@@ -21,7 +21,9 @@ export default function ChartPie({ data }: ChartPieProps) {
           iconType='circle'
           iconSize={10}
         />
-        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+        <ChartTooltip
+          content={props => <ChartTooltipContent {...props} hideLabel />}
+        />
         <Pie
           labelLine={false}
           data={data}
