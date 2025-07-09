@@ -6,9 +6,16 @@ import Image from 'next/image'
 import { FaAngleRight, FaUserTie } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
+import useLogin from './_hooks/use-login'
+
+export interface LoginValues {
+  username: string
+  password: string
+}
 
 export default function Home() {
   const [form] = Form.useForm()
+  const { login } = useLogin()
 
   return (
     <div className="bg-[url('/fondo-login.jpg')] h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative">
@@ -21,7 +28,12 @@ export default function Home() {
           width={350}
           height={300}
         />
-        <FormBase form={form} name='login' size='large'>
+        <FormBase<LoginValues>
+          form={form}
+          name='login'
+          size='large'
+          onFinish={login}
+        >
           <Form.Item
             hasFeedback
             name='username'

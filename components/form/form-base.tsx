@@ -4,13 +4,13 @@ import { Form, FormProps } from 'antd'
 import { useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 
-interface FormBaseProps extends FormProps {
+interface FormBaseProps<T> extends FormProps<T> {
   children: React.ReactNode
   setSubmittable?: React.Dispatch<React.SetStateAction<boolean>>
   onChangeValues?: () => void
 }
 
-export default function FormBase({
+export default function FormBase<T>({
   children,
   variant = 'filled',
   form,
@@ -19,7 +19,7 @@ export default function FormBase({
   setSubmittable,
   onChangeValues,
   ...props
-}: FormBaseProps) {
+}: FormBaseProps<T>) {
   const values = Form.useWatch([], form)
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function FormBase({
   }, [form, onChangeValues, setSubmittable, values])
 
   return (
-    <Form
+    <Form<T>
       variant={variant}
       form={form}
       name={name}

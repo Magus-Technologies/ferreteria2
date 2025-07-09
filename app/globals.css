@@ -147,3 +147,7 @@
 .animate-rainbow {
   animation: var(--animate-rainbow);
 }
+
+:root {
+  font-size: 14px;
+}
