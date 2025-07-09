@@ -5,7 +5,7 @@ import esES from 'antd/locale/es_ES'
 import './globals.css'
 import { Ubuntu } from 'next/font/google'
 
-const ubuntu = Ubuntu({ weight: ['400', '500', '700'] })
+const ubuntu = Ubuntu({ weight: ['400', '500', '700'], subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Ferretería',
