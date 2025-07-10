@@ -16,6 +16,8 @@ import TableProductosPorVencer from './_components/tables/table-productos-por-ve
 import TableProductosSinRotar from './_components/tables/table-productos-sin-rotar'
 import TableProductosUrgenteStock from './_components/tables/table-productos-urgente-stock'
 import PrestamosPrestes from './_components/charts/prestamos-prestes'
+import { Select } from 'antd'
+import { PiWarehouseFill } from 'react-icons/pi'
 
 export default function GestionComercialEInventario() {
   const can = usePermission()
@@ -24,11 +26,22 @@ export default function GestionComercialEInventario() {
 
   return (
     <div className='animate-fade animate-ease-in-out animate-delay-[250ms] size-full flex flex-col items-center px-8 pb-2 gap-4'>
-      <div className='w-full'>
+      <div className='w-full flex items-center justify-between'>
         <div className='text-4xl font-bold text-slate-700 flex items-center gap-2'>
           <MdSpaceDashboard className='text-cyan-600' />
           Dashboard
         </div>
+        <Select
+          prefix={<PiWarehouseFill className='text-cyan-600 mx-2' size={20} />}
+          variant='filled'
+          size='large'
+          className='min-w-[300px]'
+          placeholder='Seleccionar Almacén'
+          options={[
+            { value: 'almacen-1', label: 'Almacén 1' },
+            { value: 'almacen-2', label: 'Almacén 2' },
+          ]}
+        />
       </div>
       <div className='grid grid-cols-4 grid-rows-5 gap-x-12 gap-y-7 size-full'>
         <div className='col-start-1 col-end-2 row-start-1 row-end-2'>

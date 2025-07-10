@@ -45,7 +45,7 @@ export default function Home() {
             ]}
           >
             <Input
-              prefix={<FaUserTie className='text-sky-500 mx-2' />}
+              prefix={<FaUserTie className='text-cyan-500 mx-2' />}
               placeholder='Nombre de usuario'
             />
           </Form.Item>
@@ -57,7 +57,7 @@ export default function Home() {
             ]}
           >
             <Input.Password
-              prefix={<RiLockPasswordFill className='text-sky-500 mx-2' />}
+              prefix={<RiLockPasswordFill className='text-cyan-500 mx-2' />}
               placeholder='Contraseña'
             />
           </Form.Item>

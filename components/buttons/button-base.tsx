@@ -18,10 +18,10 @@ export default function ButtonBase({
 }: ButtonBaseProps) {
   let colorClass = ''
   if (color === 'default') colorClass = 'bg-white shadow text-black'
-  if (color === 'success') colorClass = 'bg-lime-500'
-  if (color === 'warning') colorClass = 'bg-yellow-500'
-  if (color === 'danger') colorClass = 'bg-rose-500'
-  if (color === 'info') colorClass = 'bg-blue-500'
+  if (color === 'success') colorClass = 'bg-emerald-600'
+  if (color === 'warning') colorClass = 'bg-amber-600'
+  if (color === 'danger') colorClass = 'bg-rose-700'
+  if (color === 'info') colorClass = 'bg-cyan-600'
 
   let sizeClass = ''
   if (size === 'xl') sizeClass = 'px-12 py-2 text-xl rounded-3xl shadow-xl'
@@ -30,7 +30,7 @@ export default function ButtonBase({
   if (size === 'sm') sizeClass = 'px-6 py-1 text-sm rounded-lg shadow-sm'
   return (
     <button
-      className={`group/btn text-white relative font-bold transition-all hover:contrast-125 hover:scale-105 active:scale-95 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
+      className={`group/btn text-white relative bg bg font-bold text transition-all hover:contrast-125 hover:scale-105 active:scale-95 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
       {...props}
     >
       {children}
