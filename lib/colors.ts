@@ -1,5 +1,4 @@
 export const greenColors = [
-  '#bbf7d0',
   '#86efac',
   '#4ade80',
   '#22c55e',
@@ -20,7 +19,6 @@ export const greenColors = [
 ]
 
 export const blueColors = [
-  '#bfdbfe',
   '#93c5fd',
   '#60a5fa',
   '#3b82f6',

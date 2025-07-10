@@ -1,6 +1,6 @@
 import { ColDef } from 'ag-grid-community'
 
-interface ProductosPorVencerProps {
+interface ProductosUrgenteStockProps {
   name: string
   cantidad: string
   stock_min: number
@@ -8,8 +8,8 @@ interface ProductosPorVencerProps {
   vencimiento: string
 }
 
-export function useColumnsProductosPorVencer() {
-  const columns: ColDef<ProductosPorVencerProps>[] = [
+export function useColumnsProductosUrgenteStock() {
+  const columns: ColDef<ProductosUrgenteStockProps>[] = [
     {
       headerName: 'Producto',
       field: 'name',

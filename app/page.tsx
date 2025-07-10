@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <div className="bg-[url('/fondo-login.jpg')] h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative">
       <div className='absolute inset-0 bg-black/20'></div>
-      <div className='bg-white px-8 py-14 rounded-2xl animate-fade-down animate-delay-500 animate-ease-in-out shadow-xl'>
+      <div className='bg-white px-8 py-14 rounded-2xl animate-fade-down animate-delay-500 animate-ease-in-out shadow-xl max-w-3/4'>
         <Image
           className='mb-12'
           src='/logo-horizontal.png'

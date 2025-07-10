@@ -18,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='es'>
-      <body className={`antialiased ${ubuntu.className}`}>
+    <html lang='es' className='overflow-y-hidden'>
+      <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
         <AntdRegistry>
           <ConfigProvider locale={esES}>{children}</ConfigProvider>
         </AntdRegistry>

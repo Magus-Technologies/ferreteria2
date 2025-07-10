@@ -13,6 +13,9 @@ import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import DemandaPorCategoriaDeProductos from './_components/charts/demanda-por-categoria-de-productos'
 import TableProductosPorVencer from './_components/tables/table-productos-por-vencer'
+import TableProductosSinRotar from './_components/tables/table-productos-sin-rotar'
+import TableProductosUrgenteStock from './_components/tables/table-productos-urgente-stock'
+import PrestamosPrestes from './_components/charts/prestamos-prestes'
 
 export default function GestionComercialEInventario() {
   const can = usePermission()
@@ -20,7 +23,7 @@ export default function GestionComercialEInventario() {
     return <NoAutorizado />
 
   return (
-    <div className='animate-fade animate-ease-in-out animate-delay-[250ms] size-full flex flex-col items-center px-8 py-2 gap-6'>
+    <div className='animate-fade animate-ease-in-out animate-delay-[250ms] size-full flex flex-col items-center px-8 pb-2 gap-4'>
       <div className='w-full'>
         <div className='text-4xl font-bold text-slate-700 flex items-center gap-2'>
           <MdSpaceDashboard className='text-cyan-600' />
@@ -86,8 +89,15 @@ export default function GestionComercialEInventario() {
         <div className='col-start-2 col-end-5 row-start-2 row-end-6'>
           <div className='grid grid-cols-2 grid-rows-2 gap-y-6 gap-x-10 size-full'>
             <TableProductosPorVencer />
-            <TableProductosPorVencer />
-            <TableProductosPorVencer />
+            <TableProductosSinRotar />
+            <TableProductosUrgenteStock />
+
+            <div className=''>
+              <div className='text-center font-semibold mb-2 text-slate-700'>
+                Préstamos y Prestés
+              </div>
+              <PrestamosPrestes />
+            </div>
           </div>
         </div>
       </div>

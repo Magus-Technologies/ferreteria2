@@ -8,11 +8,12 @@ type ChartData = { label: string; value: number; fill: string }
 
 interface ChartPieProps {
   data: ChartData[]
+  className?: string
 }
 
-export default function ChartPie({ data }: ChartPieProps) {
+export default function ChartPie({ data, className }: ChartPieProps) {
   return (
-    <ChartContainer config={{}} className='mx-auto max-h-[180px] w-full'>
+    <ChartContainer config={{}} className={`w-full ${className}`}>
       <PieChart>
         <Legend
           layout='vertical'
@@ -21,9 +22,7 @@ export default function ChartPie({ data }: ChartPieProps) {
           iconType='circle'
           iconSize={10}
         />
-        <ChartTooltip
-          content={props => <ChartTooltipContent {...props} hideLabel />}
-        />
+        <ChartTooltip content={props => <ChartTooltipContent {...props} />} />
         <Pie
           labelLine={false}
           data={data}

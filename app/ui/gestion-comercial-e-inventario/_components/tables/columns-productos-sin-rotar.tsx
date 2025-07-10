@@ -1,6 +1,6 @@
 import { ColDef } from 'ag-grid-community'
 
-interface ProductosPorVencerProps {
+interface ProductosSinRotarProps {
   name: string
   cantidad: string
   stock_min: number
@@ -8,8 +8,8 @@ interface ProductosPorVencerProps {
   vencimiento: string
 }
 
-export function useColumnsProductosPorVencer() {
-  const columns: ColDef<ProductosPorVencerProps>[] = [
+export function useColumnsProductosSinRotar() {
+  const columns: ColDef<ProductosSinRotarProps>[] = [
     {
       headerName: 'Producto',
       field: 'name',

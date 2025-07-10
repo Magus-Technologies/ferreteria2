@@ -14,7 +14,7 @@ export default function BottomNavUI({ className }: { className?: string }) {
       <ButtonBase
         size='lg'
         color='success'
-        className='text-white w-80 text-balance flex items-center justify-center gap-6'
+        className='w-80 text-balance flex items-center justify-center gap-6'
         onClick={() => router.push('/ui/gestion-comercial-e-inventario')}
       >
         <FaWarehouse size={80} />
@@ -23,7 +23,7 @@ export default function BottomNavUI({ className }: { className?: string }) {
       <ButtonBase
         size='lg'
         color='warning'
-        className='text-white w-80 text-balance flex items-center justify-center'
+        className='w-80 text-balance flex items-center justify-center'
         onClick={() => router.push('/ui/facturacion-electronica')}
       >
         <IoDocumentText size={60} />
@@ -32,7 +32,7 @@ export default function BottomNavUI({ className }: { className?: string }) {
       <ButtonBase
         size='lg'
         color='danger'
-        className='text-white w-80 text-balance flex items-center justify-center gap-2'
+        className='w-80 text-balance flex items-center justify-center gap-2'
         onClick={() => router.push('/ui/gestion-contable-y-financiera')}
       >
         <FaCalculator size={50} />
@@ -41,7 +41,7 @@ export default function BottomNavUI({ className }: { className?: string }) {
       <ButtonBase
         size='lg'
         color='info'
-        className='text-white w-80 text-balance flex items-center justify-center gap-6'
+        className='w-80 text-balance flex items-center justify-center gap-6'
         onClick={() => router.push('/ui/reportes')}
       >
         <BiSolidReport size={60} />
