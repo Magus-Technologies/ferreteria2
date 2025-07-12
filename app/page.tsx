@@ -46,7 +46,7 @@ export default function Home() {
           >
             <Input
               prefix={<FaUserTie className='text-cyan-500 mx-2' />}
-              placeholder='Nombre de usuario'
+              placeholder='Nombre de usuario test'
             />
           </Form.Item>
           <Form.Item
