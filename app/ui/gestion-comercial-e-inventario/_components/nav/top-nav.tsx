@@ -1,11 +1,11 @@
 import { MdSpaceDashboard } from 'react-icons/md'
-import ButtonNav from './button-nav'
 import { FaBoxOpen, FaClipboardList } from 'react-icons/fa'
 import { FaCartShopping } from 'react-icons/fa6'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { IoMdContact } from 'react-icons/io'
 import { MenuProps } from 'antd'
 import BaseNav from '~/components/nav/base-nav'
+import ButtonNav from '~/components/nav/button-nav'
 
 const itemsInventario: MenuProps['items'] = [
   {
@@ -38,30 +38,36 @@ const itemsContactos: MenuProps['items'] = [
 
 export default function TopNav({ className }: { className?: string }) {
   return (
-    <BaseNav className={className}>
-      <ButtonNav path='/ui/gestion-comercial-e-inventario'>
+    <BaseNav className={className} bgColorClass='bg-emerald-600'>
+      <ButtonNav
+        path='/ui/gestion-comercial-e-inventario'
+        colorActive='text-emerald-600'
+      >
         <MdSpaceDashboard />
         Dashboard
       </ButtonNav>
 
       <DropdownBase menu={{ items: itemsInventario }}>
-        <ButtonNav withIcon={false}>
+        <ButtonNav withIcon={false} colorActive='text-emerald-600'>
           <FaBoxOpen />
           Inventario
         </ButtonNav>
       </DropdownBase>
       <DropdownBase menu={{ items: itemsCompras }}>
-        <ButtonNav withIcon={false}>
+        <ButtonNav withIcon={false} colorActive='text-emerald-600'>
           <FaCartShopping />
           Compras
         </ButtonNav>
       </DropdownBase>
-      <ButtonNav path='/ui/gestion-comercial-e-inventario/kardex'>
+      <ButtonNav
+        path='/ui/gestion-comercial-e-inventario/kardex'
+        colorActive='text-emerald-600'
+      >
         <FaClipboardList />
         Kardex
       </ButtonNav>
       <DropdownBase menu={{ items: itemsContactos }}>
-        <ButtonNav withIcon={false}>
+        <ButtonNav withIcon={false} colorActive='text-emerald-600'>
           <IoMdContact />
           Contactos
         </ButtonNav>

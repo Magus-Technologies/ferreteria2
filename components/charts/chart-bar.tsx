@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../ui/chart'
 
 interface ChartDataBar {
@@ -33,6 +33,7 @@ export default function ChartBar({ className, data, fills }: ChartBarProps) {
           axisLine={false}
           tickFormatter={value => value.slice(0, 3)}
         />
+        <YAxis />
         <ChartTooltip
           cursor={false}
           content={props => <ChartTooltipContent {...props} />}

@@ -9,6 +9,7 @@ interface ButtonNavProps {
   withIcon?: boolean
   className?: string
   path?: string
+  colorActive: string
 }
 
 function ButtonNavBase({
@@ -16,12 +17,13 @@ function ButtonNavBase({
   withIcon = true,
   className = '',
   path,
+  colorActive,
 }: ButtonNavProps) {
   const pathname = usePathname()
   return (
     <div
       className={`cursor-pointer transition-all flex items-center group py-1 ${className} ${
-        pathname === path ? 'bg-white px-6 rounded-full text-emerald-600' : ''
+        pathname === path ? `bg-white px-6 rounded-full ${colorActive}` : ''
       }`}
     >
       {withIcon && (
@@ -37,15 +39,25 @@ export default function ButtonNav({
   withIcon = true,
   className,
   path,
+  colorActive,
 }: ButtonNavProps) {
   return path ? (
     <Link href={path}>
-      <ButtonNavBase withIcon={withIcon} className={className} path={path}>
+      <ButtonNavBase
+        withIcon={withIcon}
+        className={className}
+        path={path}
+        colorActive={colorActive}
+      >
         {children}
       </ButtonNavBase>
     </Link>
   ) : (
-    <ButtonNavBase withIcon={withIcon} className={className}>
+    <ButtonNavBase
+      withIcon={withIcon}
+      className={className}
+      colorActive={colorActive}
+    >
       {children}
     </ButtonNavBase>
   )
