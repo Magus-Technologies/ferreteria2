@@ -1,7 +1,7 @@
 import BottomNav from './_components/nav/bottom-nav'
 import TopNav from './_components/nav/top-nav'
 
-export default function FacturacionElectronicaLayout({
+export default function GestionContableYFinancieraLayout({
   children,
 }: {
   children: React.ReactNode
