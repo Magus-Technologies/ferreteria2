@@ -1,5 +1,5 @@
-import BaseNav from '~/components/nav/base-nav'
-import ButtonNav from '~/components/nav/button-nav'
+import BaseNav from '~/app/_components/nav/base-nav'
+import ButtonNav from '~/app/_components/nav/button-nav'
 import { GiMoneyStack, GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 
 export default function BottomNav({ className }: { className?: string }) {

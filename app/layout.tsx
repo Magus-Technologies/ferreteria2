@@ -21,7 +21,16 @@ export default function RootLayout({
     <html lang='es' className='overflow-y-hidden'>
       <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
         <AntdRegistry>
-          <ConfigProvider locale={esES}>{children}</ConfigProvider>
+          <ConfigProvider
+            theme={{
+              token: {
+                fontSize: 13,
+              },
+            }}
+            locale={esES}
+          >
+            {children}
+          </ConfigProvider>
         </AntdRegistry>
       </body>
     </html>

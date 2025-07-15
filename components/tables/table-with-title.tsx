@@ -20,9 +20,9 @@ export default function TableWithTitle<T>({
 }: TableWithTitleProps<T>) {
   const tableRef = useRef<AgGridReact<T>>(null)
   return (
-    <div className='flex flex-col gap-2'>
+    <div className='flex flex-col gap-2 size-full'>
       <div className='flex items-center justify-between gap-2'>
-        <div className='font-semibold text-slate-700 text-2xl'>{title}</div>
+        <div className='font-semibold text-slate-700 text-lg'>{title}</div>
         <div>
           {exportExcel && (
             <Tooltip title='Exportar a Excel'>

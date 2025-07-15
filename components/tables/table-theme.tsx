@@ -7,14 +7,14 @@ export const themeTable = themeQuartz.withPart(iconSetQuartzLight).withParams({
   fontFamily: 'Ubuntu',
   foregroundColor: 'rgb(46, 55, 66)',
   headerBackgroundColor: '#F9FAFB',
-  headerFontSize: 'var(--text-base)',
+  headerFontSize: 'var(--text-sm)',
   fontSize: 'var(--text-sm)',
   headerFontWeight: 600,
   headerTextColor: 'var(--color-slate-600)',
   oddRowBackgroundColor: '#F9FAFB',
   rowBorder: false,
   sidePanelBorder: false,
-  spacing: 5,
+  spacing: 4,
   wrapperBorder: false,
   wrapperBorderRadius: 0,
 })
@@ -22,15 +22,18 @@ export const themeTable = themeQuartz.withPart(iconSetQuartzLight).withParams({
 export const columnTypes: {
   [key: string]: ColTypeDef
 } = {
-  currency: {
-    width: 150,
+  usd: {
     valueFormatter: params =>
-      params.value.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }),
+      `$. ${params.value.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
   },
-  shaded: {
-    cellClass: 'shaded-class',
+  pen: {
+    valueFormatter: params =>
+      `S/. ${params.value.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
   },
 }

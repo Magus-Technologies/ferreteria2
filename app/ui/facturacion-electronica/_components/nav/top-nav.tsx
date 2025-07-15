@@ -4,8 +4,8 @@ import { FaCartShopping, FaMoneyBillTrendUp } from 'react-icons/fa6'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { IoMdContact } from 'react-icons/io'
 import { MenuProps } from 'antd'
-import BaseNav from '~/components/nav/base-nav'
-import ButtonNav from '~/components/nav/button-nav'
+import BaseNav from '~/app/_components/nav/base-nav'
+import ButtonNav from '~/app/_components/nav/button-nav'
 
 const itemsVentas: MenuProps['items'] = [
   {

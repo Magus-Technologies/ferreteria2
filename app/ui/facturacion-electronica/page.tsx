@@ -4,12 +4,12 @@ import {
   MdFactCheck,
   MdSpaceDashboard,
 } from 'react-icons/md'
-import CardDashboard from '~/components/cards/card-dashboard'
+import CardDashboard from '~/app/_components/cards/card-dashboard'
 import NoAutorizado from '~/components/others/no-autorizado'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import TituloModulos from '~/components/others/titulo-modulos'
-import ContenedorGeneral from '~/components/containers/contenedor-general'
+import TituloModulos from '~/app/_components/others/titulo-modulos'
+import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { IoDocumentText } from 'react-icons/io5'
 import VentasPorCategoriaDeProductos from './_components/charts/ventas-por-categoria-de-productos'
 import VentasPorMetodosDePago from './_components/charts/ventas-por-metodos-de-pago'

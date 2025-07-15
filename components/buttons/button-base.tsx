@@ -27,7 +27,7 @@ export default function ButtonBase({
   if (size === 'xl') sizeClass = 'px-12 py-2 text-xl rounded-3xl shadow-xl'
   if (size === 'lg') sizeClass = 'px-10 py-2 text-lg rounded-2xl shadow-lg'
   if (size === 'md') sizeClass = 'px-8 py-1 text-base rounded-xl shadow-md'
-  if (size === 'sm') sizeClass = 'px-6 py-1 text-sm rounded-lg shadow-sm'
+  if (size === 'sm') sizeClass = 'px-5 py-1 text-sm rounded-lg shadow-sm'
   return (
     <button
       className={`group/btn text-white relative bg bg font-bold text transition-all hover:contrast-125 hover:scale-105 active:scale-95 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
