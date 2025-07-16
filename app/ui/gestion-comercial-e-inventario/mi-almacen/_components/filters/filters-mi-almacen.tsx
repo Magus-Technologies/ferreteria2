@@ -1,11 +1,15 @@
-import { FaBoxOpen, FaSearch } from 'react-icons/fa'
+import { FaBoxOpen, FaFilter } from 'react-icons/fa'
 import { IoDocumentText } from 'react-icons/io5'
+import { PiWarehouseFill } from 'react-icons/pi'
 import InputBase from '~/app/_components/form/inputs/input-base'
+import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
+import SelectCSStock from '~/app/_components/form/selects/select-c-s-stock'
 import SelectCategorias from '~/app/_components/form/selects/select-categorias'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import SelectMarcas from '~/app/_components/form/selects/select-marcas'
 import SelectUbicaciones from '~/app/_components/form/selects/select-ubicaciones'
 import SelectUnidadDeMedida from '~/app/_components/form/selects/select-unidad-de-medida'
+import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
@@ -14,10 +18,55 @@ export default function FiltersMiAlmacen() {
   return (
     <FormBase
       name='filtros-mi-almacen'
-      initialValues={{ estado: 'activo' }}
+      initialValues={{ estado: 'activo', cs_stock: 'all' }}
       className='w-full'
     >
-      <div className='grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-x-8 gap-y-3'>
+      <TituloModulos
+        title='Mi Almacén'
+        icon={<PiWarehouseFill className='text-cyan-600' />}
+      >
+        <div className='flex items-center gap-4'>
+          <SelectAlmacen
+            propsForm={{
+              name: 'almacen',
+              hasFeedback: false,
+              className: '!w-fit',
+            }}
+            formWithMessage={false}
+          />
+          <InputBase
+            size='large'
+            propsForm={{
+              name: 'codigo_producto',
+              hasFeedback: false,
+              className: '!min-w-[300px]',
+            }}
+            placeholder='Código / Producto'
+            prefix={<FaBoxOpen size={15} className='text-cyan-600 mx-1' />}
+            formWithMessage={false}
+          />
+          <SelectMarcas
+            size='large'
+            propsForm={{
+              name: 'marca',
+              hasFeedback: false,
+              className: '!min-w-[300px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+          />
+          <SelectEstado
+            size='large'
+            propsForm={{
+              name: 'estado',
+              hasFeedback: false,
+              className: '!min-w-[120px]',
+            }}
+            formWithMessage={false}
+          />
+        </div>
+      </TituloModulos>
+      <div className='flex items-center gap-4 mt-4'>
         <LabelBase label='Ubicación:'>
           <SelectUbicaciones
             propsForm={{
@@ -28,31 +77,10 @@ export default function FiltersMiAlmacen() {
             formWithMessage={false}
           />
         </LabelBase>
-        <LabelBase label='Cod / Producto:'>
-          <InputBase
-            propsForm={{
-              name: 'codigo_producto',
-              hasFeedback: false,
-            }}
-            placeholder='Código / Producto'
-            prefix={<FaBoxOpen size={15} className='text-cyan-600 mx-1' />}
-            formWithMessage={false}
-          />
-        </LabelBase>
         <LabelBase label='Categoría:'>
           <SelectCategorias
             propsForm={{
               name: 'categoria',
-              hasFeedback: false,
-            }}
-            className='w-full'
-            formWithMessage={false}
-          />
-        </LabelBase>
-        <LabelBase label='Marca:'>
-          <SelectMarcas
-            propsForm={{
-              name: 'marca',
               hasFeedback: false,
             }}
             className='w-full'
@@ -80,10 +108,10 @@ export default function FiltersMiAlmacen() {
             formWithMessage={false}
           />
         </LabelBase>
-        <LabelBase label='Estado:'>
-          <SelectEstado
+        <LabelBase label='Stock:'>
+          <SelectCSStock
             propsForm={{
-              name: 'estado',
+              name: 'cs_stock',
               hasFeedback: false,
             }}
             className='w-full'
@@ -92,11 +120,11 @@ export default function FiltersMiAlmacen() {
         </LabelBase>
         <ButtonBase
           color='info'
-          size='sm'
+          size='md'
           type='submit'
           className='flex items-center gap-2 w-fit'
         >
-          <FaSearch />
+          <FaFilter />
           Filtrar
         </ButtonBase>
       </div>

@@ -30,7 +30,7 @@ export default function ButtonBase({
   if (size === 'sm') sizeClass = 'px-5 py-1 text-sm rounded-lg shadow-sm'
   return (
     <button
-      className={`group/btn text-white relative bg bg font-bold text transition-all hover:contrast-125 hover:scale-105 active:scale-95 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
+      className={`group/btn text-white relative bg bg font-bold transition-all hover:contrast-125 hover:scale-105 active:scale-95 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
       {...props}
     >
       {children}

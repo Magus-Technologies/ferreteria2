@@ -35,6 +35,7 @@ export function useColumnsUltimasComprasIngresadas() {
       minWidth: 80,
       filter: true,
       flex: 1,
+      hide: true,
     },
     {
       headerName: 'Fecha',

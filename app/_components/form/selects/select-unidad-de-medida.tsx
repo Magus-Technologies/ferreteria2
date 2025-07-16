@@ -7,7 +7,7 @@ interface SelectUnidadDeMedidaProps extends SelectBaseProps {
 }
 
 export default function SelectUnidadDeMedida({
-  placeholder = 'Seleccionar Unidad de Medida',
+  placeholder = 'Unidad de Medida',
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 14,

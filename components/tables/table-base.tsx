@@ -8,18 +8,24 @@ import { RefObject } from 'react'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
-interface TableBaseProps<T> extends AgGridReactProps<T> {
+export interface TableBaseProps<T> extends AgGridReactProps<T> {
   ref?: RefObject<AgGridReact<T> | null>
+  headerBackgroundColor?: string
 }
 
-export default function TableBase<T>({ ref, ...props }: TableBaseProps<T>) {
+export default function TableBase<T>({
+  ref,
+  headerBackgroundColor,
+  ...props
+}: TableBaseProps<T>) {
   return (
     <AgGridReact<T>
       {...props}
       ref={ref}
-      theme={themeTable}
+      theme={themeTable.withParams({ headerBackgroundColor })}
       columnTypes={columnTypes}
       localeText={AG_GRID_LOCALE_ES}
+      className='shadow-lg rounded-xl overflow-hidden'
     />
   )
 }
