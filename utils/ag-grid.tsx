@@ -1,7 +1,7 @@
 import { AgGridReact } from 'ag-grid-react'
 import { utils, writeFile } from 'xlsx'
 import { Column } from 'ag-grid-community'
-import { render } from '@react-pdf/renderer'
+import { pdf } from '@react-pdf/renderer'
 import TablePdfAgGrid from '../components/pdf/table-pdf-ag-grid'
 
 function exportFile(obj: Record<string, unknown>[], nameFile: string) {
@@ -15,7 +15,8 @@ export function getJsonFromAGGrid(gridOptions: AgGridReact) {
   const gridApi = gridOptions.api
   const rowData: Record<string, unknown>[] = []
 
-  const colDefs = gridApi.getAllDisplayedColumns() as Column[]
+  const colDefsPrev = gridApi.getAllDisplayedColumns() as Column[]
+  const colDefs = colDefsPrev.filter(col => col.getColDef().type !== 'actions')
 
   gridApi.forEachNodeAfterFilterAndSort(node => {
     const data = node.data
@@ -40,13 +41,25 @@ export function exportAGGridDataToJSON(
   exportFile(rowData, nameFile)
 }
 
-export function exportAGGridDataToPDF(
+export async function exportAGGridDataToPDF(
   gridOptions: AgGridReact,
-  nameFile: string
+  nameFile: string,
+  orientation: 'vertical' | 'horizontal' = 'vertical'
 ) {
   const { rowData, colDefs } = getJsonFromAGGrid(gridOptions)
-  render(
-    <TablePdfAgGrid rowData={rowData} colDefs={colDefs} nameFile={nameFile} />,
-    `${nameFile}.pdf`
-  )
+
+  const blob = await pdf(
+    <TablePdfAgGrid
+      rowData={rowData}
+      colDefs={colDefs}
+      nameFile={nameFile}
+      orientation={orientation}
+    />
+  ).toBlob()
+  const blobUrl = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = blobUrl
+  link.download = `${nameFile}.pdf`
+  link.click()
+  URL.revokeObjectURL(blobUrl)
 }

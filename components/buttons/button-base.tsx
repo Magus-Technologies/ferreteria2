@@ -17,7 +17,7 @@ export default function ButtonBase({
   ...props
 }: ButtonBaseProps) {
   let colorClass = ''
-  if (color === 'default') colorClass = 'bg-white shadow text-black'
+  if (color === 'default') colorClass = 'bg-white shadow !text-slate-800 border'
   if (color === 'success') colorClass = 'bg-emerald-600'
   if (color === 'warning') colorClass = 'bg-amber-600'
   if (color === 'danger') colorClass = 'bg-rose-700'

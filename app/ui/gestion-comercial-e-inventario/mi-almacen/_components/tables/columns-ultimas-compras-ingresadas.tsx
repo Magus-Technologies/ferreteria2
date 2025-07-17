@@ -20,7 +20,7 @@ export function useColumnsUltimasComprasIngresadas() {
       field: 'documento',
       minWidth: 80,
       filter: true,
-      flex: 2,
+      flex: 1,
     },
     {
       headerName: 'Serie',

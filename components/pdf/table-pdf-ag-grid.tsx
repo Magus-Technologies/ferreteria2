@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   titleTable: {
     fontSize: 15,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
     textAlign: 'center',
   },
   sectionTable: {
@@ -42,8 +42,7 @@ const styles = StyleSheet.create({
   },
   cell: {
     display: 'flex',
-    padding: '4px 8px',
-    overflow: 'hidden',
+    padding: '4px 16px',
   },
 })
 
@@ -51,14 +50,20 @@ export default function TablePdfAgGrid({
   rowData,
   colDefs,
   nameFile,
+  orientation = 'vertical',
 }: {
   rowData: Record<string, unknown>[]
   colDefs: Column[]
   nameFile: string
+  orientation?: 'vertical' | 'horizontal'
 }) {
   return (
     <Document title={nameFile}>
-      <Page size='A4' style={styles.page}>
+      <Page
+        size='A4'
+        style={styles.page}
+        orientation={orientation === 'vertical' ? 'portrait' : 'landscape'}
+      >
         <View style={styles.titleTable}>
           <Text>{nameFile}</Text>
         </View>
@@ -90,11 +95,11 @@ export default function TablePdfAgGrid({
                 backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9f9f9',
               }}
             >
-              {colDefs.map(col => {
+              {colDefs.map((col, idxCol) => {
                 const colDef = col.getColDef()
                 return (
                   <Text
-                    key={colDef.headerName}
+                    key={`${idx}-${idxCol}`}
                     style={{
                       ...styles.cell,
                       flex: colDef.flex,

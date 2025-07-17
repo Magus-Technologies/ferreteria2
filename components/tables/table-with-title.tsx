@@ -6,8 +6,11 @@ import { useRef } from 'react'
 import ButtonBase from '../buttons/button-base'
 import { exportAGGridDataToJSON, exportAGGridDataToPDF } from '~/utils/ag-grid'
 import { RiFileExcel2Fill } from 'react-icons/ri'
-import { Tooltip } from 'antd'
+import { Popover, Tooltip } from 'antd'
 import { FaFilePdf } from 'react-icons/fa6'
+import { PiFilePdfFill } from 'react-icons/pi'
+import { HiMiniViewColumns } from 'react-icons/hi2'
+import SelectColumns from './select-columns'
 
 interface TableWithTitleProps<T> extends TableBaseProps<T> {
   title: string
@@ -22,11 +25,22 @@ export default function TableWithTitle<T>({
   ...props
 }: TableWithTitleProps<T>) {
   const tableRef = useRef<AgGridReact<T>>(null)
+
   return (
     <div className='flex flex-col gap-2 size-full'>
       <div className='flex items-center justify-between gap-2'>
         <div className='font-semibold text-slate-700 text-xl'>{title}</div>
         <div className='flex gap-2 items-center'>
+          <Tooltip title='Ver Columnas'>
+            <Popover
+              content={<SelectColumns gridRef={tableRef} />}
+              trigger='click'
+            >
+              <ButtonBase color='warning' size='md' className='!px-3'>
+                <HiMiniViewColumns />
+              </ButtonBase>
+            </Popover>
+          </Tooltip>
           {exportExcel && (
             <Tooltip title='Exportar a Excel'>
               <ButtonBase
@@ -34,7 +48,7 @@ export default function TableWithTitle<T>({
                   if (tableRef.current)
                     exportAGGridDataToJSON(tableRef.current, title)
                 }}
-                color='warning'
+                color='success'
                 size='md'
                 className='!px-3'
               >
@@ -43,19 +57,38 @@ export default function TableWithTitle<T>({
             </Tooltip>
           )}
           {exportPdf && (
-            <Tooltip title='Exportar a PDF'>
-              <ButtonBase
-                onClick={() => {
-                  if (tableRef.current)
-                    exportAGGridDataToPDF(tableRef.current, title)
-                }}
-                color='danger'
-                size='md'
-                className='!px-3'
-              >
-                <FaFilePdf />
-              </ButtonBase>
-            </Tooltip>
+            <>
+              <Tooltip title='Exportar a PDF Vertical'>
+                <ButtonBase
+                  onClick={() => {
+                    if (tableRef.current)
+                      exportAGGridDataToPDF(tableRef.current, title, 'vertical')
+                  }}
+                  color='danger'
+                  size='md'
+                  className='!px-3'
+                >
+                  <FaFilePdf />
+                </ButtonBase>
+              </Tooltip>
+              <Tooltip title='Exportar a PDF Horizontal'>
+                <ButtonBase
+                  onClick={() => {
+                    if (tableRef.current)
+                      exportAGGridDataToPDF(
+                        tableRef.current,
+                        title,
+                        'horizontal'
+                      )
+                  }}
+                  color='danger'
+                  size='md'
+                  className='!px-3'
+                >
+                  <PiFilePdfFill />
+                </ButtonBase>
+              </Tooltip>
+            </>
           )}
         </div>
       </div>
