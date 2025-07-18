@@ -13,6 +13,8 @@ import PorcentajeDeGanancias from './_components/charts/porcentaje-de-ganancias'
 import CierresDeCajaConPerdida from './_components/charts/cierres-de-caja-con-perdida'
 import ClientesMorosos from './_components/charts/clientes-morosos'
 import GananciasPorRecomendacion from './_components/charts/ganancias-por-recomendacion'
+import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
+import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 
 export default function GestionContableYFinanciera() {
   const can = usePermission()
@@ -24,7 +26,12 @@ export default function GestionContableYFinanciera() {
       <TituloModulos
         title='Dashboard'
         icon={<MdSpaceDashboard className='text-cyan-600' />}
-      />
+      >
+        <div className='flex gap-8 items-center'>
+          <RangePickerBase variant='filled' size='large' />
+          <SelectAlmacen />
+        </div>
+      </TituloModulos>
       <div className='grid grid-cols-4 grid-rows-5 gap-0 gap-x-12 gap-y-7 size-full'>
         <div className='col-start-1 col-end-2 row-start-1 row-end-2'>
           <CardDashboard

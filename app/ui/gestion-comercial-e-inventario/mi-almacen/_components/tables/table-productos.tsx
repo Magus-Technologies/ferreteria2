@@ -11,6 +11,8 @@ const items = [
     marca: 'Marca 1',
     stock: '10',
     stock_min: '5',
+    unidades_contenidas: '1',
+    activo: true,
   },
   {
     id: '2',
@@ -19,6 +21,8 @@ const items = [
     marca: 'Marca 2',
     stock: '15',
     stock_min: '10',
+    unidades_contenidas: '2',
+    activo: false,
   },
   {
     id: '3',
@@ -27,6 +31,8 @@ const items = [
     marca: 'Marca 3',
     stock: '20',
     stock_min: '15',
+    unidades_contenidas: '3',
+    activo: true,
   },
   {
     id: '4',
@@ -35,6 +41,8 @@ const items = [
     marca: 'Marca 4',
     stock: '25',
     stock_min: '20',
+    unidades_contenidas: '4',
+    activo: false,
   },
   {
     id: '5',
@@ -43,6 +51,8 @@ const items = [
     marca: 'Marca 5',
     stock: '30',
     stock_min: '25',
+    unidades_contenidas: '5',
+    activo: true,
   },
   {
     id: '6',
@@ -51,6 +61,8 @@ const items = [
     marca: 'Marca 6',
     stock: '35',
     stock_min: '30',
+    unidades_contenidas: '6',
+    activo: true,
   },
   {
     id: '7',
@@ -59,6 +71,8 @@ const items = [
     marca: 'Marca 7',
     stock: '40',
     stock_min: '35',
+    unidades_contenidas: '7',
+    activo: true,
   },
   {
     id: '8',
@@ -67,6 +81,8 @@ const items = [
     marca: 'Marca 8',
     stock: '45',
     stock_min: '40',
+    unidades_contenidas: '8',
+    activo: true,
   },
   {
     id: '9',
@@ -75,6 +91,8 @@ const items = [
     marca: 'Marca 9',
     stock: '50',
     stock_min: '45',
+    unidades_contenidas: '9',
+    activo: true,
   },
   {
     id: '10',
@@ -83,6 +101,8 @@ const items = [
     marca: 'Marca 10',
     stock: '55',
     stock_min: '50',
+    unidades_contenidas: '10',
+    activo: true,
   },
 ]
 

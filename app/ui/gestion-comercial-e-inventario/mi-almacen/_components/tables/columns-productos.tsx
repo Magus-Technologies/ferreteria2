@@ -15,6 +15,8 @@ interface ProductosProps {
   marca: string
   stock: string
   stock_min: string
+  unidades_contenidas: string
+  activo: boolean
 }
 
 export function useColumnsProductos() {
@@ -44,6 +46,13 @@ export function useColumnsProductos() {
       flex: 2,
     },
     {
+      headerName: 'U. Contenidas',
+      field: 'unidades_contenidas',
+      minWidth: 80,
+      filter: true,
+      flex: 1,
+    },
+    {
       headerName: 'Marca',
       field: 'marca',
       minWidth: 80,
@@ -63,6 +72,13 @@ export function useColumnsProductos() {
       minWidth: 80,
       filter: true,
       flex: 1,
+    },
+    {
+      headerName: 'Activo',
+      field: 'activo',
+      minWidth: 80,
+      flex: 1,
+      type: 'boolean',
     },
     {
       headerName: 'Acciones',

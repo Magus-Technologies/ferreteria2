@@ -19,6 +19,8 @@ import PrestamosPrestes from './_components/charts/prestamos-prestes'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import SelectAlmacen from '../../_components/form/selects/select-almacen'
+import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
+import YearPicker from '~/app/_components/form/fechas/year-picker'
 
 export default function GestionComercialEInventario() {
   const can = usePermission()
@@ -31,7 +33,10 @@ export default function GestionComercialEInventario() {
         title='Dashboard'
         icon={<MdSpaceDashboard className='text-cyan-600' />}
       >
-        <SelectAlmacen />
+        <div className='flex gap-8 items-center'>
+          <RangePickerBase variant='filled' size='large' />
+          <SelectAlmacen />
+        </div>
       </TituloModulos>
       <div className='grid grid-cols-4 grid-rows-5 gap-x-12 gap-y-7 size-full'>
         <div className='col-start-1 col-end-2 row-start-1 row-end-2'>
@@ -73,6 +78,7 @@ export default function GestionComercialEInventario() {
             value={250000000}
             prefix='S/. '
             icon={<FaMoneyBillTrendUp size={20} />}
+            iconRight={<YearPicker />}
           />
         </div>
         <div className='col-start-1 col-end-2 row-start-3 row-end-4'>
@@ -81,6 +87,7 @@ export default function GestionComercialEInventario() {
             value={250000000}
             prefix='S/. '
             icon={<FaMoneyBillWave size={20} />}
+            iconRight={<YearPicker />}
           />
         </div>
         <div className='col-start-1 col-end-2 row-start-4 row-end-6'>

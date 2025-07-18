@@ -26,14 +26,6 @@ export default function FiltersMiAlmacen() {
         icon={<PiWarehouseFill className='text-cyan-600' />}
       >
         <div className='flex items-center gap-4'>
-          <SelectAlmacen
-            propsForm={{
-              name: 'almacen',
-              hasFeedback: false,
-              className: '!w-fit',
-            }}
-            formWithMessage={false}
-          />
           <InputBase
             size='large'
             propsForm={{
@@ -53,6 +45,14 @@ export default function FiltersMiAlmacen() {
               className: '!min-w-[300px]',
             }}
             className='w-full'
+            formWithMessage={false}
+          />
+          <SelectAlmacen
+            propsForm={{
+              name: 'almacen',
+              hasFeedback: false,
+              className: '!w-fit',
+            }}
             formWithMessage={false}
           />
           <SelectEstado

@@ -8,7 +8,11 @@ import { RefObject } from 'react'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
-export interface TableBaseProps<T> extends AgGridReactProps<T> {
+export interface TableBaseProps<T>
+  extends Omit<
+    AgGridReactProps<T>,
+    'theme' | 'columnTypes' | 'localeText' | 'enableFilterHandlers'
+  > {
   ref?: RefObject<AgGridReact<T> | null>
   headerBackgroundColor?: string
 }
@@ -16,6 +20,7 @@ export interface TableBaseProps<T> extends AgGridReactProps<T> {
 export default function TableBase<T>({
   ref,
   headerBackgroundColor,
+  className = '',
   ...props
 }: TableBaseProps<T>) {
   return (
@@ -25,7 +30,8 @@ export default function TableBase<T>({
       theme={themeTable.withParams({ headerBackgroundColor })}
       columnTypes={columnTypes}
       localeText={AG_GRID_LOCALE_ES}
-      className='shadow-lg rounded-xl overflow-hidden'
+      enableFilterHandlers={true}
+      className={`shadow-lg rounded-xl overflow-hidden ${className}`}
     />
   )
 }

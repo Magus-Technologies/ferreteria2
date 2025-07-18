@@ -1,4 +1,11 @@
-import { themeQuartz, iconSetQuartzLight, ColTypeDef } from 'ag-grid-community'
+import {
+  themeQuartz,
+  iconSetQuartzLight,
+  ColTypeDef,
+  DoesFilterPassParams,
+} from 'ag-grid-community'
+import TagBoolean from '../tags/tag-boolean'
+import FilterBoolean from './filter-boolean'
 
 export const themeTable = themeQuartz.withPart(iconSetQuartzLight).withParams({
   backgroundColor: '#ffffff',
@@ -19,6 +26,19 @@ export const themeTable = themeQuartz.withPart(iconSetQuartzLight).withParams({
   wrapperBorderRadius: 0,
 })
 
+export const doesFilterPass: ({
+  model,
+  node,
+  handlerParams,
+}: DoesFilterPassParams<unknown, boolean, boolean>) => boolean = ({
+  model,
+  node,
+  handlerParams,
+}) => {
+  if (model === null) return true
+  return handlerParams.getValue(node) === model
+}
+
 export const columnTypes: {
   [key: string]: ColTypeDef
 } = {
@@ -35,5 +55,17 @@ export const columnTypes: {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
+  },
+  boolean: {
+    filter: {
+      component: FilterBoolean,
+      doesFilterPass: doesFilterPass,
+    },
+    valueFormatter: ({ value }) => (value ? 'Activo' : 'Inactivo'),
+    cellRenderer: (params: { value: boolean }) => (
+      <div className='h-full flex items-center'>
+        <TagBoolean booleano={params.value} className='w-24 ' />
+      </div>
+    ),
   },
 }

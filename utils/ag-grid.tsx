@@ -1,6 +1,6 @@
 import { AgGridReact } from 'ag-grid-react'
 import { utils, writeFile } from 'xlsx'
-import { Column } from 'ag-grid-community'
+import { Column, ValueFormatterParams } from 'ag-grid-community'
 import { pdf } from '@react-pdf/renderer'
 import TablePdfAgGrid from '../components/pdf/table-pdf-ag-grid'
 
@@ -25,7 +25,15 @@ export function getJsonFromAGGrid(gridOptions: AgGridReact) {
       const colDef = col.getColDef()
       const field = colDef.field!
       const header = colDef.headerName!
-      data_obj[header] = data[field]
+      const rawValue = data[field]
+      let displayValue: unknown
+      if (typeof colDef.valueFormatter === 'function')
+        displayValue = colDef.valueFormatter({
+          value: rawValue,
+          data,
+        } as ValueFormatterParams)
+      else displayValue = rawValue
+      data_obj[header] = displayValue
     })
     rowData.push(data_obj)
   })
