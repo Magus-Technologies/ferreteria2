@@ -26,6 +26,7 @@ export default function ModalForm<T>({
   const {
     htmlType = 'submit',
     className = 'rounded-xl !bg-emerald-500 hover:!bg-emerald-600 disabled:hover:!bg-gray-300',
+    ...restOkButtonProps
   } = okButtonProps
 
   return (
@@ -37,6 +38,7 @@ export default function ModalForm<T>({
       okButtonProps={{
         htmlType,
         className,
+        ...restOkButtonProps,
       }}
       onCancel={() => setOpen(false)}
       destroyOnHidden

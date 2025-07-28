@@ -1,26 +1,46 @@
-import { useState, useTransition } from 'react'
+import { useState, useCallback } from 'react'
 
-export default function useServerAction<TData, TRes extends { error?: string }>(
-  action: (data: TData) => Promise<TRes>
-) {
-  const [isPending, startTransition] = useTransition()
-  const [res, setRes] = useState<TRes | null>(null)
+type ServerAction<TParams, TResult> = (params: TParams) => Promise<TResult>
 
-  function handleAction(data: TData) {
-    startTransition(async () => {
-      const result = await action(data)
-      setRes(result)
-      console.log('🚀 ~ file: use-server-action.ts:8 ~ result:', result)
+interface UseServerActionProps<TParams, TResult> {
+  action: ServerAction<TParams, TResult>
+  onSuccess?: (res: TResult) => void
+  onError?: (error: unknown) => void
+}
 
-      if (result.error) {
-        console.log(result.error)
+export function useServerAction<TParams, TResult>({
+  action,
+  onSuccess,
+  onError,
+}: UseServerActionProps<TParams, TResult>) {
+  const [loading, setLoading] = useState(false)
+  const [response, setResponse] = useState<TResult | null>(null)
+  const [error, setError] = useState<unknown>(null)
+
+  const execute = useCallback(
+    async (params: TParams) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await action(params)
+        setResponse(res)
+        onSuccess?.(res)
+        return res
+      } catch (err) {
+        setError(err)
+        onError?.(err)
+        throw err
+      } finally {
+        setLoading(false)
       }
-    })
-  }
+    },
+    [action, onError, onSuccess]
+  )
 
   return {
-    isPending,
-    res,
-    handleAction,
+    execute,
+    loading,
+    response,
+    error,
   }
 }

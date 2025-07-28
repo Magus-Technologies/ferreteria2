@@ -19,6 +19,7 @@ import FormSectionLote from '../form/form-section-lote'
 import { Lote, ProductoLote } from '~/app/_types/lote'
 import { DetalleDePreciosProps } from '../tables/columns-detalle-de-precios'
 import FormSectionUnidadesDerivadas from '../form/form-section-unidades-derivadas'
+import ButtonCreateMarca from '../buttons/button-create-marca'
 
 interface ModalCreateProductoProps {
   open: boolean
@@ -153,6 +154,7 @@ export default function ModalCreateProducto({
                 }}
                 classNameIcon='text-rose-700 mx-1'
               />
+              <ButtonCreateMarca />
             </LabelBase>
             <LabelBase
               label='U. de Medida:'
