@@ -2,6 +2,7 @@ import { Tooltip } from 'antd'
 import { useState } from 'react'
 import { FaPlusCircle } from 'react-icons/fa'
 import { createMarca } from '~/app/_actions/marca'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 import FormWithName from '~/components/modals/modal-form-with-name'
 
 export default function ButtonCreateMarca() {
@@ -13,7 +14,10 @@ export default function ButtonCreateMarca() {
         title='Marca'
         open={open}
         setOpen={setOpen}
-        action={createMarca}
+        propsUseServerMutation={{
+          action: createMarca,
+          queryKey: [QueryKeys.MARCAS],
+        }}
       />
       <Tooltip title='Crear Marca'>
         <FaPlusCircle

@@ -5,6 +5,7 @@ import esES from 'antd/locale/es_ES'
 import './globals.css'
 import { Ubuntu } from 'next/font/google'
 import Script from 'next/script'
+import { Providers } from './providers'
 
 const ubuntu = Ubuntu({ weight: ['400', '500', '700'], subsets: ['latin'] })
 
@@ -39,7 +40,7 @@ export default function RootLayout({
             }}
             locale={esES}
           >
-            {children}
+            <Providers>{children}</Providers>
           </ConfigProvider>
         </AntdRegistry>
       </body>

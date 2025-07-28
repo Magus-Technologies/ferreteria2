@@ -5,34 +5,35 @@ import { Dispatch, SetStateAction } from 'react'
 import LabelBase from '../form/label-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import { MdDriveFileRenameOutline } from 'react-icons/md'
-import { useServerAction } from '~/hooks/use-server-action'
+import {
+  UseMutationActionProps,
+  useServerMutation,
+} from '~/hooks/use-server-mutation'
 
-export default function FormWithName<T extends { name: string }, Res>({
-  title,
-  open,
-  setOpen,
-  action,
-  children,
-  onSuccess,
-  onError,
-}: {
+type ModalFormWithNameProps<T extends { name: string }, Res> = {
+  propsUseServerMutation: UseMutationActionProps<T, Res>
   title: string
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
-  action: (obj: T) => Promise<Res>
   children?: React.ReactNode
-  onSuccess?: (res: Res) => void
-  onError?: (error: unknown) => void
-}) {
+}
+
+export default function FormWithName<T extends { name: string }, Res>({
+  propsUseServerMutation,
+  title,
+  open,
+  setOpen,
+  children,
+}: ModalFormWithNameProps<T, Res>) {
   const [form] = Form.useForm<T>()
-  const { execute, loading } = useServerAction({
-    action,
+  const { onSuccess, ...restPropsMutation } = propsUseServerMutation
+  const { execute, loading } = useServerMutation<T, Res>({
+    ...restPropsMutation,
     onSuccess: res => {
       setOpen(false)
       form.resetFields()
       onSuccess?.(res)
     },
-    onError,
   })
 
   return (
