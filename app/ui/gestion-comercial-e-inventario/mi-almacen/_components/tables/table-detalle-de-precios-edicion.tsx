@@ -1,0 +1,58 @@
+'use client'
+
+import TableWithTitle, {
+  TableWithTitleProps,
+} from '~/components/tables/table-with-title'
+import { FormInstance, FormListFieldData } from 'antd'
+import { useColumnsDetalleDePreciosEdicion } from './columns-detalle-de-precios-edicion'
+
+interface TableDetalleDePreciosEdicionProps
+  extends Omit<
+    TableWithTitleProps<FormListFieldData>,
+    | 'rowData'
+    | 'columnDefs'
+    | 'id'
+    | 'title'
+    | 'paramsOfThemeTable'
+    | 'rowSelection'
+    | 'exportExcel'
+    | 'exportPdf'
+    | 'selectColumns'
+  > {
+  data: FormListFieldData[]
+  remove: (index: number | number[]) => void
+  form: FormInstance
+}
+
+export default function TableDetalleDePreciosEdicion({
+  data,
+  remove,
+  form,
+  ...rest
+}: TableDetalleDePreciosEdicionProps) {
+  return (
+    <>
+      <style>
+        {`.ag-cell-focus {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }`}
+      </style>
+      <TableWithTitle
+        {...rest}
+        id='g-c-e-i.mi-almacen.detalle-de-precios-edicion'
+        title='Detalle de precios'
+        columnDefs={useColumnsDetalleDePreciosEdicion({ remove, form })}
+        paramsOfThemeTable={{
+          spacing: 6,
+        }}
+        rowSelection={false}
+        rowData={data}
+        exportExcel={false}
+        exportPdf={false}
+        selectColumns={false}
+      />
+    </>
+  )
+}

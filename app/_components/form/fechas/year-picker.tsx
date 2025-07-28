@@ -16,6 +16,7 @@ export default function YearPicker({
   return (
     <DatePickerBase
       {...props}
+      format='YYYY'
       defaultValue={defaultValue}
       variant={variant}
       placeholder={placeholder}

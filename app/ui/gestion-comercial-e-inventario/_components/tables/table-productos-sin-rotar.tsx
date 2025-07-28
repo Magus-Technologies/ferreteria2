@@ -77,6 +77,7 @@ const items = [
 export default function TableProductosSinRotar() {
   return (
     <TableWithTitle
+      id='g-c-e-i.dashboard.productos-sin-rotar'
       title='Productos sin rotar'
       columnDefs={useColumnsProductosSinRotar()}
       rowData={items}

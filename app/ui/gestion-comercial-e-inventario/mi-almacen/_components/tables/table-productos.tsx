@@ -109,6 +109,7 @@ const items = [
 export default function TableProductos() {
   return (
     <TableWithTitle
+      id='g-c-e-i.mi-almacen.productos'
       title='Productos'
       columnDefs={useColumnsProductos()}
       rowData={items}

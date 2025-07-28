@@ -16,7 +16,11 @@ export function getJsonFromAGGrid(gridOptions: AgGridReact) {
   const rowData: Record<string, unknown>[] = []
 
   const colDefsPrev = gridApi.getAllDisplayedColumns() as Column[]
-  const colDefs = colDefsPrev.filter(col => col.getColDef().type !== 'actions')
+  const colDefs = colDefsPrev.filter(
+    col =>
+      col.getColDef().type !== 'actions' &&
+      col.getColDef().type !== 'numberColumn'
+  )
 
   gridApi.forEachNodeAfterFilterAndSort(node => {
     const data = node.data

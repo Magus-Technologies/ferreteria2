@@ -1,21 +1,28 @@
-import { ColDef } from 'ag-grid-community'
+'use client'
 
-interface DetalleDePreciosProps {
-  formato: string
-  factor: string
-  precio_compra: number
-  precio_publico: number
-  precio_especial: number
-  precio_minimo: number
-  precio_ultimo: number
-  ganancia: number
+import { ColDef } from 'ag-grid-community'
+import {
+  ProductoAlmacenUnidadDerivada,
+  ProductoAlmacenUnidadDerivadaPrecio,
+  UnidadDerivada,
+} from '~/app/_types/almacenes'
+
+export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
+  unidad_derivada: UnidadDerivada
+  precios: ProductoAlmacenUnidadDerivadaPrecio[]
 }
 
-export function useColumnsDetalleDePrecios() {
+interface UseColumnsDetalleDePreciosProps {
+  data: DetalleDePreciosProps[]
+}
+
+export function useColumnsDetalleDePrecios({
+  data,
+}: UseColumnsDetalleDePreciosProps) {
   const columns: ColDef<DetalleDePreciosProps>[] = [
     {
       headerName: 'Formato',
-      field: 'formato',
+      field: 'unidad_derivada.name',
       minWidth: 80,
       filter: true,
       flex: 2,
@@ -29,7 +36,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       headerName: 'P. Compra',
-      field: 'precio_compra',
+      field: 'costo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
       flex: 1,
@@ -37,39 +44,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       headerName: 'P. Público',
-      field: 'precio_publico',
-      minWidth: 80,
-      filter: 'agNumberColumnFilter',
-      flex: 1,
-      type: 'pen',
-    },
-    {
-      headerName: 'P. Especial',
-      field: 'precio_especial',
-      minWidth: 80,
-      filter: 'agNumberColumnFilter',
-      flex: 1,
-      type: 'pen',
-    },
-    {
-      headerName: 'P. Mínimo',
-      field: 'precio_minimo',
-      minWidth: 80,
-      filter: 'agNumberColumnFilter',
-      flex: 1,
-      type: 'pen',
-    },
-    {
-      headerName: 'P. Último',
-      field: 'precio_ultimo',
-      minWidth: 80,
-      filter: 'agNumberColumnFilter',
-      flex: 1,
-      type: 'pen',
-    },
-    {
-      headerName: 'Ganancia',
-      field: 'ganancia',
+      field: 'precio_principal',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
       flex: 1,
@@ -77,5 +52,26 @@ export function useColumnsDetalleDePrecios() {
     },
   ]
 
-  return columns
+  const precioNames = new Set<string>()
+  data.forEach(item => {
+    item.precios.forEach(p => {
+      precioNames.add(p.name)
+    })
+  })
+
+  const dynamicColumns: ColDef<DetalleDePreciosProps>[] = Array.from(
+    precioNames
+  ).map(name => ({
+    headerName: name,
+    minWidth: 80,
+    flex: 1,
+    filter: 'agNumberColumnFilter',
+    type: 'pen',
+    valueGetter: params => {
+      const precio = params.data?.precios.find(p => p.name === name)
+      return precio?.precio ?? null
+    },
+  }))
+
+  return [...columns, ...dynamicColumns]
 }

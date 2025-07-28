@@ -3,7 +3,10 @@ import InfoTooltip from '~/components/others/info-tooltip'
 interface LabelBaseProps {
   label: React.ReactNode
   className?: string
-  classNameLabel?: string
+  classNames?: {
+    label?: string
+    labelParent?: string
+  }
   children: React.ReactNode
   infoTooltip?: React.ReactNode
 }
@@ -12,18 +15,25 @@ export default function LabelBase({
   label,
   children,
   className = '',
-  classNameLabel = '',
+  classNames = {},
   infoTooltip,
 }: LabelBaseProps) {
+  const { label: labelClass = '', labelParent = '' } = classNames
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className='flex items-center gap-2'>
+      <div className={`flex items-center gap-2 ${labelParent}`}>
         <label
-          className={`text-slate-600 font-semibold text-nowrap ${classNameLabel}`}
+          className={`text-slate-600 font-semibold text-nowrap ${labelClass}`}
         >
           {label}
         </label>
-        {infoTooltip && <InfoTooltip title={infoTooltip} />}
+        {infoTooltip && (
+          <InfoTooltip
+            title={
+              <div className='text-balance text-center'>{infoTooltip}</div>
+            }
+          />
+        )}
       </div>
       {children}
     </div>

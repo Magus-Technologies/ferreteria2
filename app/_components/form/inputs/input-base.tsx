@@ -3,6 +3,7 @@
 import { Form, Input } from 'antd'
 import { FormItemProps, InputProps } from 'antd/lib'
 import { focusNext } from '../../../_utils/autofocus'
+import { useMemo } from 'react'
 
 interface InputBaseProps extends InputProps {
   uppercase?: boolean
@@ -69,17 +70,29 @@ export default function InputBase({
     ...propsFormItem
   } = propsForm || {}
 
-  const base = (
-    <Base
-      uppercase={uppercase}
-      nextInEnter={nextInEnter}
-      nextWithPrevent={nextWithPrevent}
-      onInput={onInput}
-      onKeyDown={onKeyDown}
-      autoComplete={autoComplete}
-      variant={variant}
-      {...props}
-    />
+  const base = useMemo(
+    () => (
+      <Base
+        uppercase={uppercase}
+        nextInEnter={nextInEnter}
+        nextWithPrevent={nextWithPrevent}
+        onInput={onInput}
+        onKeyDown={onKeyDown}
+        autoComplete={autoComplete}
+        variant={variant}
+        {...props}
+      />
+    ),
+    [
+      uppercase,
+      nextInEnter,
+      nextWithPrevent,
+      onInput,
+      onKeyDown,
+      autoComplete,
+      variant,
+      props,
+    ]
   )
 
   return propsForm ? (

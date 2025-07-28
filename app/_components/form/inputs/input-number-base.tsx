@@ -1,11 +1,11 @@
 'use client'
 
-import { DatePicker, DatePickerProps, Form } from 'antd'
+import { Form, InputNumber } from 'antd'
+import { FormItemProps, InputNumberProps } from 'antd/lib'
 import { focusNext } from '../../../_utils/autofocus'
-import { useMemo, useState } from 'react'
-import { FormItemProps } from 'antd/lib'
+import { useMemo } from 'react'
 
-export interface DatePickerBaseProps extends DatePickerProps {
+interface InputNumberBaseProps extends InputNumberProps {
   nextInEnter?: boolean
   nextWithPrevent?: boolean
   formWithMessage?: boolean
@@ -13,46 +13,48 @@ export interface DatePickerBaseProps extends DatePickerProps {
 }
 
 function Base({
-  nextInEnter,
-  nextWithPrevent,
+  nextInEnter = true,
+  nextWithPrevent = true,
+  controls = false,
   onKeyDown,
-  onOpenChange,
   className = '!w-full',
-  format = 'DD/MM/YYYY',
+  autoComplete = 'off',
+  variant = 'filled',
+  type = 'number',
   ...props
-}: DatePickerBaseProps) {
-  const [open, setOpen] = useState(false)
+}: InputNumberBaseProps) {
   return (
-    <DatePicker
+    <InputNumber
       {...props}
-      format={format}
+      type={type}
+      controls={controls}
+      variant={variant}
       className={className}
-      onOpenChange={open => {
-        setOpen(open)
-        onOpenChange?.(open)
-      }}
+      autoComplete={autoComplete}
       onKeyDown={e => {
         if (e.key === 'Enter' && nextInEnter) {
-          if (!open) return
           if (nextWithPrevent) e.preventDefault()
           focusNext()
         }
-        onKeyDown?.(e, () => {})
+        onKeyDown?.(e)
       }}
     />
   )
 }
 
-export default function DatePickerBase({
+export default function InputNumberBase({
   nextInEnter = true,
   nextWithPrevent = true,
+  controls = false,
   onKeyDown,
-  onOpenChange,
+  autoComplete = 'off',
+  variant = 'filled',
   formWithMessage = true,
-  propsForm,
   className = '!w-full',
+  type = 'number',
+  propsForm,
   ...props
-}: DatePickerBaseProps) {
+}: InputNumberBaseProps) {
   const {
     hasFeedback = true,
     className: classNameFormItem = 'w-full',
@@ -64,13 +66,26 @@ export default function DatePickerBase({
       <Base
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
+        controls={controls}
         onKeyDown={onKeyDown}
+        autoComplete={autoComplete}
+        variant={variant}
         className={className}
-        onOpenChange={onOpenChange}
+        type={type}
         {...props}
       />
     ),
-    [nextInEnter, nextWithPrevent, onKeyDown, onOpenChange, className, props]
+    [
+      nextInEnter,
+      nextWithPrevent,
+      controls,
+      onKeyDown,
+      autoComplete,
+      variant,
+      className,
+      type,
+      props,
+    ]
   )
 
   return propsForm ? (

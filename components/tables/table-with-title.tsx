@@ -10,37 +10,67 @@ import { Popover, Tooltip } from 'antd'
 import { FaFilePdf } from 'react-icons/fa6'
 import { PiFilePdfFill } from 'react-icons/pi'
 import { HiMiniViewColumns } from 'react-icons/hi2'
-import SelectColumns from './select-columns'
+import SelectColumns, { setVisibilityColumns } from './select-columns'
+import { useLocalStorage } from '~/hooks/use-local-storage'
 
-interface TableWithTitleProps<T> extends TableBaseProps<T> {
+export interface TableWithTitleProps<T> extends TableBaseProps<T> {
+  id: string
   title: string
+  extraTitle?: React.ReactNode
+  className?: string
+  classNames?: {
+    titleParent?: string
+  }
   exportExcel?: boolean
   exportPdf?: boolean
+  selectColumns?: boolean
 }
 
 export default function TableWithTitle<T>({
+  id,
   title,
+  extraTitle,
   exportExcel = true,
   exportPdf = true,
+  selectColumns = true,
+  classNames = {},
+  className = '',
   ...props
 }: TableWithTitleProps<T>) {
   const tableRef = useRef<AgGridReact<T>>(null)
+  const [defaultColumns, setDefaultColumns] = useLocalStorage<string[]>(
+    `table-columns-${id}`,
+    []
+  )
+
+  const { titleParent = '' } = classNames
 
   return (
-    <div className='flex flex-col gap-2 size-full'>
+    <div className={`flex flex-col gap-2 size-full ${className}`}>
       <div className='flex items-center justify-between gap-2'>
-        <div className='font-semibold text-slate-700 text-xl'>{title}</div>
+        <div className={`font-semibold text-slate-700 text-xl ${titleParent}`}>
+          {title}
+          {extraTitle}
+        </div>
         <div className='flex gap-2 items-center'>
-          <Tooltip title='Ver Columnas'>
-            <Popover
-              content={<SelectColumns gridRef={tableRef} />}
-              trigger='click'
-            >
-              <ButtonBase color='warning' size='md' className='!px-3'>
-                <HiMiniViewColumns />
-              </ButtonBase>
-            </Popover>
-          </Tooltip>
+          {selectColumns && (
+            <Tooltip title='Ver Columnas'>
+              <Popover
+                content={
+                  <SelectColumns
+                    defaultColumns={defaultColumns}
+                    setDefaultColumns={setDefaultColumns}
+                    gridRef={tableRef}
+                  />
+                }
+                trigger='click'
+              >
+                <ButtonBase color='warning' size='md' className='!px-3'>
+                  <HiMiniViewColumns />
+                </ButtonBase>
+              </Popover>
+            </Tooltip>
+          )}
           {exportExcel && (
             <Tooltip title='Exportar a Excel'>
               <ButtonBase
@@ -92,7 +122,17 @@ export default function TableWithTitle<T>({
           )}
         </div>
       </div>
-      <TableBase ref={tableRef} {...props} />
+      <TableBase
+        ref={tableRef}
+        {...props}
+        onGridReady={params => {
+          if (defaultColumns.length)
+            setVisibilityColumns({
+              gridApi: params.api,
+              checkedList: defaultColumns,
+            })
+        }}
+      />
     </div>
   )
 }

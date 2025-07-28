@@ -67,6 +67,7 @@ const items = [
 export default function TableUltimasComprasIngresadas() {
   return (
     <TableWithTitle
+      id='g-c-e-i.mi-almacen.ultimas-compras-ingresadas'
       title='Últimas 6 compras ingresadas'
       columnDefs={useColumnsUltimasComprasIngresadas()}
       rowData={items}

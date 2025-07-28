@@ -18,7 +18,7 @@ export default function CardDashboard({
   decimal = 2,
 }: CardDashboardProps) {
   return (
-    <div className='flex flex-col justify-center gap-1 bg-white px-6 py-3 rounded-2xl shadow-lg h-full'>
+    <div className='flex flex-col justify-center gap-1 bg-white px-6 py-3 rounded-2xl shadow-lg h-full min-w-[300px]'>
       <div className='flex items-center justify-between gap-4'>
         <div className='flex items-center gap-4 text-slate-500'>
           {icon}

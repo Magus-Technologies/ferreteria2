@@ -1,37 +1,82 @@
 'use client'
 
 import { AgGridReact, AgGridReactProps } from 'ag-grid-react'
-import { columnTypes, themeTable } from './table-theme'
+import { themeTable } from './table-theme'
 import { AG_GRID_LOCALE_ES } from '~/lib/ag-grid-es'
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'
+import {
+  AllCommunityModule,
+  ButtonStyleParams,
+  CheckboxStyleParams,
+  CoreParams,
+  InputStyleParams,
+  ModuleRegistry,
+  TabStyleParams,
+} from 'ag-grid-community'
 import { RefObject } from 'react'
+import useColumnTypes from './hooks/use-column-types'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
 export interface TableBaseProps<T>
   extends Omit<
     AgGridReactProps<T>,
-    'theme' | 'columnTypes' | 'localeText' | 'enableFilterHandlers'
+    | 'theme'
+    | 'columnTypes'
+    | 'localeText'
+    | 'enableFilterHandlers'
+    | 'rowSelection'
   > {
   ref?: RefObject<AgGridReact<T> | null>
-  headerBackgroundColor?: string
+  paramsOfThemeTable?: Partial<
+    CoreParams &
+      ButtonStyleParams &
+      CheckboxStyleParams &
+      TabStyleParams &
+      InputStyleParams
+  >
+  rowSelection?: boolean
 }
 
 export default function TableBase<T>({
   ref,
-  headerBackgroundColor,
+  paramsOfThemeTable,
   className = '',
+  rowSelection = true,
+  columnDefs,
   ...props
 }: TableBaseProps<T>) {
+  const { columnTypes } = useColumnTypes()
+
   return (
-    <AgGridReact<T>
-      {...props}
-      ref={ref}
-      theme={themeTable.withParams({ headerBackgroundColor })}
-      columnTypes={columnTypes}
-      localeText={AG_GRID_LOCALE_ES}
-      enableFilterHandlers={true}
-      className={`shadow-lg rounded-xl overflow-hidden ${className}`}
-    />
+    <>
+      <style>
+        {`
+      .ag-row-selected .ag-cell {
+        color: white !important;
+        font-weight: 700;
+      }
+    `}
+      </style>
+
+      <AgGridReact<T>
+        {...props}
+        ref={ref}
+        theme={themeTable.withParams(paramsOfThemeTable ?? {})}
+        columnTypes={columnTypes}
+        localeText={AG_GRID_LOCALE_ES}
+        enableFilterHandlers={true}
+        className={`shadow-lg rounded-xl overflow-hidden ${className}`}
+        rowSelection={rowSelection ? 'single' : undefined}
+        columnDefs={[
+          {
+            headerName: '#',
+            width: 50,
+            valueGetter: params => (params.node?.rowIndex ?? 0) + 1,
+            type: 'numberColumn',
+          },
+          ...(columnDefs ?? []),
+        ]}
+      />
+    </>
   )
 }

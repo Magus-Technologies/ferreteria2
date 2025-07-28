@@ -77,6 +77,7 @@ const items = [
 export default function TableProductosPorVencer() {
   return (
     <TableWithTitle
+      id='g-c-e-i.dashboard.productos-por-vencer'
       title='Productos por vencer'
       columnDefs={useColumnsProductosPorVencer()}
       rowData={items}

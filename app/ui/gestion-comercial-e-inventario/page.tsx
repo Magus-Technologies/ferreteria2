@@ -38,7 +38,7 @@ export default function GestionComercialEInventario() {
           <SelectAlmacen />
         </div>
       </TituloModulos>
-      <div className='grid grid-cols-4 grid-rows-5 gap-x-12 gap-y-7 size-full'>
+      <div className='grid grid-cols-[repeat(4,minmax(min-content,1fr))] grid-rows-5 gap-x-12 gap-y-7 size-full'>
         <div className='col-start-1 col-end-2 row-start-1 row-end-2'>
           <CardDashboard
             title='Costo Total de Inventario'

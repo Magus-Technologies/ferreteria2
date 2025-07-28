@@ -77,6 +77,7 @@ const items = [
 export default function TableProductosUrgenteStock() {
   return (
     <TableWithTitle
+      id='g-c-e-i.dashboard.productos-urgente-stock'
       title='Productos Urgente por Stockear'
       columnDefs={useColumnsProductosUrgenteStock()}
       rowData={items}

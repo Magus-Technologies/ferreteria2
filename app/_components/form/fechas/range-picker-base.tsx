@@ -2,9 +2,10 @@
 
 import { DatePicker, Form } from 'antd'
 import { focusNext } from '../../../_utils/autofocus'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { FormItemProps } from 'antd/lib'
 import { RangePickerProps } from 'antd/es/date-picker'
+import { presetsRangePicker } from '~/lib/presets-range-picker'
 const { RangePicker } = DatePicker
 
 export interface RangePickerBaseProps extends RangePickerProps {
@@ -19,12 +20,16 @@ function Base({
   nextWithPrevent,
   onKeyDown,
   onOpenChange,
+  format = 'DD/MM/YYYY',
+  presets = presetsRangePicker,
   ...props
 }: RangePickerBaseProps) {
   const [open, setOpen] = useState(false)
   return (
     <RangePicker
       {...props}
+      format={format}
+      presets={presets}
       onOpenChange={open => {
         setOpen(open)
         onOpenChange?.(open)
@@ -56,14 +61,17 @@ export default function RangePickerBase({
     ...propsFormItem
   } = propsForm || {}
 
-  const base = (
-    <Base
-      nextInEnter={nextInEnter}
-      nextWithPrevent={nextWithPrevent}
-      onKeyDown={onKeyDown}
-      onOpenChange={onOpenChange}
-      {...props}
-    />
+  const base = useMemo(
+    () => (
+      <Base
+        nextInEnter={nextInEnter}
+        nextWithPrevent={nextWithPrevent}
+        onKeyDown={onKeyDown}
+        onOpenChange={onOpenChange}
+        {...props}
+      />
+    ),
+    [nextInEnter, nextWithPrevent, onKeyDown, onOpenChange, props]
   )
 
   return propsForm ? (

@@ -6,12 +6,14 @@ interface ColumnActionProps {
   id: string
   permiso: string
   children?: React.ReactNode
+  childrenMiddle?: React.ReactNode
 }
 
 export default function ColumnAction({
   id,
   permiso,
   children,
+  childrenMiddle,
 }: ColumnActionProps) {
   const can = usePermission()
 
@@ -26,6 +28,7 @@ export default function ColumnAction({
           />
         </Tooltip>
       )}
+      {childrenMiddle}
       {permiso && can(`${permiso}.delete`) && (
         <Tooltip title='Eliminar'>
           <MdDelete

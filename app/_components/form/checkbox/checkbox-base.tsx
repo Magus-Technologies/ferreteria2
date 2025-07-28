@@ -3,6 +3,7 @@
 import { Checkbox, CheckboxProps, Form } from 'antd'
 import { focusNext } from '../../../_utils/autofocus'
 import { FormItemProps } from 'antd/lib'
+import { useMemo } from 'react'
 
 export interface CheckboxBaseProps extends CheckboxProps {
   nextInEnter?: boolean
@@ -46,13 +47,16 @@ export default function CheckboxBase({
     ...propsFormItem
   } = propsForm || {}
 
-  const base = (
-    <Base
-      nextInEnter={nextInEnter}
-      nextWithPrevent={nextWithPrevent}
-      onKeyDown={onKeyDown}
-      {...props}
-    />
+  const base = useMemo(
+    () => (
+      <Base
+        nextInEnter={nextInEnter}
+        nextWithPrevent={nextWithPrevent}
+        onKeyDown={onKeyDown}
+        {...props}
+      />
+    ),
+    [nextInEnter, nextWithPrevent, onKeyDown, props]
   )
 
   return propsForm ? (
