@@ -30,7 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const { AUTH_TRUST_HOST, NODE_ENV, AUTH_URL } = process.env
         console.log(
-          '🚀 ~ file: auth.ts:32 ~ {AUTH_TRUST_HOST, NODE_ENV, AUTH_URL}:',
+          '🚀 ~ file: auth.ts :32 ~ {AUTH_TRUST_HOST, NODE_ENV, AUTH_URL}:',
           { AUTH_TRUST_HOST, NODE_ENV, AUTH_URL }
         )
 
