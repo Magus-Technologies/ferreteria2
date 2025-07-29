@@ -25,7 +25,6 @@ export default function Home() {
   })
 
   const { data: session } = useSession()
-  console.log('🚀 ~ file: page.tsx:28 ~ session:', session)
   if (session) redirect('/ui')
 
   return (
