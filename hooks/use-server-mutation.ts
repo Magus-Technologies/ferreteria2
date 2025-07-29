@@ -3,18 +3,23 @@ import {
   UseMutationOptions,
   useQueryClient,
 } from '@tanstack/react-query'
+import { App } from 'antd'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { ServerResult } from '~/auth/middleware-server-actions'
 
-type ServerAction<TParams, TResult> = (params: TParams) => Promise<TResult>
+export type ServerAction<TParams, TResult> = (
+  params: TParams
+) => Promise<ServerResult<TResult>>
 
 export interface UseMutationActionProps<TParams, TResult> {
   action: ServerAction<TParams, TResult>
-  onSuccess?: (res: TResult) => void
+  onSuccess?: (res: ServerResult<TResult>) => void
   queryKey?: QueryKeys[]
   propsMutation?: Omit<
-    UseMutationOptions<TResult, unknown, TParams>,
+    UseMutationOptions<ServerResult<TResult>, unknown, TParams>,
     'mutationFn' | 'onSuccess'
   >
+  msgSuccess?: string
 }
 
 export function useServerMutation<TParams, TResult>({
@@ -22,13 +27,29 @@ export function useServerMutation<TParams, TResult>({
   queryKey,
   onSuccess,
   propsMutation,
+  msgSuccess,
 }: UseMutationActionProps<TParams, TResult>) {
   const queryClient = useQueryClient()
+  const { notification } = App.useApp()
 
   const mutation = useMutation({
     mutationFn: action,
     onSuccess: res => {
+      if (res?.error) {
+        notification.error({
+          placement: 'bottomRight',
+          message: 'Error',
+          description: res.error.message,
+        })
+        return
+      }
       if (queryKey) queryClient.invalidateQueries({ queryKey })
+      if (msgSuccess)
+        notification.success({
+          placement: 'bottomRight',
+          message: 'Operación exitosa',
+          description: msgSuccess,
+        })
       onSuccess?.(res)
     },
     ...propsMutation,
@@ -37,7 +58,7 @@ export function useServerMutation<TParams, TResult>({
   return {
     execute: mutation.mutateAsync,
     loading: mutation.isPending,
-    response: mutation.data,
+    response: mutation.data?.data,
     error: mutation.error,
   }
 }

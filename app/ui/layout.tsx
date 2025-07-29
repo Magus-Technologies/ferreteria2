@@ -1,8 +1,14 @@
-export default function ProtectedLayout({
+import { redirect } from 'next/navigation'
+import { auth } from '~/auth/auth'
+
+export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await auth()
+  if (!session) redirect('/')
+
   return (
     <div className='relative h-dvh w-dvw overflow-y-hidden overflow-x-auto'>
       <div className='relative size-full flex flex-col items-center justify-center min-w-fit'>

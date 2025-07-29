@@ -13,6 +13,10 @@ jobs:
   build:
     runs-on: self-hosted
 
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+
     strategy:
       matrix:
         node-version: [20.x]

@@ -23,7 +23,9 @@ function ButtonNavBase({
   return (
     <div
       className={`cursor-pointer transition-all flex items-center group py-1 ${className} ${
-        pathname === path ? `bg-white px-6 rounded-full ${colorActive}` : ''
+        pathname === path
+          ? `bg-white px-6 rounded-full ${colorActive}`
+          : 'text-white'
       }`}
     >
       {withIcon && (

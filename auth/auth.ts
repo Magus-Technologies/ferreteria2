@@ -1,10 +1,12 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import argon2 from 'argon2'
 import { schemaLogin } from './schema'
 import { getUserFromDb } from './utils/getUserFromDb'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { prisma } from '~/db/db'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
       credentials: {
@@ -21,16 +23,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       authorize: async credentials => {
         const result = schemaLogin.safeParse(credentials)
-        if (!result.success) throw new Error('Invalid credentials.')
+        if (!result.success) return null
         const { email, password } = result.data
-        const pwHash = await argon2.hash(password)
 
-        const user = await getUserFromDb(email, pwHash)
+        const user = await getUserFromDb(email, password)
 
-        if (!user) throw new Error('Invalid credentials.')
+        if (!user) return null
 
         return user
       },
     }),
   ],
+  session: {
+    strategy: 'jwt',
+  },
 })

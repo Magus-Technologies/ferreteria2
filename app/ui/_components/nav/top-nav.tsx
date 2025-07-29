@@ -1,6 +1,9 @@
+'use client'
+
 import { MenuProps } from 'antd/lib'
 import { FaSignOutAlt } from 'react-icons/fa'
 import DropdownBase from '~/components/dropdown/dropdown-base'
+import { signOut } from 'next-auth/react'
 
 const items: MenuProps['items'] = [
   {
@@ -44,6 +47,7 @@ const items: MenuProps['items'] = [
     label: 'Cerrar Sesión',
     className: '!text-red-500',
     extra: <FaSignOutAlt className='text-red-500' />,
+    onClick: () => signOut(),
   },
 ]
 

@@ -4,7 +4,8 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { Marca } from '../_types/producto'
 
 async function getMarcasWA() {
-  const item = await new Promise<Marca[]>(resolve =>
+  return { error: { message: 'Error al obtener marcas' } }
+  const items = await new Promise<Marca[]>(resolve =>
     setTimeout(() => {
       const random = Math.floor(Math.random() * 10) + 1
       resolve([
@@ -19,14 +20,23 @@ async function getMarcasWA() {
       ])
     }, 3000)
   )
-  return item
+  return { data: items }
 }
 export const getMarcas = withAuth(getMarcasWA)
 
 async function createMarcaWA({ name }: { name: string }) {
-  const item = await new Promise<string>(resolve =>
-    setTimeout(() => resolve(name), 3000)
-  )
-  return item
+  try {
+    const item = await new Promise<string>(resolve =>
+      setTimeout(() => resolve(name), 3000)
+    )
+    return { data: item }
+  } catch (error) {
+    return {
+      error: {
+        message: JSON.stringify(error, null, 2),
+        data: error,
+      },
+    }
+  }
 }
 export const createMarca = withAuth(createMarcaWA)

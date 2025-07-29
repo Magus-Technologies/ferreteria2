@@ -17,6 +17,7 @@ export default function ButtonCreateMarca() {
         propsUseServerMutation={{
           action: createMarca,
           queryKey: [QueryKeys.MARCAS],
+          msgSuccess: 'Marca creada exitosamente',
         }}
       />
       <Tooltip title='Crear Marca'>

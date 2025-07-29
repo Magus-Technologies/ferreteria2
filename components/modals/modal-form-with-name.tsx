@@ -10,24 +10,24 @@ import {
   useServerMutation,
 } from '~/hooks/use-server-mutation'
 
-type ModalFormWithNameProps<T extends { name: string }, Res> = {
-  propsUseServerMutation: UseMutationActionProps<T, Res>
+type ModalFormWithNameProps<T extends { name: string }, TRes> = {
+  propsUseServerMutation: UseMutationActionProps<T, TRes>
   title: string
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
   children?: React.ReactNode
 }
 
-export default function FormWithName<T extends { name: string }, Res>({
+export default function FormWithName<T extends { name: string }, TRes>({
   propsUseServerMutation,
   title,
   open,
   setOpen,
   children,
-}: ModalFormWithNameProps<T, Res>) {
+}: ModalFormWithNameProps<T, TRes>) {
   const [form] = Form.useForm<T>()
   const { onSuccess, ...restPropsMutation } = propsUseServerMutation
-  const { execute, loading } = useServerMutation<T, Res>({
+  const { execute, loading } = useServerMutation<T, TRes>({
     ...restPropsMutation,
     onSuccess: res => {
       setOpen(false)

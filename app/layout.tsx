@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
-import { ConfigProvider } from 'antd'
+import { App, ConfigProvider } from 'antd'
 import esES from 'antd/locale/es_ES'
 import './globals.css'
 import { Ubuntu } from 'next/font/google'
 import Script from 'next/script'
 import { Providers } from './providers'
+import { SessionProvider } from 'next-auth/react'
 
 const ubuntu = Ubuntu({ weight: ['400', '500', '700'], subsets: ['latin'] })
 
@@ -31,18 +32,22 @@ export default function RootLayout({
         </head>
       )}
       <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
-        <AntdRegistry>
-          <ConfigProvider
-            theme={{
-              token: {
-                fontSize: 13,
-              },
-            }}
-            locale={esES}
-          >
-            <Providers>{children}</Providers>
-          </ConfigProvider>
-        </AntdRegistry>
+        <SessionProvider>
+          <AntdRegistry>
+            <ConfigProvider
+              theme={{
+                token: {
+                  fontSize: 13,
+                },
+              }}
+              locale={esES}
+            >
+              <App>
+                <Providers>{children}</Providers>
+              </App>
+            </ConfigProvider>
+          </AntdRegistry>
+        </SessionProvider>
       </body>
     </html>
   )

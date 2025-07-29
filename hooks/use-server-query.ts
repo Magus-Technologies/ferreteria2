@@ -1,13 +1,20 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-
-type ServerAction<TParams, TResult> = (params: TParams) => Promise<TResult>
+import { ServerAction } from './use-server-mutation'
+import { ServerResult } from '~/auth/middleware-server-actions'
+import { useEffect } from 'react'
+import { App } from 'antd'
 
 // Overload sin `select`
 export function useServerQuery<TParams, TResult>(props: {
   action: ServerAction<TParams, TResult>
   propsQuery?: Omit<
-    UseQueryOptions<TResult, unknown, TResult, QueryKeys[]>,
+    UseQueryOptions<
+      ServerResult<TResult>,
+      unknown,
+      ServerResult<TResult>,
+      QueryKeys[]
+    >,
     'queryFn'
   >
   params: TParams
@@ -22,7 +29,12 @@ export function useServerQuery<TParams, TResult>(props: {
 export function useServerQuery<TParams, TResult, TSelect>(props: {
   action: ServerAction<TParams, TResult>
   propsQuery?: Omit<
-    UseQueryOptions<TResult, unknown, TSelect, QueryKeys[]>,
+    UseQueryOptions<
+      ServerResult<TResult>,
+      unknown,
+      ServerResult<TSelect>,
+      QueryKeys[]
+    >,
     'queryFn'
   >
   params: TParams
@@ -38,10 +50,16 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
   action: ServerAction<TParams, TResult>
   params: TParams
   propsQuery?: Omit<
-    UseQueryOptions<TResult, unknown, TSelect, QueryKeys[]>,
+    UseQueryOptions<
+      ServerResult<TResult>,
+      unknown,
+      ServerResult<TSelect>,
+      QueryKeys[]
+    >,
     'queryFn'
   >
 }) {
+  const { notification } = App.useApp()
   const { action, params, propsQuery } = props
 
   const {
@@ -59,10 +77,20 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
     ...restPropsQuery,
   })
 
+  useEffect(() => {
+    if (query.data?.error) {
+      notification.error({
+        placement: 'bottomRight',
+        message: 'Error',
+        description: query.data.error.message,
+      })
+    }
+  }, [notification, query.data])
+
   return {
     refetch: query.refetch,
     loading: query.isPending,
-    response: query.data,
+    response: query.data?.data,
     error: query.error,
   }
 }

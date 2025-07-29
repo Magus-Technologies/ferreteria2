@@ -6,6 +6,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import { FaCalculator, FaSignOutAlt, FaWarehouse } from 'react-icons/fa'
 import { IoDocumentText } from 'react-icons/io5'
 import { MdOutlineMenuOpen } from 'react-icons/md'
+import { signOut } from 'next-auth/react'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 
 export default function DropdownUser() {
@@ -60,6 +61,7 @@ export default function DropdownUser() {
       label: 'Cerrar Sesión',
       className: '!text-red-500',
       extra: <FaSignOutAlt className='text-red-500' />,
+      onClick: () => signOut(),
     },
   ]
 
