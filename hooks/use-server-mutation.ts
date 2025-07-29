@@ -36,6 +36,7 @@ export function useServerMutation<TParams, TResult>({
     mutationFn: action,
     onSuccess: res => {
       if (res?.error) {
+        console.warn('🚨 Error:', res.error)
         notification.error({
           placement: 'bottomRight',
           message: 'Error',

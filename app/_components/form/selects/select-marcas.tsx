@@ -25,7 +25,6 @@ export default function SelectMarcas({
     },
     params: undefined,
   })
-  console.log('🚀 ~ file: select-marcas.tsx:22 ~ response:', response)
   return (
     <SelectBase
       {...props}

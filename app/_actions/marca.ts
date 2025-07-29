@@ -4,7 +4,6 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { Marca } from '../_types/producto'
 
 async function getMarcasWA() {
-  return { error: { message: 'Error al obtener marcas' } }
   const items = await new Promise<Marca[]>(resolve =>
     setTimeout(() => {
       const random = Math.floor(Math.random() * 10) + 1
