@@ -31,4 +31,4 @@ jobs:
           cache: 'npm'
       - run: npm i # Cambiar a ci en producción
       - run: npm run build --if-present
-      - run: pm2 start ecosystem.config.js --only ferreteria --update-env
+      - run: pm2 start ecosystem.config.js --only ferreteria || pm2 restart ferreteria --update-env --env-clean

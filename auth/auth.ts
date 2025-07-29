@@ -5,10 +5,6 @@ import { getUserFromDb } from './utils/getUserFromDb'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '~/db/db'
 
-console.log(
-  '🚀 ~ file: auth.ts:10 ~ process.env.AUTH_TRUST_HOST:',
-  process.env.AUTH_TRUST_HOST
-)
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -32,9 +28,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await getUserFromDb(email, password)
 
+        const { AUTH_TRUST_HOST, NODE_ENV, AUTH_URL } = process.env
         console.log(
-          '🚀 ~ file: auth.ts:37 ~ process.env.AUTH_TRUST_HOST:',
-          process.env.AUTH_TRUST_HOST
+          '🚀 ~ file: auth.ts:32 ~ {AUTH_TRUST_HOST, NODE_ENV, AUTH_URL}:',
+          { AUTH_TRUST_HOST, NODE_ENV, AUTH_URL }
         )
 
         if (!user) return null
