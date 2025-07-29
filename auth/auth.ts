@@ -32,6 +32,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await getUserFromDb(email, password)
 
+        console.log(
+          '🚀 ~ file: auth.ts:37 ~ process.env.AUTH_TRUST_HOST:',
+          process.env.AUTH_TRUST_HOST
+        )
+
         if (!user) return null
 
         return user
