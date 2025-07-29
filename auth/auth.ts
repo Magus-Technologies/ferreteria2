@@ -34,7 +34,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const user = await getUserFromDb(email, password)
         console.log('🚀 ~ file: auth.ts:32 ~ user:', user)
         console.log(
-          '🚀 ~ file: auth.ts:33 ~ process.env.DATABASE_URL:',
+          '🚀 ~ file: auth.ts:33 ~ process.env.DATABASE_URL: ',
           process.env.DATABASE_URL
         )
 
