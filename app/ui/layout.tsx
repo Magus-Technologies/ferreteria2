@@ -7,7 +7,6 @@ export default async function ProtectedLayout({
   children: React.ReactNode
 }) {
   const session = await auth()
-  console.log('🚀 ~ file: layout.tsx:10 ~ session:', session)
   if (!session) redirect('/')
 
   return (

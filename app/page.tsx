@@ -21,14 +21,10 @@ export default function Home() {
 
   const { execute: login, loading } = useServerMutation({
     action: loginServer,
-    onSuccess: res => {
-      console.log('🚀 ~ file: page.tsx:25 ~ res:', res)
-      redirect('/ui')
-    },
+    onSuccess: () => redirect('/ui'),
   })
 
   const { data: session } = useSession()
-  console.log('🚀 ~ file: page.tsx:28 ~ session:', session)
   if (session) redirect('/ui')
 
   return (
