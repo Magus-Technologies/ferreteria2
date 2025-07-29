@@ -17,7 +17,6 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
-      AUTH_URL: ${{ secrets.AUTH_URL }}
 
     strategy:
       matrix:
