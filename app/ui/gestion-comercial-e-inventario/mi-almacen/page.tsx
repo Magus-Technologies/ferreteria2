@@ -6,14 +6,13 @@ import TableDetalleDePrecios from './_components/tables/table-detalle-de-precios
 import ButtonBase from '~/components/buttons/button-base'
 import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import CardMiniInfo from './_components/cards/card-mini-info'
-import usePermission from '~/hooks/use-permission'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateProducto from './_components/buttons/button-create-producto'
+import can from '~/utils/server-validate-permission'
 
-export default function MiAlmacen() {
-  const can = usePermission()
-  if (!can(permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX))
+export default async function MiAlmacen() {
+  if (!(await can(permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX)))
     return <NoAutorizado />
 
   return (
@@ -32,13 +31,13 @@ export default function MiAlmacen() {
           </div>
         </div>
         <div className='flex flex-col items-center justify-around gap-8'>
-          {can(permissions.PRODUCTO_CREATE) && <ButtonCreateProducto />}
-          {can(permissions.PRODUCTO_INGRESO_CREATE) && (
+          {(await can(permissions.PRODUCTO_CREATE)) && <ButtonCreateProducto />}
+          {(await can(permissions.PRODUCTO_INGRESO_CREATE)) && (
             <ButtonBase className='flex items-center justify-center gap-2 !rounded-md w-full h-full'>
               <GiReceiveMoney className='text-orange-600' size={15} /> Ingresos
             </ButtonBase>
           )}
-          {can(permissions.PRODUCTO_SALIDA_CREATE) && (
+          {(await can(permissions.PRODUCTO_SALIDA_CREATE)) && (
             <ButtonBase className='flex items-center justify-center gap-2 !rounded-md w-full h-full'>
               <GiPayMoney className='text-rose-600' size={15} /> Salidas
             </ButtonBase>

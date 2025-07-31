@@ -1,41 +1,33 @@
 'use server'
 
 import { withAuth } from '~/auth/middleware-server-actions'
-import { Marca } from '../_types/producto'
+import { prisma } from '~/db/db'
+import { errorFormated } from '~/utils/error-formated'
+import { permissions } from '~/lib/permissions'
+import can from '~/utils/server-validate-permission'
 
 async function getMarcasWA() {
-  const items = await new Promise<Marca[]>(resolve =>
-    setTimeout(() => {
-      const random = Math.floor(Math.random() * 10) + 1
-      resolve([
-        {
-          id: random,
-          name: 'Marca ' + random,
-        },
-        {
-          id: random + 1,
-          name: 'Marca ' + (random + 1),
-        },
-      ])
-    }, 3000)
-  )
-  return { data: items }
+  try {
+    const puede = await can(permissions.MARCA_LISTADO)
+    if (!puede) throw new Error('No tienes permiso para ver la lista de marcas')
+
+    const item = await prisma.marca.findMany()
+    return { data: item }
+  } catch (error) {
+    return errorFormated(error)
+  }
 }
 export const getMarcas = withAuth(getMarcasWA)
 
 async function createMarcaWA({ name }: { name: string }) {
   try {
-    const item = await new Promise<string>(resolve =>
-      setTimeout(() => resolve(name), 3000)
-    )
+    const puede = await can(permissions.MARCA_CREATE)
+    if (!puede) throw new Error('No tienes permiso para crear marcas')
+
+    const item = await prisma.marca.create({ data: { name } })
     return { data: item }
   } catch (error) {
-    return {
-      error: {
-        message: JSON.stringify(error, null, 2),
-        data: error,
-      },
-    }
+    return errorFormated(error)
   }
 }
 export const createMarca = withAuth(createMarcaWA)

@@ -9,17 +9,20 @@ import SelectCategorias from '~/app/_components/form/selects/select-categorias'
 import SelectMarcas from '~/app/_components/form/selects/select-marcas'
 import SelectUbicaciones from '~/app/_components/form/selects/select-ubicaciones'
 import SelectUnidadDeMedida from '~/app/_components/form/selects/select-unidad-de-medida'
-import { Producto } from '~/app/_types/producto'
 import LabelBase from '~/components/form/label-base'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import { toUTCString } from '~/utils/fechas'
-import { Dayjs } from 'dayjs'
 import FormSectionLote from '../form/form-section-lote'
-import { Lote, ProductoLote } from '~/app/_types/lote'
 import { DetalleDePreciosProps } from '../tables/columns-detalle-de-precios'
 import FormSectionUnidadesDerivadas from '../form/form-section-unidades-derivadas'
 import ButtonCreateMarca from '../buttons/button-create-marca'
+import type {
+  Producto,
+  ProductoAlmacen,
+  ProductoAlmacenUnidadDerivadaCompra,
+} from '@prisma/client'
+import type { Dayjs } from 'dayjs'
 
 interface ModalCreateProductoProps {
   open: boolean
@@ -30,14 +33,13 @@ export type FormCreateProductoProps = Omit<
   Producto,
   'id' | 'created_at' | 'updated_at'
 > & {
-  lote: Partial<
-    Pick<Lote, 'name'> & {
-      vencimiento: Dayjs
-      productos: Pick<ProductoLote, 'stock_entero' | 'stock_fraccion'>
-    }
-  >
-} & {
+  producto_almacen: Pick<ProductoAlmacen, 'ubicacion_id'>
+  compra: Pick<ProductoAlmacenUnidadDerivadaCompra, 'lote'> & {
+    vencimiento?: Dayjs
+  }
   unidades_derivadas: DetalleDePreciosProps[]
+  stock_entero?: number
+  stock_fraccion?: number
 }
 
 export default function ModalCreateProducto({
@@ -65,10 +67,12 @@ export default function ModalCreateProducto({
         onFinish: values => {
           const data = {
             ...values,
-            lote: {
-              ...values.lote,
-              vencimiento: values.lote.vencimiento
-                ? toUTCString({ date: values.lote.vencimiento })
+            compra: {
+              ...values.compra,
+              vencimiento: values.compra.vencimiento
+                ? toUTCString({
+                    date: values.compra.vencimiento,
+                  })
                 : null,
             },
           }
@@ -179,7 +183,7 @@ export default function ModalCreateProducto({
           <LabelBase label='Ubicación:' classNames={{ labelParent: 'mb-6' }}>
             <SelectUbicaciones
               propsForm={{
-                name: 'ubicacion_id',
+                name: ['producto_almacen', 'ubicacion_id'],
                 rules: [
                   {
                     required: true,

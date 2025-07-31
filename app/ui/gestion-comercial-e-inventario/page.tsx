@@ -9,7 +9,6 @@ import {
 import { MdSpaceDashboard } from 'react-icons/md'
 import CardDashboard from '~/app/_components/cards/card-dashboard'
 import NoAutorizado from '~/components/others/no-autorizado'
-import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import DemandaPorCategoriaDeProductos from './_components/charts/demanda-por-categoria-de-productos'
 import TableProductosPorVencer from './_components/tables/table-productos-por-vencer'
@@ -21,10 +20,10 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import SelectAlmacen from '../../_components/form/selects/select-almacen'
 import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import YearPicker from '~/app/_components/form/fechas/year-picker'
+import can from '~/utils/server-validate-permission'
 
-export default function GestionComercialEInventario() {
-  const can = usePermission()
-  if (!can(permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX))
+export default async function GestionComercialEInventario() {
+  if (!(await can(permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX)))
     return <NoAutorizado />
 
   return (

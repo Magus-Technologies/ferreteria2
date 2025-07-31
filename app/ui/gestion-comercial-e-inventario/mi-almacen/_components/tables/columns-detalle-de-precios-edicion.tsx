@@ -7,8 +7,8 @@ import { MdDelete } from 'react-icons/md'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectUnidadDerivada from '~/app/_components/form/selects/select-unidad-derivada'
-import { ProductoAlmacenUnidadDerivadaPrecio } from '~/app/_types/almacenes'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
+import { Prisma, ProductoAlmacenUnidadDerivadaPrecio } from '@prisma/client'
 
 export function useColumnsDetalleDePreciosEdicion({
   form,
@@ -25,18 +25,21 @@ export function useColumnsDetalleDePreciosEdicion({
   >([
     {
       name: 'Precio Especial',
-      precio: 0,
-      activador: 0,
+      precio: new Prisma.Decimal('0'),
+      activador: new Prisma.Decimal('0'),
+      comision: null,
     },
     {
       name: 'Precio Mínimo',
-      precio: 0,
-      activador: 0,
+      precio: new Prisma.Decimal('0'),
+      activador: new Prisma.Decimal('0'),
+      comision: null,
     },
     {
       name: 'Precio Último',
-      precio: 0,
-      activador: 0,
+      precio: new Prisma.Decimal('0'),
+      activador: new Prisma.Decimal('0'),
+      comision: null,
     },
   ])
 

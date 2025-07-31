@@ -1,0 +1,90 @@
+model Almacen {
+    id   Int    @id @default(autoincrement())
+    name String
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    ubicaciones          Ubicacion[]
+    productos_en_almacen ProductoAlmacen[]
+    compras              Compra[]
+
+    @@index([name])
+}
+
+model ProductoAlmacen {
+    id Int @id @default(autoincrement())
+
+    producto    Producto @relation(fields: [producto_id], references: [id])
+    producto_id Int
+
+    almacen    Almacen @relation(fields: [almacen_id], references: [id])
+    almacen_id Int
+
+    stock_fraccion Decimal @default(0) @db.Decimal(9, 3)
+    costo          Decimal @default(0) @db.Decimal(9, 3)
+
+    ubicacion    Ubicacion @relation(fields: [ubicacion_id], references: [id])
+    ubicacion_id Int
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    unidades_derivadas ProductoAlmacenUnidadDerivada[]
+    compras            ProductoAlmacenCompra[]
+
+    @@unique([producto_id, almacen_id])
+}
+
+model Ubicacion {
+    id         Int    @id @default(autoincrement())
+    name       String
+    almacen_id Int
+
+    almacen             Almacen           @relation(fields: [almacen_id], references: [id])
+    productos_almacenes ProductoAlmacen[]
+
+    @@index([name])
+}
+
+model UnidadDerivada {
+    id   Int    @id @default(autoincrement())
+    name String
+
+    productos_almacenes_unidad_derivada ProductoAlmacenUnidadDerivada[]
+
+    @@index([name])
+}
+
+model ProductoAlmacenUnidadDerivada {
+    id Int @id @default(autoincrement())
+
+    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id])
+    producto_almacen_id Int
+
+    unidad_derivada    UnidadDerivada @relation(fields: [unidad_derivada_id], references: [id])
+    unidad_derivada_id Int
+
+    factor             Decimal  @db.Decimal(9, 3)
+    precio_principal   Decimal  @db.Decimal(9, 3)
+    comision_principal Decimal? @db.Decimal(9, 3)
+
+    precios ProductoAlmacenUnidadDerivadaPrecio[]
+    compras ProductoAlmacenUnidadDerivadaCompra[]
+
+    @@unique([producto_almacen_id, unidad_derivada_id])
+    @@unique([producto_almacen_id, factor])
+}
+
+model ProductoAlmacenUnidadDerivadaPrecio {
+    id                                  Int      @id @default(autoincrement())
+    producto_almacen_unidad_derivada_id Int
+    name                                String
+    precio                              Decimal  @db.Decimal(9, 3)
+    comision                            Decimal? @db.Decimal(9, 3)
+    activador                           Decimal? @db.Decimal(9, 3)
+
+    producto_almacen_unidad_derivada ProductoAlmacenUnidadDerivada @relation(fields: [producto_almacen_unidad_derivada_id], references: [id])
+
+    @@unique([producto_almacen_unidad_derivada_id, name])
+}

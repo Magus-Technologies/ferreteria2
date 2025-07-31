@@ -1,15 +1,17 @@
 'use client'
 
-import { ColDef } from 'ag-grid-community'
 import {
+  ProductoAlmacen,
   ProductoAlmacenUnidadDerivada,
   ProductoAlmacenUnidadDerivadaPrecio,
   UnidadDerivada,
-} from '~/app/_types/almacenes'
+} from '@prisma/client'
+import { ColDef } from 'ag-grid-community'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   unidad_derivada: UnidadDerivada
   precios: ProductoAlmacenUnidadDerivadaPrecio[]
+  costo: ProductoAlmacen['costo']
 }
 
 interface UseColumnsDetalleDePreciosProps {

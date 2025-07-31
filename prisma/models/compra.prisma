@@ -1,0 +1,37 @@
+model Compra {
+    id         Int @id @default(autoincrement())
+    almacen_id Int
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    almacen                       Almacen                               @relation(fields: [almacen_id], references: [id])
+    productos_por_unidad_derivada ProductoAlmacenUnidadDerivadaCompra[]
+    productos_por_almacen         ProductoAlmacenCompra[]
+
+    @@index([created_at])
+}
+
+model ProductoAlmacenUnidadDerivadaCompra {
+    id                                  Int       @id @default(autoincrement())
+    compra_id                           Int
+    producto_almacen_unidad_derivada_id Int
+    cantidad                            Decimal   @db.Decimal(9, 3)
+    lote                                String?
+    vencimiento                         DateTime?
+
+    compra                           Compra                        @relation(fields: [compra_id], references: [id])
+    producto_almacen_unidad_derivada ProductoAlmacenUnidadDerivada @relation(fields: [producto_almacen_unidad_derivada_id], references: [id])
+}
+
+model ProductoAlmacenCompra {
+    id Int @id @default(autoincrement())
+
+    compra    Compra @relation(fields: [compra_id], references: [id])
+    compra_id Int
+
+    costo Decimal @db.Decimal(9, 3)
+
+    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id])
+    producto_almacen_id Int
+}

@@ -1,9 +1,28 @@
-import NextAuth from 'next-auth'
+import NextAuth, { DefaultSession } from 'next-auth'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { JWT } from 'next-auth/jwt'
 import Credentials from 'next-auth/providers/credentials'
 import { schemaLogin } from './schema'
 import { getUserFromDb } from './utils/getUserFromDb'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '~/db/db'
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      all_permissions: string[]
+    } & DefaultSession['user']
+  }
+  interface User {
+    all_permissions: string[]
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    all_permissions: string[]
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -28,12 +47,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await getUserFromDb(email, password)
 
-        const { AUTH_TRUST_HOST, NODE_ENV, AUTH_URL } = process.env
-        console.log(
-          '🚀 ~ file: auth.ts :32 ~ {AUTH_TRUST_HOST, NODE_ENV, AUTH_URL}:',
-          { AUTH_TRUST_HOST, NODE_ENV, AUTH_URL }
-        )
-
         if (!user) return null
 
         return user
@@ -42,5 +55,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: {
     strategy: 'jwt',
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.all_permissions = user.all_permissions
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user) session.user.all_permissions = token.all_permissions
+      return session
+    },
   },
 })

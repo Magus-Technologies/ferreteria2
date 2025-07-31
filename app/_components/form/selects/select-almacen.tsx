@@ -1,5 +1,10 @@
+'use client'
+
 import { PiWarehouseFill } from 'react-icons/pi'
 import SelectBase, { SelectBaseProps } from './select-base'
+import { useServerQuery } from '~/hooks/use-server-query'
+import { getAlmacenes } from '~/app/_actions/almacen'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 interface SelectAlmacenProps extends SelectBaseProps {
   classNameIcon?: string
@@ -15,6 +20,13 @@ export default function SelectAlmacen({
   size = 'large',
   ...props
 }: SelectAlmacenProps) {
+  const { response } = useServerQuery({
+    action: getAlmacenes,
+    propsQuery: {
+      queryKey: [QueryKeys.ALMACENES],
+    },
+    params: undefined,
+  })
   return (
     <SelectBase
       {...props}
@@ -23,10 +35,10 @@ export default function SelectAlmacen({
       placeholder={placeholder}
       className={className}
       size={size}
-      options={[
-        { value: 'almacen-1', label: 'Almacén 1' },
-        { value: 'almacen-2', label: 'Almacén 2' },
-      ]}
+      options={response?.map(item => ({
+        value: item.id,
+        label: item.name,
+      }))}
     />
   )
 }

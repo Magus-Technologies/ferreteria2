@@ -1,0 +1,17 @@
+model Permission {
+    id          Int    @id @default(autoincrement())
+    name        String
+    descripcion String
+
+    roles Role[]
+    users User[]
+}
+
+model Role {
+    id          Int    @id @default(autoincrement())
+    name        String
+    descripcion String
+
+    permissions Permission[]
+    users       User[]
+}

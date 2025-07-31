@@ -4,6 +4,14 @@ import { prisma } from '~/db/db'
 export const getUserFromDb = async (email: string, pwHash: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
+    include: {
+      roles: {
+        include: {
+          permissions: true,
+        },
+      },
+      permissions: true,
+    },
   })
 
   if (!user) return null
@@ -12,5 +20,17 @@ export const getUserFromDb = async (email: string, pwHash: string) => {
 
   if (!isPasswordValid) return null
 
-  return user
+  const all_permissions = Array.from(
+    new Set([
+      ...user.permissions.map(p => p.name),
+      ...user.roles.flatMap(role => role.permissions.map(p => p.name)),
+    ])
+  )
+
+  const userWithAllPermissions = {
+    ...user,
+    all_permissions,
+  }
+
+  return userWithAllPermissions
 }

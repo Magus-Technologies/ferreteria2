@@ -26,7 +26,7 @@ export default function FormSectionLote({ form }: FormSectionLoteProps) {
         <LabelBase label='N° Lote:' classNames={{ labelParent: 'mb-6' }}>
           <InputBase
             propsForm={{
-              name: ['lote', 'name'],
+              name: ['compra', 'lote'],
             }}
             placeholder='N° Lote'
             prefix={<FaTruckRampBox size={15} className='text-cyan-600 mx-1' />}
@@ -35,7 +35,7 @@ export default function FormSectionLote({ form }: FormSectionLoteProps) {
         <LabelBase label='Vencimiento:' classNames={{ labelParent: 'mb-6' }}>
           <DatePickerBase
             propsForm={{
-              name: ['lote', 'vencimiento'],
+              name: ['compra', 'vencimiento'],
             }}
             placeholder='Vencimiento'
             prefix={
@@ -48,7 +48,7 @@ export default function FormSectionLote({ form }: FormSectionLoteProps) {
         <LabelBase label='Stock Entero:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
             propsForm={{
-              name: ['lote', 'productos', 'stock_entero'],
+              name: 'stock_entero',
             }}
             placeholder='Stock Entero'
             prefix={<FaBox size={15} className='text-cyan-600 mx-1' />}
@@ -57,7 +57,7 @@ export default function FormSectionLote({ form }: FormSectionLoteProps) {
         <LabelBase label='Stock Fraccion:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
             propsForm={{
-              name: ['lote', 'productos', 'stock_fraccion'],
+              name: 'stock_fraccion',
             }}
             placeholder='Stock Fraccion'
             prefix={<FaBox size={15} className='text-cyan-600 mx-1' />}

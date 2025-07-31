@@ -1,0 +1,52 @@
+model Producto {
+    id          Int     @id @default(autoincrement())
+    cod_barra   String? @unique
+    name        String
+    name_ticket String
+
+    categoria    Categoria @relation(fields: [categoria_id], references: [id])
+    categoria_id Int
+
+    marca    Marca @relation(fields: [marca_id], references: [id])
+    marca_id Int
+
+    unidad_medida    UnidadMedida @relation(fields: [unidad_medida_id], references: [id])
+    unidad_medida_id Int
+
+    accion_tecnica      String?  @db.Text
+    stock_min           Int
+    unidades_contenidas Int
+    created_at          DateTime @default(now())
+    updated_at          DateTime @updatedAt
+
+    producto_en_almacenes ProductoAlmacen[]
+
+    @@index([name])
+}
+
+model Categoria {
+    id   Int    @id @default(autoincrement())
+    name String
+
+    productos Producto[]
+
+    @@index([name])
+}
+
+model Marca {
+    id   Int    @id @default(autoincrement())
+    name String
+
+    productos Producto[]
+
+    @@index([name])
+}
+
+model UnidadMedida {
+    id   Int    @id @default(autoincrement())
+    name String
+
+    productos Producto[]
+
+    @@index([name])
+}
