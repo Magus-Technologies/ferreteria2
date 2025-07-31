@@ -16,13 +16,13 @@ import { toUTCString } from '~/utils/fechas'
 import FormSectionLote from '../form/form-section-lote'
 import { DetalleDePreciosProps } from '../tables/columns-detalle-de-precios'
 import FormSectionUnidadesDerivadas from '../form/form-section-unidades-derivadas'
-import ButtonCreateMarca from '../buttons/button-create-marca'
 import type {
   Producto,
   ProductoAlmacen,
   ProductoAlmacenUnidadDerivadaCompra,
 } from '@prisma/client'
 import type { Dayjs } from 'dayjs'
+import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 
 interface ModalCreateProductoProps {
   open: boolean
@@ -82,18 +82,36 @@ export default function ModalCreateProducto({
     >
       <div className='grid grid-cols-2 gap-8 mb-2'>
         <div>
-          <LabelBase
-            label='Cod. de Barra:'
-            classNames={{ labelParent: 'mb-6' }}
-          >
-            <InputBase
-              propsForm={{
-                name: 'cod_barra',
-              }}
-              placeholder='Código de Barra'
-              prefix={<FaBarcode size={15} className='text-cyan-600 mx-1' />}
-            />
-          </LabelBase>
+          <div className='grid grid-cols-2 gap-8'>
+            <LabelBase label='Almacén:' classNames={{ labelParent: 'mb-6' }}>
+              <SelectAlmacen
+                size='middle'
+                classNameIcon='text-rose-700 mx-1'
+                propsForm={{
+                  name: 'almacen_id',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Por favor, selecciona un Almacén',
+                    },
+                  ],
+                }}
+                form={form}
+              />
+            </LabelBase>
+            <LabelBase
+              label='Cod. de Barra:'
+              classNames={{ labelParent: 'mb-6' }}
+            >
+              <InputBase
+                propsForm={{
+                  name: 'cod_barra',
+                }}
+                placeholder='Código de Barra'
+                prefix={<FaBarcode size={15} className='text-cyan-600 mx-1' />}
+              />
+            </LabelBase>
+          </div>
           <LabelBase label='Producto:' classNames={{ labelParent: 'mb-6' }}>
             <InputBase
               onChange={e =>
@@ -158,7 +176,6 @@ export default function ModalCreateProducto({
                 }}
                 classNameIcon='text-rose-700 mx-1'
               />
-              <ButtonCreateMarca />
             </LabelBase>
             <LabelBase
               label='U. de Medida:'

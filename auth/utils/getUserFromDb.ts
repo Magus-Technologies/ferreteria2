@@ -11,6 +11,7 @@ export const getUserFromDb = async (email: string, pwHash: string) => {
         },
       },
       permissions: true,
+      empresa: true,
     },
   })
 

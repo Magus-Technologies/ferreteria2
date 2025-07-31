@@ -1,3 +1,6 @@
+'use client'
+
+import { Form } from 'antd'
 import { FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { IoDocumentText } from 'react-icons/io5'
 import { PiWarehouseFill } from 'react-icons/pi'
@@ -16,11 +19,17 @@ import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 
 export default function FiltersMiAlmacen() {
+  const [form] = Form.useForm()
+
   return (
     <FormBase
+      form={form}
       name='filtros-mi-almacen'
       initialValues={{ estado: 'activo', cs_stock: 'all', cs_comision: 'all' }}
       className='w-full'
+      onFinish={values =>
+        console.log('🚀 ~ file: filters-mi-almacen.tsx:29 ~ values:', values)
+      }
     >
       <TituloModulos
         title='Mi Almacén'
@@ -57,6 +66,7 @@ export default function FiltersMiAlmacen() {
             }}
             className='w-full'
             formWithMessage={false}
+            form={form}
           />
           <SelectEstado
             size='large'
@@ -80,6 +90,7 @@ export default function FiltersMiAlmacen() {
             }}
             className='w-full'
             formWithMessage={false}
+            form={form}
           />
         </LabelBase>
         <LabelBase label='Categoría:'>

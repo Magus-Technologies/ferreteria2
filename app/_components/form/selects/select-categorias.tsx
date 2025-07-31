@@ -1,5 +1,10 @@
+'use client'
+
 import { BiSolidCategoryAlt } from 'react-icons/bi'
 import SelectBase, { SelectBaseProps } from './select-base'
+import { useServerQuery } from '~/hooks/use-server-query'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import { getCategorias } from '~/app/_actions/categoria'
 
 interface SelectCategoriasProps extends SelectBaseProps {
   classNameIcon?: string
@@ -13,16 +18,23 @@ export default function SelectCategorias({
   sizeIcon = 18,
   ...props
 }: SelectCategoriasProps) {
+  const { response } = useServerQuery({
+    action: getCategorias,
+    propsQuery: {
+      queryKey: [QueryKeys.CATEGORIAS],
+    },
+    params: undefined,
+  })
   return (
     <SelectBase
       {...props}
       prefix={<BiSolidCategoryAlt className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={[
-        { value: 'categoria-1', label: 'Categoria 1' },
-        { value: 'categoria-2', label: 'Categoria 2' },
-      ]}
+      options={response?.map(item => ({
+        value: item.id,
+        label: item.name,
+      }))}
     />
   )
 }

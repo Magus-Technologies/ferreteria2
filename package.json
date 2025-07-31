@@ -34,7 +34,8 @@
     "tailwindcss-animated": "^2.0.0",
     "uuid": "^11.1.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "zod": "^4.0.10"
+    "zod": "^4.0.10",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

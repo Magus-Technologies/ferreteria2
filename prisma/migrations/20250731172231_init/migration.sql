@@ -96,6 +96,14 @@ CREATE TABLE "ProductoAlmacenCompra" (
 );
 
 -- CreateTable
+CREATE TABLE "Empresa" (
+    "id" SERIAL NOT NULL,
+    "almacen_id" INTEGER NOT NULL,
+
+    CONSTRAINT "Empresa_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Permission" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
@@ -163,6 +171,7 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
+    "empresa_id" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -338,6 +347,9 @@ ALTER TABLE "ProductoAlmacenCompra" ADD CONSTRAINT "ProductoAlmacenCompra_compra
 ALTER TABLE "ProductoAlmacenCompra" ADD CONSTRAINT "ProductoAlmacenCompra_producto_almacen_id_fkey" FOREIGN KEY ("producto_almacen_id") REFERENCES "ProductoAlmacen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Empresa" ADD CONSTRAINT "Empresa_almacen_id_fkey" FOREIGN KEY ("almacen_id") REFERENCES "Almacen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Producto" ADD CONSTRAINT "Producto_categoria_id_fkey" FOREIGN KEY ("categoria_id") REFERENCES "Categoria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -345,6 +357,9 @@ ALTER TABLE "Producto" ADD CONSTRAINT "Producto_marca_id_fkey" FOREIGN KEY ("mar
 
 -- AddForeignKey
 ALTER TABLE "Producto" ADD CONSTRAINT "Producto_unidad_medida_id_fkey" FOREIGN KEY ("unidad_medida_id") REFERENCES "UnidadMedida"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_empresa_id_fkey" FOREIGN KEY ("empresa_id") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

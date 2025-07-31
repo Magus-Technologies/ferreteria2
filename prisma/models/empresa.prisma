@@ -1,0 +1,8 @@
+model Empresa {
+    id Int @id @default(autoincrement())
+
+    almacen_predeterminado Almacen @relation(fields: [almacen_id], references: [id])
+    almacen_id             Int
+
+    users User[]
+}

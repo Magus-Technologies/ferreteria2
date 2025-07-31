@@ -11,6 +11,7 @@ export default async function userSeeder() {
       name: 'Admin',
       email: 'admin@aplication.com',
       password,
+      empresa_id: 1,
       roles: {
         create: [
           {

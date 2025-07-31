@@ -5,6 +5,7 @@ import SelectBase, { SelectBaseProps } from './select-base'
 import { TbBrand4Chan } from 'react-icons/tb'
 import { getMarcas } from '~/app/_actions/marca'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import ButtonCreateMarca from '../buttons/button-create-marca'
 
 interface SelectMarcasProps extends SelectBaseProps {
   classNameIcon?: string
@@ -26,15 +27,18 @@ export default function SelectMarcas({
     params: undefined,
   })
   return (
-    <SelectBase
-      {...props}
-      prefix={<TbBrand4Chan className={classNameIcon} size={sizeIcon} />}
-      variant={variant}
-      placeholder={placeholder}
-      options={response?.map(item => ({
-        value: item.id,
-        label: item.name,
-      }))}
-    />
+    <>
+      <SelectBase
+        {...props}
+        prefix={<TbBrand4Chan className={classNameIcon} size={sizeIcon} />}
+        variant={variant}
+        placeholder={placeholder}
+        options={response?.map(item => ({
+          value: item.id,
+          label: item.name,
+        }))}
+      />
+      <ButtonCreateMarca />
+    </>
   )
 }

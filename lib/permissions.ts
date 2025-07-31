@@ -30,11 +30,37 @@ export enum permissions {
   ALMACEN_CREATE = 'almacen.create',
   ALMACEN_UPDATE = 'almacen.update',
   ALMACEN_DELETE = 'almacen.delete',
+
+  // Unidades de Medida
+  UNIDAD_MEDIDA_BASE = 'unidad-medida',
+  UNIDAD_MEDIDA_LISTADO = 'unidad-medida.listado',
+  UNIDAD_MEDIDA_CREATE = 'unidad-medida.create',
+  UNIDAD_MEDIDA_UPDATE = 'unidad-medida.update',
+  UNIDAD_MEDIDA_DELETE = 'unidad-medida.delete',
+
+  // Categorias
+  CATEGORIA_BASE = 'categoria',
+  CATEGORIA_LISTADO = 'categoria.listado',
+  CATEGORIA_CREATE = 'categoria.create',
+  CATEGORIA_UPDATE = 'categoria.update',
+  CATEGORIA_DELETE = 'categoria.delete',
+
+  // Ubicaciones
+  UBICACION_BASE = 'ubicacion',
+  UBICACION_LISTADO = 'ubicacion.listado',
+  UBICACION_CREATE = 'ubicacion.create',
+  UBICACION_UPDATE = 'ubicacion.update',
+  UBICACION_DELETE = 'ubicacion.delete',
 }
 
 type PermisosValidos = Exclude<
   permissions,
-  permissions.PRODUCTO_BASE | permissions.MARCA_BASE | permissions.ALMACEN_BASE
+  | permissions.PRODUCTO_BASE
+  | permissions.MARCA_BASE
+  | permissions.ALMACEN_BASE
+  | permissions.UNIDAD_MEDIDA_BASE
+  | permissions.CATEGORIA_BASE
+  | permissions.UBICACION_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -63,6 +89,21 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.ALMACEN_CREATE]: 'Crear Almacén',
   [permissions.ALMACEN_UPDATE]: 'Actualizar Almacén',
   [permissions.ALMACEN_DELETE]: 'Eliminar Almacén',
+
+  [permissions.UNIDAD_MEDIDA_LISTADO]: 'Ver Listado de Unidades de Medida',
+  [permissions.UNIDAD_MEDIDA_CREATE]: 'Crear Unidad de Medida',
+  [permissions.UNIDAD_MEDIDA_UPDATE]: 'Actualizar Unidad de Medida',
+  [permissions.UNIDAD_MEDIDA_DELETE]: 'Eliminar Unidad de Medida',
+
+  [permissions.CATEGORIA_LISTADO]: 'Ver Listado de Categorias',
+  [permissions.CATEGORIA_CREATE]: 'Crear Categoria',
+  [permissions.CATEGORIA_UPDATE]: 'Actualizar Categoria',
+  [permissions.CATEGORIA_DELETE]: 'Eliminar Categoria',
+
+  [permissions.UBICACION_LISTADO]: 'Ver Listado de Ubicaciones',
+  [permissions.UBICACION_CREATE]: 'Crear Ubicación',
+  [permissions.UBICACION_UPDATE]: 'Actualizar Ubicación',
+  [permissions.UBICACION_DELETE]: 'Eliminar Ubicación',
 }
 
 export function getAllPermissions() {

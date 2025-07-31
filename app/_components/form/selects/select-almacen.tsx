@@ -1,14 +1,17 @@
 'use client'
 
 import { PiWarehouseFill } from 'react-icons/pi'
-import SelectBase, { SelectBaseProps } from './select-base'
+import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { getAlmacenes } from '~/app/_actions/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useStoreAlmacen } from '~/store/store-almacen'
+import { useEffect, useRef } from 'react'
 
 interface SelectAlmacenProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
+  afecta_store?: boolean
 }
 
 export default function SelectAlmacen({
@@ -18,8 +21,15 @@ export default function SelectAlmacen({
   sizeIcon = 20,
   className = 'min-w-[300px]',
   size = 'large',
+  afecta_store = true,
+  onChange,
+  ref,
   ...props
 }: SelectAlmacenProps) {
+  const selectAlmacenRef = useRef<RefSelectBaseProps>(null)
+  const setAlmacenId = useStoreAlmacen(store => store.setAlmacenId)
+  const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
   const { response } = useServerQuery({
     action: getAlmacenes,
     propsQuery: {
@@ -27,8 +37,12 @@ export default function SelectAlmacen({
     },
     params: undefined,
   })
+  useEffect(() => {
+    if (afecta_store) selectAlmacenRef.current?.changeValue(almacen_id)
+  }, [afecta_store, almacen_id])
   return (
     <SelectBase
+      ref={selectAlmacenRef ?? ref}
       {...props}
       prefix={<PiWarehouseFill className={classNameIcon} size={sizeIcon} />}
       variant={variant}
@@ -39,6 +53,10 @@ export default function SelectAlmacen({
         value: item.id,
         label: item.name,
       }))}
+      onChange={value => {
+        if (afecta_store) setAlmacenId(value)
+        onChange?.(value)
+      }}
     />
   )
 }

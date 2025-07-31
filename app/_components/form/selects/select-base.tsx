@@ -1,15 +1,21 @@
 'use client'
 
-import { Form, Select, SelectProps } from 'antd'
+import { Form, FormInstance, RefSelectProps, Select, SelectProps } from 'antd'
 import { focusNext } from '../../../_utils/autofocus'
-import { useMemo, useState } from 'react'
+import { RefObject, useImperativeHandle, useState } from 'react'
 import { FormItemProps } from 'antd/lib'
+
+export interface RefSelectBaseProps extends RefSelectProps {
+  changeValue: (value: unknown) => void
+}
 
 export interface SelectBaseProps extends SelectProps {
   nextInEnter?: boolean
   nextWithPrevent?: boolean
   formWithMessage?: boolean
   propsForm?: FormItemProps
+  ref?: RefObject<RefSelectBaseProps | null>
+  form?: FormInstance
 }
 
 function Base({
@@ -20,6 +26,7 @@ function Base({
   ...props
 }: SelectBaseProps) {
   const [open, setOpen] = useState(false)
+
   return (
     <Select
       {...props}
@@ -46,6 +53,8 @@ export default function SelectBase({
   onOpenChange,
   formWithMessage = true,
   propsForm,
+  onChange,
+  form,
   ...props
 }: SelectBaseProps) {
   const {
@@ -54,18 +63,15 @@ export default function SelectBase({
     ...propsFormItem
   } = propsForm || {}
 
-  const base = useMemo(
-    () => (
-      <Base
-        nextInEnter={nextInEnter}
-        nextWithPrevent={nextWithPrevent}
-        onKeyDown={onKeyDown}
-        onOpenChange={onOpenChange}
-        {...props}
-      />
-    ),
-    [nextInEnter, nextWithPrevent, onKeyDown, onOpenChange, props]
-  )
+  const [value, setValue] = useState<unknown>()
+
+  useImperativeHandle(props.ref, () => ({
+    ...props.ref!.current!,
+    changeValue: (value: unknown) => {
+      if (form) form.setFieldValue(propsFormItem.name, value)
+      else setValue(value)
+    },
+  }))
 
   return propsForm ? (
     <Form.Item
@@ -73,9 +79,27 @@ export default function SelectBase({
       {...propsFormItem}
       className={`${className} ${formWithMessage ? '' : '!mb-0'}`}
     >
-      {base}
+      <Base
+        nextInEnter={nextInEnter}
+        nextWithPrevent={nextWithPrevent}
+        onKeyDown={onKeyDown}
+        onOpenChange={onOpenChange}
+        onChange={onChange}
+        {...props}
+      />
     </Form.Item>
   ) : (
-    base
+    <Base
+      nextInEnter={nextInEnter}
+      nextWithPrevent={nextWithPrevent}
+      onKeyDown={onKeyDown}
+      onOpenChange={onOpenChange}
+      onChange={value => {
+        setValue(value)
+        onChange?.(value)
+      }}
+      value={value}
+      {...props}
+    />
   )
 }

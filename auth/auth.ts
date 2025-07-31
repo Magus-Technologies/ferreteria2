@@ -6,21 +6,25 @@ import { schemaLogin } from './schema'
 import { getUserFromDb } from './utils/getUserFromDb'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '~/db/db'
+import { Empresa } from '@prisma/client'
 
 declare module 'next-auth' {
   interface Session {
     user: {
       all_permissions: string[]
+      empresa: Empresa
     } & DefaultSession['user']
   }
   interface User {
     all_permissions: string[]
+    empresa: Empresa
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
     all_permissions: string[]
+    empresa: Empresa
   }
 }
 
@@ -58,11 +62,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.all_permissions = user.all_permissions
+      if (user) {
+        token.all_permissions = user.all_permissions
+        token.empresa = user.empresa
+      }
       return token
     },
     async session({ session, token }) {
-      if (session.user) session.user.all_permissions = token.all_permissions
+      if (session.user) {
+        session.user.all_permissions = token.all_permissions
+        session.user.empresa = token.empresa
+      }
       return session
     },
   },
