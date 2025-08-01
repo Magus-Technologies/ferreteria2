@@ -40,7 +40,10 @@ export default function ModalForm<T>({
         className,
         ...restOkButtonProps,
       }}
-      onCancel={() => setOpen(false)}
+      onCancel={() => {
+        setOpen(false)
+        formProps?.form?.resetFields()
+      }}
       destroyOnHidden
       modalRender={dom => <FormBase<T> {...formProps}>{dom}</FormBase>}
     >

@@ -11,6 +11,7 @@ import {
   InputStyleParams,
   ModuleRegistry,
   TabStyleParams,
+  ValueGetterParams,
 } from 'ag-grid-community'
 import { RefObject } from 'react'
 import useColumnTypes from './hooks/use-column-types'
@@ -35,6 +36,7 @@ export interface TableBaseProps<T>
       InputStyleParams
   >
   rowSelection?: boolean
+  withNumberColumn?: boolean
 }
 
 export default function TableBase<T>({
@@ -43,6 +45,8 @@ export default function TableBase<T>({
   className = '',
   rowSelection = true,
   columnDefs,
+  withNumberColumn = true,
+  onDragStopped,
   ...props
 }: TableBaseProps<T>) {
   const { columnTypes } = useColumnTypes()
@@ -61,6 +65,11 @@ export default function TableBase<T>({
       <AgGridReact<T>
         {...props}
         ref={ref}
+        onDragStopped={event => {
+          if (props.rowDragManaged && withNumberColumn)
+            event.api.refreshCells({ force: true })
+          onDragStopped?.(event)
+        }}
         theme={themeTable.withParams(paramsOfThemeTable ?? {})}
         columnTypes={columnTypes}
         localeText={AG_GRID_LOCALE_ES}
@@ -68,12 +77,18 @@ export default function TableBase<T>({
         className={`shadow-lg rounded-xl overflow-hidden ${className}`}
         rowSelection={rowSelection ? 'single' : undefined}
         columnDefs={[
-          {
-            headerName: '#',
-            width: 50,
-            valueGetter: params => (params.node?.rowIndex ?? 0) + 1,
-            type: 'numberColumn',
-          },
+          ...(withNumberColumn
+            ? [
+                {
+                  headerName: '#',
+                  width: props.rowDragManaged ? 65 : 50,
+                  valueGetter: (params: ValueGetterParams<T>) =>
+                    (params.node?.rowIndex ?? 0) + 1,
+                  type: 'numberColumn',
+                  rowDrag: props.rowDragManaged,
+                },
+              ]
+            : []),
           ...(columnDefs ?? []),
         ]}
       />

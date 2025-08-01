@@ -1,37 +1,37 @@
 import { Tooltip } from 'antd'
 import { useState } from 'react'
-import { createMarca } from '~/app/_actions/marca'
+import { createUnidadMedida } from '~/app/_actions/unidadMedida'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import FormWithName from '~/components/modals/modal-form-with-name'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
 
-interface ButtonCreateMarcaProps {
+interface ButtonCreateUnidadMedidaProps {
   className?: string
 }
 
-export default function ButtonCreateMarca({
+export default function ButtonCreateUnidadMedida({
   className,
-}: ButtonCreateMarcaProps) {
+}: ButtonCreateUnidadMedidaProps) {
   const [open, setOpen] = useState(false)
 
   const can = usePermission()
-  if (!can(permissions.MARCA_CREATE)) return null
+  if (!can(permissions.UNIDAD_MEDIDA_CREATE)) return null
 
   return (
     <>
       <FormWithName
-        title='Marca'
+        title='Unidad de Medida'
         open={open}
         setOpen={setOpen}
         propsUseServerMutation={{
-          action: createMarca,
-          queryKey: [QueryKeys.MARCAS],
-          msgSuccess: 'Marca creada exitosamente',
+          action: createUnidadMedida,
+          queryKey: [QueryKeys.UNIDADES_MEDIDA],
+          msgSuccess: 'Unidad de medida creada exitosamente',
         }}
       />
-      <Tooltip title='Crear Marca'>
+      <Tooltip title='Crear Unidad de Medida'>
         <ButtonCreateFormWithName
           onClick={() => setOpen(true)}
           className={className}

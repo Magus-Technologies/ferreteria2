@@ -20,8 +20,8 @@ export default function SelectEstado({
       variant={variant}
       placeholder={placeholder}
       options={[
-        { value: 'activo', label: 'Activo' },
-        { value: 'inactivo', label: 'Inactivo' },
+        { value: 1, label: 'Activo' },
+        { value: 0, label: 'Inactivo' },
       ]}
     />
   )

@@ -8,7 +8,6 @@ import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import { useServerMutation } from '~/hooks/use-server-mutation'
 import loginServer from './_actions/login'
-import { redirect } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
 export interface LoginValues {
@@ -21,11 +20,12 @@ export default function Home() {
 
   const { execute: login, loading } = useServerMutation({
     action: loginServer,
-    onSuccess: () => redirect('/ui'),
+    onSuccess: () => (window.location.href = '/ui'),
   })
 
-  const { data: session } = useSession()
-  if (session) redirect('/ui')
+  const { status } = useSession()
+  if (status === 'loading') return null
+  if (status === 'authenticated') return (window.location.href = '/ui')
 
   return (
     <div className="bg-[url('/fondo-login.jpg')] h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative">

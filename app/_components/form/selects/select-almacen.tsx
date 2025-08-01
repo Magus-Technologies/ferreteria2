@@ -23,7 +23,6 @@ export default function SelectAlmacen({
   size = 'large',
   afecta_store = true,
   onChange,
-  ref,
   ...props
 }: SelectAlmacenProps) {
   const selectAlmacenRef = useRef<RefSelectBaseProps>(null)
@@ -42,7 +41,7 @@ export default function SelectAlmacen({
   }, [afecta_store, almacen_id])
   return (
     <SelectBase
-      ref={selectAlmacenRef ?? ref}
+      ref={selectAlmacenRef}
       {...props}
       prefix={<PiWarehouseFill className={classNameIcon} size={sizeIcon} />}
       variant={variant}

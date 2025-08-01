@@ -5,21 +5,21 @@ const prisma = new PrismaClient()
 export default async function almacenSeeder() {
   const data = [
     {
-      name: 'Almacén 1',
+      name: 'ALMACÉN 1',
       ubicaciones: {
-        create: [{ name: 'Ubicación 1-1' }, { name: 'Ubicación 1-2' }],
+        create: [{ name: 'UBICACIÓN 1-1' }, { name: 'UBICACIÓN 1-2' }],
       },
     },
     {
-      name: 'Almacén 2',
+      name: 'ALMACÉN 2',
       ubicaciones: {
-        create: [{ name: 'Ubicación 2-1' }, { name: 'Ubicación 2-2' }],
+        create: [{ name: 'UBICACIÓN 2-1' }, { name: 'UBICACIÓN 2-2' }],
       },
     },
     {
-      name: 'Almacén 3',
+      name: 'ALMACÉN 3',
       ubicaciones: {
-        create: [{ name: 'Ubicación 3-1' }, { name: 'Ubicación 3-2' }],
+        create: [{ name: 'UBICACIÓN 3-1' }, { name: 'UBICACIÓN 3-2' }],
       },
     },
   ]

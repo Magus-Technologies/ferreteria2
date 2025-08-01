@@ -10,6 +10,7 @@ import ButtonCreateMarca from '../buttons/button-create-marca'
 interface SelectMarcasProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
+  showButtonCreate?: boolean
 }
 
 export default function SelectMarcas({
@@ -17,6 +18,7 @@ export default function SelectMarcas({
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 18,
+  showButtonCreate = false,
   ...props
 }: SelectMarcasProps) {
   const { response } = useServerQuery({
@@ -38,7 +40,7 @@ export default function SelectMarcas({
           label: item.name,
         }))}
       />
-      <ButtonCreateMarca />
+      {showButtonCreate && <ButtonCreateMarca />}
     </>
   )
 }

@@ -5,9 +5,9 @@ const prisma = new PrismaClient()
 export default async function categoriasSeeder() {
   await prisma.categoria.createMany({
     data: [
-      { name: 'Categoria 1' },
-      { name: 'Categoria 2' },
-      { name: 'Categoria 3' },
+      { name: 'CATEGORÍA 1' },
+      { name: 'CATEGORÍA 2' },
+      { name: 'CATEGORÍA 3' },
     ],
   })
 }

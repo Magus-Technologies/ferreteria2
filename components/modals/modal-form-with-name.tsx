@@ -1,7 +1,7 @@
-import { Form } from 'antd'
+import { Form, FormInstance } from 'antd'
 import TitleForm from '../form/title-form'
 import ModalForm from './modal-form'
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, RefObject, SetStateAction, useImperativeHandle } from 'react'
 import LabelBase from '../form/label-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import { MdDriveFileRenameOutline } from 'react-icons/md'
@@ -10,12 +10,17 @@ import {
   useServerMutation,
 } from '~/hooks/use-server-mutation'
 
+export interface ModalFormWithNameRef<T extends { name: string }> {
+  setFieldValue: FormInstance<T>['setFieldValue']
+}
+
 type ModalFormWithNameProps<T extends { name: string }, TRes> = {
   propsUseServerMutation: UseMutationActionProps<T, TRes>
   title: string
   open: boolean
   setOpen: Dispatch<SetStateAction<boolean>>
   children?: React.ReactNode
+  ref?: RefObject<ModalFormWithNameRef<T> | null>
 }
 
 export default function FormWithName<T extends { name: string }, TRes>({
@@ -24,6 +29,7 @@ export default function FormWithName<T extends { name: string }, TRes>({
   open,
   setOpen,
   children,
+  ref,
 }: ModalFormWithNameProps<T, TRes>) {
   const [form] = Form.useForm<T>()
   const { onSuccess, ...restPropsMutation } = propsUseServerMutation
@@ -35,6 +41,12 @@ export default function FormWithName<T extends { name: string }, TRes>({
       onSuccess?.(res)
     },
   })
+
+  useImperativeHandle(ref, () => ({
+    setFieldValue: (name, value) => {
+      if (form) form.setFieldValue(name, value)
+    },
+  }))
 
   return (
     <ModalForm

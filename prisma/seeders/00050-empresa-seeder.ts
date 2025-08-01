@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 export default async function empresaSeeder() {
   const almacen = await prisma.almacen.findFirstOrThrow({
     where: {
-      name: 'Almacén 1',
+      name: 'ALMACÉN 1',
     },
   })
   await prisma.empresa.create({

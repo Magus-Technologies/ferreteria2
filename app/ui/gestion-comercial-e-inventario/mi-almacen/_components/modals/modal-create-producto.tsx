@@ -159,6 +159,7 @@ export default function ModalCreateProducto({
                   },
                 ],
               }}
+              showButtonCreate
               classNameIcon='text-rose-700 mx-1'
             />
           </LabelBase>
@@ -174,6 +175,7 @@ export default function ModalCreateProducto({
                     },
                   ],
                 }}
+                showButtonCreate
                 classNameIcon='text-rose-700 mx-1'
               />
             </LabelBase>
@@ -191,6 +193,7 @@ export default function ModalCreateProducto({
                     },
                   ],
                 }}
+                showButtonCreate
                 classNameIcon='text-rose-700 mx-1'
               />
             </LabelBase>
@@ -208,6 +211,7 @@ export default function ModalCreateProducto({
                   },
                 ],
               }}
+              showButtonCreate
               classNameIcon='text-rose-700 mx-1'
             />
           </LabelBase>

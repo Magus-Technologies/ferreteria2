@@ -7,10 +7,12 @@ import { getUbicaciones } from '~/app/_actions/ubicacion'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useEffect, useRef } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import ButtonCreateUbicacion from '../buttons/button-create-ubicacion'
 
 interface SelectUbicacionesProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
+  showButtonCreate?: boolean
 }
 
 export default function SelectUbicaciones({
@@ -18,7 +20,7 @@ export default function SelectUbicaciones({
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 16,
-  ref,
+  showButtonCreate = false,
   ...props
 }: SelectUbicacionesProps) {
   const selectUbicacionesRef = useRef<RefSelectBaseProps>(null)
@@ -39,18 +41,21 @@ export default function SelectUbicaciones({
   }, [almacen_id, refetch])
 
   return (
-    <SelectBase
-      ref={selectUbicacionesRef ?? ref}
-      prefix={
-        <FaLocationCrosshairs className={classNameIcon} size={sizeIcon} />
-      }
-      variant={variant}
-      placeholder={placeholder}
-      options={response?.map(item => ({
-        value: item.id,
-        label: item.name,
-      }))}
-      {...props}
-    />
+    <>
+      <SelectBase
+        ref={selectUbicacionesRef}
+        prefix={
+          <FaLocationCrosshairs className={classNameIcon} size={sizeIcon} />
+        }
+        variant={variant}
+        placeholder={placeholder}
+        options={response?.map(item => ({
+          value: item.id,
+          label: item.name,
+        }))}
+        {...props}
+      />
+      {showButtonCreate && <ButtonCreateUbicacion />}
+    </>
   )
 }

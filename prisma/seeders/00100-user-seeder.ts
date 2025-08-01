@@ -8,7 +8,7 @@ export default async function userSeeder() {
   const password = await argon2.hash('12345')
   await prisma.user.create({
     data: {
-      name: 'Admin',
+      name: 'ADMIN',
       email: 'admin@aplication.com',
       password,
       empresa_id: 1,
@@ -16,7 +16,7 @@ export default async function userSeeder() {
         create: [
           {
             name: 'admin_global',
-            descripcion: 'Administrador Global',
+            descripcion: 'ADMINISTRADOR GLOBAL',
             permissions: {
               create: getAllPermissions(),
             },

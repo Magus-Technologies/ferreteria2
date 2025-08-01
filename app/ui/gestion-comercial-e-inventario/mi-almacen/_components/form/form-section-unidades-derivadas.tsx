@@ -12,6 +12,7 @@ export default function FormSectionUnidadesDerivadas({
       {(fields, { add, remove }) => (
         <TableDetalleDePreciosEdicion
           form={form}
+          rowDragManaged={true}
           remove={remove}
           className='h-[300px]'
           classNames={{
