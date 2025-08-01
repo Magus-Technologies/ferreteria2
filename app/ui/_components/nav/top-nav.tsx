@@ -47,7 +47,7 @@ const items: MenuProps['items'] = [
     label: 'Cerrar Sesión',
     className: '!text-red-500',
     extra: <FaSignOutAlt className='text-red-500' />,
-    onClick: () => signOut({ callbackUrl: window.location.origin + '/' }),
+    onClick: () => signOut(),
   },
 ]
 
