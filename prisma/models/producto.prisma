@@ -18,6 +18,7 @@ model Producto {
     img                 String?
     ficha_tecnica       String?
     stock_min           Int
+    stock_max           Int
     unidades_contenidas Int
     estado              Boolean @default(true)
 
@@ -43,6 +44,7 @@ model Marca {
     name String @unique
 
     productos Producto[]
+    empresas  Empresa[]
 
     @@index([name])
 }

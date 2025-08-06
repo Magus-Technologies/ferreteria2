@@ -9,6 +9,7 @@ interface LabelBaseProps {
   }
   children: React.ReactNode
   infoTooltip?: React.ReactNode
+  orientation?: 'row' | 'column'
 }
 
 export default function LabelBase({
@@ -17,10 +18,15 @@ export default function LabelBase({
   className = '',
   classNames = {},
   infoTooltip,
+  orientation = 'row',
 }: LabelBaseProps) {
   const { label: labelClass = '', labelParent = '' } = classNames
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div
+      className={`flex ${
+        orientation === 'column' ? 'flex-col items-start' : 'items-center'
+      } gap-2 ${className}`}
+    >
       <div className={`flex items-center gap-2 ${labelParent}`}>
         <label
           className={`text-slate-600 font-semibold text-nowrap ${labelClass}`}

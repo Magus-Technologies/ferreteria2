@@ -14,8 +14,9 @@ export default function FormArchivosProducto() {
   return (
     <div className='grid grid-cols-2 gap-8'>
       <LabelBase
-        className='flex-col !items-start h-fit'
+        className='h-fit'
         label='Adjuntar Imagen:'
+        orientation='column'
       >
         <DraggerBase
           className='w-full'
@@ -33,7 +34,8 @@ export default function FormArchivosProducto() {
         />
       </LabelBase>
       <LabelBase
-        className='flex-col !items-start h-fit'
+        orientation='column'
+        className='h-fit'
         label='Adjuntar Ficha Técnica:'
       >
         <DraggerBase

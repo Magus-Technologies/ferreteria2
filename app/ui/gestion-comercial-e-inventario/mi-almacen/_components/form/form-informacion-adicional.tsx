@@ -6,7 +6,7 @@ export default function FormInformacionAdicional() {
   return (
     <>
       <FormArchivosProducto />
-      <LabelBase className='flex-col !items-start mt-4' label='Acción Técnica:'>
+      <LabelBase className='mt-4' label='Acción Técnica:' orientation='column'>
         <TextareaBase
           rows={5}
           formWithMessage={false}

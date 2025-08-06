@@ -18,14 +18,25 @@ import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 
-export default function FiltersMiAlmacen() {
+interface FiltersMiAlmacenProps {
+  marca_predeterminada?: number
+}
+
+export default function FiltersMiAlmacen({
+  marca_predeterminada,
+}: FiltersMiAlmacenProps) {
   const [form] = Form.useForm()
 
   return (
     <FormBase
       form={form}
       name='filtros-mi-almacen'
-      initialValues={{ estado: 1, cs_stock: 'all', cs_comision: 'all' }}
+      initialValues={{
+        estado: 1,
+        cs_stock: 'all',
+        cs_comision: 'all',
+        marca: marca_predeterminada,
+      }}
       className='w-full'
       onFinish={values =>
         console.log('🚀 ~ file: filters-mi-almacen.tsx:29 ~ values:', values)

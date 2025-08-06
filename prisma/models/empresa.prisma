@@ -4,5 +4,8 @@ model Empresa {
     almacen_predeterminado Almacen @relation(fields: [almacen_id], references: [id])
     almacen_id             Int
 
+    marca_predeterminada Marca @relation(fields: [marca_id], references: [id])
+    marca_id             Int
+
     users User[]
 }

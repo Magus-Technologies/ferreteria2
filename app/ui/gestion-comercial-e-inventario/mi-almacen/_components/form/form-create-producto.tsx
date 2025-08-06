@@ -144,7 +144,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                   rules: [
                     {
                       required: true,
-                      message: 'Falta Unidad de Medida',
+                      message: 'Falta la Unidad de Medida',
                     },
                   ],
                 }}
@@ -164,7 +164,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                   rules: [
                     {
                       required: true,
-                      message: 'Por favor, selecciona una ubicación',
+                      message: 'Falta la Ubicación',
                     },
                   ],
                 }}
@@ -186,15 +186,15 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
               />
             </LabelBase>
           </div>
-          <div className='grid grid-cols-2 gap-8'>
-            <LabelBase label='Stock Min:' classNames={{ labelParent: 'mb-6' }}>
+          <div className='grid grid-cols-3 gap-8'>
+            <LabelBase orientation='column' label='Stock Min:'>
               <InputNumberBase
                 propsForm={{
                   name: 'stock_min',
                   rules: [
                     {
                       required: true,
-                      message: 'Por favor, ingresa el stock mínimo',
+                      message: 'Falta el Stock Mínimo',
                     },
                   ],
                 }}
@@ -207,9 +207,29 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                 }
               />
             </LabelBase>
+            <LabelBase orientation='column' label='Stock Max:'>
+              <InputNumberBase
+                propsForm={{
+                  name: 'stock_max',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Falta el Stock Máximo',
+                    },
+                  ],
+                }}
+                min={0}
+                step={1}
+                precision={0}
+                placeholder='Stock Máximo'
+                prefix={
+                  <AiFillAlert size={15} className='text-rose-700 mx-1' />
+                }
+              />
+            </LabelBase>
             <LabelBase
+              orientation='column'
               label='U. Contenidas:'
-              classNames={{ labelParent: 'mb-6' }}
               infoTooltip='Por defecto las Unidades contenidas son 1'
             >
               <InputNumberBase
@@ -218,7 +238,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                   rules: [
                     {
                       required: true,
-                      message: 'Falta Unidades Contenidas',
+                      message: 'Falta las Unidades Contenidas',
                     },
                   ],
                 }}

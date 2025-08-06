@@ -10,14 +10,18 @@ import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateProducto from './_components/buttons/button-create-producto'
 import can from '~/utils/server-validate-permission'
+import { auth } from '~/auth/auth'
 
 export default async function MiAlmacen() {
+  const session = await auth()
   if (!(await can(permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX)))
     return <NoAutorizado />
 
   return (
     <ContenedorGeneral>
-      <FiltersMiAlmacen />
+      <FiltersMiAlmacen
+        marca_predeterminada={session?.user?.empresa.marca_id}
+      />
       <div className='flex size-full gap-8'>
         <div className='grid grid-rows-7 gap-y-4 size-full'>
           <div className='row-start-1 row-end-4'>

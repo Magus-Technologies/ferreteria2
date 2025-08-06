@@ -63,8 +63,7 @@ export default function useCreateProducto({
             message: 'Producto creado',
             description: 'Producto creado correctamente',
           })
-        } catch (error) {
-          console.error('🚀 ~ file: use-create-producto.tsx:67 ~ error:', error)
+        } catch {
           notification.warning({
             message: 'Producto creado',
             description: 'Error al subir la imagen y/o ficha técnica',

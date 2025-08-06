@@ -34,6 +34,7 @@ export default function ModalForm<T>({
   return (
     <Modal
       {...restModalProps}
+      maskClosable={false}
       open={open}
       cancelText={cancelText}
       cancelButtonProps={cancelButtonProps}
