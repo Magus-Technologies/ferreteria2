@@ -19,40 +19,45 @@ export async function POST(req: NextRequest) {
     ficha_tecnica: null,
   }
 
-  if (img_file) {
-    const data = await img_file.arrayBuffer()
-    const mime = img_file.type
-    const ext = mime.split('/')[1]
-    const path = `/uploads/productos/imgs/${cod_producto}.${ext}`
-    await fs.promises.mkdir(`public/uploads/productos/imgs`, {
-      recursive: true,
+  try {
+    if (img_file) {
+      const data = await img_file.arrayBuffer()
+      const mime = img_file.type
+      const ext = mime.split('/')[1]
+      const path = `/uploads/productos/imgs/${cod_producto}.${ext}`
+      await fs.promises.mkdir(`public/uploads/productos/imgs`, {
+        recursive: true,
+      })
+      fs.promises.writeFile(`public${path}`, Buffer.from(data))
+      dataProductFormated.img = path
+    }
+
+    if (ficha_tecnica_file) {
+      const data = await ficha_tecnica_file.arrayBuffer()
+      const mime = ficha_tecnica_file.type
+      const ext = mime.split('/')[1]
+      const path = `/uploads/productos/fichas-tecnicas/${cod_producto}.${ext}`
+      await fs.promises.mkdir(`public/uploads/productos/fichas-tecnicas`, {
+        recursive: true,
+      })
+      fs.promises.writeFile(`public${path}`, Buffer.from(data))
+      dataProductFormated.ficha_tecnica = path
+    }
+
+    if (!img_file && !ficha_tecnica_file) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+    }
+
+    await prisma.producto.update({
+      where: {
+        cod_producto,
+      },
+      data: dataProductFormated,
     })
-    fs.promises.writeFile(`public${path}`, Buffer.from(data))
-    dataProductFormated.img = path
+
+    return NextResponse.json({ data: 'ok' })
+  } catch (error) {
+    console.error('🚀 ~ file: route.ts:46 ~ error:', error)
+    return NextResponse.json({ error }, { status: 400 })
   }
-
-  if (ficha_tecnica_file) {
-    const data = await ficha_tecnica_file.arrayBuffer()
-    const mime = ficha_tecnica_file.type
-    const ext = mime.split('/')[1]
-    const path = `/uploads/productos/fichas-tecnicas/${cod_producto}.${ext}`
-    await fs.promises.mkdir(`public/uploads/productos/fichas-tecnicas`, {
-      recursive: true,
-    })
-    fs.promises.writeFile(`public${path}`, Buffer.from(data))
-    dataProductFormated.ficha_tecnica = path
-  }
-
-  if (!img_file && !ficha_tecnica_file) {
-    return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
-  }
-
-  await prisma.producto.update({
-    where: {
-      cod_producto,
-    },
-    data: dataProductFormated,
-  })
-
-  return NextResponse.json({ data: 'ok' })
 }
