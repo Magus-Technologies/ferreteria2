@@ -13,7 +13,9 @@ export interface SelectBaseProps extends SelectProps {
   nextInEnter?: boolean
   nextWithPrevent?: boolean
   formWithMessage?: boolean
-  propsForm?: FormItemProps
+  propsForm?: FormItemProps & {
+    prefix_array_name?: (string | number)[]
+  }
   ref?: RefObject<RefSelectBaseProps | null>
   form?: FormInstance
 }
@@ -55,6 +57,7 @@ export default function SelectBase({
   propsForm,
   onChange,
   form,
+  optionFilterProp = 'label',
   ...props
 }: SelectBaseProps) {
   const {
@@ -68,7 +71,16 @@ export default function SelectBase({
   useImperativeHandle(props.ref, () => ({
     ...props.ref!.current!,
     changeValue: (value: unknown) => {
-      if (form) form.setFieldValue(propsFormItem.name, value)
+      if (form)
+        form.setFieldValue(
+          propsFormItem.name instanceof Array
+            ? [
+                ...(propsFormItem.prefix_array_name ?? []),
+                ...propsFormItem.name,
+              ]
+            : propsFormItem.name,
+          value
+        )
       else setValue(value)
     },
   }))
@@ -85,6 +97,7 @@ export default function SelectBase({
         onKeyDown={onKeyDown}
         onOpenChange={onOpenChange}
         onChange={onChange}
+        optionFilterProp={optionFilterProp}
         {...props}
       />
     </Form.Item>
@@ -99,6 +112,7 @@ export default function SelectBase({
         onChange?.(value)
       }}
       value={value}
+      optionFilterProp={optionFilterProp}
       {...props}
     />
   )

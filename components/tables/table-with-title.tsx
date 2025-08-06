@@ -122,7 +122,7 @@ export default function TableWithTitle<T>({
           )}
         </div>
       </div>
-      <TableBase
+      <TableBase<T>
         ref={tableRef}
         {...props}
         onGridReady={params => {

@@ -5,6 +5,7 @@ import { prisma } from '~/db/db'
 import { errorFormated } from '~/utils/error-formated'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
+import { Prisma } from '@prisma/client'
 
 async function getMarcasWA() {
   try {
@@ -24,8 +25,18 @@ async function createMarcaWA({ name }: { name: string }) {
     const puede = await can(permissions.MARCA_CREATE)
     if (!puede) throw new Error('No tienes permiso para crear marcas')
 
-    const item = await prisma.marca.create({ data: { name } })
-    return { data: item }
+    try {
+      const item = await prisma.marca.create({ data: { name } })
+      return { data: item }
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002')
+          throw new Error('Ya existe una marca con ese nombre')
+        throw new Error(`${error.code}`)
+      }
+
+      throw new Error('Error al crear la marca')
+    }
   } catch (error) {
     return errorFormated(error)
   }

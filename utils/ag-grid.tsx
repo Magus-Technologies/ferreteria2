@@ -11,6 +11,18 @@ function exportFile(obj: Record<string, unknown>[], nameFile: string) {
   writeFile(wb, `${nameFile}.xlsx`)
 }
 
+function getNestedValue<T>(obj: unknown, path: string): T | undefined {
+  return path
+    .split('.')
+    .reduce<unknown>(
+      (acc, key) =>
+        acc && typeof acc === 'object'
+          ? (acc as Record<string, unknown>)[key]
+          : undefined,
+      obj
+    ) as T | undefined
+}
+
 export function getJsonFromAGGrid(gridOptions: AgGridReact) {
   const gridApi = gridOptions.api
   const rowData: Record<string, unknown>[] = []
@@ -29,7 +41,7 @@ export function getJsonFromAGGrid(gridOptions: AgGridReact) {
       const colDef = col.getColDef()
       const field = colDef.field!
       const header = colDef.headerName!
-      const rawValue = data[field]
+      const rawValue = getNestedValue(data, field)
       let displayValue: unknown
       if (typeof colDef.valueFormatter === 'function')
         displayValue = colDef.valueFormatter({

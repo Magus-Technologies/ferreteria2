@@ -1,6 +1,5 @@
 import { Tooltip } from 'antd'
 import { useState } from 'react'
-import { createMarca } from '~/app/_actions/marca'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import FormWithName, {
   GenericFormWithName,
@@ -8,35 +7,36 @@ import FormWithName, {
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
+import { createUnidadDerivada } from '~/app/_actions/unidadDerivada'
 
-interface ButtonCreateMarcaProps {
+interface ButtonCreateUnidadDerivadaProps {
   className?: string
   onSuccess?: (res: GenericFormWithName) => void
 }
 
-export default function ButtonCreateMarca({
+export default function ButtonCreateUnidadDerivada({
   className,
   onSuccess,
-}: ButtonCreateMarcaProps) {
+}: ButtonCreateUnidadDerivadaProps) {
   const [open, setOpen] = useState(false)
 
   const can = usePermission()
-  if (!can(permissions.MARCA_CREATE)) return null
+  if (!can(permissions.UNIDAD_DERIVADA_CREATE)) return null
 
   return (
     <>
       <FormWithName
-        title='Marca'
+        title='Unidad Derivada'
         open={open}
         setOpen={setOpen}
         propsUseServerMutation={{
-          action: createMarca,
-          queryKey: [QueryKeys.MARCAS],
+          action: createUnidadDerivada,
+          queryKey: [QueryKeys.UNIDADES_DERIVADAS],
           onSuccess: res => onSuccess?.(res.data!),
-          msgSuccess: 'Marca creada exitosamente',
+          msgSuccess: 'Unidad derivada creada exitosamente',
         }}
       />
-      <Tooltip title='Crear Marca'>
+      <Tooltip title='Crear Unidad Derivada'>
         <ButtonCreateFormWithName
           onClick={() => setOpen(true)}
           className={className}

@@ -3,24 +3,16 @@
 import {
   ProductoAlmacen,
   ProductoAlmacenUnidadDerivada,
-  ProductoAlmacenUnidadDerivadaPrecio,
   UnidadDerivada,
 } from '@prisma/client'
 import { ColDef } from 'ag-grid-community'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   unidad_derivada: UnidadDerivada
-  precios: ProductoAlmacenUnidadDerivadaPrecio[]
   costo: ProductoAlmacen['costo']
 }
 
-interface UseColumnsDetalleDePreciosProps {
-  data: DetalleDePreciosProps[]
-}
-
-export function useColumnsDetalleDePrecios({
-  data,
-}: UseColumnsDetalleDePreciosProps) {
+export function useColumnsDetalleDePrecios() {
   const columns: ColDef<DetalleDePreciosProps>[] = [
     {
       headerName: 'Formato',
@@ -46,7 +38,7 @@ export function useColumnsDetalleDePrecios({
     },
     {
       headerName: 'P. Público',
-      field: 'precio_principal',
+      field: 'precio_publico',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
       flex: 1,
@@ -54,26 +46,5 @@ export function useColumnsDetalleDePrecios({
     },
   ]
 
-  const precioNames = new Set<string>()
-  data.forEach(item => {
-    item.precios.forEach(p => {
-      precioNames.add(p.name)
-    })
-  })
-
-  const dynamicColumns: ColDef<DetalleDePreciosProps>[] = Array.from(
-    precioNames
-  ).map(name => ({
-    headerName: name,
-    minWidth: 80,
-    flex: 1,
-    filter: 'agNumberColumnFilter',
-    type: 'pen',
-    valueGetter: params => {
-      const precio = params.data?.precios.find(p => p.name === name)
-      return precio?.precio ?? null
-    },
-  }))
-
-  return [...columns, ...dynamicColumns]
+  return columns
 }

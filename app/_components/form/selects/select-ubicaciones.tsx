@@ -5,9 +5,10 @@ import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { FaLocationCrosshairs } from 'react-icons/fa6'
 import { getUbicaciones } from '~/app/_actions/ubicacion'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import ButtonCreateUbicacion from '../buttons/button-create-ubicacion'
+import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectUbicacionesProps extends SelectBaseProps {
   classNameIcon?: string
@@ -24,10 +25,11 @@ export default function SelectUbicaciones({
   ...props
 }: SelectUbicacionesProps) {
   const selectUbicacionesRef = useRef<RefSelectBaseProps>(null)
+  const [primera_vez, setPrimeraVez] = useState(true)
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { response, refetch } = useServerQuery({
+  const { response, refetch, loading } = useServerQuery({
     action: getUbicaciones,
     propsQuery: {
       queryKey: [QueryKeys.UBICACIONES],
@@ -36,14 +38,21 @@ export default function SelectUbicaciones({
   })
 
   useEffect(() => {
-    refetch()
-    selectUbicacionesRef.current?.changeValue(undefined)
-  }, [almacen_id, refetch])
+    if (!loading && almacen_id) setPrimeraVez(false)
+  }, [loading, almacen_id])
+
+  useEffect(() => {
+    if (!primera_vez) {
+      refetch()
+      selectUbicacionesRef.current?.changeValue(undefined)
+    }
+  }, [almacen_id, refetch, primera_vez])
 
   return (
     <>
       <SelectBase
         ref={selectUbicacionesRef}
+        showSearch
         prefix={
           <FaLocationCrosshairs className={classNameIcon} size={sizeIcon} />
         }
@@ -55,7 +64,16 @@ export default function SelectUbicaciones({
         }))}
         {...props}
       />
-      {showButtonCreate && <ButtonCreateUbicacion />}
+      {showButtonCreate && (
+        <ButtonCreateUbicacion
+          onSuccess={res =>
+            iterarChangeValue({
+              refObject: selectUbicacionesRef,
+              value: res.id,
+            })
+          }
+        />
+      )}
     </>
   )
 }

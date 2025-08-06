@@ -81,7 +81,6 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
     if (query.data?.error) {
       console.warn('🚨 Error:', query.data?.error)
       notification.error({
-        placement: 'bottomRight',
         message: 'Error',
         description: query.data.error.message,
       })

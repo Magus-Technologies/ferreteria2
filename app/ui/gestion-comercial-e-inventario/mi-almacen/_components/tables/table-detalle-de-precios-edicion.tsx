@@ -41,6 +41,18 @@ export default function TableDetalleDePreciosEdicion({
       </style>
       <TableWithTitle
         {...rest}
+        onRowDragEnd={event => {
+          const indexActual = event.overIndex
+          const indexAnterior = event.node.data!.name
+          const unidades_derivadas = form.getFieldValue(
+            'unidades_derivadas'
+          ) as FormListFieldData[]
+          const unidadDerivadaAnterior = unidades_derivadas[indexAnterior]
+          const unidadDerivadaActual = unidades_derivadas[indexActual]
+          unidades_derivadas[indexAnterior] = unidadDerivadaActual
+          unidades_derivadas[indexActual] = unidadDerivadaAnterior
+          form.setFieldValue('unidades_derivadas', unidades_derivadas)
+        }}
         id='g-c-e-i.mi-almacen.detalle-de-precios-edicion'
         title='Detalle de precios'
         columnDefs={useColumnsDetalleDePreciosEdicion({ remove, form })}

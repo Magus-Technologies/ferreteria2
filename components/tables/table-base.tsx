@@ -46,7 +46,6 @@ export default function TableBase<T>({
   rowSelection = true,
   columnDefs,
   withNumberColumn = true,
-  onDragStopped,
   ...props
 }: TableBaseProps<T>) {
   const { columnTypes } = useColumnTypes()
@@ -65,11 +64,6 @@ export default function TableBase<T>({
       <AgGridReact<T>
         {...props}
         ref={ref}
-        onDragStopped={event => {
-          if (props.rowDragManaged && withNumberColumn)
-            event.api.refreshCells({ force: true })
-          onDragStopped?.(event)
-        }}
         theme={themeTable.withParams(paramsOfThemeTable ?? {})}
         columnTypes={columnTypes}
         localeText={AG_GRID_LOCALE_ES}

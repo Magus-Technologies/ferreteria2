@@ -1,6 +1,17 @@
+enum TipoDocumento {
+    T01 @map("01")
+    T03 @map("03")
+    XX  @map("xx")
+}
+
 model Compra {
     id         Int @id @default(autoincrement())
     almacen_id Int
+
+    tipo_documento TipoDocumento @default(XX)
+    serie          String
+    numero         Int
+    descripcion    String?
 
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
@@ -9,6 +20,7 @@ model Compra {
     productos_por_unidad_derivada ProductoAlmacenUnidadDerivadaCompra[]
     productos_por_almacen         ProductoAlmacenCompra[]
 
+    @@unique([tipo_documento, serie, numero])
     @@index([created_at])
 }
 
@@ -22,6 +34,8 @@ model ProductoAlmacenUnidadDerivadaCompra {
 
     compra                           Compra                        @relation(fields: [compra_id], references: [id])
     producto_almacen_unidad_derivada ProductoAlmacenUnidadDerivada @relation(fields: [producto_almacen_unidad_derivada_id], references: [id])
+
+    @@unique([compra_id, producto_almacen_unidad_derivada_id])
 }
 
 model ProductoAlmacenCompra {
@@ -34,4 +48,6 @@ model ProductoAlmacenCompra {
 
     producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id])
     producto_almacen_id Int
+
+    @@unique([compra_id, producto_almacen_id])
 }

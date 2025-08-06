@@ -25,7 +25,7 @@ export default function TableDetalleDePrecios({
       {...rest}
       id='g-c-e-i.mi-almacen.detalle-de-precios'
       title='Detalle de precios'
-      columnDefs={useColumnsDetalleDePrecios({ data })}
+      columnDefs={useColumnsDetalleDePrecios()}
       rowData={data}
     />
   )

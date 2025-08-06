@@ -48,7 +48,7 @@ export default function FormSectionLote({ form }: FormSectionLoteProps) {
         <LabelBase label='Stock Entero:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
             propsForm={{
-              name: 'stock_entero',
+              name: ['compra', 'stock_entero'],
             }}
             placeholder='Stock Entero'
             prefix={<FaBox size={15} className='text-cyan-600 mx-1' />}
@@ -57,7 +57,7 @@ export default function FormSectionLote({ form }: FormSectionLoteProps) {
         <LabelBase label='Stock Fraccion:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
             propsForm={{
-              name: 'stock_fraccion',
+              name: ['compra', 'stock_fraccion'],
             }}
             placeholder='Stock Fraccion'
             prefix={<FaBox size={15} className='text-cyan-600 mx-1' />}

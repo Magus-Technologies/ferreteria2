@@ -1,11 +1,13 @@
 'use client'
 
 import { FaWeightHanging } from 'react-icons/fa'
-import SelectBase, { SelectBaseProps } from './select-base'
+import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { getUnidadesMedida } from '~/app/_actions/unidadMedida'
 import ButtonCreateUnidadMedida from '../buttons/button-create-unidad-medida'
+import { useRef } from 'react'
+import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectUnidadDeMedidaProps extends SelectBaseProps {
   classNameIcon?: string
@@ -21,6 +23,8 @@ export default function SelectUnidadDeMedida({
   showButtonCreate = false,
   ...props
 }: SelectUnidadDeMedidaProps) {
+  const selectUnidadDeMedidaRef = useRef<RefSelectBaseProps>(null)
+
   const { response } = useServerQuery({
     action: getUnidadesMedida,
     propsQuery: {
@@ -28,10 +32,12 @@ export default function SelectUnidadDeMedida({
     },
     params: undefined,
   })
+
   return (
     <>
       <SelectBase
-        {...props}
+        ref={selectUnidadDeMedidaRef}
+        showSearch
         prefix={<FaWeightHanging className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
@@ -39,8 +45,18 @@ export default function SelectUnidadDeMedida({
           value: item.id,
           label: item.name,
         }))}
+        {...props}
       />
-      {showButtonCreate && <ButtonCreateUnidadMedida />}
+      {showButtonCreate && (
+        <ButtonCreateUnidadMedida
+          onSuccess={res =>
+            iterarChangeValue({
+              refObject: selectUnidadDeMedidaRef,
+              value: res.id,
+            })
+          }
+        />
+      )}
     </>
   )
 }

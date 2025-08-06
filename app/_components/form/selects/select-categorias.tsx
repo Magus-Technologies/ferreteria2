@@ -1,11 +1,13 @@
 'use client'
 
 import { BiSolidCategoryAlt } from 'react-icons/bi'
-import SelectBase, { SelectBaseProps } from './select-base'
+import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getCategorias } from '~/app/_actions/categoria'
 import ButtonCreateCategoria from '../buttons/button-create-categoria'
+import { useRef } from 'react'
+import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectCategoriasProps extends SelectBaseProps {
   classNameIcon?: string
@@ -21,6 +23,8 @@ export default function SelectCategorias({
   showButtonCreate = false,
   ...props
 }: SelectCategoriasProps) {
+  const selectCategoriasRef = useRef<RefSelectBaseProps>(null)
+
   const { response } = useServerQuery({
     action: getCategorias,
     propsQuery: {
@@ -28,10 +32,12 @@ export default function SelectCategorias({
     },
     params: undefined,
   })
+
   return (
     <>
       <SelectBase
-        {...props}
+        ref={selectCategoriasRef}
+        showSearch
         prefix={
           <BiSolidCategoryAlt className={classNameIcon} size={sizeIcon} />
         }
@@ -41,8 +47,18 @@ export default function SelectCategorias({
           value: item.id,
           label: item.name,
         }))}
+        {...props}
       />
-      {showButtonCreate && <ButtonCreateCategoria />}
+      {showButtonCreate && (
+        <ButtonCreateCategoria
+          onSuccess={res =>
+            iterarChangeValue({
+              refObject: selectCategoriasRef,
+              value: res.id,
+            })
+          }
+        />
+      )}
     </>
   )
 }

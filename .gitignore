@@ -43,3 +43,6 @@ next-env.d.ts
 # prisma
 /lib/generated/prisma
 /prisma/migrations
+
+# uploads
+/public/uploads

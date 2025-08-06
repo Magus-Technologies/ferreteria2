@@ -4,6 +4,7 @@ export enum permissions {
   GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX = 'gestion-comercial-e-inventario.mi-almacen.index',
   // Gestion Comercial e Inventario - Mi Almacén
   PRODUCTO_BASE = 'producto',
+  PRODUCTO_LISTADO = 'producto.listado',
   PRODUCTO_CREATE = 'producto.create',
   PRODUCTO_UPDATE = 'producto.update',
   PRODUCTO_DUPLICAR = 'producto.duplicar',
@@ -51,6 +52,13 @@ export enum permissions {
   UBICACION_CREATE = 'ubicacion.create',
   UBICACION_UPDATE = 'ubicacion.update',
   UBICACION_DELETE = 'ubicacion.delete',
+
+  // Unidades Derivadas
+  UNIDAD_DERIVADA_BASE = 'unidad-derivada',
+  UNIDAD_DERIVADA_LISTADO = 'unidad-derivada.listado',
+  UNIDAD_DERIVADA_CREATE = 'unidad-derivada.create',
+  UNIDAD_DERIVADA_UPDATE = 'unidad-derivada.update',
+  UNIDAD_DERIVADA_DELETE = 'unidad-derivada.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -61,6 +69,7 @@ type PermisosValidos = Exclude<
   | permissions.UNIDAD_MEDIDA_BASE
   | permissions.CATEGORIA_BASE
   | permissions.UBICACION_BASE
+  | permissions.UNIDAD_DERIVADA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -68,6 +77,7 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX]:
     'Ver Página Mi Almacén',
 
+  [permissions.PRODUCTO_LISTADO]: 'Ver Listado de Productos',
   [permissions.PRODUCTO_CREATE]: 'Crear Producto',
   [permissions.PRODUCTO_UPDATE]: 'Actualizar Producto',
   [permissions.PRODUCTO_DUPLICAR]: 'Duplicar Producto',
@@ -104,6 +114,11 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.UBICACION_CREATE]: 'Crear Ubicación',
   [permissions.UBICACION_UPDATE]: 'Actualizar Ubicación',
   [permissions.UBICACION_DELETE]: 'Eliminar Ubicación',
+
+  [permissions.UNIDAD_DERIVADA_LISTADO]: 'Ver Listado de Unidades Derivadas',
+  [permissions.UNIDAD_DERIVADA_CREATE]: 'Crear Unidad Derivada',
+  [permissions.UNIDAD_DERIVADA_UPDATE]: 'Actualizar Unidad Derivada',
+  [permissions.UNIDAD_DERIVADA_DELETE]: 'Eliminar Unidad Derivada',
 }
 
 export function getAllPermissions() {

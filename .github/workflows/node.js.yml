@@ -34,5 +34,7 @@ jobs:
       - run: npm i # Cambiar a ci en producción
       - run: npm run build --if-present
       - run: |
+          # Crear symlink solo si no existe
+          [ -L ./public/uploads ] || ln -s /var/ferreteria_uploads ./public/uploads
           pm2 delete ferreteria || true
           pm2 start ecosystem.config.js --only ferreteria --update-env

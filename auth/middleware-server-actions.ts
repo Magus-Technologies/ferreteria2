@@ -10,7 +10,7 @@ export function withAuth<TParams, TData>(
   action: (params: TParams, session: Session) => Promise<ServerResult<TData>>
 ): (params: TParams) => Promise<ServerResult<TData>> {
   return async (params: TParams) => {
-    const session = (await auth()) as Session | null
+    const session = await auth()
 
     if (!session) {
       return {

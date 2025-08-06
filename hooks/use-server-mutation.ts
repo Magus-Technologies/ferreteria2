@@ -38,7 +38,6 @@ export function useServerMutation<TParams, TResult>({
       if (res?.error) {
         console.warn('🚨 Error:', res.error)
         notification.error({
-          placement: 'bottomRight',
           message: 'Error',
           description: res.error.message,
         })
@@ -47,7 +46,6 @@ export function useServerMutation<TParams, TResult>({
       if (queryKey) queryClient.invalidateQueries({ queryKey })
       if (msgSuccess)
         notification.success({
-          placement: 'bottomRight',
           message: 'Operación exitosa',
           description: msgSuccess,
         })

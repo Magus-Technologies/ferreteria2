@@ -10,6 +10,11 @@ import {
   useServerMutation,
 } from '~/hooks/use-server-mutation'
 
+export interface GenericFormWithName {
+  id: number
+  name: string
+}
+
 export interface ModalFormWithNameRef<T extends { name: string }> {
   setFieldValue: FormInstance<T>['setFieldValue']
 }

@@ -4,4 +4,6 @@ export enum QueryKeys {
   UNIDADES_MEDIDA = 'unidades_medida',
   CATEGORIAS = 'categorias',
   UBICACIONES = 'ubicaciones',
+  UNIDADES_DERIVADAS = 'unidades_derivadas',
+  PRODUCTOS = 'productos',
 }

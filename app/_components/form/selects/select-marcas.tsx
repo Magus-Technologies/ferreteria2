@@ -1,11 +1,13 @@
 'use client'
 
 import { useServerQuery } from '~/hooks/use-server-query'
-import SelectBase, { SelectBaseProps } from './select-base'
+import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { TbBrand4Chan } from 'react-icons/tb'
 import { getMarcas } from '~/app/_actions/marca'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonCreateMarca from '../buttons/button-create-marca'
+import { useRef } from 'react'
+import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectMarcasProps extends SelectBaseProps {
   classNameIcon?: string
@@ -21,6 +23,8 @@ export default function SelectMarcas({
   showButtonCreate = false,
   ...props
 }: SelectMarcasProps) {
+  const selectMarcasRef = useRef<RefSelectBaseProps>(null)
+
   const { response } = useServerQuery({
     action: getMarcas,
     propsQuery: {
@@ -28,10 +32,12 @@ export default function SelectMarcas({
     },
     params: undefined,
   })
+
   return (
     <>
       <SelectBase
-        {...props}
+        ref={selectMarcasRef}
+        showSearch
         prefix={<TbBrand4Chan className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
@@ -39,8 +45,18 @@ export default function SelectMarcas({
           value: item.id,
           label: item.name,
         }))}
+        {...props}
       />
-      {showButtonCreate && <ButtonCreateMarca />}
+      {showButtonCreate && (
+        <ButtonCreateMarca
+          onSuccess={res =>
+            iterarChangeValue({
+              refObject: selectMarcasRef,
+              value: res.id,
+            })
+          }
+        />
+      )}
     </>
   )
 }

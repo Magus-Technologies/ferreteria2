@@ -1,6 +1,6 @@
 model Almacen {
     id   Int    @id @default(autoincrement())
-    name String
+    name String @unique
 
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
@@ -45,12 +45,13 @@ model Ubicacion {
     almacen             Almacen           @relation(fields: [almacen_id], references: [id])
     productos_almacenes ProductoAlmacen[]
 
+    @@unique([almacen_id, name])
     @@index([name])
 }
 
 model UnidadDerivada {
     id   Int    @id @default(autoincrement())
-    name String
+    name String @unique
 
     productos_almacenes_unidad_derivada ProductoAlmacenUnidadDerivada[]
 
@@ -66,26 +67,24 @@ model ProductoAlmacenUnidadDerivada {
     unidad_derivada    UnidadDerivada @relation(fields: [unidad_derivada_id], references: [id])
     unidad_derivada_id Int
 
-    factor             Decimal  @db.Decimal(9, 3)
-    precio_principal   Decimal  @db.Decimal(9, 3)
-    comision_principal Decimal? @db.Decimal(9, 3)
+    factor           Decimal  @db.Decimal(9, 3)
+    precio_publico   Decimal  @db.Decimal(9, 3)
+    comision_publico Decimal? @db.Decimal(9, 3)
 
-    precios ProductoAlmacenUnidadDerivadaPrecio[]
+    precio_especial    Decimal? @db.Decimal(9, 3)
+    comision_especial  Decimal? @db.Decimal(9, 3)
+    activador_especial Decimal? @db.Decimal(9, 3)
+
+    precio_minimo    Decimal? @db.Decimal(9, 3)
+    comision_minimo  Decimal? @db.Decimal(9, 3)
+    activador_minimo Decimal? @db.Decimal(9, 3)
+
+    precio_ultimo    Decimal? @db.Decimal(9, 3)
+    comision_ultimo  Decimal? @db.Decimal(9, 3)
+    activador_ultimo Decimal? @db.Decimal(9, 3)
+
     compras ProductoAlmacenUnidadDerivadaCompra[]
 
     @@unique([producto_almacen_id, unidad_derivada_id])
     @@unique([producto_almacen_id, factor])
-}
-
-model ProductoAlmacenUnidadDerivadaPrecio {
-    id                                  Int      @id @default(autoincrement())
-    producto_almacen_unidad_derivada_id Int
-    name                                String
-    precio                              Decimal  @db.Decimal(9, 3)
-    comision                            Decimal? @db.Decimal(9, 3)
-    activador                           Decimal? @db.Decimal(9, 3)
-
-    producto_almacen_unidad_derivada ProductoAlmacenUnidadDerivada @relation(fields: [producto_almacen_unidad_derivada_id], references: [id])
-
-    @@unique([producto_almacen_unidad_derivada_id, name])
 }

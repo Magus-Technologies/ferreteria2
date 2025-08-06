@@ -8,6 +8,7 @@ interface ModalFormProps<T> {
   modalProps?: Omit<ModalProps, 'children'>
   formProps?: Omit<FormBaseProps<T>, 'children'>
   children?: React.ReactNode
+  onCancel?: () => void
 }
 
 export default function ModalForm<T>({
@@ -16,6 +17,7 @@ export default function ModalForm<T>({
   modalProps,
   formProps,
   children,
+  onCancel,
 }: ModalFormProps<T>) {
   const {
     cancelText = 'Cancelar',
@@ -43,6 +45,7 @@ export default function ModalForm<T>({
       onCancel={() => {
         setOpen(false)
         formProps?.form?.resetFields()
+        onCancel?.()
       }}
       destroyOnHidden
       modalRender={dom => <FormBase<T> {...formProps}>{dom}</FormBase>}

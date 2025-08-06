@@ -4,6 +4,7 @@ import { Tooltip } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import FormWithName, {
+  GenericFormWithName,
   ModalFormWithNameRef,
 } from '~/components/modals/modal-form-with-name'
 import usePermission from '~/hooks/use-permission'
@@ -15,10 +16,12 @@ import { createUbicacion } from '~/app/_actions/ubicacion'
 
 interface ButtonCreateUbicacionProps {
   className?: string
+  onSuccess?: (res: GenericFormWithName) => void
 }
 
 export default function ButtonCreateUbicacion({
   className,
+  onSuccess,
 }: ButtonCreateUbicacionProps) {
   const [open, setOpen] = useState(false)
   const formRef = useRef<ModalFormWithNameRef<{
@@ -44,6 +47,7 @@ export default function ButtonCreateUbicacion({
         propsUseServerMutation={{
           action: createUbicacion,
           queryKey: [QueryKeys.UBICACIONES],
+          onSuccess: res => onSuccess?.(res.data!),
           msgSuccess: 'Ubicación creada exitosamente',
         }}
       >

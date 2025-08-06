@@ -25,7 +25,7 @@ export default function FiltersMiAlmacen() {
     <FormBase
       form={form}
       name='filtros-mi-almacen'
-      initialValues={{ estado: 'activo', cs_stock: 'all', cs_comision: 'all' }}
+      initialValues={{ estado: 1, cs_stock: 'all', cs_comision: 'all' }}
       className='w-full'
       onFinish={values =>
         console.log('🚀 ~ file: filters-mi-almacen.tsx:29 ~ values:', values)
