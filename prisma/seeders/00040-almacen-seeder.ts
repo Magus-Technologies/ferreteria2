@@ -23,5 +23,8 @@ export default async function almacenSeeder() {
       },
     },
   ]
-  data.forEach(async item => await prisma.almacen.create({ data: item }))
+
+  for (const item of data) {
+    await prisma.almacen.create({ data: item })
+  }
 }
