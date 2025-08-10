@@ -2,10 +2,11 @@ import { FilterWrapperParams, IAfterGuiAttachedParams } from 'ag-grid-community'
 import { CustomFilterDisplayProps, useGridFilterDisplay } from 'ag-grid-react'
 import { Radio, RadioChangeEvent } from 'antd'
 import { useCallback, useRef } from 'react'
+import { ValorBooleanoString } from '~/lib/constantes'
 
 export default function useFilterBoolean({
-  trueText = 'Activo',
-  falseText = 'Inactivo',
+  trueText = ValorBooleanoString.true,
+  falseText = ValorBooleanoString.false,
   allText = 'Todos',
 }: {
   trueText?: string

@@ -4,7 +4,14 @@ import { AgGridReact } from 'ag-grid-react'
 import { Checkbox, Divider } from 'antd'
 import { CheckboxProps } from 'antd/lib'
 import { GridApi } from 'ag-grid-community'
-import { RefObject, useEffect, useState } from 'react'
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from 'react'
 const CheckboxGroup = Checkbox.Group
 
 export function setVisibilityColumns({
@@ -16,28 +23,38 @@ export function setVisibilityColumns({
 }) {
   const gridColumns = gridApi?.getAllGridColumns() ?? []
   gridApi?.setColumnsVisible(
-    gridColumns.filter(col =>
-      checkedList.includes(col.getColDef().headerName!)
-    ),
-    true
-  )
-  gridApi?.setColumnsVisible(
     gridColumns.filter(
       col => !checkedList.includes(col.getColDef().headerName!)
     ),
     false
   )
+  gridApi?.setColumnsVisible(
+    gridColumns.filter(col =>
+      checkedList.includes(col.getColDef().headerName!)
+    ),
+    true
+  )
+}
+
+export interface SelectColumnsRef {
+  setCheckedList: Dispatch<SetStateAction<string[]>>
+}
+
+interface SelectColumnsProps {
+  defaultColumns: string[]
+  setDefaultColumns: (value: string[] | ((value: string[]) => string[])) => void
+  gridRef: RefObject<AgGridReact | null>
+  children?: React.ReactNode
+  ref?: React.RefObject<SelectColumnsRef | null>
 }
 
 export default function SelectColumns({
   defaultColumns,
   setDefaultColumns,
   gridRef,
-}: {
-  defaultColumns: string[]
-  setDefaultColumns: (value: string[] | ((value: string[]) => string[])) => void
-  gridRef: RefObject<AgGridReact | null>
-}) {
+  children,
+  ref,
+}: SelectColumnsProps) {
   const gridApi = gridRef?.current?.api
   const plainOptions =
     gridApi?.getAllGridColumns()?.map(col => col.getColDef().headerName!) ?? []
@@ -58,6 +75,10 @@ export default function SelectColumns({
     setCheckedList(e.target.checked ? plainOptions : [])
   }
 
+  useImperativeHandle(ref, () => ({
+    setCheckedList,
+  }))
+
   useEffect(() => {
     if (!gridRef.current) return
     setVisibilityColumns({ gridApi, checkedList })
@@ -66,6 +87,7 @@ export default function SelectColumns({
 
   return (
     <>
+      {children}
       <Checkbox
         indeterminate={indeterminate}
         onChange={onCheckAllChange}

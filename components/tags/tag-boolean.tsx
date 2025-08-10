@@ -1,6 +1,7 @@
 import { Tag, TagProps } from 'antd'
 import { FaCheckCircle } from 'react-icons/fa'
 import { FaCircleXmark } from 'react-icons/fa6'
+import { ValorBooleanoString } from '~/lib/constantes'
 
 interface TagBooleanProps
   extends Omit<TagProps, 'color' | 'icon' | 'bordered'> {
@@ -11,8 +12,8 @@ interface TagBooleanProps
 
 export default function TagBoolean({
   booleano,
-  ifIsTrue = 'Activo',
-  ifIsFalse = 'Inactivo',
+  ifIsTrue = ValorBooleanoString.true,
+  ifIsFalse = ValorBooleanoString.false,
   className = '',
   ...props
 }: TagBooleanProps) {

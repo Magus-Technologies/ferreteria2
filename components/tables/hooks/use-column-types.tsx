@@ -1,6 +1,7 @@
 import { ColTypeDef, DoesFilterPassParams } from 'ag-grid-community'
 import useFilterBoolean from './use-filter-boolean'
 import TagBoolean from '~/components/tags/tag-boolean'
+import { ValorBooleanoString } from '~/lib/constantes'
 
 export const doesFilterPass: ({
   model,
@@ -44,7 +45,8 @@ export default function useColumnTypes() {
         component: FilterBoolean,
         doesFilterPass: doesFilterPass,
       },
-      valueFormatter: ({ value }) => (value ? 'Activo' : 'Inactivo'),
+      valueFormatter: ({ value }) =>
+        value ? ValorBooleanoString.true : ValorBooleanoString.false,
       cellRenderer: (params: { value: boolean }) => (
         <div className='h-full flex items-center'>
           <TagBoolean booleano={params.value} className='w-24 ' />

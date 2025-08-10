@@ -14,7 +14,6 @@
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.0.2",
     "@auth/prisma-adapter": "^2.10.0",
-    "@paralleldrive/cuid2": "^2.2.2",
     "@prisma/client": "^6.12.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@react-pdf/renderer": "^4.3.0",
@@ -35,7 +34,8 @@
     "tailwindcss-animated": "^2.0.0",
     "uuid": "^11.1.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "zod": "^4.0.10",
+    "zod": "^3.25.76",
+    "zod-prisma-types": "^3.2.4",
     "zustand": "^5.0.7"
   },
   "devDependencies": {

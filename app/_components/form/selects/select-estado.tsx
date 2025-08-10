@@ -1,3 +1,4 @@
+import { ValorBooleanoString } from '~/lib/constantes'
 import SelectBase, { SelectBaseProps } from './select-base'
 import { FaBoltLightning } from 'react-icons/fa6'
 
@@ -20,8 +21,8 @@ export default function SelectEstado({
       variant={variant}
       placeholder={placeholder}
       options={[
-        { value: 1, label: 'Activo' },
-        { value: 0, label: 'Inactivo' },
+        { value: 1, label: ValorBooleanoString.true },
+        { value: 0, label: ValorBooleanoString.false },
       ]}
     />
   )

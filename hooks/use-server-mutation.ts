@@ -17,9 +17,11 @@ export interface UseMutationActionProps<TParams, TResult> {
   queryKey?: QueryKeys[]
   propsMutation?: Omit<
     UseMutationOptions<ServerResult<TResult>, unknown, TParams>,
-    'mutationFn' | 'onSuccess'
+    'mutationFn' | 'onSuccess' | 'onError'
   >
   msgSuccess?: string
+  showNotificationError?: boolean
+  onErrorControled?: (error: ServerResult<TResult>['error']) => void
 }
 
 export function useServerMutation<TParams, TResult>({
@@ -28,6 +30,8 @@ export function useServerMutation<TParams, TResult>({
   onSuccess,
   propsMutation,
   msgSuccess,
+  showNotificationError = true,
+  onErrorControled,
 }: UseMutationActionProps<TParams, TResult>) {
   const queryClient = useQueryClient()
   const { notification } = App.useApp()
@@ -37,13 +41,18 @@ export function useServerMutation<TParams, TResult>({
     onSuccess: res => {
       if (res?.error) {
         console.warn('🚨 Error:', res.error)
-        notification.error({
-          message: 'Error',
-          description: res.error.message,
-        })
+        if (showNotificationError)
+          notification.error({
+            message: 'Error',
+            description: res.error.message,
+          })
+        onErrorControled?.(res.error)
         return
       }
-      if (queryKey) queryClient.invalidateQueries({ queryKey })
+      if (queryKey)
+        queryKey.forEach(key =>
+          queryClient.invalidateQueries({ queryKey: [key] })
+        )
       if (msgSuccess)
         notification.success({
           message: 'Operación exitosa',

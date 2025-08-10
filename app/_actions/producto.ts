@@ -1,6 +1,5 @@
 'use server'
 
-import { Prisma, Producto } from '@prisma/client'
 import { withAuth } from '~/auth/middleware-server-actions'
 import { ExtendedTransactionClient, prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
@@ -10,7 +9,9 @@ import {
   FormCreateProductoFormatedProps,
   UnidadDerivadaCreateProducto,
 } from '../ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
-import { createId } from '@paralleldrive/cuid2'
+import { Prisma, Producto } from '@prisma/client'
+import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
+import z from 'zod'
 
 async function getProductosWA() {
   try {
@@ -36,7 +37,7 @@ async function getProductosWA() {
       },
     })
 
-    return { data: JSON.parse(JSON.stringify(items)) }
+    return { data: JSON.parse(JSON.stringify(items)) as typeof items }
   } catch (error) {
     return errorFormated(error)
   }
@@ -56,16 +57,10 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
             compra,
             unidades_derivadas,
             producto_almacen,
-            cod_producto,
             ...dataProduct
           } = data
 
-          // Crear el producto
-          const producto = await crearProducto({
-            dataProduct,
-            cod_producto,
-            db,
-          })
+          const producto = await db.producto.create({ data: dataProduct })
 
           // Crear el producto en el almacen
           const { productoAlmacenUnidadDerivada, productoAlmacen } =
@@ -138,37 +133,6 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
 }
 export const createProducto = withAuth(createProductoWA)
 
-async function crearProducto({
-  dataProduct,
-  cod_producto,
-  db,
-}: {
-  dataProduct: Omit<
-    Producto,
-    | 'id'
-    | 'created_at'
-    | 'updated_at'
-    | 'cod_producto'
-    | 'img'
-    | 'ficha_tecnica'
-  >
-  cod_producto?: string | null
-  db: ExtendedTransactionClient
-}) {
-  const dataProductFormated: Omit<
-    Producto,
-    'id' | 'created_at' | 'updated_at'
-  > = {
-    ...dataProduct,
-    cod_producto: cod_producto || createId(),
-    img: null,
-    ficha_tecnica: null,
-  }
-
-  const item = await db.producto.create({ data: dataProductFormated })
-  return item
-}
-
 async function crearProductoEnAlmacen({
   producto,
   unidades_derivadas,
@@ -224,3 +188,41 @@ async function crearProductoEnAlmacen({
     }
   return { productoAlmacenUnidadDerivada, productoAlmacen }
 }
+
+async function importarProductosWA({ data }: { data: unknown }) {
+  try {
+    const puede = await can(permissions.PRODUCTO_IMPORT)
+    if (!puede) throw new Error('No tienes permiso para importar productos')
+
+    const dataParsed = await z
+      .array(ProductoCreateInputSchema)
+      .superRefine(async (items, ctx) => {
+        const cods = items.map(item => item.cod_producto)
+
+        const existentes = await prisma.producto.findMany({
+          where: { cod_producto: { in: cods } },
+          select: { cod_producto: true },
+        })
+
+        const codsExistentes = new Set(existentes.map(e => e.cod_producto))
+
+        items.forEach((item, index) => {
+          if (codsExistentes.has(item.cod_producto)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `cod_producto duplicado: ${item.cod_producto}`,
+              path: [index, 'cod_producto'],
+            })
+          }
+        })
+      })
+      .parseAsync(data)
+    for (const item of dataParsed) {
+      await prisma.producto.create({ data: item })
+    }
+    return { data: 'ok' }
+  } catch (error) {
+    return errorFormated(error)
+  }
+}
+export const importarProductos = withAuth(importarProductosWA)

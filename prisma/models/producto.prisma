@@ -1,6 +1,6 @@
 model Producto {
     id           Int     @id @default(autoincrement())
-    cod_producto String? @unique @default(cuid())
+    cod_producto String  @unique
     cod_barra    String? @unique
     name         String
     name_ticket  String

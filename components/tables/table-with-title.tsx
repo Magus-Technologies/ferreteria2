@@ -2,15 +2,18 @@
 
 import { AgGridReact } from 'ag-grid-react'
 import TableBase, { TableBaseProps } from './table-base'
-import { useRef } from 'react'
-import ButtonBase from '../buttons/button-base'
+import { useImperativeHandle, useRef } from 'react'
+import ButtonBase, { ButtonBaseProps } from '../buttons/button-base'
 import { exportAGGridDataToJSON, exportAGGridDataToPDF } from '~/utils/ag-grid'
 import { RiFileExcel2Fill } from 'react-icons/ri'
-import { Popover, Tooltip } from 'antd'
+import { Divider, Popover, Tooltip } from 'antd'
 import { FaFilePdf } from 'react-icons/fa6'
 import { PiFilePdfFill } from 'react-icons/pi'
 import { HiMiniViewColumns } from 'react-icons/hi2'
-import SelectColumns, { setVisibilityColumns } from './select-columns'
+import SelectColumns, {
+  SelectColumnsRef,
+  setVisibilityColumns,
+} from './select-columns'
 import { useLocalStorage } from '~/hooks/use-local-storage'
 
 export interface TableWithTitleProps<T> extends TableBaseProps<T> {
@@ -24,6 +27,12 @@ export interface TableWithTitleProps<T> extends TableBaseProps<T> {
   exportExcel?: boolean
   exportPdf?: boolean
   selectColumns?: boolean
+  optionsSelectColumns?: {
+    color?: ButtonBaseProps['color']
+    label: string
+    columns: string[]
+  }[]
+  tableRef?: React.RefObject<AgGridReact<T> | null>
 }
 
 export default function TableWithTitle<T>({
@@ -35,13 +44,19 @@ export default function TableWithTitle<T>({
   selectColumns = true,
   classNames = {},
   className = '',
+  optionsSelectColumns = [],
+  tableRef,
   ...props
 }: TableWithTitleProps<T>) {
-  const tableRef = useRef<AgGridReact<T>>(null)
+  const tableRefInterno = useRef<AgGridReact<T>>(null)
   const [defaultColumns, setDefaultColumns] = useLocalStorage<string[]>(
     `table-columns-${id}`,
     []
   )
+
+  useImperativeHandle(tableRef, () => tableRefInterno.current!)
+
+  const selectColumnsRef = useRef<SelectColumnsRef>(null)
 
   const { titleParent = '' } = classNames
 
@@ -60,8 +75,30 @@ export default function TableWithTitle<T>({
                   <SelectColumns
                     defaultColumns={defaultColumns}
                     setDefaultColumns={setDefaultColumns}
-                    gridRef={tableRef}
-                  />
+                    gridRef={tableRefInterno}
+                    ref={selectColumnsRef}
+                  >
+                    <div className='grid gap-2'>
+                      {optionsSelectColumns.map((option, index) => (
+                        <ButtonBase
+                          onClick={() => {
+                            selectColumnsRef.current?.setCheckedList(
+                              option.columns
+                            )
+                          }}
+                          color={option.color ?? 'info'}
+                          size='sm'
+                          className='!px-3 w-full'
+                          key={index}
+                        >
+                          {option.label}
+                        </ButtonBase>
+                      ))}
+                    </div>
+                    {optionsSelectColumns.length > 0 && (
+                      <Divider className='!my-2' />
+                    )}
+                  </SelectColumns>
                 }
                 trigger='click'
               >
@@ -75,8 +112,8 @@ export default function TableWithTitle<T>({
             <Tooltip title='Exportar a Excel'>
               <ButtonBase
                 onClick={() => {
-                  if (tableRef.current)
-                    exportAGGridDataToJSON(tableRef.current, title)
+                  if (tableRefInterno.current)
+                    exportAGGridDataToJSON(tableRefInterno.current, title)
                 }}
                 color='success'
                 size='md'
@@ -91,8 +128,12 @@ export default function TableWithTitle<T>({
               <Tooltip title='Exportar a PDF Vertical'>
                 <ButtonBase
                   onClick={() => {
-                    if (tableRef.current)
-                      exportAGGridDataToPDF(tableRef.current, title, 'vertical')
+                    if (tableRefInterno.current)
+                      exportAGGridDataToPDF(
+                        tableRefInterno.current,
+                        title,
+                        'vertical'
+                      )
                   }}
                   color='danger'
                   size='md'
@@ -104,9 +145,9 @@ export default function TableWithTitle<T>({
               <Tooltip title='Exportar a PDF Horizontal'>
                 <ButtonBase
                   onClick={() => {
-                    if (tableRef.current)
+                    if (tableRefInterno.current)
                       exportAGGridDataToPDF(
-                        tableRef.current,
+                        tableRefInterno.current,
                         title,
                         'horizontal'
                       )
@@ -123,14 +164,18 @@ export default function TableWithTitle<T>({
         </div>
       </div>
       <TableBase<T>
-        ref={tableRef}
+        ref={tableRefInterno}
         {...props}
         onGridReady={params => {
-          if (defaultColumns.length)
+          if (defaultColumns.length) {
             setVisibilityColumns({
               gridApi: params.api,
               checkedList: defaultColumns,
             })
+            setTimeout(() => {
+              params.api.refreshHeader()
+            }, 100)
+          }
         }}
       />
     </div>

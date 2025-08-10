@@ -6,7 +6,7 @@ import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface FormCodProductoProps {
   form: FormInstance<FormCreateProductoProps>
@@ -14,6 +14,14 @@ interface FormCodProductoProps {
 
 export default function FormCodProducto({ form }: FormCodProductoProps) {
   const [disabled, setDisabled] = useState(true)
+
+  useEffect(() => {
+    const randomCode =
+      Math.random().toString(36).substring(2, 10) +
+      (Math.random() * 10000000).toFixed(0).substring(0, 4)
+    if (disabled) form.setFieldValue('cod_producto', randomCode)
+    else form.setFieldValue('cod_producto', undefined)
+  }, [disabled, form])
 
   return (
     <LabelBase
@@ -27,7 +35,7 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
           name: 'cod_producto',
           rules: [
             {
-              required: !disabled,
+              required: true,
               message: 'Falta el Código del Producto',
             },
           ],
@@ -42,10 +50,7 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
       />
       <CheckboxBase
         defaultChecked
-        onChange={e => {
-          setDisabled(e.target.checked)
-          form.setFieldValue('cod_producto', undefined)
-        }}
+        onChange={e => setDisabled(e.target.checked)}
         className='absolute top-11 left-8'
         style={{
           zoom: 0.6,

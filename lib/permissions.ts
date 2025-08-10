@@ -11,6 +11,7 @@ export enum permissions {
   PRODUCTO_DELETE = 'producto.delete',
   PRODUCTO_INGRESO_CREATE = 'producto.ingreso.create',
   PRODUCTO_SALIDA_CREATE = 'producto.salida.create',
+  PRODUCTO_IMPORT = 'producto.import',
 
   // Facturacion Electronica
   FACTURACION_ELECTRONICA_INDEX = 'facturacion-electronica.index',
@@ -84,6 +85,7 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.PRODUCTO_DELETE]: 'Eliminar Producto',
   [permissions.PRODUCTO_INGRESO_CREATE]: 'Crear Ingreso de Producto',
   [permissions.PRODUCTO_SALIDA_CREATE]: 'Crear Salida de Producto',
+  [permissions.PRODUCTO_IMPORT]: 'Importar Productos',
 
   [permissions.FACTURACION_ELECTRONICA_INDEX]:
     'Ver Página Facturación Electronica',

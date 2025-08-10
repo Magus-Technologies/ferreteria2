@@ -46,8 +46,15 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
 
   const columns: ColDef<TableProductosProps>[] = [
     {
-      headerName: 'Código',
+      headerName: 'Código de Producto',
       field: 'cod_producto',
+      minWidth: 180,
+      filter: true,
+      flex: 2,
+    },
+    {
+      headerName: 'Código de Barra',
+      field: 'cod_barra',
       minWidth: 180,
       filter: true,
       flex: 2,
@@ -90,6 +97,13 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       flex: 2,
     },
     {
+      headerName: 'Ticket',
+      field: 'name_ticket',
+      minWidth: 250,
+      filter: true,
+      flex: 2,
+    },
+    {
       headerName: 'U. Contenidas',
       field: 'unidades_contenidas',
       minWidth: 80,
@@ -99,6 +113,20 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
     {
       headerName: 'Marca',
       field: 'marca.name',
+      minWidth: 80,
+      filter: true,
+      flex: 1,
+    },
+    {
+      headerName: 'Categoria',
+      field: 'categoria.name',
+      minWidth: 80,
+      filter: true,
+      flex: 1,
+    },
+    {
+      headerName: 'Unidad de Medida',
+      field: 'unidad_medida.name',
       minWidth: 80,
       filter: true,
       flex: 1,
@@ -183,11 +211,39 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       flex: 1,
     },
     {
+      headerName: 'S. Max',
+      field: 'stock_max',
+      minWidth: 80,
+      filter: true,
+      flex: 1,
+    },
+    {
       headerName: 'Activo',
       field: 'estado',
       minWidth: 80,
       flex: 1,
       type: 'boolean',
+    },
+    {
+      headerName: 'Acción Técnica',
+      field: 'accion_tecnica',
+      minWidth: 180,
+      filter: true,
+      flex: 1,
+    },
+    {
+      headerName: 'Ruta IMG',
+      field: 'img',
+      minWidth: 180,
+      filter: true,
+      flex: 1,
+    },
+    {
+      headerName: 'Ruta Ficha Técnica',
+      field: 'ficha_tecnica',
+      minWidth: 180,
+      filter: true,
+      flex: 1,
     },
     {
       headerName: 'Acciones',

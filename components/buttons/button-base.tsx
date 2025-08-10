@@ -1,7 +1,8 @@
 import { ButtonHTMLAttributes } from 'react'
 import BottomGradient from '../others/border-bottom-gradient'
 
-interface ButtonBaseProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonBaseProps
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode
   color?: 'default' | 'success' | 'warning' | 'danger' | 'info'
   size?: 'xl' | 'lg' | 'md' | 'sm'
@@ -30,7 +31,7 @@ export default function ButtonBase({
   if (size === 'sm') sizeClass = 'px-5 py-1 text-sm rounded-lg shadow-sm'
   return (
     <button
-      className={`group/btn text-white relative bg bg font-bold transition-all hover:contrast-125 hover:scale-105 active:scale-95 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
+      className={`group/btn text-white relative bg bg font-bold transition-all hover:contrast-125 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${colorClass} ${sizeClass} ${className}`}
       {...props}
     >
       {children}

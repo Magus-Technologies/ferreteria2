@@ -3,7 +3,7 @@ import { auth } from './auth'
 
 export type ServerResult<T> = {
   data?: T
-  error?: { message: string }
+  error?: { message: string; data?: unknown }
 }
 
 export function withAuth<TParams, TData>(
