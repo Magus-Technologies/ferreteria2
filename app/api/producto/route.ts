@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: 'ok' })
   } catch (error) {
-    console.error('🚀 ~ file: route.ts:46 ~ error:', error)
     return NextResponse.json({ error }, { status: 400 })
   }
 }

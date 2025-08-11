@@ -9,13 +9,23 @@ function exportFile<schemaType>({
   obj,
   nameFile,
   schema,
-  allColDefs,
+  colDefs,
 }: {
   obj: Record<string, unknown>[]
   nameFile: string
   schema?: ZodType<schemaType>
-  allColDefs: Column[]
+  colDefs: Column[]
 }) {
+  if (!obj.length) {
+    const objEmpty = colDefs.reduce((acc, col) => {
+      const colDef = col.getColDef()
+      const header = colDef.headerName!
+      acc[header] = null
+      return acc
+    }, {} as Record<string, unknown>)
+    obj.push(objEmpty)
+  }
+
   const ws = utils.json_to_sheet(obj)
 
   const keys = Object.keys(obj[0] || {})
@@ -34,7 +44,7 @@ function exportFile<schemaType>({
     })
     const requiredHeaders = requiredKeys.map(
       key =>
-        allColDefs
+        colDefs
           .find(col => col.getColDef().field?.split('.')[0] === key)
           ?.getColDef().headerName
     )
@@ -112,9 +122,8 @@ export function exportAGGridDataToJSON<schemaType>({
   nameFile: string
   schema?: ZodType<schemaType>
 }) {
-  const { rowData } = getJsonFromAGGrid(gridOptions)
-  const colDefs = gridOptions.api.getAllGridColumns() as Column[]
-  exportFile({ obj: rowData, nameFile, schema, allColDefs: colDefs })
+  const { rowData, colDefs } = getJsonFromAGGrid(gridOptions)
+  exportFile({ obj: rowData, nameFile, schema, colDefs })
 }
 
 export async function exportAGGridDataToPDF(

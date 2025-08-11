@@ -9,7 +9,6 @@ export default function iterarChangeValue({
   value: unknown
 }) {
   let ref = refObject.current
-  let iteracion = 0
   if (typeof ref?.changeValue !== 'function') {
     const interval = setInterval(() => {
       ref = refObject.current
@@ -17,11 +16,6 @@ export default function iterarChangeValue({
         clearInterval(interval)
         ref.changeValue(value)
       }
-      iteracion++
-      console.log(
-        '🚀 ~ file: select-ubicaciones.tsx:71 ~ iteracion:',
-        iteracion
-      )
     }, 100)
   } else {
     ref.changeValue(value)
