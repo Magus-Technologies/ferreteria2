@@ -38,6 +38,7 @@ export default function TableProductos() {
           <InputImport
             className='!ml-4'
             tableRef={tableRef}
+            schema={ProductoCreateInputSchema}
             propsUseServerMutation={{
               action: importarProductos,
               msgSuccess: 'Productos importados exitosamente',

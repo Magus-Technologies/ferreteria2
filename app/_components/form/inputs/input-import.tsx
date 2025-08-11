@@ -11,17 +11,23 @@ import {
   UseMutationActionProps,
   useServerMutation,
 } from '~/hooks/use-server-mutation'
-import { ZodIssue } from 'zod'
+import {
+  ZodFirstPartyTypeKind,
+  ZodIssue,
+  ZodObjectDef,
+  ZodRawShape,
+  ZodType,
+  ZodTypeAny,
+} from 'zod'
 import { EstadoLabel, ValorBooleanoString } from '~/lib/constantes'
 
 function setNestedValue(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: any,
   path: string,
-  value: string
+  value: unknown
 ) {
-  let val: string | number | boolean | undefined =
-    !isNaN(Number(value)) && value.trim() !== '' ? Number(value) : value
+  let val = value
   if (path === EstadoLabel)
     val = value ? value === ValorBooleanoString.true : undefined
   const keys = path.split('.')
@@ -41,25 +47,62 @@ function setNestedValue(
   }
 }
 
-function transformDataXLSXtoPrismaCreate(
-  columns: { headerName?: string; field?: string }[],
-  data: Record<string, string>[]
-) {
+function getBaseType(type: ZodTypeAny) {
+  // Quita optional y nullable hasta llegar al tipo base
+  while (
+    type._def.typeName === ZodFirstPartyTypeKind.ZodOptional ||
+    type._def.typeName === ZodFirstPartyTypeKind.ZodNullable
+  ) {
+    type = type._def.innerType
+  }
+  return type
+}
+
+function transformDataXLSXtoPrismaCreate<schemaType>({
+  columnas,
+  data,
+  schema,
+}: {
+  columnas: { headerName?: string; field?: string }[]
+  data: Record<string, unknown>[]
+  schema: ZodType<schemaType>
+}) {
+  const schemaShape = (schema._def as ZodObjectDef<ZodRawShape>).shape()
+
   return data.map(row => {
     const newRow = {}
-    columns.forEach(({ headerName, field }) => {
+    columnas.forEach(({ headerName, field }) => {
       if (!headerName || !field) return
       const cellValue = row[headerName]
-      setNestedValue(newRow, field, cellValue)
+
+      let finalValue = cellValue
+      const schemaField = schemaShape[field]
+      if (schemaField) {
+        const baseType = getBaseType(schemaField)
+        const typeName = baseType._def.typeName
+
+        if (typeName === ZodFirstPartyTypeKind.ZodString && cellValue != null) {
+          finalValue = String(cellValue)
+        } else if (
+          typeName === ZodFirstPartyTypeKind.ZodNumber &&
+          cellValue != null
+        ) {
+          const parsed = Number(cellValue)
+          finalValue = isNaN(parsed) ? cellValue : parsed
+        }
+      }
+
+      setNestedValue(newRow, field, finalValue)
     })
     return newRow
   })
 }
 
-interface InputImportProps<TParams, TResult>
+interface InputImportProps<TParams, TResult, schemaType>
   extends Omit<UploadProps, 'action'> {
   tableRef: RefObject<AgGridReact | null>
   propsUseServerMutation: UseMutationActionProps<TParams, TResult>
+  schema: ZodType<schemaType>
 }
 
 function useInputImport<TParams, TResult>({
@@ -121,12 +164,14 @@ function useInputImport<TParams, TResult>({
     },
   })
 
-  async function handleImport({
+  async function handleImport<schemaType>({
     gridApi,
     file,
+    schema,
   }: {
     gridApi: AgGridReact['api']
     file: File
+    schema: ZodType<schemaType>
   }) {
     try {
       setLoading(true)
@@ -143,7 +188,11 @@ function useInputImport<TParams, TResult>({
       const ws = wb.Sheets[wb.SheetNames[0]]
       const data = utils.sheet_to_json(ws) as Record<string, string>[]
 
-      const newData = transformDataXLSXtoPrismaCreate(columnas, data)
+      const newData = transformDataXLSXtoPrismaCreate({
+        columnas,
+        data,
+        schema,
+      })
       execute({ data: newData } as TParams)
     } catch (error) {
       console.error('Error al importar:', error)
@@ -159,11 +208,12 @@ function useInputImport<TParams, TResult>({
   return { handleImport, loading }
 }
 
-export default function InputImport<TParams, TResult>({
+export default function InputImport<TParams, TResult, schemaType>({
   tableRef,
   propsUseServerMutation,
+  schema,
   ...props
-}: InputImportProps<TParams, TResult>) {
+}: InputImportProps<TParams, TResult, schemaType>) {
   const { handleImport, loading } = useInputImport({
     tableRef,
     propsUseServerMutation,
@@ -185,7 +235,7 @@ export default function InputImport<TParams, TResult>({
           const originFileObj = file as unknown as File
           if (!originFileObj) throw new Error('No hay archivo para importar')
 
-          handleImport({ gridApi, file: originFileObj })
+          handleImport({ gridApi, file: originFileObj, schema })
         } catch (error: Error | unknown) {
           notification.error({
             message: 'Error al importar',
