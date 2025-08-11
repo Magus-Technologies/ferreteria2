@@ -193,7 +193,7 @@ function useInputImport<TParams, TResult>({
         data,
         schema,
       })
-      execute({ data: newData } as TParams)
+      await execute({ data: newData } as TParams)
     } catch (error) {
       console.error('Error al importar:', error)
       notification.error({
