@@ -2,7 +2,7 @@ import { App, Upload } from 'antd'
 import { UploadProps } from 'antd/lib'
 import { FaCloudUploadAlt } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
-import { read, utils } from 'xlsx'
+import { read, utils } from 'xlsx-js-style'
 import { AgGridReact } from 'ag-grid-react'
 import { RefObject, useState } from 'react'
 import { Column } from 'ag-grid-community'
@@ -20,9 +20,10 @@ function setNestedValue(
   path: string,
   value: string
 ) {
-  let val: string | number | boolean =
+  let val: string | number | boolean | undefined =
     !isNaN(Number(value)) && value.trim() !== '' ? Number(value) : value
-  if (path === EstadoLabel) val = val === ValorBooleanoString.true
+  if (path === EstadoLabel)
+    val = value ? value === ValorBooleanoString.true : undefined
   const keys = path.split('.')
   if (keys.length === 1) {
     obj[path] = val
@@ -130,8 +131,8 @@ function useInputImport<TParams, TResult>({
     try {
       setLoading(true)
 
-      const colDefsPrev = gridApi.getAllGridColumns() as Column[]
-      const columnas = colDefsPrev.map(col => ({
+      const colDefs = gridApi.getAllGridColumns() as Column[]
+      const columnas = colDefs.map(col => ({
         headerName: col.getColDef().headerName,
         field: col.getColDef().field,
       }))

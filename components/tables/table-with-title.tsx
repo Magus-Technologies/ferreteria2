@@ -15,8 +15,10 @@ import SelectColumns, {
   setVisibilityColumns,
 } from './select-columns'
 import { useLocalStorage } from '~/hooks/use-local-storage'
+import { ZodType } from 'zod'
 
-export interface TableWithTitleProps<T> extends TableBaseProps<T> {
+export interface TableWithTitleProps<T, schemaType = unknown>
+  extends TableBaseProps<T> {
   id: string
   title: string
   extraTitle?: React.ReactNode
@@ -33,9 +35,10 @@ export interface TableWithTitleProps<T> extends TableBaseProps<T> {
     columns: string[]
   }[]
   tableRef?: React.RefObject<AgGridReact<T> | null>
+  schema?: ZodType<schemaType>
 }
 
-export default function TableWithTitle<T>({
+export default function TableWithTitle<T, schemaType>({
   id,
   title,
   extraTitle,
@@ -46,8 +49,9 @@ export default function TableWithTitle<T>({
   className = '',
   optionsSelectColumns = [],
   tableRef,
+  schema,
   ...props
-}: TableWithTitleProps<T>) {
+}: TableWithTitleProps<T, schemaType>) {
   const tableRefInterno = useRef<AgGridReact<T>>(null)
   const [defaultColumns, setDefaultColumns] = useLocalStorage<string[]>(
     `table-columns-${id}`,
@@ -113,7 +117,11 @@ export default function TableWithTitle<T>({
               <ButtonBase
                 onClick={() => {
                   if (tableRefInterno.current)
-                    exportAGGridDataToJSON(tableRefInterno.current, title)
+                    exportAGGridDataToJSON({
+                      gridOptions: tableRefInterno.current,
+                      nameFile: title,
+                      schema,
+                    })
                 }}
                 color='success'
                 size='md'

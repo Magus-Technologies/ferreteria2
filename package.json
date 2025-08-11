@@ -33,7 +33,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animated": "^2.0.0",
     "uuid": "^11.1.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "xlsx-js-style": "^1.2.0",
     "zod": "^3.25.76",
     "zod-prisma-types": "^3.2.4",
     "zustand": "^5.0.7"

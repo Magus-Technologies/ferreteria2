@@ -11,6 +11,7 @@ import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
+import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
 
 export default function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)
@@ -31,6 +32,7 @@ export default function TableProductos() {
       id='g-c-e-i.mi-almacen.productos'
       tableRef={tableRef}
       title='Productos'
+      schema={ProductoCreateInputSchema}
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
           <InputImport

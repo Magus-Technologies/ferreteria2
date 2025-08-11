@@ -23,9 +23,9 @@ export function setVisibilityColumns({
 }) {
   const gridColumns = gridApi?.getAllGridColumns() ?? []
   gridApi?.setColumnsVisible(
-    gridColumns.filter(
-      col => !checkedList.includes(col.getColDef().headerName!)
-    ),
+    gridColumns.filter(col => {
+      return !checkedList.includes(col.getColDef().headerName!)
+    }),
     false
   )
   gridApi?.setColumnsVisible(

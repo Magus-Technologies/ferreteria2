@@ -75,6 +75,7 @@ export default function TableBase<T>({
             ? [
                 {
                   headerName: '#',
+                  colId: '#',
                   width: props.rowDragManaged ? 65 : 50,
                   valueGetter: (params: ValueGetterParams<T>) =>
                     (params.node?.rowIndex ?? 0) + 1,

@@ -1,11 +1,57 @@
 import { AgGridReact } from 'ag-grid-react'
-import { utils, writeFile } from 'xlsx'
+import { utils, writeFile } from 'xlsx-js-style'
 import { Column, ValueFormatterParams } from 'ag-grid-community'
 import { pdf } from '@react-pdf/renderer'
 import TablePdfAgGrid from '../components/pdf/table-pdf-ag-grid'
+import { ZodObjectDef, ZodRawShape, ZodType } from 'zod'
 
-function exportFile(obj: Record<string, unknown>[], nameFile: string) {
+function exportFile<schemaType>({
+  obj,
+  nameFile,
+  schema,
+  allColDefs,
+}: {
+  obj: Record<string, unknown>[]
+  nameFile: string
+  schema?: ZodType<schemaType>
+  allColDefs: Column[]
+}) {
   const ws = utils.json_to_sheet(obj)
+
+  const keys = Object.keys(obj[0] || {})
+  keys.forEach((_, index) => {
+    const cellRef = utils.encode_cell({ r: 0, c: index })
+    ws[cellRef].s = {
+      font: { bold: true },
+    }
+  })
+
+  if (schema) {
+    const schemaShape = (schema._def as ZodObjectDef<ZodRawShape>).shape()
+    const requiredKeys = Object.keys(schemaShape).filter(key => {
+      const field = schemaShape[key]
+      return !field.isOptional()
+    })
+    const requiredHeaders = requiredKeys.map(
+      key =>
+        allColDefs
+          .find(col => col.getColDef().field?.split('.')[0] === key)
+          ?.getColDef().headerName
+    )
+    keys.forEach((key, index) => {
+      if (requiredHeaders.includes(key)) {
+        const cellRef = utils.encode_cell({ r: 0, c: index })
+        ws[cellRef].s.font.color = { rgb: 'FF0000' }
+      }
+    })
+  }
+
+  ws['!cols'] = keys.map(key => {
+    const colValues = [key, ...obj.map(row => row[key] ?? '')]
+    const maxLength = Math.max(...colValues.map(v => String(v).length))
+    return { wch: maxLength + 1 }
+  })
+
   const wb = utils.book_new()
   utils.book_append_sheet(wb, ws, 'Data')
   writeFile(wb, `${nameFile}.xlsx`)
@@ -57,12 +103,18 @@ export function getJsonFromAGGrid(gridOptions: AgGridReact) {
   return { rowData, colDefs }
 }
 
-export function exportAGGridDataToJSON(
-  gridOptions: AgGridReact,
+export function exportAGGridDataToJSON<schemaType>({
+  gridOptions,
+  nameFile,
+  schema,
+}: {
+  gridOptions: AgGridReact
   nameFile: string
-) {
+  schema?: ZodType<schemaType>
+}) {
   const { rowData } = getJsonFromAGGrid(gridOptions)
-  exportFile(rowData, nameFile)
+  const colDefs = gridOptions.api.getAllGridColumns() as Column[]
+  exportFile({ obj: rowData, nameFile, schema, allColDefs: colDefs })
 }
 
 export async function exportAGGridDataToPDF(
