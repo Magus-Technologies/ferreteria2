@@ -35,6 +35,9 @@ async function getProductosWA() {
         categoria: true,
         unidad_medida: true,
       },
+      orderBy: {
+        name: 'asc',
+      },
     })
 
     return { data: JSON.parse(JSON.stringify(items)) as typeof items }

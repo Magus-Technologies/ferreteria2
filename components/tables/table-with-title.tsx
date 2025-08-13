@@ -67,7 +67,9 @@ export default function TableWithTitle<T, schemaType>({
   return (
     <div className={`flex flex-col gap-2 size-full ${className}`}>
       <div className='flex items-center justify-between gap-2'>
-        <div className={`font-semibold text-slate-700 text-xl ${titleParent}`}>
+        <div
+          className={`font-semibold text-slate-700 text-xl flex items-center gap-4 ${titleParent}`}
+        >
           {title}
           {extraTitle}
         </div>

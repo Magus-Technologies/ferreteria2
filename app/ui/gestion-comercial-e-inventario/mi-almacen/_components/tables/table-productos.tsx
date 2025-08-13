@@ -12,6 +12,7 @@ import { AgGridReact } from 'ag-grid-react'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
+import InputUploadMasivo from '../inputs/input-upload-masivo'
 
 export default function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)
@@ -35,21 +36,34 @@ export default function TableProductos() {
       schema={ProductoCreateInputSchema}
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
-          <InputImport
-            className='!ml-4'
-            tableRef={tableRef}
-            schema={ProductoCreateInputSchema}
-            propsUseServerMutation={{
-              action: importarProductos,
-              msgSuccess: 'Productos importados exitosamente',
-              queryKey: [
-                QueryKeys.PRODUCTOS,
-                QueryKeys.MARCAS,
-                QueryKeys.CATEGORIAS,
-                QueryKeys.UNIDADES_MEDIDA,
-              ],
-            }}
-          />
+          <>
+            <InputImport
+              tableRef={tableRef}
+              schema={ProductoCreateInputSchema}
+              propsUseServerMutation={{
+                action: importarProductos,
+                msgSuccess: 'Productos importados exitosamente',
+                queryKey: [
+                  QueryKeys.PRODUCTOS,
+                  QueryKeys.MARCAS,
+                  QueryKeys.CATEGORIAS,
+                  QueryKeys.UNIDADES_MEDIDA,
+                ],
+              }}
+            />
+            <InputUploadMasivo
+              accept='image/*'
+              buttonProps={{ color: 'warning' }}
+              tipo='img'
+              buttonTitle='Subir Imágenes'
+            />
+            <InputUploadMasivo
+              accept='application/pdf'
+              buttonProps={{ color: 'danger' }}
+              tipo='ficha_tecnica'
+              buttonTitle='Subir Fichas Técnicas'
+            />
+          </>
         )
       }
       columnDefs={useColumnsProductos({ almacen_id })}
