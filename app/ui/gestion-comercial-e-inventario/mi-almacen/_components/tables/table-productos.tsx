@@ -101,8 +101,6 @@ export default function TableProductos() {
                   'S. Max',
                   'Activo',
                   'Acción Técnica',
-                  'Ruta IMG',
-                  'Ruta Ficha Técnica',
                 ],
               },
             ]

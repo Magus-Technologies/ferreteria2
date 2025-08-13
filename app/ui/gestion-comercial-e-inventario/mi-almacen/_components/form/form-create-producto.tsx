@@ -211,19 +211,13 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
               <InputNumberBase
                 propsForm={{
                   name: 'stock_max',
-                  rules: [
-                    {
-                      required: true,
-                      message: 'Falta el Stock Máximo',
-                    },
-                  ],
                 }}
                 min={0}
                 step={1}
                 precision={0}
                 placeholder='Stock Máximo'
                 prefix={
-                  <AiFillAlert size={15} className='text-rose-700 mx-1' />
+                  <AiFillAlert size={15} className='text-cyan-600 mx-1' />
                 }
               />
             </LabelBase>
