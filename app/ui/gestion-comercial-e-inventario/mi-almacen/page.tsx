@@ -31,7 +31,7 @@ export default async function MiAlmacen() {
             <TableUltimasComprasIngresadas />
           </div>
           <div className='row-start-6 row-end-8'>
-            <TableDetalleDePrecios data={[]} />
+            <TableDetalleDePrecios />
           </div>
         </div>
         <div className='flex flex-col items-center justify-around gap-8'>

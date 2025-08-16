@@ -13,10 +13,16 @@ import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
 import InputUploadMasivo from '../inputs/input-upload-masivo'
+import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
+import { importarUbicaciones } from '~/app/_actions/ubicacion'
 
 export default function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
+  const setProductoSeleccionado = useStoreProductoSeleccionado(
+    store => store.setProducto
+  )
 
   const can = usePermission()
 
@@ -28,18 +34,72 @@ export default function TableProductos() {
     params: undefined,
   })
 
+  type ResponseItem = NonNullable<typeof response>[number]
+
   return (
-    <TableWithTitle
+    <TableWithTitle<ResponseItem>
       id='g-c-e-i.mi-almacen.productos'
+      onSelectionChanged={({ selectedNodes }) =>
+        setProductoSeleccionado(selectedNodes?.[0].data as ResponseItem)
+      }
       tableRef={tableRef}
       title='Productos'
       schema={ProductoCreateInputSchema}
+      headersRequired={['Ubicación en Almacén']}
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
           <>
             <InputImport
               tableRef={tableRef}
               schema={ProductoCreateInputSchema}
+              columnasExtra={[
+                {
+                  headerName: 'producto_en_almacenes',
+                  field: 'producto_en_almacenes',
+                },
+              ]}
+              preProcessData={async data => {
+                if (!almacen_id) throw new Error('No se selecciono un almacén')
+
+                if (data.some(item => !item['Ubicación en Almacén']))
+                  throw new Error(
+                    'Todos los productos deben tener una ubicación obligatoriamente'
+                  )
+
+                const ubicaciones = await importarUbicaciones(
+                  data.map(item => ({
+                    name: item['Ubicación en Almacén'] as string,
+                    almacen_id,
+                  }))
+                )
+
+                if (!ubicaciones.data)
+                  throw new Error('No se encontraron ubicaciones')
+
+                const newData = data.map(item => {
+                  const {
+                    'Stock Fracción en Almacén': stock_fraccion,
+                    'Costo en Almacén': costo,
+                    'Ubicación en Almacén': ubicacion,
+                    ...rest
+                  } = item
+                  return {
+                    ...rest,
+                    producto_en_almacenes: {
+                      create: {
+                        stock_fraccion,
+                        costo,
+                        ubicacion_id: ubicaciones.data!.find(
+                          item => item.name === ubicacion
+                        )!.id,
+                        almacen_id,
+                      },
+                    },
+                  }
+                })
+
+                return newData
+              }}
               propsUseServerMutation={{
                 action: importarProductos,
                 msgSuccess: 'Productos importados exitosamente',
@@ -97,10 +157,15 @@ export default function TableProductos() {
                   'Marca',
                   'Categoria',
                   'Unidad de Medida',
+                  'Ubicación en Almacén',
+                  'Stock Fracción en Almacén',
+                  'Costo en Almacén',
                   'S. Min',
                   'S. Max',
                   'Activo',
                   'Acción Técnica',
+                  'Ruta IMG',
+                  'Ruta Ficha Técnica',
                 ],
               },
             ]

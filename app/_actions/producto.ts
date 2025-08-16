@@ -10,7 +10,11 @@ import {
   UnidadDerivadaCreateProducto,
 } from '../ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
 import { Prisma, Producto } from '@prisma/client'
-import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
+import {
+  ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema,
+  ProductoCreateInputSchema,
+  ProductoUncheckedCreateInputSchema,
+} from '~/prisma/generated/zod'
 import z from 'zod'
 
 async function getProductosWA() {
@@ -29,6 +33,7 @@ async function getProductosWA() {
               },
             },
             almacen: true,
+            ubicacion: true,
           },
         },
         marca: true,
@@ -63,7 +68,10 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
             ...dataProduct
           } = data
 
-          const producto = await db.producto.create({ data: dataProduct })
+          const dataProductParsed =
+            ProductoUncheckedCreateInputSchema.parse(dataProduct)
+
+          const producto = await db.producto.create({ data: dataProductParsed })
 
           // Crear el producto en el almacen
           const { productoAlmacenUnidadDerivada, productoAlmacen } =
@@ -81,12 +89,12 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
               .mul(producto.unidades_contenidas)
               .add(compra.stock_fraccion || 0)
 
-            const compraCosto =
-              unidades_derivadas.find(
-                item =>
-                  item.unidad_derivada_id ===
-                  productoAlmacenUnidadDerivada.unidad_derivada_id
-              )?.costo || 0
+            const unidad_derivada = unidades_derivadas.find(
+              item =>
+                item.unidad_derivada_id ===
+                productoAlmacenUnidadDerivada.unidad_derivada_id
+            )!
+            const compraCosto = unidad_derivada.costo
 
             await prisma.compra.createPrimeraCompra(
               {
@@ -105,7 +113,9 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
                 productos_por_almacen: [
                   {
                     producto_almacen_id: productoAlmacen.id,
-                    costo: new Prisma.Decimal(compraCosto),
+                    costo: new Prisma.Decimal(compraCosto).div(
+                      unidad_derivada.factor
+                    ),
                   },
                 ],
               },
@@ -163,11 +173,14 @@ async function crearProductoEnAlmacen({
   await db.productoAlmacenUnidadDerivada.createMany({
     data: unidades_derivadas.map(item => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { costo, ...rest } = item
-      return {
+      const { costo, p_venta, ganancia, ...rest } = item
+      const data = {
         producto_almacen_id: productoAlmacen.id,
         ...rest,
       }
+      const dataParsed =
+        ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema.parse(data)
+      return dataParsed
     }),
   })
 
@@ -197,31 +210,43 @@ async function importarProductosWA({ data }: { data: unknown }) {
     const puede = await can(permissions.PRODUCTO_IMPORT)
     if (!puede) throw new Error('No tienes permiso para importar productos')
 
-    const dataParsed = await z
-      .array(ProductoCreateInputSchema)
-      .superRefine(async (items, ctx) => {
-        const cods = items.map(item => item.cod_producto)
-
-        const existentes = await prisma.producto.findMany({
-          where: { cod_producto: { in: cods } },
-          select: { cod_producto: true },
-        })
-
-        const codsExistentes = new Set(existentes.map(e => e.cod_producto))
-
-        items.forEach((item, index) => {
-          if (codsExistentes.has(item.cod_producto)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `cod_producto duplicado: ${item.cod_producto}`,
-              path: [index, 'cod_producto'],
-            })
-          }
-        })
-      })
-      .parseAsync(data)
+    const dataParsed = z.array(ProductoCreateInputSchema).parse(data)
     for (const item of dataParsed) {
-      await prisma.producto.create({ data: item })
+      const { producto_en_almacenes, ...restProducto } = item
+      const producto_almacen = producto_en_almacenes!.create! as Omit<
+        Prisma.ProductoAlmacenUncheckedCreateInput,
+        'producto_id'
+      >
+      const producto_almacen_costo_formated = {
+        ...producto_almacen,
+        costo:
+          Number(producto_almacen.costo) /
+          Number(restProducto.unidades_contenidas),
+      }
+
+      const producto_upsert: Prisma.ProductoUpsertArgs = {
+        where: {
+          cod_producto: restProducto.cod_producto,
+        },
+        create: restProducto,
+        update: restProducto,
+      }
+      const productoUpserted = await prisma.producto.upsert(producto_upsert)
+
+      const producto_almacen_upsert: Prisma.ProductoAlmacenUpsertArgs = {
+        where: {
+          producto_id_almacen_id: {
+            producto_id: productoUpserted.id,
+            almacen_id: producto_almacen_costo_formated.almacen_id,
+          },
+        },
+        create: {
+          producto_id: productoUpserted.id,
+          ...producto_almacen_costo_formated,
+        },
+        update: producto_almacen_costo_formated,
+      }
+      await prisma.productoAlmacen.upsert(producto_almacen_upsert)
     }
     return { data: 'ok' }
   } catch (error) {

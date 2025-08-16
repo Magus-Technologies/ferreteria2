@@ -36,9 +36,10 @@ export interface TableWithTitleProps<T, schemaType = unknown>
   }[]
   tableRef?: React.RefObject<AgGridReact<T> | null>
   schema?: ZodType<schemaType>
+  headersRequired?: string[]
 }
 
-export default function TableWithTitle<T, schemaType>({
+export default function TableWithTitle<T, schemaType = unknown>({
   id,
   title,
   extraTitle,
@@ -50,6 +51,7 @@ export default function TableWithTitle<T, schemaType>({
   optionsSelectColumns = [],
   tableRef,
   schema,
+  headersRequired = [],
   ...props
 }: TableWithTitleProps<T, schemaType>) {
   const tableRefInterno = useRef<AgGridReact<T>>(null)
@@ -123,6 +125,7 @@ export default function TableWithTitle<T, schemaType>({
                       gridOptions: tableRefInterno.current,
                       nameFile: title,
                       schema,
+                      headersRequired,
                     })
                 }}
                 color='success'

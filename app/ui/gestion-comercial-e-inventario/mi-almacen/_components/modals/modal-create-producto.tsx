@@ -23,6 +23,8 @@ export type UnidadDerivadaCreateProducto = Omit<
   'id' | 'producto_almacen_id'
 > & {
   costo: number
+  p_venta: number
+  ganancia: number
 }
 
 export type FormCreateProductoProps = Omit<

@@ -1,4 +1,4 @@
-import { App, Form, FormInstance } from 'antd'
+import { Form, FormInstance } from 'antd'
 import ButtonBase from '~/components/buttons/button-base'
 import TableDetalleDePreciosEdicion from '../tables/table-detalle-de-precios-edicion'
 
@@ -7,26 +7,8 @@ export default function FormSectionUnidadesDerivadas({
 }: {
   form: FormInstance
 }) {
-  const { notification } = App.useApp()
   return (
-    <Form.List
-      name='unidades_derivadas'
-      rules={[
-        {
-          validator: async (_, value) => {
-            if (!value || value.length < 1) {
-              notification.error({
-                message: 'Error',
-                description: 'Debe agregar al menos una unidad derivada',
-              })
-              return Promise.reject(
-                new Error('Debe agregar al menos una unidad derivada')
-              )
-            }
-          },
-        },
-      ]}
-    >
+    <Form.List name='unidades_derivadas'>
       {(fields, { add, remove }) => (
         <TableDetalleDePreciosEdicion
           form={form}

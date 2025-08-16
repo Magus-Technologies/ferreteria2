@@ -96,6 +96,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Factor'
+              precision={3}
               onChange={() => {
                 onChangeCosto({
                   form,
@@ -137,6 +138,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='P. Compra'
+              precision={2}
               onChange={val => {
                 onChangeCosto({
                   form,
@@ -144,6 +146,68 @@ export function useColumnsDetalleDePreciosEdicion({
                   costo: val ? Number(val) : undefined,
                   notification,
                 })
+
+                const precio_publico = form.getFieldValue([
+                  'unidades_derivadas',
+                  value,
+                  'precio_publico',
+                ])
+                if (!precio_publico) return
+
+                const costo = val ? Number(val) : 0
+                const ganancia = precio_publico - costo
+                const p_venta = costo != 0 ? (ganancia * 100) / costo : 0
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'p_venta'],
+                  p_venta
+                )
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'ganancia'],
+                  ganancia
+                )
+              }}
+            />
+          </div>
+        )
+      },
+      flex: 1,
+    },
+    {
+      headerName: '% Venta',
+      field: 'name',
+      minWidth: 140,
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'p_venta'],
+                hasFeedback: false,
+              }}
+              formWithMessage={false}
+              placeholder='% venta'
+              suffix='%'
+              precision={2}
+              onChange={val => {
+                const costo = form.getFieldValue([
+                  'unidades_derivadas',
+                  value,
+                  'costo',
+                ])
+                if (!costo) return
+
+                const p_venta = val ? Number(val) : 0
+                const precio_publico = costo + costo * (p_venta / 100)
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'precio_publico'],
+                  precio_publico
+                )
+                const ganancia = precio_publico - costo
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'ganancia'],
+                  ganancia
+                )
               }}
             />
           </div>
@@ -171,6 +235,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='P. Público'
+              precision={2}
               onChange={val => {
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'precio_especial'],
@@ -183,6 +248,68 @@ export function useColumnsDetalleDePreciosEdicion({
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'precio_ultimo'],
                   val
+                )
+
+                const costo = form.getFieldValue([
+                  'unidades_derivadas',
+                  value,
+                  'costo',
+                ])
+                if (!costo) return
+
+                const precio_publico = val ? Number(val) : 0
+                const ganancia = precio_publico - costo
+                const p_venta = (ganancia * 100) / costo
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'p_venta'],
+                  p_venta
+                )
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'ganancia'],
+                  ganancia
+                )
+              }}
+            />
+          </div>
+        )
+      },
+      flex: 1,
+    },
+    {
+      headerName: 'Ganancia',
+      field: 'name',
+      minWidth: 140,
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'ganancia'],
+                hasFeedback: false,
+              }}
+              formWithMessage={false}
+              placeholder='Ganancia'
+              prefix='S/. '
+              precision={2}
+              onChange={val => {
+                const costo = form.getFieldValue([
+                  'unidades_derivadas',
+                  value,
+                  'costo',
+                ])
+                if (!costo) return
+
+                const ganancia = val ? Number(val) : 0
+                const precio_publico = costo + ganancia
+                const p_venta = (ganancia * 100) / costo
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'precio_publico'],
+                  precio_publico
+                )
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'p_venta'],
+                  p_venta
                 )
               }}
             />
@@ -212,6 +339,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Precio Especial'
+              precision={2}
               onChange={() =>
                 onChangeComisiones({
                   form,
@@ -245,6 +373,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Precio Mínimo'
+              precision={2}
               onChange={() =>
                 onChangeComisiones({
                   form,
@@ -278,6 +407,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Precio Último'
+              precision={2}
               onChange={() =>
                 onChangeComisiones({
                   form,
@@ -304,6 +434,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Comisión P. Público'
+              precision={2}
               onChange={val => {
                 onChangeComisiones({
                   form,
@@ -347,6 +478,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Comisión Especial'
+              precision={2}
             />
           </div>
         )
@@ -367,6 +499,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Comisión Mínimo'
+              precision={2}
             />
           </div>
         )
@@ -387,6 +520,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Comisión Último'
+              precision={2}
             />
           </div>
         )
@@ -407,6 +541,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Activador Especial'
+              precision={2}
             />
           </div>
         )
@@ -427,6 +562,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Activador Mínimo'
+              precision={2}
             />
           </div>
         )
@@ -447,6 +583,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='Activador Último'
+              precision={2}
             />
           </div>
         )

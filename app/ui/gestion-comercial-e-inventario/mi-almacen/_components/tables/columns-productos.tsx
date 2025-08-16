@@ -20,12 +20,13 @@ import {
   Producto,
   ProductoAlmacen,
   ProductoAlmacenUnidadDerivada,
+  Ubicacion,
   UnidadDerivada,
   UnidadMedida,
 } from '@prisma/client'
 import { getStock, GetStock } from '~/app/_utils/get-stock'
 
-type TableProductosProps = Producto & {
+export type TableProductosProps = Producto & {
   marca: Marca
   categoria: Categoria
   unidad_medida: UnidadMedida
@@ -34,6 +35,7 @@ type TableProductosProps = Producto & {
       unidad_derivada: UnidadDerivada
     })[]
     almacen: Almacen
+    ubicacion: Ubicacion
   })[]
 }
 
@@ -48,13 +50,6 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
     {
       headerName: 'Código de Producto',
       field: 'cod_producto',
-      minWidth: 180,
-      filter: true,
-      flex: 2,
-    },
-    {
-      headerName: 'Código de Barra',
-      field: 'cod_barra',
       minWidth: 180,
       filter: true,
       flex: 2,
@@ -104,11 +99,76 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       flex: 2,
     },
     {
+      headerName: 'Ubicación en Almacén',
+      field: 'producto_en_almacenes',
+      minWidth: 180,
+      filter: true,
+      valueFormatter: ({
+        value,
+      }: ValueFormatterParams<
+        TableProductosProps,
+        TableProductosProps['producto_en_almacenes']
+      >) => {
+        const producto_en_almacen = value?.find(
+          item => item.almacen_id === almacen_id
+        )
+        return producto_en_almacen?.ubicacion.name ?? ''
+      },
+      flex: 1,
+    },
+    {
+      headerName: 'Stock Fracción en Almacén',
+      field: 'producto_en_almacenes',
+      minWidth: 190,
+      filter: true,
+      valueFormatter: ({
+        value,
+      }: ValueFormatterParams<
+        TableProductosProps,
+        TableProductosProps['producto_en_almacenes']
+      >) => {
+        const producto_en_almacen = value?.find(
+          item => item.almacen_id === almacen_id
+        )
+        return `${Number(producto_en_almacen?.stock_fraccion ?? 0)}`
+      },
+      flex: 1,
+    },
+    {
+      headerName: 'Costo en Almacén',
+      field: 'producto_en_almacenes',
+      minWidth: 150,
+      filter: true,
+      valueFormatter: ({
+        value,
+        data,
+      }: ValueFormatterParams<
+        TableProductosProps,
+        TableProductosProps['producto_en_almacenes']
+      >) => {
+        const producto_en_almacen = value?.find(
+          item => item.almacen_id === almacen_id
+        )
+        return `${
+          Number(producto_en_almacen?.costo ?? 0) *
+          Number(data!.unidades_contenidas)
+        }`
+      },
+      flex: 1,
+    },
+    {
       headerName: 'U. Contenidas',
       field: 'unidades_contenidas',
       minWidth: 80,
       filter: true,
       flex: 1,
+    },
+    {
+      headerName: 'Código de Barra',
+      field: 'cod_barra',
+      minWidth: 180,
+      filter: true,
+      flex: 2,
     },
     {
       headerName: 'Marca',
@@ -237,6 +297,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       minWidth: 180,
       filter: true,
       flex: 1,
+      type: 'link',
     },
     {
       headerName: 'Ruta Ficha Técnica',
@@ -244,6 +305,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       minWidth: 180,
       filter: true,
       flex: 1,
+      type: 'link',
     },
     {
       headerName: 'Acciones',

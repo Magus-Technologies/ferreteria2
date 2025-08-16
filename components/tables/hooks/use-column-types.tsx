@@ -23,19 +23,19 @@ export default function useColumnTypes() {
     [key: string]: ColTypeDef
   } = {
     usd: {
-      valueFormatter: params =>
+      cellRenderer: (params: { value: number | string }) =>
         !params.value
-          ? '-'
-          : `$. ${params.value.toLocaleString('en-US', {
+          ? ''
+          : `$. ${Number(params.value).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}`,
     },
     pen: {
-      valueFormatter: params =>
+      cellRenderer: (params: { value: number | string }) =>
         !params.value
-          ? '-'
-          : `S/. ${params.value.toLocaleString('en-US', {
+          ? ''
+          : `S/. ${Number(params.value).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}`,
@@ -52,6 +52,24 @@ export default function useColumnTypes() {
           <TagBoolean booleano={params.value} className='w-24 ' />
         </div>
       ),
+    },
+    link: {
+      cellRenderer: (params: { value: string }) => (
+        <div className='h-full flex items-center'>
+          <a href={params.value} target='_blank' rel='noreferrer'>
+            {params.value}
+          </a>
+        </div>
+      ),
+    },
+    percent: {
+      cellRenderer: (params: { value: number | string }) =>
+        !params.value
+          ? ''
+          : `${Number(params.value).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}%`,
     },
   }
 

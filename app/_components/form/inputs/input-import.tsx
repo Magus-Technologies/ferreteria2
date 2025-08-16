@@ -4,7 +4,7 @@ import { FaCloudUploadAlt } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import { read, utils } from 'xlsx-js-style'
 import { AgGridReact } from 'ag-grid-react'
-import { RefObject, useState } from 'react'
+import { ReactNode, RefObject, useState } from 'react'
 import { Column } from 'ag-grid-community'
 import { BiLoaderAlt } from 'react-icons/bi'
 import {
@@ -62,17 +62,19 @@ function transformDataXLSXtoPrismaCreate<schemaType>({
   columnas,
   data,
   schema,
+  fieldsIgnored = [],
 }: {
   columnas: { headerName?: string; field?: string }[]
   data: Record<string, unknown>[]
   schema: ZodType<schemaType>
+  fieldsIgnored?: string[]
 }) {
   const schemaShape = (schema._def as ZodObjectDef<ZodRawShape>).shape()
 
   return data.map(row => {
     const newRow = {}
     columnas.forEach(({ headerName, field }) => {
-      if (!headerName || !field) return
+      if (!headerName || !field || fieldsIgnored.includes(field)) return
       const cellValue = row[headerName]
 
       let finalValue = cellValue
@@ -103,6 +105,12 @@ interface InputImportProps<TParams, TResult, schemaType>
   tableRef: RefObject<AgGridReact | null>
   propsUseServerMutation: UseMutationActionProps<TParams, TResult>
   schema: ZodType<schemaType>
+  title?: ReactNode
+  preProcessData?: (
+    data: Record<string, unknown>[]
+  ) => Promise<Record<string, unknown>[]>
+  columnasExtra?: { headerName: string; field: string }[]
+  fieldsIgnored?: string[]
 }
 
 function useInputImport<TParams, TResult>({
@@ -168,10 +176,18 @@ function useInputImport<TParams, TResult>({
     gridApi,
     file,
     schema,
+    preProcessData = data => Promise.resolve(data),
+    columnasExtra = [],
+    fieldsIgnored = [],
   }: {
     gridApi: AgGridReact['api']
     file: File
     schema: ZodType<schemaType>
+    preProcessData?: (
+      data: Record<string, unknown>[]
+    ) => Promise<Record<string, unknown>[]>
+    columnasExtra?: { headerName: string; field: string }[]
+    fieldsIgnored?: string[]
   }) {
     try {
       setLoading(true)
@@ -186,19 +202,26 @@ function useInputImport<TParams, TResult>({
       const wb = read(arrayBuffer, { type: 'array' })
 
       const ws = wb.Sheets[wb.SheetNames[0]]
-      const data = utils.sheet_to_json(ws) as Record<string, string>[]
+      const preData = utils.sheet_to_json(ws) as Record<string, unknown>[]
+      const data = await preProcessData(preData)
+      console.log('🚀 ~ file: input-import.tsx:199 ~ data:', data)
 
       const newData = transformDataXLSXtoPrismaCreate({
-        columnas,
+        columnas: [...columnas, ...columnasExtra],
         data,
         schema,
+        fieldsIgnored,
       })
+      console.log('🚀 ~ file: input-import.tsx:202 ~ newData:', newData)
       await execute({ data: newData } as TParams)
     } catch (error) {
       console.error('Error al importar:', error)
       notification.error({
         message: 'Error al importar',
-        description: 'No se pudo importar el archivo',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo importar el archivo',
       })
     } finally {
       setLoading(false)
@@ -212,6 +235,10 @@ export default function InputImport<TParams, TResult, schemaType>({
   tableRef,
   propsUseServerMutation,
   schema,
+  title = 'Importar',
+  preProcessData = data => Promise.resolve(data),
+  columnasExtra = [],
+  fieldsIgnored = [],
   ...props
 }: InputImportProps<TParams, TResult, schemaType>) {
   const { handleImport, loading } = useInputImport({
@@ -235,7 +262,14 @@ export default function InputImport<TParams, TResult, schemaType>({
           const originFileObj = file as unknown as File
           if (!originFileObj) throw new Error('No hay archivo para importar')
 
-          handleImport({ gridApi, file: originFileObj, schema })
+          handleImport({
+            gridApi,
+            file: originFileObj,
+            schema,
+            preProcessData,
+            columnasExtra,
+            fieldsIgnored,
+          })
         } catch (error: Error | unknown) {
           notification.error({
             message: 'Error al importar',
@@ -257,7 +291,7 @@ export default function InputImport<TParams, TResult, schemaType>({
         ) : (
           <FaCloudUploadAlt />
         )}
-        Importar
+        {title}
       </ButtonBase>
     </Upload>
   )

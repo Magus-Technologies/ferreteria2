@@ -87,6 +87,13 @@ export default function useCreateProducto({
   })
 
   function crearProductoForm(values: FormCreateProductoProps) {
+    if (values.unidades_derivadas.length < 1) {
+      notification.error({
+        message: 'Error',
+        description: 'Debe agregar al menos una unidad derivada',
+      })
+      return
+    }
     const data = {
       ...values,
       compra: {

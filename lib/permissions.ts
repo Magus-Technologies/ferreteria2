@@ -13,6 +13,8 @@ export enum permissions {
   PRODUCTO_SALIDA_CREATE = 'producto.salida.create',
   PRODUCTO_IMPORT = 'producto.import',
 
+  DETALLES_DE_PRECIOS_IMPORT = 'detalle-de-precios.import',
+
   // Facturacion Electronica
   FACTURACION_ELECTRONICA_INDEX = 'facturacion-electronica.index',
 
@@ -86,6 +88,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.PRODUCTO_INGRESO_CREATE]: 'Crear Ingreso de Producto',
   [permissions.PRODUCTO_SALIDA_CREATE]: 'Crear Salida de Producto',
   [permissions.PRODUCTO_IMPORT]: 'Importar Productos',
+
+  [permissions.DETALLES_DE_PRECIOS_IMPORT]: 'Importar Detalles de Precios',
 
   [permissions.FACTURACION_ELECTRONICA_INDEX]:
     'Ver Página Facturación Electronica',

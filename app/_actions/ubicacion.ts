@@ -55,3 +55,28 @@ async function createUbicacionWA({
   }
 }
 export const createUbicacion = withAuth(createUbicacionWA)
+
+async function importarUbicacionesWA(
+  data: { name: string; almacen_id: number }[]
+) {
+  try {
+    const items = await Promise.all(
+      data.map(item =>
+        prisma.ubicacion.upsert({
+          where: {
+            almacen_id_name: { almacen_id: item.almacen_id, name: item.name },
+          },
+          update: {},
+          create: {
+            name: item.name,
+            almacen_id: item.almacen_id,
+          },
+        })
+      )
+    )
+    return { data: items }
+  } catch (error) {
+    return errorFormated(error)
+  }
+}
+export const importarUbicaciones = withAuth(importarUbicacionesWA)

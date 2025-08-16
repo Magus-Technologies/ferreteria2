@@ -10,11 +10,13 @@ function exportFile<schemaType>({
   nameFile,
   schema,
   colDefs,
+  headersRequired = [],
 }: {
   obj: Record<string, unknown>[]
   nameFile: string
   schema?: ZodType<schemaType>
   colDefs: Column[]
+  headersRequired?: string[]
 }) {
   if (!obj.length) {
     const objEmpty = colDefs.reduce((acc, col) => {
@@ -34,6 +36,11 @@ function exportFile<schemaType>({
     ws[cellRef].s = {
       font: { bold: true },
     }
+  })
+
+  headersRequired.forEach(header => {
+    const cellRef = utils.encode_cell({ r: 0, c: keys.indexOf(header) })
+    ws[cellRef].s.font.color = { rgb: 'FF0000' }
   })
 
   if (schema) {
@@ -117,13 +124,15 @@ export function exportAGGridDataToJSON<schemaType>({
   gridOptions,
   nameFile,
   schema,
+  headersRequired = [],
 }: {
   gridOptions: AgGridReact
   nameFile: string
   schema?: ZodType<schemaType>
+  headersRequired?: string[]
 }) {
   const { rowData, colDefs } = getJsonFromAGGrid(gridOptions)
-  exportFile({ obj: rowData, nameFile, schema, colDefs })
+  exportFile({ obj: rowData, nameFile, schema, colDefs, headersRequired })
 }
 
 export async function exportAGGridDataToPDF(
