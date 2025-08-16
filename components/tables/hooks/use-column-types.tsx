@@ -1,4 +1,9 @@
-import { ColTypeDef, DoesFilterPassParams } from 'ag-grid-community'
+import {
+  ColTypeDef,
+  DoesFilterPassParams,
+  ICellRendererParams,
+  ValueFormatterParams,
+} from 'ag-grid-community'
 import useFilterBoolean from './use-filter-boolean'
 import TagBoolean from '~/components/tags/tag-boolean'
 import { ValorBooleanoString } from '~/lib/constantes'
@@ -23,22 +28,38 @@ export default function useColumnTypes() {
     [key: string]: ColTypeDef
   } = {
     usd: {
-      cellRenderer: (params: { value: number | string }) =>
-        !params.value
+      cellRenderer: (params: ICellRendererParams) => {
+        const { column, value } = params
+        const colDef = column!.getColDef()
+        let formatted
+
+        if (typeof colDef.valueFormatter === 'function')
+          formatted = colDef.valueFormatter(params as ValueFormatterParams)
+        else formatted = value
+        return !formatted
           ? ''
-          : `$. ${Number(params.value).toLocaleString('en-US', {
+          : `$. ${Number(formatted).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}`,
+            })}`
+      },
     },
     pen: {
-      cellRenderer: (params: { value: number | string }) =>
-        !params.value
+      cellRenderer: (params: ICellRendererParams) => {
+        const { column, value } = params
+        const colDef = column!.getColDef()
+        let formatted
+
+        if (typeof colDef.valueFormatter === 'function')
+          formatted = colDef.valueFormatter(params as ValueFormatterParams)
+        else formatted = value
+        return !formatted
           ? ''
-          : `S/. ${Number(params.value).toLocaleString('en-US', {
+          : `S/. ${Number(formatted).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}`,
+            })}`
+      },
     },
     boolean: {
       filter: {
@@ -63,13 +84,21 @@ export default function useColumnTypes() {
       ),
     },
     percent: {
-      cellRenderer: (params: { value: number | string }) =>
-        !params.value
+      cellRenderer: (params: ICellRendererParams) => {
+        const { column, value } = params
+        const colDef = column!.getColDef()
+        let formatted
+
+        if (typeof colDef.valueFormatter === 'function')
+          formatted = colDef.valueFormatter(params as ValueFormatterParams)
+        else formatted = value
+        return !formatted
           ? ''
-          : `${Number(params.value).toLocaleString('en-US', {
+          : `${Number(formatted).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}%`,
+            })}%`
+      },
     },
   }
 
