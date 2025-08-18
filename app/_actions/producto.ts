@@ -220,8 +220,8 @@ async function importarProductosWA({ data }: { data: unknown }) {
       const producto_almacen_costo_formated = {
         ...producto_almacen,
         costo:
-          Number(producto_almacen.costo) /
-          Number(restProducto.unidades_contenidas),
+          Number(producto_almacen.costo ?? 0) /
+          Number(restProducto.unidades_contenidas ?? 1),
       }
 
       const producto_upsert: Prisma.ProductoUpsertArgs = {

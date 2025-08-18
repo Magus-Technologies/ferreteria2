@@ -141,8 +141,12 @@ export const getProductoAlmacenByCodProductoAndAlmacenName = withAuth(
 
 async function importarUnidadesDerivadasWA(data: { name: string }[]) {
   try {
+    const uniqueData = Array.from(
+      new Map(data.map(item => [`${item.name}`, item])).values()
+    )
+
     const items = await Promise.all(
-      data.map(item =>
+      uniqueData.map(item =>
         prisma.unidadDerivada.upsert({
           where: {
             name: item.name,

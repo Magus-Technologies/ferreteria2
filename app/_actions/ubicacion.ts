@@ -60,8 +60,14 @@ async function importarUbicacionesWA(
   data: { name: string; almacen_id: number }[]
 ) {
   try {
+    const uniqueData = Array.from(
+      new Map(
+        data.map(item => [`${item.almacen_id}-${item.name}`, item])
+      ).values()
+    )
+
     const items = await Promise.all(
-      data.map(item =>
+      uniqueData.map(item =>
         prisma.ubicacion.upsert({
           where: {
             almacen_id_name: { almacen_id: item.almacen_id, name: item.name },

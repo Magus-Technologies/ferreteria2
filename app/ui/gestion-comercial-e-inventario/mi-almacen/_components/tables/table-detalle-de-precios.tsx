@@ -74,7 +74,14 @@ export default function TableDetalleDePrecios() {
             preProcessData={async data => {
               if (!almacen_id) throw new Error('No se selecciono un almacén')
 
-              if (data.some(item => !item['Cod. Producto']))
+              if (
+                data.some(
+                  item =>
+                    item['Cod. Producto'] === null ||
+                    item['Cod. Producto'] === '' ||
+                    item['Cod. Producto'] === undefined
+                )
+              )
                 throw new Error(
                   'Todas las Unidades Derivadas deben tener un Código de Producto obligatoriamente'
                 )
@@ -82,7 +89,7 @@ export default function TableDetalleDePrecios() {
               const response =
                 await getProductoAlmacenByCodProductoAndAlmacenName(
                   data.map(item => ({
-                    cod_producto: item['Cod. Producto'] as string,
+                    cod_producto: `${item['Cod. Producto']}`,
                     almacen_id,
                   }))
                 )
@@ -105,7 +112,7 @@ export default function TableDetalleDePrecios() {
                   connect: {
                     id: response.data!.find(
                       ({ cod_producto }) =>
-                        cod_producto === item['Cod. Producto']
+                        cod_producto === `${item['Cod. Producto']}`
                     )?.producto_almacen_id,
                   },
                 },

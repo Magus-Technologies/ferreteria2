@@ -204,7 +204,6 @@ function useInputImport<TParams, TResult>({
       const ws = wb.Sheets[wb.SheetNames[0]]
       const preData = utils.sheet_to_json(ws) as Record<string, unknown>[]
       const data = await preProcessData(preData)
-      console.log('🚀 ~ file: input-import.tsx:199 ~ data:', data)
 
       const newData = transformDataXLSXtoPrismaCreate({
         columnas: [...columnas, ...columnasExtra],
@@ -212,7 +211,6 @@ function useInputImport<TParams, TResult>({
         schema,
         fieldsIgnored,
       })
-      console.log('🚀 ~ file: input-import.tsx:202 ~ newData:', newData)
       await execute({ data: newData } as TParams)
     } catch (error) {
       console.error('Error al importar:', error)
