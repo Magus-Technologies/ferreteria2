@@ -86,10 +86,13 @@ export default function TableDetalleDePrecios() {
                   'Todas las Unidades Derivadas deben tener un Código de Producto obligatoriamente'
                 )
 
+              const preResponse = new Set<string>(
+                data.map(item => `${item['Cod. Producto']}`)
+              )
               const response =
                 await getProductoAlmacenByCodProductoAndAlmacenName(
-                  data.map(item => ({
-                    cod_producto: `${item['Cod. Producto']}`,
+                  Array.from(preResponse).map(cod_producto => ({
+                    cod_producto,
                     almacen_id,
                   }))
                 )
@@ -98,9 +101,12 @@ export default function TableDetalleDePrecios() {
                   'No se encontraron los Productos en este Almacén'
                 )
 
+              const preUnidadesDerivadas = new Set<string>(
+                data.map(item => `${item['Formato']}`)
+              )
               const unidades_derivadas = await importarUnidadesDerivadas(
-                data.map(item => ({
-                  name: item['Formato'] as string,
+                Array.from(preUnidadesDerivadas).map(name => ({
+                  name,
                 }))
               )
               if (!unidades_derivadas.data)

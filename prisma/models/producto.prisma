@@ -17,7 +17,7 @@ model Producto {
     accion_tecnica      String? @db.Text
     img                 String?
     ficha_tecnica       String?
-    stock_min           Int
+    stock_min           Decimal @db.Decimal(9, 3)
     stock_max           Int?
     unidades_contenidas Int
     estado              Boolean @default(true)

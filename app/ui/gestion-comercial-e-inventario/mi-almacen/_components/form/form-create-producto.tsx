@@ -199,8 +199,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                   ],
                 }}
                 min={0}
-                step={1}
-                precision={0}
+                precision={2}
                 placeholder='Stock Mínimo'
                 prefix={
                   <AiFillAlert size={15} className='text-rose-700 mx-1' />
@@ -236,9 +235,8 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                     },
                   ],
                 }}
-                min={1}
-                step={1}
-                precision={0}
+                min={0}
+                precision={2}
                 placeholder='Unidades Contenidas'
                 prefix={
                   <FaBoxesStacked size={15} className='text-rose-700 mx-1' />

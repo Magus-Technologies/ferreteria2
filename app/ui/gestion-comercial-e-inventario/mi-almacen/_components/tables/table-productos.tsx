@@ -66,9 +66,12 @@ export default function TableProductos() {
                     'Todos los productos deben tener una ubicación obligatoriamente'
                   )
 
+                const ubicacionesNames = new Set(
+                  data.map(item => item['Ubicación en Almacén'] as string)
+                )
                 const ubicaciones = await importarUbicaciones(
-                  data.map(item => ({
-                    name: item['Ubicación en Almacén'] as string,
+                  Array.from(ubicacionesNames).map(name => ({
+                    name,
                     almacen_id,
                   }))
                 )

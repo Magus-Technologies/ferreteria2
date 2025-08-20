@@ -37,10 +37,10 @@ function setNestedValue(
     obj[keys[0]] = {
       connectOrCreate: {
         where: {
-          [keys[1]]: val,
+          [keys[1]]: `${val}`,
         },
         create: {
-          [keys[1]]: val,
+          [keys[1]]: `${val}`,
         },
       },
     }
@@ -152,7 +152,7 @@ function useInputImport<TParams, TResult>({
           <div className='max-h-[60dvh] overflow-y-auto'>
             {Object.entries(filas).map(([fila, columnas], index) => (
               <div key={index} className='pr-4'>
-                <strong>Fila {Number(fila) + 1}:</strong>
+                <strong>Fila {Number(fila) + 2}:</strong>
                 <div className='grid grid-cols-3 gap-x-4 pl-8'>
                   {columnas.map((columna, index) => (
                     <span className='text-red-500 text-nowrap' key={index}>
