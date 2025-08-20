@@ -8,6 +8,7 @@ import can from '~/utils/server-validate-permission'
 import { Prisma } from '@prisma/client'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
 import z from 'zod'
+import { chunkArray } from '~/utils/chunks'
 
 async function getUnidadesDerivadasWA() {
   try {
@@ -58,22 +59,28 @@ async function importarDetallesDePreciosWA({ data }: { data: unknown }) {
     const dataParsed = z
       .array(ProductoAlmacenUnidadDerivadaCreateInputSchema)
       .parse(data)
-    for (const item of dataParsed) {
-      if (!item.precio_especial) item.precio_especial = item.precio_publico
-      if (!item.precio_minimo) item.precio_minimo = item.precio_publico
-      if (!item.precio_ultimo) item.precio_ultimo = item.precio_publico
+    const chunks = chunkArray(dataParsed, 200)
+    for (const lote of chunks) {
+      await prisma.$transaction(
+        lote.map(item => {
+          if (!item.precio_especial) item.precio_especial = item.precio_publico
+          if (!item.precio_minimo) item.precio_minimo = item.precio_publico
+          if (!item.precio_ultimo) item.precio_ultimo = item.precio_publico
 
-      await prisma.productoAlmacenUnidadDerivada.upsert({
-        where: {
-          producto_almacen_id_unidad_derivada_id: {
-            producto_almacen_id: item.producto_almacen.connect!.id!,
-            unidad_derivada_id: item.unidad_derivada.connect!.id!,
-          },
-        },
-        create: item,
-        update: item,
-      })
+          return prisma.productoAlmacenUnidadDerivada.upsert({
+            where: {
+              producto_almacen_id_unidad_derivada_id: {
+                producto_almacen_id: item.producto_almacen.connect!.id!,
+                unidad_derivada_id: item.unidad_derivada.connect!.id!,
+              },
+            },
+            create: item,
+            update: item,
+          })
+        })
+      )
     }
+
     return { data: 'ok' }
   } catch (error) {
     return errorFormated(error)
