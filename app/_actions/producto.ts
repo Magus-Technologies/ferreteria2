@@ -16,6 +16,7 @@ import {
   ProductoUncheckedCreateInputSchema,
 } from '~/prisma/generated/zod'
 import z from 'zod'
+import { chunkArray } from '~/utils/chunks'
 
 async function getProductosWA() {
   try {
@@ -211,43 +212,52 @@ async function importarProductosWA({ data }: { data: unknown }) {
     if (!puede) throw new Error('No tienes permiso para importar productos')
 
     const dataParsed = z.array(ProductoCreateInputSchema).parse(data)
-    for (const item of dataParsed) {
-      const { producto_en_almacenes, ...restProducto } = item
-      const producto_almacen = producto_en_almacenes!.create! as Omit<
-        Prisma.ProductoAlmacenUncheckedCreateInput,
-        'producto_id'
-      >
-      const producto_almacen_costo_formated = {
-        ...producto_almacen,
-        costo:
-          Number(producto_almacen.costo ?? 0) /
-          Number(restProducto.unidades_contenidas ?? 1),
-      }
+    const chunks = chunkArray(dataParsed, 200)
+    for (const lote of chunks) {
+      await prisma.$transaction(async tx => {
+        await Promise.all(
+          lote.map(async item => {
+            const { producto_en_almacenes, ...restProducto } = item
+            const producto_almacen = producto_en_almacenes!.create! as Omit<
+              Prisma.ProductoAlmacenUncheckedCreateInput,
+              'producto_id'
+            >
+            const producto_almacen_costo_formated = {
+              ...producto_almacen,
+              costo:
+                Number(producto_almacen.costo ?? 0) /
+                Number(restProducto.unidades_contenidas ?? 1),
+            }
 
-      const producto_upsert: Prisma.ProductoUpsertArgs = {
-        where: {
-          cod_producto: restProducto.cod_producto,
-        },
-        create: restProducto,
-        update: restProducto,
-      }
-      const productoUpserted = await prisma.producto.upsert(producto_upsert)
+            const producto_upsert: Prisma.ProductoUpsertArgs = {
+              where: {
+                cod_producto: restProducto.cod_producto,
+              },
+              create: restProducto,
+              update: restProducto,
+            }
+            const productoUpserted = await prisma.producto.upsert(
+              producto_upsert
+            )
 
-      const producto_almacen_upsert: Prisma.ProductoAlmacenUpsertArgs = {
-        where: {
-          producto_id_almacen_id: {
-            producto_id: productoUpserted.id,
-            almacen_id: producto_almacen_costo_formated.almacen_id,
-          },
-        },
-        create: {
-          producto_id: productoUpserted.id,
-          ...producto_almacen_costo_formated,
-        },
-        update: producto_almacen_costo_formated,
-      }
-      await prisma.productoAlmacen.upsert(producto_almacen_upsert)
+            await tx.productoAlmacen.upsert({
+              where: {
+                producto_id_almacen_id: {
+                  producto_id: productoUpserted.id,
+                  almacen_id: producto_almacen_costo_formated.almacen_id,
+                },
+              },
+              create: {
+                producto_id: productoUpserted.id,
+                ...producto_almacen_costo_formated,
+              },
+              update: producto_almacen_costo_formated,
+            })
+          })
+        )
+      })
     }
+
     return { data: 'ok' }
   } catch (error) {
     return errorFormated(error)
