@@ -208,7 +208,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         )
         return getStock({
           stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
-          unidades_contenidas: data!.unidades_contenidas,
+          unidades_contenidas: Number(data!.unidades_contenidas),
         }).stock
       },
       cellRenderer: ({
@@ -244,7 +244,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                       producto_almacen_unidad_derivada={
                         item.unidades_derivadas.find(
                           item =>
-                            Number(item.factor) === data!.unidades_contenidas
+                            Number(item.factor) ===
+                            Number(data!.unidades_contenidas)
                         ) ?? item.unidades_derivadas[0]
                       }
                       almacen={item.almacen.name}

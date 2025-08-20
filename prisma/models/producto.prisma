@@ -19,7 +19,7 @@ model Producto {
     ficha_tecnica       String?
     stock_min           Decimal @db.Decimal(9, 3)
     stock_max           Int?
-    unidades_contenidas Int
+    unidades_contenidas Decimal @db.Decimal(9, 3)
     estado              Boolean @default(true)
 
     created_at DateTime @default(now())

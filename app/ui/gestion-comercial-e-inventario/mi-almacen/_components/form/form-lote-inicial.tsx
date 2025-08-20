@@ -14,7 +14,7 @@ export default function FormLoteInicial({
     <GetStock
       stock_entero={stock_entero}
       stock_fraccion={stock_fraccion}
-      unidades_contenidas={unidades_contenidas}
+      unidades_contenidas={Number(unidades_contenidas)}
     />
   )
 }
