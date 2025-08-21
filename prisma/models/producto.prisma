@@ -2,7 +2,7 @@ model Producto {
     id           Int     @id @default(autoincrement())
     cod_producto String  @unique
     cod_barra    String? @unique
-    name         String
+    name         String  @unique
     name_ticket  String
 
     categoria    Categoria @relation(fields: [categoria_id], references: [id])

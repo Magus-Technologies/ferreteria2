@@ -211,48 +211,84 @@ async function importarProductosWA({ data }: { data: unknown }) {
     const puede = await can(permissions.PRODUCTO_IMPORT)
     if (!puede) throw new Error('No tienes permiso para importar productos')
 
-    const dataParsed = z.array(ProductoCreateInputSchema).parse(data)
+    const dataParsed = z
+      .array(ProductoCreateInputSchema)
+      .superRefine((items, ctx) => {
+        const seen = new Set<string>()
+        items.forEach((it, i) => {
+          const key = it.name
+          if (seen.has(key)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicado: nombre ${key}`,
+              path: [i],
+            })
+          } else {
+            seen.add(key)
+          }
+        })
+
+        const seenCodBarra = new Set<string>()
+        items.forEach((it, i) => {
+          const key = it.cod_barra
+          if (!key) return
+          if (seenCodBarra.has(key)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicado: codigo de barra ${key}`,
+              path: [i],
+            })
+          } else {
+            seenCodBarra.add(key)
+          }
+        })
+      })
+      .parse(data)
     const chunks = chunkArray(dataParsed, 200)
     for (const lote of chunks) {
       await prisma.$transaction(async tx => {
         await Promise.all(
           lote.map(async item => {
-            const { producto_en_almacenes, ...restProducto } = item
-            const producto_almacen = producto_en_almacenes!.create! as Omit<
-              Prisma.ProductoAlmacenUncheckedCreateInput,
-              'producto_id'
-            >
-            const producto_almacen_costo_formated = {
-              ...producto_almacen,
-              costo:
-                Number(producto_almacen.costo ?? 0) /
-                Number(restProducto.unidades_contenidas ?? 1),
-            }
+            try {
+              const { producto_en_almacenes, ...restProducto } = item
+              const producto_almacen = producto_en_almacenes!.create! as Omit<
+                Prisma.ProductoAlmacenUncheckedCreateInput,
+                'producto_id'
+              >
+              const producto_almacen_costo_formated = {
+                ...producto_almacen,
+                costo:
+                  Number(producto_almacen.costo ?? 0) /
+                  Number(restProducto.unidades_contenidas ?? 1),
+              }
 
-            const producto_upsert: Prisma.ProductoUpsertArgs = {
-              where: {
-                cod_producto: restProducto.cod_producto,
-              },
-              create: restProducto,
-              update: restProducto,
-            }
-            const productoUpserted = await prisma.producto.upsert(
-              producto_upsert
-            )
-
-            await tx.productoAlmacen.upsert({
-              where: {
-                producto_id_almacen_id: {
-                  producto_id: productoUpserted.id,
-                  almacen_id: producto_almacen_costo_formated.almacen_id,
+              const producto_upsert: Prisma.ProductoUpsertArgs = {
+                where: {
+                  cod_producto: restProducto.cod_producto,
                 },
-              },
-              create: {
-                producto_id: productoUpserted.id,
-                ...producto_almacen_costo_formated,
-              },
-              update: producto_almacen_costo_formated,
-            })
+                create: restProducto,
+                update: restProducto,
+              }
+              const productoUpserted = await prisma.producto.upsert(
+                producto_upsert
+              )
+
+              await tx.productoAlmacen.upsert({
+                where: {
+                  producto_id_almacen_id: {
+                    producto_id: productoUpserted.id,
+                    almacen_id: producto_almacen_costo_formated.almacen_id,
+                  },
+                },
+                create: {
+                  producto_id: productoUpserted.id,
+                  ...producto_almacen_costo_formated,
+                },
+                update: producto_almacen_costo_formated,
+              })
+            } catch (error) {
+              console.log(error)
+            }
           })
         )
       })

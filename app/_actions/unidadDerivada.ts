@@ -58,6 +58,23 @@ async function importarDetallesDePreciosWA({ data }: { data: unknown }) {
 
     const dataParsed = z
       .array(ProductoAlmacenUnidadDerivadaCreateInputSchema)
+      .superRefine((items, ctx) => {
+        const seen = new Set<string>()
+        items.forEach((it, i) => {
+          const key = `${it.producto_almacen!.connect!.id}|${it.factor}`
+          if (seen.has(key)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicado: id ${
+                it.producto_almacen!.connect!.id
+              } con factor ${it.factor}`,
+              path: [i],
+            })
+          } else {
+            seen.add(key)
+          }
+        })
+      })
       .parse(data)
     const chunks = chunkArray(dataParsed, 200)
     for (const lote of chunks) {
