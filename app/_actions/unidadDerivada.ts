@@ -74,24 +74,6 @@ async function importarDetallesDePreciosWA({ data }: { data: unknown }) {
             seen.add(key)
           }
         })
-
-        const seenUnidadDerivada = new Set<string>()
-        items.forEach((it, i) => {
-          const key = `${it.producto_almacen!.connect!.id}|${
-            it.unidad_derivada!.connect!.id
-          }`
-          if (seenUnidadDerivada.has(key)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: `Duplicado: id ${
-                it.producto_almacen!.connect!.id
-              } con unidad derivada ${it.unidad_derivada!.connect!.id}`,
-              path: [i, 'unidad_derivada'],
-            })
-          } else {
-            seenUnidadDerivada.add(key)
-          }
-        })
       })
       .parse(data)
     const chunks = chunkArray(dataParsed, 200)

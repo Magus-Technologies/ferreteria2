@@ -60,6 +60,7 @@ export default function TableDetalleDePrecios() {
               'producto_almacen.costo',
               'producto.cod_producto',
               'unidad_derivada.name',
+              'producto.name',
             ]}
             columnasExtra={[
               {
@@ -166,6 +167,7 @@ export default function TableDetalleDePrecios() {
                 label: 'Importación',
                 columns: [
                   'Cod. Producto',
+                  'Producto',
                   'Formato',
                   'Factor',
                   'P. Público',

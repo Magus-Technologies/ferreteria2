@@ -29,6 +29,13 @@ export function useColumnsDetalleDePrecios() {
       flex: 2,
     },
     {
+      headerName: 'Producto',
+      field: 'producto.name',
+      minWidth: 180,
+      filter: true,
+      flex: 2,
+    },
+    {
       headerName: 'Formato',
       field: 'unidad_derivada.name',
       minWidth: 80,
