@@ -268,9 +268,7 @@ async function importarProductosWA({ data }: { data: unknown }) {
               create: restProducto,
               update: restProducto,
             }
-            const productoUpserted = await prisma.producto.upsert(
-              producto_upsert
-            )
+            const productoUpserted = await tx.producto.upsert(producto_upsert)
 
             await tx.productoAlmacen.upsert({
               where: {

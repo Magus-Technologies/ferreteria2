@@ -26,8 +26,6 @@ model Producto {
     updated_at DateTime @updatedAt
 
     producto_en_almacenes ProductoAlmacen[]
-
-    @@index([name])
 }
 
 model Categoria {
@@ -35,8 +33,6 @@ model Categoria {
     name String @unique
 
     productos Producto[]
-
-    @@index([name])
 }
 
 model Marca {
@@ -45,8 +41,6 @@ model Marca {
 
     productos Producto[]
     empresas  Empresa[]
-
-    @@index([name])
 }
 
 model UnidadMedida {
@@ -54,6 +48,4 @@ model UnidadMedida {
     name String @unique
 
     productos Producto[]
-
-    @@index([name])
 }

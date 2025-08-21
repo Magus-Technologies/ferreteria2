@@ -9,8 +9,6 @@ model Almacen {
     productos_en_almacen ProductoAlmacen[]
     compras              Compra[]
     empresas             Empresa[]
-
-    @@index([name])
 }
 
 model ProductoAlmacen {
@@ -54,8 +52,6 @@ model UnidadDerivada {
     name String @unique
 
     productos_almacenes_unidad_derivada ProductoAlmacenUnidadDerivada[]
-
-    @@index([name])
 }
 
 model ProductoAlmacenUnidadDerivada {
