@@ -221,7 +221,7 @@ async function importarProductosWA({ data }: { data: unknown }) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               message: `Duplicado: nombre ${key}`,
-              path: [i],
+              path: [i, 'name'],
             })
           } else {
             seen.add(key)
@@ -236,7 +236,7 @@ async function importarProductosWA({ data }: { data: unknown }) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               message: `Duplicado: codigo de barra ${key}`,
-              path: [i],
+              path: [i, 'cod_barra'],
             })
           } else {
             seenCodBarra.add(key)

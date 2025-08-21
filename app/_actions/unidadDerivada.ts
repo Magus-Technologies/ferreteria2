@@ -68,7 +68,7 @@ async function importarDetallesDePreciosWA({ data }: { data: unknown }) {
               message: `Duplicado: id ${
                 it.producto_almacen!.connect!.id
               } con factor ${it.factor}`,
-              path: [i],
+              path: [i, 'factor'],
             })
           } else {
             seen.add(key)
