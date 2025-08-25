@@ -14,6 +14,7 @@ interface SelectUbicacionesProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
   showButtonCreate?: boolean
+  tieneValorPorDefecto?: boolean
 }
 
 export default function SelectUbicaciones({
@@ -22,10 +23,14 @@ export default function SelectUbicaciones({
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 16,
   showButtonCreate = false,
+  tieneValorPorDefecto = false,
   ...props
 }: SelectUbicacionesProps) {
   const selectUbicacionesRef = useRef<RefSelectBaseProps>(null)
   const [primera_vez, setPrimeraVez] = useState(true)
+
+  const [primera_vez_con_valor_por_defecto, setPrimeraVezConValorPorDefecto] =
+    useState(true)
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
@@ -44,8 +49,11 @@ export default function SelectUbicaciones({
   useEffect(() => {
     if (!primera_vez) {
       refetch()
-      selectUbicacionesRef.current?.changeValue(undefined)
+      if (!(primera_vez_con_valor_por_defecto && tieneValorPorDefecto))
+        selectUbicacionesRef.current?.changeValue(undefined)
+      setPrimeraVezConValorPorDefecto(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [almacen_id, refetch, primera_vez])
 
   return (

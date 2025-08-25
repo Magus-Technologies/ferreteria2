@@ -5,13 +5,13 @@ model Producto {
     name         String  @unique
     name_ticket  String
 
-    categoria    Categoria @relation(fields: [categoria_id], references: [id])
+    categoria    Categoria @relation(fields: [categoria_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     categoria_id Int
 
-    marca    Marca @relation(fields: [marca_id], references: [id])
+    marca    Marca @relation(fields: [marca_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     marca_id Int
 
-    unidad_medida    UnidadMedida @relation(fields: [unidad_medida_id], references: [id])
+    unidad_medida    UnidadMedida @relation(fields: [unidad_medida_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     unidad_medida_id Int
 
     accion_tecnica      String? @db.Text
@@ -29,23 +29,26 @@ model Producto {
 }
 
 model Categoria {
-    id   Int    @id @default(autoincrement())
-    name String @unique
+    id     Int     @id @default(autoincrement())
+    name   String  @unique
+    estado Boolean @default(true)
 
     productos Producto[]
 }
 
 model Marca {
-    id   Int    @id @default(autoincrement())
-    name String @unique
+    id     Int     @id @default(autoincrement())
+    name   String  @unique
+    estado Boolean @default(true)
 
     productos Producto[]
     empresas  Empresa[]
 }
 
 model UnidadMedida {
-    id   Int    @id @default(autoincrement())
-    name String @unique
+    id     Int     @id @default(autoincrement())
+    name   String  @unique
+    estado Boolean @default(true)
 
     productos Producto[]
 }

@@ -25,6 +25,8 @@ import {
   UnidadMedida,
 } from '@prisma/client'
 import { getStock, GetStock } from '~/app/_utils/get-stock'
+// import { eliminarProducto } from '~/app/_actions/producto'
+import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
 
 export type TableProductosProps = Producto & {
   marca: Marca
@@ -45,6 +47,8 @@ interface UseColumnsProductosProps {
 
 export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
   const can = usePermission()
+  const setOpen = useStoreEditOrCopyProducto(state => state.setOpenModal)
+  const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
 
   const columns: ColDef<TableProductosProps>[] = [
     {
@@ -317,10 +321,20 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           <ColumnAction
             id={params.value}
             permiso={permissions.PRODUCTO_BASE}
+            // actionDelete={eliminarProducto}
+            showDelete={false}
+            onEdit={() => {
+              setProducto(params.data)
+              setOpen(true)
+            }}
             childrenMiddle={
               can(permissions.PRODUCTO_DUPLICAR) && (
                 <Tooltip title='Duplicar'>
                   <IoIosCopy
+                    onClick={() => {
+                      setProducto({ ...params.data!, id: undefined })
+                      setOpen(true)
+                    }}
                     size={15}
                     className='cursor-pointer text-cyan-600 hover:scale-105 transition-all active:scale-95'
                   />

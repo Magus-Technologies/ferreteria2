@@ -14,15 +14,24 @@ import {
   ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema,
   ProductoCreateInputSchema,
   ProductoUncheckedCreateInputSchema,
+  ProductoWhereInputSchema,
 } from '~/prisma/generated/zod'
 import z from 'zod'
 import { chunkArray } from '~/utils/chunks'
 
-async function getProductosWA() {
+async function getProductosWA({
+  where,
+}: {
+  where?: Prisma.ProductoWhereInput
+}) {
   try {
     const puede = await can(permissions.PRODUCTO_LISTADO)
     if (!puede)
       throw new Error('No tienes permiso para ver la lista de productos')
+
+    if (!where) return { data: [] }
+
+    const whereParsed = ProductoWhereInputSchema.parse(where)
 
     const items = await prisma.producto.findMany({
       include: {
@@ -31,6 +40,9 @@ async function getProductosWA() {
             unidades_derivadas: {
               include: {
                 unidad_derivada: true,
+              },
+              orderBy: {
+                orden: 'asc',
               },
             },
             almacen: true,
@@ -44,6 +56,7 @@ async function getProductosWA() {
       orderBy: {
         name: 'asc',
       },
+      where: whereParsed,
     })
 
     return { data: JSON.parse(JSON.stringify(items)) as typeof items }
@@ -100,23 +113,24 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
             await prisma.compra.createPrimeraCompra(
               {
                 almacen_id,
-                productos_por_unidad_derivada: [
-                  {
-                    cantidad: compraCantidad,
-                    lote: compra.lote,
-                    vencimiento: compra.vencimiento
-                      ? new Date(compra.vencimiento)
-                      : null,
-                    producto_almacen_unidad_derivada_id:
-                      productoAlmacenUnidadDerivada.id,
-                  },
-                ],
                 productos_por_almacen: [
                   {
                     producto_almacen_id: productoAlmacen.id,
                     costo: new Prisma.Decimal(compraCosto).div(
                       unidad_derivada.factor
                     ),
+                    unidades_derivadas: [
+                      {
+                        factor: unidad_derivada.factor,
+                        cantidad: compraCantidad,
+                        lote: compra.lote,
+                        vencimiento: compra.vencimiento
+                          ? new Date(compra.vencimiento)
+                          : null,
+                        name: productoAlmacenUnidadDerivada.unidad_derivada
+                          .name,
+                      },
+                    ],
                   },
                 ],
               },
@@ -131,6 +145,7 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
         }
       )
     } catch (error) {
+      console.log('🚀 ~ file: producto.ts:148 ~ error:', error)
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
           throw new Error(
@@ -142,6 +157,7 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
       throw new Error('Error al crear el producto')
     }
   } catch (error) {
+    console.log('🚀 ~ file: producto.ts:160 ~ error:', error)
     return errorFormated(error)
   }
 }
@@ -191,6 +207,9 @@ async function crearProductoEnAlmacen({
         producto_almacen_id: productoAlmacen.id,
         factor: producto.unidades_contenidas,
       },
+      include: {
+        unidad_derivada: true,
+      },
     })
 
   if (!productoAlmacenUnidadDerivada)
@@ -199,6 +218,9 @@ async function crearProductoEnAlmacen({
         await db.productoAlmacenUnidadDerivada.findFirstOrThrow({
           where: {
             producto_almacen_id: productoAlmacen.id,
+          },
+          include: {
+            unidad_derivada: true,
           },
         }),
       productoAlmacen,
@@ -294,3 +316,103 @@ async function importarProductosWA({ data }: { data: unknown }) {
   }
 }
 export const importarProductos = withAuth(importarProductosWA)
+
+// async function eliminarProductoWA({ id }: { id: number }) {
+//   try {
+//     const puede = await can(permissions.PRODUCTO_DELETE)
+//     if (!puede) throw new Error('No tienes permiso para eliminar productos')
+
+//     await prisma.producto.delete({ where: { id } })
+//     return { data: 'ok' }
+//   } catch (error) {
+//     return errorFormated(error)
+//   }
+// }
+// export const eliminarProducto = withAuth(eliminarProductoWA)
+
+async function editarProductoWA(data: FormCreateProductoFormatedProps) {
+  try {
+    const puede = await can(permissions.PRODUCTO_CREATE)
+    if (!puede) throw new Error('No tienes permiso para crear productos')
+
+    try {
+      return await prisma.$transaction(
+        async db => {
+          const {
+            almacen_id,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            compra,
+            unidades_derivadas,
+            producto_almacen: ubicacion,
+            ...dataProduct
+          } = data
+
+          const dataProductParsed =
+            ProductoUncheckedCreateInputSchema.parse(dataProduct)
+
+          if (!dataProductParsed.id)
+            throw new Error('No se especificó el id del producto')
+
+          const producto = await db.producto.update({
+            where: {
+              id: dataProductParsed.id,
+            },
+            data: dataProductParsed,
+          })
+
+          const producto_almacen = await db.productoAlmacen.update({
+            where: {
+              producto_id_almacen_id: {
+                producto_id: dataProductParsed.id,
+                almacen_id,
+              },
+            },
+            data: {
+              costo: unidades_derivadas.length
+                ? unidades_derivadas[0].costo /
+                  Number(unidades_derivadas[0].factor)
+                : 0,
+              ubicacion_id: ubicacion.ubicacion_id,
+            },
+          })
+
+          await db.productoAlmacenUnidadDerivada.deleteMany({
+            where: {
+              producto_almacen_id: producto_almacen.id,
+            },
+          })
+
+          await db.productoAlmacenUnidadDerivada.createMany({
+            data: unidades_derivadas.map(item => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { costo, p_venta, ganancia, ...rest } = item
+              const data = {
+                producto_almacen_id: producto_almacen.id,
+                ...rest,
+              }
+              const dataParsed =
+                ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema.parse(
+                  data
+                )
+              return dataParsed
+            }),
+          })
+
+          return { data: producto }
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        }
+      )
+    } catch (error) {
+      console.log('🚀 ~ file: producto.ts:408 ~ error:', error)
+      if (error instanceof Prisma.PrismaClientKnownRequestError)
+        throw new Error(`${error.code}`)
+
+      throw new Error('Error al editar el producto')
+    }
+  } catch (error) {
+    return errorFormated(error)
+  }
+}
+export const editarProducto = withAuth(editarProductoWA)

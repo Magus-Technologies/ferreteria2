@@ -2,121 +2,112 @@ import {
   Compra,
   Prisma,
   PrismaClient,
-  ProductoAlmacenCompra,
-  ProductoAlmacenUnidadDerivadaCompra,
   TipoDocumento,
+  UnidadDerivada,
+  UnidadDerivadaInmutableCompra,
 } from '@prisma/client'
 
 const extendedPrisma = new PrismaClient().$extends({
   model: {
     compra: {
       async createAfectaStock(
-        data: Omit<Compra, 'id' | 'created_at' | 'updated_at'> & {
-          productos_por_unidad_derivada: Omit<
-            ProductoAlmacenUnidadDerivadaCompra,
-            'id' | 'compra_id'
-          >[]
-          productos_por_almacen: Omit<
-            ProductoAlmacenCompra,
-            'id' | 'compra_id'
-          >[]
+        data: {
+          compra: Omit<
+            Prisma.CompraUncheckedCreateInput,
+            'productos_por_almacen'
+          >
+          productos_por_almacen: (Omit<
+            Prisma.ProductoAlmacenCompraUncheckedCreateInput,
+            'unidades_derivadas' | 'compra_id'
+          > & {
+            unidades_derivadas: (Omit<
+              UnidadDerivadaInmutableCompra,
+              'id' | 'unidad_derivada_inmutable_id'
+            > & {
+              name: UnidadDerivada['name']
+            })[]
+          })[]
         },
         db: Prisma.TransactionClient
       ) {
-        const {
-          productos_por_unidad_derivada,
-          productos_por_almacen,
-          ...rest
-        } = data
-        const compra = await db.compra.create({
+        const { productos_por_almacen, compra } = data
+
+        const compra_creada = await db.compra.create({
           data: {
-            ...rest,
-            productos_por_unidad_derivada: {
-              create: productos_por_unidad_derivada,
-            },
+            ...compra,
             productos_por_almacen: {
-              create: productos_por_almacen,
+              create: productos_por_almacen.map(item => ({
+                ...item,
+                unidades_derivadas: {
+                  create: item.unidades_derivadas.map(unidad_derivada => ({
+                    unidad_derivada_inmutable_compra: {
+                      create: {
+                        factor: unidad_derivada.factor,
+                        cantidad: unidad_derivada.cantidad,
+                        lote: unidad_derivada.lote,
+                        vencimiento: unidad_derivada.vencimiento,
+                        unidad_derivada_inmutable: {
+                          connectOrCreate: {
+                            where: {
+                              name: unidad_derivada.name,
+                            },
+                            create: {
+                              name: unidad_derivada.name,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  })),
+                },
+              })),
             },
           },
         })
 
-        for (const item of productos_por_unidad_derivada) {
-          const itemCompra =
-            await db.productoAlmacenUnidadDerivadaCompra.findFirstOrThrow({
+        for (const item of productos_por_almacen) {
+          for (const unidad_derivada of item.unidades_derivadas) {
+            await db.productoAlmacen.update({
               where: {
-                compra_id: compra.id,
-                producto_almacen_unidad_derivada_id:
-                  item.producto_almacen_unidad_derivada_id,
+                id: item.producto_almacen_id,
               },
-              select: {
-                producto_almacen_unidad_derivada: {
-                  select: {
-                    producto_almacen: {
-                      select: {
-                        id: true,
-                      },
-                    },
-                    factor: true,
-                  },
+              data: {
+                stock_fraccion: {
+                  increment: unidad_derivada.cantidad.mul(
+                    unidad_derivada.factor
+                  ),
                 },
+                costo: item.costo,
               },
             })
-
-          await db.productoAlmacen.update({
-            where: {
-              id: itemCompra.producto_almacen_unidad_derivada.producto_almacen
-                .id,
-            },
-            data: {
-              stock_fraccion: {
-                increment: item.cantidad.mul(
-                  itemCompra.producto_almacen_unidad_derivada.factor
-                ),
-              },
-            },
-          })
+          }
         }
 
-        for (const item of productos_por_almacen) {
-          await db.productoAlmacen.update({
-            where: {
-              id: item.producto_almacen_id,
-            },
-            data: {
-              costo: item.costo,
-            },
-          })
-        }
-
-        return compra
+        return compra_creada
       },
 
       async createPrimeraCompra(
-        data: Omit<
-          Compra,
-          | 'id'
-          | 'created_at'
-          | 'updated_at'
-          | 'tipo_documento'
-          | 'serie'
-          | 'numero'
-          | 'descripcion'
-        > & {
-          productos_por_unidad_derivada: Omit<
-            ProductoAlmacenUnidadDerivadaCompra,
-            'id' | 'compra_id'
-          >[]
-          productos_por_almacen: Omit<
-            ProductoAlmacenCompra,
-            'id' | 'compra_id'
-          >[]
+        data: {
+          almacen_id: Compra['almacen_id']
+          productos_por_almacen: (Omit<
+            Prisma.ProductoAlmacenCompraUncheckedCreateInput,
+            'unidades_derivadas' | 'compra_id'
+          > & {
+            unidades_derivadas: (Omit<
+              UnidadDerivadaInmutableCompra,
+              'id' | 'unidad_derivada_inmutable_id'
+            > & {
+              name: UnidadDerivada['name']
+            })[]
+          })[]
         },
         db: Prisma.TransactionClient
       ) {
+        const { almacen_id, productos_por_almacen } = data
         const ultima_compra = await db.compra.findFirst({
           where: {
-            almacen_id: data.almacen_id,
-            tipo_documento: TipoDocumento.XX,
+            almacen_id,
+            tipo_documento: TipoDocumento.NotaDeVenta,
           },
           orderBy: {
             created_at: 'desc',
@@ -124,11 +115,14 @@ const extendedPrisma = new PrismaClient().$extends({
         })
         return this.createAfectaStock(
           {
-            ...data,
-            tipo_documento: TipoDocumento.XX,
-            serie: 'NTV1',
-            numero: (ultima_compra?.numero ?? 0) + 1,
-            descripcion: 'Stock inicial por creación de producto',
+            compra: {
+              almacen_id,
+              tipo_documento: TipoDocumento.NotaDeVenta,
+              serie: 'NTV1',
+              numero: (ultima_compra?.numero ?? 0) + 1,
+              descripcion: 'Stock inicial por creación de producto',
+            },
+            productos_por_almacen,
           },
           db
         )

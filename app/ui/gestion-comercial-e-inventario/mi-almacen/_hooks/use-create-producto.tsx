@@ -3,22 +3,22 @@ import {
   FormCreateProductoFormatedProps,
   FormCreateProductoProps,
 } from '../_components/modals/modal-create-producto'
-import { createProducto } from '~/app/_actions/producto'
+import { createProducto, editarProducto } from '~/app/_actions/producto'
 import { toUTCString } from '~/utils/fechas'
 import { useStoreArchivosProducto } from '../store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
 import { Producto } from '@prisma/client'
 import { FormInstance } from 'antd'
-import { Dispatch, SetStateAction } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useStoreEditOrCopyProducto } from '../store/store-edit-or-copy-producto'
 
 export default function useCreateProducto({
   setOpen,
   form,
 }: {
-  setOpen: Dispatch<SetStateAction<boolean>>
+  setOpen: (value: boolean) => void
   form: FormInstance
 }) {
   const queryClient = useQueryClient()
@@ -35,47 +35,49 @@ export default function useCreateProducto({
     state => state.setFichaTecnicaFile
   )
 
+  const producto = useStoreEditOrCopyProducto(state => state.producto)
+  const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
+
   const { execute, loading } = useServerMutation<
     FormCreateProductoFormatedProps,
     Producto
   >({
-    action: createProducto,
+    action: producto?.id ? editarProducto : createProducto,
     onSuccess: async res => {
-      if (img_file || ficha_tecnica_file) {
-        const formData = new FormData()
+      const formData = new FormData()
 
-        if (img_file) formData.append('img_file', img_file)
-        if (ficha_tecnica_file)
-          formData.append('ficha_tecnica_file', ficha_tecnica_file)
+      if (img_file) formData.append('img_file', img_file)
+      if (producto?.img) formData.append('img_prev', producto.img)
 
-        formData.append('cod_producto', res.data!.cod_producto!)
+      if (ficha_tecnica_file)
+        formData.append('ficha_tecnica_file', ficha_tecnica_file)
+      if (producto?.ficha_tecnica)
+        formData.append('ficha_tecnica_prev', producto.ficha_tecnica)
 
-        setUploading(true)
-        try {
-          const res = await fetch('/api/producto', {
-            method: 'POST',
-            body: formData,
-          })
+      formData.append('cod_producto', res.data!.cod_producto!)
 
-          if (!res.ok) throw new Error('Error al subir el archivo')
-
-          notification.success({
-            message: 'Producto creado',
-            description: 'Producto creado correctamente',
-          })
-        } catch {
-          notification.warning({
-            message: 'Producto creado',
-            description: 'Error al subir la imagen y/o ficha técnica',
-          })
-        } finally {
-          setUploading(false)
-        }
-      } else {
-        notification.success({
-          message: 'Producto creado',
-          description: 'Producto creado correctamente',
+      setUploading(true)
+      try {
+        const res = await fetch('/api/producto', {
+          method: 'POST',
+          body: formData,
         })
+
+        if (!res.ok) throw new Error('Error al subir el archivo')
+
+        notification.success({
+          message: producto?.id ? 'Producto editado' : 'Producto creado',
+          description: producto?.id
+            ? 'Producto editado correctamente'
+            : 'Producto creado correctamente',
+        })
+      } catch {
+        notification.warning({
+          message: producto?.id ? 'Producto editado' : 'Producto creado',
+          description: 'Error al subir la imagen y/o ficha técnica',
+        })
+      } finally {
+        setUploading(false)
       }
 
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
@@ -83,6 +85,7 @@ export default function useCreateProducto({
       form.resetFields()
       setImgFile(undefined)
       setFichaTecnicaFile(undefined)
+      setProducto(undefined)
     },
   })
 
@@ -98,13 +101,21 @@ export default function useCreateProducto({
       ...values,
       compra: {
         ...values.compra,
-        vencimiento: values.compra.vencimiento
+        vencimiento: values.compra?.vencimiento
           ? toUTCString({
               date: values.compra.vencimiento,
             })
           : undefined,
       },
+      unidades_derivadas: values.unidades_derivadas.map((item, index) => {
+        delete item.unidad_derivada
+        return {
+          ...item,
+          orden: index,
+        }
+      }),
       estado: values.estado === 1,
+      id: producto?.id,
     }
     execute(data)
   }

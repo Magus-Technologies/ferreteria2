@@ -1,10 +1,9 @@
 import { Modal, ModalProps } from 'antd'
 import FormBase, { FormBaseProps } from '../form/form-base'
-import { Dispatch, SetStateAction } from 'react'
 
 interface ModalFormProps<T> {
   open: boolean
-  setOpen: Dispatch<SetStateAction<boolean>>
+  setOpen: (value: boolean) => void
   modalProps?: Omit<ModalProps, 'children'>
   formProps?: Omit<FormBaseProps<T>, 'children'>
   children?: React.ReactNode

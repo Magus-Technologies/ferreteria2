@@ -1,14 +1,14 @@
 enum TipoDocumento {
-    T01 @map("01")
-    T03 @map("03")
-    XX  @map("xx")
+    Factura     @map("01")
+    Boleta      @map("03")
+    NotaDeVenta @map("xx")
 }
 
 model Compra {
     id         Int @id @default(autoincrement())
     almacen_id Int
 
-    tipo_documento TipoDocumento @default(XX)
+    tipo_documento TipoDocumento @default(NotaDeVenta)
     serie          String
     numero         Int
     descripcion    String?
@@ -16,26 +16,11 @@ model Compra {
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
 
-    almacen                       Almacen                               @relation(fields: [almacen_id], references: [id])
-    productos_por_unidad_derivada ProductoAlmacenUnidadDerivadaCompra[]
-    productos_por_almacen         ProductoAlmacenCompra[]
+    almacen               Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+    productos_por_almacen ProductoAlmacenCompra[]
 
     @@unique([tipo_documento, serie, numero])
     @@index([created_at])
-}
-
-model ProductoAlmacenUnidadDerivadaCompra {
-    id                                  Int       @id @default(autoincrement())
-    compra_id                           Int
-    producto_almacen_unidad_derivada_id Int
-    cantidad                            Decimal   @db.Decimal(9, 3)
-    lote                                String?
-    vencimiento                         DateTime?
-
-    compra                           Compra                        @relation(fields: [compra_id], references: [id])
-    producto_almacen_unidad_derivada ProductoAlmacenUnidadDerivada @relation(fields: [producto_almacen_unidad_derivada_id], references: [id])
-
-    @@unique([compra_id, producto_almacen_unidad_derivada_id])
 }
 
 model ProductoAlmacenCompra {
@@ -49,5 +34,38 @@ model ProductoAlmacenCompra {
     producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id])
     producto_almacen_id Int
 
+    unidades_derivadas UnidadDerivadaInmutableProductoAlmacenCompra[]
+
     @@unique([compra_id, producto_almacen_id])
+}
+
+model UnidadDerivadaInmutableProductoAlmacenCompra {
+    id Int @id @default(autoincrement())
+
+    unidad_derivada_inmutable_compra_id Int
+    unidad_derivada_inmutable_compra    UnidadDerivadaInmutableCompra @relation(fields: [unidad_derivada_inmutable_compra_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+    producto_almacen_compra_id Int
+    producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model UnidadDerivadaInmutableCompra {
+    id Int @id @default(autoincrement())
+
+    unidad_derivada_inmutable_id Int
+    unidad_derivada_inmutable    UnidadDerivadaInmutable @relation(fields: [unidad_derivada_inmutable_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+    factor      Decimal   @db.Decimal(9, 3)
+    cantidad    Decimal   @db.Decimal(9, 3)
+    lote        String?
+    vencimiento DateTime?
+
+    unidades_derivadas_inmutables_productos_en_compras UnidadDerivadaInmutableProductoAlmacenCompra[]
+}
+
+model UnidadDerivadaInmutable {
+    id   Int    @id @default(autoincrement())
+    name String @unique
+
+    unidades_derivadas_inmutables_en_compras UnidadDerivadaInmutableCompra[]
 }

@@ -4,6 +4,6 @@ const prisma = new PrismaClient()
 
 export default async function marcasSeeder() {
   await prisma.marca.createMany({
-    data: [{ name: 'MARCA 1' }, { name: 'MARCA 2' }, { name: 'MARCA 3' }],
+    data: [{ name: 'ACEROS AREQUIPA' }],
   })
 }

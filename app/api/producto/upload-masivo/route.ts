@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
       },
       select: {
         cod_producto: true,
+        img: true,
+        ficha_tecnica: true,
       },
     })
 
@@ -47,7 +49,10 @@ export async function POST(req: NextRequest) {
     })
 
     await replaceFiles({
-      codProductos: productosFound,
+      urls: productos
+        .filter(producto => productosFound.includes(producto.cod_producto))
+        .map(producto => producto[tipo])
+        .filter(url => url !== null),
       files: filesFound,
       ruta,
       tipo,
@@ -64,12 +69,12 @@ export async function POST(req: NextRequest) {
 }
 
 async function replaceFiles({
-  codProductos,
+  urls,
   files,
   ruta,
   tipo,
 }: {
-  codProductos: string[]
+  urls: string[]
   files: File[]
   ruta: string
   tipo: 'img' | 'ficha_tecnica'
@@ -79,12 +84,19 @@ async function replaceFiles({
   })
   const UPLOAD_DIR = path.join(process.cwd(), `public${ruta}`)
 
-  for await (const dirent of await fs.promises.opendir(UPLOAD_DIR)) {
-    if (!dirent.isFile()) continue
-
-    const baseName = path.parse(dirent.name).name.toLowerCase()
-    if (codProductos.some(p => p.toLowerCase() === baseName)) {
-      await fs.promises.unlink(path.join(UPLOAD_DIR, dirent.name))
+  for (const url of urls) {
+    const filePath = path.join(process.cwd(), 'public', url)
+    try {
+      await fs.promises.unlink(filePath)
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        (err as NodeJS.ErrnoException).code === 'ENOENT'
+      ) {
+        // ignorar si el archivo no existe
+        continue
+      }
+      throw err
     }
   }
 

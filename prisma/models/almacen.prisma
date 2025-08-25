@@ -14,16 +14,16 @@ model Almacen {
 model ProductoAlmacen {
     id Int @id @default(autoincrement())
 
-    producto    Producto @relation(fields: [producto_id], references: [id])
+    producto    Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     producto_id Int
 
-    almacen    Almacen @relation(fields: [almacen_id], references: [id])
+    almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     almacen_id Int
 
     stock_fraccion Decimal @default(0) @db.Decimal(9, 3)
     costo          Decimal @default(0) @db.Decimal(9, 3)
 
-    ubicacion    Ubicacion @relation(fields: [ubicacion_id], references: [id])
+    ubicacion    Ubicacion @relation(fields: [ubicacion_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     ubicacion_id Int
 
     created_at DateTime @default(now())
@@ -36,11 +36,12 @@ model ProductoAlmacen {
 }
 
 model Ubicacion {
-    id         Int    @id @default(autoincrement())
+    id         Int     @id @default(autoincrement())
     name       String
     almacen_id Int
+    estado     Boolean @default(true)
 
-    almacen             Almacen           @relation(fields: [almacen_id], references: [id])
+    almacen             Almacen           @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     productos_almacenes ProductoAlmacen[]
 
     @@unique([almacen_id, name])
@@ -48,8 +49,9 @@ model Ubicacion {
 }
 
 model UnidadDerivada {
-    id   Int    @id @default(autoincrement())
-    name String @unique
+    id     Int     @id @default(autoincrement())
+    name   String  @unique
+    estado Boolean @default(true)
 
     productos_almacenes_unidad_derivada ProductoAlmacenUnidadDerivada[]
 }
@@ -57,11 +59,13 @@ model UnidadDerivada {
 model ProductoAlmacenUnidadDerivada {
     id Int @id @default(autoincrement())
 
-    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id])
+    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     producto_almacen_id Int
 
-    unidad_derivada    UnidadDerivada @relation(fields: [unidad_derivada_id], references: [id])
+    unidad_derivada    UnidadDerivada @relation(fields: [unidad_derivada_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     unidad_derivada_id Int
+
+    orden Int @db.SmallInt
 
     factor           Decimal  @db.Decimal(9, 3)
     precio_publico   Decimal  @db.Decimal(9, 3)
@@ -78,8 +82,6 @@ model ProductoAlmacenUnidadDerivada {
     precio_ultimo    Decimal? @db.Decimal(9, 3)
     comision_ultimo  Decimal? @db.Decimal(9, 3)
     activador_ultimo Decimal? @db.Decimal(9, 3)
-
-    compras ProductoAlmacenUnidadDerivadaCompra[]
 
     @@unique([producto_almacen_id, unidad_derivada_id])
     @@unique([producto_almacen_id, factor])

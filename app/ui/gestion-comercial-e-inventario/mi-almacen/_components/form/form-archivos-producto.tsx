@@ -1,14 +1,18 @@
 import { FaFilePdf, FaImage } from 'react-icons/fa'
 import DraggerBase from '~/app/_components/form/inputs/dragger-base'
 import LabelBase from '~/components/form/label-base'
-import { useBeforeUpload } from '~/utils/upload'
+import { toUploadFile, useBeforeUpload } from '~/utils/upload'
 import { useStoreArchivosProducto } from '../../store/store-archivos-producto'
 
 export default function FormArchivosProducto() {
   const beforeUpload = useBeforeUpload()
   const setImgFile = useStoreArchivosProducto(state => state.setImgFile)
+  const img_file = useStoreArchivosProducto(state => state.img_file)
   const setFichaTecnicaFile = useStoreArchivosProducto(
     state => state.setFichaTecnicaFile
+  )
+  const ficha_tecnica_file = useStoreArchivosProducto(
+    state => state.ficha_tecnica_file
   )
 
   return (
@@ -19,6 +23,7 @@ export default function FormArchivosProducto() {
         orientation='column'
       >
         <DraggerBase
+          fileList={img_file ? [toUploadFile(img_file)] : []}
           className='w-full'
           listType='picture'
           maxCount={1}
@@ -39,6 +44,9 @@ export default function FormArchivosProducto() {
         label='Adjuntar Ficha Técnica:'
       >
         <DraggerBase
+          fileList={
+            ficha_tecnica_file ? [toUploadFile(ficha_tecnica_file)] : []
+          }
           className='w-full'
           listType='picture'
           maxCount={1}

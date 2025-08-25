@@ -1,10 +1,10 @@
 model Empresa {
     id Int @id @default(autoincrement())
 
-    almacen_predeterminado Almacen @relation(fields: [almacen_id], references: [id])
+    almacen_predeterminado Almacen @relation(fields: [almacen_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     almacen_id             Int
 
-    marca_predeterminada Marca @relation(fields: [marca_id], references: [id])
+    marca_predeterminada Marca @relation(fields: [marca_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     marca_id             Int
 
     users User[]

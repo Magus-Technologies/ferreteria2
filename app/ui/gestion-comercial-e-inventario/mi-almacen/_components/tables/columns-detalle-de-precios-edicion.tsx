@@ -139,6 +139,7 @@ export function useColumnsDetalleDePreciosEdicion({
               formWithMessage={false}
               placeholder='P. Compra'
               precision={3}
+              prefix='S/. '
               onChange={val => {
                 onChangeCosto({
                   form,
@@ -236,6 +237,7 @@ export function useColumnsDetalleDePreciosEdicion({
               formWithMessage={false}
               placeholder='P. Público'
               precision={2}
+              prefix='S/. '
               onChange={val => {
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'precio_especial'],
@@ -337,6 +339,7 @@ export function useColumnsDetalleDePreciosEdicion({
                   },
                 ],
               }}
+              prefix='S/. '
               formWithMessage={false}
               placeholder='Precio Especial'
               precision={2}
@@ -371,6 +374,7 @@ export function useColumnsDetalleDePreciosEdicion({
                   },
                 ],
               }}
+              prefix='S/. '
               formWithMessage={false}
               placeholder='Precio Mínimo'
               precision={2}
@@ -405,6 +409,7 @@ export function useColumnsDetalleDePreciosEdicion({
                   },
                 ],
               }}
+              prefix='S/. '
               formWithMessage={false}
               placeholder='Precio Último'
               precision={2}
@@ -435,6 +440,7 @@ export function useColumnsDetalleDePreciosEdicion({
               formWithMessage={false}
               placeholder='Comisión P. Público'
               precision={2}
+              prefix='S/. '
               onChange={val => {
                 onChangeComisiones({
                   form,
@@ -476,6 +482,7 @@ export function useColumnsDetalleDePreciosEdicion({
               propsForm={{
                 name: [value, 'comision_especial'],
               }}
+              prefix='S/. '
               formWithMessage={false}
               placeholder='Comisión Especial'
               precision={2}
@@ -497,6 +504,7 @@ export function useColumnsDetalleDePreciosEdicion({
               propsForm={{
                 name: [value, 'comision_minimo'],
               }}
+              prefix='S/. '
               formWithMessage={false}
               placeholder='Comisión Mínimo'
               precision={2}
@@ -518,6 +526,7 @@ export function useColumnsDetalleDePreciosEdicion({
               propsForm={{
                 name: [value, 'comision_ultimo'],
               }}
+              prefix='S/. '
               formWithMessage={false}
               placeholder='Comisión Último'
               precision={2}
@@ -665,7 +674,7 @@ function onChangeCosto({
   const unidades_derivadas = form.getFieldValue(
     'unidades_derivadas'
   ) as FormCreateProductoProps['unidades_derivadas']
-  const factores = unidades_derivadas.map(item => item.factor)
+  const factores = (unidades_derivadas ?? []).map(item => item.factor)
 
   if (factores.some(factor => !factor)) {
     notification.error({

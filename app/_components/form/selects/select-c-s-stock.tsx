@@ -6,6 +6,12 @@ interface SelectCSStockProps extends SelectBaseProps {
   sizeIcon?: number
 }
 
+export enum CSStock {
+  ALL = 'all',
+  CON_STOCK = 'con_stock',
+  SIN_STOCK = 'sin_stock',
+}
+
 export default function SelectCSStock({
   placeholder = 'C/S Stock',
   variant = 'filled',
@@ -20,9 +26,9 @@ export default function SelectCSStock({
       variant={variant}
       placeholder={placeholder}
       options={[
-        { value: 'all', label: 'Todos' },
-        { value: 'con_stock', label: 'Con Stock' },
-        { value: 'sin_stock', label: 'Sin Stock' },
+        { value: CSStock.ALL, label: 'Todos' },
+        { value: CSStock.CON_STOCK, label: 'Con Stock' },
+        { value: CSStock.SIN_STOCK, label: 'Sin Stock' },
       ]}
     />
   )

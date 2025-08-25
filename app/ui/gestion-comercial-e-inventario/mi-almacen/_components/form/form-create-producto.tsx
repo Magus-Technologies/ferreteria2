@@ -14,12 +14,14 @@ import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import FormCodProducto from '../form/form-cod-producto'
 import { FormInstance } from 'antd'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
+import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
 
 interface FormCreateProductoProps {
   form: FormInstance
 }
 
 export default function FormCreateProducto({ form }: FormCreateProductoProps) {
+  const producto = useStoreEditOrCopyProducto(state => state.producto)
   return (
     <>
       <div className='grid grid-cols-2 gap-8 mb-2'>
@@ -40,6 +42,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                   ],
                 }}
                 form={form}
+                {...(producto?.id && { disabled: true, variant: 'borderless' })}
               />
             </LabelBase>
             <FormCodProducto form={form} />
@@ -171,6 +174,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                 showButtonCreate
                 classNameIcon='text-rose-700 mx-1'
                 form={form}
+                tieneValorPorDefecto
               />
             </LabelBase>
             <LabelBase
@@ -244,7 +248,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
               />
             </LabelBase>
           </div>
-          <FormSectionLote form={form} />
+          {!producto?.id && <FormSectionLote form={form} />}
         </div>
       </div>
       <FormSectionUnidadesDerivadas form={form} />

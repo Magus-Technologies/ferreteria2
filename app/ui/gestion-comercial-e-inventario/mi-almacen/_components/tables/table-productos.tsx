@@ -7,7 +7,7 @@ import { getProductos, importarProductos } from '~/app/_actions/producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputImport from '~/app/_components/form/inputs/input-import'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
@@ -15,8 +15,15 @@ import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
 import InputUploadMasivo from '../inputs/input-upload-masivo'
 import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
 import { importarUbicaciones } from '~/app/_actions/ubicacion'
+import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
 
-export default function TableProductos() {
+export default function TableProductos({
+  marca_predeterminada,
+  almacen_predeterminado,
+}: {
+  marca_predeterminada?: number
+  almacen_predeterminado?: number
+}) {
   const tableRef = useRef<AgGridReact>(null)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
@@ -24,15 +31,32 @@ export default function TableProductos() {
     store => store.setProducto
   )
 
+  const filtros = useStoreFiltrosProductos(state => state.filtros)
+
   const can = usePermission()
 
-  const { response } = useServerQuery({
+  const { response, refetch, loading } = useServerQuery({
     action: getProductos,
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS],
     },
-    params: undefined,
+    params: {
+      where: filtros
+        ? filtros
+        : {
+            producto_en_almacenes: {
+              some: {
+                almacen_id: almacen_predeterminado,
+              },
+            },
+            marca_id: marca_predeterminada,
+          },
+    },
   })
+
+  useEffect(() => {
+    refetch()
+  }, [filtros, refetch])
 
   type ResponseItem = NonNullable<typeof response>[number]
 
@@ -40,12 +64,13 @@ export default function TableProductos() {
     <TableWithTitle<ResponseItem>
       id='g-c-e-i.mi-almacen.productos'
       onSelectionChanged={({ selectedNodes }) =>
-        setProductoSeleccionado(selectedNodes?.[0].data as ResponseItem)
+        setProductoSeleccionado(selectedNodes?.[0]?.data as ResponseItem)
       }
       tableRef={tableRef}
       title='Productos'
       schema={ProductoCreateInputSchema}
       headersRequired={['Ubicación en Almacén']}
+      loading={loading}
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
           <>

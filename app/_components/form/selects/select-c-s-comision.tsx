@@ -6,6 +6,12 @@ interface SelectCSComisionProps extends SelectBaseProps {
   sizeIcon?: number
 }
 
+export enum CSComision {
+  ALL = 'all',
+  CON_COMISION = 'con_comision',
+  SIN_COMISION = 'sin_comision',
+}
+
 export default function SelectCSComision({
   placeholder = 'C/S Comisión',
   variant = 'filled',
@@ -20,9 +26,9 @@ export default function SelectCSComision({
       variant={variant}
       placeholder={placeholder}
       options={[
-        { value: 'all', label: 'Todos' },
-        { value: 'con_comision', label: 'Con Comisión' },
-        { value: 'sin_comision', label: 'Sin Comisión' },
+        { value: CSComision.ALL, label: 'Todos' },
+        { value: CSComision.CON_COMISION, label: 'Con Comisión' },
+        { value: CSComision.SIN_COMISION, label: 'Sin Comisión' },
       ]}
     />
   )

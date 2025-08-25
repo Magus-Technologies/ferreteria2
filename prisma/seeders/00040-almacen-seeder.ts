@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 export default async function almacenSeeder() {
   const data = [
     {
-      name: 'ALMACÉN 1',
+      name: 'ALMACÉN PRINCIPAL',
       ubicaciones: {
         create: [{ name: 'UBICACIÓN 1-1' }, { name: 'UBICACIÓN 1-2' }],
       },

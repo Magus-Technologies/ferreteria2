@@ -89,7 +89,7 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
 
   return {
     refetch: query.refetch,
-    loading: query.isPending,
+    loading: query.isPending || query.isFetching,
     response: query.data?.data,
     error: query.error,
   }
