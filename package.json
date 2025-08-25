@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
+    "build:server": "next build --no-lint",
     "start": "next start",
     "lint": "next lint",
     "share": "npx tunnelmole 3000",

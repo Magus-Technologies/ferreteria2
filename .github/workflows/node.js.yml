@@ -27,16 +27,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+
+      # Cache para .next/cache
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/*.js', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
       - run: npm i # Cambiar a ci en produccióname:
       - run: npx prisma generate
       - run: npm run lint
       - run: npx tsc --noEmit
-      - run: next build --no-lint
+      - run: npm run build:server
       - run: |
           # Crear symlink solo si no existe
           [ -L ./public/uploads ] || ln -s /var/ferreteria_uploads ./public/uploads
