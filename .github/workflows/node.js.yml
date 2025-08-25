@@ -18,6 +18,7 @@ jobs:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
       AUTH_URL: ${{ secrets.AUTH_URL }}
+      NODE_OPTIONS: --max-old-space-size=4096
 
     strategy:
       matrix:
@@ -31,8 +32,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm i # Cambiar a ci en producción
-      - run: npm run build
+      - run: npm i # Cambiar a ci en produccióname:
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: next build --no-lint
       - run: |
           # Crear symlink solo si no existe
           [ -L ./public/uploads ] || ln -s /var/ferreteria_uploads ./public/uploads

@@ -145,7 +145,6 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
         }
       )
     } catch (error) {
-      console.log('🚀 ~ file: producto.ts:148 ~ error:', error)
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
           throw new Error(
@@ -157,7 +156,6 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
       throw new Error('Error al crear el producto')
     }
   } catch (error) {
-    console.log('🚀 ~ file: producto.ts:160 ~ error:', error)
     return errorFormated(error)
   }
 }
@@ -405,7 +403,6 @@ async function editarProductoWA(data: FormCreateProductoFormatedProps) {
         }
       )
     } catch (error) {
-      console.log('🚀 ~ file: producto.ts:408 ~ error:', error)
       if (error instanceof Prisma.PrismaClientKnownRequestError)
         throw new Error(`${error.code}`)
 
