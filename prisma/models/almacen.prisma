@@ -65,8 +65,6 @@ model ProductoAlmacenUnidadDerivada {
     unidad_derivada    UnidadDerivada @relation(fields: [unidad_derivada_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     unidad_derivada_id Int
 
-    orden Int @db.SmallInt
-
     factor           Decimal  @db.Decimal(9, 3)
     precio_publico   Decimal  @db.Decimal(9, 3)
     comision_publico Decimal? @db.Decimal(9, 3)

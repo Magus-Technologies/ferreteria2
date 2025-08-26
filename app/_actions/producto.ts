@@ -41,9 +41,6 @@ async function getProductosWA({
               include: {
                 unidad_derivada: true,
               },
-              orderBy: {
-                orden: 'asc',
-              },
             },
             almacen: true,
             ubicacion: true,

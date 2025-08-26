@@ -109,10 +109,7 @@ export default function useCreateProducto({
       },
       unidades_derivadas: values.unidades_derivadas.map((item, index) => {
         delete item.unidad_derivada
-        return {
-          ...item,
-          orden: index,
-        }
+        return item
       }),
       estado: values.estado === 1,
       id: producto?.id,
