@@ -18,7 +18,7 @@ jobs:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
       AUTH_URL: ${{ secrets.AUTH_URL }}
-      NODE_OPTIONS: --max-old-space-size=4096
+      # NODE_OPTIONS: --max-old-space-size=4096
 
     strategy:
       matrix:
