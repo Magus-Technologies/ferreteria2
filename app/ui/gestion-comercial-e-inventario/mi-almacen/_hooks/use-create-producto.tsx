@@ -107,7 +107,7 @@ export default function useCreateProducto({
             })
           : undefined,
       },
-      unidades_derivadas: values.unidades_derivadas.map((item, index) => {
+      unidades_derivadas: values.unidades_derivadas.map(item => {
         delete item.unidad_derivada
         return item
       }),
