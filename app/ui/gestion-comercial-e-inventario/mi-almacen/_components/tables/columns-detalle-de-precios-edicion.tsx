@@ -675,6 +675,7 @@ function onChangeCosto({
     'unidades_derivadas'
   ) as FormCreateProductoProps['unidades_derivadas']
   const factores = (unidades_derivadas ?? []).map(item => item.factor)
+  const costos = (unidades_derivadas ?? []).map(item => item.costo)
 
   if (factores.some(factor => !factor)) {
     notification.error({
@@ -691,13 +692,30 @@ function onChangeCosto({
   }
 
   const factor = form.getFieldValue(['unidades_derivadas', value, 'factor'])
-  const costo_unidad = (costo ?? 0) / Number(factor)
+  let factor_disponible = Number(factor)
+  let costo_disponible = costo
+  if (!costo) {
+    const index_factor_and_costo = factores.findIndex((factor, index) => {
+      return (
+        factor &&
+        Number(factor) !== 0 &&
+        costos[index] &&
+        Number(costos[index]) !== 0
+      )
+    })
+    if (index_factor_and_costo !== -1) {
+      costo_disponible = costos[index_factor_and_costo]
+      factor_disponible = Number(factores[index_factor_and_costo])
+    }
+  }
+
+  const costo_unidad = (costo_disponible ?? 0) / Number(factor_disponible)
 
   unidades_derivadas.forEach((item, index) => {
     const factor = Number(item.factor)
     form.setFieldValue(
       ['unidades_derivadas', index, 'costo'],
-      costo ? factor * costo_unidad : undefined
+      costo_disponible ? factor * costo_unidad : undefined
     )
   })
 }

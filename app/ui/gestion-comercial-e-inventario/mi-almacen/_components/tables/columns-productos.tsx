@@ -54,9 +54,9 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
     {
       headerName: 'Código de Producto',
       field: 'cod_producto',
-      minWidth: 180,
+      minWidth: 110,
       filter: true,
-      flex: 2,
+      flex: 1,
     },
     {
       headerName: 'Producto',
@@ -93,7 +93,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           </div>
         )
       },
-      flex: 2,
+      flex: 3,
     },
     {
       headerName: 'Ticket',

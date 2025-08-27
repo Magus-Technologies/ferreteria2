@@ -13,7 +13,11 @@ async function getCategoriasWA() {
     if (!puede)
       throw new Error('No tienes permiso para ver la lista de categorías')
 
-    const item = await prisma.categoria.findMany()
+    const item = await prisma.categoria.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    })
     return { data: item }
   } catch (error) {
     return errorFormated(error)

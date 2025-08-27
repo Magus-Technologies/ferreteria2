@@ -47,11 +47,12 @@ export default function useCreateProducto({
       const formData = new FormData()
 
       if (img_file) formData.append('img_file', img_file)
-      if (producto?.img) formData.append('img_prev', producto.img)
+      if (producto?.img && producto?.id)
+        formData.append('img_prev', producto.img)
 
       if (ficha_tecnica_file)
         formData.append('ficha_tecnica_file', ficha_tecnica_file)
-      if (producto?.ficha_tecnica)
+      if (producto?.ficha_tecnica && producto?.id)
         formData.append('ficha_tecnica_prev', producto.ficha_tecnica)
 
       formData.append('cod_producto', res.data!.cod_producto!)

@@ -22,6 +22,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
+import { Prisma } from '@prisma/client'
 
 interface FiltersMiAlmacenProps {
   marca_predeterminada?: number
@@ -146,9 +147,33 @@ export default function FiltersMiAlmacen({
             },
           },
           estado: estado === 1,
-          ...(cod_producto ? { cod_producto } : {}),
-          ...(accion_tecnica ? { accion_tecnica } : {}),
-        }
+          ...(cod_producto
+            ? {
+                OR: [
+                  {
+                    cod_producto: {
+                      contains: cod_producto,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    name: {
+                      contains: cod_producto,
+                      mode: 'insensitive',
+                    },
+                  },
+                ],
+              }
+            : {}),
+          ...(accion_tecnica
+            ? {
+                accion_tecnica: {
+                  contains: accion_tecnica,
+                  mode: 'insensitive',
+                },
+              }
+            : {}),
+        } satisfies Prisma.ProductoWhereInput
         setFiltros(data)
       }}
     >

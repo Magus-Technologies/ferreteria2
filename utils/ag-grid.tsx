@@ -40,7 +40,7 @@ function exportFile<schemaType>({
 
   headersRequired.forEach(header => {
     const cellRef = utils.encode_cell({ r: 0, c: keys.indexOf(header) })
-    ws[cellRef].s.font.color = { rgb: 'FF0000' }
+    if (ws[cellRef]) ws[cellRef].s.font.color = { rgb: 'FF0000' }
   })
 
   if (schema) {

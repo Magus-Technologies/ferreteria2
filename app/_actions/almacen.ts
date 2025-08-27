@@ -13,7 +13,11 @@ async function getAlmacenesWA() {
     if (!puede)
       throw new Error('No tienes permiso para ver la lista de almacenes')
 
-    const item = await prisma.almacen.findMany()
+    const item = await prisma.almacen.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    })
     return { data: item }
   } catch (error) {
     return errorFormated(error)

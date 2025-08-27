@@ -24,23 +24,23 @@ export function useColumnsDetalleDePrecios() {
     {
       headerName: 'Cod. Producto',
       field: 'producto.cod_producto',
-      minWidth: 80,
+      minWidth: 130,
       filter: true,
-      flex: 2,
+      flex: 1,
     },
     {
       headerName: 'Producto',
       field: 'producto.name',
-      minWidth: 180,
+      minWidth: 250,
       filter: true,
-      flex: 2,
+      flex: 3,
     },
     {
       headerName: 'Formato',
       field: 'unidad_derivada.name',
       minWidth: 80,
       filter: true,
-      flex: 2,
+      flex: 1,
     },
     {
       headerName: 'Factor',

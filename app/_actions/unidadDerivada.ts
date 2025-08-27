@@ -18,7 +18,11 @@ async function getUnidadesDerivadasWA() {
         'No tienes permiso para ver la lista de unidades derivadas'
       )
 
-    const item = await prisma.unidadDerivada.findMany()
+    const item = await prisma.unidadDerivada.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    })
     return { data: item }
   } catch (error) {
     return errorFormated(error)

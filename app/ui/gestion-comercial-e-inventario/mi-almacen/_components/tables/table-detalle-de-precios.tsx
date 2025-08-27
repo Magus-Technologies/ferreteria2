@@ -16,6 +16,9 @@ import {
   importarDetallesDePrecios,
   importarUnidadesDerivadas,
 } from '~/app/_actions/unidadDerivada'
+import { useQuery } from '@tanstack/react-query'
+import { TableProductosProps } from './columns-productos'
+import ButtonBase from '~/components/buttons/button-base'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
@@ -33,16 +36,42 @@ export default function TableDetalleDePrecios() {
     item => item.almacen_id === almacen_id
   )
 
-  const rowData = producto_en_almacen?.unidades_derivadas.map(item => ({
-    ...item,
-    almacen: producto_en_almacen?.almacen,
-    producto: productoSeleccionado,
-    producto_almacen: {
-      costo: producto_en_almacen?.costo,
-      stock_fraccion: producto_en_almacen?.stock_fraccion,
-      ubicacion: producto_en_almacen?.ubicacion,
-    },
-  }))
+  const { data } = useQuery({
+    queryKey: [QueryKeys.PRODUCTOS],
+    queryFn: (): Promise<{ data: TableProductosProps[] }> =>
+      Promise.resolve({ data: [] }),
+    enabled: false,
+    refetchOnWindowFocus: false,
+  })
+
+  const productos_completos = data?.data
+
+  const rowData = producto_en_almacen
+    ? producto_en_almacen?.unidades_derivadas?.map(item => ({
+        ...item,
+        almacen: producto_en_almacen?.almacen,
+        producto: productoSeleccionado,
+        producto_almacen: {
+          costo: producto_en_almacen?.costo,
+          stock_fraccion: producto_en_almacen?.stock_fraccion,
+          ubicacion: producto_en_almacen?.ubicacion,
+        },
+      }))
+    : productos_completos?.flatMap(producto_seleccionado_aux =>
+        producto_seleccionado_aux?.producto_en_almacenes?.flatMap(
+          producto_en_almacen_aux =>
+            producto_en_almacen_aux?.unidades_derivadas?.map(item => ({
+              ...item,
+              almacen: producto_en_almacen_aux?.almacen,
+              producto: producto_seleccionado_aux,
+              producto_almacen: {
+                costo: producto_en_almacen_aux?.costo,
+                stock_fraccion: producto_en_almacen_aux?.stock_fraccion,
+                ubicacion: producto_en_almacen_aux?.ubicacion,
+              },
+            }))
+        )
+      )
 
   return (
     <TableWithTitle
@@ -52,96 +81,112 @@ export default function TableDetalleDePrecios() {
       schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}
       extraTitle={
-        can(permissions.PRODUCTO_IMPORT) && (
-          <InputImport
-            tableRef={tableRef}
-            schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
-            fieldsIgnored={[
-              'producto_almacen.costo',
-              'producto.cod_producto',
-              'unidad_derivada.name',
-              'producto.name',
-            ]}
-            columnasExtra={[
-              {
-                headerName: 'producto_almacen',
-                field: 'producto_almacen',
-              },
-              {
-                headerName: 'unidad_derivada',
-                field: 'unidad_derivada',
-              },
-            ]}
-            preProcessData={async data => {
-              if (!almacen_id) throw new Error('No se selecciono un almacén')
+        <>
+          {' '}
+          de
+          <span className='italic -ml-2 text-blue-900'>
+            {productoSeleccionado
+              ? productoSeleccionado.name
+              : 'TODOS LOS PRODUCTOS FILTRADOS'}
+          </span>
+          <ButtonBase
+            onClick={() => setProductoSeleccionado(undefined)}
+            color='warning'
+            size='sm'
+          >
+            Ver Todo
+          </ButtonBase>
+          {can(permissions.PRODUCTO_IMPORT) && (
+            <InputImport
+              tableRef={tableRef}
+              schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
+              fieldsIgnored={[
+                'producto_almacen.costo',
+                'producto.cod_producto',
+                'unidad_derivada.name',
+                'producto.name',
+              ]}
+              columnasExtra={[
+                {
+                  headerName: 'producto_almacen',
+                  field: 'producto_almacen',
+                },
+                {
+                  headerName: 'unidad_derivada',
+                  field: 'unidad_derivada',
+                },
+              ]}
+              preProcessData={async data => {
+                if (!almacen_id) throw new Error('No se selecciono un almacén')
 
-              if (
-                data.some(
-                  item =>
-                    item['Cod. Producto'] === null ||
-                    item['Cod. Producto'] === '' ||
-                    item['Cod. Producto'] === undefined
+                if (
+                  data.some(
+                    item =>
+                      item['Cod. Producto'] === null ||
+                      item['Cod. Producto'] === '' ||
+                      item['Cod. Producto'] === undefined
+                  )
                 )
-              )
-                throw new Error(
-                  'Todas las Unidades Derivadas deben tener un Código de Producto obligatoriamente'
-                )
+                  throw new Error(
+                    'Todas las Unidades Derivadas deben tener un Código de Producto obligatoriamente'
+                  )
 
-              const preResponse = new Set<string>(
-                data.map(item => `${item['Cod. Producto']}`)
-              )
-              const response =
-                await getProductoAlmacenByCodProductoAndAlmacenName(
-                  Array.from(preResponse).map(cod_producto => ({
-                    cod_producto,
-                    almacen_id,
+                const preResponse = new Set<string>(
+                  data.map(item => `${item['Cod. Producto']}`)
+                )
+                const response =
+                  await getProductoAlmacenByCodProductoAndAlmacenName(
+                    Array.from(preResponse).map(cod_producto => ({
+                      cod_producto,
+                      almacen_id,
+                    }))
+                  )
+                if (!response.data)
+                  throw new Error(
+                    'No se encontraron los Productos en este Almacén'
+                  )
+
+                const preUnidadesDerivadas = new Set<string>(
+                  data.map(item => `${item['Formato']}`)
+                )
+                const unidades_derivadas = await importarUnidadesDerivadas(
+                  Array.from(preUnidadesDerivadas).map(name => ({
+                    name,
                   }))
                 )
-              if (!response.data)
-                throw new Error(
-                  'No se encontraron los Productos en este Almacén'
-                )
+                if (!unidades_derivadas.data)
+                  throw new Error('No se encontraron unidades derivadas')
 
-              const preUnidadesDerivadas = new Set<string>(
-                data.map(item => `${item['Formato']}`)
-              )
-              const unidades_derivadas = await importarUnidadesDerivadas(
-                Array.from(preUnidadesDerivadas).map(name => ({
-                  name,
+                const newData = data.map(item => ({
+                  ...item,
+                  producto_almacen: {
+                    connect: {
+                      id: response.data!.find(
+                        ({ cod_producto }) =>
+                          cod_producto === `${item['Cod. Producto']}`
+                      )?.producto_almacen_id,
+                    },
+                  },
+                  unidad_derivada: {
+                    connect: {
+                      id: unidades_derivadas.data!.find(
+                        ({ name }) => name === item['Formato']
+                      )?.id,
+                    },
+                  },
                 }))
-              )
-              if (!unidades_derivadas.data)
-                throw new Error('No se encontraron unidades derivadas')
 
-              const newData = data.map(item => ({
-                ...item,
-                producto_almacen: {
-                  connect: {
-                    id: response.data!.find(
-                      ({ cod_producto }) =>
-                        cod_producto === `${item['Cod. Producto']}`
-                    )?.producto_almacen_id,
-                  },
-                },
-                unidad_derivada: {
-                  connect: {
-                    id: unidades_derivadas.data!.find(
-                      ({ name }) => name === item['Formato']
-                    )?.id,
-                  },
-                },
-              }))
-
-              return newData
-            }}
-            propsUseServerMutation={{
-              action: importarDetallesDePrecios,
-              msgSuccess: 'Unidades Derivadas importadas exitosamente',
-              onSuccess: () => setProductoSeleccionado(undefined),
-              queryKey: [QueryKeys.PRODUCTOS],
-            }}
-          />
-        )
+                return newData
+              }}
+              propsUseServerMutation={{
+                action: importarDetallesDePrecios,
+                msgSuccess: 'Unidades Derivadas importadas exitosamente',
+                onSuccess: () => setProductoSeleccionado(undefined),
+                queryKey: [QueryKeys.PRODUCTOS],
+              }}
+            />
+          )}
+        </>
       }
       columnDefs={useColumnsDetalleDePrecios()}
       optionsSelectColumns={[

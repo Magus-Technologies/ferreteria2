@@ -142,10 +142,11 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
         }
       )
     } catch (error) {
+      console.log('🚀 ~ file: producto.ts:145 ~ error:', error)
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
           throw new Error(
-            'Ya existe un producto con ese código de producto y/o barra'
+            'Ya existe un producto con ese código de producto, código de barra o nombre'
           )
         throw new Error(`${error.code}`)
       }

@@ -84,7 +84,8 @@ export default function ModalCreateProducto() {
         })
       else setFichaTecnicaFile(undefined)
 
-      const { estado, producto_en_almacenes, ...restProducto } = producto
+      const { estado, producto_en_almacenes, cod_producto, ...restProducto } =
+        producto
       const producto_almacen = producto_en_almacenes[0]
       const costo_unidad = Number(producto_almacen.costo)
       form.setFieldsValue({
@@ -92,16 +93,24 @@ export default function ModalCreateProducto() {
         estado: Number(estado),
         producto_almacen,
         unidades_derivadas: producto_almacen.unidades_derivadas.map(item => {
+          const { id, producto_almacen_id, ...rest } = item
           const costo = costo_unidad * Number(item.factor)
           const ganancia = Number(item.precio_publico) - costo
           const p_venta = costo != 0 ? (ganancia * 100) / costo : 0
           return {
-            ...item,
+            ...rest,
             costo,
             p_venta,
             ganancia,
+            ...(producto?.id
+              ? {
+                  id,
+                  producto_almacen_id,
+                }
+              : {}),
           }
         }),
+        ...(producto?.id ? { cod_producto } : {}),
       })
     } else {
       form.setFieldsValue({

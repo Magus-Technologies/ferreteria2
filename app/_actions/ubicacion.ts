@@ -17,6 +17,9 @@ async function getUbicacionesWA({ almacen_id }: { almacen_id: number }) {
       where: {
         almacen_id,
       },
+      orderBy: {
+        name: 'asc',
+      },
     })
     return { data: item }
   } catch (error) {

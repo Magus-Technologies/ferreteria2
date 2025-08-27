@@ -12,7 +12,11 @@ async function getMarcasWA() {
     const puede = await can(permissions.MARCA_LISTADO)
     if (!puede) throw new Error('No tienes permiso para ver la lista de marcas')
 
-    const item = await prisma.marca.findMany()
+    const item = await prisma.marca.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    })
     return { data: item }
   } catch (error) {
     return errorFormated(error)

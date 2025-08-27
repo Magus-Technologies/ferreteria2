@@ -24,7 +24,7 @@ export function getStock({
   return {
     stock: `${addNegative ? '-' : ''}${
       unidadesCompletas != 0 ? unidadesCompletas : ''
-    }F${fraccionFormateada}`,
+    }F${fraccionFormateada != 0 ? fraccionFormateada : ''}`,
     addNegative,
     unidadesCompletas,
     fraccionFormateada,
@@ -53,7 +53,7 @@ export function GetStock({
       {addNegative ? '-' : ''}
       {unidadesCompletas != 0 ? unidadesCompletas : ''}
       <span className={`text-orange-600 ${className}`}>F</span>
-      {fraccionFormateada}
+      {fraccionFormateada != 0 ? fraccionFormateada : ''}
     </>
   )
 }

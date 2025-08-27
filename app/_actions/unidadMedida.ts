@@ -15,7 +15,11 @@ async function getUnidadesMedidaWA() {
         'No tienes permiso para ver la lista de unidades de medida'
       )
 
-    const item = await prisma.unidadMedida.findMany()
+    const item = await prisma.unidadMedida.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    })
     return { data: item }
   } catch (error) {
     return errorFormated(error)

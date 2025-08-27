@@ -6,7 +6,8 @@ import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
 
 interface FormCodProductoProps {
   form: FormInstance<FormCreateProductoProps>
@@ -14,13 +15,19 @@ interface FormCodProductoProps {
 
 export default function FormCodProducto({ form }: FormCodProductoProps) {
   const [disabled, setDisabled] = useState(true)
+  const producto = useStoreEditOrCopyProducto(state => state.producto)
+  const primera_vez = useRef(true)
 
   useEffect(() => {
-    const randomCode =
-      Math.random().toString(36).substring(2, 10) +
-      (Math.random() * 10000000).toFixed(0).substring(0, 4)
-    if (disabled) form.setFieldValue('cod_producto', randomCode)
-    else form.setFieldValue('cod_producto', undefined)
+    if (!(producto?.id && primera_vez.current)) {
+      const randomCode =
+        Math.random().toString(36).substring(2, 10) +
+        (Math.random() * 10000000).toFixed(0).substring(0, 4)
+      if (disabled) form.setFieldValue('cod_producto', randomCode)
+      else form.setFieldValue('cod_producto', undefined)
+    }
+    primera_vez.current = false
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled, form])
 
   return (

@@ -32,7 +32,7 @@ export default function RootLayout({
         </head>
       )}
       <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
-        <SessionProvider>
+        <SessionProvider refetchOnWindowFocus={false}>
           <AntdRegistry>
             <ConfigProvider
               theme={{
