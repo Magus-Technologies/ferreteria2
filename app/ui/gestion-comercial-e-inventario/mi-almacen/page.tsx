@@ -25,10 +25,7 @@ export default async function MiAlmacen() {
       <div className='flex size-full gap-8'>
         <div className='grid grid-rows-7 gap-y-4 size-full'>
           <div className='row-start-1 row-end-4'>
-            <TableProductos
-              marca_predeterminada={session?.user?.empresa.marca_id}
-              almacen_predeterminado={session?.user?.empresa.almacen_id}
-            />
+            <TableProductos />
           </div>
           <div className='row-start-4 row-end-6'>
             <TableUltimasComprasIngresadas />

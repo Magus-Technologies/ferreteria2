@@ -135,7 +135,9 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
             )
           }
 
-          return { data: producto }
+          return {
+            data: JSON.parse(JSON.stringify(producto)) as typeof producto,
+          }
         },
         {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -394,7 +396,9 @@ async function editarProductoWA(data: FormCreateProductoFormatedProps) {
             }),
           })
 
-          return { data: producto }
+          return {
+            data: JSON.parse(JSON.stringify(producto)) as typeof producto,
+          }
         },
         {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,

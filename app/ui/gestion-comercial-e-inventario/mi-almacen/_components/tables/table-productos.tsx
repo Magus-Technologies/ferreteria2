@@ -7,7 +7,7 @@ import { getProductos, importarProductos } from '~/app/_actions/producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputImport from '~/app/_components/form/inputs/input-import'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
@@ -17,15 +17,11 @@ import { useStoreProductoSeleccionado } from '../../store/store-producto-selecci
 import { importarUbicaciones } from '~/app/_actions/ubicacion'
 import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
 
-export default function TableProductos({
-  marca_predeterminada,
-  almacen_predeterminado,
-}: {
-  marca_predeterminada?: number
-  almacen_predeterminado?: number
-}) {
+export default function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
+  const [primera_vez, setPrimeraVez] = useState(true)
 
   const setProductoSeleccionado = useStoreProductoSeleccionado(
     store => store.setProducto
@@ -41,22 +37,17 @@ export default function TableProductos({
       queryKey: [QueryKeys.PRODUCTOS],
     },
     params: {
-      where: filtros
-        ? filtros
-        : {
-            producto_en_almacenes: {
-              some: {
-                almacen_id: almacen_predeterminado,
-              },
-            },
-            marca_id: marca_predeterminada,
-          },
+      where: filtros,
     },
   })
 
   useEffect(() => {
-    refetch()
-  }, [filtros, refetch])
+    if (!loading && filtros) setPrimeraVez(false)
+  }, [loading, filtros])
+
+  useEffect(() => {
+    if (!primera_vez) refetch()
+  }, [filtros, refetch, primera_vez])
 
   type ResponseItem = NonNullable<typeof response>[number]
 

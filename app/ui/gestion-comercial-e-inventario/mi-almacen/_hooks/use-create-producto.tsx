@@ -13,6 +13,7 @@ import { FormInstance } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreEditOrCopyProducto } from '../store/store-edit-or-copy-producto'
+import { useStoreFiltrosProductos } from '../store/store-filtros-productos'
 
 export default function useCreateProducto({
   setOpen,
@@ -37,6 +38,8 @@ export default function useCreateProducto({
 
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
+
+  const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
 
   const { execute, loading } = useServerMutation<
     FormCreateProductoFormatedProps,
@@ -87,6 +90,10 @@ export default function useCreateProducto({
       setImgFile(undefined)
       setFichaTecnicaFile(undefined)
       setProducto(undefined)
+      setFiltros(prev => ({
+        ...prev,
+        marca_id: res.data?.marca_id,
+      }))
     },
   })
 

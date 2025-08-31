@@ -23,6 +23,7 @@ import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
 import { Prisma } from '@prisma/client'
+import { useEffect } from 'react'
 
 interface FiltersMiAlmacenProps {
   marca_predeterminada?: number
@@ -47,6 +48,11 @@ export default function FiltersMiAlmacen({
   const [form] = Form.useForm<ValuesFiltersMiAlmacen>()
 
   const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
+  const filtros = useStoreFiltrosProductos(state => state.filtros)
+
+  useEffect(() => {
+    if (filtros) form.setFieldValue('marca_id', filtros.marca_id)
+  }, [filtros, form])
 
   return (
     <FormBase
@@ -117,25 +123,25 @@ export default function FiltersMiAlmacen({
                         AND: [
                           {
                             OR: [
-                              { comision_publico: { lt: 0 } },
+                              { comision_publico: { lte: 0 } },
                               { comision_publico: null },
                             ],
                           },
                           {
                             OR: [
-                              { comision_especial: { lt: 0 } },
+                              { comision_especial: { lte: 0 } },
                               { comision_especial: null },
                             ],
                           },
                           {
                             OR: [
-                              { comision_minimo: { lt: 0 } },
+                              { comision_minimo: { lte: 0 } },
                               { comision_minimo: null },
                             ],
                           },
                           {
                             OR: [
-                              { comision_ultimo: { lt: 0 } },
+                              { comision_ultimo: { lte: 0 } },
                               { comision_ultimo: null },
                             ],
                           },

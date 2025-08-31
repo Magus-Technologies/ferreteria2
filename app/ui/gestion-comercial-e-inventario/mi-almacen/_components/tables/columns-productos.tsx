@@ -54,14 +54,14 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
     {
       headerName: 'Código de Producto',
       field: 'cod_producto',
-      minWidth: 110,
+      width: 80,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Producto',
       field: 'name',
-      minWidth: 250,
+      width: 350,
+      minWidth: 350,
       filter: true,
       cellRenderer: ({
         value,
@@ -93,19 +93,20 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           </div>
         )
       },
-      flex: 3,
+      flex: 1,
     },
     {
       headerName: 'Ticket',
       field: 'name_ticket',
-      minWidth: 250,
+      width: 350,
+      minWidth: 350,
       filter: true,
-      flex: 2,
+      flex: 1,
     },
     {
       headerName: 'Ubicación en Almacén',
       field: 'producto_en_almacenes',
-      minWidth: 180,
+      width: 80,
       filter: true,
       valueFormatter: ({
         value,
@@ -118,12 +119,11 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         )
         return producto_en_almacen?.ubicacion.name ?? ''
       },
-      flex: 1,
     },
     {
       headerName: 'Stock Fracción en Almacén',
       field: 'producto_en_almacenes',
-      minWidth: 190,
+      width: 70,
       filter: true,
       valueFormatter: ({
         value,
@@ -136,12 +136,11 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         )
         return `${Number(producto_en_almacen?.stock_fraccion ?? 0)}`
       },
-      flex: 1,
     },
     {
       headerName: 'Costo en Almacén',
       field: 'producto_en_almacenes',
-      minWidth: 150,
+      width: 80,
       filter: true,
       valueFormatter: ({
         value,
@@ -158,47 +157,42 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           Number(data!.unidades_contenidas)
         }`
       },
-      flex: 1,
+      type: 'pen',
     },
     {
       headerName: 'U. Contenidas',
       field: 'unidades_contenidas',
-      minWidth: 80,
+      width: 50,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Código de Barra',
       field: 'cod_barra',
-      minWidth: 180,
+      width: 120,
       filter: true,
-      flex: 2,
     },
     {
       headerName: 'Marca',
       field: 'marca.name',
-      minWidth: 80,
+      width: 140,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Categoria',
       field: 'categoria.name',
-      minWidth: 80,
+      width: 140,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Unidad de Medida',
       field: 'unidad_medida.name',
-      minWidth: 80,
+      width: 100,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Stock',
       field: 'producto_en_almacenes',
-      minWidth: 80,
+      width: 80,
       filter: true,
       valueFormatter: ({
         value,
@@ -266,63 +260,55 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           </div>
         )
       },
-      flex: 1,
     },
     {
       headerName: 'S. Min',
       field: 'stock_min',
-      minWidth: 80,
+      width: 50,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'S. Max',
       field: 'stock_max',
-      minWidth: 80,
+      width: 50,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Activo',
       field: 'estado',
-      minWidth: 80,
-      flex: 1,
+      width: 90,
       type: 'boolean',
     },
     {
       headerName: 'Acción Técnica',
       field: 'accion_tecnica',
-      minWidth: 180,
+      width: 250,
       filter: true,
-      flex: 1,
     },
     {
       headerName: 'Ruta IMG',
       field: 'img',
-      minWidth: 180,
+      width: 250,
       filter: true,
-      flex: 1,
       type: 'link',
     },
     {
       headerName: 'Ruta Ficha Técnica',
       field: 'ficha_tecnica',
-      minWidth: 180,
+      width: 250,
       filter: true,
-      flex: 1,
       type: 'link',
     },
     {
       headerName: 'Acciones',
       field: 'id',
-      minWidth: 80,
+      width: 80,
       cellRenderer: (params: ICellRendererParams<TableProductosProps>) => {
         return (
           <ColumnAction
             id={params.value}
             permiso={permissions.PRODUCTO_BASE}
             // actionDelete={eliminarProducto}
-            showDelete={false}
             onEdit={() => {
               setProducto(params.data)
               setOpen(true)
@@ -344,7 +330,6 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           />
         )
       },
-      flex: 1,
       type: 'actions',
     },
   ]

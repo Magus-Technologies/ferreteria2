@@ -8,7 +8,7 @@ import { permissions } from '~/lib/permissions'
 import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputImport from '~/app/_components/form/inputs/input-import'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
 import {
@@ -16,9 +16,10 @@ import {
   importarDetallesDePrecios,
   importarUnidadesDerivadas,
 } from '~/app/_actions/unidadDerivada'
-import { useQuery } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { TableProductosProps } from './columns-productos'
 import ButtonBase from '~/components/buttons/button-base'
+import { ServerResult } from '~/auth/middleware-server-actions'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
@@ -36,42 +37,49 @@ export default function TableDetalleDePrecios() {
     item => item.almacen_id === almacen_id
   )
 
-  const { data } = useQuery({
-    queryKey: [QueryKeys.PRODUCTOS],
-    queryFn: (): Promise<{ data: TableProductosProps[] }> =>
-      Promise.resolve({ data: [] }),
-    enabled: false,
-    refetchOnWindowFocus: false,
-  })
+  const queryClient = useQueryClient()
+
+  const data = queryClient.getQueryData<ServerResult<TableProductosProps[]>>([
+    QueryKeys.PRODUCTOS,
+  ])
+
+  const [primeraData, setPrimeraData] = useState(0)
+  useEffect(() => {
+    if (data && primeraData < 2) setPrimeraData(prev => prev + 1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, productoSeleccionado])
 
   const productos_completos = data?.data
 
-  const rowData = producto_en_almacen
-    ? producto_en_almacen?.unidades_derivadas?.map(item => ({
-        ...item,
-        almacen: producto_en_almacen?.almacen,
-        producto: productoSeleccionado,
-        producto_almacen: {
-          costo: producto_en_almacen?.costo,
-          stock_fraccion: producto_en_almacen?.stock_fraccion,
-          ubicacion: producto_en_almacen?.ubicacion,
-        },
-      }))
-    : productos_completos?.flatMap(producto_seleccionado_aux =>
-        producto_seleccionado_aux?.producto_en_almacenes?.flatMap(
-          producto_en_almacen_aux =>
-            producto_en_almacen_aux?.unidades_derivadas?.map(item => ({
-              ...item,
-              almacen: producto_en_almacen_aux?.almacen,
-              producto: producto_seleccionado_aux,
-              producto_almacen: {
-                costo: producto_en_almacen_aux?.costo,
-                stock_fraccion: producto_en_almacen_aux?.stock_fraccion,
-                ubicacion: producto_en_almacen_aux?.ubicacion,
-              },
-            }))
+  const rowData =
+    primeraData < 2
+      ? []
+      : producto_en_almacen
+      ? producto_en_almacen?.unidades_derivadas?.map(item => ({
+          ...item,
+          almacen: producto_en_almacen?.almacen,
+          producto: productoSeleccionado,
+          producto_almacen: {
+            costo: producto_en_almacen?.costo,
+            stock_fraccion: producto_en_almacen?.stock_fraccion,
+            ubicacion: producto_en_almacen?.ubicacion,
+          },
+        }))
+      : productos_completos?.flatMap(producto_seleccionado_aux =>
+          producto_seleccionado_aux?.producto_en_almacenes?.flatMap(
+            producto_en_almacen_aux =>
+              producto_en_almacen_aux?.unidades_derivadas?.map(item => ({
+                ...item,
+                almacen: producto_en_almacen_aux?.almacen,
+                producto: producto_seleccionado_aux,
+                producto_almacen: {
+                  costo: producto_en_almacen_aux?.costo,
+                  stock_fraccion: producto_en_almacen_aux?.stock_fraccion,
+                  ubicacion: producto_en_almacen_aux?.ubicacion,
+                },
+              }))
+          )
         )
-      )
 
   return (
     <TableWithTitle
@@ -85,12 +93,17 @@ export default function TableDetalleDePrecios() {
           {' '}
           de
           <span className='italic -ml-2 text-blue-900'>
-            {productoSeleccionado
+            {primeraData < 2
+              ? '-'
+              : productoSeleccionado
               ? productoSeleccionado.name
               : 'TODOS LOS PRODUCTOS FILTRADOS'}
           </span>
           <ButtonBase
-            onClick={() => setProductoSeleccionado(undefined)}
+            onClick={() => {
+              if (primeraData < 2) setPrimeraData(prev => prev + 1)
+              setProductoSeleccionado(undefined)
+            }}
             color='warning'
             size='sm'
           >

@@ -1,12 +1,12 @@
 'use client'
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import { App, FormInstance, FormListFieldData, Tooltip } from 'antd'
+import { FormInstance, FormListFieldData, Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectUnidadDerivada from '~/app/_components/form/selects/select-unidad-derivada'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
-import { NotificationInstance } from 'antd/es/notification/interface'
+import { Prisma } from '@prisma/client'
 
 export function useColumnsDetalleDePreciosEdicion({
   form,
@@ -15,7 +15,6 @@ export function useColumnsDetalleDePreciosEdicion({
   form: FormInstance
   remove: (index: number | number[]) => void
 }) {
-  const { notification } = App.useApp()
   const columns: ColDef<FormListFieldData>[] = [
     {
       headerName: 'Formato de Venta',
@@ -101,12 +100,6 @@ export function useColumnsDetalleDePreciosEdicion({
                 onChangeCosto({
                   form,
                   value,
-                  costo: form.getFieldValue([
-                    'unidades_derivadas',
-                    value,
-                    'costo',
-                  ]),
-                  notification,
                 })
                 setTimeout(() => {
                   form.focusField(['unidades_derivadas', value, 'factor'])
@@ -145,7 +138,6 @@ export function useColumnsDetalleDePreciosEdicion({
                   form,
                   value,
                   costo: val ? Number(val) : undefined,
-                  notification,
                 })
 
                 const precio_publico = form.getFieldValue([
@@ -664,32 +656,16 @@ function onChangeCosto({
   form,
   value,
   costo,
-  notification,
 }: {
   form: FormInstance
   value?: number
   costo?: number
-  notification: NotificationInstance
 }) {
   const unidades_derivadas = form.getFieldValue(
     'unidades_derivadas'
   ) as FormCreateProductoProps['unidades_derivadas']
   const factores = (unidades_derivadas ?? []).map(item => item.factor)
   const costos = (unidades_derivadas ?? []).map(item => item.costo)
-
-  if (factores.some(factor => !factor)) {
-    notification.error({
-      message: 'Factores Vacíos',
-      description: `Todos los factores deben estar rellenados para editar los costos`,
-    })
-    form.setFieldsValue({
-      unidades_derivadas: unidades_derivadas.map(item => ({
-        ...item,
-        costo: undefined,
-      })),
-    })
-    return
-  }
 
   const factor = form.getFieldValue(['unidades_derivadas', value, 'factor'])
   let factor_disponible = Number(factor)
@@ -700,7 +676,8 @@ function onChangeCosto({
         factor &&
         Number(factor) !== 0 &&
         costos[index] &&
-        Number(costos[index]) !== 0
+        Number(costos[index]) !== 0 &&
+        index !== value
       )
     })
     if (index_factor_and_costo !== -1) {
@@ -713,9 +690,10 @@ function onChangeCosto({
 
   unidades_derivadas.forEach((item, index) => {
     const factor = Number(item.factor)
+    if (costo && index === value) return
     form.setFieldValue(
       ['unidades_derivadas', index, 'costo'],
-      costo_disponible ? factor * costo_unidad : undefined
+      costo_disponible ? Prisma.Decimal(factor).mul(costo_unidad) : undefined
     )
   })
 }

@@ -119,7 +119,7 @@ export default function ModalCreateProducto() {
         estado: 1,
       })
     }
-  }, [form, producto, setFichaTecnicaFile, setImgFile])
+  }, [form, producto, setFichaTecnicaFile, setImgFile, open])
 
   return (
     <ModalForm
