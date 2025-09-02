@@ -1,17 +1,21 @@
 import { Popconfirm, Tooltip } from 'antd'
 import { MdDelete, MdEditSquare } from 'react-icons/md'
 import usePermission from '~/hooks/use-permission'
-import { ServerAction, useServerMutation } from '~/hooks/use-server-mutation'
+import {
+  UseMutationActionProps,
+  useServerMutation,
+} from '~/hooks/use-server-mutation'
 
 interface ColumnActionProps {
   id: string
   permiso: string
   children?: React.ReactNode
   childrenMiddle?: React.ReactNode
-  actionDelete?: ServerAction<{ id: number }, unknown>
   showDelete?: boolean
   onEdit?: () => void
   showEdit?: boolean
+
+  propsDelete?: UseMutationActionProps<{ id: number }, unknown>
 }
 
 export default function ColumnAction({
@@ -19,17 +23,16 @@ export default function ColumnAction({
   permiso,
   children,
   childrenMiddle,
-  actionDelete = () => Promise.resolve({ data: 'ok' }),
   showDelete = true,
   onEdit,
   showEdit = true,
+  propsDelete,
 }: ColumnActionProps) {
   const can = usePermission()
 
-  const { execute: deleteAction, loading: deleteLoading } = useServerMutation({
-    action: actionDelete,
-    msgSuccess: 'Registro eliminado correctamente',
-  })
+  const { execute: deleteAction, loading: deleteLoading } = useServerMutation(
+    propsDelete!
+  )
 
   return (
     <div className='flex items-center gap-2 h-full'>

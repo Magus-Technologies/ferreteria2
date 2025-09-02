@@ -26,27 +26,17 @@ model Compra {
 model ProductoAlmacenCompra {
     id Int @id @default(autoincrement())
 
-    compra    Compra @relation(fields: [compra_id], references: [id])
+    compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     compra_id Int
 
-    costo Decimal @db.Decimal(9, 3)
+    costo Decimal @db.Decimal(9, 4)
 
-    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id])
+    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     producto_almacen_id Int
 
-    unidades_derivadas UnidadDerivadaInmutableProductoAlmacenCompra[]
+    unidades_derivadas UnidadDerivadaInmutableCompra[]
 
     @@unique([compra_id, producto_almacen_id])
-}
-
-model UnidadDerivadaInmutableProductoAlmacenCompra {
-    id Int @id @default(autoincrement())
-
-    unidad_derivada_inmutable_compra_id Int
-    unidad_derivada_inmutable_compra    UnidadDerivadaInmutableCompra @relation(fields: [unidad_derivada_inmutable_compra_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    producto_almacen_compra_id Int
-    producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model UnidadDerivadaInmutableCompra {
@@ -55,12 +45,13 @@ model UnidadDerivadaInmutableCompra {
     unidad_derivada_inmutable_id Int
     unidad_derivada_inmutable    UnidadDerivadaInmutable @relation(fields: [unidad_derivada_inmutable_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+    producto_almacen_compra_id Int
+    producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
     factor      Decimal   @db.Decimal(9, 3)
     cantidad    Decimal   @db.Decimal(9, 3)
     lote        String?
     vencimiento DateTime?
-
-    unidades_derivadas_inmutables_productos_en_compras UnidadDerivadaInmutableProductoAlmacenCompra[]
 }
 
 model UnidadDerivadaInmutable {

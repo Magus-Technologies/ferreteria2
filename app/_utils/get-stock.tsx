@@ -22,9 +22,9 @@ export function getStock({
     fraccionRestante % 1 === 0 ? fraccionRestante : fraccionRestante.toFixed(2)
 
   return {
-    stock: `${addNegative ? '-' : ''}${
-      unidadesCompletas != 0 ? unidadesCompletas : !fraccionFormateada ? 0 : ''
-    }F${fraccionFormateada != 0 ? fraccionFormateada : ''}`,
+    stock: `${addNegative ? '-' : ''}${unidadesCompletas}F${
+      fraccionFormateada != 0 ? fraccionFormateada : ''
+    }`,
     addNegative,
     unidadesCompletas,
     fraccionFormateada,
@@ -51,11 +51,7 @@ export function GetStock({
   return (
     <>
       {addNegative ? '-' : ''}
-      {unidadesCompletas != 0
-        ? unidadesCompletas
-        : !fraccionFormateada
-        ? 0
-        : ''}
+      {unidadesCompletas}
       <span className={`text-orange-600 ${className}`}>F</span>
       {fraccionFormateada != 0 ? fraccionFormateada : ''}
     </>

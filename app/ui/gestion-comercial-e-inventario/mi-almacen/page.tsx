@@ -5,12 +5,12 @@ import TableUltimasComprasIngresadas from './_components/tables/table-ultimas-co
 import TableDetalleDePrecios from './_components/tables/table-detalle-de-precios'
 import ButtonBase from '~/components/buttons/button-base'
 import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
-import CardMiniInfo from './_components/cards/card-mini-info'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateProducto from './_components/buttons/button-create-producto'
 import can from '~/utils/server-validate-permission'
 import { auth } from '~/auth/auth'
+import CardsInfo from './_components/others/cards-info'
 
 export default async function MiAlmacen() {
   const session = await auth()
@@ -46,17 +46,7 @@ export default async function MiAlmacen() {
               <GiPayMoney className='text-rose-600' size={15} /> Salidas
             </ButtonBase>
           )}
-          <CardMiniInfo title='Inversión' value={10000} className='h-full' />
-          <CardMiniInfo
-            title='P. Venta Aprox'
-            value={10000}
-            className='h-full'
-          />
-          <CardMiniInfo
-            title='Utilidad Aprox'
-            value={10000}
-            className='h-full'
-          />
+          <CardsInfo />
         </div>
       </div>
     </ContenedorGeneral>

@@ -61,6 +61,22 @@ export default function useColumnTypes() {
             })}`
       },
     },
+    pen4: {
+      cellRenderer: (params: ICellRendererParams) => {
+        const { column, value } = params
+        const colDef = column!.getColDef()
+        let formatted
+
+        if (typeof colDef.valueFormatter === 'function')
+          formatted = colDef.valueFormatter(params as ValueFormatterParams)
+        else formatted = value
+        return !formatted
+          ? ''
+          : `S/. ${Number(formatted).toLocaleString('en-US', {
+              maximumFractionDigits: 4,
+            })}`
+      },
+    },
     boolean: {
       filter: {
         component: FilterBoolean,

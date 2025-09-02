@@ -58,7 +58,7 @@ export function useColumnsDetalleDePrecios() {
         return `${value * Number(data!.factor)}`
       },
       flex: 1,
-      type: 'pen',
+      type: 'pen4',
     },
     {
       headerName: '% Venta',

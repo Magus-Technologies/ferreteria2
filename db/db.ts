@@ -22,7 +22,9 @@ const extendedPrisma = new PrismaClient().$extends({
           > & {
             unidades_derivadas: (Omit<
               UnidadDerivadaInmutableCompra,
-              'id' | 'unidad_derivada_inmutable_id'
+              | 'id'
+              | 'unidad_derivada_inmutable_id'
+              | 'producto_almacen_compra_id'
             > & {
               name: UnidadDerivada['name']
             })[]
@@ -40,25 +42,21 @@ const extendedPrisma = new PrismaClient().$extends({
                 ...item,
                 unidades_derivadas: {
                   create: item.unidades_derivadas.map(unidad_derivada => ({
-                    unidad_derivada_inmutable_compra: {
-                      create: {
-                        factor: unidad_derivada.factor,
-                        cantidad: unidad_derivada.cantidad,
-                        lote: unidad_derivada.lote,
-                        vencimiento: unidad_derivada.vencimiento,
-                        unidad_derivada_inmutable: {
-                          connectOrCreate: {
-                            where: {
-                              name: unidad_derivada.name,
-                            },
-                            create: {
-                              name: unidad_derivada.name,
-                            },
-                          },
+                    factor: unidad_derivada.factor,
+                    cantidad: unidad_derivada.cantidad,
+                    lote: unidad_derivada.lote,
+                    vencimiento: unidad_derivada.vencimiento,
+                    unidad_derivada_inmutable: {
+                      connectOrCreate: {
+                        where: {
+                          name: unidad_derivada.name,
+                        },
+                        create: {
+                          name: unidad_derivada.name,
                         },
                       },
                     },
-                  })),
+                  })) satisfies Prisma.UnidadDerivadaInmutableCompraCreateWithoutProducto_almacen_compraInput[],
                 },
               })),
             },
@@ -95,7 +93,9 @@ const extendedPrisma = new PrismaClient().$extends({
           > & {
             unidades_derivadas: (Omit<
               UnidadDerivadaInmutableCompra,
-              'id' | 'unidad_derivada_inmutable_id'
+              | 'id'
+              | 'unidad_derivada_inmutable_id'
+              | 'producto_almacen_compra_id'
             > & {
               name: UnidadDerivada['name']
             })[]

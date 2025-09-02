@@ -315,18 +315,45 @@ async function importarProductosWA({ data }: { data: unknown }) {
 }
 export const importarProductos = withAuth(importarProductosWA)
 
-// async function eliminarProductoWA({ id }: { id: number }) {
-//   try {
-//     const puede = await can(permissions.PRODUCTO_DELETE)
-//     if (!puede) throw new Error('No tienes permiso para eliminar productos')
+async function eliminarProductoWA({ id }: { id: number }) {
+  try {
+    const puede = await can(permissions.PRODUCTO_DELETE)
+    if (!puede) throw new Error('No tienes permiso para eliminar productos')
 
-//     await prisma.producto.delete({ where: { id } })
-//     return { data: 'ok' }
-//   } catch (error) {
-//     return errorFormated(error)
-//   }
-// }
-// export const eliminarProducto = withAuth(eliminarProductoWA)
+    const compras = await prisma.compra.findMany({
+      where: {
+        productos_por_almacen: {
+          some: {
+            producto_almacen: {
+              producto_id: id,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        descripcion: true,
+      },
+    })
+
+    if (compras.length > 1)
+      throw new Error('El producto tiene compras realizadas')
+
+    if (compras.length == 1) {
+      const compra = compras[0]
+      if (compra.descripcion != 'Stock inicial por creación de producto')
+        throw new Error('El producto tiene compras realizadas')
+
+      await prisma.compra.delete({ where: { id: compra.id } })
+    }
+
+    await prisma.producto.delete({ where: { id } })
+    return { data: 'ok' }
+  } catch (error) {
+    return errorFormated(error)
+  }
+}
+export const eliminarProducto = withAuth(eliminarProductoWA)
 
 async function editarProductoWA(data: FormCreateProductoFormatedProps) {
   try {

@@ -131,7 +131,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               formWithMessage={false}
               placeholder='P. Compra'
-              precision={3}
+              precision={4}
               prefix='S/. '
               onChange={val => {
                 onChangeCosto({

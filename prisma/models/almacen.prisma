@@ -21,7 +21,7 @@ model ProductoAlmacen {
     almacen_id Int
 
     stock_fraccion Decimal @default(0) @db.Decimal(9, 3)
-    costo          Decimal @default(0) @db.Decimal(9, 3)
+    costo          Decimal @default(0) @db.Decimal(9, 4)
 
     ubicacion    Ubicacion @relation(fields: [ubicacion_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     ubicacion_id Int
@@ -67,18 +67,18 @@ model ProductoAlmacenUnidadDerivada {
 
     factor           Decimal  @db.Decimal(9, 3)
     precio_publico   Decimal  @db.Decimal(9, 3)
-    comision_publico Decimal? @db.Decimal(9, 3)
+    comision_publico Decimal? @default(0) @db.Decimal(9, 3)
 
     precio_especial    Decimal? @db.Decimal(9, 3)
-    comision_especial  Decimal? @db.Decimal(9, 3)
+    comision_especial  Decimal? @default(0) @db.Decimal(9, 3)
     activador_especial Decimal? @db.Decimal(9, 3)
 
     precio_minimo    Decimal? @db.Decimal(9, 3)
-    comision_minimo  Decimal? @db.Decimal(9, 3)
+    comision_minimo  Decimal? @default(0) @db.Decimal(9, 3)
     activador_minimo Decimal? @db.Decimal(9, 3)
 
     precio_ultimo    Decimal? @db.Decimal(9, 3)
-    comision_ultimo  Decimal? @db.Decimal(9, 3)
+    comision_ultimo  Decimal? @default(0) @db.Decimal(9, 3)
     activador_ultimo Decimal? @db.Decimal(9, 3)
 
     @@unique([producto_almacen_id, unidad_derivada_id])

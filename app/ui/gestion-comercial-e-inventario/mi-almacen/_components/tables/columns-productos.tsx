@@ -25,8 +25,9 @@ import {
   UnidadMedida,
 } from '@prisma/client'
 import { getStock, GetStock } from '~/app/_utils/get-stock'
-// import { eliminarProducto } from '~/app/_actions/producto'
+import { eliminarProducto } from '~/app/_actions/producto'
 import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export type TableProductosProps = Producto & {
   marca: Marca
@@ -157,7 +158,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           Number(data!.unidades_contenidas)
         }`
       },
-      type: 'pen',
+      type: 'pen4',
     },
     {
       headerName: 'U. Contenidas',
@@ -308,7 +309,11 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
           <ColumnAction
             id={params.value}
             permiso={permissions.PRODUCTO_BASE}
-            // actionDelete={eliminarProducto}
+            propsDelete={{
+              action: eliminarProducto,
+              msgSuccess: 'Producto eliminado correctamente',
+              queryKey: [QueryKeys.PRODUCTOS],
+            }}
             onEdit={() => {
               setProducto(params.data)
               setOpen(true)
