@@ -1,5 +1,6 @@
 import type { Session } from 'next-auth'
 import { auth } from './auth'
+import { errorFormated } from '~/utils/error-formated'
 
 export type ServerResult<T> = {
   data?: T
@@ -19,7 +20,10 @@ export function withAuth<TParams, TData>(
         },
       }
     }
-
-    return action(params, session)
+    try {
+      return await action(params, session)
+    } catch (error) {
+      return errorFormated(error)
+    }
   }
 }

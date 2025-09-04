@@ -1,31 +1,38 @@
 'use client'
 
-import { FormInstance } from 'antd'
+import { Form, FormInstance, Spin } from 'antd'
 import { IoCodeWorkingSharp } from 'react-icons/io5'
 import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
+import { useStoreCodigoAutomatico } from '../../store/store-codigo-automatico'
+import useValidarCodigoProducto from '../../_hooks/use-validar-codigo-producto'
 
 interface FormCodProductoProps {
   form: FormInstance<FormCreateProductoProps>
 }
 
 export default function FormCodProducto({ form }: FormCodProductoProps) {
-  const [disabled, setDisabled] = useState(true)
+  const disabled = useStoreCodigoAutomatico(state => state.disabled)
+  const setDisabled = useStoreCodigoAutomatico(state => state.setDisabled)
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const primera_vez = useRef(true)
 
+  const cod_producto = Form.useWatch('cod_producto', form)
+
+  const { validar, loading, response } = useValidarCodigoProducto()
+
   useEffect(() => {
-    if (!(producto?.id && primera_vez.current)) {
-      const randomCode =
-        Math.random().toString(36).substring(2, 10) +
-        (Math.random() * 10000000).toFixed(0).substring(0, 4)
-      if (disabled) form.setFieldValue('cod_producto', randomCode)
-      else form.setFieldValue('cod_producto', undefined)
-    }
+    validar(cod_producto)
+  }, [cod_producto, validar])
+
+  useEffect(() => {
+    if (!(producto?.id && primera_vez.current))
+      form.setFieldValue('cod_producto', undefined)
+
     primera_vez.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled, form])
@@ -42,8 +49,18 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
           name: 'cod_producto',
           rules: [
             {
-              required: true,
+              required: !disabled,
               message: 'Falta el Código del Producto',
+            },
+            {
+              validator: () => {
+                if (response) {
+                  return Promise.reject(
+                    new Error(`El código ${response} ya existe`)
+                  )
+                }
+                return Promise.resolve()
+              },
             },
           ],
         }}
@@ -54,6 +71,7 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
             className={`${disabled ? 'text-gray-400' : 'text-rose-700'} mx-1`}
           />
         }
+        suffix={loading ? <Spin size='small' /> : null}
       />
       <CheckboxBase
         defaultChecked
@@ -62,6 +80,7 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
         style={{
           zoom: 0.6,
         }}
+        checked={disabled}
       >
         Automático
       </CheckboxBase>

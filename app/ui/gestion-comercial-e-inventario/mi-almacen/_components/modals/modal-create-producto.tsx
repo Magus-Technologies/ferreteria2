@@ -15,6 +15,7 @@ import useCreateProducto from '../../_hooks/use-create-producto'
 import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
 import { useEffect } from 'react'
 import { urlToFile } from '~/utils/upload'
+import { useStoreCodigoAutomatico } from '../../store/store-codigo-automatico'
 
 export type UnidadDerivadaCreateProducto = Omit<
   ProductoAlmacenUnidadDerivada,
@@ -69,9 +70,12 @@ export default function ModalCreateProducto() {
     state => state.setFichaTecnicaFile
   )
 
+  const setDisabled = useStoreCodigoAutomatico(state => state.setDisabled)
+
   useEffect(() => {
     form.resetFields()
     if (producto) {
+      setDisabled(false)
       if (producto.img)
         urlToFile(producto.img).then(file => {
           setImgFile(file)
@@ -118,8 +122,9 @@ export default function ModalCreateProducto() {
         unidades_derivadas: [],
         estado: 1,
       })
+      setDisabled(true)
     }
-  }, [form, producto, setFichaTecnicaFile, setImgFile, open])
+  }, [form, producto, setFichaTecnicaFile, setImgFile, open, setDisabled])
 
   return (
     <ModalForm
@@ -139,6 +144,7 @@ export default function ModalCreateProducto() {
         setImgFile(undefined)
         setFichaTecnicaFile(undefined)
         setProducto(undefined)
+        setDisabled(true)
       }}
       open={open}
       setOpen={setOpen}
