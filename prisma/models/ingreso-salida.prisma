@@ -1,0 +1,56 @@
+model IngresoSalida {
+    id    Int      @id @default(autoincrement())
+    fecha DateTime @default(now())
+
+    tipo_documento TipoDocumento @default(Ingreso)
+    serie          String        @default("IN01")
+    numero         Int
+    descripcion    String?
+
+    tipo_ingreso_id Int
+    tipo_ingreso    TipoIngresoSalida @relation(fields: [tipo_ingreso_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+    proveedor_id Int
+    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+    productos_por_almacen ProductoAlmacenIngresoSalida[]
+}
+
+model ProductoAlmacenIngresoSalida {
+    id Int @id @default(autoincrement())
+
+    ingreso    IngresoSalida @relation(fields: [ingreso_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    ingreso_id Int
+
+    costo Decimal @db.Decimal(9, 4)
+
+    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    producto_almacen_id Int
+
+    unidades_derivadas UnidadDerivadaInmutableIngreso[]
+
+    @@unique([ingreso_id, producto_almacen_id])
+}
+
+model UnidadDerivadaInmutableIngreso {
+    id Int @id @default(autoincrement())
+
+    unidad_derivada_inmutable_id Int
+    unidad_derivada_inmutable    UnidadDerivadaInmutable @relation(fields: [unidad_derivada_inmutable_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+    producto_almacen_ingreso_salida_id Int
+    producto_almacen_ingreso_salida    ProductoAlmacenIngresoSalida @relation(fields: [producto_almacen_ingreso_salida_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    factor      Decimal   @db.Decimal(9, 3)
+    cantidad    Decimal   @db.Decimal(9, 3)
+    lote        String?
+    vencimiento DateTime?
+}
+
+model TipoIngresoSalida {
+    id     Int     @id @default(autoincrement())
+    name   String  @unique
+    estado Boolean @default(true)
+
+    ingresos IngresoSalida[]
+}

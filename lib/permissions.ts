@@ -62,6 +62,20 @@ export enum permissions {
   UNIDAD_DERIVADA_CREATE = 'unidad-derivada.create',
   UNIDAD_DERIVADA_UPDATE = 'unidad-derivada.update',
   UNIDAD_DERIVADA_DELETE = 'unidad-derivada.delete',
+
+  // Proveedores
+  PROVEEDOR_BASE = 'proveedor',
+  PROVEEDOR_LISTADO = 'proveedor.listado',
+  PROVEEDOR_CREATE = 'proveedor.create',
+  PROVEEDOR_UPDATE = 'proveedor.update',
+  PROVEEDOR_DELETE = 'proveedor.delete',
+
+  // Ingresos y salidas
+  INGRESO_SALIDA_BASE = 'ingreso-salida',
+  INGRESO_SALIDA_LISTADO = 'ingreso-salida.listado',
+  INGRESO_SALIDA_CREATE = 'ingreso-salida.create',
+  INGRESO_SALIDA_UPDATE = 'ingreso-salida.update',
+  INGRESO_SALIDA_DELETE = 'ingreso-salida.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -73,6 +87,8 @@ type PermisosValidos = Exclude<
   | permissions.CATEGORIA_BASE
   | permissions.UBICACION_BASE
   | permissions.UNIDAD_DERIVADA_BASE
+  | permissions.PROVEEDOR_BASE
+  | permissions.INGRESO_SALIDA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -125,6 +141,16 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.UNIDAD_DERIVADA_CREATE]: 'Crear Unidad Derivada',
   [permissions.UNIDAD_DERIVADA_UPDATE]: 'Actualizar Unidad Derivada',
   [permissions.UNIDAD_DERIVADA_DELETE]: 'Eliminar Unidad Derivada',
+
+  [permissions.PROVEEDOR_LISTADO]: 'Ver Listado de Proveedores',
+  [permissions.PROVEEDOR_CREATE]: 'Crear Proveedor',
+  [permissions.PROVEEDOR_UPDATE]: 'Actualizar Proveedor',
+  [permissions.PROVEEDOR_DELETE]: 'Eliminar Proveedor',
+
+  [permissions.INGRESO_SALIDA_LISTADO]: 'Ver Listado de Ingresos y Salidas',
+  [permissions.INGRESO_SALIDA_CREATE]: 'Crear Ingreso y Salida',
+  [permissions.INGRESO_SALIDA_UPDATE]: 'Actualizar Ingreso y Salida',
+  [permissions.INGRESO_SALIDA_DELETE]: 'Eliminar Ingreso y Salida',
 }
 
 export function getAllPermissions() {

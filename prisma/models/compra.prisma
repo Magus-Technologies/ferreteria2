@@ -1,12 +1,13 @@
 enum TipoDocumento {
     Factura     @map("01")
     Boleta      @map("03")
-    NotaDeVenta @map("xx")
+    NotaDeVenta @map("nv")
+    Ingreso     @map("in")
+    Salida      @map("sa")
 }
 
 model Compra {
-    id         Int @id @default(autoincrement())
-    almacen_id Int
+    id Int @id @default(autoincrement())
 
     tipo_documento TipoDocumento @default(NotaDeVenta)
     serie          String
@@ -16,7 +17,6 @@ model Compra {
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
 
-    almacen               Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     productos_por_almacen ProductoAlmacenCompra[]
 
     @@unique([tipo_documento, serie, numero])
@@ -58,5 +58,6 @@ model UnidadDerivadaInmutable {
     id   Int    @id @default(autoincrement())
     name String @unique
 
-    unidades_derivadas_inmutables_en_compras UnidadDerivadaInmutableCompra[]
+    unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
+    unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngreso[]
 }

@@ -7,7 +7,7 @@ model Almacen {
 
     ubicaciones          Ubicacion[]
     productos_en_almacen ProductoAlmacen[]
-    compras              Compra[]
+    // compras              Compra[]
     empresas             Empresa[]
 }
 
@@ -31,6 +31,7 @@ model ProductoAlmacen {
 
     unidades_derivadas ProductoAlmacenUnidadDerivada[]
     compras            ProductoAlmacenCompra[]
+    ingresos_salidas   ProductoAlmacenIngresoSalida[]
 
     @@unique([producto_id, almacen_id])
 }

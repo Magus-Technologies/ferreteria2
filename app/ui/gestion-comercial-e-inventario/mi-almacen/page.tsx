@@ -3,14 +3,14 @@ import FiltersMiAlmacen from './_components/filters/filters-mi-almacen'
 import TableProductos from './_components/tables/table-productos'
 import TableUltimasComprasIngresadas from './_components/tables/table-ultimas-compras-ingresadas'
 import TableDetalleDePrecios from './_components/tables/table-detalle-de-precios'
-import ButtonBase from '~/components/buttons/button-base'
-import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateProducto from './_components/buttons/button-create-producto'
 import can from '~/utils/server-validate-permission'
 import { auth } from '~/auth/auth'
 import CardsInfo from './_components/others/cards-info'
+import ButtonCreateIngresoSalida from './_components/buttons/button-create-ingreso-salida'
+import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
 
 export default async function MiAlmacen() {
   const session = await auth()
@@ -37,14 +37,10 @@ export default async function MiAlmacen() {
         <div className='flex flex-col items-center justify-around gap-8'>
           {(await can(permissions.PRODUCTO_CREATE)) && <ButtonCreateProducto />}
           {(await can(permissions.PRODUCTO_INGRESO_CREATE)) && (
-            <ButtonBase className='flex items-center justify-center gap-2 !rounded-md w-full h-full'>
-              <GiReceiveMoney className='text-orange-600' size={15} /> Ingresos
-            </ButtonBase>
+            <ButtonCreateIngresoSalida tipo={IngresoSalidaEnum.ingreso} />
           )}
           {(await can(permissions.PRODUCTO_SALIDA_CREATE)) && (
-            <ButtonBase className='flex items-center justify-center gap-2 !rounded-md w-full h-full'>
-              <GiPayMoney className='text-rose-600' size={15} /> Salidas
-            </ButtonBase>
+            <ButtonCreateIngresoSalida tipo={IngresoSalidaEnum.salida} />
           )}
           <CardsInfo />
         </div>

@@ -1,22 +1,36 @@
 'use server'
 
 import { withAuth } from '~/auth/middleware-server-actions'
-import { ExtendedTransactionClient, prisma } from '~/db/db'
+import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
-import {
-  FormCreateProductoFormatedProps,
-  UnidadDerivadaCreateProducto,
-} from '../ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
-import { Prisma, Producto } from '@prisma/client'
+import { FormCreateProductoFormatedProps } from '../ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
+import { Prisma } from '@prisma/client'
 import {
   ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema,
   ProductoCreateInputSchema,
+  ProductoFindManyArgsSchema,
   ProductoUncheckedCreateInputSchema,
   ProductoWhereInputSchema,
 } from '~/prisma/generated/zod'
 import z from 'zod'
 import { chunkArray } from '~/utils/chunks'
+import { crearProductoEnAlmacen, getUltimoIdProducto } from './utils/producto'
+import { createPrimeraCompra } from './utils/compra'
+
+async function SearchProductosWA(args: Prisma.ProductoFindManyArgs) {
+  const argsParsed = ProductoFindManyArgsSchema.parse(args)
+
+  const items = await prisma.producto.findMany({
+    ...argsParsed,
+    orderBy: {
+      name: 'asc',
+    },
+  })
+
+  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
+}
+export const SearchProductos = withAuth(SearchProductosWA)
 
 async function getProductosWA({
   where,
@@ -57,18 +71,6 @@ async function getProductosWA({
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
 }
 export const getProductos = withAuth(getProductosWA)
-
-async function getUltimoIdProducto({ db }: { db: ExtendedTransactionClient }) {
-  const ultimo_id = await db.producto.findFirst({
-    orderBy: {
-      id: 'desc',
-    },
-    select: {
-      id: true,
-    },
-  })
-  return String(ultimo_id?.id ? ultimo_id.id + 1 : 1)
-}
 
 async function createProductoWA(data: FormCreateProductoFormatedProps) {
   const puede = await can(permissions.PRODUCTO_CREATE)
@@ -118,7 +120,7 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
           )!
           const compraCosto = unidad_derivada.costo
 
-          await prisma.compra.createPrimeraCompra(
+          await createPrimeraCompra(
             {
               almacen_id,
               productos_por_almacen: [
@@ -141,7 +143,7 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
                 },
               ],
             },
-            db as unknown as Prisma.TransactionClient
+            db
           )
         }
 
@@ -166,71 +168,6 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
   }
 }
 export const createProducto = withAuth(createProductoWA)
-
-async function crearProductoEnAlmacen({
-  producto,
-  unidades_derivadas,
-  producto_almacen,
-  almacen_id,
-  db,
-}: {
-  producto: Producto
-  unidades_derivadas: UnidadDerivadaCreateProducto[]
-  producto_almacen: FormCreateProductoFormatedProps['producto_almacen']
-  almacen_id: number
-  db: ExtendedTransactionClient
-}) {
-  const productoAlmacen = await db.productoAlmacen.create({
-    data: {
-      producto_id: producto.id,
-      almacen_id,
-      costo: unidades_derivadas.length
-        ? unidades_derivadas[0].costo / Number(unidades_derivadas[0].factor)
-        : 0,
-      ubicacion_id: producto_almacen.ubicacion_id,
-    },
-  })
-
-  await db.productoAlmacenUnidadDerivada.createMany({
-    data: unidades_derivadas.map(item => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { costo, p_venta, ganancia, ...rest } = item
-      const data = {
-        producto_almacen_id: productoAlmacen.id,
-        ...rest,
-      }
-      const dataParsed =
-        ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema.parse(data)
-      return dataParsed
-    }),
-  })
-
-  const productoAlmacenUnidadDerivada =
-    await db.productoAlmacenUnidadDerivada.findFirst({
-      where: {
-        producto_almacen_id: productoAlmacen.id,
-        factor: producto.unidades_contenidas,
-      },
-      include: {
-        unidad_derivada: true,
-      },
-    })
-
-  if (!productoAlmacenUnidadDerivada)
-    return {
-      productoAlmacenUnidadDerivada:
-        await db.productoAlmacenUnidadDerivada.findFirstOrThrow({
-          where: {
-            producto_almacen_id: productoAlmacen.id,
-          },
-          include: {
-            unidad_derivada: true,
-          },
-        }),
-      productoAlmacen,
-    }
-  return { productoAlmacenUnidadDerivada, productoAlmacen }
-}
 
 async function importarProductosWA({ data }: { data: unknown }) {
   const puede = await can(permissions.PRODUCTO_IMPORT)
@@ -335,6 +272,10 @@ async function eliminarProductoWA({ id }: { id: number }) {
       id: true,
       descripcion: true,
     },
+    orderBy: {
+      created_at: 'asc',
+    },
+    take: 2,
   })
 
   if (compras.length > 1)

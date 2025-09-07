@@ -13,7 +13,15 @@ export const TiposDocumentos: Record<
     name: 'Boleta de venta',
   },
   [TipoDocumento.NotaDeVenta]: {
-    code: 'xx',
+    code: 'nv',
     name: 'Nota de venta',
+  },
+  [TipoDocumento.Ingreso]: {
+    code: 'in',
+    name: 'Ingreso',
+  },
+  [TipoDocumento.Salida]: {
+    code: 'sa',
+    name: 'Salida',
   },
 }

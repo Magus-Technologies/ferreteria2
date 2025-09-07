@@ -1,0 +1,12 @@
+model Proveedor {
+    id Int @id @default(autoincrement())
+
+    razon_social String  @unique
+    ruc          String  @unique
+    direccion    String?
+    telefono     String?
+    email        String?
+    estado       Boolean @default(true)
+
+    IngresoSalida IngresoSalida[]
+}
