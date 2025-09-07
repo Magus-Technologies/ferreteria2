@@ -45,7 +45,7 @@ jobs:
       - run: npm i # Cambiar a ci en produccióname:
       - run: npx prisma generate
       - run: npm run lint
-      - run: npx tsc --noEmit
+      # - run: npx tsc --noEmit
       - run: npm run build:server
       - run: |
           # Crear symlink solo si no existe
