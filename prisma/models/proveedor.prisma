@@ -9,4 +9,20 @@ model Proveedor {
     estado       Boolean @default(true)
 
     IngresoSalida IngresoSalida[]
+
+    vendedores Vendedor[]
+}
+
+model Vendedor {
+    id        Int       @id @default(autoincrement())
+    dni       String    @unique
+    nombres   String
+    direccion String?
+    telefono  String?
+    email     String?
+    estado    Boolean   @default(true)
+    cumple    DateTime?
+
+    proveedor_id Int
+    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id])
 }

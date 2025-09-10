@@ -3,6 +3,16 @@ import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
 
+export function toString({
+  date,
+  format = 'YYYY-MM-DD HH:mm:ss',
+}: {
+  date?: Dayjs
+  format?: string
+}) {
+  return date?.format(format)
+}
+
 export function toUTCString({
   date,
   format = 'YYYY-MM-DD HH:mm:ss',

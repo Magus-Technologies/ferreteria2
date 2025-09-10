@@ -36,6 +36,14 @@ export default function FormSelectUnidadDerivadaProducto({
   const [factor, setFactor] = useState(0)
 
   useEffect(() => {
+    form.setFieldValue(
+      'unidad_derivada_id',
+      unidades_derivadas?.[0].unidad_derivada.id
+    )
+    setFactor(Number(unidades_derivadas?.[0].factor ?? 0))
+  }, [form, unidades_derivadas])
+
+  useEffect(() => {
     setProducto(undefined)
     setFactor(0)
   }, [open])
@@ -119,15 +127,9 @@ export default function FormSelectUnidadDerivadaProducto({
         <SelectProveedores
           showButtonCreate={can(permissions.PROVEEDOR_CREATE)}
           className='w-full'
-          classNameIcon='text-rose-700 mx-1'
+          classNameIcon='text-cyan-600 mx-1'
           propsForm={{
             name: 'proveedor_id',
-            rules: [
-              {
-                required: true,
-                message: 'Por favor, selecciona un Proveedor',
-              },
-            ],
           }}
           form={form}
         />
@@ -137,6 +139,7 @@ export default function FormSelectUnidadDerivadaProducto({
         <div className='flex flex-col flex-1'>
           <LabelBase label='Tipo Ingreso:' classNames={{ labelParent: 'mb-6' }}>
             <SelectTiposIngresoSalida
+              showButtonCreate={can(permissions.TIPO_INGRESO_SALIDA_CREATE)}
               className='w-full'
               classNameIcon='text-rose-700 mx-1'
               propsForm={{

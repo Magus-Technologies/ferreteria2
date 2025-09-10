@@ -4,7 +4,7 @@ import {
   FormCreateProductoProps,
 } from '../_components/modals/modal-create-producto'
 import { createProducto, editarProducto } from '~/app/_actions/producto'
-import { toUTCString } from '~/utils/fechas'
+import { toString } from '~/utils/fechas'
 import { useStoreArchivosProducto } from '../store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
@@ -110,7 +110,7 @@ export default function useCreateProducto({
       compra: {
         ...values.compra,
         vencimiento: values.compra?.vencimiento
-          ? toUTCString({
+          ? toString({
               date: values.compra.vencimiento,
             })
           : undefined,

@@ -10,8 +10,8 @@ model IngresoSalida {
     tipo_ingreso_id Int
     tipo_ingreso    TipoIngresoSalida @relation(fields: [tipo_ingreso_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-    proveedor_id Int
-    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+    proveedor_id Int?
+    proveedor    Proveedor? @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
     productos_por_almacen ProductoAlmacenIngresoSalida[]
 }

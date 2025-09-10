@@ -26,7 +26,10 @@ import {
 } from '@prisma/client'
 import { getStock, GetStock } from '~/app/_utils/get-stock'
 import { eliminarProducto } from '~/app/_actions/producto'
-import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
+import {
+  productoEditOrCopy,
+  useStoreEditOrCopyProducto,
+} from '../../store/store-edit-or-copy-producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export type TableProductosProps = Producto & {
@@ -315,7 +318,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
               queryKey: [QueryKeys.PRODUCTOS],
             }}
             onEdit={() => {
-              setProducto(params.data)
+              setProducto(params.data as productoEditOrCopy)
               setOpen(true)
             }}
             childrenMiddle={
@@ -323,7 +326,12 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                 <Tooltip title='Duplicar'>
                   <IoIosCopy
                     onClick={() => {
-                      setProducto({ ...params.data!, id: undefined })
+                      setProducto({
+                        ...params.data!,
+                        id: undefined,
+                        cod_producto: undefined,
+                        cod_barra: undefined,
+                      })
                       setOpen(true)
                     }}
                     size={15}

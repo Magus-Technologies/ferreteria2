@@ -1,8 +1,13 @@
 import { create } from 'zustand'
 import { TableProductosProps } from '../_components/tables/columns-productos'
 
-type productoEditOrCopy = Omit<TableProductosProps, 'id'> & {
+export type productoEditOrCopy = Omit<
+  TableProductosProps,
+  'id' | 'cod_producto' | 'cod_barra'
+> & {
   id?: number
+  cod_producto?: string
+  cod_barra?: string
 }
 
 type UseStoreEditOrCopyProductoProps = {

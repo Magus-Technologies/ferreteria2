@@ -75,7 +75,7 @@ export default function ModalCreateProducto() {
   useEffect(() => {
     form.resetFields()
     if (producto) {
-      setDisabled(false)
+      if (producto.cod_producto) setDisabled(false)
       if (producto.img)
         urlToFile(producto.img).then(file => {
           setImgFile(file)

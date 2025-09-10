@@ -76,6 +76,13 @@ export enum permissions {
   INGRESO_SALIDA_CREATE = 'ingreso-salida.create',
   INGRESO_SALIDA_UPDATE = 'ingreso-salida.update',
   INGRESO_SALIDA_DELETE = 'ingreso-salida.delete',
+
+  // Tipos de ingresos y salidas
+  TIPO_INGRESO_SALIDA_BASE = 'tipo-ingreso-salida',
+  TIPO_INGRESO_SALIDA_LISTADO = 'tipo-ingreso-salida.listado',
+  TIPO_INGRESO_SALIDA_CREATE = 'tipo-ingreso-salida.create',
+  TIPO_INGRESO_SALIDA_UPDATE = 'tipo-ingreso-salida.update',
+  TIPO_INGRESO_SALIDA_DELETE = 'tipo-ingreso-salida.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -89,6 +96,7 @@ type PermisosValidos = Exclude<
   | permissions.UNIDAD_DERIVADA_BASE
   | permissions.PROVEEDOR_BASE
   | permissions.INGRESO_SALIDA_BASE
+  | permissions.TIPO_INGRESO_SALIDA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -151,6 +159,13 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.INGRESO_SALIDA_CREATE]: 'Crear Ingreso y Salida',
   [permissions.INGRESO_SALIDA_UPDATE]: 'Actualizar Ingreso y Salida',
   [permissions.INGRESO_SALIDA_DELETE]: 'Eliminar Ingreso y Salida',
+
+  [permissions.TIPO_INGRESO_SALIDA_LISTADO]:
+    'Ver Listado de Tipos de Ingresos y Salidas',
+  [permissions.TIPO_INGRESO_SALIDA_CREATE]: 'Crear Tipo de Ingreso y Salida',
+  [permissions.TIPO_INGRESO_SALIDA_UPDATE]:
+    'Actualizar Tipo de Ingreso y Salida',
+  [permissions.TIPO_INGRESO_SALIDA_DELETE]: 'Eliminar Tipo de Ingreso y Salida',
 }
 
 export function getAllPermissions() {

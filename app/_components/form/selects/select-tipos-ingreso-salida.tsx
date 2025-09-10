@@ -1,10 +1,13 @@
 'use client'
 
 import { useServerQuery } from '~/hooks/use-server-query'
-import SelectBase, { SelectBaseProps } from './select-base'
+import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getTiposIngresoSalida } from '~/app/_actions/tipos-ingreso-salida'
 import { FaCheckSquare } from 'react-icons/fa'
+import iterarChangeValue from '~/app/_utils/iterar-change-value'
+import { useRef } from 'react'
+import ButtonCreateTiposIngresoSalida from '../buttons/button-create-tipos-ingreso-salida'
 
 interface SelectTiposIngresoSalidaProps extends SelectBaseProps {
   classNameIcon?: string
@@ -17,8 +20,11 @@ export default function SelectTiposIngresoSalida({
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 18,
+  showButtonCreate = false,
   ...props
 }: SelectTiposIngresoSalidaProps) {
+  const selectTiposIngresoSalidaRef = useRef<RefSelectBaseProps>(null)
+
   const { response } = useServerQuery({
     action: getTiposIngresoSalida,
     propsQuery: {
@@ -30,6 +36,7 @@ export default function SelectTiposIngresoSalida({
   return (
     <>
       <SelectBase
+        ref={selectTiposIngresoSalidaRef}
         showSearch
         prefix={<FaCheckSquare className={classNameIcon} size={sizeIcon} />}
         variant={variant}
@@ -40,6 +47,16 @@ export default function SelectTiposIngresoSalida({
         }))}
         {...props}
       />
+      {showButtonCreate && (
+        <ButtonCreateTiposIngresoSalida
+          onSuccess={res =>
+            iterarChangeValue({
+              refObject: selectTiposIngresoSalidaRef,
+              value: res.id,
+            })
+          }
+        />
+      )}
     </>
   )
 }

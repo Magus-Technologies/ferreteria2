@@ -1,15 +1,12 @@
-import { Proveedor } from '@prisma/client'
-import { Form } from 'antd'
-import InputBase from '~/app/_components/form/inputs/input-base'
-import SelectEstado from '~/app/_components/form/selects/select-estado'
-import LabelBase from '~/components/form/label-base'
+import { Proveedor, Vendedor } from '@prisma/client'
+import { Form, Tabs } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import useCreateProveedor from '../../_hooks/use-create-proveedor'
-import { MdEmail, MdFactory } from 'react-icons/md'
-import { FaAddressCard } from 'react-icons/fa'
-import { BsGeoAltFill } from 'react-icons/bs'
-import { FaMobileButton } from 'react-icons/fa6'
+import FormCreateProveedor from '../form/form-create-proveedor'
+import { TabsProps } from 'antd/lib'
+import FormVendedoresProveedor from '../form/form-vendedores-proveedor'
+import type { Dayjs } from 'dayjs'
 
 interface ModalCreateProveedorProps {
   open: boolean
@@ -22,6 +19,10 @@ export type dataProveedorModalProps = Omit<
   'id' | 'created_at' | 'updated_at' | 'estado'
 > & {
   estado: number
+  vendedores: (Omit<Vendedor, 'id' | 'estado' | 'cumple'> & {
+    estado: number
+    cumple: Dayjs
+  })[]
 }
 
 export default function ModalCreateProveedor({
@@ -38,12 +39,24 @@ export default function ModalCreateProveedor({
       onSuccess?.(res.data!)
     },
   })
+  const items: TabsProps['items'] = [
+    {
+      key: '1',
+      label: 'Datos Proveedor',
+      children: <FormCreateProveedor form={form} />,
+    },
+    {
+      key: '2',
+      label: 'Vendedores',
+      children: <FormVendedoresProveedor form={form} />,
+    },
+  ]
 
   return (
     <ModalForm
       modalProps={{
-        title: <TitleForm>Crear Proveedor</TitleForm>,
-        className: 'min-w-[600px]',
+        title: <TitleForm className='!pb-0'>Crear Proveedor</TitleForm>,
+        className: 'min-w-[550px]',
         wrapClassName: '!flex !items-center',
         centered: true,
         okButtonProps: { loading, disabled: loading },
@@ -62,97 +75,7 @@ export default function ModalCreateProveedor({
         },
       }}
     >
-      <div className='flex gap-4 items-center justify-center'>
-        <LabelBase
-          label='Ruc:'
-          className='w-full'
-          classNames={{ labelParent: 'mb-6' }}
-        >
-          <InputBase
-            prefix={<FaAddressCard className='text-rose-700 mx-1' />}
-            propsForm={{
-              name: 'ruc',
-              rules: [
-                {
-                  required: true,
-                  message: 'Por favor, ingresa el RUC',
-                },
-              ],
-            }}
-            placeholder='Ruc'
-          />
-        </LabelBase>
-        <LabelBase
-          label='Estado:'
-          className='w-full'
-          classNames={{ labelParent: 'mb-6' }}
-        >
-          <SelectEstado
-            classNameIcon='text-rose-700 mx-1'
-            propsForm={{
-              name: 'estado',
-              rules: [
-                {
-                  required: true,
-                  message: 'Por favor, selecciona un estado',
-                },
-              ],
-            }}
-          />
-        </LabelBase>
-      </div>
-      <LabelBase label='Razon Social:' classNames={{ labelParent: 'mb-6' }}>
-        <InputBase
-          prefix={<MdFactory className='text-rose-700 mx-1' />}
-          propsForm={{
-            name: 'razon_social',
-            rules: [
-              {
-                required: true,
-                message: 'Por favor, ingresa la razón social',
-              },
-            ],
-          }}
-          placeholder='Razon Social'
-        />
-      </LabelBase>
-      <LabelBase label='Direccion:' classNames={{ labelParent: 'mb-6' }}>
-        <InputBase
-          prefix={<BsGeoAltFill className='text-cyan-600 mx-1' />}
-          propsForm={{
-            name: 'direccion',
-          }}
-          placeholder='Direccion'
-        />
-      </LabelBase>
-      <div className='flex gap-4 items-center justify-center'>
-        <LabelBase
-          label='Telefono:'
-          className='w-full'
-          classNames={{ labelParent: 'mb-6' }}
-        >
-          <InputBase
-            prefix={<FaMobileButton className='text-cyan-600 mx-1' />}
-            propsForm={{
-              name: 'telefono',
-            }}
-            placeholder='Telefono'
-          />
-        </LabelBase>
-        <LabelBase
-          label='Email:'
-          className='w-full'
-          classNames={{ labelParent: 'mb-6' }}
-        >
-          <InputBase
-            prefix={<MdEmail className='text-cyan-600 mx-1' />}
-            propsForm={{
-              name: 'email',
-            }}
-            placeholder='Email'
-          />
-        </LabelBase>
-      </div>
+      <Tabs className='min-h-[315px]' items={items} />
     </ModalForm>
   )
 }

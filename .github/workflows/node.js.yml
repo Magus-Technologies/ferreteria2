@@ -18,6 +18,7 @@ jobs:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
       AUTH_URL: ${{ secrets.AUTH_URL }}
+      RENIEC_TOKEN: ${{ secrets.RENIEC_TOKEN }}
 
     strategy:
       matrix:
@@ -45,7 +46,6 @@ jobs:
       - run: npm i # Cambiar a ci en produccióname:
       - run: npx prisma generate
       - run: npm run lint
-      # - run: npx tsc --noEmit
       - run: npm run build:server
       - run: |
           # Crear symlink solo si no existe

@@ -16,6 +16,7 @@ import {
 } from '@prisma/client'
 import useCreateIngresoSalida from '../../_hooks/use-create-ingreso-salida'
 import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
+import dayjs from 'dayjs'
 
 export type FormCreateIngresoSalidaProps = {
   fecha?: Dayjs
@@ -77,6 +78,10 @@ export default function ModalCreateIngresoSalida({
       formProps={{
         form,
         onFinish: crearIngresoSalidaForm,
+        initialValues: {
+          fecha: dayjs(),
+          tipo_ingreso_id: 1,
+        },
       }}
     >
       <div className='flex gap-4 items-center justify-center'>

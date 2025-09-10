@@ -20,19 +20,24 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
   const setDisabled = useStoreCodigoAutomatico(state => state.setDisabled)
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const primera_vez = useRef(true)
+  const primera_vez_validar = useRef(0)
 
   const cod_producto = Form.useWatch('cod_producto', form)
 
   const { validar, loading, response } = useValidarCodigoProducto()
 
   useEffect(() => {
-    validar(cod_producto)
+    if (primera_vez_validar.current >= (producto ? 2 : 1)) validar(cod_producto)
+    primera_vez_validar.current += 1
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cod_producto, validar])
 
   useEffect(() => {
-    if (!(producto?.id && primera_vez.current))
-      form.setFieldValue('cod_producto', undefined)
-
+    if (!(producto?.id && primera_vez.current)) {
+      if (disabled) form.setFieldValue('cod_producto', undefined)
+      else if (producto?.cod_producto)
+        form.setFieldValue('cod_producto', producto.cod_producto)
+    }
     primera_vez.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled, form])

@@ -1,5 +1,5 @@
 import { useServerMutation } from '~/hooks/use-server-mutation'
-import { toUTCString } from '~/utils/fechas'
+import { toString } from '~/utils/fechas'
 import { IngresoSalida } from '@prisma/client'
 import { FormInstance } from 'antd'
 import {
@@ -39,7 +39,7 @@ export default function useCreateIngresoSalida({
       ...values,
       tipo,
       fecha: values.fecha
-        ? toUTCString({
+        ? toString({
             date: values.fecha,
           })
         : undefined,

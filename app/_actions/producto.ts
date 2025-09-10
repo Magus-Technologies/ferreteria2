@@ -318,20 +318,48 @@ async function editarProductoWA(data: FormCreateProductoFormatedProps) {
         const dataProductParsed =
           ProductoUncheckedCreateInputSchema.parse(dataProduct)
 
-        if (!dataProductParsed.id)
-          throw new Error('No se especificó el id del producto')
+        const { id, ...restProducto } = dataProductParsed
+
+        if (!id) throw new Error('No se especificó el id del producto')
+
+        const producto_actual = await db.producto.findUnique({
+          where: {
+            id,
+          },
+          select: {
+            cod_producto: true,
+            cod_barra: true,
+            name: true,
+          },
+        })
+
+        if (!producto_actual) throw new Error('No se encontró el producto')
 
         const producto = await db.producto.update({
           where: {
-            id: dataProductParsed.id,
+            id,
           },
-          data: dataProductParsed,
+          data: {
+            ...restProducto,
+            cod_producto:
+              producto_actual.cod_producto === restProducto.cod_producto
+                ? undefined
+                : restProducto.cod_producto,
+            cod_barra:
+              producto_actual.cod_barra === restProducto.cod_barra
+                ? undefined
+                : restProducto.cod_barra,
+            name:
+              producto_actual.name === restProducto.name
+                ? undefined
+                : restProducto.name,
+          },
         })
 
         const producto_almacen = await db.productoAlmacen.update({
           where: {
             producto_id_almacen_id: {
-              producto_id: dataProductParsed.id,
+              producto_id: id,
               almacen_id,
             },
           },

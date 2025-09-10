@@ -15,12 +15,15 @@ import FormCodProducto from '../form/form-cod-producto'
 import { FormInstance } from 'antd'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
+import usePermission from '~/hooks/use-permission'
+import { permissions } from '~/lib/permissions'
 
 interface FormCreateProductoProps {
   form: FormInstance
 }
 
 export default function FormCreateProducto({ form }: FormCreateProductoProps) {
+  const can = usePermission()
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   return (
     <>
@@ -99,7 +102,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                     },
                   ],
                 }}
-                showButtonCreate
+                showButtonCreate={can(permissions.CATEGORIA_CREATE)}
                 classNameIcon='text-rose-700 mx-1'
                 form={form}
               />
@@ -132,7 +135,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                     },
                   ],
                 }}
-                showButtonCreate
+                showButtonCreate={can(permissions.MARCA_CREATE)}
                 classNameIcon='text-rose-700 mx-1'
                 form={form}
               />
@@ -151,7 +154,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                     },
                   ],
                 }}
-                showButtonCreate
+                showButtonCreate={can(permissions.UNIDAD_MEDIDA_CREATE)}
                 classNameIcon='text-rose-700 mx-1'
                 form={form}
               />

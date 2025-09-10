@@ -5,7 +5,7 @@ import { FormItemProps, InputProps } from 'antd/lib'
 import { focusNext } from '../../../_utils/autofocus'
 import { useMemo } from 'react'
 
-interface InputBaseProps extends InputProps {
+export interface InputBaseProps extends InputProps {
   uppercase?: boolean
   nextInEnter?: boolean
   nextWithPrevent?: boolean
