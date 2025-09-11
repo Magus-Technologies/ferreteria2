@@ -39,6 +39,7 @@ export default function ModalCreateProveedor({
       onSuccess?.(res.data!)
     },
   })
+
   const items: TabsProps['items'] = [
     {
       key: '1',
