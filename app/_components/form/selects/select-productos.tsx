@@ -37,6 +37,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   sizeIcon?: number
   showButtonCreate?: boolean
   onChange?: (value: string, producto?: ProductoSelect) => void
+  optionsDefault?: { value: number; label: string }[]
 }
 
 export default function SelectProductos({
@@ -45,6 +46,7 @@ export default function SelectProductos({
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 18,
   onChange,
+  optionsDefault = [],
   ...props
 }: SelectProductosProps) {
   const [text, setText] = useState('')
@@ -121,10 +123,16 @@ export default function SelectProductos({
         prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
-        options={response?.map(item => ({
-          value: item.id,
-          label: `${item.cod_producto} : ${item.name}`,
-        }))}
+        options={[
+          ...optionsDefault,
+          ...(response?.map(item => ({
+            value: item.id,
+            label: `${item.cod_producto} : ${item.name}`,
+          })) || []),
+        ].filter(
+          (item, index, self) =>
+            self.findIndex(i => i.value === item.value) === index
+        )}
         {...props}
       />
     </>

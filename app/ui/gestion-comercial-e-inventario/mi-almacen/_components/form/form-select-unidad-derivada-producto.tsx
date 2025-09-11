@@ -15,6 +15,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
 import { FormInstance } from 'antd'
 import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
+import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
 
 export default function FormSelectUnidadDerivadaProducto({
   form,
@@ -26,8 +27,15 @@ export default function FormSelectUnidadDerivadaProducto({
   tipo: IngresoSalidaEnum
 }) {
   const can = usePermission()
-  const [producto, setProducto] = useState<ProductoSelect>()
+
+  const productoSeleccionado = useStoreProductoSeleccionado(
+    store => store.producto
+  ) as ProductoSelect | undefined
+  const [producto, setProducto] = useState<ProductoSelect | undefined>(
+    productoSeleccionado
+  )
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
   const producto_en_almacen = producto?.producto_en_almacenes?.find(
     item => item.almacen_id === almacen_id
   )
@@ -44,14 +52,31 @@ export default function FormSelectUnidadDerivadaProducto({
   }, [form, unidades_derivadas])
 
   useEffect(() => {
-    setProducto(undefined)
-    setFactor(0)
+    setProducto(productoSeleccionado)
+    form.setFieldValue('producto_id', productoSeleccionado?.id)
+  }, [form, productoSeleccionado])
+
+  useEffect(() => {
+    if (!open) {
+      setProducto(undefined)
+      setFactor(0)
+    }
   }, [open])
 
   return (
     <>
       <LabelBase label='Producto:' classNames={{ labelParent: 'mb-6' }}>
         <SelectProductos
+          optionsDefault={
+            productoSeleccionado
+              ? [
+                  {
+                    value: productoSeleccionado.id,
+                    label: `${productoSeleccionado.cod_producto} : ${productoSeleccionado.name}`,
+                  },
+                ]
+              : []
+          }
           className='w-full'
           classNameIcon='text-rose-700 mx-1'
           onChange={(_, product) => setProducto(product)}

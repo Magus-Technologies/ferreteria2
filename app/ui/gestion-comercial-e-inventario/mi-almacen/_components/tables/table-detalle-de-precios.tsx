@@ -45,14 +45,14 @@ export default function TableDetalleDePrecios() {
 
   const [primeraData, setPrimeraData] = useState(0)
   useEffect(() => {
-    if (data && primeraData < 2) setPrimeraData(prev => prev + 1)
+    if (data && primeraData < 1) setPrimeraData(prev => prev + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, productoSeleccionado])
 
   const productos_completos = data?.data
 
   const rowData =
-    primeraData < 2
+    primeraData < 1
       ? []
       : producto_en_almacen
       ? producto_en_almacen?.unidades_derivadas?.map(item => ({
