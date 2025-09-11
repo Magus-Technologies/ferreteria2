@@ -24,6 +24,7 @@ async function createIngresoSalidaWA(
           unidad_derivada_id,
           producto_id,
           almacen_id,
+          fecha,
           ...rest
         } = data
 
@@ -66,6 +67,7 @@ async function createIngresoSalidaWA(
         const item = await db.ingresoSalida.create({
           data: {
             ...rest,
+            fecha: fecha ? new Date(fecha) : undefined,
             numero,
             productos_por_almacen: {
               create: [

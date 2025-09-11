@@ -46,6 +46,7 @@ jobs:
       - run: npm i # Cambiar a ci en produccióname:
       - run: npx prisma generate
       - run: npm run lint
+      # - run: npx tsc --noEmit # Comentado porque consume mucha ram, se debe validar haciendo `npm run build` antes de hacer push a github
       - run: npm run build:server
       - run: |
           # Crear symlink solo si no existe
