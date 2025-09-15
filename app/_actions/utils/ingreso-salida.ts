@@ -1,19 +1,24 @@
 'use server'
 
-import { Prisma } from '@prisma/client'
+import { Prisma, TipoDocumento } from '@prisma/client'
 
-export async function getUltimoIdIngresoSalida({
+export async function getUltimoNumeroIngresoSalida({
   db,
+  tipo_documento,
 }: {
   db: Prisma.TransactionClient
+  tipo_documento: TipoDocumento
 }) {
   const ultimo_id = await db.ingresoSalida.findFirst({
+    where: {
+      tipo_documento,
+    },
     orderBy: {
-      id: 'desc',
+      numero: 'desc',
     },
     select: {
-      id: true,
+      numero: true,
     },
   })
-  return ultimo_id?.id ? ultimo_id.id + 1 : 1
+  return ultimo_id?.numero ? ultimo_id.numero + 1 : 1
 }

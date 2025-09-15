@@ -11,12 +11,15 @@ import {
   Almacen,
   Producto,
   Proveedor,
+  TipoDocumento,
   TipoIngresoSalida,
   UnidadDerivada,
 } from '@prisma/client'
 import useCreateIngresoSalida from '../../_hooks/use-create-ingreso-salida'
-import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
 import dayjs from 'dayjs'
+import ModalDocIngresoSalida from './modal-doc-ingreso-salida'
+import { useState } from 'react'
+import { DataDocIngresoSalida } from '../docs/doc-ingreso-salida'
 
 export type FormCreateIngresoSalidaProps = {
   fecha?: Dayjs
@@ -34,93 +37,108 @@ export type FormCreateIngresoSalidaFormatedProps = Omit<
   'fecha'
 > & {
   fecha?: string
-  tipo: IngresoSalidaEnum
+  tipo_documento: TipoDocumento
 }
 
 type ModalCreateIngresoSalidaProps = {
-  tipo: IngresoSalidaEnum
+  tipo_documento: TipoDocumento
   open: boolean
   setOpen: (open: boolean) => void
 }
 
 export default function ModalCreateIngresoSalida({
-  tipo,
+  tipo_documento,
   open,
   setOpen,
 }: ModalCreateIngresoSalidaProps) {
   const [form] = Form.useForm()
+  const [openDoc, setOpenDoc] = useState(false)
+  const [data, setData] = useState<DataDocIngresoSalida>()
 
   const { crearIngresoSalidaForm, loading } = useCreateIngresoSalida({
-    setOpen,
-    form,
-    tipo,
+    tipo_documento,
+    onSuccess: data => {
+      setOpen(false)
+      form.resetFields()
+      setData(data)
+      setOpenDoc(true)
+    },
   })
 
   return (
-    <ModalForm
-      modalProps={{
-        title: (
-          <TitleForm>
-            Crear {tipo === IngresoSalidaEnum.ingreso ? 'Ingreso' : 'Salida'}
-          </TitleForm>
-        ),
-        className: 'min-w-[600px]',
-        wrapClassName: '!flex !items-center',
-        centered: true,
-        okButtonProps: { loading, disabled: loading },
-        okText: 'Crear',
-      }}
-      onCancel={() => {
-        form.resetFields()
-      }}
-      open={open}
-      setOpen={setOpen}
-      formProps={{
-        form,
-        onFinish: crearIngresoSalidaForm,
-        initialValues: {
-          fecha: dayjs(),
-          tipo_ingreso_id: 1,
-        },
-      }}
-    >
-      <div className='flex gap-4 items-center justify-center'>
-        <LabelBase
-          label='Fecha:'
-          className='w-full'
-          classNames={{ labelParent: 'mb-6' }}
-        >
-          <DatePickerBase
-            prefix={<FaCalendar className='text-cyan-600 mx-1' />}
-            propsForm={{
-              name: 'fecha',
-            }}
-            placeholder='Fecha'
-          />
-        </LabelBase>
-        <LabelBase
-          label='Almacén:'
-          className='w-full'
-          classNames={{ labelParent: 'mb-6' }}
-        >
-          <SelectAlmacen
-            size='middle'
+    <>
+      <ModalDocIngresoSalida open={openDoc} setOpen={setOpenDoc} data={data} />
+      <ModalForm
+        modalProps={{
+          title: (
+            <TitleForm>
+              Crear{' '}
+              {tipo_documento === TipoDocumento.Ingreso ? 'Ingreso' : 'Salida'}
+            </TitleForm>
+          ),
+          className: 'min-w-[600px]',
+          wrapClassName: '!flex !items-center',
+          centered: true,
+          okButtonProps: { loading, disabled: loading },
+          okText: 'Crear',
+          afterOpenChange: () => form.focusField('cantidad'),
+        }}
+        onCancel={() => {
+          form.resetFields()
+        }}
+        open={open}
+        setOpen={setOpen}
+        formProps={{
+          form,
+          onFinish: crearIngresoSalidaForm,
+          initialValues: {
+            fecha: dayjs(),
+            tipo_ingreso_id: 1,
+          },
+        }}
+      >
+        <div className='flex gap-4 items-center justify-center'>
+          <LabelBase
+            label='Fecha:'
             className='w-full'
-            classNameIcon='text-rose-700 mx-1'
-            propsForm={{
-              name: 'almacen_id',
-              rules: [
-                {
-                  required: true,
-                  message: 'Por favor, selecciona un Almacén',
-                },
-              ],
-            }}
-            form={form}
-          />
-        </LabelBase>
-      </div>
-      <FormSelectUnidadDerivadaProducto tipo={tipo} form={form} open={open} />
-    </ModalForm>
+            classNames={{ labelParent: 'mb-6' }}
+          >
+            <DatePickerBase
+              prefix={<FaCalendar className='text-cyan-600 mx-1' />}
+              propsForm={{
+                name: 'fecha',
+              }}
+              placeholder='Fecha'
+            />
+          </LabelBase>
+          <LabelBase
+            label='Almacén:'
+            className='w-full'
+            classNames={{ labelParent: 'mb-6' }}
+          >
+            <SelectAlmacen
+              size='middle'
+              className='w-full'
+              classNameIcon='text-rose-700 mx-1'
+              propsForm={{
+                name: 'almacen_id',
+                rules: [
+                  {
+                    required: true,
+                    message: 'Por favor, selecciona un Almacén',
+                  },
+                ],
+              }}
+              form={form}
+            />
+          </LabelBase>
+        </div>
+        <FormSelectUnidadDerivadaProducto
+          tipo={tipo_documento}
+          form={form}
+          open={open}
+        />
+      </ModalForm>
+    </>
   )
 }

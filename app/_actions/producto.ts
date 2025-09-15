@@ -17,6 +17,7 @@ import z from 'zod'
 import { chunkArray } from '~/utils/chunks'
 import { crearProductoEnAlmacen, getUltimoIdProducto } from './utils/producto'
 import { createPrimeraCompra } from './utils/compra'
+import { auth } from '~/auth/auth'
 
 async function SearchProductosWA(args: Prisma.ProductoFindManyArgs) {
   const argsParsed = ProductoFindManyArgsSchema.parse(args)
@@ -76,6 +77,8 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
   const puede = await can(permissions.PRODUCTO_CREATE)
   if (!puede) throw new Error('No tienes permiso para crear productos')
 
+  const session = await auth()
+
   try {
     return await prisma.$transaction(
       async db => {
@@ -122,6 +125,7 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
 
           await createPrimeraCompra(
             {
+              user_id: session!.user!.id!,
               almacen_id,
               productos_por_almacen: [
                 {

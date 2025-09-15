@@ -2,10 +2,13 @@ model IngresoSalida {
     id    Int      @id @default(autoincrement())
     fecha DateTime @default(now())
 
-    tipo_documento TipoDocumento @default(Ingreso)
-    serie          String        @default("IN01")
+    tipo_documento TipoDocumento
+    serie          Int
     numero         Int
     descripcion    String?
+
+    almacen_id Int
+    almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
     tipo_ingreso_id Int
     tipo_ingreso    TipoIngresoSalida @relation(fields: [tipo_ingreso_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -13,7 +16,13 @@ model IngresoSalida {
     proveedor_id Int?
     proveedor    Proveedor? @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+    user_id String
+    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
     productos_por_almacen ProductoAlmacenIngresoSalida[]
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
 }
 
 model ProductoAlmacenIngresoSalida {
@@ -27,12 +36,12 @@ model ProductoAlmacenIngresoSalida {
     producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     producto_almacen_id Int
 
-    unidades_derivadas UnidadDerivadaInmutableIngreso[]
+    unidades_derivadas UnidadDerivadaInmutableIngresoSalida[]
 
     @@unique([ingreso_id, producto_almacen_id])
 }
 
-model UnidadDerivadaInmutableIngreso {
+model UnidadDerivadaInmutableIngresoSalida {
     id Int @id @default(autoincrement())
 
     unidad_derivada_inmutable_id Int

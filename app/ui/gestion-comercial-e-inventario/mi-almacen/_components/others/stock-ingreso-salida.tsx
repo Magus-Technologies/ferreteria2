@@ -1,8 +1,8 @@
 import { Form } from 'antd'
 import { FormInstance } from 'antd/lib'
 import { ProductoSelect } from '~/app/_components/form/selects/select-productos'
-import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
 import { getStock } from '~/app/_utils/get-stock'
+import { TipoDocumento } from '@prisma/client'
 
 export default function StockIngresoSalida({
   factor,
@@ -17,7 +17,7 @@ export default function StockIngresoSalida({
     | undefined
   unidades_contenidas: number
   form: FormInstance
-  tipo: IngresoSalidaEnum
+  tipo: TipoDocumento
 }) {
   const cantidad = Form.useWatch('cantidad', form)
 
@@ -38,7 +38,7 @@ export default function StockIngresoSalida({
         <div className='font-bold text-xl'>Nuevo Stock</div>
         <div
           className={`${
-            tipo === IngresoSalidaEnum.ingreso
+            tipo === TipoDocumento.Ingreso
               ? 'text-emerald-600'
               : 'text-rose-600'
           } font-bold text-4xl text-nowrap`}
@@ -49,7 +49,7 @@ export default function StockIngresoSalida({
                 Number(producto_en_almacen?.stock_fraccion ?? 0) +
                 Number(cantidad ?? 0) *
                   Number(factor) *
-                  (tipo === IngresoSalidaEnum.ingreso ? 1 : -1),
+                  (tipo === TipoDocumento.Ingreso ? 1 : -1),
               unidades_contenidas,
             }).stock
           }

@@ -14,6 +14,12 @@ model Compra {
     numero         Int
     descripcion    String?
 
+    user_id String
+    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    almacen_id Int
+    almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
 
@@ -59,5 +65,5 @@ model UnidadDerivadaInmutable {
     name String @unique
 
     unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
-    unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngreso[]
+    unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
 }

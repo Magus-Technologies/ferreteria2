@@ -10,7 +10,7 @@ import can from '~/utils/server-validate-permission'
 import { auth } from '~/auth/auth'
 import CardsInfo from './_components/others/cards-info'
 import ButtonCreateIngresoSalida from './_components/buttons/button-create-ingreso-salida'
-import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
+import { TipoDocumento } from '@prisma/client'
 
 export default async function MiAlmacen() {
   const session = await auth()
@@ -37,10 +37,10 @@ export default async function MiAlmacen() {
         <div className='flex flex-col items-center justify-around gap-8'>
           {(await can(permissions.PRODUCTO_CREATE)) && <ButtonCreateProducto />}
           {(await can(permissions.PRODUCTO_INGRESO_CREATE)) && (
-            <ButtonCreateIngresoSalida tipo={IngresoSalidaEnum.ingreso} />
+            <ButtonCreateIngresoSalida tipo={TipoDocumento.Ingreso} />
           )}
           {(await can(permissions.PRODUCTO_SALIDA_CREATE)) && (
-            <ButtonCreateIngresoSalida tipo={IngresoSalidaEnum.salida} />
+            <ButtonCreateIngresoSalida tipo={TipoDocumento.Salida} />
           )}
           <CardsInfo />
         </div>

@@ -1,7 +1,7 @@
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import { Column } from 'ag-grid-community'
 
-const styles = StyleSheet.create({
+export const styles_globales = StyleSheet.create({
   page: {
     padding: 48,
     fontSize: 10,
@@ -9,12 +9,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     display: 'flex',
     flexDirection: 'column',
-  },
-  titleTable: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
   },
   sectionTable: {
     marginBottom: 16,
@@ -46,6 +40,15 @@ const styles = StyleSheet.create({
   },
 })
 
+const styles = StyleSheet.create({
+  titleTable: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+})
+
 export default function TablePdfAgGrid({
   rowData,
   colDefs,
@@ -61,22 +64,22 @@ export default function TablePdfAgGrid({
     <Document title={nameFile}>
       <Page
         size='A4'
-        style={styles.page}
+        style={styles_globales.page}
         orientation={orientation === 'vertical' ? 'portrait' : 'landscape'}
       >
         <View style={styles.titleTable}>
           <Text>{nameFile}</Text>
         </View>
 
-        <View style={styles.sectionTable}>
-          <View style={styles.tableHeader}>
+        <View style={styles_globales.sectionTable}>
+          <View style={styles_globales.tableHeader}>
             {colDefs.map((col, idx) => {
               const colDef = col.getColDef()
               return (
                 <Text
                   key={idx}
                   style={{
-                    ...styles.cell,
+                    ...styles_globales.cell,
                     flex: colDef.flex,
                     fontWeight: 'bold',
                   }}
@@ -91,7 +94,7 @@ export default function TablePdfAgGrid({
             <View
               key={idx}
               style={{
-                ...styles.tableRow,
+                ...styles_globales.tableRow,
                 backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9f9f9',
               }}
             >
@@ -101,7 +104,7 @@ export default function TablePdfAgGrid({
                   <Text
                     key={`${idx}-${idxCol}`}
                     style={{
-                      ...styles.cell,
+                      ...styles_globales.cell,
                       flex: colDef.flex,
                     }}
                   >

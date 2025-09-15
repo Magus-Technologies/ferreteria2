@@ -1,9 +1,9 @@
 import { AgGridReact } from 'ag-grid-react'
 import { utils, writeFile } from 'xlsx-js-style'
 import { Column, ValueFormatterParams } from 'ag-grid-community'
-import { pdf } from '@react-pdf/renderer'
 import TablePdfAgGrid from '../components/pdf/table-pdf-ag-grid'
 import { ZodObjectDef, ZodRawShape, ZodType } from 'zod'
+import { downloadPdf } from '~/hooks/use-react-to-pdf'
 
 function exportFile<schemaType>({
   obj,
@@ -142,18 +142,15 @@ export async function exportAGGridDataToPDF(
 ) {
   const { rowData, colDefs } = getJsonFromAGGrid(gridOptions)
 
-  const blob = await pdf(
-    <TablePdfAgGrid
-      rowData={rowData}
-      colDefs={colDefs}
-      nameFile={nameFile}
-      orientation={orientation}
-    />
-  ).toBlob()
-  const blobUrl = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = blobUrl
-  link.download = `${nameFile}.pdf`
-  link.click()
-  URL.revokeObjectURL(blobUrl)
+  await downloadPdf({
+    jsx: (
+      <TablePdfAgGrid
+        rowData={rowData}
+        colDefs={colDefs}
+        nameFile={nameFile}
+        orientation={orientation}
+      />
+    ),
+    name: nameFile,
+  })
 }

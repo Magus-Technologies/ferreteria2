@@ -7,8 +7,9 @@ model Almacen {
 
     ubicaciones          Ubicacion[]
     productos_en_almacen ProductoAlmacen[]
-    // compras              Compra[]
+    compras              Compra[]
     empresas             Empresa[]
+    ingresos_salidas     IngresoSalida[]
 }
 
 model ProductoAlmacen {

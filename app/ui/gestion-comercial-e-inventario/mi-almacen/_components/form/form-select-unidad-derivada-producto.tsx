@@ -14,8 +14,8 @@ import { permissions } from '~/lib/permissions'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
 import { FormInstance } from 'antd'
-import { IngresoSalidaEnum } from '~/app/_lib/tipos-ingresos-salidas'
 import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
+import { TipoDocumento } from '@prisma/client'
 
 export default function FormSelectUnidadDerivadaProducto({
   form,
@@ -24,7 +24,7 @@ export default function FormSelectUnidadDerivadaProducto({
 }: {
   form: FormInstance
   open: boolean
-  tipo: IngresoSalidaEnum
+  tipo: TipoDocumento
 }) {
   const can = usePermission()
 
@@ -162,7 +162,10 @@ export default function FormSelectUnidadDerivadaProducto({
 
       <div className='flex gap-8'>
         <div className='flex flex-col flex-1'>
-          <LabelBase label='Tipo Ingreso:' classNames={{ labelParent: 'mb-6' }}>
+          <LabelBase
+            label={`Tipo de ${tipo}:`}
+            classNames={{ labelParent: 'mb-6' }}
+          >
             <SelectTiposIngresoSalida
               showButtonCreate={can(permissions.TIPO_INGRESO_SALIDA_CREATE)}
               className='w-full'

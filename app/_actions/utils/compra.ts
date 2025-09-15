@@ -6,6 +6,7 @@ import {
   TipoDocumento,
   UnidadDerivada,
   UnidadDerivadaInmutableCompra,
+  User,
 } from '@prisma/client'
 
 export async function createCompraAfectaStock(
@@ -77,6 +78,7 @@ export async function createCompraAfectaStock(
 
 export async function createPrimeraCompra(
   data: {
+    user_id: User['id']
     almacen_id: Almacen['id']
     productos_por_almacen: (Omit<
       Prisma.ProductoAlmacenCompraUncheckedCreateInput,
@@ -92,7 +94,7 @@ export async function createPrimeraCompra(
   },
   db: Prisma.TransactionClient
 ) {
-  const { productos_por_almacen, almacen_id } = data
+  const { productos_por_almacen, almacen_id, user_id } = data
   const ultima_compra = await db.compra.findFirst({
     where: {
       productos_por_almacen: {
@@ -111,6 +113,8 @@ export async function createPrimeraCompra(
   return createCompraAfectaStock(
     {
       compra: {
+        user_id,
+        almacen_id,
         tipo_documento: TipoDocumento.NotaDeVenta,
         serie: 'NTV1',
         numero: (ultima_compra?.numero ?? 0) + 1,
