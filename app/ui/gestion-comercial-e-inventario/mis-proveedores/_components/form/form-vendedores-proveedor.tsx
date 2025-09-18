@@ -56,16 +56,21 @@ export default function FormVendedoresProveedor({
                     placeholder='DNI'
                     onSuccess={res => {
                       const dniData = res as ConsultaDni
-                      console.log(
-                        '🚀 ~ file: form-vendedores-proveedor.tsx:59 ~ dniData:',
-                        dniData
-                      )
+                      form.resetFields([
+                        ['vendedores', name, 'nombres'],
+                        ['vendedores', name, 'cumple'],
+                        ['vendedores', name, 'direccion'],
+                        ['vendedores', name, 'telefono'],
+                        ['vendedores', name, 'email'],
+                      ])
                       if (dniData.success)
                         form.setFieldValue(
                           ['vendedores', name, 'nombres'],
                           `${dniData?.nombres} ${dniData?.apellidoPaterno} ${dniData?.apellidoMaterno}`
                         )
                     }}
+                    form={form}
+                    nameWatch={['vendedores', name, 'dni']}
                   />
                 </LabelBase>
                 <LabelBase
@@ -155,9 +160,16 @@ export default function FormVendedoresProveedor({
                   classNames={{ labelParent: 'mb-6' }}
                 >
                   <InputBase
+                    type='email'
                     prefix={<MdEmail className='text-cyan-600 mx-1' />}
                     propsForm={{
                       name: [name, 'email'],
+                      rules: [
+                        {
+                          type: 'email',
+                          message: 'Ingresa un email valido',
+                        },
+                      ],
                     }}
                     placeholder='Email'
                   />

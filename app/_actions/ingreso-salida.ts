@@ -163,7 +163,6 @@ async function createIngresoSalidaWA(
       }
     )
   } catch (error) {
-    console.log('🚀 ~ file: ingreso-salida.ts:153 ~ error:', error)
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002')
         throw new Error(

@@ -24,5 +24,5 @@ model Vendedor {
     cumple    DateTime?
 
     proveedor_id Int
-    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id])
+    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

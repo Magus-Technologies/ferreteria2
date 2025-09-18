@@ -9,11 +9,15 @@ import ModalCreateProveedor from '~/app/ui/gestion-comercial-e-inventario/mis-pr
 interface ButtonCreateProveedorProps {
   className?: string
   onSuccess?: (res: Proveedor) => void
+  textDefault?: string
+  setTextDefault?: (text: string) => void
 }
 
 export default function ButtonCreateProveedor({
   className,
   onSuccess,
+  textDefault,
+  setTextDefault,
 }: ButtonCreateProveedorProps) {
   const [open, setOpen] = useState(false)
 
@@ -26,6 +30,8 @@ export default function ButtonCreateProveedor({
         open={open}
         setOpen={setOpen}
         onSuccess={onSuccess}
+        textDefault={textDefault}
+        setTextDefault={setTextDefault}
       />
       <Tooltip title='Crear Proveedor'>
         <ButtonCreateFormWithName

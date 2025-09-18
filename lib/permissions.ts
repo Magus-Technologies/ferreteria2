@@ -2,6 +2,7 @@ export enum permissions {
   // Gestion Comercial e Inventario
   GESTION_COMERCIAL_E_INVENTARIO_INDEX = 'gestion-comercial-e-inventario.index',
   GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX = 'gestion-comercial-e-inventario.mi-almacen.index',
+  GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX = 'gestion-comercial-e-inventario.mis-compras.index',
   // Gestion Comercial e Inventario - Mi Almacén
   PRODUCTO_BASE = 'producto',
   PRODUCTO_LISTADO = 'producto.listado',
@@ -103,6 +104,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     'Ver Página Gestion Comercial e Inventario',
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX]:
     'Ver Página Mi Almacén',
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX]:
+    'Ver Página Mis Compras',
 
   [permissions.PRODUCTO_LISTADO]: 'Ver Listado de Productos',
   [permissions.PRODUCTO_CREATE]: 'Crear Producto',

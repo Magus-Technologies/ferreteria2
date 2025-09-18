@@ -37,6 +37,12 @@ export default function FormCreateProveedor({ form }: { form: FormInstance }) {
               const rucData = (res as ConsultaRuc)?.ruc
                 ? (res as ConsultaRuc)
                 : undefined
+              form.resetFields([
+                'razon_social',
+                'direccion',
+                'telefono',
+                'email',
+              ])
               form.setFieldValue(
                 'razon_social',
                 dniData
@@ -49,6 +55,8 @@ export default function FormCreateProveedor({ form }: { form: FormInstance }) {
                 form.setFieldValue('telefono', rucData?.telefonos[0])
               }
             }}
+            form={form}
+            nameWatch='ruc'
           />
         </LabelBase>
         <LabelBase

@@ -1,4 +1,4 @@
-import { Proveedor, Vendedor } from '@prisma/client'
+import { Prisma, Proveedor, Vendedor } from '@prisma/client'
 import { Form, Tabs } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -7,11 +7,22 @@ import FormCreateProveedor from '../form/form-create-proveedor'
 import { TabsProps } from 'antd/lib'
 import FormVendedoresProveedor from '../form/form-vendedores-proveedor'
 import type { Dayjs } from 'dayjs'
+import { useEffect } from 'react'
+import dayjs from 'dayjs'
+
+export type dataEditProveedor = Prisma.ProveedorGetPayload<{
+  include: {
+    vendedores: true
+  }
+}>
 
 interface ModalCreateProveedorProps {
   open: boolean
   setOpen: (open: boolean) => void
   onSuccess?: (res: Proveedor) => void
+  dataEdit?: dataEditProveedor
+  textDefault?: string
+  setTextDefault?: (text: string) => void
 }
 
 export type dataProveedorModalProps = Omit<
@@ -29,6 +40,9 @@ export default function ModalCreateProveedor({
   open,
   setOpen,
   onSuccess,
+  dataEdit,
+  textDefault,
+  setTextDefault,
 }: ModalCreateProveedorProps) {
   const [form] = Form.useForm()
 
@@ -38,6 +52,7 @@ export default function ModalCreateProveedor({
       form.resetFields()
       onSuccess?.(res.data!)
     },
+    dataEdit,
   })
 
   const items: TabsProps['items'] = [
@@ -53,27 +68,49 @@ export default function ModalCreateProveedor({
     },
   ]
 
+  useEffect(() => {
+    form.resetFields()
+    if (dataEdit) {
+      form.setFieldsValue({
+        ...dataEdit,
+        estado: dataEdit.estado ? 1 : 0,
+        vendedores: dataEdit.vendedores.map(item => ({
+          ...item,
+          estado: item.estado ? 1 : 0,
+          cumple: item.cumple ? dayjs(item.cumple) : undefined,
+        })),
+      })
+    } else {
+      form.setFieldsValue({
+        estado: 1,
+        ruc: textDefault,
+      })
+    }
+  }, [form, dataEdit, open, textDefault])
+
   return (
     <ModalForm
       modalProps={{
-        title: <TitleForm className='!pb-0'>Crear Proveedor</TitleForm>,
+        title: (
+          <TitleForm className='!pb-0'>
+            {dataEdit ? 'Editar' : 'Crear'} Proveedor
+          </TitleForm>
+        ),
         className: 'min-w-[550px]',
         wrapClassName: '!flex !items-center',
         centered: true,
         okButtonProps: { loading, disabled: loading },
-        okText: 'Crear',
+        okText: dataEdit ? 'Editar' : 'Crear',
       }}
       onCancel={() => {
         form.resetFields()
+        setTextDefault?.('')
       }}
       open={open}
       setOpen={setOpen}
       formProps={{
         form,
         onFinish: crearProveedorForm,
-        initialValues: {
-          estado: 1,
-        },
       }}
     >
       <Tabs className='min-h-[315px]' items={items} />

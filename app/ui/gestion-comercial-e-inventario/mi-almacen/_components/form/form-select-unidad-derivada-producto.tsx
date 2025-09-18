@@ -46,9 +46,9 @@ export default function FormSelectUnidadDerivadaProducto({
   useEffect(() => {
     form.setFieldValue(
       'unidad_derivada_id',
-      unidades_derivadas?.[0].unidad_derivada.id
+      unidades_derivadas?.[0]?.unidad_derivada?.id
     )
-    setFactor(Number(unidades_derivadas?.[0].factor ?? 0))
+    setFactor(Number(unidades_derivadas?.[0]?.factor ?? 0))
   }, [form, unidades_derivadas])
 
   useEffect(() => {

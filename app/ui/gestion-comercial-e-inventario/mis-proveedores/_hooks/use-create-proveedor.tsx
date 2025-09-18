@@ -1,18 +1,23 @@
 import { Proveedor } from '@prisma/client'
-import { createProveedor } from '~/app/_actions/proveedor'
+import { createProveedor, editarProveedor } from '~/app/_actions/proveedor'
 import { useServerMutation } from '~/hooks/use-server-mutation'
-import { dataProveedorModalProps } from '../_components/modals/modal-create-proveedor'
+import {
+  dataEditProveedor,
+  dataProveedorModalProps,
+} from '../_components/modals/modal-create-proveedor'
 import { ServerResult } from '~/auth/middleware-server-actions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { toString } from '~/utils/fechas'
 
 export default function useCreateProveedor({
   onSuccess,
+  dataEdit,
 }: {
   onSuccess?: (res: ServerResult<Proveedor>) => void
+  dataEdit?: dataEditProveedor
 }) {
   const { execute, loading } = useServerMutation({
-    action: createProveedor,
+    action: dataEdit ? editarProveedor : createProveedor,
     queryKey: [QueryKeys.PROVEEDORES, QueryKeys.PROVEEDORES_SEARCH],
     onSuccess,
     msgSuccess: 'Proveedor creado exitosamente',
@@ -38,6 +43,7 @@ export default function useCreateProveedor({
             },
           }
         : {}),
+      id: dataEdit?.id,
     }
     execute({ data })
   }

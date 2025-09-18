@@ -1,5 +1,6 @@
 import { Modal, ModalProps } from 'antd'
 import FormBase, { FormBaseProps } from '../form/form-base'
+import { classOkButtonModal } from '~/lib/clases'
 
 interface ModalFormProps<T> {
   open: boolean
@@ -26,7 +27,7 @@ export default function ModalForm<T>({
   } = modalProps || {}
   const {
     htmlType = 'submit',
-    className = 'rounded-xl !bg-emerald-500 hover:!bg-emerald-600 disabled:hover:!bg-gray-300',
+    className = classOkButtonModal,
     ...restOkButtonProps
   } = okButtonProps
 

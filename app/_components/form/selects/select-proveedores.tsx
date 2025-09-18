@@ -5,11 +5,12 @@ import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { Prisma, Proveedor } from '@prisma/client'
-import { FaBoxOpen } from 'react-icons/fa'
+import { FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { SearchProveedor } from '~/app/_actions/proveedor'
 import ButtonCreateProveedor from '../buttons/button-create-proveedor'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import ModalProveedorSearch from '../../modals/modal-proveedor-search'
 
 interface SelectProveedoresProps extends SelectBaseProps {
   classNameIcon?: string
@@ -27,6 +28,9 @@ export default function SelectProveedores({
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
+
+  const [openModalProveedorSearch, setOpenModalProveedorSearch] =
+    useState(false)
 
   const [value] = useDebounce(text, 1000)
 
@@ -65,8 +69,13 @@ export default function SelectProveedores({
     }
   }, [value, refetch])
 
+  const [textDefault, setTextDefault] = useState('')
+  useEffect(() => {
+    if (text) setTextDefault(text)
+  }, [text])
+
   return (
-    <>
+    <div className='flex items-center gap-4 w-full'>
       <SelectBase
         ref={selectProveedoresRef}
         showSearch
@@ -94,6 +103,19 @@ export default function SelectProveedores({
         )}
         {...props}
       />
+      <FaSearch
+        className={`text-yellow-600 mb-7 -ml-[4.5rem] ${
+          showButtonCreate ? 'mr-10' : ''
+        } cursor-pointer z-10`}
+        size={15}
+        onClick={() => setOpenModalProveedorSearch(true)}
+      />
+      <ModalProveedorSearch
+        open={openModalProveedorSearch}
+        setOpen={setOpenModalProveedorSearch}
+        onOk={() => {}}
+        textDefault={textDefault}
+      />
       {showButtonCreate && (
         <ButtonCreateProveedor
           onSuccess={res => {
@@ -103,8 +125,10 @@ export default function SelectProveedores({
               value: res.id,
             })
           }}
+          textDefault={textDefault}
+          setTextDefault={setTextDefault}
         />
       )}
-    </>
+    </div>
   )
 }

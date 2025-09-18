@@ -1,6 +1,7 @@
 import { Modal, Tooltip } from 'antd'
 import { FaDownload, FaShareNodes } from 'react-icons/fa6'
 import ButtonBase from '~/components/buttons/button-base'
+import { classOkButtonModal } from '~/lib/clases'
 
 interface ModalEntradaStockProps {
   open: boolean
@@ -56,8 +57,7 @@ export default function ModalShowDoc({
       cancelText='Cerrar'
       cancelButtonProps={{ className: 'rounded-xl' }}
       okButtonProps={{
-        className:
-          'rounded-xl !bg-emerald-500 hover:!bg-emerald-600 disabled:hover:!bg-gray-300',
+        className: classOkButtonModal,
       }}
       onCancel={() => setOpen(false)}
       maskClosable={false}

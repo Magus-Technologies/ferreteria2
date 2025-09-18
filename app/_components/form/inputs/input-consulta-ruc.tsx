@@ -4,15 +4,20 @@ import { useServerMutation } from '~/hooks/use-server-mutation'
 import { consultaReniec } from '~/app/_actions/consulta-reniec'
 import { useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { Spin } from 'antd'
+import { Form, Spin } from 'antd'
 import { FaSearch } from 'react-icons/fa'
+import { FormInstance } from 'antd/lib'
 
-interface InputConsultaRucProps extends InputBaseProps {
+interface InputConsultaRucProps extends Omit<InputBaseProps, 'form'> {
   onSuccess?: (data: ConsultaDni | ConsultaRuc) => void
+  form?: FormInstance
+  nameWatch?: string | (string | number)[]
 }
 
 export default function InputConsultaRuc({
   onSuccess,
+  form,
+  nameWatch,
   ...props
 }: InputConsultaRucProps) {
   const { execute, loading } = useServerMutation({
@@ -26,13 +31,20 @@ export default function InputConsultaRuc({
 
   const [value] = useDebounce(text, 1000)
 
+  const ruc = Form.useWatch(nameWatch, form)
+  useEffect(() => {
+    if (ruc) setText(ruc)
+  }, [ruc])
+
   useEffect(() => {
     if (value) execute({ search: value })
   }, [execute, value])
 
   return (
     <InputBase
-      onChange={e => setText(e.target.value)}
+      onChange={e => {
+        if (!nameWatch) setText(e.target.value)
+      }}
       placeholder='Buscar RUC / DNI'
       suffix={
         loading ? (

@@ -18,6 +18,9 @@ async function SearchProveedorWA(args: Prisma.ProveedorFindManyArgs) {
     orderBy: {
       razon_social: 'asc',
     },
+    include: {
+      vendedores: true,
+    },
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
@@ -48,3 +51,70 @@ async function createProveedorWA({
   }
 }
 export const createProveedor = withAuth(createProveedorWA)
+
+async function editarProveedorWA({
+  data,
+}: {
+  data: Prisma.ProveedorUncheckedCreateInput
+}) {
+  const puede = await can(permissions.PROVEEDOR_UPDATE)
+  if (!puede) throw new Error('No tienes permiso para editar Proveedors')
+
+  const dataParsed = ProveedorUncheckedCreateInputSchema.parse(data)
+
+  try {
+    const proveedor_actual = await prisma.proveedor.findUnique({
+      where: {
+        id: data.id,
+      },
+      select: {
+        razon_social: true,
+        ruc: true,
+      },
+    })
+    const item = await prisma.proveedor.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        ...dataParsed,
+        razon_social:
+          proveedor_actual?.razon_social === dataParsed.razon_social
+            ? undefined
+            : dataParsed.razon_social,
+        ruc:
+          proveedor_actual?.ruc === dataParsed.ruc ? undefined : dataParsed.ruc,
+      },
+    })
+    return { data: item }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002')
+        throw new Error('Ya existe una Proveedor con esa Razon Social y/o RucW')
+      throw new Error(`${error.code}`)
+    }
+
+    throw new Error('Error al editar la Proveedor')
+  }
+}
+export const editarProveedor = withAuth(editarProveedorWA)
+
+async function eliminarProveedorWA({ id }: { id: number }) {
+  const puede = await can(permissions.PROVEEDOR_DELETE)
+  if (!puede) throw new Error('No tienes permiso para eliminar Proveedors')
+  try {
+    await prisma.proveedor.delete({ where: { id } })
+    return { data: 'ok' }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2003')
+        throw new Error(
+          'Este Proveedor tiene registros a su nombre en el sistema'
+        )
+      throw new Error(`${error.code}`)
+    }
+
+    throw new Error('Error al eliminar la Proveedor')
+  }
+}
+export const eliminarProveedor = withAuth(eliminarProveedorWA)
