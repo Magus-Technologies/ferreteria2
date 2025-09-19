@@ -11,6 +11,8 @@ import ButtonCreateProveedor from '../buttons/button-create-proveedor'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalProveedorSearch from '../../modals/modal-proveedor-search'
+import { dataEditProveedor } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/modals/modal-create-proveedor'
+import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
 
 interface SelectProveedoresProps extends SelectBaseProps {
   classNameIcon?: string
@@ -35,6 +37,12 @@ export default function SelectProveedores({
   const [value] = useDebounce(text, 1000)
 
   const [proveedorCreado, setProveedorCreado] = useState<Proveedor>()
+  const [proveedorSeleccionado, setProveedorSeleccionado] =
+    useState<dataEditProveedor>()
+
+  const proveedorSeleccionadoStore = useStoreProveedorSeleccionado(
+    store => store.proveedor
+  )
 
   const { response, refetch } = useServerQuery({
     action: SearchProveedor,
@@ -65,6 +73,7 @@ export default function SelectProveedores({
   useEffect(() => {
     if (value) {
       setProveedorCreado(undefined)
+      setProveedorSeleccionado(undefined)
       refetch()
     }
   }, [value, refetch])
@@ -97,6 +106,14 @@ export default function SelectProveedores({
                 },
               ]
             : []),
+          ...(proveedorSeleccionado
+            ? [
+                {
+                  value: proveedorSeleccionado.id,
+                  label: `${proveedorSeleccionado.ruc} : ${proveedorSeleccionado.razon_social}`,
+                },
+              ]
+            : []),
         ].filter(
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
@@ -104,16 +121,23 @@ export default function SelectProveedores({
         {...props}
       />
       <FaSearch
-        className={`text-yellow-600 mb-7 -ml-[4.5rem] ${
-          showButtonCreate ? 'mr-10' : ''
-        } cursor-pointer z-10`}
+        className={`text-yellow-600 mb-7 cursor-pointer z-10`}
         size={15}
         onClick={() => setOpenModalProveedorSearch(true)}
       />
       <ModalProveedorSearch
         open={openModalProveedorSearch}
         setOpen={setOpenModalProveedorSearch}
-        onOk={() => {}}
+        onOk={() => {
+          if (proveedorSeleccionadoStore) {
+            setProveedorSeleccionado(proveedorSeleccionadoStore)
+            iterarChangeValue({
+              refObject: selectProveedoresRef,
+              value: proveedorSeleccionadoStore.id,
+            })
+            setOpenModalProveedorSearch(false)
+          }
+        }}
         textDefault={textDefault}
       />
       {showButtonCreate && (

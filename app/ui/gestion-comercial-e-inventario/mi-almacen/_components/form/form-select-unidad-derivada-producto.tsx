@@ -150,6 +150,7 @@ export default function FormSelectUnidadDerivadaProducto({
 
       <LabelBase label='Proveedor:' classNames={{ labelParent: 'mb-6' }}>
         <SelectProveedores
+          allowClear
           showButtonCreate={can(permissions.PROVEEDOR_CREATE)}
           className='w-full'
           classNameIcon='text-cyan-600 mx-1'

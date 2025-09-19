@@ -11,6 +11,7 @@ import { useColumnsProveedores } from './columns-proveedores'
 import ModalCreateProveedor, {
   dataEditProveedor,
 } from '../modals/modal-create-proveedor'
+import { useStoreProveedorSeleccionado } from '../../store/store-proveedor-seleccionado'
 
 export default function TableProveedoresBusqueda({ value }: { value: string }) {
   const { response, refetch, loading } = useServerQuery({
@@ -46,6 +47,10 @@ export default function TableProveedoresBusqueda({ value }: { value: string }) {
   const [open, setOpen] = useState(false)
   const [dataEdit, setDataEdit] = useState<dataEditProveedor>()
 
+  const setProveedorSeleccionado = useStoreProveedorSeleccionado(
+    store => store.setProveedor
+  )
+
   return (
     <>
       <ModalCreateProveedor open={open} setOpen={setOpen} dataEdit={dataEdit} />
@@ -56,6 +61,11 @@ export default function TableProveedoresBusqueda({ value }: { value: string }) {
         loading={loading}
         columnDefs={useColumnsProveedores({ setDataEdit, setOpen })}
         rowData={value ? response : []}
+        onSelectionChanged={({ selectedNodes }) =>
+          setProveedorSeleccionado(
+            selectedNodes?.[0]?.data as dataEditProveedor
+          )
+        }
         optionsSelectColumns={[
           {
             label: 'Default',
