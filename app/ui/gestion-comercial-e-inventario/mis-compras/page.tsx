@@ -2,6 +2,9 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
+import FiltersMisCompras from './_components/filters/filters-mis-compras'
+import TableCompras from './_components/tables/table-compras'
+import TableDetalleDeCompra from './_components/tables/table-detalle-de-compra'
 
 export default async function MisCompras() {
   if (
@@ -11,7 +14,9 @@ export default async function MisCompras() {
 
   return (
     <ContenedorGeneral>
-      <div></div>
+      <FiltersMisCompras />
+      <TableCompras />
+      <TableDetalleDeCompra />
     </ContenedorGeneral>
   )
 }

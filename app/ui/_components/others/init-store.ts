@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useStoreFiltrosProductos } from '../../gestion-comercial-e-inventario/mi-almacen/store/store-filtros-productos'
+import { useStoreFiltrosProductos } from '../../gestion-comercial-e-inventario/mi-almacen/_store/store-filtros-productos'
 import { Empresa } from '@prisma/client'
 
 export function InitStore({

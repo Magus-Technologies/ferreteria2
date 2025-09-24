@@ -5,15 +5,15 @@ import {
 } from '../_components/modals/modal-create-producto'
 import { createProducto, editarProducto } from '~/app/_actions/producto'
 import { toString } from '~/utils/fechas'
-import { useStoreArchivosProducto } from '../store/store-archivos-producto'
+import { useStoreArchivosProducto } from '../_store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
 import { Producto } from '@prisma/client'
 import { FormInstance } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useStoreEditOrCopyProducto } from '../store/store-edit-or-copy-producto'
-import { useStoreFiltrosProductos } from '../store/store-filtros-productos'
+import { useStoreEditOrCopyProducto } from '../_store/store-edit-or-copy-producto'
+import { useStoreFiltrosProductos } from '../_store/store-filtros-productos'
 
 export default function useCreateProducto({
   setOpen,

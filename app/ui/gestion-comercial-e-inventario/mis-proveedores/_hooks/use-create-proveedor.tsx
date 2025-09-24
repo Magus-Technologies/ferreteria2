@@ -20,7 +20,7 @@ export default function useCreateProveedor({
     action: dataEdit ? editarProveedor : createProveedor,
     queryKey: [QueryKeys.PROVEEDORES, QueryKeys.PROVEEDORES_SEARCH],
     onSuccess,
-    msgSuccess: 'Proveedor creado exitosamente',
+    msgSuccess: `Proveedor ${dataEdit ? 'editado' : 'creado'} exitosamente`,
   })
 
   function crearProveedorForm(values: dataProveedorModalProps) {
@@ -39,6 +39,8 @@ export default function useCreateProveedor({
                       date: item.cumple,
                     })
                   : undefined,
+                id: undefined,
+                proveedor_id: undefined,
               })),
             },
           }

@@ -21,7 +21,7 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
-import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
+import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 import { Prisma } from '@prisma/client'
 import { useEffect } from 'react'
 

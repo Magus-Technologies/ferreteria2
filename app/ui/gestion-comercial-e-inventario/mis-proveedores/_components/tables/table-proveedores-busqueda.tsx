@@ -41,7 +41,7 @@ export default function TableProveedoresBusqueda({ value }: { value: string }) {
   })
 
   useEffect(() => {
-    if (value) refetch()
+    refetch()
   }, [value, refetch])
 
   const [open, setOpen] = useState(false)
@@ -60,7 +60,7 @@ export default function TableProveedoresBusqueda({ value }: { value: string }) {
         schema={ProveedorCreateInputSchema}
         loading={loading}
         columnDefs={useColumnsProveedores({ setDataEdit, setOpen })}
-        rowData={value ? response : []}
+        rowData={response || []}
         onSelectionChanged={({ selectedNodes }) =>
           setProveedorSeleccionado(
             selectedNodes?.[0]?.data as dataEditProveedor

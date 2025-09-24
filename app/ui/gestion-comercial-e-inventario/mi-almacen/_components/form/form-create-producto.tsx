@@ -14,7 +14,7 @@ import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import FormCodProducto from '../form/form-cod-producto'
 import { FormInstance } from 'antd'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
-import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
+import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 

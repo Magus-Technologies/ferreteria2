@@ -59,12 +59,12 @@ export default function ModalCreateProveedor({
     {
       key: '1',
       label: 'Datos Proveedor',
-      children: <FormCreateProveedor form={form} />,
+      children: <FormCreateProveedor form={form} dataEdit={dataEdit} />,
     },
     {
       key: '2',
       label: 'Vendedores',
-      children: <FormVendedoresProveedor form={form} />,
+      children: <FormVendedoresProveedor form={form} dataEdit={dataEdit} />,
     },
   ]
 

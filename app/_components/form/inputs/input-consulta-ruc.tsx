@@ -12,12 +12,14 @@ interface InputConsultaRucProps extends Omit<InputBaseProps, 'form'> {
   onSuccess?: (data: ConsultaDni | ConsultaRuc) => void
   form?: FormInstance
   nameWatch?: string | (string | number)[]
+  automatico?: boolean
 }
 
 export default function InputConsultaRuc({
   onSuccess,
   form,
   nameWatch,
+  automatico = true,
   ...props
 }: InputConsultaRucProps) {
   const { execute, loading } = useServerMutation({
@@ -37,8 +39,8 @@ export default function InputConsultaRuc({
   }, [ruc])
 
   useEffect(() => {
-    if (value) execute({ search: value })
-  }, [execute, value])
+    if (value && automatico) execute({ search: value })
+  }, [automatico, execute, value])
 
   return (
     <InputBase

@@ -84,6 +84,20 @@ export enum permissions {
   TIPO_INGRESO_SALIDA_CREATE = 'tipo-ingreso-salida.create',
   TIPO_INGRESO_SALIDA_UPDATE = 'tipo-ingreso-salida.update',
   TIPO_INGRESO_SALIDA_DELETE = 'tipo-ingreso-salida.delete',
+
+  // Usuarios
+  USUARIO_BASE = 'usuario',
+  USUARIO_LISTADO = 'usuario.listado',
+  USUARIO_CREATE = 'usuario.create',
+  USUARIO_UPDATE = 'usuario.update',
+  USUARIO_DELETE = 'usuario.delete',
+
+  // Compras
+  COMPRAS_BASE = 'compras',
+  COMPRAS_LISTADO = 'compras.listado',
+  COMPRAS_CREATE = 'compras.create',
+  COMPRAS_UPDATE = 'compras.update',
+  COMPRAS_DELETE = 'compras.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -98,6 +112,8 @@ type PermisosValidos = Exclude<
   | permissions.PROVEEDOR_BASE
   | permissions.INGRESO_SALIDA_BASE
   | permissions.TIPO_INGRESO_SALIDA_BASE
+  | permissions.USUARIO_BASE
+  | permissions.COMPRAS_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -169,6 +185,16 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.TIPO_INGRESO_SALIDA_UPDATE]:
     'Actualizar Tipo de Ingreso y Salida',
   [permissions.TIPO_INGRESO_SALIDA_DELETE]: 'Eliminar Tipo de Ingreso y Salida',
+
+  [permissions.USUARIO_LISTADO]: 'Ver Listado de Usuarios',
+  [permissions.USUARIO_CREATE]: 'Crear Usuario',
+  [permissions.USUARIO_UPDATE]: 'Actualizar Usuario',
+  [permissions.USUARIO_DELETE]: 'Eliminar Usuario',
+
+  [permissions.COMPRAS_LISTADO]: 'Ver Listado de Compras',
+  [permissions.COMPRAS_CREATE]: 'Crear Compra',
+  [permissions.COMPRAS_UPDATE]: 'Actualizar Compra',
+  [permissions.COMPRAS_DELETE]: 'Eliminar Compra',
 }
 
 export function getAllPermissions() {

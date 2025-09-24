@@ -2,7 +2,7 @@ import { FaFilePdf, FaImage } from 'react-icons/fa'
 import DraggerBase from '~/app/_components/form/inputs/dragger-base'
 import LabelBase from '~/components/form/label-base'
 import { toUploadFile, useBeforeUpload } from '~/utils/upload'
-import { useStoreArchivosProducto } from '../../store/store-archivos-producto'
+import { useStoreArchivosProducto } from '../../_store/store-archivos-producto'
 
 export default function FormArchivosProducto() {
   const beforeUpload = useBeforeUpload()

@@ -3,8 +3,8 @@
 import ButtonBase from '~/components/buttons/button-base'
 import ModalCreateProducto from '../modals/modal-create-producto'
 import { FaPlusCircle } from 'react-icons/fa'
-import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
-import { useStoreArchivosProducto } from '../../store/store-archivos-producto'
+import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
+import { useStoreArchivosProducto } from '../../_store/store-archivos-producto'
 
 export default function ButtonCreateProducto() {
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)

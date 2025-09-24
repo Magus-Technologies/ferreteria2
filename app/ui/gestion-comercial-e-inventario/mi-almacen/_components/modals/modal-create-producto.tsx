@@ -10,12 +10,12 @@ import type {
 } from '@prisma/client'
 import type { Dayjs } from 'dayjs'
 import TabsForm from '../tabs/tabs-form'
-import { useStoreArchivosProducto } from '../../store/store-archivos-producto'
+import { useStoreArchivosProducto } from '../../_store/store-archivos-producto'
 import useCreateProducto from '../../_hooks/use-create-producto'
-import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
+import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
 import { useEffect } from 'react'
 import { urlToFile } from '~/utils/upload'
-import { useStoreCodigoAutomatico } from '../../store/store-codigo-automatico'
+import { useStoreCodigoAutomatico } from '../../_store/store-codigo-automatico'
 
 export type UnidadDerivadaCreateProducto = Omit<
   ProductoAlmacenUnidadDerivada,

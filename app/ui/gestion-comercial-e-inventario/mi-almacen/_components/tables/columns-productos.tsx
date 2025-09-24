@@ -29,7 +29,7 @@ import { eliminarProducto } from '~/app/_actions/producto'
 import {
   productoEditOrCopy,
   useStoreEditOrCopyProducto,
-} from '../../store/store-edit-or-copy-producto'
+} from '../../_store/store-edit-or-copy-producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export type TableProductosProps = Producto & {

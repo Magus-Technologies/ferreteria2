@@ -13,9 +13,9 @@ import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { ProductoCreateInputSchema } from '~/prisma/generated/zod'
 import InputUploadMasivo from '../inputs/input-upload-masivo'
-import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
+import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { importarUbicaciones } from '~/app/_actions/ubicacion'
-import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
+import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 
 export default function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)

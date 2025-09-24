@@ -5,7 +5,7 @@ import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { Prisma, Proveedor } from '@prisma/client'
-import { FaBoxOpen, FaSearch } from 'react-icons/fa'
+import { FaSearch } from 'react-icons/fa'
 import { SearchProveedor } from '~/app/_actions/proveedor'
 import ButtonCreateProveedor from '../buttons/button-create-proveedor'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
@@ -13,11 +13,13 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalProveedorSearch from '../../modals/modal-proveedor-search'
 import { dataEditProveedor } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
+import { FaTruck } from 'react-icons/fa6'
 
 interface SelectProveedoresProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
   showButtonCreate?: boolean
+  classIconSearch?: string
 }
 
 export default function SelectProveedores({
@@ -26,6 +28,7 @@ export default function SelectProveedores({
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 18,
   showButtonCreate = false,
+  classIconSearch = '',
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
@@ -42,6 +45,9 @@ export default function SelectProveedores({
 
   const proveedorSeleccionadoStore = useStoreProveedorSeleccionado(
     store => store.proveedor
+  )
+  const setProveedorSeleccionadoStore = useStoreProveedorSeleccionado(
+    store => store.setProveedor
   )
 
   const { response, refetch } = useServerQuery({
@@ -90,7 +96,7 @@ export default function SelectProveedores({
         showSearch
         filterOption={false}
         onSearch={setText}
-        prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
+        prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
         options={[
@@ -121,7 +127,7 @@ export default function SelectProveedores({
         {...props}
       />
       <FaSearch
-        className={`text-yellow-600 mb-7 cursor-pointer z-10`}
+        className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
         onClick={() => setOpenModalProveedorSearch(true)}
       />
@@ -135,6 +141,7 @@ export default function SelectProveedores({
               refObject: selectProveedoresRef,
               value: proveedorSeleccionadoStore.id,
             })
+            setProveedorSeleccionadoStore(undefined)
             setOpenModalProveedorSearch(false)
           }
         }}

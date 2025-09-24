@@ -14,7 +14,7 @@ import { permissions } from '~/lib/permissions'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
 import { FormInstance } from 'antd'
-import { useStoreProductoSeleccionado } from '../../store/store-producto-seleccionado'
+import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { TipoDocumento } from '@prisma/client'
 
 export default function FormSelectUnidadDerivadaProducto({
@@ -152,7 +152,7 @@ export default function FormSelectUnidadDerivadaProducto({
         <SelectProveedores
           allowClear
           showButtonCreate={can(permissions.PROVEEDOR_CREATE)}
-          className='w-full'
+          className='w-full max-w-[420px]'
           classNameIcon='text-cyan-600 mx-1'
           propsForm={{
             name: 'proveedor_id',

@@ -7,8 +7,8 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
 import { useEffect, useRef } from 'react'
-import { useStoreEditOrCopyProducto } from '../../store/store-edit-or-copy-producto'
-import { useStoreCodigoAutomatico } from '../../store/store-codigo-automatico'
+import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
+import { useStoreCodigoAutomatico } from '../../_store/store-codigo-automatico'
 import useValidarCodigoProducto from '../../_hooks/use-validar-codigo-producto'
 
 interface FormCodProductoProps {

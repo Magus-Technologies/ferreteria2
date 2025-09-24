@@ -72,6 +72,11 @@ async function editarProveedorWA({
         ruc: true,
       },
     })
+    await prisma.vendedor.deleteMany({
+      where: {
+        proveedor_id: data.id,
+      },
+    })
     const item = await prisma.proveedor.update({
       where: {
         id: data.id,

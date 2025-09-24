@@ -6,6 +6,11 @@ enum TipoDocumento {
     Salida      @map("sa")
 }
 
+enum FormaDePago {
+    Contado @map("co")
+    Credito @map("cr")
+}
+
 model Compra {
     id Int @id @default(autoincrement())
 
@@ -13,6 +18,7 @@ model Compra {
     serie          String
     numero         Int
     descripcion    String?
+    forma_de_pago  FormaDePago   @default(Contado)
 
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -22,6 +28,9 @@ model Compra {
 
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
+
+    proveedor_id Int?
+    proveedor    Proveedor? @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
     productos_por_almacen ProductoAlmacenCompra[]
 

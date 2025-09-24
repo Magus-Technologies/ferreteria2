@@ -5,7 +5,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { getProductos } from '~/app/_actions/producto'
-import { useStoreFiltrosProductos } from '../../store/store-filtros-productos'
+import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 
 export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(state => state.filtros)

@@ -11,6 +11,7 @@ model Proveedor {
     IngresoSalida IngresoSalida[]
 
     vendedores Vendedor[]
+    compras    Compra[]
 }
 
 model Vendedor {

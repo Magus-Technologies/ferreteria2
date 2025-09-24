@@ -10,11 +10,14 @@ import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import { ConsultaDni } from '~/app/_types/consulta-ruc'
 import LabelBase from '~/components/form/label-base'
+import { dataEditProveedor } from '../modals/modal-create-proveedor'
 
 export default function FormVendedoresProveedor({
   form,
+  dataEdit,
 }: {
   form: FormInstance
+  dataEdit?: dataEditProveedor
 }) {
   return (
     <Form.List name='vendedores'>
@@ -53,6 +56,7 @@ export default function FormVendedoresProveedor({
                         },
                       ],
                     }}
+                    automatico={dataEdit ? false : true}
                     placeholder='DNI'
                     onSuccess={res => {
                       const dniData = res as ConsultaDni
