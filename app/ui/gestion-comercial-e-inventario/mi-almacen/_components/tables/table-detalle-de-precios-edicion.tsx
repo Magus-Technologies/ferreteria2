@@ -5,6 +5,7 @@ import TableWithTitle, {
 } from '~/components/tables/table-with-title'
 import { FormInstance, FormListFieldData } from 'antd'
 import { useColumnsDetalleDePreciosEdicion } from './columns-detalle-de-precios-edicion'
+import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 
 interface TableDetalleDePreciosEdicionProps
   extends Omit<
@@ -32,13 +33,7 @@ export default function TableDetalleDePreciosEdicion({
 }: TableDetalleDePreciosEdicionProps) {
   return (
     <>
-      <style>
-        {`.ag-cell-focus {
-          border: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }`}
-      </style>
+      <CellFocusWithoutStyle />
       <TableWithTitle
         {...rest}
         onRowDragEnd={event => {

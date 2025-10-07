@@ -18,7 +18,12 @@ export async function createCompraAfectaStock(
     > & {
       unidades_derivadas: (Omit<
         UnidadDerivadaInmutableCompra,
-        'id' | 'unidad_derivada_inmutable_id' | 'producto_almacen_compra_id'
+        | 'id'
+        | 'unidad_derivada_inmutable_id'
+        | 'producto_almacen_compra_id'
+        | 'cantidad_restante'
+        | 'bonificacion'
+        | 'flete'
       > & {
         name: UnidadDerivada['name']
       })[]
@@ -38,6 +43,7 @@ export async function createCompraAfectaStock(
             create: item.unidades_derivadas.map(unidad_derivada => ({
               factor: unidad_derivada.factor,
               cantidad: unidad_derivada.cantidad,
+              cantidad_restante: unidad_derivada.cantidad,
               lote: unidad_derivada.lote,
               vencimiento: unidad_derivada.vencimiento,
               unidad_derivada_inmutable: {
@@ -86,7 +92,12 @@ export async function createPrimeraCompra(
     > & {
       unidades_derivadas: (Omit<
         UnidadDerivadaInmutableCompra,
-        'id' | 'unidad_derivada_inmutable_id' | 'producto_almacen_compra_id'
+        | 'id'
+        | 'unidad_derivada_inmutable_id'
+        | 'producto_almacen_compra_id'
+        | 'cantidad_restante'
+        | 'bonificacion'
+        | 'flete'
       > & {
         name: UnidadDerivada['name']
       })[]
@@ -118,6 +129,7 @@ export async function createPrimeraCompra(
         tipo_documento: TipoDocumento.NotaDeVenta,
         serie: 'NTV1',
         numero: (ultima_compra?.numero ?? 0) + 1,
+        fecha: new Date(),
         descripcion: 'Stock inicial por creación de producto',
       },
       productos_por_almacen,

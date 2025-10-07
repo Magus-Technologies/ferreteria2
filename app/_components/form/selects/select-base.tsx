@@ -58,6 +58,7 @@ export default function SelectBase({
   onChange,
   form,
   optionFilterProp = 'label',
+  variant = 'filled',
   ...props
 }: SelectBaseProps) {
   const {
@@ -98,6 +99,7 @@ export default function SelectBase({
         onOpenChange={onOpenChange}
         onChange={onChange}
         optionFilterProp={optionFilterProp}
+        variant={variant}
         {...props}
       />
     </Form.Item>
@@ -113,6 +115,7 @@ export default function SelectBase({
       }}
       value={value}
       optionFilterProp={optionFilterProp}
+      variant={variant}
       {...props}
     />
   )

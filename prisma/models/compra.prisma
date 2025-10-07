@@ -7,18 +7,29 @@ enum TipoDocumento {
 }
 
 enum FormaDePago {
-    Contado @map("co")
-    Credito @map("cr")
+    Contado  @map("co")
+    Crédito @map("cr")
+}
+
+enum TipoMoneda {
+    Soles    @map("s")
+    Dólares @map("d")
 }
 
 model Compra {
     id Int @id @default(autoincrement())
 
-    tipo_documento TipoDocumento @default(NotaDeVenta)
-    serie          String
-    numero         Int
-    descripcion    String?
-    forma_de_pago  FormaDePago   @default(Contado)
+    tipo_documento    TipoDocumento @default(NotaDeVenta)
+    serie             String
+    numero            Int
+    descripcion       String?
+    forma_de_pago     FormaDePago   @default(Contado)
+    tipo_moneda       TipoMoneda    @default(Soles)
+    tipo_de_cambio    Decimal       @default(1) @db.Decimal(9, 4)
+    percepcion        Decimal       @default(0) @db.Decimal(9, 4)
+    numero_dias       Int?
+    fecha_vencimiento DateTime?
+    fecha             DateTime
 
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -34,7 +45,7 @@ model Compra {
 
     productos_por_almacen ProductoAlmacenCompra[]
 
-    @@unique([tipo_documento, serie, numero])
+    @@unique([serie, numero, proveedor_id])
     @@index([created_at])
 }
 
@@ -63,10 +74,15 @@ model UnidadDerivadaInmutableCompra {
     producto_almacen_compra_id Int
     producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    factor      Decimal   @db.Decimal(9, 3)
-    cantidad    Decimal   @db.Decimal(9, 3)
-    lote        String?
-    vencimiento DateTime?
+    factor            Decimal   @db.Decimal(9, 3)
+    cantidad          Decimal   @db.Decimal(9, 3)
+    cantidad_restante Decimal   @db.Decimal(9, 3)
+    lote              String?
+    vencimiento       DateTime?
+    flete             Decimal   @default(0) @db.Decimal(9, 4)
+    bonificacion      Boolean   @default(false)
+
+    @@unique([producto_almacen_compra_id, unidad_derivada_inmutable_id, bonificacion])
 }
 
 model UnidadDerivadaInmutable {

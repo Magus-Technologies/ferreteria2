@@ -3,7 +3,7 @@ import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
 
-export function toString({
+export function toLocalString({
   date,
   format = 'YYYY-MM-DD HH:mm:ss',
 }: {

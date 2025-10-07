@@ -52,7 +52,15 @@ export type FormCreateProductoFormatedProps = Omit<
   estado: boolean
 }
 
-export default function ModalCreateProducto() {
+export default function ModalCreateProducto({
+  onSuccess,
+  textDefault,
+  setTextDefault,
+}: {
+  onSuccess?: (res: Producto) => void
+  textDefault?: string
+  setTextDefault?: (text: string) => void
+}) {
   const [form] = Form.useForm<FormCreateProductoProps>()
 
   const open = useStoreEditOrCopyProducto(state => state.openModal)
@@ -63,6 +71,7 @@ export default function ModalCreateProducto() {
   const { crearProductoForm, loading } = useCreateProducto({
     setOpen,
     form,
+    onSuccess,
   })
 
   const setImgFile = useStoreArchivosProducto(state => state.setImgFile)
@@ -121,10 +130,19 @@ export default function ModalCreateProducto() {
         unidades_contenidas: 1,
         unidades_derivadas: [],
         estado: 1,
+        name: textDefault,
       })
       setDisabled(true)
     }
-  }, [form, producto, setFichaTecnicaFile, setImgFile, open, setDisabled])
+  }, [
+    form,
+    producto,
+    setFichaTecnicaFile,
+    setImgFile,
+    open,
+    setDisabled,
+    textDefault,
+  ])
 
   return (
     <ModalForm
@@ -145,6 +163,7 @@ export default function ModalCreateProducto() {
         setFichaTecnicaFile(undefined)
         setProducto(undefined)
         setDisabled(true)
+        setTextDefault?.('')
       }}
       open={open}
       setOpen={setOpen}

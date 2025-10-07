@@ -1,6 +1,8 @@
 'use client'
 
-import TableWithTitle from '~/components/tables/table-with-title'
+import TableWithTitle, {
+  TableWithTitleProps,
+} from '~/components/tables/table-with-title'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ProveedorCreateInputSchema } from '~/prisma/generated/zod'
@@ -13,7 +15,24 @@ import ModalCreateProveedor, {
 } from '../modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '../../store/store-proveedor-seleccionado'
 
-export default function TableProveedoresBusqueda({ value }: { value: string }) {
+interface TableProveedoresBusquedaProps
+  extends Omit<
+    TableWithTitleProps<dataEditProveedor>,
+    'id' | 'title' | 'onRowDoubleClicked'
+  > {
+  value: string
+  onRowDoubleClicked?: ({
+    data,
+  }: {
+    data: dataEditProveedor | undefined
+  }) => void
+}
+
+export default function TableProveedoresBusqueda({
+  value,
+  onRowDoubleClicked,
+  ...props
+}: TableProveedoresBusquedaProps) {
   const { response, refetch, loading } = useServerQuery({
     action: SearchProveedor,
     propsQuery: {
@@ -55,6 +74,7 @@ export default function TableProveedoresBusqueda({ value }: { value: string }) {
     <>
       <ModalCreateProveedor open={open} setOpen={setOpen} dataEdit={dataEdit} />
       <TableWithTitle<dataEditProveedor>
+        {...props}
         id='g-c-e-i.mi-almacen.proveedores'
         title='Proveedores'
         schema={ProveedorCreateInputSchema}
@@ -66,6 +86,10 @@ export default function TableProveedoresBusqueda({ value }: { value: string }) {
             selectedNodes?.[0]?.data as dataEditProveedor
           )
         }
+        onRowDoubleClicked={({ data }) => {
+          setProveedorSeleccionado(data)
+          onRowDoubleClicked?.({ data })
+        }}
         optionsSelectColumns={[
           {
             label: 'Default',

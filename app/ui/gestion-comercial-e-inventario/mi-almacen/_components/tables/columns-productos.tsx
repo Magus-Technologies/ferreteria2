@@ -72,8 +72,12 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         data,
       }: ICellRendererParams<TableProductosProps>) => {
         return (
-          <div className='flex items-center justify-between gap-2'>
-            {value}
+          <div className='flex items-center justify-between gap-2 pr-5'>
+            <Tooltip classNames={{ body: 'text-center!' }} title={value}>
+              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                {value}
+              </div>
+            </Tooltip>
             <Popover
               content={
                 data?.img ? (
@@ -89,7 +93,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
             >
               <FaImage
                 size={15}
-                className={`cursor-pointer ${
+                className={`cursor-pointer min-w-fit absolute right-0 ${
                   data?.img ? 'text-cyan-600' : 'text-gray-400'
                 }`}
               />
@@ -196,7 +200,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
     {
       headerName: 'Stock',
       field: 'producto_en_almacenes',
-      width: 80,
+      width: 90,
       filter: true,
       valueFormatter: ({
         value,
@@ -258,7 +262,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
             >
               <PiWarehouseFill
                 size={15}
-                className='text-cyan-600 cursor-pointer'
+                className='text-cyan-600 cursor-pointer min-w-fit'
               />
             </Popover>
           </div>

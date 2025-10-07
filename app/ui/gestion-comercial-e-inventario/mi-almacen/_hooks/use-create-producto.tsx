@@ -4,7 +4,7 @@ import {
   FormCreateProductoProps,
 } from '../_components/modals/modal-create-producto'
 import { createProducto, editarProducto } from '~/app/_actions/producto'
-import { toString } from '~/utils/fechas'
+import { toLocalString } from '~/utils/fechas'
 import { useStoreArchivosProducto } from '../_store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
@@ -18,9 +18,11 @@ import { useStoreFiltrosProductos } from '../_store/store-filtros-productos'
 export default function useCreateProducto({
   setOpen,
   form,
+  onSuccess,
 }: {
   setOpen: (value: boolean) => void
   form: FormInstance
+  onSuccess?: (res: Producto) => void
 }) {
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
@@ -94,6 +96,8 @@ export default function useCreateProducto({
         ...prev,
         marca_id: res.data?.marca_id,
       }))
+
+      onSuccess?.(res.data!)
     },
   })
 
@@ -110,7 +114,7 @@ export default function useCreateProducto({
       compra: {
         ...values.compra,
         vencimiento: values.compra?.vencimiento
-          ? toString({
+          ? toLocalString({
               date: values.compra.vencimiento,
             })
           : undefined,

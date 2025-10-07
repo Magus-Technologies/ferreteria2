@@ -89,6 +89,19 @@ export default function SelectProveedores({
     if (text) setTextDefault(text)
   }, [text])
 
+  function handleSelect({ data }: { data?: dataEditProveedor } = {}) {
+    const proveedor = data || proveedorSeleccionadoStore
+    if (proveedor) {
+      setProveedorSeleccionado(proveedor)
+      iterarChangeValue({
+        refObject: selectProveedoresRef,
+        value: proveedor.id,
+      })
+      setProveedorSeleccionadoStore(undefined)
+      setOpenModalProveedorSearch(false)
+    }
+  }
+
   return (
     <div className='flex items-center gap-4 w-full'>
       <SelectBase
@@ -134,18 +147,9 @@ export default function SelectProveedores({
       <ModalProveedorSearch
         open={openModalProveedorSearch}
         setOpen={setOpenModalProveedorSearch}
-        onOk={() => {
-          if (proveedorSeleccionadoStore) {
-            setProveedorSeleccionado(proveedorSeleccionadoStore)
-            iterarChangeValue({
-              refObject: selectProveedoresRef,
-              value: proveedorSeleccionadoStore.id,
-            })
-            setProveedorSeleccionadoStore(undefined)
-            setOpenModalProveedorSearch(false)
-          }
-        }}
+        onOk={() => handleSelect()}
         textDefault={textDefault}
+        onRowDoubleClicked={handleSelect}
       />
       {showButtonCreate && (
         <ButtonCreateProveedor

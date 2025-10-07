@@ -11,7 +11,6 @@ import SelectTiposIngresoSalida from '~/app/_components/form/selects/select-tipo
 import LabelBase from '~/components/form/label-base'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import { useStoreAlmacen } from '~/store/store-almacen'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
 import { FormInstance } from 'antd'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
@@ -34,11 +33,8 @@ export default function FormSelectUnidadDerivadaProducto({
   const [producto, setProducto] = useState<ProductoSelect | undefined>(
     productoSeleccionado
   )
-  const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const producto_en_almacen = producto?.producto_en_almacenes?.find(
-    item => item.almacen_id === almacen_id
-  )
+  const producto_en_almacen = producto?.producto_en_almacenes[0]
   const unidades_derivadas = producto_en_almacen?.unidades_derivadas
 
   const [factor, setFactor] = useState(0)

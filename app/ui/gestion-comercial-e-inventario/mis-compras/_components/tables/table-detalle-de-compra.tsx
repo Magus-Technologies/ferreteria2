@@ -4,7 +4,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
 import { useStoreCompraSeleccionada } from '../../_store/store-compra-seleccionada'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   TableDetalleDeCompraProps,
   useColumnsDetalleDeCompra,
@@ -14,6 +14,14 @@ export default function TableDetalleDeCompra() {
   const tableRef = useRef<AgGridReact>(null)
 
   const compraSeleccionada = useStoreCompraSeleccionada(store => store.compra)
+  const setCompraSeleccionada = useStoreCompraSeleccionada(
+    store => store.setCompra
+  )
+
+  useEffect(() => {
+    setCompraSeleccionada(undefined)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <TableWithTitle<TableDetalleDeCompraProps>
@@ -44,6 +52,7 @@ export default function TableDetalleDeCompra() {
         compraSeleccionada?.productos_por_almacen?.flatMap(ppa =>
           ppa.unidades_derivadas.map(ud => ({
             ...ud,
+            costo: ppa.costo,
             producto_almacen: ppa.producto_almacen,
           }))
         ) ?? []

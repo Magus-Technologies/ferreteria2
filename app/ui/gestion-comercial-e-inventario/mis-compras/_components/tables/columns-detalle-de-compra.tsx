@@ -5,7 +5,7 @@ import { TableComprasProps } from './columns-compras'
 
 export type TableDetalleDeCompraProps = Pick<
   TableComprasProps['productos_por_almacen'][number],
-  'producto_almacen'
+  'producto_almacen' | 'costo'
 > &
   TableComprasProps['productos_por_almacen'][number]['unidades_derivadas'][number]
 
@@ -14,8 +14,8 @@ export function useColumnsDetalleDeCompra() {
     {
       headerName: 'Cod. Producto',
       field: 'producto_almacen',
-      width: 130,
-      minWidth: 130,
+      width: 70,
+      minWidth: 70,
       filter: true,
       valueFormatter: ({
         value,
@@ -28,15 +28,19 @@ export function useColumnsDetalleDeCompra() {
     {
       headerName: 'Producto',
       field: 'producto_almacen',
-      width: 130,
-      minWidth: 130,
+      width: 200,
+      minWidth: 200,
       filter: true,
       valueFormatter: ({
         value,
+        data,
       }: {
         value: TableDetalleDeCompraProps['producto_almacen']
+        data: TableDetalleDeCompraProps | undefined
       }) => {
-        return value.producto.name
+        return data?.bonificacion
+          ? `🎁 ${value.producto.name} (Bonificación)`
+          : value.producto.name
       },
       flex: 1,
     },
@@ -55,47 +59,69 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
-      headerName: 'Unidad de Medida',
-      field: 'producto_almacen',
-      width: 130,
-      minWidth: 130,
+      headerName: 'Unidad Derivada',
+      field: 'unidad_derivada_inmutable',
+      width: 80,
+      minWidth: 80,
       filter: true,
       valueFormatter: ({
         value,
       }: {
-        value: TableDetalleDeCompraProps['producto_almacen']
+        value: TableDetalleDeCompraProps['unidad_derivada_inmutable']
       }) => {
-        return value.producto.unidad_medida.name
+        return value.name
       },
     },
     {
       headerName: 'Cantidad',
       field: 'cantidad',
-      width: 80,
-      minWidth: 80,
+      width: 50,
+      minWidth: 50,
       filter: 'agNumberColumnFilter',
     },
     {
       headerName: 'P. Compra',
-      field: 'producto_almacen.costo',
-      width: 80,
-      minWidth: 80,
+      field: 'costo',
+      width: 90,
+      minWidth: 90,
       filter: 'agNumberColumnFilter',
       type: 'pen4',
+      valueFormatter: ({
+        data,
+      }: {
+        data: TableDetalleDeCompraProps | undefined
+      }) =>
+        data?.bonificacion
+          ? '0'
+          : String(Number(data?.costo ?? 0) * Number(data?.factor ?? 1)),
     },
     {
       headerName: 'Importe',
       field: 'producto_almacen',
-      width: 80,
-      minWidth: 80,
+      width: 90,
+      minWidth: 90,
       filter: 'agNumberColumnFilter',
+      type: 'pen4',
+      valueFormatter: ({
+        data,
+      }: {
+        data: TableDetalleDeCompraProps | undefined
+      }) =>
+        data?.bonificacion
+          ? '0'
+          : String(
+              Number(data?.costo ?? 0) *
+                Number(data?.factor ?? 1) *
+                Number(data?.cantidad ?? 0)
+            ),
     },
     {
       headerName: 'F. Vencimiento',
       field: 'vencimiento',
-      width: 80,
-      minWidth: 80,
+      width: 90,
+      minWidth: 90,
       filter: 'agDateColumnFilter',
+      type: 'date',
     },
     {
       headerName: 'Lote',

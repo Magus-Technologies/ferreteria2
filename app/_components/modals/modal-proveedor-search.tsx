@@ -6,12 +6,19 @@ import { useEffect, useState } from 'react'
 import ButtonCreateProveedor from '../form/buttons/button-create-proveedor'
 import { useDebounce } from 'use-debounce'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
+import { dataEditProveedor } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/modals/modal-create-proveedor'
 
 type ModalProveedorSearchProps = {
   open: boolean
   setOpen: (open: boolean) => void
   onOk: ModalProps['onOk']
   textDefault: string
+
+  onRowDoubleClicked?: ({
+    data,
+  }: {
+    data: dataEditProveedor | undefined
+  }) => void
 }
 
 export default function ModalProveedorSearch({
@@ -19,6 +26,7 @@ export default function ModalProveedorSearch({
   setOpen,
   onOk,
   textDefault,
+  onRowDoubleClicked,
 }: ModalProveedorSearchProps) {
   const [text, setText] = useState(textDefault)
   useEffect(() => {
@@ -72,7 +80,10 @@ export default function ModalProveedorSearch({
         />
       </div>
       <div className='h-[500px] min-w-[1000px] w-full mt-4'>
-        <TableProveedoresBusqueda value={value} />
+        <TableProveedoresBusqueda
+          value={value}
+          onRowDoubleClicked={onRowDoubleClicked}
+        />
       </div>
     </Modal>
   )

@@ -4,6 +4,25 @@ import { ProductoSelect } from '~/app/_components/form/selects/select-productos'
 import { getStock } from '~/app/_utils/get-stock'
 import { TipoDocumento } from '@prisma/client'
 
+export function calcularNuevoStock({
+  stock_fraccion,
+  cantidad,
+  factor,
+  tipo = TipoDocumento.Ingreso,
+}: {
+  stock_fraccion: number
+  cantidad: number
+  factor: number
+  tipo?: TipoDocumento
+}) {
+  return (
+    Number(stock_fraccion ?? 0) +
+    Number(cantidad ?? 0) *
+      Number(factor) *
+      (tipo === TipoDocumento.Ingreso ? 1 : -1)
+  )
+}
+
 export default function StockIngresoSalida({
   factor,
   producto_en_almacen,
@@ -45,11 +64,14 @@ export default function StockIngresoSalida({
         >
           {
             getStock({
-              stock_fraccion:
-                Number(producto_en_almacen?.stock_fraccion ?? 0) +
-                Number(cantidad ?? 0) *
-                  Number(factor) *
-                  (tipo === TipoDocumento.Ingreso ? 1 : -1),
+              stock_fraccion: calcularNuevoStock({
+                stock_fraccion: Number(
+                  producto_en_almacen?.stock_fraccion ?? 0
+                ),
+                cantidad,
+                factor,
+                tipo,
+              }),
               unidades_contenidas,
             }).stock
           }

@@ -7,6 +7,8 @@ import {
 import useFilterBoolean from './use-filter-boolean'
 import TagBoolean from '~/components/tags/tag-boolean'
 import { ValorBooleanoString } from '~/lib/constantes'
+import { toLocalString } from '~/utils/fechas'
+import dayjs from 'dayjs'
 
 export const doesFilterPass: ({
   model,
@@ -115,6 +117,15 @@ export default function useColumnTypes() {
               maximumFractionDigits: 2,
             })}%`
       },
+    },
+    date: {
+      valueFormatter: ({ value }) =>
+        value
+          ? toLocalString({
+              date: dayjs(value),
+              format: 'YYYY-MM-DD',
+            })!
+          : '-',
     },
   }
 

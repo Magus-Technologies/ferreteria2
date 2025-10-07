@@ -3,8 +3,6 @@
 import { Form } from 'antd'
 import { FaPlusCircle, FaSearch } from 'react-icons/fa'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
-import { CSComision } from '~/app/_components/form/selects/select-c-s-comision'
-import { CSStock } from '~/app/_components/form/selects/select-c-s-stock'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
@@ -19,7 +17,14 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { FormaDePago, TipoDocumento } from '@prisma/client'
-import { toString } from '~/utils/fechas'
+import { toLocalString } from '~/utils/fechas'
+import { useRouter } from 'next/navigation'
+import dayjs from 'dayjs'
+import { useEffect } from 'react'
+import { useStoreAlmacen } from '~/store/store-almacen'
+import SelectEstadoDeCuenta, {
+  EstadoDeCuenta,
+} from '~/app/_components/form/selects/select-estado-de-cuenta'
 
 interface ValuesFiltersMisCompras {
   almacen_id: number
@@ -29,30 +34,49 @@ interface ValuesFiltersMisCompras {
   forma_de_pago?: FormaDePago
   tipo_documento?: TipoDocumento
   user_id?: string
+  estado_de_cuenta?: EstadoDeCuenta
 }
 
 export default function FiltersMisCompras() {
   const [form] = Form.useForm<ValuesFiltersMisCompras>()
 
+  const almacen_id = useStoreAlmacen(state => state.almacen_id)
+
+  const router = useRouter()
+
   const setFiltros = useStoreFiltrosMisCompras(state => state.setFiltros)
+
+  useEffect(() => {
+    const data = {
+      almacen_id,
+      forma_de_pago: FormaDePago.Contado,
+      created_at: {
+        gte: toLocalString({ date: dayjs().startOf('day') }),
+        lte: toLocalString({ date: dayjs().endOf('day') }),
+      },
+    } satisfies Prisma.CompraWhereInput
+    setFiltros(data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <FormBase
       form={form}
       name='filtros-mi-almacen'
       initialValues={{
-        estado: 1,
-        cs_stock: CSStock.ALL,
-        cs_comision: CSComision.ALL,
+        forma_de_pago: FormaDePago.Contado,
+        desde: dayjs().startOf('day'),
+        hasta: dayjs().endOf('day'),
       }}
       className='w-full'
       onFinish={values => {
         const { desde, hasta, ...rest } = values
+        delete rest.estado_de_cuenta
         const data = {
           ...rest,
           created_at: {
-            gte: desde ? toString({ date: desde }) : undefined,
-            lte: hasta ? toString({ date: hasta }) : undefined,
+            gte: desde ? toLocalString({ date: desde }) : undefined,
+            lte: hasta ? toLocalString({ date: hasta }) : undefined,
           },
         } satisfies Prisma.CompraWhereInput
         setFiltros(data)
@@ -68,6 +92,11 @@ export default function FiltersMisCompras() {
               size='lg'
               type='button'
               className='flex items-center gap-2 w-fit'
+              onClick={() =>
+                router.push(
+                  '/ui/gestion-comercial-e-inventario/mis-compras/crear-compra'
+                )
+              }
             >
               <FaPlusCircle />
               Crear Compra
@@ -168,7 +197,19 @@ export default function FiltersMisCompras() {
             propsForm={{
               name: 'user_id',
               hasFeedback: false,
-              className: '!min-w-[200px] !w-[200px] !max-w-[200px]',
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+            allowClear
+          />
+        </LabelBase>
+        <LabelBase label='Estado de Cuenta:'>
+          <SelectEstadoDeCuenta
+            propsForm={{
+              name: 'estado_de_cuenta',
+              hasFeedback: false,
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
             }}
             className='w-full'
             formWithMessage={false}
