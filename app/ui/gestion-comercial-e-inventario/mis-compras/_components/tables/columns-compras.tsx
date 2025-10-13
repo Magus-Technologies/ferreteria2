@@ -89,10 +89,7 @@ export function useColumnsCompras() {
         value,
       }: {
         value: TableComprasProps['productos_por_almacen']
-      }) =>
-        String(
-          Number(getSubTotal(value)) - Number(getSubTotal(value)) / (IGV + 1)
-        ),
+      }) => String(Number(getSubTotal(value)) / (IGV + 1)),
       type: 'pen',
     },
     {
@@ -104,7 +101,10 @@ export function useColumnsCompras() {
         value,
       }: {
         value: TableComprasProps['productos_por_almacen']
-      }) => String(Number(getSubTotal(value)) / (IGV + 1)),
+      }) =>
+        String(
+          Number(getSubTotal(value)) - Number(getSubTotal(value)) / (IGV + 1)
+        ),
       filter: 'agNumberColumnFilter',
       type: 'pen',
     },

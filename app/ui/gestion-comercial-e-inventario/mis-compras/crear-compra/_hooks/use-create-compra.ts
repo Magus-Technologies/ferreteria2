@@ -77,8 +77,7 @@ export default function useCreateCompra() {
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const { execute, loading } = useServerMutation({
     action: createCompra,
-    onSuccess: async res => {
-      console.log('🚀 ~ file: use-create-compra.ts:17 ~ res:', res)
+    onSuccess: async () => {
       router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
     },
     msgSuccess: 'Compra creada exitosamente',

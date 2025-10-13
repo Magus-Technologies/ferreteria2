@@ -29,29 +29,37 @@ export default function HeaderCrearCompra() {
     <TituloModulos
       title='Crear Compra'
       icon={<TbShoppingCartPlus className='text-cyan-600' />}
+      extra={
+        <div className='pl-8 flex items-center gap-4'>
+          <SelectProductos
+            allowClear
+            size='large'
+            className='!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!'
+            classNameIcon='text-cyan-600 mx-1'
+            classIconSearch='!mb-0'
+            classIconPlus='mb-0!'
+            showButtonCreate={can(permissions.PRODUCTO_CREATE)}
+            withSearch
+            withTipoBusqueda
+            handleOnlyOneResult={producto => {
+              setProductoSeleccionadoSearchStore(
+                producto as TableProductosProps
+              )
+              if (producto) setOpenModalAgregarProducto(true)
+            }}
+            onChange={(_, producto) => {
+              setProductoSeleccionadoSearchStore(
+                producto as TableProductosProps
+              )
+              if (producto) setOpenModalAgregarProducto(true)
+            }}
+          />
+        </div>
+      }
     >
       <div className='flex items-center gap-4'>
-        <SelectAlmacen className='w-full mr-8!' />
+        <SelectAlmacen className='w-full' />
 
-        <SelectProductos
-          allowClear
-          size='large'
-          className='!min-w-[400px] !w-[400px] !max-w-[400px]'
-          classNameIcon='text-cyan-600 mx-1'
-          classIconSearch='!mb-0'
-          classIconPlus='mb-0!'
-          showButtonCreate={can(permissions.PRODUCTO_CREATE)}
-          withSearch
-          withTipoBusqueda
-          handleOnlyOneResult={producto => {
-            setProductoSeleccionadoSearchStore(producto as TableProductosProps)
-            if (producto) setOpenModalAgregarProducto(true)
-          }}
-          onChange={(_, producto) => {
-            setProductoSeleccionadoSearchStore(producto as TableProductosProps)
-            if (producto) setOpenModalAgregarProducto(true)
-          }}
-        />
         <Modal
           open={openModalAgregarProducto}
           onCancel={() => setOpenModalAgregarProducto(false)}

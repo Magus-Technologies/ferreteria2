@@ -15,7 +15,7 @@ export interface DatePickerBaseProps extends DatePickerProps {
 function Base({
   nextInEnter,
   nextWithPrevent,
-  onKeyDown,
+  onKeyUp,
   onOpenChange,
   className = '!w-full',
   format = 'DD/MM/YYYY',
@@ -31,13 +31,13 @@ function Base({
         setOpen(open)
         onOpenChange?.(open)
       }}
-      onKeyDown={e => {
+      onKeyUp={e => {
         if (e.key === 'Enter' && nextInEnter) {
           if (!open) return
           if (nextWithPrevent) e.preventDefault()
           focusNext()
         }
-        onKeyDown?.(e, () => {})
+        onKeyUp?.(e)
       }}
     />
   )
@@ -46,7 +46,7 @@ function Base({
 export default function DatePickerBase({
   nextInEnter = true,
   nextWithPrevent = true,
-  onKeyDown,
+  onKeyUp,
   onOpenChange,
   formWithMessage = true,
   propsForm,
@@ -64,13 +64,13 @@ export default function DatePickerBase({
       <Base
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
-        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         className={className}
         onOpenChange={onOpenChange}
         {...props}
       />
     ),
-    [nextInEnter, nextWithPrevent, onKeyDown, onOpenChange, className, props]
+    [nextInEnter, nextWithPrevent, onKeyUp, onOpenChange, className, props]
   )
 
   return propsForm ? (

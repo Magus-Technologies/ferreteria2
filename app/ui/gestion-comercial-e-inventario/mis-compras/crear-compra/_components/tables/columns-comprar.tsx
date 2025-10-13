@@ -21,10 +21,49 @@ export function useColumnsComprar({
 
   const columns: ColDef<FormListFieldData>[] = [
     {
+      headerName: 'Código',
+      field: 'name',
+      minWidth: 70,
+      width: 70,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        return (
+          <div className='flex items-center h-full'>
+            <Tooltip
+              classNames={{ body: 'text-center!' }}
+              title={form.getFieldValue([
+                'productos',
+                value,
+                'producto_codigo',
+              ])}
+            >
+              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                {form.getFieldValue(['productos', value, 'producto_codigo'])}
+              </div>
+            </Tooltip>
+            <InputBase
+              propsForm={{
+                name: [value, 'producto_codigo'],
+                rules: [
+                  {
+                    required: true,
+                    message: '',
+                  },
+                ],
+                hidden: true,
+              }}
+              readOnly
+              variant='borderless'
+              formWithMessage={false}
+            />
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'Producto',
       field: 'name',
-      minWidth: 300,
-      width: 300,
+      minWidth: 250,
+      width: 250,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
@@ -85,11 +124,19 @@ export function useColumnsComprar({
     {
       headerName: 'Marca',
       field: 'name',
-      minWidth: 180,
-      width: 180,
+      minWidth: 120,
+      width: 120,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
+            <Tooltip
+              classNames={{ body: 'text-center!' }}
+              title={form.getFieldValue(['productos', value, 'marca_name'])}
+            >
+              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                {form.getFieldValue(['productos', value, 'marca_name'])}
+              </div>
+            </Tooltip>
             <InputBase
               propsForm={{
                 name: [value, 'marca_name'],
@@ -99,6 +146,7 @@ export function useColumnsComprar({
                     message: '',
                   },
                 ],
+                hidden: true,
               }}
               readOnly
               variant='borderless'
@@ -111,11 +159,27 @@ export function useColumnsComprar({
     {
       headerName: 'Unidad Derivada',
       field: 'name',
-      minWidth: 120,
-      width: 120,
+      minWidth: 90,
+      width: 90,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
+            <Tooltip
+              classNames={{ body: 'text-center!' }}
+              title={form.getFieldValue([
+                'productos',
+                value,
+                'unidad_derivada_name',
+              ])}
+            >
+              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                {form.getFieldValue([
+                  'productos',
+                  value,
+                  'unidad_derivada_name',
+                ])}
+              </div>
+            </Tooltip>
             <InputNumberBase
               propsForm={{
                 name: [value, 'unidad_derivada_id'],
@@ -151,6 +215,7 @@ export function useColumnsComprar({
                     message: '',
                   },
                 ],
+                hidden: true,
               }}
               readOnly
               variant='borderless'

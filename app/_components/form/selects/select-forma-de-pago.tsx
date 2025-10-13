@@ -17,7 +17,6 @@ export default function SelectFormaDePago({
   return (
     <SelectBase
       {...props}
-      defaultValue={FormaDePago.Contado}
       prefix={<FaMoneyCheck className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}

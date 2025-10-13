@@ -18,7 +18,7 @@ function Base({
   nextInEnter = true,
   nextWithPrevent = true,
   onInput,
-  onKeyDown,
+  onKeyUp,
   autoComplete = 'off',
   variant = 'filled',
   ...props
@@ -41,12 +41,12 @@ function Base({
         onInput?.(e)
       }}
       autoComplete={autoComplete}
-      onKeyDown={e => {
+      onKeyUp={e => {
         if (e.key === 'Enter' && nextInEnter) {
           if (nextWithPrevent) e.preventDefault()
           focusNext()
         }
-        onKeyDown?.(e)
+        onKeyUp?.(e)
       }}
     />
   )
@@ -57,7 +57,7 @@ export default function InputBase({
   nextInEnter = true,
   nextWithPrevent = true,
   onInput,
-  onKeyDown,
+  onKeyUp,
   autoComplete = 'off',
   variant = 'filled',
   formWithMessage = true,
@@ -77,7 +77,7 @@ export default function InputBase({
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
         onInput={onInput}
-        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         autoComplete={autoComplete}
         variant={variant}
         {...props}
@@ -88,7 +88,7 @@ export default function InputBase({
       nextInEnter,
       nextWithPrevent,
       onInput,
-      onKeyDown,
+      onKeyUp,
       autoComplete,
       variant,
       props,

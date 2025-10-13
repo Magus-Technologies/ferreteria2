@@ -1,15 +1,11 @@
 'use client'
 
-import { useServerQuery } from '~/hooks/use-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
-import { useDebounce } from 'use-debounce'
-import { Prisma, Proveedor } from '@prisma/client'
+import { Proveedor } from '@prisma/client'
 import { FaSearch } from 'react-icons/fa'
-import { SearchProveedor } from '~/app/_actions/proveedor'
 import ButtonCreateProveedor from '../buttons/button-create-proveedor'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalProveedorSearch from '../../modals/modal-proveedor-search'
 import { dataEditProveedor } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
@@ -37,8 +33,6 @@ export default function SelectProveedores({
   const [openModalProveedorSearch, setOpenModalProveedorSearch] =
     useState(false)
 
-  const [value] = useDebounce(text, 1000)
-
   const [proveedorCreado, setProveedorCreado] = useState<Proveedor>()
   const [proveedorSeleccionado, setProveedorSeleccionado] =
     useState<dataEditProveedor>()
@@ -50,46 +44,13 @@ export default function SelectProveedores({
     store => store.setProveedor
   )
 
-  const { response, refetch } = useServerQuery({
-    action: SearchProveedor,
-    propsQuery: {
-      queryKey: [QueryKeys.PROVEEDORES_SEARCH],
-      enabled: !!value,
-    },
-    params: {
-      where: {
-        OR: [
-          {
-            razon_social: {
-              contains: value,
-              mode: 'insensitive',
-            },
-          },
-          {
-            ruc: {
-              contains: value,
-              mode: 'insensitive',
-            },
-          },
-        ],
-      },
-    } satisfies Prisma.ProveedorFindManyArgs,
-  })
-
-  useEffect(() => {
-    if (value) {
-      setProveedorCreado(undefined)
-      setProveedorSeleccionado(undefined)
-      refetch()
-    }
-  }, [value, refetch])
-
   const [textDefault, setTextDefault] = useState('')
   useEffect(() => {
     if (text) setTextDefault(text)
   }, [text])
 
   function handleSelect({ data }: { data?: dataEditProveedor } = {}) {
+    setText('')
     const proveedor = data || proveedorSeleccionadoStore
     if (proveedor) {
       setProveedorSeleccionado(proveedor)
@@ -109,14 +70,11 @@ export default function SelectProveedores({
         showSearch
         filterOption={false}
         onSearch={setText}
+        searchValue={text}
         prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
         options={[
-          ...(response?.map(item => ({
-            value: item.id,
-            label: `${item.ruc} : ${item.razon_social}`,
-          })) || []),
           ...(proveedorCreado
             ? [
                 {
@@ -137,6 +95,10 @@ export default function SelectProveedores({
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
         )}
+        onKeyUp={e => {
+          if (e.key === 'Enter') setOpenModalProveedorSearch(true)
+        }}
+        open={false}
         {...props}
       />
       <FaSearch

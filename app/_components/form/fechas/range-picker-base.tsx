@@ -18,7 +18,7 @@ export interface RangePickerBaseProps extends RangePickerProps {
 function Base({
   nextInEnter,
   nextWithPrevent,
-  onKeyDown,
+  onKeyUp,
   onOpenChange,
   format = 'DD/MM/YYYY',
   presets = presetsRangePicker,
@@ -34,13 +34,13 @@ function Base({
         setOpen(open)
         onOpenChange?.(open)
       }}
-      onKeyDown={e => {
+      onKeyUp={e => {
         if (e.key === 'Enter' && nextInEnter) {
           if (!open) return
           if (nextWithPrevent) e.preventDefault()
           focusNext()
         }
-        onKeyDown?.(e, () => {})
+        onKeyUp?.(e)
       }}
     />
   )
@@ -49,7 +49,7 @@ function Base({
 export default function RangePickerBase({
   nextInEnter = true,
   nextWithPrevent = true,
-  onKeyDown,
+  onKeyUp,
   onOpenChange,
   formWithMessage = true,
   propsForm,
@@ -66,12 +66,12 @@ export default function RangePickerBase({
       <Base
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
-        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         onOpenChange={onOpenChange}
         {...props}
       />
     ),
-    [nextInEnter, nextWithPrevent, onKeyDown, onOpenChange, props]
+    [nextInEnter, nextWithPrevent, onKeyUp, onOpenChange, props]
   )
 
   return propsForm ? (

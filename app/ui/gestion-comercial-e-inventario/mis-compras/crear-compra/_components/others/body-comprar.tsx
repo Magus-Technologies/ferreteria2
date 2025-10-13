@@ -34,6 +34,7 @@ export interface FormCreateCompra {
     subtotal: number
     marca_name?: Marca['name']
     producto_name?: Producto['name']
+    producto_codigo?: Producto['cod_producto']
     unidad_derivada_name: UnidadDerivada['name']
     unidad_derivada_factor: ProductoAlmacenUnidadDerivada['factor']
 

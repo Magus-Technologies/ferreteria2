@@ -7,6 +7,7 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import LabelBase from '~/components/form/label-base'
+import dayjs from 'dayjs'
 
 export default function FormFormaDePagoCompra({
   form,
@@ -58,6 +59,14 @@ export default function FormFormaDePagoCompra({
           precision={0}
           min={0}
           disabled={formaDePago === FormaDePago.Contado}
+          onChange={val => {
+            if (!val) form.setFieldValue('fecha_vencimiento', undefined)
+            else
+              form.setFieldValue(
+                'fecha_vencimiento',
+                dayjs().add(Number(val), 'days')
+              )
+          }}
         />
       </LabelBase>
       <LabelBase
@@ -86,6 +95,14 @@ export default function FormFormaDePagoCompra({
             />
           }
           disabled={formaDePago === FormaDePago.Contado}
+          onChange={val => {
+            if (!val) form.setFieldValue('numero_dias', undefined)
+            else
+              form.setFieldValue(
+                'numero_dias',
+                val.diff(dayjs().startOf('day'), 'days')
+              )
+          }}
         />
       </LabelBase>
     </>

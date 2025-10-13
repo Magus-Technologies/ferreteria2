@@ -1,9 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useServerQuery } from '~/hooks/use-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
-import { useDebounce } from 'use-debounce'
 import {
   Marca,
   Prisma,
@@ -121,7 +121,6 @@ export default function SelectProductos({
 
   useEffect(() => {
     setProductoSeleccionadoSearchStore(undefined)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const [openModalProductoSearch, setOpenModalProductoSearch] = useState(false)
@@ -135,21 +134,20 @@ export default function SelectProductos({
   const [tipoBusqueda, setTipoBusqueda] = useState<TipoBusquedaProducto>(
     TipoBusquedaProducto.CODIGO_DESCRIPCION
   )
-  const [value] = useDebounce(text, 1000)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
   const [productoCreado, setProductoCreado] = useState<Producto>()
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<ProductoSelect>()
 
-  const { response, refetch } = useServerQuery({
+  const { response, refetch, loading } = useServerQuery({
     action: SearchProductos,
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS_SEARCH],
-      enabled: !!value,
+      enabled: !!text,
     },
     params: {
-      where: { ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value }) },
+      where: { ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value: text }) },
       select: {
         id: true,
         name: true,
@@ -180,19 +178,22 @@ export default function SelectProductos({
     } satisfies Prisma.ProductoFindManyArgs,
   })
 
-  useEffect(() => {
-    if (value) {
+  function handleSearch() {
+    if (text) {
       setProductoCreado(undefined)
       setProductoSeleccionado(undefined)
       refetch()
     }
-  }, [value, refetch, tipoBusqueda])
+  }
+
+  useEffect(() => {
+    handleSearch()
+  }, [tipoBusqueda])
 
   useEffect(() => {
     if (response?.length === 1)
       handleOnlyOneResult?.(response[0] as unknown as ProductoSelect)
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    else if ((response?.length ?? 0) > 1) setOpenModalProductoSearch(true)
   }, [response])
 
   function handleSelect({ data }: { data?: ProductoSelect } = {}) {
@@ -229,6 +230,7 @@ export default function SelectProductos({
         filterOption={false}
         onSearch={setText}
         prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
+        loading={loading}
         variant={variant}
         placeholder={
           placeholder ||
@@ -266,6 +268,10 @@ export default function SelectProductos({
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
         )}
+        onKeyUp={e => {
+          if (e.key === 'Enter') handleSearch()
+        }}
+        open={false}
         {...props}
       />
       {withSearch && (

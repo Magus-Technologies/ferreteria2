@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FaBoxes, FaPlusCircle } from 'react-icons/fa'
 import {
   FaMoneyBill,
@@ -11,7 +11,9 @@ import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
-import SelectBase from '~/app/_components/form/selects/select-base'
+import SelectBase, {
+  RefSelectBaseProps,
+} from '~/app/_components/form/selects/select-base'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
@@ -94,6 +96,7 @@ export default function CardAgregarProductoCompra({
       ...values,
       producto_id: productoSeleccionadoSearchStore?.id,
       producto_name: productoSeleccionadoSearchStore?.name,
+      producto_codigo: productoSeleccionadoSearchStore?.cod_producto,
       marca_name: productoSeleccionadoSearchStore?.marca?.name,
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name,
       unidad_derivada_factor: unidad_derivada?.factor,
@@ -110,20 +113,43 @@ export default function CardAgregarProductoCompra({
     handleChange(null, 'unidad_derivada_id')
   }, [unidades_derivadas])
 
+  const cantidadRef = useRef<HTMLInputElement>(null)
+  const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
+  const precio_compraRef = useRef<HTMLInputElement>(null)
+  const buttom_masRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    cantidadRef.current?.focus()
+  }, [productoSeleccionadoSearchStore])
+  useEffect(() => {
+    unidad_derivadaRef.current?.changeValue(
+      unidades_derivadas?.[0].unidad_derivada.id
+    )
+    setValues(prev => ({
+      ...prev,
+      unidad_derivada_id: unidades_derivadas?.[0].unidad_derivada.id,
+    }))
+  }, [unidades_derivadas])
+
   return (
     <div className='flex flex-col gap-2'>
       <LabelBase label='Cantidad:' orientation='column'>
         <InputNumberBase
+          ref={cantidadRef}
           placeholder='Cantidad'
           precision={2}
           prefix={<FaBoxes size={15} className='text-rose-700 mx-1' />}
           onChange={value => handleChange(value, 'cantidad')}
           value={values.cantidad}
           min={0}
+          nextInEnter={false}
+          onKeyUp={e => {
+            if (e.key === 'Enter') precio_compraRef.current?.focus()
+          }}
         />
       </LabelBase>
       <LabelBase label='Unidad Derivada:' orientation='column'>
         <SelectBase
+          ref={unidad_derivadaRef}
           placeholder='Unidad Derivada'
           prefix={<FaWeightHanging size={15} className='text-rose-700 mx-1' />}
           onChange={value => handleChange(value, 'unidad_derivada_id')}
@@ -139,6 +165,7 @@ export default function CardAgregarProductoCompra({
       </LabelBase>
       <LabelBase label='P. Compra:' orientation='column'>
         <InputNumberBase
+          ref={precio_compraRef}
           placeholder='P. Compra'
           precision={4}
           prefix={
@@ -153,6 +180,10 @@ export default function CardAgregarProductoCompra({
           onChange={value => handleChange(value, 'precio_compra')}
           value={values.precio_compra}
           min={0}
+          nextInEnter={false}
+          onKeyUp={e => {
+            if (e.key === 'Enter') buttom_masRef.current?.focus()
+          }}
         />
       </LabelBase>
       <LabelBase label='Flete:' orientation='column'>
@@ -218,6 +249,7 @@ export default function CardAgregarProductoCompra({
 
       <div className='flex items-center justify-between gap-2'>
         <ButtonBase
+          ref={buttom_masRef}
           color='success'
           className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4!'
           onClick={() => handleOk(false)}

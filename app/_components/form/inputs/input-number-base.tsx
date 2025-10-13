@@ -10,34 +10,37 @@ interface InputNumberBaseProps extends InputNumberProps {
   nextWithPrevent?: boolean
   formWithMessage?: boolean
   propsForm?: FormItemProps
+  ref?: React.RefObject<HTMLInputElement | null>
 }
 
 function Base({
   nextInEnter = true,
   nextWithPrevent = true,
   controls = false,
-  onKeyDown,
+  onKeyUp,
   className = '!w-full',
   autoComplete = 'off',
   variant = 'filled',
   type = 'number',
+  ref,
   ...props
 }: InputNumberBaseProps) {
   return (
     <InputNumber
-      {...props}
+      ref={ref}
       type={type}
       controls={controls}
       variant={variant}
       className={className}
       autoComplete={autoComplete}
-      onKeyDown={e => {
+      onKeyUp={e => {
         if (e.key === 'Enter' && nextInEnter) {
           if (nextWithPrevent) e.preventDefault()
           focusNext()
         }
-        onKeyDown?.(e)
+        onKeyUp?.(e)
       }}
+      {...props}
     />
   )
 }
@@ -46,7 +49,7 @@ export default function InputNumberBase({
   nextInEnter = true,
   nextWithPrevent = true,
   controls = false,
-  onKeyDown,
+  onKeyUp,
   autoComplete = 'off',
   variant = 'filled',
   formWithMessage = true,
@@ -67,7 +70,7 @@ export default function InputNumberBase({
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
         controls={controls}
-        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         autoComplete={autoComplete}
         variant={variant}
         className={className}
@@ -79,7 +82,7 @@ export default function InputNumberBase({
       nextInEnter,
       nextWithPrevent,
       controls,
-      onKeyDown,
+      onKeyUp,
       autoComplete,
       variant,
       className,

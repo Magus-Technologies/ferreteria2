@@ -23,7 +23,7 @@ export interface SelectBaseProps extends SelectProps {
 function Base({
   nextInEnter,
   nextWithPrevent,
-  onKeyDown,
+  onKeyUp,
   onOpenChange,
   ...props
 }: SelectBaseProps) {
@@ -36,13 +36,13 @@ function Base({
         setOpen(open)
         onOpenChange?.(open)
       }}
-      onKeyDown={e => {
+      onKeyUp={e => {
         if (e.key === 'Enter' && nextInEnter) {
           if (!open) return
           if (nextWithPrevent) e.preventDefault()
           focusNext()
         }
-        onKeyDown?.(e)
+        onKeyUp?.(e)
       }}
     />
   )
@@ -51,7 +51,7 @@ function Base({
 export default function SelectBase({
   nextInEnter = true,
   nextWithPrevent = true,
-  onKeyDown,
+  onKeyUp,
   onOpenChange,
   formWithMessage = true,
   propsForm,
@@ -95,7 +95,7 @@ export default function SelectBase({
       <Base
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
-        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         onOpenChange={onOpenChange}
         onChange={onChange}
         optionFilterProp={optionFilterProp}
@@ -107,7 +107,7 @@ export default function SelectBase({
     <Base
       nextInEnter={nextInEnter}
       nextWithPrevent={nextWithPrevent}
-      onKeyDown={onKeyDown}
+      onKeyUp={onKeyUp}
       onOpenChange={onOpenChange}
       onChange={value => {
         setValue(value)

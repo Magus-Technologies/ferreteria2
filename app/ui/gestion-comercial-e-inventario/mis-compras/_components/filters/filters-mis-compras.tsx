@@ -49,7 +49,6 @@ export default function FiltersMisCompras() {
   useEffect(() => {
     const data = {
       almacen_id,
-      forma_de_pago: FormaDePago.Contado,
       created_at: {
         gte: toLocalString({ date: dayjs().startOf('day') }),
         lte: toLocalString({ date: dayjs().endOf('day') }),
@@ -64,7 +63,6 @@ export default function FiltersMisCompras() {
       form={form}
       name='filtros-mi-almacen'
       initialValues={{
-        forma_de_pago: FormaDePago.Contado,
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
       }}
