@@ -112,6 +112,14 @@ export function getJsonFromAGGrid(gridOptions: AgGridReact) {
           data,
         } as ValueFormatterParams)
       else displayValue = rawValue
+      if (colDef.type === 'pen')
+        displayValue = Number(displayValue).toLocaleString('en-US', {
+          maximumFractionDigits: 2,
+        })
+      if (colDef.type === 'pen4')
+        displayValue = Number(displayValue).toLocaleString('en-US', {
+          maximumFractionDigits: 4,
+        })
       data_obj[header] = displayValue
     })
     rowData.push(data_obj)

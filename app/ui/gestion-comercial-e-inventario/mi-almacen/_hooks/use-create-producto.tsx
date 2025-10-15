@@ -4,7 +4,7 @@ import {
   FormCreateProductoProps,
 } from '../_components/modals/modal-create-producto'
 import { createProducto, editarProducto } from '~/app/_actions/producto'
-import { toLocalString } from '~/utils/fechas'
+import { toUTCBD } from '~/utils/fechas'
 import { useStoreArchivosProducto } from '../_store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
@@ -114,7 +114,7 @@ export default function useCreateProducto({
       compra: {
         ...values.compra,
         vencimiento: values.compra?.vencimiento
-          ? toLocalString({
+          ? toUTCBD({
               date: values.compra.vencimiento,
             })
           : undefined,

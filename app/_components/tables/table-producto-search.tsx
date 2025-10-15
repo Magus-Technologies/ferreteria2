@@ -40,7 +40,7 @@ export default function TableProductoSearch({
     action: getProductos,
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS],
-      enabled: !!value,
+      enabled: false,
     },
     params: {
       where: getFiltrosPorTipoBusqueda({

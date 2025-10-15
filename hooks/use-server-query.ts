@@ -23,6 +23,8 @@ export function useServerQuery<TParams, TResult>(props: {
   loading: boolean
   response: TResult | undefined
   error: unknown
+  isPending: boolean
+  isFetching: boolean
 }
 
 // Overload con `select`
@@ -43,6 +45,8 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
   loading: boolean
   response: TSelect | undefined
   error: unknown
+  isPending: boolean
+  isFetching: boolean
 }
 
 // Implementación
@@ -95,5 +99,7 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
         : query.isPending || query.isFetching,
     response: query.data?.data,
     error: query.error,
+    isPending: query.isPending,
+    isFetching: query.isFetching,
   }
 }

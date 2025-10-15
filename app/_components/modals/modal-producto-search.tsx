@@ -17,6 +17,7 @@ type ModalProductoSearchProps = {
   open: boolean
   setOpen: (open: boolean) => void
   textDefault: string
+  setTextDefault: (textDefault: string) => void
   tipoBusqueda: TipoBusquedaProducto
   onRowDoubleClicked?: ({
     data,
@@ -30,6 +31,7 @@ export default function ModalProductoSearch({
   open,
   setOpen,
   textDefault,
+  setTextDefault,
   tipoBusqueda,
   onRowDoubleClicked,
   setTipoBusqueda,
@@ -47,7 +49,12 @@ export default function ModalProductoSearch({
 
   useEffect(() => {
     if (open) setProductoSeleccionadoStore(undefined)
-  }, [open, setProductoSeleccionadoStore])
+    else {
+      setTextDefault('')
+      setText('')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const tableRef = useRef<RefTableProductoSearchProps | null>(null)
 
@@ -63,7 +70,6 @@ export default function ModalProductoSearch({
       footer={null}
       onCancel={() => {
         setOpen(false)
-        setText('')
       }}
       maskClosable={false}
       keyboard={false}

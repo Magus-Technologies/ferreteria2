@@ -126,9 +126,6 @@ export default function SelectProductos({
   const [openModalProductoSearch, setOpenModalProductoSearch] = useState(false)
 
   const [text, setText] = useState('')
-  useEffect(() => {
-    if (text) setTextDefault(text)
-  }, [text])
 
   const [textDefault, setTextDefault] = useState('')
   const [tipoBusqueda, setTipoBusqueda] = useState<TipoBusquedaProducto>(
@@ -140,11 +137,11 @@ export default function SelectProductos({
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<ProductoSelect>()
 
-  const { response, refetch, loading } = useServerQuery({
+  const { response, refetch, loading, isFetching } = useServerQuery({
     action: SearchProductos,
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS_SEARCH],
-      enabled: !!text,
+      enabled: false,
     },
     params: {
       where: { ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value: text }) },
@@ -186,15 +183,18 @@ export default function SelectProductos({
     }
   }
 
-  useEffect(() => {
-    handleSearch()
-  }, [tipoBusqueda])
+  const primeraVez = useRef(true)
 
   useEffect(() => {
+    if (primeraVez.current) {
+      primeraVez.current = false
+      return
+    }
+    if (isFetching) return
     if (response?.length === 1)
       handleOnlyOneResult?.(response[0] as unknown as ProductoSelect)
-    else if ((response?.length ?? 0) > 1) setOpenModalProductoSearch(true)
-  }, [response])
+    else setOpenModalProductoSearch(true)
+  }, [response, isFetching])
 
   function handleSelect({ data }: { data?: ProductoSelect } = {}) {
     const producto = data || productoSeleccionadoSearchStore
@@ -221,6 +221,9 @@ export default function SelectProductos({
       )}
       <SelectBase
         showSearch
+        onClear={() => {
+          setTextDefault('')
+        }}
         onChange={value => {
           const producto = response?.find(item => item.id === value) as
             | ProductoSelect
@@ -269,7 +272,10 @@ export default function SelectProductos({
             self.findIndex(i => i.value === item.value) === index
         )}
         onKeyUp={e => {
-          if (e.key === 'Enter') handleSearch()
+          if (e.key === 'Enter') {
+            setTextDefault(text)
+            handleSearch()
+          }
         }}
         open={false}
         {...props}
@@ -278,13 +284,17 @@ export default function SelectProductos({
         <FaSearch
           className={`text-yellow-600 mb-7 cursor-pointer min-w-fit ${classIconSearch}`}
           size={15}
-          onClick={() => setOpenModalProductoSearch(true)}
+          onClick={() => {
+            setTextDefault(text)
+            setOpenModalProductoSearch(true)
+          }}
         />
       )}
       <ModalProductoSearch
         open={openModalProductoSearch}
         setOpen={setOpenModalProductoSearch}
         textDefault={textDefault}
+        setTextDefault={setTextDefault}
         onRowDoubleClicked={handleSelect}
         tipoBusqueda={tipoBusqueda}
         setTipoBusqueda={setTipoBusqueda}

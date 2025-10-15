@@ -1,5 +1,5 @@
 import { useServerMutation } from '~/hooks/use-server-mutation'
-import { toLocalString } from '~/utils/fechas'
+import { toUTCBD } from '~/utils/fechas'
 import { TipoDocumento } from '@prisma/client'
 import {
   FormCreateIngresoSalidaFormatedProps,
@@ -35,7 +35,7 @@ export default function useCreateIngresoSalida({
       ...values,
       tipo_documento: tipo_documento,
       fecha: values.fecha
-        ? toLocalString({
+        ? toUTCBD({
             date: values.fecha,
           })
         : undefined,

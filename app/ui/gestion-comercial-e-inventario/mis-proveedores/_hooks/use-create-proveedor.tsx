@@ -7,7 +7,7 @@ import {
 } from '../_components/modals/modal-create-proveedor'
 import { ServerResult } from '~/auth/middleware-server-actions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { toLocalString } from '~/utils/fechas'
+import { toUTCBD } from '~/utils/fechas'
 
 export default function useCreateProveedor({
   onSuccess,
@@ -35,7 +35,7 @@ export default function useCreateProveedor({
                 ...item,
                 estado: item.estado === 1,
                 cumple: item.cumple
-                  ? toLocalString({
+                  ? toUTCBD({
                       date: item.cumple,
                     })
                   : undefined,

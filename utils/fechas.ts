@@ -22,3 +22,7 @@ export function toUTCString({
 }) {
   return date?.utc().format(format)
 }
+
+export function toUTCBD({ date }: { date: Dayjs }) {
+  return date.utc().toDate().toISOString()
+}

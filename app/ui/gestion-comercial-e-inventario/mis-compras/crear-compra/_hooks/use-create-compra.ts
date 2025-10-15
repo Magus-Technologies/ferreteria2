@@ -1,7 +1,7 @@
 import { createCompra } from '~/app/_actions/compra'
 import { FormCreateCompra } from '../_components/others/body-comprar'
 import { useServerMutation } from '~/hooks/use-server-mutation'
-import { toLocalString } from '~/utils/fechas'
+import { toUTCBD } from '~/utils/fechas'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
@@ -52,7 +52,7 @@ function agruparProductos({
       precio_compra: p.bonificacion ? 0 : p.precio_compra,
       lote: p.lote,
       vencimiento: p.vencimiento
-        ? toLocalString({
+        ? toUTCBD({
             date: p.vencimiento,
           })
         : undefined,
@@ -102,7 +102,7 @@ export default function useCreateCompra() {
     const dataFormated = {
       ...restValues,
       user_id,
-      fecha: toLocalString({
+      fecha: toUTCBD({
         date: restValues.fecha,
       })!,
       numero_dias:
@@ -112,7 +112,7 @@ export default function useCreateCompra() {
       fecha_vencimiento:
         restValues.forma_de_pago === FormaDePago.Crédito &&
         restValues.fecha_vencimiento
-          ? toLocalString({
+          ? toUTCBD({
               date: restValues.fecha_vencimiento,
             })
           : undefined,

@@ -103,6 +103,7 @@ export default function FormFormaDePagoCompra({
                 val.diff(dayjs().startOf('day'), 'days')
               )
           }}
+          className='!w-[160px] !min-w-[160px] !max-w-[160px]'
         />
       </LabelBase>
     </>

@@ -81,6 +81,8 @@ export default function TablePdfAgGrid({
                   style={{
                     ...styles_globales.cell,
                     flex: colDef.flex,
+                    minWidth: colDef.minWidth ?? 0,
+                    width: colDef.width ?? 0,
                     fontWeight: 'bold',
                   }}
                 >
@@ -106,6 +108,8 @@ export default function TablePdfAgGrid({
                     style={{
                       ...styles_globales.cell,
                       flex: colDef.flex,
+                      minWidth: colDef.minWidth ?? 0,
+                      width: colDef.width ?? 0,
                     }}
                   >
                     {String(item[colDef.headerName!])}

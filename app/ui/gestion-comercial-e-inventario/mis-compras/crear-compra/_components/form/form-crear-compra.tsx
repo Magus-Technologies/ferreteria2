@@ -30,7 +30,7 @@ export default function FormCrearCompra({ form }: { form: FormInstance }) {
               ],
             }}
             placeholder='Fecha'
-            className='!w-[140px] !min-w-[140px] !max-w-[120px]'
+            className='!w-[160px] !min-w-[160px] !max-w-[160px]'
             prefix={<FaCalendar size={15} className='text-rose-700 mx-1' />}
           />
         </LabelBase>

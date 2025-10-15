@@ -86,6 +86,7 @@ export default function BodyComprar() {
         tipo_moneda: TipoMoneda.Soles,
         fecha: dayjs(),
         forma_de_pago: FormaDePago.Contado,
+        tipo_documento: TipoDocumento.Factura,
       }}
       onFinish={handleSubmit}
     >

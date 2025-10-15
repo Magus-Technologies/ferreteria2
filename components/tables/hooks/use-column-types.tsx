@@ -123,7 +123,7 @@ export default function useColumnTypes() {
         value
           ? toLocalString({
               date: dayjs(value),
-              format: 'YYYY-MM-DD',
+              format: 'DD/MM/YYYY',
             })!
           : '-',
     },

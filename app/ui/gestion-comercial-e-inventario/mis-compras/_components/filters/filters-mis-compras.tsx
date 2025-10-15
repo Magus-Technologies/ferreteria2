@@ -17,7 +17,7 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { FormaDePago, TipoDocumento } from '@prisma/client'
-import { toLocalString } from '~/utils/fechas'
+import { toUTCBD } from '~/utils/fechas'
 import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
 import { useEffect } from 'react'
@@ -50,8 +50,8 @@ export default function FiltersMisCompras() {
     const data = {
       almacen_id,
       created_at: {
-        gte: toLocalString({ date: dayjs().startOf('day') }),
-        lte: toLocalString({ date: dayjs().endOf('day') }),
+        gte: toUTCBD({ date: dayjs().startOf('day') }),
+        lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
     } satisfies Prisma.CompraWhereInput
     setFiltros(data)
@@ -73,8 +73,8 @@ export default function FiltersMisCompras() {
         const data = {
           ...rest,
           created_at: {
-            gte: desde ? toLocalString({ date: desde }) : undefined,
-            lte: hasta ? toLocalString({ date: hasta }) : undefined,
+            gte: desde ? toUTCBD({ date: desde }) : undefined,
+            lte: hasta ? toUTCBD({ date: hasta }) : undefined,
           },
         } satisfies Prisma.CompraWhereInput
         setFiltros(data)
