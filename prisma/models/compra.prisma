@@ -6,6 +6,13 @@ enum TipoDocumento {
     Salida      @map("sa")
 }
 
+enum EstadoDeCompra {
+    Creado    @map("cr")
+    EnEspera  @map("ee")
+    Anulado   @map("an")
+    Procesado @map("pr")
+}
+
 enum FormaDePago {
     Contado  @map("co")
     Crédito @map("cr")
@@ -45,6 +52,8 @@ model Compra {
 
     productos_por_almacen ProductoAlmacenCompra[]
 
+    estado_de_compra EstadoDeCompra @default(Creado)
+
     @@unique([serie, numero, proveedor_id])
     @@index([created_at])
 }
@@ -74,13 +83,12 @@ model UnidadDerivadaInmutableCompra {
     producto_almacen_compra_id Int
     producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    factor            Decimal   @db.Decimal(9, 3)
-    cantidad          Decimal   @db.Decimal(9, 3)
-    cantidad_restante Decimal   @db.Decimal(9, 3)
-    lote              String?
-    vencimiento       DateTime?
-    flete             Decimal   @default(0) @db.Decimal(9, 4)
-    bonificacion      Boolean   @default(false)
+    factor       Decimal   @db.Decimal(9, 3)
+    cantidad     Decimal   @db.Decimal(9, 3)
+    lote         String?
+    vencimiento  DateTime?
+    flete        Decimal   @default(0) @db.Decimal(9, 4)
+    bonificacion Boolean   @default(false)
 
     @@unique([producto_almacen_compra_id, unidad_derivada_inmutable_id, bonificacion])
 }

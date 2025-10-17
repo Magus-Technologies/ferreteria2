@@ -147,7 +147,6 @@ export default function useCreateCompra() {
                 },
                 factor: Number(u.unidad_derivada_factor),
                 cantidad: Number(u.cantidad),
-                cantidad_restante: Number(u.cantidad),
                 lote: u.lote,
                 vencimiento: u.vencimiento,
                 bonificacion: u.bonificacion,
@@ -158,6 +157,10 @@ export default function useCreateCompra() {
         }),
       },
     } satisfies Prisma.CompraUncheckedCreateInput
+    console.log(
+      '🚀 ~ file: use-create-compra.ts:162 ~ dataFormated:',
+      dataFormated
+    )
     execute(dataFormated)
   }
 

@@ -49,7 +49,7 @@ export default function FiltersMisCompras() {
   useEffect(() => {
     const data = {
       almacen_id,
-      created_at: {
+      fecha: {
         gte: toUTCBD({ date: dayjs().startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
@@ -72,7 +72,7 @@ export default function FiltersMisCompras() {
         delete rest.estado_de_cuenta
         const data = {
           ...rest,
-          created_at: {
+          fecha: {
             gte: desde ? toUTCBD({ date: desde }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta }) : undefined,
           },

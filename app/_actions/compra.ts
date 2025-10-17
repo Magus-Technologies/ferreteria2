@@ -43,7 +43,7 @@ async function getComprasWA({ where }: { where?: Prisma.CompraWhereInput }) {
       user: true,
     },
     orderBy: {
-      created_at: 'asc',
+      fecha: 'asc',
     },
     where: whereParsed,
   })

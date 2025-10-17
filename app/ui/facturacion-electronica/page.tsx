@@ -6,7 +6,6 @@ import {
 } from 'react-icons/md'
 import CardDashboard from '~/app/_components/cards/card-dashboard'
 import NoAutorizado from '~/components/others/no-autorizado'
-import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
@@ -19,10 +18,11 @@ import VentasPorTiposDeDocumento from './_components/charts/ventas-por-tipos-de-
 import VentasPorMarca from './_components/charts/ventas-por-marca'
 import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
+import can from '~/utils/server-validate-permission'
 
-export default function FacturacionElectronica() {
-  const can = usePermission()
-  if (!can(permissions.FACTURACION_ELECTRONICA_INDEX)) return <NoAutorizado />
+export default async function FacturacionElectronica() {
+  if (!(await can(permissions.FACTURACION_ELECTRONICA_INDEX)))
+    return <NoAutorizado />
 
   return (
     <ContenedorGeneral>

@@ -21,7 +21,6 @@ export async function createCompraAfectaStock(
         | 'id'
         | 'unidad_derivada_inmutable_id'
         | 'producto_almacen_compra_id'
-        | 'cantidad_restante'
         | 'bonificacion'
         | 'flete'
       > & {
@@ -43,7 +42,6 @@ export async function createCompraAfectaStock(
             create: item.unidades_derivadas.map(unidad_derivada => ({
               factor: unidad_derivada.factor,
               cantidad: unidad_derivada.cantidad,
-              cantidad_restante: unidad_derivada.cantidad,
               lote: unidad_derivada.lote,
               vencimiento: unidad_derivada.vencimiento,
               unidad_derivada_inmutable: {
@@ -95,7 +93,6 @@ export async function createPrimeraCompra(
         | 'id'
         | 'unidad_derivada_inmutable_id'
         | 'producto_almacen_compra_id'
-        | 'cantidad_restante'
         | 'bonificacion'
         | 'flete'
       > & {
