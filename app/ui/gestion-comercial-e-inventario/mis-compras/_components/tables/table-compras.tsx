@@ -10,6 +10,8 @@ import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compra
 import { useStoreCompraSeleccionada } from '../../_store/store-compra-seleccionada'
 import { getCompras } from '~/app/_actions/compra'
 import { useColumnsCompras } from './columns-compras'
+import ModalCrearRecepcionAlmacen from '../modals/modal-crear-recepcion-almacen'
+import { getComprasResponseProps } from '~/app/_actions/compra'
 
 export default function TableCompras() {
   const tableRef = useRef<AgGridReact>(null)
@@ -40,43 +42,55 @@ export default function TableCompras() {
     if (!primera_vez) refetch()
   }, [filtros, refetch, primera_vez])
 
-  type ResponseItem = NonNullable<typeof response>[number]
+  const [openModal, setOpenModal] = useState(false)
+  const [compraRecepcion, setCompraRecepcion] =
+    useState<getComprasResponseProps>()
 
   return (
-    <TableWithTitle<ResponseItem>
-      id='g-c-e-i.mis-compras.compras'
-      onSelectionChanged={({ selectedNodes }) =>
-        setCompraSeleccionada(selectedNodes?.[0]?.data as ResponseItem)
-      }
-      tableRef={tableRef}
-      title='Compras'
-      schema={CompraCreateInputSchema}
-      loading={loading}
-      columnDefs={useColumnsCompras()}
-      rowData={response}
-      optionsSelectColumns={[
-        {
-          label: 'Default',
-          columns: [
-            '#',
-            'Documento',
-            'Serie',
-            'Número',
-            'Fecha',
-            'RUC',
-            'Proveedor',
-            'Subtotal',
-            'IGV',
-            'Total',
-            'Forma de Pago',
-            'Total Pagado',
-            'Resta',
-            'Estado de Cuenta',
-            'Registrador',
-            'Acciones',
-          ],
-        },
-      ]}
-    />
+    <>
+      <ModalCrearRecepcionAlmacen
+        open={openModal}
+        setOpen={setOpenModal}
+        compra={compraRecepcion}
+        setCompra={setCompraRecepcion}
+      />
+      <TableWithTitle<getComprasResponseProps>
+        id='g-c-e-i.mis-compras.compras'
+        onSelectionChanged={({ selectedNodes }) =>
+          setCompraSeleccionada(
+            selectedNodes?.[0]?.data as getComprasResponseProps
+          )
+        }
+        tableRef={tableRef}
+        title='Compras'
+        schema={CompraCreateInputSchema}
+        loading={loading}
+        columnDefs={useColumnsCompras({ setCompraRecepcion, setOpenModal })}
+        rowData={response}
+        optionsSelectColumns={[
+          {
+            label: 'Default',
+            columns: [
+              '#',
+              'Documento',
+              'Serie',
+              'Número',
+              'Fecha',
+              'RUC',
+              'Proveedor',
+              'Subtotal',
+              'IGV',
+              'Total',
+              'Forma de Pago',
+              'Total Pagado',
+              'Resta',
+              'Estado de Cuenta',
+              'Registrador',
+              'Acciones',
+            ],
+          },
+        ]}
+      />
+    </>
   )
 }

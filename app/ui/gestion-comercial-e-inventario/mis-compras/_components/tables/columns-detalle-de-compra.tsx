@@ -1,13 +1,13 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { TableComprasProps } from './columns-compras'
+import { getComprasResponseProps } from '~/app/_actions/compra'
 
 export type TableDetalleDeCompraProps = Pick<
-  TableComprasProps['productos_por_almacen'][number],
+  getComprasResponseProps['productos_por_almacen'][number],
   'producto_almacen' | 'costo'
 > &
-  TableComprasProps['productos_por_almacen'][number]['unidades_derivadas'][number]
+  getComprasResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number]
 
 export function useColumnsDetalleDeCompra() {
   const columns: ColDef<TableDetalleDeCompraProps>[] = [

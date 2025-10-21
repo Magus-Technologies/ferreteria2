@@ -1,7 +1,7 @@
 import { FaCalculator, FaCartShopping, FaWarehouse } from 'react-icons/fa6'
 import { BiTransferAlt } from 'react-icons/bi'
 import { MdOutlinePendingActions } from 'react-icons/md'
-import { FaTruck } from 'react-icons/fa'
+import { FaTruck, FaTruckLoading } from 'react-icons/fa'
 import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
 
@@ -53,6 +53,13 @@ export default function BottomNav({ className }: { className?: string }) {
       >
         <FaTruck />
         Mis Proveedores
+      </ButtonNav>
+      <ButtonNav
+        colorActive='text-emerald-600'
+        path='/ui/gestion-comercial-e-inventario/mis-recepciones'
+      >
+        <FaTruckLoading />
+        Mis Recepciones
       </ButtonNav>
     </BaseNav>
   )

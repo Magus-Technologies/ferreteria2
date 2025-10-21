@@ -71,6 +71,7 @@ export default function BodyComprar() {
   useEffect(() => {
     setProductosCompra([])
     setProductoAgregadoCompra(undefined)
+    return () => setProductoAgregadoCompra(undefined)
   }, [])
 
   useEffect(() => {

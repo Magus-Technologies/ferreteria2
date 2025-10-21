@@ -30,9 +30,10 @@ model ProductoAlmacen {
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt
 
-    unidades_derivadas ProductoAlmacenUnidadDerivada[]
-    compras            ProductoAlmacenCompra[]
-    ingresos_salidas   ProductoAlmacenIngresoSalida[]
+    unidades_derivadas  ProductoAlmacenUnidadDerivada[]
+    compras             ProductoAlmacenCompra[]
+    ingresos_salidas    ProductoAlmacenIngresoSalida[]
+    recepciones_almacen ProductoAlmacenRecepcion[]
 
     @@unique([producto_id, almacen_id])
 }

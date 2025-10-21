@@ -28,7 +28,7 @@ type ProductoAgrupado = Pick<
   >
 }
 
-function agruparProductos({
+export function agruparProductos({
   productos,
 }: {
   productos: FormCreateCompra['productos']
@@ -157,10 +157,6 @@ export default function useCreateCompra() {
         }),
       },
     } satisfies Prisma.CompraUncheckedCreateInput
-    console.log(
-      '🚀 ~ file: use-create-compra.ts:162 ~ dataFormated:',
-      dataFormated
-    )
     execute(dataFormated)
   }
 

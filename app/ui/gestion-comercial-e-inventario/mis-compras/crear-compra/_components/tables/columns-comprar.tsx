@@ -13,9 +13,11 @@ import { FormCreateCompra } from '../others/body-comprar'
 export function useColumnsComprar({
   form,
   remove,
+  incluye_precios = true,
 }: {
   form: FormInstance
   remove: (index: number | number[]) => void
+  incluye_precios?: boolean
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
 
@@ -311,6 +313,7 @@ export function useColumnsComprar({
           </div>
         )
       },
+      hide: !incluye_precios,
     },
     {
       headerName: 'SubTotal',
@@ -345,6 +348,7 @@ export function useColumnsComprar({
           </div>
         )
       },
+      hide: !incluye_precios,
     },
     {
       headerName: 'Flete',
@@ -367,6 +371,7 @@ export function useColumnsComprar({
           </div>
         )
       },
+      hide: !incluye_precios,
     },
     {
       headerName: 'F. Vencimiento',

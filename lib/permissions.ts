@@ -3,6 +3,8 @@ export enum permissions {
   GESTION_COMERCIAL_E_INVENTARIO_INDEX = 'gestion-comercial-e-inventario.index',
   GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX = 'gestion-comercial-e-inventario.mi-almacen.index',
   GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX = 'gestion-comercial-e-inventario.mis-compras.index',
+  GESTION_COMERCIAL_E_INVENTARIO_MIS_RECEPCIONES_INDEX = 'gestion-comercial-e-inventario.mis-recepciones.index',
+
   // Gestion Comercial e Inventario - Mi Almacén
   PRODUCTO_BASE = 'producto',
   PRODUCTO_LISTADO = 'producto.listado',
@@ -98,6 +100,13 @@ export enum permissions {
   COMPRAS_CREATE = 'compras.create',
   COMPRAS_UPDATE = 'compras.update',
   COMPRAS_DELETE = 'compras.delete',
+
+  // Recepción Almacén
+  RECEPCION_ALMACEN_BASE = 'recepcion-almacen',
+  RECEPCION_ALMACEN_LISTADO = 'recepcion-almacen.listado',
+  RECEPCION_ALMACEN_CREATE = 'recepcion-almacen.create',
+  RECEPCION_ALMACEN_UPDATE = 'recepcion-almacen.update',
+  RECEPCION_ALMACEN_DELETE = 'recepcion-almacen.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -114,6 +123,7 @@ type PermisosValidos = Exclude<
   | permissions.TIPO_INGRESO_SALIDA_BASE
   | permissions.USUARIO_BASE
   | permissions.COMPRAS_BASE
+  | permissions.RECEPCION_ALMACEN_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -122,6 +132,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     'Ver Página Mi Almacén',
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX]:
     'Ver Página Mis Compras',
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_RECEPCIONES_INDEX]:
+    'Ver Página Mis Recepciones',
 
   [permissions.PRODUCTO_LISTADO]: 'Ver Listado de Productos',
   [permissions.PRODUCTO_CREATE]: 'Crear Producto',
@@ -195,6 +207,12 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.COMPRAS_CREATE]: 'Crear Compra',
   [permissions.COMPRAS_UPDATE]: 'Actualizar Compra',
   [permissions.COMPRAS_DELETE]: 'Eliminar Compra',
+
+  [permissions.RECEPCION_ALMACEN_LISTADO]:
+    'Ver Listado de Recepciones de Almacén',
+  [permissions.RECEPCION_ALMACEN_CREATE]: 'Crear Recepción de Almacén',
+  [permissions.RECEPCION_ALMACEN_UPDATE]: 'Actualizar Recepción de Almacén',
+  [permissions.RECEPCION_ALMACEN_DELETE]: 'Eliminar Recepción de Almacén',
 }
 
 export function getAllPermissions() {

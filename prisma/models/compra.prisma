@@ -1,9 +1,10 @@
 enum TipoDocumento {
-    Factura     @map("01")
-    Boleta      @map("03")
-    NotaDeVenta @map("nv")
-    Ingreso     @map("in")
-    Salida      @map("sa")
+    Factura          @map("01")
+    Boleta           @map("03")
+    NotaDeVenta      @map("nv")
+    Ingreso          @map("in")
+    Salida           @map("sa")
+    RecepcionAlmacen @map("rc")
 }
 
 enum EstadoDeCompra {
@@ -52,10 +53,11 @@ model Compra {
 
     productos_por_almacen ProductoAlmacenCompra[]
 
-    estado_de_compra EstadoDeCompra @default(Creado)
+    estado_de_compra  EstadoDeCompra    @default(Creado)
+    recepcion_almacen RecepcionAlmacen?
 
     @@unique([serie, numero, proveedor_id])
-    @@index([created_at])
+    @@index([fecha])
 }
 
 model ProductoAlmacenCompra {
@@ -99,4 +101,5 @@ model UnidadDerivadaInmutable {
 
     unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
     unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
+    UnidadDerivadaInmutableRecepcion          UnidadDerivadaInmutableRecepcion[]
 }

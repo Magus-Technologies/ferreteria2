@@ -29,11 +29,13 @@ export default function TableComprar({
   fields,
   remove,
   add,
+  incluye_precios = true,
 }: {
   form: FormInstance
   fields: FormListFieldData[]
   remove: (index: number | number[]) => void
   add: (defaultValue?: StoreValue, insertIndex?: number) => void
+  incluye_precios?: boolean
 }) {
   const productoAgregadoCompraStore = useStoreProductoAgregadoCompra(
     store => store.productoAgregado
@@ -175,7 +177,7 @@ export default function TableComprar({
       <TableBase
         rowSelection={false}
         rowData={fields}
-        columnDefs={useColumnsComprar({ remove, form })}
+        columnDefs={useColumnsComprar({ remove, form, incluye_precios })}
       />
     </>
   )

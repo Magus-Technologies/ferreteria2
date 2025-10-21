@@ -1,37 +1,24 @@
 'use client'
 
-import { ColDef } from 'ag-grid-community'
-import { Prisma, TipoDocumento } from '@prisma/client'
+import { ColDef, ICellRendererParams } from 'ag-grid-community'
+import { EstadoDeCompra, TipoDocumento } from '@prisma/client'
 import { IGV } from '~/lib/constantes'
+import ColumnAction from '~/components/tables/column-action'
+import { permissions } from '~/lib/permissions'
+import usePermission from '~/hooks/use-permission'
+import { Tooltip } from 'antd'
+import { FaTruckLoading } from 'react-icons/fa'
+import { eliminarCompra, getComprasResponseProps } from '~/app/_actions/compra'
 
-export type TableComprasProps = Prisma.CompraGetPayload<{
-  include: {
-    proveedor: true
-    productos_por_almacen: {
-      include: {
-        producto_almacen: {
-          include: {
-            producto: {
-              include: {
-                marca: true
-                unidad_medida: true
-              }
-            }
-          }
-        }
-        unidades_derivadas: {
-          include: {
-            unidad_derivada_inmutable: true
-          }
-        }
-      }
-    }
-    user: true
-  }
-}>
-
-export function useColumnsCompras() {
-  const columns: ColDef<TableComprasProps>[] = [
+export function useColumnsCompras({
+  setCompraRecepcion,
+  setOpenModal,
+}: {
+  setCompraRecepcion: (compra: getComprasResponseProps | undefined) => void
+  setOpenModal: (open: boolean) => void
+}) {
+  const can = usePermission()
+  const columns: ColDef<getComprasResponseProps>[] = [
     {
       headerName: 'Documento',
       field: 'tipo_documento',
@@ -88,7 +75,7 @@ export function useColumnsCompras() {
       valueFormatter: ({
         value,
       }: {
-        value: TableComprasProps['productos_por_almacen']
+        value: getComprasResponseProps['productos_por_almacen']
       }) => String(Number(getSubTotal(value)) / (IGV + 1)),
       type: 'pen',
     },
@@ -100,7 +87,7 @@ export function useColumnsCompras() {
       valueFormatter: ({
         value,
       }: {
-        value: TableComprasProps['productos_por_almacen']
+        value: getComprasResponseProps['productos_por_almacen']
       }) =>
         String(
           Number(getSubTotal(value)) - Number(getSubTotal(value)) / (IGV + 1)
@@ -116,7 +103,7 @@ export function useColumnsCompras() {
       valueFormatter: ({
         value,
       }: {
-        value: TableComprasProps['productos_por_almacen']
+        value: getComprasResponseProps['productos_por_almacen']
       }) => getSubTotal(value),
       filter: 'agNumberColumnFilter',
       type: 'pen',
@@ -161,12 +148,60 @@ export function useColumnsCompras() {
       minWidth: 80,
       filter: true,
     },
+    {
+      headerName: 'Acciones',
+      field: 'id',
+      width: 80,
+      cellRenderer: (params: ICellRendererParams<getComprasResponseProps>) => {
+        return (
+          <ColumnAction
+            showEdit={false}
+            titleDelete='Anular'
+            id={params.value}
+            permiso={permissions.COMPRAS_BASE}
+            propsDelete={{
+              action: eliminarCompra,
+              msgSuccess: 'Compra anulada correctamente',
+            }}
+            childrenMiddle={
+              can(permissions.RECEPCION_ALMACEN_CREATE) && (
+                <Tooltip
+                  title={
+                    params.data?.estado_de_compra === EstadoDeCompra.Creado
+                      ? 'Recepcionar en Almacén'
+                      : 'Recepcionada en Almacén'
+                  }
+                >
+                  <FaTruckLoading
+                    onClick={() => {
+                      if (
+                        params.data?.estado_de_compra === EstadoDeCompra.Creado
+                      ) {
+                        setCompraRecepcion(params.data)
+                        setOpenModal(true)
+                      }
+                    }}
+                    size={15}
+                    className={`cursor-pointer ${
+                      params.data?.estado_de_compra === EstadoDeCompra.Creado
+                        ? 'text-cyan-600'
+                        : 'text-gray-500'
+                    } hover:scale-105 transition-all active:scale-95`}
+                  />
+                </Tooltip>
+              )
+            }
+          />
+        )
+      },
+      type: 'actions',
+    },
   ]
 
   return columns
 }
 
-function getSubTotal(value: TableComprasProps['productos_por_almacen']) {
+function getSubTotal(value: getComprasResponseProps['productos_por_almacen']) {
   return String(
     value.reduce(
       (acc, item) =>

@@ -4,11 +4,38 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
-import { Prisma } from '@prisma/client'
+import { EstadoDeCompra, Prisma } from '@prisma/client'
 import {
   CompraUncheckedCreateInputSchema,
   CompraWhereInputSchema,
 } from '~/prisma/generated/zod'
+
+const includeCompra = {
+  proveedor: true,
+  productos_por_almacen: {
+    include: {
+      producto_almacen: {
+        include: {
+          producto: {
+            include: {
+              marca: true,
+              unidad_medida: true,
+            },
+          },
+        },
+      },
+      unidades_derivadas: {
+        include: {
+          unidad_derivada_inmutable: true,
+        },
+      },
+    },
+  },
+  user: true,
+}
+export type getComprasResponseProps = Prisma.CompraGetPayload<{
+  include: typeof includeCompra
+}>
 
 async function getComprasWA({ where }: { where?: Prisma.CompraWhereInput }) {
   const puede = await can(permissions.COMPRAS_LISTADO)
@@ -19,29 +46,7 @@ async function getComprasWA({ where }: { where?: Prisma.CompraWhereInput }) {
   const whereParsed = CompraWhereInputSchema.parse(where)
 
   const items = await prisma.compra.findMany({
-    include: {
-      proveedor: true,
-      productos_por_almacen: {
-        include: {
-          producto_almacen: {
-            include: {
-              producto: {
-                include: {
-                  marca: true,
-                  unidad_medida: true,
-                },
-              },
-            },
-          },
-          unidades_derivadas: {
-            include: {
-              unidad_derivada_inmutable: true,
-            },
-          },
-        },
-      },
-      user: true,
-    },
+    include: includeCompra,
     orderBy: {
       fecha: 'asc',
     },
@@ -88,3 +93,30 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
   )
 }
 export const createCompra = withAuth(createCompraWA)
+
+async function eliminarCompraWA({ id }: { id: number }) {
+  const puede = await can(permissions.COMPRAS_DELETE)
+  if (!puede) throw new Error('No tienes permiso para eliminar una compra')
+
+  const compra = await prisma.compra.findUnique({
+    where: {
+      id,
+    },
+  })
+
+  if (!compra) throw new Error('Compra no encontrada')
+  if (compra.estado_de_compra !== EstadoDeCompra.Creado)
+    throw new Error('La compra no se puede eliminar')
+
+  await prisma.compra.update({
+    where: {
+      id,
+    },
+    data: {
+      estado_de_compra: EstadoDeCompra.Anulado,
+    },
+  })
+
+  return { data: 'ok' }
+}
+export const eliminarCompra = withAuth(eliminarCompraWA)

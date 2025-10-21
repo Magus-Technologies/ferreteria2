@@ -29,4 +29,9 @@ export const TiposDocumentos: Record<
     name: 'Salida',
     cod_serie: 'SA',
   },
+  [TipoDocumento.RecepcionAlmacen]: {
+    code: 'rc',
+    name: 'Recepcion de Almacén',
+    cod_serie: 'RC',
+  },
 }

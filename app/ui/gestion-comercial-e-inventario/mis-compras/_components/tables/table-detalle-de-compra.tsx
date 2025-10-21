@@ -39,7 +39,7 @@ export default function TableDetalleDeCompra() {
             'Cod. Producto',
             'Producto',
             'Marca',
-            'Unidad de Medida',
+            'Unidad Derivada',
             'Cantidad',
             'P. Compra',
             'Importe',

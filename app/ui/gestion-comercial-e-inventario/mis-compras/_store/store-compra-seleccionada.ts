@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { TableComprasProps } from '../_components/tables/columns-compras'
+import { getComprasResponseProps } from '~/app/_actions/compra'
 
 type UseStoreCompraSeleccionadaProps = {
-  compra?: TableComprasProps
-  setCompra: (value: TableComprasProps | undefined) => void
+  compra?: getComprasResponseProps
+  setCompra: (value: getComprasResponseProps | undefined) => void
 }
 
 export const useStoreCompraSeleccionada =

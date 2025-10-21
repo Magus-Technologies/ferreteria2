@@ -23,7 +23,9 @@ export default function SelectTipoDocumento({
       options={Object.values(TipoDocumento)
         .filter(
           value =>
-            value !== TipoDocumento.Ingreso && value !== TipoDocumento.Salida
+            value === TipoDocumento.Factura ||
+            value === TipoDocumento.Boleta ||
+            value === TipoDocumento.NotaDeVenta
         )
         .map(value => ({
           value,

@@ -14,7 +14,7 @@ interface ColumnActionProps {
   showDelete?: boolean
   onEdit?: () => void
   showEdit?: boolean
-
+  titleDelete?: string
   propsDelete?: UseMutationActionProps<{ id: number }, unknown>
 }
 
@@ -26,6 +26,7 @@ export default function ColumnAction({
   showDelete = true,
   onEdit,
   showEdit = true,
+  titleDelete = 'Eliminar',
   propsDelete,
 }: ColumnActionProps) {
   const can = usePermission()
@@ -51,12 +52,12 @@ export default function ColumnAction({
       )}
       {childrenMiddle}
       {permiso && can(`${permiso}.delete`) && showDelete && (
-        <Tooltip title='Eliminar'>
+        <Tooltip title={titleDelete}>
           <Popconfirm
-            title='Eliminar'
-            description='¿Estas seguro de eliminar este registro?'
+            title={titleDelete}
+            description={`¿Estas seguro de ${titleDelete.toLowerCase()} este registro?`}
             onConfirm={() => deleteAction({ id: Number(id) })}
-            okText='Eliminar'
+            okText={titleDelete}
             cancelText='Cancelar'
           >
             <MdDelete
