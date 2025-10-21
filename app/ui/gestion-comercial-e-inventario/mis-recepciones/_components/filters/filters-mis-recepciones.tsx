@@ -86,14 +86,14 @@ export default function FiltersMisRecepciones() {
         </div>
       </TituloModulos>
       <div className='flex items-center gap-4 mt-4'>
-        <LabelBase label='Fecha Compra:'>
+        <LabelBase label='Desde:'>
           <DatePickerBase
             propsForm={{
               name: 'desde',
               hasFeedback: false,
               className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
             }}
-            placeholder='Fecha Compra'
+            placeholder='Desde'
             formWithMessage={false}
             prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
             allowClear

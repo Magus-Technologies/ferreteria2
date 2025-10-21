@@ -4,6 +4,7 @@ import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
 import TableRecepcionesAlmacen from './_components/tables/table-recepciones-almacen'
 import FiltersMisRecepciones from './_components/filters/filters-mis-recepciones'
+import TableDetalleDeRecepcion from './_components/tables/table-detalle-de-recepcion'
 
 export default async function MisRecepciones() {
   if (
@@ -17,6 +18,7 @@ export default async function MisRecepciones() {
     <ContenedorGeneral>
       <FiltersMisRecepciones />
       <TableRecepcionesAlmacen />
+      <TableDetalleDeRecepcion />
     </ContenedorGeneral>
   )
 }
