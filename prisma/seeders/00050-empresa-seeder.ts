@@ -17,6 +17,11 @@ export default async function empresaSeeder() {
     data: {
       almacen_id: almacen.id,
       marca_id: marca.id,
+      ruc: '20611539160',
+      razon_social: 'GRUPO MI REDENTOR S.A.C.',
+      direccion: 'CAL.SINCHI ROCA MZA. 6 LOTE. 15 P.J. EL MILAGRO (SECTOR III)',
+      telefono: '908846540 / 952686345',
+      email: 'grupomiredentorsac@gmail.com',
     },
   })
 }

@@ -7,12 +7,12 @@ export const TiposDocumentos: Record<
   [TipoDocumento.Factura]: {
     code: '01',
     name: 'Factura',
-    cod_serie: 'F',
+    cod_serie: 'F0',
   },
   [TipoDocumento.Boleta]: {
     code: '03',
     name: 'Boleta de venta',
-    cod_serie: 'B',
+    cod_serie: 'B0',
   },
   [TipoDocumento.NotaDeVenta]: {
     code: 'nv',
@@ -31,7 +31,7 @@ export const TiposDocumentos: Record<
   },
   [TipoDocumento.RecepcionAlmacen]: {
     code: 'rc',
-    name: 'Recepcion de Almacén',
+    name: 'Recepción de Almacén',
     cod_serie: 'RC',
   },
 }

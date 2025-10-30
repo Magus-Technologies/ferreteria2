@@ -5,25 +5,50 @@ import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
 import { FormCreateProductoFormatedProps } from '../ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
-import { Prisma } from '@prisma/client'
+import { Prisma, TipoDocumento } from '@prisma/client'
 import {
   ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema,
   ProductoCreateInputSchema,
-  ProductoFindManyArgsSchema,
   ProductoUncheckedCreateInputSchema,
   ProductoWhereInputSchema,
 } from '~/prisma/generated/zod'
 import z from 'zod'
 import { chunkArray } from '~/utils/chunks'
 import { crearProductoEnAlmacen, getUltimoIdProducto } from './utils/producto'
-import { createPrimeraCompra } from './utils/compra'
 import { auth } from '~/auth/auth'
+import { getUltimoNumeroIngresoSalida } from './utils/ingreso-salida'
+import { TIPOS_INGRESOS_SALIDAS } from '../_lib/tipos-ingresos-salidas'
 
-async function SearchProductosWA(args: Prisma.ProductoFindManyArgs) {
-  const argsParsed = ProductoFindManyArgsSchema.parse(args)
+const includeGetProductos = {
+  producto_en_almacenes: {
+    include: {
+      unidades_derivadas: {
+        include: {
+          unidad_derivada: true,
+        },
+      },
+      almacen: true,
+      ubicacion: true,
+    },
+  },
+  marca: true,
+  categoria: true,
+  unidad_medida: true,
+} satisfies Prisma.ProductoInclude
+export type getProductosResponseProps = Prisma.ProductoGetPayload<{
+  include: typeof includeGetProductos
+}>
+
+async function SearchProductosWA({
+  where,
+}: {
+  where?: Prisma.ProductoWhereInput
+}) {
+  const whereParsed = ProductoWhereInputSchema.parse(where)
 
   const items = await prisma.producto.findMany({
-    ...argsParsed,
+    where: whereParsed,
+    include: includeGetProductos,
     orderBy: {
       name: 'asc',
     },
@@ -47,22 +72,7 @@ async function getProductosWA({
   const whereParsed = ProductoWhereInputSchema.parse(where)
 
   const items = await prisma.producto.findMany({
-    include: {
-      producto_en_almacenes: {
-        include: {
-          unidades_derivadas: {
-            include: {
-              unidad_derivada: true,
-            },
-          },
-          almacen: true,
-          ubicacion: true,
-        },
-      },
-      marca: true,
-      categoria: true,
-      unidad_medida: true,
-    },
+    include: includeGetProductos,
     orderBy: {
       name: 'asc',
     },
@@ -110,7 +120,7 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
             db,
           })
 
-        // Generar primera compra
+        // Generar primer ingreso
         if (compra.stock_entero || compra.stock_fraccion) {
           const compraCantidad = new Prisma.Decimal(compra.stock_entero || 0)
             .mul(producto.unidades_contenidas)
@@ -123,32 +133,75 @@ async function createProductoWA(data: FormCreateProductoFormatedProps) {
           )!
           const compraCosto = unidad_derivada.costo
 
-          await createPrimeraCompra(
-            {
+          const tipo_ingreso = await prisma.tipoIngresoSalida.findFirstOrThrow({
+            where: { name: TIPOS_INGRESOS_SALIDAS.AJUSTE },
+            select: { id: true },
+          })
+
+          const numero = await getUltimoNumeroIngresoSalida({
+            db,
+            tipo_documento: TipoDocumento.Ingreso,
+          })
+
+          await db.ingresoSalida.create({
+            data: {
+              tipo_ingreso_id: tipo_ingreso.id,
+              descripcion: `Ingreso por Creación de Producto`,
+              almacen_id: productoAlmacen.almacen_id,
               user_id: session!.user!.id!,
-              almacen_id,
-              productos_por_almacen: [
-                {
+              tipo_documento: TipoDocumento.Ingreso,
+              serie: session!.user!.empresa.serie_ingreso,
+              fecha: new Date(),
+              numero,
+              productos_por_almacen: {
+                create: {
+                  costo: compraCosto,
                   producto_almacen_id: productoAlmacen.id,
-                  costo: new Prisma.Decimal(compraCosto).div(
-                    unidad_derivada.factor
-                  ),
-                  unidades_derivadas: [
-                    {
-                      factor: unidad_derivada.factor,
-                      cantidad: compraCantidad,
-                      lote: compra.lote,
-                      vencimiento: compra.vencimiento
-                        ? new Date(compra.vencimiento)
-                        : null,
-                      name: productoAlmacenUnidadDerivada.unidad_derivada.name,
-                    },
-                  ],
+                  unidades_derivadas: {
+                    create: [
+                      {
+                        factor: unidad_derivada.factor,
+                        cantidad: compraCantidad.div(unidad_derivada.factor),
+                        cantidad_restante: compraCantidad.div(
+                          unidad_derivada.factor
+                        ),
+                        historial: {
+                          create: {
+                            stock_anterior: 0,
+                            stock_nuevo: compraCantidad,
+                          },
+                        },
+                        unidad_derivada_inmutable: {
+                          connectOrCreate: {
+                            where: {
+                              name: productoAlmacenUnidadDerivada
+                                .unidad_derivada.name,
+                            },
+                            create: {
+                              name: productoAlmacenUnidadDerivada
+                                .unidad_derivada.name,
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
                 },
-              ],
+              },
             },
-            db
-          )
+          })
+
+          await db.productoAlmacen.update({
+            where: {
+              id: productoAlmacen.id,
+            },
+            data: {
+              stock_fraccion: {
+                increment: compraCantidad,
+              },
+              costo: compraCosto,
+            },
+          })
         }
 
         return {
@@ -208,53 +261,79 @@ async function importarProductosWA({ data }: { data: unknown }) {
           seenCodBarra.add(key)
         }
       })
+
+      const seenCodProducto = new Set<string>()
+      items.forEach((it, i) => {
+        const key = it.cod_producto
+        if (!key) return
+        if (seenCodProducto.has(key)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Duplicado: codigo de producto ${key}`,
+            path: [i, 'cod_producto'],
+          })
+        } else {
+          seenCodProducto.add(key)
+        }
+      })
     })
     .parse(data)
   const chunks = chunkArray(dataParsed, 200)
+  const duplicados: Prisma.ProductoCreateInput[] = []
+
   for (const lote of chunks) {
-    await prisma.$transaction(async tx => {
-      await Promise.all(
-        lote.map(async item => {
-          const { producto_en_almacenes, ...restProducto } = item
-          const producto_almacen = producto_en_almacenes!.create! as Omit<
-            Prisma.ProductoAlmacenUncheckedCreateInput,
-            'producto_id'
-          >
-          const producto_almacen_costo_formated = {
-            ...producto_almacen,
-            costo:
-              Number(producto_almacen.costo ?? 0) /
-              Number(restProducto.unidades_contenidas ?? 1),
-          }
+    try {
+      await prisma.$transaction(async tx => {
+        for (const item of lote) {
+          try {
+            const { producto_en_almacenes, ...restProducto } = item
+            const producto_almacen = producto_en_almacenes!.create! as Omit<
+              Prisma.ProductoAlmacenUncheckedCreateInput,
+              'producto_id'
+            >
 
-          const producto_upsert: Prisma.ProductoUpsertArgs = {
-            where: {
-              cod_producto: restProducto.cod_producto,
-            },
-            create: restProducto,
-            update: restProducto,
-          }
-          const productoUpserted = await tx.producto.upsert(producto_upsert)
+            const producto_almacen_costo_formated = {
+              ...producto_almacen,
+              costo:
+                Number(producto_almacen.costo ?? 0) /
+                Number(restProducto.unidades_contenidas ?? 1),
+            }
 
-          await tx.productoAlmacen.upsert({
-            where: {
-              producto_id_almacen_id: {
-                producto_id: productoUpserted.id,
-                almacen_id: producto_almacen_costo_formated.almacen_id,
+            const producto_create: Prisma.ProductoCreateArgs = {
+              data: {
+                ...restProducto,
+                permitido: false,
+                producto_en_almacenes: {
+                  create: producto_almacen_costo_formated,
+                },
               },
-            },
-            create: {
-              producto_id: productoUpserted.id,
-              ...producto_almacen_costo_formated,
-            },
-            update: producto_almacen_costo_formated,
-          })
-        })
-      )
-    })
+            }
+
+            await tx.producto.create(producto_create)
+          } catch (error) {
+            if (
+              error instanceof Prisma.PrismaClientKnownRequestError &&
+              error.code === 'P2002' &&
+              Array.isArray(error.meta?.target) &&
+              (error.meta.target as string[]).some(campo =>
+                ['name', 'cod_barra', 'cod_producto'].includes(campo)
+              )
+            ) {
+              duplicados.push(item)
+              continue
+            }
+
+            throw error
+          }
+        }
+      })
+    } catch (err) {
+      console.error('❌ Lote cancelado por error crítico:', err)
+      break
+    }
   }
 
-  return { data: 'ok' }
+  return { data: duplicados }
 }
 export const importarProductos = withAuth(importarProductosWA)
 

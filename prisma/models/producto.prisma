@@ -21,6 +21,7 @@ model Producto {
     stock_max           Int?
     unidades_contenidas Decimal @db.Decimal(9, 3)
     estado              Boolean @default(true)
+    permitido           Boolean @default(true)
 
     created_at DateTime @default(now())
     updated_at DateTime @updatedAt

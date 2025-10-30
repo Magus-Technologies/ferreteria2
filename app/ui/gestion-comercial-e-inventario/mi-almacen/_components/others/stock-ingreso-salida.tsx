@@ -1,8 +1,8 @@
 import { Form } from 'antd'
 import { FormInstance } from 'antd/lib'
-import { ProductoSelect } from '~/app/_components/form/selects/select-productos'
 import { getStock } from '~/app/_utils/get-stock'
 import { TipoDocumento } from '@prisma/client'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 export function calcularNuevoStock({
   stock_fraccion,
@@ -32,7 +32,7 @@ export default function StockIngresoSalida({
 }: {
   factor: number
   producto_en_almacen:
-    | ProductoSelect['producto_en_almacenes'][number]
+    | getProductosResponseProps['producto_en_almacenes'][number]
     | undefined
   unidades_contenidas: number
   form: FormInstance

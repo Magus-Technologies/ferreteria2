@@ -56,12 +56,15 @@ export default function FiltersMisRecepciones() {
       }}
       className='w-full'
       onFinish={values => {
-        const { desde, hasta, ...rest } = values
+        const { desde, hasta, almacen_id, ...rest } = values
         const data = {
           ...rest,
+          compra: {
+            almacen_id,
+          },
           fecha: {
-            gte: desde ? toUTCBD({ date: desde }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta }) : undefined,
+            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
+            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
         } satisfies Prisma.RecepcionAlmacenWhereInput
         setFiltros(data)

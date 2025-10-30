@@ -16,6 +16,7 @@ import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-prod
 import { useEffect } from 'react'
 import { urlToFile } from '~/utils/upload'
 import { useStoreCodigoAutomatico } from '../../_store/store-codigo-automatico'
+import { useStoreAlmacen } from '~/store/store-almacen'
 
 export type UnidadDerivadaCreateProducto = Omit<
   ProductoAlmacenUnidadDerivada,
@@ -62,6 +63,7 @@ export default function ModalCreateProducto({
   setTextDefault?: (text: string) => void
 }) {
   const [form] = Form.useForm<FormCreateProductoProps>()
+  const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
   const open = useStoreEditOrCopyProducto(state => state.openModal)
   const setOpen = useStoreEditOrCopyProducto(state => state.setOpenModal)
@@ -99,7 +101,10 @@ export default function ModalCreateProducto({
 
       const { estado, producto_en_almacenes, cod_producto, ...restProducto } =
         producto
-      const producto_almacen = producto_en_almacenes[0]
+      const producto_almacen = producto_en_almacenes.find(
+        item => item.almacen_id === almacen_id
+      )
+      if (!producto_almacen) return
       const costo_unidad = Number(producto_almacen.costo)
       form.setFieldsValue({
         ...restProducto,
@@ -134,15 +139,8 @@ export default function ModalCreateProducto({
       })
       setDisabled(true)
     }
-  }, [
-    form,
-    producto,
-    setFichaTecnicaFile,
-    setImgFile,
-    open,
-    setDisabled,
-    textDefault,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [producto])
 
   return (
     <ModalForm

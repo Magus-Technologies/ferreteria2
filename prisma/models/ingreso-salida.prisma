@@ -6,6 +6,7 @@ model IngresoSalida {
     serie          Int
     numero         Int
     descripcion    String?
+    estado         Boolean       @default(true)
 
     almacen_id Int
     almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -50,10 +51,23 @@ model UnidadDerivadaInmutableIngresoSalida {
     producto_almacen_ingreso_salida_id Int
     producto_almacen_ingreso_salida    ProductoAlmacenIngresoSalida @relation(fields: [producto_almacen_ingreso_salida_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    factor      Decimal   @db.Decimal(9, 3)
-    cantidad    Decimal   @db.Decimal(9, 3)
-    lote        String?
-    vencimiento DateTime?
+    factor            Decimal   @db.Decimal(9, 3)
+    cantidad          Decimal   @db.Decimal(9, 3)
+    cantidad_restante Decimal   @db.Decimal(9, 3)
+    lote              String?
+    vencimiento       DateTime?
+
+    historial HistorialUnidadDerivadaInmutableIngresoSalida[]
+}
+
+model HistorialUnidadDerivadaInmutableIngresoSalida {
+    id Int @id @default(autoincrement())
+
+    unidad_derivada_inmutable_ingreso_salida_id Int
+    unidad_derivada_inmutable_ingreso_salida    UnidadDerivadaInmutableIngresoSalida @relation(fields: [unidad_derivada_inmutable_ingreso_salida_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    stock_anterior Decimal @db.Decimal(9, 3)
+    stock_nuevo    Decimal @db.Decimal(9, 3)
 }
 
 model TipoIngresoSalida {

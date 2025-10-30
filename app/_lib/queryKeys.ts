@@ -7,6 +7,7 @@ export enum QueryKeys {
   UNIDADES_DERIVADAS = 'unidades_derivadas',
   PRODUCTOS = 'productos',
   PRODUCTOS_SEARCH = 'productos_search',
+  PRODUCTOS_TABLE_SEARCH = 'productos_table_search',
   PROVEEDORES = 'proveedores',
   PROVEEDORES_SEARCH = 'proveedores_search',
   TIPOS_INGRESO_SALIDA = 'tipos_ingreso_salida',

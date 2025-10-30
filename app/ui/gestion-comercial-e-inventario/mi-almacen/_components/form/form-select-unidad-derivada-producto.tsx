@@ -3,18 +3,18 @@ import { FaBox, FaWeightHanging } from 'react-icons/fa6'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
-import SelectProductos, {
-  ProductoSelect,
-} from '~/app/_components/form/selects/select-productos'
+import SelectProductos from '~/app/_components/form/selects/select-productos'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import SelectTiposIngresoSalida from '~/app/_components/form/selects/select-tipos-ingreso-salida'
 import LabelBase from '~/components/form/label-base'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
-import { FormInstance } from 'antd'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { TipoDocumento } from '@prisma/client'
+import { FormInstance } from 'antd'
+import { useStoreAlmacen } from '~/store/store-almacen'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 export default function FormSelectUnidadDerivadaProducto({
   form,
@@ -29,12 +29,16 @@ export default function FormSelectUnidadDerivadaProducto({
 
   const productoSeleccionado = useStoreProductoSeleccionado(
     store => store.producto
-  ) as ProductoSelect | undefined
-  const [producto, setProducto] = useState<ProductoSelect | undefined>(
-    productoSeleccionado
   )
+  const [producto, setProducto] = useState<
+    getProductosResponseProps | undefined
+  >(productoSeleccionado)
 
-  const producto_en_almacen = producto?.producto_en_almacenes[0]
+  const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
+  const producto_en_almacen = producto?.producto_en_almacenes.find(
+    item => item.almacen_id === almacen_id
+  )
   const unidades_derivadas = producto_en_almacen?.unidades_derivadas
 
   const [factor, setFactor] = useState(0)
@@ -85,6 +89,10 @@ export default function FormSelectUnidadDerivadaProducto({
               },
             ],
           }}
+          withSearch
+          showButtonCreate={can(permissions.PRODUCTO_CREATE)}
+          form={form}
+          limpiarOnChange
         />
       </LabelBase>
       <div className='flex gap-4 items-center justify-center'>

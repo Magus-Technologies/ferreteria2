@@ -1,14 +1,21 @@
 model RecepcionAlmacen {
     id Int @id @default(autoincrement())
 
-    numero        Int
-    observaciones String?  @db.Text
-    fecha         DateTime
+    numero                      Int
+    observaciones               String?  @db.Text
+    fecha                       DateTime
+    transportista_razon_social  String?
+    transportista_ruc           String?
+    transportista_placa         String?
+    transportista_licencia      String?
+    transportista_name          String?
+    transportista_guia_remision String?
+    estado                      Boolean  @default(true)
 
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    compra_id Int    @unique
+    compra_id String
     compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
     created_at DateTime @default(now())
@@ -44,13 +51,28 @@ model UnidadDerivadaInmutableRecepcion {
     producto_almacen_recepcion_id Int
     producto_almacen_recepcion    ProductoAlmacenRecepcion @relation(fields: [producto_almacen_recepcion_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    factor            Decimal   @db.Decimal(9, 3)
-    cantidad          Decimal   @db.Decimal(9, 3)
-    cantidad_restante Decimal   @db.Decimal(9, 3)
+    factor            Decimal                                     @db.Decimal(9, 3)
+    cantidad          Decimal                                     @db.Decimal(9, 3)
+    cantidad_restante Decimal                                     @db.Decimal(9, 3)
     lote              String?
     vencimiento       DateTime?
-    flete             Decimal   @default(0) @db.Decimal(9, 4)
-    bonificacion      Boolean   @default(false)
+    flete             Decimal                                     @default(0) @db.Decimal(9, 4)
+    bonificacion      Boolean                                     @default(false)
+    historial         HistorialUnidadDerivadaInmutableRecepcion[]
 
     @@unique([producto_almacen_recepcion_id, unidad_derivada_inmutable_id, bonificacion])
+}
+
+model HistorialUnidadDerivadaInmutableRecepcion {
+    id Int @id @default(autoincrement())
+
+    unidad_derivada_inmutable_recepcion_id Int
+    unidad_derivada_inmutable_recepcion    UnidadDerivadaInmutableRecepcion @relation(fields: [unidad_derivada_inmutable_recepcion_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    stock_anterior Decimal @db.Decimal(9, 3)
+    stock_nuevo    Decimal @db.Decimal(9, 3)
+
+    created_at DateTime @default(now())
+
+    @@index([created_at])
 }

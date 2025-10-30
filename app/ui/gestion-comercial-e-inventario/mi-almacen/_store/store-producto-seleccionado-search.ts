@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { TableProductosProps } from '../_components/tables/columns-productos'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 type UseStoreProductoSeleccionadoSearchProps = {
-  producto?: TableProductosProps
-  setProducto: (value: TableProductosProps | undefined) => void
+  producto?: getProductosResponseProps
+  setProducto: (value: getProductosResponseProps | undefined) => void
 }
 
 export const useStoreProductoSeleccionadoSearch =

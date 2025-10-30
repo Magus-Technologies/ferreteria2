@@ -3,7 +3,11 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductos } from './columns-productos'
 import { useServerQuery } from '~/hooks/use-server-query'
-import { getProductos, importarProductos } from '~/app/_actions/producto'
+import {
+  getProductos,
+  importarProductos,
+  type getProductosResponseProps,
+} from '~/app/_actions/producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputImport from '~/app/_components/form/inputs/input-import'
@@ -16,10 +20,12 @@ import InputUploadMasivo from '../inputs/input-upload-masivo'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { importarUbicaciones } from '~/app/_actions/ubicacion'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
+import { App } from 'antd'
 
 export default function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  const { notification } = App.useApp()
 
   const [primera_vez, setPrimeraVez] = useState(true)
 
@@ -49,13 +55,11 @@ export default function TableProductos() {
     if (!primera_vez) refetch()
   }, [filtros, refetch, primera_vez])
 
-  type ResponseItem = NonNullable<typeof response>[number]
-
   return (
-    <TableWithTitle<ResponseItem>
+    <TableWithTitle<getProductosResponseProps>
       id='g-c-e-i.mi-almacen.productos'
       onSelectionChanged={({ selectedNodes }) =>
-        setProductoSeleccionado(selectedNodes?.[0]?.data as ResponseItem)
+        setProductoSeleccionado(selectedNodes?.[0]?.data)
       }
       tableRef={tableRef}
       title='Productos'
@@ -122,6 +126,29 @@ export default function TableProductos() {
               propsUseServerMutation={{
                 action: importarProductos,
                 msgSuccess: 'Productos importados exitosamente',
+                onSuccess: res => {
+                  if (res.data?.length)
+                    notification.info({
+                      message: 'Productos duplicados',
+                      description: (
+                        <div className='max-h-[60dvh] overflow-y-auto'>
+                          <p>
+                            Los siguientes productos no se subieron porque ya
+                            existen:
+                          </p>
+                          {res.data.map((item, index) => (
+                            <div key={index} className='pr-4'>
+                              <div className='grid grid-cols-3 gap-x-4 pl-8'>
+                                <span className='text-red-500 text-nowrap'>
+                                  {item.name}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ),
+                    })
+                },
                 queryKey: [
                   QueryKeys.PRODUCTOS,
                   QueryKeys.MARCAS,

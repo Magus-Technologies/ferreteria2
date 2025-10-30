@@ -3,7 +3,6 @@ import InputBase from '../form/inputs/input-base'
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
-import { TableProductosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos'
 import ButtonCreateProductoPlus from '../form/buttons/button-create-producto-plus'
 import TableProductoSearch, {
   RefTableProductoSearchProps,
@@ -12,6 +11,7 @@ import SelectTipoBusquedaProducto, {
   TipoBusquedaProducto,
 } from '../form/selects/select-tipo-busqueda-producto'
 import CardAgregarProductoCompra from '~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/_components/cards/card-agregar-producto-compra'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 type ModalProductoSearchProps = {
   open: boolean
@@ -22,9 +22,10 @@ type ModalProductoSearchProps = {
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: TableProductosProps | undefined
+    data: getProductosResponseProps | undefined
   }) => void
   setTipoBusqueda: (tipoBusqueda: TipoBusquedaProducto) => void
+  showCardAgregarProducto?: boolean
 }
 
 export default function ModalProductoSearch({
@@ -35,6 +36,7 @@ export default function ModalProductoSearch({
   tipoBusqueda,
   onRowDoubleClicked,
   setTipoBusqueda,
+  showCardAgregarProducto = false,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault)
   useEffect(() => {
@@ -104,9 +106,11 @@ export default function ModalProductoSearch({
             tipoBusqueda={tipoBusqueda}
           />
         </div>
-        <div>
-          <CardAgregarProductoCompra setOpen={setOpen} />
-        </div>
+        {showCardAgregarProducto && (
+          <div>
+            <CardAgregarProductoCompra setOpen={setOpen} />
+          </div>
+        )}
       </div>
     </Modal>
   )

@@ -10,7 +10,6 @@ import CardAgregarProductoCompra from '../cards/card-agregar-producto-compra'
 import { useState } from 'react'
 import usePermission from '~/hooks/use-permission'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
-import { TableProductosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos'
 
 export default function HeaderCrearCompra() {
   const can = usePermission()
@@ -41,16 +40,13 @@ export default function HeaderCrearCompra() {
             showButtonCreate={can(permissions.PRODUCTO_CREATE)}
             withSearch
             withTipoBusqueda
+            showCardAgregarProducto
             handleOnlyOneResult={producto => {
-              setProductoSeleccionadoSearchStore(
-                producto as TableProductosProps
-              )
+              setProductoSeleccionadoSearchStore(producto)
               if (producto) setOpenModalAgregarProducto(true)
             }}
             onChange={(_, producto) => {
-              setProductoSeleccionadoSearchStore(
-                producto as TableProductosProps
-              )
+              setProductoSeleccionadoSearchStore(producto)
               if (producto) setOpenModalAgregarProducto(true)
             }}
           />

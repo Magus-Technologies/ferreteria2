@@ -1,26 +1,33 @@
 import { Modal, Tooltip } from 'antd'
+import { cloneElement } from 'react'
 import { FaDownload, FaShareNodes } from 'react-icons/fa6'
 import ButtonBase from '~/components/buttons/button-base'
+import { useJSXToPdf } from '~/hooks/use-react-to-pdf'
 import { classOkButtonModal } from '~/lib/clases'
 
 interface ModalEntradaStockProps {
   open: boolean
   setOpen: (open: boolean) => void
-  title: string
+  nro_doc: string
   children: React.ReactNode
-  handlePdf?: () => void
-  handleShare?: () => void
-  handlePrint?: () => void
 }
 export default function ModalShowDoc({
   open,
   setOpen,
-  title,
+  nro_doc,
   children,
-  handlePdf,
-  handleShare,
-  handlePrint,
 }: ModalEntradaStockProps) {
+  const title = `Documento Nro: ${nro_doc}`
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const childrenWithProps = cloneElement(children as React.ReactElement<any>, {
+    show_logo_html: true,
+  })
+
+  const { download, print, share } = useJSXToPdf({
+    jsx: <>{children}</>,
+    name: nro_doc,
+  })
   return (
     <Modal
       centered
@@ -32,7 +39,7 @@ export default function ModalShowDoc({
           {title}
           <Tooltip title='Descargar PDF'>
             <ButtonBase
-              onClick={handlePdf}
+              onClick={download}
               color='danger'
               size='md'
               className='!px-3'
@@ -42,7 +49,7 @@ export default function ModalShowDoc({
           </Tooltip>
           <Tooltip title='Compartir'>
             <ButtonBase
-              onClick={handleShare}
+              onClick={share}
               color='success'
               size='md'
               className='!px-3'
@@ -53,7 +60,7 @@ export default function ModalShowDoc({
         </div>
       }
       okText={'Imprimir'}
-      onOk={handlePrint}
+      onOk={print}
       cancelText='Cerrar'
       cancelButtonProps={{ className: 'rounded-xl' }}
       okButtonProps={{
@@ -65,7 +72,7 @@ export default function ModalShowDoc({
       destroyOnHidden
     >
       <div className='border rounded-xl' style={{ width: 595, zoom: 1.5 }}>
-        {children}
+        {childrenWithProps}
       </div>
     </Modal>
   )

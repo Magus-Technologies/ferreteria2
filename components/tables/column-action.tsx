@@ -6,8 +6,8 @@ import {
   useServerMutation,
 } from '~/hooks/use-server-mutation'
 
-interface ColumnActionProps {
-  id: string
+interface ColumnActionProps<T> {
+  id: T
   permiso: string
   children?: React.ReactNode
   childrenMiddle?: React.ReactNode
@@ -15,10 +15,10 @@ interface ColumnActionProps {
   onEdit?: () => void
   showEdit?: boolean
   titleDelete?: string
-  propsDelete?: UseMutationActionProps<{ id: number }, unknown>
+  propsDelete?: UseMutationActionProps<{ id: T }, unknown>
 }
 
-export default function ColumnAction({
+export default function ColumnAction<T>({
   id,
   permiso,
   children,
@@ -28,7 +28,7 @@ export default function ColumnAction({
   showEdit = true,
   titleDelete = 'Eliminar',
   propsDelete,
-}: ColumnActionProps) {
+}: ColumnActionProps<T>) {
   const can = usePermission()
 
   const { execute: deleteAction, loading: deleteLoading } = useServerMutation(
@@ -56,7 +56,7 @@ export default function ColumnAction({
           <Popconfirm
             title={titleDelete}
             description={`¿Estas seguro de ${titleDelete.toLowerCase()} este registro?`}
-            onConfirm={() => deleteAction({ id: Number(id) })}
+            onConfirm={() => deleteAction({ id })}
             okText={titleDelete}
             cancelText='Cancelar'
           >

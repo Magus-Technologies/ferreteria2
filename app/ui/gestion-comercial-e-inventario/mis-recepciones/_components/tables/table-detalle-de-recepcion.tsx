@@ -9,6 +9,7 @@ import {
   TableDetalleDeRecepcionProps,
   useColumnsDetalleDeRecepcion,
 } from './columns-detalle-de-recepcion'
+import { getDetallesRecepcionAlmacen } from '../../_utils/get-detalles-recepcion-almacen'
 
 export default function TableDetalleDeRecepcion() {
   const tableRef = useRef<AgGridReact>(null)
@@ -27,12 +28,15 @@ export default function TableDetalleDeRecepcion() {
 
   return (
     <TableWithTitle<TableDetalleDeRecepcionProps>
+      key={`estado-${recepcionSeleccionada?.estado ?? false}`}
       tableRef={tableRef}
       id='g-c-e-i.mis-recepciones.detalle-de-recepcion'
       title='Detalle de Recepción'
       schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}
-      columnDefs={useColumnsDetalleDeRecepcion()}
+      columnDefs={useColumnsDetalleDeRecepcion({
+        estado: recepcionSeleccionada?.estado ?? false,
+      })}
       optionsSelectColumns={[
         {
           label: 'Default',
@@ -43,6 +47,8 @@ export default function TableDetalleDeRecepcion() {
             'Marca',
             'Unidad Derivada',
             'Cantidad',
+            'Stock Anterior',
+            'Stock Nuevo',
             'P. Compra',
             'Importe',
             'F. Vencimiento',
@@ -50,15 +56,7 @@ export default function TableDetalleDeRecepcion() {
           ],
         },
       ]}
-      rowData={
-        recepcionSeleccionada?.productos_por_almacen?.flatMap(ppa =>
-          ppa.unidades_derivadas.map(ud => ({
-            ...ud,
-            costo: ppa.costo,
-            producto_almacen: ppa.producto_almacen,
-          }))
-        ) ?? []
-      }
+      rowData={getDetallesRecepcionAlmacen({ data: recepcionSeleccionada })}
     />
   )
 }

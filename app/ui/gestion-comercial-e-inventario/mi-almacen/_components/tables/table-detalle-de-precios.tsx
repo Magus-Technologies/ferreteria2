@@ -17,9 +17,9 @@ import {
   importarUnidadesDerivadas,
 } from '~/app/_actions/unidadDerivada'
 import { useQueryClient } from '@tanstack/react-query'
-import { TableProductosProps } from './columns-productos'
 import ButtonBase from '~/components/buttons/button-base'
 import { ServerResult } from '~/auth/middleware-server-actions'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
@@ -39,9 +39,9 @@ export default function TableDetalleDePrecios() {
 
   const queryClient = useQueryClient()
 
-  const data = queryClient.getQueryData<ServerResult<TableProductosProps[]>>([
-    QueryKeys.PRODUCTOS,
-  ])
+  const data = queryClient.getQueryData<
+    ServerResult<getProductosResponseProps[]>
+  >([QueryKeys.PRODUCTOS])
 
   const [primeraData, setPrimeraData] = useState(0)
   useEffect(() => {

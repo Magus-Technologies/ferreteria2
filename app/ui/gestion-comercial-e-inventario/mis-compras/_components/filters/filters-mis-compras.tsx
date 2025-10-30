@@ -25,6 +25,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import SelectEstadoDeCuenta, {
   EstadoDeCuenta,
 } from '~/app/_components/form/selects/select-estado-de-cuenta'
+import TotalCompras from '../others/total-compras'
 
 interface ValuesFiltersMisCompras {
   almacen_id: number
@@ -73,8 +74,8 @@ export default function FiltersMisCompras() {
         const data = {
           ...rest,
           fecha: {
-            gte: desde ? toUTCBD({ date: desde }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta }) : undefined,
+            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
+            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
         } satisfies Prisma.CompraWhereInput
         setFiltros(data)
@@ -99,16 +100,7 @@ export default function FiltersMisCompras() {
               <FaPlusCircle />
               Crear Compra
             </ButtonBase>
-            <div className='flex items-center gap-2 font-bold text-2xl'>
-              <div className='text-slate-700'>TOTAL:</div>
-              <div className='text-slate-900 text-nowrap'>
-                S/.{' '}
-                {(0).toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </div>
-            </div>
+            <TotalCompras />
           </div>
         }
       >

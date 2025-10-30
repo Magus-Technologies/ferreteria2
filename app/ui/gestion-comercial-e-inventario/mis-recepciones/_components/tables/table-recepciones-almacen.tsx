@@ -13,6 +13,7 @@ import {
   getRecepcionesAlmacenResponseProps,
 } from '~/app/_actions/recepcion-almacen'
 import { useColumnsRecepcionesAlmacen } from './columns-recepciones-almacen'
+import ModalDocRecepcionAlmacen from '../modals/modal-doc-recepcion-almacen'
 
 export default function TableRecepcionesAlmacen() {
   const tableRef = useRef<AgGridReact>(null)
@@ -43,8 +44,18 @@ export default function TableRecepcionesAlmacen() {
     if (!primera_vez) refetch()
   }, [filtros, refetch, primera_vez])
 
+  const [openModalDocRecepcionAlmacen, setOpenModalDocRecepcionAlmacen] =
+    useState(false)
+  const [dataModalDocRecepcionAlmacen, setDataModalDocRecepcionAlmacen] =
+    useState<getRecepcionesAlmacenResponseProps>()
+
   return (
     <>
+      <ModalDocRecepcionAlmacen
+        open={openModalDocRecepcionAlmacen}
+        setOpen={setOpenModalDocRecepcionAlmacen}
+        data={dataModalDocRecepcionAlmacen}
+      />
       <TableWithTitle<getRecepcionesAlmacenResponseProps>
         id='g-c-e-i.mis-recepciones.recepciones-almacen'
         onSelectionChanged={({ selectedNodes }) =>
@@ -56,12 +67,24 @@ export default function TableRecepcionesAlmacen() {
         title='Recepciones de Almacén'
         schema={CompraCreateInputSchema}
         loading={loading}
-        columnDefs={useColumnsRecepcionesAlmacen()}
+        columnDefs={useColumnsRecepcionesAlmacen({
+          setDataModalDocRecepcionAlmacen,
+          setOpenModalDocRecepcionAlmacen,
+        })}
         rowData={response}
         optionsSelectColumns={[
           {
             label: 'Default',
-            columns: ['#', 'N° Documento', 'Fecha', 'Registrador', 'Acciones'],
+            columns: [
+              '#',
+              'N° Documento',
+              'Fecha',
+              'Registrador',
+              'Proveedor',
+              'Compra',
+              'Activo',
+              'Acciones',
+            ],
           },
         ]}
       />

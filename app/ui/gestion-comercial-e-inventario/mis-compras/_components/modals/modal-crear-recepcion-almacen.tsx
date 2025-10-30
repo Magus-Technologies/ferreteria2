@@ -9,15 +9,23 @@ import { useEffect } from 'react'
 import dayjs from 'dayjs'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar } from 'react-icons/fa'
-import LabelBase from '~/components/form/label-base'
-import TextareaBase from '~/app/_components/form/inputs/textarea-base'
 import useCreateRecepcionAlmacen from '../../_hooks/use-create-recepcion-almacen'
 import { useRouter } from 'next/navigation'
+import FormCrearRecepcionAlmacen from '../form/form-crear-recepcion-almacen'
+import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
 
 export type FormCreateRecepcionAlmacen = Pick<
   FormCreateCompra,
   'productos' | 'fecha'
->
+> & {
+  transportista_ruc: string
+  transportista_razon_social: string
+  transportista_placa: string
+  transportista_licencia: string
+  transportista_name: string
+  transportista_guia_remision: string
+  observaciones: string
+}
 
 export default function ModalCrearRecepcionAlmacen({
   open,
@@ -33,9 +41,7 @@ export default function ModalCrearRecepcionAlmacen({
   const [form] = Form.useForm<FormCreateRecepcionAlmacen>()
   const route = useRouter()
 
-  const nro_doc = compra
-    ? `${compra.serie}-${compra.numero.toString().padStart(4, '0')}`
-    : ''
+  const nro_doc = getNroDocCompra({ compra })
 
   const { handleSubmit, loading } = useCreateRecepcionAlmacen({
     compra_id: compra?.id,
@@ -58,34 +64,37 @@ export default function ModalCrearRecepcionAlmacen({
       )
       form.setFieldValue(
         'productos',
-        productos_formateados.map(p => {
-          const producto = p.producto.producto_almacen.producto
-          const unidad_derivada = p.unidad_derivada
-          return {
-            producto_codigo: producto.cod_producto,
-            producto_id: producto.id,
-            producto_name: producto.name,
-            bonificacion: unidad_derivada.bonificacion,
-            marca_name: producto.marca.name,
-            unidad_derivada_name:
-              unidad_derivada.unidad_derivada_inmutable.name,
-            unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable.id,
-            unidad_derivada_factor: unidad_derivada.factor,
-            cantidad: unidad_derivada.cantidad,
-            precio_compra:
-              Number(p.producto.producto_almacen.costo) *
-              Number(unidad_derivada.factor),
-            subtotal:
-              Number(p.producto.producto_almacen.costo) *
-              Number(unidad_derivada.factor) *
-              Number(unidad_derivada.cantidad),
-            flete: unidad_derivada.flete,
-            vencimiento: unidad_derivada.vencimiento
-              ? dayjs(unidad_derivada.vencimiento)
-              : undefined,
-            lote: unidad_derivada.lote,
-          }
-        })
+        productos_formateados
+          .filter(p => Number(p.unidad_derivada.cantidad_pendiente) > 0)
+          .map(p => {
+            const producto = p.producto.producto_almacen.producto
+            const unidad_derivada = p.unidad_derivada
+            return {
+              producto_codigo: producto.cod_producto,
+              producto_id: producto.id,
+              producto_name: producto.name,
+              bonificacion: unidad_derivada.bonificacion,
+              marca_name: producto.marca.name,
+              unidad_derivada_name:
+                unidad_derivada.unidad_derivada_inmutable.name,
+              unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable.id,
+              unidad_derivada_factor: unidad_derivada.factor,
+              cantidad: unidad_derivada.cantidad_pendiente,
+              cantidad_pendiente: unidad_derivada.cantidad_pendiente,
+              precio_compra:
+                Number(p.producto.producto_almacen.costo) *
+                Number(unidad_derivada.factor),
+              subtotal:
+                Number(p.producto.producto_almacen.costo) *
+                Number(unidad_derivada.factor) *
+                Number(unidad_derivada.cantidad),
+              flete: unidad_derivada.flete,
+              vencimiento: unidad_derivada.vencimiento
+                ? dayjs(unidad_derivada.vencimiento)
+                : undefined,
+              lote: unidad_derivada.lote,
+            }
+          })
       )
     }
     form.setFieldValue('fecha', dayjs())
@@ -136,17 +145,13 @@ export default function ModalCrearRecepcionAlmacen({
       }}
     >
       <div className='h-[250px] min-h-[250px]'>
-        <FormTableComprar form={form} incluye_precios={false} />
-      </div>
-      <LabelBase className='mt-4' label='Observaciones:' orientation='column'>
-        <TextareaBase
-          rows={3}
-          formWithMessage={false}
-          propsForm={{
-            name: 'observaciones',
-          }}
+        <FormTableComprar
+          form={form}
+          incluye_precios={false}
+          cantidad_pendiente={true}
         />
-      </LabelBase>
+      </div>
+      <FormCrearRecepcionAlmacen form={form} />
     </ModalForm>
   )
 }

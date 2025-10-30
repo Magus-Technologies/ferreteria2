@@ -2,6 +2,9 @@
 
 import { ColDef } from 'ag-grid-community'
 import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
+import { getStock } from '~/app/_utils/get-stock'
+import { getHistorial } from '../../../mi-almacen/_components/tables/columns-doc-ingreso-salida'
+import { RecepcionAlmacen } from '@prisma/client'
 
 export type TableDetalleDeRecepcionProps = Pick<
   getRecepcionesAlmacenResponseProps['productos_por_almacen'][number],
@@ -9,7 +12,15 @@ export type TableDetalleDeRecepcionProps = Pick<
 > &
   getRecepcionesAlmacenResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number]
 
-export function useColumnsDetalleDeRecepcion() {
+export function useColumnsDetalleDeRecepcion({
+  estado,
+}: {
+  estado: RecepcionAlmacen['estado']
+}) {
+  console.log(
+    '🚀 ~ file: columns-detalle-de-recepcion.tsx:19 ~ estado:',
+    estado
+  )
   const columns: ColDef<TableDetalleDeRecepcionProps>[] = [
     {
       headerName: 'Cod. Producto',
@@ -78,6 +89,60 @@ export function useColumnsDetalleDeRecepcion() {
       width: 50,
       minWidth: 50,
       filter: 'agNumberColumnFilter',
+    },
+    {
+      headerName: 'Stock Anterior',
+      field: 'historial',
+      width: 60,
+      minWidth: 60,
+      valueFormatter: ({
+        data,
+        value,
+      }: {
+        data: TableDetalleDeRecepcionProps | undefined
+        value: TableDetalleDeRecepcionProps['historial']
+      }) => {
+        const historial = getHistorial({
+          historial: value,
+          estado,
+        })
+
+        const unidades_contenidas = Number(
+          data?.producto_almacen.producto.unidades_contenidas
+        )
+        return getStock({
+          stock_fraccion: Number(historial.stock_anterior),
+          unidades_contenidas,
+        }).stock
+      },
+      filter: true,
+    },
+    {
+      headerName: 'Stock Nuevo',
+      field: 'historial',
+      width: 60,
+      minWidth: 60,
+      valueFormatter: ({
+        data,
+        value,
+      }: {
+        data: TableDetalleDeRecepcionProps | undefined
+        value: TableDetalleDeRecepcionProps['historial']
+      }) => {
+        const historial = getHistorial({
+          historial: value,
+          estado,
+        })
+
+        const unidades_contenidas = Number(
+          data?.producto_almacen.producto.unidades_contenidas
+        )
+        return getStock({
+          stock_fraccion: Number(historial.stock_nuevo),
+          unidades_contenidas,
+        }).stock
+      },
+      filter: true,
     },
     {
       headerName: 'F. Vencimiento',

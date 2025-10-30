@@ -14,10 +14,12 @@ export function useColumnsComprar({
   form,
   remove,
   incluye_precios = true,
+  cantidad_pendiente = false,
 }: {
   form: FormInstance
   remove: (index: number | number[]) => void
   incluye_precios?: boolean
+  cantidad_pendiente?: boolean
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
 
@@ -248,6 +250,17 @@ export function useColumnsComprar({
               }}
               precision={2}
               min={0}
+              max={
+                cantidad_pendiente
+                  ? Number(
+                      form.getFieldValue([
+                        'productos',
+                        value,
+                        'cantidad_pendiente',
+                      ])
+                    )
+                  : undefined
+              }
               formWithMessage={false}
               onChange={val => {
                 form.setFieldValue(

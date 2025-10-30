@@ -22,7 +22,8 @@ model ProductoAlmacen {
     almacen_id Int
 
     stock_fraccion Decimal @default(0) @db.Decimal(9, 3)
-    costo          Decimal @default(0) @db.Decimal(9, 4)
+
+    costo Decimal @default(0) @db.Decimal(9, 4)
 
     ubicacion    Ubicacion @relation(fields: [ubicacion_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
     ubicacion_id Int

@@ -43,13 +43,14 @@ export default function useCreateRecepcionAlmacen({
     if (!compra_id)
       return notification.error({ message: 'No hay una compra seleccionada' })
 
-    const { productos, fecha } = values
+    const { productos, fecha, ...rest } = values
 
     const productos_agrupados = agruparProductos({
       productos: productos,
     })
 
     const dataFormated = {
+      ...rest,
       user_id,
       compra_id,
       fecha: toUTCBD({

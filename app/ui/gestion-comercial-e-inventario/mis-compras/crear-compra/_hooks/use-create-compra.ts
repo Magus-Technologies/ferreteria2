@@ -7,7 +7,7 @@ import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import { FormaDePago, Prisma } from '@prisma/client'
+import { FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
 import { useSession } from 'next-auth/react'
 
 type ProductoAgrupado = Pick<
@@ -93,7 +93,7 @@ export default function useCreateCompra() {
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
 
-    const { productos, ...restValues } = values
+    const { productos, tipo_de_cambio, tipo_moneda, ...restValues } = values
 
     const productos_agrupados = agruparProductos({
       productos: productos,
@@ -101,6 +101,8 @@ export default function useCreateCompra() {
 
     const dataFormated = {
       ...restValues,
+      tipo_moneda,
+      tipo_de_cambio: tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
       user_id,
       fecha: toUTCBD({
         date: restValues.fecha,
@@ -147,6 +149,7 @@ export default function useCreateCompra() {
                 },
                 factor: Number(u.unidad_derivada_factor),
                 cantidad: Number(u.cantidad),
+                cantidad_pendiente: Number(u.cantidad),
                 lote: u.lote,
                 vencimiento: u.vencimiento,
                 bonificacion: u.bonificacion,

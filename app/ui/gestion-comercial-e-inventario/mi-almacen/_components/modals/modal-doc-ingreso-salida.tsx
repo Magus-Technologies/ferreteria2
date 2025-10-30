@@ -2,8 +2,8 @@ import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import DocIngresoSalida, {
   DataDocIngresoSalida,
 } from '../docs/doc-ingreso-salida'
-import { TiposDocumentos } from '~/lib/docs'
-import { useJSXToPdf } from '~/hooks/use-react-to-pdf'
+import { getNroDoc } from '~/app/_utils/get-nro-doc'
+import { useSession } from 'next-auth/react'
 
 export default function ModalDocIngresoSalida({
   open,
@@ -14,27 +14,18 @@ export default function ModalDocIngresoSalida({
   setOpen: (open: boolean) => void
   data: DataDocIngresoSalida | undefined
 }) {
-  const nro_doc = data?.tipo_documento
-    ? `${TiposDocumentos[data.tipo_documento].cod_serie}${data.serie
-        .toString()
-        .padStart(2, '0')}-${data.numero.toString().padStart(4, '0')}`
-    : ''
-
-  const { download, print, share } = useJSXToPdf({
-    jsx: <DocIngresoSalida data={data} nro_doc={nro_doc} />,
-    name: nro_doc,
+  const nro_doc = getNroDoc({
+    tipo_documento: data?.tipo_documento,
+    serie: data?.serie ?? 0,
+    numero: data?.numero ?? 0,
   })
 
+  const { data: session } = useSession()
+  const empresa = session?.user.empresa
+
   return (
-    <ModalShowDoc
-      open={open}
-      setOpen={setOpen}
-      title={`Documento Nro: ${nro_doc}`}
-      handlePdf={download}
-      handleShare={share}
-      handlePrint={print}
-    >
-      <DocIngresoSalida data={data} nro_doc={nro_doc} />
+    <ModalShowDoc open={open} setOpen={setOpen} nro_doc={nro_doc}>
+      <DocIngresoSalida data={data} nro_doc={nro_doc} empresa={empresa} />
     </ModalShowDoc>
   )
 }

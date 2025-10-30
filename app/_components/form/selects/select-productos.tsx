@@ -4,15 +4,11 @@
 import { useServerQuery } from '~/hooks/use-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
+import { Prisma, Producto } from '@prisma/client'
 import {
-  Marca,
-  Prisma,
-  Producto,
-  ProductoAlmacen,
-  ProductoAlmacenUnidadDerivada,
-  UnidadDerivada,
-} from '@prisma/client'
-import { SearchProductos } from '~/app/_actions/producto'
+  getProductosResponseProps,
+  SearchProductos,
+} from '~/app/_actions/producto'
 import { FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -62,36 +58,20 @@ export function getFiltrosPorTipoBusqueda({
   return filtros[tipoBusqueda]
 }
 
-export type ProductoSelect = Pick<
-  Producto,
-  'id' | 'name' | 'cod_producto' | 'unidades_contenidas'
-> & {
-  marca: Marca
-  producto_en_almacenes: (Pick<
-    ProductoAlmacen,
-    'almacen_id' | 'costo' | 'stock_fraccion'
-  > & {
-    unidades_derivadas: (Pick<
-      ProductoAlmacenUnidadDerivada,
-      'id' | 'factor'
-    > & {
-      unidad_derivada: Pick<UnidadDerivada, 'id' | 'name'>
-    })[]
-  })[]
-}
-
 interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
   showButtonCreate?: boolean
-  onChange?: (value: string, producto?: ProductoSelect) => void
+  onChange?: (value: number, producto?: getProductosResponseProps) => void
   optionsDefault?: { value: number; label: string }[]
   classIconSearch?: string
   classNameTipoBusqueda?: string
   classIconPlus?: string
   withSearch?: boolean
   withTipoBusqueda?: boolean
-  handleOnlyOneResult?: (producto: ProductoSelect) => void
+  handleOnlyOneResult?: (producto: getProductosResponseProps) => void
+  showCardAgregarProducto?: boolean
+  limpiarOnChange?: boolean
 }
 
 export default function SelectProductos({
@@ -108,6 +88,8 @@ export default function SelectProductos({
   withSearch = false,
   withTipoBusqueda = false,
   handleOnlyOneResult,
+  showCardAgregarProducto = false,
+  limpiarOnChange = false,
   ...props
 }: SelectProductosProps) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -135,7 +117,7 @@ export default function SelectProductos({
 
   const [productoCreado, setProductoCreado] = useState<Producto>()
   const [productoSeleccionado, setProductoSeleccionado] =
-    useState<ProductoSelect>()
+    useState<getProductosResponseProps>()
 
   const { response, refetch, loading, isFetching } = useServerQuery({
     action: SearchProductos,
@@ -144,35 +126,11 @@ export default function SelectProductos({
       enabled: false,
     },
     params: {
-      where: { ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value: text }) },
-      select: {
-        id: true,
-        name: true,
-        cod_producto: true,
-        unidades_contenidas: true,
-        marca: true,
-        producto_en_almacenes: {
-          where: { almacen_id },
-          select: {
-            almacen_id: true,
-            costo: true,
-            stock_fraccion: true,
-            unidades_derivadas: {
-              select: {
-                id: true,
-                factor: true,
-                unidad_derivada: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+      where: {
+        ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value: text }),
+        producto_en_almacenes: { some: { almacen_id } },
       },
-    } satisfies Prisma.ProductoFindManyArgs,
+    },
   })
 
   function handleSearch() {
@@ -191,12 +149,11 @@ export default function SelectProductos({
       return
     }
     if (isFetching) return
-    if (response?.length === 1)
-      handleOnlyOneResult?.(response[0] as unknown as ProductoSelect)
+    if (response?.length === 1) handleOnlyOneResult?.(response[0])
     else setOpenModalProductoSearch(true)
   }, [response, isFetching])
 
-  function handleSelect({ data }: { data?: ProductoSelect } = {}) {
+  function handleSelect({ data }: { data?: getProductosResponseProps } = {}) {
     const producto = data || productoSeleccionadoSearchStore
     if (producto) {
       setProductoSeleccionado(producto)
@@ -206,6 +163,8 @@ export default function SelectProductos({
       })
       setProductoSeleccionadoSearchStore(undefined)
       setOpenModalProductoSearch(false)
+      if (limpiarOnChange) setText('')
+      onChange?.(producto.id, producto)
     }
   }
 
@@ -220,18 +179,20 @@ export default function SelectProductos({
         />
       )}
       <SelectBase
+        ref={selectProductoRef}
         showSearch
         onClear={() => {
           setTextDefault('')
         }}
         onChange={value => {
           const producto = response?.find(item => item.id === value) as
-            | ProductoSelect
+            | getProductosResponseProps
             | undefined
           onChange?.(value, producto)
         }}
         filterOption={false}
         onSearch={setText}
+        searchValue={text}
         prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
         loading={loading}
         variant={variant}
@@ -298,6 +259,7 @@ export default function SelectProductos({
         onRowDoubleClicked={handleSelect}
         tipoBusqueda={tipoBusqueda}
         setTipoBusqueda={setTipoBusqueda}
+        showCardAgregarProducto={showCardAgregarProducto}
       />
       {showButtonCreate && (
         <ButtonCreateProductoPlus

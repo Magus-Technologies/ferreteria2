@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import { TableProductosProps } from '../_components/tables/columns-productos'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 export type productoEditOrCopy = Omit<
-  TableProductosProps,
+  getProductosResponseProps,
   'id' | 'cod_producto' | 'cod_barra'
 > & {
   id?: number

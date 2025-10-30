@@ -4,7 +4,7 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
-import { EstadoDeCompra, Prisma } from '@prisma/client'
+import { Compra, EstadoDeCompra, Prisma } from '@prisma/client'
 import {
   CompraUncheckedCreateInputSchema,
   CompraWhereInputSchema,
@@ -94,7 +94,7 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
 }
 export const createCompra = withAuth(createCompraWA)
 
-async function eliminarCompraWA({ id }: { id: number }) {
+async function eliminarCompraWA({ id }: { id: Compra['id'] }) {
   const puede = await can(permissions.COMPRAS_DELETE)
   if (!puede) throw new Error('No tienes permiso para eliminar una compra')
 

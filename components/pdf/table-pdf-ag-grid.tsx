@@ -3,7 +3,7 @@ import { Column } from 'ag-grid-community'
 
 export const styles_globales = StyleSheet.create({
   page: {
-    padding: 48,
+    padding: 36,
     fontSize: 10,
     color: 'black',
     backgroundColor: 'white',
@@ -11,7 +11,6 @@ export const styles_globales = StyleSheet.create({
     flexDirection: 'column',
   },
   sectionTable: {
-    marginBottom: 16,
     display: 'flex',
     flexDirection: 'column',
   },
@@ -36,7 +35,7 @@ export const styles_globales = StyleSheet.create({
   },
   cell: {
     display: 'flex',
-    padding: '4px 16px',
+    padding: '4px 8px',
   },
 })
 

@@ -72,7 +72,7 @@ export default function SelectBase({
   useImperativeHandle(props.ref, () => ({
     ...props.ref!.current!,
     changeValue: (value: unknown) => {
-      if (form)
+      if (form) {
         form.setFieldValue(
           propsFormItem.name instanceof Array
             ? [
@@ -82,7 +82,7 @@ export default function SelectBase({
             : propsFormItem.name,
           value
         )
-      else setValue(value)
+      } else setValue(value)
     },
   }))
 

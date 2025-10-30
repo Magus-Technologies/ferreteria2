@@ -9,41 +9,22 @@ import { Popover, Tooltip } from 'antd'
 import { FaImage } from 'react-icons/fa'
 import { IoIosCopy } from 'react-icons/io'
 import { PiWarehouseFill } from 'react-icons/pi'
+import { GoAlertFill } from 'react-icons/go'
 import ColumnAction from '~/components/tables/column-action'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ProductoOtrosAlmacenes from '../others/producto-otros-almacenes'
-import {
-  Almacen,
-  Categoria,
-  Marca,
-  Producto,
-  ProductoAlmacen,
-  ProductoAlmacenUnidadDerivada,
-  Ubicacion,
-  UnidadDerivada,
-  UnidadMedida,
-} from '@prisma/client'
+import { SiAdblock } from 'react-icons/si'
 import { getStock, GetStock } from '~/app/_utils/get-stock'
-import { eliminarProducto } from '~/app/_actions/producto'
+import {
+  eliminarProducto,
+  getProductosResponseProps,
+} from '~/app/_actions/producto'
 import {
   productoEditOrCopy,
   useStoreEditOrCopyProducto,
 } from '../../_store/store-edit-or-copy-producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-
-export type TableProductosProps = Producto & {
-  marca: Marca
-  categoria: Categoria
-  unidad_medida: UnidadMedida
-  producto_en_almacenes: (ProductoAlmacen & {
-    unidades_derivadas: (ProductoAlmacenUnidadDerivada & {
-      unidad_derivada: UnidadDerivada
-    })[]
-    almacen: Almacen
-    ubicacion: Ubicacion
-  })[]
-}
 
 interface UseColumnsProductosProps {
   almacen_id?: number
@@ -54,7 +35,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
   const setOpen = useStoreEditOrCopyProducto(state => state.setOpenModal)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
 
-  const columns: ColDef<TableProductosProps>[] = [
+  const columns: ColDef<getProductosResponseProps>[] = [
     {
       headerName: 'Código de Producto',
       field: 'cod_producto',
@@ -70,9 +51,17 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       cellRenderer: ({
         value,
         data,
-      }: ICellRendererParams<TableProductosProps>) => {
+      }: ICellRendererParams<getProductosResponseProps>) => {
         return (
-          <div className='flex items-center justify-between gap-2 pr-5'>
+          <div className='flex items-center gap-2 pr-5'>
+            {!data?.permitido && (
+              <Tooltip
+                classNames={{ body: 'text-center!' }}
+                title='Este producto aún no tiene Unidades Derivadas Importadas, no podrá usarse para venta, compra, o alguna otra acción'
+              >
+                <GoAlertFill className='text-rose-700 cursor-pointer' />
+              </Tooltip>
+            )}
             <Tooltip classNames={{ body: 'text-center!' }} title={value}>
               <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
                 {value}
@@ -119,13 +108,13 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       valueFormatter: ({
         value,
       }: ValueFormatterParams<
-        TableProductosProps,
-        TableProductosProps['producto_en_almacenes']
+        getProductosResponseProps,
+        getProductosResponseProps['producto_en_almacenes']
       >) => {
         const producto_en_almacen = value?.find(
           item => item.almacen_id === almacen_id
         )
-        return producto_en_almacen?.ubicacion.name ?? ''
+        return producto_en_almacen?.ubicacion?.name ?? ''
       },
     },
     {
@@ -136,8 +125,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       valueFormatter: ({
         value,
       }: ValueFormatterParams<
-        TableProductosProps,
-        TableProductosProps['producto_en_almacenes']
+        getProductosResponseProps,
+        getProductosResponseProps['producto_en_almacenes']
       >) => {
         const producto_en_almacen = value?.find(
           item => item.almacen_id === almacen_id
@@ -154,8 +143,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         value,
         data,
       }: ValueFormatterParams<
-        TableProductosProps,
-        TableProductosProps['producto_en_almacenes']
+        getProductosResponseProps,
+        getProductosResponseProps['producto_en_almacenes']
       >) => {
         const producto_en_almacen = value?.find(
           item => item.almacen_id === almacen_id
@@ -206,8 +195,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         value,
         data,
       }: ValueFormatterParams<
-        TableProductosProps,
-        TableProductosProps['producto_en_almacenes']
+        getProductosResponseProps,
+        getProductosResponseProps['producto_en_almacenes']
       >) => {
         const producto_en_almacen = value?.find(
           item => item.almacen_id === almacen_id
@@ -221,8 +210,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         value,
         data,
       }: ICellRendererParams<
-        TableProductosProps,
-        TableProductosProps['producto_en_almacenes']
+        getProductosResponseProps,
+        getProductosResponseProps['producto_en_almacenes']
       >) => {
         const producto_en_almacen = value?.find(
           item => item.almacen_id === almacen_id
@@ -254,7 +243,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                             Number(data!.unidades_contenidas)
                         ) ?? item.unidades_derivadas[0]
                       }
-                      almacen={item.almacen.name}
+                      almacen={item.almacen?.name}
                     />
                   ))}
                 </div>
@@ -311,8 +300,10 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       headerName: 'Acciones',
       field: 'id',
       width: 80,
-      cellRenderer: (params: ICellRendererParams<TableProductosProps>) => {
-        return (
+      cellRenderer: (
+        params: ICellRendererParams<getProductosResponseProps>
+      ) => {
+        return params.data?.permitido ? (
           <ColumnAction
             id={params.value}
             permiso={permissions.PRODUCTO_BASE}
@@ -345,6 +336,18 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
               )
             }
           />
+        ) : (
+          <div className='flex items-center gap-2 h-full'>
+            <Tooltip
+              classNames={{ body: 'text-center!' }}
+              title='Falta Importar sus Unidades Derivadas'
+            >
+              <SiAdblock
+                size={15}
+                className='text-rose-700 cursor-pointer min-w-fit'
+              />
+            </Tooltip>
+          </div>
         )
       },
       type: 'actions',

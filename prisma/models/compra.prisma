@@ -25,7 +25,7 @@ enum TipoMoneda {
 }
 
 model Compra {
-    id Int @id @default(autoincrement())
+    id String @id @default(cuid())
 
     tipo_documento    TipoDocumento @default(NotaDeVenta)
     serie             String
@@ -38,6 +38,7 @@ model Compra {
     numero_dias       Int?
     fecha_vencimiento DateTime?
     fecha             DateTime
+    guia              String?
 
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -53,8 +54,8 @@ model Compra {
 
     productos_por_almacen ProductoAlmacenCompra[]
 
-    estado_de_compra  EstadoDeCompra    @default(Creado)
-    recepcion_almacen RecepcionAlmacen?
+    estado_de_compra    EstadoDeCompra     @default(Creado)
+    recepciones_almacen RecepcionAlmacen[]
 
     @@unique([serie, numero, proveedor_id])
     @@index([fecha])
@@ -64,7 +65,7 @@ model ProductoAlmacenCompra {
     id Int @id @default(autoincrement())
 
     compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    compra_id Int
+    compra_id String
 
     costo Decimal @db.Decimal(9, 4)
 
@@ -85,14 +86,16 @@ model UnidadDerivadaInmutableCompra {
     producto_almacen_compra_id Int
     producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    factor       Decimal   @db.Decimal(9, 3)
-    cantidad     Decimal   @db.Decimal(9, 3)
-    lote         String?
-    vencimiento  DateTime?
-    flete        Decimal   @default(0) @db.Decimal(9, 4)
-    bonificacion Boolean   @default(false)
+    factor             Decimal   @db.Decimal(9, 3)
+    cantidad           Decimal   @db.Decimal(9, 3)
+    cantidad_pendiente Decimal   @default(0) @db.Decimal(9, 3)
+    lote               String?
+    vencimiento        DateTime?
+    flete              Decimal   @default(0) @db.Decimal(9, 4)
+    bonificacion       Boolean   @default(false)
 
     @@unique([producto_almacen_compra_id, unidad_derivada_inmutable_id, bonificacion])
+    @@index([cantidad_pendiente])
 }
 
 model UnidadDerivadaInmutable {

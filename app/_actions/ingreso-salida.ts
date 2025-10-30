@@ -9,6 +9,31 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { getUltimoNumeroIngresoSalida } from './utils/ingreso-salida'
 import { auth } from '~/auth/auth'
 
+const includeGetIngresoSalida = {
+  user: true,
+  almacen: true,
+  proveedor: true,
+  tipo_ingreso: true,
+  productos_por_almacen: {
+    include: {
+      producto_almacen: {
+        include: {
+          producto: true,
+        },
+      },
+      unidades_derivadas: {
+        include: {
+          unidad_derivada_inmutable: true,
+          historial: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.IngresoSalidaInclude
+export type getIngresoSalidaResponseProps = Prisma.IngresoSalidaGetPayload<{
+  include: typeof includeGetIngresoSalida
+}>
+
 async function createIngresoSalidaWA(
   data: FormCreateIngresoSalidaFormatedProps
 ) {
@@ -40,7 +65,11 @@ async function createIngresoSalidaWA(
           select: {
             id: true,
             costo: true,
+            stock_fraccion: true,
             unidades_derivadas: {
+              where: {
+                unidad_derivada_id,
+              },
               select: {
                 factor: true,
                 unidad_derivada: {
@@ -53,19 +82,19 @@ async function createIngresoSalidaWA(
             },
           },
         })
-
         if (!productoAlmacen) throw new Error('Producto no encontrado')
 
-        const unidad_derivada = productoAlmacen.unidades_derivadas.find(
-          item => item.unidad_derivada.id === unidad_derivada_id
-        )
-
+        const unidad_derivada = productoAlmacen.unidades_derivadas[0]
         if (!unidad_derivada) throw new Error('Unidad derivada no encontrada')
 
         const numero = await getUltimoNumeroIngresoSalida({
           db,
           tipo_documento,
         })
+
+        const cantidad_fraccion = unidad_derivada.factor
+          .mul(cantidad)
+          .mul(tipo_documento === TipoDocumento.Ingreso ? 1 : -1)
 
         const serie =
           tipo_documento === TipoDocumento.Ingreso
@@ -82,34 +111,38 @@ async function createIngresoSalidaWA(
             fecha: fecha ? new Date(fecha) : undefined,
             numero,
             productos_por_almacen: {
-              create: [
-                {
-                  costo: productoAlmacen.costo,
-                  producto_almacen_id: productoAlmacen.id,
-                  unidades_derivadas: {
-                    create: [
-                      {
-                        factor: unidad_derivada.factor,
-                        cantidad: unidad_derivada.factor
-                          .mul(cantidad)
-                          .mul(
-                            tipo_documento === TipoDocumento.Ingreso ? 1 : -1
-                          ),
-                        unidad_derivada_inmutable: {
-                          connectOrCreate: {
-                            where: {
-                              name: unidad_derivada.unidad_derivada.name,
-                            },
-                            create: {
-                              name: unidad_derivada.unidad_derivada.name,
-                            },
+              create: {
+                costo: productoAlmacen.costo,
+                producto_almacen_id: productoAlmacen.id,
+                unidades_derivadas: {
+                  create: [
+                    {
+                      factor: unidad_derivada.factor,
+                      cantidad: cantidad,
+                      cantidad_restante: cantidad,
+                      historial: {
+                        create: {
+                          stock_anterior: productoAlmacen.stock_fraccion,
+                          stock_nuevo:
+                            productoAlmacen.stock_fraccion.add(
+                              cantidad_fraccion
+                            ),
+                        },
+                      },
+                      unidad_derivada_inmutable: {
+                        connectOrCreate: {
+                          where: {
+                            name: unidad_derivada.unidad_derivada.name,
+                          },
+                          create: {
+                            name: unidad_derivada.unidad_derivada.name,
                           },
                         },
                       },
-                    ],
-                  },
+                    },
+                  ],
                 },
-              ],
+              },
             },
           },
         })
@@ -120,9 +153,7 @@ async function createIngresoSalidaWA(
           },
           data: {
             stock_fraccion: {
-              increment: unidad_derivada.factor
-                .mul(cantidad)
-                .mul(tipo_documento === TipoDocumento.Ingreso ? 1 : -1),
+              increment: cantidad_fraccion,
             },
             costo: productoAlmacen.costo,
           },
@@ -132,26 +163,7 @@ async function createIngresoSalidaWA(
           where: {
             id: item.id,
           },
-          include: {
-            user: true,
-            almacen: true,
-            proveedor: true,
-            tipo_ingreso: true,
-            productos_por_almacen: {
-              include: {
-                producto_almacen: {
-                  include: {
-                    producto: true,
-                  },
-                },
-                unidades_derivadas: {
-                  include: {
-                    unidad_derivada_inmutable: true,
-                  },
-                },
-              },
-            },
-          },
+          include: includeGetIngresoSalida,
         })
 
         return {

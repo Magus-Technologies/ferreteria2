@@ -1,9 +1,9 @@
-import { getProductos } from '~/app/_actions/producto'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import {
-  TableProductosProps,
-  useColumnsProductos,
-} from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos'
+  getProductos,
+  getProductosResponseProps,
+} from '~/app/_actions/producto'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useColumnsProductos } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos'
 import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
@@ -17,7 +17,7 @@ import { RefObject, useEffect, useImperativeHandle, useMemo } from 'react'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 
 export interface RefTableProductoSearchProps
-  extends TableWithTitleProps<TableProductosProps> {
+  extends TableWithTitleProps<getProductosResponseProps> {
   handleRefetch: () => void
 }
 
@@ -31,7 +31,7 @@ export default function TableProductoSearch({
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: TableProductosProps | undefined
+    data: getProductosResponseProps | undefined
   }) => void
   tipoBusqueda: TipoBusquedaProducto
   ref?: RefObject<RefTableProductoSearchProps | null>
@@ -39,14 +39,18 @@ export default function TableProductoSearch({
   const { response, refetch, loading } = useServerQuery({
     action: getProductos,
     propsQuery: {
-      queryKey: [QueryKeys.PRODUCTOS],
+      queryKey: [QueryKeys.PRODUCTOS_TABLE_SEARCH],
       enabled: false,
     },
     params: {
-      where: getFiltrosPorTipoBusqueda({
-        tipoBusqueda,
-        value,
-      }),
+      where: {
+        ...getFiltrosPorTipoBusqueda({
+          tipoBusqueda,
+          value,
+        }),
+        permitido: true,
+        estado: true,
+      },
     },
   })
 
