@@ -9,6 +9,9 @@ import usePermission from '~/hooks/use-permission'
 import { Tooltip } from 'antd'
 import { FaTruckLoading } from 'react-icons/fa'
 import { eliminarCompra, getComprasResponseProps } from '~/app/_actions/compra'
+import { useRouter } from 'next/navigation'
+import TagEstadoDeCompra from '../others/tag-estado-de-compra'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export function useColumnsCompras({
   setCompraRecepcion,
@@ -17,6 +20,7 @@ export function useColumnsCompras({
   setCompraRecepcion: (compra: getComprasResponseProps | undefined) => void
   setOpenModal: (open: boolean) => void
 }) {
+  const router = useRouter()
   const can = usePermission()
   const columns: ColDef<getComprasResponseProps>[] = [
     {
@@ -149,49 +153,73 @@ export function useColumnsCompras({
       filter: true,
     },
     {
+      headerName: 'Estado',
+      field: 'estado_de_compra',
+      width: 90,
+      minWidth: 90,
+      cellRenderer: (params: ICellRendererParams<getComprasResponseProps>) => (
+        <div className='flex items-center h-full'>
+          <TagEstadoDeCompra estado_de_compra={params.value}>
+            {params.value}
+          </TagEstadoDeCompra>
+        </div>
+      ),
+      filter: true,
+    },
+    {
       headerName: 'Acciones',
       field: 'id',
       width: 80,
       cellRenderer: (params: ICellRendererParams<getComprasResponseProps>) => {
         return (
           <ColumnAction
-            showEdit={false}
             titleDelete='Anular'
             id={params.value}
             permiso={permissions.COMPRAS_BASE}
+            showDelete={
+              params.data?.estado_de_compra !== EstadoDeCompra.Anulado &&
+              params.data?.estado_de_compra !== EstadoDeCompra.Procesado
+            }
             propsDelete={{
               action: eliminarCompra,
               msgSuccess: 'Compra anulada correctamente',
+              queryKey: [QueryKeys.COMPRAS],
             }}
-            childrenMiddle={
-              can(permissions.RECEPCION_ALMACEN_CREATE) && (
-                <Tooltip
-                  title={
-                    params.data?.estado_de_compra === EstadoDeCompra.Creado
-                      ? 'Recepcionar en Almacén'
-                      : 'Recepcionada en Almacén'
-                  }
-                >
-                  <FaTruckLoading
-                    onClick={() => {
-                      if (
-                        params.data?.estado_de_compra === EstadoDeCompra.Creado
-                      ) {
-                        setCompraRecepcion(params.data)
-                        setOpenModal(true)
-                      }
-                    }}
-                    size={15}
-                    className={`cursor-pointer ${
-                      params.data?.estado_de_compra === EstadoDeCompra.Creado
-                        ? 'text-cyan-600'
-                        : 'text-gray-500'
-                    } hover:scale-105 transition-all active:scale-95`}
-                  />
-                </Tooltip>
+            onEdit={() =>
+              router.push(
+                `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${params.value}`
               )
             }
-          />
+          >
+            {can(permissions.RECEPCION_ALMACEN_CREATE) && (
+              <Tooltip
+                title={
+                  params.data?.estado_de_compra === EstadoDeCompra.Creado
+                    ? 'Recepcionar en Almacén'
+                    : params.data?.estado_de_compra === EstadoDeCompra.Procesado
+                    ? 'Recepcionada en Almacén'
+                    : 'No se puede Recepcionar'
+                }
+              >
+                <FaTruckLoading
+                  onClick={() => {
+                    if (
+                      params.data?.estado_de_compra === EstadoDeCompra.Creado
+                    ) {
+                      setCompraRecepcion(params.data)
+                      setOpenModal(true)
+                    }
+                  }}
+                  size={15}
+                  className={`cursor-pointer ${
+                    params.data?.estado_de_compra === EstadoDeCompra.Creado
+                      ? 'text-cyan-600'
+                      : 'text-gray-500'
+                  } hover:scale-105 transition-all active:scale-95`}
+                />
+              </Tooltip>
+            )}
+          </ColumnAction>
         )
       },
       type: 'actions',

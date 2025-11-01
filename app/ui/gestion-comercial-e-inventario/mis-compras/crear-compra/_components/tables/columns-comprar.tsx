@@ -9,17 +9,20 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { FormCreateCompra } from '../others/body-comprar'
+import { CompraConUnidadDerivadaNormal } from '../others/header'
 
 export function useColumnsComprar({
   form,
   remove,
   incluye_precios = true,
   cantidad_pendiente = false,
+  compra,
 }: {
   form: FormInstance
   remove: (index: number | number[]) => void
   incluye_precios?: boolean
   cantidad_pendiente?: boolean
+  compra?: CompraConUnidadDerivadaNormal
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
 
@@ -275,6 +278,13 @@ export function useColumnsComprar({
                     )
                 )
               }}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              variant={
+                (compra?._count?.recepciones_almacen ?? 0) > 0
+                  ? 'borderless'
+                  : undefined
+              }
             />
           </div>
         )
@@ -322,6 +332,13 @@ export function useColumnsComprar({
                   costo: Number(val ?? 0),
                 })
               }}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              variant={
+                (compra?._count?.recepciones_almacen ?? 0) > 0
+                  ? 'borderless'
+                  : undefined
+              }
             />
           </div>
         )
@@ -380,6 +397,13 @@ export function useColumnsComprar({
               precision={4}
               min={0}
               formWithMessage={false}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              variant={
+                (compra?._count?.recepciones_almacen ?? 0) > 0
+                  ? 'borderless'
+                  : undefined
+              }
             />
           </div>
         )
@@ -401,6 +425,13 @@ export function useColumnsComprar({
               placeholder='Vencimiento'
               formWithMessage={false}
               size='small'
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              variant={
+                (compra?._count?.recepciones_almacen ?? 0) > 0
+                  ? 'borderless'
+                  : undefined
+              }
             />
           </div>
         )
@@ -420,6 +451,13 @@ export function useColumnsComprar({
               }}
               size='small'
               formWithMessage={false}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              variant={
+                (compra?._count?.recepciones_almacen ?? 0) > 0
+                  ? 'borderless'
+                  : undefined
+              }
             />
           </div>
         )
@@ -432,7 +470,7 @@ export function useColumnsComprar({
       minWidth: 40,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
-        return (
+        return (compra?._count?.recepciones_almacen ?? 0) > 0 ? null : (
           <div className='flex items-center gap-2 h-full'>
             <Tooltip title='Eliminar'>
               <MdDelete

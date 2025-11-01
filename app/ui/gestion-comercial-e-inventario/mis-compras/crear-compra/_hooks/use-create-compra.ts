@@ -1,4 +1,4 @@
-import { createCompra } from '~/app/_actions/compra'
+import { createCompra, editarCompra } from '~/app/_actions/compra'
 import { FormCreateCompra } from '../_components/others/body-comprar'
 import { useServerMutation } from '~/hooks/use-server-mutation'
 import { toUTCBD } from '~/utils/fechas'
@@ -9,7 +9,8 @@ import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
 import { useSession } from 'next-auth/react'
-
+import { CompraConUnidadDerivadaNormal } from '../_components/others/header'
+// 2025-10-30 16:52:39.655
 type ProductoAgrupado = Pick<
   FormCreateCompra['productos'][number],
   'producto_id' | 'marca_name' | 'producto_name'
@@ -66,7 +67,11 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateCompra() {
+export default function useCreateCompra({
+  compra,
+}: {
+  compra?: CompraConUnidadDerivadaNormal
+} = {}) {
   const router = useRouter()
 
   const { data: session } = useSession()
@@ -76,18 +81,23 @@ export default function useCreateCompra() {
   const { notification } = useApp()
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const { execute, loading } = useServerMutation({
-    action: createCompra,
+    action: compra ? editarCompra : createCompra,
     onSuccess: async () => {
       router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
     },
-    msgSuccess: 'Compra creada exitosamente',
+    msgSuccess: `Compra ${compra ? 'editada' : 'creada'} exitosamente`,
   })
 
   async function handleSubmit(values: FormCreateCompra) {
-    if (!can(permissions.COMPRAS_CREATE))
+    if (!compra && !can(permissions.COMPRAS_CREATE))
       return notification.error({
         message: 'No tienes permiso para crear una compra',
       })
+    if (compra && !can(permissions.COMPRAS_UPDATE))
+      return notification.error({
+        message: 'No tienes permiso para editar una compra',
+      })
+
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
@@ -101,6 +111,7 @@ export default function useCreateCompra() {
 
     const dataFormated = {
       ...restValues,
+      ...(compra ? { id: compra.id } : {}),
       tipo_moneda,
       tipo_de_cambio: tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
       user_id,

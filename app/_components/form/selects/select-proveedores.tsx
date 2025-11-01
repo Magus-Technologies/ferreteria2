@@ -16,6 +16,7 @@ interface SelectProveedoresProps extends SelectBaseProps {
   sizeIcon?: number
   showButtonCreate?: boolean
   classIconSearch?: string
+  proveedorOptionsDefault?: Pick<Proveedor, 'id' | 'ruc' | 'razon_social'>[]
 }
 
 export default function SelectProveedores({
@@ -25,6 +26,7 @@ export default function SelectProveedores({
   sizeIcon = 18,
   showButtonCreate = false,
   classIconSearch = '',
+  proveedorOptionsDefault = [],
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
@@ -91,6 +93,10 @@ export default function SelectProveedores({
                 },
               ]
             : []),
+          ...proveedorOptionsDefault.map(proveedor => ({
+            value: proveedor.id,
+            label: `${proveedor.ruc} : ${proveedor.razon_social}`,
+          })),
         ].filter(
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index

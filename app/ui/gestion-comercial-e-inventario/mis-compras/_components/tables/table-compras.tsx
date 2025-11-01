@@ -86,6 +86,7 @@ export default function TableCompras() {
               'Resta',
               'Estado de Cuenta',
               'Registrador',
+              'Estado',
               'Acciones',
             ],
           },

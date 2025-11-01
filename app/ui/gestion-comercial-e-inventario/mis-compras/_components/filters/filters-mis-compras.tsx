@@ -7,7 +7,7 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
-import { Prisma } from '@prisma/client'
+import { EstadoDeCompra, Prisma } from '@prisma/client'
 import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compras'
 import { FaCalendar, FaCartShopping } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
@@ -18,7 +18,6 @@ import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { FormaDePago, TipoDocumento } from '@prisma/client'
 import { toUTCBD } from '~/utils/fechas'
-import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
 import { useEffect } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -26,6 +25,11 @@ import SelectEstadoDeCuenta, {
   EstadoDeCuenta,
 } from '~/app/_components/form/selects/select-estado-de-cuenta'
 import TotalCompras from '../others/total-compras'
+import Link from 'next/link'
+import SelectEstadoDeCompra, {
+  EstadoDeCompraSelect,
+} from '~/app/_components/form/selects/select-estado-de-compra'
+import SelectPendienteDeRecepcionAlmacen from '~/app/_components/form/selects/select-pendiente-de-recepcion-almacen'
 
 interface ValuesFiltersMisCompras {
   almacen_id: number
@@ -36,14 +40,14 @@ interface ValuesFiltersMisCompras {
   tipo_documento?: TipoDocumento
   user_id?: string
   estado_de_cuenta?: EstadoDeCuenta
+  estado_de_compra?: EstadoDeCompra
+  pendiente_de_recepcion?: EstadoDeCompra
 }
 
 export default function FiltersMisCompras() {
   const [form] = Form.useForm<ValuesFiltersMisCompras>()
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
-
-  const router = useRouter()
 
   const setFiltros = useStoreFiltrosMisCompras(state => state.setFiltros)
 
@@ -53,6 +57,9 @@ export default function FiltersMisCompras() {
       fecha: {
         gte: toUTCBD({ date: dayjs().startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
+      },
+      estado_de_compra: {
+        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
       },
     } satisfies Prisma.CompraWhereInput
     setFiltros(data)
@@ -66,10 +73,17 @@ export default function FiltersMisCompras() {
       initialValues={{
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
+        estado_de_compra: EstadoDeCompraSelect.Activos,
       }}
       className='w-full'
       onFinish={values => {
-        const { desde, hasta, ...rest } = values
+        const {
+          desde,
+          hasta,
+          estado_de_compra,
+          pendiente_de_recepcion,
+          ...rest
+        } = values
         delete rest.estado_de_cuenta
         const data = {
           ...rest,
@@ -77,6 +91,18 @@ export default function FiltersMisCompras() {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
+          ...(pendiente_de_recepcion
+            ? { estado_de_compra: pendiente_de_recepcion }
+            : estado_de_compra
+            ? {
+                estado_de_compra:
+                  estado_de_compra === EstadoDeCompraSelect.Activos
+                    ? {
+                        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
+                      }
+                    : estado_de_compra,
+              }
+            : {}),
         } satisfies Prisma.CompraWhereInput
         setFiltros(data)
       }}
@@ -86,20 +112,17 @@ export default function FiltersMisCompras() {
         icon={<FaCartShopping className='text-cyan-600' />}
         extra={
           <div className='flex items-center gap-6 ml-6'>
-            <ButtonBase
-              color='success'
-              size='lg'
-              type='button'
-              className='flex items-center gap-2 w-fit'
-              onClick={() =>
-                router.push(
-                  '/ui/gestion-comercial-e-inventario/mis-compras/crear-compra'
-                )
-              }
-            >
-              <FaPlusCircle />
-              Crear Compra
-            </ButtonBase>
+            <Link href='/ui/gestion-comercial-e-inventario/mis-compras/crear-compra'>
+              <ButtonBase
+                color='success'
+                size='lg'
+                type='button'
+                className='flex items-center gap-2 w-fit'
+              >
+                <FaPlusCircle />
+                Crear Compra
+              </ButtonBase>
+            </Link>
             <TotalCompras />
           </div>
         }
@@ -194,10 +217,36 @@ export default function FiltersMisCompras() {
             allowClear
           />
         </LabelBase>
+      </div>
+      <div className='flex items-center gap-4 mt-4'>
         <LabelBase label='Estado de Cuenta:'>
           <SelectEstadoDeCuenta
             propsForm={{
               name: 'estado_de_cuenta',
+              hasFeedback: false,
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+            allowClear
+          />
+        </LabelBase>
+        <LabelBase label='Estado de Compra:'>
+          <SelectEstadoDeCompra
+            propsForm={{
+              name: 'estado_de_compra',
+              hasFeedback: false,
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+            allowClear
+          />
+        </LabelBase>
+        <LabelBase label='Pendiente de Recepción:'>
+          <SelectPendienteDeRecepcionAlmacen
+            propsForm={{
+              name: 'pendiente_de_recepcion',
               hasFeedback: false,
               className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
             }}

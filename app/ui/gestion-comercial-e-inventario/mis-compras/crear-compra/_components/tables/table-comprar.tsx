@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 import dayjs from 'dayjs'
 import { ValuesCardAgregarProductoCompra } from '../cards/card-agregar-producto-compra'
 import { FormCreateCompra } from '../others/body-comprar'
+import { CompraConUnidadDerivadaNormal } from '../others/header'
 
 function condicionEditarProductoCompra({
   producto,
@@ -31,6 +32,7 @@ export default function TableComprar({
   add,
   incluye_precios = true,
   cantidad_pendiente = false,
+  compra,
 }: {
   form: FormInstance
   fields: FormListFieldData[]
@@ -38,6 +40,7 @@ export default function TableComprar({
   add: (defaultValue?: StoreValue, insertIndex?: number) => void
   incluye_precios?: boolean
   cantidad_pendiente?: boolean
+  compra?: CompraConUnidadDerivadaNormal
 }) {
   const productoAgregadoCompraStore = useStoreProductoAgregadoCompra(
     store => store.productoAgregado
@@ -184,6 +187,7 @@ export default function TableComprar({
           form,
           incluye_precios,
           cantidad_pendiente,
+          compra,
         })}
       />
     </>

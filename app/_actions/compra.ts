@@ -9,30 +9,8 @@ import {
   CompraUncheckedCreateInputSchema,
   CompraWhereInputSchema,
 } from '~/prisma/generated/zod'
+import { includeCompra } from './lib/lib-compra'
 
-const includeCompra = {
-  proveedor: true,
-  productos_por_almacen: {
-    include: {
-      producto_almacen: {
-        include: {
-          producto: {
-            include: {
-              marca: true,
-              unidad_medida: true,
-            },
-          },
-        },
-      },
-      unidades_derivadas: {
-        include: {
-          unidad_derivada_inmutable: true,
-        },
-      },
-    },
-  },
-  user: true,
-}
 export type getComprasResponseProps = Prisma.CompraGetPayload<{
   include: typeof includeCompra
 }>
@@ -102,11 +80,32 @@ async function eliminarCompraWA({ id }: { id: Compra['id'] }) {
     where: {
       id,
     },
+    select: {
+      _count: {
+        select: {
+          recepciones_almacen: {
+            where: {
+              estado: true,
+            },
+          },
+        },
+      },
+      estado_de_compra: true,
+    },
   })
 
   if (!compra) throw new Error('Compra no encontrada')
-  if (compra.estado_de_compra !== EstadoDeCompra.Creado)
+
+  if (
+    compra.estado_de_compra === EstadoDeCompra.Procesado ||
+    compra.estado_de_compra === EstadoDeCompra.Anulado
+  )
     throw new Error('La compra no se puede eliminar')
+
+  if (compra._count.recepciones_almacen > 0)
+    throw new Error(
+      'La compra no se puede eliminar porque tiene Recepciones de Almacén activas'
+    )
 
   await prisma.compra.update({
     where: {
@@ -120,3 +119,52 @@ async function eliminarCompraWA({ id }: { id: Compra['id'] }) {
   return { data: 'ok' }
 }
 export const eliminarCompra = withAuth(eliminarCompraWA)
+
+async function editarCompraWA(data: Prisma.CompraUncheckedCreateInput) {
+  const puede = await can(permissions.COMPRAS_UPDATE)
+  if (!puede) throw new Error('No tienes permiso para editar una compra')
+
+  const parsedData = CompraUncheckedCreateInputSchema.parse(data)
+
+  return await prisma.$transaction(
+    async db => {
+      const proveedor_serie_numero = await db.compra.findFirst({
+        where: {
+          proveedor_id: parsedData.proveedor_id,
+          serie: parsedData.serie,
+          numero: parsedData.numero,
+          id: {
+            not: parsedData.id,
+          },
+        },
+        select: {
+          id: true,
+        },
+      })
+
+      if (proveedor_serie_numero)
+        throw new Error(
+          'Ya existe una compra con el mismo proveedor, serie y número (edición)'
+        )
+
+      const compra = await db.compra.update({
+        where: {
+          id: parsedData.id,
+        },
+        data: {
+          ...parsedData,
+          productos_por_almacen: {
+            deleteMany: {},
+            ...parsedData.productos_por_almacen,
+          },
+        },
+      })
+
+      return { data: JSON.parse(JSON.stringify(compra)) as typeof compra }
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    }
+  )
+}
+export const editarCompra = withAuth(editarCompraWA)

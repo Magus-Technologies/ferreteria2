@@ -17,12 +17,14 @@ import dayjs from 'dayjs'
 import { useEffect } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosMisRecepciones } from '../../_store/store-filtros-mis-recepciones'
+import SelectEstado from '~/app/_components/form/selects/select-estado'
 
 interface ValuesFiltersMisRecepciones {
   almacen_id: Almacen['id']
   desde?: Dayjs
   hasta?: Dayjs
   user_id?: string
+  estado?: number
 }
 
 export default function FiltersMisRecepciones() {
@@ -56,7 +58,7 @@ export default function FiltersMisRecepciones() {
       }}
       className='w-full'
       onFinish={values => {
-        const { desde, hasta, almacen_id, ...rest } = values
+        const { desde, hasta, almacen_id, estado, ...rest } = values
         const data = {
           ...rest,
           compra: {
@@ -66,6 +68,7 @@ export default function FiltersMisRecepciones() {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
+          estado: estado === 1,
         } satisfies Prisma.RecepcionAlmacenWhereInput
         setFiltros(data)
       }}
@@ -125,6 +128,17 @@ export default function FiltersMisRecepciones() {
             className='w-full'
             formWithMessage={false}
             allowClear
+          />
+        </LabelBase>
+        <LabelBase label='Estado:'>
+          <SelectEstado
+            propsForm={{
+              name: 'estado',
+              hasFeedback: false,
+              className: '!min-w-[120px] !w-[120px] !max-w-[120px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
           />
         </LabelBase>
         <ButtonBase

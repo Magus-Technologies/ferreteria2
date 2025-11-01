@@ -12,8 +12,15 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import { IoIosDocument } from 'react-icons/io'
 import { IoDocumentAttach } from 'react-icons/io5'
 import FormFormaDePagoCompra from './form-forma-de-pago-compra'
+import { CompraConUnidadDerivadaNormal } from '../others/header'
 
-export default function FormCrearCompra({ form }: { form: FormInstance }) {
+export default function FormCrearCompra({
+  form,
+  compra,
+}: {
+  form: FormInstance
+  compra?: CompraConUnidadDerivadaNormal
+}) {
   const can = usePermission()
   return (
     <div className='flex flex-col'>
@@ -75,6 +82,9 @@ export default function FormCrearCompra({ form }: { form: FormInstance }) {
             showButtonCreate={can(permissions.PROVEEDOR_CREATE)}
             className='!w-[420px] !min-w-[420px] !max-w-[420px]'
             classNameIcon='text-rose-700 mx-1'
+            proveedorOptionsDefault={
+              compra?.proveedor ? [compra.proveedor] : []
+            }
             propsForm={{
               name: 'proveedor_id',
               rules: [

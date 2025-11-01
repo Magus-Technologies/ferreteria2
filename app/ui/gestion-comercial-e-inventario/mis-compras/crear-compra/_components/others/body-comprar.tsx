@@ -8,6 +8,7 @@ import FormBase from '~/components/form/form-base'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import { useEffect } from 'react'
 import {
+  EstadoDeCompra,
   FormaDePago,
   Marca,
   Producto,
@@ -18,9 +19,11 @@ import {
   UnidadDerivada,
 } from '@prisma/client'
 import FormCrearCompra from '../form/form-crear-compra'
-import dayjs, { Dayjs } from 'dayjs'
+import { Dayjs } from 'dayjs'
 import useCreateCompra from '../../_hooks/use-create-compra'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { CompraConUnidadDerivadaNormal } from './header'
+import useInitCompra from '../../../editar-compra/[id]/_hooks/use-init-compra'
 
 export interface FormCreateCompra {
   productos: {
@@ -52,10 +55,15 @@ export interface FormCreateCompra {
   numero_dias?: number
   fecha_vencimiento?: Dayjs
   percepcion?: number
+  estado_de_compra?: EstadoDeCompra
 }
 
-export default function BodyComprar() {
+export default function BodyComprar({
+  compra,
+}: { compra?: CompraConUnidadDerivadaNormal } = {}) {
   const [form] = Form.useForm<FormCreateCompra>()
+
+  useInitCompra({ compra, form })
 
   const setProductosCompra = useStoreProductoAgregadoCompra(
     store => store.setProductos
@@ -66,7 +74,7 @@ export default function BodyComprar() {
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { handleSubmit } = useCreateCompra()
+  const { handleSubmit } = useCreateCompra({ compra })
 
   useEffect(() => {
     setProductosCompra([])
@@ -75,7 +83,7 @@ export default function BodyComprar() {
   }, [])
 
   useEffect(() => {
-    form.setFieldValue('productos', [])
+    if (!compra) form.setFieldValue('productos', [])
   }, [almacen_id])
 
   return (
@@ -83,19 +91,13 @@ export default function BodyComprar() {
       form={form}
       name='login'
       className='flex gap-6 size-full'
-      initialValues={{
-        tipo_moneda: TipoMoneda.Soles,
-        fecha: dayjs(),
-        forma_de_pago: FormaDePago.Contado,
-        tipo_documento: TipoDocumento.Factura,
-      }}
       onFinish={handleSubmit}
     >
       <div className='flex-1 flex flex-col gap-6'>
-        <FormTableComprar form={form} />
-        <FormCrearCompra form={form} />
+        <FormTableComprar form={form} compra={compra} />
+        <FormCrearCompra form={form} compra={compra} />
       </div>
-      <CardsInfoCompra form={form} />
+      <CardsInfoCompra form={form} compra={compra} />
     </FormBase>
   )
 }

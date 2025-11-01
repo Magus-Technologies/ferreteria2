@@ -1,19 +1,23 @@
 import { Form, FormInstance } from 'antd'
 import TableComprar from '../tables/table-comprar'
+import { CompraConUnidadDerivadaNormal } from '../others/header'
 
 export default function FormTableComprar({
   form,
   incluye_precios = true,
   cantidad_pendiente = false,
+  compra,
 }: {
   form: FormInstance
   incluye_precios?: boolean
   cantidad_pendiente?: boolean
+  compra?: CompraConUnidadDerivadaNormal
 }) {
   return (
     <Form.List name='productos'>
       {(fields, { add, remove }) => (
         <TableComprar
+          compra={compra}
           form={form}
           fields={fields}
           remove={remove}

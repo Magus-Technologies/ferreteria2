@@ -2,7 +2,7 @@
 
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
-import { TbShoppingCartPlus } from 'react-icons/tb'
+import { TbShoppingCartCog, TbShoppingCartPlus } from 'react-icons/tb'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import { permissions } from '~/lib/permissions'
 import { Modal } from 'antd'
@@ -10,8 +10,25 @@ import CardAgregarProductoCompra from '../cards/card-agregar-producto-compra'
 import { useState } from 'react'
 import usePermission from '~/hooks/use-permission'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
+import { getComprasResponseProps } from '~/app/_actions/compra'
 
-export default function HeaderCrearCompra() {
+export type CompraConUnidadDerivadaNormal = Omit<
+  getComprasResponseProps,
+  'productos_por_almacen'
+> & {
+  productos_por_almacen: (Omit<
+    getComprasResponseProps['productos_por_almacen'][number],
+    'unidades_derivadas'
+  > & {
+    unidades_derivadas: (getComprasResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number] & {
+      unidad_derivada_normal: getComprasResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number]['unidad_derivada_inmutable']
+    })[]
+  })[]
+}
+
+export default function HeaderCrearCompra({
+  compra,
+}: { compra?: CompraConUnidadDerivadaNormal } = {}) {
   const can = usePermission()
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] =
@@ -26,35 +43,43 @@ export default function HeaderCrearCompra() {
 
   return (
     <TituloModulos
-      title='Crear Compra'
-      icon={<TbShoppingCartPlus className='text-cyan-600' />}
+      title={`${compra ? 'Editar' : 'Crear'} Compra`}
+      icon={
+        compra ? (
+          <TbShoppingCartCog className='text-orange-600' />
+        ) : (
+          <TbShoppingCartPlus className='text-cyan-600' />
+        )
+      }
       extra={
-        <div className='pl-8 flex items-center gap-4'>
-          <SelectProductos
-            allowClear
-            size='large'
-            className='!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!'
-            classNameIcon='text-cyan-600 mx-1'
-            classIconSearch='!mb-0'
-            classIconPlus='mb-0!'
-            showButtonCreate={can(permissions.PRODUCTO_CREATE)}
-            withSearch
-            withTipoBusqueda
-            showCardAgregarProducto
-            handleOnlyOneResult={producto => {
-              setProductoSeleccionadoSearchStore(producto)
-              if (producto) setOpenModalAgregarProducto(true)
-            }}
-            onChange={(_, producto) => {
-              setProductoSeleccionadoSearchStore(producto)
-              if (producto) setOpenModalAgregarProducto(true)
-            }}
-          />
-        </div>
+        (compra?._count?.recepciones_almacen ?? 0) > 0 ? null : (
+          <div className='pl-8 flex items-center gap-4'>
+            <SelectProductos
+              allowClear
+              size='large'
+              className='!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!'
+              classNameIcon='text-cyan-600 mx-1'
+              classIconSearch='!mb-0'
+              classIconPlus='mb-0!'
+              showButtonCreate={can(permissions.PRODUCTO_CREATE)}
+              withSearch
+              withTipoBusqueda
+              showCardAgregarProducto
+              handleOnlyOneResult={producto => {
+                setProductoSeleccionadoSearchStore(producto)
+                if (producto) setOpenModalAgregarProducto(true)
+              }}
+              onChange={(_, producto) => {
+                setProductoSeleccionadoSearchStore(producto)
+                if (producto) setOpenModalAgregarProducto(true)
+              }}
+            />
+          </div>
+        )
       }
     >
       <div className='flex items-center gap-4'>
-        <SelectAlmacen className='w-full' />
+        <SelectAlmacen className='w-full' disabled={!!compra} />
 
         <Modal
           open={openModalAgregarProducto}
