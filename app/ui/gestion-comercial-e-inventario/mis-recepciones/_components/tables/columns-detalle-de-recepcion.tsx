@@ -17,10 +17,6 @@ export function useColumnsDetalleDeRecepcion({
 }: {
   estado: RecepcionAlmacen['estado']
 }) {
-  console.log(
-    '🚀 ~ file: columns-detalle-de-recepcion.tsx:19 ~ estado:',
-    estado
-  )
   const columns: ColDef<TableDetalleDeRecepcionProps>[] = [
     {
       headerName: 'Cod. Producto',

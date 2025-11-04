@@ -5,7 +5,7 @@ import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
 import { FormCreateProductoFormatedProps } from '../ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
-import { Prisma, TipoDocumento } from '@prisma/client'
+import { EstadoDeCompra, Prisma, TipoDocumento } from '@prisma/client'
 import {
   ProductoAlmacenUnidadDerivadaUncheckedCreateInputSchema,
   ProductoCreateInputSchema,
@@ -29,6 +29,32 @@ const includeGetProductos = {
       },
       almacen: true,
       ubicacion: true,
+      compras: {
+        include: {
+          compra: {
+            include: {
+              proveedor: true,
+              user: true,
+            },
+          },
+          unidades_derivadas: {
+            include: {
+              unidad_derivada_inmutable: true,
+            },
+          },
+        },
+        where: {
+          compra: {
+            estado_de_compra: EstadoDeCompra.Procesado,
+          },
+        },
+        orderBy: {
+          compra: {
+            created_at: 'desc',
+          },
+        },
+        take: 6,
+      },
     },
   },
   marca: true,

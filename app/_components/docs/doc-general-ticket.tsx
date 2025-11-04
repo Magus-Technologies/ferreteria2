@@ -1,13 +1,12 @@
 import { Document, Page, Text, View } from '@react-pdf/renderer'
-import { styles_globales } from '~/components/pdf/table-pdf-ag-grid'
-import DocHeader from './doc-header'
-import { styles_docs } from './styles'
+import { styles_ticket } from './styles'
 import { Empresa } from '@prisma/client'
-import DocTable from './doc-table'
 import { ColDef } from 'ag-grid-community'
+import DocHeaderTicket from './doc-header-ticket'
+import DocTableTicket from './doc-table-ticket'
 import { NumeroALetras } from '~/utils/numero-a-letras'
 
-export default function DocGeneral<T>({
+export default function DocGeneralTicket<T>({
   empresa,
   show_logo_html = false,
   tipo_documento,
@@ -17,6 +16,7 @@ export default function DocGeneral<T>({
   rowData,
   total,
   observaciones,
+  headerNameAl100,
   totalConLetras = false,
 }: {
   empresa: Empresa | undefined
@@ -29,37 +29,41 @@ export default function DocGeneral<T>({
   rowData: T[]
   total: number
   observaciones: string
+  headerNameAl100: string
   totalConLetras?: boolean
 }) {
   return (
     <Document title={nro_doc}>
-      <Page size='A4' style={styles_globales.page}>
-        <DocHeader
+      <Page
+        size={{ width: 80 / 0.3528, height: 400 / 0.3528 }}
+        style={styles_ticket.page}
+      >
+        <DocHeaderTicket
           empresa={empresa}
           show_logo_html={show_logo_html}
           tipo_documento={tipo_documento}
           nro_doc={nro_doc}
         />
-
         {children}
-
-        <DocTable colDefs={colDefs} rowData={rowData} />
-
-        <View style={styles_docs.section}>
-          <View style={styles_docs.total}>
-            {totalConLetras && (
-              <Text
-                style={{ textAlign: 'left', position: 'absolute', left: 6 }}
-              >
-                {NumeroALetras(total)}
-              </Text>
-            )}
-            <Text style={styles_docs.textTotal}>TOTAL</Text>
+        <DocTableTicket
+          colDefs={colDefs}
+          rowData={rowData}
+          headerNameAl100={headerNameAl100}
+        />
+        <View
+          style={{
+            marginBottom: 6,
+          }}
+        >
+          <View style={styles_ticket.total}>
+            <Text style={styles_ticket.textTotal}>TOTAL</Text>
             <Text>{total}</Text>
           </View>
+          {totalConLetras && (
+            <Text style={{ fontSize: 7 }}>{NumeroALetras(total)}</Text>
+          )}
         </View>
-
-        <View style={styles_docs.observaciones}>
+        <View style={styles_ticket.observaciones}>
           <Text style={{ fontWeight: 'bold' }}>Observaciones:</Text>
           <Text>{observaciones}</Text>
         </View>

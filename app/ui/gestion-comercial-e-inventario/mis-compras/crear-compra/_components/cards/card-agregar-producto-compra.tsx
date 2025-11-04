@@ -130,6 +130,14 @@ export default function CardAgregarProductoCompra({
     }))
   }, [unidades_derivadas])
 
+  const unidad_derivada_seleccionada = unidades_derivadas?.find(
+    item => item.unidad_derivada.id === values?.unidad_derivada_id
+  )
+  console.log(
+    '🚀 ~ file: card-agregar-producto-compra.tsx:134 ~ unidad_derivada_seleccionada:',
+    unidad_derivada_seleccionada
+  )
+
   return (
     <div className='flex flex-col gap-2'>
       <LabelBase label='Cantidad:' orientation='column'>
@@ -163,6 +171,33 @@ export default function CardAgregarProductoCompra({
           }
         />
       </LabelBase>
+      <div className='grid grid-cols-2 font-bold text-sm'>
+        <div className='flex flex-col items-center'>
+          <div className='text-slate-500'>Costo:</div>
+          <div className='text-orange-700'>
+            S/.{' '}
+            {(
+              Number(unidad_derivada_seleccionada?.factor ?? 0) *
+              Number(producto_en_almacen?.costo ?? 0)
+            ).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 4,
+            })}
+          </div>
+        </div>
+        <div className='flex flex-col items-center'>
+          <div className='text-slate-500'>P. Público:</div>
+          <div className='text-orange-700'>
+            S/.{' '}
+            {Number(
+              unidad_derivada_seleccionada?.precio_publico ?? 0
+            ).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 4,
+            })}
+          </div>
+        </div>
+      </div>
       <LabelBase label='P. Compra:' orientation='column'>
         <InputNumberBase
           ref={precio_compraRef}

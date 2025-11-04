@@ -12,6 +12,8 @@ import SelectTipoBusquedaProducto, {
 } from '../form/selects/select-tipo-busqueda-producto'
 import CardAgregarProductoCompra from '~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/_components/cards/card-agregar-producto-compra'
 import { getProductosResponseProps } from '~/app/_actions/producto'
+import TableDetalleDePreciosSearch from '../tables/table-detalle-de-precios-search'
+import TableUltimasComprasIngresadasSearch from '../tables/table-ultimas-compras-ingresadas-search'
 
 type ModalProductoSearchProps = {
   open: boolean
@@ -98,13 +100,23 @@ export default function ModalProductoSearch({
         />
       </div>
       <div className='flex items-center justify-center gap-8'>
-        <div className='h-[500px] min-w-[1000px] w-full mt-4'>
-          <TableProductoSearch
-            ref={tableRef}
-            value={value}
-            onRowDoubleClicked={onRowDoubleClicked}
-            tipoBusqueda={tipoBusqueda}
-          />
+        <div className='h-[600px] min-w-[1000px] w-full mt-4'>
+          <div className='grid grid-rows-7 gap-y-4 size-full'>
+            <div className='row-start-1 row-end-4'>
+              <TableProductoSearch
+                ref={tableRef}
+                value={value}
+                onRowDoubleClicked={onRowDoubleClicked}
+                tipoBusqueda={tipoBusqueda}
+              />
+            </div>
+            <div className='row-start-4 row-end-6'>
+              <TableUltimasComprasIngresadasSearch />
+            </div>
+            <div className='row-start-6 row-end-8'>
+              <TableDetalleDePreciosSearch />
+            </div>
+          </div>
         </div>
         {showCardAgregarProducto && (
           <div>

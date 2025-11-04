@@ -1,7 +1,7 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { IngresoSalida, Prisma } from '@prisma/client'
+import { IngresoSalida, Prisma, TipoDocumento } from '@prisma/client'
 import { getStock } from '~/app/_utils/get-stock'
 
 export type UnidadDerivadaConProducto =
@@ -23,8 +23,10 @@ export type UnidadDerivadaConProducto =
 
 export function useColumnsDocIngresoSalida({
   estado,
+  tipo_documento,
 }: {
   estado: IngresoSalida['estado']
+  tipo_documento: IngresoSalida['tipo_documento']
 }) {
   const columns: ColDef<UnidadDerivadaConProducto>[] = [
     {
@@ -93,6 +95,7 @@ export function useColumnsDocIngresoSalida({
         const historial = getHistorial({
           historial: value,
           estado,
+          salida: tipo_documento === TipoDocumento.Salida,
         })
 
         const unidades_contenidas = Number(
@@ -121,6 +124,7 @@ export function useColumnsDocIngresoSalida({
         const historial = getHistorial({
           historial: value,
           estado,
+          salida: tipo_documento === TipoDocumento.Salida,
         })
 
         const unidades_contenidas = Number(
@@ -149,6 +153,7 @@ export function useColumnsDocIngresoSalida({
         const factor = Number(data?.factor)
         return `${Number(value.costo) * factor}`
       },
+      type: 'pen4',
     },
   ]
 
@@ -158,22 +163,31 @@ export function useColumnsDocIngresoSalida({
 export function getHistorial({
   historial,
   estado,
+  salida = false,
 }: {
   historial: {
     stock_anterior: Prisma.Decimal
     stock_nuevo: Prisma.Decimal
   }[]
   estado: boolean
+  salida?: boolean
 }) {
-  console.log('🚀 ~ file: columns-doc-ingreso-salida.tsx:167 ~ estado:', estado)
   const stock_anterior = Number(historial[0].stock_anterior)
   const stock_nuevo = Number(historial[0].stock_nuevo)
   let index = 0
-  if (
-    (estado && stock_anterior > stock_nuevo) ||
-    (!estado && stock_anterior < stock_nuevo)
-  )
-    index = 1
+  if (!salida) {
+    if (
+      (estado && stock_anterior > stock_nuevo) ||
+      (!estado && stock_anterior < stock_nuevo)
+    )
+      index = 1
+  } else {
+    if (
+      (estado && stock_anterior < stock_nuevo) ||
+      (!estado && stock_anterior > stock_nuevo)
+    )
+      index = 1
+  }
 
   return historial[index]
 }

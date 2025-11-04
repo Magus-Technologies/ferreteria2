@@ -49,7 +49,7 @@ export function useColumnsCompras({
     },
     {
       headerName: 'Fecha',
-      field: 'created_at',
+      field: 'fecha',
       width: 90,
       minWidth: 90,
       type: 'date',

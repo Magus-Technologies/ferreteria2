@@ -8,6 +8,7 @@ model RecepcionAlmacen {
     transportista_ruc           String?
     transportista_placa         String?
     transportista_licencia      String?
+    transportista_dni           String?
     transportista_name          String?
     transportista_guia_remision String?
     estado                      Boolean  @default(true)

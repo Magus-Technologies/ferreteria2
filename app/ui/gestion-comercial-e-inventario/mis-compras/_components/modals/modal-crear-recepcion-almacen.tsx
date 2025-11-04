@@ -22,6 +22,7 @@ export type FormCreateRecepcionAlmacen = Pick<
   transportista_razon_social: string
   transportista_placa: string
   transportista_licencia: string
+  transportista_dni: string
   transportista_name: string
   transportista_guia_remision: string
   observaciones: string

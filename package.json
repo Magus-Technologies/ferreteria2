@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "share": "npx tunnelmole 3000",
-    "migrate:fresh": "(if exist prisma\\migrations (rmdir /s /q prisma\\migrations)) && npx prisma migrate reset --force && npx prisma migrate dev --name init && npm run seed",
+    "migrate:fresh": "(if exist prisma\\migrations (rmdir /s /q prisma\\migrations)) && npx prisma migrate reset --force && npx prisma migrate dev --name init",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {

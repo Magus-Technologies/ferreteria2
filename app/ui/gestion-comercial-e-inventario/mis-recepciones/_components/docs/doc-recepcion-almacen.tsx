@@ -147,7 +147,7 @@ export default function DocRecepcionAlmacen({
                 Guía Remisión:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.compra.guia}
+                {data?.compra.guia ?? '-'}
               </Text>
             </View>
           </View>

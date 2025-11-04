@@ -1,76 +1,66 @@
+'use client'
+
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsUltimasComprasIngresadas } from './columns-ultimas-compras-ingresadas'
+import { useStoreAlmacen } from '~/store/store-almacen'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
-const items = [
-  {
-    documento: 'Factura',
-    serie: '001',
-    numero: '001',
-    fecha: '2022-01-01',
-    razon_social: 'Empresa 1 ada sdasd asd asad asda da',
-    registrado_por: 'Usuario 1 asdasd asdas dasd asd as',
-    cantidad: 10,
-    unidad_de_medida: 'Kg asd asd asd asd asd',
-    precio: 100,
-    subtotal: 1000,
-  },
-  {
-    documento: 'Factura',
-    serie: '002',
-    numero: '002',
-    fecha: '2022-01-02',
-    razon_social: 'Empresa 2',
-    registrado_por: 'Usuario 2',
-    cantidad: 20,
-    unidad_de_medida: 'Kg',
-    precio: 150,
-    subtotal: 3000,
-  },
-  {
-    documento: 'Factura',
-    serie: '003',
-    numero: '003',
-    fecha: '2022-01-03',
-    razon_social: 'Empresa 3',
-    registrado_por: 'Usuario 3',
-    cantidad: 30,
-    unidad_de_medida: 'Kg',
-    precio: 200,
-    subtotal: 6000,
-  },
-  {
-    documento: 'Factura',
-    serie: '004',
-    numero: '004',
-    fecha: '2022-01-04',
-    razon_social: 'Empresa 4',
-    registrado_por: 'Usuario 4',
-    cantidad: 40,
-    unidad_de_medida: 'Kg',
-    precio: 250,
-    subtotal: 10000,
-  },
-  {
-    documento: 'Factura',
-    serie: '005',
-    numero: '005',
-    fecha: '2022-01-05',
-    razon_social: 'Empresa 5',
-    registrado_por: 'Usuario 5',
-    cantidad: 50,
-    unidad_de_medida: 'Kg',
-    precio: 300,
-    subtotal: 15000,
-  },
-]
+export default function TableUltimasComprasIngresadas({
+  id,
+  productoSeleccionado,
+}: {
+  id: string
+  productoSeleccionado: getProductosResponseProps | undefined
+}) {
+  const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-export default function TableUltimasComprasIngresadas() {
+  const producto_en_almacen = productoSeleccionado?.producto_en_almacenes.find(
+    item => item.almacen_id === almacen_id
+  )
+
+  const rowData = producto_en_almacen
+    ? producto_en_almacen!.compras?.flatMap(ppa =>
+        ppa.unidades_derivadas.map(ud => ({
+          ...ud,
+          costo: ppa.costo,
+          compra: ppa.compra,
+        }))
+      )
+    : []
+
   return (
     <TableWithTitle
-      id='g-c-e-i.mi-almacen.ultimas-compras-ingresadas'
+      id={id}
       title='Últimas 6 compras ingresadas'
+      extraTitle={
+        <>
+          {' '}
+          de
+          <span className='italic -ml-2 text-blue-900'>
+            {productoSeleccionado ? productoSeleccionado.name : '-'}
+          </span>
+        </>
+      }
       columnDefs={useColumnsUltimasComprasIngresadas()}
-      rowData={items}
+      optionsSelectColumns={[
+        {
+          label: 'Default',
+          columns: [
+            '#',
+            'Documento',
+            'Serie',
+            'Número',
+            'Fecha',
+            'Razón Social',
+            'Registrado por',
+            'U. Derivada',
+            'Cant.',
+            'Precio',
+            'Subtotal',
+          ],
+        },
+      ]}
+      rowData={rowData}
     />
   )
 }

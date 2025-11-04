@@ -2,8 +2,8 @@
 
 import {
   Almacen,
+  Prisma,
   Producto,
-  ProductoAlmacen,
   ProductoAlmacenUnidadDerivada,
   Ubicacion,
   UnidadDerivada,
@@ -14,7 +14,9 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   almacen: Almacen
   producto: Producto
   unidad_derivada: UnidadDerivada
-  producto_almacen: ProductoAlmacen & {
+  producto_almacen: {
+    costo: Prisma.Decimal
+    stock_fraccion: Prisma.Decimal
     ubicacion: Ubicacion
   }
 }

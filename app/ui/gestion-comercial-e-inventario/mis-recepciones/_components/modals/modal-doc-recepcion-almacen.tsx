@@ -4,6 +4,8 @@ import { useSession } from 'next-auth/react'
 import DocRecepcionAlmacen from '../docs/doc-recepcion-almacen'
 import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
 import { TipoDocumento } from '@prisma/client'
+import { useState } from 'react'
+import DocRecepcionAlmacenTicket from '../docs/doc-recepcion-almacen-ticket'
 
 export default function ModalDocRecepcionAlmacen({
   open,
@@ -23,9 +25,25 @@ export default function ModalDocRecepcionAlmacen({
     numero: data?.numero ?? 0,
   })
 
+  const [esTicket, setEsTicket] = useState(false)
+
   return (
-    <ModalShowDoc open={open} setOpen={setOpen} nro_doc={nro_doc}>
-      <DocRecepcionAlmacen data={data} nro_doc={nro_doc} empresa={empresa} />
+    <ModalShowDoc
+      open={open}
+      setOpen={setOpen}
+      nro_doc={nro_doc}
+      setEsTicket={setEsTicket}
+      esTicket={esTicket}
+    >
+      {esTicket ? (
+        <DocRecepcionAlmacenTicket
+          data={data}
+          nro_doc={nro_doc}
+          empresa={empresa}
+        />
+      ) : (
+        <DocRecepcionAlmacen data={data} nro_doc={nro_doc} empresa={empresa} />
+      )}
     </ModalShowDoc>
   )
 }

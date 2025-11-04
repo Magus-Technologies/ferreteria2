@@ -1,7 +1,7 @@
 'use client'
 
 import { Text, View } from '@react-pdf/renderer'
-import { Empresa } from '@prisma/client'
+import { Empresa, TipoDocumento } from '@prisma/client'
 import { TiposDocumentos } from '~/lib/docs'
 import { useColumnsDocIngresoSalida } from '../tables/columns-doc-ingreso-salida'
 import DocGeneral from '~/app/_components/docs/doc-general'
@@ -46,7 +46,10 @@ export default function DocIngresoSalida({
       show_logo_html={show_logo_html}
       tipo_documento={tipo_documento}
       nro_doc={nro_doc}
-      colDefs={useColumnsDocIngresoSalida({ estado: data?.estado || false })}
+      colDefs={useColumnsDocIngresoSalida({
+        estado: data?.estado || false,
+        tipo_documento: data?.tipo_documento || TipoDocumento.Ingreso,
+      })}
       rowData={rowData}
       total={rowData.reduce(
         (acc, item) =>
@@ -57,6 +60,7 @@ export default function DocIngresoSalida({
         0
       )}
       observaciones={data?.descripcion ?? '-'}
+      totalConLetras
     >
       <View style={styles_docs.section}>
         <View style={styles_docs.sectionInformacionGeneral}>

@@ -36,6 +36,8 @@ export default function TableProductoSearch({
   tipoBusqueda: TipoBusquedaProducto
   ref?: RefObject<RefTableProductoSearchProps | null>
 }) {
+  const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
   const { response, refetch, loading } = useServerQuery({
     action: getProductos,
     propsQuery: {
@@ -48,6 +50,7 @@ export default function TableProductoSearch({
           tipoBusqueda,
           value,
         }),
+        producto_en_almacenes: { some: { almacen_id } },
         permitido: true,
         estado: true,
       },
@@ -55,8 +58,6 @@ export default function TableProductoSearch({
   })
 
   type ResponseItem = NonNullable<typeof response>[number]
-
-  const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     store => store.setProducto

@@ -93,7 +93,7 @@ export default function TableDetalleDePrecios() {
           {' '}
           de
           <span className='italic -ml-2 text-blue-900'>
-            {primeraData < 2
+            {primeraData < 1
               ? '-'
               : productoSeleccionado
               ? productoSeleccionado.name

@@ -1,7 +1,6 @@
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import FiltersMiAlmacen from './_components/filters/filters-mi-almacen'
 import TableProductos from './_components/tables/table-productos'
-import TableUltimasComprasIngresadas from './_components/tables/table-ultimas-compras-ingresadas'
 import TableDetalleDePrecios from './_components/tables/table-detalle-de-precios'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
@@ -11,6 +10,7 @@ import { auth } from '~/auth/auth'
 import CardsInfo from './_components/others/cards-info'
 import ButtonCreateIngresoSalida from './_components/buttons/button-create-ingreso-salida'
 import { TipoDocumento } from '@prisma/client'
+import TableUltimasComprasIngresadasMiAlmacen from './_components/tables/table-ultimas-compras-ingresadas-mi-almacen'
 
 export default async function MiAlmacen() {
   const session = await auth()
@@ -28,7 +28,7 @@ export default async function MiAlmacen() {
             <TableProductos />
           </div>
           <div className='row-start-4 row-end-6'>
-            <TableUltimasComprasIngresadas />
+            <TableUltimasComprasIngresadasMiAlmacen />
           </div>
           <div className='row-start-6 row-end-8'>
             <TableDetalleDePrecios />

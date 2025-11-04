@@ -4,6 +4,8 @@ import DocIngresoSalida, {
 } from '../docs/doc-ingreso-salida'
 import { getNroDoc } from '~/app/_utils/get-nro-doc'
 import { useSession } from 'next-auth/react'
+import DocIngresoSalidaTicket from '../docs/doc-ingreso-salida-ticket'
+import { useState } from 'react'
 
 export default function ModalDocIngresoSalida({
   open,
@@ -23,9 +25,25 @@ export default function ModalDocIngresoSalida({
   const { data: session } = useSession()
   const empresa = session?.user.empresa
 
+  const [esTicket, setEsTicket] = useState(false)
+
   return (
-    <ModalShowDoc open={open} setOpen={setOpen} nro_doc={nro_doc}>
-      <DocIngresoSalida data={data} nro_doc={nro_doc} empresa={empresa} />
+    <ModalShowDoc
+      open={open}
+      setOpen={setOpen}
+      nro_doc={nro_doc}
+      setEsTicket={setEsTicket}
+      esTicket={esTicket}
+    >
+      {esTicket ? (
+        <DocIngresoSalidaTicket
+          data={data}
+          nro_doc={nro_doc}
+          empresa={empresa}
+        />
+      ) : (
+        <DocIngresoSalida data={data} nro_doc={nro_doc} empresa={empresa} />
+      )}
     </ModalShowDoc>
   )
 }

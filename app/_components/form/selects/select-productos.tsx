@@ -129,6 +129,8 @@ export default function SelectProductos({
       where: {
         ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value: text }),
         producto_en_almacenes: { some: { almacen_id } },
+        permitido: true,
+        estado: true,
       },
     },
   })

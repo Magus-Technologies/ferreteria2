@@ -1,6 +1,7 @@
 import { Modal, Tooltip } from 'antd'
-import { cloneElement } from 'react'
+import { cloneElement, Dispatch, SetStateAction } from 'react'
 import { FaDownload, FaShareNodes } from 'react-icons/fa6'
+import { HiClipboardDocument } from 'react-icons/hi2'
 import ButtonBase from '~/components/buttons/button-base'
 import { useJSXToPdf } from '~/hooks/use-react-to-pdf'
 import { classOkButtonModal } from '~/lib/clases'
@@ -10,12 +11,16 @@ interface ModalEntradaStockProps {
   setOpen: (open: boolean) => void
   nro_doc: string
   children: React.ReactNode
+  setEsTicket?: Dispatch<SetStateAction<boolean>>
+  esTicket?: boolean
 }
 export default function ModalShowDoc({
   open,
   setOpen,
   nro_doc,
   children,
+  setEsTicket,
+  esTicket = false,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
 
@@ -57,6 +62,18 @@ export default function ModalShowDoc({
               <FaShareNodes />
             </ButtonBase>
           </Tooltip>
+          {setEsTicket && (
+            <Tooltip title='Cambiar modelo'>
+              <ButtonBase
+                onClick={() => setEsTicket(prev => !prev)}
+                color='warning'
+                size='md'
+                className='!px-3'
+              >
+                <HiClipboardDocument />
+              </ButtonBase>
+            </Tooltip>
+          )}
         </div>
       }
       okText={'Imprimir'}
@@ -71,7 +88,14 @@ export default function ModalShowDoc({
       keyboard={false}
       destroyOnHidden
     >
-      <div className='border rounded-xl' style={{ width: 595, zoom: 1.5 }}>
+      <div
+        className='border rounded-xl'
+        style={{
+          width: esTicket ? 226.77 : 595.28,
+          maxWidth: esTicket ? 226.77 : 595.28,
+          zoom: 1.5,
+        }}
+      >
         {childrenWithProps}
       </div>
     </Modal>

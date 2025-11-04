@@ -43,11 +43,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-
 
-      - run: npm i # Cambiar a ci en produccióname:
+      - run: npm i # Cambiar a ci en producción
       - run: npx prisma generate
       - run: npm run lint
       # - run: npx tsc --noEmit # Comentado porque consume mucha ram, se debe validar haciendo `npm run build` antes de hacer push a github
       - run: npm run build:server
+      - run: npx prisma migrate deploy
+      - run: npm run seed
       - run: |
           # Crear symlink solo si no existe
           [ -L ./public/uploads ] || ln -s /var/ferreteria_uploads ./public/uploads
