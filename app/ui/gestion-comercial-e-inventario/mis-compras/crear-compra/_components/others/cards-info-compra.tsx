@@ -47,17 +47,10 @@ export default function CardsInfoCompra({
 
   return (
     <div className='flex flex-col gap-4 max-w-64'>
-      {compra ? null : (
-        <>
-          <ButtonBase className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-orange-500'>
-            <BsFillCartCheckFill
-              className='text-orange-600 min-w-fit'
-              size={30}
-            />{' '}
-            Recuperar Orden de Compra
-          </ButtonBase>
-        </>
-      )}
+      <ButtonBase className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-orange-500'>
+        <BsFillCartCheckFill className='text-orange-600 min-w-fit' size={30} />{' '}
+        Recuperar Orden de Compra
+      </ButtonBase>
       <ButtonRecuperarCompraAnulada />
       <ButtonRecuperarCompraEnEspera />
       <CardInfo title='V. Bruto' value={subTotal} moneda={tipo_moneda} />
