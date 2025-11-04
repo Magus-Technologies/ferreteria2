@@ -68,6 +68,7 @@ export default function useInitCompra({
         fecha: dayjs(),
         forma_de_pago: FormaDePago.Contado,
         tipo_documento: TipoDocumento.Factura,
+        tipo_de_cambio: 1,
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compra])

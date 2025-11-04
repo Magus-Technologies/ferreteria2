@@ -1,23 +1,23 @@
 'use client'
 
 import TableWithTitle from '~/components/tables/table-with-title'
-import { AgGridReact } from 'ag-grid-react'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
-import { useStoreCompraSeleccionada } from '../../_store/store-compra-seleccionada'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import {
   TableDetalleDeCompraProps,
   useColumnsDetalleDeCompra,
 } from './columns-detalle-de-compra'
+import { getComprasResponseProps } from '~/app/_actions/compra'
 
-export default function TableDetalleDeCompra() {
-  const tableRef = useRef<AgGridReact>(null)
-
-  const compraSeleccionada = useStoreCompraSeleccionada(store => store.compra)
-  const setCompraSeleccionada = useStoreCompraSeleccionada(
-    store => store.setCompra
-  )
-
+export default function TableDetalleDeCompra({
+  id,
+  compraSeleccionada,
+  setCompraSeleccionada,
+}: {
+  id: string
+  compraSeleccionada: getComprasResponseProps | undefined
+  setCompraSeleccionada: (value: getComprasResponseProps | undefined) => void
+}) {
   useEffect(() => {
     setCompraSeleccionada(undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -25,8 +25,7 @@ export default function TableDetalleDeCompra() {
 
   return (
     <TableWithTitle<TableDetalleDeCompraProps>
-      tableRef={tableRef}
-      id='g-c-e-i.mis-compras.detalle-de-compra'
+      id={id}
       title='Detalle de Compra'
       schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}

@@ -3,8 +3,8 @@ import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
 import FiltersMisCompras from './_components/filters/filters-mis-compras'
-import TableCompras from './_components/tables/table-compras'
-import TableDetalleDeCompra from './_components/tables/table-detalle-de-compra'
+import TableMisCompras from './_components/tables/table-mis-compras'
+import TableDetalleDeCompraMisCompras from './_components/tables/table-detalle-de-compra-mis-compras'
 
 export default async function MisCompras() {
   if (
@@ -15,8 +15,8 @@ export default async function MisCompras() {
   return (
     <ContenedorGeneral>
       <FiltersMisCompras />
-      <TableCompras />
-      <TableDetalleDeCompra />
+      <TableMisCompras />
+      <TableDetalleDeCompraMisCompras />
     </ContenedorGeneral>
   )
 }

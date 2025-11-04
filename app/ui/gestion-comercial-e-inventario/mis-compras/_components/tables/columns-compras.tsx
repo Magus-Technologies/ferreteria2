@@ -17,9 +17,9 @@ export function useColumnsCompras({
   setCompraRecepcion,
   setOpenModal,
 }: {
-  setCompraRecepcion: (compra: getComprasResponseProps | undefined) => void
-  setOpenModal: (open: boolean) => void
-}) {
+  setCompraRecepcion?: (compra: getComprasResponseProps | undefined) => void
+  setOpenModal?: (open: boolean) => void
+} = {}) {
   const router = useRouter()
   const can = usePermission()
   const columns: ColDef<getComprasResponseProps>[] = [
@@ -166,64 +166,73 @@ export function useColumnsCompras({
       ),
       filter: true,
     },
-    {
-      headerName: 'Acciones',
-      field: 'id',
-      width: 80,
-      cellRenderer: (params: ICellRendererParams<getComprasResponseProps>) => {
-        return (
-          <ColumnAction
-            titleDelete='Anular'
-            id={params.value}
-            permiso={permissions.COMPRAS_BASE}
-            showDelete={
-              params.data?.estado_de_compra !== EstadoDeCompra.Anulado &&
-              params.data?.estado_de_compra !== EstadoDeCompra.Procesado
-            }
-            propsDelete={{
-              action: eliminarCompra,
-              msgSuccess: 'Compra anulada correctamente',
-              queryKey: [QueryKeys.COMPRAS],
-            }}
-            onEdit={() =>
-              router.push(
-                `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${params.value}`
-              )
-            }
-          >
-            {can(permissions.RECEPCION_ALMACEN_CREATE) && (
-              <Tooltip
-                title={
-                  params.data?.estado_de_compra === EstadoDeCompra.Creado
-                    ? 'Recepcionar en Almacén'
-                    : params.data?.estado_de_compra === EstadoDeCompra.Procesado
-                    ? 'Recepcionada en Almacén'
-                    : 'No se puede Recepcionar'
-                }
-              >
-                <FaTruckLoading
-                  onClick={() => {
-                    if (
-                      params.data?.estado_de_compra === EstadoDeCompra.Creado
-                    ) {
-                      setCompraRecepcion(params.data)
-                      setOpenModal(true)
-                    }
+    ...((setCompraRecepcion && setOpenModal
+      ? [
+          {
+            headerName: 'Acciones',
+            field: 'id',
+            width: 80,
+            cellRenderer: (
+              params: ICellRendererParams<getComprasResponseProps>
+            ) => {
+              return (
+                <ColumnAction
+                  titleDelete='Anular'
+                  id={params.value}
+                  permiso={permissions.COMPRAS_BASE}
+                  showDelete={
+                    params.data?.estado_de_compra !== EstadoDeCompra.Anulado &&
+                    params.data?.estado_de_compra !== EstadoDeCompra.Procesado
+                  }
+                  propsDelete={{
+                    action: eliminarCompra,
+                    msgSuccess: 'Compra anulada correctamente',
+                    queryKey: [QueryKeys.COMPRAS],
                   }}
-                  size={15}
-                  className={`cursor-pointer ${
-                    params.data?.estado_de_compra === EstadoDeCompra.Creado
-                      ? 'text-cyan-600'
-                      : 'text-gray-500'
-                  } hover:scale-105 transition-all active:scale-95`}
-                />
-              </Tooltip>
-            )}
-          </ColumnAction>
-        )
-      },
-      type: 'actions',
-    },
+                  onEdit={() =>
+                    router.push(
+                      `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${params.value}`
+                    )
+                  }
+                >
+                  {can(permissions.RECEPCION_ALMACEN_CREATE) && (
+                    <Tooltip
+                      title={
+                        params.data?.estado_de_compra === EstadoDeCompra.Creado
+                          ? 'Recepcionar en Almacén'
+                          : params.data?.estado_de_compra ===
+                            EstadoDeCompra.Procesado
+                          ? 'Recepcionada en Almacén'
+                          : 'No se puede Recepcionar'
+                      }
+                    >
+                      <FaTruckLoading
+                        onClick={() => {
+                          if (
+                            params.data?.estado_de_compra ===
+                            EstadoDeCompra.Creado
+                          ) {
+                            setCompraRecepcion(params.data)
+                            setOpenModal(true)
+                          }
+                        }}
+                        size={15}
+                        className={`cursor-pointer ${
+                          params.data?.estado_de_compra ===
+                          EstadoDeCompra.Creado
+                            ? 'text-cyan-600'
+                            : 'text-gray-500'
+                        } hover:scale-105 transition-all active:scale-95`}
+                      />
+                    </Tooltip>
+                  )}
+                </ColumnAction>
+              )
+            },
+            type: 'actions',
+          },
+        ]
+      : []) as ColDef<getComprasResponseProps>[]),
   ]
 
   return columns

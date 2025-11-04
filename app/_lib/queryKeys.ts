@@ -13,5 +13,7 @@ export enum QueryKeys {
   TIPOS_INGRESO_SALIDA = 'tipos_ingreso_salida',
   USUARIOS = 'usuarios',
   COMPRAS = 'compras',
+  COMPRAS_ANULADAS = 'compras_anuladas',
+  COMPRAS_EN_ESPERA = 'compras_en_espera',
   RECEPCIONES_ALMACEN = 'recepciones_almacen',
 }

@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  BsCartXFill,
-  BsFillCartCheckFill,
-  BsFillCartDashFill,
-} from 'react-icons/bs'
+import { BsFillCartCheckFill, BsFillCartDashFill } from 'react-icons/bs'
 import ButtonBase from '~/components/buttons/button-base'
 import CardInfo from '../cards/card-info'
 import { TbShoppingCartCog, TbShoppingCartPlus } from 'react-icons/tb'
@@ -15,6 +11,8 @@ import { useMemo } from 'react'
 import { CompraConUnidadDerivadaNormal } from './header'
 import { EstadoDeCompra } from '@prisma/client'
 import InputBase from '~/app/_components/form/inputs/input-base'
+import ButtonRecuperarCompraEnEspera from '../buttons/button-recuperar-compra-en-espera'
+import ButtonRecuperarCompraAnulada from '../buttons/button-recuperar-compra-anulada'
 
 export default function CardsInfoCompra({
   form,
@@ -58,19 +56,10 @@ export default function CardsInfoCompra({
             />{' '}
             Recuperar Orden de Compra
           </ButtonBase>
-          <ButtonBase className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-rose-500'>
-            <BsCartXFill className='text-rose-600 min-w-fit' size={30} />{' '}
-            Recuperar Compra Anulada
-          </ButtonBase>
-          <ButtonBase className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-yellow-500'>
-            <BsFillCartDashFill
-              className='text-yellow-600 min-w-fit'
-              size={30}
-            />{' '}
-            Recuperar Compra en Espera
-          </ButtonBase>
         </>
       )}
+      <ButtonRecuperarCompraAnulada />
+      <ButtonRecuperarCompraEnEspera />
       <CardInfo title='V. Bruto' value={subTotal} moneda={tipo_moneda} />
       <CardInfo
         title='Sub Total'
