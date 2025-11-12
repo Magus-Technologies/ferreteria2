@@ -16,6 +16,7 @@ model Empresa {
     direccion    String
     telefono     String
     email        String
+    efectivo     Decimal @default(0) @db.Decimal(9, 2)
 
     users User[]
 }

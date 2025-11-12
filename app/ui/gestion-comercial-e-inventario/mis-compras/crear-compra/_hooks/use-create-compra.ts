@@ -7,7 +7,7 @@ import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import { FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
+import { EstadoDeCompra, FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
 import { useSession } from 'next-auth/react'
 import { CompraConUnidadDerivadaNormal } from '../_components/others/header'
 // 2025-10-30 16:52:39.655
@@ -103,7 +103,20 @@ export default function useCreateCompra({
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
 
+    if (
+      values.estado_de_compra === EstadoDeCompra.Creado &&
+      (!values.serie || !values.numero || !values.proveedor_id)
+    )
+      return notification.error({
+        message: 'Por favor, ingresa la serie, el número y el proveedor',
+      })
+
     const { productos, tipo_de_cambio, tipo_moneda, ...restValues } = values
+
+    if (!productos || productos.length === 0)
+      return notification.error({
+        message: 'Por favor, ingresa al menos un producto',
+      })
 
     const productos_agrupados = agruparProductos({
       productos: productos,

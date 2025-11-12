@@ -1,10 +1,11 @@
 import { Proveedor } from '@prisma/client'
-import { createProveedor, editarProveedor } from '~/app/_actions/proveedor'
-import { useServerMutation } from '~/hooks/use-server-mutation'
 import {
-  dataEditProveedor,
-  dataProveedorModalProps,
-} from '../_components/modals/modal-create-proveedor'
+  createProveedor,
+  editarProveedor,
+  getProveedorResponseProps,
+} from '~/app/_actions/proveedor'
+import { useServerMutation } from '~/hooks/use-server-mutation'
+import { dataProveedorModalProps } from '../_components/modals/modal-create-proveedor'
 import { ServerResult } from '~/auth/middleware-server-actions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { toUTCBD } from '~/utils/fechas'
@@ -14,7 +15,7 @@ export default function useCreateProveedor({
   dataEdit,
 }: {
   onSuccess?: (res: ServerResult<Proveedor>) => void
-  dataEdit?: dataEditProveedor
+  dataEdit?: getProveedorResponseProps
 }) {
   const { execute, loading } = useServerMutation({
     action: dataEdit ? editarProveedor : createProveedor,
@@ -24,7 +25,7 @@ export default function useCreateProveedor({
   })
 
   function crearProveedorForm(values: dataProveedorModalProps) {
-    const { vendedores, estado, ...rest } = values
+    const { vendedores, carros, choferes, estado, ...rest } = values
     const data = {
       ...rest,
       estado: estado === 1,
@@ -39,6 +40,28 @@ export default function useCreateProveedor({
                       date: item.cumple,
                     })
                   : undefined,
+                id: undefined,
+                proveedor_id: undefined,
+              })),
+            },
+          }
+        : {}),
+      ...(carros && carros.length
+        ? {
+            carros: {
+              create: carros.map(item => ({
+                ...item,
+                id: undefined,
+                proveedor_id: undefined,
+              })),
+            },
+          }
+        : {}),
+      ...(choferes && choferes.length
+        ? {
+            choferes: {
+              create: choferes.map(item => ({
+                ...item,
                 id: undefined,
                 proveedor_id: undefined,
               })),

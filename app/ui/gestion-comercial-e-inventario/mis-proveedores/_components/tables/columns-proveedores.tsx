@@ -4,17 +4,19 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { dataEditProveedor } from '../modals/modal-create-proveedor'
-import { eliminarProveedor } from '~/app/_actions/proveedor'
+import {
+  eliminarProveedor,
+  getProveedorResponseProps,
+} from '~/app/_actions/proveedor'
 
 export function useColumnsProveedores({
   setDataEdit,
   setOpen,
 }: {
-  setDataEdit: (data: dataEditProveedor | undefined) => void
+  setDataEdit: (data: getProveedorResponseProps | undefined) => void
   setOpen: (open: boolean) => void
 }) {
-  const columns: ColDef<dataEditProveedor>[] = [
+  const columns: ColDef<getProveedorResponseProps>[] = [
     {
       headerName: 'RUC',
       field: 'ruc',
@@ -65,7 +67,9 @@ export function useColumnsProveedores({
       headerName: 'Acciones',
       field: 'id',
       width: 80,
-      cellRenderer: (params: ICellRendererParams<dataEditProveedor>) => {
+      cellRenderer: (
+        params: ICellRendererParams<getProveedorResponseProps>
+      ) => {
         return (
           <ColumnAction
             id={params.value}

@@ -1,0 +1,26 @@
+model SubCaja {
+    id   String @id @default(cuid())
+    name String @unique
+
+    metodos_de_pago MetodoDePago[]
+}
+
+model MetodoDePago {
+    id              String  @id @default(cuid())
+    name            String  @unique
+    cuenta_bancaria String
+    monto           Decimal @default(0) @db.Decimal(9, 2)
+
+    subcaja_id String
+    subcaja    SubCaja @relation(fields: [subcaja_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    despliegue_de_pagos DespliegueDePago[]
+}
+
+model DespliegueDePago {
+    id   String @id @default(cuid())
+    name String @unique
+
+    metodo_de_pago_id String
+    metodo_de_pago    MetodoDePago @relation(fields: [metodo_de_pago_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}

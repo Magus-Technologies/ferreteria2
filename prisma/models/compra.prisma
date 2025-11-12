@@ -28,8 +28,8 @@ model Compra {
     id String @id @default(cuid())
 
     tipo_documento    TipoDocumento @default(NotaDeVenta)
-    serie             String
-    numero            Int
+    serie             String?
+    numero            Int?
     descripcion       String?
     forma_de_pago     FormaDePago   @default(Contado)
     tipo_moneda       TipoMoneda    @default(Soles)

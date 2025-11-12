@@ -12,6 +12,8 @@ model Proveedor {
 
     vendedores Vendedor[]
     compras    Compra[]
+    carros     Carro[]
+    choferes   Chofer[]
 }
 
 model Vendedor {
@@ -23,6 +25,24 @@ model Vendedor {
     email     String?
     estado    Boolean   @default(true)
     cumple    DateTime?
+
+    proveedor_id Int
+    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Carro {
+    id    Int    @id @default(autoincrement())
+    placa String
+
+    proveedor_id Int
+    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Chofer {
+    id       Int    @id @default(autoincrement())
+    dni      String @unique
+    name     String
+    licencia String
 
     proveedor_id Int
     proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)

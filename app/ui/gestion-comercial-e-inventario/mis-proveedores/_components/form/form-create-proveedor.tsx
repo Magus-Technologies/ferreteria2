@@ -8,14 +8,14 @@ import { FormInstance } from 'antd/lib'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import { BsGeoAltFill } from 'react-icons/bs'
 import { FaMobileButton } from 'react-icons/fa6'
-import { dataEditProveedor } from '../modals/modal-create-proveedor'
+import { getProveedorResponseProps } from '~/app/_actions/proveedor'
 
 export default function FormCreateProveedor({
   form,
   dataEdit,
 }: {
   form: FormInstance
-  dataEdit?: dataEditProveedor
+  dataEdit?: getProveedorResponseProps
 }) {
   return (
     <>

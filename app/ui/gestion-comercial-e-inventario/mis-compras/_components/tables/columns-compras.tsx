@@ -6,12 +6,18 @@ import { IGV } from '~/lib/constantes'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
 import usePermission from '~/hooks/use-permission'
-import { Tooltip } from 'antd'
+import { Popconfirm, Tooltip } from 'antd'
 import { FaTruckLoading } from 'react-icons/fa'
-import { eliminarCompra, getComprasResponseProps } from '~/app/_actions/compra'
+import {
+  eliminarCompra,
+  getComprasResponseProps,
+  updateCompra,
+} from '~/app/_actions/compra'
 import { useRouter } from 'next/navigation'
 import TagEstadoDeCompra from '../others/tag-estado-de-compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useServerMutation } from '~/hooks/use-server-mutation'
+import { FaFlag } from 'react-icons/fa6'
 
 export function useColumnsCompras({
   setCompraRecepcion,
@@ -22,6 +28,13 @@ export function useColumnsCompras({
 } = {}) {
   const router = useRouter()
   const can = usePermission()
+
+  const { execute, loading } = useServerMutation({
+    action: updateCompra,
+    queryKey: [QueryKeys.COMPRAS],
+    msgSuccess: `Recepción Finalizada correctamente`,
+  })
+
   const columns: ColDef<getComprasResponseProps>[] = [
     {
       headerName: 'Documento',
@@ -171,7 +184,7 @@ export function useColumnsCompras({
           {
             headerName: 'Acciones',
             field: 'id',
-            width: 80,
+            width: 95,
             cellRenderer: (
               params: ICellRendererParams<getComprasResponseProps>
             ) => {
@@ -222,10 +235,35 @@ export function useColumnsCompras({
                           EstadoDeCompra.Creado
                             ? 'text-cyan-600'
                             : 'text-gray-500'
-                        } hover:scale-105 transition-all active:scale-95`}
+                        } hover:scale-105 transition-all active:scale-95 min-w-fit`}
                       />
                     </Tooltip>
                   )}
+                  {can(permissions.RECEPCION_ALMACEN_FINALIZAR) &&
+                    params.data?.estado_de_compra === EstadoDeCompra.Creado && (
+                      <Tooltip title='Finalizar Recepción'>
+                        <Popconfirm
+                          title='Finalizar Recepción'
+                          description={`¿Estas seguro de marcar la recepción de almacén de esta compra como Finalizado?`}
+                          onConfirm={() =>
+                            execute({
+                              id: params.value,
+                              data: {
+                                estado_de_compra: EstadoDeCompra.Procesado,
+                              },
+                            })
+                          }
+                          okText='Finalizar'
+                          cancelText='Cancelar'
+                          disabled={loading}
+                        >
+                          <FaFlag
+                            size={15}
+                            className={`cursor-pointer text-rose-600 hover:scale-105 transition-all active:scale-95 min-w-fit`}
+                          />
+                        </Popconfirm>
+                      </Tooltip>
+                    )}
                 </ColumnAction>
               )
             },

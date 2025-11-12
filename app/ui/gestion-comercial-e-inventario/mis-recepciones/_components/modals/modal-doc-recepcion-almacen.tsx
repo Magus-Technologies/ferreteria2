@@ -25,7 +25,7 @@ export default function ModalDocRecepcionAlmacen({
     numero: data?.numero ?? 0,
   })
 
-  const [esTicket, setEsTicket] = useState(false)
+  const [esTicket, setEsTicket] = useState(true)
 
   return (
     <ModalShowDoc

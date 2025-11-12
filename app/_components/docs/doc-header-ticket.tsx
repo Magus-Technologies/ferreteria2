@@ -1,6 +1,6 @@
-import { Empresa } from '@prisma/client'
 import { Image, Text, View } from '@react-pdf/renderer'
 import { styles_ticket } from './styles'
+import { EmpresaSession } from '~/auth/auth'
 
 export default function DocHeaderTicket({
   empresa,
@@ -8,7 +8,7 @@ export default function DocHeaderTicket({
   tipo_documento,
   nro_doc,
 }: {
-  empresa: Empresa | undefined
+  empresa: EmpresaSession | undefined
   show_logo_html?: boolean
   tipo_documento: string
   nro_doc: string

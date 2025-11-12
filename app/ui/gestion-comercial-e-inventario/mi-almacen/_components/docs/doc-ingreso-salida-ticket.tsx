@@ -1,12 +1,13 @@
 'use client'
 
 import { Text, View } from '@react-pdf/renderer'
-import { Empresa, TipoDocumento } from '@prisma/client'
+import { TipoDocumento } from '@prisma/client'
 import { TiposDocumentos } from '~/lib/docs'
 import { useColumnsDocIngresoSalida } from '../tables/columns-doc-ingreso-salida'
 import { DataDocIngresoSalida } from './doc-ingreso-salida'
 import DocGeneralTicket from '~/app/_components/docs/doc-general-ticket'
 import { styles_ticket } from '~/app/_components/docs/styles'
+import { EmpresaSession } from '~/auth/auth'
 
 export default function DocIngresoSalidaTicket({
   data,
@@ -16,7 +17,7 @@ export default function DocIngresoSalidaTicket({
 }: {
   data: DataDocIngresoSalida
   nro_doc: string
-  empresa: Empresa | undefined
+  empresa: EmpresaSession | undefined
   show_logo_html?: boolean
 }) {
   const rowData =

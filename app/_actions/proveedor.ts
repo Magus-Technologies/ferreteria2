@@ -9,6 +9,14 @@ import {
   ProveedorUncheckedCreateInputSchema,
 } from '~/prisma/generated/zod'
 import can from '~/utils/server-validate-permission'
+const includeGetProveedor = {
+  vendedores: true,
+  carros: true,
+  choferes: true,
+} satisfies Prisma.ProveedorInclude
+export type getProveedorResponseProps = Prisma.ProveedorGetPayload<{
+  include: typeof includeGetProveedor
+}>
 
 async function SearchProveedorWA(args: Prisma.ProveedorFindManyArgs) {
   const argsParsed = ProveedorFindManyArgsSchema.parse(args)
@@ -18,9 +26,7 @@ async function SearchProveedorWA(args: Prisma.ProveedorFindManyArgs) {
     orderBy: {
       razon_social: 'asc',
     },
-    include: {
-      vendedores: true,
-    },
+    include: includeGetProveedor,
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
@@ -72,11 +78,6 @@ async function editarProveedorWA({
         ruc: true,
       },
     })
-    await prisma.vendedor.deleteMany({
-      where: {
-        proveedor_id: data.id,
-      },
-    })
     const item = await prisma.proveedor.update({
       where: {
         id: data.id,
@@ -89,6 +90,18 @@ async function editarProveedorWA({
             : dataParsed.razon_social,
         ruc:
           proveedor_actual?.ruc === dataParsed.ruc ? undefined : dataParsed.ruc,
+        vendedores: {
+          deleteMany: {},
+          ...dataParsed.vendedores,
+        },
+        carros: {
+          deleteMany: {},
+          ...dataParsed.carros,
+        },
+        choferes: {
+          deleteMany: {},
+          ...dataParsed.choferes,
+        },
       },
     })
     return { data: item }

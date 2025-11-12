@@ -46,7 +46,7 @@ export default function ColumnAction<T>({
               deleteLoading
                 ? 'opacity-50 cursor-not-allowed pointer-events-none'
                 : 'cursor-pointer'
-            }`}
+            } min-w-fit`}
           />
         </Tooltip>
       )}
@@ -66,7 +66,7 @@ export default function ColumnAction<T>({
                 deleteLoading
                   ? 'opacity-50 cursor-not-allowed pointer-events-none'
                   : 'cursor-pointer'
-              }`}
+              } min-w-fit`}
             />
           </Popconfirm>
         </Tooltip>

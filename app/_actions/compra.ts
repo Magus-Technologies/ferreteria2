@@ -7,6 +7,7 @@ import can from '~/utils/server-validate-permission'
 import { Compra, EstadoDeCompra, Prisma } from '@prisma/client'
 import {
   CompraUncheckedCreateInputSchema,
+  CompraUncheckedUpdateInputSchema,
   CompraWhereInputSchema,
 } from '~/prisma/generated/zod'
 import { includeCompra } from './lib/lib-compra'
@@ -43,21 +44,29 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
 
   return await prisma.$transaction(
     async db => {
-      const proveedor_serie_numero = await db.compra.findFirst({
-        where: {
-          proveedor_id: parsedData.proveedor_id,
-          serie: parsedData.serie,
-          numero: parsedData.numero,
-        },
-        select: {
-          id: true,
-        },
-      })
+      if (
+        parsedData.estado_de_compra === EstadoDeCompra.Creado ||
+        (parsedData.estado_de_compra === EstadoDeCompra.EnEspera &&
+          parsedData.serie &&
+          parsedData.numero &&
+          parsedData.proveedor_id)
+      ) {
+        const proveedor_serie_numero = await db.compra.findFirst({
+          where: {
+            proveedor_id: parsedData.proveedor_id,
+            serie: parsedData.serie,
+            numero: parsedData.numero,
+          },
+          select: {
+            id: true,
+          },
+        })
 
-      if (proveedor_serie_numero)
-        throw new Error(
-          'Ya existe una compra con el mismo proveedor, serie y número'
-        )
+        if (proveedor_serie_numero)
+          throw new Error(
+            'Ya existe una compra con el mismo proveedor, serie y número'
+          )
+      }
 
       const compra = await db.compra.create({
         data: parsedData,
@@ -128,24 +137,32 @@ async function editarCompraWA(data: Prisma.CompraUncheckedCreateInput) {
 
   return await prisma.$transaction(
     async db => {
-      const proveedor_serie_numero = await db.compra.findFirst({
-        where: {
-          proveedor_id: parsedData.proveedor_id,
-          serie: parsedData.serie,
-          numero: parsedData.numero,
-          id: {
-            not: parsedData.id,
+      if (
+        parsedData.estado_de_compra === EstadoDeCompra.Creado ||
+        (parsedData.estado_de_compra === EstadoDeCompra.EnEspera &&
+          parsedData.serie &&
+          parsedData.numero &&
+          parsedData.proveedor_id)
+      ) {
+        const proveedor_serie_numero = await db.compra.findFirst({
+          where: {
+            proveedor_id: parsedData.proveedor_id,
+            serie: parsedData.serie,
+            numero: parsedData.numero,
+            id: {
+              not: parsedData.id,
+            },
           },
-        },
-        select: {
-          id: true,
-        },
-      })
+          select: {
+            id: true,
+          },
+        })
 
-      if (proveedor_serie_numero)
-        throw new Error(
-          'Ya existe una compra con el mismo proveedor, serie y número (edición)'
-        )
+        if (proveedor_serie_numero)
+          throw new Error(
+            'Ya existe una compra con el mismo proveedor, serie y número (edición)'
+          )
+      }
 
       const compra = await db.compra.update({
         where: {
@@ -168,3 +185,33 @@ async function editarCompraWA(data: Prisma.CompraUncheckedCreateInput) {
   )
 }
 export const editarCompra = withAuth(editarCompraWA)
+
+async function updateCompraWA({
+  data,
+  id,
+}: {
+  data: Prisma.CompraUncheckedUpdateInput
+  id: Compra['id']
+}) {
+  const puede = await can(permissions.COMPRAS_UPDATE)
+  if (!puede) throw new Error('No tienes permiso para editar una compra')
+
+  const parsedData = CompraUncheckedUpdateInputSchema.parse(data)
+
+  return await prisma.$transaction(
+    async db => {
+      const compra = await db.compra.update({
+        where: {
+          id,
+        },
+        data: parsedData,
+      })
+
+      return { data: JSON.parse(JSON.stringify(compra)) as typeof compra }
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    }
+  )
+}
+export const updateCompra = withAuth(updateCompraWA)

@@ -232,6 +232,91 @@ export function useColumnsComprar({
         )
       },
     },
+    ...((cantidad_pendiente
+      ? [
+          {
+            headerName: 'Total',
+            field: 'name',
+            minWidth: 85,
+            width: 85,
+            cellRenderer: ({
+              value,
+            }: ICellRendererParams<FormListFieldData>) => {
+              return (
+                <div className='flex items-center h-full'>
+                  {(
+                    Number(
+                      form.getFieldValue([
+                        'productos',
+                        value,
+                        'cantidad_recepcionada',
+                      ])
+                    ) +
+                    Number(
+                      form.getFieldValue([
+                        'productos',
+                        value,
+                        'cantidad_pendiente',
+                      ])
+                    )
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )
+            },
+          },
+          {
+            headerName: 'Entregado',
+            field: 'name',
+            minWidth: 85,
+            width: 85,
+            cellRenderer: ({
+              value,
+            }: ICellRendererParams<FormListFieldData>) => {
+              return (
+                <div className='flex items-center h-full'>
+                  {Number(
+                    form.getFieldValue([
+                      'productos',
+                      value,
+                      'cantidad_recepcionada',
+                    ])
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )
+            },
+          },
+          {
+            headerName: 'Pendiente',
+            field: 'name',
+            minWidth: 85,
+            width: 85,
+            cellRenderer: ({
+              value,
+            }: ICellRendererParams<FormListFieldData>) => {
+              return (
+                <div className='flex items-center h-full'>
+                  {Number(
+                    form.getFieldValue([
+                      'productos',
+                      value,
+                      'cantidad_pendiente',
+                    ])
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )
+            },
+          },
+        ]
+      : []) as ColDef<FormListFieldData>[]),
     {
       headerName: 'Cantidad',
       field: 'name',
@@ -330,6 +415,9 @@ export function useColumnsComprar({
                   form,
                   value,
                   costo: Number(val ?? 0),
+                  producto_id: Number(
+                    form.getFieldValue(['productos', value, 'producto_id'])
+                  ),
                 })
               }}
               disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
@@ -492,10 +580,12 @@ export function onChangeCostoTablaCompras({
   form,
   value,
   costo,
+  producto_id,
 }: {
   form: FormInstance
   value?: number
   costo?: number
+  producto_id: number
 }) {
   const productos = form.getFieldValue(
     'productos'
@@ -513,6 +603,8 @@ export function onChangeCostoTablaCompras({
 
   unidades_derivadas.forEach((factor, index) => {
     if (costo && index === value) return
+    if (productos[index].producto_id !== producto_id) return
+
     const nuevo_precio_compra = Prisma.Decimal(factor).mul(costo_unidad)
     form.setFieldValue(
       ['productos', index, 'precio_compra'],

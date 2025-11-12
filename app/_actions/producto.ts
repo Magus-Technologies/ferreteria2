@@ -515,7 +515,7 @@ async function editarProductoWA(data: FormCreateProductoFormatedProps) {
     if (error instanceof Prisma.PrismaClientKnownRequestError)
       throw new Error(`${error.code}`)
 
-    throw new Error('Error al editar el producto')
+    throw error
   }
 }
 export const editarProducto = withAuth(editarProductoWA)

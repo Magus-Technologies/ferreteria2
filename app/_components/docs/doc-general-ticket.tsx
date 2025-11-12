@@ -1,10 +1,10 @@
 import { Document, Page, Text, View } from '@react-pdf/renderer'
 import { styles_ticket } from './styles'
-import { Empresa } from '@prisma/client'
 import { ColDef } from 'ag-grid-community'
 import DocHeaderTicket from './doc-header-ticket'
 import DocTableTicket from './doc-table-ticket'
 import { NumeroALetras } from '~/utils/numero-a-letras'
+import { EmpresaSession } from '~/auth/auth'
 
 export default function DocGeneralTicket<T>({
   empresa,
@@ -19,7 +19,7 @@ export default function DocGeneralTicket<T>({
   headerNameAl100,
   totalConLetras = false,
 }: {
-  empresa: Empresa | undefined
+  empresa: EmpresaSession | undefined
   show_logo_html?: boolean
   tipo_documento: string
   nro_doc: string

@@ -81,12 +81,14 @@ export default function ModalCrearRecepcionAlmacen({
               unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable.id,
               unidad_derivada_factor: unidad_derivada.factor,
               cantidad: unidad_derivada.cantidad_pendiente,
+              cantidad_recepcionada:
+                Number(unidad_derivada.cantidad) -
+                Number(unidad_derivada.cantidad_pendiente),
               cantidad_pendiente: unidad_derivada.cantidad_pendiente,
               precio_compra:
-                Number(p.producto.producto_almacen.costo) *
-                Number(unidad_derivada.factor),
+                Number(p.producto.costo) * Number(unidad_derivada.factor),
               subtotal:
-                Number(p.producto.producto_almacen.costo) *
+                Number(p.producto.costo) *
                 Number(unidad_derivada.factor) *
                 Number(unidad_derivada.cantidad),
               flete: unidad_derivada.flete,
@@ -132,7 +134,7 @@ export default function ModalCrearRecepcionAlmacen({
             </div>
           </TitleForm>
         ),
-        className: 'min-w-[1300px]',
+        className: 'min-w-[1430px]',
         wrapClassName: '!flex !items-center',
         centered: true,
         okButtonProps: { loading, disabled: loading },

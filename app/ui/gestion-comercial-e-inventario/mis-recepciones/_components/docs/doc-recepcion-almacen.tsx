@@ -6,9 +6,9 @@ import { useColumnsDetalleDeRecepcion } from '../tables/columns-detalle-de-recep
 import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
 import { getDetallesRecepcionAlmacen } from '../../_utils/get-detalles-recepcion-almacen'
 import DocGeneral from '~/app/_components/docs/doc-general'
-import { Empresa } from '@prisma/client'
 import { styles_docs } from '~/app/_components/docs/styles'
 import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
+import { EmpresaSession } from '~/auth/auth'
 
 export default function DocRecepcionAlmacen({
   data,
@@ -18,7 +18,7 @@ export default function DocRecepcionAlmacen({
 }: {
   data: getRecepcionesAlmacenResponseProps | undefined
   nro_doc: string
-  empresa: Empresa | undefined
+  empresa: EmpresaSession | undefined
   show_logo_html?: boolean
 }) {
   const rowData = getDetallesRecepcionAlmacen({ data })

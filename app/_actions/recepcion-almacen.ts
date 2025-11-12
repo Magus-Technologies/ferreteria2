@@ -10,6 +10,7 @@ import {
 } from '~/prisma/generated/zod'
 import can from '~/utils/server-validate-permission'
 import { getUltimoNumeroRecepcionAlmacen } from './utils/recepcion-almacen'
+import { manejoDeCosto } from '../_utils/manejo-de-costo'
 
 const includeRecepcionAlmacen = {
   compra: {
@@ -126,15 +127,25 @@ async function manejo_de_recepcion({
         (acc, u) => acc.add(u.cantidad.mul(u.factor)),
         new Prisma.Decimal(0)
       )
-      if (
-        !agregar &&
-        producto_almacen_compra.producto_almacen.stock_fraccion
-          .sub(cantidad_total)
-          .toNumber() < 0
-      )
-        throw new Error('El producto no tiene suficiente stock para quitar')
 
       const stock_base = producto_almacen_compra.producto_almacen.stock_fraccion
+
+      console.log(
+        '🚀 ~ file: recepcion-almacen.ts:127 ~ cantidad_total:',
+        cantidad_total.mul(agregar ? 1 : -1)
+      )
+      console.log('🚀 ~ file: recepcion-almacen.ts:147 ~ costo:', costo)
+      const { nuevo_costo } = manejoDeCosto({
+        stock_actual: stock_base,
+        nuevo_stock: stock_base
+          .add(cantidad_total.mul(agregar ? 1 : -1))
+          .toNumber(),
+        agregar,
+        costo_nuevo:
+          unidades_derivadas.length === 1 && unidades_derivadas[0].bonificacion
+            ? Prisma.Decimal(0)
+            : costo,
+      })
 
       const acumulados: Prisma.Decimal[] = []
       let suma = new Prisma.Decimal(0)
@@ -182,35 +193,6 @@ async function manejo_de_recepcion({
           })
         })
       )
-
-      let nuevo_costo: Prisma.Decimal | undefined = undefined
-      if (
-        producto_almacen_compra.producto_almacen.stock_fraccion.toNumber() === 0
-      ) {
-        if (agregar)
-          nuevo_costo =
-            unidades_derivadas.length === 1 &&
-            unidades_derivadas[0].bonificacion
-              ? Prisma.Decimal(0)
-              : costo
-        else
-          throw new Error(
-            'No se puede quitar stock a un producto que no tiene stock'
-          )
-      } else if (
-        producto_almacen_compra.producto_almacen.stock_fraccion.toNumber() > 0
-      ) {
-        if (agregar) nuevo_costo = undefined
-        else nuevo_costo = undefined
-      } else throw new Error('El producto tiene stock negativo')
-
-      if (
-        !agregar &&
-        producto_almacen_compra.producto_almacen.stock_fraccion
-          .sub(cantidad_total)
-          .toNumber() === 0
-      )
-        nuevo_costo = Prisma.Decimal(0)
 
       await db.productoAlmacen.update({
         where: {

@@ -30,6 +30,8 @@ export const getUserFromDb = async (email: string, pwHash: string) => {
 
   const userWithAllPermissions = {
     ...user,
+    efectivo: user.efectivo.toNumber(),
+    empresa: { ...user.empresa, efectivo: user.empresa.efectivo.toNumber() },
     all_permissions,
   }
 

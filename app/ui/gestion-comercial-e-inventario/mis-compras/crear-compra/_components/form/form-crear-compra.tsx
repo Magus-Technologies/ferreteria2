@@ -81,18 +81,12 @@ export default function FormCrearCompra({
             allowClear
             showButtonCreate={can(permissions.PROVEEDOR_CREATE)}
             className='!w-[420px] !min-w-[420px] !max-w-[420px]'
-            classNameIcon='text-rose-700 mx-1'
+            classNameIcon={`text-cyan-600 mx-1`}
             proveedorOptionsDefault={
               compra?.proveedor ? [compra.proveedor] : []
             }
             propsForm={{
               name: 'proveedor_id',
-              rules: [
-                {
-                  required: true,
-                  message: 'Por favor, selecciona el proveedor',
-                },
-              ],
             }}
             form={form}
           />
@@ -118,33 +112,21 @@ export default function FormCrearCompra({
         </LabelBase>
         <LabelBase label='Serie:' classNames={{ labelParent: 'mb-6' }}>
           <InputBase
-            prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
+            prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
             className='!w-[120px] !min-w-[120px] !max-w-[120px]'
             placeholder='Serie'
             propsForm={{
               name: 'serie',
-              rules: [
-                {
-                  required: true,
-                  message: 'Por favor, ingresa la serie',
-                },
-              ],
             }}
           />
         </LabelBase>
         <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
-            prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
+            prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
             className='!w-[120px] !min-w-[120px] !max-w-[120px]'
             placeholder='Número'
             propsForm={{
               name: 'numero',
-              rules: [
-                {
-                  required: true,
-                  message: 'Por favor, ingresa el número',
-                },
-              ],
             }}
             precision={0}
             min={0}

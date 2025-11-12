@@ -59,6 +59,10 @@ export default function FiltersMisRecepciones() {
       className='w-full'
       onFinish={values => {
         const { desde, hasta, almacen_id, estado, ...rest } = values
+        console.log(
+          '🚀 ~ file: filters-mis-recepciones.tsx:62 ~ estado:',
+          estado
+        )
         const data = {
           ...rest,
           compra: {
@@ -68,7 +72,7 @@ export default function FiltersMisRecepciones() {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
-          estado: estado === 1,
+          estado: estado !== undefined ? estado === 1 : undefined,
         } satisfies Prisma.RecepcionAlmacenWhereInput
         setFiltros(data)
       }}

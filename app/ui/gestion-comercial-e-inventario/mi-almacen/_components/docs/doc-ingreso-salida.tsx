@@ -1,12 +1,13 @@
 'use client'
 
 import { Text, View } from '@react-pdf/renderer'
-import { Empresa, TipoDocumento } from '@prisma/client'
+import { TipoDocumento } from '@prisma/client'
 import { TiposDocumentos } from '~/lib/docs'
 import { useColumnsDocIngresoSalida } from '../tables/columns-doc-ingreso-salida'
 import DocGeneral from '~/app/_components/docs/doc-general'
 import { styles_docs } from '~/app/_components/docs/styles'
 import { getIngresoSalidaResponseProps } from '~/app/_actions/ingreso-salida'
+import { EmpresaSession } from '~/auth/auth'
 
 export type DataDocIngresoSalida = getIngresoSalidaResponseProps | undefined
 
@@ -18,7 +19,7 @@ export default function DocIngresoSalida({
 }: {
   data: DataDocIngresoSalida
   nro_doc: string
-  empresa: Empresa | undefined
+  empresa: EmpresaSession | undefined
   show_logo_html?: boolean
 }) {
   const rowData =

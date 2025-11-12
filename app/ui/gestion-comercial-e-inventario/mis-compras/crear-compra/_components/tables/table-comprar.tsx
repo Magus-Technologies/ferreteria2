@@ -72,6 +72,7 @@ export default function TableComprar({
         form,
         value: length,
         costo: Number(producto.precio_compra ?? 0),
+        producto_id: producto.producto_id!,
       })
   }
 
@@ -168,6 +169,7 @@ export default function TableComprar({
             form,
             value: index,
             costo: Number(productoAgregadoCompra.precio_compra ?? 0),
+            producto_id: productoAgregadoCompra.producto_id,
           })
       } else {
         agregarProducto({ producto: productoAgregadoCompra })

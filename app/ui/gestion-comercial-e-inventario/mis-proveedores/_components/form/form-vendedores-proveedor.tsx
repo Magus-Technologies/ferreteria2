@@ -3,21 +3,22 @@ import { FormInstance } from 'antd/lib'
 import { BsGeoAltFill, BsPlusCircleDotted } from 'react-icons/bs'
 import { FaAddressCard } from 'react-icons/fa'
 import { FaMobileButton } from 'react-icons/fa6'
-import { MdCelebration, MdDelete, MdEmail, MdFactory } from 'react-icons/md'
+import { MdCelebration, MdDelete, MdEmail } from 'react-icons/md'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import { ConsultaDni } from '~/app/_types/consulta-ruc'
 import LabelBase from '~/components/form/label-base'
-import { dataEditProveedor } from '../modals/modal-create-proveedor'
+import { IoMdPerson } from 'react-icons/io'
+import { getProveedorResponseProps } from '~/app/_actions/proveedor'
 
 export default function FormVendedoresProveedor({
   form,
   dataEdit,
 }: {
   form: FormInstance
-  dataEdit?: dataEditProveedor
+  dataEdit?: getProveedorResponseProps
 }) {
   return (
     <Form.List name='vendedores'>
@@ -103,7 +104,7 @@ export default function FormVendedoresProveedor({
                   orientation='column'
                 >
                   <InputBase
-                    prefix={<MdFactory className='text-rose-700 mx-1' />}
+                    prefix={<IoMdPerson className='text-rose-700 mx-1' />}
                     propsForm={{
                       name: [name, 'nombres'],
                       rules: [

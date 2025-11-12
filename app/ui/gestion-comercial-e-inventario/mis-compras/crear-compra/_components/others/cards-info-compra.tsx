@@ -96,7 +96,10 @@ export default function CardsInfoCompra({
         </ButtonBase>
       )}
       <ButtonBase
-        type='submit'
+        onClick={() => {
+          form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
+          form.submit()
+        }}
         color={compra ? 'info' : 'success'}
         className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
       >

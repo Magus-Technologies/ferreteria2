@@ -48,8 +48,8 @@ export interface FormCreateCompra {
   tipo_de_cambio: number
   proveedor_id?: Proveedor['id']
   tipo_documento: TipoDocumento
-  serie: string
-  numero: number
+  serie?: string
+  numero?: number
   guia?: string
   forma_de_pago: FormaDePago
   numero_dias?: number

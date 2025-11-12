@@ -8,6 +8,7 @@ import { Prisma, TipoDocumento } from '@prisma/client'
 import { withAuth } from '~/auth/middleware-server-actions'
 import { getUltimoNumeroIngresoSalida } from './utils/ingreso-salida'
 import { auth } from '~/auth/auth'
+import { manejoDeCosto } from '../_utils/manejo-de-costo'
 
 const includeGetIngresoSalida = {
   user: true,
@@ -147,6 +148,15 @@ async function createIngresoSalidaWA(
           },
         })
 
+        const { nuevo_costo } = manejoDeCosto({
+          stock_actual: productoAlmacen.stock_fraccion,
+          nuevo_stock: productoAlmacen.stock_fraccion
+            .add(cantidad_fraccion)
+            .toNumber(),
+          agregar: tipo_documento === TipoDocumento.Ingreso,
+          costo_nuevo: productoAlmacen.costo,
+        })
+
         await db.productoAlmacen.update({
           where: {
             id: productoAlmacen.id,
@@ -155,7 +165,7 @@ async function createIngresoSalidaWA(
             stock_fraccion: {
               increment: cantidad_fraccion,
             },
-            costo: productoAlmacen.costo,
+            costo: nuevo_costo,
           },
         })
 
@@ -183,7 +193,7 @@ async function createIngresoSalidaWA(
       throw new Error(`${error.code}`)
     }
 
-    throw new Error('Error al crear el ingreso/salida')
+    throw error
   }
 }
 export const createIngresoSalida = withAuth(createIngresoSalidaWA)

@@ -107,6 +107,7 @@ export enum permissions {
   RECEPCION_ALMACEN_CREATE = 'recepcion-almacen.create',
   RECEPCION_ALMACEN_UPDATE = 'recepcion-almacen.update',
   RECEPCION_ALMACEN_DELETE = 'recepcion-almacen.delete',
+  RECEPCION_ALMACEN_FINALIZAR = 'recepcion-almacen.finalizar',
 }
 
 type PermisosValidos = Exclude<
@@ -213,6 +214,7 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.RECEPCION_ALMACEN_CREATE]: 'Crear Recepción de Almacén',
   [permissions.RECEPCION_ALMACEN_UPDATE]: 'Actualizar Recepción de Almacén',
   [permissions.RECEPCION_ALMACEN_DELETE]: 'Eliminar Recepción de Almacén',
+  [permissions.RECEPCION_ALMACEN_FINALIZAR]: 'Finalizar Recepción de Almacén',
 }
 
 export function getAllPermissions() {

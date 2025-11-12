@@ -23,6 +23,6 @@ export function getNroDocCompra({
   compra?: { serie: Compra['serie']; numero: Compra['numero'] }
 }) {
   return compra
-    ? `${compra.serie}-${compra.numero.toString().padStart(4, '0')}`
+    ? `${compra.serie}-${(compra.numero ?? '-').toString().padStart(4, '0')}`
     : ''
 }

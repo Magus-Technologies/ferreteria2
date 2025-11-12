@@ -25,7 +25,7 @@ export default function ModalDocIngresoSalida({
   const { data: session } = useSession()
   const empresa = session?.user.empresa
 
-  const [esTicket, setEsTicket] = useState(false)
+  const [esTicket, setEsTicket] = useState(true)
 
   return (
     <ModalShowDoc

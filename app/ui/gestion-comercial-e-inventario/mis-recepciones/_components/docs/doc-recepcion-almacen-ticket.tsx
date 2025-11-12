@@ -5,10 +5,10 @@ import { TiposDocumentos } from '~/lib/docs'
 import { useColumnsDetalleDeRecepcion } from '../tables/columns-detalle-de-recepcion'
 import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
 import { getDetallesRecepcionAlmacen } from '../../_utils/get-detalles-recepcion-almacen'
-import { Empresa } from '@prisma/client'
 import { styles_ticket } from '~/app/_components/docs/styles'
 import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
 import DocGeneralTicket from '~/app/_components/docs/doc-general-ticket'
+import { EmpresaSession } from '~/auth/auth'
 
 export default function DocRecepcionAlmacenTicket({
   data,
@@ -18,7 +18,7 @@ export default function DocRecepcionAlmacenTicket({
 }: {
   data: getRecepcionesAlmacenResponseProps | undefined
   nro_doc: string
-  empresa: Empresa | undefined
+  empresa: EmpresaSession | undefined
   show_logo_html?: boolean
 }) {
   const rowData = getDetallesRecepcionAlmacen({ data })

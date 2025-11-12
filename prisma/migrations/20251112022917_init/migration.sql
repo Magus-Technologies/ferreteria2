@@ -75,11 +75,39 @@ CREATE TABLE "ProductoAlmacenUnidadDerivada" (
 );
 
 -- CreateTable
+CREATE TABLE "SubCaja" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "SubCaja_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MetodoDePago" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "cuenta_bancaria" TEXT NOT NULL,
+    "monto" DECIMAL(9,2) NOT NULL DEFAULT 0,
+    "subcaja_id" TEXT NOT NULL,
+
+    CONSTRAINT "MetodoDePago_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DespliegueDePago" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "metodo_de_pago_id" TEXT NOT NULL,
+
+    CONSTRAINT "DespliegueDePago_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Compra" (
     "id" TEXT NOT NULL,
     "tipo_documento" "TipoDocumento" NOT NULL DEFAULT 'nv',
-    "serie" TEXT NOT NULL,
-    "numero" INTEGER NOT NULL,
+    "serie" TEXT,
+    "numero" INTEGER,
     "descripcion" TEXT,
     "forma_de_pago" "FormaDePago" NOT NULL DEFAULT 'co',
     "tipo_moneda" "TipoMoneda" NOT NULL DEFAULT 's',
@@ -146,6 +174,7 @@ CREATE TABLE "Empresa" (
     "direccion" TEXT NOT NULL,
     "telefono" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "efectivo" DECIMAL(9,2) NOT NULL DEFAULT 0,
 
     CONSTRAINT "Empresa_pkey" PRIMARY KEY ("id")
 );
@@ -310,6 +339,26 @@ CREATE TABLE "Vendedor" (
 );
 
 -- CreateTable
+CREATE TABLE "Carro" (
+    "id" SERIAL NOT NULL,
+    "placa" TEXT NOT NULL,
+    "proveedor_id" INTEGER NOT NULL,
+
+    CONSTRAINT "Carro_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Chofer" (
+    "id" SERIAL NOT NULL,
+    "dni" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "licencia" TEXT NOT NULL,
+    "proveedor_id" INTEGER NOT NULL,
+
+    CONSTRAINT "Chofer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "RecepcionAlmacen" (
     "id" SERIAL NOT NULL,
     "numero" INTEGER NOT NULL,
@@ -377,6 +426,7 @@ CREATE TABLE "User" (
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
     "empresa_id" INTEGER NOT NULL,
+    "efectivo" DECIMAL(9,2) NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -480,6 +530,15 @@ CREATE UNIQUE INDEX "ProductoAlmacenUnidadDerivada_producto_almacen_id_unidad_de
 CREATE UNIQUE INDEX "ProductoAlmacenUnidadDerivada_producto_almacen_id_factor_key" ON "ProductoAlmacenUnidadDerivada"("producto_almacen_id", "factor");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "SubCaja_name_key" ON "SubCaja"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MetodoDePago_name_key" ON "MetodoDePago"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DespliegueDePago_name_key" ON "DespliegueDePago"("name");
+
+-- CreateIndex
 CREATE INDEX "Compra_fecha_idx" ON "Compra"("fecha");
 
 -- CreateIndex
@@ -537,6 +596,9 @@ CREATE UNIQUE INDEX "Proveedor_ruc_key" ON "Proveedor"("ruc");
 CREATE UNIQUE INDEX "Vendedor_dni_key" ON "Vendedor"("dni");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Chofer_dni_key" ON "Chofer"("dni");
+
+-- CreateIndex
 CREATE INDEX "RecepcionAlmacen_fecha_idx" ON "RecepcionAlmacen"("fecha");
 
 -- CreateIndex
@@ -583,6 +645,12 @@ ALTER TABLE "ProductoAlmacenUnidadDerivada" ADD CONSTRAINT "ProductoAlmacenUnida
 
 -- AddForeignKey
 ALTER TABLE "ProductoAlmacenUnidadDerivada" ADD CONSTRAINT "ProductoAlmacenUnidadDerivada_unidad_derivada_id_fkey" FOREIGN KEY ("unidad_derivada_id") REFERENCES "UnidadDerivada"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MetodoDePago" ADD CONSTRAINT "MetodoDePago_subcaja_id_fkey" FOREIGN KEY ("subcaja_id") REFERENCES "SubCaja"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DespliegueDePago" ADD CONSTRAINT "DespliegueDePago_metodo_de_pago_id_fkey" FOREIGN KEY ("metodo_de_pago_id") REFERENCES "MetodoDePago"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Compra" ADD CONSTRAINT "Compra_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -649,6 +717,12 @@ ALTER TABLE "Producto" ADD CONSTRAINT "Producto_unidad_medida_id_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "Vendedor" ADD CONSTRAINT "Vendedor_proveedor_id_fkey" FOREIGN KEY ("proveedor_id") REFERENCES "Proveedor"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Carro" ADD CONSTRAINT "Carro_proveedor_id_fkey" FOREIGN KEY ("proveedor_id") REFERENCES "Proveedor"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Chofer" ADD CONSTRAINT "Chofer_proveedor_id_fkey" FOREIGN KEY ("proveedor_id") REFERENCES "Proveedor"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RecepcionAlmacen" ADD CONSTRAINT "RecepcionAlmacen_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -7,24 +7,25 @@ import { useServerQuery } from '~/hooks/use-server-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ProveedorCreateInputSchema } from '~/prisma/generated/zod'
 import { Prisma } from '@prisma/client'
-import { SearchProveedor } from '~/app/_actions/proveedor'
+import {
+  getProveedorResponseProps,
+  SearchProveedor,
+} from '~/app/_actions/proveedor'
 import { useEffect, useState } from 'react'
 import { useColumnsProveedores } from './columns-proveedores'
-import ModalCreateProveedor, {
-  dataEditProveedor,
-} from '../modals/modal-create-proveedor'
+import ModalCreateProveedor from '../modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '../../store/store-proveedor-seleccionado'
 
 interface TableProveedoresBusquedaProps
   extends Omit<
-    TableWithTitleProps<dataEditProveedor>,
+    TableWithTitleProps<getProveedorResponseProps>,
     'id' | 'title' | 'onRowDoubleClicked'
   > {
   value: string
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: dataEditProveedor | undefined
+    data: getProveedorResponseProps | undefined
   }) => void
 }
 
@@ -64,7 +65,7 @@ export default function TableProveedoresBusqueda({
   }, [value, refetch])
 
   const [open, setOpen] = useState(false)
-  const [dataEdit, setDataEdit] = useState<dataEditProveedor>()
+  const [dataEdit, setDataEdit] = useState<getProveedorResponseProps>()
 
   const setProveedorSeleccionado = useStoreProveedorSeleccionado(
     store => store.setProveedor
@@ -73,7 +74,7 @@ export default function TableProveedoresBusqueda({
   return (
     <>
       <ModalCreateProveedor open={open} setOpen={setOpen} dataEdit={dataEdit} />
-      <TableWithTitle<dataEditProveedor>
+      <TableWithTitle<getProveedorResponseProps>
         {...props}
         id='g-c-e-i.mi-almacen.proveedores'
         title='Proveedores'
@@ -83,7 +84,7 @@ export default function TableProveedoresBusqueda({
         rowData={response || []}
         onSelectionChanged={({ selectedNodes }) =>
           setProveedorSeleccionado(
-            selectedNodes?.[0]?.data as dataEditProveedor
+            selectedNodes?.[0]?.data as getProveedorResponseProps
           )
         }
         onRowDoubleClicked={({ data }) => {

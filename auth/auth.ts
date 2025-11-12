@@ -8,17 +8,21 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '~/db/db'
 import { Empresa } from '@prisma/client'
 
+export type EmpresaSession = Omit<Empresa, 'efectivo'> & { efectivo: number }
+
 declare module 'next-auth' {
   interface Session {
     user: {
       all_permissions: string[]
-      empresa: Empresa
+      empresa: EmpresaSession
+      efectivo: number
       id: string
     } & DefaultSession['user']
   }
   interface User {
     all_permissions: string[]
-    empresa: Empresa
+    empresa: EmpresaSession
+    efectivo: number
     id: string
   }
 }
@@ -26,7 +30,8 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     all_permissions: string[]
-    empresa: Empresa
+    empresa: EmpresaSession
+    efectivo: number
     id: string
   }
 }
@@ -68,6 +73,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.all_permissions = user.all_permissions
         token.empresa = user.empresa
+        token.efectivo = user.efectivo
         token.id = user.id
       }
       return token
@@ -76,6 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.all_permissions = token.all_permissions
         session.user.empresa = token.empresa
+        session.user.efectivo = token.efectivo
         session.user.id = token.id
       }
       return session

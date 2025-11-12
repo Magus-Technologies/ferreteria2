@@ -161,21 +161,20 @@ export function NumeroALetras(num: number) {
     letrasMonedaPlural: 'SOLES',
     letrasMonedaSingular: 'SOL',
 
-    letrasMonedaCentavoPlural: 'CENTAVOS',
-    letrasMonedaCentavoSingular: 'CENTAVO',
+    // letrasMonedaCentavoPlural: 'CENTAVOS',
+    // letrasMonedaCentavoSingular: 'CENTAVO',
   }
 
   if (data.centavos > 0) {
-    data.letrasCentavos =
-      'CON ' +
-      (function () {
-        if (data.centavos == 1)
-          return (
-            Millones(data.centavos) + ' ' + data.letrasMonedaCentavoSingular
-          )
-        else
-          return Millones(data.centavos) + ' ' + data.letrasMonedaCentavoPlural
-      })()
+    data.letrasCentavos = 'CON ' + data.centavos + '/100'
+    // (function () {
+    //   if (data.centavos == 1)
+    //     return (
+    //       Millones(data.centavos) + ' ' + data.letrasMonedaCentavoSingular
+    //     )
+    //   else
+    //     return Millones(data.centavos) + ' ' + data.letrasMonedaCentavoPlural
+    // })()
   }
 
   if (data.enteros == 0)

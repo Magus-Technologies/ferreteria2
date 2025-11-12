@@ -7,15 +7,17 @@ import { FaSearch } from 'react-icons/fa'
 import ButtonCreateProveedor from '../buttons/button-create-proveedor'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 import ModalProveedorSearch from '../../modals/modal-proveedor-search'
-import { dataEditProveedor } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
 import { FaTruck } from 'react-icons/fa6'
+import { getProveedorResponseProps } from '~/app/_actions/proveedor'
 
-interface SelectProveedoresProps extends SelectBaseProps {
+interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
+  onChange?: (value: number, proveedor?: getProveedorResponseProps) => void
   showButtonCreate?: boolean
   classIconSearch?: string
+  classIconCreate?: string
   proveedorOptionsDefault?: Pick<Proveedor, 'id' | 'ruc' | 'razon_social'>[]
 }
 
@@ -26,7 +28,9 @@ export default function SelectProveedores({
   sizeIcon = 18,
   showButtonCreate = false,
   classIconSearch = '',
+  classIconCreate = '',
   proveedorOptionsDefault = [],
+  onChange,
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
@@ -37,7 +41,7 @@ export default function SelectProveedores({
 
   const [proveedorCreado, setProveedorCreado] = useState<Proveedor>()
   const [proveedorSeleccionado, setProveedorSeleccionado] =
-    useState<dataEditProveedor>()
+    useState<getProveedorResponseProps>()
 
   const proveedorSeleccionadoStore = useStoreProveedorSeleccionado(
     store => store.proveedor
@@ -51,7 +55,7 @@ export default function SelectProveedores({
     if (text) setTextDefault(text)
   }, [text])
 
-  function handleSelect({ data }: { data?: dataEditProveedor } = {}) {
+  function handleSelect({ data }: { data?: getProveedorResponseProps } = {}) {
     setText('')
     const proveedor = data || proveedorSeleccionadoStore
     if (proveedor) {
@@ -62,6 +66,7 @@ export default function SelectProveedores({
       })
       setProveedorSeleccionadoStore(undefined)
       setOpenModalProveedorSearch(false)
+      onChange?.(proveedor.id, proveedor)
     }
   }
 
@@ -130,6 +135,7 @@ export default function SelectProveedores({
           }}
           textDefault={textDefault}
           setTextDefault={setTextDefault}
+          className={classIconCreate}
         />
       )}
     </div>

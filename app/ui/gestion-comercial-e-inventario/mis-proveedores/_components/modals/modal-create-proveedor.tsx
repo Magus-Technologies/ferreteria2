@@ -1,4 +1,4 @@
-import { Prisma, Proveedor, Vendedor } from '@prisma/client'
+import { Carro, Chofer, Proveedor, Vendedor } from '@prisma/client'
 import { Form, Tabs } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -9,18 +9,15 @@ import FormVendedoresProveedor from '../form/form-vendedores-proveedor'
 import type { Dayjs } from 'dayjs'
 import { useEffect } from 'react'
 import dayjs from 'dayjs'
-
-export type dataEditProveedor = Prisma.ProveedorGetPayload<{
-  include: {
-    vendedores: true
-  }
-}>
+import FormCarrosProveedor from '../form/form-carros-proveedor'
+import FormChoferesProveedor from '../form/form-choferes-proveedor'
+import { getProveedorResponseProps } from '~/app/_actions/proveedor'
 
 interface ModalCreateProveedorProps {
   open: boolean
   setOpen: (open: boolean) => void
   onSuccess?: (res: Proveedor) => void
-  dataEdit?: dataEditProveedor
+  dataEdit?: getProveedorResponseProps
   textDefault?: string
   setTextDefault?: (text: string) => void
 }
@@ -34,6 +31,8 @@ export type dataProveedorModalProps = Omit<
     estado: number
     cumple: Dayjs
   })[]
+  carros: Pick<Carro, 'placa'>[]
+  choferes: Pick<Chofer, 'dni' | 'name' | 'licencia'>[]
 }
 
 export default function ModalCreateProveedor({
@@ -65,6 +64,16 @@ export default function ModalCreateProveedor({
       key: '2',
       label: 'Vendedores',
       children: <FormVendedoresProveedor form={form} dataEdit={dataEdit} />,
+    },
+    {
+      key: '3',
+      label: 'Carros',
+      children: <FormCarrosProveedor />,
+    },
+    {
+      key: '4',
+      label: 'Choferes',
+      children: <FormChoferesProveedor form={form} dataEdit={dataEdit} />,
     },
   ]
 

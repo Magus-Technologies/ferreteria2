@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { dataEditProveedor } from '../_components/modals/modal-create-proveedor'
+import { getProveedorResponseProps } from '~/app/_actions/proveedor'
 
 type UseStoreProveedorSeleccionadoProps = {
-  proveedor?: dataEditProveedor
-  setProveedor: (value: dataEditProveedor | undefined) => void
+  proveedor?: getProveedorResponseProps
+  setProveedor: (value: getProveedorResponseProps | undefined) => void
 }
 
 export const useStoreProveedorSeleccionado =
