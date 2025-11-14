@@ -24,3 +24,17 @@ model DespliegueDePago {
     metodo_de_pago_id String
     metodo_de_pago    MetodoDePago @relation(fields: [metodo_de_pago_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
+
+model AperturaYCierreCaja {
+    id             String    @id @default(cuid())
+    fecha_apertura DateTime  @default(now())
+    monto_apertura Decimal   @default(0) @db.Decimal(9, 2)
+    fecha_cierre   DateTime?
+    monto_cierre   Decimal?  @db.Decimal(9, 2)
+
+    user_id String
+    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([fecha_apertura])
+    @@index([fecha_cierre])
+}

@@ -103,6 +103,18 @@ CREATE TABLE "DespliegueDePago" (
 );
 
 -- CreateTable
+CREATE TABLE "AperturaYCierreCaja" (
+    "id" TEXT NOT NULL,
+    "fecha_apertura" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "monto_apertura" DECIMAL(9,2) NOT NULL DEFAULT 0,
+    "fecha_cierre" TIMESTAMP(3),
+    "monto_cierre" DECIMAL(9,2),
+    "user_id" TEXT NOT NULL,
+
+    CONSTRAINT "AperturaYCierreCaja_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Compra" (
     "id" TEXT NOT NULL,
     "tipo_documento" "TipoDocumento" NOT NULL DEFAULT 'nv',
@@ -539,6 +551,12 @@ CREATE UNIQUE INDEX "MetodoDePago_name_key" ON "MetodoDePago"("name");
 CREATE UNIQUE INDEX "DespliegueDePago_name_key" ON "DespliegueDePago"("name");
 
 -- CreateIndex
+CREATE INDEX "AperturaYCierreCaja_fecha_apertura_idx" ON "AperturaYCierreCaja"("fecha_apertura");
+
+-- CreateIndex
+CREATE INDEX "AperturaYCierreCaja_fecha_cierre_idx" ON "AperturaYCierreCaja"("fecha_cierre");
+
+-- CreateIndex
 CREATE INDEX "Compra_fecha_idx" ON "Compra"("fecha");
 
 -- CreateIndex
@@ -651,6 +669,9 @@ ALTER TABLE "MetodoDePago" ADD CONSTRAINT "MetodoDePago_subcaja_id_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "DespliegueDePago" ADD CONSTRAINT "DespliegueDePago_metodo_de_pago_id_fkey" FOREIGN KEY ("metodo_de_pago_id") REFERENCES "MetodoDePago"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AperturaYCierreCaja" ADD CONSTRAINT "AperturaYCierreCaja_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Compra" ADD CONSTRAINT "Compra_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

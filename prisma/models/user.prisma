@@ -11,9 +11,10 @@ model User {
     Authenticator Authenticator[]
 
     // Adicionales
-    empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    empresa    Empresa               @relation(fields: [empresa_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     empresa_id Int
-    efectivo   Decimal @default(0) @db.Decimal(9, 2)
+    cajas      AperturaYCierreCaja[]
+    efectivo   Decimal               @default(0) @db.Decimal(9, 2)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

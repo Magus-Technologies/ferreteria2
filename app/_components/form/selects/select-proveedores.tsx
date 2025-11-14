@@ -10,6 +10,8 @@ import ModalProveedorSearch from '../../modals/modal-proveedor-search'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
 import { FaTruck } from 'react-icons/fa6'
 import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import useGetProveedores from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_hooks/use-get-proveedores'
+import { useDebounce } from 'use-debounce'
 
 interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
@@ -70,6 +72,16 @@ export default function SelectProveedores({
     }
   }
 
+  const [value] = useDebounce(text, 1000)
+
+  const { response, loading } = useGetProveedores({ value })
+
+  useEffect(() => {
+    if (response && response.length === 1) handleSelect({ data: response[0] })
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [response])
+
   return (
     <div className='flex items-center gap-4 w-full'>
       <SelectBase
@@ -81,6 +93,7 @@ export default function SelectProveedores({
         prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
+        loading={loading}
         options={[
           ...(proveedorCreado
             ? [

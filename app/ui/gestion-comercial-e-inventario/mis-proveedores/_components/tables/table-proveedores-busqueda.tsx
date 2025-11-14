@@ -3,18 +3,13 @@
 import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
-import { useServerQuery } from '~/hooks/use-server-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ProveedorCreateInputSchema } from '~/prisma/generated/zod'
-import { Prisma } from '@prisma/client'
-import {
-  getProveedorResponseProps,
-  SearchProveedor,
-} from '~/app/_actions/proveedor'
+import { getProveedorResponseProps } from '~/app/_actions/proveedor'
 import { useEffect, useState } from 'react'
 import { useColumnsProveedores } from './columns-proveedores'
 import ModalCreateProveedor from '../modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '../../store/store-proveedor-seleccionado'
+import useGetProveedores from '../../_hooks/use-get-proveedores'
 
 interface TableProveedoresBusquedaProps
   extends Omit<
@@ -34,31 +29,7 @@ export default function TableProveedoresBusqueda({
   onRowDoubleClicked,
   ...props
 }: TableProveedoresBusquedaProps) {
-  const { response, refetch, loading } = useServerQuery({
-    action: SearchProveedor,
-    propsQuery: {
-      queryKey: [QueryKeys.PROVEEDORES_SEARCH],
-      enabled: !!value,
-    },
-    params: {
-      where: {
-        OR: [
-          {
-            razon_social: {
-              contains: value,
-              mode: 'insensitive',
-            },
-          },
-          {
-            ruc: {
-              contains: value,
-              mode: 'insensitive',
-            },
-          },
-        ],
-      },
-    } satisfies Prisma.ProveedorFindManyArgs,
-  })
+  const { response, refetch, loading } = useGetProveedores({ value })
 
   useEffect(() => {
     refetch()

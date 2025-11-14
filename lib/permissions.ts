@@ -108,6 +108,13 @@ export enum permissions {
   RECEPCION_ALMACEN_UPDATE = 'recepcion-almacen.update',
   RECEPCION_ALMACEN_DELETE = 'recepcion-almacen.delete',
   RECEPCION_ALMACEN_FINALIZAR = 'recepcion-almacen.finalizar',
+
+  // Caja
+  CAJA_BASE = 'caja',
+  CAJA_LISTADO = 'caja.listado',
+  CAJA_CREATE = 'caja.create',
+  CAJA_UPDATE = 'caja.update',
+  CAJA_DELETE = 'caja.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -125,6 +132,7 @@ type PermisosValidos = Exclude<
   | permissions.USUARIO_BASE
   | permissions.COMPRAS_BASE
   | permissions.RECEPCION_ALMACEN_BASE
+  | permissions.CAJA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -215,6 +223,11 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.RECEPCION_ALMACEN_UPDATE]: 'Actualizar Recepción de Almacén',
   [permissions.RECEPCION_ALMACEN_DELETE]: 'Eliminar Recepción de Almacén',
   [permissions.RECEPCION_ALMACEN_FINALIZAR]: 'Finalizar Recepción de Almacén',
+
+  [permissions.CAJA_LISTADO]: 'Ver Listado de Cajas',
+  [permissions.CAJA_CREATE]: 'Aperturar Caja',
+  [permissions.CAJA_UPDATE]: 'Cerrar Caja',
+  [permissions.CAJA_DELETE]: 'Eliminar Caja',
 }
 
 export function getAllPermissions() {

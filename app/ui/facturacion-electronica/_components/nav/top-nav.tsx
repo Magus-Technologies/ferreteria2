@@ -1,3 +1,5 @@
+'use client'
+
 import { MdSpaceDashboard } from 'react-icons/md'
 import { FaClipboardList } from 'react-icons/fa'
 import { FaCartShopping, FaMoneyBillTrendUp } from 'react-icons/fa6'
@@ -6,6 +8,8 @@ import { IoMdContact } from 'react-icons/io'
 import { MenuProps } from 'antd'
 import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
+import { useState } from 'react'
+import ModalAperturarCaja from '../modals/modal-aperturar-caja'
 
 const itemsVentas: MenuProps['items'] = [
   {
@@ -38,26 +42,29 @@ const itemsVentas: MenuProps['items'] = [
   },
 ]
 
-const itemsFinanzas: MenuProps['items'] = [
-  {
-    key: '1',
-    label: 'Aperturar Caja',
-  },
-  {
-    key: '2',
-    label: 'Cerrar Caja',
-  },
-  {
-    key: '3',
-    label: 'Crear Ingreso',
-  },
-  {
-    key: '4',
-    label: 'Crear Gasto',
-  },
-]
-
 export default function TopNav({ className }: { className?: string }) {
+  const [openAperturaCaja, setOpenAperturaCaja] = useState(false)
+
+  const itemsFinanzas: MenuProps['items'] = [
+    {
+      key: '1',
+      label: 'Aperturar Caja',
+      onClick: () => setOpenAperturaCaja(true),
+    },
+    {
+      key: '2',
+      label: 'Cerrar Caja',
+    },
+    {
+      key: '3',
+      label: 'Crear Ingreso',
+    },
+    {
+      key: '4',
+      label: 'Crear Gasto',
+    },
+  ]
+
   return (
     <BaseNav className={className} bgColorClass='bg-amber-600'>
       <ButtonNav
@@ -78,6 +85,10 @@ export default function TopNav({ className }: { className?: string }) {
         <IoMdContact />
         Crear Contacto
       </ButtonNav>
+      <ModalAperturarCaja
+        open={openAperturaCaja}
+        setOpen={setOpenAperturaCaja}
+      />
       <DropdownBase menu={{ items: itemsFinanzas }}>
         <ButtonNav withIcon={false} colorActive='text-amber-600'>
           <FaMoneyBillTrendUp />
