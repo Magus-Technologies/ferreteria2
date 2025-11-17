@@ -4,13 +4,14 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
-import { Compra, EstadoDeCompra, FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
+import { Compra, EstadoDeCompra, FormaDePago, Prisma } from '@prisma/client'
 import {
   CompraUncheckedCreateInputSchema,
   CompraUncheckedUpdateInputSchema,
   CompraWhereInputSchema,
 } from '~/prisma/generated/zod'
 import { includeCompra } from './lib/lib-compra'
+import { getTotalCompra } from './utils/compra'
 
 export type getComprasResponseProps = Prisma.CompraGetPayload<{
   include: typeof includeCompra
@@ -43,7 +44,7 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
   const parsedData = CompraUncheckedCreateInputSchema.parse(data)
 
   return await prisma.$transaction(
-    async db => {
+    async (db) => {
       if (
         parsedData.forma_de_pago === FormaDePago.Contado &&
         !parsedData.egreso_dinero_id &&
@@ -90,50 +91,58 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
           )
       }
 
-      const compra = await db.compra.create({
+      await db.compra.create({
         data: parsedData,
       })
+
+      const compra = await db.compra.findUniqueOrThrow({
+        where: { id: parsedData.id },
+        include: {
+          _count: {
+            select: {
+              recepciones_almacen: { where: { estado: true } },
+              pagos_de_compras: { where: { estado: true } },
+            },
+          },
+          productos_por_almacen: {
+            include: {
+              unidades_derivadas: true,
+            },
+          },
+        },
+      })
+
+      const totalSoles = getTotalCompra({ compra })
+
+      if (parsedData.egreso_dinero_id) {
+        const egreso = await db.egresoDinero.findUnique({
+          where: { id: parsedData.egreso_dinero_id },
+          select: { monto: true, vuelto: true },
+        })
+        if (!egreso) throw new Error('Egreso asociado no encontrado')
+
+        const montoMenosVuelto =
+          Number(egreso.monto ?? 0) - Number(egreso.vuelto ?? 0)
+        const a = Number(montoMenosVuelto.toFixed(2))
+        const b = Number(Number(totalSoles).toFixed(2))
+        if (a !== b)
+          throw new Error(
+            'El monto menos el vuelto del egreso debe ser igual al total de la compra'
+          )
+      }
 
       if (
         compra.forma_de_pago === FormaDePago.Contado &&
         compra.despliegue_de_pago_id
       ) {
-        const productosCreate = Array.isArray(
-          parsedData.productos_por_almacen?.create
-        )
-          ? (parsedData.productos_por_almacen!.create)
-          : []
-
-        let total = 0
-        for (const item of productosCreate) {
-          const costo = Number(item.costo ?? 0)
-          const unidades = Array.isArray(item.unidades_derivadas?.create)
-            ? (item.unidades_derivadas!.create)
-            : []
-          for (const u of unidades) {
-            const cantidad = Number(u.cantidad ?? 0)
-            const factor = Number(u.factor ?? 0)
-            const flete = Number(u.flete ?? 0)
-            const bonificacion = Boolean(u.bonificacion)
-            const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
-            total += montoLinea
-          }
-        }
-
-        const totalConPercepcion =
-          total + Number((parsedData).percepcion ?? 0)
-
-        const totalSoles =
-          parsedData.tipo_moneda === TipoMoneda.Soles
-            ? totalConPercepcion
-            : totalConPercepcion * Number(parsedData.tipo_de_cambio ?? 1)
-
         const despliegue = await db.despliegueDePago.findUnique({
           where: { id: compra.despliegue_de_pago_id },
           select: { metodo_de_pago_id: true },
         })
         if (!despliegue)
-          throw new Error('Despliegue de pago no encontrado para la compra creada')
+          throw new Error(
+            'Despliegue de pago no encontrado para la compra creada'
+          )
 
         await db.metodoDePago.update({
           where: { id: despliegue.metodo_de_pago_id },
@@ -158,47 +167,93 @@ async function eliminarCompraWA({ id }: { id: Compra['id'] }) {
   const puede = await can(permissions.COMPRAS_DELETE)
   if (!puede) throw new Error('No tienes permiso para eliminar una compra')
 
-  const compra = await prisma.compra.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      _count: {
-        select: {
-          recepciones_almacen: {
-            where: {
-              estado: true,
+  return await prisma.$transaction(
+    async (db) => {
+      const compra = await db.compra.findUnique({
+        where: { id },
+        include: {
+          _count: {
+            select: {
+              recepciones_almacen: { where: { estado: true } },
+              pagos_de_compras: { where: { estado: true } },
+            },
+          },
+          productos_por_almacen: {
+            include: {
+              unidades_derivadas: true,
             },
           },
         },
-      },
-      estado_de_compra: true,
+      })
+
+      if (!compra) throw new Error('Compra no encontrada')
+
+      if (
+        compra.estado_de_compra === EstadoDeCompra.Procesado ||
+        compra.estado_de_compra === EstadoDeCompra.Anulado
+      )
+        throw new Error('La compra no se puede anular')
+
+      if (compra._count.recepciones_almacen > 0)
+        throw new Error(
+          'La compra no se puede anular porque tiene Recepciones de Almacén activas'
+        )
+
+      if (compra._count.pagos_de_compras > 0)
+        throw new Error(
+          'La compra no se puede anular porque tiene Pagos de Compra activos'
+        )
+
+      const totalSoles = getTotalCompra({ compra })
+
+      if (compra.despliegue_de_pago_id) {
+        const despliegue = await db.despliegueDePago.findUniqueOrThrow({
+          where: { id: compra.despliegue_de_pago_id },
+          select: { metodo_de_pago_id: true },
+        })
+
+        await db.metodoDePago.update({
+          where: { id: despliegue.metodo_de_pago_id },
+          data: { monto: { increment: totalSoles } },
+        })
+      }
+
+      if (compra.egreso_dinero_id) {
+        const egreso = await db.egresoDinero.findUniqueOrThrow({
+          where: { id: compra.egreso_dinero_id },
+          select: {
+            monto: true,
+            vuelto: true,
+            despliegue_de_pago_id: true,
+          },
+        })
+
+        await db.egresoDinero.update({
+          where: { id: compra.egreso_dinero_id },
+          data: { estado: false },
+        })
+
+        const despliegue = await db.despliegueDePago.findUniqueOrThrow({
+          where: { id: egreso.despliegue_de_pago_id },
+          select: { metodo_de_pago_id: true },
+        })
+        const reintegro = Number(egreso.monto ?? 0) - Number(egreso.vuelto ?? 0)
+        if (reintegro > 0)
+          await db.metodoDePago.update({
+            where: { id: despliegue.metodo_de_pago_id },
+            data: { monto: { increment: reintegro } },
+          })
+      }
+
+      await db.compra.update({
+        where: { id },
+        data: { estado_de_compra: EstadoDeCompra.Anulado },
+      })
+
+      return { data: 'ok' }
     },
-  })
-
-  if (!compra) throw new Error('Compra no encontrada')
-
-  if (
-    compra.estado_de_compra === EstadoDeCompra.Procesado ||
-    compra.estado_de_compra === EstadoDeCompra.Anulado
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
   )
-    throw new Error('La compra no se puede anular')
-
-  if (compra._count.recepciones_almacen > 0)
-    throw new Error(
-      'La compra no se puede anular porque tiene Recepciones de Almacén activas'
-    )
-
-  await prisma.compra.update({
-    where: {
-      id,
-    },
-    data: {
-      estado_de_compra: EstadoDeCompra.Anulado,
-    },
-  })
-
-  return { data: 'ok' }
 }
 export const eliminarCompra = withAuth(eliminarCompraWA)
 
@@ -209,7 +264,7 @@ async function editarCompraWA(data: Prisma.CompraUncheckedCreateInput) {
   const parsedData = CompraUncheckedCreateInputSchema.parse(data)
 
   return await prisma.$transaction(
-    async db => {
+    async (db) => {
       if (
         parsedData.estado_de_compra === EstadoDeCompra.Creado ||
         (parsedData.estado_de_compra === EstadoDeCompra.EnEspera &&
@@ -272,7 +327,7 @@ async function updateCompraWA({
   const parsedData = CompraUncheckedUpdateInputSchema.parse(data)
 
   return await prisma.$transaction(
-    async db => {
+    async (db) => {
       const compra = await db.compra.update({
         where: {
           id,

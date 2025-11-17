@@ -3,6 +3,9 @@ model IngresoDinero {
     monto         Decimal @default(0) @db.Decimal(9, 2)
     observaciones String?
 
+    despliegue_de_pago_id String
+    despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
@@ -17,8 +20,8 @@ model EgresoDinero {
     observaciones String?
     estado        Boolean  @default(true)
 
-    despliegue_de_pago_id String?
-    despliegue_de_pago    DespliegueDePago? @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+    despliegue_de_pago_id String
+    despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
