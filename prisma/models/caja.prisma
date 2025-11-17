@@ -8,7 +8,7 @@ model SubCaja {
 model MetodoDePago {
     id              String  @id @default(cuid())
     name            String  @unique
-    cuenta_bancaria String
+    cuenta_bancaria String?
     monto           Decimal @default(0) @db.Decimal(9, 2)
 
     subcaja_id String
@@ -21,6 +21,7 @@ model DespliegueDePago {
     id        String  @id @default(cuid())
     name      String  @unique
     adicional Decimal @default(0) @db.Decimal(9, 2)
+    mostrar   Boolean @default(true)
 
     metodo_de_pago_id String
     metodo_de_pago    MetodoDePago @relation(fields: [metodo_de_pago_id], references: [id], onDelete: Cascade, onUpdate: Cascade)

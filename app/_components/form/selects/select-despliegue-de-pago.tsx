@@ -24,7 +24,9 @@ export default function SelectDespliegueDePago({
       queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
     },
     params: {
-      where: undefined,
+      where: {
+        mostrar: true,
+      },
     },
   })
 

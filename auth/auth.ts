@@ -8,7 +8,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '~/db/db'
 import { Empresa } from '@prisma/client'
 
-export type EmpresaSession = Omit<Empresa, 'efectivo'> & { efectivo: number }
+export type EmpresaSession = Empresa
 
 declare module 'next-auth' {
   interface Session {
@@ -52,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           placeholder: '*****',
         },
       },
-      authorize: async credentials => {
+      authorize: async (credentials) => {
         const result = schemaLogin.safeParse(credentials)
         if (!result.success) return null
         const { email, password } = result.data
