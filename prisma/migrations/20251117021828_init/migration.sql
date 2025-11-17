@@ -86,7 +86,7 @@ CREATE TABLE "SubCaja" (
 CREATE TABLE "MetodoDePago" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "cuenta_bancaria" TEXT NOT NULL,
+    "cuenta_bancaria" TEXT,
     "monto" DECIMAL(9,2) NOT NULL DEFAULT 0,
     "subcaja_id" TEXT NOT NULL,
 
@@ -98,6 +98,7 @@ CREATE TABLE "DespliegueDePago" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "adicional" DECIMAL(9,2) NOT NULL DEFAULT 0,
+    "mostrar" BOOLEAN NOT NULL DEFAULT true,
     "metodo_de_pago_id" TEXT NOT NULL,
 
     CONSTRAINT "DespliegueDePago_pkey" PRIMARY KEY ("id")
@@ -130,14 +131,14 @@ CREATE TABLE "Compra" (
     "fecha_vencimiento" TIMESTAMP(3),
     "fecha" TIMESTAMP(3) NOT NULL,
     "guia" TEXT,
+    "estado_de_compra" "EstadoDeCompra" NOT NULL DEFAULT 'cr',
     "egreso_dinero_id" TEXT,
-    "metodo_de_pago_id" TEXT,
+    "despliegue_de_pago_id" TEXT,
     "user_id" TEXT NOT NULL,
     "almacen_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "proveedor_id" INTEGER,
-    "estado_de_compra" "EstadoDeCompra" NOT NULL DEFAULT 'cr',
 
     CONSTRAINT "Compra_pkey" PRIMARY KEY ("id")
 );
@@ -177,6 +178,17 @@ CREATE TABLE "UnidadDerivadaInmutable" (
 );
 
 -- CreateTable
+CREATE TABLE "PagoDeCompra" (
+    "id" TEXT NOT NULL,
+    "estado" BOOLEAN NOT NULL DEFAULT true,
+    "compra_id" TEXT NOT NULL,
+    "despliegue_de_pago_id" TEXT NOT NULL,
+    "monto" DECIMAL(9,2) NOT NULL,
+
+    CONSTRAINT "PagoDeCompra_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Empresa" (
     "id" SERIAL NOT NULL,
     "almacen_id" INTEGER NOT NULL,
@@ -189,7 +201,6 @@ CREATE TABLE "Empresa" (
     "direccion" TEXT NOT NULL,
     "telefono" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "efectivo" DECIMAL(9,2) NOT NULL DEFAULT 0,
 
     CONSTRAINT "Empresa_pkey" PRIMARY KEY ("id")
 );
@@ -504,6 +515,7 @@ CREATE TABLE "IngresoDinero" (
     "id" TEXT NOT NULL,
     "monto" DECIMAL(9,2) NOT NULL DEFAULT 0,
     "observaciones" TEXT,
+    "despliegue_de_pago_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -517,6 +529,8 @@ CREATE TABLE "EgresoDinero" (
     "monto" DECIMAL(9,2) NOT NULL DEFAULT 0,
     "vuelto" DECIMAL(9,2),
     "observaciones" TEXT,
+    "estado" BOOLEAN NOT NULL DEFAULT true,
+    "despliegue_de_pago_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -666,6 +680,12 @@ CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 CREATE UNIQUE INDEX "Authenticator_credentialID_key" ON "Authenticator"("credentialID");
 
 -- CreateIndex
+CREATE INDEX "EgresoDinero_vuelto_idx" ON "EgresoDinero"("vuelto");
+
+-- CreateIndex
+CREATE INDEX "EgresoDinero_createdAt_idx" ON "EgresoDinero"("createdAt");
+
+-- CreateIndex
 CREATE INDEX "_PermissionToRole_B_index" ON "_PermissionToRole"("B");
 
 -- CreateIndex
@@ -705,7 +725,7 @@ ALTER TABLE "AperturaYCierreCaja" ADD CONSTRAINT "AperturaYCierreCaja_user_id_fk
 ALTER TABLE "Compra" ADD CONSTRAINT "Compra_egreso_dinero_id_fkey" FOREIGN KEY ("egreso_dinero_id") REFERENCES "EgresoDinero"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Compra" ADD CONSTRAINT "Compra_metodo_de_pago_id_fkey" FOREIGN KEY ("metodo_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Compra" ADD CONSTRAINT "Compra_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Compra" ADD CONSTRAINT "Compra_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -727,6 +747,12 @@ ALTER TABLE "UnidadDerivadaInmutableCompra" ADD CONSTRAINT "UnidadDerivadaInmuta
 
 -- AddForeignKey
 ALTER TABLE "UnidadDerivadaInmutableCompra" ADD CONSTRAINT "UnidadDerivadaInmutableCompra_producto_almacen_compra_id_fkey" FOREIGN KEY ("producto_almacen_compra_id") REFERENCES "ProductoAlmacenCompra"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PagoDeCompra" ADD CONSTRAINT "PagoDeCompra_compra_id_fkey" FOREIGN KEY ("compra_id") REFERENCES "Compra"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PagoDeCompra" ADD CONSTRAINT "PagoDeCompra_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Empresa" ADD CONSTRAINT "Empresa_almacen_id_fkey" FOREIGN KEY ("almacen_id") REFERENCES "Almacen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -813,7 +839,13 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Authenticator" ADD CONSTRAINT "Authenticator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "IngresoDinero" ADD CONSTRAINT "IngresoDinero_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "IngresoDinero" ADD CONSTRAINT "IngresoDinero_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

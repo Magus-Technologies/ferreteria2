@@ -8,7 +8,7 @@ export default async function cajasSeeder() {
       name: 'Caja Chica',
       metodos_de_pago: {
         create: {
-          name: 'Efectivo',
+          name: 'Efectivo CA',
           despliegue_de_pagos: {
             create: {
               name: 'CCH / Efectivo',
@@ -25,7 +25,7 @@ export default async function cajasSeeder() {
       metodos_de_pago: {
         create: [
           {
-            name: 'BCP',
+            name: 'BCP CB',
             despliegue_de_pagos: {
               create: [
                 { name: 'CB / BCP / QR' },
@@ -34,13 +34,13 @@ export default async function cajasSeeder() {
             },
           },
           {
-            name: 'SCOTIABANK',
+            name: 'SCOTIABANK CB',
             despliegue_de_pagos: {
               create: [{ name: 'CB / SCOTIABANK / TRANSFERENCIA' }],
             },
           },
           {
-            name: 'BBVA',
+            name: 'BBVA CB',
             despliegue_de_pagos: {
               create: [
                 { name: 'CB / BBVA / QR' },
@@ -59,21 +59,23 @@ export default async function cajasSeeder() {
       metodos_de_pago: {
         create: [
           {
-            name: 'BCP',
+            name: 'BCP CA',
             despliegue_de_pagos: {
-              create: [{ name: 'TRANSFERENCIA', mostrar: false }],
+              create: [{ name: 'CA / BCP / TRANSFERENCIA', mostrar: false }],
             },
           },
           {
-            name: 'SCOTIABANK',
+            name: 'SCOTIABANK CA',
             despliegue_de_pagos: {
-              create: [{ name: 'TRANSFERENCIA', mostrar: false }],
+              create: [
+                { name: 'CA / SCOTIABANK / TRANSFERENCIA', mostrar: false },
+              ],
             },
           },
           {
-            name: 'BBVA',
+            name: 'BBVA CA',
             despliegue_de_pagos: {
-              create: [{ name: 'TRANSFERENCIA', mostrar: false }],
+              create: [{ name: 'CA / BBVA / TRANSFERENCIA', mostrar: false }],
             },
           },
         ],
@@ -87,13 +89,13 @@ export default async function cajasSeeder() {
       metodos_de_pago: {
         create: [
           {
-            name: 'Efectivo',
+            name: 'Efectivo CN',
             despliegue_de_pagos: {
               create: [{ name: 'CN / EFECTIVO' }],
             },
           },
           {
-            name: 'BCP',
+            name: 'BCP CN',
             despliegue_de_pagos: {
               create: [
                 { name: 'CN / BCP / YAPE' },
@@ -102,13 +104,13 @@ export default async function cajasSeeder() {
             },
           },
           {
-            name: 'SCOTIABANK',
+            name: 'SCOTIABANK CN',
             despliegue_de_pagos: {
               create: [{ name: 'CN / SCOTIABANK / TRANSFERENCIA' }],
             },
           },
           {
-            name: 'BBVA',
+            name: 'BBVA CN',
             despliegue_de_pagos: {
               create: [{ name: 'CN / BBVA / TRANSFERENCIA' }],
             },
