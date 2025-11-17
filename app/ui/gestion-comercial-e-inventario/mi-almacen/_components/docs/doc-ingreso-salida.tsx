@@ -71,7 +71,7 @@ export default function DocIngresoSalida({
                 Fecha de Emisión:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {new Date(data?.created_at || '').toLocaleDateString('es-ES', {
+                {new Date(data?.fecha || '').toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',

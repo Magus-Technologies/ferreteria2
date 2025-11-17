@@ -150,9 +150,6 @@ async function createIngresoSalidaWA(
 
         const { nuevo_costo } = manejoDeCosto({
           stock_actual: productoAlmacen.stock_fraccion,
-          nuevo_stock: productoAlmacen.stock_fraccion
-            .add(cantidad_fraccion)
-            .toNumber(),
           agregar: tipo_documento === TipoDocumento.Ingreso,
           costo_nuevo: productoAlmacen.costo,
         })

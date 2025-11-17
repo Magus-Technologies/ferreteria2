@@ -109,11 +109,11 @@ async function eliminarCompraWA({ id }: { id: Compra['id'] }) {
     compra.estado_de_compra === EstadoDeCompra.Procesado ||
     compra.estado_de_compra === EstadoDeCompra.Anulado
   )
-    throw new Error('La compra no se puede eliminar')
+    throw new Error('La compra no se puede anular')
 
   if (compra._count.recepciones_almacen > 0)
     throw new Error(
-      'La compra no se puede eliminar porque tiene Recepciones de Almacén activas'
+      'La compra no se puede anular porque tiene Recepciones de Almacén activas'
     )
 
   await prisma.compra.update({

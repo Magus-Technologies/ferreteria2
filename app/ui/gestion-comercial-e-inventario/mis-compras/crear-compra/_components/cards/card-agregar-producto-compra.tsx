@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react'
 import { FaBoxes, FaPlusCircle } from 'react-icons/fa'
 import {
@@ -47,9 +48,11 @@ export const valuesDefault: ValuesCardAgregarProductoCompra = {
 export default function CardAgregarProductoCompra({
   onOk,
   setOpen,
+  onChangeValues,
 }: {
   onOk?: (values: ValuesCardAgregarProductoCompra) => void
   setOpen: (open: boolean) => void
+  onChangeValues?: (values: ValuesCardAgregarProductoCompra) => void
 }) {
   const [values, setValues] =
     useState<ValuesCardAgregarProductoCompra>(valuesDefault)
@@ -109,10 +112,6 @@ export default function CardAgregarProductoCompra({
     if (closeModal) setOpen(false)
   }
 
-  useEffect(() => {
-    handleChange(null, 'unidad_derivada_id')
-  }, [unidades_derivadas])
-
   const cantidadRef = useRef<HTMLInputElement>(null)
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
   const precio_compraRef = useRef<HTMLInputElement>(null)
@@ -124,18 +123,18 @@ export default function CardAgregarProductoCompra({
     unidad_derivadaRef.current?.changeValue(
       unidades_derivadas?.[0].unidad_derivada.id
     )
-    setValues(prev => ({
-      ...prev,
-      unidad_derivada_id: unidades_derivadas?.[0].unidad_derivada.id,
-    }))
+    handleChange(
+      unidades_derivadas?.[0].unidad_derivada.id || null,
+      'unidad_derivada_id'
+    )
   }, [unidades_derivadas])
+
+  useEffect(() => {
+    onChangeValues?.(values)
+  }, [values])
 
   const unidad_derivada_seleccionada = unidades_derivadas?.find(
     item => item.unidad_derivada.id === values?.unidad_derivada_id
-  )
-  console.log(
-    '🚀 ~ file: card-agregar-producto-compra.tsx:134 ~ unidad_derivada_seleccionada:',
-    unidad_derivada_seleccionada
   )
 
   return (

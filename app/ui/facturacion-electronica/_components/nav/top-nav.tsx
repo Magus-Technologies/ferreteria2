@@ -10,6 +10,7 @@ import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
 import { useState } from 'react'
 import ModalAperturarCaja from '../modals/modal-aperturar-caja'
+import useItemsFinanzas from '../../_hooks/use-items-finanzas'
 
 const itemsVentas: MenuProps['items'] = [
   {
@@ -45,25 +46,9 @@ const itemsVentas: MenuProps['items'] = [
 export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false)
 
-  const itemsFinanzas: MenuProps['items'] = [
-    {
-      key: '1',
-      label: 'Aperturar Caja',
-      onClick: () => setOpenAperturaCaja(true),
-    },
-    {
-      key: '2',
-      label: 'Cerrar Caja',
-    },
-    {
-      key: '3',
-      label: 'Crear Ingreso',
-    },
-    {
-      key: '4',
-      label: 'Crear Gasto',
-    },
-  ]
+  const { itemsFinanzas } = useItemsFinanzas({
+    setOpenAperturaCaja,
+  })
 
   return (
     <BaseNav className={className} bgColorClass='bg-amber-600'>

@@ -16,4 +16,6 @@ export enum QueryKeys {
   COMPRAS_ANULADAS = 'compras_anuladas',
   COMPRAS_EN_ESPERA = 'compras_en_espera',
   RECEPCIONES_ALMACEN = 'recepciones_almacen',
+  EGRESOS_DINERO = 'egresos_dinero',
+  DESPLIEGUE_DE_PAGO = 'despliegue_de_pago',
 }

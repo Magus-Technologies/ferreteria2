@@ -5,8 +5,13 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 import { useColumnsDetalleDePrecios } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
+import { CostoUnidadDerivadaSearch } from '../modals/modal-producto-search'
 
-export default function TableDetalleDePreciosSearch() {
+export default function TableDetalleDePreciosSearch({
+  costoUnidadDerivada,
+}: {
+  costoUnidadDerivada: CostoUnidadDerivadaSearch
+}) {
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const productoSeleccionado = useStoreProductoSeleccionadoSearch(
     store => store.producto
@@ -29,6 +34,13 @@ export default function TableDetalleDePreciosSearch() {
       }))
     : []
 
+  const unidad_derivada = producto_en_almacen?.unidades_derivadas.find(
+    item => item.unidad_derivada.id === costoUnidadDerivada?.unidad_derivada_id
+  )
+  const nuevo_costo_general =
+    Number(costoUnidadDerivada?.costo ?? 0) /
+    Number(unidad_derivada?.factor ?? 1)
+
   return (
     <TableWithTitle
       id='g-c-e-i.detalle-de-precios-search'
@@ -44,6 +56,13 @@ export default function TableDetalleDePreciosSearch() {
           </span>
         </>
       }
+      rowClassRules={{
+        'bg-yellow-400!': params =>
+          nuevo_costo_general
+            ? Number(params.data?.precio_publico ?? 0) <
+              Number(nuevo_costo_general * Number(params.data?.factor ?? 0))
+            : false,
+      }}
       columnDefs={useColumnsDetalleDePrecios()}
       optionsSelectColumns={[
         {

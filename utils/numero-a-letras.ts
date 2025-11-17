@@ -160,21 +160,10 @@ export function NumeroALetras(num: number) {
     letrasCentavos: '',
     letrasMonedaPlural: 'SOLES',
     letrasMonedaSingular: 'SOL',
-
-    // letrasMonedaCentavoPlural: 'CENTAVOS',
-    // letrasMonedaCentavoSingular: 'CENTAVO',
   }
 
   if (data.centavos > 0) {
     data.letrasCentavos = 'CON ' + data.centavos + '/100'
-    // (function () {
-    //   if (data.centavos == 1)
-    //     return (
-    //       Millones(data.centavos) + ' ' + data.letrasMonedaCentavoSingular
-    //     )
-    //   else
-    //     return Millones(data.centavos) + ' ' + data.letrasMonedaCentavoPlural
-    // })()
   }
 
   if (data.enteros == 0)
@@ -191,8 +180,8 @@ export function NumeroALetras(num: number) {
     return (
       Millones(data.enteros) +
       ' ' +
-      data.letrasMonedaPlural +
+      data.letrasCentavos +
       ' ' +
-      data.letrasCentavos
+      data.letrasMonedaPlural
     )
 }

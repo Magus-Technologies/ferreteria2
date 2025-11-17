@@ -115,6 +115,20 @@ export enum permissions {
   CAJA_CREATE = 'caja.create',
   CAJA_UPDATE = 'caja.update',
   CAJA_DELETE = 'caja.delete',
+
+  // Egresos Dinero
+  EGRESO_DINERO_BASE = 'egreso-dinero',
+  EGRESO_DINERO_LISTADO = 'egreso-dinero.listado',
+  EGRESO_DINERO_CREATE = 'egreso-dinero.create',
+  EGRESO_DINERO_UPDATE = 'egreso-dinero.update',
+  EGRESO_DINERO_DELETE = 'egreso-dinero.delete',
+
+  // Despliegue de Pago
+  DESPLIEGUE_DE_PAGO_BASE = 'despliegue-de-pago',
+  DESPLIEGUE_DE_PAGO_LISTADO = 'despliegue-de-pago.listado',
+  DESPLIEGUE_DE_PAGO_CREATE = 'despliegue-de-pago.create',
+  DESPLIEGUE_DE_PAGO_UPDATE = 'despliegue-de-pago.update',
+  DESPLIEGUE_DE_PAGO_DELETE = 'despliegue-de-pago.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -133,6 +147,8 @@ type PermisosValidos = Exclude<
   | permissions.COMPRAS_BASE
   | permissions.RECEPCION_ALMACEN_BASE
   | permissions.CAJA_BASE
+  | permissions.EGRESO_DINERO_BASE
+  | permissions.DESPLIEGUE_DE_PAGO_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -228,6 +244,16 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.CAJA_CREATE]: 'Aperturar Caja',
   [permissions.CAJA_UPDATE]: 'Cerrar Caja',
   [permissions.CAJA_DELETE]: 'Eliminar Caja',
+
+  [permissions.EGRESO_DINERO_LISTADO]: 'Ver Listado de Egresos Dinero',
+  [permissions.EGRESO_DINERO_CREATE]: 'Crear Egreso Dinero',
+  [permissions.EGRESO_DINERO_UPDATE]: 'Actualizar Egreso Dinero',
+  [permissions.EGRESO_DINERO_DELETE]: 'Eliminar Egreso Dinero',
+
+  [permissions.DESPLIEGUE_DE_PAGO_LISTADO]: 'Ver Listado de Despliegue de Pago',
+  [permissions.DESPLIEGUE_DE_PAGO_CREATE]: 'Crear Despliegue de Pago',
+  [permissions.DESPLIEGUE_DE_PAGO_UPDATE]: 'Actualizar Despliegue de Pago',
+  [permissions.DESPLIEGUE_DE_PAGO_DELETE]: 'Eliminar Despliegue de Pago',
 }
 
 export function getAllPermissions() {

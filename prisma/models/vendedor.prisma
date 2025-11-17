@@ -1,0 +1,29 @@
+model IngresoDinero {
+    id            String  @id @default(cuid())
+    monto         Decimal @default(0) @db.Decimal(9, 2)
+    observaciones String?
+
+    user_id String
+    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model EgresoDinero {
+    id            String   @id @default(cuid())
+    monto         Decimal  @default(0) @db.Decimal(9, 2)
+    vuelto        Decimal? @db.Decimal(9, 2)
+    observaciones String?
+
+    user_id String
+    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    compras Compra[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([vuelto])
+    @@index([createdAt])
+}

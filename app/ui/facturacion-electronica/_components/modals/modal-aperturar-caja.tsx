@@ -52,6 +52,9 @@ export default function ModalAperturarCaja({
       formProps={{
         form,
         onFinish: crearAperturarCaja,
+        initialValues: {
+          monto_apertura: session?.user?.efectivo ?? 0,
+        },
       }}
     >
       <div className='flex items-center justify-around gap-6'>

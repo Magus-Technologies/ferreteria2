@@ -97,6 +97,7 @@ CREATE TABLE "MetodoDePago" (
 CREATE TABLE "DespliegueDePago" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "adicional" DECIMAL(9,2) NOT NULL DEFAULT 0,
     "metodo_de_pago_id" TEXT NOT NULL,
 
     CONSTRAINT "DespliegueDePago_pkey" PRIMARY KEY ("id")
@@ -129,6 +130,8 @@ CREATE TABLE "Compra" (
     "fecha_vencimiento" TIMESTAMP(3),
     "fecha" TIMESTAMP(3) NOT NULL,
     "guia" TEXT,
+    "egreso_dinero_id" TEXT,
+    "metodo_de_pago_id" TEXT,
     "user_id" TEXT NOT NULL,
     "almacen_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -497,6 +500,31 @@ CREATE TABLE "Authenticator" (
 );
 
 -- CreateTable
+CREATE TABLE "IngresoDinero" (
+    "id" TEXT NOT NULL,
+    "monto" DECIMAL(9,2) NOT NULL DEFAULT 0,
+    "observaciones" TEXT,
+    "user_id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "IngresoDinero_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EgresoDinero" (
+    "id" TEXT NOT NULL,
+    "monto" DECIMAL(9,2) NOT NULL DEFAULT 0,
+    "vuelto" DECIMAL(9,2),
+    "observaciones" TEXT,
+    "user_id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "EgresoDinero_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_PermissionToRole" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL,
@@ -674,6 +702,12 @@ ALTER TABLE "DespliegueDePago" ADD CONSTRAINT "DespliegueDePago_metodo_de_pago_i
 ALTER TABLE "AperturaYCierreCaja" ADD CONSTRAINT "AperturaYCierreCaja_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Compra" ADD CONSTRAINT "Compra_egreso_dinero_id_fkey" FOREIGN KEY ("egreso_dinero_id") REFERENCES "EgresoDinero"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Compra" ADD CONSTRAINT "Compra_metodo_de_pago_id_fkey" FOREIGN KEY ("metodo_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Compra" ADD CONSTRAINT "Compra_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -777,6 +811,12 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Authenticator" ADD CONSTRAINT "Authenticator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "IngresoDinero" ADD CONSTRAINT "IngresoDinero_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_PermissionToRole" ADD CONSTRAINT "_PermissionToRole_A_fkey" FOREIGN KEY ("A") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;

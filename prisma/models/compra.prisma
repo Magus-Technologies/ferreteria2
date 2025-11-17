@@ -27,18 +27,22 @@ enum TipoMoneda {
 model Compra {
     id String @id @default(cuid())
 
-    tipo_documento    TipoDocumento @default(NotaDeVenta)
+    tipo_documento    TipoDocumento  @default(NotaDeVenta)
     serie             String?
     numero            Int?
     descripcion       String?
-    forma_de_pago     FormaDePago   @default(Contado)
-    tipo_moneda       TipoMoneda    @default(Soles)
-    tipo_de_cambio    Decimal       @default(1) @db.Decimal(9, 4)
-    percepcion        Decimal       @default(0) @db.Decimal(9, 4)
+    forma_de_pago     FormaDePago    @default(Contado)
+    tipo_moneda       TipoMoneda     @default(Soles)
+    tipo_de_cambio    Decimal        @default(1) @db.Decimal(9, 4)
+    percepcion        Decimal        @default(0) @db.Decimal(9, 4)
     numero_dias       Int?
     fecha_vencimiento DateTime?
     fecha             DateTime
     guia              String?
+    estado_de_compra  EstadoDeCompra @default(Creado)
+
+    egreso_dinero_id String?
+    egreso_dinero    EgresoDinero? @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -53,9 +57,8 @@ model Compra {
     proveedor    Proveedor? @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
     productos_por_almacen ProductoAlmacenCompra[]
-
-    estado_de_compra    EstadoDeCompra     @default(Creado)
-    recepciones_almacen RecepcionAlmacen[]
+    recepciones_almacen   RecepcionAlmacen[]
+    pagos_de_compras      PagoDeCompra[]
 
     @@unique([serie, numero, proveedor_id])
     @@index([fecha])
@@ -105,4 +108,16 @@ model UnidadDerivadaInmutable {
     unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
     unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
     UnidadDerivadaInmutableRecepcion          UnidadDerivadaInmutableRecepcion[]
+}
+
+model PagoDeCompra {
+    id String @id @default(cuid())
+
+    compra_id String
+    compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    despliegue_de_pago_id String
+    despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    monto Decimal @db.Decimal(9, 2)
 }

@@ -144,9 +144,6 @@ export default function FormCrearCompra({
             }}
           />
         </LabelBase>
-      </div>
-      <div className='flex gap-6'>
-        <FormFormaDePagoCompra form={form} />
         <LabelBase label='Percepción:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
             prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
@@ -159,6 +156,9 @@ export default function FormCrearCompra({
             min={0}
           />
         </LabelBase>
+      </div>
+      <div className='flex gap-6'>
+        <FormFormaDePagoCompra form={form} />
       </div>
     </div>
   )

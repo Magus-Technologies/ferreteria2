@@ -30,6 +30,11 @@ type ModalProductoSearchProps = {
   showCardAgregarProducto?: boolean
 }
 
+export type CostoUnidadDerivadaSearch = {
+  costo: number | undefined | null
+  unidad_derivada_id: number | undefined | null
+} | null
+
 export default function ModalProductoSearch({
   open,
   setOpen,
@@ -61,6 +66,9 @@ export default function ModalProductoSearch({
   }, [open])
 
   const tableRef = useRef<RefTableProductoSearchProps | null>(null)
+
+  const [costoUnidadDerivada, setCostoUnidadDerivada] =
+    useState<CostoUnidadDerivadaSearch>(null)
 
   return (
     <Modal
@@ -114,13 +122,23 @@ export default function ModalProductoSearch({
               <TableUltimasComprasIngresadasSearch />
             </div>
             <div className='row-start-6 row-end-8'>
-              <TableDetalleDePreciosSearch />
+              <TableDetalleDePreciosSearch
+                costoUnidadDerivada={costoUnidadDerivada}
+              />
             </div>
           </div>
         </div>
         {showCardAgregarProducto && (
           <div>
-            <CardAgregarProductoCompra setOpen={setOpen} />
+            <CardAgregarProductoCompra
+              setOpen={setOpen}
+              onChangeValues={values => {
+                setCostoUnidadDerivada({
+                  costo: values.precio_compra,
+                  unidad_derivada_id: values.unidad_derivada_id,
+                })
+              }}
+            />
           </div>
         )}
       </div>

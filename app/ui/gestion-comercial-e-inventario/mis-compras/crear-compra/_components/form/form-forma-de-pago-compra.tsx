@@ -8,6 +8,7 @@ import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import LabelBase from '~/components/form/label-base'
 import dayjs from 'dayjs'
+import FormMetodoPagoCompra from './form-metodo-pago-compra'
 
 export default function FormFormaDePagoCompra({
   form,
@@ -106,6 +107,7 @@ export default function FormFormaDePagoCompra({
           className='!w-[160px] !min-w-[160px] !max-w-[160px]'
         />
       </LabelBase>
+      <FormMetodoPagoCompra form={form} />
     </>
   )
 }

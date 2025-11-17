@@ -56,6 +56,8 @@ export interface FormCreateCompra {
   fecha_vencimiento?: Dayjs
   percepcion?: number
   estado_de_compra?: EstadoDeCompra
+  egreso_dinero_id?: string
+  metodo_de_pago_id?: string
 }
 
 export default function BodyComprar({

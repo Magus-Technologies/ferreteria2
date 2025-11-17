@@ -130,16 +130,8 @@ async function manejo_de_recepcion({
 
       const stock_base = producto_almacen_compra.producto_almacen.stock_fraccion
 
-      console.log(
-        '🚀 ~ file: recepcion-almacen.ts:127 ~ cantidad_total:',
-        cantidad_total.mul(agregar ? 1 : -1)
-      )
-      console.log('🚀 ~ file: recepcion-almacen.ts:147 ~ costo:', costo)
       const { nuevo_costo } = manejoDeCosto({
         stock_actual: stock_base,
-        nuevo_stock: stock_base
-          .add(cantidad_total.mul(agregar ? 1 : -1))
-          .toNumber(),
         agregar,
         costo_nuevo:
           unidades_derivadas.length === 1 && unidades_derivadas[0].bonificacion
