@@ -44,6 +44,9 @@ model Compra {
     egreso_dinero_id String?
     egreso_dinero    EgresoDinero? @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
+    despliegue_de_pago_id String?
+    despliegue_de_pago    DespliegueDePago? @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
