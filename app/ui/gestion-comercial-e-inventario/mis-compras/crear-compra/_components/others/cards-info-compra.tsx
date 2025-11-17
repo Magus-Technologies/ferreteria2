@@ -21,7 +21,6 @@ export default function CardsInfoCompra({
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
 }) {
-  console.log('🚀 ~ file: cards-info-compra.tsx:25 ~ compra:', compra)
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form)
   const percepcion = Form.useWatch('percepcion', form)
@@ -76,6 +75,7 @@ export default function CardsInfoCompra({
         moneda={tipo_moneda}
       />
       {(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+      (compra?._count?.pagos_de_compras ?? 0) > 0 ||
       compra?.estado_de_compra === EstadoDeCompra.Creado ? null : (
         <ButtonBase
           onClick={() => {

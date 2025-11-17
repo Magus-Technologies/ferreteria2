@@ -9,6 +9,11 @@ export const includeCompra = {
           estado: true,
         },
       },
+      pagos_de_compras: {
+        where: {
+          estado: true,
+        },
+      },
     },
   },
   productos_por_almacen: {

@@ -363,10 +363,13 @@ export function useColumnsComprar({
                     )
                 )
               }}
-              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
-              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
               variant={
-                (compra?._count?.recepciones_almacen ?? 0) > 0
+                (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+                (compra?._count?.pagos_de_compras ?? 0) > 0
                   ? 'borderless'
                   : undefined
               }
@@ -420,10 +423,13 @@ export function useColumnsComprar({
                   ),
                 })
               }}
-              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
-              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
               variant={
-                (compra?._count?.recepciones_almacen ?? 0) > 0
+                (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+                (compra?._count?.pagos_de_compras ?? 0) > 0
                   ? 'borderless'
                   : undefined
               }
@@ -485,10 +491,13 @@ export function useColumnsComprar({
               precision={4}
               min={0}
               formWithMessage={false}
-              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
-              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
               variant={
-                (compra?._count?.recepciones_almacen ?? 0) > 0
+                (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+                (compra?._count?.pagos_de_compras ?? 0) > 0
                   ? 'borderless'
                   : undefined
               }
@@ -513,10 +522,13 @@ export function useColumnsComprar({
               placeholder='Vencimiento'
               formWithMessage={false}
               size='small'
-              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
-              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
               variant={
-                (compra?._count?.recepciones_almacen ?? 0) > 0
+                (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+                (compra?._count?.pagos_de_compras ?? 0) > 0
                   ? 'borderless'
                   : undefined
               }
@@ -539,10 +551,13 @@ export function useColumnsComprar({
               }}
               size='small'
               formWithMessage={false}
-              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0}
-              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0}
+              disabled={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
+              readOnly={(compra?._count?.recepciones_almacen ?? 0) > 0 ||
+              (compra?._count?.pagos_de_compras ?? 0) > 0}
               variant={
-                (compra?._count?.recepciones_almacen ?? 0) > 0
+                (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+                (compra?._count?.pagos_de_compras ?? 0) > 0
                   ? 'borderless'
                   : undefined
               }
@@ -558,7 +573,8 @@ export function useColumnsComprar({
       minWidth: 40,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
-        return (compra?._count?.recepciones_almacen ?? 0) > 0 ? null : (
+        return (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+        (compra?._count?.pagos_de_compras ?? 0) > 0 ? null : (
           <div className='flex items-center gap-2 h-full'>
             <Tooltip title='Eliminar'>
               <MdDelete

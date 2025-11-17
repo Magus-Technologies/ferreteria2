@@ -52,15 +52,18 @@ export default function HeaderCrearCompra({
         )
       }
       extra={
-        (compra?._count?.recepciones_almacen ?? 0) > 0 ? null : (
-          <div className='pl-8 flex items-center gap-4'>
-            <SelectProductos
-              allowClear
-              size='large'
-              className='!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!'
-              classNameIcon='text-cyan-600 mx-1'
-              classIconSearch='!mb-0'
-              classIconPlus='mb-0!'
+        (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+        (compra?._count?.pagos_de_compras ?? 0) > 0
+          ? null
+          : (
+              <div className='pl-8 flex items-center gap-4'>
+                <SelectProductos
+                  allowClear
+                  size='large'
+                  className='!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!'
+                  classNameIcon='text-cyan-600 mx-1'
+                  classIconSearch='!mb-0'
+                  classIconPlus='mb-0!'
               showButtonCreate={can(permissions.PRODUCTO_CREATE)}
               withSearch
               withTipoBusqueda

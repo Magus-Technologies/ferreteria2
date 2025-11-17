@@ -24,6 +24,6 @@ async function getDespliegueDePagoWA({
     where: whereParsed,
   })
 
-  return { data: items }
+  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
 }
 export const getDespliegueDePago = withAuth(getDespliegueDePagoWA)
