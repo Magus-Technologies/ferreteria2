@@ -4,7 +4,7 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
-import { Compra, EstadoDeCompra, Prisma } from '@prisma/client'
+import { Compra, EstadoDeCompra, FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
 import {
   CompraUncheckedCreateInputSchema,
   CompraUncheckedUpdateInputSchema,
@@ -45,6 +45,28 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
   return await prisma.$transaction(
     async db => {
       if (
+        parsedData.forma_de_pago === FormaDePago.Contado &&
+        !parsedData.egreso_dinero_id &&
+        !parsedData.despliegue_de_pago_id
+      )
+        throw new Error(
+          'En compras al contado debes seleccionar Egreso asociado o Despliegue de Pago'
+        )
+
+      if (
+        parsedData.forma_de_pago === FormaDePago.Crédito &&
+        (parsedData.egreso_dinero_id || parsedData.despliegue_de_pago_id)
+      )
+        throw new Error(
+          'En compras a crédito no debes seleccionar Egreso asociado ni Despliegue de Pago'
+        )
+
+      if (parsedData.egreso_dinero_id && parsedData.despliegue_de_pago_id)
+        throw new Error(
+          'No puedes seleccionar Egreso asociado y Despliegue de Pago al mismo tiempo'
+        )
+
+      if (
         parsedData.estado_de_compra === EstadoDeCompra.Creado ||
         (parsedData.estado_de_compra === EstadoDeCompra.EnEspera &&
           parsedData.serie &&
@@ -71,6 +93,57 @@ async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
       const compra = await db.compra.create({
         data: parsedData,
       })
+
+      if (
+        compra.forma_de_pago === FormaDePago.Contado &&
+        compra.despliegue_de_pago_id
+      ) {
+        const productosCreate = Array.isArray(
+          parsedData.productos_por_almacen?.create
+        )
+          ? (parsedData.productos_por_almacen!.create)
+          : []
+
+        let total = 0
+        for (const item of productosCreate) {
+          const costo = Number(item.costo ?? 0)
+          const unidades = Array.isArray(item.unidades_derivadas?.create)
+            ? (item.unidades_derivadas!.create)
+            : []
+          for (const u of unidades) {
+            const cantidad = Number(u.cantidad ?? 0)
+            const factor = Number(u.factor ?? 0)
+            const flete = Number(u.flete ?? 0)
+            const bonificacion = Boolean(u.bonificacion)
+            const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
+            total += montoLinea
+          }
+        }
+
+        const totalConPercepcion =
+          total + Number((parsedData).percepcion ?? 0)
+
+        const totalSoles =
+          parsedData.tipo_moneda === TipoMoneda.Soles
+            ? totalConPercepcion
+            : totalConPercepcion * Number(parsedData.tipo_de_cambio ?? 1)
+
+        const despliegue = await db.despliegueDePago.findUnique({
+          where: { id: compra.despliegue_de_pago_id },
+          select: { metodo_de_pago_id: true },
+        })
+        if (!despliegue)
+          throw new Error('Despliegue de pago no encontrado para la compra creada')
+
+        await db.metodoDePago.update({
+          where: { id: despliegue.metodo_de_pago_id },
+          data: {
+            monto: {
+              decrement: totalSoles,
+            },
+          },
+        })
+      }
 
       return { data: JSON.parse(JSON.stringify(compra)) as typeof compra }
     },
