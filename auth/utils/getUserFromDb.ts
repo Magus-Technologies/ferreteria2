@@ -23,15 +23,15 @@ export const getUserFromDb = async (email: string, pwHash: string) => {
 
   const all_permissions = Array.from(
     new Set([
-      ...user.permissions.map(p => p.name),
-      ...user.roles.flatMap(role => role.permissions.map(p => p.name)),
+      ...user.permissions.map((p) => p.name),
+      ...user.roles.flatMap((role) => role.permissions.map((p) => p.name)),
     ])
   )
 
   const userWithAllPermissions = {
     ...user,
     efectivo: user.efectivo.toNumber(),
-    empresa: { ...user.empresa, efectivo: user.empresa.efectivo.toNumber() },
+    empresa: user.empresa,
     all_permissions,
   }
 

@@ -51,7 +51,7 @@ export default function FormMetodoPagoCompra({ form }: { form: FormInstance }) {
       >
         <SelectDespliegueDePago
           classNameIcon='text-cyan-600 mx-1'
-          className='!w-[135px] !min-w-[135px] !max-w-[135px]'
+          className='!w-[200px] !min-w-[200px] !max-w-[200px]'
           propsForm={{
             name: 'despliegue_de_pago_id',
           }}
