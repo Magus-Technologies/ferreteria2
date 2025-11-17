@@ -114,7 +114,8 @@ model UnidadDerivadaInmutable {
 }
 
 model PagoDeCompra {
-    id String @id @default(cuid())
+    id     String  @id @default(cuid())
+    estado Boolean @default(true)
 
     compra_id String
     compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
