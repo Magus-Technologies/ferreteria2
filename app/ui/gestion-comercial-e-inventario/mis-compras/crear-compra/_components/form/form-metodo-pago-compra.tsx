@@ -42,7 +42,7 @@ export default function FormMetodoPagoCompra({ form }: { form: FormInstance }) {
           propsForm={{
             name: 'egreso_dinero_id',
           }}
-          disabled={disabled && !!despliegue_de_pago_id}
+          disabled={disabled || !!despliegue_de_pago_id}
         />
       </LabelBase>
       <LabelBase
@@ -55,7 +55,7 @@ export default function FormMetodoPagoCompra({ form }: { form: FormInstance }) {
           propsForm={{
             name: 'despliegue_de_pago_id',
           }}
-          disabled={disabled && !!egreso_dinero_id}
+          disabled={disabled || !!egreso_dinero_id}
         />
       </LabelBase>
     </>
