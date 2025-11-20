@@ -28,6 +28,7 @@ model DespliegueDePago {
 
     pagos_de_compras PagoDeCompra[]
     compras          Compra[]
+    ventas           Venta[]
     egresos_dinero   EgresoDinero[]
     ingresos_dinero  IngresoDinero[]
 }

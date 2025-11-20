@@ -5,43 +5,12 @@ import { FaClipboardList } from 'react-icons/fa'
 import { FaCartShopping, FaMoneyBillTrendUp } from 'react-icons/fa6'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { IoMdContact } from 'react-icons/io'
-import { MenuProps } from 'antd'
 import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
 import { useState } from 'react'
 import ModalAperturarCaja from '../modals/modal-aperturar-caja'
 import useItemsFinanzas from '../../_hooks/use-items-finanzas'
-
-const itemsVentas: MenuProps['items'] = [
-  {
-    key: '1',
-    label: 'Crear Venta',
-  },
-  {
-    key: '2',
-    label: 'Crear Cotizacion',
-  },
-  {
-    key: '3',
-    label: 'Prestar / Pedir',
-  },
-  {
-    key: '4',
-    label: 'Crear Guía',
-  },
-  {
-    key: '5',
-    label: 'Crear Nota de Crédito',
-  },
-  {
-    key: '6',
-    label: 'Crear Nota de Débito',
-  },
-  {
-    key: '7',
-    label: 'Envíos a Sunat',
-  },
-]
+import useItemsVentas from '../../_hooks/use-items-ventas'
 
 export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false)
@@ -49,6 +18,7 @@ export default function TopNav({ className }: { className?: string }) {
   const { itemsFinanzas } = useItemsFinanzas({
     setOpenAperturaCaja,
   })
+  const { itemsVentas } = useItemsVentas()
 
   return (
     <BaseNav className={className} bgColorClass='bg-amber-600'>

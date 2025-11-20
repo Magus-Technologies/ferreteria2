@@ -71,6 +71,8 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   withTipoBusqueda?: boolean
   handleOnlyOneResult?: (producto: getProductosResponseProps) => void
   showCardAgregarProducto?: boolean
+  showCardAgregarProductoVenta?: boolean
+  showUltimasCompras?: boolean
   limpiarOnChange?: boolean
 }
 
@@ -89,16 +91,18 @@ export default function SelectProductos({
   withTipoBusqueda = false,
   handleOnlyOneResult,
   showCardAgregarProducto = false,
+  showCardAgregarProductoVenta = false,
   limpiarOnChange = false,
+  showUltimasCompras = true,
   ...props
 }: SelectProductosProps) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
 
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
-    store => store.producto
+    (store) => store.producto
   )
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
-    store => store.setProducto
+    (store) => store.setProducto
   )
 
   useEffect(() => {
@@ -113,7 +117,7 @@ export default function SelectProductos({
   const [tipoBusqueda, setTipoBusqueda] = useState<TipoBusquedaProducto>(
     TipoBusquedaProducto.CODIGO_DESCRIPCION
   )
-  const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  const almacen_id = useStoreAlmacen((store) => store.almacen_id)
 
   const [productoCreado, setProductoCreado] = useState<Producto>()
   const [productoSeleccionado, setProductoSeleccionado] =
@@ -186,8 +190,8 @@ export default function SelectProductos({
         onClear={() => {
           setTextDefault('')
         }}
-        onChange={value => {
-          const producto = response?.find(item => item.id === value) as
+        onChange={(value) => {
+          const producto = response?.find((item) => item.id === value) as
             | getProductosResponseProps
             | undefined
           onChange?.(value, producto)
@@ -208,7 +212,7 @@ export default function SelectProductos({
         }
         options={[
           ...optionsDefault,
-          ...(response?.map(item => ({
+          ...(response?.map((item) => ({
             value: item.id,
             label: `${item.cod_producto} : ${item.name}`,
           })) || []),
@@ -232,9 +236,9 @@ export default function SelectProductos({
             : []),
         ].filter(
           (item, index, self) =>
-            self.findIndex(i => i.value === item.value) === index
+            self.findIndex((i) => i.value === item.value) === index
         )}
-        onKeyUp={e => {
+        onKeyUp={(e) => {
           if (e.key === 'Enter') {
             setTextDefault(text)
             handleSearch()
@@ -262,10 +266,12 @@ export default function SelectProductos({
         tipoBusqueda={tipoBusqueda}
         setTipoBusqueda={setTipoBusqueda}
         showCardAgregarProducto={showCardAgregarProducto}
+        showCardAgregarProductoVenta={showCardAgregarProductoVenta}
+        showUltimasCompras={showUltimasCompras}
       />
       {showButtonCreate && (
         <ButtonCreateProductoPlus
-          onSuccess={res => {
+          onSuccess={(res) => {
             setProductoCreado(res)
             iterarChangeValue({
               refObject: selectProductoRef,

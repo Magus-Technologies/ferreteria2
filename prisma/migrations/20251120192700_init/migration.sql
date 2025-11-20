@@ -10,6 +10,9 @@ CREATE TYPE "FormaDePago" AS ENUM ('co', 'cr');
 -- CreateEnum
 CREATE TYPE "TipoMoneda" AS ENUM ('s', 'd');
 
+-- CreateEnum
+CREATE TYPE "EstadoDeVenta" AS ENUM ('cr', 'ee', 'an', 'pr');
+
 -- CreateTable
 CREATE TABLE "Almacen" (
     "id" SERIAL NOT NULL,
@@ -160,7 +163,7 @@ CREATE TABLE "UnidadDerivadaInmutableCompra" (
     "producto_almacen_compra_id" INTEGER NOT NULL,
     "factor" DECIMAL(9,3) NOT NULL,
     "cantidad" DECIMAL(9,3) NOT NULL,
-    "cantidad_pendiente" DECIMAL(9,3) NOT NULL DEFAULT 0,
+    "cantidad_pendiente" DECIMAL(9,3) NOT NULL,
     "lote" TEXT,
     "vencimiento" TIMESTAMP(3),
     "flete" DECIMAL(9,4) NOT NULL DEFAULT 0,
@@ -539,6 +542,50 @@ CREATE TABLE "EgresoDinero" (
 );
 
 -- CreateTable
+CREATE TABLE "Venta" (
+    "id" TEXT NOT NULL,
+    "tipo_documento" "TipoDocumento" NOT NULL DEFAULT 'nv',
+    "serie" TEXT,
+    "numero" INTEGER,
+    "descripcion" TEXT,
+    "forma_de_pago" "FormaDePago" NOT NULL DEFAULT 'co',
+    "tipo_moneda" "TipoMoneda" NOT NULL DEFAULT 's',
+    "tipo_de_cambio" DECIMAL(9,4) NOT NULL DEFAULT 1,
+    "fecha" TIMESTAMP(3) NOT NULL,
+    "estado_de_venta" "EstadoDeVenta" NOT NULL DEFAULT 'cr',
+    "despliegue_de_pago_id" TEXT,
+    "user_id" TEXT NOT NULL,
+    "almacen_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "ingresoDineroId" TEXT,
+
+    CONSTRAINT "Venta_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProductoAlmacenVenta" (
+    "id" SERIAL NOT NULL,
+    "venta_id" TEXT NOT NULL,
+    "precio" DECIMAL(9,4) NOT NULL,
+    "producto_almacen_id" INTEGER NOT NULL,
+
+    CONSTRAINT "ProductoAlmacenVenta_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UnidadDerivadaInmutableVenta" (
+    "id" SERIAL NOT NULL,
+    "unidad_derivada_inmutable_id" INTEGER NOT NULL,
+    "producto_almacen_venta_id" INTEGER NOT NULL,
+    "factor" DECIMAL(9,3) NOT NULL,
+    "cantidad" DECIMAL(9,3) NOT NULL,
+    "cantidad_pendiente" DECIMAL(9,3) NOT NULL,
+
+    CONSTRAINT "UnidadDerivadaInmutableVenta_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_PermissionToRole" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL,
@@ -684,6 +731,15 @@ CREATE INDEX "EgresoDinero_vuelto_idx" ON "EgresoDinero"("vuelto");
 
 -- CreateIndex
 CREATE INDEX "EgresoDinero_createdAt_idx" ON "EgresoDinero"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "Venta_fecha_idx" ON "Venta"("fecha");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProductoAlmacenVenta_venta_id_producto_almacen_id_key" ON "ProductoAlmacenVenta"("venta_id", "producto_almacen_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UnidadDerivadaInmutableVenta_producto_almacen_venta_id_unid_key" ON "UnidadDerivadaInmutableVenta"("producto_almacen_venta_id", "unidad_derivada_inmutable_id");
 
 -- CreateIndex
 CREATE INDEX "_PermissionToRole_B_index" ON "_PermissionToRole"("B");
@@ -849,6 +905,27 @@ ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_despliegue_de_pago_id_fk
 
 -- AddForeignKey
 ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Venta" ADD CONSTRAINT "Venta_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Venta" ADD CONSTRAINT "Venta_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Venta" ADD CONSTRAINT "Venta_almacen_id_fkey" FOREIGN KEY ("almacen_id") REFERENCES "Almacen"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductoAlmacenVenta" ADD CONSTRAINT "ProductoAlmacenVenta_venta_id_fkey" FOREIGN KEY ("venta_id") REFERENCES "Venta"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductoAlmacenVenta" ADD CONSTRAINT "ProductoAlmacenVenta_producto_almacen_id_fkey" FOREIGN KEY ("producto_almacen_id") REFERENCES "ProductoAlmacen"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UnidadDerivadaInmutableVenta" ADD CONSTRAINT "UnidadDerivadaInmutableVenta_unidad_derivada_inmutable_id_fkey" FOREIGN KEY ("unidad_derivada_inmutable_id") REFERENCES "UnidadDerivadaInmutable"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UnidadDerivadaInmutableVenta" ADD CONSTRAINT "UnidadDerivadaInmutableVenta_producto_almacen_venta_id_fkey" FOREIGN KEY ("producto_almacen_venta_id") REFERENCES "ProductoAlmacenVenta"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_PermissionToRole" ADD CONSTRAINT "_PermissionToRole_A_fkey" FOREIGN KEY ("A") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;

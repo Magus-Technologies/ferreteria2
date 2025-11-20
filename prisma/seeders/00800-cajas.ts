@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { DespliegueDePago } from '~/app/_actions/lib/lib-caja'
 
 const prisma = new PrismaClient()
 
@@ -11,7 +12,7 @@ export default async function cajasSeeder() {
           name: 'Efectivo CA',
           despliegue_de_pagos: {
             create: {
-              name: 'CCH / Efectivo',
+              name: DespliegueDePago.CCH_Efectivo,
             },
           },
         },

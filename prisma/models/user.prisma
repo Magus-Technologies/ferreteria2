@@ -26,6 +26,7 @@ model User {
 
     ingresos_salidas    IngresoSalida[]
     compras             Compra[]
+    ventas              Venta[]
     recepciones_almacen RecepcionAlmacen[]
 }
 

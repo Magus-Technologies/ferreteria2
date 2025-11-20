@@ -129,6 +129,13 @@ export enum permissions {
   DESPLIEGUE_DE_PAGO_CREATE = 'despliegue-de-pago.create',
   DESPLIEGUE_DE_PAGO_UPDATE = 'despliegue-de-pago.update',
   DESPLIEGUE_DE_PAGO_DELETE = 'despliegue-de-pago.delete',
+
+  // Ventas
+  VENTA_BASE = 'venta',
+  VENTA_LISTADO = 'venta.listado',
+  VENTA_CREATE = 'venta.create',
+  VENTA_UPDATE = 'venta.update',
+  VENTA_DELETE = 'venta.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -149,6 +156,7 @@ type PermisosValidos = Exclude<
   | permissions.CAJA_BASE
   | permissions.EGRESO_DINERO_BASE
   | permissions.DESPLIEGUE_DE_PAGO_BASE
+  | permissions.VENTA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -254,6 +262,12 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.DESPLIEGUE_DE_PAGO_CREATE]: 'Crear Despliegue de Pago',
   [permissions.DESPLIEGUE_DE_PAGO_UPDATE]: 'Actualizar Despliegue de Pago',
   [permissions.DESPLIEGUE_DE_PAGO_DELETE]: 'Eliminar Despliegue de Pago',
+
+  // Ventas
+  [permissions.VENTA_LISTADO]: 'Ver Listado de Ventas',
+  [permissions.VENTA_CREATE]: 'Crear Venta',
+  [permissions.VENTA_UPDATE]: 'Actualizar Venta',
+  [permissions.VENTA_DELETE]: 'Eliminar Venta',
 }
 
 export function getAllPermissions() {

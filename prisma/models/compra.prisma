@@ -94,7 +94,7 @@ model UnidadDerivadaInmutableCompra {
 
     factor             Decimal   @db.Decimal(9, 3)
     cantidad           Decimal   @db.Decimal(9, 3)
-    cantidad_pendiente Decimal   @default(0) @db.Decimal(9, 3)
+    cantidad_pendiente Decimal   @db.Decimal(9, 3)
     lote               String?
     vencimiento        DateTime?
     flete              Decimal   @default(0) @db.Decimal(9, 4)
@@ -109,6 +109,7 @@ model UnidadDerivadaInmutable {
     name String @unique
 
     unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
+    unidades_derivadas_inmutables_en_ventas   UnidadDerivadaInmutableVenta[]
     unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
     UnidadDerivadaInmutableRecepcion          UnidadDerivadaInmutableRecepcion[]
 }

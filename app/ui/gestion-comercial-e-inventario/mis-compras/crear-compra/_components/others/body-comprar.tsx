@@ -91,7 +91,7 @@ export default function BodyComprar({
   return (
     <FormBase
       form={form}
-      name='login'
+      name='compra'
       className='flex gap-6 size-full'
       onFinish={handleSubmit}
     >

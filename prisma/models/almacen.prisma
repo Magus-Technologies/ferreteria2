@@ -8,6 +8,7 @@ model Almacen {
     ubicaciones          Ubicacion[]
     productos_en_almacen ProductoAlmacen[]
     compras              Compra[]
+    ventas               Venta[]
     empresas             Empresa[]
     ingresos_salidas     IngresoSalida[]
 }
@@ -33,6 +34,7 @@ model ProductoAlmacen {
 
     unidades_derivadas  ProductoAlmacenUnidadDerivada[]
     compras             ProductoAlmacenCompra[]
+    ventas              ProductoAlmacenVenta[]
     ingresos_salidas    ProductoAlmacenIngresoSalida[]
     recepciones_almacen ProductoAlmacenRecepcion[]
 

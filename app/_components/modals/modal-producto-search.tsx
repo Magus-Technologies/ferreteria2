@@ -14,6 +14,7 @@ import CardAgregarProductoCompra from '~/app/ui/gestion-comercial-e-inventario/m
 import { getProductosResponseProps } from '~/app/_actions/producto'
 import TableDetalleDePreciosSearch from '../tables/table-detalle-de-precios-search'
 import TableUltimasComprasIngresadasSearch from '../tables/table-ultimas-compras-ingresadas-search'
+import CardAgregarProductoVenta from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-agregar-producto-venta'
 
 type ModalProductoSearchProps = {
   open: boolean
@@ -28,6 +29,8 @@ type ModalProductoSearchProps = {
   }) => void
   setTipoBusqueda: (tipoBusqueda: TipoBusquedaProducto) => void
   showCardAgregarProducto?: boolean
+  showCardAgregarProductoVenta?: boolean
+  showUltimasCompras?: boolean
 }
 
 export type CostoUnidadDerivadaSearch = {
@@ -44,6 +47,8 @@ export default function ModalProductoSearch({
   onRowDoubleClicked,
   setTipoBusqueda,
   showCardAgregarProducto = false,
+  showCardAgregarProductoVenta = false,
+  showUltimasCompras = true,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault)
   useEffect(() => {
@@ -53,7 +58,7 @@ export default function ModalProductoSearch({
   const [value] = useDebounce(text, 1000)
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
-    store => store.setProducto
+    (store) => store.setProducto
   )
 
   useEffect(() => {
@@ -96,20 +101,28 @@ export default function ModalProductoSearch({
         <InputBase
           placeholder='Buscar Producto'
           value={text}
-          onChange={e => setText(e.target.value)}
+          onChange={(e) => setText(e.target.value)}
           className='max-w-[500px]'
           onPressEnter={() => tableRef.current?.handleRefetch()}
         />
         <ButtonCreateProductoPlus
           className='mb-0!'
-          onSuccess={res => setText(res.name)}
+          onSuccess={(res) => setText(res.name)}
           textDefault={text}
           setTextDefault={setText}
         />
       </div>
       <div className='flex items-center justify-center gap-8'>
-        <div className='h-[600px] min-w-[1000px] w-full mt-4'>
-          <div className='grid grid-rows-7 gap-y-4 size-full'>
+        <div
+          className={`${
+            showUltimasCompras ? 'h-[600px]' : 'h-[400px]'
+          } min-w-[1000px] w-full mt-4`}
+        >
+          <div
+            className={`grid ${
+              showUltimasCompras ? 'grid-rows-7' : 'grid-rows-5'
+            } gap-y-4 size-full`}
+          >
             <div className='row-start-1 row-end-4'>
               <TableProductoSearch
                 ref={tableRef}
@@ -118,10 +131,18 @@ export default function ModalProductoSearch({
                 tipoBusqueda={tipoBusqueda}
               />
             </div>
-            <div className='row-start-4 row-end-6'>
-              <TableUltimasComprasIngresadasSearch />
-            </div>
-            <div className='row-start-6 row-end-8'>
+            {showUltimasCompras && (
+              <div className='row-start-4 row-end-6'>
+                <TableUltimasComprasIngresadasSearch />
+              </div>
+            )}
+            <div
+              className={
+                showUltimasCompras
+                  ? 'row-start-6 row-end-8'
+                  : 'row-start-4 row-end-6'
+              }
+            >
               <TableDetalleDePreciosSearch
                 costoUnidadDerivada={costoUnidadDerivada}
               />
@@ -132,13 +153,18 @@ export default function ModalProductoSearch({
           <div>
             <CardAgregarProductoCompra
               setOpen={setOpen}
-              onChangeValues={values => {
+              onChangeValues={(values) => {
                 setCostoUnidadDerivada({
                   costo: values.precio_compra,
                   unidad_derivada_id: values.unidad_derivada_id,
                 })
               }}
             />
+          </div>
+        )}
+        {showCardAgregarProductoVenta && (
+          <div>
+            <CardAgregarProductoVenta setOpen={setOpen} />
           </div>
         )}
       </div>
