@@ -42,7 +42,7 @@ model ProductoAlmacenVenta {
     venta    Venta  @relation(fields: [venta_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     venta_id String
 
-    precio Decimal @db.Decimal(9, 4)
+    costo Decimal @db.Decimal(9, 4)
 
     producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
     producto_almacen_id Int
@@ -50,6 +50,11 @@ model ProductoAlmacenVenta {
     unidades_derivadas UnidadDerivadaInmutableVenta[]
 
     @@unique([venta_id, producto_almacen_id])
+}
+
+enum DescuentoTipo {
+    Porcentaje @map("%")
+    Monto      @map("m")
 }
 
 model UnidadDerivadaInmutableVenta {
@@ -61,9 +66,13 @@ model UnidadDerivadaInmutableVenta {
     producto_almacen_venta_id Int
     producto_almacen_venta    ProductoAlmacenVenta @relation(fields: [producto_almacen_venta_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    factor             Decimal @db.Decimal(9, 3)
-    cantidad           Decimal @db.Decimal(9, 3)
-    cantidad_pendiente Decimal @db.Decimal(9, 3)
+    factor             Decimal       @db.Decimal(9, 3)
+    cantidad           Decimal       @db.Decimal(9, 3)
+    cantidad_pendiente Decimal       @db.Decimal(9, 3)
+    precio             Decimal       @db.Decimal(9, 4)
+    recargo            Decimal       @default(0) @db.Decimal(9, 4)
+    descuento_tipo     DescuentoTipo @default(Monto)
+    descuento          Decimal       @default(0) @db.Decimal(9, 4)
 
     @@unique([producto_almacen_venta_id, unidad_derivada_inmutable_id])
 }

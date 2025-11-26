@@ -5,6 +5,7 @@ import {
   FormaDePago,
   TipoMoneda,
   TipoDocumento,
+  DescuentoTipo,
 } from '@prisma/client'
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
@@ -13,6 +14,7 @@ import useCreateVenta from '../../_hooks/use-create-venta'
 import useInitVenta from '../../_hooks/use-init-venta'
 import { VentaConUnidadDerivadaNormal } from './header-crear-venta'
 import FormTableVender from '../form/form-table-vender'
+import FormCrearVenta from '../form/form-crear-venta'
 
 export type FormCreateVenta = {
   productos: Array<{
@@ -25,13 +27,14 @@ export type FormCreateVenta = {
     unidad_derivada_factor: number
     cantidad: number
     precio_venta: number
+    recargo?: number
     subtotal: number
+    descuento_tipo?: DescuentoTipo
+    descuento?: number
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago
   tipo_documento: TipoDocumento
-  serie?: string
-  numero?: number
   tipo_moneda: TipoMoneda
   tipo_de_cambio?: number
   estado_de_venta?: EstadoDeVenta
@@ -56,7 +59,7 @@ export default function BodyVender({
     >
       <div className='flex-1 flex flex-col gap-6'>
         <FormTableVender form={form} venta={venta} />
-        {/* <FormCrearVender form={form} venta={venta} /> */}
+        <FormCrearVenta form={form} venta={venta} />
       </div>
       {/* <CardsInfoVender form={form} venta={venta} /> */}
     </FormBase>

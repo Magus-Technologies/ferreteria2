@@ -1,11 +1,13 @@
 'use client'
 
-import { TipoMoneda } from '@prisma/client'
+import { DescuentoTipo, TipoMoneda } from '@prisma/client'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
+import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
+import { MdDelete } from 'react-icons/md'
 
 export function useColumnsVender({
   form,
@@ -178,16 +180,7 @@ export function useColumnsVender({
             precision={2}
             min={0}
             formWithMessage={false}
-            onChange={(val) => {
-              form.setFieldValue(
-                ['productos', value, 'subtotal'],
-                Number(val ?? 0) *
-                  Number(
-                    form.getFieldValue(['productos', value, 'precio_venta']) ??
-                      0
-                  )
-              )
-            }}
+            onChange={() => calcularSubtotalForm({ form, value })}
           />
         </div>
       ),
@@ -209,15 +202,62 @@ export function useColumnsVender({
             precision={4}
             min={0}
             formWithMessage={false}
-            onChange={(val) => {
-              form.setFieldValue(
-                ['productos', value, 'subtotal'],
-                Number(val ?? 0) *
-                  Number(
-                    form.getFieldValue(['productos', value, 'cantidad']) ?? 0
-                  )
-              )
+            onChange={() => calcularSubtotalForm({ form, value })}
+          />
+        </div>
+      ),
+    },
+    {
+      headerName: 'Recargo',
+      field: 'name',
+      minWidth: 110,
+      width: 110,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
+        <div className='flex items-center h-full'>
+          <InputNumberBase
+            prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+            size='small'
+            propsForm={{
+              name: [value, 'recargo'],
+              rules: [{ required: true, message: '' }],
             }}
+            precision={4}
+            min={0}
+            formWithMessage={false}
+            onChange={() => calcularSubtotalForm({ form, value })}
+          />
+        </div>
+      ),
+    },
+    {
+      headerName: 'Descuento',
+      field: 'name',
+      minWidth: 160,
+      width: 160,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
+        <div className='flex items-center h-full gap-1'>
+          <SelectDescuentoTipo
+            formWithMessage={false}
+            size='small'
+            propsForm={{
+              name: [value, 'descuento_tipo'],
+              rules: [{ required: true, message: '' }],
+              hasFeedback: false,
+            }}
+            onChange={() => calcularSubtotalForm({ form, value })}
+          />
+          <InputNumberBase
+            prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+            size='small'
+            className='w-full'
+            propsForm={{
+              name: [value, 'descuento'],
+              rules: [{ required: true, message: '' }],
+            }}
+            precision={4}
+            min={0}
+            formWithMessage={false}
+            onChange={() => calcularSubtotalForm({ form, value })}
           />
         </div>
       ),
@@ -249,15 +289,77 @@ export function useColumnsVender({
       field: 'name',
       width: 40,
       minWidth: 40,
-      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center gap-2 h-full'>
-          <button className='text-rose-700' onClick={() => remove(data!.name!)}>
-            x
-          </button>
-        </div>
-      ),
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        return (
+          // (compra?._count?.recepciones_almacen ?? 0) > 0 ||
+          // (compra?._count?.pagos_de_compras ?? 0) > 0 ? null : (
+          <div className='flex items-center gap-2 h-full'>
+            <Tooltip title='Eliminar'>
+              <MdDelete
+                onClick={() => remove(value!)}
+                size={15}
+                className='cursor-pointer text-rose-700 hover:scale-105 transition-all active:scale-95'
+              />
+            </Tooltip>
+          </div>
+        )
+      },
     },
   ]
 
   return columns
+}
+
+function calcularSubtotalForm({
+  form,
+  value,
+}: {
+  form: FormInstance
+  value: number
+}) {
+  form.setFieldValue(
+    ['productos', value, 'subtotal'],
+    calcularSubtotalVenta({
+      precio_venta: Number(
+        form.getFieldValue(['productos', value, 'precio_venta']) ?? 0
+      ),
+      recargo: Number(form.getFieldValue(['productos', value, 'recargo']) ?? 0),
+      descuento_tipo: form.getFieldValue([
+        'productos',
+        value,
+        'descuento_tipo',
+      ]) as DescuentoTipo,
+      descuento: Number(
+        form.getFieldValue(['productos', value, 'descuento']) ?? 0
+      ),
+      cantidad: Number(
+        form.getFieldValue(['productos', value, 'cantidad']) ?? 0
+      ),
+    })
+  )
+}
+
+export function calcularSubtotalVenta({
+  precio_venta,
+  recargo,
+  descuento_tipo,
+  descuento,
+  cantidad,
+}: {
+  precio_venta: number
+  recargo: number
+  descuento_tipo: DescuentoTipo
+  descuento: number
+  cantidad: number
+}) {
+  return (
+    (Number(precio_venta) + Number(recargo)) * Number(cantidad) -
+    (descuento_tipo === DescuentoTipo.Porcentaje
+      ? ((Number(precio_venta) + Number(recargo)) *
+          Number(descuento) *
+          Number(cantidad)) /
+        100
+      : Number(descuento))
+  )
 }

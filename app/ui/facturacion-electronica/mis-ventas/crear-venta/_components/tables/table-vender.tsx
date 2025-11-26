@@ -58,7 +58,10 @@ export default function TableVender({
     add({
       ...producto,
       subtotal: Number(
-        (Number(producto.precio_venta) * Number(producto.cantidad)).toFixed(2)
+        (
+          (Number(producto.precio_venta) + Number(producto.recargo ?? 0)) *
+          Number(producto.cantidad)
+        ).toFixed(2)
       ),
     })
   }
@@ -118,7 +121,8 @@ export default function TableVender({
                   cantidad: nueva_cantidad,
                   subtotal: Number(
                     (
-                      Number(productoAgregadoVenta.precio_venta) *
+                      (Number(productoAgregadoVenta.precio_venta) +
+                        Number(productoAgregadoVenta.recargo ?? 0)) *
                       Number(nueva_cantidad)
                     ).toFixed(2)
                   ),
@@ -136,7 +140,8 @@ export default function TableVender({
                   cantidad: nueva_cantidad,
                   subtotal: Number(
                     (
-                      Number(productoAgregadoVenta.precio_venta) *
+                      (Number(productoAgregadoVenta.precio_venta) +
+                        Number(productoAgregadoVenta.recargo ?? 0)) *
                       Number(nueva_cantidad)
                     ).toFixed(2)
                   ),

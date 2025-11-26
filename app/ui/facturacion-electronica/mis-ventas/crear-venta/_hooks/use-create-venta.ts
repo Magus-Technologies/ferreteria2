@@ -44,6 +44,7 @@ export function agruparProductos({
       unidad_derivada_name: p.unidad_derivada_name,
       unidad_derivada_factor: p.unidad_derivada_factor,
       precio_venta: p.precio_venta,
+      recargo: p.recargo,
       producto_codigo: p.producto_codigo,
     })
   }
@@ -104,11 +105,8 @@ export default function useCreateVenta() {
       almacen_id,
       productos_por_almacen: {
         create: productos_agrupados.map((p) => {
-          const unidad = p.unidades_derivadas[0]
-          const precio_unidad =
-            Number(unidad.precio_venta) / Number(unidad.unidad_derivada_factor)
           return {
-            precio: precio_unidad,
+            costo: 1,
             producto_almacen: {
               connect: {
                 producto_id_almacen_id: {
@@ -128,6 +126,7 @@ export default function useCreateVenta() {
                 factor: Number(u.unidad_derivada_factor),
                 cantidad: Number(u.cantidad),
                 cantidad_pendiente: Number(u.cantidad),
+                precio: Number(u.precio_venta),
               })),
             },
           }

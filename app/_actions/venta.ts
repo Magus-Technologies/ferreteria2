@@ -100,14 +100,15 @@ async function createVentaWA(data: Prisma.VentaUncheckedCreateInput) {
             ? parsedData.productos_por_almacen!.create
             : []
           ).reduce((acc, p) => {
-            const precio = Number(p.precio ?? 0)
             const unidades = Array.isArray(p.unidades_derivadas?.create)
               ? p.unidades_derivadas!.create
               : []
             const subtotal = unidades.reduce((s, u) => {
+              const precio = Number(u.precio ?? 0)
+              const recargo = Number(u.recargo ?? 0)
               const cantidad = Number(u.cantidad ?? 0)
               const factor = Number(u.factor ?? 0)
-              return s + cantidad * factor * precio
+              return s + cantidad * factor * (precio + recargo)
             }, 0)
             return acc + subtotal
           }, 0) ?? 0

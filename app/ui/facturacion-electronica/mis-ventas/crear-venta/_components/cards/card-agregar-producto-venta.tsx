@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react'
-import { FaBoxes, FaPlusCircle } from 'react-icons/fa'
-import { FaMoneyBill, FaWeightHanging } from 'react-icons/fa6'
+import { FaBoxes, FaPiggyBank, FaPlusCircle } from 'react-icons/fa'
+import { FaMoneyBillTrendUp, FaWeightHanging } from 'react-icons/fa6'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectBase, {
   RefSelectBaseProps,
@@ -11,10 +11,12 @@ import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { App } from 'antd'
-import { GetStock } from '~/app/_utils/get-stock'
-import { calcularNuevoStock } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/others/stock-ingreso-salida'
 import { FormCreateVenta } from '../others/body-vender'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
+import { DescuentoTipo, TipoMoneda } from '@prisma/client'
+import SelectPrecios from '~/app/_components/form/selects/select-precios'
+import { calcularSubtotalVenta } from '../tables/columns-vender'
 
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
@@ -24,6 +26,9 @@ export const valuesDefault: ValuesCardAgregarProductoVenta = {
   cantidad: undefined,
   unidad_derivada_id: undefined,
   precio_venta: undefined,
+  recargo: undefined,
+  descuento_tipo: undefined,
+  descuento: undefined,
 
   producto_id: undefined,
   producto_name: undefined,
@@ -45,6 +50,10 @@ export default function CardAgregarProductoVenta({
 
   const setProductoAgregadoVenta = useStoreProductoAgregadoVenta(
     (store) => store.setProductoAgregado
+  )
+
+  const tipo_moneda = useStoreProductoAgregadoVenta(
+    (store) => store.tipo_moneda
   )
 
   const handleChange = (
@@ -96,7 +105,7 @@ export default function CardAgregarProductoVenta({
 
   const cantidadRef = useRef<HTMLInputElement>(null)
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
-  const precio_ventaRef = useRef<HTMLInputElement>(null)
+  const precio_ventaRef = useRef<RefSelectBaseProps>(null)
   const buttom_masRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     cantidadRef.current?.focus()
@@ -141,7 +150,10 @@ export default function CardAgregarProductoVenta({
           ref={unidad_derivadaRef}
           placeholder='Unidad Derivada'
           prefix={<FaWeightHanging size={15} className='text-rose-700 mx-1' />}
-          onChange={(value) => handleChange(value, 'unidad_derivada_id')}
+          onChange={(value) => {
+            handleChange(value, 'unidad_derivada_id')
+            handleChange(null, 'precio_venta')
+          }}
           className='w-full'
           value={values.unidad_derivada_id}
           options={
@@ -152,65 +164,61 @@ export default function CardAgregarProductoVenta({
           }
         />
       </LabelBase>
-      <div className='grid grid-cols-2 font-bold text-sm'>
-        <div className='flex flex-col items-center'>
-          <div className='text-slate-500'>Costo:</div>
-          <div className='text-orange-700'>
-            S/.{' '}
-            {(
-              Number(unidad_derivada_seleccionada?.factor ?? 0) *
-              Number(producto_en_almacen?.costo ?? 0)
-            ).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 4,
-            })}
-          </div>
-        </div>
-        <div className='flex flex-col items-center'>
-          <div className='text-slate-500'>P. Público:</div>
-          <div className='text-orange-700'>
-            S/.{' '}
-            {Number(
-              unidad_derivada_seleccionada?.precio_publico ?? 0
-            ).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 4,
-            })}
-          </div>
-        </div>
-      </div>
       <LabelBase label='P. Venta:' orientation='column'>
-        <InputNumberBase
+        <SelectPrecios
+          unidadDerivada={unidad_derivada_seleccionada}
           ref={precio_ventaRef}
           placeholder='P. Venta'
-          precision={4}
-          prefix={<FaMoneyBill size={15} className={`text-rose-700 mx-1`} />}
           onChange={(value) => handleChange(value, 'precio_venta')}
+          className='w-full'
+          classNameIcon='text-rose-700'
           value={values.precio_venta}
-          min={0}
           nextInEnter={false}
           onKeyUp={(e) => {
             if (e.key === 'Enter') buttom_masRef.current?.focus()
           }}
         />
       </LabelBase>
+      <LabelBase label='Recargo:' orientation='column'>
+        <InputNumberBase
+          placeholder='Recargo'
+          precision={4}
+          prefix={
+            <FaMoneyBillTrendUp size={15} className={`text-cyan-600 mx-1`} />
+          }
+          onChange={(value) => handleChange(value, 'recargo')}
+          value={values.recargo}
+          min={0}
+        />
+      </LabelBase>
+      <LabelBase label='Descuento:' orientation='column'>
+        <div className='flex items-center gap-1'>
+          <SelectDescuentoTipo
+            value={values.descuento_tipo}
+            onChange={(value) => handleChange(value, 'descuento_tipo')}
+            formWithMessage={false}
+          />
+          <InputNumberBase
+            placeholder='Descuento'
+            precision={4}
+            prefix={<FaPiggyBank size={15} className={`text-cyan-600 mx-1`} />}
+            onChange={(value) => handleChange(value, 'descuento')}
+            value={values.descuento}
+            min={0}
+          />
+        </div>
+      </LabelBase>
       <div className='flex items-center justify-between text-2xl font-bold my-2'>
         <div className='text-slate-500'>Total:</div>
         <div>
-          <GetStock
-            stock_fraccion={calcularNuevoStock({
-              stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
-              cantidad: values.cantidad ?? 0,
-              factor: Number(
-                unidades_derivadas?.find(
-                  (item) => item.id === values.unidad_derivada_id
-                )?.factor ?? 1
-              ),
-            })}
-            unidades_contenidas={Number(
-              productoSeleccionadoSearchStore?.unidades_contenidas ?? 0
-            )}
-          />
+          {tipo_moneda === TipoMoneda.Soles ? `S/.` : `$.`}
+          {calcularSubtotalVenta({
+            precio_venta: values.precio_venta ?? 0,
+            recargo: values.recargo ?? 0,
+            cantidad: values.cantidad ?? 0,
+            descuento: values.descuento ?? 0,
+            descuento_tipo: values.descuento_tipo || DescuentoTipo.Monto,
+          })}
         </div>
       </div>
 

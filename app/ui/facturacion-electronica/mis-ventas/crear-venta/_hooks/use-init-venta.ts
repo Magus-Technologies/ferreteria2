@@ -37,9 +37,13 @@ export default function useInitVenta({
           ppa.unidades_derivadas.map((ud) => ({
             cantidad: Number(ud.cantidad),
             unidad_derivada_id: ud.unidad_derivada_normal.id,
-            precio_venta: Number(ppa.precio) * Number(ud.factor),
+            recargo: Number(ud.recargo),
+            precio_venta:
+              (Number(ud.precio) + Number(ud.recargo)) * Number(ud.factor),
             subtotal:
-              Number(ppa.precio) * Number(ud.factor) * Number(ud.cantidad),
+              (Number(ud.precio) + Number(ud.recargo)) *
+              Number(ud.factor) *
+              Number(ud.cantidad),
             marca_name: ppa.producto_almacen.producto.marca.name,
             producto_name: ppa.producto_almacen.producto.name,
             producto_codigo: ppa.producto_almacen.producto.cod_producto,

@@ -13,6 +13,9 @@ CREATE TYPE "TipoMoneda" AS ENUM ('s', 'd');
 -- CreateEnum
 CREATE TYPE "EstadoDeVenta" AS ENUM ('cr', 'ee', 'an', 'pr');
 
+-- CreateEnum
+CREATE TYPE "DescuentoTipo" AS ENUM ('%', 'm');
+
 -- CreateTable
 CREATE TABLE "Almacen" (
     "id" SERIAL NOT NULL,
@@ -567,7 +570,7 @@ CREATE TABLE "Venta" (
 CREATE TABLE "ProductoAlmacenVenta" (
     "id" SERIAL NOT NULL,
     "venta_id" TEXT NOT NULL,
-    "precio" DECIMAL(9,4) NOT NULL,
+    "costo" DECIMAL(9,4) NOT NULL,
     "producto_almacen_id" INTEGER NOT NULL,
 
     CONSTRAINT "ProductoAlmacenVenta_pkey" PRIMARY KEY ("id")
@@ -581,6 +584,10 @@ CREATE TABLE "UnidadDerivadaInmutableVenta" (
     "factor" DECIMAL(9,3) NOT NULL,
     "cantidad" DECIMAL(9,3) NOT NULL,
     "cantidad_pendiente" DECIMAL(9,3) NOT NULL,
+    "precio" DECIMAL(9,4) NOT NULL,
+    "recargo" DECIMAL(9,4) NOT NULL DEFAULT 0,
+    "descuento_tipo" "DescuentoTipo" NOT NULL DEFAULT 'm',
+    "descuento" DECIMAL(9,4) NOT NULL DEFAULT 0,
 
     CONSTRAINT "UnidadDerivadaInmutableVenta_pkey" PRIMARY KEY ("id")
 );

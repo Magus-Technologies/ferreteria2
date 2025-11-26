@@ -9,6 +9,8 @@ import SelectProductos from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
+import CardAgregarProductoVenta from '../cards/card-agregar-producto-venta'
+import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 
 export type VentaConUnidadDerivadaNormal = Omit<
   getVentaResponseProps,
@@ -33,6 +35,13 @@ export default function HeaderCrearVenta({
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] =
     useState(false)
+
+  const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
+    (store) => store.setProducto
+  )
+  const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
+    (store) => store.producto
+  )
 
   return (
     <TituloModulos
@@ -62,14 +71,14 @@ export default function HeaderCrearVenta({
             withTipoBusqueda
             showCardAgregarProductoVenta
             showUltimasCompras={false}
-            //   handleOnlyOneResult={producto => {
-            //     setProductoSeleccionadoSearchStore(producto)
-            //     if (producto) setOpenModalAgregarProducto(true)
-            //   }}
-            //   onChange={(_, producto) => {
-            //     setProductoSeleccionadoSearchStore(producto)
-            //     if (producto) setOpenModalAgregarProducto(true)
-            //   }}
+            handleOnlyOneResult={(producto) => {
+              setProductoSeleccionadoSearchStore(producto)
+              if (producto) setOpenModalAgregarProducto(true)
+            }}
+            onChange={(_, producto) => {
+              setProductoSeleccionadoSearchStore(producto)
+              if (producto) setOpenModalAgregarProducto(true)
+            }}
           />
         </div>
         // )
@@ -85,7 +94,7 @@ export default function HeaderCrearVenta({
           title={
             <div className='text-xl font-bold text-left text-balance mb-3'>
               <span className='text-slate-400 block'>AGREGAR:</span>{' '}
-              {/* {productoSeleccionadoSearchStore?.name} */}
+              {productoSeleccionadoSearchStore?.name}
             </div>
           }
           width={300}
@@ -94,7 +103,7 @@ export default function HeaderCrearVenta({
           maskClosable={false}
           keyboard={false}
         >
-          {/* <CardAgregarProductoCompra setOpen={setOpenModalAgregarProducto} /> */}
+          <CardAgregarProductoVenta setOpen={setOpenModalAgregarProducto} />
         </Modal>
       </div>
     </TituloModulos>
