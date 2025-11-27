@@ -136,6 +136,13 @@ export enum permissions {
   VENTA_CREATE = 'venta.create',
   VENTA_UPDATE = 'venta.update',
   VENTA_DELETE = 'venta.delete',
+
+  // Clientes
+  CLIENTE_BASE = 'cliente',
+  CLIENTE_LISTADO = 'cliente.listado',
+  CLIENTE_CREATE = 'cliente.create',
+  CLIENTE_UPDATE = 'cliente.update',
+  CLIENTE_DELETE = 'cliente.delete',
 }
 
 type PermisosValidos = Exclude<
@@ -157,6 +164,7 @@ type PermisosValidos = Exclude<
   | permissions.EGRESO_DINERO_BASE
   | permissions.DESPLIEGUE_DE_PAGO_BASE
   | permissions.VENTA_BASE
+  | permissions.CLIENTE_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -268,6 +276,12 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.VENTA_CREATE]: 'Crear Venta',
   [permissions.VENTA_UPDATE]: 'Actualizar Venta',
   [permissions.VENTA_DELETE]: 'Eliminar Venta',
+
+  // Clientes
+  [permissions.CLIENTE_LISTADO]: 'Ver Listado de Clientes',
+  [permissions.CLIENTE_CREATE]: 'Crear Cliente',
+  [permissions.CLIENTE_UPDATE]: 'Actualizar Cliente',
+  [permissions.CLIENTE_DELETE]: 'Eliminar Cliente',
 }
 
 export function getAllPermissions() {

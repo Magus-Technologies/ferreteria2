@@ -7,7 +7,7 @@ import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import { EstadoDeVenta, Prisma, TipoMoneda } from '@prisma/client'
+import { Prisma, TipoMoneda } from '@prisma/client'
 import { useSession } from 'next-auth/react'
 
 type ProductoAgrupado = Pick<
@@ -86,13 +86,6 @@ export default function useCreateVenta() {
       return notification.error({
         message: 'Por favor, ingresa al menos un producto',
       })
-    if (
-      estado_de_venta === EstadoDeVenta.Creado &&
-      (!values.serie || !values.numero)
-    )
-      return notification.error({
-        message: 'Por favor, ingresa la serie y el número',
-      })
 
     const productos_agrupados = agruparProductos({ productos })
     const dataFormated = {
@@ -125,7 +118,7 @@ export default function useCreateVenta() {
                 },
                 factor: Number(u.unidad_derivada_factor),
                 cantidad: Number(u.cantidad),
-                cantidad_pendiente: Number(u.cantidad),
+                // cantidad_pendiente: Number(u.cantidad),
                 precio: Number(u.precio_venta),
               })),
             },

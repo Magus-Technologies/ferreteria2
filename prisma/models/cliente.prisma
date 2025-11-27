@@ -1,0 +1,15 @@
+model Cliente {
+    id Int @id @default(autoincrement())
+
+    tipo_documento   String
+    numero_documento String  @unique
+    nombres          String?
+    apellidos        String?
+    razon_social     String?
+    direccion        String?
+    telefono         String?
+    email            String?
+    estado           Boolean @default(true)
+
+    ventas Venta[]
+}

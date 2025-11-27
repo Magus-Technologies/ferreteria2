@@ -39,6 +39,7 @@ export type FormCreateVenta = {
   tipo_de_cambio?: number
   estado_de_venta?: EstadoDeVenta
   despliegue_de_pago_id?: string
+  cliente_id?: number
 }
 
 export default function BodyVender({

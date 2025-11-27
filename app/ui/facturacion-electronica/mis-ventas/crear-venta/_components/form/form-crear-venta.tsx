@@ -6,6 +6,7 @@ import { FormInstance } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
+import FormFormaDePagoVenta from './form-forma-de-pago-venta'
 
 export default function FormCrearVenta({
   form,
@@ -93,11 +94,12 @@ export default function FormCrearVenta({
           />
         </LabelBase>
       </div>
-      {/* <div className='flex gap-6'>{(compra?._count?.pagos_de_compras ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
-        Tiene Pagos Asociados, no se puede cambiar los datos del pago.
-      </div> :
-        <FormFormaDePagoCompra form={form} />}
-      </div> */}
+      <div className='flex gap-6'>{
+      // (compra?._count?.pagos_de_compras ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
+      //   Tiene Pagos Asociados, no se puede cambiar los datos del pago.
+      // </div> :
+        <FormFormaDePagoVenta form={form} />}
+      </div>
     </div>
   )
 }

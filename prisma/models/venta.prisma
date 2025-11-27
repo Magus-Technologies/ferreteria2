@@ -21,6 +21,9 @@ model Venta {
     despliegue_de_pago_id String?
     despliegue_de_pago    DespliegueDePago? @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+    cliente_id Int?
+    cliente    Cliente? @relation(fields: [cliente_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
     user_id String
     user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
