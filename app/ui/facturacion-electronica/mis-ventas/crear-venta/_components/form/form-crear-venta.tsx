@@ -7,6 +7,7 @@ import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import FormFormaDePagoVenta from './form-forma-de-pago-venta'
+import SelectClientes from '~/app/_components/form/selects/select-clientes'
 
 export default function FormCrearVenta({
   form,
@@ -93,12 +94,45 @@ export default function FormCrearVenta({
             classNameIcon='text-rose-700 mx-1'
           />
         </LabelBase>
+        <LabelBase label='Cliente:' classNames={{ labelParent: 'mb-6' }}>
+          <SelectClientes
+            propsForm={{
+              name: 'cliente_id',
+              hasFeedback: false,
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              rules: [
+                {
+                  required: true,
+                  message: 'Selecciona el cliente',
+                },
+              ],
+            }}
+            className='w-full'
+            classNameIcon='text-rose-700 mx-1'
+          />
+        </LabelBase>
+        <LabelBase
+          label='Recomendado por:'
+          classNames={{ labelParent: 'mb-6' }}
+        >
+          <SelectClientes
+            propsForm={{
+              name: 'recomendado_por_id',
+              hasFeedback: false,
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+            }}
+            className='w-full'
+            classNameIcon='text-cyan-600 mx-1'
+          />
+        </LabelBase>
       </div>
-      <div className='flex gap-6'>{
-      // (compra?._count?.pagos_de_compras ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
-      //   Tiene Pagos Asociados, no se puede cambiar los datos del pago.
-      // </div> :
-        <FormFormaDePagoVenta form={form} />}
+      <div className='flex gap-6'>
+        {
+          // (compra?._count?.pagos_de_compras ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
+          //   Tiene Pagos Asociados, no se puede cambiar los datos del pago.
+          // </div> :
+          <FormFormaDePagoVenta form={form} />
+        }
       </div>
     </div>
   )

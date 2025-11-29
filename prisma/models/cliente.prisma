@@ -1,15 +1,21 @@
+enum TipoCliente {
+    Persona @map("p")
+    Empresa @map("e")
+}
+
 model Cliente {
     id Int @id @default(autoincrement())
 
-    tipo_documento   String
-    numero_documento String  @unique
+    tipo_cliente     TipoCliente @default(Persona)
+    numero_documento String      @unique
     nombres          String?
     apellidos        String?
     razon_social     String?
     direccion        String?
     telefono         String?
     email            String?
-    estado           Boolean @default(true)
+    estado           Boolean     @default(true)
 
-    ventas Venta[]
+    ventas          Venta[] @relation("cliente")
+    recomendaciones Venta[] @relation("recomendado_por")
 }

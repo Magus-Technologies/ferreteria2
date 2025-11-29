@@ -26,11 +26,11 @@ model DespliegueDePago {
     metodo_de_pago_id String
     metodo_de_pago    MetodoDePago @relation(fields: [metodo_de_pago_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-    pagos_de_compras PagoDeCompra[]
-    compras          Compra[]
-    ventas           Venta[]
-    egresos_dinero   EgresoDinero[]
-    ingresos_dinero  IngresoDinero[]
+    pagos_de_compras          PagoDeCompra[]
+    compras                   Compra[]
+    despliegues_de_pago_venta DespliegueDePagoVenta[]
+    egresos_dinero            EgresoDinero[]
+    ingresos_dinero           IngresoDinero[]
 }
 
 model AperturaYCierreCaja {

@@ -15,6 +15,7 @@ import useInitVenta from '../../_hooks/use-init-venta'
 import { VentaConUnidadDerivadaNormal } from './header-crear-venta'
 import FormTableVender from '../form/form-table-vender'
 import FormCrearVenta from '../form/form-crear-venta'
+import CardsInfoVenta from '../cards/cards-info-venta'
 
 export type FormCreateVenta = {
   productos: Array<{
@@ -40,6 +41,10 @@ export type FormCreateVenta = {
   estado_de_venta?: EstadoDeVenta
   despliegue_de_pago_id?: string
   cliente_id?: number
+  metodos_de_pago?: Array<{
+    despliegue_de_pago_id: string
+    monto: number
+  }>
 }
 
 export default function BodyVender({
@@ -62,7 +67,7 @@ export default function BodyVender({
         <FormTableVender form={form} venta={venta} />
         <FormCrearVenta form={form} venta={venta} />
       </div>
-      {/* <CardsInfoVender form={form} venta={venta} /> */}
+      <CardsInfoVenta form={form} />
     </FormBase>
   )
 }

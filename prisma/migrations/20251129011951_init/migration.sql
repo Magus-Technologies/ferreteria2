@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "TipoCliente" AS ENUM ('p', 'e');
+
+-- CreateEnum
 CREATE TYPE "TipoDocumento" AS ENUM ('01', '03', 'nv', 'in', 'sa', 'rc');
 
 -- CreateEnum
@@ -120,6 +123,22 @@ CREATE TABLE "AperturaYCierreCaja" (
     "user_id" TEXT NOT NULL,
 
     CONSTRAINT "AperturaYCierreCaja_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Cliente" (
+    "id" SERIAL NOT NULL,
+    "tipo_cliente" "TipoCliente" NOT NULL DEFAULT 'p',
+    "numero_documento" TEXT NOT NULL,
+    "nombres" TEXT,
+    "apellidos" TEXT,
+    "razon_social" TEXT,
+    "direccion" TEXT,
+    "telefono" TEXT,
+    "email" TEXT,
+    "estado" BOOLEAN NOT NULL DEFAULT true,
+
+    CONSTRAINT "Cliente_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -556,14 +575,24 @@ CREATE TABLE "Venta" (
     "tipo_de_cambio" DECIMAL(9,4) NOT NULL DEFAULT 1,
     "fecha" TIMESTAMP(3) NOT NULL,
     "estado_de_venta" "EstadoDeVenta" NOT NULL DEFAULT 'cr',
-    "despliegue_de_pago_id" TEXT,
+    "cliente_id" INTEGER,
+    "recomendado_por_id" INTEGER,
     "user_id" TEXT NOT NULL,
     "almacen_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "ingresoDineroId" TEXT,
 
     CONSTRAINT "Venta_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DespliegueDePagoVenta" (
+    "id" SERIAL NOT NULL,
+    "venta_id" TEXT NOT NULL,
+    "despliegue_de_pago_id" TEXT NOT NULL,
+    "monto" DECIMAL(9,4) NOT NULL,
+
+    CONSTRAINT "DespliegueDePagoVenta_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -651,6 +680,9 @@ CREATE INDEX "AperturaYCierreCaja_fecha_apertura_idx" ON "AperturaYCierreCaja"("
 
 -- CreateIndex
 CREATE INDEX "AperturaYCierreCaja_fecha_cierre_idx" ON "AperturaYCierreCaja"("fecha_cierre");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Cliente_numero_documento_key" ON "Cliente"("numero_documento");
 
 -- CreateIndex
 CREATE INDEX "Compra_fecha_idx" ON "Compra"("fecha");
@@ -741,6 +773,9 @@ CREATE INDEX "EgresoDinero_createdAt_idx" ON "EgresoDinero"("createdAt");
 
 -- CreateIndex
 CREATE INDEX "Venta_fecha_idx" ON "Venta"("fecha");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DespliegueDePagoVenta_venta_id_despliegue_de_pago_id_key" ON "DespliegueDePagoVenta"("venta_id", "despliegue_de_pago_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ProductoAlmacenVenta_venta_id_producto_almacen_id_key" ON "ProductoAlmacenVenta"("venta_id", "producto_almacen_id");
@@ -914,13 +949,22 @@ ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_despliegue_de_pago_id_fk
 ALTER TABLE "EgresoDinero" ADD CONSTRAINT "EgresoDinero_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Venta" ADD CONSTRAINT "Venta_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Venta" ADD CONSTRAINT "Venta_cliente_id_fkey" FOREIGN KEY ("cliente_id") REFERENCES "Cliente"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Venta" ADD CONSTRAINT "Venta_recomendado_por_id_fkey" FOREIGN KEY ("recomendado_por_id") REFERENCES "Cliente"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Venta" ADD CONSTRAINT "Venta_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Venta" ADD CONSTRAINT "Venta_almacen_id_fkey" FOREIGN KEY ("almacen_id") REFERENCES "Almacen"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DespliegueDePagoVenta" ADD CONSTRAINT "DespliegueDePagoVenta_venta_id_fkey" FOREIGN KEY ("venta_id") REFERENCES "Venta"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DespliegueDePagoVenta" ADD CONSTRAINT "DespliegueDePagoVenta_despliegue_de_pago_id_fkey" FOREIGN KEY ("despliegue_de_pago_id") REFERENCES "DespliegueDePago"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProductoAlmacenVenta" ADD CONSTRAINT "ProductoAlmacenVenta_venta_id_fkey" FOREIGN KEY ("venta_id") REFERENCES "Venta"("id") ON DELETE CASCADE ON UPDATE CASCADE;

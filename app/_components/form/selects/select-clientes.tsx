@@ -1,16 +1,24 @@
+'use client'
+
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
 import { Cliente } from '@prisma/client'
-import { FaUser } from 'react-icons/fa'
+import { FaSearch, FaUser } from 'react-icons/fa'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 import { getClienteResponseProps } from '~/app/_actions/cliente'
 import useGetClientes from '~/app/ui/facturacion-electronica/mis-ventas/_hooks/use-get-clientes'
 import { useDebounce } from 'use-debounce'
+import ButtonCreateCliente from '../buttons/button-create-cliente'
+import ModalClienteSearch from '../../modals/modal-cliente-search'
+import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
 
 interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
   onChange?: (value: number, cliente?: getClienteResponseProps) => void
+  showButtonCreate?: boolean
+  classIconSearch?: string
+  classIconCreate?: string
   clienteOptionsDefault?: Pick<Cliente, 'id' | 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>[]
 }
 
@@ -19,6 +27,9 @@ export default function SelectClientes({
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 18,
+  showButtonCreate = false,
+  classIconSearch = '',
+  classIconCreate = '',
   clienteOptionsDefault = [],
   onChange,
   ...props
@@ -26,18 +37,35 @@ export default function SelectClientes({
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
 
+  const [openModalClienteSearch, setOpenModalClienteSearch] = useState(false)
+
+  const [clienteCreado, setClienteCreado] = useState<Cliente>()
   const [clienteSeleccionado, setClienteSeleccionado] =
     useState<getClienteResponseProps>()
 
+  const clienteSeleccionadoStore = useStoreClienteSeleccionado(
+    store => store.cliente
+  )
+  const setClienteSeleccionadoStore = useStoreClienteSeleccionado(
+    store => store.setCliente
+  )
+
+  const [textDefault, setTextDefault] = useState('')
+  useEffect(() => {
+    if (text) setTextDefault(text)
+  }, [text])
+
   function handleSelect({ data }: { data?: getClienteResponseProps } = {}) {
     setText('')
-    const cliente = data
+    const cliente = data || clienteSeleccionadoStore
     if (cliente) {
       setClienteSeleccionado(cliente)
       iterarChangeValue({
         refObject: selectClientesRef,
         value: cliente.id,
       })
+      setClienteSeleccionadoStore(undefined)
+      setOpenModalClienteSearch(false)
       onChange?.(cliente.id, cliente)
     }
   }
@@ -70,6 +98,14 @@ export default function SelectClientes({
         placeholder={placeholder}
         loading={loading}
         options={[
+          ...(clienteCreado
+            ? [
+                {
+                  value: clienteCreado.id,
+                  label: getLabel(clienteCreado),
+                },
+              ]
+            : []),
           ...(clienteSeleccionado
             ? [
                 {
@@ -86,25 +122,25 @@ export default function SelectClientes({
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
         )}
-        onKeyUp={() => {
-        //   if (e.key === 'Enter') setOpenModalClienteSearch(true)
+        onKeyUp={e => {
+          if (e.key === 'Enter') setOpenModalClienteSearch(true)
         }}
         open={false}
         {...props}
       />
-      {/* <FaSearch
+      <FaSearch
         className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
         onClick={() => setOpenModalClienteSearch(true)}
-      /> */}
-      {/* <ModalClienteSearch
+      />
+      <ModalClienteSearch
         open={openModalClienteSearch}
         setOpen={setOpenModalClienteSearch}
         onOk={() => handleSelect()}
         textDefault={textDefault}
         onRowDoubleClicked={handleSelect}
-      /> */}
-      {/* {showButtonCreate && (
+      />
+      {showButtonCreate && (
         <ButtonCreateCliente
           onSuccess={res => {
             setClienteCreado(res)
@@ -117,7 +153,7 @@ export default function SelectClientes({
           setTextDefault={setTextDefault}
           className={classIconCreate}
         />
-      )} */}
+      )}
     </div>
   )
 }
