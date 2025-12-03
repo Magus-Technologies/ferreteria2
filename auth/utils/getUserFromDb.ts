@@ -29,7 +29,6 @@ export const getUserFromDb = async (email: string, pwHash: string) => {
   )
 
   const userWithAllPermissions = {
-    // ...user,
     id: user.id,
     efectivo: user.efectivo.toNumber(),
     empresa: user.empresa,
