@@ -35,13 +35,13 @@ jobs:
           cache: 'npm'
 
       # Cache para .next/cache
-      - name: Cache Next.js build
-        uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-
+      # - name: Cache Next.js build
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: .next/cache
+      #     key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nextjs-
 
       - run: npm i # Cambiar a ci en producción
       - run: npx prisma generate
