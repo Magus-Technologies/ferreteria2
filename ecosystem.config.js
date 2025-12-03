@@ -13,6 +13,7 @@ module.exports = {
         AUTH_SECRET: process.env.AUTH_SECRET,
         AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
         AUTH_URL: process.env.AUTH_URL,
+        RENIEC_TOKEN: process.env.RENIEC_TOKEN,
       },
     },
   ],
