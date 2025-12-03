@@ -3,7 +3,7 @@
 module.exports = {
   apps: [
     {
-      name: 'ferreteria',
+      name: 'ferreteriav2',
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
       instances: 1,

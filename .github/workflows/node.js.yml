@@ -53,5 +53,5 @@ jobs:
       - run: |
           # Crear symlink solo si no existe
           [ -L ./public/uploads ] || ln -s /var/ferreteria_uploads ./public/uploads
-          pm2 delete ferreteria || true
-          pm2 start ecosystem.config.js --only ferreteria --update-env
+          pm2 delete ferreteriav2 || true
+          pm2 start ecosystem.config.js --only ferreteriav2 --update-env
