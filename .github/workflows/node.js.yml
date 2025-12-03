@@ -47,6 +47,11 @@ jobs:
       - run: npx prisma generate
       - run: npm run lint
       # - run: npx tsc --noEmit # Comentado porque consume mucha ram, se debe validar haciendo `npm run build` antes de hacer push a github
+
+      # <<< Paso agregado: limpiar build anterior
+      - name: Clean previous Next.js build
+        run: rm -rf .next
+
       - run: npm run build:server
       - run: npx prisma migrate deploy
       - run: npm run seed
