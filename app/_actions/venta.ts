@@ -9,7 +9,6 @@ import {
   VentaUncheckedCreateInputSchema,
   VentaWhereInputSchema,
 } from '~/prisma/generated/zod'
-// import { DespliegueDePago } from './lib/lib-caja'
 
 const includeVenta = {
   productos_por_almacen: {
