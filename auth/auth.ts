@@ -56,8 +56,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const result = schemaLogin.safeParse(credentials)
         if (!result.success) return null
         const { email, password } = result.data
+        console.log('🚀 ~ email:', email)
 
         const user = await getUserFromDb(email, password)
+        console.log('🚀 ~ user:', user)
 
         if (!user) return null
 
