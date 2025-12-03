@@ -56,10 +56,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const result = schemaLogin.safeParse(credentials)
         if (!result.success) return null
         const { email, password } = result.data
-        console.log('🚀 ~ email:', email)
 
         const user = await getUserFromDb(email, password)
-        console.log('🚀 ~ user:', user)
 
         if (!user) return null
 
@@ -72,6 +70,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log('🚀 ~ token:', token)
+      console.log('🚀 ~ user:', user)
       if (user) {
         token.all_permissions = user.all_permissions
         token.empresa = user.empresa
@@ -81,6 +81,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token
     },
     async session({ session, token }) {
+      console.log('🚀 ~ session:', session)
+      console.log('🚀 ~ token:', token)
       if (session.user) {
         session.user.all_permissions = token.all_permissions
         session.user.empresa = token.empresa
