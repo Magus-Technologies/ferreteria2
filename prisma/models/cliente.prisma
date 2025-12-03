@@ -8,9 +8,9 @@ model Cliente {
 
     tipo_cliente     TipoCliente @default(Persona)
     numero_documento String      @unique
-    nombres          String?
-    apellidos        String?
-    razon_social     String?
+    nombres          String
+    apellidos        String
+    razon_social     String
     direccion        String?
     telefono         String?
     email            String?

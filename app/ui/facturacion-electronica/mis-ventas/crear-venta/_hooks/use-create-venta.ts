@@ -1,14 +1,14 @@
-import { createVenta } from '~/app/_actions/venta'
+// import { createVenta } from '~/app/_actions/venta'
 import { FormCreateVenta } from '../_components/others/body-vender'
-import { useServerMutation } from '~/hooks/use-server-mutation'
-import { toUTCBD } from '~/utils/fechas'
-import { useStoreAlmacen } from '~/store/store-almacen'
-import useApp from 'antd/es/app/useApp'
-import { useRouter } from 'next/navigation'
-import usePermission from '~/hooks/use-permission'
-import { permissions } from '~/lib/permissions'
-import { Prisma, TipoMoneda } from '@prisma/client'
-import { useSession } from 'next-auth/react'
+// import { useServerMutation } from '~/hooks/use-server-mutation'
+// import { toUTCBD } from '~/utils/fechas'
+// import { useStoreAlmacen } from '~/store/store-almacen'
+// import useApp from 'antd/es/app/useApp'
+// import { useRouter } from 'next/navigation'
+// import usePermission from '~/hooks/use-permission'
+// import { permissions } from '~/lib/permissions'
+// import { Prisma, TipoMoneda } from '@prisma/client'
+// import { useSession } from 'next-auth/react'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -52,82 +52,84 @@ export function agruparProductos({
 }
 
 export default function useCreateVenta() {
-  const router = useRouter()
-  const { data: session } = useSession()
-  const user_id = session?.user?.id
-  const can = usePermission()
-  const { notification } = useApp()
-  const almacen_id = useStoreAlmacen((store) => store.almacen_id)
-  const { execute, loading } = useServerMutation({
-    action: createVenta,
-    onSuccess: async () => {
-      router.push(`/ui/facturacion-electronica`)
-    },
-    msgSuccess: `Venta creada exitosamente`,
-  })
+  // const router = useRouter()
+  // const { data: session } = useSession()
+  // const user_id = session?.user?.id
+  // const can = usePermission()
+  // const { notification } = useApp()
+  // const almacen_id = useStoreAlmacen((store) => store.almacen_id)
+  // const { execute, loading } = useServerMutation({
+  //   action: createVenta,
+  //   onSuccess: async () => {
+  //     router.push(`/ui/facturacion-electronica`)
+  //   },
+  //   msgSuccess: `Venta creada exitosamente`,
+  // })
 
   async function handleSubmit(values: FormCreateVenta) {
-    if (!can(permissions.FACTURACION_ELECTRONICA_INDEX))
-      return notification.error({
-        message: 'No tienes permiso para crear una venta',
-      })
-    if (!user_id)
-      return notification.error({ message: 'No hay un usuario seleccionado' })
-    if (!almacen_id)
-      return notification.error({ message: 'No hay un almacen seleccionado' })
-    const {
-      productos,
-      tipo_de_cambio,
-      tipo_moneda,
-      estado_de_venta,
-      ...restValues
-    } = values
-    if (!productos || productos.length === 0)
-      return notification.error({
-        message: 'Por favor, ingresa al menos un producto',
-      })
+    console.log('🚀 ~ handleSubmit ~ values:', values)
+    return
+    // if (!can(permissions.FACTURACION_ELECTRONICA_INDEX))
+    //   return notification.error({
+    //     message: 'No tienes permiso para crear una venta',
+    //   })
+    // if (!user_id)
+    //   return notification.error({ message: 'No hay un usuario seleccionado' })
+    // if (!almacen_id)
+    //   return notification.error({ message: 'No hay un almacen seleccionado' })
+    // const {
+    //   productos,
+    //   tipo_de_cambio,
+    //   tipo_moneda,
+    //   estado_de_venta,
+    //   ...restValues
+    // } = values
+    // if (!productos || productos.length === 0)
+    //   return notification.error({
+    //     message: 'Por favor, ingresa al menos un producto',
+    //   })
 
-    const productos_agrupados = agruparProductos({ productos })
-    const dataFormated = {
-      ...restValues,
-      estado_de_venta,
-      tipo_moneda,
-      tipo_de_cambio: tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
-      user_id,
-      fecha: toUTCBD({ date: restValues.fecha })!,
-      almacen_id,
-      productos_por_almacen: {
-        create: productos_agrupados.map((p) => {
-          return {
-            costo: 1,
-            producto_almacen: {
-              connect: {
-                producto_id_almacen_id: {
-                  almacen_id,
-                  producto_id: p.producto_id,
-                },
-              },
-            },
-            unidades_derivadas: {
-              create: p.unidades_derivadas.map((u) => ({
-                unidad_derivada_inmutable: {
-                  connectOrCreate: {
-                    where: { name: u.unidad_derivada_name },
-                    create: { name: u.unidad_derivada_name },
-                  },
-                },
-                factor: Number(u.unidad_derivada_factor),
-                cantidad: Number(u.cantidad),
-                // cantidad_pendiente: Number(u.cantidad),
-                precio: Number(u.precio_venta),
-              })),
-            },
-          }
-        }),
-      },
-    } satisfies Prisma.VentaUncheckedCreateInput
-    execute(dataFormated)
+    // const productos_agrupados = agruparProductos({ productos })
+    // const dataFormated = {
+    //   ...restValues,
+    //   estado_de_venta,
+    //   tipo_moneda,
+    //   tipo_de_cambio: tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
+    //   user_id,
+    //   fecha: toUTCBD({ date: restValues.fecha })!,
+    //   almacen_id,
+    //   productos_por_almacen: {
+    //     create: productos_agrupados.map((p) => {
+    //       return {
+    //         costo: 1,
+    //         producto_almacen: {
+    //           connect: {
+    //             producto_id_almacen_id: {
+    //               almacen_id,
+    //               producto_id: p.producto_id,
+    //             },
+    //           },
+    //         },
+    //         unidades_derivadas: {
+    //           create: p.unidades_derivadas.map((u) => ({
+    //             unidad_derivada_inmutable: {
+    //               connectOrCreate: {
+    //                 where: { name: u.unidad_derivada_name },
+    //                 create: { name: u.unidad_derivada_name },
+    //               },
+    //             },
+    //             factor: Number(u.unidad_derivada_factor),
+    //             cantidad: Number(u.cantidad),
+    //             // cantidad_pendiente: Number(u.cantidad),
+    //             precio: Number(u.precio_venta),
+    //           })),
+    //         },
+    //       }
+    //     }),
+    //   },
+    // } satisfies Prisma.VentaUncheckedCreateInput
+    // execute(dataFormated)
   }
 
-  return { handleSubmit, loading }
+  return { handleSubmit, loading: false }
 }

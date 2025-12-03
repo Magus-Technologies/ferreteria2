@@ -7,7 +7,6 @@ import { permissions } from '~/lib/permissions'
 import {
   ClienteFindManyArgsSchema,
   ClienteUncheckedCreateInputSchema,
-  ClienteUncheckedUpdateInputSchema,
 } from '~/prisma/generated/zod'
 import can from '~/utils/server-validate-permission'
 
@@ -55,13 +54,13 @@ export const createCliente = withAuth(createClienteWA)
 async function editarClienteWA({
   data,
 }: {
-  data: Prisma.ClienteUncheckedUpdateInput & { id: number }
+  data: Prisma.ClienteUncheckedCreateInput
 }) {
   const puede = await can(permissions.CLIENTE_UPDATE)
   if (!puede) throw new Error('No tienes permiso para editar Clientes')
 
   const { id, ...rest } = data
-  const dataParsed = ClienteUncheckedUpdateInputSchema.parse(rest)
+  const dataParsed = ClienteUncheckedCreateInputSchema.parse(rest)
 
   try {
     const item = await prisma.cliente.update({

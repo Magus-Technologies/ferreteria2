@@ -32,6 +32,7 @@ export type FormCreateVenta = {
     subtotal: number
     descuento_tipo?: DescuentoTipo
     descuento?: number
+    comision?: number
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago

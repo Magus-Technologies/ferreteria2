@@ -1,4 +1,4 @@
-import { Cliente } from '@prisma/client'
+import { Cliente, TipoCliente } from '@prisma/client'
 import { Form } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -16,6 +16,17 @@ interface ModalCreateClienteProps {
   setTextDefault?: (text: string) => void
 }
 
+export interface FormCreateClienteValues {
+  tipo_cliente: TipoCliente
+  numero_documento: string
+  razon_social: string
+  nombres: string
+  apellidos: string
+  direccion?: string | null
+  telefono?: string | null
+  email?: string | null
+}
+
 export default function ModalCreateCliente({
   open,
   setOpen,
@@ -24,10 +35,10 @@ export default function ModalCreateCliente({
   textDefault,
   setTextDefault,
 }: ModalCreateClienteProps) {
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<FormCreateClienteValues>()
 
   const { crearClienteForm, loading } = useCreateCliente({
-    onSuccess: res => {
+    onSuccess: (res) => {
       setOpen(false)
       form.resetFields()
       onSuccess?.(res.data!)
@@ -73,7 +84,7 @@ export default function ModalCreateCliente({
         onFinish: crearClienteForm,
       }}
     >
-        <FormCreateCliente form={form} dataEdit={dataEdit} />
+      <FormCreateCliente form={form} dataEdit={dataEdit} />
     </ModalForm>
   )
 }

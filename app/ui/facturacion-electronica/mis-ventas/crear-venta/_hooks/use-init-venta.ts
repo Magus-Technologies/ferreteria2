@@ -30,8 +30,6 @@ export default function useInitVenta({
         tipo_de_cambio: Number(venta.tipo_de_cambio),
         // cliente_id: venta.cliente_id || undefined,
         tipo_documento: venta.tipo_documento,
-        serie: venta.serie || undefined,
-        numero: venta.numero || undefined,
         forma_de_pago: venta.forma_de_pago,
         productos: venta.productos_por_almacen.flatMap((ppa) =>
           ppa.unidades_derivadas.map((ud) => ({

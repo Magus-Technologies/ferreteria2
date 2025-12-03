@@ -86,6 +86,27 @@ export default function CardAgregarProductoVenta({
       (item) => item.unidad_derivada.id === values.unidad_derivada_id
     )
 
+    let comision = 0
+    if (unidad_derivada) {
+      if (
+        Number(unidad_derivada.precio_publico) === Number(values.precio_venta)
+      ) {
+        comision = Number(unidad_derivada.comision_publico ?? 0)
+      } else if (
+        Number(unidad_derivada.precio_especial) === Number(values.precio_venta)
+      ) {
+        comision = Number(unidad_derivada.comision_especial ?? 0)
+      } else if (
+        Number(unidad_derivada.precio_minimo) === Number(values.precio_venta)
+      ) {
+        comision = Number(unidad_derivada.comision_minimo ?? 0)
+      } else if (
+        Number(unidad_derivada.precio_ultimo) === Number(values.precio_venta)
+      ) {
+        comision = Number(unidad_derivada.comision_ultimo ?? 0)
+      }
+    }
+
     const valuesFormated = {
       ...values,
       producto_id: productoSeleccionadoSearchStore?.id,
@@ -95,6 +116,7 @@ export default function CardAgregarProductoVenta({
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name,
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_venta: values.precio_venta,
+      comision,
     }
 
     onOk?.(valuesFormated)

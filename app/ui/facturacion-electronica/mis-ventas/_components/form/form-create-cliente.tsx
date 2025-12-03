@@ -8,6 +8,10 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import { BsGeoAltFill } from 'react-icons/bs'
 import { FaMobileButton } from 'react-icons/fa6'
 import { getClienteResponseProps } from '~/app/_actions/cliente'
+import SelectTipoCliente from '~/app/_components/form/selects/select-tipo-cliente'
+import { Form } from 'antd'
+import { useEffect } from 'react'
+import { TipoCliente } from '@prisma/client'
 
 export default function FormCreateCliente({
   form,
@@ -16,9 +20,25 @@ export default function FormCreateCliente({
   form: FormInstance
   dataEdit?: getClienteResponseProps
 }) {
+  const numero_documento = Form.useWatch('numero_documento', form)
+
+  useEffect(() => {
+    if (numero_documento?.length === 8) {
+      form.setFieldValue('tipo_cliente', TipoCliente.Persona)
+    } else if (numero_documento?.length === 11) {
+      form.setFieldValue('tipo_cliente', TipoCliente.Empresa)
+    }
+  }, [numero_documento, form])
+
   return (
     <>
-      <div className='flex items-center justify-center mt-4'>
+      <SelectTipoCliente
+        propsForm={{
+          name: 'tipo_cliente',
+          className: 'hidden',
+        }}
+      />
+      <div className='flex items-center justify-center mt-5'>
         <LabelBase
           label='Ruc / DNI:'
           className='w-full'
@@ -32,6 +52,16 @@ export default function FormCreateCliente({
                 {
                   required: true,
                   message: 'Por favor, ingresa el RUC o DNI',
+                },
+                {
+                  validator: (_, value) => {
+                    if (!value || value.length === 8 || value.length === 11) {
+                      return Promise.resolve()
+                    }
+                    return Promise.reject(
+                      new Error('El documento debe tener 8 o 11 caracteres')
+                    )
+                  },
                 },
               ],
             }}

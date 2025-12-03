@@ -20,6 +20,8 @@ export function useColumnsVender({
   cantidad_pendiente?: boolean
   venta?: VentaConUnidadDerivadaNormal
 }) {
+  console.log('🚀 ~ useColumnsVender ~ venta:', venta)
+  console.log('🚀 ~ useColumnsVender ~ cantidad_pendiente:', cantidad_pendiente)
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
 
   const columns: ColDef<FormListFieldData>[] = [

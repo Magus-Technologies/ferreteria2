@@ -31,17 +31,17 @@ export function useColumnsClientes({
       minWidth: 300,
       filter: true,
       flex: 1,
-      valueGetter: params => {
-          if (params.data?.razon_social) return params.data.razon_social
-          return `${params.data?.nombres} ${params.data?.apellidos}`
-      }
+      valueGetter: (params) => {
+        if (params.data?.razon_social) return params.data.razon_social
+        return `${params.data?.nombres} ${params.data?.apellidos}`
+      },
     },
     {
       headerName: 'Dirección',
       field: 'direccion',
       width: 120,
       minWidth: 120,
-      valueFormatter: params => params.value || '-',
+      valueFormatter: (params) => params.value || '-',
       filter: true,
     },
     {
@@ -49,7 +49,7 @@ export function useColumnsClientes({
       field: 'telefono',
       width: 120,
       minWidth: 120,
-      valueFormatter: params => params.value || '-',
+      valueFormatter: (params) => params.value || '-',
       filter: true,
     },
     {
@@ -57,20 +57,18 @@ export function useColumnsClientes({
       field: 'email',
       width: 120,
       minWidth: 120,
-      valueFormatter: params => params.value || '-',
+      valueFormatter: (params) => params.value || '-',
       filter: true,
     },
     {
       headerName: 'Acciones',
       field: 'id',
       width: 80,
-      cellRenderer: (
-        params: ICellRendererParams<getClienteResponseProps>
-      ) => {
+      cellRenderer: (params: ICellRendererParams<getClienteResponseProps>) => {
         return (
           <ColumnAction
             id={params.value}
-            permiso={permissions.CLIENTE_DELETE}
+            permiso={permissions.CLIENTE_BASE}
             propsDelete={{
               action: eliminarCliente,
               msgSuccess: 'Cliente eliminado correctamente',

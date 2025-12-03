@@ -7,6 +7,7 @@ import {
 import { useServerMutation } from '~/hooks/use-server-mutation'
 import { ServerResult } from '~/auth/middleware-server-actions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { FormCreateClienteValues } from '../_components/modals/modal-create-cliente'
 
 export default function useCreateCliente({
   onSuccess,
@@ -22,7 +23,7 @@ export default function useCreateCliente({
     msgSuccess: `Cliente ${dataEdit ? 'editado' : 'creado'} exitosamente`,
   })
 
-  function crearClienteForm(values: any) {
+  function crearClienteForm(values: FormCreateClienteValues) {
     const data = {
       ...values,
       id: dataEdit?.id,

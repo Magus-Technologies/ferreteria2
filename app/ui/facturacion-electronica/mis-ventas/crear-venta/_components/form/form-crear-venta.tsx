@@ -16,6 +16,7 @@ export default function FormCrearVenta({
   form: FormInstance
   venta?: VentaConUnidadDerivadaNormal
 }) {
+  console.log('🚀 ~ FormCrearVenta ~ venta:', venta)
   return (
     <div className='flex flex-col'>
       <div className='flex gap-6'>

@@ -90,6 +90,7 @@ model UnidadDerivadaInmutableVenta {
     recargo            Decimal       @default(0) @db.Decimal(9, 4)
     descuento_tipo     DescuentoTipo @default(Monto)
     descuento          Decimal       @default(0) @db.Decimal(9, 4)
+    comision           Decimal       @default(0) @db.Decimal(9, 4)
 
     @@unique([producto_almacen_venta_id, unidad_derivada_inmutable_id])
 }
