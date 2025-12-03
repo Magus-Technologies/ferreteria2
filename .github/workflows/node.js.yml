@@ -35,23 +35,18 @@ jobs:
           cache: 'npm'
 
       # Cache para .next/cache
-      # - name: Cache Next.js build
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: .next/cache
-      #     key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-nextjs-
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
 
       - run: npm i # Cambiar a ci en producción
       - run: npx prisma generate
       - run: npm run lint
       # - run: npx tsc --noEmit # Comentado porque consume mucha ram, se debe validar haciendo `npm run build` antes de hacer push a github
-
-      # <<< Paso agregado: limpiar build anterior
-      - name: Clean previous Next.js build
-        run: rm -rf .next
-
       - run: npm run build:server
       - run: npx prisma migrate deploy
       - run: npm run seed
