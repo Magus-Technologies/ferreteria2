@@ -1,21 +1,16 @@
 model Empresa {
-    id Int @id @default(autoincrement())
-
-    almacen_predeterminado Almacen @relation(fields: [almacen_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-    almacen_id             Int
-
-    marca_predeterminada Marca @relation(fields: [marca_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-    marca_id             Int
-
-    serie_ingreso           Int @default(1)
-    serie_salida            Int @default(1)
-    serie_recepcion_almacen Int @default(1)
-
-    ruc          String
-    razon_social String
-    direccion    String
-    telefono     String
-    email        String
-
-    users User[]
+  id                      Int     @id @default(autoincrement())
+  almacen_id              Int
+  marca_id                Int
+  serie_ingreso           Int     @default(1)
+  serie_salida            Int     @default(1)
+  serie_recepcion_almacen Int     @default(1)
+  ruc                     String
+  razon_social            String
+  direccion               String
+  telefono                String
+  email                   String
+  almacen_predeterminado  Almacen @relation(fields: [almacen_id], references: [id])
+  marca_predeterminada    Marca   @relation(fields: [marca_id], references: [id])
+  users                   User[]
 }

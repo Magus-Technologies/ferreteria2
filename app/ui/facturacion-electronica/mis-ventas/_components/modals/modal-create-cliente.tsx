@@ -49,9 +49,11 @@ export default function ModalCreateCliente({
   useEffect(() => {
     form.resetFields()
     if (dataEdit) {
-      form.setFieldsValue({
-        ...dataEdit,
-      })
+      // Transformar null a undefined para compatibilidad con Ant Design Form
+      const formValues = Object.fromEntries(
+        Object.entries(dataEdit).map(([key, value]) => [key, value ?? undefined])
+      )
+      form.setFieldsValue(formValues)
     } else {
       form.setFieldsValue({
         numero_documento: textDefault,

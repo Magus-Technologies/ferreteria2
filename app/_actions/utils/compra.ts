@@ -54,7 +54,7 @@ export async function validarNuevaCompra({
 
   if (
     parsedData.estado_de_compra === EstadoDeCompra.Creado &&
-    parsedData.forma_de_pago === FormaDePago.Crédito &&
+    parsedData.forma_de_pago === FormaDePago.cr &&
     (parsedData.egreso_dinero_id || parsedData.despliegue_de_pago_id)
   )
     throw new Error(

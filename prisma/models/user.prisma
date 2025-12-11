@@ -1,86 +1,77 @@
 model User {
-    id            String          @id @default(cuid())
-    name          String?
-    email         String          @unique
-    password      String
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    // Optional for WebAuthn support
-    Authenticator Authenticator[]
-
-    // Adicionales
-    empresa        Empresa               @relation(fields: [empresa_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    empresa_id     Int
-    cajas          AperturaYCierreCaja[]
-    efectivo       Decimal               @default(0) @db.Decimal(9, 2)
-    ingresosDinero IngresoDinero[]
-    egresosDinero  EgresoDinero[]
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    roles       Role[]
-    permissions Permission[]
-
-    ingresos_salidas    IngresoSalida[]
-    compras             Compra[]
-    ventas              Venta[]
-    recepciones_almacen RecepcionAlmacen[]
+  id                  String                @id @default(cuid())
+  name                String?
+  email               String                @unique
+  password            String
+  emailVerified       DateTime?
+  image               String?
+  empresa_id          Int
+  efectivo            Decimal               @default(0) @db.Decimal(9, 2)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  accounts            Account[]
+  cajas               AperturaYCierreCaja[]
+  Authenticator       Authenticator[]
+  compras             Compra[]
+  egresosDinero       EgresoDinero[]
+  entregas_chofer     EntregaProducto[]     @relation("chofer_entrega")
+  entregas_productos  EntregaProducto[]     @relation("usuario_entrega")
+  ingresosDinero      IngresoDinero[]
+  ingresos_salidas    IngresoSalida[]
+  recepciones_almacen RecepcionAlmacen[]
+  sessions            Session[]
+  empresa             Empresa               @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  ventas              Venta[]
+  permissions         Permission[]          @relation("PermissionToUser")
+  roles               Role[]                @relation("RoleToUser")
 }
 
 model Account {
-    userId            String
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String?
-    access_token      String?
-    expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String?
-    session_state     String?
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    @@id([provider, providerAccountId])
+  @@id([provider, providerAccountId])
 }
 
 model Session {
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
-    identifier String
-    token      String
-    expires    DateTime
+  identifier String
+  token      String
+  expires    DateTime
 
-    @@id([identifier, token])
+  @@id([identifier, token])
 }
 
-// Optional for WebAuthn support
 model Authenticator {
-    credentialID         String  @unique
-    userId               String
-    providerAccountId    String
-    credentialPublicKey  String
-    counter              Int
-    credentialDeviceType String
-    credentialBackedUp   Boolean
-    transports           String?
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    @@id([userId, credentialID])
+  @@id([userId, credentialID])
 }

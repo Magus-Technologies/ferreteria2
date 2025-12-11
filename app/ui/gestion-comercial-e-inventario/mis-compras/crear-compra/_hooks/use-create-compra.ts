@@ -136,7 +136,7 @@ export default function useCreateCompra({
           ? undefined
           : restValues.numero_dias,
       fecha_vencimiento:
-        restValues.forma_de_pago === FormaDePago.Crédito &&
+        restValues.forma_de_pago === FormaDePago.cr &&
         restValues.fecha_vencimiento
           ? toUTCBD({
               date: restValues.fecha_vencimiento,

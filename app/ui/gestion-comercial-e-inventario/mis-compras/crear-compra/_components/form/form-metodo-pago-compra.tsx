@@ -20,7 +20,7 @@ export default function FormMetodoPagoCompra({ form }: { form: FormInstance }) {
   }, [egreso_dinero_id, despliegue_de_pago_id])
 
   useEffect(() => {
-    if (formaDePago === FormaDePago.Crédito) {
+    if (formaDePago === FormaDePago.cr) {
       form.setFieldValue('despliegue_de_pago_id', undefined)
       form.setFieldValue('egreso_dinero_id', undefined)
       setDisabled(true)

@@ -38,7 +38,7 @@ export default function FormFormaDePagoVenta({
           prefix={
             <IoIosDocument
               className={`${
-                formaDePago === FormaDePago.Crédito
+                formaDePago === FormaDePago.cr
                   ? 'text-rose-700'
                   : 'text-cyan-600'
               } mr-1`}
@@ -51,7 +51,7 @@ export default function FormFormaDePagoVenta({
             name: 'numero_dias',
             rules: [
               {
-                required: formaDePago === FormaDePago.Crédito,
+                required: formaDePago === FormaDePago.cr,
                 message: 'Ingresa el número de días',
               },
             ],
@@ -78,7 +78,7 @@ export default function FormFormaDePagoVenta({
             name: 'fecha_vencimiento',
             rules: [
               {
-                required: formaDePago === FormaDePago.Crédito,
+                required: formaDePago === FormaDePago.cr,
                 message: 'Ingresa la fecha de vencimiento',
               },
             ],
@@ -88,7 +88,7 @@ export default function FormFormaDePagoVenta({
             <FaCalendar
               size={15}
               className={`${
-                formaDePago === FormaDePago.Crédito
+                formaDePago === FormaDePago.cr
                   ? 'text-rose-700'
                   : 'text-cyan-600'
               } mx-1`}

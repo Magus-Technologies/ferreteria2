@@ -39,7 +39,9 @@ export default function InputConsultaRuc({
   }, [ruc])
 
   useEffect(() => {
-    if (value && automatico) execute({ search: value })
+    if (value && automatico && (value.length === 8 || value.length === 11)) {
+      execute({ search: value })
+    } 
   }, [automatico, execute, value])
 
   return (

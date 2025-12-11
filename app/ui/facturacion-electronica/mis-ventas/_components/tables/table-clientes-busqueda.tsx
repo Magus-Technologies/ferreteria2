@@ -50,11 +50,16 @@ export default function TableClientesBusqueda({
         columnDefs={useColumnsClientes({ setDataEdit, setOpen })}
         rowData={response || []}
         onSelectionChanged={({ selectedNodes }) =>
+        {
+          console.log('clientre seleccionado en la tabla',selectedNodes?.[0]?.data)
           setClienteSeleccionado(
             selectedNodes?.[0]?.data as getClienteResponseProps
           )
         }
+         
+        }
         onRowDoubleClicked={({ data }) => {
+          console.log('doble click en el clienbte' , data)
           setClienteSeleccionado(data)
           onRowDoubleClicked?.({ data })
         }}

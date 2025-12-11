@@ -1,0 +1,56 @@
+model EntregaProducto {
+  id                   Int                      @id @default(autoincrement())
+  venta_id             String
+  tipo_entrega         TipoEntrega              @default(Inmediata)
+  tipo_despacho        TipoDespacho             @default(EnTienda)
+  estado_entrega       EstadoEntrega            @default(Pendiente)
+  fecha_entrega        DateTime
+  fecha_programada     DateTime?
+  hora_inicio          String?
+  hora_fin             String?
+  direccion_entrega    String?
+  observaciones        String?
+  almacen_salida_id    Int
+  chofer_id            String?
+  user_id              String
+  created_at           DateTime                 @default(now())
+  updated_at           DateTime                 @updatedAt
+  productos_entregados DetalleEntregaProducto[]
+  almacen_salida       Almacen                  @relation(fields: [almacen_salida_id], references: [id])
+  chofer               User?                    @relation("chofer_entrega", fields: [chofer_id], references: [id], onDelete: Restrict)
+  user                 User                     @relation("usuario_entrega", fields: [user_id], references: [id], onDelete: Cascade)
+  venta                Venta                    @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+
+  @@index([venta_id])
+  @@index([fecha_entrega])
+  @@index([estado_entrega])
+}
+
+model DetalleEntregaProducto {
+  id                       Int                          @id @default(autoincrement())
+  entrega_producto_id      Int
+  unidad_derivada_venta_id Int
+  cantidad_entregada       Decimal                      @db.Decimal(9, 3)
+  ubicacion                String?
+  entrega_producto         EntregaProducto              @relation(fields: [entrega_producto_id], references: [id], onDelete: Cascade)
+  unidad_derivada_venta    UnidadDerivadaInmutableVenta @relation(fields: [unidad_derivada_venta_id], references: [id])
+
+  @@unique([entrega_producto_id, unidad_derivada_venta_id], map: "DetalleEntregaProducto_entrega_producto_id_unidad_derivada_vent")
+}
+
+enum TipoEntrega {
+  Inmediata  @map("in")
+  Programada @map("pr")
+}
+
+enum TipoDespacho {
+  EnTienda  @map("et")
+  Domicilio @map("do")
+}
+
+enum EstadoEntrega {
+  Pendiente @map("pe")
+  EnCamino  @map("ec")
+  Entregado @map("en")
+  Cancelado @map("ca")
+}

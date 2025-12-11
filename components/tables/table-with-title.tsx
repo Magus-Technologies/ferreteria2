@@ -1,42 +1,42 @@
-'use client'
+"use client";
 
-import { AgGridReact } from 'ag-grid-react'
-import TableBase, { TableBaseProps } from './table-base'
-import { useImperativeHandle, useRef } from 'react'
-import ButtonBase, { ButtonBaseProps } from '../buttons/button-base'
-import { exportAGGridDataToJSON, exportAGGridDataToPDF } from '~/utils/ag-grid'
-import { RiFileExcel2Fill } from 'react-icons/ri'
-import { Divider, Popover, Tooltip } from 'antd'
-import { FaFilePdf } from 'react-icons/fa6'
-import { PiFilePdfFill } from 'react-icons/pi'
-import { HiMiniViewColumns } from 'react-icons/hi2'
+import { AgGridReact } from "ag-grid-react";
+import TableBase, { TableBaseProps } from "./table-base";
+import { useImperativeHandle, useRef } from "react";
+import ButtonBase, { ButtonBaseProps } from "../buttons/button-base";
+import { exportAGGridDataToJSON, exportAGGridDataToPDF } from "~/utils/ag-grid";
+import { RiFileExcel2Fill } from "react-icons/ri";
+import { Divider, Popover, Tooltip } from "antd";
+import { FaFilePdf } from "react-icons/fa6";
+import { PiFilePdfFill } from "react-icons/pi";
+import { HiMiniViewColumns } from "react-icons/hi2";
 import SelectColumns, {
   SelectColumnsRef,
   setVisibilityColumns,
-} from './select-columns'
-import { useLocalStorage } from '~/hooks/use-local-storage'
-import { ZodType } from 'zod'
+} from "./select-columns";
+import { useLocalStorage } from "~/hooks/use-local-storage";
+import { ZodType } from "zod";
 
 export interface TableWithTitleProps<T, schemaType = unknown>
   extends TableBaseProps<T> {
-  id: string
-  title: string
-  extraTitle?: React.ReactNode
-  className?: string
+  id: string;
+  title: string;
+  extraTitle?: React.ReactNode;
+  className?: string;
   classNames?: {
-    titleParent?: string
-  }
-  exportExcel?: boolean
-  exportPdf?: boolean
-  selectColumns?: boolean
+    titleParent?: string;
+  };
+  exportExcel?: boolean;
+  exportPdf?: boolean;
+  selectColumns?: boolean;
   optionsSelectColumns?: {
-    color?: ButtonBaseProps['color']
-    label: string
-    columns: string[]
-  }[]
-  tableRef?: React.RefObject<AgGridReact<T> | null>
-  schema?: ZodType<schemaType>
-  headersRequired?: string[]
+    color?: ButtonBaseProps["color"];
+    label: string;
+    columns: string[];
+  }[];
+  tableRef?: React.RefObject<AgGridReact<T> | null>;
+  schema?: ZodType<schemaType>;
+  headersRequired?: string[];
 }
 
 export default function TableWithTitle<T, schemaType = unknown>({
@@ -47,37 +47,37 @@ export default function TableWithTitle<T, schemaType = unknown>({
   exportPdf = true,
   selectColumns = true,
   classNames = {},
-  className = '',
+  className = "",
   optionsSelectColumns = [],
   tableRef,
   schema,
   headersRequired = [],
   ...props
 }: TableWithTitleProps<T, schemaType>) {
-  const tableRefInterno = useRef<AgGridReact<T>>(null)
+  const tableRefInterno = useRef<AgGridReact<T>>(null);
   const [defaultColumns, setDefaultColumns] = useLocalStorage<string[]>(
     `table-columns-${id}`,
     []
-  )
+  );
 
-  useImperativeHandle(tableRef, () => tableRefInterno.current!)
+  useImperativeHandle(tableRef, () => tableRefInterno.current!);
 
-  const selectColumnsRef = useRef<SelectColumnsRef>(null)
+  const selectColumnsRef = useRef<SelectColumnsRef>(null);
 
-  const { titleParent = '' } = classNames
+  const { titleParent = "" } = classNames;
 
   return (
     <div className={`flex flex-col gap-2 size-full ${className}`}>
-      <div className='flex items-center justify-between gap-2'>
+      <div className="flex items-center justify-between gap-2">
         <div
           className={`font-semibold text-slate-700 text-xl flex items-center gap-4 ${titleParent}`}
         >
           {title}
           {extraTitle}
         </div>
-        <div className='flex gap-2 items-center'>
+        <div className="flex gap-2 items-center">
           {selectColumns && (
-            <Tooltip title='Ver Columnas'>
+            <Tooltip title="Ver Columnas">
               <Popover
                 content={
                   <SelectColumns
@@ -86,17 +86,17 @@ export default function TableWithTitle<T, schemaType = unknown>({
                     gridRef={tableRefInterno}
                     ref={selectColumnsRef}
                   >
-                    <div className='grid gap-2'>
+                    <div className="grid gap-2">
                       {optionsSelectColumns.map((option, index) => (
                         <ButtonBase
                           onClick={() => {
                             selectColumnsRef.current?.setCheckedList(
                               option.columns
-                            )
+                            );
                           }}
-                          color={option.color ?? 'info'}
-                          size='sm'
-                          className='!px-3 w-full'
+                          color={option.color ?? "info"}
+                          size="sm"
+                          className="!px-3 w-full"
                           key={index}
                         >
                           {option.label}
@@ -104,20 +104,20 @@ export default function TableWithTitle<T, schemaType = unknown>({
                       ))}
                     </div>
                     {optionsSelectColumns.length > 0 && (
-                      <Divider className='!my-2' />
+                      <Divider className="!my-2" />
                     )}
                   </SelectColumns>
                 }
-                trigger='click'
+                trigger="click"
               >
-                <ButtonBase color='warning' size='md' className='!px-3'>
+                <ButtonBase color="warning" size="md" className="!px-3">
                   <HiMiniViewColumns />
                 </ButtonBase>
               </Popover>
             </Tooltip>
           )}
           {exportExcel && (
-            <Tooltip title='Exportar a Excel'>
+            <Tooltip title="Exportar a Excel">
               <ButtonBase
                 onClick={() => {
                   if (tableRefInterno.current)
@@ -126,11 +126,11 @@ export default function TableWithTitle<T, schemaType = unknown>({
                       nameFile: title,
                       schema,
                       headersRequired,
-                    })
+                    });
                 }}
-                color='success'
-                size='md'
-                className='!px-3'
+                color="success"
+                size="md"
+                className="!px-3"
               >
                 <RiFileExcel2Fill />
               </ButtonBase>
@@ -138,36 +138,36 @@ export default function TableWithTitle<T, schemaType = unknown>({
           )}
           {exportPdf && (
             <>
-              <Tooltip title='Exportar a PDF Vertical'>
+              <Tooltip title="Exportar a PDF Vertical">
                 <ButtonBase
                   onClick={() => {
                     if (tableRefInterno.current)
                       exportAGGridDataToPDF(
                         tableRefInterno.current,
                         title,
-                        'vertical'
-                      )
+                        "vertical"
+                      );
                   }}
-                  color='danger'
-                  size='md'
-                  className='!px-3'
+                  color="danger"
+                  size="md"
+                  className="!px-3"
                 >
                   <FaFilePdf />
                 </ButtonBase>
               </Tooltip>
-              <Tooltip title='Exportar a PDF Horizontal'>
+              <Tooltip title="Exportar a PDF Horizontal">
                 <ButtonBase
                   onClick={() => {
                     if (tableRefInterno.current)
                       exportAGGridDataToPDF(
                         tableRefInterno.current,
                         title,
-                        'horizontal'
-                      )
+                        "horizontal"
+                      );
                   }}
-                  color='danger'
-                  size='md'
-                  className='!px-3'
+                  color="danger"
+                  size="md"
+                  className="!px-3"
                 >
                   <PiFilePdfFill />
                 </ButtonBase>
@@ -179,18 +179,18 @@ export default function TableWithTitle<T, schemaType = unknown>({
       <TableBase<T>
         ref={tableRefInterno}
         {...props}
-        onGridReady={params => {
+        onGridReady={(params) => {
           if (defaultColumns.length) {
             setVisibilityColumns({
               gridApi: params.api,
               checkedList: defaultColumns,
-            })
+            });
             setTimeout(() => {
-              params.api.refreshHeader()
-            }, 100)
+              params.api.refreshHeader();
+            }, 100);
           }
         }}
       />
     </div>
-  )
+  );
 }

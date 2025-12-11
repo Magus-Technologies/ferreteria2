@@ -1,17 +1,15 @@
 model Permission {
-    id          Int    @id @default(autoincrement())
-    name        String @unique
-    descripcion String
-
-    roles Role[]
-    users User[]
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  descripcion String
+  roles       Role[] @relation("PermissionToRole")
+  users       User[] @relation("PermissionToUser")
 }
 
 model Role {
-    id          Int    @id @default(autoincrement())
-    name        String @unique
-    descripcion String
-
-    permissions Permission[]
-    users       User[]
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  descripcion String
+  permissions Permission[] @relation("PermissionToRole")
+  users       User[]       @relation("RoleToUser")
 }
