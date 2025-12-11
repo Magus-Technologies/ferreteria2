@@ -97,6 +97,7 @@ export default function FormCrearVenta({
         </LabelBase>
         <LabelBase label='Cliente:' classNames={{ labelParent: 'mb-6' }}>
           <SelectClientes
+          form={form}
             propsForm={{
               name: 'cliente_id',
               hasFeedback: false,

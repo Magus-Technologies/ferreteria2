@@ -48,6 +48,7 @@ export default function FormCreateCliente({
             prefix={<FaAddressCard className='text-rose-700 mx-1' />}
             propsForm={{
               name: 'numero_documento',
+              validateTrigger: 'onBlur',
               rules: [
                 {
                   required: true,

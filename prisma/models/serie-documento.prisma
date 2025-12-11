@@ -1,0 +1,14 @@
+model SerieDocumento {
+  id             Int           @id @default(autoincrement())
+  tipo_documento TipoDocumento
+  serie          String        // Ej: "F001", "B001", "NV01"
+  correlativo    Int           @default(0) // Último número usado
+  almacen_id     Int
+  activo         Boolean       @default(true)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  almacen        Almacen       @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
+
+  @@unique([tipo_documento, serie, almacen_id])
+  @@index([almacen_id, tipo_documento, activo])
+}

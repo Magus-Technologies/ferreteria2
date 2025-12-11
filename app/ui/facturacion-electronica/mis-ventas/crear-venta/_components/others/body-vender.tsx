@@ -42,6 +42,7 @@ export type FormCreateVenta = {
   estado_de_venta?: EstadoDeVenta
   despliegue_de_pago_id?: string
   cliente_id?: number
+  recomendado_por_id?: number
   metodos_de_pago?: Array<{
     despliegue_de_pago_id: string
     monto: number

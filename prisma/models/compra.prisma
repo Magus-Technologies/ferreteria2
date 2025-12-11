@@ -1,128 +1,109 @@
-enum TipoDocumento {
-    Factura          @map("01")
-    Boleta           @map("03")
-    NotaDeVenta      @map("nv")
-    Ingreso          @map("in")
-    Salida           @map("sa")
-    RecepcionAlmacen @map("rc")
-}
-
-enum EstadoDeCompra {
-    Creado    @map("cr")
-    EnEspera  @map("ee")
-    Anulado   @map("an")
-    Procesado @map("pr")
-}
-
-enum FormaDePago {
-    Contado  @map("co")
-    Crédito @map("cr")
-}
-
-enum TipoMoneda {
-    Soles    @map("s")
-    Dólares @map("d")
-}
-
 model Compra {
-    id String @id @default(cuid())
+  id                    String                  @id @default(cuid())
+  tipo_documento        TipoDocumento           @default(NotaDeVenta)
+  serie                 String?
+  numero                Int?
+  descripcion           String?
+  forma_de_pago         FormaDePago             @default(Contado)
+  tipo_moneda           TipoMoneda              @default(Soles)
+  tipo_de_cambio        Decimal                 @default(1) @db.Decimal(9, 4)
+  percepcion            Decimal                 @default(0) @db.Decimal(9, 4)
+  numero_dias           Int?
+  fecha_vencimiento     DateTime?
+  fecha                 DateTime
+  guia                  String?
+  estado_de_compra      EstadoDeCompra          @default(Creado)
+  egreso_dinero_id      String?
+  despliegue_de_pago_id String?
+  user_id               String
+  almacen_id            Int
+  created_at            DateTime                @default(now())
+  updated_at            DateTime                @updatedAt
+  proveedor_id          Int?
+  almacen               Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
+  despliegue_de_pago    DespliegueDePago?       @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict)
+  egreso_dinero         EgresoDinero?           @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade)
+  proveedor             Proveedor?              @relation(fields: [proveedor_id], references: [id], onDelete: Restrict)
+  user                  User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pagos_de_compras      PagoDeCompra[]
+  productos_por_almacen ProductoAlmacenCompra[]
+  recepciones_almacen   RecepcionAlmacen[]
 
-    tipo_documento    TipoDocumento  @default(NotaDeVenta)
-    serie             String?
-    numero            Int?
-    descripcion       String?
-    forma_de_pago     FormaDePago    @default(Contado)
-    tipo_moneda       TipoMoneda     @default(Soles)
-    tipo_de_cambio    Decimal        @default(1) @db.Decimal(9, 4)
-    percepcion        Decimal        @default(0) @db.Decimal(9, 4)
-    numero_dias       Int?
-    fecha_vencimiento DateTime?
-    fecha             DateTime
-    guia              String?
-    estado_de_compra  EstadoDeCompra @default(Creado)
-
-    egreso_dinero_id String?
-    egreso_dinero    EgresoDinero? @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    despliegue_de_pago_id String?
-    despliegue_de_pago    DespliegueDePago? @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    user_id String
-    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    almacen_id Int
-    almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-
-    proveedor_id Int?
-    proveedor    Proveedor? @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    productos_por_almacen ProductoAlmacenCompra[]
-    recepciones_almacen   RecepcionAlmacen[]
-    pagos_de_compras      PagoDeCompra[]
-
-    @@unique([serie, numero, proveedor_id])
-    @@index([fecha])
+  @@unique([serie, numero, proveedor_id])
+  @@index([fecha])
 }
 
 model ProductoAlmacenCompra {
-    id Int @id @default(autoincrement())
+  id                  Int                             @id @default(autoincrement())
+  compra_id           String
+  costo               Decimal                         @db.Decimal(9, 4)
+  producto_almacen_id Int
+  compra              Compra                          @relation(fields: [compra_id], references: [id], onDelete: Cascade)
+  producto_almacen    ProductoAlmacen                 @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade)
+  unidades_derivadas  UnidadDerivadaInmutableCompra[]
 
-    compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    compra_id String
-
-    costo Decimal @db.Decimal(9, 4)
-
-    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    producto_almacen_id Int
-
-    unidades_derivadas UnidadDerivadaInmutableCompra[]
-
-    @@unique([compra_id, producto_almacen_id])
+  @@unique([compra_id, producto_almacen_id])
 }
 
 model UnidadDerivadaInmutableCompra {
-    id Int @id @default(autoincrement())
+  id                           Int                     @id @default(autoincrement())
+  unidad_derivada_inmutable_id Int
+  producto_almacen_compra_id   Int
+  factor                       Decimal                 @db.Decimal(9, 3)
+  cantidad                     Decimal                 @db.Decimal(9, 3)
+  cantidad_pendiente           Decimal                 @db.Decimal(9, 3)
+  lote                         String?
+  vencimiento                  DateTime?
+  flete                        Decimal                 @default(0) @db.Decimal(9, 4)
+  bonificacion                 Boolean                 @default(false)
+  producto_almacen_compra      ProductoAlmacenCompra   @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade)
+  unidad_derivada_inmutable    UnidadDerivadaInmutable @relation(fields: [unidad_derivada_inmutable_id], references: [id])
 
-    unidad_derivada_inmutable_id Int
-    unidad_derivada_inmutable    UnidadDerivadaInmutable @relation(fields: [unidad_derivada_inmutable_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    producto_almacen_compra_id Int
-    producto_almacen_compra    ProductoAlmacenCompra @relation(fields: [producto_almacen_compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    factor             Decimal   @db.Decimal(9, 3)
-    cantidad           Decimal   @db.Decimal(9, 3)
-    cantidad_pendiente Decimal   @db.Decimal(9, 3)
-    lote               String?
-    vencimiento        DateTime?
-    flete              Decimal   @default(0) @db.Decimal(9, 4)
-    bonificacion       Boolean   @default(false)
-
-    @@unique([producto_almacen_compra_id, unidad_derivada_inmutable_id, bonificacion])
-    @@index([cantidad_pendiente])
+  @@unique([producto_almacen_compra_id, unidad_derivada_inmutable_id, bonificacion])
+  @@index([cantidad_pendiente])
 }
 
 model UnidadDerivadaInmutable {
-    id   Int    @id @default(autoincrement())
-    name String @unique
-
-    unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
-    unidades_derivadas_inmutables_en_ventas   UnidadDerivadaInmutableVenta[]
-    unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
-    UnidadDerivadaInmutableRecepcion          UnidadDerivadaInmutableRecepcion[]
+  id                                        Int                                    @id @default(autoincrement())
+  name                                      String                                 @unique
+  unidades_derivadas_inmutables_en_compras  UnidadDerivadaInmutableCompra[]
+  unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
+  UnidadDerivadaInmutableRecepcion          UnidadDerivadaInmutableRecepcion[]
+  unidades_derivadas_inmutables_en_ventas   UnidadDerivadaInmutableVenta[]
 }
 
 model PagoDeCompra {
-    id     String  @id @default(cuid())
-    estado Boolean @default(true)
+  id                    String           @id @default(cuid())
+  estado                Boolean          @default(true)
+  compra_id             String
+  despliegue_de_pago_id String
+  monto                 Decimal          @db.Decimal(9, 2)
+  compra                Compra           @relation(fields: [compra_id], references: [id], onDelete: Cascade)
+  despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Cascade)
+}
 
-    compra_id String
-    compra    Compra @relation(fields: [compra_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+enum TipoDocumento {
+  Factura          @map("01")
+  Boleta           @map("03")
+  NotaDeVenta      @map("nv")
+  Ingreso          @map("in")
+  Salida           @map("sa")
+  RecepcionAlmacen @map("rc")
+}
 
-    despliegue_de_pago_id String
-    despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+enum EstadoDeCompra {
+  Creado    @map("cr")
+  EnEspera  @map("ee")
+  Anulado   @map("an")
+  Procesado @map("pr")
+}
 
-    monto Decimal @db.Decimal(9, 2)
+enum FormaDePago {
+  Contado @map("co")
+  cr
+}
+
+enum TipoMoneda {
+  Soles @map("s")
+  d
 }

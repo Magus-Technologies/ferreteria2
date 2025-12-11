@@ -6,7 +6,7 @@ import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
 import { Prisma, EstadoDeVenta } from '@prisma/client'
 import {
-  VentaUncheckedCreateInputSchema,
+  VentaCreateInputSchema,
   VentaWhereInputSchema,
 } from '~/prisma/generated/zod'
 // import { DespliegueDePago } from './lib/lib-caja'
@@ -32,6 +32,8 @@ const includeVenta = {
     },
   },
   user: true,
+  cliente: true,
+  recomendado_por: true,
 } satisfies Prisma.VentaInclude
 
 export type getVentaResponseProps = Prisma.VentaGetPayload<{
@@ -54,18 +56,58 @@ async function getVentaWA({ where }: { where?: Prisma.VentaWhereInput }) {
     where: whereParsed,
   })
 
-  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
+  // Serializar para convertir Decimal a number
+  const serialized = JSON.parse(
+    JSON.stringify(items, (_key, value) => {
+      if (typeof value === 'object' && value !== null && value.constructor?.name === 'Decimal') {
+        return Number(value)
+      }
+      return value
+    })
+  )
+
+  return { data: serialized as typeof items }
 }
 export const getVenta = withAuth(getVentaWA)
 
-async function createVentaWA(data: Prisma.VentaUncheckedCreateInput) {
+async function createVentaWA(data: Prisma.VentaCreateInput) { //VentaUncheckedCreateInput
   const puede = await can(permissions.VENTA_CREATE)
   if (!puede) throw new Error('No tienes permiso para crear una venta')
 
-  const parsedData = VentaUncheckedCreateInputSchema.parse(data)
+  const parsedData = VentaCreateInputSchema.parse(data)
+
+  // Extraer almacen_id de la estructura anidada
+  const almacen_id = parsedData.almacen && typeof parsedData.almacen === 'object' && 'connect' in parsedData.almacen
+    ? (parsedData.almacen.connect as { id: number }).id
+    : undefined
 
   return await prisma.$transaction(
     async (db) => {
+      // Generar serie y número automáticamente si no se proporcionan
+      if (!parsedData.serie || !parsedData.numero) {
+        const serieDoc = await db.serieDocumento.findFirst({
+          where: {
+            tipo_documento: parsedData.tipo_documento,
+            almacen_id: almacen_id,
+            activo: true,
+          },
+          orderBy: {
+            created_at: 'desc',
+          },
+        })
+
+        if (serieDoc) {
+          const nuevoCorrelativo = serieDoc.correlativo + 1
+          
+          await db.serieDocumento.update({
+            where: { id: serieDoc.id },
+            data: { correlativo: nuevoCorrelativo },
+          })
+
+          parsedData.serie = serieDoc.serie
+          parsedData.numero = nuevoCorrelativo
+        }
+      }
       // if (
       //   parsedData.estado_de_venta === EstadoDeVenta.Creado &&
       //   parsedData.forma_de_pago === FormaDePago.Contado &&

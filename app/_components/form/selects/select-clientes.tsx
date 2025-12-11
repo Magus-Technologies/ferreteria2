@@ -58,16 +58,19 @@ export default function SelectClientes({
   function handleSelect({ data }: { data?: getClienteResponseProps } = {}) {
     setText('')
     const cliente = data || clienteSeleccionadoStore
+    // console.log('handleselect - cliente', cliente)
     if (cliente) {
       setClienteSeleccionado(cliente)
+
       iterarChangeValue({
         refObject: selectClientesRef,
         value: cliente.id,
       })
+      
       setClienteSeleccionadoStore(undefined)
       setOpenModalClienteSearch(false)
       onChange?.(cliente.id, cliente)
-    }
+    } 
   }
 
   const [value] = useDebounce(text, 1000)

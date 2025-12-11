@@ -1,96 +1,81 @@
-enum EstadoDeVenta {
-    Creado    @map("cr")
-    EnEspera  @map("ee")
-    Anulado   @map("an")
-    Procesado @map("pr")
-}
-
 model Venta {
-    id String @id @default(cuid())
+  id                     String                  @id @default(cuid())
+  tipo_documento         TipoDocumento           @default(NotaDeVenta)
+  serie                  String?
+  numero                 Int?
+  descripcion            String?
+  forma_de_pago          FormaDePago             @default(Contado)
+  tipo_moneda            TipoMoneda              @default(Soles)
+  tipo_de_cambio         Decimal                 @default(1) @db.Decimal(9, 4)
+  fecha                  DateTime
+  estado_de_venta        EstadoDeVenta           @default(Creado)
+  cliente_id             Int?
+  recomendado_por_id     Int?
+  user_id                String
+  almacen_id             Int
+  created_at             DateTime                @default(now())
+  updated_at             DateTime                @updatedAt
+  despliegueDePagoVentas DespliegueDePagoVenta[]
+  entregas_productos     EntregaProducto[]
+  productos_por_almacen  ProductoAlmacenVenta[]
+  almacen                Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
+  cliente                Cliente?                @relation("cliente", fields: [cliente_id], references: [id], onDelete: Restrict)
+  recomendado_por        Cliente?                @relation("recomendado_por", fields: [recomendado_por_id], references: [id], onDelete: Restrict)
+  user                   User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-    tipo_documento  TipoDocumento @default(NotaDeVenta)
-    serie           String?
-    numero          Int?
-    descripcion     String?
-    forma_de_pago   FormaDePago   @default(Contado)
-    tipo_moneda     TipoMoneda    @default(Soles)
-    tipo_de_cambio  Decimal       @default(1) @db.Decimal(9, 4)
-    fecha           DateTime
-    estado_de_venta EstadoDeVenta @default(Creado)
-
-    cliente_id Int?
-    cliente    Cliente? @relation("cliente", fields: [cliente_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    recomendado_por_id Int?
-    recomendado_por    Cliente? @relation("recomendado_por", fields: [recomendado_por_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    user_id String
-    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    almacen_id Int
-    almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-
-    productos_por_almacen  ProductoAlmacenVenta[]
-    despliegueDePagoVentas DespliegueDePagoVenta[]
-
-    @@index([fecha])
+  @@index([fecha])
 }
 
 model DespliegueDePagoVenta {
-    id Int @id @default(autoincrement())
+  id                    Int              @id @default(autoincrement())
+  venta_id              String
+  despliegue_de_pago_id String
+  monto                 Decimal          @db.Decimal(9, 4)
+  despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id])
+  venta                 Venta            @relation(fields: [venta_id], references: [id], onDelete: Cascade)
 
-    venta_id String
-    venta    Venta  @relation(fields: [venta_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    despliegue_de_pago_id String
-    despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    monto Decimal @db.Decimal(9, 4)
-
-    @@unique([venta_id, despliegue_de_pago_id])
+  @@unique([venta_id, despliegue_de_pago_id])
 }
 
 model ProductoAlmacenVenta {
-    id Int @id @default(autoincrement())
+  id                  Int                            @id @default(autoincrement())
+  venta_id            String
+  costo               Decimal                        @db.Decimal(9, 4)
+  producto_almacen_id Int
+  producto_almacen    ProductoAlmacen                @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade)
+  venta               Venta                          @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+  unidades_derivadas  UnidadDerivadaInmutableVenta[]
 
-    venta    Venta  @relation(fields: [venta_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    venta_id String
-
-    costo Decimal @db.Decimal(9, 4)
-
-    producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-    producto_almacen_id Int
-
-    unidades_derivadas UnidadDerivadaInmutableVenta[]
-
-    @@unique([venta_id, producto_almacen_id])
-}
-
-enum DescuentoTipo {
-    Porcentaje @map("%")
-    Monto      @map("m")
+  @@unique([venta_id, producto_almacen_id])
 }
 
 model UnidadDerivadaInmutableVenta {
-    id Int @id @default(autoincrement())
+  id                           Int                      @id @default(autoincrement())
+  unidad_derivada_inmutable_id Int
+  producto_almacen_venta_id    Int
+  factor                       Decimal                  @db.Decimal(9, 3)
+  cantidad                     Decimal                  @db.Decimal(9, 3)
+  cantidad_pendiente           Decimal                  @db.Decimal(9, 3)
+  precio                       Decimal                  @db.Decimal(9, 4)
+  recargo                      Decimal                  @default(0) @db.Decimal(9, 4)
+  descuento_tipo               DescuentoTipo            @default(Monto)
+  descuento                    Decimal                  @default(0) @db.Decimal(9, 4)
+  comision                     Decimal                  @default(0) @db.Decimal(9, 4)
+  detalles_entrega             DetalleEntregaProducto[]
+  producto_almacen_venta       ProductoAlmacenVenta     @relation(fields: [producto_almacen_venta_id], references: [id], onDelete: Cascade)
+  unidad_derivada_inmutable    UnidadDerivadaInmutable  @relation(fields: [unidad_derivada_inmutable_id], references: [id])
 
-    unidad_derivada_inmutable_id Int
-    unidad_derivada_inmutable    UnidadDerivadaInmutable @relation(fields: [unidad_derivada_inmutable_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  @@unique([producto_almacen_venta_id, unidad_derivada_inmutable_id])
+}
 
-    producto_almacen_venta_id Int
-    producto_almacen_venta    ProductoAlmacenVenta @relation(fields: [producto_almacen_venta_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+enum EstadoDeVenta {
+  Creado    @map("cr")
+  EnEspera  @map("ee")
+  Anulado   @map("an")
+  Procesado @map("pr")
+}
 
-    factor             Decimal       @db.Decimal(9, 3)
-    cantidad           Decimal       @db.Decimal(9, 3)
-    cantidad_pendiente Decimal       @db.Decimal(9, 3)
-    precio             Decimal       @db.Decimal(9, 4)
-    recargo            Decimal       @default(0) @db.Decimal(9, 4)
-    descuento_tipo     DescuentoTipo @default(Monto)
-    descuento          Decimal       @default(0) @db.Decimal(9, 4)
-    comision           Decimal       @default(0) @db.Decimal(9, 4)
-
-    @@unique([producto_almacen_venta_id, unidad_derivada_inmutable_id])
+enum DescuentoTipo {
+  Porcentaje @map("%")
+  Monto      @map("m")
 }

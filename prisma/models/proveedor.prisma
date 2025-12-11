@@ -1,49 +1,43 @@
 model Proveedor {
-    id Int @id @default(autoincrement())
-
-    razon_social String  @unique
-    ruc          String  @unique
-    direccion    String?
-    telefono     String?
-    email        String?
-    estado       Boolean @default(true)
-
-    IngresoSalida IngresoSalida[]
-
-    vendedores Vendedor[]
-    compras    Compra[]
-    carros     Carro[]
-    choferes   Chofer[]
+  id            Int             @id @default(autoincrement())
+  razon_social  String          @unique
+  ruc           String          @unique
+  direccion     String?
+  telefono      String?
+  email         String?
+  estado        Boolean         @default(true)
+  carros        Carro[]
+  choferes      Chofer[]
+  compras       Compra[]
+  IngresoSalida IngresoSalida[]
+  vendedores    Vendedor[]
 }
 
 model Vendedor {
-    id        Int       @id @default(autoincrement())
-    dni       String    @unique
-    nombres   String
-    direccion String?
-    telefono  String?
-    email     String?
-    estado    Boolean   @default(true)
-    cumple    DateTime?
-
-    proveedor_id Int
-    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id           Int       @id @default(autoincrement())
+  dni          String    @unique
+  nombres      String
+  direccion    String?
+  telefono     String?
+  email        String?
+  estado       Boolean   @default(true)
+  cumple       DateTime?
+  proveedor_id Int
+  proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
 }
 
 model Carro {
-    id    Int    @id @default(autoincrement())
-    placa String
-
-    proveedor_id Int
-    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id           Int       @id @default(autoincrement())
+  placa        String
+  proveedor_id Int
+  proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
 }
 
 model Chofer {
-    id       Int    @id @default(autoincrement())
-    dni      String @unique
-    name     String
-    licencia String
-
-    proveedor_id Int
-    proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id           Int       @id @default(autoincrement())
+  dni          String    @unique
+  name         String
+  licencia     String
+  proveedor_id Int
+  proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
 }
