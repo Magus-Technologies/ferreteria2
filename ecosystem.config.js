@@ -1,4 +1,4 @@
-// ecosystem.config.js
+require('dotenv').config(); // Carga el archivo .env
 
 module.exports = {
   apps: [
@@ -11,12 +11,12 @@ module.exports = {
       env: {
         DATABASE_URL: process.env.DATABASE_URL,
         AUTH_SECRET: process.env.AUTH_SECRET,
-        AUTH_TRUST_HOST: true,
+        AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST === 'true', // Evalúa si es true o false
         AUTH_URL: process.env.AUTH_URL,
         RENIEC_TOKEN: process.env.RENIEC_TOKEN,
-        NEXTAUTH_URL: 'http://62.171.147.202',
+        NEXTAUTH_URL: process.env.AUTH_URL, // Ajustar NEXTAUTH_URL a AUTH_URL si es el mismo valor
         PORT: 3001,
       },
     },
   ],
-}
+};
