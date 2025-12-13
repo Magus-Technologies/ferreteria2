@@ -20,58 +20,24 @@ model Compra {
   created_at            DateTime                @default(now())
   updated_at            DateTime                @updatedAt
   proveedor_id          Int?
-  almacen               Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
-  despliegue_de_pago    DespliegueDePago?       @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict)
-  egreso_dinero         EgresoDinero?           @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade)
-  proveedor             Proveedor?              @relation(fields: [proveedor_id], references: [id], onDelete: Restrict)
-  user                  User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  almacen               Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  despliegue_de_pago    DespliegueDePago?       @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  egreso_dinero         EgresoDinero?           @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  proveedor             Proveedor?              @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user                  User                    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  
   pagos_de_compras      PagoDeCompra[]
   productos_por_almacen ProductoAlmacenCompra[]
   recepciones_almacen   RecepcionAlmacen[]
 
-    tipo_documento    TipoDocumento  @default(NotaDeVenta)
-    serie             String?
-    numero            Int?
-    descripcion       String?
-    forma_de_pago     FormaDePago    @default(Contado)
-    tipo_moneda       TipoMoneda     @default(Soles)
-    tipo_de_cambio    Decimal        @default(1) @db.Decimal(9, 4)
-    percepcion        Decimal        @default(0) @db.Decimal(9, 4)
-    numero_dias       Int?
-    fecha_vencimiento DateTime?
-    fecha             DateTime
-    guia              String?
-    estado_de_compra  EstadoDeCompra @default(Creado)
-
-    egreso_dinero_id String?
-    egreso_dinero    EgresoDinero? @relation(fields: [egreso_dinero_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    despliegue_de_pago_id String?
-    despliegue_de_pago    DespliegueDePago? @relation(fields: [despliegue_de_pago_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    user_id String
-    user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    almacen_id Int
-    almacen    Almacen @relation(fields: [almacen_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-
-    proveedor_id Int?
-    proveedor    Proveedor? @relation(fields: [proveedor_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
-    productos_por_almacen ProductoAlmacenCompra[]
-    recepciones_almacen   RecepcionAlmacen[]
-    pagos_de_compras      PagoDeCompra[]
-
-    @@unique([serie, numero, proveedor_id])
-    @@index([fecha])
-    @@index([estado_de_compra])
-    @@index([proveedor_id])
-    @@index([almacen_id])
-    @@index([user_id])
-    @@index([created_at])
+  @@unique([serie, numero, proveedor_id])
+  @@index([fecha])
+  @@index([estado_de_compra])
+  @@index([proveedor_id])
+  @@index([almacen_id])
+  @@index([user_id])
+  @@index([created_at])
 }
 
 model ProductoAlmacenCompra {
