@@ -1,6 +1,6 @@
 'use client'
 
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getTiposIngresoSalida } from '~/app/_actions/tipos-ingreso-salida'
@@ -25,7 +25,7 @@ export default function SelectTiposIngresoSalida({
 }: SelectTiposIngresoSalidaProps) {
   const selectTiposIngresoSalidaRef = useRef<RefSelectBaseProps>(null)
 
-  const { response } = useServerQuery({
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
     action: getTiposIngresoSalida,
     propsQuery: {
       queryKey: [QueryKeys.TIPOS_INGRESO_SALIDA],
@@ -45,6 +45,16 @@ export default function SelectTiposIngresoSalida({
           value: item.id,
           label: item.name,
         }))}
+        onFocus={() => {
+          if (!isFetched) {
+            triggerFetch()
+          }
+        }}
+        onDropdownVisibleChange={(open) => {
+          if (open && !isFetched) {
+            triggerFetch()
+          }
+        }}
         {...props}
       />
       {showButtonCreate && (

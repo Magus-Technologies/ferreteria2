@@ -3,23 +3,30 @@
 import CardMiniInfo from '../cards/card-mini-info'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useServerQuery } from '~/hooks/use-server-query'
-import { getProductos } from '~/app/_actions/producto'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
+import { SearchProductos } from '~/app/_actions/producto'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
+import { useEffect } from 'react'
 
 export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(state => state.filtros)
 
-  const { response } = useServerQuery({
-    action: getProductos,
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
+    action: SearchProductos, // Usar SearchProductos para límite de 50
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS],
-      enabled: false,
     },
     params: {
       where: filtros,
     },
   })
+
+  // Cargar datos solo después de 3 segundos para no interferir con carga principal
+  useEffect(() => {
+    if (filtros && !isFetched) {
+      setTimeout(() => triggerFetch(), 3000) // Incrementado a 3s
+    }
+  }, [filtros, isFetched, triggerFetch])
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 

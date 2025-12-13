@@ -1,26 +1,38 @@
 model Producto {
-  id                    Int               @id @default(autoincrement())
-  cod_producto          String            @unique
-  cod_barra             String?           @unique
-  name                  String            @unique
-  name_ticket           String
-  categoria_id          Int
-  marca_id              Int
-  unidad_medida_id      Int
-  accion_tecnica        String?
-  img                   String?
-  ficha_tecnica         String?
-  stock_min             Decimal           @db.Decimal(9, 3)
-  stock_max             Int?
-  unidades_contenidas   Decimal           @db.Decimal(9, 3)
-  estado                Boolean           @default(true)
-  permitido             Boolean           @default(true)
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  categoria             Categoria         @relation(fields: [categoria_id], references: [id])
-  marca                 Marca             @relation(fields: [marca_id], references: [id])
-  unidad_medida         UnidadMedida      @relation(fields: [unidad_medida_id], references: [id])
-  producto_en_almacenes ProductoAlmacen[]
+    id           Int     @id @default(autoincrement())
+    cod_producto String  @unique
+    cod_barra    String? @unique
+    name         String  @unique
+    name_ticket  String
+
+    categoria    Categoria @relation(fields: [categoria_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+    categoria_id Int
+
+    marca    Marca @relation(fields: [marca_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+    marca_id Int
+
+    unidad_medida    UnidadMedida @relation(fields: [unidad_medida_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+    unidad_medida_id Int
+
+    accion_tecnica      String? @db.Text
+    img                 String?
+    ficha_tecnica       String?
+    stock_min           Decimal @db.Decimal(9, 3)
+    stock_max           Int?
+    unidades_contenidas Decimal @db.Decimal(9, 3)
+    estado              Boolean @default(true)
+    permitido           Boolean @default(true)
+
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    producto_en_almacenes ProductoAlmacen[]
+
+    @@index([name])
+    @@index([categoria_id])
+    @@index([marca_id])
+    @@index([estado])
+    @@index([created_at])
 }
 
 model Categoria {

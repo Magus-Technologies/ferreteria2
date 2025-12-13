@@ -1,17 +1,17 @@
 'use client'
 
+import { usePaginatedServerQuery } from '~/hooks/use-paginated-server-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductos } from './columns-productos'
-import { useServerQuery } from '~/hooks/use-server-query'
 import {
-  getProductos,
+  getProductosPaginated,
   importarProductos,
   type getProductosResponseProps,
 } from '~/app/_actions/producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputImport from '~/app/_components/form/inputs/input-import'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
@@ -21,13 +21,12 @@ import { useStoreProductoSeleccionado } from '../../_store/store-producto-selecc
 import { importarUbicaciones } from '~/app/_actions/ubicacion'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 import { App } from 'antd'
+import PaginationControls from '~/app/_components/tables/pagination-controls'
 
-export default function TableProductos() {
+function TableProductos() {
   const tableRef = useRef<AgGridReact>(null)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const { notification } = App.useApp()
-
-  const [primera_vez, setPrimeraVez] = useState(true)
 
   const setProductoSeleccionado = useStoreProductoSeleccionado(
     store => store.setProducto
@@ -37,23 +36,28 @@ export default function TableProductos() {
 
   const can = usePermission()
 
-  const { response, refetch, loading } = useServerQuery({
-    action: getProductos,
+  const columns = useColumnsProductos({ almacen_id })
+
+  const { 
+    response, 
+    loading,
+    currentPage,
+    totalPages,
+    total,
+    nextPage,
+    prevPage,
+    pageSize
+  } = usePaginatedServerQuery({
+    action: getProductosPaginated,
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS],
     },
     params: {
       where: filtros,
     },
+    pageSize: 100, // 100 productos por página
+    enabled: !!filtros,
   })
-
-  useEffect(() => {
-    if (!loading && filtros) setPrimeraVez(false)
-  }, [loading, filtros])
-
-  useEffect(() => {
-    if (!primera_vez) refetch()
-  }, [filtros, refetch, primera_vez])
 
   return (
     <TableWithTitle<getProductosResponseProps>
@@ -66,6 +70,8 @@ export default function TableProductos() {
       schema={ProductoCreateInputSchema}
       headersRequired={['Ubicación en Almacén']}
       loading={loading}
+      columnDefs={columns}
+      rowData={response}
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
           <>
@@ -172,8 +178,6 @@ export default function TableProductos() {
           </>
         )
       }
-      columnDefs={useColumnsProductos({ almacen_id })}
-      rowData={response}
       optionsSelectColumns={[
         {
           label: 'Default',
@@ -217,6 +221,19 @@ export default function TableProductos() {
             ]
           : []),
       ]}
-    />
+    >
+      {/* Paginación */}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        total={total}
+        pageSize={pageSize}
+        loading={loading}
+        onNextPage={nextPage}
+        onPrevPage={prevPage}
+      />
+    </TableWithTitle>
   )
 }
+
+export default TableProductos

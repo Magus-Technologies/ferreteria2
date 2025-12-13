@@ -16,19 +16,19 @@ export function InitStore({
   const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
 
   useEffect(() => {
+    // Inicializar almacen predeterminado de forma asíncrona
     if (almacen_predeterminado) {
-      setAlmacenId(almacen_predeterminado)
+      setTimeout(() => setAlmacenId(almacen_predeterminado), 100)
     }
+    
+    // Inicializar filtros solo con datos básicos, sin queries complejas
     if (marca_predeterminada) {
-      setFiltros({
-        producto_en_almacenes: {
-          some: {
-            almacen_id: almacen_predeterminado,
-          },
-        },
-        marca_id: marca_predeterminada,
-        estado: true,
-      })
+      setTimeout(() => {
+        setFiltros({
+          marca_id: marca_predeterminada,
+          estado: true,
+        })
+      }, 200)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

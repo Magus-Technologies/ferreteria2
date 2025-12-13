@@ -24,6 +24,7 @@ export default function SelectEgresosDinero({
     action: getEgresosDinero,
     propsQuery: {
       queryKey: [QueryKeys.EGRESOS_DINERO],
+      staleTime: 3 * 60 * 1000, // Cache por 3 minutos
     },
     params: {
       where: {

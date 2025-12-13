@@ -1,6 +1,6 @@
 'use client'
 
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { FaLocationCrosshairs } from 'react-icons/fa6'
 import { getUbicaciones } from '~/app/_actions/ubicacion'
@@ -34,7 +34,7 @@ export default function SelectUbicaciones({
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { response, refetch, loading } = useServerQuery({
+  const { response, refetch, loading, triggerFetch, isFetched } = useLazyServerQuery({
     action: getUbicaciones,
     propsQuery: {
       queryKey: [QueryKeys.UBICACIONES],
@@ -70,6 +70,16 @@ export default function SelectUbicaciones({
           value: item.id,
           label: item.name,
         }))}
+        onFocus={() => {
+          if (!isFetched) {
+            triggerFetch()
+          }
+        }}
+        onDropdownVisibleChange={(open) => {
+          if (open && !isFetched) {
+            triggerFetch()
+          }
+        }}
         {...props}
       />
       {showButtonCreate && (

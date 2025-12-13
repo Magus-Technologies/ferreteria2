@@ -6,8 +6,10 @@ module.exports = {
       name: 'ferreteriav2',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -H 0.0.0.0 -p 3001',
-      instances: 1,
-      exec_mode: 'fork',
+      instances: 'max',
+      exec_mode: 'cluster',
+      max_memory_restart: '500M',
+      autorestart: true,
       env: {
         DATABASE_URL: process.env.DATABASE_URL,
         AUTH_SECRET: process.env.AUTH_SECRET,

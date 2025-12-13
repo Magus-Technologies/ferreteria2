@@ -70,6 +70,19 @@ export default function TableBase<T>({
         enableFilterHandlers={true}
         className={`shadow-lg rounded-xl overflow-hidden ${className}`}
         rowSelection={rowSelection ? 'single' : undefined}
+        // Optimizaciones de rendimiento
+        suppressRowVirtualisation={false}
+        suppressColumnVirtualisation={false}
+        rowBuffer={10}
+        debounceVerticalScrollbar={true}
+        suppressAnimationFrame={false}
+        // Paginación por defecto
+        pagination={props.pagination ?? true}
+        paginationPageSize={props.paginationPageSize ?? 50}
+        paginationPageSizeSelector={props.paginationPageSizeSelector ?? [25, 50, 100, 200]}
+        paginationAutoPageSize={false}
+        // Lazy loading para mejorar rendimiento
+        suppressRowTransform={true}
         columnDefs={[
           ...(withNumberColumn
             ? [
@@ -81,6 +94,7 @@ export default function TableBase<T>({
                     (params.node?.rowIndex ?? 0) + 1,
                   type: 'numberColumn',
                   rowDrag: props.rowDragManaged,
+                  suppressNavigable: true,
                 },
               ]
             : []),

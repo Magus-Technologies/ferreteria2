@@ -1,3 +1,5 @@
+'use client'
+
 import { BsWrenchAdjustableCircleFill } from 'react-icons/bs'
 import { FaMoneyBillWave } from 'react-icons/fa'
 import {
@@ -10,21 +12,33 @@ import { MdSpaceDashboard } from 'react-icons/md'
 import CardDashboard from '~/app/_components/cards/card-dashboard'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
-import DemandaPorCategoriaDeProductos from './_components/charts/demanda-por-categoria-de-productos'
-import TableProductosPorVencer from './_components/tables/table-productos-por-vencer'
-import TableProductosSinRotar from './_components/tables/table-productos-sin-rotar'
-import TableProductosUrgenteStock from './_components/tables/table-productos-urgente-stock'
-import PrestamosPrestes from './_components/charts/prestamos-prestes'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import SelectAlmacen from '../../_components/form/selects/select-almacen'
 import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import YearPicker from '~/app/_components/form/fechas/year-picker'
-import can from '~/utils/server-validate-permission'
+import { usePermission } from '~/hooks/use-permission'
+import { Suspense, lazy } from 'react'
+import { Spin } from 'antd'
 
-export default async function GestionComercialEInventario() {
-  if (!(await can(permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX)))
-    return <NoAutorizado />
+// Lazy loading de componentes pesados
+const DemandaPorCategoriaDeProductos = lazy(() => import('./_components/charts/demanda-por-categoria-de-productos'))
+const TableProductosPorVencer = lazy(() => import('./_components/tables/table-productos-por-vencer'))
+const TableProductosSinRotar = lazy(() => import('./_components/tables/table-productos-sin-rotar'))
+const TableProductosUrgenteStock = lazy(() => import('./_components/tables/table-productos-urgente-stock'))
+const PrestamosPrestes = lazy(() => import('./_components/charts/prestamos-prestes'))
+
+// Componente de loading optimizado
+const ComponentLoading = () => (
+  <div className="flex items-center justify-center h-40">
+    <Spin size="large" />
+  </div>
+)
+
+export default function GestionComercialEInventario() {
+  const canAccess = usePermission(permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX)
+  
+  if (!canAccess) return <NoAutorizado />
 
   return (
     <ContenedorGeneral>
@@ -93,19 +107,28 @@ export default async function GestionComercialEInventario() {
           <div className='text-center font-semibold -mt-2 text-slate-700'>
             Demanda por Categoría de Productos
           </div>
-          <DemandaPorCategoriaDeProductos />
+          <Suspense fallback={<ComponentLoading />}>
+            <DemandaPorCategoriaDeProductos />
+          </Suspense>
         </div>
         <div className='col-start-2 col-end-5 row-start-2 row-end-6'>
           <div className='grid grid-cols-2 grid-rows-2 gap-y-6 gap-x-10 size-full'>
-            <TableProductosPorVencer />
-            <TableProductosSinRotar />
-            <TableProductosUrgenteStock />
-
+            <Suspense fallback={<ComponentLoading />}>
+              <TableProductosPorVencer />
+            </Suspense>
+            <Suspense fallback={<ComponentLoading />}>
+              <TableProductosSinRotar />
+            </Suspense>
+            <Suspense fallback={<ComponentLoading />}>
+              <TableProductosUrgenteStock />
+            </Suspense>
             <div className=''>
               <div className='text-center font-semibold mb-2 text-slate-700'>
                 Préstamos y Prestés
               </div>
-              <PrestamosPrestes />
+              <Suspense fallback={<ComponentLoading />}>
+                <PrestamosPrestes />
+              </Suspense>
             </div>
           </div>
         </div>

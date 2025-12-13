@@ -1,7 +1,7 @@
 'use client'
 
 import SelectBase, { SelectBaseProps } from './select-base'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getDespliegueDePago } from '~/app/_actions/despliegue-de-pago'
 import { FaMoneyCheckAlt } from 'react-icons/fa'
@@ -18,7 +18,7 @@ export default function SelectDespliegueDePago({
   sizeIcon = 14,
   ...props
 }: SelectDespliegueDePagoProps) {
-  const { response } = useServerQuery({
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
     action: getDespliegueDePago,
     propsQuery: {
       queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
@@ -40,6 +40,16 @@ export default function SelectDespliegueDePago({
         value: item.id,
         label: item.name,
       }))}
+      onFocus={() => {
+        if (!isFetched) {
+          triggerFetch()
+        }
+      }}
+      onDropdownVisibleChange={(open) => {
+        if (open && !isFetched) {
+          triggerFetch()
+        }
+      }}
       {...props}
     />
   )

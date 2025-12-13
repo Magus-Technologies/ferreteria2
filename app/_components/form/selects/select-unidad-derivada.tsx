@@ -2,7 +2,7 @@
 
 import { FaWeightHanging } from 'react-icons/fa'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import { getUnidadesDerivadas } from '~/app/_actions/unidadDerivada'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonCreateUnidadDerivada from '../buttons/button-create-unidad-derivada'
@@ -25,7 +25,7 @@ export default function SelectUnidadDerivada({
 }: SelectUnidadDerivadaProps) {
   const selectUnidadDerivadaRef = useRef<RefSelectBaseProps>(null)
 
-  const { response } = useServerQuery({
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
     action: getUnidadesDerivadas,
     propsQuery: {
       queryKey: [QueryKeys.UNIDADES_DERIVADAS],
@@ -45,6 +45,16 @@ export default function SelectUnidadDerivada({
           value: item.id,
           label: item.name,
         }))}
+        onFocus={() => {
+          if (!isFetched) {
+            triggerFetch()
+          }
+        }}
+        onDropdownVisibleChange={(open) => {
+          if (open && !isFetched) {
+            triggerFetch()
+          }
+        }}
         {...props}
       />
       {showButtonCreate && (

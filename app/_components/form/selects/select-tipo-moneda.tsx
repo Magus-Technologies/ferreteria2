@@ -5,6 +5,7 @@ import { useStoreTipoDeCambio } from '~/store/store-tipo-de-cambio'
 import { useEffect } from 'react'
 import { useServerQuery } from '~/hooks/use-server-query'
 import { RiExchangeDollarFill } from 'react-icons/ri'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 interface SelectTipoMonedaProps extends SelectBaseProps {
   classNameIcon?: string
@@ -25,7 +26,8 @@ export default function SelectTipoMoneda({
   const { response, refetch } = useServerQuery({
     action: consultaTipoDeCambio,
     propsQuery: {
-      queryKey: [],
+      queryKey: [QueryKeys.TIPO_CAMBIO],
+      staleTime: 30 * 60 * 1000, // Cache por 30 minutos (tipo de cambio cambia poco)
     },
     params: undefined,
   })

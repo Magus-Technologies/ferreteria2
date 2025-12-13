@@ -4,14 +4,39 @@ import { prisma } from '~/db/db'
 export const getUserFromDb = async (email: string, pwHash: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
-    include: {
+    select: {
+      id: true,
+      password: true,
+      efectivo: true,
       roles: {
-        include: {
-          permissions: true,
+        select: {
+          permissions: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
-      permissions: true,
-      empresa: true,
+      permissions: {
+        select: {
+          name: true,
+        },
+      },
+      empresa: {
+        select: {
+          id: true,
+          ruc: true,
+          razon_social: true,
+          direccion: true,
+          telefono: true,
+          email: true,
+          serie_ingreso: true,
+          serie_salida: true,
+          serie_recepcion_almacen: true,
+          almacen_id: true,
+          marca_id: true,
+        },
+      },
     },
   })
 

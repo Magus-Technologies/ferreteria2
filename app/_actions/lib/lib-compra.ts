@@ -1,7 +1,13 @@
 import { Prisma } from '@prisma/client'
 
 export const includeCompra = {
-  proveedor: true,
+  proveedor: {
+    select: {
+      id: true,
+      ruc: true,
+      razon_social: true,
+    },
+  },
   _count: {
     select: {
       recepciones_almacen: {
@@ -19,21 +25,34 @@ export const includeCompra = {
   productos_por_almacen: {
     include: {
       producto_almacen: {
-        include: {
+        select: {
+          id: true,
           producto: {
-            include: {
-              marca: true,
-              unidad_medida: true,
+            select: {
+              id: true,
+              name: true,
+              cod_producto: true,
+              marca: { select: { id: true, name: true } },
+              unidad_medida: { select: { id: true, name: true } },
             },
           },
         },
       },
       unidades_derivadas: {
-        include: {
-          unidad_derivada_inmutable: true,
+        select: {
+          id: true,
+          cantidad: true,
+          unidad_derivada_inmutable: {
+            select: { id: true, name: true }
+          },
         },
       },
     },
   },
-  user: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
 } satisfies Prisma.CompraInclude

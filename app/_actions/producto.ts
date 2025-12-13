@@ -24,23 +24,55 @@ const includeGetProductos = {
     include: {
       unidades_derivadas: {
         include: {
-          unidad_derivada: true,
+          unidad_derivada: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
-      almacen: true,
-      ubicacion: true,
+      almacen: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      ubicacion: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      // Reducir compras pesadas - solo las más recientes
       compras: {
-        include: {
+        select: {
+          id: true,
+          costo: true,
           compra: {
-            include: {
-              proveedor: true,
-              user: true,
+            select: {
+              id: true,
+              fecha: true,
+              proveedor: {
+                select: {
+                  id: true,
+                  razon_social: true,
+                },
+              },
             },
           },
           unidades_derivadas: {
-            include: {
-              unidad_derivada_inmutable: true,
+            select: {
+              cantidad: true,
+              factor: true,
+              unidad_derivada_inmutable: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
             },
+            take: 1, // Solo la primera unidad derivada
           },
         },
         where: {
@@ -53,13 +85,28 @@ const includeGetProductos = {
             created_at: 'desc',
           },
         },
-        take: 6,
+        take: 3, // Reducido de 6 a 3
       },
     },
   },
-  marca: true,
-  categoria: true,
-  unidad_medida: true,
+  marca: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  categoria: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  unidad_medida: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
 } satisfies Prisma.ProductoInclude
 export type getProductosResponseProps = Prisma.ProductoGetPayload<{
   include: typeof includeGetProductos
@@ -78,6 +125,7 @@ async function SearchProductosWA({
     orderBy: {
       name: 'asc',
     },
+    take: 50, // Reducido para búsquedas rápidas en selects
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
@@ -103,11 +151,54 @@ async function getProductosWA({
       name: 'asc',
     },
     where: whereParsed,
+    take: 100, // Reducido para mejor performance
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
 }
 export const getProductos = withAuth(getProductosWA)
+
+// Versión paginada optimizada para productos
+async function getProductosPaginatedWA({
+  where,
+  skip = 0,
+  take = 100,
+}: {
+  where?: Prisma.ProductoWhereInput
+  skip?: number
+  take?: number
+}) {
+  const puede = await can(permissions.PRODUCTO_LISTADO)
+  if (!puede)
+    throw new Error('No tienes permiso para ver la lista de productos')
+
+  if (!where) return { data: { data: [], total: 0, hasMore: false } }
+
+  const whereParsed = ProductoWhereInputSchema.parse(where)
+
+  // Usar el include completo para compatibilidad con tipos
+  const [items, total] = await Promise.all([
+    prisma.producto.findMany({
+      include: includeGetProductos,
+      orderBy: { name: 'asc' },
+      where: whereParsed,
+      skip,
+      take,
+    }),
+    prisma.producto.count({ where: whereParsed })
+  ])
+
+  const hasMore = (skip + take) < total
+
+  return { 
+    data: {
+      data: JSON.parse(JSON.stringify(items)) as typeof items,
+      total,
+      hasMore
+    }
+  }
+}
+export const getProductosPaginated = withAuth(getProductosPaginatedWA)
 
 async function createProductoWA(data: FormCreateProductoFormatedProps) {
   const puede = await can(permissions.PRODUCTO_CREATE)

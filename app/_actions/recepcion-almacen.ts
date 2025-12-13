@@ -65,6 +65,7 @@ async function getRecepcionesAlmacenWA({
       fecha: 'asc',
     },
     where: whereParsed,
+    take: 100, // Límite para evitar consultas masivas
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }

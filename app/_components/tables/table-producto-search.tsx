@@ -1,5 +1,5 @@
 import {
-  getProductos,
+  SearchProductos,
   getProductosResponseProps,
 } from '~/app/_actions/producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -39,7 +39,7 @@ export default function TableProductoSearch({
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
   const { response, refetch, loading } = useServerQuery({
-    action: getProductos,
+    action: SearchProductos, // Usar SearchProductos con límite de 50
     propsQuery: {
       queryKey: [QueryKeys.PRODUCTOS_TABLE_SEARCH],
       enabled: false,

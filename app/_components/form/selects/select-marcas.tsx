@@ -1,6 +1,6 @@
 'use client'
 
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { TbBrand4Chan } from 'react-icons/tb'
 import { getMarcas } from '~/app/_actions/marca'
@@ -25,7 +25,7 @@ export default function SelectMarcas({
 }: SelectMarcasProps) {
   const selectMarcasRef = useRef<RefSelectBaseProps>(null)
 
-  const { response } = useServerQuery({
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
     action: getMarcas,
     propsQuery: {
       queryKey: [QueryKeys.MARCAS],
@@ -45,6 +45,16 @@ export default function SelectMarcas({
           value: item.id,
           label: item.name,
         }))}
+        onFocus={() => {
+          if (!isFetched) {
+            triggerFetch()
+          }
+        }}
+        onDropdownVisibleChange={(open) => {
+          if (open && !isFetched) {
+            triggerFetch()
+          }
+        }}
         {...props}
       />
       {showButtonCreate && (

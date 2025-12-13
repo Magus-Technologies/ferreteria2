@@ -35,11 +35,52 @@ async function getComprasWA({ where }: { where?: Prisma.CompraWhereInput }) {
       fecha: 'asc',
     },
     where: whereParsed,
+    take: 100, // Límite para evitar consultas masivas
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
 }
 export const getCompras = withAuth(getComprasWA)
+
+// Versión paginada optimizada para compras
+async function getComprasPaginatedWA({
+  where,
+  skip = 0,
+  take = 50,
+}: {
+  where?: Prisma.CompraWhereInput
+  skip?: number
+  take?: number
+}) {
+  const puede = await can(permissions.COMPRAS_LISTADO)
+  if (!puede) throw new Error('No tienes permiso para ver las compras')
+
+  if (!where) return { data: { data: [], total: 0, hasMore: false } }
+
+  const whereParsed = CompraWhereInputSchema.parse(where)
+
+  const [items, total] = await Promise.all([
+    prisma.compra.findMany({
+      include: includeCompra,
+      orderBy: {
+        fecha: 'desc',
+      },
+      where: whereParsed,
+      skip,
+      take,
+    }),
+    prisma.compra.count({ where: whereParsed }),
+  ])
+
+  return {
+    data: {
+      data: JSON.parse(JSON.stringify(items)) as typeof items,
+      total,
+      hasMore: skip + take < total,
+    },
+  }
+}
+export const getComprasPaginated = withAuth(getComprasPaginatedWA)
 
 async function createCompraWA(data: Prisma.CompraUncheckedCreateInput) {
   const puede = await can(permissions.COMPRAS_CREATE)

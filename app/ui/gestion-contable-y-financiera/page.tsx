@@ -1,3 +1,5 @@
+'use client'
+
 import { FaMoneyBills } from 'react-icons/fa6'
 import { MdSpaceDashboard } from 'react-icons/md'
 import CardDashboard from '~/app/_components/cards/card-dashboard'
@@ -5,20 +7,32 @@ import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
-import VentasPorMetodosDePago from './_components/charts/ventas-por-metodos-de-pago'
 import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
-import ComisionPorVendedor from './_components/charts/comision-por-vendedor'
-import PorcentajeDeGanancias from './_components/charts/porcentaje-de-ganancias'
-import CierresDeCajaConPerdida from './_components/charts/cierres-de-caja-con-perdida'
-import ClientesMorosos from './_components/charts/clientes-morosos'
-import GananciasPorRecomendacion from './_components/charts/ganancias-por-recomendacion'
 import RangePickerBase from '~/app/_components/form/fechas/range-picker-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
-import can from '~/utils/server-validate-permission'
+import { usePermission } from '~/hooks/use-permission'
+import { Suspense, lazy } from 'react'
+import { Spin } from 'antd'
 
-export default async function GestionContableYFinanciera() {
-  if (!(await can(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)))
-    return <NoAutorizado />
+// Lazy loading de componentes pesados
+const VentasPorMetodosDePago = lazy(() => import('./_components/charts/ventas-por-metodos-de-pago'))
+const ComisionPorVendedor = lazy(() => import('./_components/charts/comision-por-vendedor'))
+const PorcentajeDeGanancias = lazy(() => import('./_components/charts/porcentaje-de-ganancias'))
+const CierresDeCajaConPerdida = lazy(() => import('./_components/charts/cierres-de-caja-con-perdida'))
+const ClientesMorosos = lazy(() => import('./_components/charts/clientes-morosos'))
+const GananciasPorRecomendacion = lazy(() => import('./_components/charts/ganancias-por-recomendacion'))
+
+// Componente de loading optimizado
+const ChartLoading = () => (
+  <div className="flex items-center justify-center h-40">
+    <Spin size="large" />
+  </div>
+)
+
+export default function GestionContableYFinanciera() {
+  const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
+  
+  if (!canAccess) return <NoAutorizado />
 
   return (
     <ContenedorGeneral>
@@ -73,13 +87,17 @@ export default async function GestionContableYFinanciera() {
           <div className='text-center font-semibold -mt-2 text-slate-700'>
             Comisión por Vendedor
           </div>
-          <ComisionPorVendedor />
+          <Suspense fallback={<ChartLoading />}>
+            <ComisionPorVendedor />
+          </Suspense>
         </div>
         <div className='col-start-1 col-end-2 row-start-4 row-end-6'>
           <div className='text-center font-semibold -mt-2 text-slate-700'>
             Ventas por Métodos de Pago
           </div>
-          <VentasPorMetodosDePago />
+          <Suspense fallback={<ChartLoading />}>
+            <VentasPorMetodosDePago />
+          </Suspense>
         </div>
         <div className='col-start-2 col-end-5 row-start-2 row-end-6'>
           <div className='grid grid-cols-2 grid-rows-2 gap-y-6 gap-x-10 size-full'>
@@ -87,25 +105,33 @@ export default async function GestionContableYFinanciera() {
               <div className='text-center font-semibold mb-2 text-slate-700'>
                 Porcentaje de Ganancias
               </div>
-              <PorcentajeDeGanancias />
+              <Suspense fallback={<ChartLoading />}>
+                <PorcentajeDeGanancias />
+              </Suspense>
             </div>
             <div>
               <div className='text-center font-semibold mb-2 text-slate-700'>
                 Cierres de Caja con Pérdida
               </div>
-              <CierresDeCajaConPerdida />
+              <Suspense fallback={<ChartLoading />}>
+                <CierresDeCajaConPerdida />
+              </Suspense>
             </div>
             <div>
               <div className='text-center font-semibold mb-2 text-slate-700'>
                 Clientes Morosos
               </div>
-              <ClientesMorosos />
+              <Suspense fallback={<ChartLoading />}>
+                <ClientesMorosos />
+              </Suspense>
             </div>
             <div>
               <div className='text-center font-semibold mb-2 text-slate-700'>
                 Ganancias por Recomendación
               </div>
-              <GananciasPorRecomendacion />
+              <Suspense fallback={<ChartLoading />}>
+                <GananciasPorRecomendacion />
+              </Suspense>
             </div>
           </div>
         </div>

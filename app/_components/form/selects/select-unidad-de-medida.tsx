@@ -3,7 +3,7 @@
 import { FaWeightHanging } from 'react-icons/fa'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import { getUnidadesMedida } from '~/app/_actions/unidadMedida'
 import ButtonCreateUnidadMedida from '../buttons/button-create-unidad-medida'
 import { useRef } from 'react'
@@ -25,7 +25,7 @@ export default function SelectUnidadDeMedida({
 }: SelectUnidadDeMedidaProps) {
   const selectUnidadDeMedidaRef = useRef<RefSelectBaseProps>(null)
 
-  const { response } = useServerQuery({
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
     action: getUnidadesMedida,
     propsQuery: {
       queryKey: [QueryKeys.UNIDADES_MEDIDA],
@@ -45,6 +45,16 @@ export default function SelectUnidadDeMedida({
           value: item.id,
           label: item.name,
         }))}
+        onFocus={() => {
+          if (!isFetched) {
+            triggerFetch()
+          }
+        }}
+        onDropdownVisibleChange={(open) => {
+          if (open && !isFetched) {
+            triggerFetch()
+          }
+        }}
         {...props}
       />
       {showButtonCreate && (

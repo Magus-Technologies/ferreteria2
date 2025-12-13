@@ -22,6 +22,7 @@ export default function SelectUsuarios({
     action: getUsuarios,
     propsQuery: {
       queryKey: [QueryKeys.USUARIOS],
+      staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     },
     params: undefined,
   })

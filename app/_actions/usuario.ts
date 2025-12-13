@@ -13,6 +13,7 @@ async function getUsuariosWA() {
     orderBy: {
       name: 'asc',
     },
+    take: 50, // Límite para mejor performance
   })
   return { data: item }
 }

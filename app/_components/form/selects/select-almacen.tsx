@@ -2,7 +2,7 @@
 
 import { PiWarehouseFill } from 'react-icons/pi'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import { getAlmacenes } from '~/app/_actions/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -29,16 +29,18 @@ export default function SelectAlmacen({
   const setAlmacenId = useStoreAlmacen(store => store.setAlmacenId)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { response } = useServerQuery({
+  const { response, triggerFetch, isFetched } = useLazyServerQuery({
     action: getAlmacenes,
     propsQuery: {
       queryKey: [QueryKeys.ALMACENES],
     },
     params: undefined,
   })
+
   useEffect(() => {
     if (afecta_store) selectAlmacenRef.current?.changeValue(almacen_id)
   }, [afecta_store, almacen_id])
+
   return (
     <SelectBase
       ref={selectAlmacenRef}
@@ -52,6 +54,16 @@ export default function SelectAlmacen({
         value: item.id,
         label: item.name,
       }))}
+      onFocus={() => {
+        if (!isFetched) {
+          triggerFetch()
+        }
+      }}
+      onDropdownVisibleChange={(open) => {
+        if (open && !isFetched) {
+          triggerFetch()
+        }
+      }}
       onChange={value => {
         if (afecta_store) setAlmacenId(value)
         onChange?.(value)

@@ -2,11 +2,11 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ServerAction } from './use-server-mutation'
 import { ServerResult } from '~/auth/middleware-server-actions'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { App } from 'antd'
 
-// Overload sin `select`
-export function useServerQuery<TParams, TResult>(props: {
+// Hook para queries que solo se ejecutan cuando son necesarias (lazy loading)
+export function useLazyServerQuery<TParams, TResult>(props: {
   action: ServerAction<TParams, TResult>
   propsQuery?: Omit<
     UseQueryOptions<
@@ -15,62 +15,18 @@ export function useServerQuery<TParams, TResult>(props: {
       ServerResult<TResult>,
       QueryKeys[]
     >,
-    'queryFn'
+    'queryFn' | 'enabled'
   >
   params: TParams
-}): {
-  refetch: () => void
-  loading: boolean
-  response: TResult | undefined
-  error: unknown
-  isPending: boolean
-  isFetching: boolean
-}
-
-// Overload con `select`
-export function useServerQuery<TParams, TResult, TSelect>(props: {
-  action: ServerAction<TParams, TResult>
-  propsQuery?: Omit<
-    UseQueryOptions<
-      ServerResult<TResult>,
-      unknown,
-      ServerResult<TSelect>,
-      QueryKeys[]
-    >,
-    'queryFn'
-  >
-  params: TParams
-}): {
-  refetch: () => void
-  loading: boolean
-  response: TSelect | undefined
-  error: unknown
-  isPending: boolean
-  isFetching: boolean
-}
-
-// Implementación
-export function useServerQuery<TParams, TResult, TSelect>(props: {
-  action: ServerAction<TParams, TResult>
-  params: TParams
-  propsQuery?: Omit<
-    UseQueryOptions<
-      ServerResult<TResult>,
-      unknown,
-      ServerResult<TSelect>,
-      QueryKeys[]
-    >,
-    'queryFn'
-  >
 }) {
   const { notification } = App.useApp()
   const { action, params, propsQuery } = props
+  const [shouldFetch, setShouldFetch] = useState(false)
 
   const {
-    enabled = true,
     refetchOnWindowFocus = false,
-    staleTime = 5 * 60 * 1000, // 5 minutos
-    gcTime = 10 * 60 * 1000,   // 10 minutos  
+    staleTime = 15 * 60 * 1000, // 15 minutos para lazy queries 
+    gcTime = 30 * 60 * 1000,    // 30 minutos
     queryKey,
     ...restPropsQuery
   } = propsQuery || {}
@@ -83,7 +39,7 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
 
   const query = useQuery({
     queryFn,
-    enabled,
+    enabled: shouldFetch,
     refetchOnWindowFocus,
     staleTime,
     gcTime,
@@ -97,28 +53,32 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
       notification.error({
         message: 'Error',
         description: query.data.error.message,
-        duration: 3, // Reducir duración de notificaciones
+        duration: 3,
       })
     }
   }, [notification, query.data])
 
+  // Función para iniciar el fetch manualmente
+  const triggerFetch = () => {
+    setShouldFetch(true)
+  }
+
   // Memoizar el objeto de retorno para evitar recreaciones
   return useMemo(() => ({
     refetch: query.refetch,
-    loading:
-      propsQuery?.enabled === false
-        ? false
-        : query.isPending || query.isFetching,
+    loading: shouldFetch && (query.isPending || query.isFetching),
     response: query.data?.data,
     error: query.error,
     isPending: query.isPending,
     isFetching: query.isFetching,
+    triggerFetch,
+    isFetched: shouldFetch,
   }), [
     query.refetch,
-    propsQuery?.enabled,
     query.isPending,
     query.isFetching,
     query.data?.data,
     query.error,
+    shouldFetch,
   ])
 }

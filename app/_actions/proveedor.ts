@@ -27,6 +27,7 @@ async function SearchProveedorWA(args: Prisma.ProveedorFindManyArgs) {
       razon_social: 'asc',
     },
     include: includeGetProveedor,
+    take: Math.min(argsParsed.take || 50, 100), // Máximo 100 proveedores
   })
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }

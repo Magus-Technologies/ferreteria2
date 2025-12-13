@@ -67,6 +67,7 @@ async function getEntregasProductoWA({
       fecha_entrega: 'desc',
     },
     where: whereParsed,
+    take: 100, // Límite para evitar consultas masivas
   })
 
   const serialized = JSON.parse(
