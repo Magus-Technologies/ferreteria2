@@ -14,6 +14,7 @@ module.exports = {
         AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
         AUTH_URL: process.env.AUTH_URL,
         RENIEC_TOKEN: process.env.RENIEC_TOKEN,
+        PORT: 3001,
       },
     },
   ],
