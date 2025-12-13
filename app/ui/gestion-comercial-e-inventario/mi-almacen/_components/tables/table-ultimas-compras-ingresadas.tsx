@@ -2,8 +2,11 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsUltimasComprasIngresadas } from './columns-ultimas-compras-ingresadas'
+import type { UltimasComprasType } from './columns-ultimas-compras-ingresadas'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { getProductosResponseProps } from '~/app/_actions/producto'
+
+// Importar el tipo desde las columnas para mantener consistencia
 
 export default function TableUltimasComprasIngresadas({
   id,
@@ -60,7 +63,7 @@ export default function TableUltimasComprasIngresadas({
           ],
         },
       ]}
-      rowData={rowData}
+      rowData={rowData as unknown as UltimasComprasType[]}
     />
   )
 }

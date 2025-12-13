@@ -1,4 +1,5 @@
-require('dotenv').config(); // Carga el archivo .env
+import dotenv from 'dotenv';
+dotenv.config(); // Carga el archivo .env
 
 module.exports = {
   apps: [

@@ -1,25 +1,33 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, TipoDocumento } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+interface SerieDocumentoData {
+  tipo_documento: TipoDocumento
+  serie: string
+  correlativo: number
+  almacen_id: number
+  activo: boolean
+}
+
 export default async function serieDocumentoSeeder() {
-  const data = [
+  const data: SerieDocumentoData[] = [
     {
-      tipo_documento: 'Factura',
+      tipo_documento: TipoDocumento.Factura,
       serie: 'F001',
       correlativo: 0,
       almacen_id: 1,
       activo: true,
     },
     {
-      tipo_documento: 'Boleta',
+      tipo_documento: TipoDocumento.Boleta,
       serie: 'B001',
       correlativo: 0,
       almacen_id: 1,
       activo: true,
     },
     {
-      tipo_documento: 'NotaDeVenta',
+      tipo_documento: TipoDocumento.NotaDeVenta,
       serie: 'NV01',
       correlativo: 0,
       almacen_id: 1,
@@ -31,13 +39,13 @@ export default async function serieDocumentoSeeder() {
     await prisma.serieDocumento.upsert({
       where: {
         tipo_documento_serie_almacen_id: {
-          tipo_documento: item.tipo_documento as any,
+          tipo_documento: item.tipo_documento,
           serie: item.serie,
           almacen_id: item.almacen_id,
         },
       },
       update: {},
-      create: item as any,
+      create: item,
     })
   }
 }

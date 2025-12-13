@@ -42,6 +42,11 @@ export const includeCompra = {
         select: {
           id: true,
           cantidad: true,
+          factor: true,
+          bonificacion: true,
+          flete: true,
+          vencimiento: true,
+          lote: true,
           unidad_derivada_inmutable: {
             select: { id: true, name: true }
           },

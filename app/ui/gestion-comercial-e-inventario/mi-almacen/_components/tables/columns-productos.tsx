@@ -236,13 +236,21 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                       key={index}
                       stock_fraccion={Number(item.stock_fraccion)}
                       unidades_contenidas={Number(data!.unidades_contenidas)}
-                      producto_almacen_unidad_derivada={
-                        item.unidades_derivadas.find(
+                      producto_almacen_unidad_derivada={{
+                        ...(item.unidades_derivadas.find(
                           item =>
                             Number(item.factor) ===
                             Number(data!.unidades_contenidas)
-                        ) ?? item.unidades_derivadas[0]
-                      }
+                        ) ?? item.unidades_derivadas[0]),
+                        unidad_derivada: {
+                          ...((item.unidades_derivadas.find(
+                            item =>
+                              Number(item.factor) ===
+                              Number(data!.unidades_contenidas)
+                          ) ?? item.unidades_derivadas[0]).unidad_derivada),
+                          estado: true
+                        }
+                      }}
                       almacen={item.almacen?.name}
                     />
                   ))}

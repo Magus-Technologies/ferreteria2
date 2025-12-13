@@ -4,7 +4,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
-import { useColumnsDetalleDePrecios } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
+import { useColumnsDetalleDePrecios, DetalleDePreciosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
 import { CostoUnidadDerivadaSearch } from '../modals/modal-producto-search'
 
 export default function TableDetalleDePreciosSearch({
@@ -81,7 +81,7 @@ export default function TableDetalleDePreciosSearch({
           ],
         },
       ]}
-      rowData={rowData ?? []}
+      rowData={(rowData as unknown) as DetalleDePreciosProps[] ?? []}
     />
   )
 }

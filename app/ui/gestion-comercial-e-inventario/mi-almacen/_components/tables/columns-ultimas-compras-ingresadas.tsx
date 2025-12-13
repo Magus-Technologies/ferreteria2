@@ -1,11 +1,25 @@
 import { ColDef } from 'ag-grid-community'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { getProductosResponseProps } from '~/app/_actions/producto'
 
-type UltimasComprasType = Pick<
+export type UltimasComprasType = Pick<
   getProductosResponseProps['producto_en_almacenes'][number]['compras'][number],
   'compra' | 'costo'
 > &
-  getProductosResponseProps['producto_en_almacenes'][number]['compras'][number]['unidades_derivadas'][number]
+  getProductosResponseProps['producto_en_almacenes'][number]['compras'][number]['unidades_derivadas'][number] & {
+  bonificacion?: boolean
+  compra: {
+    tipo_documento: string
+    serie: string | null
+    numero: number | null
+    fecha: Date
+    proveedor: {
+      razon_social: string
+    }
+    user: {
+      name: string | null
+    }
+  }
+}
 
 export function useColumnsUltimasComprasIngresadas() {
   const columns: ColDef<UltimasComprasType>[] = [

@@ -55,7 +55,7 @@ export default function useInitCompra({
             producto_codigo: ppa.producto_almacen.producto.cod_producto,
             unidad_derivada_name: ud.unidad_derivada_normal.name,
             unidad_derivada_factor: ud.factor,
-            producto_id: ppa.producto_almacen.producto_id,
+            producto_id: ppa.producto_almacen.producto.id,
           }))
         ),
       }

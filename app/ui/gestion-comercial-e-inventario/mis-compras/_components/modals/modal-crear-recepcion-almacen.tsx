@@ -66,10 +66,17 @@ export default function ModalCrearRecepcionAlmacen({
       form.setFieldValue(
         'productos',
         productos_formateados
-          .filter(p => Number(p.unidad_derivada.cantidad_pendiente) > 0)
+          .filter(p => {
+            const unidad = p.unidad_derivada
+            const cantidad_pendiente = (unidad as typeof unidad & { cantidad_pendiente?: number }).cantidad_pendiente ?? unidad.cantidad ?? 0
+            return Number(cantidad_pendiente) > 0
+          })
           .map(p => {
             const producto = p.producto.producto_almacen.producto
             const unidad_derivada = p.unidad_derivada
+            const cantidad_pendiente_raw = (unidad_derivada as typeof unidad_derivada & { cantidad_pendiente?: number }).cantidad_pendiente ?? unidad_derivada.cantidad ?? 0
+            const cantidad_pendiente_num = Number(cantidad_pendiente_raw)
+
             return {
               producto_codigo: producto.cod_producto,
               producto_id: producto.id,
@@ -80,17 +87,16 @@ export default function ModalCrearRecepcionAlmacen({
                 unidad_derivada.unidad_derivada_inmutable.name,
               unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable.id,
               unidad_derivada_factor: unidad_derivada.factor,
-              cantidad: unidad_derivada.cantidad_pendiente,
+              cantidad: cantidad_pendiente_num,
               cantidad_recepcionada:
-                Number(unidad_derivada.cantidad) -
-                Number(unidad_derivada.cantidad_pendiente),
-              cantidad_pendiente: unidad_derivada.cantidad_pendiente,
+                Math.max(0, Number(unidad_derivada.cantidad ?? 0) - cantidad_pendiente_num),
+              cantidad_pendiente: cantidad_pendiente_num,
               precio_compra:
                 Number(p.producto.costo) * Number(unidad_derivada.factor),
               subtotal:
                 Number(p.producto.costo) *
                 Number(unidad_derivada.factor) *
-                Number(unidad_derivada.cantidad),
+                Number(unidad_derivada.cantidad ?? 0),
               flete: unidad_derivada.flete,
               vencimiento: unidad_derivada.vencimiento
                 ? dayjs(unidad_derivada.vencimiento)

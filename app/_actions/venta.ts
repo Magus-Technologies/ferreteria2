@@ -17,23 +17,16 @@ const includeVenta = {
       producto_almacen: {
         include: {
           producto: {
-            select: {
-              id: true,
-              name: true,
-              cod_producto: true,
-              marca: { select: { id: true, name: true } },
-              unidad_medida: { select: { id: true, name: true } },
+            include: {
+              marca: true,
+              unidad_medida: true,
             },
           },
         },
       },
       unidades_derivadas: {
-        select: {
-          id: true,
-          cantidad: true,
-          unidad_derivada_inmutable: {
-            select: { id: true, name: true }
-          },
+        include: {
+          unidad_derivada_inmutable: true,
         },
       },
     },
@@ -58,10 +51,9 @@ async function getVentaWA({ where }: { where?: Prisma.VentaWhereInput }) {
   const items = await prisma.venta.findMany({
     include: includeVenta,
     orderBy: {
-      fecha: 'desc',
+      fecha: 'asc',
     },
     where: whereParsed,
-    take: 200, // Límite para mejor performance
   })
 
   // Serializar para convertir Decimal a number
@@ -92,8 +84,6 @@ async function createVentaWA(data: Prisma.VentaCreateInput) { //VentaUncheckedCr
   return await prisma.$transaction(
     async (db) => {
       // Generar serie y número automáticamente si no se proporcionan
-      // TODO: Verificar schema de serie documento
-      /*
       if (!parsedData.serie || !parsedData.numero) {
         const serieDoc = await db.serieDocumento.findFirst({
           where: {
@@ -118,7 +108,6 @@ async function createVentaWA(data: Prisma.VentaCreateInput) { //VentaUncheckedCr
           parsedData.numero = nuevoCorrelativo
         }
       }
-      */
       // if (
       //   parsedData.estado_de_venta === EstadoDeVenta.Creado &&
       //   parsedData.forma_de_pago === FormaDePago.Contado &&
