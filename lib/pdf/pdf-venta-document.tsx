@@ -260,6 +260,7 @@ export default function PDFVentaDocument({
         <View style={styles.headerContainer}>
           {/* Logo y datos de empresa */}
           <View style={styles.logoSection}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image
               src={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/logo-horizontal.png`}
               style={styles.logo}

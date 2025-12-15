@@ -159,13 +159,13 @@ export default function FiltersMiAlmacen({
                   {
                     cod_producto: {
                       contains: cod_producto,
-                      mode: 'insensitive',
+                      // mode: 'insensitive',
                     },
                   },
                   {
                     name: {
                       contains: cod_producto,
-                      mode: 'insensitive',
+                      // mode: 'insensitive',
                     },
                   },
                 ],
@@ -175,7 +175,7 @@ export default function FiltersMiAlmacen({
             ? {
                 accion_tecnica: {
                   contains: accion_tecnica,
-                  mode: 'insensitive',
+                  // mode: 'insensitive',
                 },
               }
             : {}),

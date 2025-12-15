@@ -112,12 +112,16 @@ export default function useCreateProducto({
     }
 
     // Función para limpiar valores undefined y "$undefined"
-    const cleanUndefinedValues = (obj: any): any => {
+    const cleanUndefinedValues = (obj: unknown): unknown => {
       if (obj === null || obj === undefined || obj === '$undefined') {
         return undefined
       }
+      // Preservar objetos Dayjs sin procesarlos
+      if (dayjs.isDayjs(obj)) {
+        return obj
+      }
       if (typeof obj === 'object' && !Array.isArray(obj)) {
-        const cleaned: any = {}
+        const cleaned: Record<string, unknown> = {}
         for (const [key, value] of Object.entries(obj)) {
           if (value !== undefined && value !== '$undefined') {
             cleaned[key] = cleanUndefinedValues(value)
@@ -131,9 +135,9 @@ export default function useCreateProducto({
       return obj
     }
 
-    const cleanedValues = cleanUndefinedValues(values)
+    const cleanedValues = cleanUndefinedValues(values) as FormCreateProductoProps
 
-    const data = {
+    const dataBase = {
       ...cleanedValues,
       compra: {
         ...cleanedValues.compra,
@@ -143,19 +147,24 @@ export default function useCreateProducto({
             })
           : undefined,
       },
-      unidades_derivadas: cleanedValues.unidades_derivadas.map((item: any) => {
-        delete item.unidad_derivada
-        return item
+      unidades_derivadas: cleanedValues.unidades_derivadas.map((item) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { unidad_derivada: _unidad_derivada, ...rest } = item
+        return rest
       }),
       estado: cleanedValues.estado === 1,
       id: producto?.id,
     }
-    
+
     // Si cod_producto está vacío o es "$undefined", dejamos que el servidor lo genere
-    if (!data.cod_producto || data.cod_producto === '' || data.cod_producto === '$undefined') {
-      delete data.cod_producto
-    }
-    
+    const data = (!dataBase.cod_producto || dataBase.cod_producto === '' || dataBase.cod_producto === '$undefined')
+      ? (() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { cod_producto: _cod_producto, ...rest } = dataBase
+          return rest
+        })()
+      : dataBase
+
     execute(data)
   }
 

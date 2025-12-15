@@ -11,7 +11,7 @@ import {
 import { ColDef } from 'ag-grid-community'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
-  almacen: Almacen
+  almacen: Pick<Almacen, 'id' | 'name'>
   producto: Producto
   unidad_derivada: UnidadDerivada
   producto_almacen: {

@@ -4,8 +4,6 @@ import { JWT } from 'next-auth/jwt'
 import Credentials from 'next-auth/providers/credentials'
 import { schemaLogin } from './schema'
 import { getUserFromDb } from './utils/getUserFromDb'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '~/db/db'
 import { Empresa } from '@prisma/client'
 
 export type EmpresaSession = Empresa
@@ -37,7 +35,6 @@ declare module 'next-auth/jwt' {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
       credentials: {
