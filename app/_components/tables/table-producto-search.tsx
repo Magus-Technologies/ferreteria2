@@ -92,7 +92,6 @@ export default function TableProductoSearch({
   }, [value, tipoBusqueda])
 
   useImperativeHandle(ref, () => ({
-    ...ref!.current!,
     handleRefetch: () => handleRefetch(),
   }))
 

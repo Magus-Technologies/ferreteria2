@@ -16,6 +16,7 @@ import {
   procesoPostCompra,
   validarNuevaCompra,
 } from './utils/compra'
+import { convertDecimalsToNumbers } from './utils/convert-decimals'
 
 export type getComprasResponseProps = Prisma.CompraGetPayload<{
   include: typeof includeCompra
@@ -38,7 +39,7 @@ async function getComprasWA({ where }: { where?: Prisma.CompraWhereInput }) {
     take: 100, // Límite para evitar consultas masivas
   })
 
-  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
+  return { data: convertDecimalsToNumbers(items) }
 }
 export const getCompras = withAuth(getComprasWA)
 
@@ -74,7 +75,7 @@ async function getComprasPaginatedWA({
 
   return {
     data: {
-      data: JSON.parse(JSON.stringify(items)) as typeof items,
+      data: convertDecimalsToNumbers(items),
       total,
       hasMore: skip + take < total,
     },

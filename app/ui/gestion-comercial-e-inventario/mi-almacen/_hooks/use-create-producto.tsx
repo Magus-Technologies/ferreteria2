@@ -87,7 +87,12 @@ export default function useCreateProducto({
         setUploading(false)
       }
 
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
+      // Invalidar y refetch inmediatamente
+      await queryClient.invalidateQueries({ 
+        queryKey: [QueryKeys.PRODUCTOS],
+        refetchType: 'active' // Solo refetch queries activas
+      })
+      
       setOpen(false)
       form.resetFields()
       setImgFile(undefined)

@@ -69,22 +69,33 @@ export default function SelectBase({
 
   const [value, setValue] = useState<unknown>()
 
-  useImperativeHandle(props.ref, () => ({
-    ...props.ref!.current!,
-    changeValue: (value: unknown) => {
-      if (form) {
-        form.setFieldValue(
-          propsFormItem.name instanceof Array
-            ? [
-                ...(propsFormItem.prefix_array_name ?? []),
-                ...propsFormItem.name,
-              ]
-            : propsFormItem.name,
-          value
-        )
-      } else setValue(value)
-    },
-  }))
+  useImperativeHandle(
+    props.ref,
+    () => ({
+      changeValue: (value: unknown) => {
+        if (form && propsFormItem.name) {
+          form.setFieldValue(
+            propsFormItem.name instanceof Array
+              ? [
+                  ...(propsFormItem.prefix_array_name ?? []),
+                  ...propsFormItem.name,
+                ]
+              : propsFormItem.name,
+            value
+          )
+        } else {
+          setValue(value)
+        }
+      },
+      focus: () => {
+        // Implementación básica de focus si es necesario
+      },
+      blur: () => {
+        // Implementación básica de blur si es necesario
+      },
+    }),
+    [form, propsFormItem.name, propsFormItem.prefix_array_name, setValue]
+  )
 
   return propsForm ? (
     <Form.Item

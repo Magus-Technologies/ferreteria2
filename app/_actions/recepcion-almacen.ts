@@ -11,6 +11,7 @@ import {
 import can from '~/utils/server-validate-permission'
 import { getUltimoNumeroRecepcionAlmacen } from './utils/recepcion-almacen'
 import { manejoDeCosto } from '../_utils/manejo-de-costo'
+import { convertDecimalsToNumbers } from './utils/convert-decimals'
 
 const includeRecepcionAlmacen = {
   compra: {
@@ -68,7 +69,7 @@ async function getRecepcionesAlmacenWA({
     take: 100, // Límite para evitar consultas masivas
   })
 
-  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
+  return { data: convertDecimalsToNumbers(items) }
 }
 export const getRecepcionesAlmacen = withAuth(getRecepcionesAlmacenWA)
 

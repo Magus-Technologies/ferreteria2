@@ -57,13 +57,20 @@ export function usePaginatedServerQuery<TParams extends PaginationParams, TResul
     [action, paginatedParams]
   )
 
+  // Construir un queryKey único que incluya los parámetros
+  const fullQueryKey = useMemo(() => {
+    const baseKey = queryKey || []
+    // Agregar los parámetros al queryKey para que sea único
+    return [...baseKey, { params: paginatedParams }]
+  }, [queryKey, paginatedParams])
+
   const query = useQuery({
     queryFn,
     enabled,
     refetchOnWindowFocus,
     staleTime,
     gcTime,
-    queryKey: queryKey || [],
+    queryKey: fullQueryKey,
     meta: { page: currentPage },
     ...restPropsQuery,
   })
@@ -95,10 +102,22 @@ export function usePaginatedServerQuery<TParams extends PaginationParams, TResul
     }
   }
 
+  // Mantener los datos anteriores mientras se hace refetch
+  const [cachedData, setCachedData] = useState<TResult[]>([])
+  
+  useEffect(() => {
+    if (query.data?.data?.data) {
+      setCachedData(query.data.data.data)
+    }
+  }, [query.data])
+
+  // Si estamos haciendo refetch y no hay datos nuevos, mostrar los datos en caché
+  const displayData = query.data?.data?.data ?? (query.isFetching ? cachedData : [])
+
   return {
     refetch: query.refetch,
-    loading: query.isPending || query.isFetching,
-    response: query.data?.data?.data || [],
+    loading: query.isPending,
+    response: displayData,
     total: query.data?.data?.total || 0,
     hasMore: query.data?.data?.hasMore || false,
     error: query.error,

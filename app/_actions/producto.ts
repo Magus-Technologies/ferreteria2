@@ -18,6 +18,7 @@ import { crearProductoEnAlmacen, getUltimoIdProducto } from './utils/producto'
 import { auth } from '~/auth/auth'
 import { getUltimoNumeroIngresoSalida } from './utils/ingreso-salida'
 import { TIPOS_INGRESOS_SALIDAS } from '../_lib/tipos-ingresos-salidas'
+import { convertDecimalsToNumbers } from './utils/convert-decimals'
 
 const includeGetProductos = {
   producto_en_almacenes: {
@@ -128,7 +129,7 @@ async function SearchProductosWA({
     take: 50, // Reducido para búsquedas rápidas en selects
   })
 
-  return { data: items }
+  return { data: convertDecimalsToNumbers(items) }
 }
 export const SearchProductos = withAuth(SearchProductosWA)
 
@@ -154,7 +155,7 @@ async function getProductosWA({
     take: 100, // Reducido para mejor performance
   })
 
-  return { data: items }
+  return { data: convertDecimalsToNumbers(items) }
 }
 export const getProductos = withAuth(getProductosWA)
 
@@ -190,9 +191,12 @@ async function getProductosPaginatedWA({
 
   const hasMore = (skip + take) < total
 
+  // Convertir Decimals a números antes de enviar al cliente
+  const itemsConverted = convertDecimalsToNumbers(items)
+
   return { 
     data: {
-      data: items,
+      data: itemsConverted,
       total,
       hasMore
     }

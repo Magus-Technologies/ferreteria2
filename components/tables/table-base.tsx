@@ -26,6 +26,7 @@ export interface TableBaseProps<T>
     | 'localeText'
     | 'enableFilterHandlers'
     | 'rowSelection'
+    | 'children'
   > {
   ref?: RefObject<AgGridReact<T> | null>
   paramsOfThemeTable?: Partial<
@@ -69,7 +70,7 @@ export default function TableBase<T>({
         localeText={AG_GRID_LOCALE_ES}
         enableFilterHandlers={true}
         className={`shadow-lg rounded-xl overflow-hidden ${className}`}
-        rowSelection={rowSelection ? 'single' : undefined}
+        rowSelection={rowSelection ? { mode: 'singleRow' } : undefined}
         // Optimizaciones de rendimiento
         suppressRowVirtualisation={false}
         suppressColumnVirtualisation={false}

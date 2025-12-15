@@ -9,6 +9,7 @@ import {
   EntregaProductoCreateInputSchema,
   EntregaProductoWhereInputSchema,
 } from '~/prisma/generated/zod'
+import { convertDecimalsToNumbers } from './utils/convert-decimals'
 
 const includeEntregaProducto = {
   venta: {
@@ -70,20 +71,7 @@ async function getEntregasProductoWA({
     take: 100, // Límite para evitar consultas masivas
   })
 
-  const serialized = JSON.parse(
-    JSON.stringify(items, (_key, value) => {
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        value.constructor?.name === 'Decimal'
-      ) {
-        return Number(value)
-      }
-      return value
-    })
-  )
-
-  return { data: serialized as typeof items }
+  return { data: convertDecimalsToNumbers(items) }
 }
 export const getEntregasProducto = withAuth(getEntregasProductoWA)
 

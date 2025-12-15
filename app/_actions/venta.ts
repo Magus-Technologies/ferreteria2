@@ -9,6 +9,7 @@ import {
   VentaCreateInputSchema,
   VentaWhereInputSchema,
 } from '~/prisma/generated/zod'
+import { convertDecimalsToNumbers } from './utils/convert-decimals'
 // import { DespliegueDePago } from './lib/lib-caja'
 
 const includeVenta = {
@@ -56,17 +57,7 @@ async function getVentaWA({ where }: { where?: Prisma.VentaWhereInput }) {
     where: whereParsed,
   })
 
-  // Serializar para convertir Decimal a number
-  const serialized = JSON.parse(
-    JSON.stringify(items, (_key, value) => {
-      if (typeof value === 'object' && value !== null && value.constructor?.name === 'Decimal') {
-        return Number(value)
-      }
-      return value
-    })
-  )
-
-  return { data: serialized as typeof items }
+  return { data: convertDecimalsToNumbers(items) }
 }
 export const getVenta = withAuth(getVentaWA)
 

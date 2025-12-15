@@ -28,16 +28,33 @@ export default function Home() {
   if (status === 'authenticated') return (window.location.href = '/ui')
 
   return (
-    <div className="bg-[url('/fondo-login.jpg')] h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative">
-      <div className='absolute inset-0 bg-black/20'></div>
-      <div className='bg-white px-8 py-14 rounded-2xl animate-fade-down animate-delay-500 animate-ease-in-out shadow-xl max-w-3/4'>
-        <Image
-          className='mb-12'
-          src='/logo-horizontal.png'
-          alt='Logo'
-          width={350}
-          height={300}
-        />
+    <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative overflow-hidden">
+      <div className='absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]'></div>
+
+      {/* Contenedor del formulario - Responsivo */}
+      <div className='bg-white/95 backdrop-blur-sm
+                      px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10 lg:px-8 lg:py-14
+                      rounded-xl sm:rounded-2xl
+                      animate-fade-down animate-delay-500 animate-ease-in-out
+                      shadow-2xl shadow-black/20
+                      w-[calc(100dvw-2rem)] sm:w-[min(90dvw,28rem)] md:w-[min(85dvw,32rem)] lg:w-auto lg:max-w-md xl:max-w-lg
+                      max-h-dvh overflow-y-auto
+                      mx-4 sm:mx-0
+                      relative z-10'>
+
+        {/* Logo - Responsivo */}
+        <div className='mb-6 sm:mb-8 md:mb-10 lg:mb-12 flex justify-center'>
+          <Image
+            className='w-48 h-auto sm:w-56 md:w-64 lg:w-80 xl:w-[350px] object-contain'
+            src='/logo-horizontal.png'
+            alt='Logo'
+            width={350}
+            height={300}
+            priority
+          />
+        </div>
+
+        {/* Formulario */}
         <FormBase<LoginValues>
           form={form}
           name='login'
@@ -55,8 +72,9 @@ export default function Home() {
             ]}
           >
             <Input
-              prefix={<FaUserTie className='text-cyan-500 mx-2' />}
+              prefix={<FaUserTie className='text-cyan-500 mx-2 text-base sm:text-lg' />}
               placeholder='Nombre de Usuario'
+              className='text-sm sm:text-base'
             />
           </Form.Item>
           <Form.Item
@@ -67,12 +85,15 @@ export default function Home() {
             ]}
           >
             <Input.Password
-              prefix={<RiLockPasswordFill className='text-cyan-500 mx-2' />}
+              prefix={<RiLockPasswordFill className='text-cyan-500 mx-2 text-base sm:text-lg' />}
               placeholder='Contraseña'
+              className='text-sm sm:text-base'
             />
           </Form.Item>
           <RainbowButton
-            className='w-full mt-2 active:scale-95 transition-all hover:scale-105 text-lg'
+            className='w-full mt-2 active:scale-95 transition-all hover:scale-105
+                       text-base sm:text-lg
+                       h-10 sm:h-11 md:h-12'
             size='lg'
             variant='outline'
             disabled={loading}
@@ -81,8 +102,17 @@ export default function Home() {
             {loading && <FaSpinner className='ml-2 animate-spin' />}
           </RainbowButton>
         </FormBase>
-        <div className='active:scale-95 mt-4 text-center text-xs text-gray-500 cursor-pointer hover:text-sky-500 transition-all group/recuperar-password flex items-center w-full justify-center -ml-2'>
-          <FaAngleRight className='invisible -translate-x-2 transition-all group-hover/recuperar-password:translate-x-0 group-hover/recuperar-password:visible' />
+
+        {/* Recuperar contraseña */}
+        <div className='active:scale-95 mt-3 sm:mt-4 text-center
+                        text-[11px] sm:text-xs
+                        text-gray-500 cursor-pointer hover:text-sky-500
+                        transition-all group/recuperar-password
+                        flex items-center w-full justify-center -ml-2'>
+          <FaAngleRight className='invisible -translate-x-2 transition-all
+                                   group-hover/recuperar-password:translate-x-0
+                                   group-hover/recuperar-password:visible
+                                   text-xs sm:text-sm' />
           ¿Olvidaste tu contraseña?
         </div>
       </div>

@@ -127,6 +127,18 @@ export default function useColumnTypes() {
             })!
           : '-',
     },
+    numberColumn: {
+      // Tipo para la columna de números (#)
+      cellStyle: { textAlign: 'center' },
+      suppressNavigable: true,
+    },
+    actions: {
+      // Tipo para columnas de acciones
+      cellStyle: { textAlign: 'center' },
+      suppressNavigable: false,
+      sortable: false,
+      filter: false,
+    },
   }
 
   return { columnTypes }

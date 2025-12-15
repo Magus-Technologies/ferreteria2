@@ -52,7 +52,7 @@ export default function TopNav({ className }: { className?: string }) {
         </ButtonNav>
       </DropdownBase>
       <ButtonNav
-        path='/ui/gestion-comercial-e-inventario/kardex'
+        path='/ui/gestion-comercial-e-inventario/mi-almacen'
         colorActive='text-emerald-600'
       >
         <FaClipboardList />
