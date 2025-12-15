@@ -45,12 +45,13 @@ export type FormCreateProductoProps = Omit<
 
 export type FormCreateProductoFormatedProps = Omit<
   FormCreateProductoProps,
-  'compra' | 'estado'
+  'compra' | 'estado' | 'cod_producto'
 > & {
   compra: Omit<FormCreateProductoProps['compra'], 'vencimiento'> & {
     vencimiento?: string
   }
   estado: boolean
+  cod_producto?: string
 }
 
 export default function ModalCreateProducto({

@@ -16,13 +16,13 @@ export default function useGetProveedores({ value }: { value: string }) {
           {
             razon_social: {
               contains: value,
-              mode: 'insensitive',
+              // mode: 'insensitive',
             },
           },
           {
             ruc: {
               contains: value,
-              mode: 'insensitive',
+              // mode: 'insensitive',
             },
           },
         ],

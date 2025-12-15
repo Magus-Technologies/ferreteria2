@@ -33,13 +33,11 @@ export function getFiltrosPorTipoBusqueda({
         {
           name: {
             contains: value,
-            mode: Prisma.QueryMode.insensitive,
           },
         },
         {
           cod_producto: {
             contains: value,
-            mode: Prisma.QueryMode.insensitive,
           },
         },
       ],
@@ -50,7 +48,6 @@ export function getFiltrosPorTipoBusqueda({
     [TipoBusquedaProducto.ACCION_TECNICA]: {
       accion_tecnica: {
         contains: value,
-        mode: Prisma.QueryMode.insensitive,
       },
     },
   }

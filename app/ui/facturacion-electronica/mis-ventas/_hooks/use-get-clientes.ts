@@ -17,25 +17,21 @@ export default function useGetClientes({ value }: { value: string }) {
             {
               razon_social: {
                 contains: valueDebounce,
-                mode: 'insensitive',
               },
             },
             {
               numero_documento: {
                 contains: valueDebounce,
-                mode: 'insensitive',
               },
             },
             {
               nombres: {
                 contains: valueDebounce,
-                mode: 'insensitive',
               },
             },
             {
               apellidos: {
                 contains: valueDebounce,
-                mode: 'insensitive',
               },
             },
           ],
