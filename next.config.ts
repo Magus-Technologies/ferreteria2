@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
     optimizePackageImports: ['@ant-design/nextjs-registry', 'antd', 'ag-grid-react'],
-    serverComponentsExternalPackages: ['@prisma/client'],
   },
+  serverExternalPackages: ['@prisma/client'],
   images: {
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
