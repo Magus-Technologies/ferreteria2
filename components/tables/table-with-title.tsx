@@ -37,6 +37,7 @@ export interface TableWithTitleProps<T, schemaType = unknown>
   tableRef?: React.RefObject<AgGridReact<T> | null>;
   schema?: ZodType<schemaType>;
   headersRequired?: string[];
+  children?: React.ReactNode;
 }
 
 export default function TableWithTitle<T, schemaType = unknown>({
@@ -52,6 +53,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
   tableRef,
   schema,
   headersRequired = [],
+  children,
   ...props
 }: TableWithTitleProps<T, schemaType>) {
   const tableRefInterno = useRef<AgGridReact<T>>(null);
@@ -191,6 +193,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
           }
         }}
       />
+      {children}
     </div>
   );
 }

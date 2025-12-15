@@ -1,23 +1,23 @@
-'use client'
+"use client";
 
-import { Form, FormInstance, RefSelectProps, Select, SelectProps } from 'antd'
-import { focusNext } from '../../../_utils/autofocus'
-import { RefObject, useImperativeHandle, useState } from 'react'
-import { FormItemProps } from 'antd/lib'
+import { Form, FormInstance, RefSelectProps, Select, SelectProps } from "antd";
+import { focusNext } from "../../../_utils/autofocus";
+import { RefObject, useImperativeHandle, useState } from "react";
+import { FormItemProps } from "antd/lib";
 
 export interface RefSelectBaseProps extends RefSelectProps {
-  changeValue: (value: unknown) => void
+  changeValue: (value: unknown) => void;
 }
 
 export interface SelectBaseProps extends SelectProps {
-  nextInEnter?: boolean
-  nextWithPrevent?: boolean
-  formWithMessage?: boolean
+  nextInEnter?: boolean;
+  nextWithPrevent?: boolean;
+  formWithMessage?: boolean;
   propsForm?: FormItemProps & {
-    prefix_array_name?: (string | number)[]
-  }
-  ref?: RefObject<RefSelectBaseProps | null>
-  form?: FormInstance
+    prefix_array_name?: (string | number)[];
+  };
+  ref?: RefObject<RefSelectBaseProps | null>;
+  form?: FormInstance;
 }
 
 function Base({
@@ -27,25 +27,25 @@ function Base({
   onOpenChange,
   ...props
 }: SelectBaseProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <Select
       {...props}
-      onOpenChange={open => {
-        setOpen(open)
-        onOpenChange?.(open)
+      onOpenChange={(open) => {
+        setOpen(open);
+        onOpenChange?.(open);
       }}
-      onKeyUp={e => {
-        if (e.key === 'Enter' && nextInEnter) {
-          if (!open) return
-          if (nextWithPrevent) e.preventDefault()
-          focusNext()
+      onKeyUp={(e) => {
+        if (e.key === "Enter" && nextInEnter) {
+          if (!open) return;
+          if (nextWithPrevent) e.preventDefault();
+          focusNext();
         }
-        onKeyUp?.(e)
+        onKeyUp?.(e);
       }}
     />
-  )
+  );
 }
 
 export default function SelectBase({
@@ -57,17 +57,17 @@ export default function SelectBase({
   propsForm,
   onChange,
   form,
-  optionFilterProp = 'label',
-  variant = 'filled',
+  optionFilterProp = "label",
+  variant = "filled",
   ...props
 }: SelectBaseProps) {
   const {
     hasFeedback = true,
-    className = 'w-full',
+    className = "w-full",
     ...propsFormItem
-  } = propsForm || {}
+  } = propsForm || {};
 
-  const [value, setValue] = useState<unknown>()
+  const [value, setValue] = useState<unknown>();
 
   useImperativeHandle(
     props.ref,
@@ -82,26 +82,30 @@ export default function SelectBase({
                 ]
               : propsFormItem.name,
             value
-          )
+          );
         } else {
-          setValue(value)
+          setValue(value);
         }
       },
       focus: () => {
-        // Implementación básica de focus si es necesario
+        // Implementación básica de focus
       },
       blur: () => {
-        // Implementación básica de blur si es necesario
+        // Implementación básica de blur
       },
+      scrollTo: () => {
+        // Implementación básica de scrollTo
+      },
+      nativeElement: undefined as unknown as HTMLElement,
     }),
     [form, propsFormItem.name, propsFormItem.prefix_array_name, setValue]
-  )
+  );
 
   return propsForm ? (
     <Form.Item
       hasFeedback={hasFeedback}
       {...propsFormItem}
-      className={`${className} ${formWithMessage ? '' : '!mb-0'}`}
+      className={`${className} ${formWithMessage ? "" : "!mb-0"}`}
     >
       <Base
         nextInEnter={nextInEnter}
@@ -120,14 +124,14 @@ export default function SelectBase({
       nextWithPrevent={nextWithPrevent}
       onKeyUp={onKeyUp}
       onOpenChange={onOpenChange}
-      onChange={value => {
-        setValue(value)
-        onChange?.(value)
+      onChange={(value) => {
+        setValue(value);
+        onChange?.(value);
       }}
       value={value}
       optionFilterProp={optionFilterProp}
       variant={variant}
       {...props}
     />
-  )
+  );
 }

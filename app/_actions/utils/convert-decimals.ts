@@ -16,11 +16,11 @@ export function convertDecimalsToNumbers<T>(obj: T): T {
   }
   
   if (typeof obj === 'object') {
-    const converted: any = {}
+    const converted: Record<string, unknown> = {}
     for (const key in obj) {
       converted[key] = convertDecimalsToNumbers(obj[key])
     }
-    return converted
+    return converted as T
   }
   
   return obj
