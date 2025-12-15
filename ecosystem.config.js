@@ -6,7 +6,7 @@ module.exports = {
       name: 'ferreteriav2',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -H 0.0.0.0 -p 3001',
-      instances: 'max',
+      instances: 1, 
       exec_mode: 'fork',
       max_memory_restart: '500M',
       autorestart: true,
