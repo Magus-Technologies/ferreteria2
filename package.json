@@ -10,6 +10,10 @@
     "lint": "next lint",
     "share": "npx tunnelmole 3000",
     "migrate:fresh": "(if exist prisma\\migrations (rmdir /s /q prisma\\migrations)) && npx prisma migrate reset --force && npx prisma migrate dev --name init",
+    "migrate:mysql": "powershell -ExecutionPolicy Bypass -File migrate-to-mysql.ps1",
+    "db:reset": "npx prisma migrate reset --force",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
@@ -27,6 +31,7 @@
     "dotenv": "^17.2.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.525.0",
+    "mysql2": "^3.15.3",
     "next": "15.3.4",
     "next-auth": "^5.0.0-beta.29",
     "react": "^19.0.0",

@@ -5,6 +5,7 @@ import {
 } from '../_components/modals/modal-create-producto'
 import { createProducto, editarProducto } from '~/app/_actions/producto'
 import { toUTCBD } from '~/utils/fechas'
+import dayjs from 'dayjs'
 import { useStoreArchivosProducto } from '../_store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
@@ -109,23 +110,52 @@ export default function useCreateProducto({
       })
       return
     }
+
+    // Función para limpiar valores undefined y "$undefined"
+    const cleanUndefinedValues = (obj: any): any => {
+      if (obj === null || obj === undefined || obj === '$undefined') {
+        return undefined
+      }
+      if (typeof obj === 'object' && !Array.isArray(obj)) {
+        const cleaned: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== undefined && value !== '$undefined') {
+            cleaned[key] = cleanUndefinedValues(value)
+          }
+        }
+        return cleaned
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(cleanUndefinedValues)
+      }
+      return obj
+    }
+
+    const cleanedValues = cleanUndefinedValues(values)
+
     const data = {
-      ...values,
+      ...cleanedValues,
       compra: {
-        ...values.compra,
-        vencimiento: values.compra?.vencimiento
+        ...cleanedValues.compra,
+        vencimiento: cleanedValues.compra?.vencimiento && dayjs.isDayjs(cleanedValues.compra.vencimiento)
           ? toUTCBD({
-              date: values.compra.vencimiento,
+              date: cleanedValues.compra.vencimiento,
             })
           : undefined,
       },
-      unidades_derivadas: values.unidades_derivadas.map(item => {
+      unidades_derivadas: cleanedValues.unidades_derivadas.map((item: any) => {
         delete item.unidad_derivada
         return item
       }),
-      estado: values.estado === 1,
+      estado: cleanedValues.estado === 1,
       id: producto?.id,
     }
+    
+    // Si cod_producto está vacío o es "$undefined", dejamos que el servidor lo genere
+    if (!data.cod_producto || data.cod_producto === '' || data.cod_producto === '$undefined') {
+      delete data.cod_producto
+    }
+    
     execute(data)
   }
 

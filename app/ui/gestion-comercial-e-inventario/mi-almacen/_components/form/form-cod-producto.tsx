@@ -34,7 +34,7 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
 
   useEffect(() => {
     if (!(producto?.id && primera_vez.current)) {
-      if (disabled) form.setFieldValue('cod_producto', undefined)
+      if (disabled) form.setFieldValue('cod_producto', '')
       else if (producto?.cod_producto)
         form.setFieldValue('cod_producto', producto.cod_producto)
     }

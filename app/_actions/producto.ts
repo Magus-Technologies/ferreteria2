@@ -128,7 +128,7 @@ async function SearchProductosWA({
     take: 50, // Reducido para búsquedas rápidas en selects
   })
 
-  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
+  return { data: items }
 }
 export const SearchProductos = withAuth(SearchProductosWA)
 
@@ -154,7 +154,7 @@ async function getProductosWA({
     take: 100, // Reducido para mejor performance
   })
 
-  return { data: JSON.parse(JSON.stringify(items)) as typeof items }
+  return { data: items }
 }
 export const getProductos = withAuth(getProductosWA)
 
@@ -192,7 +192,7 @@ async function getProductosPaginatedWA({
 
   return { 
     data: {
-      data: JSON.parse(JSON.stringify(items)) as typeof items,
+      data: items,
       total,
       hasMore
     }
