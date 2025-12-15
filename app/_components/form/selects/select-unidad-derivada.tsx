@@ -50,7 +50,7 @@ export default function SelectUnidadDerivada({
             triggerFetch()
           }
         }}
-        onDropdownVisibleChange={(open) => {
+        onOpenChange={(open) => {
           if (open && !isFetched) {
             triggerFetch()
           }

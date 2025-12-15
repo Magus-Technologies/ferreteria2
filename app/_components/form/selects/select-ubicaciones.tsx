@@ -75,7 +75,7 @@ export default function SelectUbicaciones({
             triggerFetch()
           }
         }}
-        onDropdownVisibleChange={(open) => {
+        onOpenChange={(open) => {
           if (open && !isFetched) {
             triggerFetch()
           }

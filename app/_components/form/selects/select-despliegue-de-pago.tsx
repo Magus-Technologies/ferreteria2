@@ -45,7 +45,7 @@ export default function SelectDespliegueDePago({
           triggerFetch()
         }
       }}
-      onDropdownVisibleChange={(open) => {
+      onOpenChange={(open) => {
         if (open && !isFetched) {
           triggerFetch()
         }

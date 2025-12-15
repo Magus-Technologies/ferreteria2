@@ -50,7 +50,7 @@ export default function SelectMarcas({
             triggerFetch()
           }
         }}
-        onDropdownVisibleChange={(open) => {
+        onOpenChange={(open) => {
           if (open && !isFetched) {
             triggerFetch()
           }

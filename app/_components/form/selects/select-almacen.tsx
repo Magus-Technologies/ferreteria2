@@ -59,7 +59,7 @@ export default function SelectAlmacen({
           triggerFetch()
         }
       }}
-      onDropdownVisibleChange={(open) => {
+      onOpenChange={(open) => {
         if (open && !isFetched) {
           triggerFetch()
         }

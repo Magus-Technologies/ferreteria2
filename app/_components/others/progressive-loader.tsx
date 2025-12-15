@@ -86,12 +86,16 @@ export default function ProgressiveLoader({
       return
     }
 
-    queue.addToQueue(
-      identifier,
-      () => setIsLoaded(true),
-      priority,
-      delay
-    )
+    const timeoutId = setTimeout(() => {
+      queue.addToQueue(
+        identifier,
+        () => setIsLoaded(true),
+        priority,
+        delay
+      )
+    }, 0) // Defer to next tick to avoid synchronous state updates
+
+    return () => clearTimeout(timeoutId)
   }, [identifier, delay, priority, queue])
 
   if (!isLoaded) {

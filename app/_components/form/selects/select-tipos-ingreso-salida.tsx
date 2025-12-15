@@ -50,7 +50,7 @@ export default function SelectTiposIngresoSalida({
             triggerFetch()
           }
         }}
-        onDropdownVisibleChange={(open) => {
+        onOpenChange={(open) => {
           if (open && !isFetched) {
             triggerFetch()
           }

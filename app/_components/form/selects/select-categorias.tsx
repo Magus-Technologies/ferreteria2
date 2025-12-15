@@ -52,7 +52,7 @@ export default function SelectCategorias({
             triggerFetch()
           }
         }}
-        onDropdownVisibleChange={(open) => {
+        onOpenChange={(open) => {
           if (open && !isFetched) {
             triggerFetch()
           }

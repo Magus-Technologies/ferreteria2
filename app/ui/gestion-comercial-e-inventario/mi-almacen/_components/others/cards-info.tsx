@@ -6,7 +6,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import { SearchProductos } from '~/app/_actions/producto'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(state => state.filtros)
@@ -30,8 +30,13 @@ export default function CardsInfo() {
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const inversion =
-    response?.reduce((acc, producto) => {
+  // Memoizar los cálculos para evitar recálculos innecesarios
+  const { inversion, precio_venta } = useMemo(() => {
+    if (!Array.isArray(response) || response.length === 0) {
+      return { inversion: 0, precio_venta: 0 }
+    }
+
+    const inversionTotal = response.reduce((acc, producto) => {
       const producto_en_almacen = producto.producto_en_almacenes?.find(
         item => item.almacen_id === almacen_id
       )
@@ -40,10 +45,9 @@ export default function CardsInfo() {
         Number(producto_en_almacen?.costo ?? 0) *
           Number(producto_en_almacen?.stock_fraccion ?? 0)
       )
-    }, 0) || 0
+    }, 0)
 
-  const precio_venta =
-    response?.reduce((acc, producto) => {
+    const precioVentaTotal = response.reduce((acc, producto) => {
       const producto_en_almacen = producto.producto_en_almacenes?.find(
         item => item.almacen_id === almacen_id
       )
@@ -51,7 +55,7 @@ export default function CardsInfo() {
       const unidad_derivada =
         producto_en_almacen?.unidades_derivadas?.find(
           ud => Number(ud.factor) == 1
-        ) ?? producto_en_almacen?.unidades_derivadas[0]
+        ) ?? producto_en_almacen?.unidades_derivadas?.[0]
 
       const precio_publico = Number(unidad_derivada?.precio_publico ?? 0)
       const factor = Number(unidad_derivada?.factor ?? 0)
@@ -65,7 +69,10 @@ export default function CardsInfo() {
           : precio_publico / factor) *
           Number(producto_en_almacen?.stock_fraccion ?? 0)
       )
-    }, 0) || 0
+    }, 0)
+
+    return { inversion: inversionTotal, precio_venta: precioVentaTotal }
+  }, [response, almacen_id])
 
   return (
     <>

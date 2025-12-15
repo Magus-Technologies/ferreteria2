@@ -34,7 +34,8 @@ export function useLazyServerQuery<TParams, TResult>(props: {
   // Memoizar la función de query para evitar recreaciones innecesarias
   const queryFn = useMemo(
     () => () => action(params),
-    [action, params]
+    // Serializar params para evitar referencias circulares
+    [action, JSON.stringify(params)]
   )
 
   const query = useQuery({
@@ -58,10 +59,10 @@ export function useLazyServerQuery<TParams, TResult>(props: {
     }
   }, [notification, query.data])
 
-  // Función para iniciar el fetch manualmente
-  const triggerFetch = () => {
+  // Función para iniciar el fetch manualmente (memoizada)
+  const triggerFetch = useMemo(() => () => {
     setShouldFetch(true)
-  }
+  }, [])
 
   // Memoizar el objeto de retorno para evitar recreaciones
   return useMemo(() => ({
@@ -80,5 +81,6 @@ export function useLazyServerQuery<TParams, TResult>(props: {
     query.data?.data,
     query.error,
     shouldFetch,
+    triggerFetch,
   ])
 }

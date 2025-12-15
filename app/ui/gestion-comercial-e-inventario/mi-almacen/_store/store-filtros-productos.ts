@@ -14,13 +14,18 @@ type UseStoreFiltrosProductosProps = {
 }
 
 export const useStoreFiltrosProductos = create<UseStoreFiltrosProductosProps>(
-  set => {
+  (set, get) => {
     return {
       filtros: undefined,
       setFiltros: value =>
-        set(state => ({
-          filtros: typeof value === 'function' ? value(state.filtros) : value,
-        })),
+        set(state => {
+          const newValue = typeof value === 'function' ? value(state.filtros) : value
+          // Evitar actualizaciones innecesarias si el valor es el mismo
+          if (JSON.stringify(newValue) === JSON.stringify(state.filtros)) {
+            return state
+          }
+          return { filtros: newValue }
+        }),
     }
   }
 )
