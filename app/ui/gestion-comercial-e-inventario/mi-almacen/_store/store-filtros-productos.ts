@@ -14,7 +14,7 @@ type UseStoreFiltrosProductosProps = {
 }
 
 export const useStoreFiltrosProductos = create<UseStoreFiltrosProductosProps>(
-  (set, get) => {
+  (set) => {
     return {
       filtros: undefined,
       setFiltros: value =>
