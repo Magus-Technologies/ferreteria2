@@ -7,8 +7,9 @@ module.exports = {
       script: 'node_modules/next/dist/bin/next',
       args: 'start -H 0.0.0.0 -p 3001',
       instances: 1, 
-      exec_mode: 'fork',
-      max_memory_restart: '2G',
+      instances: 'max',        
+      exec_mode: 'cluster',    
+      max_memory_restart: '1.5G',
       autorestart: true,
       env: {
         DATABASE_URL: process.env.DATABASE_URL,
