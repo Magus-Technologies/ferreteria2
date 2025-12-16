@@ -9,7 +9,7 @@ module.exports = {
       instances: 1, 
       instances: 'max',        
       exec_mode: 'cluster',    
-      max_memory_restart: '1.5G',
+      max_memory_restart: '1500M',
       autorestart: true,
       env: {
         DATABASE_URL: process.env.DATABASE_URL,
