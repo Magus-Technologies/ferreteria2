@@ -39,26 +39,29 @@ export default function MiAlmacen() {
     <ContenedorGeneral>
       <Suspense fallback={<ComponentLoading />}>
         <FiltersMiAlmacen
-          marca_predeterminada={session?.user?.empresa.marca_id}
+          marca_predeterminada={session?.user?.empresa?.marca_id}
         />
       </Suspense>
-      <div className='flex size-full gap-8'>
-        <div className='grid grid-rows-7 gap-y-4 size-full'>
-          <div className='row-start-1 row-end-4'>
+      {/* Layout responsivo */}
+      <div className='flex flex-col lg:flex-row w-full gap-4 sm:gap-5 md:gap-6 lg:gap-8'>
+        
+        {/* Columna principal - Tablas */}
+        <div className='flex flex-col gap-4 sm:gap-5 md:gap-6 flex-1 min-w-0'>
+          <div className='flex-[3]'>
             <ProgressiveLoader identifier="mi-almacen-table-productos" priority="critical">
               <Suspense fallback={<ComponentLoading />}>
                 <TableProductos />
               </Suspense>
             </ProgressiveLoader>
           </div>
-          <div className='row-start-4 row-end-6'>
+          <div className='flex-[2]'>
             <ProgressiveLoader identifier="mi-almacen-ultimas-compras" priority="medium" delay={800}>
               <Suspense fallback={<ComponentLoading />}>
                 <TableUltimasComprasIngresadasMiAlmacen />
               </Suspense>
             </ProgressiveLoader>
           </div>
-          <div className='row-start-6 row-end-8'>
+          <div className='flex-[2]'>
             <ProgressiveLoader identifier="mi-almacen-detalle-precios" priority="low" delay={1200}>
               <Suspense fallback={<ComponentLoading />}>
                 <TableDetalleDePrecios />
@@ -66,7 +69,9 @@ export default function MiAlmacen() {
             </ProgressiveLoader>
           </div>
         </div>
-        <div className='flex flex-col items-center justify-around gap-8'>
+
+        {/* Columna lateral - Botones y Cards */}
+        <div className='flex flex-row lg:flex-col items-center justify-center lg:justify-around gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex-wrap lg:flex-nowrap'>
           {canCreateProducto && (
             <Suspense fallback={<Spin />}>
               <ButtonCreateProducto />

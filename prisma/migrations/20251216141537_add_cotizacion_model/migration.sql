@@ -217,6 +217,60 @@ CREATE TABLE `PagoDeCompra` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `Cotizacion` (
+    `id` VARCHAR(191) NOT NULL,
+    `numero` VARCHAR(191) NOT NULL,
+    `fecha` DATETIME(3) NOT NULL,
+    `vigencia_dias` INTEGER NOT NULL DEFAULT 7,
+    `fecha_vencimiento` DATETIME(3) NOT NULL,
+    `tipo_moneda` ENUM('s', 'd') NOT NULL DEFAULT 's',
+    `tipo_de_cambio` DECIMAL(9, 4) NOT NULL DEFAULT 1,
+    `observaciones` TEXT NULL,
+    `estado_cotizacion` ENUM('pe', 'co', 've', 'ca') NOT NULL DEFAULT 'pe',
+    `cliente_id` INTEGER NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `almacen_id` INTEGER NOT NULL,
+    `venta_id` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Cotizacion_numero_key`(`numero`),
+    UNIQUE INDEX `Cotizacion_venta_id_key`(`venta_id`),
+    INDEX `Cotizacion_fecha_idx`(`fecha`),
+    INDEX `Cotizacion_estado_cotizacion_idx`(`estado_cotizacion`),
+    INDEX `Cotizacion_cliente_id_idx`(`cliente_id`),
+    INDEX `Cotizacion_almacen_id_idx`(`almacen_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ProductoAlmacenCotizacion` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `cotizacion_id` VARCHAR(191) NOT NULL,
+    `costo` DECIMAL(9, 4) NOT NULL,
+    `producto_almacen_id` INTEGER NOT NULL,
+
+    UNIQUE INDEX `ProductoAlmacenCotizacion_cotizacion_id_producto_almacen_id_key`(`cotizacion_id`, `producto_almacen_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `UnidadDerivadaInmutableCotizacion` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `unidad_derivada_inmutable_id` INTEGER NOT NULL,
+    `producto_almacen_cotizacion_id` INTEGER NOT NULL,
+    `factor` DECIMAL(9, 3) NOT NULL,
+    `cantidad` DECIMAL(9, 3) NOT NULL,
+    `precio` DECIMAL(9, 4) NOT NULL,
+    `recargo` DECIMAL(9, 4) NOT NULL DEFAULT 0,
+    `descuento_tipo` ENUM('%', 'm') NOT NULL DEFAULT 'm',
+    `descuento` DECIMAL(9, 4) NOT NULL DEFAULT 0,
+
+    UNIQUE INDEX `UnidadDerivadaInmutableCotizacion_producto_almacen_cotizacio_key`(`producto_almacen_cotizacion_id`, `unidad_derivada_inmutable_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Empresa` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `almacen_id` INTEGER NOT NULL,
@@ -797,6 +851,30 @@ ALTER TABLE `PagoDeCompra` ADD CONSTRAINT `PagoDeCompra_compra_id_fkey` FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE `PagoDeCompra` ADD CONSTRAINT `PagoDeCompra_despliegue_de_pago_id_fkey` FOREIGN KEY (`despliegue_de_pago_id`) REFERENCES `DespliegueDePago`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Cotizacion` ADD CONSTRAINT `Cotizacion_almacen_id_fkey` FOREIGN KEY (`almacen_id`) REFERENCES `Almacen`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Cotizacion` ADD CONSTRAINT `Cotizacion_cliente_id_fkey` FOREIGN KEY (`cliente_id`) REFERENCES `Cliente`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Cotizacion` ADD CONSTRAINT `Cotizacion_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Cotizacion` ADD CONSTRAINT `Cotizacion_venta_id_fkey` FOREIGN KEY (`venta_id`) REFERENCES `Venta`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductoAlmacenCotizacion` ADD CONSTRAINT `ProductoAlmacenCotizacion_producto_almacen_id_fkey` FOREIGN KEY (`producto_almacen_id`) REFERENCES `ProductoAlmacen`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductoAlmacenCotizacion` ADD CONSTRAINT `ProductoAlmacenCotizacion_cotizacion_id_fkey` FOREIGN KEY (`cotizacion_id`) REFERENCES `Cotizacion`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UnidadDerivadaInmutableCotizacion` ADD CONSTRAINT `UnidadDerivadaInmutableCotizacion_producto_almacen_cotizaci_fkey` FOREIGN KEY (`producto_almacen_cotizacion_id`) REFERENCES `ProductoAlmacenCotizacion`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UnidadDerivadaInmutableCotizacion` ADD CONSTRAINT `UnidadDerivadaInmutableCotizacion_unidad_derivada_inmutable_fkey` FOREIGN KEY (`unidad_derivada_inmutable_id`) REFERENCES `UnidadDerivadaInmutable`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Empresa` ADD CONSTRAINT `Empresa_almacen_id_fkey` FOREIGN KEY (`almacen_id`) REFERENCES `Almacen`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

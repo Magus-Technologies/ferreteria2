@@ -13,7 +13,7 @@ export function useServerQuery<TParams, TResult>(props: {
       ServerResult<TResult>,
       unknown,
       ServerResult<TResult>,
-      QueryKeys[]
+      (QueryKeys | string | number)[]
     >,
     'queryFn'
   >
@@ -35,7 +35,7 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
       ServerResult<TResult>,
       unknown,
       ServerResult<TSelect>,
-      QueryKeys[]
+      (QueryKeys | string | number)[]
     >,
     'queryFn'
   >
@@ -58,7 +58,7 @@ export function useServerQuery<TParams, TResult, TSelect>(props: {
       ServerResult<TResult>,
       unknown,
       ServerResult<TSelect>,
-      QueryKeys[]
+      (QueryKeys | string | number)[]
     >,
     'queryFn'
   >

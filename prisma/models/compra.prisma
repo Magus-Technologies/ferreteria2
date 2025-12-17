@@ -77,6 +77,7 @@ model UnidadDerivadaInmutable {
   unidades_derivadas_inmutables_en_ingresos UnidadDerivadaInmutableIngresoSalida[]
   UnidadDerivadaInmutableRecepcion          UnidadDerivadaInmutableRecepcion[]
   unidades_derivadas_inmutables_en_ventas   UnidadDerivadaInmutableVenta[]
+  unidades_derivadas_inmutables_en_cotizaciones UnidadDerivadaInmutableCotizacion[]
 }
 
 model PagoDeCompra {

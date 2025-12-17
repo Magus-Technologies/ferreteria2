@@ -40,7 +40,7 @@ export default function SelectTipoMoneda({
 
   return (
     <SelectBase
-      defaultValue={TipoMoneda.Soles}
+      {...(!props.propsForm && { defaultValue: TipoMoneda.Soles })}
       prefix={
         <RiExchangeDollarFill className={classNameIcon} size={sizeIcon} />
       }
@@ -56,6 +56,14 @@ export default function SelectTipoMoneda({
         onChange?.(value)
       }}
       {...props}
+      propsForm={
+        props.propsForm
+          ? {
+              ...props.propsForm,
+              initialValue: props.propsForm.initialValue ?? TipoMoneda.Soles,
+            }
+          : undefined
+      }
     />
   )
 }

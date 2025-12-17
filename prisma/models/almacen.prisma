@@ -11,6 +11,7 @@ model Almacen {
   series_documentos    SerieDocumento[]
   ubicaciones          Ubicacion[]
   ventas               Venta[]
+  cotizaciones         Cotizacion[]
 }
 
 model ProductoAlmacen {
@@ -30,6 +31,7 @@ model ProductoAlmacen {
   recepciones_almacen ProductoAlmacenRecepcion[]
   unidades_derivadas  ProductoAlmacenUnidadDerivada[]
   ventas              ProductoAlmacenVenta[]
+  cotizaciones        ProductoAlmacenCotizacion[]
 
   @@unique([producto_id, almacen_id])
 }

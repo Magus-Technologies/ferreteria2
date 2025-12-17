@@ -14,6 +14,8 @@ export default function useItemsVentas() {
     {
       key: '2',
       label: 'Crear Cotizacion',
+      onClick: () =>
+        router.push('/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion'),
     },
     {
       key: '3',

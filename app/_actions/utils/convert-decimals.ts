@@ -11,6 +11,11 @@ export function convertDecimalsToNumbers<T>(obj: T): T {
     return Number(obj) as T
   }
   
+  // Preservar fechas como strings ISO para que puedan ser serializadas
+  if (obj instanceof Date) {
+    return obj.toISOString() as T
+  }
+  
   if (Array.isArray(obj)) {
     return obj.map(item => convertDecimalsToNumbers(item)) as T
   }

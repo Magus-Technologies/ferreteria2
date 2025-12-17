@@ -51,7 +51,7 @@ export default function FacturacionElectronica() {
       </TituloModulos>
 
       {/* Grid responsivo para Dashboard */}
-      <div className='flex flex-col gap-4 sm:gap-5 md:gap-6 lg:gap-7 size-full'>
+      <div className='flex flex-col gap-4 sm:gap-5 md:gap-6 lg:gap-7 w-full'>
 
         {/* Cards superiores - Responsivos */}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-12'>

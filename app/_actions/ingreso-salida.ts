@@ -9,6 +9,7 @@ import { withAuth } from '~/auth/middleware-server-actions'
 import { getUltimoNumeroIngresoSalida } from './utils/ingreso-salida'
 import { auth } from '~/auth/auth'
 import { manejoDeCosto } from '../_utils/manejo-de-costo'
+import { validateEmpresa } from '~/auth/utils/validateEmpresa'
 
 const includeGetIngresoSalida = {
   user: true,
@@ -42,6 +43,7 @@ async function createIngresoSalidaWA(
   if (!puede) throw new Error('No tienes permiso para crear ingresos y salidas')
 
   const session = await auth()
+  validateEmpresa(session)
 
   try {
     return await prisma.$transaction(
@@ -99,14 +101,14 @@ async function createIngresoSalidaWA(
 
         const serie =
           tipo_documento === TipoDocumento.Ingreso
-            ? session!.user!.empresa.serie_ingreso
-            : session!.user!.empresa.serie_salida
+            ? session.user.empresa.serie_ingreso
+            : session.user.empresa.serie_salida
 
         const item = await db.ingresoSalida.create({
           data: {
             ...rest,
             almacen_id,
-            user_id: session!.user!.id!,
+            user_id: session.user.id,
             tipo_documento,
             serie,
             fecha: fecha ? new Date(fecha) : undefined,
