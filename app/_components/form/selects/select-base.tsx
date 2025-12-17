@@ -2,7 +2,7 @@
 
 import { Form, FormInstance, RefSelectProps, Select, SelectProps } from "antd";
 import { focusNext } from "../../../_utils/autofocus";
-import { RefObject, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { FormItemProps } from "antd/lib";
 
 export interface RefSelectBaseProps extends RefSelectProps {
@@ -16,7 +16,6 @@ export interface SelectBaseProps extends SelectProps {
   propsForm?: FormItemProps & {
     prefix_array_name?: (string | number)[];
   };
-  ref?: RefObject<RefSelectBaseProps | null>;
   form?: FormInstance;
 }
 
@@ -48,7 +47,7 @@ function Base({
   );
 }
 
-export default function SelectBase({
+const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function SelectBase({
   nextInEnter = true,
   nextWithPrevent = true,
   onKeyUp,
@@ -60,7 +59,7 @@ export default function SelectBase({
   optionFilterProp = "label",
   variant = "filled",
   ...props
-}: SelectBaseProps) {
+}, ref) {
   const {
     hasFeedback = true,
     className = "w-full",
@@ -70,7 +69,7 @@ export default function SelectBase({
   const [value, setValue] = useState<unknown>();
 
   useImperativeHandle(
-    props.ref,
+    ref,
     () => ({
       changeValue: (value: unknown) => {
         if (form && propsFormItem.name) {
@@ -134,4 +133,6 @@ export default function SelectBase({
       {...props}
     />
   );
-}
+});
+
+export default SelectBase;

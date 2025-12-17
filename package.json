@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "npx prisma generate && next build",
-    "build:server": "next build --no-lint",
+    "build": "set NODE_OPTIONS=--max-old-space-size=8192 && npx prisma generate && next build",
+    "build:server": "set NODE_OPTIONS=--max-old-space-size=8192 && next build --no-lint",
     "start": "next start",
     "lint": "next lint",
     "share": "npx tunnelmole 3000",

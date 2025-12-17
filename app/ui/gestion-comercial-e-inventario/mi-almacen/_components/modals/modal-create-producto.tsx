@@ -85,6 +85,8 @@ export default function ModalCreateProducto({
   const setDisabled = useStoreCodigoAutomatico(state => state.setDisabled)
 
   useEffect(() => {
+    if (!open) return
+    
     form.resetFields()
     if (producto) {
       if (producto.cod_producto) setDisabled(false)
@@ -137,11 +139,12 @@ export default function ModalCreateProducto({
         unidades_derivadas: [],
         estado: 1,
         name: textDefault,
+        almacen_id,
       })
       setDisabled(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [producto])
+  }, [producto, open])
 
   return (
     <ModalForm

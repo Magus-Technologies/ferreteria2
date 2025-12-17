@@ -18,6 +18,7 @@ model Venta {
   despliegueDePagoVentas DespliegueDePagoVenta[]
   entregas_productos     EntregaProducto[]
   productos_por_almacen  ProductoAlmacenVenta[]
+  cotizacion             Cotizacion?
   almacen                Almacen                 @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
   cliente                Cliente?                @relation("cliente", fields: [cliente_id], references: [id], onDelete: Restrict)
   recomendado_por        Cliente?                @relation("recomendado_por", fields: [recomendado_por_id], references: [id], onDelete: Restrict)

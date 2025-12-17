@@ -11,6 +11,7 @@ import { chunkArray } from '~/utils/chunks'
 import { auth } from '~/auth/auth'
 import { getUltimoNumeroIngresoSalida } from './utils/ingreso-salida'
 import { TIPOS_INGRESOS_SALIDAS } from '../_lib/tipos-ingresos-salidas'
+import { validateEmpresa } from '~/auth/utils/validateEmpresa'
 
 async function getUnidadesDerivadasWA() {
   const puede = await can(permissions.UNIDAD_DERIVADA_LISTADO)
@@ -72,6 +73,7 @@ async function importarDetallesDePreciosWA({ data }: { data: unknown }) {
     .parse(data)
 
   const session = await auth()
+  validateEmpresa(session)
 
   const chunks = chunkArray(dataParsed, 200)
   const duplicados: Prisma.ProductoAlmacenUnidadDerivadaCreateInput[] = []
@@ -163,9 +165,9 @@ async function importarDetallesDePreciosWA({ data }: { data: unknown }) {
                 tipo_ingreso_id: tipo_ingreso.id,
                 descripcion: `Ingreso por Importación de Producto`,
                 almacen_id: producto_almacen.almacen_id,
-                user_id: session!.user!.id!,
+                user_id: session.user.id,
                 tipo_documento: TipoDocumento.Ingreso,
-                serie: session!.user!.empresa.serie_ingreso,
+                serie: session.user.empresa.serie_ingreso,
                 fecha: new Date(),
                 numero,
                 productos_por_almacen: {

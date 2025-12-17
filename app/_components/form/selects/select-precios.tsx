@@ -1,4 +1,5 @@
-import SelectBase, { SelectBaseProps } from './select-base'
+import { forwardRef } from 'react'
+import SelectBase, { SelectBaseProps, RefSelectBaseProps } from './select-base'
 import { ProductoAlmacenUnidadDerivada } from '@prisma/client'
 import { FaMoneyBill } from 'react-icons/fa'
 
@@ -15,17 +16,18 @@ const precios = [
   'precio_ultimo',
 ]
 
-export default function SelectPrecios({
+const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(function SelectPrecios({
   placeholder = 'Seleccionar Precio',
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 16,
   unidadDerivada,
   ...props
-}: SelectPreciosProps) {
+}, ref) {
   return (
     <SelectBase
       {...props}
+      ref={ref}
       key={unidadDerivada?.id}
       prefix={<FaMoneyBill className={classNameIcon} size={sizeIcon} />}
       variant={variant}
@@ -49,4 +51,6 @@ export default function SelectPrecios({
       }
     />
   )
-}
+})
+
+export default SelectPrecios

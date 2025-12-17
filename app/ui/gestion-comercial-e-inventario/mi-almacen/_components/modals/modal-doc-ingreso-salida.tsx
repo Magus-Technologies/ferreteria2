@@ -39,10 +39,10 @@ export default function ModalDocIngresoSalida({
         <DocIngresoSalidaTicket
           data={data}
           nro_doc={nro_doc}
-          empresa={empresa}
+          empresa={empresa ?? undefined}
         />
       ) : (
-        <DocIngresoSalida data={data} nro_doc={nro_doc} empresa={empresa} />
+        <DocIngresoSalida data={data} nro_doc={nro_doc} empresa={empresa ?? undefined} />
       )}
     </ModalShowDoc>
   )

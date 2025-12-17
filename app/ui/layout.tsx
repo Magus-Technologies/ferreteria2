@@ -13,8 +13,8 @@ export default async function ProtectedLayout({
   return (
     <div className='relative h-dvh w-dvw overflow-hidden'>
       <InitStore
-        marca_predeterminada={session?.user?.empresa.marca_id}
-        almacen_predeterminado={session?.user?.empresa.almacen_id}
+        marca_predeterminada={session?.user?.empresa?.marca_id}
+        almacen_predeterminado={session?.user?.empresa?.almacen_id}
       />
       <div className='relative size-full flex flex-col items-center justify-center
                       overflow-x-hidden overflow-y-auto

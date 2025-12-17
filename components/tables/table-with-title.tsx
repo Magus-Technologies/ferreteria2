@@ -69,10 +69,10 @@ export default function TableWithTitle<T, schemaType = unknown>({
   const { titleParent = "" } = classNames;
 
   return (
-    <div className={`flex flex-col gap-2 size-full ${className}`}>
+    <div className={`flex flex-col gap-1 h-full ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <div
-          className={`font-semibold text-slate-700 text-xl flex items-center gap-4 ${titleParent}`}
+          className={`font-semibold text-slate-700 text-base flex items-center gap-2 ${titleParent}`}
         >
           {title}
           {extraTitle}

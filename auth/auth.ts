@@ -1,10 +1,11 @@
 import NextAuth, { DefaultSession } from 'next-auth'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { JWT } from 'next-auth/jwt'
 import Credentials from 'next-auth/providers/credentials'
+import { cache } from 'react'
 import { schemaLogin } from './schema'
 import { getUserFromDb } from './utils/getUserFromDb'
 import { Empresa } from '@prisma/client'
+import { prisma } from '~/db/db'
 
 export type EmpresaSession = Empresa
 
@@ -12,14 +13,14 @@ declare module 'next-auth' {
   interface Session {
     user: {
       all_permissions: string[]
-      empresa: EmpresaSession
+      empresa: EmpresaSession | null
       efectivo: number
       id: string
     } & DefaultSession['user']
   }
   interface User {
     all_permissions: string[]
-    empresa: EmpresaSession
+    empresa: EmpresaSession | null
     efectivo: number
     id: string
   }
@@ -27,12 +28,63 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    all_permissions: string[]
-    empresa: EmpresaSession
-    efectivo: number
     id: string
   }
 }
+
+// Función cacheada para obtener datos del usuario
+const getUserData = cache(async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      efectivo: true,
+      empresa: {
+        select: {
+          id: true,
+          ruc: true,
+          razon_social: true,
+          direccion: true,
+          telefono: true,
+          email: true,
+          serie_ingreso: true,
+          serie_salida: true,
+          serie_recepcion_almacen: true,
+          almacen_id: true,
+          marca_id: true,
+        },
+      },
+      permissions: {
+        select: {
+          name: true,
+        },
+      },
+      roles: {
+        select: {
+          permissions: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!user) return null
+
+  const all_permissions = Array.from(
+    new Set([
+      ...user.permissions.map((p) => p.name),
+      ...user.roles.flatMap((role) => role.permissions.map((p) => p.name)),
+    ])
+  )
+
+  return {
+    efectivo: user.efectivo.toNumber(),
+    empresa: user.empresa || null,
+    all_permissions,
+  }
+})
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -64,23 +116,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 días
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.all_permissions = user.all_permissions
-        token.empresa = user.empresa
-        token.efectivo = user.efectivo
+        // Solo guardar el ID del usuario en el JWT (reduce cookie de ~8KB a ~500 bytes)
         token.id = user.id
       }
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.all_permissions = token.all_permissions
-        session.user.empresa = token.empresa
-        session.user.efectivo = token.efectivo
-        session.user.id = token.id
+      if (session.user && token.id) {
+        session.user.id = token.id as string
+
+        // Obtener datos frescos del usuario desde la BD
+        // Esta función está cacheada, por lo que solo se ejecuta una vez por request
+        const userData = await getUserData(token.id as string)
+
+        if (userData) {
+          session.user.efectivo = userData.efectivo
+          session.user.empresa = userData.empresa
+          session.user.all_permissions = userData.all_permissions
+        }
       }
       return session
     },

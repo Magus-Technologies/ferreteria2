@@ -20,7 +20,7 @@ export default function BottomNav({ className }: { className?: string }) {
         <FaCartShopping />
         Mis Ventas
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600">
+      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-cotizaciones">
         <MdPointOfSale />
         Mis Cotizaciones
       </ButtonNav>

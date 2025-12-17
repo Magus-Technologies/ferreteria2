@@ -143,6 +143,18 @@ export enum permissions {
   CLIENTE_CREATE = 'cliente.create',
   CLIENTE_UPDATE = 'cliente.update',
   CLIENTE_DELETE = 'cliente.delete',
+
+  // cotizaciones
+
+  COTIZACION_BASE = 'cotizacion',
+  COTIZACION_LISTADO = 'cotizacion.listado',
+  COTIZACION_CREATE = 'cotizacion.create',
+  COTIZACION_UPDATE = 'cotizacion.update',
+  COTIZACION_DELETE = 'cotizacion.delete'
+  // COTIZACION_CONVERTIR_A_VENTA = 'cotizacion.convertir-a-venta',
+
+
+
 }
 
 type PermisosValidos = Exclude<
@@ -165,6 +177,7 @@ type PermisosValidos = Exclude<
   | permissions.DESPLIEGUE_DE_PAGO_BASE
   | permissions.VENTA_BASE
   | permissions.CLIENTE_BASE
+  | permissions.COTIZACION_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -282,6 +295,13 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.CLIENTE_CREATE]: 'Crear Cliente',
   [permissions.CLIENTE_UPDATE]: 'Actualizar Cliente',
   [permissions.CLIENTE_DELETE]: 'Eliminar Cliente',
+
+  // cotizaciones
+
+  [permissions.COTIZACION_LISTADO]: 'Ver Listado de Cotizaciones',
+  [permissions.COTIZACION_CREATE]: 'Crear Cotizacion',
+  [permissions.COTIZACION_UPDATE]: 'Actualizar Cotizacion',
+  [permissions.COTIZACION_DELETE]: 'Eliminar Cotizacion',
 }
 
 export function getAllPermissions() {

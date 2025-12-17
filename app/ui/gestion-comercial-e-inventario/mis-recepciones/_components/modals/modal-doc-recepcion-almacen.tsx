@@ -39,10 +39,10 @@ export default function ModalDocRecepcionAlmacen({
         <DocRecepcionAlmacenTicket
           data={data}
           nro_doc={nro_doc}
-          empresa={empresa}
+          empresa={empresa ?? undefined}
         />
       ) : (
-        <DocRecepcionAlmacen data={data} nro_doc={nro_doc} empresa={empresa} />
+        <DocRecepcionAlmacen data={data} nro_doc={nro_doc} empresa={empresa ?? undefined} />
       )}
     </ModalShowDoc>
   )

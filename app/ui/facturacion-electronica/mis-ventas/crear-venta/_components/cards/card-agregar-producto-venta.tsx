@@ -133,13 +133,11 @@ export default function CardAgregarProductoVenta({
     cantidadRef.current?.focus()
   }, [productoSeleccionadoSearchStore])
   useEffect(() => {
-    unidad_derivadaRef.current?.changeValue(
-      unidades_derivadas?.[0].unidad_derivada.id
-    )
-    handleChange(
-      unidades_derivadas?.[0].unidad_derivada.id || null,
-      'unidad_derivada_id'
-    )
+    const primeraUnidad = unidades_derivadas?.[0]?.unidad_derivada?.id
+    if (primeraUnidad) {
+      unidad_derivadaRef.current?.changeValue(primeraUnidad)
+      handleChange(primeraUnidad, 'unidad_derivada_id')
+    }
   }, [unidades_derivadas])
 
   useEffect(() => {

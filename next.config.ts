@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
     optimizePackageImports: ['@ant-design/nextjs-registry', 'antd', 'ag-grid-react'],
+    serverActions: {
+      bodySizeLimit: '10mb', // Aumentar límite a 10MB para importaciones grandes
+    },
   },
   serverExternalPackages: ['@prisma/client'],
   images: {
@@ -15,7 +18,7 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   compress: true,
-  swcMinify: true,
+  // swcMinify: true,
 }
 
 export default nextConfig
