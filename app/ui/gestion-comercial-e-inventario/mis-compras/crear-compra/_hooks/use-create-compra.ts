@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { EstadoDeCompra, FormaDePago, Prisma, TipoMoneda } from '@prisma/client'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 import { CompraConUnidadDerivadaNormal } from '../_components/others/header'
 // 2025-10-30 16:52:39.655
 type ProductoAgrupado = Pick<
@@ -74,8 +74,8 @@ export default function useCreateCompra({
 } = {}) {
   const router = useRouter()
 
-  const { data: session } = useSession()
-  const user_id = session?.user?.id
+  const { user } = useAuth()
+  const user_id = user?.id
 
   const can = usePermission()
   const { notification } = useApp()

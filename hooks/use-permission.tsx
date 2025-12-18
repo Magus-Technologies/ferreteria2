@@ -1,16 +1,16 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 
 export function usePermission(permiso: string) {
-  const { data: session } = useSession()
-  return session?.user?.all_permissions.includes(permiso) ?? false
+  const { user } = useAuth()
+  return user?.all_permissions?.includes(permiso) ?? false
 }
 
 export default function usePermissionHook() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   function can(permiso: string) {
-    return session?.user?.all_permissions.includes(permiso) ?? false
+    return user?.all_permissions?.includes(permiso) ?? false
   }
 
   return can

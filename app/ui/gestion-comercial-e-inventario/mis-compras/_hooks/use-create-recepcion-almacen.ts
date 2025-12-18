@@ -5,7 +5,7 @@ import useApp from 'antd/es/app/useApp'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { Compra, Prisma } from '@prisma/client'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 import { agruparProductos } from '../crear-compra/_hooks/use-create-compra'
 import { FormCreateRecepcionAlmacen } from '../_components/modals/modal-crear-recepcion-almacen'
 import { createRecepcionAlmacen } from '~/app/_actions/recepcion-almacen'
@@ -18,8 +18,8 @@ export default function useCreateRecepcionAlmacen({
   compra_id: Compra['id'] | undefined
   onSuccess?: () => void
 }) {
-  const { data: session } = useSession()
-  const user_id = session?.user?.id
+  const { user } = useAuth()
+  const user_id = user?.id
 
   const can = usePermission()
   const { notification } = useApp()

@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { Prisma, TipoMoneda } from '@prisma/client'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -53,8 +53,8 @@ export function agruparProductos({
 
 export default function useCreateVenta() {
   const router = useRouter()
-  const { data: session } = useSession()
-  const user_id = session?.user?.id
+  const { user } = useAuth()
+  const user_id = user?.id
   const can = usePermission()
   const { notification } = useApp()
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)

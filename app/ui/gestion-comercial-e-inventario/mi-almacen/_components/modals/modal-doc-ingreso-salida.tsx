@@ -3,7 +3,7 @@ import DocIngresoSalida, {
   DataDocIngresoSalida,
 } from '../docs/doc-ingreso-salida'
 import { getNroDoc } from '~/app/_utils/get-nro-doc'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 import DocIngresoSalidaTicket from '../docs/doc-ingreso-salida-ticket'
 import { useState } from 'react'
 
@@ -22,8 +22,8 @@ export default function ModalDocIngresoSalida({
     numero: data?.numero ?? 0,
   })
 
-  const { data: session } = useSession()
-  const empresa = session?.user.empresa
+  const { user } = useAuth()
+  const empresa = user?.empresa
 
   const [esTicket, setEsTicket] = useState(true)
 

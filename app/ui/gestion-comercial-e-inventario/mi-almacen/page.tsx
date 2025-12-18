@@ -5,7 +5,7 @@ import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import { TipoDocumento } from '@prisma/client'
 import { usePermission } from '~/hooks/use-permission'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
 import ProgressiveLoader from '~/app/_components/others/progressive-loader'
@@ -27,7 +27,7 @@ const ComponentLoading = () => (
 )
 
 export default function MiAlmacen() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const canAccess = usePermission(permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX)
   const canCreateProducto = usePermission(permissions.PRODUCTO_CREATE)
   const canCreateIngreso = usePermission(permissions.PRODUCTO_INGRESO_CREATE)
@@ -39,7 +39,7 @@ export default function MiAlmacen() {
     <ContenedorGeneral>
       <Suspense fallback={<ComponentLoading />}>
         <FiltersMiAlmacen
-          marca_predeterminada={session?.user?.empresa?.marca_id}
+          marca_predeterminada={user?.empresa?.marca_id}
         />
       </Suspense>
       {/* Layout responsivo */}

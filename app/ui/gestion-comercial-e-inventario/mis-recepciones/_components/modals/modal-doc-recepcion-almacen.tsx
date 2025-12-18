@@ -1,6 +1,6 @@
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getNroDoc } from '~/app/_utils/get-nro-doc'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 import DocRecepcionAlmacen from '../docs/doc-recepcion-almacen'
 import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
 import { TipoDocumento } from '@prisma/client'
@@ -16,8 +16,8 @@ export default function ModalDocRecepcionAlmacen({
   setOpen: (open: boolean) => void
   data: getRecepcionesAlmacenResponseProps | undefined
 }) {
-  const { data: session } = useSession()
-  const empresa = session?.user.empresa
+  const { user } = useAuth()
+  const empresa = user?.empresa
 
   const nro_doc = getNroDoc({
     tipo_documento: TipoDocumento.RecepcionAlmacen,

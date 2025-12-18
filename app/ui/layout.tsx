@@ -1,20 +1,35 @@
-import { redirect } from 'next/navigation'
-import { auth } from '~/auth/auth'
+'use client'
+
+import { useRequireAuth } from '~/lib/auth-context'
 import { InitStore } from './_components/others/init-store'
 
-export default async function ProtectedLayout({
+export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth()
-  if (!session) redirect('/')
+  const { user, loading } = useRequireAuth()
+
+  // Mostrar loading mientras verifica autenticación
+  if (loading) {
+    return (
+      <div className='relative h-dvh w-dvw overflow-hidden flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no hay usuario, useRequireAuth redirigirá automáticamente
+  if (!user) return null
 
   return (
     <div className='relative h-dvh w-dvw overflow-hidden'>
       <InitStore
-        marca_predeterminada={session?.user?.empresa?.marca_id}
-        almacen_predeterminado={session?.user?.empresa?.almacen_id}
+        marca_predeterminada={user?.empresa?.marca_id}
+        almacen_predeterminado={user?.empresa?.almacen_id}
       />
       <div className='relative size-full flex flex-col items-center justify-center
                       overflow-x-hidden overflow-y-auto

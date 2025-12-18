@@ -10,7 +10,7 @@ import { ColDef } from "ag-grid-community";
 import useCreateEntrega from "../../_hooks/use-create-entrega";
 import dayjs from "dayjs";
 import { useStoreAlmacen } from "~/store/store-almacen";
-import { useSession } from "next-auth/react";
+import { useAuth } from "~/lib/auth-context";
 import ModalCreateCliente from "./modal-create-cliente";
 import PopoverOpcionesEntrega from "../popovers/popover-opciones-entrega";
 import ButtonBase from "~/components/buttons/button-base";
@@ -50,7 +50,7 @@ export default function ModalEntregarProductos({
 }: ModalEntregarProductosProps) {
   const [form] = Form.useForm<FormValues>();
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
   const [productosEntrega, setProductosEntrega] = useState<ProductoEntrega[]>(
     []
@@ -198,7 +198,7 @@ export default function ModalEntregarProductos({
       return;
     }
 
-    if (!venta || !session?.user?.id) return;
+    if (!venta || !user?.id) return;
 
     const productosConCantidad = productosEntrega.filter((p) => p.entregar > 0);
 
@@ -245,7 +245,7 @@ export default function ModalEntregarProductos({
             }
           : undefined,
       user: {
-        connect: { id: session.user.id },
+        connect: { id: user.id },
       },
       productos_entregados: {
         create: productosConCantidad.map((p) => ({

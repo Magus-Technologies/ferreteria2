@@ -1,5 +1,9 @@
 'use server'
 
+// NOTA: Esta función ya no se usa con Laravel API
+// El login ahora se maneja directamente en el cliente con useAuth()
+// Mantener por compatibilidad pero no se recomienda usar
+
 import { signIn } from '~/auth/auth'
 import { LoginValues } from '../page'
 

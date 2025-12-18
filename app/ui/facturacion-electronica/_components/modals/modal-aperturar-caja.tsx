@@ -3,7 +3,7 @@ import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import dayjs from 'dayjs'
 import useAperturarCaja from '../../_hooks/use-aperturar-caja'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
 import ConteoDinero from '../others/conteo-dinero'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import LabelBase from '~/components/form/label-base'
@@ -30,7 +30,7 @@ export default function ModalAperturarCaja({
     },
   })
 
-  const { data: session } = useSession()
+  const { user } = useAuth()
 
   return (
     <ModalForm
@@ -53,14 +53,14 @@ export default function ModalAperturarCaja({
         form,
         onFinish: crearAperturarCaja,
         initialValues: {
-          monto_apertura: session?.user?.efectivo ?? 0,
+          monto_apertura: user?.efectivo ?? 0,
         },
       }}
     >
       <div className='flex items-center justify-around gap-6'>
         <div className='flex items-center gap-2'>
           <div className='font-bold text-slate-500'>Cajero:</div>
-          <div className='font-semibold'>{session?.user?.name}</div>
+          <div className='font-semibold'>{user?.name}</div>
         </div>
         <div className='flex items-center gap-2'>
           <div className='font-bold text-slate-500'>Fecha Actual:</div>
@@ -71,15 +71,15 @@ export default function ModalAperturarCaja({
         <div className='text-slate-500'>Saldo Anterior:</div>
         <div
           className={`${
-            (session?.user?.efectivo ?? 0) > 0
+            (user?.efectivo ?? 0) > 0
               ? 'text-emerald-600'
               : 'text-rose-700'
           }`}
         >
-          {session?.user?.efectivo.toLocaleString('en-US', {
+          {user?.efectivo?.toLocaleString('en-US', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 2,
-          })}
+          }) ?? '0'}
         </div>
       </div>
       <ConteoDinero
@@ -87,7 +87,7 @@ export default function ModalAperturarCaja({
         onChange={value =>
           form.setFieldValue(
             'monto_apertura',
-            value + (session?.user?.efectivo ?? 0)
+            value + (user?.efectivo ?? 0)
           )
         }
       />

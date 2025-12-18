@@ -3,55 +3,60 @@
 import { MenuProps } from 'antd/lib'
 import { FaSignOutAlt } from 'react-icons/fa'
 import DropdownBase from '~/components/dropdown/dropdown-base'
-import { signOut } from 'next-auth/react'
-
-const items: MenuProps['items'] = [
-  {
-    key: '1',
-    label: 'Mi Empresa',
-  },
-  {
-    key: '2',
-    label: 'Locaciones',
-    children: [
-      {
-        key: '2-1',
-        label: 'Locación 1',
-      },
-      {
-        key: '2-2',
-        label: 'Locación 2',
-      },
-    ],
-  },
-  {
-    key: '3',
-    label: 'Registros',
-    children: [
-      {
-        key: '3-1',
-        label: 'Registrar Producto',
-      },
-      {
-        key: '3-2',
-        label: 'Registrar Cliente',
-      },
-    ],
-  },
-  {
-    key: '4',
-    label: 'Cambiar mi Contraseña',
-  },
-  {
-    key: '5',
-    label: 'Cerrar Sesión',
-    className: '!text-red-500',
-    extra: <FaSignOutAlt className='text-red-500' />,
-    onClick: () => signOut(),
-  },
-]
+import { useAuth } from '~/lib/auth-context'
 
 export default function TopNavUI({ className }: { className?: string }) {
+  const { logout, user } = useAuth()
+
+  const items: MenuProps['items'] = [
+    {
+      key: '1',
+      label: 'Mi Empresa',
+    },
+    {
+      key: '2',
+      label: 'Locaciones',
+      children: [
+        {
+          key: '2-1',
+          label: 'Locación 1',
+        },
+        {
+          key: '2-2',
+          label: 'Locación 2',
+        },
+      ],
+    },
+    {
+      key: '3',
+      label: 'Registros',
+      children: [
+        {
+          key: '3-1',
+          label: 'Registrar Producto',
+        },
+        {
+          key: '3-2',
+          label: 'Registrar Cliente',
+        },
+      ],
+    },
+    {
+      key: '4',
+      label: 'Cambiar mi Contraseña',
+    },
+    {
+      key: '5',
+      label: 'Cerrar Sesión',
+      className: '!text-red-500',
+      extra: <FaSignOutAlt className='text-red-500' />,
+      onClick: async () => {
+        await logout()
+        window.location.href = '/'
+      },
+    },
+  ]
+
   return (
     <DropdownBase
       menu={{ items }}
@@ -65,8 +70,8 @@ export default function TopNavUI({ className }: { className?: string }) {
                     max-w-[calc(100vw-1.5rem)] sm:max-w-none
                     truncate'
     >
-      <span className='hidden sm:inline'>Hola, Grupo Mi Redentor</span>
-      <span className='inline sm:hidden'>Hola, GMR</span>
+      <span className='hidden sm:inline'>Hola, {user?.empresa?.razon_social || 'Usuario'}</span>
+      <span className='inline sm:hidden'>Hola, {user?.empresa?.razon_social?.substring(0, 3) || 'GMR'}</span>
     </DropdownBase>
   )
 }

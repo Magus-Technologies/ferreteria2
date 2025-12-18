@@ -1,31 +1,50 @@
 'use client'
 
-import { Form, Input } from 'antd'
+import { Form, Input, message } from 'antd'
 import FormBase from '../components/form/form-base'
 import Image from 'next/image'
 import { FaAngleRight, FaSpinner, FaUserTie } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
-import { useServerMutation } from '~/hooks/use-server-mutation'
-import loginServer from './_actions/login'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '~/lib/auth-context'
+import { useState } from 'react'
 
 export interface LoginValues {
-  username: string
+  email: string
   password: string
 }
 
 export default function Home() {
   const [form] = Form.useForm()
+  const { login, user, loading: authLoading } = useAuth()
+  const [loading, setLoading] = useState(false)
 
-  const { execute: login, loading } = useServerMutation({
-    action: loginServer,
-    onSuccess: () => (window.location.href = '/ui'),
-  })
+  const handleLogin = async (values: LoginValues) => {
+    setLoading(true)
+    try {
+      const result = await login(values.email, values.password)
 
-  const { status } = useSession()
-  if (status === 'loading') return null
-  if (status === 'authenticated') return (window.location.href = '/ui')
+      if (result.success) {
+        message.success('Inicio de sesión exitoso')
+        window.location.href = '/ui'
+      } else {
+        message.error(result.error || 'Error al iniciar sesión')
+      }
+    } catch {
+      message.error('Error al iniciar sesión')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Si está cargando, mostrar nada
+  if (authLoading) return null
+
+  // Si ya está autenticado, redirigir
+  if (user) {
+    window.location.href = '/ui'
+    return null
+  }
 
   return (
     <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative overflow-hidden">
@@ -59,7 +78,7 @@ export default function Home() {
           form={form}
           name='login'
           size='large'
-          onFinish={login}
+          onFinish={handleLogin}
         >
           <Form.Item
             hasFeedback
