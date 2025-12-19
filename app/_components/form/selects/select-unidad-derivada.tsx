@@ -2,11 +2,11 @@
 
 import { FaWeightHanging } from 'react-icons/fa'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
-import { getUnidadesDerivadas } from '~/app/_actions/unidadDerivada'
+import { useQuery } from '@tanstack/react-query'
+import { unidadesDerivadas } from '~/lib/api/catalogos'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonCreateUnidadDerivada from '../buttons/button-create-unidad-derivada'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectUnidadDerivadaProps extends SelectBaseProps {
@@ -24,13 +24,19 @@ export default function SelectUnidadDerivada({
   ...props
 }: SelectUnidadDerivadaProps) {
   const selectUnidadDerivadaRef = useRef<RefSelectBaseProps>(null)
+  const [shouldFetch, setShouldFetch] = useState(false)
 
-  const { response, triggerFetch, isFetched } = useLazyServerQuery({
-    action: getUnidadesDerivadas,
-    propsQuery: {
-      queryKey: [QueryKeys.UNIDADES_DERIVADAS],
+  const { data } = useQuery({
+    queryKey: [QueryKeys.UNIDADES_DERIVADAS],
+    queryFn: async () => {
+      const response = await unidadesDerivadas.getAll()
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      return response.data?.data || []
     },
-    params: undefined,
+    enabled: shouldFetch,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
   return (
@@ -41,18 +47,18 @@ export default function SelectUnidadDerivada({
         prefix={<FaWeightHanging className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
-        options={response?.map(item => ({
+        options={data?.map(item => ({
           value: item.id,
           label: item.name,
         }))}
         onFocus={() => {
-          if (!isFetched) {
-            triggerFetch()
+          if (!shouldFetch) {
+            setShouldFetch(true)
           }
         }}
         onOpenChange={(open) => {
-          if (open && !isFetched) {
-            triggerFetch()
+          if (open && !shouldFetch) {
+            setShouldFetch(true)
           }
         }}
         {...props}

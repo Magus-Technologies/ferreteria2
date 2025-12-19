@@ -1,7 +1,7 @@
 "use client";
 
 import { FormInstance } from "antd";
-import { FormCreateCotizacion } from "../others/body-cotizar";
+import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
@@ -19,8 +19,28 @@ export default function FormCrearCotizacion({
 }) {
   return (
     <div className="flex flex-col">
-      {/* Fila 1: Vendedor, Fecha Proforma, N° Cotización */}
+      {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
       <div className="flex gap-6">
+        {/* Fecha de la cotización (REQUERIDO) - Se usa como fecha y fecha_proforma */}
+        <LabelBase label="Fecha Proforma:" classNames={{ labelParent: "mb-6" }}>
+          <DatePickerBase
+            propsForm={{
+              name: "fecha",
+              initialValue: dayjs(),
+              hasFeedback: false,
+              rules: [
+                {
+                  required: true,
+                  message: "La fecha es requerida",
+                },
+              ],
+            }}
+            placeholder="Fecha"
+            className="!w-[160px] !min-w-[160px] !max-w-[160px]"
+            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
+          />
+        </LabelBase>
+
         <LabelBase label="Vendedor:" classNames={{ labelParent: "mb-6" }}>
           <InputBase
             propsForm={{
@@ -30,20 +50,6 @@ export default function FormCrearCotizacion({
             }}
             placeholder="Código o nombre del vendedor"
             prefix={<span className="text-rose-700 mx-1">👤</span>}
-          />
-        </LabelBase>
-
-        {/* Fecha en la que se hizo la cotización */}
-        <LabelBase label="Fecha Proforma:" classNames={{ labelParent: "mb-6" }}>
-          <DatePickerBase
-            propsForm={{
-              name: "fecha_proforma",
-              initialValue: dayjs(),
-              hasFeedback: false,
-            }}
-            placeholder="Fecha proforma"
-            className="!w-[160px] !min-w-[160px] !max-w-[160px]"
-            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
           />
         </LabelBase>
 
@@ -61,6 +67,20 @@ export default function FormCrearCotizacion({
             readOnly
           />
         </LabelBase>
+
+        {/* TODO: Agregar campo Tipo de Moneda cuando sea necesario */}
+        {/* <LabelBase label="Moneda:" classNames={{ labelParent: "mb-6" }}>
+          <select
+            className="h-[40px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 !min-w-[120px] !w-[120px] !max-w-[120px]"
+            onChange={(e) => {
+              form.setFieldValue("tipo_moneda", e.target.value as "s" | "d");
+            }}
+            defaultValue="s"
+          >
+            <option value="s">💵 Soles</option>
+            <option value="d">💲 Dólares</option>
+          </select>
+        </LabelBase> */}
       </div>
 
       {/* Fila 2: f.pago, n dias, f vence , t.doc */}
@@ -143,6 +163,26 @@ export default function FormCrearCotizacion({
             className="w-full"
             classNameIcon="text-rose-700 mx-1"
           />
+        </LabelBase>
+        
+        {/* Checkbox: Reservar Stock */}
+        <LabelBase label="Opciones:" classNames={{ labelParent: "mb-6" }}>
+          <div className="flex items-center gap-2 h-[40px]">
+            <input
+              type="checkbox"
+              id="reservar_stock"
+              className="w-4 h-4 text-rose-600 bg-gray-100 border-gray-300 rounded focus:ring-rose-500 focus:ring-2 cursor-pointer"
+              onChange={(e) => {
+                form.setFieldValue("reservar_stock", e.target.checked);
+              }}
+            />
+            <label
+              htmlFor="reservar_stock"
+              className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+            >
+              📦 Reservar Stock
+            </label>
+          </div>
         </LabelBase>
       </div>
 

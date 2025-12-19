@@ -1,7 +1,7 @@
 'use client'
 
 import { FormInstance } from 'antd'
-import { FormCreateCotizacion } from '../others/body-cotizar'
+import type { FormCreateCotizacion } from '../../_types/cotizacion.types'
 import TableCotizar from '../tables/table-cotizar'
 
 export default function FormTableCotizar({

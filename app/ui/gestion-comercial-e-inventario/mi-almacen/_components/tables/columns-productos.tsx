@@ -211,31 +211,38 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
               trigger="click"
               content={
                 <div className="flex flex-col items-center justify-center gap-6 px-4 py-2">
-                  {value?.map((item, index) => (
-                    <ProductoOtrosAlmacenes
-                      key={index}
-                      stock_fraccion={Number(item.stock_fraccion)}
-                      unidades_contenidas={Number(data!.unidades_contenidas)}
-                      producto_almacen_unidad_derivada={{
-                        ...(item.unidades_derivadas.find(
-                          (item) =>
-                            Number(item.factor) ===
-                            Number(data!.unidades_contenidas)
-                        ) ?? item.unidades_derivadas[0]),
-                        unidad_derivada: {
-                          ...(
-                            item.unidades_derivadas.find(
-                              (item) =>
-                                Number(item.factor) ===
-                                Number(data!.unidades_contenidas)
-                            ) ?? item.unidades_derivadas[0]
-                          ).unidad_derivada,
-                          estado: true,
-                        },
-                      }}
-                      almacen={item.almacen?.name}
-                    />
-                  ))}
+                  {value?.map((item, index) => {
+                    // Validar que existan unidades derivadas
+                    if (!item.unidades_derivadas || item.unidades_derivadas.length === 0) {
+                      return null;
+                    }
+
+                    const unidadDerivada = item.unidades_derivadas.find(
+                      (ud) =>
+                        Number(ud.factor) === Number(data!.unidades_contenidas)
+                    ) ?? item.unidades_derivadas[0];
+
+                    // Validar que la unidad derivada tenga la propiedad unidad_derivada
+                    if (!unidadDerivada?.unidad_derivada) {
+                      return null;
+                    }
+
+                    return (
+                      <ProductoOtrosAlmacenes
+                        key={index}
+                        stock_fraccion={Number(item.stock_fraccion)}
+                        unidades_contenidas={Number(data!.unidades_contenidas)}
+                        producto_almacen_unidad_derivada={{
+                          ...unidadDerivada,
+                          unidad_derivada: {
+                            ...unidadDerivada.unidad_derivada,
+                            estado: true,
+                          },
+                        }}
+                        almacen={item.almacen?.name}
+                      />
+                    );
+                  })}
                 </div>
               }
             >

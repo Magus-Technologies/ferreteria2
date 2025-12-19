@@ -2,11 +2,11 @@
 
 import { BiSolidCategoryAlt } from 'react-icons/bi'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
+import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { getCategorias } from '~/app/_actions/categoria'
+import { categoriasApi } from '~/lib/api/catalogos'
 import ButtonCreateCategoria from '../buttons/button-create-categoria'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectCategoriasProps extends SelectBaseProps {
@@ -24,13 +24,19 @@ export default function SelectCategorias({
   ...props
 }: SelectCategoriasProps) {
   const selectCategoriasRef = useRef<RefSelectBaseProps>(null)
+  const [shouldFetch, setShouldFetch] = useState(false)
 
-  const { response, triggerFetch, isFetched } = useLazyServerQuery({
-    action: getCategorias,
-    propsQuery: {
-      queryKey: [QueryKeys.CATEGORIAS],
+  const { data } = useQuery({
+    queryKey: [QueryKeys.CATEGORIAS],
+    queryFn: async () => {
+      const response = await categoriasApi.getAll()
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      return response.data?.data || []
     },
-    params: undefined,
+    enabled: shouldFetch,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
   return (
@@ -43,18 +49,18 @@ export default function SelectCategorias({
         }
         variant={variant}
         placeholder={placeholder}
-        options={response?.map(item => ({
+        options={data?.map(item => ({
           value: item.id,
           label: item.name,
         }))}
         onFocus={() => {
-          if (!isFetched) {
-            triggerFetch()
+          if (!shouldFetch) {
+            setShouldFetch(true)
           }
         }}
         onOpenChange={(open) => {
-          if (open && !isFetched) {
-            triggerFetch()
+          if (open && !shouldFetch) {
+            setShouldFetch(true)
           }
         }}
         {...props}

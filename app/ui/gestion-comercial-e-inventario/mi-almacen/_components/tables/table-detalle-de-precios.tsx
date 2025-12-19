@@ -11,11 +11,7 @@ import InputImport from '~/app/_components/form/inputs/input-import'
 import { useEffect, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
-import {
-  getProductoAlmacenByCodProductoAndAlmacenName,
-  importarDetallesDePrecios,
-  importarUnidadesDerivadas,
-} from '~/app/_actions/unidadDerivada'
+import { detallePreciosApi, ImportDetallePreciosItem } from '~/lib/api/detalle-precios'
 import { useQueryClient } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
 import { ServerResult } from '~/auth/middleware-server-actions'
@@ -147,52 +143,127 @@ export default function TableDetalleDePrecios() {
                 const preResponse = new Set<string>(
                   data.map(item => `${item['Cod. Producto']}`)
                 )
-                const response =
-                  await getProductoAlmacenByCodProductoAndAlmacenName(
-                    Array.from(preResponse).map(cod_producto => ({
-                      cod_producto,
-                      almacen_id,
-                    }))
-                  )
-                if (!response.data)
+                const response = await detallePreciosApi.getProductoAlmacenByCodProducto(
+                  Array.from(preResponse).map(cod_producto => ({
+                    cod_producto,
+                    almacen_id,
+                  }))
+                )
+                
+                if (response.error || !response.data) {
+                  const errorMsg = response.error?.message || 'No se encontraron los Productos en este Almacén';
                   throw new Error(
-                    'No se encontraron los Productos en este Almacén'
-                  )
+                    `${errorMsg}\n\n⚠️ IMPORTANTE: Debes importar los PRODUCTOS primero antes de importar el Detalle de Precios.\n\nPasos:\n1. Importa el Excel de Productos\n2. Luego importa el Excel de Detalle de Precios`
+                  );
+                }
+
+                // Mostrar advertencias si hay productos omitidos
+                if (response.data.advertencias && response.data.advertencias.length > 0) {
+                  console.warn('⚠️ Advertencias al importar:', response.data.advertencias);
+                  // Opcional: Mostrar notificación al usuario
+                  // notification.warning({
+                  //   message: 'Productos omitidos',
+                  //   description: response.data.advertencias.join('\n'),
+                  //   duration: 10,
+                  // });
+                }
 
                 const preUnidadesDerivadas = new Set<string>(
                   data.map(item => `${item['Formato']}`)
                 )
-                const unidades_derivadas = await importarUnidadesDerivadas(
+                const unidades_derivadas = await detallePreciosApi.importarUnidadesDerivadas(
                   Array.from(preUnidadesDerivadas).map(name => ({
                     name,
                   }))
                 )
-                if (!unidades_derivadas.data)
-                  throw new Error('No se encontraron unidades derivadas')
+                if (unidades_derivadas.error || !unidades_derivadas.data)
+                  throw new Error(unidades_derivadas.error?.message || 'No se encontraron unidades derivadas')
 
-                const newData = data.map(item => ({
-                  ...item,
-                  producto_almacen: {
-                    connect: {
-                      id: response.data!.find(
-                        ({ cod_producto }) =>
-                          cod_producto === `${item['Cod. Producto']}`
-                      )?.producto_almacen_id,
-                    },
-                  },
-                  unidad_derivada: {
-                    connect: {
-                      id: unidades_derivadas.data!.find(
-                        ({ name }) => name === item['Formato']
-                      )?.id,
-                    },
-                  },
-                }))
+                // Filtrar solo los productos que se encontraron
+                const newData = data
+                  .filter(item => {
+                    const productoEncontrado = response.data!.data.find(
+                      ({ cod_producto }) => cod_producto === `${item['Cod. Producto']}`
+                    );
+                    return !!productoEncontrado;
+                  })
+                  .map(item => {
+                    const baseData: Record<string, unknown> = {
+                      producto_almacen: {
+                        connect: {
+                          id: response.data!.data.find(
+                            ({ cod_producto }) =>
+                              cod_producto === `${item['Cod. Producto']}`
+                          )?.producto_almacen_id,
+                        },
+                      },
+                      unidad_derivada: {
+                        connect: {
+                          id: unidades_derivadas.data!.data.find(
+                            ({ name }) => name === item['Formato']
+                          )?.id,
+                        },
+                      },
+                      factor: Number(item['Factor']) || 1,
+                      precio_publico: Number(item['P. Público']) || 0,
+                    };
+
+                    // Solo agregar campos opcionales si tienen valor
+                    if (item['Comisión P. Público'] !== undefined && item['Comisión P. Público'] !== null && item['Comisión P. Público'] !== '') {
+                      baseData.comision_publico = Number(item['Comisión P. Público']);
+                    }
+                    if (item['P. Especial'] !== undefined && item['P. Especial'] !== null && item['P. Especial'] !== '') {
+                      baseData.precio_especial = Number(item['P. Especial']);
+                    }
+                    if (item['Comisión P. Especial'] !== undefined && item['Comisión P. Especial'] !== null && item['Comisión P. Especial'] !== '') {
+                      baseData.comision_especial = Number(item['Comisión P. Especial']);
+                    }
+                    if (item['Activador P. Especial'] !== undefined && item['Activador P. Especial'] !== null && item['Activador P. Especial'] !== '') {
+                      baseData.activador_especial = Number(item['Activador P. Especial']);
+                    }
+                    if (item['P. Mínimo'] !== undefined && item['P. Mínimo'] !== null && item['P. Mínimo'] !== '') {
+                      baseData.precio_minimo = Number(item['P. Mínimo']);
+                    }
+                    if (item['Comisión P. Mínimo'] !== undefined && item['Comisión P. Mínimo'] !== null && item['Comisión P. Mínimo'] !== '') {
+                      baseData.comision_minimo = Number(item['Comisión P. Mínimo']);
+                    }
+                    if (item['Activador P. Mínimo'] !== undefined && item['Activador P. Mínimo'] !== null && item['Activador P. Mínimo'] !== '') {
+                      baseData.activador_minimo = Number(item['Activador P. Mínimo']);
+                    }
+                    if (item['P. Último'] !== undefined && item['P. Último'] !== null && item['P. Último'] !== '') {
+                      baseData.precio_ultimo = Number(item['P. Último']);
+                    }
+                    if (item['Comisión P. Último'] !== undefined && item['Comisión P. Último'] !== null && item['Comisión P. Último'] !== '') {
+                      baseData.comision_ultimo = Number(item['Comisión P. Último']);
+                    }
+                    if (item['Activador P. Último'] !== undefined && item['Activador P. Último'] !== null && item['Activador P. Último'] !== '') {
+                      baseData.activador_ultimo = Number(item['Activador P. Último']);
+                    }
+
+                    return baseData;
+                  })
+
+                console.log('✅ Datos procesados para enviar:', newData);
+                console.log('📊 Total de registros:', newData.length);
+                console.log('📋 Primer registro procesado:', newData[0]);
 
                 return newData
               }}
               propsUseServerMutation={{
-                action: importarDetallesDePrecios,
+                action: async (data: { data: Array<Record<string, unknown>> }) => {
+                  console.log('📤 Enviando datos al backend:', data);
+                  console.log('📊 Primer registro:', data.data[0]);
+                  
+                  const res = await detallePreciosApi.import(data as unknown as { data: ImportDetallePreciosItem[] });
+                  
+                  console.log('📥 Respuesta del backend:', res);
+                  
+                  if (res.error) {
+                    console.error('❌ Error del backend:', res.error);
+                    throw new Error(res.error.message);
+                  }
+                  return { data: res.data };
+                },
                 msgSuccess: 'Unidades Derivadas importadas exitosamente',
                 onSuccess: () => setProductoSeleccionado(undefined),
                 queryKey: [QueryKeys.PRODUCTOS],

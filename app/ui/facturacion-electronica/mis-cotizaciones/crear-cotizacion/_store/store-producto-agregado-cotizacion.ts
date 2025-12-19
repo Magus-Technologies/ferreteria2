@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { TipoMoneda } from '@prisma/client'
-import { FormCreateCotizacion } from '../_components/others/body-cotizar'
+import type { FormCreateCotizacion, TipoMoneda } from '../_types/cotizacion.types'
 
 type UseStoreProductoAgregadoCotizacion = {
   productoAgregado?: FormCreateCotizacion['productos'][number]
@@ -15,6 +14,6 @@ export const useStoreProductoAgregadoCotizacion =
   create<UseStoreProductoAgregadoCotizacion>((set) => ({
     productoAgregado: undefined,
     setProductoAgregado: (producto) => set({ productoAgregado: producto }),
-    tipo_moneda: TipoMoneda.Soles,
+    tipo_moneda: 's',
     setTipoMoneda: (tipo_moneda) => set({ tipo_moneda }),
   }))

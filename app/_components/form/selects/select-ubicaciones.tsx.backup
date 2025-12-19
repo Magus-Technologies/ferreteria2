@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useLazyServerQuery } from "~/hooks/use-lazy-server-query";
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from "./select-base";
 import { FaLocationCrosshairs } from "react-icons/fa6";
-import { ubicacionesApi } from "~/lib/api/catalogos";
+import { getUbicaciones } from "~/app/_actions/ubicacion";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useEffect, useRef, useState } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
@@ -33,24 +33,19 @@ export default function SelectUbicaciones({
     useState(true);
 
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
-  const [shouldFetch, setShouldFetch] = useState(false);
 
-  const { data, refetch, isLoading } = useQuery({
-    queryKey: [QueryKeys.UBICACIONES, almacen_id],
-    queryFn: async () => {
-      const response = await ubicacionesApi.getAll({ almacen_id: almacen_id || 0 });
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-      return response.data?.data || [];
-    },
-    enabled: shouldFetch && !!almacen_id,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
+  const { response, refetch, loading, triggerFetch, isFetched } =
+    useLazyServerQuery({
+      action: getUbicaciones,
+      propsQuery: {
+        queryKey: [QueryKeys.UBICACIONES],
+      },
+      params: { almacen_id: almacen_id || 0 },
+    });
 
   useEffect(() => {
-    if (!isLoading && almacen_id) setPrimeraVez(false);
-  }, [isLoading, almacen_id]);
+    if (!loading && almacen_id) setPrimeraVez(false);
+  }, [loading, almacen_id]);
 
   useEffect(() => {
     if (!primera_vez) {
@@ -76,18 +71,18 @@ export default function SelectUbicaciones({
         }
         variant={variant}
         placeholder={placeholder}
-        options={data?.map((item) => ({
+        options={response?.map((item) => ({
           value: item.id,
           label: item.name,
         }))}
         onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true);
+          if (!isFetched) {
+            triggerFetch();
           }
         }}
         onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true);
+          if (open && !isFetched) {
+            triggerFetch();
           }
         }}
         {...props}

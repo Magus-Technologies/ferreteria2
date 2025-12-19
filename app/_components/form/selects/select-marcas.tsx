@@ -1,12 +1,12 @@
 'use client'
 
-import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
+import { useQuery } from '@tanstack/react-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { TbBrand4Chan } from 'react-icons/tb'
-import { getMarcas } from '~/app/_actions/marca'
+import { marcasApi } from '~/lib/api/catalogos'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonCreateMarca from '../buttons/button-create-marca'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectMarcasProps extends SelectBaseProps {
@@ -24,13 +24,19 @@ export default function SelectMarcas({
   ...props
 }: SelectMarcasProps) {
   const selectMarcasRef = useRef<RefSelectBaseProps>(null)
+  const [shouldFetch, setShouldFetch] = useState(false)
 
-  const { response, triggerFetch, isFetched } = useLazyServerQuery({
-    action: getMarcas,
-    propsQuery: {
-      queryKey: [QueryKeys.MARCAS],
+  const { data } = useQuery({
+    queryKey: [QueryKeys.MARCAS],
+    queryFn: async () => {
+      const response = await marcasApi.getAll()
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      return response.data?.data || []
     },
-    params: undefined,
+    enabled: shouldFetch,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
   return (
@@ -41,18 +47,18 @@ export default function SelectMarcas({
         prefix={<TbBrand4Chan className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
-        options={response?.map(item => ({
+        options={data?.map(item => ({
           value: item.id,
           label: item.name,
         }))}
         onFocus={() => {
-          if (!isFetched) {
-            triggerFetch()
+          if (!shouldFetch) {
+            setShouldFetch(true)
           }
         }}
         onOpenChange={(open) => {
-          if (open && !isFetched) {
-            triggerFetch()
+          if (open && !shouldFetch) {
+            setShouldFetch(true)
           }
         }}
         {...props}

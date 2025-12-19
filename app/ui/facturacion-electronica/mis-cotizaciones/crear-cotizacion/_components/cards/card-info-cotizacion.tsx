@@ -1,10 +1,10 @@
-import { TipoMoneda } from '@prisma/client'
+import type { TipoMoneda } from '../../_types/cotizacion.types'
 
 export default function CardInfoCotizacion({
   title,
   value,
   className = '',
-  moneda = TipoMoneda.Soles,
+  moneda = 's',
 }: {
   title: string
   value: number
@@ -19,7 +19,7 @@ export default function CardInfoCotizacion({
         {title}:
       </h3>
       <p className='text-xl font-bold text-left text-slate-800 text-nowrap'>
-        {moneda === TipoMoneda.Soles ? 'S/.' : '$.'}{' '}
+        {moneda === 's' ? 'S/.' : '$.'}{' '}
         {value.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,

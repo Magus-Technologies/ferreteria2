@@ -5,6 +5,7 @@ import { useColumnsProductos } from "./columns-productos";
 import type { Producto } from "~/app/_types/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { productosApiV2 } from "~/lib/api/producto";
+import { ubicacionesApi } from "~/lib/api/catalogos";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import InputImport from "~/app/_components/form/inputs/input-import";
 import { useRef, useState, useEffect } from "react";
@@ -14,7 +15,6 @@ import { permissions } from "~/lib/permissions";
 import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
 import InputUploadMasivo from "../inputs/input-upload-masivo";
 import { useStoreProductoSeleccionado } from "../../_store/store-producto-seleccionado";
-import { importarUbicaciones } from "~/app/_actions/ubicacion";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { App } from "antd";
 import PaginationControls from "~/app/_components/tables/pagination-controls";
@@ -87,7 +87,7 @@ function TableProductos() {
                 },
               ]}
               preProcessData={async (data) => {
-                if (!almacen_id) throw new Error("No se selecciono un almacén");
+                if (!almacen_id) throw new Error("No se seleccionó un almacén");
 
                 if (data.some((item) => !item["Ubicación en Almacén"]))
                   throw new Error(
@@ -97,39 +97,62 @@ function TableProductos() {
                 const ubicacionesNames = new Set(
                   data.map((item) => item["Ubicación en Almacén"] as string)
                 );
-                const ubicaciones = await importarUbicaciones(
-                  Array.from(ubicacionesNames).map((name) => ({
-                    name,
-                    almacen_id,
-                  }))
-                );
 
-                if (!ubicaciones.data)
-                  throw new Error("No se encontraron ubicaciones");
+                console.log('📍 Ubicaciones a importar:', Array.from(ubicacionesNames));
 
-                const newData = data.map((item) => {
-                  const {
-                    "Stock Fracción en Almacén": stock_fraccion,
-                    "Costo en Almacén": costo,
-                    "Ubicación en Almacén": ubicacion,
-                    ...rest
-                  } = item;
-                  return {
-                    ...rest,
-                    producto_en_almacenes: {
-                      create: {
-                        stock_fraccion,
-                        costo,
-                        ubicacion_id: ubicaciones.data!.find(
-                          (item) => item.name === ubicacion
-                        )!.id,
-                        almacen_id,
+                try {
+                  const ubicaciones = await ubicacionesApi.importMany(
+                    Array.from(ubicacionesNames).map((name) => ({
+                      name,
+                      almacen_id,
+                    }))
+                  );
+
+                  console.log('✅ Respuesta de importarUbicaciones:', ubicaciones);
+
+                  // Verificar si hay error en la respuesta
+                  if ('error' in ubicaciones && ubicaciones.error) {
+                    throw new Error(ubicaciones.error.message || "Error al importar ubicaciones");
+                  }
+
+                  if (!ubicaciones?.data || ubicaciones.data.length === 0) {
+                    throw new Error("No se pudieron crear/encontrar las ubicaciones");
+                  }
+
+                  const newData = data.map((item) => {
+                    const {
+                      "Stock Fracción en Almacén": stock_fraccion,
+                      "Costo en Almacén": costo,
+                      "Ubicación en Almacén": ubicacion,
+                      ...rest
+                    } = item;
+                    
+                    const ubicacionEncontrada = ubicaciones.data!.find(
+                      (u) => u.name === ubicacion
+                    );
+
+                    if (!ubicacionEncontrada) {
+                      throw new Error(`No se encontró la ubicación: ${ubicacion}`);
+                    }
+
+                    return {
+                      ...rest,
+                      producto_en_almacenes: {
+                        create: {
+                          stock_fraccion,
+                          costo,
+                          ubicacion_id: ubicacionEncontrada.id,
+                          almacen_id,
+                        },
                       },
-                    },
-                  };
-                });
+                    };
+                  });
 
-                return newData;
+                  return newData;
+                } catch (error) {
+                  console.error('❌ Error en preProcessData:', error);
+                  throw error;
+                }
               }}
               propsUseServerMutation={{
                 action: async (data: { data: Array<Record<string, unknown>> }) => {

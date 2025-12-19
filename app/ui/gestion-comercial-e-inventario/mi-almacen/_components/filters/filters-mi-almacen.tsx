@@ -54,11 +54,24 @@ export default function FiltersMiAlmacen({
     if (filtros) form.setFieldValue('marca_id', filtros.marca_id)
   }, [filtros, form])
 
+  // Inicializar filtros automáticamente al montar el componente
+  useEffect(() => {
+    // Esperar a que el formulario esté listo y luego aplicar filtros iniciales
+    const timer = setTimeout(() => {
+      if (!filtros) {
+        form.submit()
+      }
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <FormBase
       form={form}
       name='filtros-mi-almacen'
       initialValues={{
+        almacen_id: 1, // Almacén Principal por defecto
         estado: 1,
         cs_stock: CSStock.ALL,
         cs_comision: CSComision.ALL,
@@ -87,7 +100,7 @@ export default function FiltersMiAlmacen({
           unidad_medida_id: unidad_medida_id || undefined,
           ubicacion_id: ubicacion_id || undefined,
           accion_tecnica: accion_tecnica || undefined,
-          estado: estado === 1 ? true : estado === 0 ? false : undefined,
+          estado: estado === 1 ? 1 : estado === 0 ? 0 : undefined,
           cs_stock:
             cs_stock === CSStock.CON_STOCK
               ? 'con_stock'

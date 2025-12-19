@@ -1,7 +1,7 @@
 'use client'
 
 import { FormInstance } from 'antd'
-import { FormCreateCotizacion } from '../others/body-cotizar'
+import type { FormCreateCotizacion } from '../../_types/cotizacion.types'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsCotizar } from './columns-cotizar'
 import { useStoreProductoAgregadoCotizacion } from '../../_store/store-producto-agregado-cotizacion'

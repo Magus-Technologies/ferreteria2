@@ -2,11 +2,11 @@
 
 import { PiWarehouseFill } from 'react-icons/pi'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
-import { getAlmacenes } from '~/app/_actions/almacen'
+import { useQuery } from '@tanstack/react-query'
+import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface SelectAlmacenProps extends SelectBaseProps {
   classNameIcon?: string
@@ -28,13 +28,19 @@ export default function SelectAlmacen({
   const selectAlmacenRef = useRef<RefSelectBaseProps>(null)
   const setAlmacenId = useStoreAlmacen(store => store.setAlmacenId)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  const [shouldFetch, setShouldFetch] = useState(false)
 
-  const { response, triggerFetch, isFetched } = useLazyServerQuery({
-    action: getAlmacenes,
-    propsQuery: {
-      queryKey: [QueryKeys.ALMACENES],
+  const { data } = useQuery({
+    queryKey: [QueryKeys.ALMACENES],
+    queryFn: async () => {
+      const response = await almacenesApi.getAll()
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      return response.data?.data || []
     },
-    params: undefined,
+    enabled: shouldFetch,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
   useEffect(() => {
@@ -50,18 +56,18 @@ export default function SelectAlmacen({
       placeholder={placeholder}
       className={className}
       size={size}
-      options={response?.map(item => ({
+      options={data?.map(item => ({
         value: item.id,
         label: item.name,
       }))}
       onFocus={() => {
-        if (!isFetched) {
-          triggerFetch()
+        if (!shouldFetch) {
+          setShouldFetch(true)
         }
       }}
       onOpenChange={(open) => {
-        if (open && !isFetched) {
-          triggerFetch()
+        if (open && !shouldFetch) {
+          setShouldFetch(true)
         }
       }}
       onChange={value => {

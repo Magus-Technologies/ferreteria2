@@ -168,7 +168,7 @@ export interface GetProductosParams {
   unidad_medida_id?: number;
   ubicacion_id?: number;
   accion_tecnica?: string;
-  estado?: boolean | 0 | 1;
+  estado?: 0 | 1; // Cambiar a 0 o 1 en lugar de boolean
   cs_stock?: 'con_stock' | 'sin_stock' | 'all';
   cs_comision?: 'con_comision' | 'sin_comision' | 'all';
   per_page?: number;

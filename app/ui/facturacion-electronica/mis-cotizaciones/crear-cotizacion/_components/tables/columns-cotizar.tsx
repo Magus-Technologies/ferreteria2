@@ -2,9 +2,8 @@
 
 import { FormInstance } from 'antd'
 import { ColDef } from 'ag-grid-community'
-import { FormCreateCotizacion } from '../others/body-cotizar'
+import type { FormCreateCotizacion, DescuentoTipo } from '../../_types/cotizacion.types'
 import { FaTrash } from 'react-icons/fa'
-import { DescuentoTipo } from '@prisma/client'
 
 export function calcularSubtotalCotizacion({
   precio_venta,
@@ -22,7 +21,7 @@ export function calcularSubtotalCotizacion({
   const precioConRecargo = precio_venta + recargo
   const subtotalSinDescuento = precioConRecargo * cantidad
 
-  if (descuento_tipo === DescuentoTipo.Monto) {
+  if (descuento_tipo === 'Monto') {
     return (subtotalSinDescuento - descuento).toFixed(2)
   } else {
     const descuentoCalculado = (subtotalSinDescuento * descuento) / 100
@@ -87,7 +86,7 @@ export function useColumnsCotizar({
           recargo: recargo || 0,
           cantidad: cantidad || 0,
           descuento: descuento || 0,
-          descuento_tipo: descuento_tipo || DescuentoTipo.Monto,
+          descuento_tipo: descuento_tipo || 'Monto',
         })
       },
       valueFormatter: (params) => `S/. ${params.value}`,

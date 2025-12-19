@@ -1,24 +1,23 @@
-'use client'
+"use client";
 
-import { DescuentoTipo } from '@prisma/client'
-import { Form, FormInstance } from 'antd'
-import { useMemo } from 'react'
-import ButtonBase from '~/components/buttons/button-base'
-import { FormCreateCotizacion } from '../others/body-cotizar'
-import CardInfoCotizacion from './card-info-cotizacion'
-import { MdSell } from 'react-icons/md'
-import { FaPrint } from 'react-icons/fa'
+import { Form, FormInstance } from "antd";
+import { useMemo } from "react";
+import ButtonBase from "~/components/buttons/button-base";
+import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
+import CardInfoCotizacion from "./card-info-cotizacion";
+import { MdSell } from "react-icons/md";
+import { FaPrint } from "react-icons/fa";
 
 export default function CardsInfoCotizacion({
   form,
 }: {
-  form: FormInstance<FormCreateCotizacion>
+  form: FormInstance<FormCreateCotizacion>;
 }) {
-  const tipo_moneda = Form.useWatch('tipo_moneda', form)
+  const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const productos = Form.useWatch(
-    'productos',
+    "productos",
     form
-  ) as FormCreateCotizacion['productos']
+  ) as FormCreateCotizacion["productos"];
 
   // Calcular SubTotal (suma de productos sin descuento)
   const subTotal = useMemo(
@@ -31,70 +30,74 @@ export default function CardsInfoCotizacion({
         0
       ),
     [productos]
-  )
+  );
 
   // Calcular Total Descuento
   const totalDescuento = useMemo(
     () =>
       (productos || []).reduce((acc, item) => {
-        const descuento_tipo = item?.descuento_tipo ?? DescuentoTipo.Monto
-        const descuento = Number(item?.descuento ?? 0)
-        const precio_venta = Number(item?.precio_venta ?? 0)
-        const recargo = Number(item?.recargo ?? 0)
-        const cantidad = Number(item?.cantidad ?? 0)
+        const descuento_tipo = item?.descuento_tipo ?? "Monto";
+        const descuento = Number(item?.descuento ?? 0);
+        const precio_venta = Number(item?.precio_venta ?? 0);
+        const recargo = Number(item?.recargo ?? 0);
+        const cantidad = Number(item?.cantidad ?? 0);
 
-        if (descuento_tipo === DescuentoTipo.Porcentaje) {
-          return acc + ((precio_venta + recargo) * descuento * cantidad) / 100
+        if (descuento_tipo === "Porcentaje") {
+          return acc + ((precio_venta + recargo) * descuento * cantidad) / 100;
         } else {
-          return acc + descuento
+          return acc + descuento;
         }
       }, 0),
     [productos]
-  )
+  );
 
   // Calcular Total
   const total = useMemo(
     () => subTotal - totalDescuento,
     [subTotal, totalDescuento]
-  )
+  );
 
   return (
-    <div className='flex flex-col gap-4 max-w-64'>
-      <CardInfoCotizacion title='SubTotal' value={subTotal} moneda={tipo_moneda} />
+    <div className="flex flex-col gap-4 max-w-64">
       <CardInfoCotizacion
-        title='Total Dscto'
+        title="SubTotal"
+        value={subTotal}
+        moneda={tipo_moneda}
+      />
+      <CardInfoCotizacion
+        title="Total Dscto"
         value={totalDescuento}
         moneda={tipo_moneda}
       />
       <CardInfoCotizacion
-        title='Total'
+        title="Total"
         value={total}
         moneda={tipo_moneda}
-        className='border-cyan-500 border-2'
+        className="border-cyan-500 border-2"
       />
-      
+
       <ButtonBase
         onClick={() => {
-          form.submit()
+          form.submit();
         }}
-        color='success'
-        className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
+        color="success"
+        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
       >
-        <MdSell className='min-w-fit' size={30} />
+        <MdSell className="min-w-fit" size={30} />
         Guardar Cotización
       </ButtonBase>
-      
+
       <ButtonBase
-        type='button'
-        color='info'
-        className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
+        type="button"
+        color="info"
+        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
         onClick={() => {
-          console.log('Imprimir cotización')
+          console.log("Imprimir cotización");
         }}
       >
-        <FaPrint className='min-w-fit' size={30} />
+        <FaPrint className="min-w-fit" size={30} />
         Imprimir
       </ButtonBase>
     </div>
-  )
+  );
 }
