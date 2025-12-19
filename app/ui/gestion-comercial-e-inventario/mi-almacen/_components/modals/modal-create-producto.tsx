@@ -2,12 +2,12 @@ import { Form } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import type {
-  Producto,
   ProductoAlmacen,
   ProductoAlmacenUnidadDerivada,
   UnidadDerivada,
   UnidadDerivadaInmutableCompra,
 } from '@prisma/client'
+import type { Producto } from '~/app/_types/producto'
 import type { Dayjs } from 'dayjs'
 import TabsForm from '../tabs/tabs-form'
 import { useStoreArchivosProducto } from '../../_store/store-archivos-producto'

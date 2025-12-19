@@ -4,7 +4,8 @@
 import { useServerQuery } from '~/hooks/use-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
-import { Prisma, Producto } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import type { Producto } from '~/app/_types/producto'
 import {
   getProductosResponseProps,
   SearchProductos,

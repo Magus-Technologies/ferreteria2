@@ -258,7 +258,11 @@ export const productosApi = {
   },
 };
 
-// Exportar por defecto
+// Exportar módulos nuevos de API
+export { almacenesApi } from './api/almacen';
+export { productosApiV2 } from './api/producto';
+
+// Exportar por defecto (mantener compatibilidad)
 const api = {
   auth: authApi,
   productos: productosApi,

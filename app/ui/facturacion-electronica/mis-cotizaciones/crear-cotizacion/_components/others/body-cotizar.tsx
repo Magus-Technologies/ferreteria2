@@ -3,6 +3,8 @@
 import {
   TipoMoneda,
   DescuentoTipo,
+  FormaDePago,
+  TipoDocumento,
 } from '@prisma/client'
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
@@ -27,12 +29,30 @@ export type FormCreateCotizacion = {
     descuento_tipo?: DescuentoTipo
     descuento?: number
   }>
+  // Campos principales
   fecha: Dayjs
   tipo_moneda: TipoMoneda
   tipo_de_cambio?: number
-  cliente_id?: number
-  observaciones?: string
+  
+  // Campos de vendedor y forma de pago
+  vendedor?: string
+  forma_de_pago?: FormaDePago
   vigencia_dias?: number
+  
+  // Campos de cliente
+  ruc_dni?: string
+  cliente_id?: number
+  telefono?: string
+  direccion?: string
+  
+  // Campos de documento
+  fecha_vencimiento?: Dayjs
+  tipo_documento?: TipoDocumento
+  fecha_proforma?: Dayjs
+  numero?: string  // Número completo generado automáticamente (COT-2025-001)
+  
+  // Observaciones
+  observaciones?: string
 }
 
 export default function BodyCotizar() {

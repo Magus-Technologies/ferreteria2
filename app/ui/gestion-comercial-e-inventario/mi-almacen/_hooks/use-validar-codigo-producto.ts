@@ -1,14 +1,11 @@
 import { App } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
-import { validarCodigoProducto } from '~/app/_actions/producto'
-import { useServerMutation } from '~/hooks/use-server-mutation'
+import { productosApiV2 } from '~/lib/api/producto'
 
 export default function useValidarCodigoProducto() {
-  const { execute, response, loading } = useServerMutation({
-    action: validarCodigoProducto,
-  })
-
+  const [loading, setLoading] = useState(false)
+  const [response, setResponse] = useState<string | null>(null)
   const { notification } = App.useApp()
 
   useEffect(() => {
@@ -19,7 +16,17 @@ export default function useValidarCodigoProducto() {
   }, [notification, response])
 
   const debounced = useDebouncedCallback<(value: string) => void>(
-    value => execute({ cod_producto: value }),
+    async (value) => {
+      setLoading(true)
+      try {
+        const res = await productosApiV2.validarCodigo(value)
+        setResponse(res.data ?? null)
+      } catch {
+        setResponse(null)
+      } finally {
+        setLoading(false)
+      }
+    },
     500
   )
 

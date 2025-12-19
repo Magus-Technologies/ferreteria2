@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 
 export type productoEditOrCopy = Omit<
-  getProductosResponseProps,
+  Producto,
   'id' | 'cod_producto' | 'cod_barra'
 > & {
   id?: number

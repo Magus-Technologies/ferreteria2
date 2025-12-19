@@ -22,8 +22,8 @@ import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
-import { Prisma } from '@prisma/client'
 import { useEffect } from 'react'
+import type { GetProductosParams } from '~/app/_types/producto'
 
 interface FiltersMiAlmacenProps {
   marca_predeterminada?: number
@@ -74,113 +74,36 @@ export default function FiltersMiAlmacen({
           accion_tecnica,
           cs_stock,
           cs_comision,
-          ...rest
+          marca_id,
+          categoria_id,
+          unidad_medida_id,
         } = values
-        const data = {
-          ...rest,
-          producto_en_almacenes: {
-            some: {
-              almacen_id,
-              ubicacion_id,
-              ...(cs_stock === CSStock.CON_STOCK
-                ? { stock_fraccion: { gt: 0 } }
-                : cs_stock === CSStock.SIN_STOCK
-                ? { stock_fraccion: { lte: 0 } }
-                : {}),
-              ...(cs_comision === CSComision.CON_COMISION
-                ? {
-                    unidades_derivadas: {
-                      some: {
-                        OR: [
-                          {
-                            comision_publico: {
-                              gt: 0,
-                            },
-                          },
-                          {
-                            comision_especial: {
-                              gt: 0,
-                            },
-                          },
-                          {
-                            comision_minimo: {
-                              gt: 0,
-                            },
-                          },
-                          {
-                            comision_ultimo: {
-                              gt: 0,
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  }
-                : cs_comision === CSComision.SIN_COMISION
-                ? {
-                    unidades_derivadas: {
-                      some: {
-                        AND: [
-                          {
-                            OR: [
-                              { comision_publico: { lte: 0 } },
-                              { comision_publico: null },
-                            ],
-                          },
-                          {
-                            OR: [
-                              { comision_especial: { lte: 0 } },
-                              { comision_especial: null },
-                            ],
-                          },
-                          {
-                            OR: [
-                              { comision_minimo: { lte: 0 } },
-                              { comision_minimo: null },
-                            ],
-                          },
-                          {
-                            OR: [
-                              { comision_ultimo: { lte: 0 } },
-                              { comision_ultimo: null },
-                            ],
-                          },
-                        ],
-                      },
-                    },
-                  }
-                : {}),
-            },
-          },
-          estado: estado === 1,
-          ...(cod_producto
-            ? {
-                OR: [
-                  {
-                    cod_producto: {
-                      contains: cod_producto,
-                      // mode: 'insensitive',
-                    },
-                  },
-                  {
-                    name: {
-                      contains: cod_producto,
-                      // mode: 'insensitive',
-                    },
-                  },
-                ],
-              }
-            : {}),
-          ...(accion_tecnica
-            ? {
-                accion_tecnica: {
-                  contains: accion_tecnica,
-                  // mode: 'insensitive',
-                },
-              }
-            : {}),
-        } satisfies Prisma.ProductoWhereInput
-        setFiltros(data)
+
+        const filtros: Partial<GetProductosParams> = {
+          almacen_id,
+          search: cod_producto || undefined,
+          marca_id: marca_id || undefined,
+          categoria_id: categoria_id || undefined,
+          unidad_medida_id: unidad_medida_id || undefined,
+          ubicacion_id: ubicacion_id || undefined,
+          accion_tecnica: accion_tecnica || undefined,
+          estado: estado === 1 ? true : estado === 0 ? false : undefined,
+          cs_stock:
+            cs_stock === CSStock.CON_STOCK
+              ? 'con_stock'
+              : cs_stock === CSStock.SIN_STOCK
+              ? 'sin_stock'
+              : 'all',
+          cs_comision:
+            cs_comision === CSComision.CON_COMISION
+              ? 'con_comision'
+              : cs_comision === CSComision.SIN_COMISION
+              ? 'sin_comision'
+              : 'all',
+          per_page: 100,
+        }
+
+        setFiltros(filtros)
       }}
     >
       <TituloModulos
