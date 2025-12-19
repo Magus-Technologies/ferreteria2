@@ -1,14 +1,12 @@
-import { ProductoAlmacenUnidadDerivada, UnidadDerivada } from '@prisma/client'
 import { FaMoneyBills } from 'react-icons/fa6'
 import { PiWarehouseFill } from 'react-icons/pi'
 import { GetStock } from '~/app/_utils/get-stock'
+import type { ProductoAlmacenUnidadDerivada } from '~/app/_types/producto'
 
 interface ProductoOtrosAlmacenesProps {
   stock_fraccion: number
   unidades_contenidas: number
-  producto_almacen_unidad_derivada: ProductoAlmacenUnidadDerivada & {
-    unidad_derivada: UnidadDerivada
-  }
+  producto_almacen_unidad_derivada: ProductoAlmacenUnidadDerivada
   almacen: string
 }
 

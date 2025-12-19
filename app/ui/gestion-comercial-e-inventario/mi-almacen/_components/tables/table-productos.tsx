@@ -1,17 +1,13 @@
 "use client";
 
-import { usePaginatedServerQuery } from "~/hooks/use-paginated-server-query";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { useColumnsProductos } from "./columns-productos";
-import {
-  getProductosPaginated,
-  importarProductos,
-  type getProductosResponseProps,
-} from "~/app/_actions/producto";
+import type { Producto } from "~/app/_types/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
+import { productosApiV2 } from "~/lib/api/producto";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import InputImport from "~/app/_components/form/inputs/input-import";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
 import usePermission from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
@@ -22,11 +18,13 @@ import { importarUbicaciones } from "~/app/_actions/ubicacion";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { App } from "antd";
 import PaginationControls from "~/app/_components/tables/pagination-controls";
+import { useProductosByAlmacen } from "../../_hooks/useProductosByAlmacen";
 
 function TableProductos() {
   const tableRef = useRef<AgGridReact>(null);
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const { notification } = App.useApp();
+  const [page, setPage] = useState(1);
 
   const setProductoSeleccionado = useStoreProductoSeleccionado(
     (store) => store.setProducto
@@ -39,28 +37,32 @@ function TableProductos() {
   const columns = useColumnsProductos({ almacen_id });
 
   const {
-    response,
+    data: response,
     loading,
     currentPage,
     totalPages,
     total,
-    nextPage,
-    prevPage,
-    pageSize,
-  } = usePaginatedServerQuery({
-    action: getProductosPaginated,
-    propsQuery: {
-      queryKey: [QueryKeys.PRODUCTOS],
+    perPage: pageSize,
+  } = useProductosByAlmacen({
+    filtros: {
+      ...filtros,
+      almacen_id: filtros?.almacen_id || almacen_id || 1,
+      page,
+      per_page: 100,
     },
-    params: {
-      where: filtros,
-    },
-    pageSize: 100, // 100 productos por página
-    enabled: !!filtros,
+    enabled: !!(filtros?.almacen_id || almacen_id),
   });
 
+  // Resetear página a 1 cuando cambien los filtros
+  useEffect(() => {
+    setPage(1);
+  }, [filtros]);
+
+  const nextPage = () => setPage((p) => Math.min(p + 1, totalPages));
+  const prevPage = () => setPage((p) => Math.max(1, p - 1));
+
   return (
-    <TableWithTitle<getProductosResponseProps>
+    <TableWithTitle<Producto>
       id="g-c-e-i.mi-almacen.productos"
       onSelectionChanged={({ selectedNodes }) =>
         setProductoSeleccionado(selectedNodes?.[0]?.data)
@@ -130,7 +132,13 @@ function TableProductos() {
                 return newData;
               }}
               propsUseServerMutation={{
-                action: importarProductos,
+                action: async (data: { data: Array<Record<string, unknown>> }) => {
+                  const res = await productosApiV2.import(data);
+                  if (res.error) {
+                    throw new Error(res.error.message);
+                  }
+                  return { data: res.data };
+                },
                 msgSuccess: "Productos importados exitosamente",
                 onSuccess: (res) => {
                   if (res.data?.length)
@@ -146,7 +154,7 @@ function TableProductos() {
                             <div key={index} className="pr-4">
                               <div className="grid grid-cols-3 gap-x-4 pl-8">
                                 <span className="text-red-500 text-nowrap">
-                                  {item.name}
+                                  {String(item.name || '')}
                                 </span>
                               </div>
                             </div>

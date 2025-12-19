@@ -1,34 +1,22 @@
 'use client'
 
 import CardMiniInfo from '../cards/card-mini-info'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
-import { SearchProductos } from '~/app/_actions/producto'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useProductosSearch } from '../../_hooks/useProductosSearch'
 
 export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(state => state.filtros)
-
-  const { response, triggerFetch, isFetched } = useLazyServerQuery({
-    action: SearchProductos, // Usar SearchProductos para límite de 50
-    propsQuery: {
-      queryKey: [QueryKeys.PRODUCTOS],
-    },
-    params: {
-      where: filtros,
-    },
-  })
-
-  // Cargar datos solo después de 3 segundos para no interferir con carga principal
-  useEffect(() => {
-    if (filtros && !isFetched) {
-      setTimeout(() => triggerFetch(), 3000) // Incrementado a 3s
-    }
-  }, [filtros, isFetched, triggerFetch])
-
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+
+  const { data: response } = useProductosSearch({
+    filtros: {
+      ...filtros,
+      almacen_id: filtros?.almacen_id || almacen_id || 1,
+    },
+    enabled: !!(filtros?.almacen_id || almacen_id),
+  })
 
   // Memoizar los cálculos para evitar recálculos innecesarios
   const { inversion, precio_venta } = useMemo(() => {

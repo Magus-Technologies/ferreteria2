@@ -1,20 +1,18 @@
-import { useServerMutation } from '~/hooks/use-server-mutation'
 import {
   FormCreateProductoFormatedProps,
   FormCreateProductoProps,
 } from '../_components/modals/modal-create-producto'
-import { createProducto, editarProducto } from '~/app/_actions/producto'
 import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
 import { useStoreArchivosProducto } from '../_store/store-archivos-producto'
 import { useState } from 'react'
 import { App } from 'antd'
-import { Producto } from '@prisma/client'
+import type { Producto } from '~/app/_types/producto'
 import { FormInstance } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreEditOrCopyProducto } from '../_store/store-edit-or-copy-producto'
 import { useStoreFiltrosProductos } from '../_store/store-filtros-productos'
+import { productosApiV2 } from '~/lib/api/producto'
 
 export default function useCreateProducto({
   setOpen,
@@ -44,12 +42,27 @@ export default function useCreateProducto({
 
   const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
 
-  const { execute, loading } = useServerMutation<
-    FormCreateProductoFormatedProps,
-    Producto
-  >({
-    action: producto?.id ? editarProducto : createProducto,
-    onSuccess: async res => {
+  const [loading, setLoading] = useState(false)
+
+  async function execute(data: FormCreateProductoFormatedProps) {
+    setLoading(true)
+
+    try {
+      // Llamar al API de Laravel
+      const res = producto?.id
+        ? await productosApiV2.update(producto.id, data)
+        : await productosApiV2.create(data)
+
+      if (res.error) {
+        notification.error({
+          message: 'Error',
+          description: res.error.message,
+        })
+        setLoading(false)
+        return
+      }
+
+      // Upload de archivos (igual que antes)
       const formData = new FormData()
 
       if (img_file) formData.append('img_file', img_file)
@@ -65,12 +78,12 @@ export default function useCreateProducto({
 
       setUploading(true)
       try {
-        const res = await fetch('/api/producto', {
+        const uploadRes = await fetch('/api/producto', {
           method: 'POST',
           body: formData,
         })
 
-        if (!res.ok) throw new Error('Error al subir el archivo')
+        if (!uploadRes.ok) throw new Error('Error al subir el archivo')
 
         notification.success({
           message: producto?.id ? 'Producto editado' : 'Producto creado',
@@ -87,12 +100,14 @@ export default function useCreateProducto({
         setUploading(false)
       }
 
-      // Invalidar y refetch inmediatamente
-      await queryClient.invalidateQueries({ 
-        queryKey: [QueryKeys.PRODUCTOS],
-        refetchType: 'active' // Solo refetch queries activas
+      // Invalidar todas las queries de productos
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'productos-by-almacen' ||
+          query.queryKey[0] === 'productos-search',
+        refetchType: 'active',
       })
-      
+
       setOpen(false)
       form.resetFields()
       setImgFile(undefined)
@@ -104,8 +119,15 @@ export default function useCreateProducto({
       }))
 
       onSuccess?.(res.data!)
-    },
-  })
+    } catch {
+      notification.error({
+        message: 'Error',
+        description: 'Error al procesar la solicitud',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   function crearProductoForm(values: FormCreateProductoProps) {
     if (values.unidades_derivadas.length < 1) {

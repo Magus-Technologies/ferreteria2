@@ -106,7 +106,8 @@ export default function TableProductoSearch({
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
       loading={loading}
-      columnDefs={useColumnsProductos({ almacen_id })}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      columnDefs={useColumnsProductos({ almacen_id }) as any}
       onRowDoubleClicked={({ data }) => {
         setProductoSeleccionadoSearchStore(data);
         onRowDoubleClicked?.({ data });

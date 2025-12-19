@@ -1,12 +1,12 @@
-import { useServerMutation } from '~/hooks/use-server-mutation'
-import { toUTCBD } from '~/utils/fechas'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { App } from 'antd'
 import { TipoDocumento } from '@prisma/client'
+import { toUTCBD } from '~/utils/fechas'
 import {
-  FormCreateIngresoSalidaFormatedProps,
   FormCreateIngresoSalidaProps,
 } from '../_components/modals/modal-create-ingreso-salida'
-import { createIngresoSalida } from '~/app/_actions/ingreso-salida'
-import { QueryKeys } from '~/app/_lib/queryKeys'
+import { ingresosSalidasApi } from '~/lib/api/ingreso-salida'
 import { DataDocIngresoSalida } from '../_components/docs/doc-ingreso-salida'
 
 export default function useCreateIngresoSalida({
@@ -16,31 +16,58 @@ export default function useCreateIngresoSalida({
   tipo_documento: TipoDocumento
   onSuccess?: (res: DataDocIngresoSalida) => void
 }) {
-  const { execute, loading } = useServerMutation<
-    FormCreateIngresoSalidaFormatedProps,
-    DataDocIngresoSalida
-  >({
-    action: createIngresoSalida,
-    queryKey: [QueryKeys.PRODUCTOS, QueryKeys.PRODUCTOS_SEARCH],
-    onSuccess: res => {
-      onSuccess?.(res.data)
-    },
-    msgSuccess: `${
-      tipo_documento === TipoDocumento.Ingreso ? 'Ingreso' : 'Salida'
-    } creado exitosamente`,
-  })
+  const [loading, setLoading] = useState(false)
+  const queryClient = useQueryClient()
+  const { notification } = App.useApp()
 
-  function crearIngresoSalidaForm(values: FormCreateIngresoSalidaProps) {
-    const data = {
-      ...values,
-      tipo_documento: tipo_documento,
-      fecha: values.fecha
-        ? toUTCBD({
-            date: values.fecha,
-          })
-        : undefined,
+  async function crearIngresoSalidaForm(values: FormCreateIngresoSalidaProps) {
+    setLoading(true)
+    try {
+      // Convertir TipoDocumento a 'Ingreso' o 'Salida' para el API
+      const tipoDocumentoApi: 'Ingreso' | 'Salida' =
+        tipo_documento === TipoDocumento.Ingreso ? 'Ingreso' : 'Salida'
+
+      const data = {
+        ...values,
+        tipo_documento: tipoDocumentoApi,
+        fecha: values.fecha
+          ? toUTCBD({
+              date: values.fecha,
+            })
+          : undefined,
+      }
+
+      const res = await ingresosSalidasApi.create(data)
+
+      if (res.error) {
+        notification.error({
+          message: 'Error',
+          description: res.error.message,
+        })
+        return
+      }
+
+      notification.success({
+        message: `${tipo_documento === TipoDocumento.Ingreso ? 'Ingreso' : 'Salida'} creado exitosamente`,
+      })
+
+      // Invalidar queries de productos
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'productos-by-almacen' ||
+          query.queryKey[0] === 'productos-search',
+        refetchType: 'active',
+      })
+
+      onSuccess?.(res.data as unknown as DataDocIngresoSalida)
+    } catch {
+      notification.error({
+        message: 'Error',
+        description: 'Error al procesar la solicitud',
+      })
+    } finally {
+      setLoading(false)
     }
-    execute(data)
   }
 
   return {

@@ -1,15 +1,15 @@
 import { create } from 'zustand'
-import { Prisma } from '@prisma/client'
+import type { GetProductosParams } from '~/app/_types/producto'
 
 type UseStoreFiltrosProductosProps = {
-  filtros?: Prisma.ProductoWhereInput
+  filtros?: Partial<GetProductosParams>
   setFiltros: (
     value:
-      | Prisma.ProductoWhereInput
+      | Partial<GetProductosParams>
       | undefined
       | ((
-          prev?: Prisma.ProductoWhereInput
-        ) => Prisma.ProductoWhereInput | undefined)
+          prev?: Partial<GetProductosParams>
+        ) => Partial<GetProductosParams> | undefined)
   ) => void
 }
 
