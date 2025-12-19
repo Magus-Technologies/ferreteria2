@@ -42,7 +42,6 @@ export default function TableDetalleDePrecios() {
   const [primeraData, setPrimeraData] = useState(0)
   useEffect(() => {
     if (data && primeraData < 1) setPrimeraData(prev => prev + 1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, productoSeleccionado])
 
   const productos_completos = data?.data
@@ -115,156 +114,92 @@ export default function TableDetalleDePrecios() {
                 'unidad_derivada.name',
                 'producto.name',
               ]}
+              // IMPORTANTE: Definir aquí todos los campos que construyes en preProcessData
+              // para evitar que el componente los filtre y lleguen como undefined.
               columnasExtra={[
-                {
-                  headerName: 'producto_almacen',
-                  field: 'producto_almacen',
-                },
-                {
-                  headerName: 'unidad_derivada',
-                  field: 'unidad_derivada',
-                },
+                { headerName: 'producto_almacen', field: 'producto_almacen' },
+                { headerName: 'unidad_derivada', field: 'unidad_derivada' },
+                { headerName: 'factor', field: 'factor' },
+                { headerName: 'precio_publico', field: 'precio_publico' },
+                { headerName: 'comision_publico', field: 'comision_publico' },
+                { headerName: 'precio_especial', field: 'precio_especial' },
+                { headerName: 'comision_especial', field: 'comision_especial' },
+                { headerName: 'activador_especial', field: 'activador_especial' },
+                { headerName: 'precio_minimo', field: 'precio_minimo' },
+                { headerName: 'comision_minimo', field: 'comision_minimo' },
+                { headerName: 'activador_minimo', field: 'activador_minimo' },
+                { headerName: 'precio_ultimo', field: 'precio_ultimo' },
+                { headerName: 'comision_ultimo', field: 'comision_ultimo' },
+                { headerName: 'activador_ultimo', field: 'activador_ultimo' },
               ]}
               preProcessData={async data => {
                 if (!almacen_id) throw new Error('No se selecciono un almacén')
 
-                if (
-                  data.some(
-                    item =>
-                      item['Cod. Producto'] === null ||
-                      item['Cod. Producto'] === '' ||
-                      item['Cod. Producto'] === undefined
-                  )
-                )
-                  throw new Error(
-                    'Todas las Unidades Derivadas deben tener un Código de Producto obligatoriamente'
-                  )
+                if (data.some(item => !item['Cod. Producto']))
+                  throw new Error('Todas las Unidades Derivadas deben tener un Código de Producto')
 
-                const preResponse = new Set<string>(
-                  data.map(item => `${item['Cod. Producto']}`)
-                )
+                const preResponse = new Set<string>(data.map(item => `${item['Cod. Producto']}`))
                 const response = await detallePreciosApi.getProductoAlmacenByCodProducto(
-                  Array.from(preResponse).map(cod_producto => ({
-                    cod_producto,
-                    almacen_id,
-                  }))
+                  Array.from(preResponse).map(cod_producto => ({ cod_producto, almacen_id }))
                 )
                 
                 if (response.error || !response.data) {
-                  const errorMsg = response.error?.message || 'No se encontraron los Productos en este Almacén';
-                  throw new Error(
-                    `${errorMsg}\n\n⚠️ IMPORTANTE: Debes importar los PRODUCTOS primero antes de importar el Detalle de Precios.\n\nPasos:\n1. Importa el Excel de Productos\n2. Luego importa el Excel de Detalle de Precios`
-                  );
+                  throw new Error(response.error?.message || 'No se encontraron los Productos');
                 }
 
-                // Mostrar advertencias si hay productos omitidos
-                if (response.data.advertencias && response.data.advertencias.length > 0) {
-                  console.warn('⚠️ Advertencias al importar:', response.data.advertencias);
-                  // Opcional: Mostrar notificación al usuario
-                  // notification.warning({
-                  //   message: 'Productos omitidos',
-                  //   description: response.data.advertencias.join('\n'),
-                  //   duration: 10,
-                  // });
-                }
-
-                const preUnidadesDerivadas = new Set<string>(
-                  data.map(item => `${item['Formato']}`)
-                )
+                const preUnidadesDerivadas = new Set<string>(data.map(item => `${item['Formato']}`))
                 const unidades_derivadas = await detallePreciosApi.importarUnidadesDerivadas(
-                  Array.from(preUnidadesDerivadas).map(name => ({
-                    name,
-                  }))
+                  Array.from(preUnidadesDerivadas).map(name => ({ name }))
                 )
+                
                 if (unidades_derivadas.error || !unidades_derivadas.data)
-                  throw new Error(unidades_derivadas.error?.message || 'No se encontraron unidades derivadas')
+                  throw new Error('Error al procesar unidades derivadas')
 
-                // Filtrar solo los productos que se encontraron
-                const newData = data
-                  .filter(item => {
-                    const productoEncontrado = response.data!.data.find(
-                      ({ cod_producto }) => cod_producto === `${item['Cod. Producto']}`
-                    );
-                    return !!productoEncontrado;
-                  })
+                return data
+                  .filter(item => response.data!.data.find(p => p.cod_producto === `${item['Cod. Producto']}`))
                   .map(item => {
-                    const baseData: Record<string, unknown> = {
-                      producto_almacen: {
-                        connect: {
-                          id: response.data!.data.find(
-                            ({ cod_producto }) =>
-                              cod_producto === `${item['Cod. Producto']}`
-                          )?.producto_almacen_id,
-                        },
-                      },
-                      unidad_derivada: {
-                        connect: {
-                          id: unidades_derivadas.data!.data.find(
-                            ({ name }) => name === item['Formato']
-                          )?.id,
-                        },
-                      },
+                    const prodId = response.data!.data.find(p => p.cod_producto === `${item['Cod. Producto']}`)?.producto_almacen_id;
+                    const unitId = unidades_derivadas.data!.data.find(u => u.name === item['Formato'])?.id;
+
+                    const row: Record<string, any> = {
+                      producto_almacen: { connect: { id: prodId } },
+                      unidad_derivada: { connect: { id: unitId } },
+                      // Aseguramos que los números no sean NaN
                       factor: Number(item['Factor']) || 1,
                       precio_publico: Number(item['P. Público']) || 0,
                     };
 
-                    // Solo agregar campos opcionales si tienen valor
-                    if (item['Comisión P. Público'] !== undefined && item['Comisión P. Público'] !== null && item['Comisión P. Público'] !== '') {
-                      baseData.comision_publico = Number(item['Comisión P. Público']);
-                    }
-                    if (item['P. Especial'] !== undefined && item['P. Especial'] !== null && item['P. Especial'] !== '') {
-                      baseData.precio_especial = Number(item['P. Especial']);
-                    }
-                    if (item['Comisión P. Especial'] !== undefined && item['Comisión P. Especial'] !== null && item['Comisión P. Especial'] !== '') {
-                      baseData.comision_especial = Number(item['Comisión P. Especial']);
-                    }
-                    if (item['Activador P. Especial'] !== undefined && item['Activador P. Especial'] !== null && item['Activador P. Especial'] !== '') {
-                      baseData.activador_especial = Number(item['Activador P. Especial']);
-                    }
-                    if (item['P. Mínimo'] !== undefined && item['P. Mínimo'] !== null && item['P. Mínimo'] !== '') {
-                      baseData.precio_minimo = Number(item['P. Mínimo']);
-                    }
-                    if (item['Comisión P. Mínimo'] !== undefined && item['Comisión P. Mínimo'] !== null && item['Comisión P. Mínimo'] !== '') {
-                      baseData.comision_minimo = Number(item['Comisión P. Mínimo']);
-                    }
-                    if (item['Activador P. Mínimo'] !== undefined && item['Activador P. Mínimo'] !== null && item['Activador P. Mínimo'] !== '') {
-                      baseData.activador_minimo = Number(item['Activador P. Mínimo']);
-                    }
-                    if (item['P. Último'] !== undefined && item['P. Último'] !== null && item['P. Último'] !== '') {
-                      baseData.precio_ultimo = Number(item['P. Último']);
-                    }
-                    if (item['Comisión P. Último'] !== undefined && item['Comisión P. Último'] !== null && item['Comisión P. Último'] !== '') {
-                      baseData.comision_ultimo = Number(item['Comisión P. Último']);
-                    }
-                    if (item['Activador P. Último'] !== undefined && item['Activador P. Último'] !== null && item['Activador P. Último'] !== '') {
-                      baseData.activador_ultimo = Number(item['Activador P. Último']);
-                    }
+                    // Mapeo dinámico para campos opcionales
+                    const optionalFields = {
+                      comision_publico: 'Comisión P. Público',
+                      precio_especial: 'P. Especial',
+                      comision_especial: 'Comisión P. Especial',
+                      activador_especial: 'Activador P. Especial',
+                      precio_minimo: 'P. Mínimo',
+                      comision_minimo: 'Comisión P. Mínimo',
+                      activador_minimo: 'Activador P. Mínimo',
+                      precio_ultimo: 'P. Último',
+                      comision_ultimo: 'Comisión P. Último',
+                      activador_ultimo: 'Activador P. Último',
+                    };
 
-                    return baseData;
+                    Object.entries(optionalFields).forEach(([apiKey, excelKey]) => {
+                      if (item[excelKey] !== undefined && item[excelKey] !== null && item[excelKey] !== '') {
+                        row[apiKey] = Number(item[excelKey]);
+                      }
+                    });
+
+                    return row;
                   })
-
-                console.log('✅ Datos procesados para enviar:', newData);
-                console.log('📊 Total de registros:', newData.length);
-                console.log('📋 Primer registro procesado:', newData[0]);
-
-                return newData
               }}
               propsUseServerMutation={{
-                action: async (data: { data: Array<Record<string, unknown>> }) => {
-                  console.log('📤 Enviando datos al backend:', data);
-                  console.log('📊 Primer registro:', data.data[0]);
-                  
-                  const res = await detallePreciosApi.import(data as unknown as { data: ImportDetallePreciosItem[] });
-                  
-                  console.log('📥 Respuesta del backend:', res);
-                  
-                  if (res.error) {
-                    console.error('❌ Error del backend:', res.error);
-                    throw new Error(res.error.message);
-                  }
+                action: async (payload: { data: Array<Record<string, unknown>> }) => {
+                  // Aquí el payload.data ya debería contener los valores mapeados
+                  const res = await detallePreciosApi.import(payload as any);
+                  if (res.error) throw new Error(res.error.message);
                   return { data: res.data };
                 },
-                msgSuccess: 'Unidades Derivadas importadas exitosamente',
+                msgSuccess: 'Importación completada correctamente',
                 onSuccess: () => setProductoSeleccionado(undefined),
                 queryKey: [QueryKeys.PRODUCTOS],
               }}
@@ -276,43 +211,19 @@ export default function TableDetalleDePrecios() {
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: [
-            '#',
-            'Formato',
-            'Factor',
-            'P. Compra',
-            '% Venta',
-            'P. Público',
-            'Ganancia',
-            'P. Especial',
-            'P. Mínimo',
-            'P. Último',
-          ],
+          columns: ['#', 'Formato', 'Factor', 'P. Compra', '% Venta', 'P. Público', 'Ganancia', 'P. Especial', 'P. Mínimo', 'P. Último'],
         },
         ...(can(permissions.PRODUCTO_IMPORT)
-          ? [
-              {
+          ? [{
                 color: 'warning' as const,
                 label: 'Importación',
                 columns: [
-                  'Cod. Producto',
-                  'Producto',
-                  'Formato',
-                  'Factor',
-                  'P. Público',
-                  'Comisión P. Público',
-                  'P. Especial',
-                  'Comisión P. Especial',
-                  'Activador P. Especial',
-                  'P. Mínimo',
-                  'Comisión P. Mínimo',
-                  'Activador P. Mínimo',
-                  'P. Último',
-                  'Comisión P. Último',
-                  'Activador P. Último',
+                  'Cod. Producto', 'Producto', 'Formato', 'Factor', 'P. Público', 
+                  'Comisión P. Público', 'P. Especial', 'Comisión P. Especial', 
+                  'Activador P. Especial', 'P. Mínimo', 'Comisión P. Mínimo', 
+                  'Activador P. Mínimo', 'P. Último', 'Comisión P. Último', 'Activador P. Último'
                 ],
-              },
-            ]
+            }]
           : []),
       ]}
       rowData={rowData ?? []}
