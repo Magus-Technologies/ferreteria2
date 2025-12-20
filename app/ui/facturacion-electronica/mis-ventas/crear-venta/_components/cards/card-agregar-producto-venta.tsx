@@ -119,9 +119,20 @@ export default function CardAgregarProductoVenta({
       comision,
     }
 
-    onOk?.(valuesFormated)
+    // Si se proporciona onOk, solo llamarlo (usado por cotizaciones)
+    // Si no, actualizar el store de ventas (comportamiento por defecto)
+    console.log('🔧 handleOk ejecutado');
+    console.log('📦 valuesFormated:', valuesFormated);
+    console.log('🎯 onOk existe?', !!onOk);
+
+    if (onOk) {
+      console.log('✅ Ejecutando onOk (cotizaciones)');
+      onOk(valuesFormated)
+    } else {
+      console.log('✅ Ejecutando store de ventas');
+      setProductoAgregadoVenta(valuesFormated)
+    }
     setValues(valuesDefault)
-    setProductoAgregadoVenta(valuesFormated)
     if (closeModal) setOpen(false)
   }
 
@@ -164,6 +175,21 @@ export default function CardAgregarProductoVenta({
             if (e.key === 'Enter') precio_ventaRef.current?.focus()
           }}
         />
+        {/* Validación de stock */}
+        {values.cantidad && unidad_derivada_seleccionada && producto_en_almacen && (() => {
+          const cantidadEnFraccion = Number(values.cantidad) * Number(unidad_derivada_seleccionada.factor);
+          const stockDisponible = Number(producto_en_almacen.stock_fraccion);
+          const stockEnUnidad = stockDisponible / Number(unidad_derivada_seleccionada.factor);
+          
+          if (cantidadEnFraccion > stockDisponible) {
+            return (
+              <div className='text-red-600 text-sm mt-1 font-medium'>
+                ⚠️ Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)} {unidad_derivada_seleccionada.unidad_derivada.name}
+              </div>
+            );
+          }
+          return null;
+        })()}
       </LabelBase>
       <LabelBase label='Unidad Derivada:' orientation='column'>
         <SelectBase

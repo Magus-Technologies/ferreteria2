@@ -4,9 +4,7 @@ import {
 } from "~/app/_actions/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useColumnsProductos } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos";
-import TableWithTitle, {
-  
-} from "~/components/tables/table-with-title";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { useServerQuery } from "~/hooks/use-server-query";
 import { TipoBusquedaProducto } from "../form/selects/select-tipo-busqueda-producto";
 import { getFiltrosPorTipoBusqueda } from "../form/selects/select-productos";
@@ -97,11 +95,16 @@ export default function TableProductoSearch({
   return (
     <TableWithTitle<ResponseItem>
       id="g-c-e-i.table-producto-search"
-      onSelectionChanged={({ selectedNodes }) =>
-        setProductoSeleccionadoSearchStore(
-          selectedNodes?.[0]?.data as ResponseItem
-        )
-      }
+      rowSelection={true}
+      onSelectionChanged={({ selectedNodes }) => {
+        const producto = selectedNodes?.[0]?.data as ResponseItem;
+        setProductoSeleccionadoSearchStore(producto);
+      }}
+      onRowClicked={({ data, node }) => {
+        // Con 1 click: seleccionar la fila (esto la pintará automáticamente)
+        node.setSelected(true);
+        setProductoSeleccionadoSearchStore(data);
+      }}
       title="Productos"
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
@@ -109,6 +112,7 @@ export default function TableProductoSearch({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       columnDefs={useColumnsProductos({ almacen_id }) as any}
       onRowDoubleClicked={({ data }) => {
+        // Con 2 clicks: actualizar el producto Y ejecutar la acción adicional (abrir modal)
         setProductoSeleccionadoSearchStore(data);
         onRowDoubleClicked?.({ data });
       }}

@@ -3,9 +3,7 @@
 import { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
 import { FaFileInvoice, FaPrint } from "react-icons/fa";
-import { GetCotizacionesResponse } from "~/app/_actions/cotizacion";
-
-type Cotizacion = GetCotizacionesResponse;
+import { Cotizacion } from "~/lib/api/cotizaciones";
 
 export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
   return [
@@ -70,10 +68,10 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       width: 120,
       valueGetter: (params) => {
         const cotizacion = params.data;
-        if (!cotizacion) return 0;
+        if (!cotizacion || !cotizacion.productos_por_almacen) return 0;
 
         const total = cotizacion.productos_por_almacen.reduce((sum, pa) => {
-          const subtotalProducto = pa.unidades_derivadas.reduce((subSum, ud) => {
+          const subtotalProducto = (pa.unidades_derivadas || []).reduce((subSum, ud) => {
             return subSum + (Number(ud.cantidad) * Number(ud.factor) * Number(ud.precio));
           }, 0);
           return sum + subtotalProducto;

@@ -39,7 +39,7 @@ export default function HeaderCrearCotizacion() {
             showButtonCreate={can(permissions.PRODUCTO_CREATE)}
             withSearch
             withTipoBusqueda
-            showCardAgregarProductoVenta
+            showCardAgregarProductoCotizacion
             showUltimasCompras={false}
             handleOnlyOneResult={(producto) => {
               setProductoSeleccionadoSearchStore(producto)

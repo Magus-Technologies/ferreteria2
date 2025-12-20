@@ -78,6 +78,8 @@ export default function CardsInfoCotizacion({
 
       <ButtonBase
         onClick={() => {
+          console.log('🔘 CLICK en botón Guardar Cotización');
+          console.log('📋 Valores actuales del formulario:', form.getFieldsValue());
           form.submit();
         }}
         color="success"

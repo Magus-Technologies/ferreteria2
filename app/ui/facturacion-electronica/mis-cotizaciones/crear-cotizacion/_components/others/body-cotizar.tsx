@@ -111,6 +111,9 @@ export default function BodyCotizar() {
       name="cotizacion"
       className="flex gap-6 size-full"
       onFinish={handleSubmit}
+      onFinishFailed={() => {
+        message.error('Por favor completa todos los campos requeridos');
+      }}
       disabled={loading}
     >
       <div className="flex-1 flex flex-col gap-6">

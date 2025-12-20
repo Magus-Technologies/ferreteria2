@@ -4,12 +4,10 @@ import React from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsMisCotizaciones } from './columns-mis-cotizaciones'
 import { create } from 'zustand'
-import { getCotizaciones, type GetCotizacionesResponse } from '~/app/_actions/cotizacion'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { cotizacionesApi, type Cotizacion } from '~/lib/api/cotizaciones'
+import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
-
-type Cotizacion = GetCotizacionesResponse
 
 type UseStoreCotizacionSeleccionada = {
   cotizacion?: Cotizacion
@@ -25,16 +23,15 @@ export const useStoreCotizacionSeleccionada =
 export default function TableMisCotizaciones() {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
 
-  const { response, loading } = useServerQuery({
-    action: getCotizaciones,
-    propsQuery: {
-      queryKey: [QueryKeys.COTIZACIONES, almacen_id ?? 0],
+  const { data: response, isLoading: loading } = useQuery({
+    queryKey: [QueryKeys.COTIZACIONES, almacen_id ?? 0],
+    queryFn: async () => {
+      const result = await cotizacionesApi.getAll({ 
+        almacen_id: almacen_id ?? undefined 
+      })
+      return result.data?.data || [] // Laravel devuelve { data: { data: [...] } }
     },
-    params: {
-      where: {
-        almacen_id,
-      },
-    },
+    enabled: !!almacen_id,
   })
 
   const setCotizacionSeleccionada = useStoreCotizacionSeleccionada(

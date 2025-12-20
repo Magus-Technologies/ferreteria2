@@ -70,6 +70,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   handleOnlyOneResult?: (producto: getProductosResponseProps) => void
   showCardAgregarProducto?: boolean
   showCardAgregarProductoVenta?: boolean
+  showCardAgregarProductoCotizacion?: boolean
   showUltimasCompras?: boolean
   limpiarOnChange?: boolean
 }
@@ -90,6 +91,7 @@ export default function SelectProductos({
   handleOnlyOneResult,
   showCardAgregarProducto = false,
   showCardAgregarProductoVenta = false,
+  showCardAgregarProductoCotizacion = false,
   limpiarOnChange = false,
   showUltimasCompras = true,
   ...props
@@ -265,6 +267,7 @@ export default function SelectProductos({
         setTipoBusqueda={setTipoBusqueda}
         showCardAgregarProducto={showCardAgregarProducto}
         showCardAgregarProductoVenta={showCardAgregarProductoVenta}
+        showCardAgregarProductoCotizacion={showCardAgregarProductoCotizacion}
         showUltimasCompras={showUltimasCompras}
       />
       {showButtonCreate && (

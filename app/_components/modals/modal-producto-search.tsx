@@ -15,6 +15,7 @@ import { getProductosResponseProps } from '~/app/_actions/producto'
 import TableDetalleDePreciosSearch from '../tables/table-detalle-de-precios-search'
 import TableUltimasComprasIngresadasSearch from '../tables/table-ultimas-compras-ingresadas-search'
 import CardAgregarProductoVenta from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-agregar-producto-venta'
+import CardAgregarProductoCotizacion from '~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_components/cards/card-agregar-producto-cotizacion'
 
 type ModalProductoSearchProps = {
   open: boolean
@@ -30,6 +31,7 @@ type ModalProductoSearchProps = {
   setTipoBusqueda: (tipoBusqueda: TipoBusquedaProducto) => void
   showCardAgregarProducto?: boolean
   showCardAgregarProductoVenta?: boolean
+  showCardAgregarProductoCotizacion?: boolean
   showUltimasCompras?: boolean
 }
 
@@ -48,6 +50,7 @@ export default function ModalProductoSearch({
   setTipoBusqueda,
   showCardAgregarProducto = false,
   showCardAgregarProductoVenta = false,
+  showCardAgregarProductoCotizacion = false,
   showUltimasCompras = true,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault)
@@ -165,6 +168,11 @@ export default function ModalProductoSearch({
         {showCardAgregarProductoVenta && (
           <div>
             <CardAgregarProductoVenta setOpen={setOpen} />
+          </div>
+        )}
+        {showCardAgregarProductoCotizacion && (
+          <div>
+            <CardAgregarProductoCotizacion setOpen={setOpen} />
           </div>
         )}
       </div>

@@ -11,12 +11,36 @@ import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-docu
 import LabelBase from "~/components/form/label-base";
 import { FaCalendar } from "react-icons/fa6";
 import dayjs from "dayjs";
+import { useEffect } from "react";
+import { useAuth } from "~/lib/auth-context";
+import { cotizacionesApi } from "~/lib/api/cotizaciones";
 
 export default function FormCrearCotizacion({
   form,
 }: {
   form: FormInstance<FormCreateCotizacion>;
 }) {
+  const { user } = useAuth();
+
+  // Autocompletar vendedor con el usuario logueado
+  useEffect(() => {
+    if (user?.name) {
+      form.setFieldValue("vendedor", user.name);
+    }
+  }, [user, form]);
+
+  // Cargar el siguiente número de cotización automáticamente
+  useEffect(() => {
+    const cargarSiguienteNumero = async () => {
+      const response = await cotizacionesApi.getSiguienteNumero();
+      if (response.data?.numero) {
+        form.setFieldValue("numero", response.data.numero);
+      }
+    };
+
+    cargarSiguienteNumero();
+  }, [form]);
+
   return (
     <div className="flex flex-col">
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
@@ -162,6 +186,21 @@ export default function FormCrearCotizacion({
             }}
             className="w-full"
             classNameIcon="text-rose-700 mx-1"
+            onChange={(_, cliente) => {
+              // Autocompletar dirección y teléfono del cliente seleccionado
+              if (cliente) {
+                if (cliente.direccion) {
+                  form.setFieldValue("direccion", cliente.direccion);
+                }
+                if (cliente.telefono) {
+                  form.setFieldValue("telefono", cliente.telefono);
+                }
+                // También autocompletar RUC/DNI
+                if (cliente.numero_documento) {
+                  form.setFieldValue("ruc_dni", cliente.numero_documento);
+                }
+              }
+            }}
           />
         </LabelBase>
         

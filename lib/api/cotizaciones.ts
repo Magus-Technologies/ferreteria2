@@ -3,6 +3,74 @@ import type { ApiResponse } from '~/app/_types/api';
 
 // ============= INTERFACES =============
 
+export interface Cliente {
+  id: number;
+  tipo_cliente: 'p' | 'e'; // persona o empresa
+  numero_documento: string;
+  nombres: string;
+  apellidos: string;
+  razon_social: string | null;
+  direccion: string | null;
+  telefono: string | null;
+  email: string | null;
+}
+
+export interface User {
+  id: string;
+  name: string;
+}
+
+export interface Almacen {
+  id: number;
+  name: string;
+}
+
+export interface Marca {
+  id: number;
+  name: string;
+}
+
+export interface Producto {
+  id: number;
+  name: string;
+  cod_producto: string | null;
+  marca: Marca;
+}
+
+export interface ProductoAlmacen {
+  id: number;
+  producto_id: number;
+  almacen_id: number;
+  producto: Producto;
+}
+
+export interface UnidadDerivadaInmutable {
+  id: number;
+  name: string;
+}
+
+export interface UnidadDerivadaInmutableCotizacion {
+  id: number;
+  unidad_derivada_inmutable_id: number;
+  producto_almacen_cotizacion_id: number;
+  factor: number;
+  cantidad: number;
+  precio: number;
+  recargo: number;
+  descuento_tipo: '%' | 'm';
+  descuento: number;
+  unidad_derivada_inmutable: UnidadDerivadaInmutable;
+}
+
+export interface ProductoAlmacenCotizacion {
+  id: number;
+  cotizacion_id: string;
+  producto_almacen_id: number;
+  costo: number;
+  producto_almacen: ProductoAlmacen;
+  unidades_derivadas: UnidadDerivadaInmutableCotizacion[];
+}
+
 export interface Cotizacion {
   id: string;
   numero: string;
@@ -27,6 +95,11 @@ export interface Cotizacion {
   venta_id: string | null;
   created_at: string;
   updated_at: string;
+  // Relaciones
+  cliente?: Cliente | null;
+  user?: User;
+  almacen?: Almacen;
+  productos_por_almacen?: ProductoAlmacenCotizacion[];
 }
 
 export interface ProductoCotizacion {
@@ -89,6 +162,13 @@ interface CotizacionesListResponse {
 // ============= COTIZACIONES API =============
 
 export const cotizacionesApi = {
+  /**
+   * Obtener el siguiente número de cotización disponible
+   */
+  async getSiguienteNumero(): Promise<ApiResponse<{ numero: string }>> {
+    return apiRequest<{ numero: string }>('/cotizaciones/siguiente-numero/preview');
+  },
+
   /**
    * Obtener lista de cotizaciones con filtros
    */
