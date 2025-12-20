@@ -62,14 +62,16 @@ export default function BodyVender({
     <FormBase<FormCreateVenta>
       form={form}
       name='venta'
-      className='flex gap-6 size-full'
+      className='flex flex-col xl:flex-row gap-4 xl:gap-6 size-full'
       onFinish={handleSubmit}
     >
-      <div className='flex-1 flex flex-col gap-6'>
+      <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0'>
         <FormTableVender form={form} venta={venta} />
         <FormCrearVenta form={form} venta={venta} />
       </div>
-      <CardsInfoVenta form={form} />
+      <div className='w-full xl:w-auto'>
+        <CardsInfoVenta form={form} />
+      </div>
     </FormBase>
   )
 }

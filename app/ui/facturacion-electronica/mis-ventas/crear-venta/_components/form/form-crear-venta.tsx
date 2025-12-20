@@ -18,9 +18,10 @@ export default function FormCrearVenta({
 }) {
   console.log('🚀 ~ FormCrearVenta ~ venta:', venta)
   return (
-    <div className='flex flex-col'>
-      <div className='flex gap-6'>
-        <LabelBase label='Fecha:' classNames={{ labelParent: 'mb-6' }}>
+    <div className='flex flex-col gap-4'>
+      {/* Primera fila: Fecha, Tipo Moneda, Tipo de Cambio */}
+      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
+        <LabelBase label='Fecha:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
           <DatePickerBase
             propsForm={{
               name: 'fecha',
@@ -32,14 +33,14 @@ export default function FormCrearVenta({
               ],
             }}
             placeholder='Fecha'
-            className='!w-[160px] !min-w-[160px] !max-w-[160px]'
+            className='w-full sm:!w-[160px] sm:!min-w-[160px] sm:!max-w-[160px]'
             prefix={<FaCalendar size={15} className='text-rose-700 mx-1' />}
           />
         </LabelBase>
-        <LabelBase label='Tipo Moneda:' classNames={{ labelParent: 'mb-6' }}>
+        <LabelBase label='Tipo Moneda:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
           <SelectTipoMoneda
             classNameIcon='text-rose-700 mx-1'
-            className='!w-[120px] !min-w-[120px] !max-w-[120px]'
+            className='w-full sm:!w-[120px] sm:!min-w-[120px] sm:!max-w-[120px]'
             propsForm={{
               name: 'tipo_moneda',
               rules: [
@@ -52,11 +53,9 @@ export default function FormCrearVenta({
             onChangeTipoDeCambio={(value) =>
               form.setFieldValue('tipo_de_cambio', value)
             }
-            // disabled={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            // variant={compra?._count?.pagos_de_compras ?? 0 > 0 ? 'borderless' : undefined}
           />
         </LabelBase>
-        <LabelBase label='Tipo de Cambio:' classNames={{ labelParent: 'mb-6' }}>
+        <LabelBase label='Tipo de Cambio:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
           <InputNumberBase
             propsForm={{
               name: 'tipo_de_cambio',
@@ -70,20 +69,19 @@ export default function FormCrearVenta({
             prefix={<span className='text-rose-700 font-bold'>S/. </span>}
             precision={4}
             min={1}
-            className='!w-[100px] !min-w-[100px] !max-w-[100px]'
-            // disabled={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            // readOnly={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            // variant={compra?._count?.pagos_de_compras ?? 0 > 0 ? 'borderless' : undefined}
+            className='w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]'
           />
         </LabelBase>
       </div>
-      <div className='flex gap-6'>
-        <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-6' }}>
+      
+      {/* Segunda fila: Tipo Documento, Cliente, Recomendado por */}
+      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
+        <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
           <SelectTipoDocumento
             propsForm={{
               name: 'tipo_documento',
               hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
               rules: [
                 {
                   required: true,
@@ -95,13 +93,13 @@ export default function FormCrearVenta({
             classNameIcon='text-rose-700 mx-1'
           />
         </LabelBase>
-        <LabelBase label='Cliente:' classNames={{ labelParent: 'mb-6' }}>
+        <LabelBase label='Cliente:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
           <SelectClientes
-          form={form}
+            form={form}
             propsForm={{
               name: 'cliente_id',
               hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
               rules: [
                 {
                   required: true,
@@ -115,26 +113,24 @@ export default function FormCrearVenta({
         </LabelBase>
         <LabelBase
           label='Recomendado por:'
-          classNames={{ labelParent: 'mb-6' }}
+          classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }}
+          className='w-full sm:w-auto'
         >
           <SelectClientes
             propsForm={{
               name: 'recomendado_por_id',
               hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
             }}
             className='w-full'
             classNameIcon='text-cyan-600 mx-1'
           />
         </LabelBase>
       </div>
-      <div className='flex gap-6'>
-        {
-          // (compra?._count?.pagos_de_compras ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
-          //   Tiene Pagos Asociados, no se puede cambiar los datos del pago.
-          // </div> :
-          <FormFormaDePagoVenta form={form} />
-        }
+      
+      {/* Tercera fila: Forma de Pago */}
+      <div className='flex gap-3 sm:gap-4 lg:gap-6'>
+        <FormFormaDePagoVenta form={form} />
       </div>
     </div>
   )

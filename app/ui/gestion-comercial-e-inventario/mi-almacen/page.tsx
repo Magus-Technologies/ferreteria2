@@ -57,6 +57,33 @@ export default function MiAlmacen() {
       </Suspense>
       {/* Layout responsivo */}
       <div className="w-full mt-4">
+        {/* Botones de acción - Móvil/Tablet: Arriba en fila horizontal */}
+        <div className="lg:hidden mb-4">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {canCreateProducto && (
+              <Suspense fallback={<Spin />}>
+                <div className="flex-shrink-0 min-w-[120px]">
+                  <ButtonCreateProducto />
+                </div>
+              </Suspense>
+            )}
+            {canCreateIngreso && (
+              <Suspense fallback={<Spin />}>
+                <div className="flex-shrink-0 min-w-[120px]">
+                  <ButtonCreateIngresoSalida tipo={TipoDocumento.Ingreso} />
+                </div>
+              </Suspense>
+            )}
+            {canCreateSalida && (
+              <Suspense fallback={<Spin />}>
+                <div className="flex-shrink-0 min-w-[120px]">
+                  <ButtonCreateIngresoSalida tipo={TipoDocumento.Salida} />
+                </div>
+              </Suspense>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8">
           {/* Columna principal - Tablas */}
           <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
@@ -94,8 +121,8 @@ export default function MiAlmacen() {
             </div>
           </div>
 
-          {/* Columna lateral - Botones y Cards */}
-          <div className="flex flex-row lg:flex-col items-start gap-4 sm:gap-5 md:gap-6 flex-wrap lg:flex-nowrap">
+          {/* Columna lateral - Botones y Cards (Solo Desktop) */}
+          <div className="hidden lg:flex flex-col items-start gap-4 flex-nowrap min-w-[140px]">
             {canCreateProducto && (
               <Suspense fallback={<Spin />}>
                 <ButtonCreateProducto />
@@ -115,6 +142,15 @@ export default function MiAlmacen() {
               <CardsInfo />
             </Suspense>
           </div>
+        </div>
+
+        {/* Cards de información - Móvil/Tablet: Abajo en grid */}
+        <div className="lg:hidden mt-4">
+          <Suspense fallback={<Spin />}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <CardsInfo />
+            </div>
+          </Suspense>
         </div>
       </div>
     </ContenedorGeneral>

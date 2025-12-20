@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
 import { ServerResult } from '~/auth/middleware-server-actions'
 import { getProductosResponseProps } from '~/app/_actions/producto'
+import ActionButtonsWrapper from '../others/action-buttons-wrapper'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
@@ -105,7 +106,8 @@ export default function TableDetalleDePrecios() {
             Ver Todo
           </ButtonBase>
           {can(permissions.PRODUCTO_IMPORT) && (
-            <InputImport
+            <ActionButtonsWrapper>
+              <InputImport
               tableRef={tableRef}
               schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
               fieldsIgnored={[
@@ -204,6 +206,7 @@ export default function TableDetalleDePrecios() {
                 queryKey: [QueryKeys.PRODUCTOS],
               }}
             />
+            </ActionButtonsWrapper>
           )}
         </>
       }

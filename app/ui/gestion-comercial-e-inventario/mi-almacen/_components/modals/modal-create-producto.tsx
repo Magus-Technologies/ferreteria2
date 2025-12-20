@@ -154,7 +154,15 @@ export default function ModalCreateProducto({
             {producto?.id ? 'Editar Producto' : 'Agregar Producto'}
           </TitleForm>
         ),
-        className: 'min-w-[1300px]',
+        className: 'xl:min-w-[1300px]',
+        // Usar width de Ant Design para controlar el ancho
+        width: typeof window !== 'undefined' && window.innerWidth >= 1280 ? 1300 : '98vw',
+        styles: {
+          body: {
+            maxHeight: 'calc(100vh - 120px)',
+            overflowY: 'auto',
+          },
+        },
         wrapClassName: '!flex !items-center',
         centered: true,
         okButtonProps: { loading, disabled: loading },

@@ -19,6 +19,7 @@ import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { App } from "antd";
 import PaginationControls from "~/app/_components/tables/pagination-controls";
 import { useProductosByAlmacen } from "../../_hooks/useProductosByAlmacen";
+import ActionButtonsWrapper from "../others/action-buttons-wrapper";
 
 function TableProductos() {
   const tableRef = useRef<AgGridReact>(null);
@@ -76,7 +77,7 @@ function TableProductos() {
       rowData={response}
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
-          <>
+          <ActionButtonsWrapper>
             <InputImport
               tableRef={tableRef}
               schema={ProductoCreateInputSchema}
@@ -206,7 +207,7 @@ function TableProductos() {
               tipo="ficha_tecnica"
               buttonTitle="Subir Fichas Técnicas"
             />
-          </>
+          </ActionButtonsWrapper>
         )
       }
       optionsSelectColumns={[

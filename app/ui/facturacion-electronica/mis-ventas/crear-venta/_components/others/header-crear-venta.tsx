@@ -54,15 +54,11 @@ export default function HeaderCrearVenta({
         )
       }
       extra={
-        // (compra?._count?.recepciones_almacen ?? 0) > 0 ||
-        // (compra?._count?.pagos_de_compras ?? 0) > 0
-        //   ? null
-        //   : (
-        <div className='pl-8 flex items-center gap-4'>
+        <div className='pl-0 lg:pl-8 flex items-center gap-2 lg:gap-4 w-full lg:w-auto'>
           <SelectProductos
             allowClear
             size='large'
-            className='!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!'
+            className='w-full lg:!min-w-[400px] lg:!w-[400px] lg:!max-w-[400px] font-normal!'
             classNameIcon='text-cyan-600 mx-1'
             classIconSearch='!mb-0'
             classIconPlus='mb-0!'
@@ -81,10 +77,9 @@ export default function HeaderCrearVenta({
             }}
           />
         </div>
-        // )
       }
     >
-      <div className='flex items-center gap-4'>
+      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4'>
         <SelectAlmacen className='w-full' disabled={!!venta} />
 
         <Modal
@@ -97,7 +92,7 @@ export default function HeaderCrearVenta({
               {productoSeleccionadoSearchStore?.name}
             </div>
           }
-          width={300}
+          width={typeof window !== 'undefined' && window.innerWidth >= 640 ? 300 : '95vw'}
           classNames={{ content: 'min-w-fit' }}
           destroyOnHidden
           maskClosable={false}

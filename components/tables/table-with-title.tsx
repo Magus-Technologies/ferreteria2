@@ -70,14 +70,16 @@ export default function TableWithTitle<T, schemaType = unknown>({
 
   return (
     <div className={`flex flex-col gap-1 h-full ${className}`}>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div
-          className={`font-semibold text-slate-700 text-base flex items-center gap-2 ${titleParent}`}
+          className={`font-semibold text-slate-700 text-base flex flex-wrap items-center gap-2 ${titleParent}`}
         >
-          {title}
-          {extraTitle}
+          <span className="whitespace-nowrap">{title}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            {extraTitle}
+          </div>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-shrink-0">
           {selectColumns && (
             <Tooltip title="Ver Columnas">
               <Popover

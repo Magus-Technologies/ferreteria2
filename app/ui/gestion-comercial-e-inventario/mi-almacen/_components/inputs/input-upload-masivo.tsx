@@ -106,7 +106,7 @@ export default function InputUploadMasivo({
     >
       <ButtonBase
         disabled={loading}
-        className='flex gap-2 items-center'
+        className='flex gap-2 items-center flex-shrink-0 whitespace-nowrap'
         size='sm'
         {...buttonProps}
       >

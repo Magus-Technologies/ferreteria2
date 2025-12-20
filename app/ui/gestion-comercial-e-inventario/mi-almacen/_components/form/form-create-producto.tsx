@@ -27,10 +27,11 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   return (
     <>
-      <div className='grid grid-cols-2 gap-8 mb-2'>
-        <div>
-          <div className='grid grid-cols-2 gap-8'>
-            <LabelBase label='Almacén:' classNames={{ labelParent: 'mb-6' }}>
+      {/* Grid: 1 columna hasta xl (1280px), luego 2 columnas */}
+      <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-5 xl:gap-8 mb-2'>
+        <div className='space-y-4 md:space-y-5 xl:space-y-0'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 xl:gap-8'>
+            <LabelBase label='Almacén:' classNames={{ labelParent: 'mb-4 xl:mb-6' }}>
               <SelectAlmacen
                 size='middle'
                 className='w-full'
@@ -50,7 +51,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
             </LabelBase>
             <FormCodProducto form={form} />
           </div>
-          <LabelBase label='Producto:' classNames={{ labelParent: 'mb-6' }}>
+          <LabelBase label='Producto:' classNames={{ labelParent: 'mb-4 xl:mb-6' }}>
             <InputBase
               onChange={e =>
                 form.setFieldsValue({ name_ticket: e.target.value })
@@ -70,7 +71,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
           </LabelBase>
           <LabelBase
             label='Descrip. Ticket:'
-            classNames={{ labelParent: 'mb-6' }}
+            classNames={{ labelParent: 'mb-4 xl:mb-6' }}
           >
             <InputBase
               propsForm={{
@@ -86,11 +87,10 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
               prefix={<FaBoxOpen size={15} className='text-rose-700 mx-1' />}
             />
           </LabelBase>
-          <div className='flex items-center gap-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 md:gap-5 xl:gap-8'>
             <LabelBase
               label='Categoría:'
-              classNames={{ labelParent: 'mb-6' }}
-              className='w-full'
+              classNames={{ labelParent: 'mb-4 xl:mb-6' }}
             >
               <SelectCategorias
                 propsForm={{
@@ -107,7 +107,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                 form={form}
               />
             </LabelBase>
-            <LabelBase label='Estado:' classNames={{ labelParent: 'mb-6' }}>
+            <LabelBase label='Estado:' classNames={{ labelParent: 'mb-4 xl:mb-6' }}>
               <SelectEstado
                 propsForm={{
                   name: 'estado',
@@ -117,14 +117,14 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                       message: 'Por favor, selecciona un estado',
                     },
                   ],
-                  className: '!min-w-[135px] !w-[135px] !max-w-[135px]',
+                  className: 'w-full sm:!min-w-[135px] sm:!w-[135px]',
                 }}
                 classNameIcon='text-rose-700 mx-1'
               />
             </LabelBase>
           </div>
-          <div className='grid grid-cols-2 gap-8'>
-            <LabelBase label='Marca:' classNames={{ labelParent: 'mb-6' }}>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 xl:gap-8'>
+            <LabelBase label='Marca:' classNames={{ labelParent: 'mb-4 xl:mb-6' }}>
               <SelectMarcas
                 propsForm={{
                   name: 'marca_id',
@@ -142,7 +142,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
             </LabelBase>
             <LabelBase
               label='U. de Medida:'
-              classNames={{ labelParent: 'mb-6' }}
+              classNames={{ labelParent: 'mb-4 xl:mb-6' }}
             >
               <SelectUnidadDeMedida
                 propsForm={{
@@ -161,9 +161,9 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
             </LabelBase>
           </div>
         </div>
-        <div>
-          <div className='grid grid-cols-2 gap-8'>
-            <LabelBase label='Ubicación:' classNames={{ labelParent: 'mb-6' }}>
+        <div className='space-y-4 md:space-y-5 xl:space-y-0'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 xl:gap-8'>
+            <LabelBase label='Ubicación:' classNames={{ labelParent: 'mb-4 xl:mb-6' }}>
               <SelectUbicaciones
                 propsForm={{
                   name: ['producto_almacen', 'ubicacion_id'],
@@ -182,7 +182,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
             </LabelBase>
             <LabelBase
               label='Cod. de Barra:'
-              classNames={{ labelParent: 'mb-6' }}
+              classNames={{ labelParent: 'mb-4 xl:mb-6' }}
             >
               <InputBase
                 propsForm={{
@@ -193,7 +193,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
               />
             </LabelBase>
           </div>
-          <div className='grid grid-cols-3 gap-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5 xl:gap-8'>
             <LabelBase orientation='column' label='Stock Min:'>
               <InputNumberBase
                 propsForm={{
@@ -205,6 +205,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                     },
                   ],
                 }}
+                className='w-full'
                 min={0}
                 precision={2}
                 placeholder='Stock Mínimo'
@@ -218,6 +219,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                 propsForm={{
                   name: 'stock_max',
                 }}
+                className='w-full'
                 min={0}
                 step={1}
                 precision={0}
@@ -242,6 +244,7 @@ export default function FormCreateProducto({ form }: FormCreateProductoProps) {
                     },
                   ],
                 }}
+                className='w-full'
                 min={0}
                 precision={2}
                 placeholder='Unidades Contenidas'

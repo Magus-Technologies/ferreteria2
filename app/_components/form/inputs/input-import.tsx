@@ -280,7 +280,7 @@ export default function InputImport<TParams, TResult, schemaType>({
     >
       <ButtonBase
         disabled={loading}
-        className='flex gap-2 items-center'
+        className='flex gap-2 items-center flex-shrink-0 whitespace-nowrap'
         color='success'
         size='sm'
       >

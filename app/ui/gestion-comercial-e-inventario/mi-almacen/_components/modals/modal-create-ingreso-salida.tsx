@@ -76,12 +76,19 @@ export default function ModalCreateIngresoSalida({
               {tipo_documento === TipoDocumento.Ingreso ? 'Ingreso' : 'Salida'}
             </TitleForm>
           ),
-          className: 'min-w-[600px]',
+          // PC: min-width 600px, Móvil/Tablet: 95% del ancho
+          className: 'w-[95vw] xl:w-auto xl:min-w-[600px] max-w-[700px]',
           wrapClassName: '!flex !items-center',
           centered: true,
           okButtonProps: { loading, disabled: loading },
           okText: 'Crear',
           afterOpenChange: () => form.focusField('cantidad'),
+          styles: {
+            body: {
+              maxHeight: 'calc(100vh - 150px)',
+              overflowY: 'auto',
+            },
+          },
         }}
         onCancel={() => {
           form.resetFields()
@@ -97,11 +104,11 @@ export default function ModalCreateIngresoSalida({
           },
         }}
       >
-        <div className='flex gap-4 items-center justify-center'>
+        <div className='flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-center'>
           <LabelBase
             label='Fecha:'
             className='w-full'
-            classNames={{ labelParent: 'mb-6' }}
+            classNames={{ labelParent: 'mb-4 sm:mb-6' }}
           >
             <DatePickerBase
               prefix={<FaCalendar className='text-cyan-600 mx-1' />}
@@ -109,12 +116,13 @@ export default function ModalCreateIngresoSalida({
                 name: 'fecha',
               }}
               placeholder='Fecha'
+              className='w-full'
             />
           </LabelBase>
           <LabelBase
             label='Almacén:'
             className='w-full'
-            classNames={{ labelParent: 'mb-6' }}
+            classNames={{ labelParent: 'mb-4 sm:mb-6' }}
           >
             <SelectAlmacen
               size='middle'

@@ -22,7 +22,8 @@ export default function ButtonCreateIngresoSalida({
         setOpen={setOpen}
       />
       <ButtonBase
-        className='flex items-center justify-center gap-2 !rounded-md w-full h-full'
+        className='flex items-center justify-center gap-2 !rounded-md w-full lg:h-full h-10'
+        size='sm'
         onClick={() => setOpen(true)}
       >
         {tipo === TipoDocumento.Ingreso ? (

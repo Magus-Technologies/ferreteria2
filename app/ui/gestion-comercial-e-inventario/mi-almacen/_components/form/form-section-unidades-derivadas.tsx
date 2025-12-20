@@ -9,14 +9,14 @@ export default function FormSectionUnidadesDerivadas({
 }) {
   return (
     <Form.List name='unidades_derivadas'>
-      {(fields, { add, remove }) => (
+      {(fields, { add, remove}) => (
         <TableDetalleDePreciosEdicion
           form={form}
           rowDragManaged={true}
           remove={remove}
           className='h-[200px]'
           classNames={{
-            titleParent: 'flex items-center gap-4 text-nowrap',
+            titleParent: 'flex items-center gap-2 md:gap-4',
           }}
           extraTitle={
             <ButtonBase
@@ -24,6 +24,7 @@ export default function FormSectionUnidadesDerivadas({
               onClick={() => add()}
               color='success'
               size='sm'
+              className='whitespace-nowrap flex-shrink-0 text-xs md:text-sm'
             >
               + Agregar Unidad Derivada
             </ButtonBase>
