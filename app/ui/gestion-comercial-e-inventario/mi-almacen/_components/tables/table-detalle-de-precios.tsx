@@ -14,15 +14,16 @@ import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generat
 import { detallePreciosApi, ImportDetallePreciosItem } from '~/lib/api/detalle-precios'
 import { useQueryClient } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
-import { ServerResult } from '~/auth/middleware-server-actions'
-import { getProductosResponseProps } from '~/app/_actions/producto'
 import ActionButtonsWrapper from '../others/action-buttons-wrapper'
+import { useProductosByAlmacen } from '../../_hooks/useProductosByAlmacen'
+import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
   const can = usePermission()
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  const filtros = useStoreFiltrosProductos((state) => state.filtros)
   const productoSeleccionado = useStoreProductoSeleccionado(
     store => store.producto
   )
@@ -36,16 +37,24 @@ export default function TableDetalleDePrecios() {
 
   const queryClient = useQueryClient()
 
-  const data = queryClient.getQueryData<
-    ServerResult<getProductosResponseProps[]>
-  >([QueryKeys.PRODUCTOS])
+  // Usar el hook correcto para obtener productos
+  const { data: productosData } = useProductosByAlmacen({
+    filtros: {
+      ...filtros,
+      almacen_id: filtros?.almacen_id || almacen_id || 1,
+      per_page: 10000, // Obtener todos los productos para detalle de precios
+    },
+    enabled: !!(filtros?.almacen_id || almacen_id),
+  })
 
   const [primeraData, setPrimeraData] = useState(0)
   useEffect(() => {
-    if (data && primeraData < 1) setPrimeraData(prev => prev + 1)
-  }, [data, productoSeleccionado])
+    if (productosData && productosData.length > 0 && primeraData < 1) {
+      setPrimeraData(prev => prev + 1)
+    }
+  }, [productosData, productoSeleccionado, primeraData])
 
-  const productos_completos = data?.data
+  const productos_completos = productosData
 
   const rowData =
     primeraData < 1
@@ -202,7 +211,13 @@ export default function TableDetalleDePrecios() {
                   return { data: res.data };
                 },
                 msgSuccess: 'Importación completada correctamente',
-                onSuccess: () => setProductoSeleccionado(undefined),
+                onSuccess: () => {
+                  // Invalidar queries de productos por almacén para refrescar tabla
+                  queryClient.invalidateQueries({
+                    queryKey: ['productos-by-almacen']
+                  });
+                  setProductoSeleccionado(undefined);
+                },
                 queryKey: [QueryKeys.PRODUCTOS],
               }}
             />

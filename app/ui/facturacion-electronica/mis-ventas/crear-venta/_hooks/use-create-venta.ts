@@ -51,7 +51,7 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateVenta() {
+export default function useCreateVenta(form?: any) {
   const router = useRouter()
   const { user } = useAuth()
   const user_id = user?.id
@@ -61,6 +61,10 @@ export default function useCreateVenta() {
   const { execute, loading } = useServerMutation({
     action: createVenta,
     onSuccess: async () => {
+      // Resetear formulario después de crear la venta
+      if (form) {
+        form.resetFields()
+      }
       router.push(`/ui/facturacion-electronica`)
     },
     msgSuccess: `Venta creada exitosamente`,

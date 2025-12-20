@@ -20,11 +20,13 @@ import { App } from "antd";
 import PaginationControls from "~/app/_components/tables/pagination-controls";
 import { useProductosByAlmacen } from "../../_hooks/useProductosByAlmacen";
 import ActionButtonsWrapper from "../others/action-buttons-wrapper";
+import { useQueryClient } from "@tanstack/react-query";
 
 function TableProductos() {
   const tableRef = useRef<AgGridReact>(null);
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const { notification } = App.useApp();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
 
   const setProductoSeleccionado = useStoreProductoSeleccionado(
@@ -165,6 +167,11 @@ function TableProductos() {
                 },
                 msgSuccess: "Productos importados exitosamente",
                 onSuccess: (res) => {
+                  // Invalidar queries de productos por almacén para refrescar tabla
+                  queryClient.invalidateQueries({
+                    queryKey: ['productos-by-almacen']
+                  });
+
                   if (res.data?.length)
                     notification.info({
                       message: "Productos duplicados",

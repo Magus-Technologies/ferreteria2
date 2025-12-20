@@ -56,7 +56,7 @@ export default function BodyVender({
 
   useInitVenta({ venta, form })
 
-  const { handleSubmit } = useCreateVenta()
+  const { handleSubmit } = useCreateVenta(form)
 
   return (
     <FormBase<FormCreateVenta>

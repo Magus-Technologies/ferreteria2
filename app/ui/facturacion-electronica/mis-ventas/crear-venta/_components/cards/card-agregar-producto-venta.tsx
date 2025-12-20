@@ -148,6 +148,12 @@ export default function CardAgregarProductoVenta({
     if (primeraUnidad) {
       unidad_derivadaRef.current?.changeValue(primeraUnidad)
       handleChange(primeraUnidad, 'unidad_derivada_id')
+
+      // Autoseleccionar precio público por defecto
+      const precioPublico = unidades_derivadas?.[0]?.precio_publico
+      if (precioPublico) {
+        handleChange(Number(precioPublico), 'precio_venta')
+      }
     }
   }, [unidades_derivadas])
 
@@ -198,7 +204,16 @@ export default function CardAgregarProductoVenta({
           prefix={<FaWeightHanging size={15} className='text-rose-700 mx-1' />}
           onChange={(value) => {
             handleChange(value, 'unidad_derivada_id')
-            handleChange(null, 'precio_venta')
+
+            // Autoseleccionar precio público de la unidad seleccionada
+            const unidadSeleccionada = unidades_derivadas?.find(
+              (item) => item.unidad_derivada.id === value
+            )
+            if (unidadSeleccionada?.precio_publico) {
+              handleChange(Number(unidadSeleccionada.precio_publico), 'precio_venta')
+            } else {
+              handleChange(null, 'precio_venta')
+            }
           }}
           className='w-full'
           value={values.unidad_derivada_id}
