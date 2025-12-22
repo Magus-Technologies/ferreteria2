@@ -10,7 +10,7 @@ interface UseProductosSearchParams {
 }
 
 /**
- * Hook para búsqueda de productos (sin paginación, máximo 50 resultados)
+ * Hook para búsqueda de productos (sin paginación, máximo 100 resultados)
  * Usado para cards-info y otros componentes que necesitan datos agregados
  */
 export function useProductosSearch({
@@ -20,16 +20,21 @@ export function useProductosSearch({
   const query = useQuery({
     queryKey: ['productos-search', filtros],
     queryFn: async () => {
+      console.log('🔍 Búsqueda de productos con filtros:', filtros);
+      
       const response = await productosApiV2.getAllByAlmacen({
         ...filtros,
         almacen_id: filtros.almacen_id || 1,
-        per_page: 50, // Máximo 50 para búsquedas rápidas
+        per_page: 100, // Aumentado para búsquedas
         page: 1,
       });
 
       if (response.error) {
+        console.error('❌ Error en búsqueda:', response.error);
         throw new Error(response.error.message);
       }
+
+      console.log('✅ Productos encontrados:', response.data?.data?.length || 0);
 
       return response.data?.data ?? [];
     },
