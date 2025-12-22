@@ -51,7 +51,7 @@ function TableProductos() {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
       page,
-      per_page: 100,
+      per_page: 10000, // Cargar todos los productos (hasta 10,000)
     },
     enabled: !!(filtros?.almacen_id || almacen_id),
   });

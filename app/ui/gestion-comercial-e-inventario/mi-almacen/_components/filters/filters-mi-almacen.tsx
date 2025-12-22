@@ -26,7 +26,7 @@ import { useEffect, useState, useMemo } from 'react'
 import type { GetProductosParams } from '~/app/_types/producto'
 
 interface FiltersMiAlmacenProps {
-  marca_predeterminada?: number
+  // marca_predeterminada?: number // Ya no se usa
 }
 
 interface ValuesFiltersMiAlmacen {
@@ -42,18 +42,20 @@ interface ValuesFiltersMiAlmacen {
   cs_comision?: CSComision
 }
 
-export default function FiltersMiAlmacen({
-  marca_predeterminada,
-}: FiltersMiAlmacenProps) {
+export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const [form] = Form.useForm<ValuesFiltersMiAlmacen>()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
   const filtros = useStoreFiltrosProductos(state => state.filtros)
 
+  // Limpiar marca_id del store al montar el componente
   useEffect(() => {
-    if (filtros) form.setFieldValue('marca_id', filtros.marca_id)
-  }, [filtros, form])
+    if (filtros?.marca_id) {
+      const { marca_id, ...restoFiltros } = filtros
+      setFiltros(restoFiltros)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Inicializar filtros automáticamente al montar el componente
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function FiltersMiAlmacen({
         form.submit()
       }
     }, 100)
-    
+
     return () => clearTimeout(timer)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -130,7 +132,7 @@ export default function FiltersMiAlmacen({
         estado: 1,
         cs_stock: CSStock.ALL,
         cs_comision: CSComision.ALL,
-        marca_id: marca_predeterminada,
+        // marca_id: marca_predeterminada, // Removido para mostrar todos los productos por defecto
       }}
       className='w-full'
       onFinish={handleFinish}

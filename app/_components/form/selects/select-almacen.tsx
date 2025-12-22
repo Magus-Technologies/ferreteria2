@@ -28,7 +28,8 @@ export default function SelectAlmacen({
   const selectAlmacenRef = useRef<RefSelectBaseProps>(null)
   const setAlmacenId = useStoreAlmacen(store => store.setAlmacenId)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
-  const [shouldFetch, setShouldFetch] = useState(false)
+  // Cargar inmediatamente si hay un valor inicial o en el store
+  const [shouldFetch, setShouldFetch] = useState(!!props.value || !!almacen_id)
 
   const { data } = useQuery({
     queryKey: [QueryKeys.ALMACENES],
