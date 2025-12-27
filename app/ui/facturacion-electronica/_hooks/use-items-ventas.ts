@@ -27,14 +27,23 @@ export default function useItemsVentas() {
     {
       key: '4',
       label: 'Crear Guía',
+      onClick: () => {
+        router.push('/ui/facturacion-electronica/mis-guias/crear-guia')
+      }
     },
     {
       key: '5',
       label: 'Crear Nota de Crédito',
+       onClick: () => {
+        router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-credito')
+      }
     },
     {
       key: '6',
       label: 'Crear Nota de Débito',
+       onClick: () => {
+        router.push('/ui/facturacion-electronica/crear-notas-electronicas/nota-debito')
+      }
     },
     {
       key: '7',

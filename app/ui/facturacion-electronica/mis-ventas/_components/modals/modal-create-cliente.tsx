@@ -1,4 +1,4 @@
-import { Cliente, TipoCliente } from '@prisma/client'
+import { TipoCliente } from '@prisma/client'
 import { Form } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -6,6 +6,7 @@ import useCreateCliente from '../../_hooks/use-create-cliente'
 import FormCreateCliente from '../form/form-create-cliente'
 import { useEffect } from 'react'
 import { getClienteResponseProps } from '~/app/_actions/cliente'
+import type { Cliente } from '~/lib/api/cliente'
 
 interface ModalCreateClienteProps {
   open: boolean
@@ -38,10 +39,10 @@ export default function ModalCreateCliente({
   const [form] = Form.useForm<FormCreateClienteValues>()
 
   const { crearClienteForm, loading } = useCreateCliente({
-    onSuccess: (res) => {
+    onSuccess: (cliente) => {
       setOpen(false)
       form.resetFields()
-      onSuccess?.(res.data!)
+      onSuccess?.(cliente)
     },
     dataEdit,
   })

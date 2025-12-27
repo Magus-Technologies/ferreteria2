@@ -266,6 +266,7 @@ export const productosApi = {
 // Exportar módulos nuevos de API
 export { almacenesApi } from './api/almacen';
 export { productosApiV2 } from './api/producto';
+export { clienteApi } from './api/cliente';
 
 // Exportar por defecto (mantener compatibilidad)
 const api = {

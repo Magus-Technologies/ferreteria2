@@ -150,11 +150,15 @@ export enum permissions {
   COTIZACION_LISTADO = 'cotizacion.listado',
   COTIZACION_CREATE = 'cotizacion.create',
   COTIZACION_UPDATE = 'cotizacion.update',
-  COTIZACION_DELETE = 'cotizacion.delete'
+  COTIZACION_DELETE = 'cotizacion.delete',
   // COTIZACION_CONVERTIR_A_VENTA = 'cotizacion.convertir-a-venta',
 
-
-
+  // Guías de Remisión
+  GUIA_BASE = 'guia',
+  GUIA_LISTADO = 'guia.listado',
+  GUIA_CREATE = 'guia.create',
+  GUIA_UPDATE = 'guia.update',
+  GUIA_DELETE = 'guia.delete'
 }
 
 type PermisosValidos = Exclude<
@@ -178,6 +182,7 @@ type PermisosValidos = Exclude<
   | permissions.VENTA_BASE
   | permissions.CLIENTE_BASE
   | permissions.COTIZACION_BASE
+  | permissions.GUIA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
@@ -302,6 +307,12 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.COTIZACION_CREATE]: 'Crear Cotizacion',
   [permissions.COTIZACION_UPDATE]: 'Actualizar Cotizacion',
   [permissions.COTIZACION_DELETE]: 'Eliminar Cotizacion',
+
+  // Guías de Remisión
+  [permissions.GUIA_LISTADO]: 'Ver Listado de Guías de Remisión',
+  [permissions.GUIA_CREATE]: 'Crear Guía de Remisión',
+  [permissions.GUIA_UPDATE]: 'Actualizar Guía de Remisión',
+  [permissions.GUIA_DELETE]: 'Eliminar Guía de Remisión',
 }
 
 export function getAllPermissions() {
