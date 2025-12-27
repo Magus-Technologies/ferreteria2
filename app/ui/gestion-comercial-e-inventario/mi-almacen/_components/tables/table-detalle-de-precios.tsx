@@ -146,7 +146,8 @@ export default function TableDetalleDePrecios() {
               preProcessData={async data => {
                 if (!almacen_id) throw new Error('No se selecciono un almacén')
 
-                if (data.some(item => !item['Cod. Producto']))
+                // Validar que existe el código de producto (permitir "0" como válido)
+                if (data.some(item => item['Cod. Producto'] === undefined || item['Cod. Producto'] === null || item['Cod. Producto'] === ''))
                   throw new Error('Todas las Unidades Derivadas deben tener un Código de Producto')
 
                 const preResponse = new Set<string>(data.map(item => `${item['Cod. Producto']}`))
