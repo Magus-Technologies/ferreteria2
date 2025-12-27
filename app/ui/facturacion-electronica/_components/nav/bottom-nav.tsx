@@ -24,11 +24,11 @@ export default function BottomNav({ className }: { className?: string }) {
         <MdPointOfSale />
         Mis Cotizaciones
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600">
+      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-guias">
         <IoDocumentAttach />
         Mis Guias
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600">
+      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-prestamos">
         <GiReceiveMoney />
         Mis Préstamos
       </ButtonNav>

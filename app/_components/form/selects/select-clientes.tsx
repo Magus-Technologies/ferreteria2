@@ -11,6 +11,7 @@ import { useDebounce } from 'use-debounce'
 import ButtonCreateCliente from '../buttons/button-create-cliente'
 import ModalClienteSearch from '../../modals/modal-cliente-search'
 import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
+import { FormInstance } from 'antd'
 
 interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
@@ -20,6 +21,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classIconSearch?: string
   classIconCreate?: string
   clienteOptionsDefault?: Pick<Cliente, 'id' | 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>[]
+  form?: FormInstance
 }
 
 export default function SelectClientes({
@@ -32,6 +34,7 @@ export default function SelectClientes({
   classIconCreate = '',
   clienteOptionsDefault = [],
   onChange,
+  form,
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
@@ -56,21 +59,39 @@ export default function SelectClientes({
   }, [text])
 
   function handleSelect({ data }: { data?: getClienteResponseProps } = {}) {
-    setText('')
     const cliente = data || clienteSeleccionadoStore
     // console.log('handleselect - cliente', cliente)
     if (cliente) {
       setClienteSeleccionado(cliente)
 
+      // Mostrar el nombre del cliente en el campo de búsqueda
+      const clienteLabel = cliente.razon_social
+        ? `${cliente.numero_documento} : ${cliente.razon_social}`
+        : `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+      setText(clienteLabel)
+
       iterarChangeValue({
         refObject: selectClientesRef,
         value: cliente.id,
       })
-      
+
+      // Autocompletar campos del formulario si se proporciona form
+      if (form) {
+        if (cliente.numero_documento) {
+          form.setFieldValue('ruc_dni', cliente.numero_documento)
+        }
+        if (cliente.telefono) {
+          form.setFieldValue('telefono', cliente.telefono)
+        }
+        if (cliente.direccion) {
+          form.setFieldValue('direccion', cliente.direccion)
+        }
+      }
+
       setClienteSeleccionadoStore(undefined)
       setOpenModalClienteSearch(false)
       onChange?.(cliente.id, cliente)
-    } 
+    }
   }
 
   const [value] = useDebounce(text, 1000)
@@ -92,6 +113,7 @@ export default function SelectClientes({
     <div className='flex items-center gap-4 w-full'>
       <SelectBase
         ref={selectClientesRef}
+        form={form}
         showSearch
         filterOption={false}
         onSearch={setText}

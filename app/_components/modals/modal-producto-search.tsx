@@ -16,6 +16,7 @@ import TableDetalleDePreciosSearch from "../tables/table-detalle-de-precios-sear
 import TableUltimasComprasIngresadasSearch from "../tables/table-ultimas-compras-ingresadas-search";
 import CardAgregarProductoVenta from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-agregar-producto-venta";
 import CardAgregarProductoCotizacion from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_components/cards/card-agregar-producto-cotizacion";
+import CardAgregarProductoPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/_components/cards/card-agregar-producto-prestamo";
 
 type ModalProductoSearchProps = {
   open: boolean;
@@ -32,6 +33,7 @@ type ModalProductoSearchProps = {
   showCardAgregarProducto?: boolean;
   showCardAgregarProductoVenta?: boolean;
   showCardAgregarProductoCotizacion?: boolean;
+  showCardAgregarProductoPrestamo?: boolean;
   showUltimasCompras?: boolean;
 };
 
@@ -51,6 +53,7 @@ export default function ModalProductoSearch({
   showCardAgregarProducto = false,
   showCardAgregarProductoVenta = false,
   showCardAgregarProductoCotizacion = false,
+  showCardAgregarProductoPrestamo = false,
   showUltimasCompras = true,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
@@ -183,6 +186,11 @@ export default function ModalProductoSearch({
         {showCardAgregarProductoCotizacion && (
           <div className="w-full xl:w-auto">
             <CardAgregarProductoCotizacion setOpen={setOpen} />
+          </div>
+        )}
+        {showCardAgregarProductoPrestamo && (
+          <div className="w-full xl:w-auto">
+            <CardAgregarProductoPrestamo setOpen={setOpen} />
           </div>
         )}
       </div>

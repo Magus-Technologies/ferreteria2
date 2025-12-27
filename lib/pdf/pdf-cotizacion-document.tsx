@@ -251,21 +251,31 @@ export default function PDFCotizacionDocument({
 }: {
   cotizacion: CotizacionConRelaciones;
 }) {
-  const productos = cotizacion.productos_por_almacen.flatMap((pa) =>
-    pa.unidades_derivadas.map((ud) => ({
-      codigo: pa.producto_almacen.producto.cod_producto || "",
-      nombre: pa.producto_almacen.producto.name,
-      marca: pa.producto_almacen.producto.marca?.name || "N/A",
-      unidad: ud.unidad_derivada_inmutable.name,
-      cantidad: Number(ud.cantidad),
-      precio: Number(ud.precio),
-      descuento: Number(ud.descuento || 0),
-      subtotal: Number(ud.cantidad) * Number(ud.factor) * Number(ud.precio),
-    }))
-  );
+  // Soportar tanto snake_case (Prisma) como camelCase (Laravel)
+  const productosPorAlmacen = cotizacion.productosPorAlmacen || cotizacion.productos_por_almacen || [];
 
-  const subtotal = productos.reduce((sum, p) => sum + p.subtotal, 0);
-  const totalDescuento = productos.reduce((sum, p) => sum + p.descuento, 0);
+  const productos = productosPorAlmacen.flatMap((pa: any) => {
+    const unidadesDerivadas = pa.unidadesDerivadas || pa.unidades_derivadas || [];
+    const productoAlmacen = pa.productoAlmacen || pa.producto_almacen;
+
+    return unidadesDerivadas.map((ud: any) => {
+      const unidadDerivadaInmutable = ud.unidadDerivadaInmutable || ud.unidad_derivada_inmutable;
+
+      return {
+        codigo: productoAlmacen?.producto?.cod_producto || productoAlmacen?.producto?.codigo || "",
+        nombre: productoAlmacen?.producto?.name || productoAlmacen?.producto?.descripcion || "",
+        marca: productoAlmacen?.producto?.marca?.name || "N/A",
+        unidad: unidadDerivadaInmutable?.name || "UND",
+        cantidad: Number(ud.cantidad || 0),
+        precio: Number(ud.precio || 0),
+        descuento: Number(ud.descuento || 0),
+        subtotal: Number(ud.cantidad || 0) * Number(ud.factor || 1) * Number(ud.precio || 0),
+      };
+    });
+  });
+
+  const subtotal = productos.reduce((sum: number, p: any) => sum + p.subtotal, 0);
+  const totalDescuento = productos.reduce((sum: number, p: any) => sum + p.descuento, 0);
   const total = subtotal - totalDescuento;
 
   const clienteNombre =
@@ -400,7 +410,7 @@ export default function PDFCotizacionDocument({
             <Text style={[styles.tableCell, styles.colImporte]}>IMPORTE</Text>
           </View>
 
-          {productos.map((producto, idx) => (
+          {productos.map((producto: any, idx: number) => (
             <View key={idx} style={styles.tableRow}>
               <Text style={[styles.tableCell, styles.colItem]}>{idx + 1}</Text>
               <Text style={[styles.tableCell, styles.colUbi]}>A1</Text>

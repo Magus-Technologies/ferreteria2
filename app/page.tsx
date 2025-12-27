@@ -29,8 +29,21 @@ export default function Home() {
         window.location.href = '/ui'
       } else {
         message.error(result.error || 'Error al iniciar sesión')
+        
+        if (result.error?.includes('credenciales')) {
+          form.setFields([
+            {
+              name: 'email',
+              errors: [result.error],
+            },
+            {
+              name: 'password',
+              errors: [''],
+            },
+          ])
+        }
       }
-    } catch {
+    } catch (error) {
       message.error('Error al iniciar sesión')
     } finally {
       setLoading(false)

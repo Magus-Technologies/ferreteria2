@@ -71,6 +71,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   showCardAgregarProducto?: boolean
   showCardAgregarProductoVenta?: boolean
   showCardAgregarProductoCotizacion?: boolean
+  showCardAgregarProductoPrestamo?: boolean
   showUltimasCompras?: boolean
   limpiarOnChange?: boolean
 }
@@ -92,6 +93,7 @@ export default function SelectProductos({
   showCardAgregarProducto = false,
   showCardAgregarProductoVenta = false,
   showCardAgregarProductoCotizacion = false,
+  showCardAgregarProductoPrestamo = false,
   limpiarOnChange = false,
   showUltimasCompras = true,
   ...props
@@ -268,6 +270,7 @@ export default function SelectProductos({
         showCardAgregarProducto={showCardAgregarProducto}
         showCardAgregarProductoVenta={showCardAgregarProductoVenta}
         showCardAgregarProductoCotizacion={showCardAgregarProductoCotizacion}
+        showCardAgregarProductoPrestamo={showCardAgregarProductoPrestamo}
         showUltimasCompras={showUltimasCompras}
       />
       {showButtonCreate && (

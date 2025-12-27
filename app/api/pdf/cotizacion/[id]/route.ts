@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '~/db/db'
 import { generarPDFCotizacion } from '~/lib/pdf/generar-pdf-cotizacion'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function GET(
   request: NextRequest,
@@ -9,35 +10,29 @@ export async function GET(
   try {
     const { id: cotizacionId } = await params
 
-    const cotizacion = await prisma.cotizacion.findUnique({
-      where: { id: cotizacionId },
-      include: {
-        productos_por_almacen: {
-          include: {
-            producto_almacen: {
-              include: {
-                producto: {
-                  include: {
-                    marca: true,
-                    unidad_medida: true,
-                  },
-                },
-              },
-            },
-            unidades_derivadas: {
-              include: {
-                unidad_derivada_inmutable: true,
-              },
-            },
-          },
-        },
-        user: true,
-        cliente: true,
-        almacen: true,
+    // Obtener cotización desde Laravel API (ruta pública)
+    const response = await fetch(`${API_URL}/cotizaciones/${cotizacionId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-    })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+      console.error('Error al obtener cotización:', errorData);
+      return NextResponse.json(
+        { error: errorData.message || 'Cotización no encontrada' },
+        { status: response.status }
+      )
+    }
+
+    const data = await response.json();
+    console.log('Datos recibidos de Laravel:', data);
+    const cotizacion = data.data;
 
     if (!cotizacion) {
+      console.error('No se encontró cotización en data.data');
       return NextResponse.json(
         { error: 'Cotización no encontrada' },
         { status: 404 }

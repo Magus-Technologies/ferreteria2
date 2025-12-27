@@ -230,7 +230,7 @@ export default function PDFVentaDocument({
     }))
   )
 
-  const subtotal = productos.reduce((sum, p) => sum + p.subtotal, 0)
+  const subtotal = productos.reduce((sum: number, p: any) => sum + p.subtotal, 0)
   const igv = subtotal * 0.18
   const total = subtotal + igv
 

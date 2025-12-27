@@ -149,7 +149,7 @@ export default function FiltersMisCotizaciones() {
               formWithMessage={false}
             />
           </div>
-          <div className='flex items-center gap-2'>
+          {/* <div className='flex items-center gap-2'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
               Sucursal:
             </label>
@@ -162,7 +162,7 @@ export default function FiltersMisCotizaciones() {
               placeholder='MI REDENTOR'
               formWithMessage={false}
             />
-          </div>
+          </div> */}
           <ButtonBase
             color='info'
             size='md'

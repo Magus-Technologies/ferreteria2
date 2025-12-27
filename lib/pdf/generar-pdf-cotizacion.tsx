@@ -1,33 +1,9 @@
 import { pdf } from "@react-pdf/renderer";
-import { Prisma } from "@prisma/client";
 import PDFCotizacionDocument from "./pdf-cotizacion-document";
 
-export type CotizacionConRelaciones = Prisma.CotizacionGetPayload<{
-  include: {
-    productos_por_almacen: {
-      include: {
-        producto_almacen: {
-          include: {
-            producto: {
-              include: {
-                marca: true;
-                unidad_medida: true;
-              };
-            };
-          };
-        };
-        unidades_derivadas: {
-          include: {
-            unidad_derivada_inmutable: true;
-          };
-        };
-      };
-    };
-    user: true;
-    cliente: true;
-    almacen: true;
-  };
-}>;
+// Tipo genérico para cotización (compatible con Prisma y Laravel)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type CotizacionConRelaciones = any;
 
 export async function generarPDFCotizacion(
   cotizacion: CotizacionConRelaciones

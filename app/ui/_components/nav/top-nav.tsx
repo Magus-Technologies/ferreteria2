@@ -2,16 +2,21 @@
 
 import { MenuProps } from 'antd/lib'
 import { FaSignOutAlt } from 'react-icons/fa'
+import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
 
 export default function TopNavUI({ className }: { className?: string }) {
   const { logout, user } = useAuth()
+  const router = useRouter()
 
   const items: MenuProps['items'] = [
     {
       key: '1',
       label: 'Mi Empresa',
+      onClick: () => {
+        router.push('/ui/configuracion/mi-empresa')
+      }
     },
     {
       key: '2',
@@ -33,10 +38,17 @@ export default function TopNavUI({ className }: { className?: string }) {
       children: [
         {
           key: '3-1',
-          label: 'Registrar Producto',
+          label: 'Registrar Usuario',
+          onClick: () => {
+            router.push('/ui/configuracion/usuarios')
+          },
         },
         {
           key: '3-2',
+          label: 'Registrar Producto',
+        },
+        {
+          key: '3-3',
           label: 'Registrar Cliente',
         },
       ],

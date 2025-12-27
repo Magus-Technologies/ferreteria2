@@ -20,6 +20,9 @@ export default function useItemsVentas() {
     {
       key: '3',
       label: 'Prestar / Pedir',
+      onClick:()=> {
+        router.push('/ui/facturacion-electronica/mis-prestamos/crear-prestamo')
+      }
     },
     {
       key: '4',
