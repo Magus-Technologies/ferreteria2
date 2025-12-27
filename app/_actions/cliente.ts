@@ -1,6 +1,6 @@
 'use server'
 
-import { Cliente, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
@@ -9,7 +9,11 @@ import {
   ClienteUncheckedCreateInputSchema,
 } from '~/prisma/generated/zod'
 import can from '~/utils/server-validate-permission'
+import { Cliente } from '~/lib/api/cliente'
 
+// DEPRECATED: Este tipo ahora apunta al tipo de la API de Laravel
+// Se mantiene solo para compatibilidad temporal con código legacy
+// Usar directamente `Cliente` de '~/lib/api/cliente' en nuevo código
 export type getClienteResponseProps = Cliente
 
 async function SearchClienteWA(args: Prisma.ClienteFindManyArgs) {

@@ -14,6 +14,7 @@ import { useAuth } from "~/lib/auth-context";
 import ModalCreateCliente from "./modal-create-cliente";
 import PopoverOpcionesEntrega from "../popovers/popover-opciones-entrega";
 import ButtonBase from "~/components/buttons/button-base";
+import type { Cliente } from "~/lib/api/cliente";
 
 interface ModalEntregarProductosProps {
   open: boolean;
@@ -359,7 +360,7 @@ export default function ModalEntregarProductos({
       <ModalCreateCliente
         open={modalEditarClienteOpen}
         setOpen={setModalEditarClienteOpen}
-        dataEdit={venta?.cliente || undefined}
+        dataEdit={venta?.cliente as Cliente | undefined}
         onSuccess={(cliente) => {
           if (cliente.direccion) {
             form.setFieldValue("direccion_entrega", cliente.direccion);

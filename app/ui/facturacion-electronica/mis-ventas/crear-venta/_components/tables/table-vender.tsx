@@ -160,7 +160,7 @@ export default function TableVender({
     <>
       <CellFocusWithoutStyle />
       <TableBase
-        className='h-[300px] md:h-[400px] lg:h-[500px]'
+        className='h-full'
         rowSelection={false}
         rowData={fields}
         columnDefs={useColumnsVender({

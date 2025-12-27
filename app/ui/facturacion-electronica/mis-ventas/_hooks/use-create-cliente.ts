@@ -59,6 +59,8 @@ export default function useCreateCliente({
       apellidos: values.apellidos || '',
       razon_social: values.razon_social || null,
       direccion: values.direccion || null,
+      direccion_2: values.direccion_2 || null,
+      direccion_3: values.direccion_3 || null,
       telefono: values.telefono || null,
       email: values.email || null,
       estado: true,

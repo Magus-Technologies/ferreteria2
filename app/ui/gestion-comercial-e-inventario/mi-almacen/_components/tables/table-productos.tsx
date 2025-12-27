@@ -70,6 +70,10 @@ function TableProductos() {
       onSelectionChanged={({ selectedNodes }) =>
         setProductoSeleccionado(selectedNodes?.[0]?.data)
       }
+      onRowClicked={(event) => {
+        // Seleccionar la fila cuando se hace clic en cualquier parte
+        event.node.setSelected(true);
+      }}
       tableRef={tableRef}
       title="Productos"
       schema={ProductoCreateInputSchema}

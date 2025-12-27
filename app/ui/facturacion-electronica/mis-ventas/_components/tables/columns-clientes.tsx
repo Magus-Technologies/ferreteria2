@@ -4,19 +4,16 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import {
-  eliminarCliente,
-  getClienteResponseProps,
-} from '~/app/_actions/cliente'
+import { clienteApi, Cliente } from '~/lib/api/cliente'
 
 export function useColumnsClientes({
   setDataEdit,
   setOpen,
 }: {
-  setDataEdit: (data: getClienteResponseProps | undefined) => void
+  setDataEdit: (data: Cliente | undefined) => void
   setOpen: (open: boolean) => void
 }) {
-  const columns: ColDef<getClienteResponseProps>[] = [
+  const columns: ColDef<Cliente>[] = [
     {
       headerName: 'Documento',
       field: 'numero_documento',
@@ -64,13 +61,17 @@ export function useColumnsClientes({
       headerName: 'Acciones',
       field: 'id',
       width: 80,
-      cellRenderer: (params: ICellRendererParams<getClienteResponseProps>) => {
+      cellRenderer: (params: ICellRendererParams<Cliente>) => {
         return (
           <ColumnAction
             id={params.value}
             permiso={permissions.CLIENTE_BASE}
             propsDelete={{
-              action: eliminarCliente,
+              action: async ({ id }: { id: number }) => {
+                const result = await clienteApi.delete(id)
+                if (result.error) throw new Error(result.error.message)
+                return result
+              },
               msgSuccess: 'Cliente eliminado correctamente',
               queryKey: [QueryKeys.CLIENTES, QueryKeys.CLIENTES_SEARCH],
             }}

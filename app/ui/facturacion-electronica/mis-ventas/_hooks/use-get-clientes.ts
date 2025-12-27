@@ -38,7 +38,7 @@ export default function useGetClientes({ value }: { value: string }) {
         },
         take: 20,
       })
-      setResponse(res.data)
+      setResponse(res.data as getClienteResponseProps[])
       setLoading(false)
     }
     fetchData()

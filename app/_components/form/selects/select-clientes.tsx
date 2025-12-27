@@ -2,11 +2,10 @@
 
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
-import { Cliente } from '@prisma/client'
 import { FaSearch, FaUser } from 'react-icons/fa'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
-import { getClienteResponseProps } from '~/app/_actions/cliente'
-import useGetClientes from '~/app/ui/facturacion-electronica/mis-ventas/_hooks/use-get-clientes'
+import { Cliente } from '~/lib/api/cliente'
+import useSearchClientes from '~/app/ui/facturacion-electronica/mis-ventas/_hooks/use-search-clientes'
 import { useDebounce } from 'use-debounce'
 import ButtonCreateCliente from '../buttons/button-create-cliente'
 import ModalClienteSearch from '../../modals/modal-cliente-search'
@@ -16,7 +15,7 @@ import { FormInstance } from 'antd'
 interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
-  onChange?: (value: number, cliente?: getClienteResponseProps) => void
+  onChange?: (value: number, cliente?: Cliente) => void
   showButtonCreate?: boolean
   classIconSearch?: string
   classIconCreate?: string
@@ -44,7 +43,7 @@ export default function SelectClientes({
 
   const [clienteCreado, setClienteCreado] = useState<Cliente>()
   const [clienteSeleccionado, setClienteSeleccionado] =
-    useState<getClienteResponseProps>()
+    useState<Cliente>()
 
   const clienteSeleccionadoStore = useStoreClienteSeleccionado(
     store => store.cliente
@@ -58,7 +57,7 @@ export default function SelectClientes({
     if (text) setTextDefault(text)
   }, [text])
 
-  function handleSelect({ data }: { data?: getClienteResponseProps } = {}) {
+  function handleSelect({ data }: { data?: Cliente } = {}) {
     const cliente = data || clienteSeleccionadoStore
     // console.log('handleselect - cliente', cliente)
     if (cliente) {
@@ -83,7 +82,23 @@ export default function SelectClientes({
         if (cliente.telefono) {
           form.setFieldValue('telefono', cliente.telefono)
         }
-        if (cliente.direccion) {
+
+        // Guardar las 3 direcciones en el formulario (campos ocultos para referencia)
+        form.setFieldValue('_cliente_direccion_1', cliente.direccion || '')
+        form.setFieldValue('_cliente_direccion_2', cliente.direccion_2 || '')
+        form.setFieldValue('_cliente_direccion_3', cliente.direccion_3 || '')
+
+        // Llenar campo de dirección según el checkbox seleccionado (por defecto D1)
+        const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1'
+
+        if (direccionSeleccionada === 'D1' && cliente.direccion) {
+          form.setFieldValue('direccion', cliente.direccion)
+        } else if (direccionSeleccionada === 'D2' && cliente.direccion_2) {
+          form.setFieldValue('direccion', cliente.direccion_2)
+        } else if (direccionSeleccionada === 'D3' && cliente.direccion_3) {
+          form.setFieldValue('direccion', cliente.direccion_3)
+        } else if (cliente.direccion) {
+          // Fallback a dirección 1 si la seleccionada no existe
           form.setFieldValue('direccion', cliente.direccion)
         }
       }
@@ -96,7 +111,7 @@ export default function SelectClientes({
 
   const [value] = useDebounce(text, 1000)
 
-  const { response, loading } = useGetClientes({ value })
+  const { response, loading } = useSearchClientes({ value })
 
   useEffect(() => {
     if (response && response.length === 1) handleSelect({ data: response[0] })

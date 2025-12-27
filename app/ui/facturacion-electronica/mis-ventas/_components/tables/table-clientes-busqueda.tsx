@@ -4,23 +4,23 @@ import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
 import { ClienteCreateInputSchema } from '~/prisma/generated/zod'
-import { getClienteResponseProps } from '~/app/_actions/cliente'
+import { Cliente } from '~/lib/api/cliente'
 import { useState } from 'react'
 import { useColumnsClientes } from './columns-clientes'
 import ModalCreateCliente from '../modals/modal-create-cliente'
 import { useStoreClienteSeleccionado } from '../../store/store-cliente-seleccionado'
-import useGetClientes from '../../_hooks/use-get-clientes'
+import useSearchClientes from '../../_hooks/use-search-clientes'
 
 interface TableClientesBusquedaProps
   extends Omit<
-    TableWithTitleProps<getClienteResponseProps>,
+    TableWithTitleProps<Cliente>,
     'id' | 'title' | 'onRowDoubleClicked'
   > {
   value: string
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: getClienteResponseProps | undefined
+    data: Cliente | undefined
   }) => void
 }
 
@@ -29,10 +29,10 @@ export default function TableClientesBusqueda({
   onRowDoubleClicked,
   ...props
 }: TableClientesBusquedaProps) {
-  const { response, loading } = useGetClientes({ value })
+  const { response, loading } = useSearchClientes({ value })
 
   const [open, setOpen] = useState(false)
-  const [dataEdit, setDataEdit] = useState<getClienteResponseProps>()
+  const [dataEdit, setDataEdit] = useState<Cliente>()
 
   const setClienteSeleccionado = useStoreClienteSeleccionado(
     store => store.setCliente
@@ -41,7 +41,7 @@ export default function TableClientesBusqueda({
   return (
     <>
       <ModalCreateCliente open={open} setOpen={setOpen} dataEdit={dataEdit} />
-      <TableWithTitle<getClienteResponseProps>
+      <TableWithTitle<Cliente>
         {...props}
         id='mis-ventas.clientes'
         title='Clientes'
@@ -51,12 +51,12 @@ export default function TableClientesBusqueda({
         rowData={response || []}
         onSelectionChanged={({ selectedNodes }) =>
         {
-          console.log('clientre seleccionado en la tabla',selectedNodes?.[0]?.data)
+          console.log('cliente seleccionado en la tabla',selectedNodes?.[0]?.data)
           setClienteSeleccionado(
-            selectedNodes?.[0]?.data as getClienteResponseProps
+            selectedNodes?.[0]?.data as Cliente
           )
         }
-         
+
         }
         onRowDoubleClicked={({ data }) => {
           console.log('doble click en el clienbte' , data)

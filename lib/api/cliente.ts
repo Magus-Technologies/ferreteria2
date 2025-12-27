@@ -14,6 +14,8 @@ export interface Cliente {
   apellidos: string;
   razon_social: string | null;
   direccion: string | null;
+  direccion_2: string | null;
+  direccion_3: string | null;
   telefono: string | null;
   email: string | null;
   estado: boolean;
@@ -28,6 +30,8 @@ export interface CreateClienteRequest {
   apellidos: string;
   razon_social?: string | null;
   direccion?: string | null;
+  direccion_2?: string | null;
+  direccion_3?: string | null;
   telefono?: string | null;
   email?: string | null;
   estado?: boolean;

@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { getClienteResponseProps } from '~/app/_actions/cliente'
+import { Cliente } from '~/lib/api/cliente'
 
 type UseStoreClienteSeleccionadoProps = {
-  cliente?: getClienteResponseProps
-  setCliente: (value: getClienteResponseProps | undefined) => void
+  cliente?: Cliente
+  setCliente: (value: Cliente | undefined) => void
 }
 
 export const useStoreClienteSeleccionado =

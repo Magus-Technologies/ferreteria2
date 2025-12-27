@@ -3,7 +3,7 @@ import { useState } from 'react'
 import usePermission from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
-import { Cliente } from '@prisma/client'
+import { Cliente } from '~/lib/api/cliente'
 import ModalCreateCliente from '~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente'
 
 interface ButtonCreateClienteProps {

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import ButtonCreateCliente from '../form/buttons/button-create-cliente'
 import { useDebounce } from 'use-debounce'
 import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
-import { getClienteResponseProps } from '~/app/_actions/cliente'
+import { Cliente } from '~/lib/api/cliente'
 
 type ModalClienteSearchProps = {
   open: boolean
@@ -17,7 +17,7 @@ type ModalClienteSearchProps = {
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: getClienteResponseProps | undefined
+    data: Cliente | undefined
   }) => void
 }
 

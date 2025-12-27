@@ -1,6 +1,6 @@
 "use client";
 
-import { FormInstance } from "antd";
+import { FormInstance, Form } from "antd";
 import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
@@ -14,7 +14,7 @@ import dayjs from "dayjs";
 import { useEffect } from "react";
 import { useAuth } from "~/lib/auth-context";
 import { cotizacionesApi } from "~/lib/api/cotizaciones";
-
+import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
 export default function FormCrearCotizacion({
   form,
 }: {
@@ -41,8 +41,29 @@ export default function FormCrearCotizacion({
     cargarSiguienteNumero();
   }, [form]);
 
+  // Inicializar D1 al montar el componente
+  useEffect(() => {
+    if (!form.getFieldValue("direccion_seleccionada")) {
+      form.setFieldValue("direccion_seleccionada", "D1");
+    }
+  }, [form]);
+
   return (
     <div className="flex flex-col">
+      {/* Campos ocultos para que Form.useWatch funcione */}
+      <Form.Item name="direccion_seleccionada" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_direccion_1" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_direccion_2" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_direccion_3" hidden>
+        <input type="hidden" />
+      </Form.Item>
+
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
       <div className="flex gap-6">
         {/* Fecha de la cotización (REQUERIDO) - Se usa como fecha y fecha_proforma */}
@@ -203,7 +224,7 @@ export default function FormCrearCotizacion({
             }}
           />
         </LabelBase>
-        
+
         {/* Checkbox: Reservar Stock */}
         <LabelBase label="Opciones:" classNames={{ labelParent: "mb-6" }}>
           <div className="flex items-center gap-2 h-[40px]">
@@ -227,17 +248,6 @@ export default function FormCrearCotizacion({
 
       {/* Fila 4: Dirección, Telefono, cred .disp */}
       <div className="flex gap-6">
-        <LabelBase label="Dirección:" classNames={{ labelParent: "mb-6" }}>
-          <InputBase
-            propsForm={{
-              name: "direccion",
-              hasFeedback: false,
-              className: "!min-w-[300px] !w-[300px] !max-w-[300px]",
-            }}
-            placeholder="Dirección del cliente"
-            prefix={<span className="text-rose-700 mx-1">📍</span>}
-          />
-        </LabelBase>
         <LabelBase label="Tele/Cel:" classNames={{ labelParent: "mb-6" }}>
           <InputBase
             propsForm={{
@@ -249,6 +259,19 @@ export default function FormCrearCotizacion({
             prefix={<span className="text-rose-700 mx-1">📞</span>}
           />
         </LabelBase>
+        <LabelBase label="Dirección:" classNames={{ labelParent: "mb-6" }}>
+          <InputBase
+            propsForm={{
+              name: "direccion",
+              hasFeedback: false,
+              className: "!min-w-[300px] !w-[300px] !max-w-[300px]",
+            }}
+            placeholder="Dirección del cliente"
+            prefix={<span className="text-rose-700 mx-1">📍</span>}
+          />
+        </LabelBase>
+
+        <RadioDireccionCliente form={form} />
       </div>
     </div>
   );

@@ -80,6 +80,8 @@ export default function FormCreateCliente({
                 'nombres',
                 'apellidos',
                 'direccion',
+                'direccion_2',
+                'direccion_3',
                 'telefono',
                 'email',
               ])
@@ -130,13 +132,31 @@ export default function FormCreateCliente({
           />
         </LabelBase>
       </div>
-      <LabelBase label='Direccion:' classNames={{ labelParent: 'mb-6' }}>
+      <LabelBase label='Dirección 1:' classNames={{ labelParent: 'mb-6' }}>
         <InputBase
           prefix={<BsGeoAltFill className='text-cyan-600 mx-1' />}
           propsForm={{
             name: 'direccion',
           }}
-          placeholder='Direccion'
+          placeholder='Dirección 1'
+        />
+      </LabelBase>
+      <LabelBase label='Dirección 2:' classNames={{ labelParent: 'mb-6' }}>
+        <InputBase
+          prefix={<BsGeoAltFill className='text-cyan-600 mx-1' />}
+          propsForm={{
+            name: 'direccion_2',
+          }}
+          placeholder='Dirección 2 (opcional)'
+        />
+      </LabelBase>
+      <LabelBase label='Dirección 3:' classNames={{ labelParent: 'mb-6' }}>
+        <InputBase
+          prefix={<BsGeoAltFill className='text-cyan-600 mx-1' />}
+          propsForm={{
+            name: 'direccion_3',
+          }}
+          placeholder='Dirección 3 (opcional)'
         />
       </LabelBase>
       <div className='flex gap-4 items-center justify-center'>

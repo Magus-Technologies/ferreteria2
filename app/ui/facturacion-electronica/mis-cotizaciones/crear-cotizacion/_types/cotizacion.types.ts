@@ -43,6 +43,10 @@ export interface FormCreateCotizacion {
   cliente_id?: number;
   telefono?: string;
   direccion?: string;
+  direccion_seleccionada?: 'D1' | 'D2' | 'D3';
+  _cliente_direccion_1?: string;
+  _cliente_direccion_2?: string;
+  _cliente_direccion_3?: string;
   
   // Campos de documento
   fecha_vencimiento?: Dayjs;

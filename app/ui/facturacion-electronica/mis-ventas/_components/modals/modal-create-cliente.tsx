@@ -24,6 +24,8 @@ export interface FormCreateClienteValues {
   nombres: string
   apellidos: string
   direccion?: string | null
+  direccion_2?: string | null
+  direccion_3?: string | null
   telefono?: string | null
   email?: string | null
 }
