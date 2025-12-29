@@ -15,16 +15,16 @@ export default function CardsInfoPrestamo({
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const productos = Form.useWatch("productos", form) as FormCreatePrestamo["productos"];
 
-  // Calcular SubTotal
-  const subTotal = useMemo(
-    () =>
-      (productos || []).reduce(
-        (acc, item) =>
-          acc + Number(item?.costo ?? 0) * Number(item?.cantidad ?? 0),
-        0
-      ),
-    [productos]
-  );
+  // Calcular SubTotal - Comentado: Solo se maneja por cantidad
+  // const subTotal = useMemo(
+  //   () =>
+  //     (productos || []).reduce(
+  //       (acc, item) =>
+  //         acc + Number(item?.costo ?? 0) * Number(item?.cantidad ?? 0),
+  //       0
+  //     ),
+  //   [productos]
+  // );
 
   // Total de Items
   const totalItems = useMemo(
@@ -46,12 +46,14 @@ export default function CardsInfoPrestamo({
     <div className="flex flex-col gap-4 max-w-64">
       <CardInfoPrestamo title="Total Items" value={totalItems} moneda={tipo_moneda} />
       <CardInfoPrestamo title="Total Unidades" value={totalCantidad} moneda={tipo_moneda} />
+      {/* Comentado: Solo se maneja por cantidad
       <CardInfoPrestamo
         title="Monto Total"
         value={subTotal}
         moneda={tipo_moneda}
         className="border-amber-500 border-2"
       />
+      */}
 
       <ButtonBase
         onClick={() => {

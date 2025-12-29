@@ -51,15 +51,57 @@ export default function useCreateIngresoSalida({
         message: `${tipo_documento === TipoDocumento.Ingreso ? 'Ingreso' : 'Salida'} creado exitosamente`,
       })
 
-      // Invalidar queries de productos
-      await queryClient.invalidateQueries({
-        predicate: (query) =>
-          query.queryKey[0] === 'productos-by-almacen' ||
-          query.queryKey[0] === 'productos-search',
-        refetchType: 'active',
-      })
+      // Actualizar el stock del producto específico en la caché
+      // Esto es más eficiente que refrescar toda la tabla
+      const responseData = res.data as any
+      const productoActualizado = responseData?.productos_por_almacen?.[0]?.producto_almacen
+      if (productoActualizado) {
+        // Actualizar todas las queries de productos que contengan este producto
+        queryClient.setQueriesData(
+          {
+            predicate: (query) =>
+              query.queryKey[0] === 'productos-by-almacen' ||
+              query.queryKey[0] === 'productos-search',
+          },
+          (oldData: any) => {
+            if (!oldData?.data) return oldData
 
-      onSuccess?.(res.data as unknown as DataDocIngresoSalida)
+            // Actualizar el producto en el array
+            return {
+              ...oldData,
+              data: oldData.data.map((producto: any) => {
+                // Si es el producto que acabamos de modificar, actualizar su stock
+                if (producto.id === productoActualizado.producto_id) {
+                  return {
+                    ...producto,
+                    producto_en_almacenes: producto.producto_en_almacenes?.map((pa: any) => {
+                      if (pa.id === productoActualizado.id) {
+                        return {
+                          ...pa,
+                          stock_fraccion: productoActualizado.stock_fraccion,
+                          costo: productoActualizado.costo,
+                        }
+                      }
+                      return pa
+                    }),
+                  }
+                }
+                return producto
+              }),
+            }
+          }
+        )
+      }
+
+      // Convertir el response de Laravel al formato Prisma
+      // Laravel devuelve tipo_documento como "in" o "sa"
+      // Prisma espera TipoDocumento.Ingreso o TipoDocumento.Salida
+      const transformedData = res.data ? {
+        ...res.data,
+        tipo_documento: tipo_documento, // Usar el tipo original de Prisma
+      } : undefined
+
+      onSuccess?.(transformedData as unknown as DataDocIngresoSalida)
     } catch {
       notification.error({
         message: 'Error',

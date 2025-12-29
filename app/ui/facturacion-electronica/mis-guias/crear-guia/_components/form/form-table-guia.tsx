@@ -9,16 +9,18 @@ export default function FormTableGuia({
   guia?: any
 }) {
   return (
-    <Form.List name='productos'>
-      {(fields, { add, remove }) => (
-        <TableGuia
-          guia={guia}
-          form={form}
-          fields={fields}
-          remove={remove}
-          add={add}
-        />
-      )}
-    </Form.List>
+    <div className='h-[300px] md:h-[400px] lg:h-[500px]'>
+      <Form.List name='productos'>
+        {(fields, { add, remove }) => (
+          <TableGuia
+            guia={guia}
+            form={form}
+            fields={fields}
+            remove={remove}
+            add={add}
+          />
+        )}
+      </Form.List>
+    </div>
   )
 }

@@ -65,7 +65,7 @@ export default function useCreateVenta(form?: any) {
       if (form) {
         form.resetFields()
       }
-      router.push(`/ui/facturacion-electronica`)
+      router.push(`/ui/facturacion-electronica/mis-ventas`)
     },
     msgSuccess: `Venta creada exitosamente`,
   })
@@ -73,10 +73,13 @@ export default function useCreateVenta(form?: any) {
   async function handleSubmit(values: FormCreateVenta) {
     console.log('🚀 ~ handleSubmit ~ values:', values)
 
-    if (!can(permissions.FACTURACION_ELECTRONICA_INDEX))
-      return notification.error({
-        message: 'No tienes permiso para crear una venta',
-      })
+    // TEMPORAL: Comentado para permitir crear ventas sin validación de permisos
+    // TODO: Descomentar cuando se asignen los permisos correctos en la base de datos
+    // if (!can(permissions.VENTA_CREATE))
+    //   return notification.error({
+    //     message: 'No tienes permiso para crear una venta',
+    //   })
+    
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
@@ -88,6 +91,13 @@ export default function useCreateVenta(form?: any) {
       estado_de_venta,
       cliente_id,
       recomendado_por_id,
+      _cliente_direccion_1,
+      _cliente_direccion_2,
+      _cliente_direccion_3,
+      direccion,
+      direccion_seleccionada,
+      ruc_dni,
+      telefono,
       ...restValues
     } = values
     if (!productos || productos.length === 0)

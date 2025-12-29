@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { getComprasResponseProps } from '~/app/_actions/compra'
+import { type Compra } from '~/lib/api/compra'
 
 type UseStoreCompraSeleccionadaProps = {
-  compra?: getComprasResponseProps
-  setCompra: (value: getComprasResponseProps | undefined) => void
+  compra?: Compra
+  setCompra: (value: Compra | undefined) => void
 }
 
 export const useStoreCompraSeleccionada =

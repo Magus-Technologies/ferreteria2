@@ -1,15 +1,14 @@
 'use client'
 
 import SelectBase, { SelectBaseProps } from './select-base'
-import { Carro } from '@prisma/client'
 import { FaCar } from 'react-icons/fa6'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor, Carro } from '~/lib/api/proveedor'
 
 interface SelectProveedorCarrosProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
   onChange?: (value: number, carro?: Carro) => void
-  proveedor: getProveedorResponseProps | undefined
+  proveedor: Proveedor | undefined
 }
 
 export default function SelectProveedorCarros({
@@ -29,10 +28,10 @@ export default function SelectProveedorCarros({
       variant={variant}
       placeholder={placeholder}
       onChange={value => {
-        const carro = proveedor?.carros.find(carro => carro.id === value)
+        const carro = proveedor?.carros?.find(carro => carro.id === value)
         onChange?.(value, carro)
       }}
-      options={proveedor?.carros.map(carro => ({
+      options={proveedor?.carros?.map(carro => ({
         value: carro.id,
         label: carro.placa,
       }))}

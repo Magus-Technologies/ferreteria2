@@ -157,8 +157,11 @@ export default function SelectProductos({
       return
     }
     if (isFetching) return
-    if (response?.length === 1) handleOnlyOneResult?.(response[0])
-    else setOpenModalProductoSearch(true)
+    // Solo abrir modal si hay resultados (significa que el usuario buscó algo)
+    if (!response || response.length === 0) return
+
+    if (response.length === 1) handleOnlyOneResult?.(response[0])
+    else if (text) setOpenModalProductoSearch(true) // Solo abrir si hay texto de búsqueda
   }, [response, isFetching])
 
   function handleSelect({ data }: { data?: getProductosResponseProps } = {}) {

@@ -38,7 +38,7 @@ export default function StockIngresoSalida({
   form: FormInstance
   tipo: TipoDocumento
 }) {
-  const cantidad = Form.useWatch('cantidad', form)
+  const cantidad = Form.useWatch('cantidad', { form })
 
   return (
     <div className='flex flex-col items-center justify-center gap-4 mb-7'>

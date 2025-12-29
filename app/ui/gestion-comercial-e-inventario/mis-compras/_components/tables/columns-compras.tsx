@@ -8,34 +8,41 @@ import { permissions } from '~/lib/permissions'
 import usePermission from '~/hooks/use-permission'
 import { Popconfirm, Tooltip } from 'antd'
 import { FaTruckLoading } from 'react-icons/fa'
-import {
-  eliminarCompra,
-  getComprasResponseProps,
-  updateCompra,
-} from '~/app/_actions/compra'
 import { useRouter } from 'next/navigation'
 import TagEstadoDeCompra from '../others/tag-estado-de-compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useServerMutation } from '~/hooks/use-server-mutation'
 import { FaFlag } from 'react-icons/fa6'
+import { compraApi, type Compra } from '~/lib/api/compra'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import useApp from 'antd/es/app/useApp'
 
 export function useColumnsCompras({
   setCompraRecepcion,
   setOpenModal,
 }: {
-  setCompraRecepcion?: (compra: getComprasResponseProps | undefined) => void
+  setCompraRecepcion?: (compra: Compra | undefined) => void
   setOpenModal?: (open: boolean) => void
 } = {}) {
   const router = useRouter()
   const can = usePermission()
+  const queryClient = useQueryClient()
+  const { message } = useApp()
 
-  const { execute, loading } = useServerMutation({
-    action: updateCompra,
-    queryKey: [QueryKeys.COMPRAS],
-    msgSuccess: `Recepción Finalizada correctamente`,
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: { estado_de_compra: string } }) => {
+      const result = await compraApi.update(id, data)
+      if (result.error) {
+        throw new Error(result.error.message)
+      }
+      return result.data!.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+      message.success('Recepción Finalizada correctamente')
+    },
   })
 
-  const columns: ColDef<getComprasResponseProps>[] = [
+  const columns: ColDef<Compra>[] = [
     {
       headerName: 'Documento',
       field: 'tipo_documento',
@@ -92,7 +99,7 @@ export function useColumnsCompras({
       valueFormatter: ({
         value,
       }: {
-        value: getComprasResponseProps['productos_por_almacen']
+        value: Compra['productos_por_almacen']
       }) => String(Number(getSubTotal(value)) / (IGV + 1)),
       type: 'pen',
     },
@@ -104,7 +111,7 @@ export function useColumnsCompras({
       valueFormatter: ({
         value,
       }: {
-        value: getComprasResponseProps['productos_por_almacen']
+        value: Compra['productos_por_almacen']
       }) =>
         String(
           Number(getSubTotal(value)) - Number(getSubTotal(value)) / (IGV + 1)
@@ -120,7 +127,7 @@ export function useColumnsCompras({
       valueFormatter: ({
         value,
       }: {
-        value: getComprasResponseProps['productos_por_almacen']
+        value: Compra['productos_por_almacen']
       }) => getSubTotal(value),
       filter: 'agNumberColumnFilter',
       type: 'pen',
@@ -170,7 +177,7 @@ export function useColumnsCompras({
       field: 'estado_de_compra',
       width: 90,
       minWidth: 90,
-      cellRenderer: (params: ICellRendererParams<getComprasResponseProps>) => (
+      cellRenderer: (params: ICellRendererParams<Compra>) => (
         <div className='flex items-center h-full'>
           <TagEstadoDeCompra estado_de_compra={params.value}>
             {params.value}
@@ -186,7 +193,7 @@ export function useColumnsCompras({
             field: 'id',
             width: 95,
             cellRenderer: (
-              params: ICellRendererParams<getComprasResponseProps>
+              params: ICellRendererParams<Compra>
             ) => {
               return (
                 <ColumnAction
@@ -198,7 +205,13 @@ export function useColumnsCompras({
                     params.data?.estado_de_compra !== EstadoDeCompra.Procesado
                   }
                   propsDelete={{
-                    action: eliminarCompra,
+                    action: async ({ id }: { id: string }) => {
+                      const result = await compraApi.delete(id)
+                      if (result.error) {
+                        throw new Error(result.error.message)
+                      }
+                      return { data: 'ok' }
+                    },
                     msgSuccess: 'Compra anulada correctamente',
                     queryKey: [QueryKeys.COMPRAS],
                   }}
@@ -246,20 +259,17 @@ export function useColumnsCompras({
                           title='Finalizar Recepción'
                           description={`¿Estas seguro de marcar la recepción de almacén de esta compra como Finalizado?`}
                           onConfirm={() =>
-                            execute({
+                            updateMutation.mutate({
                               id: params.value,
-                              data: {
-                                estado_de_compra: EstadoDeCompra.Procesado,
-                              },
+                              data: { estado_de_compra: EstadoDeCompra.Procesado },
                             })
                           }
-                          okText='Finalizar'
-                          cancelText='Cancelar'
-                          disabled={loading}
+                          okText='Si'
+                          cancelText='No'
                         >
                           <FaFlag
+                            className={`cursor-pointer text-green-600 hover:scale-105 transition-all active:scale-95 min-w-fit`}
                             size={15}
-                            className={`cursor-pointer text-rose-600 hover:scale-105 transition-all active:scale-95 min-w-fit`}
                           />
                         </Popconfirm>
                       </Tooltip>
@@ -267,30 +277,28 @@ export function useColumnsCompras({
                 </ColumnAction>
               )
             },
-            type: 'actions',
           },
         ]
-      : []) as ColDef<getComprasResponseProps>[]),
+      : []) as ColDef<Compra>[]),
   ]
-
   return columns
 }
 
-function getSubTotal(value: getComprasResponseProps['productos_por_almacen']) {
-  return String(
-    value.reduce(
-      (acc, item) =>
-        acc +
-        item.unidades_derivadas.reduce(
-          (acc2, item2) =>
-            acc2 +
-            Number(item2.cantidad) *
-              Number(item2.factor) *
-              Number(item.costo) *
-              (item2.bonificacion ? 0 : 1),
-          0
-        ),
-      0
-    )
-  )
+function getSubTotal(productos: Compra['productos_por_almacen']) {
+  if (!productos || productos.length === 0) return '0'
+
+  let total = 0
+  for (const item of productos) {
+    const costo = Number(item.costo ?? 0)
+    for (const u of item.unidades_derivadas ?? []) {
+      const cantidad = Number(u.cantidad ?? 0)
+      const factor = Number(u.factor ?? 0)
+      const flete = Number(u.flete ?? 0)
+      const bonificacion = Boolean(u.bonificacion)
+      const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
+      total += montoLinea
+    }
+  }
+
+  return total.toFixed(2)
 }

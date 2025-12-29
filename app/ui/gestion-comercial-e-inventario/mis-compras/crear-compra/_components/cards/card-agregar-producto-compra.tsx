@@ -102,7 +102,7 @@ export default function CardAgregarProductoCompra({
       producto_codigo: productoSeleccionadoSearchStore?.cod_producto,
       marca_name: productoSeleccionadoSearchStore?.marca?.name,
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name,
-      unidad_derivada_factor: unidad_derivada?.factor,
+      unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_compra: values.bonificacion ? 0 : values.precio_compra,
     }
 

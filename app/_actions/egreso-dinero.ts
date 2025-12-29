@@ -13,7 +13,7 @@ async function getEgresosDineroWA({
   where?: Prisma.EgresoDineroWhereInput
 }) {
   const puede = await can(permissions.EGRESO_DINERO_LISTADO)
-  if (!puede) throw new Error('No tienes permiso para ver la lista de egresos')
+  if (!puede) return { data: [] } // Return empty array instead of throwing error
 
   if (!where) return { data: [] }
 

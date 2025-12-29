@@ -3,7 +3,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { FaBoxes, FaPlusCircle } from 'react-icons/fa'
-import { FaMoneyBillTrendUp, FaWeightHanging } from 'react-icons/fa6'
+import { FaWeightHanging } from 'react-icons/fa6'
+// import { FaMoneyBillTrendUp } from 'react-icons/fa6' // Comentado: Solo se maneja por cantidad
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectBase, {
   RefSelectBaseProps,
@@ -15,7 +16,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { App } from 'antd'
 import { FormCreatePrestamo } from '../../_types/prestamo.types'
 import { useStoreProductoAgregadoPrestamo } from '../../_store/store-producto-agregado-prestamo'
-import { TipoMoneda } from '~/lib/api/prestamo'
+// import { TipoMoneda } from '~/lib/api/prestamo' // Comentado: Solo se maneja por cantidad
 
 export type ValuesCardAgregarProductoPrestamo = Partial<
   FormCreatePrestamo['productos'][number]
@@ -24,7 +25,7 @@ export type ValuesCardAgregarProductoPrestamo = Partial<
 export const valuesDefault: ValuesCardAgregarProductoPrestamo = {
   cantidad: undefined,
   unidad_derivada_id: undefined,
-  costo: undefined,
+  // costo: undefined, // Comentado: Solo se maneja por cantidad
 
   producto_id: undefined,
   producto_name: undefined,
@@ -44,9 +45,9 @@ export default function CardAgregarProductoPrestamo({
     (store) => store.setProductoAgregado
   )
 
-  const tipo_moneda = useStoreProductoAgregadoPrestamo(
-    (store) => store.tipo_moneda
-  )
+  // const tipo_moneda = useStoreProductoAgregadoPrestamo(
+  //   (store) => store.tipo_moneda
+  // ) // Comentado: Solo se maneja por cantidad
 
   const handleChange = (
     value: string | number | boolean | null,
@@ -69,7 +70,7 @@ export default function CardAgregarProductoPrestamo({
   const unidades_derivadas = producto_en_almacen?.unidades_derivadas
 
   function handleOk(closeModal?: boolean) {
-    if (!values.cantidad || !values.unidad_derivada_id || !values.costo)
+    if (!values.cantidad || !values.unidad_derivada_id)
       return notification.error({
         message: 'Complete todos los campos obligatorios',
       })
@@ -93,8 +94,8 @@ export default function CardAgregarProductoPrestamo({
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name ?? '',
       unidad_derivada_factor: Number(unidad_derivada?.factor ?? 1),
       cantidad: values.cantidad,
-      costo: values.costo,
-      subtotal: values.cantidad * values.costo,
+      // costo: values.costo, // Comentado: Solo se maneja por cantidad
+      // subtotal: values.cantidad * values.costo, // Comentado: Solo se maneja por cantidad
     }
 
     setProductoAgregadoPrestamo(valuesFormated)
@@ -104,7 +105,7 @@ export default function CardAgregarProductoPrestamo({
 
   const cantidadRef = useRef<HTMLInputElement>(null)
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
-  const costoRef = useRef<HTMLInputElement>(null)
+  // const costoRef = useRef<HTMLInputElement>(null) // Comentado: Solo se maneja por cantidad
   const buttom_masRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -136,7 +137,7 @@ export default function CardAgregarProductoPrestamo({
           min={0}
           nextInEnter={false}
           onKeyUp={(e) => {
-            if (e.key === 'Enter') costoRef.current?.focus()
+            if (e.key === 'Enter') buttom_masRef.current?.focus()
           }}
         />
         {/* Validación de stock */}
@@ -173,6 +174,7 @@ export default function CardAgregarProductoPrestamo({
           }
         />
       </LabelBase>
+      {/* Comentado: Solo se maneja por cantidad
       <LabelBase label='Costo:' orientation='column'>
         <InputNumberBase
           ref={costoRef}
@@ -200,6 +202,7 @@ export default function CardAgregarProductoPrestamo({
           })}
         </div>
       </div>
+      */}
 
       <div className='flex items-center justify-between gap-2'>
         <ButtonBase

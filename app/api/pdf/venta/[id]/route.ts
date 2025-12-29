@@ -32,7 +32,11 @@ export async function GET(
             },
           },
         },
-        user: true,
+        user: {
+          include: {
+            empresa: true,
+          },
+        },
         cliente: true,
         almacen: true,
       },

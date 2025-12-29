@@ -1,13 +1,13 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { getComprasResponseProps } from '~/app/_actions/compra'
+import { type Compra, type ProductoAlmacenCompra, type UnidadDerivadaInmutableCompra } from '~/lib/api/compra'
 
 export type TableDetalleDeCompraProps = Pick<
-  getComprasResponseProps['productos_por_almacen'][number],
+  ProductoAlmacenCompra,
   'producto_almacen' | 'costo'
 > &
-  getComprasResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number]
+  UnidadDerivadaInmutableCompra
 
 export function useColumnsDetalleDeCompra() {
   const columns: ColDef<TableDetalleDeCompraProps>[] = [
@@ -22,7 +22,7 @@ export function useColumnsDetalleDeCompra() {
       }: {
         value: TableDetalleDeCompraProps['producto_almacen']
       }) => {
-        return value.producto.cod_producto
+        return value?.producto?.cod_producto ?? ''
       },
     },
     {
@@ -38,9 +38,10 @@ export function useColumnsDetalleDeCompra() {
         value: TableDetalleDeCompraProps['producto_almacen']
         data: TableDetalleDeCompraProps | undefined
       }) => {
+        const productName = value?.producto?.name ?? ''
         return data?.bonificacion
-          ? `🎁 ${value.producto.name} (Bonificación)`
-          : value.producto.name
+          ? `🎁 ${productName} (Bonificación)`
+          : productName
       },
       flex: 1,
     },
@@ -55,7 +56,7 @@ export function useColumnsDetalleDeCompra() {
       }: {
         value: TableDetalleDeCompraProps['producto_almacen']
       }) => {
-        return value.producto.marca.name
+        return value?.producto?.marca?.name ?? ''
       },
     },
     {
@@ -69,7 +70,7 @@ export function useColumnsDetalleDeCompra() {
       }: {
         value: TableDetalleDeCompraProps['unidad_derivada_inmutable']
       }) => {
-        return value.name
+        return value?.name ?? ''
       },
     },
     {

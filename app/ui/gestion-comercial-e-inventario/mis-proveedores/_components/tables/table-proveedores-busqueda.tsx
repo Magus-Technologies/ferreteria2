@@ -4,7 +4,7 @@ import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
 import { ProveedorCreateInputSchema } from '~/prisma/generated/zod'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 import { useEffect, useState } from 'react'
 import { useColumnsProveedores } from './columns-proveedores'
 import ModalCreateProveedor from '../modals/modal-create-proveedor'
@@ -13,14 +13,14 @@ import useGetProveedores from '../../_hooks/use-get-proveedores'
 
 interface TableProveedoresBusquedaProps
   extends Omit<
-    TableWithTitleProps<getProveedorResponseProps>,
+    TableWithTitleProps<Proveedor>,
     'id' | 'title' | 'onRowDoubleClicked'
   > {
   value: string
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: getProveedorResponseProps | undefined
+    data: Proveedor | undefined
   }) => void
 }
 
@@ -36,7 +36,7 @@ export default function TableProveedoresBusqueda({
   }, [value, refetch])
 
   const [open, setOpen] = useState(false)
-  const [dataEdit, setDataEdit] = useState<getProveedorResponseProps>()
+  const [dataEdit, setDataEdit] = useState<Proveedor>()
 
   const setProveedorSeleccionado = useStoreProveedorSeleccionado(
     store => store.setProveedor
@@ -45,7 +45,7 @@ export default function TableProveedoresBusqueda({
   return (
     <>
       <ModalCreateProveedor open={open} setOpen={setOpen} dataEdit={dataEdit} />
-      <TableWithTitle<getProveedorResponseProps>
+      <TableWithTitle<Proveedor>
         {...props}
         id='g-c-e-i.mi-almacen.proveedores'
         title='Proveedores'
@@ -55,7 +55,7 @@ export default function TableProveedoresBusqueda({
         rowData={response || []}
         onSelectionChanged={({ selectedNodes }) =>
           setProveedorSeleccionado(
-            selectedNodes?.[0]?.data as getProveedorResponseProps
+            selectedNodes?.[0]?.data as Proveedor
           )
         }
         onRowDoubleClicked={({ data }) => {

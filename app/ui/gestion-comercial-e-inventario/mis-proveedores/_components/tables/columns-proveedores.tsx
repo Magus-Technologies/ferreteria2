@@ -4,19 +4,16 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import {
-  eliminarProveedor,
-  getProveedorResponseProps,
-} from '~/app/_actions/proveedor'
+import { proveedorApi, type Proveedor } from '~/lib/api/proveedor'
 
 export function useColumnsProveedores({
   setDataEdit,
   setOpen,
 }: {
-  setDataEdit: (data: getProveedorResponseProps | undefined) => void
+  setDataEdit: (data: Proveedor | undefined) => void
   setOpen: (open: boolean) => void
 }) {
-  const columns: ColDef<getProveedorResponseProps>[] = [
+  const columns: ColDef<Proveedor>[] = [
     {
       headerName: 'RUC',
       field: 'ruc',
@@ -67,15 +64,19 @@ export function useColumnsProveedores({
       headerName: 'Acciones',
       field: 'id',
       width: 80,
-      cellRenderer: (
-        params: ICellRendererParams<getProveedorResponseProps>
-      ) => {
+      cellRenderer: (params: ICellRendererParams<Proveedor>) => {
         return (
           <ColumnAction
             id={params.value}
-            permiso={permissions.PRODUCTO_BASE}
+            permiso={permissions.PROVEEDOR_BASE}
             propsDelete={{
-              action: eliminarProveedor,
+              action: async ({ id }: { id: number }) => {
+                const result = await proveedorApi.delete(id)
+                if (result.error) {
+                  throw new Error(result.error.message)
+                }
+                return { data: 'ok' }
+              },
               msgSuccess: 'Proveedor eliminado correctamente',
               queryKey: [QueryKeys.PROVEEDORES, QueryKeys.PROVEEDORES_SEARCH],
             }}

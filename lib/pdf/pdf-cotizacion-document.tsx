@@ -29,15 +29,16 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   companyInfo: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#000",
-    lineHeight: 1.6,
+    lineHeight: 1.4,
     paddingTop: 0,
+    flex: 1,
   },
   companyName: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 3,
   },
   documentSection: {
     width: "45%",
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   documentBox: {
-    border: "0.5px solid #000",
+    border: "0.5px solid #fadc06",
     borderRadius: 12,
     padding: 12,
     width: 220,
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   clienteBox: {
-    border: "0.5px solid #000",
+    border: "0.5px solid #fadc06",
     marginBottom: 10,
   },
   clienteRow: {
@@ -103,25 +104,25 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   tableContainer: {
-    border: "1px solid #000",
+    border: "2px solid #fadc06",
   },
   tableHeader: {
     flexDirection: "row",
     padding: 4,
     fontSize: 7,
     fontWeight: "bold",
-    borderBottom: "1px solid #000",
-    backgroundColor: "#f0f0f0",
+    borderBottom: "1px solid #fadc06",
+    backgroundColor: "#fadc06",
   },
   tableRow: {
     flexDirection: "row",
-    borderBottom: "1px solid #000",
+    borderBottom: "1px solid #fadc06",
     minHeight: 20,
   },
   tableCell: {
     padding: 3,
     fontSize: 7,
-    borderRight: "1px solid #000",
+    borderRight: "1px solid #fadc06",
   },
   colItem: { width: "5%", textAlign: "center" },
   colUbi: { width: "5%", textAlign: "center" },
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   observacionesBox: {
-    border: "1.5px solid #000",
+    border: "2px solid #fadc06",
     borderRadius: 8,
     padding: 8,
   },
@@ -170,16 +171,16 @@ const styles = StyleSheet.create({
   },
   totalRow: {
     flexDirection: "row",
-    borderBottom: "1px solid #000",
+    borderBottom: "1px solid #fadc06",
   },
   totalRowLast: {
     flexDirection: "row",
-    borderBottom: "1px solid #000",
+    borderBottom: "1px solid #fadc06",
   },
   totalLabelCell: {
     width: "60%",
-    borderRight: "1px solid #000",
-    borderLeft: "1px solid #000",
+    borderRight: "1px solid #fadc06",
+    borderLeft: "1px solid #fadc06",
     padding: 6,
   },
   totalLabelText: {
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
   totalValueCell: {
     width: "40%",
     padding: 6,
-    borderRight: "1px solid #000",
+    borderRight: "1px solid #fadc06",
   },
   totalValueText: {
     fontSize: 8,
@@ -222,22 +223,22 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   cuentasTable: {
-    border: "1px solid #000",
+    border: "2px solid #fadc06",
     width: "55%",
   },
   cuentasHeader: {
     flexDirection: "row",
-    borderBottom: "1px solid #000",
+    borderBottom: "1px solid #fadc06",
     fontWeight: "bold",
   },
   cuentasRow: {
     flexDirection: "row",
-    borderBottom: "1px solid #000",
+    borderBottom: "1px solid #fadc06",
   },
   cuentasCell: {
     padding: 2,
     fontSize: 5,
-    borderRight: "1px solid #000",
+    borderRight: "1px solid #fadc06",
     textAlign: "center",
   },
   cuentasColEntidad: { width: "25%" },
@@ -248,9 +249,14 @@ const styles = StyleSheet.create({
 
 export default function PDFCotizacionDocument({
   cotizacion,
+  logoDataURI,
 }: {
   cotizacion: CotizacionConRelaciones;
+  logoDataURI: string;
 }) {
+  // Obtener datos de la empresa desde el usuario
+  const empresa = cotizacion.user?.empresa;
+
   // Soportar tanto snake_case (Prisma) como camelCase (Laravel)
   const productosPorAlmacen = cotizacion.productosPorAlmacen || cotizacion.productos_por_almacen || [];
 
@@ -306,24 +312,24 @@ export default function PDFCotizacionDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.headerContainer}>
           <View style={styles.logoSection}>
-            <Image
-              src={`${
-                process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-              }/logoPdf.png`}
-              style={styles.logo}
-            />
+            {logoDataURI && (
+              <Image
+                src={logoDataURI}
+                style={styles.logo}
+              />
+            )}
             <View style={styles.companyInfo}>
-              <Text style={styles.companyName}>GRUPO MI REDENTOR S.A.C</Text>
-              <Text>CAL.SINCHI ROCA MZA. 6 LOTE. 15 P.J.</Text>
-              <Text>EL MILAGRO (SECTOR III)</Text>
-              <Text>{"\n"}Cel: 908846540 / 952686345</Text>
-              <Text>{"\n"}Email: grupomiredentorsac@gmail.com</Text>
+              <Text style={styles.companyName}>{empresa?.razon_social || 'GRUPO MI REDENTOR S.A.C'}</Text>
+              <Text>{empresa?.direccion || 'CAL.SINCHI ROCA MZA. 6 LOTE. 15 P.J.'}</Text>
+              <Text>{empresa?.distrito || 'EL MILAGRO (SECTOR III)'}</Text>
+              <Text>{"\n"}Cel: {empresa?.celular || '908846540 / 952686345'}</Text>
+              <Text>{"\n"}Email: {empresa?.email || 'grupomiredentorsac@gmail.com'}</Text>
             </View>
           </View>
 
           <View style={styles.documentSection}>
             <View style={styles.documentBox}>
-              <Text style={styles.rucText}>R.U.C 20611539160</Text>
+              <Text style={styles.rucText}>R.U.C {empresa?.ruc || '20611539160'}</Text>
               <Text style={styles.documentTitle}>Proforma</Text>
               <Text style={styles.documentNumber}>{cotizacion.numero}</Text>
             </View>
@@ -443,7 +449,7 @@ export default function PDFCotizacionDocument({
             <View
               style={{
                 minHeight: (10 - productos.length) * 20,
-                borderBottom: "1px solid #000",
+                borderBottom: "1px solid #fadc06",
               }}
             />
           )}

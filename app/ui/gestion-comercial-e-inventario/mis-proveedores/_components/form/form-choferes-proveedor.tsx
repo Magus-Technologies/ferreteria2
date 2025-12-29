@@ -8,14 +8,14 @@ import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
 import { ConsultaDni } from '~/app/_types/consulta-ruc'
 import LabelBase from '~/components/form/label-base'
 import { IoMdPerson } from 'react-icons/io'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 
 export default function FormChoferesProveedor({
   form,
   dataEdit,
 }: {
   form: FormInstance
-  dataEdit?: getProveedorResponseProps
+  dataEdit?: Proveedor
 }) {
   return (
     <Form.List name='choferes'>

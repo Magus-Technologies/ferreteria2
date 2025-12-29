@@ -1,4 +1,3 @@
-import { Carro, Chofer, Proveedor, Vendedor } from '@prisma/client'
 import { Form, Tabs } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -11,28 +10,39 @@ import { useEffect } from 'react'
 import dayjs from 'dayjs'
 import FormCarrosProveedor from '../form/form-carros-proveedor'
 import FormChoferesProveedor from '../form/form-choferes-proveedor'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 
 interface ModalCreateProveedorProps {
   open: boolean
   setOpen: (open: boolean) => void
   onSuccess?: (res: Proveedor) => void
-  dataEdit?: getProveedorResponseProps
+  dataEdit?: Proveedor
   textDefault?: string
   setTextDefault?: (text: string) => void
 }
 
 export type dataProveedorModalProps = Omit<
   Proveedor,
-  'id' | 'created_at' | 'updated_at' | 'estado'
+  'id' | 'estado' | 'vendedores' | 'carros' | 'choferes'
 > & {
   estado: number
-  vendedores: (Omit<Vendedor, 'id' | 'estado' | 'cumple'> & {
+  vendedores?: {
+    dni: string
+    nombres: string
+    direccion?: string | null
+    telefono?: string | null
+    email?: string | null
     estado: number
-    cumple: Dayjs
-  })[]
-  carros: Pick<Carro, 'placa'>[]
-  choferes: Pick<Chofer, 'dni' | 'name' | 'licencia'>[]
+    cumple?: Dayjs | null
+  }[]
+  carros?: {
+    placa: string
+  }[]
+  choferes?: {
+    dni: string
+    name: string
+    licencia: string
+  }[]
 }
 
 export default function ModalCreateProveedor({
@@ -49,7 +59,7 @@ export default function ModalCreateProveedor({
     onSuccess: res => {
       setOpen(false)
       form.resetFields()
-      onSuccess?.(res.data!)
+      onSuccess?.(res)
     },
     dataEdit,
   })
@@ -83,7 +93,7 @@ export default function ModalCreateProveedor({
       form.setFieldsValue({
         ...dataEdit,
         estado: dataEdit.estado ? 1 : 0,
-        vendedores: dataEdit.vendedores.map(item => ({
+        vendedores: dataEdit.vendedores?.map(item => ({
           ...item,
           estado: item.estado ? 1 : 0,
           cumple: item.cumple ? dayjs(item.cumple) : undefined,

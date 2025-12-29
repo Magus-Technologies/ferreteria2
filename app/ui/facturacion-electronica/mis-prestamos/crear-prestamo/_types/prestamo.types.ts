@@ -14,8 +14,8 @@ export interface ProductoPrestamo {
   unidad_derivada_name: string;
   unidad_derivada_factor: number;
   cantidad: number;
-  costo: number;
-  subtotal: number;
+  // costo: number; // Comentado: Solo se maneja por cantidad
+  // subtotal: number; // Comentado: Solo se maneja por cantidad
 }
 
 export interface FormCreatePrestamo {

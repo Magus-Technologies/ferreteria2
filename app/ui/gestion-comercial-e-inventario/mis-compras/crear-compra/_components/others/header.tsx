@@ -10,20 +10,22 @@ import CardAgregarProductoCompra from '../cards/card-agregar-producto-compra'
 import { useState } from 'react'
 import usePermission from '~/hooks/use-permission'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
-import { getComprasResponseProps } from '~/app/_actions/compra'
+import { type Compra, type ProductoAlmacenCompra, type UnidadDerivadaInmutableCompra } from '~/lib/api/compra'
 
 export type CompraConUnidadDerivadaNormal = Omit<
-  getComprasResponseProps,
+  Compra,
   'productos_por_almacen'
 > & {
   productos_por_almacen: (Omit<
-    getComprasResponseProps['productos_por_almacen'][number],
+    ProductoAlmacenCompra,
     'unidades_derivadas'
   > & {
-    unidades_derivadas: (getComprasResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number] & {
-      unidad_derivada_normal: getComprasResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number]['unidad_derivada_inmutable']
+    unidades_derivadas: (UnidadDerivadaInmutableCompra & {
+      unidad_derivada_normal: NonNullable<UnidadDerivadaInmutableCompra['unidad_derivada_inmutable']>
     })[]
   })[]
+  recepciones_almacen_count?: number
+  pagos_de_compras_count?: number
 }
 
 export default function HeaderCrearCompra({
@@ -52,8 +54,8 @@ export default function HeaderCrearCompra({
         )
       }
       extra={
-        (compra?._count?.recepciones_almacen ?? 0) > 0 ||
-        (compra?._count?.pagos_de_compras ?? 0) > 0
+        (compra?.recepciones_almacen_count ?? 0) > 0 ||
+        (compra?.pagos_de_compras_count ?? 0) > 0
           ? null
           : (
               <div className='pl-8 flex items-center gap-4'>

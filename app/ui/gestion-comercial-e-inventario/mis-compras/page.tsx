@@ -6,6 +6,7 @@ import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
+import ProgressiveLoader from '~/app/_components/others/progressive-loader'
 
 // Lazy loading de componentes pesados
 const FiltersMisCompras = lazy(() => import('./_components/filters/filters-mis-compras'))
@@ -21,7 +22,7 @@ const ComponentLoading = () => (
 
 export default function MisCompras() {
   const canAccess = usePermission(permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX)
-  
+
   if (!canAccess) return <NoAutorizado />
 
   return (
@@ -29,12 +30,33 @@ export default function MisCompras() {
       <Suspense fallback={<ComponentLoading />}>
         <FiltersMisCompras />
       </Suspense>
-      <Suspense fallback={<ComponentLoading />}>
-        <TableMisCompras />
-      </Suspense>
-      <Suspense fallback={<ComponentLoading />}>
-        <TableDetalleDeCompraMisCompras />
-      </Suspense>
+
+      {/* Layout responsivo */}
+      <div className="w-full mt-4">
+        <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
+          <div className="h-[250px]">
+            <ProgressiveLoader
+              identifier="mis-compras-table-compras"
+              priority="critical"
+            >
+              <Suspense fallback={<ComponentLoading />}>
+                <TableMisCompras />
+              </Suspense>
+            </ProgressiveLoader>
+          </div>
+          <div className="h-[200px]">
+            <ProgressiveLoader
+              identifier="mis-compras-detalle-compra"
+              priority="medium"
+              delay={800}
+            >
+              <Suspense fallback={<ComponentLoading />}>
+                <TableDetalleDeCompraMisCompras />
+              </Suspense>
+            </ProgressiveLoader>
+          </div>
+        </div>
+      </div>
     </ContenedorGeneral>
   )
 }

@@ -45,6 +45,12 @@ export type FormCreateVenta = {
   recomendado_por_id?: number
   direccion?: string
   direccion_seleccionada?: 'D1' | 'D2' | 'D3'
+  // Campos temporales del cliente
+  _cliente_direccion_1?: string
+  _cliente_direccion_2?: string
+  _cliente_direccion_3?: string
+  ruc_dni?: string
+  telefono?: string
   metodos_de_pago?: Array<{
     despliegue_de_pago_id: string
     monto: number

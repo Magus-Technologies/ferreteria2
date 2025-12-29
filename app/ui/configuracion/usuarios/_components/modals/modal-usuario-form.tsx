@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, message, Tabs, Input } from "antd";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   FaUser,
   FaEnvelope,
@@ -22,6 +22,8 @@ import { usuariosApi, CreateUsuarioRequest, Usuario } from "~/lib/api/usuarios";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useAuth } from "~/lib/auth-context";
 import dayjs from "dayjs";
+import { consultaReniec } from "~/app/_actions/consulta-reniec";
+import { ConsultaDni } from "~/app/_types/consulta-ruc";
 
 interface ModalUsuarioFormProps {
   open: boolean;
@@ -40,6 +42,7 @@ export default function ModalUsuarioForm({
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isEdit = !!usuarioEdit;
+  const [consultando, setConsultando] = useState(false);
 
   // Mutación para crear
   const createMutation = useMutation({
@@ -100,6 +103,13 @@ export default function ModalUsuarioForm({
         ciudad: usuarioEdit.ciudad || undefined,
         nacionalidad: usuarioEdit.nacionalidad || "PERUANA",
         fecha_nacimiento: usuarioEdit.fecha_nacimiento || undefined,
+        // Información de Contrato
+        rol_sistema: usuarioEdit.rol_sistema || undefined,
+        cargo: usuarioEdit.cargo || undefined,
+        fecha_inicio: usuarioEdit.fecha_inicio || undefined,
+        fecha_baja: usuarioEdit.fecha_baja || undefined,
+        vacaciones_dias: usuarioEdit.vacaciones_dias || 15,
+        sueldo_boleta: usuarioEdit.sueldo_boleta || undefined,
         estado: usuarioEdit.estado,
       });
     } else if (open && !usuarioEdit) {
@@ -108,6 +118,7 @@ export default function ModalUsuarioForm({
         empresa_id: user?.empresa?.id || 1,
         tipo_documento: "DNI",
         nacionalidad: "PERUANA",
+        vacaciones_dias: 15,
         estado: true,
       });
     } else if (!open) {
@@ -116,13 +127,23 @@ export default function ModalUsuarioForm({
   }, [open, usuarioEdit, form, user]);
 
   const handleSubmit = async (values: any) => {
-    // Convertir fecha a formato YYYY-MM-DD si existe
+    // Convertir fechas a formato YYYY-MM-DD si existen
     const dataToSend: CreateUsuarioRequest = {
       ...values,
       fecha_nacimiento: values.fecha_nacimiento
         ? typeof values.fecha_nacimiento === "string"
           ? values.fecha_nacimiento
           : dayjs(values.fecha_nacimiento).format("YYYY-MM-DD")
+        : undefined,
+      fecha_inicio: values.fecha_inicio
+        ? typeof values.fecha_inicio === "string"
+          ? values.fecha_inicio
+          : dayjs(values.fecha_inicio).format("YYYY-MM-DD")
+        : undefined,
+      fecha_baja: values.fecha_baja
+        ? typeof values.fecha_baja === "string"
+          ? values.fecha_baja
+          : dayjs(values.fecha_baja).format("YYYY-MM-DD")
         : undefined,
     };
 
@@ -133,7 +154,67 @@ export default function ModalUsuarioForm({
     }
   };
 
-  const loading = createMutation.isPending || updateMutation.isPending;
+  // Función para autocompletar datos desde RENIEC/SUNAT
+  const handleDocumentoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const documento = e.target.value.trim();
+    const tipoDocumento = form.getFieldValue('tipo_documento');
+
+    // DNI: 8 dígitos
+    if (tipoDocumento === 'DNI' && documento.length === 8 && /^\d{8}$/.test(documento)) {
+      try {
+        setConsultando(true);
+        const response = await consultaReniec({ search: documento });
+
+        if (response.data) {
+          const data = response.data as ConsultaDni;
+          
+          // Completar nombre completo
+          const nombreCompleto = `${data.nombres} ${data.apellidoPaterno} ${data.apellidoMaterno}`;
+          form.setFieldsValue({
+            name: nombreCompleto,
+          });
+          
+          message.success('Datos obtenidos de RENIEC');
+        } else {
+          message.warning('No se encontraron datos para este DNI');
+        }
+      } catch (error) {
+        console.error('Error consultando DNI:', error);
+        message.error('Error al consultar DNI');
+      } finally {
+        setConsultando(false);
+      }
+    }
+    
+    // RUC: 11 dígitos
+    if (tipoDocumento === 'RUC' && documento.length === 11 && /^\d{11}$/.test(documento)) {
+      try {
+        setConsultando(true);
+        const response = await consultaReniec({ search: documento });
+
+        if (response.data) {
+          const data = response.data as any; // ConsultaRuc
+          
+          form.setFieldsValue({
+            name: data.razonSocial || '',
+            direccion_linea1: data.direccion || '',
+            telefono: data.telefonos?.[0] || '',
+          });
+          
+          message.success('Datos obtenidos de SUNAT');
+        } else {
+          message.warning('No se encontraron datos para este RUC');
+        }
+      } catch (error) {
+        console.error('Error consultando RUC:', error);
+        message.error('Error al consultar RUC');
+      } finally {
+        setConsultando(false);
+      }
+    }
+  };
+
+  const loading = createMutation.isPending || updateMutation.isPending || consultando;
 
   // Tabs para organizar la información
   const tabItems = [
@@ -181,6 +262,9 @@ export default function ModalUsuarioForm({
                   }}
                   placeholder="Número de documento"
                   prefix={<FaIdCard size={14} className="text-blue-600 mx-1" />}
+                  onChange={handleDocumentoChange}
+                  maxLength={11}
+                  disabled={consultando}
                 />
               </LabelBase>
             </div>
@@ -423,12 +507,104 @@ export default function ModalUsuarioForm({
       label: "Información de Contrato",
       children: (
         <div className="space-y-3">
-          <div className="text-center text-gray-500 py-8">
-            <p>Información de contrato próximamente...</p>
-            <p className="text-sm mt-2">
-              Aquí puedes agregar campos como cargo, fecha de ingreso, salario,
-              etc.
-            </p>
+          {/* Fila 1: Rol del Sistema y Cargo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <LabelBase label="Rol del Sistema: *" orientation="column">
+                <SelectBase
+                  propsForm={{
+                    name: "rol_sistema",
+                    rules: [
+                      { required: true, message: "Selecciona el rol del sistema" },
+                    ],
+                  }}
+                  placeholder="Seleccionar rol"
+                  options={[
+                    { value: "ADMINISTRADOR", label: "Administrador" },
+                    { value: "VENDEDOR", label: "Vendedor" },
+                    { value: "ALMACENERO", label: "Almacenero" },
+                    { value: "CONTADOR", label: "Contador" },
+                    { value: "CONDUCTOR", label: "Conductor" },
+                  ]}
+                />
+              </LabelBase>
+            </div>
+            <div>
+              <LabelBase label="Cargo u Ocupación: *" orientation="column">
+                <SelectBase
+                  propsForm={{
+                    name: "cargo",
+                    rules: [
+                      { required: true, message: "Selecciona el cargo" },
+                    ],
+                  }}
+                  placeholder="Seleccionar cargo"
+                  options={[
+                    { value: "ADMINISTRADOR GERENCIA", label: "Administrador Gerencia" },
+                    { value: "GERENTE GENERAL GERENCIA", label: "Gerente General Gerencia" },
+                    { value: "VENDEDOR", label: "Vendedor" },
+                    { value: "ASISTENTE CONTABLE", label: "Asistente Contable" },
+                    { value: "ALMACENERO", label: "Almacenero" },
+                    { value: "CONDUCTOR MOTO-OBRERO", label: "Conductor Moto-Obrero" },
+                    { value: "OBRERO-CONDUCTOR", label: "Obrero-Conductor" },
+                    { value: "AYUDANTE DE CAMION", label: "Ayudante de Camión" },
+                  ]}
+                />
+              </LabelBase>
+            </div>
+          </div>
+
+          {/* Fila 2: Fechas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <LabelBase label="Fecha de Inicio:" orientation="column">
+                <DatePickerBase
+                  propsForm={{ name: "fecha_inicio" }}
+                  placeholder="DD/MM/AAAA"
+                  prefix={
+                    <FaCalendar size={14} className="text-blue-600 mx-1" />
+                  }
+                  format="DD/MM/YYYY"
+                />
+              </LabelBase>
+            </div>
+            <div>
+              <LabelBase label="Fecha de Baja:" orientation="column">
+                <DatePickerBase
+                  propsForm={{ name: "fecha_baja" }}
+                  placeholder="DD/MM/AAAA"
+                  prefix={
+                    <FaCalendar size={14} className="text-blue-600 mx-1" />
+                  }
+                  format="DD/MM/YYYY"
+                />
+              </LabelBase>
+            </div>
+          </div>
+
+          {/* Fila 3: Vacaciones y Sueldo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <LabelBase label="Vacaciones (días):" orientation="column">
+                <InputBase
+                  propsForm={{ name: "vacaciones_dias" }}
+                  placeholder="15"
+                  type="number"
+                  min={0}
+                />
+              </LabelBase>
+            </div>
+            <div>
+              <LabelBase label="Sueldo en Boleta:" orientation="column">
+                <InputBase
+                  propsForm={{ name: "sueldo_boleta" }}
+                  placeholder="0.00"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                />
+              </LabelBase>
+            </div>
           </div>
         </div>
       ),

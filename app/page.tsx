@@ -8,6 +8,7 @@ import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import { useAuth } from '~/lib/auth-context'
 import { useState } from 'react'
+import ModalRecuperarPassword from './_components/modals/modal-recuperar-password'
 
 export interface LoginValues {
   email: string
@@ -18,6 +19,7 @@ export default function Home() {
   const [form] = Form.useForm()
   const { login, user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [modalRecuperarOpen, setModalRecuperarOpen] = useState(false)
 
   const handleLogin = async (values: LoginValues) => {
     setLoading(true)
@@ -136,11 +138,14 @@ export default function Home() {
         </FormBase>
 
         {/* Recuperar contraseña */}
-        <div className='active:scale-95 mt-3 sm:mt-4 text-center
+        <div
+          onClick={() => setModalRecuperarOpen(true)}
+          className='active:scale-95 mt-3 sm:mt-4 text-center
                         text-[11px] sm:text-xs
                         text-gray-500 cursor-pointer hover:text-sky-500
                         transition-all group/recuperar-password
-                        flex items-center w-full justify-center -ml-2'>
+                        flex items-center w-full justify-center -ml-2'
+        >
           <FaAngleRight className='invisible -translate-x-2 transition-all
                                    group-hover/recuperar-password:translate-x-0
                                    group-hover/recuperar-password:visible
@@ -148,6 +153,12 @@ export default function Home() {
           ¿Olvidaste tu contraseña?
         </div>
       </div>
+
+      {/* Modal Recuperar Contraseña */}
+      <ModalRecuperarPassword
+        open={modalRecuperarOpen}
+        onClose={() => setModalRecuperarOpen(false)}
+      />
     </div>
   )
 }

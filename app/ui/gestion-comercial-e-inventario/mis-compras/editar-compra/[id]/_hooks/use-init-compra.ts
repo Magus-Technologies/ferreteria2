@@ -50,12 +50,12 @@ export default function useInitCompra({
             flete: Number(ud.flete),
             subtotal:
               Number(ppa.costo) * Number(ud.factor) * Number(ud.cantidad),
-            marca_name: ppa.producto_almacen.producto.marca.name,
-            producto_name: ppa.producto_almacen.producto.name,
-            producto_codigo: ppa.producto_almacen.producto.cod_producto,
+            marca_name: ppa.producto_almacen?.producto?.marca?.name,
+            producto_name: ppa.producto_almacen?.producto?.name,
+            producto_codigo: ppa.producto_almacen?.producto?.cod_producto,
             unidad_derivada_name: ud.unidad_derivada_normal.name,
-            unidad_derivada_factor: ud.factor,
-            producto_id: ppa.producto_almacen.producto.id,
+            unidad_derivada_factor: Number(ud.factor),
+            producto_id: ppa.producto_almacen?.producto?.id ?? 0,
           }))
         ),
       }

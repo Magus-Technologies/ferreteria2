@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { message, Popconfirm, Tag } from 'antd'
-import { FaEdit, FaTrash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import { FaEdit, FaTrash } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
 import { usuariosApi, Usuario } from '~/lib/api/usuarios'
@@ -11,7 +11,11 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalUsuarioForm from '../modals/modal-usuario-form'
 import ButtonBase from '~/components/buttons/button-base'
 
-export default function TableUsuarios() {
+interface TableUsuariosProps {
+  onUsuarioSelect: (usuario: Usuario | null) => void
+}
+
+export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
   const [usuarioEdit, setUsuarioEdit] = useState<Usuario | null>(null)
   const [openModal, setOpenModal] = useState(false)
   const queryClient = useQueryClient()
@@ -48,6 +52,28 @@ export default function TableUsuarios() {
   const columnDefs = useMemo<ColDef<Usuario>[]>(
     () => [
       {
+        headerName: 'Estado',
+        field: 'estado',
+        width: 100,
+        cellRenderer: (params: { data: Usuario }) => {
+          return params.data.estado ? (
+            <Tag color='success'>
+              Activo
+            </Tag>
+          ) : (
+            <Tag color='error'>
+              Inactivo
+            </Tag>
+          )
+        },
+      },
+      {
+        headerName: 'Documento',
+        field: 'numero_documento',
+        width: 120,
+        valueGetter: (params) => params.data?.numero_documento || '-',
+      },
+      {
         headerName: 'Nombre',
         field: 'name',
         flex: 1,
@@ -62,38 +88,30 @@ export default function TableUsuarios() {
         filter: 'agTextColumnFilter',
       },
       {
-        headerName: 'Documento',
-        field: 'numero_documento',
+        headerName: 'Cargo u ocupación',
+        field: 'cargo',
+        width: 180,
+        filter: 'agTextColumnFilter',
+        valueGetter: (params) => params.data?.cargo || '-',
+      },
+      {
+        headerName: 'Rol Sistema',
+        field: 'rol_sistema',
+        width: 140,
+        valueGetter: (params) => params.data?.rol_sistema || '-',
+      },
+      {
+        headerName: 'Fecha Inicio',
+        field: 'fecha_inicio',
         width: 120,
-        valueGetter: (params) => params.data?.numero_documento || '-',
-      },
-      {
-        headerName: 'Celular',
-        field: 'celular',
-        width: 120,
-        valueGetter: (params) => params.data?.celular || '-',
-      },
-      {
-        headerName: 'Empresa',
-        field: 'empresa.razon_social',
-        flex: 1,
-        minWidth: 200,
-        valueGetter: (params) => params.data?.empresa?.razon_social || '-',
-      },
-      {
-        headerName: 'Estado',
-        field: 'estado',
-        width: 100,
-        cellRenderer: (params: { data: Usuario }) => {
-          return params.data.estado ? (
-            <Tag color='success' icon={<FaCheckCircle />}>
-              Activo
-            </Tag>
-          ) : (
-            <Tag color='error' icon={<FaTimesCircle />}>
-              Inactivo
-            </Tag>
-          )
+        valueFormatter: (params) => {
+          if (!params.value) return '-'
+          const date = new Date(params.value)
+          return date.toLocaleDateString('es-PE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })
         },
       },
       {
@@ -142,6 +160,16 @@ export default function TableUsuarios() {
         domLayout='autoHeight'
         pagination={true}
         paginationPageSize={20}
+        onRowClicked={(event) => {
+          // Seleccionar la fila cuando se hace clic en cualquier parte
+          event.node.setSelected(true)
+        }}
+        onSelectionChanged={(event) => {
+          const selectedNodes = event.api.getSelectedNodes()
+          const usuario = selectedNodes[0]?.data || null
+          onUsuarioSelect(usuario)
+        }}
+        getRowId={(params) => params.data.id}
       />
 
       <ModalUsuarioForm

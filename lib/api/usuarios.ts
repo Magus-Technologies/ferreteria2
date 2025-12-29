@@ -38,6 +38,14 @@ export interface Usuario {
   nacionalidad: string | null;
   fecha_nacimiento: string | null;
   
+  // Información de Contrato
+  cargo: string | null;
+  fecha_inicio: string | null;
+  fecha_baja: string | null;
+  vacaciones_dias: number;
+  sueldo_boleta: number | null;
+  rol_sistema: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'CONDUCTOR' | null;
+  
   // Estado
   estado: boolean;
   
@@ -71,6 +79,14 @@ export interface CreateUsuarioRequest {
   nacionalidad?: string;
   fecha_nacimiento?: string;
   
+  // Información de Contrato (opcionales)
+  cargo?: string;
+  fecha_inicio?: string;
+  fecha_baja?: string;
+  vacaciones_dias?: number;
+  sueldo_boleta?: number;
+  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'CONDUCTOR';
+  
   // Otros
   efectivo?: number;
   estado?: boolean;
@@ -98,6 +114,14 @@ export interface UpdateUsuarioRequest {
   ciudad?: string;
   nacionalidad?: string;
   fecha_nacimiento?: string;
+  
+  // Información de Contrato
+  cargo?: string;
+  fecha_inicio?: string;
+  fecha_baja?: string;
+  vacaciones_dias?: number;
+  sueldo_boleta?: number;
+  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'CONDUCTOR';
   
   // Otros
   efectivo?: number;

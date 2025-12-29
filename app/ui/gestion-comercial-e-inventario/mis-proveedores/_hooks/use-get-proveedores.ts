@@ -1,38 +1,28 @@
-import { Prisma } from '@prisma/client'
-import { SearchProveedor } from '~/app/_actions/proveedor'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useQuery } from '@tanstack/react-query'
+import { proveedorApi, type Proveedor } from '~/lib/api/proveedor'
 
 export default function useGetProveedores({ value }: { value: string }) {
-  const { response, refetch, loading } = useServerQuery({
-    action: SearchProveedor,
-    propsQuery: {
-      queryKey: [QueryKeys.PROVEEDORES_SEARCH],
-      enabled: !!value,
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: [QueryKeys.PROVEEDORES_SEARCH, value],
+    queryFn: async () => {
+      const result = await proveedorApi.getAll({
+        search: value,
+        per_page: 50
+      })
+
+      if (result.error) {
+        throw new Error(result.error.message)
+      }
+
+      return result.data?.data || []
     },
-    params: {
-      where: {
-        OR: [
-          {
-            razon_social: {
-              contains: value,
-              // mode: 'insensitive',
-            },
-          },
-          {
-            ruc: {
-              contains: value,
-              // mode: 'insensitive',
-            },
-          },
-        ],
-      },
-    } satisfies Prisma.ProveedorFindManyArgs,
+    enabled: !!value,
   })
 
   return {
-    response,
+    response: data,
     refetch,
-    loading,
+    loading: isLoading,
   }
 }

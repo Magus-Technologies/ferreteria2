@@ -2,7 +2,7 @@
 import { Form } from 'antd'
 import ModalForm from '~/components/modals/modal-form'
 import TitleForm from '~/components/form/title-form'
-import { getComprasResponseProps } from '~/app/_actions/compra'
+import { type Compra } from '~/lib/api/compra'
 import FormTableComprar from '../../crear-compra/_components/form/form-table-comprar'
 import { FormCreateCompra } from '../../crear-compra/_components/others/body-comprar'
 import { useEffect } from 'react'
@@ -36,8 +36,8 @@ export default function ModalCrearRecepcionAlmacen({
 }: {
   open: boolean
   setOpen: (open: boolean) => void
-  compra: getComprasResponseProps | undefined
-  setCompra: (compra: getComprasResponseProps | undefined) => void
+  compra: Compra | undefined
+  setCompra: (compra: Compra | undefined) => void
 }) {
   const [form] = Form.useForm<FormCreateRecepcionAlmacen>()
   const route = useRouter()
@@ -55,10 +55,10 @@ export default function ModalCrearRecepcionAlmacen({
 
   useEffect(() => {
     form.resetFields()
-    if (compra) {
+    if (compra && compra.productos_por_almacen) {
       const productos_formateados = compra.productos_por_almacen.flatMap(
         producto_por_almacen =>
-          producto_por_almacen.unidades_derivadas.map(unidad_derivada => ({
+          (producto_por_almacen.unidades_derivadas || []).map(unidad_derivada => ({
             producto: producto_por_almacen,
             unidad_derivada: unidad_derivada,
           }))
@@ -68,24 +68,26 @@ export default function ModalCrearRecepcionAlmacen({
         productos_formateados
           .filter(p => {
             const unidad = p.unidad_derivada
-            const cantidad_pendiente = (unidad as typeof unidad & { cantidad_pendiente?: number }).cantidad_pendiente ?? unidad.cantidad ?? 0
+            const cantidad_pendiente = unidad.cantidad_pendiente ?? unidad.cantidad ?? 0
             return Number(cantidad_pendiente) > 0
           })
           .map(p => {
-            const producto = p.producto.producto_almacen.producto
+            const producto = p.producto.producto_almacen?.producto
             const unidad_derivada = p.unidad_derivada
-            const cantidad_pendiente_raw = (unidad_derivada as typeof unidad_derivada & { cantidad_pendiente?: number }).cantidad_pendiente ?? unidad_derivada.cantidad ?? 0
+            const cantidad_pendiente_raw = unidad_derivada.cantidad_pendiente ?? unidad_derivada.cantidad ?? 0
             const cantidad_pendiente_num = Number(cantidad_pendiente_raw)
+
+            if (!producto) return null
 
             return {
               producto_codigo: producto.cod_producto,
               producto_id: producto.id,
               producto_name: producto.name,
               bonificacion: unidad_derivada.bonificacion,
-              marca_name: producto.marca.name,
+              marca_name: producto.marca?.name ?? '',
               unidad_derivada_name:
-                unidad_derivada.unidad_derivada_inmutable.name,
-              unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable.id,
+                unidad_derivada.unidad_derivada_inmutable?.name ?? '',
+              unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable?.id ?? 0,
               unidad_derivada_factor: unidad_derivada.factor,
               cantidad: cantidad_pendiente_num,
               cantidad_recepcionada:
@@ -104,6 +106,7 @@ export default function ModalCrearRecepcionAlmacen({
               lote: unidad_derivada.lote,
             }
           })
+          .filter(Boolean)
       )
     }
     form.setFieldValue('fecha', dayjs())

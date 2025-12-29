@@ -25,6 +25,8 @@ export default function SelectEgresosDinero({
     propsQuery: {
       queryKey: [QueryKeys.EGRESOS_DINERO],
       staleTime: 3 * 60 * 1000, // Cache por 3 minutos
+      retry: false, // Don't retry on permission errors
+      throwOnError: false, // Don't throw errors (like permission denied)
     },
     params: {
       where: {

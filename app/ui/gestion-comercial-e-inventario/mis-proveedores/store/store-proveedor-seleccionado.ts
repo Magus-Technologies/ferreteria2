@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 
 type UseStoreProveedorSeleccionadoProps = {
-  proveedor?: getProveedorResponseProps
-  setProveedor: (value: getProveedorResponseProps | undefined) => void
+  proveedor?: Proveedor
+  setProveedor: (value: Proveedor | undefined) => void
 }
 
 export const useStoreProveedorSeleccionado =

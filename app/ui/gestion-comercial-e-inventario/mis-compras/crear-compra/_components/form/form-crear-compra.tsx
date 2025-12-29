@@ -57,8 +57,8 @@ export default function FormCrearCompra({
             onChangeTipoDeCambio={value =>
               form.setFieldValue('tipo_de_cambio', value)
             }
-            disabled={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            variant={compra?._count?.pagos_de_compras ?? 0 > 0 ? 'borderless' : undefined}
+            disabled={(compra?.pagos_de_compras_count ?? 0) > 0}
+            variant={compra?.pagos_de_compras_count ?? 0 > 0 ? 'borderless' : undefined}
           />
         </LabelBase>
         <LabelBase label='Tipo de Cambio:' classNames={{ labelParent: 'mb-6' }}>
@@ -76,9 +76,9 @@ export default function FormCrearCompra({
             precision={4}
             min={1}
             className='!w-[100px] !min-w-[100px] !max-w-[100px]'
-            disabled={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            readOnly={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            variant={compra?._count?.pagos_de_compras ?? 0 > 0 ? 'borderless' : undefined}
+            disabled={(compra?.pagos_de_compras_count ?? 0) > 0}
+            readOnly={(compra?.pagos_de_compras_count ?? 0) > 0}
+            variant={compra?.pagos_de_compras_count ?? 0 > 0 ? 'borderless' : undefined}
           />
         </LabelBase>
         <LabelBase label='Proveedor:' classNames={{ labelParent: 'mb-6' }}>
@@ -157,15 +157,15 @@ export default function FormCrearCompra({
             propsForm={{
               name: 'percepcion',
             }}
-            disabled={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            readOnly={(compra?._count?.pagos_de_compras ?? 0) > 0}
-            variant={compra?._count?.pagos_de_compras ?? 0 > 0 ? 'borderless' : undefined}
+            disabled={(compra?.pagos_de_compras_count ?? 0) > 0}
+            readOnly={(compra?.pagos_de_compras_count ?? 0) > 0}
+            variant={compra?.pagos_de_compras_count ?? 0 > 0 ? 'borderless' : undefined}
             precision={2}
             min={0}
           />
         </LabelBase>
       </div>
-      <div className='flex gap-6'>{(compra?._count?.pagos_de_compras ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
+      <div className='flex flex-wrap gap-6'>{(compra?.pagos_de_compras_count ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
         Tiene Pagos Asociados, no se puede cambiar los datos del pago.
       </div> :
         <FormFormaDePagoCompra form={form} />}

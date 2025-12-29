@@ -2,21 +2,20 @@
 
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
-import { Proveedor } from '@prisma/client'
 import { FaSearch } from 'react-icons/fa'
 import ButtonCreateProveedor from '../buttons/button-create-proveedor'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 import ModalProveedorSearch from '../../modals/modal-proveedor-search'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
 import { FaTruck } from 'react-icons/fa6'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 import useGetProveedores from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_hooks/use-get-proveedores'
 import { useDebounce } from 'use-debounce'
 
 interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
-  onChange?: (value: number, proveedor?: getProveedorResponseProps) => void
+  onChange?: (value: number, proveedor?: Proveedor) => void
   showButtonCreate?: boolean
   classIconSearch?: string
   classIconCreate?: string
@@ -43,7 +42,7 @@ export default function SelectProveedores({
 
   const [proveedorCreado, setProveedorCreado] = useState<Proveedor>()
   const [proveedorSeleccionado, setProveedorSeleccionado] =
-    useState<getProveedorResponseProps>()
+    useState<Proveedor>()
 
   const proveedorSeleccionadoStore = useStoreProveedorSeleccionado(
     store => store.proveedor
@@ -57,7 +56,7 @@ export default function SelectProveedores({
     if (text) setTextDefault(text)
   }, [text])
 
-  function handleSelect({ data }: { data?: getProveedorResponseProps } = {}) {
+  function handleSelect({ data }: { data?: Proveedor } = {}) {
     setText('')
     const proveedor = data || proveedorSeleccionadoStore
     if (proveedor) {

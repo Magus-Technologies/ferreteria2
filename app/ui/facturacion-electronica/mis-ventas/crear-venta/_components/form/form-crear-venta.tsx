@@ -12,6 +12,8 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { useEffect } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import { TipoDocumento } from "@prisma/client";
+import { useUltimoCliente } from "../../../_hooks/use-ultimo-cliente";
 
 export default function FormCrearVenta({
   form,
@@ -20,12 +22,59 @@ export default function FormCrearVenta({
   form: FormInstance;
   venta?: VentaConUnidadDerivadaNormal;
 }) {
+  const tipoDocumento = Form.useWatch('tipo_documento', form);
+  const { data: ultimoCliente } = useUltimoCliente();
+
   // Inicializar D1 al montar el componente
   useEffect(() => {
     if (!form.getFieldValue("direccion_seleccionada")) {
       form.setFieldValue("direccion_seleccionada", "D1");
     }
   }, [form]);
+
+  // Autoseleccionar último cliente para Boleta y Nota de Venta
+  useEffect(() => {
+    if (!tipoDocumento || !ultimoCliente) return;
+
+    const clienteActual = form.getFieldValue('cliente_id');
+    
+    if (tipoDocumento === TipoDocumento.Boleta || tipoDocumento === TipoDocumento.NotaDeVenta) {
+      // Para Boleta y Nota de Venta: Autoseleccionar último cliente registrado
+      if (!clienteActual) {
+        form.setFieldValue('cliente_id', ultimoCliente.id);
+        
+        // También actualizar los campos relacionados del cliente
+        if (ultimoCliente.numero_documento) {
+          form.setFieldValue('ruc_dni', ultimoCliente.numero_documento);
+        }
+        if (ultimoCliente.telefono) {
+          form.setFieldValue('telefono', ultimoCliente.telefono);
+        }
+        
+        // Guardar las direcciones
+        form.setFieldValue('_cliente_direccion_1', ultimoCliente.direccion || '');
+        form.setFieldValue('_cliente_direccion_2', ultimoCliente.direccion_2 || '');
+        form.setFieldValue('_cliente_direccion_3', ultimoCliente.direccion_3 || '');
+        
+        // Llenar dirección según selección
+        const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1';
+        if (direccionSeleccionada === 'D1' && ultimoCliente.direccion) {
+          form.setFieldValue('direccion', ultimoCliente.direccion);
+        } else if (direccionSeleccionada === 'D2' && ultimoCliente.direccion_2) {
+          form.setFieldValue('direccion', ultimoCliente.direccion_2);
+        } else if (direccionSeleccionada === 'D3' && ultimoCliente.direccion_3) {
+          form.setFieldValue('direccion', ultimoCliente.direccion_3);
+        } else if (ultimoCliente.direccion) {
+          form.setFieldValue('direccion', ultimoCliente.direccion);
+        }
+      }
+    } else if (tipoDocumento === TipoDocumento.Factura) {
+      // Para Factura: Limpiar cliente si es el último cliente (para forzar selección manual)
+      if (clienteActual === ultimoCliente?.id) {
+        form.setFieldValue('cliente_id', undefined);
+      }
+    }
+  }, [tipoDocumento, ultimoCliente, form]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -144,6 +193,7 @@ export default function FormCrearVenta({
         >
           <SelectClientes
             form={form}
+            clienteOptionsDefault={ultimoCliente ? [ultimoCliente] : []}
             propsForm={{
               name: "cliente_id",
               hasFeedback: false,
@@ -151,8 +201,20 @@ export default function FormCrearVenta({
                 "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
               rules: [
                 {
-                  required: true,
-                  message: "Selecciona el cliente",
+                  // Solo obligatorio para Facturas
+                  required: tipoDocumento === TipoDocumento.Factura,
+                  message: "Selecciona el cliente (obligatorio para facturas)",
+                },
+                {
+                  // Validar que para Facturas sea RUC (11 dígitos)
+                  validator: async (_, value) => {
+                    if (tipoDocumento === TipoDocumento.Factura && value) {
+                      // Aquí deberías validar que el cliente seleccionado tenga RUC
+                      // Por ahora solo validamos que exista
+                      return Promise.resolve();
+                    }
+                    return Promise.resolve();
+                  },
                 },
               ],
             }}

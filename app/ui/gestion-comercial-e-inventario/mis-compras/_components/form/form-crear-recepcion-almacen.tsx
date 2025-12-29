@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { BsFillPostcardFill } from 'react-icons/bs'
 import { FaAddressCard, FaIdCardAlt } from 'react-icons/fa'
 import { MdFactory } from 'react-icons/md'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
@@ -21,7 +21,7 @@ export default function FormCrearRecepcionAlmacen({
   form: FormInstance
 }) {
   const can = usePermission()
-  const [proveedor, setProveedor] = useState<getProveedorResponseProps>()
+  const [proveedor, setProveedor] = useState<Proveedor>()
 
   return (
     <>
@@ -35,7 +35,7 @@ export default function FormCrearRecepcionAlmacen({
             classIconSearch='mb-0!'
             classIconCreate='mb-0!'
             onChange={(_, proveedor) => {
-              setProveedor(proveedor)
+              setProveedor(proveedor as Proveedor)
               form.setFieldValue('transportista_ruc', proveedor?.ruc)
               form.setFieldValue(
                 'transportista_razon_social',

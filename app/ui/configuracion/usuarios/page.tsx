@@ -7,9 +7,11 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import ModalUsuarioForm from './_components/modals/modal-usuario-form'
+import { Usuario } from '~/lib/api/usuarios'
 
 // Lazy loading de componentes pesados
 const TableUsuarios = lazy(() => import('./_components/tables/table-usuarios'))
+const TableInfoUsuario = lazy(() => import('./_components/tables/table-info-usuario'))
 
 // Componente de loading
 const ComponentLoading = () => (
@@ -20,6 +22,7 @@ const ComponentLoading = () => (
 
 export default function UsuariosPage() {
   const [openModal, setOpenModal] = useState(false)
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null)
 
   return (
     <ContenedorGeneral>
@@ -39,9 +42,17 @@ export default function UsuariosPage() {
           </ButtonBase>
         </TituloModulos>
 
+        {/* Tabla principal de usuarios */}
         <div className='mt-4 w-full'>
           <Suspense fallback={<ComponentLoading />}>
-            <TableUsuarios />
+            <TableUsuarios onUsuarioSelect={setUsuarioSeleccionado} />
+          </Suspense>
+        </div>
+
+        {/* Tabla de información del usuario seleccionado */}
+        <div className='mt-6 w-full'>
+          <Suspense fallback={<ComponentLoading />}>
+            <TableInfoUsuario usuario={usuarioSeleccionado} />
           </Suspense>
         </div>
       </div>

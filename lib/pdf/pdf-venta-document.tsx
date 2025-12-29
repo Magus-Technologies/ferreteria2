@@ -11,233 +11,247 @@ import { VentaConRelaciones } from './generar-pdf-venta'
 const styles = StyleSheet.create({
   page: {
     padding: 30,
-    fontSize: 9,
-    fontFamily: 'Helvetica',
-    backgroundColor: '#ffffff',
+    fontSize: 8,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
   },
-  // Header con logo y datos de empresa
   headerContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    borderBottom: '2px solid #f59e0b',
-    paddingBottom: 15,
+    flexDirection: "row",
+    marginBottom: 15,
   },
   logoSection: {
-    width: '50%',
+    width: "55%",
+    flexDirection: "row",
+    alignItems: "center",
   },
   logo: {
-    width: 180,
-    height: 'auto',
-    marginBottom: 5,
+    width: 100,
+    marginRight: 15,
   },
   companyInfo: {
-    fontSize: 8,
-    color: '#374151',
+    fontSize: 7,
+    color: "#000",
     lineHeight: 1.4,
+    paddingTop: 0,
+    flex: 1,
+  },
+  companyName: {
+    fontSize: 10,
+    fontWeight: "bold",
+    marginBottom: 3,
   },
   documentSection: {
-    width: '50%',
-    alignItems: 'flex-end',
+    width: "45%",
+    alignItems: "flex-end",
+    justifyContent: "center",
   },
   documentBox: {
-    border: '2px solid #f59e0b',
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#fffbeb',
-    minWidth: 180,
-  },
-  documentTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#d97706',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  documentNumber: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#b45309',
-    textAlign: 'center',
-    marginBottom: 8,
+    border: "0.5px solid #fadc06",
+    borderRadius: 12,
+    padding: 12,
+    width: 220,
   },
   rucText: {
-    fontSize: 10,
-    color: '#374151',
-    textAlign: 'center',
-  },
-  // Sección de cliente y venta
-  infoSection: {
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    backgroundColor: '#f3f4f6',
-    padding: 6,
+    fontSize: 12,
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 8,
-    borderLeft: '3px solid #f59e0b',
-    paddingLeft: 8,
   },
-  infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  documentTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
   },
-  infoItem: {
-    flexDirection: 'row',
-    width: '48%',
-    marginBottom: 4,
+  documentNumber: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
-  infoLabel: {
-    fontWeight: 'bold',
-    color: '#4b5563',
-    width: 90,
-    fontSize: 8,
+  clienteBox: {
+    border: "0.5px solid #fadc06",
+    marginBottom: 10,
   },
-  infoValue: {
-    color: '#1f2937',
-    flex: 1,
-    fontSize: 8,
+  clienteRow: {
+    flexDirection: "row",
+    minHeight: 18,
   },
-  // Tabla de productos
-  table: {
-    marginTop: 10,
-    marginBottom: 15,
+  clienteCellLeft: {
+    width: "12%",
+    padding: 4,
+    fontSize: 7,
+    fontWeight: "bold",
   },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#d97706',
-    color: '#ffffff',
-    padding: 8,
-    fontSize: 8,
-    fontWeight: 'bold',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+  clienteCellValueLeft: {
+    width: "38%",
+    padding: 4,
+    fontSize: 7,
   },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottom: '1px solid #e5e7eb',
-    padding: 6,
-    fontSize: 8,
-    minHeight: 25,
+  clienteCellRight: {
+    width: "15%",
+    padding: 4,
+    fontSize: 7,
+    fontWeight: "bold",
   },
-  tableRowAlt: {
-    backgroundColor: '#f9fafb',
+  clienteCellValueRight: {
+    width: "35%",
+    padding: 4,
+    fontSize: 7,
   },
-  // Columnas de la tabla
-  colItem: { width: '5%', textAlign: 'center' },
-  colProducto: { width: '40%', paddingRight: 5 },
-  colUnidad: { width: '12%', textAlign: 'center' },
-  colCantidad: { width: '10%', textAlign: 'center' },
-  colPrecio: { width: '13%', textAlign: 'right', paddingRight: 5 },
-  colSubtotal: { width: '20%', textAlign: 'right', paddingRight: 5 },
-  // Totales
-  totalsContainer: {
-    marginTop: 15,
-    alignItems: 'flex-end',
-  },
-  totalsBox: {
-    width: 220,
-    border: '1px solid #d1d5db',
-    borderRadius: 6,
-    padding: 10,
-    backgroundColor: '#f9fafb',
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingBottom: 6,
-    borderBottom: '1px solid #e5e7eb',
-  },
-  totalLabel: {
-    fontSize: 9,
-    color: '#4b5563',
-  },
-  totalValue: {
-    fontSize: 9,
-    color: '#1f2937',
-    fontWeight: 'bold',
-  },
-  grandTotalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#d97706',
-    padding: 8,
-    borderRadius: 4,
+  introText: {
+    fontSize: 7,
+    marginBottom: 8,
     marginTop: 5,
   },
-  grandTotalLabel: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  tableContainer: {
+    border: "2px solid #fadc06",
   },
-  grandTotalValue: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  tableHeader: {
+    flexDirection: "row",
+    padding: 4,
+    fontSize: 7,
+    fontWeight: "bold",
+    borderBottom: "1px solid #fadc06",
+    backgroundColor: "#fadc06",
   },
-  // Observaciones y footer
-  observaciones: {
-    marginTop: 15,
-    padding: 10,
-    backgroundColor: '#fef3c7',
-    borderLeft: '3px solid #f59e0b',
-    borderRadius: 4,
+  tableRow: {
+    flexDirection: "row",
+    borderBottom: "1px solid #fadc06",
+    minHeight: 20,
+  },
+  tableCell: {
+    padding: 3,
+    fontSize: 7,
+    borderRight: "1px solid #fadc06",
+  },
+  colItem: { width: "5%", textAlign: "center" },
+  colUbi: { width: "5%", textAlign: "center" },
+  colCodigo: { width: "10%", textAlign: "center" },
+  colCant: { width: "7%", textAlign: "center" },
+  colUnidad: { width: "8%", textAlign: "center" },
+  colDescripcion: { width: "40%", textAlign: "left" },
+  colPrecio: { width: "10%", textAlign: "right" },
+  colDesc: { width: "7%", textAlign: "right" },
+  colImporte: { width: "8%", textAlign: "right", borderRight: "none" },
+  sonRow: {
+    padding: 6,
+    fontSize: 7,
+    fontWeight: "bold",
+  },
+  bottomRow: {
+    flexDirection: "row",
+    minHeight: 120,
+  },
+  observacionesCell: {
+    width: "65%",
+    padding: 15,
+    borderRight: "1px solid #fff",
+    justifyContent: "center",
+  },
+  observacionesBox: {
+    border: "2px solid #fadc06",
+    borderRadius: 8,
+    padding: 8,
   },
   observacionesTitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#92400e',
+    fontSize: 8,
+    fontWeight: "bold",
     marginBottom: 4,
   },
-  observacionesText: {
-    fontSize: 8,
-    color: '#78350f',
+  observacionesList: {
+    fontSize: 6,
+    lineHeight: 1.5,
   },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 30,
-    right: 30,
-    textAlign: 'center',
-    fontSize: 7,
-    color: '#6b7280',
-    borderTop: '1px solid #e5e7eb',
-    paddingTop: 10,
+  totalesCell: {
+    width: "35%",
+  },
+  totalRow: {
+    flexDirection: "row",
+    borderBottom: "1px solid #fadc06",
+  },
+  totalRowLast: {
+    flexDirection: "row",
+    borderBottom: "1px solid #fadc06",
+  },
+  totalLabelCell: {
+    width: "60%",
+    borderRight: "1px solid #fadc06",
+    borderLeft: "1px solid #fadc06",
+    padding: 6,
+  },
+  totalLabelText: {
+    fontSize: 8,
+    fontWeight: "bold",
+    textAlign: "right",
+  },
+  totalValueCell: {
+    width: "40%",
+    padding: 6,
+    borderRight: "1px solid #fadc06",
+  },
+  totalValueText: {
+    fontSize: 8,
+    textAlign: "right",
+  },
+  footerText: {
+    textAlign: "center",
+    fontSize: 8,
+    marginTop: 15,
+    marginBottom: 10,
   },
   footerBold: {
-    fontWeight: 'bold',
-    color: '#374151',
+    fontWeight: "bold",
   },
 })
 
 export default function PDFVentaDocument({
   venta,
+  logoDataURI,
 }: {
-  venta: VentaConRelaciones
+  venta: VentaConRelaciones;
+  logoDataURI: string;
 }) {
-  // Calcular productos y totales
+  // Obtener datos de la empresa
+  const empresa = venta.user.empresa as any
+
+  // Calcular productos
   const productos = venta.productos_por_almacen.flatMap((pa) =>
     pa.unidades_derivadas.map((ud) => ({
+      codigo: pa.producto_almacen.producto.cod_producto || "",
       nombre: pa.producto_almacen.producto.name,
       marca: pa.producto_almacen.producto.marca.name,
       unidad: ud.unidad_derivada_inmutable.name,
       cantidad: Number(ud.cantidad),
       precio: Number(ud.precio),
+      descuento: Number(ud.descuento || 0),
       subtotal: Number(ud.cantidad) * Number(ud.factor) * Number(ud.precio),
     }))
   )
 
   const subtotal = productos.reduce((sum: number, p: any) => sum + p.subtotal, 0)
-  const igv = subtotal * 0.18
-  const total = subtotal + igv
+  const totalDescuento = productos.reduce((sum: number, p: any) => sum + p.descuento, 0)
+  const igv = (subtotal - totalDescuento) * 0.18
+  const total = subtotal - totalDescuento + igv
 
   const clienteNombre =
     venta.cliente?.razon_social ||
     `${venta.cliente?.nombres || ''} ${venta.cliente?.apellidos || ''}`.trim() ||
     'CLIENTES VARIOS'
+
+  const fechaEmision = new Date(venta.fecha)
+
+  const formatFecha = (fecha: Date) => {
+    const dia = String(fecha.getDate()).padStart(2, "0");
+    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+    const anio = String(fecha.getFullYear()).slice(-2);
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  const formatHora = (fecha: Date) => {
+    const horas = String(fecha.getHours()).padStart(2, "0");
+    const minutos = String(fecha.getMinutes()).padStart(2, "0");
+    return `${horas}:${minutos}:00`;
+  }
 
   // Determinar el título del documento
   const getTituloDocumento = () => {
@@ -245,7 +259,7 @@ export default function PDFVentaDocument({
       case 'Factura':
         return 'FACTURA ELECTRÓNICA'
       case 'Boleta':
-        return 'BOLETA DE VENTA ELECTRÓNICA'
+        return 'BOLETA DE VENTA'
       case 'NotaDeVenta':
         return 'NOTA DE VENTA'
       default:
@@ -253,172 +267,210 @@ export default function PDFVentaDocument({
     }
   }
 
+  // Formatear número de comprobante
+  const numeroComprobante = `${venta.serie || 'S/N'}-${String(venta.numero || 0).padStart(8, '0')}`
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header con Logo y Documento */}
         <View style={styles.headerContainer}>
-          {/* Logo y datos de empresa */}
           <View style={styles.logoSection}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image
-              src={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/logo-horizontal.png`}
-              style={styles.logo}
-            />
+            {logoDataURI && (
+              <Image
+                src={logoDataURI}
+                style={styles.logo}
+              />
+            )}
             <View style={styles.companyInfo}>
-              <Text style={{ fontWeight: 'bold', fontSize: 9, marginBottom: 3 }}>
-                EMPRESA DEMO S.A.C.
-              </Text>
-              <Text>RUC: 20123456789</Text>
-              <Text>Av. Principal 123, Lima - Perú</Text>
-              <Text>Teléfono: (01) 123-4567</Text>
-              <Text>Email: ventas@empresa.com</Text>
+              <Text style={styles.companyName}>{empresa?.razon_social || 'GRUPO MI REDENTOR S.A.C'}</Text>
+              <Text>{empresa?.direccion || 'CAL.SINCHI ROCA MZA. 6 LOTE. 15 P.J.'}</Text>
+              <Text>{empresa?.distrito || 'EL MILAGRO (SECTOR III)'}</Text>
+              <Text>{"\n"}Cel: {empresa?.celular || '908846540 / 952686345'}</Text>
+              <Text>{"\n"}Email: {empresa?.email || 'grupomiredentorsac@gmail.com'}</Text>
             </View>
           </View>
 
-          {/* Cuadro del documento */}
           <View style={styles.documentSection}>
             <View style={styles.documentBox}>
-              <Text style={styles.rucText}>RUC: 20123456789</Text>
+              <Text style={styles.rucText}>R.U.C {empresa?.ruc || '20611539160'}</Text>
               <Text style={styles.documentTitle}>{getTituloDocumento()}</Text>
-              <Text style={styles.documentNumber}>
-                {venta.serie || 'S/N'}-{String(venta.numero || 0).padStart(8, '0')}
-              </Text>
+              <Text style={styles.documentNumber}>{numeroComprobante}</Text>
             </View>
           </View>
         </View>
 
-        {/* Datos del Cliente */}
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>DATOS DEL CLIENTE</Text>
-          <View style={styles.infoGrid}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Cliente:</Text>
-              <Text style={styles.infoValue}>{clienteNombre}</Text>
-            </View>
-            {venta.cliente?.numero_documento && (
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {venta.cliente.tipo_cliente === 'Empresa' ? 'RUC:' : 'DNI:'}
-                </Text>
-                <Text style={styles.infoValue}>{venta.cliente.numero_documento}</Text>
-              </View>
-            )}
-            {venta.cliente?.direccion && (
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Dirección:</Text>
-                <Text style={styles.infoValue}>{venta.cliente.direccion}</Text>
-              </View>
-            )}
-            {venta.cliente?.telefono && (
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Teléfono:</Text>
-                <Text style={styles.infoValue}>{venta.cliente.telefono}</Text>
-              </View>
-            )}
+        <View style={styles.clienteBox}>
+          <View style={styles.clienteRow}>
+            <Text style={styles.clienteCellLeft}>Cliente</Text>
+            <Text style={styles.clienteCellValueLeft}>: {clienteNombre}</Text>
+            <Text style={styles.clienteCellRight}>F. Emisión</Text>
+            <Text style={styles.clienteCellValueRight}>
+              : {formatFecha(fechaEmision)}
+            </Text>
+          </View>
+
+          <View style={styles.clienteRow}>
+            <Text style={styles.clienteCellLeft}>Dirección</Text>
+            <Text style={styles.clienteCellValueLeft}>
+              : {venta.cliente?.direccion || ""}
+            </Text>
+            <Text style={styles.clienteCellRight}>Hora</Text>
+            <Text style={styles.clienteCellValueRight}>
+              : {formatHora(fechaEmision)}
+            </Text>
+          </View>
+
+          <View style={styles.clienteRow}>
+            <Text style={styles.clienteCellLeft}>RUC / DNI</Text>
+            <Text style={styles.clienteCellValueLeft}>
+              : {venta.cliente?.numero_documento || ""}
+            </Text>
+            <Text style={styles.clienteCellRight}>Tipo Doc.</Text>
+            <Text style={styles.clienteCellValueRight}>
+              : {venta.tipo_documento}
+            </Text>
+          </View>
+
+          <View style={styles.clienteRow}>
+            <Text style={styles.clienteCellLeft}>Vendedor</Text>
+            <Text style={styles.clienteCellValueLeft}>
+              : {venta.user.name}
+            </Text>
+            <Text style={styles.clienteCellRight}>Almacén</Text>
+            <Text style={styles.clienteCellValueRight}>: {venta.almacen.name}</Text>
+          </View>
+
+          <View style={styles.clienteRow}>
+            <Text style={styles.clienteCellLeft}>Forma Pago</Text>
+            <Text style={styles.clienteCellValueLeft}>: {venta.forma_de_pago}</Text>
+            <Text style={styles.clienteCellRight}>Moneda</Text>
+            <Text style={styles.clienteCellValueRight}>: SOLES</Text>
+          </View>
+
+          <View style={styles.clienteRow}>
+            <Text style={styles.clienteCellLeft}>Cajero</Text>
+            <Text style={styles.clienteCellValueLeft}>
+              : {venta.user.name}
+            </Text>
+            <Text style={styles.clienteCellRight}>Estado</Text>
+            <Text style={styles.clienteCellValueRight}>: {venta.estado_de_venta}</Text>
           </View>
         </View>
 
-        {/* Datos de la Venta */}
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>INFORMACIÓN DE LA VENTA</Text>
-          <View style={styles.infoGrid}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Fecha Emisión:</Text>
-              <Text style={styles.infoValue}>
-                {new Date(venta.fecha).toLocaleDateString('es-PE', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Forma de Pago:</Text>
-              <Text style={styles.infoValue}>{venta.forma_de_pago}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Moneda:</Text>
-              <Text style={styles.infoValue}>Soles (PEN)</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Vendedor:</Text>
-              <Text style={styles.infoValue}>{venta.user.name}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Almacén:</Text>
-              <Text style={styles.infoValue}>{venta.almacen.name}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Tabla de Productos */}
-        <View style={styles.table}>
+        <View style={styles.tableContainer}>
           <View style={styles.tableHeader}>
-            <Text style={styles.colItem}>#</Text>
-            <Text style={styles.colProducto}>DESCRIPCIÓN</Text>
-            <Text style={styles.colUnidad}>UNIDAD</Text>
-            <Text style={styles.colCantidad}>CANT.</Text>
-            <Text style={styles.colPrecio}>P. UNIT.</Text>
-            <Text style={styles.colSubtotal}>SUBTOTAL</Text>
+            <Text style={[styles.tableCell, styles.colItem]}>ITEM.</Text>
+            <Text style={[styles.tableCell, styles.colUbi]}>UBI.</Text>
+            <Text style={[styles.tableCell, styles.colCodigo]}>CÓDIGO</Text>
+            <Text style={[styles.tableCell, styles.colCant]}>CANT.</Text>
+            <Text style={[styles.tableCell, styles.colUnidad]}>UNIDAD</Text>
+            <Text style={[styles.tableCell, styles.colDescripcion]}>
+              DESCRIPCIÓN
+            </Text>
+            <Text style={[styles.tableCell, styles.colPrecio]}>P. UNI.</Text>
+            <Text style={[styles.tableCell, styles.colDesc]}>DESC.</Text>
+            <Text style={[styles.tableCell, styles.colImporte]}>IMPORTE</Text>
           </View>
 
-          {productos.map((producto, idx) => (
-            <View
-              key={idx}
-              style={[styles.tableRow, idx % 2 === 1 ? styles.tableRowAlt : {}]}
-            >
-              <Text style={styles.colItem}>{idx + 1}</Text>
-              <Text style={styles.colProducto}>
-                {producto.nombre}
-                {'\n'}
-                <Text style={{ fontSize: 7, color: '#6b7280' }}>
-                  Marca: {producto.marca}
-                </Text>
+          {productos.map((producto: any, idx: number) => (
+            <View key={idx} style={styles.tableRow}>
+              <Text style={[styles.tableCell, styles.colItem]}>{idx + 1}</Text>
+              <Text style={[styles.tableCell, styles.colUbi]}>A1</Text>
+              <Text style={[styles.tableCell, styles.colCodigo]}>
+                {producto.codigo}
               </Text>
-              <Text style={styles.colUnidad}>{producto.unidad}</Text>
-              <Text style={styles.colCantidad}>{producto.cantidad.toFixed(2)}</Text>
-              <Text style={styles.colPrecio}>S/ {producto.precio.toFixed(2)}</Text>
-              <Text style={styles.colSubtotal}>S/ {producto.subtotal.toFixed(2)}</Text>
+              <Text style={[styles.tableCell, styles.colCant]}>
+                {producto.cantidad.toFixed(0)}
+              </Text>
+              <Text style={[styles.tableCell, styles.colUnidad]}>
+                {producto.unidad}
+              </Text>
+              <Text style={[styles.tableCell, styles.colDescripcion]}>
+                {producto.nombre}
+              </Text>
+              <Text style={[styles.tableCell, styles.colPrecio]}>
+                {producto.precio.toFixed(2)}
+              </Text>
+              <Text style={[styles.tableCell, styles.colDesc]}>
+                {producto.descuento.toFixed(2)}
+              </Text>
+              <Text style={[styles.tableCell, styles.colImporte]}>
+                {producto.subtotal.toFixed(2)}
+              </Text>
             </View>
           ))}
-        </View>
 
-        {/* Totales */}
-        <View style={styles.totalsContainer}>
-          <View style={styles.totalsBox}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Op. Gravada:</Text>
-              <Text style={styles.totalValue}>S/ {subtotal.toFixed(2)}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>IGV (18%):</Text>
-              <Text style={styles.totalValue}>S/ {igv.toFixed(2)}</Text>
-            </View>
-            <View style={styles.grandTotalRow}>
-              <Text style={styles.grandTotalLabel}>IMPORTE TOTAL:</Text>
-              <Text style={styles.grandTotalValue}>S/ {total.toFixed(2)}</Text>
-            </View>
+          {/* Espacio vacío si hay pocos productos */}
+          {productos.length < 10 && (
+            <View
+              style={{
+                minHeight: (10 - productos.length) * 20,
+                borderBottom: "1px solid #fadc06",
+              }}
+            />
+          )}
+
+          <View style={styles.sonRow}>
+            <Text>SON: {convertirNumeroALetras(total)} SOLES.</Text>
           </View>
         </View>
 
-        {/* Observaciones */}
-        {venta.descripcion && (
-          <View style={styles.observaciones}>
-            <Text style={styles.observacionesTitle}>OBSERVACIONES:</Text>
-            <Text style={styles.observacionesText}>{venta.descripcion}</Text>
+        {/* Sección de observaciones y totales */}
+        <View style={styles.bottomRow}>
+          <View style={styles.observacionesCell}>
+            <View style={styles.observacionesBox}>
+              <Text style={styles.observacionesTitle}>OBSERVACIONES</Text>
+              <Text style={styles.observacionesList}>
+                {venta.descripcion || "- NINGUNA"}
+              </Text>
+            </View>
           </View>
-        )}
+
+          <View style={styles.totalesCell}>
+            <View style={styles.totalRow}>
+              <View style={styles.totalLabelCell}>
+                <Text style={styles.totalLabelText}>SUBTOTAL</Text>
+              </View>
+              <View style={styles.totalValueCell}>
+                <Text style={styles.totalValueText}>
+                  {(subtotal - totalDescuento).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.totalRow}>
+              <View style={styles.totalLabelCell}>
+                <Text style={styles.totalLabelText}>IGV (18%)</Text>
+              </View>
+              <View style={styles.totalValueCell}>
+                <Text style={styles.totalValueText}>{igv.toFixed(2)}</Text>
+              </View>
+            </View>
+            <View style={styles.totalRowLast}>
+              <View style={styles.totalLabelCell}>
+                <Text style={styles.totalLabelText}>TOTAL</Text>
+              </View>
+              <View style={styles.totalValueCell}>
+                <Text style={styles.totalValueText}>{total.toFixed(2)}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerBold}>¡Gracias por su preferencia!</Text>
-          <Text>
-            Este documento es una representación impresa de la {getTituloDocumento().toLowerCase()}
+        <Text style={styles.footerText}>
+          <Text style={styles.footerBold}>
+            ¡GRACIAS POR SU PREFERENCIA! ¡DIOS LES BENDIGA!
           </Text>
-          <Text>Para consultas: ventas@empresa.com | Tel: (01) 123-4567</Text>
-        </View>
+        </Text>
       </Page>
     </Document>
   )
+}
+
+// Función auxiliar para convertir números a letras (simplificada)
+function convertirNumeroALetras(num: number): string {
+  // Implementación simple - puedes mejorar esto
+  const entero = Math.floor(num)
+  const decimal = Math.round((num - entero) * 100)
+  return `${entero.toFixed(0)} CON ${decimal}/100`
 }

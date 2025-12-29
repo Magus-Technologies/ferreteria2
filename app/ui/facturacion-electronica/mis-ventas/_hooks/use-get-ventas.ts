@@ -10,8 +10,8 @@ export default function useGetVentas({
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS, where],
-    queryFn: () => getVenta({ where }),
-    enabled: !!where,
+    queryFn: () => getVenta({ where: where || {} }),
+    // Siempre habilitado, si no hay filtros se cargan todas las ventas
   })
 
   return {

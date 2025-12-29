@@ -28,7 +28,7 @@ export async function GET(
     }
 
     const data = await response.json();
-    console.log('Datos recibidos de Laravel:', data);
+    console.log('Datos recibidos de Laravel (cotización):', JSON.stringify(data, null, 2));
     const cotizacion = data.data;
 
     if (!cotizacion) {
@@ -38,6 +38,9 @@ export async function GET(
         { status: 404 }
       )
     }
+    
+    console.log('Usuario en cotización:', cotizacion.user);
+    console.log('Empresa en usuario:', cotizacion.user?.empresa);
 
     const pdfBuffer = await generarPDFCotizacion(cotizacion)
 

@@ -11,6 +11,8 @@ export async function GET(
 
     // Obtener datos del préstamo desde Laravel API (sin autenticación)
     const response = await prestamoApi.getById(prestamoId);
+    
+    console.log('Respuesta de API préstamo:', JSON.stringify(response, null, 2));
 
     if (response.error || !response.data) {
       return NextResponse.json(
@@ -27,6 +29,9 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    console.log('Usuario en préstamo:', prestamo.user);
+    console.log('Empresa en usuario:', (prestamo.user as any)?.empresa);
 
     // Generar PDF con los datos obtenidos de Laravel
     const pdfBuffer = await generarPDFPrestamo(prestamo)

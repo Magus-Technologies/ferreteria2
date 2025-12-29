@@ -182,6 +182,7 @@ export default function TableComprar({
     <>
       <CellFocusWithoutStyle />
       <TableBase
+        className='h-full'
         rowSelection={false}
         rowData={fields}
         columnDefs={useColumnsComprar({

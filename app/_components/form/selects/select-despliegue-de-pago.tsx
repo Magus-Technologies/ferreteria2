@@ -1,10 +1,11 @@
 'use client'
 
 import SelectBase, { SelectBaseProps } from './select-base'
-import { useLazyServerQuery } from '~/hooks/use-lazy-server-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { getDespliegueDePago } from '~/app/_actions/despliegue-de-pago'
 import { FaMoneyCheckAlt } from 'react-icons/fa'
+import { despliegueDePagoApi, type DespliegueDePago } from '~/lib/api/despliegue-de-pago'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface SelectDespliegueDePagoProps extends SelectBaseProps {
   classNameIcon?: string
@@ -18,16 +19,16 @@ export default function SelectDespliegueDePago({
   sizeIcon = 14,
   ...props
 }: SelectDespliegueDePagoProps) {
-  const { response, triggerFetch, isFetched } = useLazyServerQuery({
-    action: getDespliegueDePago,
-    propsQuery: {
-      queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+  const [shouldFetch, setShouldFetch] = useState(false)
+
+  const { data } = useQuery({
+    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+    queryFn: async () => {
+      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      return result.data?.data || []
     },
-    params: {
-      where: {
-        mostrar: true,
-      },
-    },
+    enabled: shouldFetch,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   return (
@@ -36,18 +37,18 @@ export default function SelectDespliegueDePago({
       prefix={<FaMoneyCheckAlt className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={response?.map(item => ({
+      options={data?.map((item: DespliegueDePago) => ({
         value: item.id,
         label: item.name,
       }))}
       onFocus={() => {
-        if (!isFetched) {
-          triggerFetch()
+        if (!shouldFetch) {
+          setShouldFetch(true)
         }
       }}
       onOpenChange={(open) => {
-        if (open && !isFetched) {
-          triggerFetch()
+        if (open && !shouldFetch) {
+          setShouldFetch(true)
         }
       }}
       {...props}

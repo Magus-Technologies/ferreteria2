@@ -1,28 +1,47 @@
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useServerQuery } from '~/hooks/use-server-query'
-import { getCompras } from '~/app/_actions/compra'
 import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compras'
+import { compraApi } from '~/lib/api/compra'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { EstadoDeCompra } from '@prisma/client'
 
 export default function TotalCompras() {
   const filtros = useStoreFiltrosMisCompras(state => state.filtros)
 
-  const { response: data } = useServerQuery({
-    action: getCompras,
-    propsQuery: {
-      queryKey: [QueryKeys.COMPRAS],
-      enabled: false,
+  // Convert Prisma filters to API filters
+  const apiFilters = useMemo(() => {
+    if (!filtros) return undefined
+
+    return {
+      almacen_id: filtros.almacen_id as number | undefined,
+      estado_de_compra: filtros.estado_de_compra
+        ? (filtros.estado_de_compra as { equals?: EstadoDeCompra })?.equals
+        : undefined,
+      proveedor_id: filtros.proveedor_id as number | undefined,
+      per_page: 9999, // Get all records for total calculation
+    }
+  }, [filtros])
+
+  const { data: response } = useQuery({
+    queryKey: [QueryKeys.COMPRAS, 'total', apiFilters],
+    queryFn: async () => {
+      const result = await compraApi.getAll(apiFilters)
+      if (result.error) {
+        throw new Error(result.error.message)
+      }
+      return result.data!
     },
-    params: {
-      where: filtros,
-    },
+    enabled: false,
   })
+
+  const data = response?.data ?? []
 
   const costo_total = (data ?? []).reduce((acc, compra) => {
     return (
       acc +
       (
         compra?.productos_por_almacen?.flatMap(ppa =>
-          ppa.unidades_derivadas.map(ud => ({
+          (ppa.unidades_derivadas ?? []).map(ud => ({
             ...ud,
             costo: ppa.costo,
             producto_almacen: ppa.producto_almacen,

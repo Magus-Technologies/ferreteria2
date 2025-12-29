@@ -221,7 +221,6 @@ export function useColumnsVender({
             size='small'
             propsForm={{
               name: [value, 'recargo'],
-              rules: [{ required: true, message: '' }],
             }}
             precision={4}
             min={0}
@@ -243,7 +242,6 @@ export function useColumnsVender({
             size='small'
             propsForm={{
               name: [value, 'descuento_tipo'],
-              rules: [{ required: true, message: '' }],
               hasFeedback: false,
             }}
             onChange={() => calcularSubtotalForm({ form, value })}
@@ -254,7 +252,6 @@ export function useColumnsVender({
             className='w-full'
             propsForm={{
               name: [value, 'descuento'],
-              rules: [{ required: true, message: '' }],
             }}
             precision={4}
             min={0}

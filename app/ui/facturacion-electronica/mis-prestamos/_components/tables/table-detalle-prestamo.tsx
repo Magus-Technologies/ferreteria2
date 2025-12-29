@@ -11,8 +11,8 @@ type DetalleCotizacion = {
   marca: string
   unidad_medida: string
   cantidad: number
-  precio: number
-  subtotal: number
+  // precio: number // Comentado: Solo se maneja por cantidad
+  // subtotal: number // Comentado: Solo se maneja por cantidad
 }
 
 export default function TableDetallePrestamo() {
@@ -28,17 +28,18 @@ export default function TableDetallePrestamo() {
         marca: productoAlmacen.productoAlmacen?.producto?.marca?.name || 'N/A',
         unidad_medida: unidad.name || '',
         cantidad: Number(unidad.cantidad || 0),
-        precio: Number(productoAlmacen.costo || 0),
-        subtotal:
-          Number(unidad.cantidad || 0) *
-          Number(unidad.factor || 1) *
-          Number(productoAlmacen.costo || 0),
+        // precio: Number(productoAlmacen.costo || 0), // Comentado: Solo se maneja por cantidad
+        // subtotal: // Comentado: Solo se maneja por cantidad
+        //   Number(unidad.cantidad || 0) *
+        //   Number(unidad.factor || 1) *
+        //   Number(productoAlmacen.costo || 0),
       })) || []
     ) || []
 
-  const subtotal = detalle.reduce((sum: number, item: any) => sum + item.subtotal, 0)
-  const totalDescuento = 0 // Por ahora 0, puedes agregar descuentos después
-  const total = subtotal - totalDescuento
+  // Comentado: Solo se maneja por cantidad
+  // const subtotal = detalle.reduce((sum: number, item: any) => sum + item.subtotal, 0)
+  // const totalDescuento = 0 // Por ahora 0, puedes agregar descuentos después
+  // const total = subtotal - totalDescuento
 
   const columns: ColDef<DetalleCotizacion>[] = [
     {
@@ -68,18 +69,19 @@ export default function TableDetallePrestamo() {
       width: 80,
       valueFormatter: (params) => params.value?.toFixed(2),
     },
-    {
-      headerName: 'Precio',
-      field: 'precio',
-      width: 100,
-      valueFormatter: (params) => `S/. ${params.value?.toFixed(2)}`,
-    },
-    {
-      headerName: 'Subtotal',
-      field: 'subtotal',
-      width: 120,
-      valueFormatter: (params) => `S/. ${params.value?.toFixed(2)}`,
-    },
+    // Comentado: Solo se maneja por cantidad
+    // {
+    //   headerName: 'Precio',
+    //   field: 'precio',
+    //   width: 100,
+    //   valueFormatter: (params) => `S/. ${params.value?.toFixed(2)}`,
+    // },
+    // {
+    //   headerName: 'Subtotal',
+    //   field: 'subtotal',
+    //   width: 120,
+    //   valueFormatter: (params) => `S/. ${params.value?.toFixed(2)}`,
+    // },
   ]
 
   return (
@@ -121,6 +123,7 @@ export default function TableDetallePrestamo() {
         {/* Totales al costado derecho */}
         <div className='w-[280px] bg-white border border-gray-200 rounded-lg p-3 h-fit'>
           <div className='space-y-1.5'>
+            {/* Comentado: Solo se maneja por cantidad
             <div className='flex justify-between items-center py-1.5 border-b'>
               <span className='text-xs'>Subtotal:</span>
               <span className='font-semibold text-xs'>S/. {subtotal.toFixed(2)}</span>
@@ -135,6 +138,7 @@ export default function TableDetallePrestamo() {
                 S/. {total.toFixed(2)}
               </span>
             </div>
+            */}
             <div className='flex justify-between items-center py-1.5 border-b'>
               <span className='text-xs'>Estado:</span>
               <span className='font-semibold text-xs'>

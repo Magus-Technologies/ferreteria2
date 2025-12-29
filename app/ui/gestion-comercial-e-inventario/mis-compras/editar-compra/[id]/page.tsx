@@ -6,8 +6,9 @@ import { permissions } from '~/lib/permissions'
 import can from '~/utils/server-validate-permission'
 import HeaderCrearCompra from '../../crear-compra/_components/others/header'
 import BodyComprar from '../../crear-compra/_components/others/body-comprar'
+import { compraApi } from '~/lib/api/compra'
+import { CompraConUnidadDerivadaNormal } from '../../crear-compra/_components/others/header'
 import { prisma } from '~/db/db'
-import { includeCompra } from '~/app/_actions/lib/lib-compra'
 
 export default async function CrearCompra({
   params,
@@ -19,20 +20,19 @@ export default async function CrearCompra({
   const { id } = await params
   if (!id) return <NoAutorizado />
 
-  const compra = await prisma.compra.findUnique({
-    where: {
-      id,
-    },
-    include: includeCompra,
-  })
+  const result = await compraApi.getById(id)
+
+  if (result.error || !result.data?.data) return <NoAutorizado />
+
+  const compra = result.data.data
 
   const unidades_derivadas_names = [
     ...new Set(
-      compra?.productos_por_almacen.flatMap(ppa =>
-        ppa.unidades_derivadas.map(ud => ud.unidad_derivada_inmutable.name)
-      )
+      compra.productos_por_almacen?.flatMap(ppa =>
+        (ppa.unidades_derivadas ?? []).map(ud => ud.unidad_derivada_inmutable?.name)
+      ).filter(Boolean) ?? []
     ),
-  ]
+  ] as string[]
 
   const unidades_derivadas = await prisma.unidadDerivada.findMany({
     where: {
@@ -46,24 +46,18 @@ export default async function CrearCompra({
     },
   })
 
-  if (!compra) return <NoAutorizado />
-
-  const compraConUnidadesDerivadas = {
+  const compraFormated: CompraConUnidadDerivadaNormal = {
     ...compra,
-    productos_por_almacen: compra.productos_por_almacen.map(ppa => ({
+    productos_por_almacen: (compra.productos_por_almacen ?? []).map(ppa => ({
       ...ppa,
-      unidades_derivadas: ppa.unidades_derivadas.map(ud => ({
+      unidades_derivadas: (ppa.unidades_derivadas ?? []).map(ud => ({
         ...ud,
         unidad_derivada_normal: unidades_derivadas.find(
-          ud2 => ud2.name === ud.unidad_derivada_inmutable.name
+          ud2 => ud2.name === ud.unidad_derivada_inmutable?.name
         )!,
       })),
     })),
   }
-
-  const compraFormated = JSON.parse(
-    JSON.stringify(compraConUnidadesDerivadas)
-  ) as typeof compraConUnidadesDerivadas
 
   return (
     <ContenedorGeneral>

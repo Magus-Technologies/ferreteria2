@@ -11,14 +11,14 @@ import SelectEstado from '~/app/_components/form/selects/select-estado'
 import { ConsultaDni } from '~/app/_types/consulta-ruc'
 import LabelBase from '~/components/form/label-base'
 import { IoMdPerson } from 'react-icons/io'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 
 export default function FormVendedoresProveedor({
   form,
   dataEdit,
 }: {
   form: FormInstance
-  dataEdit?: getProveedorResponseProps
+  dataEdit?: Proveedor
 }) {
   return (
     <Form.List name='vendedores'>

@@ -45,7 +45,7 @@ export default function CardsInfoCompra({
   )
 
   return (
-    <div className='flex flex-col gap-4 max-w-64'>
+    <div className='flex flex-col gap-4 w-full xl:w-64'>
       <ButtonBase className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-orange-500'>
         <BsFillCartCheckFill className='text-orange-600 min-w-fit' size={30} />{' '}
         Recuperar Orden de Compra
@@ -74,8 +74,8 @@ export default function CardsInfoCompra({
         value={subTotal + flete * tipo_de_cambio + (percepcion ?? 0)}
         moneda={tipo_moneda}
       />
-      {(compra?._count?.recepciones_almacen ?? 0) > 0 ||
-      (compra?._count?.pagos_de_compras ?? 0) > 0 ||
+      {(compra?.recepciones_almacen_count ?? 0) > 0 ||
+      (compra?.pagos_de_compras_count ?? 0) > 0 ||
       compra?.estado_de_compra === EstadoDeCompra.Creado ? null : (
         <ButtonBase
           onClick={() => {

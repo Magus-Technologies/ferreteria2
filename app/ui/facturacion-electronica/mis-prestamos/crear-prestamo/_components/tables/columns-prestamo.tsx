@@ -36,19 +36,20 @@ export function useColumnsPrestamo(
       width: 100,
       valueFormatter: (params) => params.value?.toFixed(2) || "0.00",
     },
-    {
-      headerName: "Costo Unit.",
-      field: "costo",
-      width: 120,
-      valueFormatter: (params) => `S/. ${params.value?.toFixed(4) || "0.0000"}`,
-    },
-    {
-      headerName: "Subtotal",
-      field: "subtotal",
-      width: 120,
-      valueFormatter: (params) => `S/. ${params.value?.toFixed(2) || "0.00"}`,
-      cellStyle: { fontWeight: "bold", color: "#1e40af" },
-    },
+    // Comentado: Solo se maneja por cantidad
+    // {
+    //   headerName: "Costo Unit.",
+    //   field: "costo",
+    //   width: 120,
+    //   valueFormatter: (params) => `S/. ${params.value?.toFixed(4) || "0.0000"}`,
+    // },
+    // {
+    //   headerName: "Subtotal",
+    //   field: "subtotal",
+    //   width: 120,
+    //   valueFormatter: (params) => `S/. ${params.value?.toFixed(2) || "0.00"}`,
+    //   cellStyle: { fontWeight: "bold", color: "#1e40af" },
+    // },
     {
       headerName: "Acciones",
       width: 100,

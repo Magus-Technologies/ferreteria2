@@ -60,6 +60,10 @@ export default function TableMisVentas() {
         loading={loading}
         columnDefs={useColumnsMisVentas()}
         rowData={response || []}
+        onRowClicked={(event) => {
+          // Seleccionar la fila cuando se hace clic en cualquier parte
+          event.node.setSelected(true);
+        }}
         onSelectionChanged={({ selectedNodes }) =>
           setVentaSeleccionada(
             selectedNodes?.[0]?.data as getVentaResponseProps

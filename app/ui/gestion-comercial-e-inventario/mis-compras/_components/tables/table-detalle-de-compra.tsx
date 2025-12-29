@@ -2,12 +2,13 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import {
   TableDetalleDeCompraProps,
   useColumnsDetalleDeCompra,
 } from './columns-detalle-de-compra'
-import { getComprasResponseProps } from '~/app/_actions/compra'
+import { type Compra } from '~/lib/api/compra'
+import { RowClickedEvent } from 'ag-grid-community'
 
 export default function TableDetalleDeCompra({
   id,
@@ -15,13 +16,20 @@ export default function TableDetalleDeCompra({
   setCompraSeleccionada,
 }: {
   id: string
-  compraSeleccionada: getComprasResponseProps | undefined
-  setCompraSeleccionada: (value: getComprasResponseProps | undefined) => void
+  compraSeleccionada: Compra | undefined
+  setCompraSeleccionada: (value: Compra | undefined) => void
 }) {
   useEffect(() => {
     setCompraSeleccionada(undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleRowClicked = useCallback(
+    (event: RowClickedEvent<TableDetalleDeCompraProps>) => {
+      event.node.setSelected(true)
+    },
+    []
+  )
 
   return (
     <TableWithTitle<TableDetalleDeCompraProps>
@@ -30,6 +38,7 @@ export default function TableDetalleDeCompra({
       schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}
       columnDefs={useColumnsDetalleDeCompra()}
+      onRowClicked={handleRowClicked}
       optionsSelectColumns={[
         {
           label: 'Default',
@@ -49,7 +58,7 @@ export default function TableDetalleDeCompra({
       ]}
       rowData={
         compraSeleccionada?.productos_por_almacen?.flatMap(ppa =>
-          ppa.unidades_derivadas.map(ud => ({
+          (ppa.unidades_derivadas ?? []).map(ud => ({
             ...ud,
             costo: ppa.costo,
             producto_almacen: ppa.producto_almacen,

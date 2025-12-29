@@ -24,7 +24,7 @@ export default function CrearCompra() {
   if (!canAccess) return <NoAutorizado />
 
   return (
-    <ContenedorGeneral>
+    <ContenedorGeneral className='h-full'>
       <Suspense fallback={<ComponentLoading />}>
         <HeaderCrearCompra />
       </Suspense>

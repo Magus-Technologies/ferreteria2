@@ -10,6 +10,7 @@ model Empresa {
   direccion               String
   telefono                String
   email                   String
+  logo                    String? // Ruta relativa del logo (ej: "mi-logo.png")
   almacen_predeterminado  Almacen @relation(fields: [almacen_id], references: [id])
   marca_predeterminada    Marca   @relation(fields: [marca_id], references: [id])
   users                   User[]

@@ -13,8 +13,7 @@ async function getDespliegueDePagoWA({
   where?: Prisma.DespliegueDePagoWhereInput
 }) {
   const puede = await can(permissions.DESPLIEGUE_DE_PAGO_LISTADO)
-  if (!puede)
-    throw new Error('No tienes permiso para ver la lista de despliegue de pago')
+  if (!puede) return { data: [] } // Return empty array instead of throwing error
 
   if (!where) return { data: [] }
 

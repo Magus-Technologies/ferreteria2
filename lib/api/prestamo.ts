@@ -160,7 +160,7 @@ export interface ProductoPrestamoRequest {
   unidad_derivada_id: number;
   unidad_derivada_factor: number;
   cantidad: number;
-  costo: number;
+  costo?: number; // Opcional: Solo se maneja por cantidad
 }
 
 export interface CreatePrestamoRequest {

@@ -4,10 +4,22 @@ import Credentials from 'next-auth/providers/credentials'
 import { cache } from 'react'
 import { schemaLogin } from './schema'
 import { getUserFromDb } from './utils/getUserFromDb'
-import { Empresa } from '@prisma/client'
 import { prisma } from '~/db/db'
 
-export type EmpresaSession = Empresa
+export type EmpresaSession = {
+  id: number
+  ruc: string
+  razon_social: string
+  direccion: string
+  telefono: string
+  email: string
+  serie_ingreso: number
+  serie_salida: number
+  serie_recepcion_almacen: number
+  almacen_id: number
+  marca_id: number
+  logo: string | null
+}
 
 declare module 'next-auth' {
   interface Session {
@@ -51,6 +63,7 @@ const getUserData = cache(async (userId: string) => {
           serie_recepcion_almacen: true,
           almacen_id: true,
           marca_id: true,
+          logo: true,
         },
       },
       permissions: {
@@ -68,7 +81,12 @@ const getUserData = cache(async (userId: string) => {
         },
       },
     },
-  })
+  }) as {
+    efectivo: any
+    empresa: EmpresaSession | null
+    permissions: { name: string }[]
+    roles: { permissions: { name: string }[] }[]
+  } | null
 
   if (!user) return null
 

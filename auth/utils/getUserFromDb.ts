@@ -35,6 +35,7 @@ export const getUserFromDb = async (email: string, pwHash: string) => {
           serie_recepcion_almacen: true,
           almacen_id: true,
           marca_id: true,
+          logo: true,
         },
       },
     },

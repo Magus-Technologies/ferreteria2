@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import ButtonCreateProveedor from '../form/buttons/button-create-proveedor'
 import { useDebounce } from 'use-debounce'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
-import { getProveedorResponseProps } from '~/app/_actions/proveedor'
+import type { Proveedor } from '~/lib/api/proveedor'
 
 type ModalProveedorSearchProps = {
   open: boolean
@@ -17,7 +17,7 @@ type ModalProveedorSearchProps = {
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: getProveedorResponseProps | undefined
+    data: Proveedor | undefined
   }) => void
 }
 

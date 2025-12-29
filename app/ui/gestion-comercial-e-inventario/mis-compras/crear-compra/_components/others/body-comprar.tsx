@@ -12,7 +12,6 @@ import {
   FormaDePago,
   Marca,
   Producto,
-  ProductoAlmacenUnidadDerivada,
   Proveedor,
   TipoDocumento,
   TipoMoneda,
@@ -39,7 +38,7 @@ export interface FormCreateCompra {
     producto_name?: Producto['name']
     producto_codigo?: Producto['cod_producto']
     unidad_derivada_name: UnidadDerivada['name']
-    unidad_derivada_factor: ProductoAlmacenUnidadDerivada['factor']
+    unidad_derivada_factor: number
 
     producto_id: Producto['id']
   }[]
@@ -50,6 +49,7 @@ export interface FormCreateCompra {
   tipo_documento: TipoDocumento
   serie?: string
   numero?: number
+  descripcion?: string
   guia?: string
   forma_de_pago: FormaDePago
   numero_dias?: number
@@ -57,6 +57,7 @@ export interface FormCreateCompra {
   percepcion?: number
   estado_de_compra?: EstadoDeCompra
   egreso_dinero_id?: string
+  despliegue_de_pago_id?: number
   metodo_de_pago_id?: string
 }
 
@@ -92,14 +93,18 @@ export default function BodyComprar({
     <FormBase
       form={form}
       name='compra'
-      className='flex gap-6 size-full'
+      className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
       onFinish={handleSubmit}
     >
-      <div className='flex-1 flex flex-col gap-6'>
-        <FormTableComprar form={form} compra={compra} />
+      <div className='flex-1 flex flex-col gap-2 xl:gap-3 min-w-0 min-h-0'>
+        <div className='flex-1 min-h-0'>
+          <FormTableComprar form={form} compra={compra} />
+        </div>
         <FormCrearCompra form={form} compra={compra} />
       </div>
-      <CardsInfoCompra form={form} compra={compra} />
+      <div className='w-full xl:w-auto'>
+        <CardsInfoCompra form={form} compra={compra} />
+      </div>
     </FormBase>
   )
 }

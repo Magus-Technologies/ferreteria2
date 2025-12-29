@@ -24,6 +24,7 @@ export interface Empresa {
   serie_recepcion_almacen: number;
   almacen_id: number;
   marca_id: number;
+  logo: string | null;
 }
 
 export interface LoginResponse {
