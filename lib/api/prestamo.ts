@@ -176,7 +176,7 @@ export interface CreatePrestamoRequest {
   ruc_dni?: string;
   telefono?: string;
   direccion?: string;
-  monto_total: number;
+  monto_total?: number; // Opcional: Se calcula automáticamente en el backend si no se proporciona
   tasa_interes?: number;
   tipo_interes?: TipoInteres;
   dias_gracia?: number;

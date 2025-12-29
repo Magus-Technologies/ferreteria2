@@ -17,8 +17,8 @@ export default function TableDetalleVenta() {
   const ventaSeleccionada = useStoreVentaSeleccionada(state => state.venta)
 
   const detalleProductos: DetalleProducto[] =
-    ventaSeleccionada?.productos_por_almacen.flatMap(productoAlmacen =>
-      productoAlmacen.unidades_derivadas.map(unidad => ({
+    ventaSeleccionada?.productos_por_almacen.flatMap((productoAlmacen: any) =>
+      productoAlmacen.unidades_derivadas.map((unidad: any) => ({
         producto: productoAlmacen.producto_almacen.producto.name,
         marca: productoAlmacen.producto_almacen.producto.marca.name,
         unidad: unidad.unidad_derivada_inmutable.name,

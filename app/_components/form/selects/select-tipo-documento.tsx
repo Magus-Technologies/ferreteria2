@@ -1,11 +1,17 @@
 import SelectBase, { SelectBaseProps } from './select-base'
 import { FaFileInvoice } from 'react-icons/fa6'
-import { TipoDocumento } from '@prisma/client'
 
 interface SelectTipoDocumentoProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
 }
+
+// Tipos de documento con códigos SUNAT
+const TIPOS_DOCUMENTO = [
+  { value: '01', label: 'Factura' },
+  { value: '03', label: 'Boleta' },
+  { value: 'nv', label: 'Nota de Venta' },
+]
 
 export default function SelectTipoDocumento({
   placeholder = 'Seleccionar Tipo de Documento',
@@ -20,17 +26,7 @@ export default function SelectTipoDocumento({
       prefix={<FaFileInvoice className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={Object.values(TipoDocumento)
-        .filter(
-          value =>
-            value === TipoDocumento.Factura ||
-            value === TipoDocumento.Boleta ||
-            value === TipoDocumento.NotaDeVenta
-        )
-        .map(value => ({
-          value,
-          label: value == TipoDocumento.NotaDeVenta ? 'Nota de Venta' : value,
-        }))}
+      options={TIPOS_DOCUMENTO}
     />
   )
 }

@@ -1,4 +1,3 @@
-import { FormaDePago } from '@prisma/client'
 import { Form } from 'antd'
 import { FormInstance } from 'antd/lib'
 import { FaCalendar } from 'react-icons/fa'
@@ -24,6 +23,7 @@ export default function FormFormaDePagoVenta({
           className='!w-[135px] !min-w-[135px] !max-w-[135px]'
           propsForm={{
             name: 'forma_de_pago',
+            initialValue: 'co', // Valor por defecto: Contado
             rules: [
               {
                 required: true,
@@ -38,7 +38,7 @@ export default function FormFormaDePagoVenta({
           prefix={
             <IoIosDocument
               className={`${
-                formaDePago === FormaDePago.cr
+                formaDePago === 'cr'
                   ? 'text-rose-700'
                   : 'text-cyan-600'
               } mr-1`}
@@ -51,14 +51,14 @@ export default function FormFormaDePagoVenta({
             name: 'numero_dias',
             rules: [
               {
-                required: formaDePago === FormaDePago.cr,
+                required: formaDePago === 'cr',
                 message: 'Ingresa el número de días',
               },
             ],
           }}
           precision={0}
           min={0}
-          disabled={formaDePago === FormaDePago.Contado}
+          disabled={formaDePago === 'co'}
           onChange={val => {
             if (!val) form.setFieldValue('fecha_vencimiento', undefined)
             else
@@ -78,7 +78,7 @@ export default function FormFormaDePagoVenta({
             name: 'fecha_vencimiento',
             rules: [
               {
-                required: formaDePago === FormaDePago.cr,
+                required: formaDePago === 'cr',
                 message: 'Ingresa la fecha de vencimiento',
               },
             ],
@@ -88,13 +88,13 @@ export default function FormFormaDePagoVenta({
             <FaCalendar
               size={15}
               className={`${
-                formaDePago === FormaDePago.cr
+                formaDePago === 'cr'
                   ? 'text-rose-700'
                   : 'text-cyan-600'
               } mx-1`}
             />
           }
-          disabled={formaDePago === FormaDePago.Contado}
+          disabled={formaDePago === 'co'}
           onChange={val => {
             if (!val) form.setFieldValue('numero_dias', undefined)
             else

@@ -1,16 +1,22 @@
-import { getVenta } from '~/app/_actions/venta'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { Prisma } from '@prisma/client'
+import { ventaApi, type VentaFilters } from '~/lib/api/venta'
 
 export default function useGetVentas({
   where,
 }: {
-  where?: Prisma.VentaWhereInput
+  where?: VentaFilters
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS, where],
-    queryFn: () => getVenta({ where: where || {} }),
+    queryFn: async () => {
+      // Usar la API de Laravel en lugar del action de Prisma
+      const response = await ventaApi.list(where)
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      return response.data
+    },
     // Siempre habilitado, si no hay filtros se cargan todas las ventas
   })
 

@@ -1,17 +1,19 @@
-import { getEntregasProducto } from '~/app/_actions/entrega-producto'
+import { entregaProductoApi, EntregaProductoFilters } from '~/lib/api/entrega-producto'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { Prisma } from '@prisma/client'
 
 export default function useGetEntregas({
-  where,
+  filters,
 }: {
-  where?: Prisma.EntregaProductoWhereInput
+  filters?: EntregaProductoFilters
 }) {
   const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, where],
-    queryFn: () => getEntregasProducto({ where }),
-    enabled: !!where,
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filters],
+    queryFn: async () => {
+      const response = await entregaProductoApi.list(filters)
+      return response.data
+    },
+    enabled: !!filters,
   })
 
   return {

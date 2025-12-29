@@ -12,7 +12,7 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { useEffect } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
-import { TipoDocumento } from "@prisma/client";
+import { TipoDocumento } from "~/lib/api/venta";
 import { useUltimoCliente } from "../../../_hooks/use-ultimo-cliente";
 
 export default function FormCrearVenta({
@@ -38,7 +38,7 @@ export default function FormCrearVenta({
 
     const clienteActual = form.getFieldValue('cliente_id');
     
-    if (tipoDocumento === TipoDocumento.Boleta || tipoDocumento === TipoDocumento.NotaDeVenta) {
+    if (tipoDocumento === '03' || tipoDocumento === 'nv') {
       // Para Boleta y Nota de Venta: Autoseleccionar último cliente registrado
       if (!clienteActual) {
         form.setFieldValue('cliente_id', ultimoCliente.id);
@@ -68,7 +68,7 @@ export default function FormCrearVenta({
           form.setFieldValue('direccion', ultimoCliente.direccion);
         }
       }
-    } else if (tipoDocumento === TipoDocumento.Factura) {
+    } else if (tipoDocumento === '01') {
       // Para Factura: Limpiar cliente si es el último cliente (para forzar selección manual)
       if (clienteActual === ultimoCliente?.id) {
         form.setFieldValue('cliente_id', undefined);
@@ -172,6 +172,7 @@ export default function FormCrearVenta({
           <SelectTipoDocumento
             propsForm={{
               name: "tipo_documento",
+              initialValue: "03", // Valor por defecto: Boleta
               hasFeedback: false,
               className:
                 "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
@@ -202,13 +203,13 @@ export default function FormCrearVenta({
               rules: [
                 {
                   // Solo obligatorio para Facturas
-                  required: tipoDocumento === TipoDocumento.Factura,
+                  required: tipoDocumento === '01',
                   message: "Selecciona el cliente (obligatorio para facturas)",
                 },
                 {
                   // Validar que para Facturas sea RUC (11 dígitos)
                   validator: async (_, value) => {
-                    if (tipoDocumento === TipoDocumento.Factura && value) {
+                    if (tipoDocumento === '01' && value) {
                       // Aquí deberías validar que el cliente seleccionado tenga RUC
                       // Por ahora solo validamos que exista
                       return Promise.resolve();

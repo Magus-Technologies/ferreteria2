@@ -31,6 +31,19 @@ export default function ModalMetodosPagoVenta({
 
   const [error, setError] = useState<string>('')
 
+  // Sincronizar estado del modal con valores del formulario cuando se abre
+  useEffect(() => {
+    if (open) {
+      const metodosExistentes = form.getFieldValue('metodos_de_pago')
+      if (metodosExistentes && metodosExistentes.length > 0) {
+        setMetodosPago(metodosExistentes)
+      } else {
+        setMetodosPago([{ despliegue_de_pago_id: undefined, monto: undefined }])
+      }
+      setError('')
+    }
+  }, [open, form])
+
   // Calcular total de métodos de pago
   const totalMetodosPago = useMemo(
     () =>
@@ -107,8 +120,15 @@ export default function ModalMetodosPagoVenta({
   const handleGuardar = () => {
     if (error) return
 
+    console.log('💾 GUARDANDO métodos de pago:', metodosPago)
+
     // Guardar en el formulario
     form.setFieldValue('metodos_de_pago', metodosPago)
+
+    // Verificar que se guardó correctamente
+    const valorGuardado = form.getFieldValue('metodos_de_pago')
+    console.log('✅ Valor guardado en formulario:', valorGuardado)
+
     onCancel()
   }
 

@@ -19,7 +19,7 @@ export default function ModalVerEntregas({
   venta,
 }: ModalVerEntregasProps) {
   const { response: entregas, loading } = useGetEntregas({
-    where: venta?.id ? { venta_id: venta.id } : undefined,
+    filters: venta?.id ? { venta_id: venta.id } : undefined,
   });
 
   const getEstadoColor = (estado: string) => {
@@ -83,7 +83,7 @@ export default function ModalVerEntregas({
       ) : (
         <div className="space-y-4">
           <Timeline
-            items={(entregas || []).map((entrega) => ({
+            items={(entregas || []).map((entrega: any) => ({
               color: getEstadoColor(entrega.estado_entrega),
               dot: getEstadoIcon(entrega.estado_entrega),
               children: (
@@ -145,7 +145,7 @@ export default function ModalVerEntregas({
                   <div className="border-t pt-3">
                     <div className="font-medium mb-2">Productos entregados:</div>
                     <div className="space-y-1">
-                      {entrega.productos_entregados.map((detalle, idx) => (
+                      {entrega.productos_entregados.map((detalle: any, idx: number) => (
                         <div
                           key={idx}
                           className="flex justify-between text-sm bg-white p-2 rounded"

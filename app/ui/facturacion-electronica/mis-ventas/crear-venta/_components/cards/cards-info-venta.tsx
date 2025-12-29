@@ -1,6 +1,7 @@
 'use client'
 
-import { DescuentoTipo, EstadoDeVenta } from '@prisma/client'
+import { DescuentoTipo } from '@prisma/client'
+import { EstadoDeVenta } from '~/lib/api/venta'
 import { Form, FormInstance } from 'antd'
 import { useMemo, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
@@ -100,6 +101,15 @@ export default function CardsInfoVenta({
 
   return (
     <>
+      {/* Campo oculto para métodos de pago */}
+      <InputBase
+        propsForm={{
+          name: 'metodos_de_pago',
+          hidden: true,
+        }}
+        hidden
+      />
+
       <div className='flex flex-col gap-4 max-w-64'>
         <CardInfoVenta title='SubTotal' value={subTotal} moneda={tipo_moneda} />
         <CardInfoVenta
@@ -120,7 +130,7 @@ export default function CardsInfoVenta({
         />
         <ButtonBase
           onClick={() => setModalOpen(true)}
-          disabled={forma_de_pago === 'Crédito'}
+          disabled={forma_de_pago === 'cr'}
           color='info'
           className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
         >
@@ -132,7 +142,7 @@ export default function CardsInfoVenta({
               compra?.estado_de_compra === EstadoDeCompra.Creado ? null : ( */}
         <ButtonBase
           onClick={() => {
-            form.setFieldValue('estado_de_venta', EstadoDeVenta.EnEspera)
+            form.setFieldValue('estado_de_venta', EstadoDeVenta.EN_ESPERA)
             form.submit()
           }}
           color='warning'
@@ -150,7 +160,7 @@ export default function CardsInfoVenta({
         {/* )} */}
         <ButtonBase
           onClick={() => {
-            form.setFieldValue('estado_de_venta', EstadoDeVenta.Creado)
+            form.setFieldValue('estado_de_venta', EstadoDeVenta.CREADO)
             form.submit()
           }}
           color={venta ? 'info' : 'success'}

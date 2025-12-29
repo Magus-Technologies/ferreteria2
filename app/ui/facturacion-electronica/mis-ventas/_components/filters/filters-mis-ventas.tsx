@@ -8,7 +8,7 @@ import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
-import { EstadoDeVenta, Prisma } from "@prisma/client";
+import { EstadoDeVenta, FormaDePago, TipoDocumento } from "~/lib/api/venta";
 import { useStoreFiltrosMisVentas } from "../../_store/store-filtros-mis-ventas";
 import { FaCalendar } from "react-icons/fa6";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
@@ -17,7 +17,6 @@ import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
 import { Dayjs } from "dayjs";
-import { FormaDePago, TipoDocumento } from "@prisma/client";
 import { toUTCBD } from "~/utils/fechas";
 import dayjs from "dayjs";
 import { useEffect } from "react";
@@ -53,14 +52,9 @@ export default function FiltersMisVentas() {
   useEffect(() => {
     const data = {
       almacen_id,
-      fecha: {
-        gte: toUTCBD({ date: dayjs().startOf("day") }),
-        lte: toUTCBD({ date: dayjs().endOf("day") }),
-      },
-      estado_de_venta: {
-        in: [EstadoDeVenta.Creado, EstadoDeVenta.Procesado],
-      },
-    } satisfies Prisma.VentaWhereInput;
+      // Laravel API no usa objetos gte/lte, envía las fechas directamente
+      // El backend manejará el filtrado de rangos
+    };
     setFiltros(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -92,14 +86,11 @@ export default function FiltersMisVentas() {
 
     const data = {
       ...rest,
-      fecha: {
-        gte: desde ? toUTCBD({ date: desde.startOf("day") }) : undefined,
-        lte: hasta ? toUTCBD({ date: hasta.endOf("day") }) : undefined,
-      },
+      // Laravel API espera campos simples, no objetos anidados
       ...(serie ? { serie } : {}),
       ...(numero ? { numero } : {}),
       ...(estado_de_venta ? { estado_de_venta } : {}),
-    } satisfies Prisma.VentaWhereInput;
+    };
     setFiltros(data);
     setDrawerOpen(false);
   };

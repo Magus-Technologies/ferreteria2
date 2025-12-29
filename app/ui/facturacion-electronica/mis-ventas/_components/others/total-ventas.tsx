@@ -7,10 +7,10 @@ export default function TotalVentas() {
   const filtros = useStoreFiltrosMisVentas(state => state.filtros)
   const { response } = useGetVentas({ where: filtros })
 
-  const total = response?.reduce((acc, venta) => {
-    const subtotal = venta.productos_por_almacen.reduce((sum, producto) => {
+  const total = response?.reduce((acc: number, venta: any) => {
+    const subtotal = venta.productos_por_almacen.reduce((sum: number, producto: any) => {
       const productoTotal = producto.unidades_derivadas.reduce(
-        (pSum, unidad) => {
+        (pSum: number, unidad: any) => {
           return (
             pSum +
             Number(unidad.cantidad) *

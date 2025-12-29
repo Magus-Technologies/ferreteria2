@@ -57,9 +57,9 @@ export function useColumnsMisVentas() {
       width: 120,
       valueGetter: (params) => {
         const productos = params.data?.productos_por_almacen || [];
-        const subtotal = productos.reduce((sum, producto) => {
+        const subtotal = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
-            (pSum, unidad) => {
+            (pSum: number, unidad: any) => {
               return (
                 pSum +
                 Number(unidad.cantidad) *
@@ -82,9 +82,9 @@ export function useColumnsMisVentas() {
       width: 100,
       valueGetter: (params) => {
         const productos = params.data?.productos_por_almacen || [];
-        const subtotal = productos.reduce((sum, producto) => {
+        const subtotal = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
-            (pSum, unidad) => {
+            (pSum: number, unidad: any) => {
               return (
                 pSum +
                 Number(unidad.cantidad) *
@@ -107,9 +107,9 @@ export function useColumnsMisVentas() {
       width: 120,
       valueGetter: (params) => {
         const productos = params.data?.productos_por_almacen || [];
-        const subtotal = productos.reduce((sum, producto) => {
+        const subtotal = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
-            (pSum, unidad) => {
+            (pSum: number, unidad: any) => {
               return (
                 pSum +
                 Number(unidad.cantidad) *

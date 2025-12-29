@@ -1,12 +1,6 @@
 import { useEffect } from 'react'
 import dayjs from 'dayjs'
 import { FormInstance } from 'antd'
-import {
-  EstadoDeVenta,
-  FormaDePago,
-  TipoDocumento,
-  TipoMoneda,
-} from '@prisma/client'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { VentaConUnidadDerivadaNormal } from '../_components/others/header-crear-venta'
 import { FormCreateVenta } from '../_components/others/body-vender'
@@ -22,15 +16,15 @@ export default function useInitVenta({
 
   useEffect(() => {
     form.resetFields()
-    form.setFieldValue('estado_de_venta', EstadoDeVenta.Creado)
+    form.setFieldValue('estado_de_venta', 'cr') // Creado
     if (venta) {
       const dataFormated: FormCreateVenta = {
         fecha: dayjs(venta.fecha),
-        tipo_moneda: venta.tipo_moneda,
+        tipo_moneda: venta.tipo_moneda as any,
         tipo_de_cambio: Number(venta.tipo_de_cambio),
         // cliente_id: venta.cliente_id || undefined,
-        tipo_documento: venta.tipo_documento,
-        forma_de_pago: venta.forma_de_pago,
+        tipo_documento: venta.tipo_documento as any,
+        forma_de_pago: venta.forma_de_pago as any,
         productos: venta.productos_por_almacen.flatMap((ppa) =>
           ppa.unidades_derivadas.map((ud) => ({
             cantidad: Number(ud.cantidad),
@@ -56,10 +50,10 @@ export default function useInitVenta({
       setAlmacenId(venta.almacen_id)
     } else
       form.setFieldsValue({
-        tipo_moneda: TipoMoneda.Soles,
+        tipo_moneda: 's' as any, // Soles
         fecha: dayjs(),
-        forma_de_pago: FormaDePago.Contado,
-        tipo_documento: TipoDocumento.Factura,
+        forma_de_pago: 'co' as any, // Contado
+        tipo_documento: '03' as any, // Boleta (por defecto)
         tipo_de_cambio: 1,
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps

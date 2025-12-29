@@ -42,12 +42,6 @@ export default function BodyCrearPrestamo() {
     setLoading(true);
 
     try {
-      // Calcular monto total (suma de subtotales de productos) - Comentado: Solo se maneja por cantidad
-      // const monto_total = values.productos.reduce(
-      //   (acc, item) => acc + Number(item?.costo ?? 0) * Number(item?.cantidad ?? 0),
-      //   0
-      // );
-
       // Transformar datos del formulario al formato del backend
       const requestData: CreatePrestamoRequest = {
         productos: values.productos.map((p) => ({
@@ -55,7 +49,7 @@ export default function BodyCrearPrestamo() {
           unidad_derivada_id: p.unidad_derivada_id,
           unidad_derivada_factor: p.unidad_derivada_factor,
           cantidad: p.cantidad,
-          // costo: p.costo, // Comentado: Solo se maneja por cantidad
+          // costo no se envía (opcional)
         })),
         fecha: values.fecha.format("YYYY-MM-DD HH:mm:ss"),
         fecha_vencimiento: values.fecha_vencimiento.format("YYYY-MM-DD HH:mm:ss"),
@@ -68,7 +62,7 @@ export default function BodyCrearPrestamo() {
         ruc_dni: values.ruc_dni,
         telefono: values.telefono,
         direccion: values.direccion,
-        monto_total: values.monto_total, // Ahora se ingresa manualmente en el formulario
+        // monto_total no se envía (se calcula automáticamente en el backend)
         tasa_interes: values.tasa_interes,
         tipo_interes: values.tipo_interes,
         dias_gracia: values.dias_gracia,

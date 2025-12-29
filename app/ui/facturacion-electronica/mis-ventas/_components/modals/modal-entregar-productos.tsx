@@ -15,6 +15,7 @@ import ModalCreateCliente from "./modal-create-cliente";
 import PopoverOpcionesEntrega from "../popovers/popover-opciones-entrega";
 import ButtonBase from "~/components/buttons/button-base";
 import type { Cliente } from "~/lib/api/cliente";
+import { TipoEntrega, TipoDespacho, EstadoEntrega } from "~/lib/api/entrega-producto";
 
 interface ModalEntregarProductosProps {
   open: boolean;
@@ -77,10 +78,10 @@ export default function ModalEntregarProductos({
       const productos: ProductoEntrega[] = [];
       
       if (venta.productos_por_almacen && Array.isArray(venta.productos_por_almacen)) {
-        venta.productos_por_almacen.forEach((productoAlmacen) => {
+        venta.productos_por_almacen.forEach((productoAlmacen: any) => {
           console.log('Producto almacen:', productoAlmacen);
           if (productoAlmacen.unidades_derivadas && Array.isArray(productoAlmacen.unidades_derivadas)) {
-            productoAlmacen.unidades_derivadas.forEach((unidad) => {
+            productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
               console.log('Unidad derivada:', unidad);
               const total = Number(unidad.cantidad);
               // Si cantidad_pendiente es 0, null o undefined, usar la cantidad total
@@ -224,39 +225,24 @@ export default function ModalEntregarProductos({
     }
 
     crearEntrega({
-      venta: {
-        connect: { id: venta.id },
-      },
-      tipo_entrega: tipoDespacho === "EnTienda" ? "Inmediata" : "Programada",
-      tipo_despacho: tipoDespacho,
-      estado_entrega: tipoDespacho === "EnTienda" ? "Entregado" : "Pendiente",
-      fecha_entrega: dayjs().toDate(),
-      fecha_programada: values.fecha_programada,
+      venta_id: venta.id,
+      tipo_entrega: tipoDespacho === "EnTienda" ? TipoEntrega.RECOJO_EN_TIENDA : TipoEntrega.DESPACHO,
+      tipo_despacho: tipoDespacho === "Domicilio" ? TipoDespacho.PROGRAMADO : TipoDespacho.INMEDIATO,
+      estado_entrega: tipoDespacho === "EnTienda" ? EstadoEntrega.ENTREGADO : EstadoEntrega.PENDIENTE,
+      fecha_entrega: dayjs().format('YYYY-MM-DD'),
+      fecha_programada: values.fecha_programada ? dayjs(values.fecha_programada).format('YYYY-MM-DD') : undefined,
       hora_inicio: values.hora_inicio,
       hora_fin: values.hora_fin,
       direccion_entrega: values.direccion_entrega,
       observaciones: values.observaciones,
-      almacen_salida: {
-        connect: { id: values.almacen_salida_id },
-      },
-      chofer:
-        tipoDespacho === "Domicilio" && values.chofer_id
-          ? {
-              connect: { id: values.chofer_id },
-            }
-          : undefined,
-      user: {
-        connect: { id: user.id },
-      },
-      productos_entregados: {
-        create: productosConCantidad.map((p) => ({
-          unidad_derivada_venta: {
-            connect: { id: p.unidad_derivada_venta_id },
-          },
-          cantidad_entregada: p.entregar,
-          ubicacion: p.ubicacion || null,
-        })),
-      },
+      almacen_salida_id: values.almacen_salida_id,
+      chofer_id: tipoDespacho === "Domicilio" && values.chofer_id ? values.chofer_id : undefined,
+      user_id: user.id,
+      productos_entregados: productosConCantidad.map((p) => ({
+        unidad_derivada_venta_id: p.unidad_derivada_venta_id,
+        cantidad_entregada: p.entregar,
+        ubicacion: p.ubicacion || undefined,
+      })),
     });
   };
 

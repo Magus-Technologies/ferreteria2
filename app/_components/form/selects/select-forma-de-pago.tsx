@@ -1,11 +1,16 @@
 import SelectBase, { SelectBaseProps } from './select-base'
 import { FaMoneyCheck } from 'react-icons/fa6'
-import { FormaDePago } from '@prisma/client'
 
 interface SelectFormaDePagoProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
 }
+
+// Formas de pago con códigos
+const FORMAS_DE_PAGO = [
+  { value: 'co', label: 'Contado' },
+  { value: 'cr', label: 'Crédito' },
+]
 
 export default function SelectFormaDePago({
   placeholder = 'Seleccionar Forma de Pago',
@@ -20,10 +25,7 @@ export default function SelectFormaDePago({
       prefix={<FaMoneyCheck className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={Object.values(FormaDePago).map(value => ({
-        value,
-        label: value,
-      }))}
+      options={FORMAS_DE_PAGO}
     />
   )
 }

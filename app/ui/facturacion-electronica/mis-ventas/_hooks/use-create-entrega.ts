@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createEntregaProducto } from '~/app/_actions/entrega-producto'
+import { entregaProductoApi, CreateEntregaProductoRequest } from '~/lib/api/entrega-producto'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { Prisma } from '@prisma/client'
 import { message } from 'antd'
 
 export default function useCreateEntrega({
@@ -12,10 +11,10 @@ export default function useCreateEntrega({
   const queryClient = useQueryClient()
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (data: Prisma.EntregaProductoCreateInput) =>
-      createEntregaProducto(data),
-    onSuccess: () => {
-      message.success('Entrega registrada exitosamente')
+    mutationFn: (data: CreateEntregaProductoRequest) =>
+      entregaProductoApi.create(data),
+    onSuccess: (response) => {
+      message.success(response.data?.message || 'Entrega registrada exitosamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       onSuccess?.()
