@@ -259,6 +259,7 @@ export default function SelectProductos({
         onKeyUp={(e) => {
           if (e.key === 'Enter') {
             setTextDefault(text)
+            setOpenModalProductoSearch(true)
             handleSearch()
           }
         }}
