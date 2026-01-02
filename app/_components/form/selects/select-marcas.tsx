@@ -6,7 +6,7 @@ import { TbBrand4Chan } from 'react-icons/tb'
 import { marcasApi } from '~/lib/api/catalogos'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonCreateMarca from '../buttons/button-create-marca'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectMarcasProps extends SelectBaseProps {
@@ -24,7 +24,6 @@ export default function SelectMarcas({
   ...props
 }: SelectMarcasProps) {
   const selectMarcasRef = useRef<RefSelectBaseProps>(null)
-  const [shouldFetch, setShouldFetch] = useState(false)
 
   const { data } = useQuery({
     queryKey: [QueryKeys.MARCAS],
@@ -35,7 +34,6 @@ export default function SelectMarcas({
       }
       return response.data?.data || []
     },
-    enabled: shouldFetch,
     staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
@@ -51,16 +49,6 @@ export default function SelectMarcas({
           value: item.id,
           label: item.name,
         }))}
-        onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
-        onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
         {...props}
       />
       {showButtonCreate && (

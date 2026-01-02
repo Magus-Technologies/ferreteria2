@@ -6,7 +6,7 @@ import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import SelectFormaDePago from "~/app/_components/form/selects/select-forma-de-pago";
+import FormFormaDePago from "~/app/_components/form/form-forma-de-pago";
 import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
 import LabelBase from "~/components/form/label-base";
 import { FaCalendar } from "react-icons/fa6";
@@ -63,6 +63,9 @@ export default function FormCrearCotizacion({
       <Form.Item name="_cliente_direccion_3" hidden>
         <input type="hidden" />
       </Form.Item>
+      <Form.Item name="_cliente_direccion_4" hidden>
+        <input type="hidden" />
+      </Form.Item>
 
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
       <div className="flex gap-6">
@@ -112,6 +115,17 @@ export default function FormCrearCotizacion({
             readOnly
           />
         </LabelBase>
+        <LabelBase label="T.Doc:" classNames={{ labelParent: "mb-6" }}>
+          <SelectTipoDocumento
+            propsForm={{
+              name: "tipo_documento",
+              hasFeedback: false,
+              className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
+            }}
+            className="w-full"
+            classNameIcon="text-rose-700 mx-1"
+          />
+        </LabelBase>
 
         {/* TODO: Agregar campo Tipo de Moneda cuando sea necesario */}
         {/* <LabelBase label="Moneda:" classNames={{ labelParent: "mb-6" }}>
@@ -128,102 +142,13 @@ export default function FormCrearCotizacion({
         </LabelBase> */}
       </div>
 
-      {/* Fila 2: f.pago, n dias, f vence , t.doc */}
+      {/* Fila 2: f.pago, n dias, f vence */}
       <div className="flex gap-6">
-        <LabelBase label="F. Pago:" classNames={{ labelParent: "mb-6" }}>
-          <SelectFormaDePago
-            classNameIcon="text-rose-700 mx-1"
-            className="!w-[135px] !min-w-[135px] !max-w-[135px]"
-            propsForm={{
-              name: "forma_de_pago",
-              hasFeedback: false,
-            }}
-          />
-        </LabelBase>
-        <LabelBase label="N° DIAS:" classNames={{ labelParent: "mb-6" }}>
-          <InputNumberBase
-            propsForm={{
-              name: "vigencia_dias",
-              initialValue: 7,
-              hasFeedback: false,
-              className: "!min-w-[100px] !w-[100px] !max-w-[100px]",
-            }}
-            placeholder="7"
-            precision={0}
-            min={1}
-            prefix={<span className="text-rose-700 mx-1">📅</span>}
-          />
-        </LabelBase>
-        <LabelBase label="F VENCE:" classNames={{ labelParent: "mb-6" }}>
-          <DatePickerBase
-            propsForm={{
-              name: "fecha_vencimiento",
-              hasFeedback: false,
-            }}
-            placeholder="Fecha vencimiento"
-            className="!w-[160px] !min-w-[160px] !max-w-[160px]"
-            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
-          />
-        </LabelBase>
-        <LabelBase label="T.Doc:" classNames={{ labelParent: "mb-6" }}>
-          <SelectTipoDocumento
-            propsForm={{
-              name: "tipo_documento",
-              hasFeedback: false,
-              className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
-            }}
-            className="w-full"
-            classNameIcon="text-rose-700 mx-1"
-          />
-        </LabelBase>
-      </div>
-
-      {/* Fila 3: RUC/DNI, Cliente */}
-      <div className="flex gap-6">
-        <LabelBase label="Ruc / Dni:" classNames={{ labelParent: "mb-6" }}>
-          <InputBase
-            propsForm={{
-              name: "ruc_dni",
-              hasFeedback: false,
-              className: "!min-w-[200px] !w-[200px] !max-w-[200px]",
-            }}
-            placeholder="RUC o DNI"
-            prefix={<span className="text-rose-700 mx-1">🆔</span>}
-          />
-        </LabelBase>
-        <LabelBase label="Cliente:" classNames={{ labelParent: "mb-6" }}>
-          <SelectClientes
-            form={form}
-            propsForm={{
-              name: "cliente_id",
-              hasFeedback: false,
-              className: "!min-w-[250px] !w-[250px] !max-w-[250px]",
-              rules: [
-                {
-                  required: true,
-                  message: "Selecciona el cliente",
-                },
-              ],
-            }}
-            className="w-full"
-            classNameIcon="text-rose-700 mx-1"
-            onChange={(_, cliente) => {
-              // Autocompletar dirección y teléfono del cliente seleccionado
-              if (cliente) {
-                if (cliente.direccion) {
-                  form.setFieldValue("direccion", cliente.direccion);
-                }
-                if (cliente.telefono) {
-                  form.setFieldValue("telefono", cliente.telefono);
-                }
-                // También autocompletar RUC/DNI
-                if (cliente.numero_documento) {
-                  form.setFieldValue("ruc_dni", cliente.numero_documento);
-                }
-              }
-            }}
-          />
-        </LabelBase>
+        <FormFormaDePago
+          form={form}
+          fieldNames={{ numeroDias: "vigencia_dias" }}
+          labelNumeroDias="N° DIAS:"
+        />
 
         {/* Checkbox: Reservar Stock */}
         <LabelBase label="Opciones:" classNames={{ labelParent: "mb-6" }}>
@@ -246,19 +171,69 @@ export default function FormCrearCotizacion({
         </LabelBase>
       </div>
 
-      {/* Fila 4: Dirección, Telefono, cred .disp */}
-      <div className="flex gap-6">
-        <LabelBase label="Tele/Cel:" classNames={{ labelParent: "mb-6" }}>
-          <InputBase
+      {/* Fila 3: DNI/RUC (con lupa), Cliente y direccion*/}
+      <div className="flex gap-6 items-end">
+        <LabelBase label="DNI/RUC:" classNames={{ labelParent: "mb-6" }}>
+          <SelectClientes
+            form={form}
+            showOnlyDocument={true}
             propsForm={{
-              name: "telefono",
+              name: "cliente_id",
               hasFeedback: false,
-              className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
+              className: "!min-w-[180px] !w-[180px] !max-w-[180px]",
             }}
-            placeholder="Teléfono"
-            prefix={<span className="text-rose-700 mx-1">📞</span>}
+            className="w-full"
+            classNameIcon="text-rose-700 mx-1"
+            placeholder="DNI/RUC"
+            onChange={(_, cliente) => {
+              // Actualizar los campos relacionados
+              if (cliente) {
+                // Actualizar DNI/RUC (solo el número)
+                if (cliente.numero_documento) {
+                  form.setFieldValue('ruc_dni', cliente.numero_documento);
+                }
+                
+                // Actualizar nombre del cliente
+                const nombreCompleto = cliente.razon_social 
+                  ? cliente.razon_social
+                  : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim();
+                form.setFieldValue('cliente_nombre', nombreCompleto);
+                
+                // Actualizar dirección
+                if (cliente.direccion) {
+                  form.setFieldValue('direccion', cliente.direccion);
+                }
+                
+                // Actualizar teléfono
+                form.setFieldValue('telefono', cliente.telefono || '');
+                
+                // Actualizar email
+                form.setFieldValue('email', cliente.email || '');
+              } else {
+                form.setFieldValue('ruc_dni', '');
+                form.setFieldValue('cliente_nombre', '');
+                form.setFieldValue('direccion', '');
+                form.setFieldValue('telefono', '');
+                form.setFieldValue('email', '');
+              }
+            }}
           />
         </LabelBase>
+
+        <LabelBase label="Cliente:" classNames={{ labelParent: "mb-6" }}>
+          <InputBase
+            propsForm={{
+              name: "cliente_nombre",
+              hasFeedback: false,
+              className: "!min-w-[250px] !w-[250px] !max-w-[250px]",
+            }}
+            placeholder="Nombre del cliente"
+            className="w-full"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
+
         <LabelBase label="Dirección:" classNames={{ labelParent: "mb-6" }}>
           <InputBase
             propsForm={{
@@ -270,8 +245,39 @@ export default function FormCrearCotizacion({
             prefix={<span className="text-rose-700 mx-1">📍</span>}
           />
         </LabelBase>
+        
+        <div className="mb-6">
+          <RadioDireccionCliente form={form} />
+        </div>
+      </div>
 
-        <RadioDireccionCliente form={form} />
+      {/* Fila 4: Telefono, Email */}
+      <div className="flex gap-6">
+        <LabelBase label="Tele/Cel:" classNames={{ labelParent: "mb-6" }}>
+          <InputBase
+            propsForm={{
+              name: "telefono",
+              hasFeedback: false,
+              className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
+            }}
+            placeholder="Teléfono"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
+
+        <LabelBase label="Email:" classNames={{ labelParent: "mb-6" }}>
+          <InputBase
+            propsForm={{
+              name: "email",
+              hasFeedback: false,
+              className: "!min-w-[250px] !w-[250px] !max-w-[250px]",
+            }}
+            placeholder="Email del cliente"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
       </div>
     </div>
   );

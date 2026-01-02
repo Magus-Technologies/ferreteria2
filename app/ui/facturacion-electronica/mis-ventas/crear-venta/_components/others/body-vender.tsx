@@ -6,9 +6,10 @@ import {
   TipoMoneda,
   TipoDocumento,
   DescuentoTipo,
-} from '@prisma/client'
+} from '~/lib/api/venta'
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
+import { useState } from 'react'
 import FormBase from '~/components/form/form-base'
 import useCreateVenta from '../../_hooks/use-create-venta'
 import useInitVenta from '../../_hooks/use-init-venta'
@@ -16,6 +17,7 @@ import { VentaConUnidadDerivadaNormal } from './header-crear-venta'
 import FormTableVender from '../form/form-table-vender'
 import FormCrearVenta from '../form/form-crear-venta'
 import CardsInfoVenta from '../cards/cards-info-venta'
+import ModalDocVenta, { type VentaResponse } from '../../../_components/modals/modal-doc-venta'
 
 export type FormCreateVenta = {
   productos: Array<{
@@ -44,13 +46,16 @@ export type FormCreateVenta = {
   cliente_id?: number
   recomendado_por_id?: number
   direccion?: string
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3'
+  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4'
   // Campos temporales del cliente
   _cliente_direccion_1?: string
   _cliente_direccion_2?: string
   _cliente_direccion_3?: string
+  _cliente_direccion_4?: string
   ruc_dni?: string
+  cliente_nombre?: string
   telefono?: string
+  email?: string
   metodos_de_pago?: Array<{
     despliegue_de_pago_id: string
     monto: number
@@ -61,27 +66,51 @@ export default function BodyVender({
   venta,
 }: { venta?: VentaConUnidadDerivadaNormal } = {}) {
   const [form] = Form.useForm<FormCreateVenta>()
+  const [openDoc, setOpenDoc] = useState(false)
+  const [ventaData, setVentaData] = useState<VentaResponse>()
 
   useInitVenta({ venta, form })
 
-  const { handleSubmit } = useCreateVenta(form)
+  const { handleSubmit } = useCreateVenta({
+    form,
+    onSuccess: (data) => {
+      // Abrir modal automáticamente cuando se crea la venta
+      setVentaData(data)
+      setOpenDoc(true)
+    },
+  })
 
   return (
-    <FormBase<FormCreateVenta>
-      form={form}
-      name='venta'
-      className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
-      onFinish={handleSubmit}
-    >
-      <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0'>
-        <div className='flex-1 min-h-0'>
-          <FormTableVender form={form} venta={venta} />
+    <>
+      {/* Modal de PDF - Se abre automáticamente después de crear venta */}
+      <ModalDocVenta
+        open={openDoc}
+        setOpen={setOpenDoc}
+        data={ventaData}
+      />
+
+      <FormBase<FormCreateVenta>
+        form={form}
+        name='venta'
+        className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
+        onFinish={handleSubmit}
+      >
+        <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0'>
+          <div className='flex-1 min-h-0'>
+            <FormTableVender form={form} venta={venta} />
+          </div>
+          <FormCrearVenta form={form} venta={venta} />
         </div>
-        <FormCrearVenta form={form} venta={venta} />
-      </div>
-      <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} />
-      </div>
-    </FormBase>
+        <div className='w-full xl:w-auto'>
+          <CardsInfoVenta 
+            form={form} 
+            onSuccessVenta={(data) => {
+              setVentaData(data)
+              setOpenDoc(true)
+            }}
+          />
+        </div>
+      </FormBase>
+    </>
   )
 }

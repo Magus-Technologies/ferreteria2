@@ -1,6 +1,6 @@
 'use client'
 
-import { TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/lib/api/venta'
 import { Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
@@ -56,7 +56,7 @@ export default function FormMetodoPagoItem({
       </div>
       <div className='w-40'>
         <InputNumberBase
-          prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+          prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
           placeholder='Monto'
           value={metodo.monto}
           onChange={(value) => onChange(index, 'monto', value ?? undefined)}

@@ -10,12 +10,15 @@ import CardsInfoPrestamo from "../cards/cards-info-prestamo";
 import { prestamoApi, type CreatePrestamoRequest } from "~/lib/api/prestamo";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
+import ModalDocPrestamo, { PrestamoResponse } from "~/app/ui/facturacion-electronica/mis-prestamos/_components/modals/modal-doc-prestamo";
 
 export default function BodyCrearPrestamo() {
   const [form] = Form.useForm<FormCreatePrestamo>();
   const [loading, setLoading] = useState(false);
   const { almacen_id } = useStoreAlmacen();
   const router = useRouter();
+  const [openDoc, setOpenDoc] = useState(false);
+  const [prestamoData, setPrestamoData] = useState<PrestamoResponse>();
 
   const handleSubmit = async (values: FormCreatePrestamo) => {
     if (!almacen_id) {
@@ -95,18 +98,14 @@ export default function BodyCrearPrestamo() {
         response.data?.message || "Préstamo creado exitosamente"
       );
 
-      // Mostrar número de préstamo generado
-      if (response.data?.data.numero) {
-        message.info(`Número de préstamo: ${response.data.data.numero}`, 5);
+      // Abrir modal con el documento PDF
+      if (response.data?.data) {
+        setPrestamoData(response.data.data);
+        setOpenDoc(true);
       }
 
       // Limpiar formulario
       form.resetFields();
-
-      // Redirigir a la lista de préstamos después de 2 segundos
-      setTimeout(() => {
-        router.push('/ui/facturacion-electronica/mis-prestamos');
-      }, 2000);
     } catch (error) {
       console.error("Error al crear préstamo:", error);
       message.error("Error inesperado al crear el préstamo");
@@ -116,21 +115,24 @@ export default function BodyCrearPrestamo() {
   };
 
   return (
-    <FormBase<FormCreatePrestamo>
-      form={form}
-      name="prestamo"
-      className="flex gap-6 size-full"
-      onFinish={handleSubmit}
-      onFinishFailed={() => {
-        message.error('Por favor completa todos los campos requeridos');
-      }}
-      disabled={loading}
-    >
-      <div className="flex-1 flex flex-col gap-6">
-        <FormTablePrestamo form={form} />
-        <FormCrearPrestamo form={form} />
-      </div>
-      <CardsInfoPrestamo form={form} />
-    </FormBase>
+    <>
+      <ModalDocPrestamo open={openDoc} setOpen={setOpenDoc} data={prestamoData} />
+      <FormBase<FormCreatePrestamo>
+        form={form}
+        name="prestamo"
+        className="flex gap-6 size-full"
+        onFinish={handleSubmit}
+        onFinishFailed={() => {
+          message.error('Por favor completa todos los campos requeridos');
+        }}
+        disabled={loading}
+      >
+        <div className="flex-1 flex flex-col gap-6">
+          <FormTablePrestamo form={form} />
+          <FormCrearPrestamo form={form} />
+        </div>
+        <CardsInfoPrestamo form={form} />
+      </FormBase>
+    </>
   );
 }

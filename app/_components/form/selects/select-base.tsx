@@ -4,6 +4,7 @@ import { Form, FormInstance, RefSelectProps, Select, SelectProps } from "antd";
 import { focusNext } from "../../../_utils/autofocus";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { FormItemProps } from "antd/lib";
+import React from "react";
 
 export interface RefSelectBaseProps extends RefSelectProps {
   changeValue: (value: unknown) => void;
@@ -24,12 +25,14 @@ function Base({
   nextWithPrevent,
   onKeyUp,
   onOpenChange,
+  innerRef,
   ...props
-}: SelectBaseProps) {
+}: SelectBaseProps & { innerRef?: React.Ref<any> }) {
   const [open, setOpen] = useState(false);
 
   return (
     <Select
+      ref={innerRef}
       {...props}
       onOpenChange={(open) => {
         setOpen(open);
@@ -67,6 +70,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
   } = propsForm || {};
 
   const [value, setValue] = useState<unknown>();
+  const selectRef = React.useRef<any>(null);
 
   useImperativeHandle(
     ref,
@@ -87,15 +91,15 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
         }
       },
       focus: () => {
-        // Implementación básica de focus
+        selectRef.current?.focus();
       },
       blur: () => {
-        // Implementación básica de blur
+        selectRef.current?.blur();
       },
-      scrollTo: () => {
-        // Implementación básica de scrollTo
+      scrollTo: (arg?: any) => {
+        selectRef.current?.scrollTo?.(arg);
       },
-      nativeElement: undefined as unknown as HTMLElement,
+      nativeElement: selectRef.current?.nativeElement,
     }),
     [form, propsFormItem.name, propsFormItem.prefix_array_name, setValue]
   );
@@ -107,6 +111,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
       className={`${className} ${formWithMessage ? "" : "!mb-0"}`}
     >
       <Base
+        innerRef={selectRef}
         nextInEnter={nextInEnter}
         nextWithPrevent={nextWithPrevent}
         onKeyUp={onKeyUp}
@@ -119,6 +124,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
     </Form.Item>
   ) : (
     <Base
+      innerRef={selectRef}
       nextInEnter={nextInEnter}
       nextWithPrevent={nextWithPrevent}
       onKeyUp={onKeyUp}

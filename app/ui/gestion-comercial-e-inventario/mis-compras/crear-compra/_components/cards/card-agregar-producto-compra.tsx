@@ -285,14 +285,14 @@ export default function CardAgregarProductoCompra({
         <ButtonBase
           ref={buttom_masRef}
           color='success'
-          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4!'
+          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4! hover:!scale-100'
           onClick={() => handleOk(false)}
         >
           <FaPlusCircle className='min-w-fit' size={12} /> Más
         </ButtonBase>
         <ButtonBase
           color='warning'
-          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-nowrap px-4!'
+          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-nowrap px-4! hover:!scale-100'
           onClick={() => handleOk(true)}
         >
           <FaPlusCircle className='min-w-fit' size={12} /> Más y Salir

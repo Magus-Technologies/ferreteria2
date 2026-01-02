@@ -49,14 +49,6 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
   const filtros = useStoreFiltrosProductos(state => state.filtros)
 
-  // Limpiar marca_id del store al montar el componente
-  useEffect(() => {
-    if (filtros?.marca_id) {
-      const { marca_id, ...restoFiltros } = filtros
-      setFiltros(restoFiltros)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   // Inicializar filtros automáticamente al montar el componente
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,7 +124,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
         estado: 1,
         cs_stock: CSStock.ALL,
         cs_comision: CSComision.ALL,
-        // marca_id: marca_predeterminada, // Removido para mostrar todos los productos por defecto
+        marca_id: 1, // ACEROS AREQUIPA por defecto
       }}
       className='w-full'
       onFinish={handleFinish}

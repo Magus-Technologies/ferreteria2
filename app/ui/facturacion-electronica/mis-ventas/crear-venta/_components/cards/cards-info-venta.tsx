@@ -1,7 +1,6 @@
 'use client'
 
-import { DescuentoTipo } from '@prisma/client'
-import { EstadoDeVenta } from '~/lib/api/venta'
+import { DescuentoTipo, EstadoDeVenta } from '~/lib/api/venta'
 import { Form, FormInstance } from 'antd'
 import { useMemo, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
@@ -17,9 +16,11 @@ import { FaPause } from 'react-icons/fa6'
 export default function CardsInfoVenta({
   form,
   venta,
+  onSuccessVenta,
 }: {
   form: FormInstance
   venta?: VentaConUnidadDerivadaNormal
+  onSuccessVenta?: (data: any) => void
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const forma_de_pago = Form.useWatch('forma_de_pago', form)
@@ -47,13 +48,13 @@ export default function CardsInfoVenta({
   const totalDescuento = useMemo(
     () =>
       (productos || []).reduce((acc, item) => {
-        const descuento_tipo = item?.descuento_tipo ?? DescuentoTipo.Monto
+        const descuento_tipo = item?.descuento_tipo ?? DescuentoTipo.MONTO
         const descuento = Number(item?.descuento ?? 0)
         const precio_venta = Number(item?.precio_venta ?? 0)
         const recargo = Number(item?.recargo ?? 0)
         const cantidad = Number(item?.cantidad ?? 0)
 
-        if (descuento_tipo === DescuentoTipo.Porcentaje) {
+        if (descuento_tipo === DescuentoTipo.PORCENTAJE) {
           return acc + ((precio_venta + recargo) * descuento * cantidad) / 100
         } else {
           return acc + descuento
@@ -75,14 +76,14 @@ export default function CardsInfoVenta({
         const comision = Number(item?.comision ?? 0)
         const cantidad = Number(item?.cantidad ?? 0)
         const descuento = Number(item?.descuento ?? 0)
-        const descuento_tipo = item?.descuento_tipo ?? DescuentoTipo.Monto
+        const descuento_tipo = item?.descuento_tipo ?? DescuentoTipo.MONTO
         const precio_venta = Number(item?.precio_venta ?? 0)
         const recargo = Number(item?.recargo ?? 0)
 
         const total_comision_bruta = comision * cantidad
 
         let descuento_monto = 0
-        if (descuento_tipo === DescuentoTipo.Porcentaje) {
+        if (descuento_tipo === DescuentoTipo.PORCENTAJE) {
           descuento_monto =
             ((precio_venta + recargo) * descuento * cantidad) / 100
         } else {
@@ -157,22 +158,6 @@ export default function CardsInfoVenta({
           />
           <FaPause className='min-w-fit' size={30} /> Poner en Espera
         </ButtonBase>
-        {/* )} */}
-        <ButtonBase
-          onClick={() => {
-            form.setFieldValue('estado_de_venta', EstadoDeVenta.CREADO)
-            form.submit()
-          }}
-          color={venta ? 'info' : 'success'}
-          className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
-        >
-          {venta ? (
-            <MdOutlineSell className='min-w-fit' size={30} />
-          ) : (
-            <MdSell className='min-w-fit' size={30} />
-          )}{' '}
-          {venta ? 'Editar' : 'Crear'} Venta
-        </ButtonBase>
       </div>
 
       <ModalMetodosPagoVenta
@@ -181,6 +166,7 @@ export default function CardsInfoVenta({
         form={form}
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
+        onSuccessVenta={onSuccessVenta}
       />
     </>
   )

@@ -12,11 +12,14 @@ import {
 } from "~/lib/api/cotizaciones";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
+import ModalDocCotizacion, { CotizacionResponse } from "~/app/ui/facturacion-electronica/mis-cotizaciones/_components/modals/modal-doc-cotizacion";
 
 export default function BodyCotizar() {
   const [form] = Form.useForm<FormCreateCotizacion>();
   const [loading, setLoading] = useState(false);
   const { almacen_id } = useStoreAlmacen();
+  const [openDoc, setOpenDoc] = useState(false);
+  const [cotizacionData, setCotizacionData] = useState<CotizacionResponse>();
 
   const handleSubmit = async (values: FormCreateCotizacion) => {
     if (!almacen_id) {
@@ -87,16 +90,14 @@ export default function BodyCotizar() {
         response.data?.message || "Cotización creada exitosamente"
       );
 
-      // Mostrar número de cotización generado
-      if (response.data?.data.numero) {
-        message.info(`Número de cotización: ${response.data.data.numero}`, 5);
+      // Abrir modal con el documento PDF
+      if (response.data?.data) {
+        setCotizacionData(response.data.data);
+        setOpenDoc(true);
       }
 
       // Limpiar formulario
       form.resetFields();
-
-      // Opcional: Redirigir a la lista de cotizaciones
-      // router.push('/facturacion-electronica/mis-cotizaciones')
     } catch (error) {
       console.error("Error al crear cotización:", error);
       message.error("Error inesperado al crear la cotización");
@@ -106,21 +107,24 @@ export default function BodyCotizar() {
   };
 
   return (
-    <FormBase<FormCreateCotizacion>
-      form={form}
-      name="cotizacion"
-      className="flex gap-6 size-full"
-      onFinish={handleSubmit}
-      onFinishFailed={() => {
-        message.error('Por favor completa todos los campos requeridos');
-      }}
-      disabled={loading}
-    >
-      <div className="flex-1 flex flex-col gap-6">
-        <FormTableCotizar form={form} />
-        <FormCrearCotizacion form={form} />
-      </div>
-      <CardsInfoCotizacion form={form} />
-    </FormBase>
+    <>
+      <ModalDocCotizacion open={openDoc} setOpen={setOpenDoc} data={cotizacionData} />
+      <FormBase<FormCreateCotizacion>
+        form={form}
+        name="cotizacion"
+        className="flex gap-6 size-full"
+        onFinish={handleSubmit}
+        onFinishFailed={() => {
+          message.error('Por favor completa todos los campos requeridos');
+        }}
+        disabled={loading}
+      >
+        <div className="flex-1 flex flex-col gap-6">
+          <FormTableCotizar form={form} />
+          <FormCrearCotizacion form={form} />
+        </div>
+        <CardsInfoCotizacion form={form} />
+      </FormBase>
+    </>
   );
 }

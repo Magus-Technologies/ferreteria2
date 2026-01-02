@@ -41,12 +41,15 @@ export interface FormCreateCotizacion {
   // Campos de cliente
   ruc_dni?: string;
   cliente_id?: number;
+  cliente_nombre?: string;
   telefono?: string;
+  email?: string;
   direccion?: string;
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3';
+  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4';
   _cliente_direccion_1?: string;
   _cliente_direccion_2?: string;
   _cliente_direccion_3?: string;
+  _cliente_direccion_4?: string;
   
   // Campos de documento
   fecha_vencimiento?: Dayjs;

@@ -3,7 +3,6 @@
 import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
-import { ClienteCreateInputSchema } from '~/prisma/generated/zod'
 import { Cliente } from '~/lib/api/cliente'
 import { useState } from 'react'
 import { useColumnsClientes } from './columns-clientes'
@@ -45,7 +44,6 @@ export default function TableClientesBusqueda({
         {...props}
         id='mis-ventas.clientes'
         title='Clientes'
-        schema={ClienteCreateInputSchema}
         loading={loading}
         columnDefs={useColumnsClientes({ setDataEdit, setOpen })}
         rowData={response || []}

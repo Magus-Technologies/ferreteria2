@@ -104,7 +104,7 @@ export default function ModalProductoSearch({
       styles={{
         body: {
           maxHeight: "calc(100vh - 120px)",
-          overflowY: "auto",
+          overflowY: "scroll",
         },
       }}
     >

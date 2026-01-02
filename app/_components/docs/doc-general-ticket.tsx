@@ -57,7 +57,7 @@ export default function DocGeneralTicket<T>({
         >
           <View style={styles_ticket.total}>
             <Text style={styles_ticket.textTotal}>TOTAL</Text>
-            <Text>{total}</Text>
+            <Text>{Number(total).toFixed(2)}</Text>
           </View>
           {totalConLetras && (
             <Text style={{ fontSize: 7 }}>{NumeroALetras(total)}</Text>

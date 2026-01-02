@@ -37,7 +37,7 @@ export default function FiltersMisCotizaciones() {
       form={form}
       name='filtros-mis-cotizaciones'
       initialValues={{
-        desde: dayjs().startOf('month'),
+        desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
       }}
       className='w-full'

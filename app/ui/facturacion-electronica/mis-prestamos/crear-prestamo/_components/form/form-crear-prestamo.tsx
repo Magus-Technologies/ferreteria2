@@ -86,6 +86,9 @@ export default function FormCrearPrestamo({
       <Form.Item name="_cliente_direccion_3" hidden>
         <input type="hidden" />
       </Form.Item>
+      <Form.Item name="_cliente_direccion_4" hidden>
+        <input type="hidden" />
+      </Form.Item>
 
       {/* Fila 1: Fecha, Fecha Vencimiento, Tipo Operación, Tipo Entidad */}
       <div className="flex gap-4">

@@ -15,9 +15,16 @@ export default function FormMetodoPagoCompra({ form }: { form: FormInstance }) {
   const [disabled, setDisabled] = useState(false)
 
   useEffect(() => {
-    if (egreso_dinero_id) form.setFieldValue('despliegue_de_pago_id', undefined)
-    if (despliegue_de_pago_id) form.setFieldValue('egreso_dinero_id', undefined)
-  }, [egreso_dinero_id, despliegue_de_pago_id])
+    if (egreso_dinero_id) {
+      form.setFieldValue('despliegue_de_pago_id', undefined)
+    }
+  }, [egreso_dinero_id])
+
+  useEffect(() => {
+    if (despliegue_de_pago_id) {
+      form.setFieldValue('egreso_dinero_id', undefined)
+    }
+  }, [despliegue_de_pago_id])
 
   useEffect(() => {
     if (formaDePago === FormaDePago.cr) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { DescuentoTipo, TipoMoneda } from '@prisma/client'
+import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -195,7 +195,7 @@ export function useColumnsVender({
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
         <div className='flex items-center h-full'>
           <InputNumberBase
-            prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
             size='small'
             propsForm={{
               name: [value, 'precio_venta'],
@@ -217,7 +217,7 @@ export function useColumnsVender({
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
         <div className='flex items-center h-full'>
           <InputNumberBase
-            prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
             size='small'
             propsForm={{
               name: [value, 'recargo'],
@@ -247,7 +247,7 @@ export function useColumnsVender({
             onChange={() => calcularSubtotalForm({ form, value })}
           />
           <InputNumberBase
-            prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
             size='small'
             className='w-full'
             propsForm={{
@@ -274,7 +274,7 @@ export function useColumnsVender({
               name: [value, 'subtotal'],
               rules: [{ required: true, message: '' }],
             }}
-            prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
             precision={2}
             formWithMessage={false}
             readOnly
@@ -354,7 +354,7 @@ export function calcularSubtotalVenta({
 }) {
   return (
     (Number(precio_venta) + Number(recargo)) * Number(cantidad) -
-    (descuento_tipo === DescuentoTipo.Porcentaje
+    (descuento_tipo === DescuentoTipo.PORCENTAJE
       ? ((Number(precio_venta) + Number(recargo)) *
           Number(descuento) *
           Number(cantidad)) /

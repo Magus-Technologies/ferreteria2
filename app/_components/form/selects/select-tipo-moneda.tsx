@@ -1,4 +1,4 @@
-import { TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/lib/api/venta'
 import SelectBase, { SelectBaseProps } from './select-base'
 import { consultaTipoDeCambio } from '~/app/_actions/consulta-tipo-de-cambio'
 import { useStoreTipoDeCambio } from '~/store/store-tipo-de-cambio'
@@ -38,9 +38,15 @@ export default function SelectTipoMoneda({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])
 
+  // Mapeo de valores a nombres legibles
+  const tipoMonedaLabels: Record<TipoMoneda, string> = {
+    [TipoMoneda.SOLES]: 'Soles',
+    [TipoMoneda.DOLARES]: 'Dólares',
+  }
+
   return (
     <SelectBase
-      {...(!props.propsForm && { defaultValue: TipoMoneda.Soles })}
+      {...(!props.propsForm && { defaultValue: TipoMoneda.SOLES })}
       prefix={
         <RiExchangeDollarFill className={classNameIcon} size={sizeIcon} />
       }
@@ -48,10 +54,10 @@ export default function SelectTipoMoneda({
       placeholder={placeholder}
       options={Object.values(TipoMoneda).map(value => ({
         value,
-        label: value,
+        label: tipoMonedaLabels[value as TipoMoneda],
       }))}
       onChange={value => {
-        if (value === TipoMoneda.Soles) setTipoDeCambio(1)
+        if (value === TipoMoneda.SOLES) setTipoDeCambio(1)
         else refetch()
         onChange?.(value)
       }}
@@ -60,7 +66,7 @@ export default function SelectTipoMoneda({
         props.propsForm
           ? {
               ...props.propsForm,
-              initialValue: props.propsForm.initialValue ?? TipoMoneda.Soles,
+              initialValue: props.propsForm.initialValue ?? TipoMoneda.SOLES,
             }
           : undefined
       }

@@ -1,8 +1,11 @@
 import { apiRequest, type ApiResponse } from '../api';
-import { TipoCliente } from '@prisma/client';
 
-// Re-exportar TipoCliente para facilitar su uso
-export { TipoCliente };
+// ============= ENUMS =============
+
+export enum TipoCliente {
+  PERSONA = 'p',
+  EMPRESA = 'e',
+}
 
 // ============= INTERFACES =============
 
@@ -16,6 +19,7 @@ export interface Cliente {
   direccion: string | null;
   direccion_2: string | null;
   direccion_3: string | null;
+  direccion_4: string | null;
   telefono: string | null;
   email: string | null;
   estado: boolean;
@@ -32,6 +36,7 @@ export interface CreateClienteRequest {
   direccion?: string | null;
   direccion_2?: string | null;
   direccion_3?: string | null;
+  direccion_4?: string | null;
   telefono?: string | null;
   email?: string | null;
   estado?: boolean;
@@ -120,6 +125,19 @@ export const clienteApi = {
   delete: async (id: number): Promise<ApiResponse<{ message: string }>> => {
     return apiRequest<{ message: string }>(`/clientes/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  /**
+   * Verificar si un documento ya existe
+   */
+  checkDocumento: async (numero_documento: string, exclude_id?: number): Promise<ApiResponse<{ exists: boolean; message: string }>> => {
+    return apiRequest<{ exists: boolean; message: string }>('/clientes/check-documento', {
+      method: 'POST',
+      body: JSON.stringify({
+        numero_documento,
+        exclude_id,
+      }),
     });
   },
 };

@@ -29,6 +29,11 @@ export enum EstadoDeVenta {
   ANULADO = 'an',
 }
 
+export enum DescuentoTipo {
+  PORCENTAJE = '%',
+  MONTO = 'm',
+}
+
 // ============= INTERFACES =============
 
 export interface ProductoVentaRequest {
@@ -67,7 +72,7 @@ export interface CreateVentaRequest {
   tipo_de_cambio?: number;
   fecha: string;
   estado_de_venta: EstadoDeVenta;
-  cliente_id: number;
+  cliente_id?: number; // Opcional: Para Boleta/NV sin cliente, backend usa "CLIENTE VARIOS" automáticamente
   recomendado_por_id?: number;
   user_id: string;
   almacen_id: number;

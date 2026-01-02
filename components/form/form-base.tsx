@@ -11,10 +11,11 @@ export default function FormBase<T>({
   children,
   variant = 'filled',
   name = uuid(),
+  autoComplete = 'off',
   ...props
 }: FormBaseProps<T>) {
   return (
-    <Form<T> variant={variant} name={name} {...props}>
+    <Form<T> variant={variant} name={name} autoComplete={autoComplete} {...props}>
       {children}
     </Form>
   )

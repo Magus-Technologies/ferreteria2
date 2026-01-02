@@ -1,10 +1,10 @@
-import { TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/lib/api/venta'
 
 export default function CardInfoVenta({
   title,
   value,
   className = '',
-  moneda = TipoMoneda.Soles,
+  moneda = TipoMoneda.SOLES,
 }: {
   title: string
   value: number
@@ -19,7 +19,7 @@ export default function CardInfoVenta({
         {title}:
       </h3>
       <p className='text-xl font-bold text-left text-slate-800 text-nowrap'>
-        {moneda === TipoMoneda.Soles ? 'S/.' : '$.'}{' '}
+        {moneda === TipoMoneda.SOLES ? 'S/.' : '$.'}{' '}
         {value.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,

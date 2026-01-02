@@ -13,11 +13,7 @@ import {
   message,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { TipoDocumento } from "@prisma/client";
-import {
-  createSerieDocumento,
-  getSeriesDocumento,
-} from "~/app/_actions/serie-documento";
+import { serieDocumentoApi, type CreateSerieDocumentoRequest } from "~/lib/api/serie-documento";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -30,30 +26,31 @@ export default function TableSeriesDocumento() {
   const { data, isLoading } = useQuery({
     queryKey: ["series-documento", almacen_id],
     queryFn: async () => {
-      const result = await getSeriesDocumento({
-        where: { almacen_id },
+      const result = await serieDocumentoApi.list({
+        almacen_id: almacen_id!,
       });
-      return result.data;
+      return result.data?.data || [];
     },
     enabled: !!almacen_id,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (values: {
-      tipo_documento: TipoDocumento;
-      serie: string;
-      correlativo?: number;
-      activo?: boolean;
-    }) => {
-      await createSerieDocumento({
+    mutationFn: async (values: CreateSerieDocumentoRequest) => {
+      if (!almacen_id) throw new Error("No hay almacén seleccionado");
+
+      const response = await serieDocumentoApi.create({
         tipo_documento: values.tipo_documento,
-        serie: values.serie,
+        serie: values.serie.toUpperCase(),
         correlativo: values.correlativo || 0,
         activo: values.activo ?? true,
-        almacen: {
-          connect: { id: almacen_id },
-        },
+        almacen_id: almacen_id,
       });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Error al crear la serie");
+      }
+
+      return response;
     },
     onSuccess: () => {
       message.success("Serie creada exitosamente");
@@ -71,22 +68,24 @@ export default function TableSeriesDocumento() {
       title: "Tipo Documento",
       dataIndex: "tipo_documento",
       key: "tipo_documento",
-      render: (tipo: TipoDocumento) => {
-        const colors: Partial<Record<TipoDocumento, string>> = {
-          Factura: "blue",
-          Boleta: "green",
-          NotaDeVenta: "orange",
-          Ingreso: "cyan",
-          Salida: "purple",
+      render: (tipo: string) => {
+        const colors: Record<string, string> = {
+          "01": "blue",
+          "03": "green",
+          "nv": "orange",
+          "in": "cyan",
+          "sa": "purple",
+          "rc": "magenta",
         };
-        const labels: Partial<Record<TipoDocumento, string>> = {
-          Factura: "Factura",
-          Boleta: "Boleta",
-          NotaDeVenta: "Nota de Venta",
-          Ingreso: "Ingreso",
-          Salida: "Salida",
+        const labels: Record<string, string> = {
+          "01": "Factura",
+          "03": "Boleta",
+          "nv": "Nota de Venta",
+          "in": "Ingreso",
+          "sa": "Salida",
+          "rc": "Recibo por Honorarios",
         };
-        return <Tag color={colors[tipo]}>{labels[tipo]}</Tag>;
+        return <Tag color={colors[tipo] || "default"}>{labels[tipo] || tipo}</Tag>;
       },
     },
     {
@@ -159,9 +158,12 @@ export default function TableSeriesDocumento() {
             ]}
           >
             <Select placeholder="Seleccione">
-              <Select.Option value="Factura">Factura</Select.Option>
-              <Select.Option value="Boleta">Boleta</Select.Option>
-              <Select.Option value="NotaDeVenta">Nota de Venta</Select.Option>
+              <Select.Option value="01">Factura</Select.Option>
+              <Select.Option value="03">Boleta</Select.Option>
+              <Select.Option value="nv">Nota de Venta</Select.Option>
+              <Select.Option value="in">Ingreso</Select.Option>
+              <Select.Option value="sa">Salida</Select.Option>
+              <Select.Option value="rc">Recibo por Honorarios</Select.Option>
             </Select>
           </Form.Item>
 

@@ -1,250 +1,228 @@
 'use client'
 
-import { TipoMoneda } from '@prisma/client'
-import { FormInstance, Modal } from 'antd'
+import { TipoMoneda, EstadoDeVenta } from '~/lib/api/venta'
+import { Form, FormInstance, Modal } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
-import { FaPlus, FaSave } from 'react-icons/fa'
-import FormMetodoPagoItem from '../form/form-metodo-pago-item'
-
-interface MetodoDePago {
-  despliegue_de_pago_id?: string
-  monto?: number
-}
+import { FaSave } from 'react-icons/fa'
+import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
+import InputBase from '~/app/_components/form/inputs/input-base'
+import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
+import { FaHashtag } from 'react-icons/fa6'
+import useCreateVenta from '../../_hooks/use-create-venta'
+import LabelBase from '~/components/form/label-base'
 
 export default function ModalMetodosPagoVenta({
   open,
   onCancel,
-  form,
+  form: ventaForm,
   totalCobrado,
   tipo_moneda,
+  onSuccessVenta,
 }: {
   open: boolean
   onCancel: () => void
   form: FormInstance
   totalCobrado: number
   tipo_moneda: TipoMoneda
+  onSuccessVenta?: (data: any) => void
 }) {
-  const [metodosPago, setMetodosPago] = useState<MetodoDePago[]>([
-    { despliegue_de_pago_id: undefined, monto: undefined },
-  ])
+  const [modalForm] = Form.useForm()
 
-  const [error, setError] = useState<string>('')
+  // Watch del tipo de pago seleccionado
+  const recibe_efectivo = Form.useWatch('recibe_efectivo', modalForm)
 
-  // Sincronizar estado del modal con valores del formulario cuando se abre
+  // Obtener el nombre del despliegue seleccionado para detectar tipo
+  const [despliegueName, setDespliegueName] = useState<string>('')
+
+  // Detectar si es efectivo
+  const isEfectivo = useMemo(
+    () => despliegueName.toUpperCase().includes('EFECTIVO'),
+    [despliegueName]
+  )
+
+  // Calcular cambio del cliente
+  const cambioCliente = useMemo(() => {
+    if (!isEfectivo) return 0
+    const recibe = Number(recibe_efectivo ?? 0)
+    return Math.max(0, recibe - totalCobrado)
+  }, [isEfectivo, recibe_efectivo, totalCobrado])
+
+  // Hook para crear venta
+  const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({
+    form: ventaForm,
+    onSuccess: (data) => {
+      onCancel()
+      modalForm.resetFields()
+      // Llamar al onSuccess del padre para abrir el modal del ticket
+      onSuccessVenta?.(data)
+    },
+  })
+
+  // Resetear formulario al abrir
   useEffect(() => {
     if (open) {
-      const metodosExistentes = form.getFieldValue('metodos_de_pago')
-      if (metodosExistentes && metodosExistentes.length > 0) {
-        setMetodosPago(metodosExistentes)
-      } else {
-        setMetodosPago([{ despliegue_de_pago_id: undefined, monto: undefined }])
+      modalForm.resetFields()
+      setDespliegueName('')
+    }
+  }, [open, modalForm])
+
+  const handleGuardar = async () => {
+    try {
+      await modalForm.validateFields()
+      const values = modalForm.getFieldsValue()
+
+      // Preparar método de pago con los nuevos campos
+      const metodo_pago = {
+        despliegue_de_pago_id: values.despliegue_de_pago_id,
+        monto: totalCobrado,
+        referencia: values.referencia || null,
+        recibe_efectivo: values.recibe_efectivo || null,
       }
-      setError('')
+
+      // Guardar en el formulario de venta
+      ventaForm.setFieldValue('metodos_de_pago', [metodo_pago])
+      ventaForm.setFieldValue('estado_de_venta', EstadoDeVenta.CREADO)
+
+      // Obtener todos los valores del formulario de venta
+      const ventaValues = ventaForm.getFieldsValue()
+
+      // Crear la venta
+      await crearVenta(ventaValues)
+    } catch (error) {
+      console.error('Error al validar formulario:', error)
     }
-  }, [open, form])
-
-  // Calcular total de métodos de pago
-  const totalMetodosPago = useMemo(
-    () =>
-      metodosPago.reduce((acc, metodo) => acc + Number(metodo.monto ?? 0), 0),
-    [metodosPago]
-  )
-
-  // Calcular diferencia
-  const diferencia = useMemo(
-    () => totalCobrado - totalMetodosPago,
-    [totalCobrado, totalMetodosPago]
-  )
-
-  // Validar cuando cambian los métodos de pago
-  useEffect(() => {
-    if (metodosPago.length === 0) {
-      setError('Debe haber al menos 1 método de pago')
-      return
-    }
-
-    // Verificar que todos tengan despliegue seleccionado
-    const todosTienenDespliegue = metodosPago.every(
-      (m) => m.despliegue_de_pago_id
-    )
-    if (!todosTienenDespliegue) {
-      setError(
-        'Todos los métodos deben tener un despliegue de pago seleccionado'
-      )
-      return
-    }
-
-    // Verificar que todos tengan monto
-    const todosTienenMonto = metodosPago.every((m) => m.monto && m.monto > 0)
-    if (!todosTienenMonto) {
-      setError('Todos los métodos deben tener un monto mayor a 0')
-      return
-    }
-
-    // Verificar que la suma sea exacta
-    if (Math.abs(diferencia) > 0.01) {
-      setError(
-        `La suma de los métodos de pago debe ser exactamente igual al Total Cobrado. Diferencia: ${diferencia.toFixed(
-          2
-        )}`
-      )
-      return
-    }
-
-    setError('')
-  }, [metodosPago, diferencia])
-
-  const handleAgregarMetodo = () => {
-    setMetodosPago([
-      ...metodosPago,
-      { despliegue_de_pago_id: undefined, monto: undefined },
-    ])
-  }
-
-  const handleEliminarMetodo = (index: number) => {
-    const nuevosMetodos = metodosPago.filter((_, i) => i !== index)
-    setMetodosPago(nuevosMetodos)
-  }
-
-  const handleChangeMetodo = (
-    index: number,
-    field: keyof MetodoDePago,
-    value: string | number | undefined
-  ) => {
-    const nuevosMetodos = [...metodosPago]
-    nuevosMetodos[index] = { ...nuevosMetodos[index], [field]: value }
-    setMetodosPago(nuevosMetodos)
-  }
-
-  const handleGuardar = () => {
-    if (error) return
-
-    console.log('💾 GUARDANDO métodos de pago:', metodosPago)
-
-    // Guardar en el formulario
-    form.setFieldValue('metodos_de_pago', metodosPago)
-
-    // Verificar que se guardó correctamente
-    const valorGuardado = form.getFieldValue('metodos_de_pago')
-    console.log('✅ Valor guardado en formulario:', valorGuardado)
-
-    onCancel()
   }
 
   const handleCancelar = () => {
-    // Resetear estado
-    setMetodosPago([{ despliegue_de_pago_id: undefined, monto: undefined }])
-    setError('')
+    modalForm.resetFields()
+    setDespliegueName('')
     onCancel()
   }
 
-  // Obtener despliegues ya seleccionados
-  const desplieguesSeleccionados = useMemo(
-    () =>
-      metodosPago
-        .map((m) => m.despliegue_de_pago_id)
-        .filter((id) => id !== undefined) as string[],
-    [metodosPago]
-  )
-
   return (
     <Modal
-      title='Métodos de Pago'
+      title='Cobrar'
       open={open}
       onCancel={handleCancelar}
-      width={700}
+      width={500}
       footer={null}
+      centered
     >
-      <div className='flex flex-col gap-4'>
-        <div className='flex justify-between items-center p-4 bg-slate-100 rounded-lg'>
-          <div className='flex flex-col'>
-            <span className='text-sm text-slate-600'>Total a Cobrar:</span>
-            <span className='text-2xl font-bold text-slate-800'>
-              {tipo_moneda === TipoMoneda.Soles ? 'S/.' : '$.'}{' '}
-              {totalCobrado.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className='flex flex-col'>
-            <span className='text-sm text-slate-600'>Total Métodos:</span>
-            <span
-              className={`text-2xl font-bold ${
-                Math.abs(diferencia) < 0.01 ? 'text-green-600' : 'text-rose-600'
-              }`}
-            >
-              {tipo_moneda === TipoMoneda.Soles ? 'S/.' : '$.'}{' '}
-              {totalMetodosPago.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className='flex flex-col'>
-            <span className='text-sm text-slate-600'>Diferencia:</span>
-            <span
-              className={`text-2xl font-bold ${
-                Math.abs(diferencia) < 0.01 ? 'text-green-600' : 'text-rose-600'
-              }`}
-            >
-              {tipo_moneda === TipoMoneda.Soles ? 'S/.' : '$.'}{' '}
-              {diferencia.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+      <Form form={modalForm} layout='vertical' className='mt-4'>
+        {/* Total a Cobrar */}
+        <div className='mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200'>
+          <div className='flex justify-between items-center'>
+            <span className='text-base font-medium text-slate-700'>Total</span>
+            <span className='text-3xl font-bold text-blue-600'>
+              {tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'}{' '}
+              {totalCobrado.toFixed(2)}
             </span>
           </div>
         </div>
 
-        <div className='flex flex-col gap-2'>
-          {metodosPago.map((metodo, index) => (
-            <FormMetodoPagoItem
-              key={index}
-              index={index}
-              metodo={metodo}
-              onChange={handleChangeMetodo}
-              onEliminar={handleEliminarMetodo}
-              desplieguesExcluidos={desplieguesSeleccionados.filter(
-                (id) => id !== metodo.despliegue_de_pago_id
-              )}
-              tipo_moneda={tipo_moneda}
-              mostrarEliminar={metodosPago.length > 1}
-            />
-          ))}
-        </div>
+        {/* Tipo de Pago */}
+        <LabelBase label='Tipo de Pago [Medio de Pago]' classNames={{ labelParent: 'mb-4' }} orientation='column'>
+          <SelectDespliegueDePago
+            classNameIcon='text-rose-700 mx-1'
+            className='w-full'
+            propsForm={{
+              name: 'despliegue_de_pago_id',
+              rules: [{ required: true, message: 'Selecciona un tipo de pago' }],
+            }}
+            onChange={(value, option: any) => {
+              setDespliegueName(option?.label || '')
+              modalForm.setFieldValue('referencia', undefined)
+              modalForm.setFieldValue('recibe_efectivo', undefined)
+            }}
+          />
+        </LabelBase>
 
-        <ButtonBase
-          onClick={handleAgregarMetodo}
-          color='info'
-          className='flex items-center justify-center gap-2'
-        >
-          <FaPlus size={16} />
-          Agregar Método de Pago
-        </ButtonBase>
+        {/* Referencia Tipo de Pago */}
+        <LabelBase label='Referencia Tipo de Pago' classNames={{ labelParent: 'mb-4' }} orientation='column'>
+          <InputBase
+            prefix={<FaHashtag className='text-cyan-600 mx-1' />}
+            placeholder='Número de transacción'
+            disabled={isEfectivo}
+            uppercase={false}
+            propsForm={{
+              name: 'referencia',
+              rules: [
+                {
+                  required: !isEfectivo,
+                  message: 'Ingresa el número de transacción',
+                },
+              ],
+            }}
+          />
+        </LabelBase>
 
-        {error && (
-          <div className='p-3 bg-rose-100 border border-rose-300 rounded-lg text-rose-700 text-sm'>
-            {error}
+        {/* Recibe Efectivo */}
+        <LabelBase label='Recibe Efectivo' classNames={{ labelParent: 'mb-4' }} orientation='column'>
+          <InputNumberBase
+            prefix={
+              <span className='text-rose-700 font-bold'>
+                {tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'}
+              </span>
+            }
+            placeholder='Monto recibido'
+            disabled={!isEfectivo}
+            min={0}
+            precision={2}
+            propsForm={{
+              name: 'recibe_efectivo',
+              className: 'w-full',
+              rules: [
+                {
+                  required: isEfectivo,
+                  message: 'Ingresa el monto recibido',
+                },
+                {
+                  validator: (_, value) => {
+                    if (isEfectivo && value < totalCobrado) {
+                      return Promise.reject(
+                        new Error('El monto debe ser mayor o igual al total')
+                      )
+                    }
+                    return Promise.resolve()
+                  },
+                },
+              ],
+            }}
+          />
+        </LabelBase>
+
+        {/* Cambio del Cliente */}
+        {isEfectivo && recibe_efectivo && (
+          <div className='mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
+            <div className='flex justify-between items-center'>
+              <span className='text-base font-medium text-slate-700'>
+                Cambio del Cliente
+              </span>
+              <span className='text-2xl font-bold text-blue-600'>
+                {tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'}{' '}
+                {cambioCliente.toFixed(2)}
+              </span>
+            </div>
           </div>
         )}
 
-        <div className='flex gap-4 justify-end mt-4'>
+        {/* Botones */}
+        <div className='flex gap-3 justify-end mt-6'>
           <ButtonBase onClick={handleCancelar} color='default'>
             Cancelar
           </ButtonBase>
           <ButtonBase
             onClick={handleGuardar}
             color='success'
-            disabled={!!error}
+            disabled={creandoVenta}
             className='flex items-center gap-2'
           >
             <FaSave size={16} />
-            Guardar
+            {creandoVenta ? 'Guardando...' : 'Guardar'}
           </ButtonBase>
         </div>
-      </div>
+      </Form>
     </Modal>
   )
 }

@@ -14,7 +14,7 @@ import { App } from 'antd'
 import { FormCreateVenta } from '../others/body-vender'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
-import { DescuentoTipo, TipoMoneda } from '@prisma/client'
+import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
 import { calcularSubtotalVenta } from '../tables/columns-vender'
 
@@ -272,13 +272,13 @@ export default function CardAgregarProductoVenta({
       <div className='flex items-center justify-between text-2xl font-bold my-2'>
         <div className='text-slate-500'>Total:</div>
         <div>
-          {tipo_moneda === TipoMoneda.Soles ? `S/.` : `$.`}
+          {tipo_moneda === TipoMoneda.SOLES ? `S/.` : `$.`}
           {calcularSubtotalVenta({
             precio_venta: values.precio_venta ?? 0,
             recargo: values.recargo ?? 0,
             cantidad: values.cantidad ?? 0,
             descuento: values.descuento ?? 0,
-            descuento_tipo: values.descuento_tipo || DescuentoTipo.Monto,
+            descuento_tipo: values.descuento_tipo || DescuentoTipo.MONTO,
           })}
         </div>
       </div>
@@ -287,14 +287,14 @@ export default function CardAgregarProductoVenta({
         <ButtonBase
           ref={buttom_masRef}
           color='success'
-          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4!'
+          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4! hover:!scale-100'
           onClick={() => handleOk(false)}
         >
           <FaPlusCircle className='min-w-fit' size={12} /> Más
         </ButtonBase>
         <ButtonBase
           color='warning'
-          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-nowrap px-4!'
+          className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-nowrap px-4! hover:!scale-100'
           onClick={() => handleOk(true)}
         >
           <FaPlusCircle className='min-w-fit' size={12} /> Más y Salir

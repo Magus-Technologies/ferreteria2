@@ -6,14 +6,12 @@ import { Form, FormInstance } from "antd";
 import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
 import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
 import { VentaConUnidadDerivadaNormal } from "../others/header-crear-venta";
-import FormFormaDePagoVenta from "./form-forma-de-pago-venta";
+import FormFormaDePago from "~/app/_components/form/form-forma-de-pago";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { useEffect } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
-import { TipoDocumento } from "~/lib/api/venta";
-import { useUltimoCliente } from "../../../_hooks/use-ultimo-cliente";
 
 export default function FormCrearVenta({
   form,
@@ -22,59 +20,12 @@ export default function FormCrearVenta({
   form: FormInstance;
   venta?: VentaConUnidadDerivadaNormal;
 }) {
-  const tipoDocumento = Form.useWatch('tipo_documento', form);
-  const { data: ultimoCliente } = useUltimoCliente();
-
   // Inicializar D1 al montar el componente
   useEffect(() => {
     if (!form.getFieldValue("direccion_seleccionada")) {
       form.setFieldValue("direccion_seleccionada", "D1");
     }
   }, [form]);
-
-  // Autoseleccionar último cliente para Boleta y Nota de Venta
-  useEffect(() => {
-    if (!tipoDocumento || !ultimoCliente) return;
-
-    const clienteActual = form.getFieldValue('cliente_id');
-    
-    if (tipoDocumento === '03' || tipoDocumento === 'nv') {
-      // Para Boleta y Nota de Venta: Autoseleccionar último cliente registrado
-      if (!clienteActual) {
-        form.setFieldValue('cliente_id', ultimoCliente.id);
-        
-        // También actualizar los campos relacionados del cliente
-        if (ultimoCliente.numero_documento) {
-          form.setFieldValue('ruc_dni', ultimoCliente.numero_documento);
-        }
-        if (ultimoCliente.telefono) {
-          form.setFieldValue('telefono', ultimoCliente.telefono);
-        }
-        
-        // Guardar las direcciones
-        form.setFieldValue('_cliente_direccion_1', ultimoCliente.direccion || '');
-        form.setFieldValue('_cliente_direccion_2', ultimoCliente.direccion_2 || '');
-        form.setFieldValue('_cliente_direccion_3', ultimoCliente.direccion_3 || '');
-        
-        // Llenar dirección según selección
-        const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1';
-        if (direccionSeleccionada === 'D1' && ultimoCliente.direccion) {
-          form.setFieldValue('direccion', ultimoCliente.direccion);
-        } else if (direccionSeleccionada === 'D2' && ultimoCliente.direccion_2) {
-          form.setFieldValue('direccion', ultimoCliente.direccion_2);
-        } else if (direccionSeleccionada === 'D3' && ultimoCliente.direccion_3) {
-          form.setFieldValue('direccion', ultimoCliente.direccion_3);
-        } else if (ultimoCliente.direccion) {
-          form.setFieldValue('direccion', ultimoCliente.direccion);
-        }
-      }
-    } else if (tipoDocumento === '01') {
-      // Para Factura: Limpiar cliente si es el último cliente (para forzar selección manual)
-      if (clienteActual === ultimoCliente?.id) {
-        form.setFieldValue('cliente_id', undefined);
-      }
-    }
-  }, [tipoDocumento, ultimoCliente, form]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -89,6 +40,9 @@ export default function FormCrearVenta({
         <input type="hidden" />
       </Form.Item>
       <Form.Item name="_cliente_direccion_3" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_direccion_4" hidden>
         <input type="hidden" />
       </Form.Item>
 
@@ -157,13 +111,6 @@ export default function FormCrearVenta({
             className="w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]"
           />
         </LabelBase>
-        <div className="flex items-center ml-auto">
-          <RadioDireccionCliente form={form} />
-        </div>
-      </div>
-
-      {/* Segunda fila: Tipo Documento, Cliente, Recomendado por */}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Tipo Documento:"
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
@@ -187,42 +134,140 @@ export default function FormCrearVenta({
             classNameIcon="text-rose-700 mx-1"
           />
         </LabelBase>
+      </div>
+      {/* 2da fila */}
+      <div className="flex gap-3 sm:gap-4 lg:gap-6">
+        <FormFormaDePago form={form} />
+      </div>
+
+      {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6 items-star">
         <LabelBase
-          label="Cliente:"
+          label="DNI/RUC:"
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
           className="w-full sm:w-auto"
         >
           <SelectClientes
             form={form}
-            clienteOptionsDefault={ultimoCliente ? [ultimoCliente] : []}
+            showOnlyDocument={true}
             propsForm={{
               name: "cliente_id",
               hasFeedback: false,
               className:
                 "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
-              rules: [
-                {
-                  // Solo obligatorio para Facturas
-                  required: tipoDocumento === '01',
-                  message: "Selecciona el cliente (obligatorio para facturas)",
-                },
-                {
-                  // Validar que para Facturas sea RUC (11 dígitos)
-                  validator: async (_, value) => {
-                    if (tipoDocumento === '01' && value) {
-                      // Aquí deberías validar que el cliente seleccionado tenga RUC
-                      // Por ahora solo validamos que exista
-                      return Promise.resolve();
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ],
             }}
             className="w-full"
             classNameIcon="text-rose-700 mx-1"
+            placeholder="DNI/RUC"
+            onChange={(_, cliente) => {
+              // Actualizar los campos relacionados
+              if (cliente) {
+                // Actualizar DNI/RUC (solo el número)
+                if (cliente.numero_documento) {
+                  form.setFieldValue("ruc_dni", cliente.numero_documento);
+                }
+
+                // Actualizar nombre del cliente
+                const nombreCompleto = cliente.razon_social
+                  ? cliente.razon_social
+                  : `${cliente.nombres || ""} ${
+                      cliente.apellidos || ""
+                    }`.trim();
+                form.setFieldValue("cliente_nombre", nombreCompleto);
+
+                // Actualizar teléfono
+                form.setFieldValue("telefono", cliente.telefono || "");
+
+                // Actualizar email
+                form.setFieldValue("email", cliente.email || "");
+              } else {
+                form.setFieldValue("ruc_dni", "");
+                form.setFieldValue("cliente_nombre", "");
+                form.setFieldValue("telefono", "");
+                form.setFieldValue("email", "");
+              }
+            }}
           />
         </LabelBase>
+
+        <LabelBase
+          label="Cliente:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:flex-1"
+        >
+          <InputBase
+            propsForm={{
+              name: "cliente_nombre",
+              hasFeedback: false,
+              className: "w-full",
+            }}
+            placeholder="Nombre del cliente"
+            className="w-full"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
+
+        <LabelBase
+          label="Dirección:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:w-auto sm:flex-1"
+        >
+          <InputBase
+            prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
+            propsForm={{
+              name: "direccion",
+            }}
+            placeholder="Dirección del cliente"
+            className="w-full"
+          />
+        </LabelBase>
+
+        <div className="mb-3 sm:mb-4 lg:mb-6">
+          <RadioDireccionCliente form={form} />
+        </div>
+      </div>
+
+      {/* ultima fila: Teléfono, Email, Recomendado por */}
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
+        <LabelBase
+          label="Teléfono:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:w-auto"
+        >
+          <InputBase
+            propsForm={{
+              name: "telefono",
+              hasFeedback: false,
+              className:
+                "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
+            }}
+            placeholder="Teléfono"
+            className="w-full"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
+
+        <LabelBase
+          label="Email:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:w-auto"
+        >
+          <InputBase
+            propsForm={{
+              name: "email",
+              hasFeedback: false,
+              className:
+                "w-full sm:!min-w-[250px] sm:!w-[250px] sm:!max-w-[250px]",
+            }}
+            placeholder="Email del cliente"
+            className="w-full"
+            readOnly
+            uppercase={false}
+          />
+        </LabelBase>
+
         <LabelBase
           label="Recomendado por:"
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
@@ -233,39 +278,12 @@ export default function FormCrearVenta({
               name: "recomendado_por_id",
               hasFeedback: false,
               className:
-                "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
+                "w-full sm:!min-w-[200px] sm:!w-[200px] sm:!max-w-[200px]",
             }}
             className="w-full"
             classNameIcon="text-cyan-600 mx-1"
           />
         </LabelBase>
-           <LabelBase
-          label="Dirección:"
-          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-          className="w-full sm:w-auto sm:flex-1"
-        >
-          <div className="flex gap-2" style={{ alignItems: "center" }}>
-            <InputBase
-              prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
-              propsForm={{
-                name: "direccion",
-              }}
-              placeholder="Dirección del cliente"
-              className="flex-1"
-            />
-            {/* <RadioDireccionCliente form={form} /> */}
-          </div>
-        </LabelBase>
-      </div>
-
-      {/* Tercera fila: Dirección */}
-      {/* <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
-     
-      </div> */}
-
-      {/* Cuarta fila: Forma de Pago */}
-      <div className="flex gap-3 sm:gap-4 lg:gap-6">
-        <FormFormaDePagoVenta form={form} />
       </div>
     </div>
   );

@@ -57,7 +57,13 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateVenta(form?: any) {
+export default function useCreateVenta({
+  form,
+  onSuccess,
+}: {
+  form?: any
+  onSuccess?: (data: any) => void
+} = {}) {
   const router = useRouter()
   const { user } = useAuth()
   const user_id = user?.id
@@ -84,6 +90,7 @@ export default function useCreateVenta(form?: any) {
       _cliente_direccion_1,
       _cliente_direccion_2,
       _cliente_direccion_3,
+      _cliente_direccion_4,
       direccion,
       direccion_seleccionada,
       ruc_dni,
@@ -96,10 +103,19 @@ export default function useCreateVenta(form?: any) {
         message: 'Por favor, ingresa al menos un producto',
       })
 
-    if (!cliente_id)
+    // IMPORTANTE: Laravel backend permite cliente_id nullable para Boleta/NV
+    // Si no hay cliente, el backend usará automáticamente "CLIENTE VARIOS" (DNI: 99999999)
+    // Para Factura, SÍ requerir selección manual de cliente
+
+    if (!cliente_id && restValues.tipo_documento === '01') {
       return notification.error({
         message: 'Por favor, selecciona un cliente',
+        description: 'Las facturas requieren obligatoriamente un cliente registrado.',
       })
+    }
+
+    // Para Boleta/NV: enviar cliente_id si existe, o undefined para que backend use "CLIENTE VARIOS"
+    const clienteIdFinal = cliente_id || undefined
 
     // Si no hay estado_de_venta, usar 'cr' (Creado) por defecto
     const estadoVenta = estado_de_venta || EstadoDeVenta.CREADO
@@ -172,7 +188,8 @@ export default function useCreateVenta(form?: any) {
       tipo_de_cambio: tipoMonedaValue === 's' ? 1 : (tipo_de_cambio || 1),
       fecha: restValues.fecha.format('YYYY-MM-DD HH:mm:ss'),
       estado_de_venta: estadoVenta as EstadoDeVenta,
-      cliente_id: cliente_id,
+      // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
+      cliente_id: clienteIdFinal,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,
@@ -203,14 +220,21 @@ export default function useCreateVenta(form?: any) {
 
       // Éxito
       message.success('Venta creada exitosamente')
-      
+
+      // Llamar callback onSuccess con los datos de la venta
+      if (onSuccess && response.data?.data) {
+        onSuccess(response.data.data)
+      }
+
       // Resetear formulario
       if (form) {
         form.resetFields()
       }
-      
-      // Redirigir a la lista de ventas
-      router.push('/ui/facturacion-electronica/mis-ventas')
+
+      // Redirigir a la lista de ventas (solo si no hay onSuccess)
+      if (!onSuccess) {
+        router.push('/ui/facturacion-electronica/mis-ventas')
+      }
     } catch (error) {
       console.error('Error al crear venta:', error)
       notification.error({

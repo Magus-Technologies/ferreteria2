@@ -11,7 +11,7 @@ import { getClienteResponseProps } from '~/app/_actions/cliente'
 import SelectTipoCliente from '~/app/_components/form/selects/select-tipo-cliente'
 import { Form } from 'antd'
 import { useEffect } from 'react'
-import { TipoCliente } from '@prisma/client'
+import { TipoCliente, clienteApi } from '~/lib/api/cliente'
 
 export default function FormCreateCliente({
   form,
@@ -24,9 +24,9 @@ export default function FormCreateCliente({
 
   useEffect(() => {
     if (numero_documento?.length === 8) {
-      form.setFieldValue('tipo_cliente', TipoCliente.Persona)
+      form.setFieldValue('tipo_cliente', TipoCliente.PERSONA)
     } else if (numero_documento?.length === 11) {
-      form.setFieldValue('tipo_cliente', TipoCliente.Empresa)
+      form.setFieldValue('tipo_cliente', TipoCliente.EMPRESA)
     }
   }, [numero_documento, form])
 
@@ -64,6 +64,27 @@ export default function FormCreateCliente({
                     )
                   },
                 },
+                {
+                  validator: async (_, value) => {
+                    if (!value || (value.length !== 8 && value.length !== 11)) {
+                      return Promise.resolve()
+                    }
+
+                    // Verificar si el documento ya existe
+                    const response = await clienteApi.checkDocumento(
+                      value,
+                      dataEdit?.id // Excluir el ID actual si estamos editando
+                    )
+
+                    if (response.data?.exists) {
+                      return Promise.reject(
+                        new Error('Este documento ya está registrado')
+                      )
+                    }
+
+                    return Promise.resolve()
+                  },
+                },
               ],
             }}
             placeholder='Ruc / DNI'
@@ -82,6 +103,7 @@ export default function FormCreateCliente({
                 'direccion',
                 'direccion_2',
                 'direccion_3',
+                'direccion_4',
                 'telefono',
                 'email',
               ])
@@ -139,6 +161,7 @@ export default function FormCreateCliente({
             name: 'direccion',
           }}
           placeholder='Dirección 1'
+          autoComplete='new-password'
         />
       </LabelBase>
       <LabelBase label='Dirección 2:' classNames={{ labelParent: 'mb-6' }}>
@@ -148,6 +171,7 @@ export default function FormCreateCliente({
             name: 'direccion_2',
           }}
           placeholder='Dirección 2 (opcional)'
+          autoComplete='new-password'
         />
       </LabelBase>
       <LabelBase label='Dirección 3:' classNames={{ labelParent: 'mb-6' }}>
@@ -157,6 +181,17 @@ export default function FormCreateCliente({
             name: 'direccion_3',
           }}
           placeholder='Dirección 3 (opcional)'
+          autoComplete='new-password'
+        />
+      </LabelBase>
+      <LabelBase label='Dirección 4:' classNames={{ labelParent: 'mb-6' }}>
+        <InputBase
+          prefix={<BsGeoAltFill className='text-cyan-600 mx-1' />}
+          propsForm={{
+            name: 'direccion_4',
+          }}
+          placeholder='Dirección 4 (opcional)'
+          autoComplete='new-password'
         />
       </LabelBase>
       <div className='flex gap-4 items-center justify-center'>

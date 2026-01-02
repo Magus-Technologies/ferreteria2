@@ -55,7 +55,7 @@ export default function DocGeneral<T>({
               </Text>
             )}
             <Text style={styles_docs.textTotal}>TOTAL</Text>
-            <Text>{total}</Text>
+            <Text>{Number(total).toFixed(2)}</Text>
           </View>
         </View>
 

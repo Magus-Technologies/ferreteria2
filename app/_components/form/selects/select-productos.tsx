@@ -74,6 +74,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   showCardAgregarProductoPrestamo?: boolean
   showUltimasCompras?: boolean
   limpiarOnChange?: boolean
+  autoFocus?: boolean
 }
 
 export default function SelectProductos({
@@ -96,6 +97,7 @@ export default function SelectProductos({
   showCardAgregarProductoPrestamo = false,
   limpiarOnChange = false,
   showUltimasCompras = true,
+  autoFocus = false,
   ...props
 }: SelectProductosProps) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -110,6 +112,17 @@ export default function SelectProductos({
   useEffect(() => {
     setProductoSeleccionadoSearchStore(undefined)
   }, [])
+
+  // Aplicar autoFocus cuando el componente se monta
+  useEffect(() => {
+    if (autoFocus && selectProductoRef.current) {
+      // Usar setTimeout para asegurar que el DOM esté listo
+      const timer = setTimeout(() => {
+        selectProductoRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [autoFocus])
 
   const [openModalProductoSearch, setOpenModalProductoSearch] = useState(false)
 

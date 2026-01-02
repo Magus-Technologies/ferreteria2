@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { FormCreateVenta } from '../_components/others/body-vender'
-import { TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/lib/api/venta'
 
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
@@ -29,7 +29,7 @@ export const useStoreProductoAgregadoVenta =
     return {
       productoAgregado: undefined,
       productos: [],
-      tipo_moneda: TipoMoneda.Soles,
+      tipo_moneda: TipoMoneda.SOLES,
       setProductoAgregado: (value) => set({ productoAgregado: value }),
       setProductos: (value) =>
         set((state) => ({

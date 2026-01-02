@@ -16,6 +16,7 @@ export default function HeaderCrearPrestamo() {
       extra={
         <div className='pl-0 lg:pl-8 flex items-center gap-2 lg:gap-4 w-full lg:w-auto'>
           <SelectProductos
+            autoFocus
             allowClear
             size='large'
             className='w-full lg:!min-w-[400px] lg:!w-[400px] lg:!max-w-[400px] font-normal!'

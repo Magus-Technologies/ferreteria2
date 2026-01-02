@@ -21,6 +21,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classIconCreate?: string
   clienteOptionsDefault?: Pick<Cliente, 'id' | 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>[]
   form?: FormInstance
+  showOnlyDocument?: boolean // Nueva prop para mostrar solo el documento
 }
 
 export default function SelectClientes({
@@ -34,10 +35,12 @@ export default function SelectClientes({
   clienteOptionsDefault = [],
   onChange,
   form,
+  showOnlyDocument = false,
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
+  const [lastSelectedDocument, setLastSelectedDocument] = useState('')
 
   const [openModalClienteSearch, setOpenModalClienteSearch] = useState(false)
 
@@ -57,17 +60,49 @@ export default function SelectClientes({
     if (text) setTextDefault(text)
   }, [text])
 
+  // Detectar cuando el usuario modifica el texto y limpiar campos relacionados
+  useEffect(() => {
+    if (showOnlyDocument && lastSelectedDocument && text !== lastSelectedDocument) {
+      // El usuario modificó el DNI/RUC, limpiar campos relacionados
+      if (form) {
+        form.setFieldValue('cliente_nombre', '')
+        form.setFieldValue('direccion', '')
+        form.setFieldValue('telefono', '')
+        form.setFieldValue('email', '')
+        form.setFieldValue('_cliente_direccion_1', '')
+        form.setFieldValue('_cliente_direccion_2', '')
+        form.setFieldValue('_cliente_direccion_3', '')
+        form.setFieldValue('_cliente_direccion_4', '')
+      }
+      setClienteSeleccionado(undefined)
+      // Limpiar el cliente_id si el texto no coincide
+      if (text !== lastSelectedDocument) {
+        iterarChangeValue({
+          refObject: selectClientesRef,
+          value: undefined,
+        })
+      }
+    }
+  }, [text, lastSelectedDocument, showOnlyDocument, form])
+
   function handleSelect({ data }: { data?: Cliente } = {}) {
     const cliente = data || clienteSeleccionadoStore
     // console.log('handleselect - cliente', cliente)
     if (cliente) {
       setClienteSeleccionado(cliente)
 
-      // Mostrar el nombre del cliente en el campo de búsqueda
-      const clienteLabel = cliente.razon_social
+      // Mostrar solo el documento o el formato completo según la prop
+      const clienteLabel = showOnlyDocument
+        ? cliente.numero_documento || ''
+        : cliente.razon_social
         ? `${cliente.numero_documento} : ${cliente.razon_social}`
         : `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
       setText(clienteLabel)
+      
+      // Guardar el documento seleccionado para detectar cambios
+      if (showOnlyDocument && cliente.numero_documento) {
+        setLastSelectedDocument(cliente.numero_documento)
+      }
 
       iterarChangeValue({
         refObject: selectClientesRef,
@@ -87,6 +122,7 @@ export default function SelectClientes({
         form.setFieldValue('_cliente_direccion_1', cliente.direccion || '')
         form.setFieldValue('_cliente_direccion_2', cliente.direccion_2 || '')
         form.setFieldValue('_cliente_direccion_3', cliente.direccion_3 || '')
+        form.setFieldValue('_cliente_direccion_4', cliente.direccion_4 || '')
 
         // Llenar campo de dirección según el checkbox seleccionado (por defecto D1)
         const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1'
@@ -97,6 +133,8 @@ export default function SelectClientes({
           form.setFieldValue('direccion', cliente.direccion_2)
         } else if (direccionSeleccionada === 'D3' && cliente.direccion_3) {
           form.setFieldValue('direccion', cliente.direccion_3)
+        } else if (direccionSeleccionada === 'D4' && cliente.direccion_4) {
+          form.setFieldValue('direccion', cliente.direccion_4)
         } else if (cliente.direccion) {
           // Fallback a dirección 1 si la seleccionada no existe
           form.setFieldValue('direccion', cliente.direccion)
@@ -114,7 +152,14 @@ export default function SelectClientes({
   const { response, loading } = useSearchClientes({ value })
 
   useEffect(() => {
-    if (response && response.length === 1) handleSelect({ data: response[0] })
+    // Solo autoseleccionar si hay exactamente 1 resultado Y el texto coincide exactamente con el documento
+    if (response && response.length === 1) {
+      const cliente = response[0]
+      // Solo autoseleccionar si el texto coincide exactamente con el número de documento
+      if (cliente.numero_documento === text) {
+        handleSelect({ data: cliente })
+      }
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])

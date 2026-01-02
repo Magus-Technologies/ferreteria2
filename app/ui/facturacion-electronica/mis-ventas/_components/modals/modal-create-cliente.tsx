@@ -1,4 +1,4 @@
-import { TipoCliente } from '@prisma/client'
+import { TipoCliente } from '~/lib/api/cliente'
 import { Form } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -26,6 +26,7 @@ export interface FormCreateClienteValues {
   direccion?: string | null
   direccion_2?: string | null
   direccion_3?: string | null
+  direccion_4?: string | null
   telefono?: string | null
   email?: string | null
 }
