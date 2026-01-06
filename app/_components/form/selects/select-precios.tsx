@@ -10,10 +10,10 @@ interface SelectPreciosProps extends SelectBaseProps {
 }
 
 const precios = [
-  'precio_publico',
-  'precio_especial',
-  'precio_minimo',
-  'precio_ultimo',
+  { key: 'precio_publico', label: 'P. Público' },
+  { key: 'precio_especial', label: 'P. Especial' },
+  { key: 'precio_minimo', label: 'P. Mínimo' },
+  { key: 'precio_ultimo', label: 'P. Último' },
 ]
 
 const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(function SelectPrecios({
@@ -34,19 +34,18 @@ const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(functio
       placeholder={placeholder}
       options={
         unidadDerivada
-          ? precios.map((value) => ({
-              value:
-                Number(
-                  unidadDerivada[value as keyof ProductoAlmacenUnidadDerivada]
-                ) ?? 0,
-              label: `${Number(
-                unidadDerivada[value as keyof ProductoAlmacenUnidadDerivada] ??
-                  0
-              ).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 4,
-              })}`,
-            }))
+          ? precios.map(({ key, label }) => {
+              const precio = Number(
+                unidadDerivada[key as keyof ProductoAlmacenUnidadDerivada] ?? 0
+              )
+              return {
+                value: precio,
+                label: `${label}: S/. ${precio.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`,
+              }
+            })
           : []
       }
     />

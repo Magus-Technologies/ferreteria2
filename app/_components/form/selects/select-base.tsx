@@ -14,6 +14,7 @@ export interface SelectBaseProps extends SelectProps {
   nextInEnter?: boolean;
   nextWithPrevent?: boolean;
   formWithMessage?: boolean;
+  uppercase?: boolean;
   propsForm?: FormItemProps & {
     prefix_array_name?: (string | number)[];
   };
@@ -26,6 +27,8 @@ function Base({
   onKeyUp,
   onOpenChange,
   innerRef,
+  uppercase = false,
+  onSearch,
   ...props
 }: SelectBaseProps & { innerRef?: React.Ref<any> }) {
   const [open, setOpen] = useState(false);
@@ -34,6 +37,14 @@ function Base({
     <Select
       ref={innerRef}
       {...props}
+      onSearch={(value) => {
+        if (uppercase && value) {
+          const uppercased = value.toUpperCase();
+          onSearch?.(uppercased);
+        } else {
+          onSearch?.(value);
+        }
+      }}
       onOpenChange={(open) => {
         setOpen(open);
         onOpenChange?.(open);
@@ -61,6 +72,8 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
   form,
   optionFilterProp = "label",
   variant = "filled",
+  uppercase = false,
+  onSearch,
   ...props
 }, ref) {
   const {
@@ -119,6 +132,8 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
         onChange={onChange}
         optionFilterProp={optionFilterProp}
         variant={variant}
+        uppercase={uppercase}
+        onSearch={onSearch}
         {...props}
       />
     </Form.Item>
@@ -136,6 +151,8 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
       value={value}
       optionFilterProp={optionFilterProp}
       variant={variant}
+      uppercase={uppercase}
+      onSearch={onSearch}
       {...props}
     />
   );

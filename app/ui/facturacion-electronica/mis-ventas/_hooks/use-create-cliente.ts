@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { message } from 'antd'
+import { App } from 'antd'
 import { clienteApi, type Cliente, type CreateClienteRequest } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { FormCreateClienteValues } from '../_components/modals/modal-create-cliente'
@@ -13,6 +13,7 @@ export default function useCreateCliente({
   dataEdit?: getClienteResponseProps
 }) {
   const queryClient = useQueryClient()
+  const { notification } = App.useApp()
 
   const mutation = useMutation({
     mutationFn: async (data: CreateClienteRequest) => {
@@ -26,7 +27,10 @@ export default function useCreateCliente({
     },
     onSuccess: (response) => {
       if (response.error) {
-        message.error(response.error.message)
+        notification.error({
+          message: 'Error',
+          description: response.error.message,
+        })
         return
       }
 
@@ -35,7 +39,10 @@ export default function useCreateCliente({
           ? 'Cliente editado exitosamente'
           : 'Cliente creado exitosamente'
 
-        message.success(successMessage)
+        notification.success({
+          message: 'Operación exitosa',
+          description: successMessage,
+        })
 
         // Invalidar queries para refrescar las listas
         queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] })
@@ -46,7 +53,10 @@ export default function useCreateCliente({
       }
     },
     onError: (error: Error) => {
-      message.error(error.message || 'Error al procesar la solicitud')
+      notification.error({
+        message: 'Error',
+        description: error.message || 'Error al procesar la solicitud',
+      })
     },
   })
 

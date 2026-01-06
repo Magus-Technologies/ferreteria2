@@ -8,6 +8,7 @@ import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
 import { MdDelete } from 'react-icons/md'
+import SelectUnidadDerivadaVenta from '../form/select-unidad-derivada-venta'
 
 export function useColumnsVender({
   form,
@@ -121,50 +122,47 @@ export function useColumnsVender({
     {
       headerName: 'Unidad Derivada',
       field: 'name',
-      minWidth: 90,
-      width: 90,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue([
-              'productos',
-              value,
-              'unidad_derivada_name',
-            ])}
-          >
-            <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'unidad_derivada_name'])}
-            </div>
-          </Tooltip>
-          <InputNumberBase
-            propsForm={{
-              name: [value, 'unidad_derivada_id'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            formWithMessage={false}
-          />
-          <InputNumberBase
-            propsForm={{
-              name: [value, 'unidad_derivada_factor'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            formWithMessage={false}
-          />
-          <InputBase
-            propsForm={{
-              name: [value, 'unidad_derivada_name'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
-        </div>
-      ),
+      minWidth: 150,
+      width: 150,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const productoId = form.getFieldValue(['productos', value, 'producto_id']);
+        
+        return (
+          <div className='flex items-center h-full'>
+            <SelectUnidadDerivadaVenta
+              form={form}
+              fieldIndex={value}
+              productoId={productoId}
+            />
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'unidad_derivada_id'],
+                rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'unidad_derivada_factor'],
+                rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputBase
+              propsForm={{
+                name: [value, 'unidad_derivada_name'],
+                rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              readOnly
+              variant='borderless'
+              formWithMessage={false}
+            />
+          </div>
+        );
+      },
     },
     {
       headerName: 'Cantidad',
@@ -204,7 +202,8 @@ export function useColumnsVender({
             precision={4}
             min={0}
             formWithMessage={false}
-            onChange={() => calcularSubtotalForm({ form, value })}
+            readOnly
+            variant='borderless'
           />
         </div>
       ),

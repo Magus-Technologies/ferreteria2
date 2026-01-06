@@ -66,6 +66,11 @@ export default function FormCrearVenta({
             placeholder="Fecha"
             className="w-full sm:!w-[160px] sm:!min-w-[160px] sm:!max-w-[160px]"
             prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
+            disabledDate={(current) => {
+              // Deshabilitar fechas anteriores a hoy
+              // current && current < dayjs().startOf('day')
+              return current && current.isBefore(new Date(), 'day')
+            }}
           />
         </LabelBase>
         <LabelBase

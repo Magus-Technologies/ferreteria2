@@ -44,7 +44,7 @@ export default function TableBase<T>({
   ref,
   paramsOfThemeTable,
   className = "",
-  rowSelection = true,
+  rowSelection = true, // Volver a true para que funcione el resaltado
   columnDefs,
   withNumberColumn = true,
   ...props
@@ -55,9 +55,41 @@ export default function TableBase<T>({
     <>
       <style>
         {`
+      /* Ocultar completamente los checkboxes de selección */
+      .ag-selection-checkbox,
+      .ag-checkbox,
+      .ag-checkbox-input-wrapper,
+      .ag-cell[col-id="ag-Grid-AutoColumn"] {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+      }
+      
+      /* Ocultar la columna de selección completa */
+      .ag-header-cell[col-id="ag-Grid-AutoColumn"],
+      .ag-cell[col-id="ag-Grid-AutoColumn"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+      }
+      
+      /* Estilos para fila seleccionada */
+      .ag-row-selected {
+        background-color: #005f78 !important;
+      }
       .ag-row-selected .ag-cell {
         color: white !important;
         font-weight: 700;
+        background-color: #005f78 !important;
+      }
+      .ag-row-selected:hover {
+        background-color: #005f78 !important;
+      }
+      .ag-row-selected:hover .ag-cell {
+        background-color: #005f78 !important;
       }
     `}
       </style>
@@ -70,7 +102,11 @@ export default function TableBase<T>({
         localeText={AG_GRID_LOCALE_ES}
         enableFilterHandlers={true}
         className={`shadow-lg rounded-xl overflow-hidden ${className}`}
-        rowSelection={rowSelection ? { mode: "singleRow" } : undefined}
+        rowSelection={rowSelection ? { 
+          mode: "singleRow",
+          checkboxes: false, // Ocultar checkboxes
+          enableClickSelection: true // Permitir selección con click
+        } : undefined}
         // Scroll infinito sin paginación (desactivada por defecto)
         pagination={props.pagination ?? false}
         // Si necesitas paginación en alguna tabla específica, pasa: pagination={true}

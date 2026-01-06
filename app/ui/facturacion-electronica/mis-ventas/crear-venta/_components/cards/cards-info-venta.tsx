@@ -16,11 +16,9 @@ import { FaPause } from 'react-icons/fa6'
 export default function CardsInfoVenta({
   form,
   venta,
-  onSuccessVenta,
 }: {
   form: FormInstance
   venta?: VentaConUnidadDerivadaNormal
-  onSuccessVenta?: (data: any) => void
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const forma_de_pago = Form.useWatch('forma_de_pago', form)
@@ -39,6 +37,17 @@ export default function CardsInfoVenta({
           acc +
           (Number(item?.precio_venta ?? 0) + Number(item?.recargo ?? 0)) *
             Number(item?.cantidad ?? 0),
+        0
+      ),
+    [productos]
+  )
+
+  // Calcular Total Recargo
+  const totalRecargo = useMemo(
+    () =>
+      (productos || []).reduce(
+        (acc, item) =>
+          acc + Number(item?.recargo ?? 0) * Number(item?.cantidad ?? 0),
         0
       ),
     [productos]
@@ -114,6 +123,11 @@ export default function CardsInfoVenta({
       <div className='flex flex-col gap-4 max-w-64'>
         <CardInfoVenta title='SubTotal' value={subTotal} moneda={tipo_moneda} />
         <CardInfoVenta
+          title='Total Recargo'
+          value={totalRecargo}
+          moneda={tipo_moneda}
+        />
+        <CardInfoVenta
           title='Total Dscto'
           value={totalDescuento}
           moneda={tipo_moneda}
@@ -166,7 +180,6 @@ export default function CardsInfoVenta({
         form={form}
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
-        onSuccessVenta={onSuccessVenta}
       />
     </>
   )

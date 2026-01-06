@@ -94,7 +94,28 @@ export default function Home() {
           name='login'
           size='large'
           onFinish={handleLogin}
+          autoComplete='off'
         >
+          {/* Campos falsos ocultos para engañar al autocompletado del navegador */}
+          <input
+            type='text'
+            name='fake-username'
+            autoComplete='username'
+            style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}
+            tabIndex={-1}
+            aria-hidden='true'
+            readOnly
+          />
+          <input
+            type='password'
+            name='fake-password'
+            autoComplete='current-password'
+            style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}
+            tabIndex={-1}
+            aria-hidden='true'
+            readOnly
+          />
+
           <Form.Item
             hasFeedback
             name='email'
@@ -109,6 +130,8 @@ export default function Home() {
               prefix={<FaUserTie className='text-cyan-500 mx-2 text-base sm:text-lg' />}
               placeholder='Nombre de Usuario'
               className='text-sm sm:text-base'
+              autoComplete='off'
+              name='username-real'
             />
           </Form.Item>
           <Form.Item
@@ -118,10 +141,13 @@ export default function Home() {
               { required: true, message: 'Por favor, ingresa tu contraseña' },
             ]}
           >
-            <Input.Password
+            <Input
+              type='password'
               prefix={<RiLockPasswordFill className='text-cyan-500 mx-2 text-base sm:text-lg' />}
               placeholder='Contraseña'
               className='text-sm sm:text-base'
+              autoComplete='new-password'
+              name='password-real'
             />
           </Form.Item>
           <RainbowButton

@@ -130,6 +130,7 @@ export default function ModalCreateProveedor({
       formProps={{
         form,
         onFinish: crearProveedorForm,
+        autoComplete: 'off',
       }}
     >
       <Tabs className='min-h-[315px]' items={items} />

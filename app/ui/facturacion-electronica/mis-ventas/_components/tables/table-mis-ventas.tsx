@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { getVentaResponseProps } from "~/app/_actions/venta";
 import { useColumnsMisVentas } from "./columns-mis-ventas";
 import { useStoreFiltrosMisVentas } from "../../_store/store-filtros-mis-ventas";
 import useGetVentas from "../../_hooks/use-get-ventas";
 import { create } from "zustand";
+import { AgGridReact } from "ag-grid-react";
 
 type UseStoreVentaSeleccionada = {
   venta?: getVentaResponseProps;
@@ -21,12 +22,27 @@ export const useStoreVentaSeleccionada = create<UseStoreVentaSeleccionada>(
 );
 
 export default function TableMisVentas() {
+  const tableRef = useRef<AgGridReact>(null);
   const filtros = useStoreFiltrosMisVentas((state) => state.filtros);
   const { response, loading } = useGetVentas({ where: filtros });
 
   const setVentaSeleccionada = useStoreVentaSeleccionada(
     (state) => state.setVenta
   );
+
+  // Seleccionar automáticamente el primer registro cuando se cargan los datos
+  React.useEffect(() => {
+    if (response && response.length > 0 && tableRef.current) {
+      // Esperar un momento para que la tabla se renderice completamente
+      setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
+        if (firstNode) {
+          firstNode.setSelected(true);
+          setVentaSeleccionada(firstNode.data);
+        }
+      }, 100);
+    }
+  }, [response, setVentaSeleccionada]);
 
   // Manejador para el botón de PDF
   const handleVerPDF = (ventaId: string) => {
@@ -60,6 +76,7 @@ export default function TableMisVentas() {
         loading={loading}
         columnDefs={useColumnsMisVentas()}
         rowData={response || []}
+        tableRef={tableRef}
         onRowClicked={(event) => {
           // Seleccionar la fila cuando se hace clic en cualquier parte
           event.node.setSelected(true);

@@ -190,6 +190,7 @@ export default function FiltersMisVentas() {
               Cliente:
             </label>
             <SelectClientes
+              autoFocus
               propsForm={{
                 name: "cliente_id",
                 hasFeedback: false,
@@ -281,7 +282,8 @@ export default function FiltersMisVentas() {
               placeholder="Todos"
             />
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          {/* cajero no solo vendedor */}
+          {/* <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Cajero:
             </label>
@@ -296,7 +298,7 @@ export default function FiltersMisVentas() {
               allowClear
               placeholder="EFRAIN"
             />
-          </div>
+          </div> */}
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Registradora:
@@ -341,7 +343,7 @@ export default function FiltersMisVentas() {
               formWithMessage={false}
             />
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          {/* <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Sucu:
             </label>
@@ -354,8 +356,8 @@ export default function FiltersMisVentas() {
               placeholder="MI REDENTOR"
               formWithMessage={false}
             />
-          </div>
-          <div className="col-span-2 flex items-center gap-2">
+          </div> */}
+          {/* <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Version Venta:
             </label>
@@ -368,7 +370,7 @@ export default function FiltersMisVentas() {
               placeholder="Todos"
               formWithMessage={false}
             />
-          </div>
+          </div> */}
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Tipo Ope:
@@ -471,6 +473,7 @@ export default function FiltersMisVentas() {
               Cliente:
             </label>
             <SelectClientes
+              autoFocus
               propsForm={{ name: "cliente_id", hasFeedback: false }}
               className="w-full"
               classIconSearch="!mb-0"

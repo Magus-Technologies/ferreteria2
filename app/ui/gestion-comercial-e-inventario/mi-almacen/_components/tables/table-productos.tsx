@@ -51,7 +51,7 @@ function TableProductos() {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
       page,
-      per_page: 10000, // Cargar todos los productos (hasta 10,000)
+      per_page: 250, // OPTIMIZACIÓN: Reducido de 10,000 a 250 para mejorar performance
     },
     enabled: !!(filtros?.almacen_id || almacen_id),
   });
@@ -60,6 +60,20 @@ function TableProductos() {
   useEffect(() => {
     setPage(1);
   }, [filtros]);
+
+  // Seleccionar automáticamente el primer producto cuando se cargan los datos
+  useEffect(() => {
+    if (response && response.length > 0 && tableRef.current) {
+      // Esperar un momento para que la tabla se renderice completamente
+      setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
+        if (firstNode) {
+          firstNode.setSelected(true);
+          setProductoSeleccionado(firstNode.data);
+        }
+      }, 100);
+    }
+  }, [response, setProductoSeleccionado]);
 
   const nextPage = () => setPage((p) => Math.min(p + 1, totalPages));
   const prevPage = () => setPage((p) => Math.max(1, p - 1));

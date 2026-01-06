@@ -11,6 +11,7 @@ import { FaTruck } from 'react-icons/fa6'
 import type { Proveedor } from '~/lib/api/proveedor'
 import useGetProveedores from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_hooks/use-get-proveedores'
 import { useDebounce } from 'use-debounce'
+import { FormInstance } from 'antd'
 
 interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
@@ -20,6 +21,8 @@ interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   classIconSearch?: string
   classIconCreate?: string
   proveedorOptionsDefault?: Pick<Proveedor, 'id' | 'ruc' | 'razon_social'>[]
+  showOnlyDocument?: boolean
+  form?: FormInstance
 }
 
 export default function SelectProveedores({
@@ -32,10 +35,12 @@ export default function SelectProveedores({
   classIconCreate = '',
   proveedorOptionsDefault = [],
   onChange,
+  showOnlyDocument = false,
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
+  const [lastSelectedDocument, setLastSelectedDocument] = useState('')
 
   const [openModalProveedorSearch, setOpenModalProveedorSearch] =
     useState(false)
@@ -56,11 +61,34 @@ export default function SelectProveedores({
     if (text) setTextDefault(text)
   }, [text])
 
+  // Detectar cuando el usuario modifica el texto y limpiar campos relacionados
+  useEffect(() => {
+    if (showOnlyDocument && lastSelectedDocument && text !== lastSelectedDocument) {
+      // El usuario modificó el RUC de un proveedor ya seleccionado
+      if (props.form) {
+        props.form.setFieldValue('proveedor_razon_social', '')
+      }
+      setProveedorSeleccionado(undefined)
+      // Limpiar el proveedor_id si el texto no coincide
+      iterarChangeValue({
+        refObject: selectProveedoresRef,
+        value: undefined,
+      })
+    }
+  }, [text, lastSelectedDocument, showOnlyDocument, props.form])
+
   function handleSelect({ data }: { data?: Proveedor } = {}) {
     setText('')
     const proveedor = data || proveedorSeleccionadoStore
     if (proveedor) {
       setProveedorSeleccionado(proveedor)
+      
+      // Guardar el RUC seleccionado para detectar cambios
+      if (showOnlyDocument && proveedor.ruc) {
+        setLastSelectedDocument(proveedor.ruc)
+        setText(proveedor.ruc)
+      }
+      
       iterarChangeValue({
         refObject: selectProveedoresRef,
         value: proveedor.id,
@@ -71,21 +99,38 @@ export default function SelectProveedores({
     }
   }
 
-  const [value] = useDebounce(text, 1000)
+  const [value] = useDebounce(text, 300) // Reducir de 1000ms a 300ms
 
   const { response, loading } = useGetProveedores({ value })
 
   useEffect(() => {
-    if (response && response.length === 1) handleSelect({ data: response[0] })
+    // Autoseleccionar si hay exactamente 1 resultado
+    if (response && response.length === 1) {
+      const proveedor = response[0]
+      // Autoseleccionar si el texto coincide con el RUC (exacto o parcial al final)
+      const textoLimpio = text.trim()
+      if (proveedor.ruc === textoLimpio || 
+          (textoLimpio.length >= 8 && proveedor.ruc.startsWith(textoLimpio))) {
+        handleSelect({ data: proveedor })
+      }
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])
+
+  const getLabel = (proveedor: Pick<Proveedor, 'ruc' | 'razon_social'>) => {
+    if (showOnlyDocument) {
+      return proveedor.ruc
+    }
+    return `${proveedor.ruc} : ${proveedor.razon_social}`
+  }
 
   return (
     <div className='flex items-center gap-4 w-full'>
       <SelectBase
         ref={selectProveedoresRef}
         showSearch
+        uppercase={true}
         filterOption={false}
         onSearch={setText}
         searchValue={text}
@@ -98,7 +143,7 @@ export default function SelectProveedores({
             ? [
                 {
                   value: proveedorCreado.id,
-                  label: `${proveedorCreado.ruc} : ${proveedorCreado.razon_social}`,
+                  label: getLabel(proveedorCreado),
                 },
               ]
             : []),
@@ -106,13 +151,13 @@ export default function SelectProveedores({
             ? [
                 {
                   value: proveedorSeleccionado.id,
-                  label: `${proveedorSeleccionado.ruc} : ${proveedorSeleccionado.razon_social}`,
+                  label: getLabel(proveedorSeleccionado),
                 },
               ]
             : []),
           ...proveedorOptionsDefault.map(proveedor => ({
             value: proveedor.id,
-            label: `${proveedor.ruc} : ${proveedor.razon_social}`,
+            label: getLabel(proveedor),
           })),
         ].filter(
           (item, index, self) =>

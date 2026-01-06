@@ -84,6 +84,11 @@ export default function FormCrearCotizacion({
               ],
             }}
             placeholder="Fecha"
+                disabledDate={(current) => {
+              // Deshabilitar fechas anteriores a hoy
+              // current && current < dayjs().startOf('day')
+              return current && current.isBefore(new Date(), 'day')
+            }}
             className="!w-[160px] !min-w-[160px] !max-w-[160px]"
             prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
           />

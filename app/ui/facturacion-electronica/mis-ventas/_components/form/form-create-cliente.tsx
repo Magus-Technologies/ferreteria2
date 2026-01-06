@@ -204,8 +204,16 @@ export default function FormCreateCliente({
             prefix={<FaMobileButton className='text-cyan-600 mx-1' />}
             propsForm={{
               name: 'telefono',
+              hasFeedback: true,
+              rules: [
+                {
+                  pattern: /^\d{9}$/,
+                  message: 'El teléfono debe tener 9 dígitos',
+                },
+              ],
             }}
             placeholder='Telefono'
+            maxLength={9}
           />
         </LabelBase>
         <LabelBase
@@ -217,8 +225,16 @@ export default function FormCreateCliente({
             prefix={<MdEmail className='text-cyan-600 mx-1' />}
             propsForm={{
               name: 'email',
+              hasFeedback: true,
+              rules: [
+                {
+                  type: 'email',
+                  message: 'Ingresa un email válido',
+                },
+              ],
             }}
             placeholder='Email'
+            uppercase={false}
           />
         </LabelBase>
       </div>

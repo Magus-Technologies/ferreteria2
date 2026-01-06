@@ -20,6 +20,7 @@ export enum QueryKeys {
   DESPLIEGUE_DE_PAGO = 'despliegue_de_pago',
   CLIENTES = 'clientes',
   CLIENTES_SEARCH = 'clientes_search',
+  CHOFERES = 'choferes',
   VENTAS = 'ventas',
   ENTREGAS_PRODUCTOS = 'entregas_productos',
   TIPO_CAMBIO = "TIPO_CAMBIO",

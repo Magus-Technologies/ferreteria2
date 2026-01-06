@@ -81,19 +81,49 @@ export default function FormCrearCompra({
             variant={compra?.pagos_de_compras_count ?? 0 > 0 ? 'borderless' : undefined}
           />
         </LabelBase>
-        <LabelBase label='Proveedor:' classNames={{ labelParent: 'mb-6' }}>
+        <LabelBase label='RUC:' classNames={{ labelParent: 'mb-6' }}>
           <SelectProveedores
-            allowClear
-            showButtonCreate={can(permissions.PROVEEDOR_CREATE)}
-            className='!w-[420px] !min-w-[420px] !max-w-[420px]'
-            classNameIcon={`text-cyan-600 mx-1`}
+            form={form}
+            showOnlyDocument={true}
+            propsForm={{
+              name: 'proveedor_id',
+              hasFeedback: false,
+              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+            }}
+            className='w-full'
+            classNameIcon='text-cyan-600 mx-1'
+            placeholder='RUC'
             proveedorOptionsDefault={
               compra?.proveedor ? [compra.proveedor] : []
             }
-            propsForm={{
-              name: 'proveedor_id',
+            onChange={(_, proveedor) => {
+              // Actualizar los campos relacionados
+              if (proveedor) {
+                // Actualizar RUC (solo el número)
+                if (proveedor.ruc) {
+                  form.setFieldValue('proveedor_ruc', proveedor.ruc)
+                }
+
+                // Actualizar razón social
+                form.setFieldValue('proveedor_razon_social', proveedor.razon_social || '')
+              } else {
+                form.setFieldValue('proveedor_ruc', '')
+                form.setFieldValue('proveedor_razon_social', '')
+              }
             }}
-            form={form}
+          />
+        </LabelBase>
+        <LabelBase label='Proveedor:' classNames={{ labelParent: 'mb-6' }}>
+          <InputBase
+            propsForm={{
+              name: 'proveedor_razon_social',
+              hasFeedback: false,
+              className: '!min-w-[250px] !w-[250px] !max-w-[250px]',
+            }}
+            placeholder='Razón Social del proveedor'
+            className='w-full'
+            readOnly
+            uppercase={false}
           />
         </LabelBase>
       </div>
@@ -117,7 +147,7 @@ export default function FormCrearCompra({
         </LabelBase>
         <LabelBase label='Serie:' classNames={{ labelParent: 'mb-6' }}>
           <InputBase
-            prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
+            prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
             className='!w-[120px] !min-w-[120px] !max-w-[120px]'
             placeholder='Serie'
             propsForm={{
@@ -127,7 +157,7 @@ export default function FormCrearCompra({
         </LabelBase>
         <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
           <InputNumberBase
-            prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
+            prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
             className='!w-[120px] !min-w-[120px] !max-w-[120px]'
             placeholder='Número'
             propsForm={{

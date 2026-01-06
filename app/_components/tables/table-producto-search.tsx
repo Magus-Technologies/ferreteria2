@@ -103,7 +103,6 @@ export default function TableProductoSearch({
   return (
     <TableWithTitle<Producto>
       id="g-c-e-i.table-producto-search"
-      rowSelection={true}
       onSelectionChanged={({ selectedNodes }) => {
         const producto = selectedNodes?.[0]?.data as Producto;
         setProductoSeleccionadoSearchStore(producto as any);

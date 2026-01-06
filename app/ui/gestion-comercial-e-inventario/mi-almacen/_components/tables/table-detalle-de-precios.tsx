@@ -38,11 +38,11 @@ export default function TableDetalleDePrecios() {
   const queryClient = useQueryClient()
 
   // Usar el hook correcto para obtener productos
-  const { data: productosData } = useProductosByAlmacen({
+  const { data: productosData, refetch } = useProductosByAlmacen({
     filtros: {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
-      per_page: 10000, // Obtener todos los productos para detalle de precios
+      per_page: 10000, // NOTA: Se mantiene 10000 para detalle de precios porque necesita todos los productos con sus unidades derivadas
     },
     enabled: !!(filtros?.almacen_id || almacen_id),
   })
@@ -150,20 +150,24 @@ export default function TableDetalleDePrecios() {
                 if (data.some(item => item['Cod. Producto'] === undefined || item['Cod. Producto'] === null || item['Cod. Producto'] === ''))
                   throw new Error('Todas las Unidades Derivadas deben tener un Código de Producto')
 
+                // Preparar datos para ambas llamadas
                 const preResponse = new Set<string>(data.map(item => `${item['Cod. Producto']}`))
-                const response = await detallePreciosApi.getProductoAlmacenByCodProducto(
-                  Array.from(preResponse).map(cod_producto => ({ cod_producto, almacen_id }))
-                )
-                
+                const preUnidadesDerivadas = new Set<string>(data.map(item => `${item['Formato']}`))
+
+                // OPTIMIZACIÓN: Ejecutar ambas llamadas API en paralelo en lugar de secuencial
+                const [response, unidades_derivadas] = await Promise.all([
+                  detallePreciosApi.getProductoAlmacenByCodProducto(
+                    Array.from(preResponse).map(cod_producto => ({ cod_producto, almacen_id }))
+                  ),
+                  detallePreciosApi.importarUnidadesDerivadas(
+                    Array.from(preUnidadesDerivadas).map(name => ({ name }))
+                  )
+                ])
+
                 if (response.error || !response.data) {
                   throw new Error(response.error?.message || 'No se encontraron los Productos');
                 }
 
-                const preUnidadesDerivadas = new Set<string>(data.map(item => `${item['Formato']}`))
-                const unidades_derivadas = await detallePreciosApi.importarUnidadesDerivadas(
-                  Array.from(preUnidadesDerivadas).map(name => ({ name }))
-                )
-                
                 if (unidades_derivadas.error || !unidades_derivadas.data)
                   throw new Error('Error al procesar unidades derivadas')
 
@@ -212,11 +216,15 @@ export default function TableDetalleDePrecios() {
                   return { data: res.data };
                 },
                 msgSuccess: 'Importación completada correctamente',
-                onSuccess: () => {
-                  // Invalidar queries de productos por almacén para refrescar tabla
+                onSuccess: async () => {
+                  // OPTIMIZACIÓN: Refrescar inmediatamente los datos después del import
+                  await refetch();
+
+                  // También invalidar queries de productos por almacén
                   queryClient.invalidateQueries({
                     queryKey: ['productos-by-almacen']
                   });
+
                   setProductoSeleccionado(undefined);
                 },
                 queryKey: [QueryKeys.PRODUCTOS],

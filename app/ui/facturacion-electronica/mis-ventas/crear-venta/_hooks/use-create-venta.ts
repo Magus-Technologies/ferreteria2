@@ -3,16 +3,17 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '~/lib/auth-context'
-import { useState } from 'react'
-import { 
-  TipoDocumento, 
-  FormaDePago, 
-  TipoMoneda, 
+import { useState, useCallback } from 'react'
+import {
+  TipoDocumento,
+  FormaDePago,
+  TipoMoneda,
   EstadoDeVenta,
   type CreateVentaRequest,
   type ProductoVentaRequest,
   ventaApi
 } from '~/lib/api/venta'
+import { ventaEvents } from './venta-events'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -57,13 +58,7 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateVenta({
-  form,
-  onSuccess,
-}: {
-  form?: any
-  onSuccess?: (data: any) => void
-} = {}) {
+export default function useCreateVenta() {
   const router = useRouter()
   const { user } = useAuth()
   const user_id = user?.id
@@ -71,7 +66,7 @@ export default function useCreateVenta({
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(values: FormCreateVenta) {
+  const handleSubmit = useCallback(async (values: FormCreateVenta) => {
     console.log('🚀 ~ handleSubmit ~ values:', values)
 
     if (!user_id)
@@ -207,7 +202,11 @@ export default function useCreateVenta({
     try {
       // Usar la API de Laravel en lugar del action de Prisma
       const response = await ventaApi.create(dataFormated)
-      
+
+      console.log('📥 Response completa:', response)
+      console.log('📦 response.data:', response.data)
+      console.log('📦 response.data?.data:', response.data?.data)
+
       if (response.error) {
         notification.error({
           message: response.error.message || 'Error al crear venta',
@@ -221,19 +220,13 @@ export default function useCreateVenta({
       // Éxito
       message.success('Venta creada exitosamente')
 
-      // Llamar callback onSuccess con los datos de la venta
-      if (onSuccess && response.data?.data) {
-        onSuccess(response.data.data)
-      }
+      console.log('✅ Venta creada exitosamente')
+      console.log('📦 response.data?.data:', response.data?.data)
 
-      // Resetear formulario
-      if (form) {
-        form.resetFields()
-      }
-
-      // Redirigir a la lista de ventas (solo si no hay onSuccess)
-      if (!onSuccess) {
-        router.push('/ui/facturacion-electronica/mis-ventas')
+      // Emitir evento de venta creada
+      if (response.data?.data) {
+        console.log('📢 Emitiendo evento ventaCreada')
+        ventaEvents.emit(response.data.data)
       }
     } catch (error) {
       console.error('Error al crear venta:', error)
@@ -243,7 +236,7 @@ export default function useCreateVenta({
     } finally {
       setLoading(false)
     }
-  }
+  }, [router, user_id, notification, message, almacen_id])
 
   return { handleSubmit, loading }
 }

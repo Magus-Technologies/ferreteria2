@@ -31,11 +31,6 @@ export default function TableDetalleVenta() {
       }))
     ) || []
 
-  // Calcular totales
-  const subtotal = detalleProductos.reduce((sum, p) => sum + p.subtotal, 0)
-  const igv = subtotal * 0.18
-  const total = subtotal + igv
-
   const columnDefs: ColDef<DetalleProducto>[] = [
     // Columna # comentada porque ya viene automáticamente en la tabla
     // {
@@ -79,7 +74,7 @@ export default function TableDetalleVenta() {
   ]
 
   return (
-    <div className='mt-4 w-full'>
+    <div className='w-full'>
       {/* Info del cliente */}
       {ventaSeleccionada && (
         <div className='flex items-center gap-4 mb-3'>
@@ -102,84 +97,14 @@ export default function TableDetalleVenta() {
         </div>
       )}
 
-      {/* Tabla y Totales lado a lado */}
-      <div className='flex gap-4 w-full'>
-        {/* Tabla - ocupa la mayor parte */}
-        <div className='flex-1 min-w-0' style={{ height: '400px' }}>
-          <TableWithTitle<DetalleProducto>
-            id='detalle-venta'
-            title='Detalle de Venta'
-            columnDefs={columnDefs}
-            rowData={detalleProductos}
-          />
-        </div>
-
-        {/* Totales al costado derecho */}
-        <div className='w-[280px] bg-white border border-gray-200 rounded-lg p-3 h-fit'>
-          <div className='space-y-1.5'>
-            {/* Crédito/Contado/Pagado - Comentado temporalmente */}
-            {/* <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='font-semibold text-red-600 text-sm'>Crédito</span>
-              <span className='text-red-600 font-bold text-sm'>
-                {ventaSeleccionada?.forma_de_pago === 'Crédito'
-                  ? `S/. ${total.toFixed(2)}`
-                  : 'S/. 0.00'}
-              </span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='font-semibold text-orange-600 text-sm'>Contado</span>
-              <span className='text-orange-600 font-bold text-sm'>
-                {ventaSeleccionada?.forma_de_pago === 'Contado'
-                  ? `S/. ${total.toFixed(2)}`
-                  : 'S/. 0.00'}
-              </span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='font-semibold text-green-600 text-sm'>Pagado</span>
-              <span className='text-green-600 font-bold text-sm'>
-                S/. {total.toFixed(2)}
-              </span>
-            </div> */}
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Vía contado:</span>
-              <span className='font-semibold text-xs'>S/. {total.toFixed(2)}</span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Anulados:</span>
-              <span className='font-semibold text-xs'>S/. 0.00</span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Vía crédito:</span>
-              <span className='font-semibold text-xs'>S/. 0.00</span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Crédito (Total Paga):</span>
-              <span className='font-semibold text-xs'>S/. 0.00</span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Crédito (Deuda):</span>
-              <span className='font-semibold text-xs'>S/. 0.00</span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Total ICBPER:</span>
-              <span className='font-semibold text-xs'>S/. 0.00</span>
-            </div>
-            <div className='flex justify-between items-center py-2 border-t-2 border-gray-400'>
-              <span className='font-bold text-base'>Total ventas:</span>
-              <span className='font-bold text-base text-blue-600'>
-                S/. {total.toFixed(2)}
-              </span>
-            </div>
-            <div className='flex justify-between items-center py-1.5 border-b'>
-              <span className='text-xs'>Venta Promedio:</span>
-              <span className='font-semibold text-xs'>S/. {total.toFixed(2)}</span>
-            </div>
-            <div className='flex justify-between items-center py-1.5'>
-              <span className='text-xs'>Comisión:</span>
-              <span className='font-semibold text-xs'>S/. 0.00</span>
-            </div>
-          </div>
-        </div>
+      {/* Tabla de detalle de venta */}
+      <div className='w-full min-h-[230px] h-[calc(100vh-600px)] max-h-[600px]'>
+        <TableWithTitle<DetalleProducto>
+          id='detalle-venta'
+          title='Detalle de Venta'
+          columnDefs={columnDefs}
+          rowData={detalleProductos}
+        />
       </div>
     </div>
   )

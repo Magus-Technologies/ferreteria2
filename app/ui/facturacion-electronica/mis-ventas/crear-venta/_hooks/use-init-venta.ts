@@ -15,16 +15,26 @@ export default function useInitVenta({
   const setAlmacenId = useStoreAlmacen((state) => state.setAlmacenId)
 
   useEffect(() => {
+    console.log('🔄 useInitVenta running with venta:', venta)
     form.resetFields()
-    form.setFieldValue('estado_de_venta', 'cr') // Creado
+    console.log('✅ Form reset complete')
     if (venta) {
       const dataFormated: FormCreateVenta = {
         fecha: dayjs(venta.fecha),
         tipo_moneda: venta.tipo_moneda as any,
         tipo_de_cambio: Number(venta.tipo_de_cambio),
-        // cliente_id: venta.cliente_id || undefined,
+        cliente_id: venta.cliente_id || undefined,
         tipo_documento: venta.tipo_documento as any,
         forma_de_pago: venta.forma_de_pago as any,
+        // Datos del cliente si existen
+        ruc_dni: venta.ruc_dni || (venta as any).cliente?.numero_documento || undefined,
+        cliente_nombre: (venta as any).cliente?.razon_social || 
+          ((venta as any).cliente?.nombres && (venta as any).cliente?.apellidos 
+            ? `${(venta as any).cliente.nombres} ${(venta as any).cliente.apellidos}`.trim() 
+            : undefined),
+        telefono: (venta as any).telefono || (venta as any).cliente?.telefono || undefined,
+        direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
+        email: (venta as any).cliente?.email || undefined,
         productos: venta.productos_por_almacen.flatMap((ppa) =>
           ppa.unidades_derivadas.map((ud) => ({
             cantidad: Number(ud.cantidad),
@@ -48,14 +58,19 @@ export default function useInitVenta({
 
       form.setFieldsValue(dataFormated)
       setAlmacenId(venta.almacen_id)
-    } else
+    } else {
+      console.log('📝 Setting default values (no venta)')
       form.setFieldsValue({
         tipo_moneda: 's' as any, // Soles
         fecha: dayjs(),
         forma_de_pago: 'co' as any, // Contado
         tipo_documento: '03' as any, // Boleta (por defecto)
         tipo_de_cambio: 1,
+        productos: [], // Asegurar que la tabla esté vacía
+        estado_de_venta: 'cr' as any, // Creado
       })
+      console.log('✅ Default values set, productos should be empty array')
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venta])
 }

@@ -169,6 +169,7 @@ export default function TableVender({
           cantidad_pendiente,
           venta,
         })}
+        suppressCellFocus={true}
       />
     </>
   )

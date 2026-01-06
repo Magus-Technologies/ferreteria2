@@ -3,16 +3,18 @@
 import { ICellRendererParams } from "ag-grid-community";
 import { FaFilePdf } from "react-icons/fa6";
 import ButtonBase from "~/components/buttons/button-base";
+import { useStoreModalPdfVenta } from "../../_store/store-modal-pdf-venta";
 
 export default function CellAccionesVenta(
   props: ICellRendererParams & { ventaId?: string }
 ) {
   const ventaId = props.ventaId || props.data?.id;
+  const openModal = useStoreModalPdfVenta((state) => state.openModal);
 
   if (!ventaId) return null;
 
   const handleVerPDF = () => {
-    window.open(`/api/pdf/venta/${ventaId}`, "_blank");
+    openModal(ventaId);
   };
 
   return (
@@ -27,12 +29,12 @@ export default function CellAccionesVenta(
     >
       <ButtonBase
         color="danger"
-        size="sm"
+        size="md"
         onClick={handleVerPDF}
-        className="flex items-center gap-1"
+        className="flex items-center !px-3"
       >
         <FaFilePdf />
-        PDF
+        
       </ButtonBase>
     </div>
   );

@@ -117,6 +117,8 @@ export default function CardAgregarProductoVenta({
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_venta: values.precio_venta,
       comision,
+      // Guardar las unidades derivadas disponibles del producto
+      unidades_derivadas_disponibles: unidades_derivadas,
     }
 
     // Si se proporciona onOk, solo llamarlo (usado por cotizaciones)

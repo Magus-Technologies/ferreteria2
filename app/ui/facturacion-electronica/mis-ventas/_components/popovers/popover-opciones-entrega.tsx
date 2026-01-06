@@ -5,7 +5,7 @@ import { useState, ReactNode } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
-import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
+import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
 import dynamic from 'next/dynamic'
 
@@ -80,9 +80,15 @@ export default function PopoverOpcionesEntrega({
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Designar Chofer: <span className="text-red-500">*</span>
               </label>
-              <SelectUsuarios
+              <SelectChoferes
                 propsForm={{
                   name: 'chofer_id',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Por favor, selecciona un chofer',
+                    },
+                  ],
                 }}
                 placeholder="Seleccionar chofer"
                 className="w-full"

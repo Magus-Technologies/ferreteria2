@@ -174,10 +174,13 @@ export const productosApiV2 = {
 
   /**
    * Validar si un código de producto ya existe
-   * GET /api/productos/validar-codigo?cod_producto=ABC123
+   * GET /api/productos/validar-codigo?cod_producto=ABC123&exclude_id=123
    */
-  async validarCodigo(cod_producto: string): Promise<ApiResponse<string | null>> {
+  async validarCodigo(cod_producto: string, excludeId?: number): Promise<ApiResponse<string | null>> {
     const queryParams = new URLSearchParams({ cod_producto });
+    if (excludeId) {
+      queryParams.append('exclude_id', excludeId.toString());
+    }
     return apiRequest<string | null>(`/productos/validar-codigo?${queryParams.toString()}`);
   },
 };

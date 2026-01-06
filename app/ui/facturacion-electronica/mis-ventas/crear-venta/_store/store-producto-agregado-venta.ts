@@ -1,10 +1,14 @@
 import { create } from 'zustand'
 import { FormCreateVenta } from '../_components/others/body-vender'
 import { TipoMoneda } from '~/lib/api/venta'
+import { getProductosResponseProps } from '~/app/_actions/producto'
 
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
->
+> & {
+  // Agregar las unidades derivadas disponibles del producto
+  unidades_derivadas_disponibles?: getProductosResponseProps['producto_en_almacenes'][number]['unidades_derivadas']
+}
 
 type UseStoreProductoAgregadoVentaProps = {
   productoAgregado?: ValuesCardAgregarProductoVenta

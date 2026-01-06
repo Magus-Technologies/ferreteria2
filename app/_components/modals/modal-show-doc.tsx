@@ -1,5 +1,5 @@
 import { Modal, Tooltip } from 'antd'
-import { cloneElement, Dispatch, SetStateAction } from 'react'
+import { cloneElement, Dispatch, SetStateAction, useEffect } from 'react'
 import { FaDownload, FaShareNodes } from 'react-icons/fa6'
 import { HiClipboardDocument } from 'react-icons/hi2'
 import ButtonBase from '~/components/buttons/button-base'
@@ -33,6 +33,31 @@ export default function ModalShowDoc({
     jsx: <>{children}</>,
     name: nro_doc,
   })
+  
+  // Suprimir warnings de @react-pdf/renderer sobre casing de elementos
+  // Estos warnings son causados por la librería al renderizar en el navegador para preview
+  // y no afectan la generación del PDF real
+  useEffect(() => {
+    if (!open) return
+    
+    const originalError = console.error
+    console.error = (...args: any[]) => {
+      // Filtrar warnings específicos de @react-pdf/renderer sobre casing
+      if (
+        typeof args[0] === 'string' && 
+        (args[0].includes('is using incorrect casing') ||
+         args[0].includes('Use PascalCase for React components'))
+      ) {
+        return
+      }
+      originalError.apply(console, args)
+    }
+    
+    return () => {
+      console.error = originalError
+    }
+  }, [open])
+  
   return (
     <Modal
       centered

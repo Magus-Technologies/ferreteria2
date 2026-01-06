@@ -87,7 +87,9 @@ export default function ModalCreateProducto({
   useEffect(() => {
     if (!open) return
     
-    form.resetFields()
+    // Limpiar la validación del código cuando se abre el modal
+    setDisabled(true)
+    
     if (producto) {
       if (producto.cod_producto) setDisabled(false)
       if (producto.img)
@@ -109,31 +111,35 @@ export default function ModalCreateProducto({
       )
       if (!producto_almacen) return
       const costo_unidad = Number(producto_almacen.costo)
-      form.setFieldsValue({
-        ...restProducto,
-        estado: Number(estado),
-        producto_almacen,
-        unidades_derivadas: producto_almacen.unidades_derivadas.map(item => {
-          const { id, producto_almacen_id, ...rest } = item
-          const costo = costo_unidad * Number(item.factor)
-          const ganancia = Number(item.precio_publico) - costo
-          const p_venta = costo != 0 ? (ganancia * 100) / costo : 0
-          return {
-            ...rest,
-            costo,
-            p_venta,
-            ganancia,
-            ...(producto?.id
-              ? {
-                  id,
-                  producto_almacen_id,
-                }
-              : {}),
-          }
-        }),
-        ...(producto?.id ? { cod_producto } : {}),
-      })
+      
+      // Resetear el form primero para limpiar el estado anterior
+      form.resetFields()
+      
+      // Usar setTimeout para asegurar que el reseteo se complete antes de setear los valores
+      setTimeout(() => {
+        form.setFieldsValue({
+          ...restProducto,
+          estado: Number(estado),
+          producto_almacen,
+          unidades_derivadas: producto_almacen.unidades_derivadas.map(item => {
+            const { id, producto_almacen_id, ...rest } = item
+            const costo = costo_unidad * Number(item.factor)
+            const ganancia = Number(item.precio_publico) - costo
+            const p_venta = costo != 0 ? (ganancia * 100) / costo : 0
+            return {
+              ...rest,
+              costo,
+              p_venta,
+              ganancia,
+              // NO incluir id y producto_almacen_id en el form para evitar conflictos
+              // Se agregarán al guardar si es necesario
+            }
+          }),
+          ...(producto?.id ? { cod_producto } : {}),
+        })
+      }, 0)
     } else {
+      form.resetFields()
       form.setFieldsValue({
         unidades_contenidas: 1,
         unidades_derivadas: [],

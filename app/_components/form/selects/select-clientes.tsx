@@ -21,7 +21,8 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classIconCreate?: string
   clienteOptionsDefault?: Pick<Cliente, 'id' | 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>[]
   form?: FormInstance
-  showOnlyDocument?: boolean // Nueva prop para mostrar solo el documento
+  showOnlyDocument?: boolean
+  autoFocus?: boolean
 }
 
 export default function SelectClientes({
@@ -36,11 +37,22 @@ export default function SelectClientes({
   onChange,
   form,
   showOnlyDocument = false,
+  autoFocus = false,
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
   const [lastSelectedDocument, setLastSelectedDocument] = useState('')
+
+  // Aplicar autoFocus cuando el componente se monta
+  useEffect(() => {
+    if (autoFocus && selectClientesRef.current) {
+      const timer = setTimeout(() => {
+        selectClientesRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [autoFocus])
 
   const [openModalClienteSearch, setOpenModalClienteSearch] = useState(false)
 
@@ -147,16 +159,18 @@ export default function SelectClientes({
     }
   }
 
-  const [value] = useDebounce(text, 1000)
+  const [value] = useDebounce(text, 300) // Reducir de 1000ms a 300ms
 
   const { response, loading } = useSearchClientes({ value })
 
   useEffect(() => {
-    // Solo autoseleccionar si hay exactamente 1 resultado Y el texto coincide exactamente con el documento
+    // Autoseleccionar si hay exactamente 1 resultado
     if (response && response.length === 1) {
       const cliente = response[0]
-      // Solo autoseleccionar si el texto coincide exactamente con el número de documento
-      if (cliente.numero_documento === text) {
+      // Autoseleccionar si el texto coincide con el documento (exacto o parcial al final)
+      const textoLimpio = text.trim()
+      if (cliente.numero_documento === textoLimpio || 
+          (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio))) {
         handleSelect({ data: cliente })
       }
     }
@@ -175,6 +189,7 @@ export default function SelectClientes({
         ref={selectClientesRef}
         form={form}
         showSearch
+        uppercase={true}
         filterOption={false}
         onSearch={setText}
         searchValue={text}
@@ -182,6 +197,7 @@ export default function SelectClientes({
         variant={variant}
         placeholder={placeholder}
         loading={loading}
+        autoFocus={autoFocus}
         options={[
           ...(clienteCreado
             ? [

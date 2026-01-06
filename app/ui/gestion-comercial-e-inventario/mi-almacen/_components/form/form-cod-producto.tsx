@@ -24,13 +24,15 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
 
   const cod_producto = Form.useWatch('cod_producto', form)
 
-  const { validar, loading, response } = useValidarCodigoProducto()
+  const { validar, loading, response } = useValidarCodigoProducto(producto?.id)
 
   useEffect(() => {
-    if (primera_vez_validar.current >= (producto ? 2 : 1)) validar(cod_producto)
+    if (primera_vez_validar.current >= (producto ? 2 : 1)) {
+      if (cod_producto) validar(cod_producto)
+    }
     primera_vez_validar.current += 1
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cod_producto, validar])
+  }, [cod_producto])
 
   useEffect(() => {
     if (!(producto?.id && primera_vez.current)) {
@@ -57,7 +59,8 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
               required: !disabled,
               message: 'Falta el Código del Producto',
             },
-            {
+            // Solo validar si NO estamos editando un producto
+            ...(!producto?.id ? [{
               validator: () => {
                 if (response) {
                   return Promise.reject(
@@ -66,7 +69,7 @@ export default function FormCodProducto({ form }: FormCodProductoProps) {
                 }
                 return Promise.resolve()
               },
-            },
+            }] : []),
           ],
         }}
         placeholder='Código de Producto'

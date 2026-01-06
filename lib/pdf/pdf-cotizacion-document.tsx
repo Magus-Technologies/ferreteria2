@@ -266,16 +266,25 @@ export default function PDFCotizacionDocument({
 
     return unidadesDerivadas.map((ud: any) => {
       const unidadDerivadaInmutable = ud.unidadDerivadaInmutable || ud.unidad_derivada_inmutable;
+      const cantidad = Number(ud.cantidad || 0);
+      const precio = Number(ud.precio || 0);
+      const recargo = Number(ud.recargo || 0);
+      const descuento = Number(ud.descuento || 0);
+      
+      // Calcular subtotal: (precio + recargo) * cantidad - descuento
+      const precioConRecargo = precio + recargo;
+      const subtotalSinDescuento = precioConRecargo * cantidad;
+      const subtotal = subtotalSinDescuento - descuento;
 
       return {
         codigo: productoAlmacen?.producto?.cod_producto || productoAlmacen?.producto?.codigo || "",
         nombre: productoAlmacen?.producto?.name || productoAlmacen?.producto?.descripcion || "",
         marca: productoAlmacen?.producto?.marca?.name || "N/A",
         unidad: unidadDerivadaInmutable?.name || "UND",
-        cantidad: Number(ud.cantidad || 0),
-        precio: Number(ud.precio || 0),
-        descuento: Number(ud.descuento || 0),
-        subtotal: Number(ud.cantidad || 0) * Number(ud.factor || 1) * Number(ud.precio || 0),
+        cantidad: cantidad,
+        precio: precio,
+        descuento: descuento,
+        subtotal: subtotal,
       };
     });
   });

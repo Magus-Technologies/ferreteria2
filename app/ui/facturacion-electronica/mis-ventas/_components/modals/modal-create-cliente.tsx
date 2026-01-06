@@ -43,9 +43,12 @@ export default function ModalCreateCliente({
 
   const { crearClienteForm, loading } = useCreateCliente({
     onSuccess: (cliente) => {
-      setOpen(false)
-      form.resetFields()
-      onSuccess?.(cliente)
+      // IMPORTANTE: Retrasar el cierre del modal para que el usuario vea el mensaje de éxito
+      setTimeout(() => {
+        setOpen(false)
+        form.resetFields()
+        onSuccess?.(cliente)
+      }, 800) // 800ms es suficiente para ver el mensaje
     },
     dataEdit,
   })

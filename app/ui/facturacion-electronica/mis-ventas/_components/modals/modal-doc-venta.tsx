@@ -162,18 +162,19 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     (productoAlmacen) => {
       return productoAlmacen.unidades_derivadas.map((ud) => {
         const cantidad = Number(ud.cantidad ?? 0)
-        const factor = Number(ud.factor ?? 0)
         const precio = Number(ud.precio ?? 0)
         const recargo = Number(ud.recargo ?? 0)
         const descuento = Number(ud.descuento ?? 0)
 
-        // Calcular subtotal de la línea (igual que Laravel)
-        const subtotalLinea = precio * cantidad * factor
+        // Calcular subtotal de la línea
+        // NOTA: El precio ya es el precio de venta final de esa unidad derivada específica
+        // NO multiplicar por factor porque eso duplicaría el cálculo
+        const subtotalLinea = precio * cantidad
         const subtotalConRecargo = subtotalLinea + recargo
 
         // Aplicar descuento
         let montoLinea = subtotalConRecargo
-        if (ud.descuento_tipo === '%' || ud.descuento_tipo === 'porcentaje') {
+        if (ud.descuento_tipo === '%') {
           montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100)
         } else {
           montoLinea = subtotalConRecargo - descuento
@@ -226,3 +227,4 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     observaciones: venta.observaciones,
   }
 }
+

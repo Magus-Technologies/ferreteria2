@@ -121,19 +121,16 @@ export default function FiltersMisPrestamos() {
               placeholder='Todos los clientes'
             />
           </div>
-        </div>
-
-        {/* Fila 2: N° Préstamo, Operación, Estado, Botón Buscar */}
-        <div className='flex items-center gap-3 flex-wrap'>
           <div className='flex items-center gap-2'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
               N° Préstamo:
             </label>
             <InputBase
+              uppercase={true}
               propsForm={{
                 name: 'numero',
                 hasFeedback: false,
-                className: '!w-[150px]',
+                className: '!w-[100px]',
               }}
               placeholder='PRE-2025-001'
               formWithMessage={false}
@@ -147,7 +144,7 @@ export default function FiltersMisPrestamos() {
               propsForm={{
                 name: 'tipo_operacion',
                 hasFeedback: false,
-                className: '!w-[170px]',
+                className: '!w-[100px]',
               }}
               placeholder='Todas'
               formWithMessage={false}
@@ -166,7 +163,7 @@ export default function FiltersMisPrestamos() {
               propsForm={{
                 name: 'estado_prestamo',
                 hasFeedback: false,
-                className: '!w-[160px]',
+                className: '!w-[140px]',
               }}
               placeholder='Todos'
               formWithMessage={false}
@@ -188,6 +185,11 @@ export default function FiltersMisPrestamos() {
             <FaSearch />
             Buscar
           </ButtonBase>
+        </div>
+
+        {/* Fila 2: N° Préstamo, Operación, Estado, Botón Buscar */}
+        <div className='flex items-center gap-3 flex-wrap'>
+          
         </div>
       </div>
     </FormBase>

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsMisCotizaciones } from './columns-mis-cotizaciones'
 import { create } from 'zustand'
@@ -8,6 +8,7 @@ import { cotizacionesApi, type Cotizacion } from '~/lib/api/cotizaciones'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { AgGridReact } from 'ag-grid-react'
 
 type UseStoreCotizacionSeleccionada = {
   cotizacion?: Cotizacion
@@ -21,6 +22,7 @@ export const useStoreCotizacionSeleccionada =
   }))
 
 export default function TableMisCotizaciones() {
+  const tableRef = useRef<AgGridReact>(null);
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
 
   const { data: response, isLoading: loading } = useQuery({
@@ -38,6 +40,20 @@ export default function TableMisCotizaciones() {
     (state) => state.setCotizacion
   )
 
+  // Seleccionar automáticamente el primer registro cuando se cargan los datos
+  React.useEffect(() => {
+    if (response && response.length > 0 && tableRef.current) {
+      // Esperar un momento para que la tabla se renderice completamente
+      setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
+        if (firstNode) {
+          firstNode.setSelected(true);
+          setCotizacionSeleccionada(firstNode.data);
+        }
+      }, 100);
+    }
+  }, [response, setCotizacionSeleccionada]);
+
   return (
     <div className='w-full' style={{ height: '300px' }}>
       <TableWithTitle<Cotizacion>
@@ -46,6 +62,7 @@ export default function TableMisCotizaciones() {
         loading={loading}
         columnDefs={useColumnsMisCotizaciones()}
         rowData={response || []}
+        tableRef={tableRef}
         onSelectionChanged={({ selectedNodes }) =>
           setCotizacionSeleccionada(selectedNodes?.[0]?.data as Cotizacion)
         }

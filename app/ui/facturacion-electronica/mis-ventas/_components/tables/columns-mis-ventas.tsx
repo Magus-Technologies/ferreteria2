@@ -57,21 +57,35 @@ export function useColumnsMisVentas() {
       width: 120,
       valueGetter: (params) => {
         const productos = params.data?.productos_por_almacen || [];
-        const subtotal = productos.reduce((sum: number, producto: any) => {
+        const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
             (pSum: number, unidad: any) => {
-              return (
-                pSum +
-                Number(unidad.cantidad) *
-                  Number(unidad.factor) *
-                  Number(unidad.precio)
-              );
+              const cantidad = Number(unidad.cantidad);
+              const precio = Number(unidad.precio); // Precio CON IGV
+              const recargo = Number(unidad.recargo || 0);
+              const descuento = Number(unidad.descuento || 0);
+              
+              // Calcular total de la línea
+              const subtotalLinea = precio * cantidad;
+              const subtotalConRecargo = subtotalLinea + recargo;
+              
+              // Aplicar descuento
+              let montoLinea = subtotalConRecargo;
+              if (unidad.descuento_tipo === '%') {
+                montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+              } else {
+                montoLinea = subtotalConRecargo - descuento;
+              }
+              
+              return pSum + montoLinea;
             },
             0
           );
           return sum + productoTotal;
         }, 0);
-        return subtotal;
+        
+        // El total incluye IGV, dividir entre 1.18 para obtener subtotal sin IGV
+        return total / 1.18;
       },
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
     },
@@ -82,21 +96,33 @@ export function useColumnsMisVentas() {
       width: 100,
       valueGetter: (params) => {
         const productos = params.data?.productos_por_almacen || [];
-        const subtotal = productos.reduce((sum: number, producto: any) => {
+        const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
             (pSum: number, unidad: any) => {
-              return (
-                pSum +
-                Number(unidad.cantidad) *
-                  Number(unidad.factor) *
-                  Number(unidad.precio)
-              );
+              const cantidad = Number(unidad.cantidad);
+              const precio = Number(unidad.precio);
+              const recargo = Number(unidad.recargo || 0);
+              const descuento = Number(unidad.descuento || 0);
+              
+              const subtotalLinea = precio * cantidad;
+              const subtotalConRecargo = subtotalLinea + recargo;
+              
+              let montoLinea = subtotalConRecargo;
+              if (unidad.descuento_tipo === '%') {
+                montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+              } else {
+                montoLinea = subtotalConRecargo - descuento;
+              }
+              
+              return pSum + montoLinea;
             },
             0
           );
           return sum + productoTotal;
         }, 0);
-        return subtotal * 0.18;
+        
+        // IGV = Total - Subtotal = Total - (Total / 1.18)
+        return total - (total / 1.18);
       },
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
     },
@@ -107,21 +133,33 @@ export function useColumnsMisVentas() {
       width: 120,
       valueGetter: (params) => {
         const productos = params.data?.productos_por_almacen || [];
-        const subtotal = productos.reduce((sum: number, producto: any) => {
+        const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
             (pSum: number, unidad: any) => {
-              return (
-                pSum +
-                Number(unidad.cantidad) *
-                  Number(unidad.factor) *
-                  Number(unidad.precio)
-              );
+              const cantidad = Number(unidad.cantidad);
+              const precio = Number(unidad.precio);
+              const recargo = Number(unidad.recargo || 0);
+              const descuento = Number(unidad.descuento || 0);
+              
+              const subtotalLinea = precio * cantidad;
+              const subtotalConRecargo = subtotalLinea + recargo;
+              
+              let montoLinea = subtotalConRecargo;
+              if (unidad.descuento_tipo === '%') {
+                montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+              } else {
+                montoLinea = subtotalConRecargo - descuento;
+              }
+              
+              return pSum + montoLinea;
             },
             0
           );
           return sum + productoTotal;
         }, 0);
-        return subtotal * 1.18;
+        
+        // El total ya incluye IGV
+        return total;
       },
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
     },
@@ -139,7 +177,8 @@ export function useColumnsMisVentas() {
       headerName: "Usuario",
       colId: "usuario_nombre",
       field: "user.name",
-      width: 150,
+      flex: 1,
+      minWidth: 100,
       valueGetter: (params) => params.data?.user?.name || "",
     },
     {
@@ -156,3 +195,4 @@ export function useColumnsMisVentas() {
 
   return columnDefs;
 }
+

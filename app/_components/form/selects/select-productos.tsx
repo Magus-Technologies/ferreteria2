@@ -205,6 +205,7 @@ export default function SelectProductos({
       <SelectBase
         ref={selectProductoRef}
         showSearch
+        uppercase={true}
         onClear={() => {
           setTextDefault('')
         }}

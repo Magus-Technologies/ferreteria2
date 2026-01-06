@@ -221,4 +221,13 @@ export const cotizacionesApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Convertir una cotización a venta
+   */
+  async convertirAVenta(id: string): Promise<ApiResponse<{ message: string; venta_id: string }>> {
+    return apiRequest<{ message: string; venta_id: string }>(`/cotizaciones/${id}/convertir-a-venta`, {
+      method: 'POST',
+    });
+  },
 };

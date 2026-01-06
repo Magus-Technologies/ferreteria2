@@ -11,12 +11,24 @@ export default function TotalVentas() {
     const subtotal = venta.productos_por_almacen.reduce((sum: number, producto: any) => {
       const productoTotal = producto.unidades_derivadas.reduce(
         (pSum: number, unidad: any) => {
-          return (
-            pSum +
-            Number(unidad.cantidad) *
-              Number(unidad.factor) *
-              Number(unidad.precio)
-          )
+          const cantidad = Number(unidad.cantidad);
+          const precio = Number(unidad.precio);
+          const recargo = Number(unidad.recargo || 0);
+          const descuento = Number(unidad.descuento || 0);
+          
+          // Calcular total de la línea (SIN multiplicar por factor)
+          const subtotalLinea = precio * cantidad;
+          const subtotalConRecargo = subtotalLinea + recargo;
+          
+          // Aplicar descuento
+          let montoLinea = subtotalConRecargo;
+          if (unidad.descuento_tipo === '%') {
+            montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+          } else {
+            montoLinea = subtotalConRecargo - descuento;
+          }
+          
+          return pSum + montoLinea;
         },
         0
       )
@@ -34,3 +46,4 @@ export default function TotalVentas() {
     </div>
   )
 }
+

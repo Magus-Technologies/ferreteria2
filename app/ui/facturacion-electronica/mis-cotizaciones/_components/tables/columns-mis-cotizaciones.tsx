@@ -2,8 +2,8 @@
 
 import { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
-import { FaFileInvoice, FaPrint } from "react-icons/fa";
 import { Cotizacion } from "~/lib/api/cotizaciones";
+import CellAccionesCotizacion from "./cell-acciones-cotizacion";
 
 export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
   return [
@@ -72,7 +72,24 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
 
         const total = cotizacion.productos_por_almacen.reduce((sum, pa) => {
           const subtotalProducto = (pa.unidades_derivadas || []).reduce((subSum, ud) => {
-            return subSum + (Number(ud.cantidad) * Number(ud.factor) * Number(ud.precio));
+            const cantidad = Number(ud.cantidad);
+            const precio = Number(ud.precio);
+            const recargo = Number(ud.recargo || 0);
+            const descuento = Number(ud.descuento || 0);
+            
+            // Calcular total de la línea (igual que en ventas)
+            const subtotalLinea = precio * cantidad; // SIN multiplicar por factor
+            const subtotalConRecargo = subtotalLinea + recargo;
+            
+            // Aplicar descuento
+            let montoLinea = subtotalConRecargo;
+            if (ud.descuento_tipo === '%') {
+              montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100);
+            } else {
+              montoLinea = subtotalConRecargo - descuento;
+            }
+            
+            return subSum + montoLinea;
           }, 0);
           return sum + subtotalProducto;
         }, 0);
@@ -86,31 +103,11 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       headerName: "Acciones",
       width: 150,
       pinned: "right",
-      cellRenderer: (params: { data: Cotizacion }) => {
-        return (
-          <div className="flex items-center gap-2 h-full">
-            <button
-              onClick={() => {
-                // Convertir a venta
-                console.log("Convertir a venta:", params.data);
-              }}
-              className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded transition-colors"
-              title="Convertir a Venta"
-            >
-              <FaFileInvoice />
-            </button>
-            <button
-              onClick={() => {
-                window.open(`/api/pdf/cotizacion/${params.data.id}`, '_blank')
-              }}
-              className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded transition-colors"
-              title="Imprimir PDF"
-            >
-              <FaPrint />
-            </button>
-          </div>
-        );
-      },
+      cellRenderer: CellAccionesCotizacion,
+      cellRendererParams: (params: { data?: Cotizacion }) => ({
+        cotizacionId: params.data?.id || "",
+      }),
     },
   ];
 }
+

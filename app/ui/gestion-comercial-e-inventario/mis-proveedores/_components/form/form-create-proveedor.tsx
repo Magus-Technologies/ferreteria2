@@ -102,6 +102,7 @@ export default function FormCreateProveedor({
             ],
           }}
           placeholder='Razon Social / Nombres y Apellidos'
+          autoComplete='new-password'
         />
       </LabelBase>
       <LabelBase label='Direccion:' classNames={{ labelParent: 'mb-6' }}>
@@ -111,6 +112,7 @@ export default function FormCreateProveedor({
             name: 'direccion',
           }}
           placeholder='Direccion'
+          autoComplete='new-password'
         />
       </LabelBase>
       <div className='flex gap-4 items-center justify-center'>
@@ -125,6 +127,7 @@ export default function FormCreateProveedor({
               name: 'telefono',
             }}
             placeholder='Telefono'
+            autoComplete='new-password'
           />
         </LabelBase>
         <LabelBase
@@ -138,6 +141,7 @@ export default function FormCreateProveedor({
               name: 'email',
             }}
             placeholder='Email'
+            autoComplete='new-password'
           />
         </LabelBase>
       </div>
