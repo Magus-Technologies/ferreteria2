@@ -69,8 +69,10 @@ export function useColumnsClientes({
             propsDelete={{
               action: async ({ id }: { id: number }) => {
                 const result = await clienteApi.delete(id)
-                if (result.error) throw new Error(result.error.message)
-                return result
+                if (result.error) {
+                  return { error: result.error }
+                }
+                return { data: 'ok' }
               },
               msgSuccess: 'Cliente eliminado correctamente',
               queryKey: [QueryKeys.CLIENTES, QueryKeys.CLIENTES_SEARCH],

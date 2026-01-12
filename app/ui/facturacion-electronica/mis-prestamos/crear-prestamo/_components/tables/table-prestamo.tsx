@@ -1,38 +1,70 @@
 "use client";
 
-import { FormInstance, Form } from "antd";
-import TableWithTitle from "~/components/tables/table-with-title";
+import { FormInstance, FormListFieldData } from "antd";
+import { StoreValue } from "antd/es/form/interface";
+import { useEffect } from "react";
+import TableBase from "~/components/tables/table-base";
 import { useColumnsPrestamo } from "./columns-prestamo";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
+import CellFocusWithoutStyle from "~/components/tables/cell-focus-without-style";
+import { useStoreProductoAgregadoPrestamo } from "../../_store/store-producto-agregado-prestamo";
 
 export default function TablePrestamo({
   form,
+  fields,
+  remove,
+  add,
 }: {
   form: FormInstance<FormCreatePrestamo>;
+  fields: FormListFieldData[];
+  remove: (index: number | number[]) => void;
+  add: (defaultValue?: StoreValue, insertIndex?: number) => void;
 }) {
-  const productos = Form.useWatch("productos", form) || [];
+  const productoAgregado = useStoreProductoAgregadoPrestamo(
+    (state) => state.productoAgregado
+  );
+  const setProductoAgregado = useStoreProductoAgregadoPrestamo(
+    (state) => state.setProductoAgregado
+  );
+
+  useEffect(() => {
+    if (productoAgregado) {
+      // Agregar al formulario usando add
+      add(productoAgregado);
+
+      // Calcular monto total
+      const productos = form.getFieldValue("productos") || [];
+      const montoTotal = [...productos, productoAgregado].reduce(
+        (sum, p) => sum + p.subtotal,
+        0
+      );
+      form.setFieldValue("monto_total", montoTotal);
+
+      setProductoAgregado(undefined);
+    }
+  }, [productoAgregado, form, setProductoAgregado, add]);
 
   const handleEliminarProducto = (index: number) => {
-    const nuevosProductos = productos.filter((_: any, i: number) => i !== index);
-    form.setFieldValue("productos", nuevosProductos);
+    remove(index);
 
-    // Recalcular monto total
-    const montoTotal = nuevosProductos.reduce(
-      (sum: number, p: any) => sum + p.subtotal,
-      0
-    );
+    // Recalcular monto total después de eliminar
+    const productos = form.getFieldValue("productos") || [];
+    const montoTotal = productos
+      .filter((_: any, i: number) => i !== index)
+      .reduce((sum: number, p: any) => sum + p.subtotal, 0);
     form.setFieldValue("monto_total", montoTotal);
   };
 
   return (
-    <div style={{ height: '200px', width: '100%' }}>
-      <TableWithTitle
-        id="tabla-productos-prestamo"
-        title="Productos del Préstamo"
-        columnDefs={useColumnsPrestamo(handleEliminarProducto)}
-        rowData={productos}
-        loading={false}
+    <>
+      <CellFocusWithoutStyle />
+      <TableBase
+        className="h-full"
+        rowSelection={false}
+        rowData={fields}
+        columnDefs={useColumnsPrestamo(handleEliminarProducto, form)}
+        suppressCellFocus={true}
       />
-    </div>
+    </>
   );
 }

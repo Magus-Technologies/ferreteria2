@@ -126,7 +126,7 @@ export async function apiRequest<T = unknown>(
 
       return {
         error: {
-          message: data.message || 'Error en la petición',
+          message: data.error?.message || data.message || 'Error en la petición',
         },
       };
     }

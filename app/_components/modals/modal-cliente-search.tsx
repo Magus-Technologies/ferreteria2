@@ -33,7 +33,7 @@ export default function ModalClienteSearch({
     setText(textDefault)
   }, [textDefault])
 
-  const [value] = useDebounce(text, 1000)
+  const [value] = useDebounce(text, 500)
 
   const setClienteSeleccionadoStore = useStoreClienteSeleccionado(
     store => store.setCliente

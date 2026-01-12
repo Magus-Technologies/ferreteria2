@@ -16,6 +16,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
   onChange?: (value: number, cliente?: Cliente) => void
+  onSearchChange?: (text: string) => void // Nuevo: callback para capturar el texto de búsqueda
   showButtonCreate?: boolean
   classIconSearch?: string
   classIconCreate?: string
@@ -35,6 +36,7 @@ export default function SelectClientes({
   classIconCreate = '',
   clienteOptionsDefault = [],
   onChange,
+  onSearchChange, // Nuevo
   form,
   showOnlyDocument = false,
   autoFocus = false,
@@ -69,8 +71,12 @@ export default function SelectClientes({
 
   const [textDefault, setTextDefault] = useState('')
   useEffect(() => {
-    if (text) setTextDefault(text)
-  }, [text])
+    if (text) {
+      setTextDefault(text)
+      // Notificar al componente padre del cambio de texto
+      onSearchChange?.(text)
+    }
+  }, [text, onSearchChange])
 
   // Detectar cuando el usuario modifica el texto y limpiar campos relacionados
   useEffect(() => {

@@ -96,6 +96,7 @@ export default function ModalDocPrestamo({
       nro_doc={nro_doc}
       setEsTicket={setEsTicket}
       esTicket={esTicket}
+      tipoDocumento='prestamo'
     >
       {esTicket ? (
         <DocPrestamoTicket

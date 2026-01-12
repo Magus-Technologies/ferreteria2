@@ -1,16 +1,13 @@
-import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import { clienteApi } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export default function useSearchClientes({ value }: { value: string }) {
-  const [valueDebounce] = useDebounce(value, 500)
-
   const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.CLIENTES_SEARCH, valueDebounce],
+    queryKey: [QueryKeys.CLIENTES_SEARCH, value],
     queryFn: async () => {
       const res = await clienteApi.getAll({
-        search: valueDebounce || undefined,
+        search: value || undefined,
         per_page: 20,
       })
 
@@ -21,9 +18,13 @@ export default function useSearchClientes({ value }: { value: string }) {
 
       return res.data?.data || []
     },
-    // Mantener datos previos mientras se hace una nueva búsqueda
-    placeholderData: (previousData) => previousData,
+    // Solo ejecutar la query si hay al menos 2 caracteres
+    enabled: value.length >= 2,
   })
 
-  return { response: data, loading: isLoading }
+  // Si no hay suficientes caracteres, devolver array vacío
+  return { 
+    response: value.length >= 2 ? (data || []) : [], 
+    loading: isLoading 
+  }
 }

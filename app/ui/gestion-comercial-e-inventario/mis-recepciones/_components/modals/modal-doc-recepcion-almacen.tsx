@@ -34,6 +34,7 @@ export default function ModalDocRecepcionAlmacen({
       nro_doc={nro_doc}
       setEsTicket={setEsTicket}
       esTicket={esTicket}
+      tipoDocumento='recepcion_almacen'
     >
       {esTicket ? (
         <DocRecepcionAlmacenTicket

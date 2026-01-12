@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Spin, Modal } from 'antd'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import DocCotizacion, { CotizacionDataPDF, ProductoCotizacionPDF } from '../docs/doc-cotizacion'
 import DocCotizacionTicket from '../docs/doc-cotizacion-ticket'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { useConfiguracionImpresion } from '~/hooks/use-configuracion-impresion'
 
 // ============= TYPES =============
 
@@ -62,6 +63,30 @@ export default function ModalDocCotizacion({
   const { data: empresa, isLoading } = useEmpresaPublica()
   const [esTicket, setEsTicket] = useState(true)
 
+  // Obtener configuraciones de impresión
+  const { getConfiguracionCampo } = useConfiguracionImpresion({
+    tipoDocumento: 'cotizacion',
+    enabled: open,
+  })
+
+  // Crear objeto de estilos para pasar al componente PDF
+  const estilosCampos = useMemo(() => {
+    const campos = [
+      'fecha', 'fecha_vencimiento', 'cliente_nombre', 'cliente_documento', 
+      'cliente_direccion', 'vendedor', 'subtotal', 'total_descuento', 'total'
+    ]
+    const estilos: Record<string, { fontFamily?: string; fontSize?: number; fontWeight?: string }> = {}
+    campos.forEach(campo => {
+      const config = getConfiguracionCampo(campo)
+      estilos[campo] = {
+        fontFamily: config.font_family,
+        fontSize: config.font_size,
+        fontWeight: config.font_weight,
+      }
+    })
+    return estilos
+  }, [getConfiguracionCampo])
+
   // Generar número de documento
   const nro_doc = data ? data.numero : ''
 
@@ -92,18 +117,21 @@ export default function ModalDocCotizacion({
       nro_doc={nro_doc}
       setEsTicket={setEsTicket}
       esTicket={esTicket}
+      tipoDocumento='cotizacion'
     >
       {esTicket ? (
         <DocCotizacionTicket
           data={cotizacionDataPDF}
           nro_doc={nro_doc}
           empresa={empresa}
+          estilosCampos={estilosCampos}
         />
       ) : (
         <DocCotizacion
           data={cotizacionDataPDF}
           nro_doc={nro_doc}
           empresa={empresa}
+          estilosCampos={estilosCampos}
         />
       )}
     </ModalShowDoc>

@@ -16,13 +16,32 @@ export default function DocVentaTicket({
   nro_doc,
   empresa,
   show_logo_html = false,
+  estilosCampos,
 }: {
   data: VentaDataPDF | undefined
   nro_doc: string
   empresa: EmpresaPublica | undefined
   show_logo_html?: boolean
+  estilosCampos?: Record<string, { fontFamily?: string; fontSize?: number; fontWeight?: string }>
 }) {
   if (!data) return null
+
+  // Función para obtener estilos de un campo
+  const getEstiloCampo = (campo: string) => {
+    const estilo = estilosCampos?.[campo] || { fontFamily: 'Arial', fontSize: 8, fontWeight: 'normal' }
+    
+    // React PDF no reconoce "Arial", usar Helvetica o no especificar fontFamily
+    const fontFamily = estilo.fontFamily === 'Arial' ? undefined : 
+                       estilo.fontFamily === 'Times New Roman' ? 'Times-Roman' :
+                       estilo.fontFamily === 'Courier New' ? 'Courier' :
+                       estilo.fontFamily
+    
+    return {
+      fontFamily,
+      fontSize: estilo.fontSize || 5, // Usar 5 si no hay tamaño personalizado
+      fontWeight: estilo.fontWeight || 'normal',
+    }
+  }
 
   // Definir columnas para la tabla de productos (formato ticket)
   const colDefs: ColDef<ProductoVentaPDF>[] = [
@@ -82,6 +101,7 @@ export default function DocVentaTicket({
       observaciones={data.observaciones || '-'}
       headerNameAl100='Descripción'
       totalConLetras
+      getEstiloCampo={getEstiloCampo}
     >
       {/* Información del Cliente y Venta */}
       <View style={{ marginBottom: 2 }}>
@@ -91,13 +111,14 @@ export default function DocVentaTicket({
             paddingBottom: 12,
           }}
         >
-          <View style={styles_ticket.sectionInformacionGeneralColumn}>
+          {/* UNA SOLA COLUMNA AL 100% */}
+          <View style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
             {/* Fecha de Emisión */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 Fecha de Emisión:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={getEstiloCampo('fecha')}>
                 {new Date(data.fecha).toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
@@ -107,37 +128,38 @@ export default function DocVentaTicket({
             </View>
 
             {/* RUC/DNI del Cliente */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 {data.cliente.numero_documento.length === 11 ? 'RUC:' : 'DNI:'}
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={getEstiloCampo('cliente_documento')}>
                 {data.cliente.numero_documento}
               </Text>
             </View>
 
-            {/* Cliente */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+            {/* Cliente - Ocupa toda la fila */}
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 Cliente:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...getEstiloCampo('cliente_nombre'),
+                flex: 1,
+              }}>
                 {nombreCliente}
               </Text>
             </View>
 
-            {/* Dirección del Cliente */}
+            {/* Dirección del Cliente - Ocupa toda la fila */}
             {data.cliente.direccion && (
-              <View style={styles_ticket.subSectionInformacionGeneral}>
-                <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+              <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+                <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                   Dirección:
                 </Text>
-                <Text
-                  style={{
-                    ...styles_ticket.textValueSubSectionInformacionGeneral,
-                    fontSize: 7,
-                  }}
-                >
+                <Text style={{
+                  ...getEstiloCampo('cliente_direccion'),
+                  flex: 1,
+                }}>
                   {data.cliente.direccion}
                 </Text>
               </View>
@@ -145,15 +167,15 @@ export default function DocVentaTicket({
 
             {/* Métodos de Pago */}
             {data.metodos_de_pago && data.metodos_de_pago.length > 0 && (
-              <View style={styles_ticket.subSectionInformacionGeneral}>
-                <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+              <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+                <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                   Forma de Pago:
                 </Text>
-                <View>
+                <View style={{ flex: 1 }}>
                   {data.metodos_de_pago.map((mp, index) => (
                     <Text
                       key={index}
-                      style={styles_ticket.textValueSubSectionInformacionGeneral}
+                      style={getEstiloCampo('metodo_pago')}
                     >
                       {mp.forma_de_pago}: S/ {mp.monto.toFixed(2)}
                     </Text>
@@ -169,15 +191,15 @@ export default function DocVentaTicket({
       <View style={{ marginBottom: 8, paddingHorizontal: 4 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2, borderBottom: '1px solid #ccc' }}>
           <Text style={{ fontSize: 8, fontWeight: 'bold' }}>SUBTOTAL:</Text>
-          <Text style={{ fontSize: 8 }}>S/ {data.subtotal.toFixed(2)}</Text>
+          <Text style={getEstiloCampo('subtotal')}>S/ {data.subtotal.toFixed(2)}</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2, borderBottom: '1px solid #ccc' }}>
           <Text style={{ fontSize: 8, fontWeight: 'bold' }}>IGV (18%):</Text>
-          <Text style={{ fontSize: 8 }}>S/ {data.igv.toFixed(2)}</Text>
+          <Text style={getEstiloCampo('igv')}>S/ {data.igv.toFixed(2)}</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, backgroundColor: '#f0f0f0', paddingHorizontal: 2 }}>
           <Text style={{ fontSize: 9, fontWeight: 'bold' }}>TOTAL:</Text>
-          <Text style={{ fontSize: 9, fontWeight: 'bold' }}>S/ {data.total.toFixed(2)}</Text>
+          <Text style={{...getEstiloCampo('total'), fontSize: 9}}>S/ {data.total.toFixed(2)}</Text>
         </View>
       </View>
     </DocGeneralTicket>

@@ -17,7 +17,7 @@ const ComponentLoading = () => (
 
 export default function CrearPrestamo() {
   return (
-    <ContenedorGeneral>
+    <ContenedorGeneral className='h-full'>
       <Suspense fallback={<ComponentLoading />}>
         <HeaderCrearPrestamo />
       </Suspense>

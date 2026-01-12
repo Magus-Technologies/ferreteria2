@@ -161,6 +161,7 @@ export default function FiltersMisCompras() {
               form={form}
             />
             <SelectProveedores
+              autoFocus
               propsForm={{
                 name: 'proveedor_id',
                 hasFeedback: false,

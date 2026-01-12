@@ -7,7 +7,8 @@ export default function useGetProveedores({ value }: { value: string }) {
     queryKey: [QueryKeys.PROVEEDORES_SEARCH, value],
     queryFn: async () => {
       const result = await proveedorApi.getAll({
-        search: value,
+        search: value || undefined,
+        estado: '1', // Enviar como string '1' para que coincida con la DB
         per_page: 50
       })
 
@@ -17,11 +18,12 @@ export default function useGetProveedores({ value }: { value: string }) {
 
       return result.data?.data || []
     },
-    enabled: !!value,
+    // Solo ejecutar la query si hay al menos 2 caracteres
+    enabled: value.length >= 2,
   })
 
   return {
-    response: data,
+    response: value.length >= 2 ? (data || []) : [],
     refetch,
     loading: isLoading,
   }

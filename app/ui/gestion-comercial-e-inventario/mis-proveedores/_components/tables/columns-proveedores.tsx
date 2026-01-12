@@ -73,7 +73,7 @@ export function useColumnsProveedores({
               action: async ({ id }: { id: number }) => {
                 const result = await proveedorApi.delete(id)
                 if (result.error) {
-                  throw new Error(result.error.message)
+                  return { error: result.error }
                 }
                 return { data: 'ok' }
               },

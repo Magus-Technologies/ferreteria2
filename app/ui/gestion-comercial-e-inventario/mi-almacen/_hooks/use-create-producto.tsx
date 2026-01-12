@@ -81,9 +81,13 @@ export default function useCreateProducto({
         const uploadRes = await fetch('/api/producto', {
           method: 'POST',
           body: formData,
+          credentials: 'include', // Incluir cookies de sesión
         })
 
-        if (!uploadRes.ok) throw new Error('Error al subir el archivo')
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Error al subir el archivo')
+        }
 
         notification.success({
           message: producto?.id ? 'Producto editado' : 'Producto creado',
@@ -91,7 +95,8 @@ export default function useCreateProducto({
             ? 'Producto editado correctamente'
             : 'Producto creado correctamente',
         })
-      } catch {
+      } catch (error) {
+        console.error('Error al subir archivos:', error)
         notification.warning({
           message: producto?.id ? 'Producto editado' : 'Producto creado',
           description: 'Error al subir la imagen y/o ficha técnica',

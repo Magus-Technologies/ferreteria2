@@ -6,6 +6,7 @@ export enum QueryKeys {
   UBICACIONES = 'ubicaciones',
   UNIDADES_DERIVADAS = 'unidades_derivadas',
   PRODUCTOS = 'productos',
+  PRODUCTOS_BY_ALMACEN = 'productos-by-almacen',
   PRODUCTOS_SEARCH = 'productos_search',
   PRODUCTOS_TABLE_SEARCH = 'productos_table_search',
   PROVEEDORES = 'proveedores',

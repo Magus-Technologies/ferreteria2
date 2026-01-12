@@ -72,6 +72,7 @@ export default function FiltersComprasAnuladasEnEspera({
         const { desde, hasta, ...rest } = values
         const data = {
           ...rest,
+          estado_de_compra, // Agregar el estado de compra al filtro
           fecha: {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,

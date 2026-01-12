@@ -22,5 +22,5 @@ export default function TabsForm({ form }: TabsFormProps) {
     },
   ]
 
-  return <Tabs className='min-h-[400px] xl:min-h-[550px]' items={items} />
+  return <Tabs items={items} />
 }

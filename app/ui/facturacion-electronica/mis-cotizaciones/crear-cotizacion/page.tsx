@@ -25,7 +25,7 @@ export default function CrearCotizacion() {
   // const canAccess = true // Temporal para desarrollo
 
   return (
-    <ContenedorGeneral>
+    <ContenedorGeneral className='h-full'>
       <Suspense fallback={<ComponentLoading />}>
         <HeaderCrearCotizacion />
       </Suspense>

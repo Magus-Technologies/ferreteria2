@@ -167,6 +167,8 @@ export default function ModalCreateProducto({
           body: {
             maxHeight: 'calc(100vh - 120px)',
             overflowY: 'auto',
+            overflowX: 'hidden',
+            paddingBottom: '16px',
           },
         },
         wrapClassName: '!flex !items-center',

@@ -23,6 +23,7 @@ export interface TableWithTitleProps<T, schemaType = unknown>
   title: string;
   extraTitle?: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   classNames?: {
     titleParent?: string;
   };
@@ -49,6 +50,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
   selectColumns = true,
   classNames = {},
   className = "",
+  style,
   optionsSelectColumns = [],
   tableRef,
   schema,
@@ -69,7 +71,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
   const { titleParent = "" } = classNames;
 
   return (
-    <div className={`flex flex-col gap-1 h-full ${className}`}>
+    <div className={`flex flex-col gap-1 h-full ${className}`} style={style}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div
           className={`font-semibold text-slate-700 text-base flex flex-wrap items-center gap-2 ${titleParent}`}

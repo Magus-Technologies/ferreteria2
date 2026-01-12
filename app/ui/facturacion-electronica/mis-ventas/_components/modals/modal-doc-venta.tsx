@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Spin, Modal } from 'antd'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import DocVenta, { VentaDataPDF, ProductoVentaPDF } from '../docs/doc-venta'
@@ -6,6 +6,7 @@ import DocVentaTicket from '../docs/doc-venta-ticket'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { TipoDocumento } from '@prisma/client'
 import { TiposDocumentos } from '~/lib/docs'
+import { useConfiguracionImpresion } from '~/hooks/use-configuracion-impresion'
 
 // ============= TYPES =============
 
@@ -75,6 +76,35 @@ export default function ModalDocVenta({
   const { data: empresa, isLoading } = useEmpresaPublica()
   const [esTicket, setEsTicket] = useState(true)
 
+  // Obtener configuraciones de estilos
+  const { getConfiguracionCampo } = useConfiguracionImpresion({ 
+    tipoDocumento: 'venta',
+    enabled: open,
+  })
+
+  // Preparar estilos para pasar al PDF
+  const estilosCampos = useMemo(() => {
+    const campos = [
+      'fecha', 'numero_documento', 'empresa_nombre', 'empresa_ruc', 'empresa_direccion',
+      'cliente_nombre', 'cliente_documento', 'cliente_direccion',
+      'tabla_codigo', 'tabla_descripcion', 'tabla_cantidad', 'tabla_precio', 'tabla_subtotal',
+      'subtotal', 'igv', 'total', 'metodo_pago'
+    ]
+    
+    const estilos: Record<string, { fontFamily?: string; fontSize?: number; fontWeight?: string }> = {}
+    
+    campos.forEach(campo => {
+      const config = getConfiguracionCampo(campo)
+      estilos[campo] = {
+        fontFamily: config.font_family,
+        fontSize: config.font_size,
+        fontWeight: config.font_weight,
+      }
+    })
+    
+    return estilos
+  }, [getConfiguracionCampo])
+
   // Generar número de documento usando TiposDocumentos
   const nro_doc = data
     ? `${getTipoDocumentoCodSerie(data.tipo_documento)}${data.serie_documento?.serie || ''}-${data.numero.toString().padStart(4, '0')}`
@@ -107,12 +137,14 @@ export default function ModalDocVenta({
       nro_doc={nro_doc}
       setEsTicket={setEsTicket}
       esTicket={esTicket}
+      tipoDocumento='venta'
     >
       {esTicket ? (
         <DocVentaTicket
           data={ventaDataPDF}
           nro_doc={nro_doc}
           empresa={empresa}
+          estilosCampos={estilosCampos}
         />
       ) : (
         <DocVenta

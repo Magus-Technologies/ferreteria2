@@ -10,12 +10,10 @@ export default function FormTableCotizar({
   form: FormInstance<FormCreateCotizacion>
 }) {
   return (
-    <div className='w-full'>
-      <Form.List name="productos">
-        {(fields) => (
-          <TableCotizar form={form} fields={fields} />
-        )}
-      </Form.List>
-    </div>
+    <Form.List name="productos">
+      {(fields, { add, remove }) => (
+        <TableCotizar form={form} fields={fields} remove={remove} add={add} />
+      )}
+    </Form.List>
   )
 }

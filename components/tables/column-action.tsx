@@ -15,7 +15,10 @@ interface ColumnActionProps<T> {
   onEdit?: () => void
   showEdit?: boolean
   titleDelete?: string
-  propsDelete?: UseMutationActionProps<{ id: T }, unknown>
+  propsDelete?: UseMutationActionProps<{ id: T }, unknown> & {
+    disabled?: boolean
+    disabledTooltip?: string
+  }
 }
 
 export default function ColumnAction<T>({
@@ -31,9 +34,17 @@ export default function ColumnAction<T>({
 }: ColumnActionProps<T>) {
   const can = usePermission()
 
-  const { execute: deleteAction, loading: deleteLoading } = useServerMutation(
-    propsDelete!
-  )
+  const { disabled, disabledTooltip, action, ...restMutationProps } = propsDelete || {}
+
+  // Provide a default no-op action if none is provided
+  const defaultAction = async () => ({ data: undefined, error: undefined })
+  
+  const { execute: deleteAction, loading: deleteLoading } = useServerMutation({
+    action: action || defaultAction,
+    ...restMutationProps,
+  })
+
+  const isDeleteDisabled = disabled || deleteLoading
 
   return (
     <div className='flex items-center gap-2 h-full'>
@@ -52,23 +63,30 @@ export default function ColumnAction<T>({
       )}
       {childrenMiddle}
       {permiso && can(`${permiso}.delete`) && showDelete && (
-        <Tooltip title={titleDelete}>
-          <Popconfirm
-            title={titleDelete}
-            description={`¿Estas seguro de ${titleDelete.toLowerCase()} este registro?`}
-            onConfirm={() => deleteAction({ id })}
-            okText={titleDelete}
-            cancelText='Cancelar'
-          >
+        <Tooltip title={disabled ? disabledTooltip : titleDelete}>
+          {disabled ? (
             <MdDelete
               size={15}
-              className={`text-rose-700 hover:scale-105 transition-all active:scale-95 ${
-                deleteLoading
-                  ? 'opacity-50 cursor-not-allowed pointer-events-none'
-                  : 'cursor-pointer'
-              } min-w-fit`}
+              className="text-gray-400 opacity-50 cursor-not-allowed min-w-fit"
             />
-          </Popconfirm>
+          ) : (
+            <Popconfirm
+              title={titleDelete}
+              description={`¿Estas seguro de ${titleDelete.toLowerCase()} este registro?`}
+              onConfirm={() => deleteAction({ id })}
+              okText={titleDelete}
+              cancelText='Cancelar'
+            >
+              <MdDelete
+                size={15}
+                className={`text-rose-700 hover:scale-105 transition-all active:scale-95 ${
+                  deleteLoading
+                    ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                    : 'cursor-pointer'
+                } min-w-fit`}
+              />
+            </Popconfirm>
+          )}
         </Tooltip>
       )}
       {children}

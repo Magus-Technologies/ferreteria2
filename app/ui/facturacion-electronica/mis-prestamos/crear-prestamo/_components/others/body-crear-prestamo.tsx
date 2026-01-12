@@ -10,7 +10,9 @@ import CardsInfoPrestamo from "../cards/cards-info-prestamo";
 import { prestamoApi, type CreatePrestamoRequest } from "~/lib/api/prestamo";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
-import ModalDocPrestamo, { PrestamoResponse } from "~/app/ui/facturacion-electronica/mis-prestamos/_components/modals/modal-doc-prestamo";
+import ModalDocPrestamo, {
+  PrestamoResponse,
+} from "~/app/ui/facturacion-electronica/mis-prestamos/_components/modals/modal-doc-prestamo";
 
 export default function BodyCrearPrestamo() {
   const [form] = Form.useForm<FormCreatePrestamo>();
@@ -32,12 +34,12 @@ export default function BodyCrearPrestamo() {
     }
 
     // Validación de cliente/proveedor según tipo_entidad
-    if (values.tipo_entidad === 'CLIENTE' && !values.cliente_id) {
+    if (values.tipo_entidad === "CLIENTE" && !values.cliente_id) {
       message.error("Debe seleccionar un cliente para esta operación");
       return;
     }
 
-    if (values.tipo_entidad === 'PROVEEDOR' && !values.proveedor_id) {
+    if (values.tipo_entidad === "PROVEEDOR" && !values.proveedor_id) {
       message.error("Debe seleccionar un proveedor para esta operación");
       return;
     }
@@ -55,13 +57,17 @@ export default function BodyCrearPrestamo() {
           // costo no se envía (opcional)
         })),
         fecha: values.fecha.format("YYYY-MM-DD HH:mm:ss"),
-        fecha_vencimiento: values.fecha_vencimiento.format("YYYY-MM-DD HH:mm:ss"),
+        fecha_vencimiento: values.fecha_vencimiento.format(
+          "YYYY-MM-DD HH:mm:ss"
+        ),
         tipo_operacion: values.tipo_operacion,
         tipo_entidad: values.tipo_entidad,
         tipo_moneda: values.tipo_moneda,
         tipo_de_cambio: values.tipo_de_cambio,
-        cliente_id: values.tipo_entidad === 'CLIENTE' ? values.cliente_id : undefined,
-        proveedor_id: values.tipo_entidad === 'PROVEEDOR' ? values.proveedor_id : undefined,
+        cliente_id:
+          values.tipo_entidad === "CLIENTE" ? values.cliente_id : undefined,
+        proveedor_id:
+          values.tipo_entidad === "PROVEEDOR" ? values.proveedor_id : undefined,
         ruc_dni: values.ruc_dni,
         telefono: values.telefono,
         direccion: values.direccion,
@@ -86,17 +92,13 @@ export default function BodyCrearPrestamo() {
             .join("\n");
           message.error(`Error de validación:\n${errorMessages}`);
         } else {
-          message.error(
-            response.error.message || "Error al crear el préstamo"
-          );
+          message.error(response.error.message || "Error al crear el préstamo");
         }
         return;
       }
 
       // Éxito
-      message.success(
-        response.data?.message || "Préstamo creado exitosamente"
-      );
+      message.success(response.data?.message || "Préstamo creado exitosamente");
 
       // Abrir modal con el documento PDF
       if (response.data?.data) {
@@ -116,22 +118,30 @@ export default function BodyCrearPrestamo() {
 
   return (
     <>
-      <ModalDocPrestamo open={openDoc} setOpen={setOpenDoc} data={prestamoData} />
+      <ModalDocPrestamo
+        open={openDoc}
+        setOpen={setOpenDoc}
+        data={prestamoData}
+      />
       <FormBase<FormCreatePrestamo>
         form={form}
         name="prestamo"
-        className="flex gap-6 size-full"
+        className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
         onFinish={handleSubmit}
         onFinishFailed={() => {
-          message.error('Por favor completa todos los campos requeridos');
+          message.error("Por favor completa todos los campos requeridos");
         }}
         disabled={loading}
       >
-        <div className="flex-1 flex flex-col gap-6">
-          <FormTablePrestamo form={form} />
+        <div className="flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0">
+          <div className="flex-1 min-h-0">
+            <FormTablePrestamo form={form} />
+          </div>
           <FormCrearPrestamo form={form} />
         </div>
-        <CardsInfoPrestamo form={form} />
+        <div className="w-full xl:w-auto">
+          <CardsInfoPrestamo form={form} />
+        </div>
       </FormBase>
     </>
   );

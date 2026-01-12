@@ -112,6 +112,7 @@ export interface Producto {
   unidades_contenidas: number;
   estado: boolean;
   permitido: boolean;
+  tiene_ingresos?: boolean; // Campo agregado para validar eliminación
   created_at: string;
   updated_at: string;
   marca: Marca;

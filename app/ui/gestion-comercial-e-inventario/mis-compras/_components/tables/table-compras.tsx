@@ -2,7 +2,7 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useRef, memo, useCallback, useMemo, useState } from 'react'
+import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { CompraCreateInputSchema } from '~/prisma/generated/zod'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
@@ -40,12 +40,43 @@ const TableCompras = memo(function TableCompras({
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
 
+    // Mapeo de estados de Prisma a valores de Laravel
+    const estadoMap: Record<EstadoDeCompra, string> = {
+      [EstadoDeCompra.Creado]: 'cr',
+      [EstadoDeCompra.EnEspera]: 'ee',
+      [EstadoDeCompra.Anulado]: 'an',
+      [EstadoDeCompra.Procesado]: 'pr',
+    };
+
+    // Extraer estado_de_compra
+    let estadoDeCompra: string | undefined;
+    if (filtros.estado_de_compra) {
+      const estadoFilter = filtros.estado_de_compra as any;
+      if (estadoFilter.equals) {
+        estadoDeCompra = estadoMap[estadoFilter.equals as EstadoDeCompra];
+      } else if (estadoFilter.in && Array.isArray(estadoFilter.in) && estadoFilter.in.length > 0) {
+        // Si hay múltiples estados, tomar el primero (o podrías enviar todos)
+        // Por ahora, el backend no soporta múltiples estados, así que omitimos este filtro
+        estadoDeCompra = undefined;
+      } else if (typeof estadoFilter === 'string') {
+        estadoDeCompra = estadoMap[estadoFilter as EstadoDeCompra];
+      }
+    }
+
+    // Extraer fechas
+    const fechaFilter = filtros.fecha as any;
+    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
+    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
+
     return {
       almacen_id: filtros.almacen_id as number | undefined,
-      estado_de_compra: filtros.estado_de_compra
-        ? (filtros.estado_de_compra as { equals?: EstadoDeCompra })?.equals
-        : undefined,
+      estado_de_compra: estadoDeCompra,
       proveedor_id: filtros.proveedor_id as number | undefined,
+      forma_de_pago: filtros.forma_de_pago as string | undefined,
+      tipo_documento: filtros.tipo_documento as string | undefined,
+      user_id: filtros.user_id as string | undefined,
+      desde,
+      hasta,
       per_page: pageSize,
       page,
     }
@@ -132,6 +163,20 @@ const TableCompras = memo(function TableCompras({
       setPage(p => p - 1)
     }
   }, [page])
+
+  // Seleccionar automáticamente la primera fila cuando se cargan los datos
+  useEffect(() => {
+    if (rowData && rowData.length > 0 && tableRef.current) {
+      // Esperar un momento para que la tabla se renderice completamente
+      setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
+        if (firstNode) {
+          firstNode.setSelected(true);
+          setCompraSeleccionada(firstNode.data);
+        }
+      }, 100);
+    }
+  }, [rowData, setCompraSeleccionada]);
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null

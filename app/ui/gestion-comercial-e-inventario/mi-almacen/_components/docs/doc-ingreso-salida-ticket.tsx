@@ -14,12 +14,31 @@ export default function DocIngresoSalidaTicket({
   nro_doc,
   empresa,
   show_logo_html = false,
+  estilosCampos,
 }: {
   data: DataDocIngresoSalida
   nro_doc: string
   empresa: EmpresaSession | undefined
   show_logo_html?: boolean
+  estilosCampos?: Record<string, { fontFamily?: string; fontSize?: number; fontWeight?: string }>
 }) {
+  // Función para obtener estilos de un campo
+  const getEstiloCampo = (campo: string) => {
+    const estilo = estilosCampos?.[campo] || { fontFamily: 'Arial', fontSize: 8, fontWeight: 'normal' }
+    
+    // React PDF no reconoce "Arial", usar Helvetica o no especificar fontFamily
+    const fontFamily = estilo.fontFamily === 'Arial' ? undefined : 
+                       estilo.fontFamily === 'Times New Roman' ? 'Times-Roman' :
+                       estilo.fontFamily === 'Courier New' ? 'Courier' :
+                       estilo.fontFamily
+    
+    return {
+      fontFamily,
+      fontSize: estilo.fontSize,
+      fontWeight: estilo.fontWeight,
+    }
+  }
+  
   const rowData =
     data?.productos_por_almacen.flatMap(pa =>
       pa.unidades_derivadas.map(ud => ({
@@ -80,6 +99,7 @@ export default function DocIngresoSalidaTicket({
       observaciones={data?.descripcion ?? '-'}
       headerNameAl100='Producto'
       totalConLetras
+      getEstiloCampo={getEstiloCampo}
     >
       <View style={{ marginBottom: 2 }}>
         <View
@@ -93,7 +113,10 @@ export default function DocIngresoSalidaTicket({
               <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
                 Fecha de Emisión:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_ticket.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('fecha'),
+              }}>
                 {new Date(data?.fecha || '').toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
@@ -105,7 +128,10 @@ export default function DocIngresoSalidaTicket({
               <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
                 Almacén:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_ticket.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('almacen'),
+              }}>
                 {data?.almacen.name}
               </Text>
             </View>
@@ -113,7 +139,10 @@ export default function DocIngresoSalidaTicket({
               <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
                 Usuario:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_ticket.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('usuario'),
+              }}>
                 {data?.user.name}
               </Text>
             </View>
@@ -127,7 +156,10 @@ export default function DocIngresoSalidaTicket({
               <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
                 Proveedor:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_ticket.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('proveedor'),
+              }}>
                 {data?.proveedor?.razon_social ?? '-'}
               </Text>
             </View>
@@ -135,7 +167,10 @@ export default function DocIngresoSalidaTicket({
               <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
                 Tipo de {tipo_documento}:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_ticket.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('tipo_ingreso'),
+              }}>
                 {data?.tipo_ingreso.name}
               </Text>
             </View>
@@ -143,7 +178,10 @@ export default function DocIngresoSalidaTicket({
               <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
                 Observaciones:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_ticket.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('observaciones'),
+              }}>
                 {data?.descripcion ?? '-'}
               </Text>
             </View>

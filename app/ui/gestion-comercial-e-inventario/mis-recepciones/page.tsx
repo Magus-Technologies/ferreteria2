@@ -29,12 +29,23 @@ export default function MisRecepciones() {
       <Suspense fallback={<ComponentLoading />}>
         <FiltersMisRecepciones />
       </Suspense>
-      <Suspense fallback={<ComponentLoading />}>
-        <TableRecepcionesAlmacen />
-      </Suspense>
-      <Suspense fallback={<ComponentLoading />}>
-        <TableDetalleDeRecepcion />
-      </Suspense>
+      
+      {/* Layout con alturas definidas para las tablas */}
+      <div className="w-full mt-4 flex flex-col gap-4 sm:gap-5 md:gap-6">
+        {/* Tabla principal de recepciones */}
+        <div className="h-[300px]">
+          <Suspense fallback={<ComponentLoading />}>
+            <TableRecepcionesAlmacen />
+          </Suspense>
+        </div>
+        
+        {/* Tabla de detalle de recepción */}
+        <div className="h-[250px]">
+          <Suspense fallback={<ComponentLoading />}>
+            <TableDetalleDeRecepcion />
+          </Suspense>
+        </div>
+      </div>
     </ContenedorGeneral>
   )
 }

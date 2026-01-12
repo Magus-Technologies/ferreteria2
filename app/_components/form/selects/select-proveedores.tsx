@@ -105,18 +105,16 @@ export default function SelectProveedores({
 
   useEffect(() => {
     // Autoseleccionar si hay exactamente 1 resultado
-    if (response && response.length === 1) {
+    if (response && response.length === 1 && value) {
       const proveedor = response[0]
-      // Autoseleccionar si el texto coincide con el RUC (exacto o parcial al final)
-      const textoLimpio = text.trim()
-      if (proveedor.ruc === textoLimpio || 
-          (textoLimpio.length >= 8 && proveedor.ruc.startsWith(textoLimpio))) {
+      // Autoseleccionar SOLO si el valor debounced coincide exactamente con el RUC
+      if (proveedor.ruc === value.trim()) {
         handleSelect({ data: proveedor })
       }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response])
+  }, [response, value])
 
   const getLabel = (proveedor: Pick<Proveedor, 'ruc' | 'razon_social'>) => {
     if (showOnlyDocument) {

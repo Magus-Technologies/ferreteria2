@@ -33,7 +33,7 @@ export default function ModalProveedorSearch({
     setText(textDefault)
   }, [textDefault])
 
-  const [value] = useDebounce(text, 1000)
+  const [value] = useDebounce(text, 500)
 
   const setProveedorSeleccionadoStore = useStoreProveedorSeleccionado(
     store => store.setProveedor

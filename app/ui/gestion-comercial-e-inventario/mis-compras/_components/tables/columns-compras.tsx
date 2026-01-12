@@ -137,6 +137,11 @@ export function useColumnsCompras({
       field: 'forma_de_pago',
       width: 80,
       minWidth: 80,
+      valueFormatter: ({ value }) => {
+        if (value === 'co') return 'Contado';
+        if (value === 'cr') return 'Crédito';
+        return value || '';
+      },
       filter: true,
     },
     {
@@ -177,13 +182,25 @@ export function useColumnsCompras({
       field: 'estado_de_compra',
       width: 90,
       minWidth: 90,
-      cellRenderer: (params: ICellRendererParams<Compra>) => (
-        <div className='flex items-center h-full'>
-          <TagEstadoDeCompra estado_de_compra={params.value}>
-            {params.value}
-          </TagEstadoDeCompra>
-        </div>
-      ),
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        // Mapear código a nombre usando strings directos
+        const estadoNombre: Record<string, string> = {
+          'cr': 'Creado',
+          'ee': 'En Espera',
+          'pr': 'Procesado',
+          'an': 'Anulado',
+        };
+
+        const nombre = estadoNombre[params.value as string] || params.value;
+
+        return (
+          <div className='flex items-center h-full'>
+            <TagEstadoDeCompra estado_de_compra={params.value}>
+              {nombre}
+            </TagEstadoDeCompra>
+          </div>
+        );
+      },
       filter: true,
     },
     ...((setCompraRecepcion && setOpenModal

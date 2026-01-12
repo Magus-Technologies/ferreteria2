@@ -7,14 +7,44 @@ export default function DocTableTicket<T>({
   colDefs,
   rowData,
   headerNameAl100,
+  getEstiloCampo,
 }: {
   colDefs: ColDef[]
   rowData: T[]
   headerNameAl100: string
+  getEstiloCampo?: (campo: string) => { fontFamily?: string; fontSize?: number; fontWeight?: string }
 }) {
   const colDefHederNameAl100 = colDefs.find(
     colDef => colDef.headerName === headerNameAl100
   )
+  
+  // Función helper para obtener estilos de un campo
+  const getFieldStyle = (headerName: string) => {
+    if (!getEstiloCampo) return {}
+    
+    // Mapear nombres de columnas a campos de configuración
+    const fieldMap: Record<string, string> = {
+      // Campos de ingreso/salida
+      'Código': 'tabla_codigo',
+      'Cantidad': 'tabla_cantidad',
+      'Unidad Derivada': 'tabla_unidad',
+      'Costo': 'tabla_costo',
+      // Campos de venta
+      'Cant.': 'tabla_cantidad',
+      'Descripción': 'tabla_descripcion',
+      'P.U.': 'tabla_precio',
+      'Subt.': 'tabla_subtotal',
+      // Campos de cotización
+      'Unid.': 'tabla_unidad',
+      'P. Unit.': 'tabla_precio',
+      'Desc.': 'tabla_descuento',
+      'Subtotal': 'tabla_subtotal',
+    }
+    
+    const campo = fieldMap[headerName]
+    return campo ? getEstiloCampo(campo) : {}
+  }
+  
   return (
     <View style={styles_ticket.sectionTable}>
       <Text
@@ -59,6 +89,7 @@ export default function DocTableTicket<T>({
             style={{
               ...styles_ticket.cell,
               paddingBottom: 0,
+              ...getFieldStyle(colDefHederNameAl100?.headerName || ''),
             }}
           >
             {getCellValue(colDefHederNameAl100!, item)}
@@ -79,6 +110,7 @@ export default function DocTableTicket<T>({
                     width: colDef.width,
                     minWidth: colDef.minWidth,
                     paddingTop: 0,
+                    ...getFieldStyle(colDef.headerName || ''),
                   }}
                 >
                   {colDef.type === 'pen4'

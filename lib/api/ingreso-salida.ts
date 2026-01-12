@@ -75,21 +75,12 @@ export const ingresosSalidasApi = {
   async create(
     data: CreateIngresoSalidaParams
   ): Promise<ApiResponse<IngresoSalida>> {
-    const response = await apiRequest<{ data: IngresoSalida }>(
+    return apiRequest<IngresoSalida>(
       `/ingresos-salidas`,
       {
         method: 'POST',
         body: JSON.stringify(data),
       }
     );
-
-    // Extraer data.data (Laravel devuelve { data: IngresoSalida })
-    if (response.data) {
-      return {
-        data: response.data.data,
-      };
-    }
-
-    return response as ApiResponse<IngresoSalida>;
   },
 };

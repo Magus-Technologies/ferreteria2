@@ -16,8 +16,8 @@ import SelectFormaDePago from "~/app/_components/form/selects/select-forma-de-pa
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
+import SelectEstadoDeVenta from "~/app/_components/form/selects/select-estado-de-venta";
 import { Dayjs } from "dayjs";
-import { toUTCBD } from "~/utils/fechas";
 import dayjs from "dayjs";
 import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
@@ -29,6 +29,7 @@ import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
 interface ValuesFiltersMisVentas {
   almacen_id: number;
   cliente_id?: number;
+  cliente_search_text?: string; // Nuevo: texto de búsqueda del cliente
   desde?: Dayjs;
   hasta?: Dayjs;
   forma_de_pago?: FormaDePago;
@@ -43,6 +44,7 @@ export default function FiltersMisVentas() {
   const [modalEntregarOpen, setModalEntregarOpen] = useState(false);
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [clienteSearchText, setClienteSearchText] = useState<string>(''); // Nuevo: guardar texto de búsqueda
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const ventaSeleccionada = useStoreVentaSeleccionada((state) => state.venta);
@@ -66,13 +68,17 @@ export default function FiltersMisVentas() {
     if (values.cliente_id) count++;
     if (values.tipo_documento) count++;
     if (values.forma_de_pago) count++;
+    if (values.estado_de_venta) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
     return count;
   }, [form]);
 
   const handleFinish = (values: ValuesFiltersMisVentas) => {
-    const { desde, hasta, estado_de_venta, serie_numero, ...rest } = values;
+    console.log('📝 Valores del formulario:', values);
+    console.log('📝 Texto de búsqueda del cliente:', clienteSearchText);
+    
+    const { desde, hasta, estado_de_venta, serie_numero, cliente_id, ...rest } = values;
 
     let serie: string | undefined;
     let numero: number | undefined;
@@ -84,13 +90,30 @@ export default function FiltersMisVentas() {
       }
     }
 
-    const data = {
+    // Construir objeto de filtros solo con valores definidos
+    const data: any = {
       ...rest,
+      // Si hay cliente_id, usarlo (cliente seleccionado)
+      ...(cliente_id ? { cliente_id } : {}),
+      // Si NO hay cliente_id pero SÍ hay texto de búsqueda, usar search
+      ...(!cliente_id && clienteSearchText ? { search: clienteSearchText } : {}),
+      // Incluir fechas si existen
+      ...(desde ? { desde: desde.format('YYYY-MM-DD') } : {}),
+      ...(hasta ? { hasta: hasta.format('YYYY-MM-DD') } : {}),
       // Laravel API espera campos simples, no objetos anidados
       ...(serie ? { serie } : {}),
       ...(numero ? { numero } : {}),
       ...(estado_de_venta ? { estado_de_venta } : {}),
     };
+    
+    // Limpiar valores undefined, null o vacíos
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined || data[key] === null || data[key] === '') {
+        delete data[key];
+      }
+    });
+    
+    console.log('🔍 Filtros aplicados (limpiados):', data);
     setFiltros(data);
     setDrawerOpen(false);
   };
@@ -202,6 +225,21 @@ export default function FiltersMisVentas() {
               allowClear
               form={form}
               placeholder="Digite nombre del cliente"
+              onSearchChange={(text) => {
+                console.log('🔵 Texto de búsqueda:', text);
+                setClienteSearchText(text);
+              }}
+              onChange={(value) => {
+                console.log('🔵 Cliente seleccionado - ID:', value);
+                // Cuando se selecciona un cliente, limpiar el texto de búsqueda
+                if (value) {
+                  setClienteSearchText('');
+                }
+                // Cuando se limpia el cliente, asegurarse de que el valor sea undefined
+                if (!value) {
+                  form.setFieldValue('cliente_id', undefined);
+                }
+              }}
             />
           </div>
           <div className="col-span-2 flex items-center gap-2">
@@ -254,16 +292,18 @@ export default function FiltersMisVentas() {
           </div>
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Listar Ventas:
+              Estado:
             </label>
-            <InputBase
+            <SelectEstadoDeVenta
               propsForm={{
-                name: "listar_ventas",
+                name: "estado_de_venta",
                 hasFeedback: false,
                 className: "!w-full",
               }}
-              placeholder="TODOS"
+              className="w-full"
               formWithMessage={false}
+              allowClear
+              placeholder="Todos"
             />
           </div>
           <div className="col-span-2 flex items-center gap-2">
@@ -282,109 +322,6 @@ export default function FiltersMisVentas() {
               placeholder="Todos"
             />
           </div>
-          {/* cajero no solo vendedor */}
-          {/* <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Cajero:
-            </label>
-            <SelectUsuarios
-              propsForm={{
-                name: "cajero_id",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              className="w-full"
-              formWithMessage={false}
-              allowClear
-              placeholder="EFRAIN"
-            />
-          </div> */}
-          <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Registradora:
-            </label>
-            <InputBase
-              propsForm={{
-                name: "registradora",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              placeholder="SERVIDOR"
-              formWithMessage={false}
-            />
-          </div>
-          <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              T.Pago:
-            </label>
-            <InputBase
-              propsForm={{
-                name: "tipo_pago",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              placeholder="Todos"
-              formWithMessage={false}
-            />
-          </div>
-
-          {/* Fila 3 */}
-          <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Estado Cta:
-            </label>
-            <InputBase
-              propsForm={{
-                name: "estado_cuenta",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              placeholder="Todos"
-              formWithMessage={false}
-            />
-          </div>
-          {/* <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Sucu:
-            </label>
-            <InputBase
-              propsForm={{
-                name: "sucursal",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              placeholder="MI REDENTOR"
-              formWithMessage={false}
-            />
-          </div> */}
-          {/* <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Version Venta:
-            </label>
-            <InputBase
-              propsForm={{
-                name: "version_venta",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              placeholder="Todos"
-              formWithMessage={false}
-            />
-          </div> */}
-          <div className="col-span-2 flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Tipo Ope:
-            </label>
-            <InputBase
-              propsForm={{
-                name: "tipo_operacion",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
-              placeholder="Todos"
-              formWithMessage={false}
-            />
-          </div>
           <div className="col-span-1 flex items-center gap-2">
             <ButtonBase
               color="info"
@@ -396,7 +333,9 @@ export default function FiltersMisVentas() {
               Buscar
             </ButtonBase>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+
+          {/* Fila 3 - Botones de acción */}
+          <div className="col-span-3 flex items-center gap-2">
             <ButtonBase
               color="warning"
               size="md"
@@ -409,7 +348,7 @@ export default function FiltersMisVentas() {
               Entregar Productos
             </ButtonBase>
           </div>
-          <div className="col-span-1 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-2">
             <ButtonBase
               color="info"
               size="md"
@@ -481,6 +420,21 @@ export default function FiltersMisVentas() {
               allowClear
               form={form}
               placeholder="Digite nombre del cliente"
+              onSearchChange={(text) => {
+                console.log('🔵 Texto de búsqueda:', text);
+                setClienteSearchText(text);
+              }}
+              onChange={(value) => {
+                console.log('🔵 Cliente seleccionado - ID:', value);
+                // Cuando se selecciona un cliente, limpiar el texto de búsqueda
+                if (value) {
+                  setClienteSearchText('');
+                }
+                // Cuando se limpia el cliente, asegurarse de que el valor sea undefined
+                if (!value) {
+                  form.setFieldValue('cliente_id', undefined);
+                }
+              }}
             />
           </div>
           <div>
@@ -511,6 +465,18 @@ export default function FiltersMisVentas() {
             </label>
             <SelectFormaDePago
               propsForm={{ name: "forma_de_pago", hasFeedback: false }}
+              className="w-full"
+              formWithMessage={false}
+              allowClear
+              placeholder="Todos"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-700 block mb-2">
+              Estado:
+            </label>
+            <SelectEstadoDeVenta
+              propsForm={{ name: "estado_de_venta", hasFeedback: false }}
               className="w-full"
               formWithMessage={false}
               allowClear

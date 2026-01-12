@@ -45,13 +45,32 @@ export default function DocCotizacion({
   nro_doc,
   empresa,
   show_logo_html = false,
+  estilosCampos,
 }: {
   data: CotizacionDataPDF | undefined
   nro_doc: string
   empresa: EmpresaPublica | undefined
   show_logo_html?: boolean
+  estilosCampos?: Record<string, { fontFamily?: string; fontSize?: number; fontWeight?: string }>
 }) {
   if (!data) return null
+
+  // Función para obtener estilos de un campo
+  const getEstiloCampo = (campo: string) => {
+    const estilo = estilosCampos?.[campo] || { fontFamily: 'Arial', fontSize: 8, fontWeight: 'normal' }
+    
+    // React PDF no reconoce "Arial", usar Helvetica o no especificar fontFamily
+    const fontFamily = estilo.fontFamily === 'Arial' ? undefined : 
+                       estilo.fontFamily === 'Times New Roman' ? 'Times-Roman' :
+                       estilo.fontFamily === 'Courier New' ? 'Courier' :
+                       estilo.fontFamily
+    
+    return {
+      fontFamily,
+      fontSize: estilo.fontSize,
+      fontWeight: estilo.fontWeight,
+    }
+  }
 
   // Definir columnas para la tabla de productos
   const colDefs: ColDef<ProductoCotizacionPDF>[] = [
@@ -136,6 +155,7 @@ export default function DocCotizacion({
       total={data.total}
       observaciones={data.observaciones || '-'}
       totalConLetras
+      getEstiloCampo={getEstiloCampo}
     >
       {/* Información del Cliente y Cotización */}
       <View style={styles_docs.section}>
@@ -146,7 +166,11 @@ export default function DocCotizacion({
               <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
                 Fecha de Emisión:
               </Text>
-              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_docs.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('fecha'),
+                width: '50%',
+              }}>
                 {new Date(data.fecha).toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
@@ -160,7 +184,11 @@ export default function DocCotizacion({
               <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
                 F. Vencimiento:
               </Text>
-              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_docs.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('fecha_vencimiento'),
+                width: '50%',
+              }}>
                 {new Date(data.fecha_vencimiento).toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
@@ -174,7 +202,11 @@ export default function DocCotizacion({
               <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
                 {data.cliente.numero_documento.length === 11 ? 'RUC:' : 'DNI:'}
               </Text>
-              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_docs.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('cliente_documento'),
+                width: '50%',
+              }}>
                 {data.cliente.numero_documento}
               </Text>
             </View>
@@ -184,7 +216,11 @@ export default function DocCotizacion({
               <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
                 Cliente:
               </Text>
-              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_docs.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('cliente_nombre'),
+                width: '50%',
+              }}>
                 {nombreCliente}
               </Text>
             </View>
@@ -197,7 +233,11 @@ export default function DocCotizacion({
                 <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
                   Dirección:
                 </Text>
-                <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+                <Text style={{
+                  ...styles_docs.textValueSubSectionInformacionGeneral,
+                  ...getEstiloCampo('cliente_direccion'),
+                  width: '50%',
+                }}>
                   {data.cliente.direccion}
                 </Text>
               </View>
@@ -208,7 +248,11 @@ export default function DocCotizacion({
               <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
                 Vendedor:
               </Text>
-              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...styles_docs.textValueSubSectionInformacionGeneral,
+                ...getEstiloCampo('vendedor'),
+                width: '50%',
+              }}>
                 {data.vendedor}
               </Text>
             </View>
@@ -222,15 +266,15 @@ export default function DocCotizacion({
           <View style={{ width: 150 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 4, borderBottom: '1px solid #ccc' }}>
               <Text style={{ fontSize: 10, fontWeight: 'bold' }}>SUBTOTAL:</Text>
-              <Text style={{ fontSize: 10 }}>S/ {data.subtotal.toFixed(2)}</Text>
+              <Text style={getEstiloCampo('subtotal')}>S/ {data.subtotal.toFixed(2)}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 4, borderBottom: '1px solid #ccc' }}>
               <Text style={{ fontSize: 10, fontWeight: 'bold' }}>T. DESCUENTO:</Text>
-              <Text style={{ fontSize: 10 }}>S/ {data.total_descuento.toFixed(2)}</Text>
+              <Text style={getEstiloCampo('total_descuento')}>S/ {data.total_descuento.toFixed(2)}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 4, backgroundColor: '#f0f0f0' }}>
               <Text style={{ fontSize: 11, fontWeight: 'bold' }}>TOTAL:</Text>
-              <Text style={{ fontSize: 11, fontWeight: 'bold' }}>S/ {data.total.toFixed(2)}</Text>
+              <Text style={{...getEstiloCampo('total'), fontSize: 11}}>S/ {data.total.toFixed(2)}</Text>
             </View>
           </View>
         </View>

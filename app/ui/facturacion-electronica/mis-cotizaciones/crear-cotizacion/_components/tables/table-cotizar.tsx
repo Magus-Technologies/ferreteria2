@@ -1,8 +1,9 @@
 'use client'
 
-import { Form, FormInstance, FormListFieldData } from 'antd'
+import { FormInstance, FormListFieldData } from 'antd'
+import { StoreValue } from 'antd/es/form/interface'
 import type { FormCreateCotizacion } from '../../_types/cotizacion.types'
-import TableWithTitle from '~/components/tables/table-with-title'
+import TableBase from '~/components/tables/table-base'
 import { useColumnsCotizar, calcularSubtotalCotizacion } from './columns-cotizar'
 import { useStoreProductoAgregadoCotizacion } from '../../_store/store-producto-agregado-cotizacion'
 import { useEffect } from 'react'
@@ -11,9 +12,13 @@ import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 export default function TableCotizar({
   form,
   fields,
+  remove,
+  add,
 }: {
   form: FormInstance<FormCreateCotizacion>
   fields: FormListFieldData[]
+  remove: (index: number | number[]) => void
+  add: (defaultValue?: StoreValue, insertIndex?: number) => void
 }) {
   const productoAgregado = useStoreProductoAgregadoCotizacion(
     (store) => store.productoAgregado
@@ -48,10 +53,8 @@ export default function TableCotizar({
       // Agregar al store
       setProductosStore((prev) => [...prev, productoConSubtotal])
       
-      // Agregar al formulario
-      const productos = form.getFieldValue('productos') || []
-      const nuevosProductos = [...productos, productoConSubtotal];
-      form.setFieldValue('productos', nuevosProductos)
+      // Agregar al formulario usando add
+      add(productoConSubtotal)
       
       // Limpiar el producto agregado
       setProductoAgregado(undefined)
@@ -62,16 +65,13 @@ export default function TableCotizar({
   return (
     <>
       <CellFocusWithoutStyle />
-      <div className='w-full lg:h-[480px]'>
-        <TableWithTitle
-          id='cotizar'
-          title='PRODUCTOS'
-          columnDefs={useColumnsCotizar({ form })}
-          rowData={fields}
-          suppressCellFocus={true}
-          rowSelection={false}
-        />
-      </div>
+      <TableBase
+        className='h-full'
+        rowSelection={false}
+        rowData={fields}
+        columnDefs={useColumnsCotizar({ form })}
+        suppressCellFocus={true}
+      />
     </>
   )
 }

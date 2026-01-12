@@ -7,10 +7,39 @@ import { styles_docs } from './styles'
 export default function DocTable<T>({
   colDefs,
   rowData,
+  getEstiloCampo,
 }: {
   colDefs: ColDef[]
   rowData: T[]
+  getEstiloCampo?: (campo: string) => { fontFamily?: string; fontSize?: number; fontWeight?: string }
 }) {
+  // Función helper para obtener estilos de un campo
+  const getFieldStyle = (headerName: string) => {
+    if (!getEstiloCampo) return {}
+    
+    // Mapear nombres de columnas a campos de configuración
+    const fieldMap: Record<string, string> = {
+      // Campos comunes
+      'Código': 'tabla_codigo',
+      'Descripción': 'tabla_descripcion',
+      'Cant.': 'tabla_cantidad',
+      'Unid.': 'tabla_unidad',
+      'P. Unit.': 'tabla_precio',
+      'Desc.': 'tabla_descuento',
+      'Subtotal': 'tabla_subtotal',
+      // Campos de ingreso/salida
+      'Cantidad': 'tabla_cantidad',
+      'Unidad Derivada': 'tabla_unidad',
+      'Costo': 'tabla_costo',
+      // Campos de venta
+      'P.U.': 'tabla_precio',
+      'Subt.': 'tabla_subtotal',
+    }
+    
+    const campo = fieldMap[headerName]
+    return campo ? getEstiloCampo(campo) : {}
+  }
+
   const colDefs_with_index = [
     {
       headerName: '#',
@@ -59,6 +88,7 @@ export default function DocTable<T>({
                   flex: colDef.flex,
                   width: colDef.width,
                   minWidth: colDef.minWidth,
+                  ...getFieldStyle(colDef.headerName || ''),
                 }}
               >
                 {colDef.colId === '#' ? idx + 1 : getCellValue(colDef, item)}

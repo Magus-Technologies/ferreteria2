@@ -298,6 +298,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       field: "id",
       width: 80,
       cellRenderer: (params: ICellRendererParams<Producto>) => {
+        const tieneIngresos = params.data?.tiene_ingresos ?? false;
+        
         return params.data?.permitido ? (
           <ColumnAction
             id={params.value}
@@ -311,7 +313,11 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                 return { data: res.data };
               },
               msgSuccess: "Producto eliminado correctamente",
-              queryKey: [QueryKeys.PRODUCTOS],
+              queryKey: [QueryKeys.PRODUCTOS_BY_ALMACEN],
+              disabled: tieneIngresos,
+              disabledTooltip: tieneIngresos 
+                ? "No se puede eliminar porque el producto tiene movimientos de inventario (ingresos/salidas)"
+                : undefined,
             }}
             onEdit={() => {
               setProducto(params.data as unknown as productoEditOrCopy);

@@ -18,6 +18,7 @@ export default function DocGeneral<T>({
   total,
   observaciones,
   totalConLetras = false,
+  getEstiloCampo,
 }: {
   empresa: EmpresaSession | undefined
   show_logo_html?: boolean
@@ -30,6 +31,7 @@ export default function DocGeneral<T>({
   total: number
   observaciones: string
   totalConLetras?: boolean
+  getEstiloCampo?: (campo: string) => { fontFamily?: string; fontSize?: number; fontWeight?: string }
 }) {
   return (
     <Document title={nro_doc}>
@@ -43,7 +45,7 @@ export default function DocGeneral<T>({
 
         {children}
 
-        <DocTable colDefs={colDefs} rowData={rowData} />
+        <DocTable colDefs={colDefs} rowData={rowData} getEstiloCampo={getEstiloCampo} />
 
         <View style={styles_docs.section}>
           <View style={styles_docs.total}>

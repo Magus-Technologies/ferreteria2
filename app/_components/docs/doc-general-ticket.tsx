@@ -18,6 +18,7 @@ export default function DocGeneralTicket<T>({
   observaciones,
   headerNameAl100,
   totalConLetras = false,
+  getEstiloCampo,
 }: {
   empresa: EmpresaSession | undefined
   show_logo_html?: boolean
@@ -31,6 +32,7 @@ export default function DocGeneralTicket<T>({
   observaciones: string
   headerNameAl100: string
   totalConLetras?: boolean
+  getEstiloCampo?: (campo: string) => { fontFamily?: string; fontSize?: number; fontWeight?: string }
 }) {
   return (
     <Document title={nro_doc}>
@@ -49,6 +51,7 @@ export default function DocGeneralTicket<T>({
           colDefs={colDefs}
           rowData={rowData}
           headerNameAl100={headerNameAl100}
+          getEstiloCampo={getEstiloCampo}
         />
         <View
           style={{

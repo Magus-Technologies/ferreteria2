@@ -14,13 +14,32 @@ export default function DocCotizacionTicket({
   nro_doc,
   empresa,
   show_logo_html = false,
+  estilosCampos,
 }: {
   data: CotizacionDataPDF | undefined
   nro_doc: string
   empresa: EmpresaPublica | undefined
   show_logo_html?: boolean
+  estilosCampos?: Record<string, { fontFamily?: string; fontSize?: number; fontWeight?: string }>
 }) {
   if (!data) return null
+
+  // Función para obtener estilos de un campo
+  const getEstiloCampo = (campo: string) => {
+    const estilo = estilosCampos?.[campo] || { fontFamily: 'Arial', fontSize: 8, fontWeight: 'normal' }
+    
+    // React PDF no reconoce "Arial", usar Helvetica o no especificar fontFamily
+    const fontFamily = estilo.fontFamily === 'Arial' ? undefined : 
+                       estilo.fontFamily === 'Times New Roman' ? 'Times-Roman' :
+                       estilo.fontFamily === 'Courier New' ? 'Courier' :
+                       estilo.fontFamily
+    
+    return {
+      fontFamily,
+      fontSize: estilo.fontSize || 5, // Usar 5 si no hay tamaño personalizado
+      fontWeight: estilo.fontWeight || 'normal',
+    }
+  }
 
   // Definir columnas para la tabla de productos (formato ticket)
   const colDefs: ColDef<ProductoCotizacionPDF>[] = [
@@ -84,6 +103,7 @@ export default function DocCotizacionTicket({
       observaciones={data.observaciones || '-'}
       headerNameAl100='Descripción'
       totalConLetras
+      getEstiloCampo={getEstiloCampo}
     >
       {/* Información del Cliente y Cotización */}
       <View style={{ marginBottom: 2 }}>
@@ -93,65 +113,69 @@ export default function DocCotizacionTicket({
             paddingBottom: 12,
           }}
         >
-          <View style={styles_ticket.sectionInformacionGeneralColumn}>
-            {/* Fecha de Emisión */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
-                Fecha de Emisión:
-              </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {new Date(data.fecha).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })}
-              </Text>
-            </View>
-
-            {/* Fecha de Vencimiento */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
-                F. Vencimiento:
-              </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {new Date(data.fecha_vencimiento).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })}
-              </Text>
+          {/* UNA SOLA COLUMNA AL 100% */}
+          <View style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
+            {/* Fecha de Emisión y F. Vencimiento en la misma fila */}
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 4, width: '100%' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', gap: 2, flex: 1 }}>
+                <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  Fecha de Emisión:
+                </Text>
+                <Text style={getEstiloCampo('fecha')}>
+                  {new Date(data.fecha).toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })}
+                </Text>
+              </View>
+              <View style={{ display: 'flex', flexDirection: 'row', gap: 2, flex: 1 }}>
+                <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
+                  F. Vencimiento:
+                </Text>
+                <Text style={getEstiloCampo('fecha_vencimiento')}>
+                  {new Date(data.fecha_vencimiento).toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })}
+                </Text>
+              </View>
             </View>
 
             {/* RUC/DNI del Cliente */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 {data.cliente.numero_documento.length === 11 ? 'RUC:' : 'DNI:'}
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={getEstiloCampo('cliente_documento')}>
                 {data.cliente.numero_documento}
               </Text>
             </View>
 
-            {/* Cliente */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+            {/* Cliente - Ocupa toda la fila */}
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 Cliente:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={{
+                ...getEstiloCampo('cliente_nombre'),
+                flex: 1,
+              }}>
                 {nombreCliente}
               </Text>
             </View>
 
-            {/* Dirección del Cliente */}
+            {/* Dirección del Cliente - Ocupa toda la fila */}
             {data.cliente.direccion && (
-              <View style={styles_ticket.subSectionInformacionGeneral}>
-                <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+              <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+                <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                   Dirección:
                 </Text>
                 <Text
                   style={{
-                    ...styles_ticket.textValueSubSectionInformacionGeneral,
-                    fontSize: 7,
+                    ...getEstiloCampo('cliente_direccion'),
+                    flex: 1,
                   }}
                 >
                   {data.cliente.direccion}
@@ -160,11 +184,11 @@ export default function DocCotizacionTicket({
             )}
 
             {/* Vendedor */}
-            <View style={styles_ticket.subSectionInformacionGeneral}>
-              <Text style={styles_ticket.textTitleSubSectionInformacionGeneral}>
+            <View style={{ display: 'flex', flexDirection: 'row', gap: 2, width: '100%' }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 Vendedor:
               </Text>
-              <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
+              <Text style={getEstiloCampo('vendedor')}>
                 {data.vendedor}
               </Text>
             </View>
@@ -176,15 +200,15 @@ export default function DocCotizacionTicket({
       <View style={{ marginBottom: 8, paddingHorizontal: 4 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2, borderBottom: '1px solid #ccc' }}>
           <Text style={{ fontSize: 8, fontWeight: 'bold' }}>SUBTOTAL:</Text>
-          <Text style={{ fontSize: 8 }}>S/ {data.subtotal.toFixed(2)}</Text>
+          <Text style={getEstiloCampo('subtotal')}>S/ {data.subtotal.toFixed(2)}</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2, borderBottom: '1px solid #ccc' }}>
           <Text style={{ fontSize: 8, fontWeight: 'bold' }}>T. DESCUENTO:</Text>
-          <Text style={{ fontSize: 8 }}>S/ {data.total_descuento.toFixed(2)}</Text>
+          <Text style={getEstiloCampo('total_descuento')}>S/ {data.total_descuento.toFixed(2)}</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, backgroundColor: '#f0f0f0', paddingHorizontal: 2 }}>
           <Text style={{ fontSize: 9, fontWeight: 'bold' }}>TOTAL:</Text>
-          <Text style={{ fontSize: 9, fontWeight: 'bold' }}>S/ {data.total.toFixed(2)}</Text>
+          <Text style={{...getEstiloCampo('total'), fontSize: 9}}>S/ {data.total.toFixed(2)}</Text>
         </View>
       </View>
     </DocGeneralTicket>

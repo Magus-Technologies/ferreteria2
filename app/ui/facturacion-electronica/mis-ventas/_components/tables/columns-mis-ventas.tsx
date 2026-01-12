@@ -167,11 +167,25 @@ export function useColumnsMisVentas() {
       headerName: "F.Pago",
       field: "forma_de_pago",
       width: 100,
+      valueFormatter: (params) => {
+        const formaPago = params.value;
+        if (formaPago === 'co') return 'Contado';
+        if (formaPago === 'cr') return 'Crédito';
+        return formaPago || '';
+      },
     },
     {
       headerName: "Estado",
       field: "estado_de_venta",
       width: 100,
+      valueFormatter: (params) => {
+        const estado = params.value;
+        if (estado === 'cr') return 'Creado';
+        if (estado === 'ee') return 'En Espera';
+        if (estado === 'pr') return 'Procesado';
+        if (estado === 'an') return 'Anulado';
+        return estado || '';
+      },
     },
     {
       headerName: "Usuario",
