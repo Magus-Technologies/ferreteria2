@@ -30,7 +30,7 @@ interface ConfiguracionImpresionState {
 
 const defaultConfig: ConfiguracionCampo = {
   font_family: 'Arial',
-  font_size: 8,
+  font_size: 7,
   font_weight: 'normal',
 }
 

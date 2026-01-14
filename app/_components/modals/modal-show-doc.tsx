@@ -133,12 +133,32 @@ export default function ModalShowDoc({
         keyboard={false}
         destroyOnHidden
       >
+        <style>
+          {`
+            /* Estilos personalizados para el scrollbar */
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: #f1f1f1;
+              border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #888;
+              border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #555;
+            }
+          `}
+        </style>
         <div
-          className='border rounded-xl'
+          className='border rounded-xl overflow-y-auto custom-scrollbar'
           style={{
             width: esTicket ? 226.77 : 595.28,
             maxWidth: esTicket ? 226.77 : 595.28,
-            zoom: 1.3,
+            maxHeight: '60vh',
+            zoom: esTicket ? 1.3 : 1.2,
           }}
         >
           {childrenWithProps}

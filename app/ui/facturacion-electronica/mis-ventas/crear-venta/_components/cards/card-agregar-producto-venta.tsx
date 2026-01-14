@@ -27,7 +27,7 @@ export const valuesDefault: ValuesCardAgregarProductoVenta = {
   unidad_derivada_id: undefined,
   precio_venta: undefined,
   recargo: undefined,
-  descuento_tipo: undefined,
+  descuento_tipo: DescuentoTipo.MONTO,
   descuento: undefined,
 
   producto_id: undefined,
@@ -263,11 +263,17 @@ export default function CardAgregarProductoVenta({
           />
           <InputNumberBase
             placeholder='Descuento'
-            precision={4}
-            prefix={<FaPiggyBank size={15} className={`text-cyan-600 mx-1`} />}
+            precision={values.descuento_tipo === DescuentoTipo.PORCENTAJE ? 2 : 4}
+            prefix={
+              values.descuento_tipo === DescuentoTipo.PORCENTAJE 
+                ? undefined 
+                : <FaPiggyBank size={15} className={`text-cyan-600 mx-1`} />
+            }
+            suffix={values.descuento_tipo === DescuentoTipo.PORCENTAJE ? '%' : undefined}
             onChange={(value) => handleChange(value, 'descuento')}
             value={values.descuento}
             min={0}
+            max={values.descuento_tipo === DescuentoTipo.PORCENTAJE ? 100 : undefined}
           />
         </div>
       </LabelBase>

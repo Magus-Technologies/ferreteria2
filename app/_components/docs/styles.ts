@@ -97,11 +97,11 @@ export const styles_docs = StyleSheet.create({
     flexDirection: 'row',
     borderBottom: '1px solid #fadc06',
     paddingVertical: 2,
-    fontSize: 8,
+    fontSize: 7,
   },
   total: {
     position: 'relative',
-    fontSize: 8,
+    fontSize: 7,
     textAlign: 'right',
     paddingRight: 4,
     border: '1px solid #fadc06',
@@ -123,7 +123,7 @@ export const styles_docs = StyleSheet.create({
     fontWeight: 'bold',
   },
   observaciones: {
-    fontSize: 8,
+    fontSize: 7,
     textAlign: 'right',
     padding: '4px 12px',
     border: '1px solid #fadc06',
@@ -139,7 +139,7 @@ export const styles_docs = StyleSheet.create({
 export const styles_ticket = StyleSheet.create({
   page: {
     padding: 12,
-    fontSize: 8,
+    fontSize: 7,
     color: 'black',
     backgroundColor: 'white',
     display: 'flex',
@@ -209,7 +209,7 @@ export const styles_ticket = StyleSheet.create({
     paddingRight: 4,
   },
   total: {
-    fontSize: 8,
+    fontSize: 7,
     textAlign: 'right',
     paddingRight: 4,
     display: 'flex',
@@ -226,7 +226,7 @@ export const styles_ticket = StyleSheet.create({
     fontWeight: 'bold',
   },
   observaciones: {
-    fontSize: 8,
+    fontSize: 7,
     textAlign: 'right',
     display: 'flex',
     flexDirection: 'column',
@@ -236,7 +236,7 @@ export const styles_ticket = StyleSheet.create({
   },
   sectionInformacionGeneral: {
     padding: '4px 4px',
-    fontSize: 5,
+    fontSize: 7,
     display: 'flex',
     flexDirection: 'row',
     gap: 2,
@@ -267,7 +267,7 @@ export const styles_ticket = StyleSheet.create({
     paddingLeft: 4,
     paddingTop: 4,
     display: 'flex',
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 'bold',
   },
 })

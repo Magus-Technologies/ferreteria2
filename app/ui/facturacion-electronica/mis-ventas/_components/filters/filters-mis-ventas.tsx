@@ -335,12 +335,12 @@ export default function FiltersMisVentas() {
           </div>
 
           {/* Fila 3 - Botones de acción */}
-          <div className="col-span-3 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-2">
             <ButtonBase
               color="warning"
               size="md"
               type="button"
-              className="flex items-center gap-2 whitespace-nowrap w-full justify-center text-xs"
+              className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
               onClick={() => ventaSeleccionada && setModalEntregarOpen(true)}
               disabled={!ventaSeleccionada}
             >
@@ -353,7 +353,7 @@ export default function FiltersMisVentas() {
               color="info"
               size="md"
               type="button"
-              className="flex items-center gap-2 whitespace-nowrap w-full justify-center text-xs"
+              className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
               onClick={() => ventaSeleccionada && setModalVerEntregasOpen(true)}
               disabled={!ventaSeleccionada}
             >

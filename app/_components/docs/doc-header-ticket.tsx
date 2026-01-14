@@ -40,7 +40,7 @@ export default function DocHeaderTicket({
         </Text>
       </View>
       <View style={styles_ticket.headerDocument}>
-        <Text style={styles_ticket.headerTitle}>{tipo_documento}</Text>
+        <Text style={styles_ticket.headerTitle}>{tipo_documento} ELECTRÓNICA</Text>
         <Text>{nro_doc}</Text>
       </View>
     </View>

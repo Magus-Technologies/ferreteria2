@@ -16,6 +16,9 @@ export interface VentaResponse {
   numero: string
   fecha: string
   tipo_documento: string
+  forma_de_pago?: string
+  fecha_vencimiento?: string
+  numero_guia?: string
   serie_documento?: {
     serie: string
   }
@@ -27,6 +30,11 @@ export interface VentaResponse {
     apellidos?: string
     direccion?: string
   } | null
+  // Usuario/Vendedor
+  user?: {
+    id: string
+    name: string
+  }
   // Campos alternativos cuando no hay cliente
   ruc_dni?: string
   cliente_nombre?: string
@@ -85,7 +93,8 @@ export default function ModalDocVenta({
   // Preparar estilos para pasar al PDF
   const estilosCampos = useMemo(() => {
     const campos = [
-      'fecha', 'numero_documento', 'empresa_nombre', 'empresa_ruc', 'empresa_direccion',
+      'fecha', 'hora', 'numero_documento', 'empresa_nombre', 'empresa_ruc', 'empresa_direccion',
+      'forma_pago', 'fecha_vencimiento', 'numero_guia', 'vendedor',
       'cliente_nombre', 'cliente_documento', 'cliente_direccion',
       'tabla_codigo', 'tabla_descripcion', 'tabla_cantidad', 'tabla_precio', 'tabla_subtotal',
       'subtotal', 'igv', 'total', 'metodo_pago'
@@ -188,6 +197,7 @@ function getTipoDocumentoCodSerie(laravelCode: string): string {
 function transformVentaData(venta: VentaResponse): VentaDataPDF {
   // Calcular total según la lógica de Laravel (VentaController::getTotalVenta)
   let totalCalculado = 0
+  let totalDescuentos = 0
 
   // Transformar productos_por_almacen a formato plano
   const productos: ProductoVentaPDF[] = venta.productos_por_almacen?.flatMap(
@@ -204,13 +214,18 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
         const subtotalLinea = precio * cantidad
         const subtotalConRecargo = subtotalLinea + recargo
 
-        // Aplicar descuento
-        let montoLinea = subtotalConRecargo
+        // Calcular descuento aplicado
+        let descuentoAplicado = 0
         if (ud.descuento_tipo === '%') {
-          montoLinea = subtotalConRecargo - (subtotalConRecargo * descuento / 100)
+          descuentoAplicado = subtotalConRecargo * descuento / 100
         } else {
-          montoLinea = subtotalConRecargo - descuento
+          descuentoAplicado = descuento
         }
+        
+        totalDescuentos += descuentoAplicado
+
+        // Aplicar descuento
+        const montoLinea = subtotalConRecargo - descuentoAplicado
 
         totalCalculado += montoLinea
 
@@ -232,6 +247,9 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
   // Calcular subtotal e IGV (18% en Perú)
   const subtotal = total / 1.18
   const igv = total - subtotal
+  
+  // Op. Gravada es el subtotal (base imponible)
+  const op_gravada = subtotal
 
   // Manejar cliente: si no hay cliente o es null, usar "CLIENTE VARIOS"
   const clienteData = venta.cliente || {
@@ -250,12 +268,18 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     numero: venta.numero,
     fecha: venta.fecha,
     tipo_documento: venta.tipo_documento,
+    forma_de_pago: venta.forma_de_pago,
+    fecha_vencimiento: venta.fecha_vencimiento,
+    numero_guia: venta.numero_guia,
+    vendedor: venta.user?.name,
     cliente: clienteData,
     productos,
     metodos_de_pago,
     subtotal,
     igv,
     total,
+    total_descuento: totalDescuentos > 0 ? totalDescuentos : undefined,
+    op_gravada,
     observaciones: venta.observaciones,
   }
 }

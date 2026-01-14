@@ -41,7 +41,7 @@ export default function DocHeader({
       <View style={styles_docs.headerDocument}>
         <Text style={{ fontWeight: 'bold' }}>R.U.C. {empresa?.ruc}</Text>
         <Text style={styles_docs.headerTitle}>
-          Documento de {tipo_documento}
+          Documento de {tipo_documento} 
         </Text>
         <Text>{nro_doc}</Text>
       </View>

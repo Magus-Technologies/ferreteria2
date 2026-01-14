@@ -152,6 +152,22 @@ export default function CardsInfoVenta({
           <FaMoneyBillWave className='min-w-fit' size={30} />
           Cobrar
         </ButtonBase>
+        
+        {/* Botón para crear venta a crédito */}
+        {forma_de_pago === 'cr' && (
+          <ButtonBase
+            onClick={() => {
+              form.setFieldValue('estado_de_venta', EstadoDeVenta.CREADO)
+              form.submit()
+            }}
+            color='success'
+            className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
+          >
+            <MdSell className='min-w-fit' size={30} />
+            Crear Venta a Crédito
+          </ButtonBase>
+        )}
+        
         {/* {(compra?._count?.recepciones_almacen ?? 0) > 0 ||
               (compra?._count?.pagos_de_compras ?? 0) > 0 ||
               compra?.estado_de_compra === EstadoDeCompra.Creado ? null : ( */}

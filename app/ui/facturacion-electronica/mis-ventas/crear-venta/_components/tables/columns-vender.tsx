@@ -234,31 +234,38 @@ export function useColumnsVender({
       field: 'name',
       minWidth: 160,
       width: 160,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full gap-1'>
-          <SelectDescuentoTipo
-            formWithMessage={false}
-            size='small'
-            propsForm={{
-              name: [value, 'descuento_tipo'],
-              hasFeedback: false,
-            }}
-            onChange={() => calcularSubtotalForm({ form, value })}
-          />
-          <InputNumberBase
-            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
-            size='small'
-            className='w-full'
-            propsForm={{
-              name: [value, 'descuento'],
-            }}
-            precision={4}
-            min={0}
-            formWithMessage={false}
-            onChange={() => calcularSubtotalForm({ form, value })}
-          />
-        </div>
-      ),
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const descuento_tipo = form.getFieldValue(['productos', value, 'descuento_tipo'])
+        const isPorcentaje = descuento_tipo === DescuentoTipo.PORCENTAJE
+        
+        return (
+          <div className='flex items-center h-full gap-1'>
+            <SelectDescuentoTipo
+              formWithMessage={false}
+              size='small'
+              propsForm={{
+                name: [value, 'descuento_tipo'],
+                hasFeedback: false,
+              }}
+              onChange={() => calcularSubtotalForm({ form, value })}
+            />
+            <InputNumberBase
+              prefix={isPorcentaje ? '' : (tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. ')}
+              suffix={isPorcentaje ? '%' : ''}
+              size='small'
+              className='w-full'
+              propsForm={{
+                name: [value, 'descuento'],
+              }}
+              precision={isPorcentaje ? 2 : 4}
+              min={0}
+              max={isPorcentaje ? 100 : undefined}
+              formWithMessage={false}
+              onChange={() => calcularSubtotalForm({ form, value })}
+            />
+          </div>
+        )
+      },
     },
     {
       headerName: 'SubTotal',

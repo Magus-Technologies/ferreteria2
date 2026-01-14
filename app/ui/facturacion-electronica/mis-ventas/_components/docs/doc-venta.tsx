@@ -24,6 +24,10 @@ export interface VentaDataPDF {
   numero: string
   fecha: string
   tipo_documento: string
+  forma_de_pago?: string
+  fecha_vencimiento?: string
+  numero_guia?: string
+  vendedor?: string
   cliente: {
     numero_documento: string
     razon_social?: string
@@ -39,6 +43,8 @@ export interface VentaDataPDF {
   subtotal: number
   igv: number
   total: number
+  total_descuento?: number
+  op_gravada?: number
   observaciones?: string
 }
 
