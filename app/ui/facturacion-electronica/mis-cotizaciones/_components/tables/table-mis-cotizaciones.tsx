@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { AgGridReact } from 'ag-grid-react'
+import { orangeColors } from '~/lib/colors'
 
 type UseStoreCotizacionSeleccionada = {
   cotizacion?: Cotizacion
@@ -63,6 +64,7 @@ export default function TableMisCotizaciones() {
         columnDefs={useColumnsMisCotizaciones()}
         rowData={response || []}
         tableRef={tableRef}
+        selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
         onSelectionChanged={({ selectedNodes }) =>
           setCotizacionSeleccionada(selectedNodes?.[0]?.data as Cotizacion)
         }

@@ -89,7 +89,7 @@ export default function CardsInfoCotizacion({
         Guardar Cotización
       </ButtonBase>
 
-      <ButtonBase
+      {/* <ButtonBase
         type="button"
         color="info"
         className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
@@ -99,7 +99,7 @@ export default function CardsInfoCotizacion({
       >
         <FaPrint className="min-w-fit" size={30} />
         Imprimir
-      </ButtonBase>
+      </ButtonBase> */}
     </div>
   );
 }

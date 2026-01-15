@@ -1,5 +1,6 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductosPorVencer } from './columns-productos-por-vencer'
+import { greenColors } from '~/lib/colors'
 
 const items = [
   {
@@ -79,6 +80,7 @@ export default function TableProductosPorVencer() {
     <TableWithTitle
       id='g-c-e-i.dashboard.productos-por-vencer'
       title='Productos por vencer'
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       columnDefs={useColumnsProductosPorVencer()}
       rowData={items}
     />

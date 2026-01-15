@@ -14,6 +14,8 @@ import {
 } from '~/app/_actions/recepcion-almacen'
 import { useColumnsRecepcionesAlmacen } from './columns-recepciones-almacen'
 import ModalDocRecepcionAlmacen from '../modals/modal-doc-recepcion-almacen'
+import { greenColors } from '~/lib/colors'
+
 
 export default function TableRecepcionesAlmacen() {
   const tableRef = useRef<AgGridReact>(null)
@@ -58,6 +60,7 @@ export default function TableRecepcionesAlmacen() {
       />
       <TableWithTitle<getRecepcionesAlmacenResponseProps>
         id='g-c-e-i.mis-recepciones.recepciones-almacen'
+        selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
         onSelectionChanged={({ selectedNodes }) =>
           setRecepcionAlmacenSeleccionada(
             selectedNodes?.[0]?.data as getRecepcionesAlmacenResponseProps

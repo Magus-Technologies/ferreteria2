@@ -5,6 +5,22 @@ import dayjs from "dayjs";
 import { Cotizacion } from "~/lib/api/cotizaciones";
 import CellAccionesCotizacion from "./cell-acciones-cotizacion";
 
+// Cell Renderer para Stock Reservado
+function CellStockReservado({ value }: { value: boolean }) {
+  if (value) {
+    return (
+      <div className="flex items-center justify-center h-full font-semibold text-red-500 keep-text-color">
+        RESERVADO
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center justify-center h-full">
+      NORMAL
+    </div>
+  );
+}
+
 export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
   return [
     // {
@@ -29,6 +45,12 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       headerName: "Modalidad",
       valueGetter: () => "CONTADO",
       width: 120,
+    },
+    {
+      headerName: "Stock",
+      field: "reservar_stock",
+      width: 120,
+      cellRenderer: CellStockReservado,
     },
     {
       headerName: "Cliente",

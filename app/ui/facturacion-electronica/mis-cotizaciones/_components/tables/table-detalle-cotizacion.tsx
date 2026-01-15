@@ -3,6 +3,7 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreCotizacionSeleccionada } from './table-mis-cotizaciones'
 import { ColDef } from 'ag-grid-community'
+import { orangeColors } from '~/lib/colors'
 
 type DetalleCotizacion = {
   codigo: string
@@ -135,6 +136,7 @@ export default function TableDetalleCotizacion() {
         <TableWithTitle<DetalleCotizacion>
           id='detalle-cotizacion'
           title='DETALLE REGISTROS'
+          selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
           columnDefs={columns}
           rowData={detalle}
         />

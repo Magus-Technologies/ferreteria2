@@ -8,6 +8,7 @@ import { useStoreFiltrosMisVentas } from "../../_store/store-filtros-mis-ventas"
 import useGetVentas from "../../_hooks/use-get-ventas";
 import { create } from "zustand";
 import { AgGridReact } from "ag-grid-react";
+import { orangeColors } from "~/lib/colors";
 
 type UseStoreVentaSeleccionada = {
   venta?: getVentaResponseProps;
@@ -77,6 +78,7 @@ export default function TableMisVentas() {
         columnDefs={useColumnsMisVentas()}
         rowData={response || []}
         tableRef={tableRef}
+        selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
         onRowClicked={(event) => {
           // Seleccionar la fila cuando se hace clic en cualquier parte
           event.node.setSelected(true);

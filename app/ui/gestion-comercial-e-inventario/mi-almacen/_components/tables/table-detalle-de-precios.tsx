@@ -17,6 +17,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import ActionButtonsWrapper from '../others/action-buttons-wrapper'
 import { useProductosByAlmacen } from '../../_hooks/useProductosByAlmacen'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
+import { greenColors } from '~/lib/colors'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
@@ -91,6 +92,7 @@ export default function TableDetalleDePrecios() {
       tableRef={tableRef}
       id='g-c-e-i.mi-almacen.detalle-de-precios'
       title='Detalle de precios'
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}
       extraTitle={

@@ -13,6 +13,7 @@ import { useStoreAlmacen } from "~/store/store-almacen";
 import { useAuth } from "~/lib/auth-context";
 import ModalCreateCliente from "./modal-create-cliente";
 import PopoverOpcionesEntrega from "../popovers/popover-opciones-entrega";
+import { orangeColors } from "~/lib/colors";
 import ButtonBase from "~/components/buttons/button-base";
 import type { Cliente } from "~/lib/api/cliente";
 import { TipoEntrega, TipoDespacho, EstadoEntrega } from "~/lib/api/entrega-producto";
@@ -326,6 +327,7 @@ export default function ModalEntregarProductos({
               <TableWithTitle<ProductoEntrega>
                 id="productos-entrega"
                 title="Lista de productos"
+                selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
                 columnDefs={columnDefs}
                 rowData={productosEntrega}
                 onCellValueChanged={(params) => {

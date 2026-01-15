@@ -35,6 +35,7 @@ type ModalProductoSearchProps = {
   showCardAgregarProductoCotizacion?: boolean;
   showCardAgregarProductoPrestamo?: boolean;
   showUltimasCompras?: boolean;
+  selectionColor?: string; // Color para la fila seleccionada
 };
 
 export type CostoUnidadDerivadaSearch = {
@@ -55,6 +56,7 @@ export default function ModalProductoSearch({
   showCardAgregarProductoCotizacion = false,
   showCardAgregarProductoPrestamo = false,
   showUltimasCompras = true,
+  selectionColor, // Recibir el color de selección
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
   useEffect(() => {
@@ -145,6 +147,7 @@ export default function ModalProductoSearch({
                 value={value}
                 onRowDoubleClicked={onRowDoubleClicked}
                 tipoBusqueda={tipoBusqueda}
+                selectionColor={selectionColor}
               />
             </div>
             {showUltimasCompras && (

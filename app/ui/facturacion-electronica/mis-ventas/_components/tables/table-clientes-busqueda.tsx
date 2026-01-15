@@ -9,6 +9,7 @@ import { useColumnsClientes } from './columns-clientes'
 import ModalCreateCliente from '../modals/modal-create-cliente'
 import { useStoreClienteSeleccionado } from '../../store/store-cliente-seleccionado'
 import useSearchClientes from '../../_hooks/use-search-clientes'
+import { orangeColors } from '~/lib/colors'
 
 interface TableClientesBusquedaProps
   extends Omit<
@@ -44,6 +45,7 @@ export default function TableClientesBusqueda({
         {...props}
         id='mis-ventas.clientes'
         title='Clientes'
+        selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
         loading={loading}
         columnDefs={useColumnsClientes({ setDataEdit, setOpen })}
         rowData={response || []}

@@ -10,6 +10,8 @@ import { RefObject, useEffect, useImperativeHandle, useMemo } from "react";
 import { useStoreProductoAgregadoCompra } from "~/app/_stores/store-producto-agregado-compra";
 import { useProductosSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_hooks/useProductosSearch";
 import type { Producto } from "~/app/_types/producto";
+import { usePathname } from "next/navigation";
+import { orangeColors, greenColors } from "~/lib/colors";
 
 export interface RefTableProductoSearchProps {
   handleRefetch: () => void;
@@ -20,6 +22,7 @@ export default function TableProductoSearch({
   onRowDoubleClicked,
   tipoBusqueda,
   ref,
+  selectionColor: selectionColorProp, // Recibir el color como prop
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -29,6 +32,7 @@ export default function TableProductoSearch({
   }) => void;
   tipoBusqueda: TipoBusquedaProducto;
   ref?: RefObject<RefTableProductoSearchProps | null>;
+  selectionColor?: string; // Agregar el prop
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
 
@@ -100,6 +104,16 @@ export default function TableProductoSearch({
     handleRefetch: () => handleRefetch(),
   }));
 
+  const pathname = usePathname();
+  // Usar el color pasado como prop, o detectar automáticamente
+  const colorSeleccion = selectionColorProp || (
+    pathname?.includes('facturacion-electronica') 
+      ? orangeColors[10] 
+      : pathname?.includes('gestion-comercial-e-inventario')
+      ? greenColors[10]
+      : undefined
+  );
+
   return (
     <TableWithTitle<Producto>
       id="g-c-e-i.table-producto-search"
@@ -123,6 +137,7 @@ export default function TableProductoSearch({
         onRowDoubleClicked?.({ data: data as any });
       }}
       rowData={productosFiltrados}
+      selectionColor={colorSeleccion}
       optionsSelectColumns={[
         {
           label: "Default",

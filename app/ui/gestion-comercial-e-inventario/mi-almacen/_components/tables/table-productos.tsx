@@ -3,6 +3,7 @@
 import TableWithTitle from "~/components/tables/table-with-title";
 import { useColumnsProductos } from "./columns-productos";
 import type { Producto } from "~/app/_types/producto";
+import { greenColors } from "~/lib/colors";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { productosApiV2 } from "~/lib/api/producto";
 import { ubicacionesApi } from "~/lib/api/catalogos";
@@ -81,6 +82,7 @@ function TableProductos() {
   return (
     <TableWithTitle<Producto>
       id="g-c-e-i.mi-almacen.productos"
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       onSelectionChanged={({ selectedNodes }) =>
         setProductoSeleccionado(selectedNodes?.[0]?.data)
       }

@@ -20,6 +20,8 @@ import ButtonCreateProductoPlus from '../buttons/button-create-producto-plus'
 import SelectTipoBusquedaProducto, {
   TipoBusquedaProducto,
 } from './select-tipo-busqueda-producto'
+import { usePathname } from 'next/navigation'
+import { orangeColors, greenColors } from '~/lib/colors'
 
 export function getFiltrosPorTipoBusqueda({
   tipoBusqueda,
@@ -75,6 +77,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   showUltimasCompras?: boolean
   limpiarOnChange?: boolean
   autoFocus?: boolean
+  selectionColor?: string // Color para la fila seleccionada en el modal
 }
 
 export default function SelectProductos({
@@ -98,9 +101,20 @@ export default function SelectProductos({
   limpiarOnChange = false,
   showUltimasCompras = true,
   autoFocus = false,
+  selectionColor, // Recibir el color de selección
   ...props
 }: SelectProductosProps) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
+
+  const pathname = usePathname()
+  // Detectar el color automáticamente si no se pasa como prop
+  const colorSeleccion = selectionColor || (
+    pathname?.includes('facturacion-electronica')
+      ? orangeColors[10]
+      : pathname?.includes('gestion-comercial-e-inventario')
+      ? greenColors[10]
+      : undefined
+  )
 
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.producto
@@ -290,6 +304,7 @@ export default function SelectProductos({
         showCardAgregarProductoCotizacion={showCardAgregarProductoCotizacion}
         showCardAgregarProductoPrestamo={showCardAgregarProductoPrestamo}
         showUltimasCompras={showUltimasCompras}
+        selectionColor={colorSeleccion}
       />
       {showButtonCreate && (
         <ButtonCreateProductoPlus

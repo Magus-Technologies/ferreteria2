@@ -10,6 +10,7 @@ import { useColumnsProveedores } from './columns-proveedores'
 import ModalCreateProveedor from '../modals/modal-create-proveedor'
 import { useStoreProveedorSeleccionado } from '../../store/store-proveedor-seleccionado'
 import useGetProveedores from '../../_hooks/use-get-proveedores'
+import { greenColors } from '~/lib/colors'
 
 interface TableProveedoresBusquedaProps
   extends Omit<
@@ -49,6 +50,7 @@ export default function TableProveedoresBusqueda({
         {...props}
         id='g-c-e-i.mi-almacen.proveedores'
         title='Proveedores'
+        selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
         schema={ProveedorCreateInputSchema}
         loading={loading}
         columnDefs={useColumnsProveedores({ setDataEdit, setOpen })}

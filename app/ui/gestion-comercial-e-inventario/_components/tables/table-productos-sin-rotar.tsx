@@ -1,5 +1,6 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductosSinRotar } from './columns-productos-sin-rotar'
+import { greenColors } from '~/lib/colors'
 
 const items = [
   {
@@ -79,6 +80,7 @@ export default function TableProductosSinRotar() {
     <TableWithTitle
       id='g-c-e-i.dashboard.productos-sin-rotar'
       title='Productos sin rotar'
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       columnDefs={useColumnsProductosSinRotar()}
       rowData={items}
     />

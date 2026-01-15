@@ -5,6 +5,7 @@ import { useColumnsUltimasComprasIngresadas } from './columns-ultimas-compras-in
 import type { UltimasComprasType } from './columns-ultimas-compras-ingresadas'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { getProductosResponseProps } from '~/app/_actions/producto'
+import { greenColors } from '~/lib/colors'
 
 // Importar el tipo desde las columnas para mantener consistencia
 
@@ -35,6 +36,7 @@ export default function TableUltimasComprasIngresadas({
     <TableWithTitle
       id={id}
       title='Últimas 6 compras ingresadas'
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       extraTitle={
         <>
           {' '}

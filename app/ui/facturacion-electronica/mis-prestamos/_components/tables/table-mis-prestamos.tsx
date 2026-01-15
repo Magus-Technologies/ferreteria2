@@ -8,6 +8,7 @@ import { prestamoApi, type Prestamo } from '~/lib/api/prestamo'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { orangeColors } from '~/lib/colors'
 
 type UseStorePrestamoSeleccionada = {
   prestamo?: Prestamo
@@ -46,6 +47,7 @@ export default function TableMisPrestamos() {
         loading={loading}
         columnDefs={useColumnsMisPrestamos()}
         rowData={response || []}
+        selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
         onSelectionChanged={({ selectedNodes }) =>
           setPrestamoSeleccionada(selectedNodes?.[0]?.data as Prestamo)
         }

@@ -3,6 +3,7 @@
 import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreVentaSeleccionada } from './table-mis-ventas'
+import { orangeColors } from '~/lib/colors'
 
 type DetalleProducto = {
   producto: string
@@ -102,6 +103,7 @@ export default function TableDetalleVenta() {
         <TableWithTitle<DetalleProducto>
           id='detalle-venta'
           title='Detalle de Venta'
+          selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
           columnDefs={columnDefs}
           rowData={detalleProductos}
         />

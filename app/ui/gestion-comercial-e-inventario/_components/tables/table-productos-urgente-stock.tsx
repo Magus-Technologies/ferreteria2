@@ -1,5 +1,6 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductosUrgenteStock } from './columns-productos-urgente-stock'
+import { greenColors } from '~/lib/colors'
 
 const items = [
   {
@@ -79,6 +80,7 @@ export default function TableProductosUrgenteStock() {
     <TableWithTitle
       id='g-c-e-i.dashboard.productos-urgente-stock'
       title='Productos Urgente por Stockear'
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       columnDefs={useColumnsProductosUrgenteStock()}
       rowData={items}
     />

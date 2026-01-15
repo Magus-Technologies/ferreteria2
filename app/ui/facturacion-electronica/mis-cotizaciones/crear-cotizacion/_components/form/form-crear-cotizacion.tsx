@@ -157,22 +157,30 @@ export default function FormCrearCotizacion({
 
         {/* Checkbox: Reservar Stock */}
         <LabelBase label="Opciones:" classNames={{ labelParent: "mb-6" }}>
-          <div className="flex items-center gap-2 h-[40px]">
-            <input
-              type="checkbox"
-              id="reservar_stock"
-              className="w-4 h-4 text-rose-600 bg-gray-100 border-gray-300 rounded focus:ring-rose-500 focus:ring-2 cursor-pointer"
-              onChange={(e) => {
-                form.setFieldValue("reservar_stock", e.target.checked);
-              }}
-            />
-            <label
-              htmlFor="reservar_stock"
-              className="text-sm font-medium text-gray-700 cursor-pointer select-none"
-            >
-              📦 Reservar Stock
-            </label>
-          </div>
+          <Form.Item
+            name="reservar_stock"
+            valuePropName="checked"
+            initialValue={false}
+            className="mb-0"
+          >
+            <div className="flex items-center gap-2 h-[40px]">
+              <input
+                type="checkbox"
+                id="reservar_stock"
+                className="w-4 h-4 text-rose-600 bg-gray-100 border-gray-300 rounded focus:ring-rose-500 focus:ring-2 cursor-pointer"
+                checked={form.getFieldValue("reservar_stock")}
+                onChange={(e) => {
+                  form.setFieldValue("reservar_stock", e.target.checked);
+                }}
+              />
+              <label
+                htmlFor="reservar_stock"
+                className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+              >
+                📦 Reservar Stock
+              </label>
+            </div>
+          </Form.Item>
         </LabelBase>
       </div>
 

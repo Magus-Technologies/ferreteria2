@@ -3,6 +3,7 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
+import { greenColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { CompraCreateInputSchema } from '~/prisma/generated/zod'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
@@ -184,6 +185,7 @@ const TableCompras = memo(function TableCompras({
   return (
     <TableWithTitle<Compra>
       id={id}
+      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
       onRowDoubleClicked={handleRowDoubleClicked}
