@@ -16,16 +16,20 @@ export default function RadioDireccionCliente({ form }: RadioDireccionClientePro
     // PRIMERO actualizar la selección
     form.setFieldValue('direccion_seleccionada', opcion)
 
-    // LUEGO actualizar la dirección
+    // LUEGO actualizar la dirección (tanto 'direccion' como 'direccion_entrega')
+    let direccionSeleccionada = ''
     if (opcion === 'D1') {
-      form.setFieldValue('direccion', direccion1 || '')
+      direccionSeleccionada = direccion1 || ''
     } else if (opcion === 'D2') {
-      form.setFieldValue('direccion', direccion2 || '')
+      direccionSeleccionada = direccion2 || ''
     } else if (opcion === 'D3') {
-      form.setFieldValue('direccion', direccion3 || '')
+      direccionSeleccionada = direccion3 || ''
     } else if (opcion === 'D4') {
-      form.setFieldValue('direccion', direccion4 || '')
+      direccionSeleccionada = direccion4 || ''
     }
+
+    form.setFieldValue('direccion', direccionSeleccionada)
+    form.setFieldValue('direccion_entrega', direccionSeleccionada)
   }
 
   return (

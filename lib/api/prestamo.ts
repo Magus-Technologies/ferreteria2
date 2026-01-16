@@ -69,8 +69,8 @@ export interface Marca {
 
 export interface Producto {
   id: number;
-  codigo: string;
-  descripcion: string;
+  cod_producto: string;
+  name: string;
   marca?: Marca;
 }
 

@@ -73,6 +73,7 @@ export interface CreateVentaRequest {
   fecha: string;
   estado_de_venta: EstadoDeVenta;
   cliente_id?: number; // Opcional: Para Boleta/NV sin cliente, backend usa "CLIENTE VARIOS" automáticamente
+  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4'; // Dirección seleccionada del cliente
   recomendado_por_id?: number;
   user_id: string;
   almacen_id: number;

@@ -4,247 +4,253 @@ import { Form, message, Modal } from "antd";
 import { useState, useEffect } from "react";
 import TitleForm from "~/components/form/title-form";
 import { getVentaResponseProps } from "~/app/_actions/venta";
-import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
-import TableWithTitle from "~/components/tables/table-with-title";
-import { ColDef } from "ag-grid-community";
 import useCreateEntrega from "../../_hooks/use-create-entrega";
 import dayjs from "dayjs";
-import { useStoreAlmacen } from "~/store/store-almacen";
+import 'dayjs/locale/es';
 import { useAuth } from "~/lib/auth-context";
 import ModalCreateCliente from "./modal-create-cliente";
-import PopoverOpcionesEntrega from "../popovers/popover-opciones-entrega";
-import { orangeColors } from "~/lib/colors";
+import ModalSeleccionarProductosEntrega from "./modal-seleccionar-productos-entrega";
 import ButtonBase from "~/components/buttons/button-base";
 import type { Cliente } from "~/lib/api/cliente";
 import { TipoEntrega, TipoDespacho, EstadoEntrega } from "~/lib/api/entrega-producto";
+import FormDespachoEnTienda from "../forms/form-despacho-en-tienda";
+import FormDespachoDomicilio from "../forms/form-despacho-domicilio";
+
+// Configurar dayjs en español
+dayjs.locale('es');
 
 interface ModalEntregarProductosProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   venta?: getVentaResponseProps;
+  tipoDespacho: "EnTienda" | "Domicilio" | "Parcial";
 }
 
 interface FormValues {
-  almacen_salida_id: number;
-  tipo_despacho: "EnTienda" | "Domicilio";
-  chofer_id?: string;
+  tipo_despacho: "EnTienda" | "Domicilio" | "Parcial";
+  quien_entrega?: "vendedor" | "almacen";
+  chofer_id?: string | number; // Puede ser string o number
+  fecha_programada?: Date;
+  hora_inicio?: string;
+  hora_fin?: string;
+  direccion_entrega?: string;
+  direccion?: string;
+  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4';
+  _cliente_direccion_1?: string;
+  _cliente_direccion_2?: string;
+  _cliente_direccion_3?: string;
+  _cliente_direccion_4?: string;
+  observaciones?: string;
+}
+
+interface DatosProgramacion {
+  chofer_id?: string | number;
   fecha_programada?: Date;
   hora_inicio?: string;
   hora_fin?: string;
   direccion_entrega?: string;
   observaciones?: string;
+  quien_entrega?: "vendedor" | "almacen";
 }
-
-type ProductoEntrega = {
-  id: number;
-  producto: string;
-  ubicacion: string;
-  total: number;
-  entregado: number;
-  pendiente: number;
-  entregar: number;
-  unidad_derivada_venta_id: number;
-};
 
 export default function ModalEntregarProductos({
   open,
   setOpen,
   venta,
+  tipoDespacho: tipoDespachoInicial,
 }: ModalEntregarProductosProps) {
   const [form] = Form.useForm<FormValues>();
-  const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const { user } = useAuth();
 
-  const [productosEntrega, setProductosEntrega] = useState<ProductoEntrega[]>(
-    []
-  );
-  const [tipoDespacho, setTipoDespacho] = useState<"EnTienda" | "Domicilio">(
-    "EnTienda"
+  const [tipoDespacho, setTipoDespacho] = useState<"EnTienda" | "Domicilio" | "Parcial">(
+    tipoDespachoInicial
   );
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
+  const [modalProductosOpen, setModalProductosOpen] = useState(false);
+  const [datosProgramacion, setDatosProgramacion] = useState<DatosProgramacion | undefined>();
+
+  // Actualizar tipoDespacho cuando cambia la prop
+  useEffect(() => {
+    setTipoDespacho(tipoDespachoInicial);
+  }, [tipoDespachoInicial]);
 
   const { crearEntrega, loading } = useCreateEntrega({
     onSuccess: () => {
+      setModalProductosOpen(false);
       setOpen(false);
       form.resetFields();
-      setProductosEntrega([]);
-      setTipoDespacho("EnTienda");
+      setDatosProgramacion(undefined);
     },
   });
 
+  // Inicializar formulario cuando se abre el modal
   useEffect(() => {
     if (open && venta) {
-      console.log('Venta recibida:', venta);
-      console.log('Productos por almacen:', venta.productos_por_almacen);
-      const productos: ProductoEntrega[] = [];
+      // Determinar la dirección correcta según direccion_seleccionada
+      let direccionInicial = '';
+      let seleccionInicial: 'D1' | 'D2' | 'D3' | 'D4' = 'D1';
       
-      if (venta.productos_por_almacen && Array.isArray(venta.productos_por_almacen)) {
-        venta.productos_por_almacen.forEach((productoAlmacen: any) => {
-          console.log('Producto almacen:', productoAlmacen);
-          if (productoAlmacen.unidades_derivadas && Array.isArray(productoAlmacen.unidades_derivadas)) {
-            productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-              console.log('Unidad derivada:', unidad);
-              const total = Number(unidad.cantidad);
-              // Si cantidad_pendiente es 0, null o undefined, usar la cantidad total
-              // Esto maneja ventas antiguas donde cantidad_pendiente no se inicializó correctamente
-              const cantidadPendienteRaw = Number(unidad.cantidad_pendiente);
-              const pendiente = cantidadPendienteRaw > 0 ? cantidadPendienteRaw : total;
-              const entregado = total - pendiente;
-
-              console.log(`Producto: ${productoAlmacen.producto_almacen?.producto?.name}, Total: ${total}, Pendiente: ${pendiente}`);
-
-              if (pendiente > 0) {
-                productos.push({
-                  id: productos.length + 1,
-                  producto: productoAlmacen.producto_almacen?.producto?.name || 'Sin nombre',
-                  ubicacion: "",
-                  total,
-                  entregado,
-                  pendiente,
-                  entregar: pendiente,
-                  unidad_derivada_venta_id: unidad.id,
-                });
-              }
-            });
-          }
-        });
-      }
-      
-      console.log('Productos finales:', productos);
-      setProductosEntrega(productos);
-      form.setFieldsValue({
-        almacen_salida_id: almacen_id,
-        tipo_despacho: "EnTienda",
-        direccion_entrega: venta.cliente?.direccion || "",
-      });
-    } else if (!open) {
-      setProductosEntrega([]);
-      form.resetFields();
-      setTipoDespacho("EnTienda");
-    }
-  }, [open, venta, almacen_id, form]);
-
-  const columnDefs: ColDef<ProductoEntrega>[] = [
-    {
-      headerName: "Producto",
-      field: "producto",
-      flex: 1,
-    },
-    {
-      headerName: "Ubicación",
-      field: "ubicacion",
-      width: 120,
-    },
-    {
-      headerName: "Total",
-      field: "total",
-      width: 100,
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-    },
-    {
-      headerName: "Entregado",
-      field: "entregado",
-      width: 120,
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-    },
-    {
-      headerName: "Pendiente",
-      field: "pendiente",
-      width: 120,
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-      cellStyle: { color: "#f59e0b", fontWeight: "bold" },
-    },
-    {
-      headerName: "Entregar",
-      field: "entregar",
-      width: 120,
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
-      cellEditorParams: {
-        min: 0,
-        max: (params: { data: ProductoEntrega }) => params.data.pendiente,
-        precision: 2,
-      },
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-      cellStyle: {
-        backgroundColor: "#f0fdf4",
-        color: "#000000",
-        fontWeight: "500",
-      },
-      cellClass: "ag-cell-editable",
-    },
-    {
-      headerName: "Eliminar",
-      width: 80,
-      cellRenderer: () => "❌",
-      onCellClicked: (params) => {
-        if (params.data) {
-          setProductosEntrega((prev) =>
-            prev.filter((p) => p.id !== params.data!.id)
-          );
+      if (venta.direccion_seleccionada) {
+        seleccionInicial = venta.direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4';
+        switch (venta.direccion_seleccionada) {
+          case 'D1':
+            direccionInicial = venta.cliente?.direccion || '';
+            break;
+          case 'D2':
+            direccionInicial = venta.cliente?.direccion_2 || '';
+            break;
+          case 'D3':
+            direccionInicial = venta.cliente?.direccion_3 || '';
+            break;
+          case 'D4':
+            direccionInicial = venta.cliente?.direccion_4 || '';
+            break;
+          default:
+            direccionInicial = venta.cliente?.direccion || '';
         }
-      },
-      cellStyle: {
-        cursor: "pointer",
-        textAlign: "center",
-        color: "#ef4444",
-      },
-    },
-  ];
+      } else {
+        // Si no hay direccion_seleccionada, usar la primera disponible
+        direccionInicial = venta.cliente?.direccion || '';
+      }
 
-  const handleConfirmarEntrega = () => {
-    const values = form.getFieldsValue();
+      form.setFieldsValue({
+        tipo_despacho: "EnTienda",
+        direccion_entrega: direccionInicial,
+        direccion: direccionInicial,
+        direccion_seleccionada: seleccionInicial,
+        // Campos ocultos con las direcciones del cliente
+        _cliente_direccion_1: venta.cliente?.direccion || '',
+        _cliente_direccion_2: venta.cliente?.direccion_2 || '',
+        _cliente_direccion_3: venta.cliente?.direccion_3 || '',
+        _cliente_direccion_4: venta.cliente?.direccion_4 || '',
+      });
+      
+      console.log('🔧 Formulario inicializado');
+      console.log('🔧 Valores iniciales:', form.getFieldsValue());
+    } else if (!open) {
+      form.resetFields();
+      setDatosProgramacion(undefined);
+    }
+  }, [open, venta, form]);
 
-    if (productosEntrega.length === 0) {
-      message.error("Debe haber al menos un producto para entregar");
-      return;
+  const handleContinuar = async () => {
+    try {
+      // Obtener valores primero
+      const values = form.getFieldsValue();
+      
+      console.log('📝 TODOS los valores del formulario:', values);
+      console.log('🚚 Chofer ID específico:', values.chofer_id);
+      console.log('📅 Fecha:', values.fecha_programada);
+      console.log('⏰ Hora Inicio:', values.hora_inicio);
+      console.log('⏰ Hora Fin:', values.hora_fin);
+      console.log('📍 Dirección:', values.direccion_entrega);
+
+      // Validaciones según tipo de despacho
+      if (tipoDespacho === "EnTienda") {
+        if (!values.quien_entrega) {
+          message.error("Debe seleccionar quién entrega");
+          return;
+        }
+      }
+
+      if (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") {
+        if (!values.chofer_id) {
+          console.error('❌ chofer_id está vacío o undefined');
+          message.error("Debe seleccionar un chofer");
+          return;
+        }
+        if (!values.fecha_programada) {
+          message.error("Debe seleccionar una fecha");
+          return;
+        }
+        if (!values.hora_inicio) {
+          message.error("Debe seleccionar hora de inicio");
+          return;
+        }
+        if (!values.hora_fin) {
+          message.error("Debe seleccionar hora de fin");
+          return;
+        }
+        if (!values.direccion_entrega) {
+          message.error("Debe ingresar una dirección");
+          return;
+        }
+      }
+
+      console.log('✅ Todas las validaciones pasaron');
+
+      // Guardar datos de programación
+      setDatosProgramacion({
+        chofer_id: values.chofer_id,
+        fecha_programada: values.fecha_programada,
+        hora_inicio: values.hora_inicio,
+        hora_fin: values.hora_fin,
+        direccion_entrega: values.direccion_entrega,
+        observaciones: values.observaciones,
+        quien_entrega: values.quien_entrega,
+      });
+
+      // Cerrar este modal y abrir el de productos
+      setOpen(false);
+      setModalProductosOpen(true);
+    } catch (error) {
+      console.error('❌ Error en handleContinuar:', error);
+      message.error("Ocurrió un error. Revise la consola.");
+    }
+  };
+
+  const handleConfirmarProductos = (data: {
+    almacen_salida_id: number;
+    productos: Array<{
+      unidad_derivada_venta_id: number;
+      cantidad_entregada: number;
+      ubicacion?: string;
+    }>;
+  }) => {
+    if (!venta || !user?.id || !datosProgramacion) return;
+
+    // Determinar tipo_entrega según el tipo de despacho
+    let tipo_entrega: TipoEntrega;
+    if (tipoDespacho === "EnTienda") {
+      tipo_entrega = TipoEntrega.RECOJO_EN_TIENDA;
+    } else if (tipoDespacho === "Parcial") {
+      tipo_entrega = TipoEntrega.PARCIAL;
+    } else {
+      tipo_entrega = TipoEntrega.DESPACHO;
     }
 
-    if (!venta || !user?.id) return;
+    // Determinar tipo_despacho
+    const tipo_despacho = tipoDespacho === "EnTienda" 
+      ? TipoDespacho.INMEDIATO 
+      : TipoDespacho.PROGRAMADO;
 
-    const productosConCantidad = productosEntrega.filter((p) => p.entregar > 0);
-
-    if (productosConCantidad.length === 0) {
-      message.error("Debe especificar cantidades a entregar");
-      return;
-    }
-
-    if (tipoDespacho === "Domicilio") {
-      if (!values.chofer_id) {
-        message.error("Debe seleccionar un chofer");
-        return;
-      }
-      if (!values.fecha_programada) {
-        message.error("Debe seleccionar una fecha");
-        return;
-      }
-      if (!values.direccion_entrega) {
-        message.error("Debe ingresar una dirección");
-        return;
-      }
-    }
+    // Determinar estado_entrega
+    const estado_entrega = tipoDespacho === "EnTienda" 
+      ? EstadoEntrega.ENTREGADO 
+      : EstadoEntrega.PENDIENTE;
 
     crearEntrega({
       venta_id: venta.id,
-      tipo_entrega: tipoDespacho === "EnTienda" ? TipoEntrega.RECOJO_EN_TIENDA : TipoEntrega.DESPACHO,
-      tipo_despacho: tipoDespacho === "Domicilio" ? TipoDespacho.PROGRAMADO : TipoDespacho.INMEDIATO,
-      estado_entrega: tipoDespacho === "EnTienda" ? EstadoEntrega.ENTREGADO : EstadoEntrega.PENDIENTE,
+      tipo_entrega,
+      tipo_despacho,
+      estado_entrega,
       fecha_entrega: dayjs().format('YYYY-MM-DD'),
-      fecha_programada: values.fecha_programada ? dayjs(values.fecha_programada).format('YYYY-MM-DD') : undefined,
-      hora_inicio: values.hora_inicio,
-      hora_fin: values.hora_fin,
-      direccion_entrega: values.direccion_entrega,
-      observaciones: values.observaciones,
-      almacen_salida_id: values.almacen_salida_id,
-      chofer_id: tipoDespacho === "Domicilio" && values.chofer_id ? values.chofer_id : undefined,
+      fecha_programada: datosProgramacion.fecha_programada ? dayjs(datosProgramacion.fecha_programada).format('YYYY-MM-DD') : undefined,
+      hora_inicio: datosProgramacion.hora_inicio,
+      hora_fin: datosProgramacion.hora_fin,
+      direccion_entrega: datosProgramacion.direccion_entrega,
+      observaciones: datosProgramacion.observaciones,
+      almacen_salida_id: data.almacen_salida_id,
+      chofer_id: (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") && datosProgramacion.chofer_id 
+        ? String(datosProgramacion.chofer_id) 
+        : undefined,
+      quien_entrega: tipoDespacho === "EnTienda" && datosProgramacion.quien_entrega ? datosProgramacion.quien_entrega as any : undefined,
       user_id: user.id,
-      productos_entregados: productosConCantidad.map((p) => ({
-        unidad_derivada_venta_id: p.unidad_derivada_venta_id,
-        cantidad_entregada: p.entregar,
-        ubicacion: p.ubicacion || undefined,
-      })),
+      productos_entregados: data.productos,
     });
+
+    // Cerrar modal de productos
+    setModalProductosOpen(false);
   };
 
   return (
@@ -252,7 +258,9 @@ export default function ModalEntregarProductos({
       <Modal
         title={
           <TitleForm className="!pb-0">
-            ENTREGAR PRODUCTOS
+            {tipoDespacho === "EnTienda" && "🏪 DESPACHO EN TIENDA"}
+            {tipoDespacho === "Domicilio" && "🚚 DESPACHO A DOMICILIO"}
+            {tipoDespacho === "Parcial" && "📦 DESPACHO PARCIAL"}
             {venta && (
               <div className="text-sm font-normal text-gray-600 mt-1">
                 FACTURA DE CLIENTE N° {venta.serie}-{venta.numero}
@@ -264,92 +272,78 @@ export default function ModalEntregarProductos({
         onCancel={() => {
           setOpen(false);
           form.resetFields();
-          setProductosEntrega([]);
-          setTipoDespacho("EnTienda");
+          setDatosProgramacion(undefined);
         }}
         width={900}
         centered
+        style={{ top: 20 }}
         footer={
           <div className="flex justify-end gap-2">
             <ButtonBase
               color="default"
               size="md"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                form.resetFields();
+                setDatosProgramacion(undefined);
+              }}
             >
               Cancelar
             </ButtonBase>
-            <PopoverOpcionesEntrega
-              form={form}
-              tipoDespacho={tipoDespacho}
-              setTipoDespacho={setTipoDespacho}
-              onConfirmar={handleConfirmarEntrega}
-              onEditarCliente={() => setModalEditarClienteOpen(true)}
-              direccion={form.getFieldValue("direccion_entrega")}
-              clienteNombre={
-                venta?.cliente?.razon_social ||
-                `${venta?.cliente?.nombres || ""} ${venta?.cliente?.apellidos || ""}`.trim()
-              }
-              loading={loading}
+            <ButtonBase
+              color="info"
+              size="md"
+              onClick={handleContinuar}
             >
-              <ButtonBase color="success" size="md" disabled={loading}>
-                {loading ? "Procesando..." : "Entregar"}
-              </ButtonBase>
-            </PopoverOpcionesEntrega>
+              Continuar →
+            </ButtonBase>
           </div>
         }
       >
         <Form form={form} layout="vertical">
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Locación de salida:
-              </label>
-              <SelectAlmacen
-                propsForm={{
-                  name: "almacen_salida_id",
-                  rules: [
-                    {
-                      required: true,
-                      message: "Seleccione un almacén",
-                    },
-                  ],
-                }}
-                className="w-full"
+            {/* Despacho en Tienda */}
+            {tipoDespacho === "EnTienda" && <FormDespachoEnTienda form={form} />}
+
+            {/* Despacho a Domicilio o Parcial */}
+            {(tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") && (
+              <FormDespachoDomicilio
                 form={form}
-              />
-            </div>
-
-            <div className="text-sm text-gray-600">
-              {productosEntrega.length} producto(s) seleccionado(s)
-            </div>
-
-            <div style={{ height: "350px" }}>
-              <TableWithTitle<ProductoEntrega>
-                id="productos-entrega"
-                title="Lista de productos"
-                selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
-                columnDefs={columnDefs}
-                rowData={productosEntrega}
-                onCellValueChanged={(params) => {
-                  setProductosEntrega((prev) =>
-                    prev.map((p) =>
-                      p.id === params.data.id
-                        ? { ...p, entregar: params.newValue }
-                        : p
-                    )
-                  );
+                tipoDespacho={tipoDespacho}
+                clienteNombre={
+                  venta?.cliente?.razon_social ||
+                  `${venta?.cliente?.nombres || ''} ${venta?.cliente?.apellidos || ''}`.trim()
+                }
+                clienteDirecciones={{
+                  direccion: venta?.cliente?.direccion,
+                  direccion_2: venta?.cliente?.direccion_2,
+                  direccion_3: venta?.cliente?.direccion_3,
+                  direccion_4: venta?.cliente?.direccion_4,
                 }}
+                direccionSeleccionada={venta?.direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined}
+                onEditarCliente={() => setModalEditarClienteOpen(true)}
               />
-            </div>
+            )}
           </div>
         </Form>
       </Modal>
 
+      <ModalSeleccionarProductosEntrega
+        open={modalProductosOpen}
+        setOpen={setModalProductosOpen}
+        venta={venta}
+        tipoDespacho={tipoDespacho}
+        datosProgramacion={datosProgramacion}
+        onConfirmar={handleConfirmarProductos}
+        loading={loading}
+      />
+
       <ModalCreateCliente
         open={modalEditarClienteOpen}
         setOpen={setModalEditarClienteOpen}
-        dataEdit={venta?.cliente as Cliente | undefined}
+        dataEdit={venta?.cliente}
         onSuccess={(cliente) => {
+          // Actualizar la dirección en el formulario si el usuario editó el cliente
           if (cliente.direccion) {
             form.setFieldValue("direccion_entrega", cliente.direccion);
           }

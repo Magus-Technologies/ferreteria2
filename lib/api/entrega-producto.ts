@@ -7,20 +7,27 @@ import { apiRequest, type ApiResponse } from '../api';
 // ============= ENUMS =============
 
 export enum TipoEntrega {
-  RECOJO_EN_TIENDA = 'rt',
-  DESPACHO = 'de',
+  RECOJO_EN_TIENDA = 'rt', // Recojo en Tienda
+  DESPACHO = 'de',         // Despacho a Domicilio
+  PARCIAL = 'pa',          // Despacho Parcial (parte en tienda, parte a domicilio)
 }
 
 export enum TipoDespacho {
-  INMEDIATO = 'in',
-  PROGRAMADO = 'pr',
+  INMEDIATO = 'in',   // Inmediato (en tienda)
+  PROGRAMADO = 'pr',  // Programado (a domicilio)
 }
 
 export enum EstadoEntrega {
-  PENDIENTE = 'pe',
-  EN_PROCESO = 'ep',
-  ENTREGADO = 'en',
-  CANCELADO = 'ca',
+  PENDIENTE = 'pe',   // Pendiente
+  EN_CAMINO = 'ec',   // En Camino
+  ENTREGADO = 'en',   // Entregado
+  CANCELADO = 'ca',   // Cancelado
+}
+
+export enum QuienEntrega {
+  VENDEDOR = 'vendedor',
+  ALMACEN = 'almacen',
+  CHOFER = 'chofer',
 }
 
 // ============= INTERFACES =============
@@ -44,6 +51,7 @@ export interface CreateEntregaProductoRequest {
   observaciones?: string;
   almacen_salida_id: number;
   chofer_id?: string;
+  quien_entrega?: QuienEntrega; // Nuevo: quién realiza la entrega física
   user_id: string;
   productos_entregados: ProductoEntregadoRequest[];
 }
@@ -60,11 +68,13 @@ export interface UpdateEntregaProductoRequest {
   observaciones?: string;
   almacen_salida_id?: number;
   chofer_id?: string;
+  quien_entrega?: QuienEntrega; // Nuevo: quién realiza la entrega física
 }
 
 export interface EntregaProductoFilters {
   venta_id?: string;
   almacen_salida_id?: number;
+  chofer_id?: string;
   estado_entrega?: EstadoEntrega;
   fecha_desde?: string;
   fecha_hasta?: string;

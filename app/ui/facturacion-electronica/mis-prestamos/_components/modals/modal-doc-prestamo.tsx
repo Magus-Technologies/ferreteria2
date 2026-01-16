@@ -29,17 +29,20 @@ export interface PrestamoResponse {
     direccion?: string | null
   } | null
   productos_por_almacen?: Array<{
-    producto_almacen: {
-      producto: {
+    producto_almacen?: {
+      producto?: {
         cod_producto: string | null
         name: string
       }
     }
-    unidades_derivadas: Array<{
+    unidades_derivadas?: Array<{
       cantidad: number | string
       costo?: number | string
       factor: number | string
-      unidad_derivada_inmutable: {
+      unidad_derivada_inmutable?: {
+        name: string
+      }
+      unidad_derivada?: {
         name: string
       }
     }>
@@ -131,7 +134,12 @@ function transformPrestamoData(prestamo: PrestamoResponse): PrestamoDataPDF {
   // Transformar productos_por_almacen a formato plano
   const productos: ProductoPrestamoPDF[] = prestamo.productos_por_almacen?.flatMap(
     (productoAlmacen) => {
-      return productoAlmacen.unidades_derivadas.map((ud) => {
+      // Validar que producto_almacen y producto existan
+      if (!productoAlmacen?.producto_almacen?.producto) {
+        return []
+      }
+
+      return productoAlmacen.unidades_derivadas?.map((ud) => {
         const cantidad = Number(ud.cantidad ?? 0)
         const factor = Number(ud.factor ?? 0)
         const costo = Number(ud.costo ?? 0)
@@ -140,14 +148,14 @@ function transformPrestamoData(prestamo: PrestamoResponse): PrestamoDataPDF {
         const importe = cantidad * factor * costo
 
         return {
-          codigo: productoAlmacen.producto_almacen.producto.cod_producto || '',
-          descripcion: productoAlmacen.producto_almacen.producto.name,
+          codigo: productoAlmacen.producto_almacen?.producto?.cod_producto || '',
+          descripcion: productoAlmacen.producto_almacen?.producto?.name || 'Sin nombre',
           cantidad: cantidad,
-          unidad: ud.unidad_derivada_inmutable.name,
+          unidad: ud.unidad_derivada_inmutable?.name || ud.unidad_derivada?.name || 'UND',
           costo: costo,
           importe: importe,
         }
-      })
+      }) || []
     }
   ) || []
 

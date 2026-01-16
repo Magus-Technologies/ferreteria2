@@ -24,6 +24,8 @@ export default function SelectChoferes({
   sizeIcon = 18,
   onChange,
   classIconSearch = '',
+  form,
+  propsForm,
   ...props
 }: SelectChoferesProps) {
   const selectChoferesRef = useRef<RefSelectBaseProps>(null)
@@ -36,6 +38,18 @@ export default function SelectChoferes({
   useEffect(() => {
     if (text) setTextDefault(text)
   }, [text])
+
+  // Sincronizar valor inicial del formulario
+  useEffect(() => {
+    if (form && propsForm?.name) {
+      const valorInicial = form.getFieldValue(propsForm.name as string);
+      console.log('🔄 Sincronizando valor inicial del formulario:', valorInicial);
+      if (valorInicial && !choferSeleccionado) {
+        // Si hay un valor pero no hay chofer seleccionado, necesitamos buscarlo
+        console.log('⚠️ Hay valor inicial pero no hay chofer seleccionado');
+      }
+    }
+  }, [form, propsForm, choferSeleccionado]);
 
   const [value] = useDebounce(text, 1000)
 
@@ -60,10 +74,24 @@ export default function SelectChoferes({
       const choferLabel = `${chofer.dni} : ${chofer.nombres} ${chofer.apellidos}`
       setText(choferLabel)
 
-      iterarChangeValue({
-        refObject: selectChoferesRef,
-        value: chofer.id,
-      })
+      console.log('🔍 handleSelect llamado con chofer:', chofer);
+      console.log('🔍 form disponible?:', !!form);
+      console.log('🔍 propsForm disponible?:', !!propsForm);
+      console.log('🔍 propsForm.name:', propsForm?.name);
+
+      // Si hay form y propsForm.name, actualizar directamente
+      if (form && propsForm?.name) {
+        console.log('✅ Actualizando chofer_id directamente en el form:', chofer.id);
+        form.setFieldValue(propsForm.name as string, chofer.id);
+      } else {
+        // Fallback al método anterior
+        console.log('⚠️ Usando iterarChangeValue (fallback)');
+        console.log('⚠️ Razón: form=', !!form, 'propsForm=', !!propsForm, 'name=', propsForm?.name);
+        iterarChangeValue({
+          refObject: selectChoferesRef,
+          value: chofer.id,
+        })
+      }
 
       setOpenModalChoferSearch(false)
       onChange?.(chofer.id, chofer)
@@ -122,7 +150,6 @@ export default function SelectChoferes({
         onKeyUp={e => {
           if (e.key === 'Enter') setOpenModalChoferSearch(true)
         }}
-        open={false}
         {...props}
       />
       <FaSearch
@@ -138,10 +165,18 @@ export default function SelectChoferes({
         onRowDoubleClicked={handleSelect}
         onSuccess={chofer => {
           setChoferCreado(chofer)
-          iterarChangeValue({
-            refObject: selectChoferesRef,
-            value: chofer.id,
-          })
+          
+          // Si hay form y propsForm.name, actualizar directamente
+          if (form && propsForm?.name) {
+            console.log('✅ Actualizando chofer creado directamente en el form:', chofer.id);
+            form.setFieldValue(propsForm.name as string, chofer.id);
+          } else {
+            // Fallback al método anterior
+            iterarChangeValue({
+              refObject: selectChoferesRef,
+              value: chofer.id,
+            })
+          }
         }}
       />
     </div>

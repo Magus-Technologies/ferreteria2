@@ -268,6 +268,7 @@ export const productosApi = {
 export { almacenesApi } from './api/almacen';
 export { productosApiV2 } from './api/producto';
 export { clienteApi } from './api/cliente';
+export { paqueteApi } from './api/paquete';
 
 // Exportar por defecto (mantener compatibilidad)
 const api = {

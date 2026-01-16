@@ -27,6 +27,7 @@ export enum QueryKeys {
   TIPO_CAMBIO = "TIPO_CAMBIO",
   COTIZACIONES = 'cotizaciones',
   PRESTAMOS = 'prestamos', 
+  PAQUETES = 'paquetes',
   EMPRESAS = 'empresas',
   UBIGEO = 'ubigeo',
 }

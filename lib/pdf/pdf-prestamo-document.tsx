@@ -256,8 +256,8 @@ export default function PDFPrestamoDocument({
   // Procesar productos del préstamo
   const productos = prestamo.productosPorAlmacen?.flatMap((pa) =>
     pa.unidadesDerivadas?.map((ud) => ({
-      codigo: pa.productoAlmacen?.producto?.codigo || "",
-      nombre: pa.productoAlmacen?.producto?.descripcion || "",
+      codigo: pa.productoAlmacen?.producto?.cod_producto || "",
+      nombre: pa.productoAlmacen?.producto?.name || "",
       marca: pa.productoAlmacen?.producto?.marca?.name || "N/A",
       unidad: ud.name,
       cantidad: Number(ud.cantidad),

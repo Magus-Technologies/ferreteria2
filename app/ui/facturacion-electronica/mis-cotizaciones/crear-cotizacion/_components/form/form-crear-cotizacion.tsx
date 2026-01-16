@@ -15,6 +15,8 @@ import { useEffect } from "react";
 import { useAuth } from "~/lib/auth-context";
 import { cotizacionesApi } from "~/lib/api/cotizaciones";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import { BsGeoAltFill } from "react-icons/bs";
+
 export default function FormCrearCotizacion({
   form,
 }: {
@@ -255,7 +257,8 @@ export default function FormCrearCotizacion({
               className: "!min-w-[300px] !w-[300px] !max-w-[300px]",
             }}
             placeholder="Dirección del cliente"
-            prefix={<span className="text-rose-700 mx-1">📍</span>}
+            prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
+           
           />
         </LabelBase>
         

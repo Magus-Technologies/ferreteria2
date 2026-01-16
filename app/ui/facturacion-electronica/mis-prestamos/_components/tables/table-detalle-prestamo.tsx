@@ -12,8 +12,6 @@ type DetalleCotizacion = {
   marca: string
   unidad_medida: string
   cantidad: number
-  // precio: number // Comentado: Solo se maneja por cantidad
-  // subtotal: number // Comentado: Solo se maneja por cantidad
 }
 
 export default function TableDetallePrestamo() {
@@ -21,26 +19,22 @@ export default function TableDetallePrestamo() {
     (state) => state.prestamo
   )
 
+  // Laravel devuelve snake_case, no camelCase
+  const productosPorAlmacen = (prestamoSeleccionada as any)?.productos_por_almacen
+
   const detalle: DetalleCotizacion[] =
-    prestamoSeleccionada?.productosPorAlmacen?.flatMap(productoAlmacen =>
-      productoAlmacen.unidadesDerivadas?.map(unidad => ({
-        codigo: productoAlmacen.productoAlmacen?.producto?.codigo || '',
-        descripcion: productoAlmacen.productoAlmacen?.producto?.descripcion || '',
-        marca: productoAlmacen.productoAlmacen?.producto?.marca?.name || 'N/A',
+    productosPorAlmacen?.flatMap((productoAlmacen: any) => {
+      const unidades = productoAlmacen.unidades_derivadas
+      const prodAlmacen = productoAlmacen.producto_almacen
+      
+      return unidades?.map((unidad: any) => ({
+        codigo: prodAlmacen?.producto?.cod_producto || '',
+        descripcion: prodAlmacen?.producto?.name || '',
+        marca: prodAlmacen?.producto?.marca?.name || 'N/A',
         unidad_medida: unidad.name || '',
         cantidad: Number(unidad.cantidad || 0),
-        // precio: Number(productoAlmacen.costo || 0), // Comentado: Solo se maneja por cantidad
-        // subtotal: // Comentado: Solo se maneja por cantidad
-        //   Number(unidad.cantidad || 0) *
-        //   Number(unidad.factor || 1) *
-        //   Number(productoAlmacen.costo || 0),
       })) || []
-    ) || []
-
-  // Comentado: Solo se maneja por cantidad
-  // const subtotal = detalle.reduce((sum: number, item: any) => sum + item.subtotal, 0)
-  // const totalDescuento = 0 // Por ahora 0, puedes agregar descuentos después
-  // const total = subtotal - totalDescuento
+    }) || []
 
   const columns: ColDef<DetalleCotizacion>[] = [
     {
@@ -70,19 +64,6 @@ export default function TableDetallePrestamo() {
       width: 80,
       valueFormatter: (params) => params.value?.toFixed(2),
     },
-    // Comentado: Solo se maneja por cantidad
-    // {
-    //   headerName: 'Precio',
-    //   field: 'precio',
-    //   width: 100,
-    //   valueFormatter: (params) => `S/. ${params.value?.toFixed(2)}`,
-    // },
-    // {
-    //   headerName: 'Subtotal',
-    //   field: 'subtotal',
-    //   width: 120,
-    //   valueFormatter: (params) => `S/. ${params.value?.toFixed(2)}`,
-    // },
   ]
 
   return (

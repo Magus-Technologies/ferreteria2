@@ -19,6 +19,7 @@ export interface VentaResponse {
   forma_de_pago?: string
   fecha_vencimiento?: string
   numero_guia?: string
+  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4' // Nueva: dirección seleccionada
   serie_documento?: {
     serie: string
   }
@@ -29,6 +30,10 @@ export interface VentaResponse {
     nombres?: string
     apellidos?: string
     direccion?: string
+    direccion_2?: string
+    direccion_3?: string
+    direccion_4?: string
+    telefono?: string
   } | null
   // Usuario/Vendedor
   user?: {
@@ -257,6 +262,32 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     razon_social: venta.cliente_nombre || 'CLIENTE VARIOS',
   }
 
+  // Determinar qué dirección usar según direccion_seleccionada
+  let direccionFinal = clienteData.direccion || ''
+  
+  if (venta.cliente && venta.direccion_seleccionada) {
+    switch (venta.direccion_seleccionada) {
+      case 'D1':
+        direccionFinal = venta.cliente.direccion || ''
+        break
+      case 'D2':
+        direccionFinal = venta.cliente.direccion_2 || ''
+        break
+      case 'D3':
+        direccionFinal = venta.cliente.direccion_3 || ''
+        break
+      case 'D4':
+        direccionFinal = venta.cliente.direccion_4 || ''
+        break
+    }
+  }
+
+  // Crear objeto cliente con la dirección correcta
+  const clienteConDireccionCorrecta = {
+    ...clienteData,
+    direccion: direccionFinal,
+  }
+
   // Transformar despliegue_de_pago_ventas a metodos_de_pago
   const metodos_de_pago = venta.despliegue_de_pago_ventas?.map((dp) => ({
     forma_de_pago: dp.despliegue_de_pago.name,
@@ -272,7 +303,7 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     fecha_vencimiento: venta.fecha_vencimiento,
     numero_guia: venta.numero_guia,
     vendedor: venta.user?.name,
-    cliente: clienteData,
+    cliente: clienteConDireccionCorrecta,
     productos,
     metodos_de_pago,
     subtotal,

@@ -227,6 +227,12 @@ export default function SelectProductos({
           const producto = response?.find((item) => item.id === value) as
             | getProductosResponseProps
             | undefined
+          
+          if (producto) {
+            // Ejecutar handleOnlyOneResult si existe
+            handleOnlyOneResult?.(producto)
+          }
+          
           onChange?.(value, producto)
         }}
         filterOption={false}
@@ -273,9 +279,20 @@ export default function SelectProductos({
         )}
         onKeyUp={(e) => {
           if (e.key === 'Enter') {
-            setTextDefault(text)
-            setOpenModalProductoSearch(true)
-            handleSearch()
+            if (withSearch) {
+              // Si withSearch está activo, abrir el modal de búsqueda
+              setTextDefault(text)
+              setOpenModalProductoSearch(true)
+              handleSearch()
+            } else {
+              // Si withSearch está desactivado, seleccionar el primer resultado
+              if (response && response.length > 0) {
+                const primerProducto = response[0]
+                handleOnlyOneResult?.(primerProducto)
+                onChange?.(primerProducto.id, primerProducto)
+                setText('') // Limpiar el texto después de seleccionar
+              }
+            }
           }
         }}
         open={false}
@@ -291,21 +308,23 @@ export default function SelectProductos({
           }}
         />
       )}
-      <ModalProductoSearch
-        open={openModalProductoSearch}
-        setOpen={setOpenModalProductoSearch}
-        textDefault={textDefault}
-        setTextDefault={setTextDefault}
-        onRowDoubleClicked={handleSelect}
-        tipoBusqueda={tipoBusqueda}
-        setTipoBusqueda={setTipoBusqueda}
-        showCardAgregarProducto={showCardAgregarProducto}
-        showCardAgregarProductoVenta={showCardAgregarProductoVenta}
-        showCardAgregarProductoCotizacion={showCardAgregarProductoCotizacion}
-        showCardAgregarProductoPrestamo={showCardAgregarProductoPrestamo}
-        showUltimasCompras={showUltimasCompras}
-        selectionColor={colorSeleccion}
-      />
+      {withSearch && (
+        <ModalProductoSearch
+          open={openModalProductoSearch}
+          setOpen={setOpenModalProductoSearch}
+          textDefault={textDefault}
+          setTextDefault={setTextDefault}
+          onRowDoubleClicked={handleSelect}
+          tipoBusqueda={tipoBusqueda}
+          setTipoBusqueda={setTipoBusqueda}
+          showCardAgregarProducto={showCardAgregarProducto}
+          showCardAgregarProductoVenta={showCardAgregarProductoVenta}
+          showCardAgregarProductoCotizacion={showCardAgregarProductoCotizacion}
+          showCardAgregarProductoPrestamo={showCardAgregarProductoPrestamo}
+          showUltimasCompras={showUltimasCompras}
+          selectionColor={colorSeleccion}
+        />
+      )}
       {showButtonCreate && (
         <ButtonCreateProductoPlus
           onSuccess={(res) => {

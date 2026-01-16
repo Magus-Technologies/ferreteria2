@@ -1,24 +1,15 @@
-import { create } from "zustand";
+import { create } from 'zustand'
+import type { PrestamoFilters } from '~/lib/api/prestamo'
 
-// TODO: Reemplazar con Prisma.CotizacionWhereInput cuando se cree el modelo
-type PrestamoWhereInput = {
-  almacen_id?: number;
-  cliente_id?: number;
-  fecha?: {
-    gte?: Date;
-    lte?: Date;
-  };
-  numero?: string;
-  [key: string]: unknown;
-};
+type UseStoreFiltrosMisPrestamosProps = {
+  filtros?: PrestamoFilters
+  setFiltros: (filtros: PrestamoFilters) => void
+}
 
-type UseStoreFiltrosMisPrestamos = {
-  filtros: PrestamoWhereInput;
-  setFiltros: (filtros: PrestamoWhereInput) => void;
-};
-
-export const useStoreFiltrosMisCotizaciones =
-  create<UseStoreFiltrosMisPrestamos>((set) => ({
-    filtros: {},
-    setFiltros: (filtros) => set({ filtros }),
-  }));
+export const useStoreFiltrosMisPrestamos =
+  create<UseStoreFiltrosMisPrestamosProps>(set => {
+    return {
+      filtros: undefined,
+      setFiltros: filtros => set({ filtros }),
+    }
+  })

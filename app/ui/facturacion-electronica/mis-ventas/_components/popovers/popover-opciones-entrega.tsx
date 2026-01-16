@@ -18,8 +18,8 @@ const MapaDireccion = dynamic(
 interface PopoverOpcionesEntregaProps {
   children: ReactNode
   form: FormInstance
-  tipoDespacho: 'EnTienda' | 'Domicilio'
-  setTipoDespacho: (tipo: 'EnTienda' | 'Domicilio') => void
+  tipoDespacho: 'EnTienda' | 'Domicilio' | 'Parcial'
+  setTipoDespacho: (tipo: 'EnTienda' | 'Domicilio' | 'Parcial') => void
   onConfirmar: () => void
   onEditarCliente: () => void
   direccion?: string
@@ -67,12 +67,38 @@ export default function PopoverOpcionesEntrega({
               value: 'Domicilio',
               label: '🚚 Despacho a Domicilio (Programar)',
             },
+            {
+              value: 'Parcial',
+              label: '📦 Despacho Parcial (Parte ahora, parte después)',
+            },
           ]}
         />
       </div>
 
+      {/* Campos para Despacho en Tienda */}
+      {tipoDespacho === 'EnTienda' && (
+        <div className="space-y-2 border-t pt-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              ¿Quién entrega? <span className="text-red-500">*</span>
+            </label>
+            <Select
+              placeholder="Seleccionar"
+              size="small"
+              value={form.getFieldValue('quien_entrega')}
+              onChange={(value) => form.setFieldValue('quien_entrega', value)}
+              options={[
+                { value: 'vendedor', label: '👤 Vendedor' },
+                { value: 'almacen', label: '📦 Almacén' },
+              ]}
+              className="w-full"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Campos para Despacho a Domicilio */}
-      {tipoDespacho === 'Domicilio' && (
+      {(tipoDespacho === 'Domicilio' || tipoDespacho === 'Parcial') && (
         <div className="space-y-2 border-t pt-2">
           {/* Fila 1: Chofer y Fecha */}
           <div className="grid grid-cols-2 gap-2">
@@ -266,8 +292,10 @@ export default function PopoverOpcionesEntrega({
           {loading
             ? 'Procesando...'
             : tipoDespacho === 'EnTienda'
-            ? 'Entregar'
-            : 'Programar'}
+            ? 'Entregar Ahora'
+            : tipoDespacho === 'Parcial'
+            ? 'Entregar Parcial'
+            : 'Programar Entrega'}
         </ButtonBase>
       </div>
     </div>

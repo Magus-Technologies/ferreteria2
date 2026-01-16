@@ -68,6 +68,8 @@ export default function useCreateVenta() {
 
   const handleSubmit = useCallback(async (values: FormCreateVenta) => {
     console.log('🚀 ~ handleSubmit ~ values:', values)
+    console.log('🔍 DEBUG - direccion_seleccionada:', values.direccion_seleccionada)
+    console.log('🔍 DEBUG - direccion:', values.direccion)
 
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
@@ -87,11 +89,13 @@ export default function useCreateVenta() {
       _cliente_direccion_3,
       _cliente_direccion_4,
       direccion,
-      direccion_seleccionada,
+      direccion_seleccionada, // ✅ Ahora SÍ se usará
       ruc_dni,
       telefono,
       ...restValues
     } = values
+    
+
     
     if (!productos || productos.length === 0)
       return notification.error({
@@ -185,6 +189,8 @@ export default function useCreateVenta() {
       estado_de_venta: estadoVenta as EstadoDeVenta,
       // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
       cliente_id: clienteIdFinal,
+      // ✅ Enviar dirección seleccionada (D1, D2, D3 o D4)
+      direccion_seleccionada: direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,
@@ -196,6 +202,7 @@ export default function useCreateVenta() {
     }
 
     console.log('📤 Datos a enviar a Laravel:', JSON.stringify(dataFormated, null, 2))
+    console.log('🔍 dataFormated.direccion_seleccionada:', dataFormated.direccion_seleccionada)
     console.log('🔍 forma_de_pago:', restValues.forma_de_pago, 'tipo:', typeof restValues.forma_de_pago)
     
     setLoading(true)

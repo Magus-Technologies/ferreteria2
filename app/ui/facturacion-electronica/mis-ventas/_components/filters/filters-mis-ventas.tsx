@@ -23,7 +23,9 @@ import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import ModalEntregarProductos from "../modals/modal-entregar-productos";
+import ModalSeleccionarTipoDespacho from "../modals/modal-seleccionar-tipo-despacho";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
+import ModalCalendarioEntregas from "../modals/modal-calendario-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
 
 interface ValuesFiltersMisVentas {
@@ -41,8 +43,11 @@ interface ValuesFiltersMisVentas {
 
 export default function FiltersMisVentas() {
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
+  const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false);
   const [modalEntregarOpen, setModalEntregarOpen] = useState(false);
+  const [tipoDespachoSeleccionado, setTipoDespachoSeleccionado] = useState<'EnTienda' | 'Domicilio' | 'Parcial'>('EnTienda');
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
+  const [modalCalendarioOpen, setModalCalendarioOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>(''); // Nuevo: guardar texto de búsqueda
 
@@ -341,11 +346,11 @@ export default function FiltersMisVentas() {
               size="md"
               type="button"
               className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
-              onClick={() => ventaSeleccionada && setModalEntregarOpen(true)}
+              onClick={() => ventaSeleccionada && setModalSeleccionarTipoOpen(true)}
               disabled={!ventaSeleccionada}
             >
               <FaTruckFast />
-              Entregar Productos
+              Entregar
             </ButtonBase>
           </div>
           <div className="col-span-2 flex items-center gap-2">
@@ -359,6 +364,18 @@ export default function FiltersMisVentas() {
             >
               <FaTruckFast />
               Ver Entregas
+            </ButtonBase>
+          </div>
+          <div className="col-span-2 flex items-center gap-2">
+            <ButtonBase
+              color="success"
+              size="md"
+              type="button"
+              className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
+              onClick={() => setModalCalendarioOpen(true)}
+            >
+              <FaCalendar />
+              Ver Calendario
             </ButtonBase>
           </div>
         </div>
@@ -521,16 +538,32 @@ export default function FiltersMisVentas() {
         </div>
       </Drawer>
 
+      <ModalSeleccionarTipoDespacho
+        open={modalSeleccionarTipoOpen}
+        setOpen={setModalSeleccionarTipoOpen}
+        onSelectTipo={(tipo) => {
+          setTipoDespachoSeleccionado(tipo);
+          setModalEntregarOpen(true);
+        }}
+        ventaNumero={ventaSeleccionada ? `${ventaSeleccionada.serie}-${ventaSeleccionada.numero}` : undefined}
+      />
+
       <ModalEntregarProductos
         open={modalEntregarOpen}
         setOpen={setModalEntregarOpen}
         venta={ventaSeleccionada}
+        tipoDespacho={tipoDespachoSeleccionado}
       />
 
       <ModalVerEntregas
         open={modalVerEntregasOpen}
         setOpen={setModalVerEntregasOpen}
         venta={ventaSeleccionada}
+      />
+
+      <ModalCalendarioEntregas
+        open={modalCalendarioOpen}
+        setOpen={setModalCalendarioOpen}
       />
     </FormBase>
   );

@@ -2,8 +2,9 @@
 
 import { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
-import { FaPrint } from "react-icons/fa";
+import { FaFilePdf } from "react-icons/fa6";
 import { Prestamo, TipoOperacion, EstadoPrestamo } from "~/lib/api/prestamo";
+import ButtonBase from "~/components/buttons/button-base";
 
 export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
   return [
@@ -93,35 +94,32 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       width: 120,
     },
     {
-      headerName: "Monto Total",
+      headerName: "Cant. Total",
       field: "monto_total",
-      width: 120,
+      width: 110,
       valueFormatter: (params) => {
-        const moneda = params.data?.tipo_moneda === 'd' ? '$' : 'S/.';
         const value = Number(params.value);
-        return `${moneda} ${isNaN(value) ? "0.00" : value.toFixed(2)}`;
+        return isNaN(value) ? "0" : value.toFixed(0);
       },
       cellStyle: { fontWeight: "bold", color: "#1e40af" },
     },
     {
-      headerName: "Pagado",
+      headerName: "Devuelto",
       field: "monto_pagado",
-      width: 110,
+      width: 100,
       valueFormatter: (params) => {
-        const moneda = params.data?.tipo_moneda === 'd' ? '$' : 'S/.';
         const value = Number(params.value);
-        return `${moneda} ${isNaN(value) ? "0.00" : value.toFixed(2)}`;
+        return isNaN(value) ? "0" : value.toFixed(0);
       },
       cellStyle: { fontWeight: "bold", color: "#059669" },
     },
     {
       headerName: "Pendiente",
       field: "monto_pendiente",
-      width: 110,
+      width: 100,
       valueFormatter: (params) => {
-        const moneda = params.data?.tipo_moneda === 'd' ? '$' : 'S/.';
         const value = Number(params.value);
-        return `${moneda} ${isNaN(value) ? "0.00" : value.toFixed(2)}`;
+        return isNaN(value) ? "0" : value.toFixed(0);
       },
       cellStyle: { fontWeight: "bold", color: "#dc2626" },
     },
@@ -140,28 +138,38 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       valueFormatter: (params) => {
         const estado = params.value;
         if (estado === EstadoPrestamo.PENDIENTE) return 'PENDIENTE';
-        if (estado === EstadoPrestamo.PAGADO_PARCIAL) return 'PAGADO PARCIAL';
-        if (estado === EstadoPrestamo.PAGADO_TOTAL) return 'PAGADO TOTAL';
+        if (estado === EstadoPrestamo.PAGADO_PARCIAL) return 'DEVUELTO PARCIAL';
+        if (estado === EstadoPrestamo.PAGADO_TOTAL) return 'DEVUELTO TOTAL';
         if (estado === EstadoPrestamo.VENCIDO) return 'VENCIDO';
         return estado;
       }
     },
     {
       headerName: "Acciones",
-      width: 120,
+      width: 100,
       pinned: "right",
       cellRenderer: (params: { data: Prestamo }) => {
         return (
-          <div className="flex items-center gap-2 h-full">
-            <button
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              justifyContent: "center",
+              height: "100%",
+              alignItems: "center",
+            }}
+          >
+            <ButtonBase
+              color="danger"
+              size="md"
               onClick={() => {
                 window.open(`/api/pdf/prestamo/${params.data.id}`, '_blank');
               }}
-              className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded transition-colors"
-              title="Imprimir PDF"
+              className="flex items-center !px-3"
+              title="Ver PDF"
             >
-              <FaPrint />
-            </button>
+              <FaFilePdf />
+            </ButtonBase>
           </div>
         );
       },

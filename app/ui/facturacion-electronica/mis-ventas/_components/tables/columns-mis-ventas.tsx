@@ -41,13 +41,15 @@ export function useColumnsMisVentas() {
       headerName: "Cliente",
       colId: "cliente_nombre",
       field: "cliente.razon_social",
-      width: 300,
+      width: 350,
       valueGetter: (params) => {
         const cliente = params.data?.cliente;
         if (!cliente) return "CLIENTES VARIOS";
-        return (
-          cliente.razon_social || `${cliente.nombres} ${cliente.apellidos}`
-        );
+        
+        const nombre = cliente.razon_social || `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim();
+        const documento = cliente.numero_documento || '';
+        
+        return documento ? `${documento} - ${nombre}` : nombre;
       },
     },
     {
