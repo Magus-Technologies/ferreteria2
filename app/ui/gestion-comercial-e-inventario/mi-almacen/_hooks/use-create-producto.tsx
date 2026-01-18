@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useStoreEditOrCopyProducto } from '../_store/store-edit-or-copy-producto'
 import { useStoreFiltrosProductos } from '../_store/store-filtros-productos'
 import { productosApiV2 } from '~/lib/api/producto'
+import { getAuthToken } from '~/lib/api'
 
 export default function useCreateProducto({
   setOpen,
@@ -28,14 +29,8 @@ export default function useCreateProducto({
   const { notification } = App.useApp()
 
   const img_file = useStoreArchivosProducto(state => state.img_file)
-  const ficha_tecnica_file = useStoreArchivosProducto(
-    state => state.ficha_tecnica_file
-  )
-
-  const setImgFile = useStoreArchivosProducto(state => state.setImgFile)
-  const setFichaTecnicaFile = useStoreArchivosProducto(
-    state => state.setFichaTecnicaFile
-  )
+  const ficha_tecnica_file = useStoreArchivosProducto(state => state.ficha_tecnica_file)
+  const resetArchivos = useStoreArchivosProducto(state => state.resetArchivos)
 
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
@@ -62,47 +57,55 @@ export default function useCreateProducto({
         return
       }
 
-      // Upload de archivos (igual que antes)
-      const formData = new FormData()
+      // Upload de archivos a Laravel (solo archivos nuevos)
+      if (img_file || ficha_tecnica_file) {
+        const formData = new FormData()
 
-      if (img_file) formData.append('img_file', img_file)
-      if (producto?.img && producto?.id)
-        formData.append('img_prev', producto.img)
+        if (img_file) formData.append('img_file', img_file)
+        if (ficha_tecnica_file) formData.append('ficha_tecnica_file', ficha_tecnica_file)
 
-      if (ficha_tecnica_file)
-        formData.append('ficha_tecnica_file', ficha_tecnica_file)
-      if (producto?.ficha_tecnica && producto?.id)
-        formData.append('ficha_tecnica_prev', producto.ficha_tecnica)
+        setUploading(true)
+        try {
+          const token = getAuthToken()
+          const uploadRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/productos/${res.data!.id}/upload-files`,
+            {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Accept': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` }),
+              },
+            }
+          )
 
-      formData.append('cod_producto', res.data!.cod_producto!)
+          if (!uploadRes.ok) {
+            const errorData = await uploadRes.json().catch(() => ({}))
+            throw new Error(errorData.message || 'Error al subir el archivo')
+          }
 
-      setUploading(true)
-      try {
-        const uploadRes = await fetch('/api/producto', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include', // Incluir cookies de sesión
-        })
-
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Error al subir el archivo')
+          notification.success({
+            message: producto?.id ? 'Producto editado' : 'Producto creado',
+            description: producto?.id
+              ? 'Producto editado correctamente'
+              : 'Producto creado correctamente',
+          })
+        } catch (error) {
+          console.error('Error al subir archivos:', error)
+          notification.warning({
+            message: producto?.id ? 'Producto editado' : 'Producto creado',
+            description: 'Error al subir la imagen y/o ficha técnica',
+          })
+        } finally {
+          setUploading(false)
         }
-
+      } else {
         notification.success({
           message: producto?.id ? 'Producto editado' : 'Producto creado',
           description: producto?.id
             ? 'Producto editado correctamente'
             : 'Producto creado correctamente',
         })
-      } catch (error) {
-        console.error('Error al subir archivos:', error)
-        notification.warning({
-          message: producto?.id ? 'Producto editado' : 'Producto creado',
-          description: 'Error al subir la imagen y/o ficha técnica',
-        })
-      } finally {
-        setUploading(false)
       }
 
       // Invalidar todas las queries de productos
@@ -115,8 +118,7 @@ export default function useCreateProducto({
 
       setOpen(false)
       form.resetFields()
-      setImgFile(undefined)
-      setFichaTecnicaFile(undefined)
+      resetArchivos()
       setProducto(undefined)
       setFiltros(prev => ({
         ...prev,

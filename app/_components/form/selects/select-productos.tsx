@@ -290,7 +290,7 @@ export default function SelectProductos({
                 const primerProducto = response[0]
                 handleOnlyOneResult?.(primerProducto)
                 onChange?.(primerProducto.id, primerProducto)
-                setText('') // Limpiar el texto después de seleccionar
+                // setText('') 
               }
             }
           }

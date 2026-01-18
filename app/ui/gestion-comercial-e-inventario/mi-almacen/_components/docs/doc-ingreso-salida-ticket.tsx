@@ -63,22 +63,20 @@ export default function DocIngresoSalidaTicket({
     tipo_documento: data?.tipo_documento || TipoDocumento.Ingreso,
   })
 
-  colDefs.find(col => col.headerName === 'Código')!.width = 40
-  colDefs.find(col => col.headerName === 'Código')!.minWidth = 40
-  colDefs.find(col => col.headerName === 'Cantidad')!.width = 40
-  colDefs.find(col => col.headerName === 'Cantidad')!.minWidth = 40
-  colDefs.find(col => col.headerName === 'Unidad Derivada')!.flex = 1
+  colDefs.find(col => col.headerName === 'Código')!.width = 35
+  colDefs.find(col => col.headerName === 'Código')!.minWidth = 35
+  colDefs.find(col => col.headerName === 'Cantidad')!.width = 30
+  colDefs.find(col => col.headerName === 'Cantidad')!.minWidth = 30
+  colDefs.find(col => col.headerName === 'Unidad Derivada')!.width = 40
+  colDefs.find(col => col.headerName === 'Unidad Derivada')!.minWidth = 40
+  colDefs.find(col => col.headerName === 'Unidad Derivada')!.flex = undefined
+  colDefs.find(col => col.headerName === 'Producto')!.flex = 1
+  colDefs.find(col => col.headerName === 'Stock Anterior')!.width = 35
+  colDefs.find(col => col.headerName === 'Stock Anterior')!.minWidth = 35
+  colDefs.find(col => col.headerName === 'Stock Nuevo')!.width = 35
+  colDefs.find(col => col.headerName === 'Stock Nuevo')!.minWidth = 35
   colDefs.find(col => col.headerName === 'Costo')!.width = 35
   colDefs.find(col => col.headerName === 'Costo')!.minWidth = 35
-
-  const i_stock_anterior = colDefs.findIndex(
-    col => col.headerName === 'Stock Anterior'
-  )
-  colDefs.splice(i_stock_anterior, 1)
-  const i_stock_nuevo = colDefs.findIndex(
-    col => col.headerName === 'Stock Nuevo'
-  )
-  colDefs.splice(i_stock_nuevo, 1)
 
   return (
     <DocGeneralTicket

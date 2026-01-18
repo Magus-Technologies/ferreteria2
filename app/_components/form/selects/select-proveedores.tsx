@@ -78,7 +78,6 @@ export default function SelectProveedores({
   }, [text, lastSelectedDocument, showOnlyDocument, props.form])
 
   function handleSelect({ data }: { data?: Proveedor } = {}) {
-    setText('')
     const proveedor = data || proveedorSeleccionadoStore
     if (proveedor) {
       setProveedorSeleccionado(proveedor)
@@ -87,6 +86,8 @@ export default function SelectProveedores({
       if (showOnlyDocument && proveedor.ruc) {
         setLastSelectedDocument(proveedor.ruc)
         setText(proveedor.ruc)
+      } else {
+        setText('')
       }
       
       iterarChangeValue({
@@ -105,7 +106,8 @@ export default function SelectProveedores({
 
   useEffect(() => {
     // Autoseleccionar si hay exactamente 1 resultado
-    if (response && response.length === 1 && value) {
+    // PERO NO si el modal de búsqueda está abierto
+    if (response && response.length === 1 && value && !openModalProveedorSearch) {
       const proveedor = response[0]
       // Autoseleccionar SOLO si el valor debounced coincide exactamente con el RUC
       if (proveedor.ruc === value.trim()) {

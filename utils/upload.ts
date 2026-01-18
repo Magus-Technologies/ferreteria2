@@ -40,3 +40,23 @@ export async function urlToFile(url: string): Promise<File> {
   const filename = url.split('/').pop() || 'file'
   return new File([blob], filename, { type: blob.type })
 }
+
+/**
+ * Construye la URL completa de storage de Laravel
+ * @param path - Ruta relativa del archivo (ej: "productos/imgs/abc.jpg")
+ * @returns URL completa (ej: "http://localhost:8000/storage/productos/imgs/abc.jpg")
+ */
+export function getStorageUrl(path: string | null | undefined): string | null {
+  if (!path) return null
+
+  // Si ya es una URL completa, devolverla tal cual
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+  // Remover '/api' del final para obtener la URL base
+  const baseUrl = apiUrl.replace(/\/api$/, '')
+
+  return `${baseUrl}/storage/${path}`
+}

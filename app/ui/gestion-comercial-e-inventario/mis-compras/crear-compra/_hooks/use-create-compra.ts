@@ -183,9 +183,38 @@ export default function useCreateCompra({
 
       return result.data!.data
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
       message.success(`Compra ${compra ? 'editada' : 'creada'} exitosamente`)
+
+      // Actualizar caché de productos para bloquear botón eliminar
+      const productosCompradosIds = variables.productos.map((p) => p.producto_id)
+      const uniqueProductoIds = [...new Set(productosCompradosIds)]
+
+      queryClient.setQueriesData(
+        {
+          predicate: (query) =>
+            query.queryKey[0] === 'productos-by-almacen' ||
+            query.queryKey[0] === 'productos-search',
+        },
+        (oldData: any) => {
+          if (!oldData?.data) return oldData
+
+          return {
+            ...oldData,
+            data: oldData.data.map((producto: any) => {
+              if (uniqueProductoIds.includes(producto.id)) {
+                return {
+                  ...producto,
+                  tiene_ingresos: true, // Bloquear botón eliminar inmediatamente
+                }
+              }
+              return producto
+            }),
+          }
+        }
+      )
+
       router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
     },
     onError: (error: Error) => {

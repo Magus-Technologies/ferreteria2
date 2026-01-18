@@ -93,13 +93,25 @@ export default function useColumnTypes() {
       ),
     },
     link: {
-      cellRenderer: (params: { value: string }) => (
-        <div className='h-full flex items-center'>
-          <a href={params.value} target='_blank' rel='noreferrer'>
-            {params.value}
-          </a>
-        </div>
-      ),
+      cellRenderer: (params: ICellRendererParams) => {
+        const { column, value } = params
+        const colDef = column!.getColDef()
+        let formatted: string
+
+        if (typeof colDef.valueFormatter === 'function')
+          formatted = colDef.valueFormatter(params as ValueFormatterParams)
+        else formatted = value
+
+        if (!formatted) return null
+
+        return (
+          <div className='h-full flex items-center'>
+            <a href={formatted} target='_blank' rel='noreferrer' className='text-cyan-600 hover:underline truncate'>
+              {formatted}
+            </a>
+          </div>
+        )
+      },
     },
     percent: {
       cellRenderer: (params: ICellRendererParams) => {

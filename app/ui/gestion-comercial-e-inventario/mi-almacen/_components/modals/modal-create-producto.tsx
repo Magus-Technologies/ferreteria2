@@ -14,7 +14,7 @@ import { useStoreArchivosProducto } from '../../_store/store-archivos-producto'
 import useCreateProducto from '../../_hooks/use-create-producto'
 import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
 import { useEffect } from 'react'
-import { urlToFile } from '~/utils/upload'
+import { getStorageUrl } from '~/utils/upload'
 import { useStoreCodigoAutomatico } from '../../_store/store-codigo-automatico'
 import { useStoreAlmacen } from '~/store/store-almacen'
 
@@ -77,10 +77,9 @@ export default function ModalCreateProducto({
     onSuccess,
   })
 
-  const setImgFile = useStoreArchivosProducto(state => state.setImgFile)
-  const setFichaTecnicaFile = useStoreArchivosProducto(
-    state => state.setFichaTecnicaFile
-  )
+  const resetArchivos = useStoreArchivosProducto(state => state.resetArchivos)
+  const setImgUrlExistente = useStoreArchivosProducto(state => state.setImgUrlExistente)
+  const setFichaTecnicaUrlExistente = useStoreArchivosProducto(state => state.setFichaTecnicaUrlExistente)
 
   const setDisabled = useStoreCodigoAutomatico(state => state.setDisabled)
 
@@ -92,17 +91,19 @@ export default function ModalCreateProducto({
     
     if (producto) {
       if (producto.cod_producto) setDisabled(false)
-      if (producto.img)
-        urlToFile(producto.img).then(file => {
-          setImgFile(file)
-        })
-      else setImgFile(undefined)
 
-      if (producto.ficha_tecnica)
-        urlToFile(producto.ficha_tecnica).then(file => {
-          setFichaTecnicaFile(file)
-        })
-      else setFichaTecnicaFile(undefined)
+      // Guardar URLs existentes para preview (no descargar como File)
+      if (producto.img) {
+        setImgUrlExistente(getStorageUrl(producto.img) || undefined)
+      } else {
+        setImgUrlExistente(undefined)
+      }
+
+      if (producto.ficha_tecnica) {
+        setFichaTecnicaUrlExistente(getStorageUrl(producto.ficha_tecnica) || undefined)
+      } else {
+        setFichaTecnicaUrlExistente(undefined)
+      }
 
       const { estado, producto_en_almacenes, cod_producto, ...restProducto } =
         producto
@@ -177,8 +178,7 @@ export default function ModalCreateProducto({
         okText: producto?.id ? 'Editar' : 'Crear',
       }}
       onCancel={() => {
-        setImgFile(undefined)
-        setFichaTecnicaFile(undefined)
+        resetArchivos()
         setProducto(undefined)
         setDisabled(true)
         setTextDefault?.('')

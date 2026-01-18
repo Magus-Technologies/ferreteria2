@@ -9,6 +9,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import { BsGeoAltFill } from 'react-icons/bs'
 import { FaMobileButton } from 'react-icons/fa6'
 import type { Proveedor } from '~/lib/api/proveedor'
+import { proveedorApi } from '~/lib/api/proveedor'
 
 export default function FormCreateProveedor({
   form,
@@ -29,10 +30,42 @@ export default function FormCreateProveedor({
             prefix={<FaAddressCard className='text-rose-700 mx-1' />}
             propsForm={{
               name: 'ruc',
+              validateTrigger: 'onBlur',
               rules: [
                 {
                   required: true,
                   message: 'Por favor, ingresa el RUC',
+                },
+                {
+                  validator: (_, value) => {
+                    if (!value || value.length === 11) {
+                      return Promise.resolve()
+                    }
+                    return Promise.reject(
+                      new Error('El RUC debe tener 11 caracteres')
+                    )
+                  },
+                },
+                {
+                  validator: async (_, value) => {
+                    if (!value || value.length !== 11) {
+                      return Promise.resolve()
+                    }
+
+                    // Verificar si el RUC ya existe
+                    const response = await proveedorApi.checkDocumento(
+                      value,
+                      dataEdit?.id // Excluir el ID actual si estamos editando
+                    )
+
+                    if (response.data?.exists) {
+                      return Promise.reject(
+                        new Error('Este RUC ya existe')
+                      )
+                    }
+
+                    return Promise.resolve()
+                  },
                 },
               ],
             }}

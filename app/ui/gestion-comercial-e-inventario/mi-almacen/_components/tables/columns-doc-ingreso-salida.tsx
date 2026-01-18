@@ -92,6 +92,11 @@ export function useColumnsDocIngresoSalida({
         data: UnidadDerivadaConProducto | undefined
         value: UnidadDerivadaConProducto['historial']
       }) => {
+        // Si no hay historial, mostrar "-"
+        if (!value || !Array.isArray(value) || value.length === 0) {
+          return '-'
+        }
+
         const historial = getHistorial({
           historial: value,
           estado,
@@ -99,11 +104,15 @@ export function useColumnsDocIngresoSalida({
         })
 
         const unidades_contenidas = Number(
-          data?.producto_almacen_ingreso_salida.producto_almacen.producto
-            .unidades_contenidas
+          data?.producto_almacen_ingreso_salida?.producto_almacen?.producto
+            ?.unidades_contenidas ?? 1
         )
+
+        const stockAnterior = Number(historial?.stock_anterior ?? 0)
+        if (isNaN(stockAnterior)) return '-'
+
         return getStock({
-          stock_fraccion: Number(historial.stock_anterior),
+          stock_fraccion: stockAnterior,
           unidades_contenidas,
         }).stock
       },
@@ -121,6 +130,11 @@ export function useColumnsDocIngresoSalida({
         data: UnidadDerivadaConProducto | undefined
         value: UnidadDerivadaConProducto['historial']
       }) => {
+        // Si no hay historial, mostrar "-"
+        if (!value || !Array.isArray(value) || value.length === 0) {
+          return '-'
+        }
+
         const historial = getHistorial({
           historial: value,
           estado,
@@ -128,11 +142,15 @@ export function useColumnsDocIngresoSalida({
         })
 
         const unidades_contenidas = Number(
-          data?.producto_almacen_ingreso_salida.producto_almacen.producto
-            .unidades_contenidas
+          data?.producto_almacen_ingreso_salida?.producto_almacen?.producto
+            ?.unidades_contenidas ?? 1
         )
+
+        const stockNuevo = Number(historial?.stock_nuevo ?? 0)
+        if (isNaN(stockNuevo)) return '-'
+
         return getStock({
-          stock_fraccion: Number(historial.stock_nuevo),
+          stock_fraccion: stockNuevo,
           unidades_contenidas,
         }).stock
       },
@@ -168,12 +186,17 @@ export function getHistorial({
   historial: {
     stock_anterior: Prisma.Decimal
     stock_nuevo: Prisma.Decimal
-  }[]
+  }[] | undefined | null
   estado: boolean
   salida?: boolean
 }) {
-  const stock_anterior = Number(historial[0].stock_anterior)
-  const stock_nuevo = Number(historial[0].stock_nuevo)
+  // Validar que historial existe y tiene elementos
+  if (!historial || historial.length === 0) {
+    return { stock_anterior: 0, stock_nuevo: 0 }
+  }
+
+  const stock_anterior = Number(historial[0]?.stock_anterior ?? 0)
+  const stock_nuevo = Number(historial[0]?.stock_nuevo ?? 0)
   let index = 0
   if (!salida) {
     if (
@@ -189,5 +212,5 @@ export function getHistorial({
       index = 1
   }
 
-  return historial[index]
+  return historial[index] ?? { stock_anterior: 0, stock_nuevo: 0 }
 }

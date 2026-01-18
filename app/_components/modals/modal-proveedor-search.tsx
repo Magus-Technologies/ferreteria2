@@ -59,7 +59,6 @@ export default function ModalProveedorSearch({
       }}
       onCancel={() => {
         setOpen(false)
-        setText('')
       }}
       maskClosable={false}
       keyboard={false}

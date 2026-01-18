@@ -1,24 +1,24 @@
 "use client";
 
-import { FormInstance, Form, Select, InputNumber } from "antd";
+import { FormInstance, Form } from "antd";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
 import {
   TipoOperacion,
   TipoEntidad,
-  TipoMoneda,
-  TipoInteres,
 } from "~/lib/api/prestamo";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import TextareaBase from "~/app/_components/form/inputs/textarea-base";
 import LabelBase from "~/components/form/label-base";
-import { FaCalendar } from "react-icons/fa6";
+import { FaCalendar, FaClipboardList, FaShieldAlt } from "react-icons/fa";
+import { MdCategory } from "react-icons/md";
 import dayjs from "dayjs";
 import { useEffect } from "react";
 import { useAuth } from "~/lib/auth-context";
 import { prestamoApi } from "~/lib/api/prestamo";
 import { useStoreProductoAgregadoPrestamo } from "../../_store/store-producto-agregado-prestamo";
 import FormSeccionCliente from "~/app/_components/form/form-seccion-cliente";
+import SelectBase from "~/app/_components/form/selects/select-base";
 
 export default function FormCrearPrestamo({
   form,
@@ -75,7 +75,7 @@ export default function FormCrearPrestamo({
               rules: [{ required: true, message: "Requerido" }],
             }}
             className="!w-[150px]"
-            prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
+            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
           />
         </LabelBase>
 
@@ -87,47 +87,47 @@ export default function FormCrearPrestamo({
               rules: [{ required: true, message: "Requerido" }],
             }}
             className="!w-[150px]"
-            prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
+            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
           />
         </LabelBase>
 
         <LabelBase label="Operación:" classNames={{ labelParent: "mb-6" }}>
-          <Form.Item
-            name="tipo_operacion"
-            initialValue={TipoOperacion.PRESTAR}
-            rules={[{ required: true }]}
-          >
-            <Select
-              className="!w-[170px]"
-              onChange={(value) => setTipoOperacion(value as TipoOperacion)}
-              options={[
-                { value: TipoOperacion.PRESTAR, label: "PRESTAR" },
-                {
-                  value: TipoOperacion.PEDIR_PRESTADO,
-                  label: "PEDIR PRESTADO",
-                },
-              ]}
-            />
-          </Form.Item>
+          <SelectBase
+            propsForm={{
+              name: "tipo_operacion",
+              initialValue: TipoOperacion.PRESTAR,
+              rules: [{ required: true }],
+            }}
+            className="!w-[170px]"
+            onChange={(value) => setTipoOperacion(value as TipoOperacion)}
+            prefix={<FaClipboardList size={15} className="text-rose-700 mx-1" />}
+            options={[
+              { value: TipoOperacion.PRESTAR, label: "PRESTAR" },
+              {
+                value: TipoOperacion.PEDIR_PRESTADO,
+                label: "PEDIR PRESTADO",
+              },
+            ]}
+          />
         </LabelBase>
 
         <LabelBase label="Tipo:" classNames={{ labelParent: "mb-6" }}>
-          <Form.Item
-            name="tipo_entidad"
-            initialValue={TipoEntidad.CLIENTE}
-            rules={[{ required: true }]}
-          >
-            <Select
-              className="!w-[150px]"
-              onChange={(value) => setTipoEntidad(value as TipoEntidad)}
-              options={[
-                { value: TipoEntidad.CLIENTE, label: "CLIENTE" },
-                { value: TipoEntidad.PROVEEDOR, label: "PROVEEDOR" },
-              ]}
-            />
-          </Form.Item>
+          <SelectBase
+            propsForm={{
+              name: "tipo_entidad",
+              initialValue: TipoEntidad.CLIENTE,
+              rules: [{ required: true }],
+            }}
+            className="!w-[150px]"
+            onChange={(value) => setTipoEntidad(value as TipoEntidad)}
+            prefix={<MdCategory size={15} className="text-rose-700 mx-1" />}
+            options={[
+              { value: TipoEntidad.CLIENTE, label: "CLIENTE" },
+              { value: TipoEntidad.PROVEEDOR, label: "PROVEEDOR" },
+            ]}
+          />
         </LabelBase>
-
+{/* 
         <LabelBase label="Moneda:" classNames={{ labelParent: "mb-6" }}>
           <Form.Item
             name="tipo_moneda"
@@ -142,7 +142,7 @@ export default function FormCrearPrestamo({
               ]}
             />
           </Form.Item>
-        </LabelBase>
+        </LabelBase> */}
       </div>
 
       {/* Fila 2: DNI/RUC, Cliente/Proveedor, Dirección, Radio */}
@@ -174,36 +174,12 @@ export default function FormCrearPrestamo({
             propsForm={{ name: "garantia" }}
             className="w-full"
             placeholder="Ej: DNI 12345678, Taladro Bosch, etc."
+            prefix={<FaShieldAlt size={15} className="text-cyan-600 mx-1" />}
           />
         </LabelBase>
       </div>
 
-      {/*
-      // CAMPOS DE INTERÉS - Comentados porque los préstamos son solo de mercadería
-      // Descomentar si en el futuro se necesitan préstamos con intereses
-      <div className="flex flex-wrap gap-4">
-        <LabelBase label="Tasa Interés (%):" classNames={{ labelParent: "mb-6" }}>
-          <Form.Item name="tasa_interes">
-            <InputNumber className="!w-[120px]" min={0} max={100} step={0.1} precision={2} placeholder="0.00" />
-          </Form.Item>
-        </LabelBase>
-        <LabelBase label="Tipo Interés:" classNames={{ labelParent: "mb-6" }}>
-          <Form.Item name="tipo_interes">
-            <Select className="!w-[150px]" placeholder="Seleccionar" allowClear
-              options={[
-                { value: TipoInteres.SIMPLE, label: "SIMPLE" },
-                { value: TipoInteres.COMPUESTO, label: "COMPUESTO" },
-              ]}
-            />
-          </Form.Item>
-        </LabelBase>
-        <LabelBase label="Días Gracia:" classNames={{ labelParent: "mb-6" }}>
-          <Form.Item name="dias_gracia" initialValue={0}>
-            <InputNumber className="!w-[120px]" min={0} placeholder="0" />
-          </Form.Item>
-        </LabelBase>
-      </div>
-      */}
+    
 
       {/* Fila 4: Observaciones */}
       <div className="flex gap-4">

@@ -17,6 +17,7 @@ import ProductoOtrosAlmacenes from "../others/producto-otros-almacenes";
 import { SiAdblock } from "react-icons/si";
 import { getStock, GetStock } from "~/app/_utils/get-stock";
 import type { Producto } from "~/app/_types/producto";
+import { getStorageUrl } from "~/utils/upload";
 import {
   productoEditOrCopy,
   useStoreEditOrCopyProducto,
@@ -66,9 +67,9 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
               content={
                 data?.img ? (
                   <img
-                    src={data.img}
-                    alt="Logo"
-                    className="max-w-72 wax-h-72"
+                    src={getStorageUrl(data.img) || ''}
+                    alt="Imagen del producto"
+                    className="max-w-72 max-h-72"
                   />
                 ) : (
                   "No hay Imagen"
@@ -285,6 +286,9 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       width: 250,
       filter: true,
       type: "link",
+      valueFormatter: ({ value }: ValueFormatterParams<Producto, string>) => {
+        return getStorageUrl(value) || '';
+      },
     },
     {
       headerName: "Ruta Ficha Técnica",
@@ -292,6 +296,9 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       width: 250,
       filter: true,
       type: "link",
+      valueFormatter: ({ value }: ValueFormatterParams<Producto, string>) => {
+        return getStorageUrl(value) || '';
+      },
     },
     {
       headerName: "Acciones",
@@ -315,8 +322,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
               msgSuccess: "Producto eliminado correctamente",
               queryKey: [QueryKeys.PRODUCTOS_BY_ALMACEN],
               disabled: tieneIngresos,
-              disabledTooltip: tieneIngresos 
-                ? "No se puede eliminar porque el producto tiene movimientos de inventario (ingresos/salidas)"
+              disabledTooltip: tieneIngresos
+                ? "No se puede eliminar porque el producto tiene movimientos (ingresos/salidas, ventas o compras)"
                 : undefined,
             }}
             onEdit={() => {

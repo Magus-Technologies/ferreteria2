@@ -18,12 +18,12 @@ export default function useGetProveedores({ value }: { value: string }) {
 
       return result.data?.data || []
     },
-    // Solo ejecutar la query si hay al menos 2 caracteres
-    enabled: value.length >= 2,
+    // Siempre ejecutar la query para mostrar proveedores inicialmente
+    enabled: true,
   })
 
   return {
-    response: value.length >= 2 ? (data || []) : [],
+    response: data || [],
     refetch,
     loading: isLoading,
   }

@@ -159,4 +159,15 @@ export const proveedorApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Verificar si un RUC ya existe
+   */
+  checkDocumento: async (ruc: string, excludeId?: number): Promise<ApiResponse<{ exists: boolean }>> => {
+    const params = new URLSearchParams({ ruc });
+    if (excludeId) {
+      params.append('exclude_id', String(excludeId));
+    }
+    return apiRequest<{ exists: boolean }>(`/proveedores/check-documento?${params}`);
+  },
 };

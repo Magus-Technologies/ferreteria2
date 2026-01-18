@@ -129,7 +129,8 @@ export default function ModalEntregarProductos({
       console.log('🔧 Valores iniciales:', form.getFieldsValue());
     } else if (!open) {
       form.resetFields();
-      setDatosProgramacion(undefined);
+      // NO resetear datosProgramacion aquí porque puede estar en transición al modal de productos
+      // Solo se resetea cuando el usuario cancela explícitamente
     }
   }, [open, venta, form]);
 
@@ -191,8 +192,10 @@ export default function ModalEntregarProductos({
       });
 
       // Cerrar este modal y abrir el de productos
+      console.log('🔄 Cerrando modal actual y abriendo modal de productos...');
       setOpen(false);
       setModalProductosOpen(true);
+      console.log('✅ modalProductosOpen ahora debería ser true');
     } catch (error) {
       console.error('❌ Error en handleContinuar:', error);
       message.error("Ocurrió un error. Revise la consola.");
@@ -207,7 +210,12 @@ export default function ModalEntregarProductos({
       ubicacion?: string;
     }>;
   }) => {
-    if (!venta || !user?.id || !datosProgramacion) return;
+    console.log('🎯 handleConfirmarProductos llamado con data:', data);
+    console.log('🔍 venta:', !!venta, 'user?.id:', user?.id, 'datosProgramacion:', datosProgramacion);
+    if (!venta || !user?.id || !datosProgramacion) {
+      console.error('❌ Faltan datos requeridos - venta:', !!venta, 'user?.id:', user?.id, 'datosProgramacion:', !!datosProgramacion);
+      return;
+    }
 
     // Determinar tipo_entrega según el tipo de despacho
     let tipo_entrega: TipoEntrega;

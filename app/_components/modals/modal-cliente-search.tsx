@@ -59,7 +59,7 @@ export default function ModalClienteSearch({
       }}
       onCancel={() => {
         setOpen(false)
-        setText('')
+        // setText('')
       }}
       maskClosable={false}
       keyboard={false}

@@ -118,7 +118,7 @@ export default function ModalVerEntregas({
                       {entrega.chofer && (
                         <div>
                           <span className="font-medium">Chofer:</span>{" "}
-                          {entrega.chofer.name}
+                          {entrega.chofer.nombres} {entrega.chofer.apellidos}
                         </div>
                       )}
                       {entrega.fecha_programada && (
@@ -145,18 +145,18 @@ export default function ModalVerEntregas({
                   <div className="border-t pt-3">
                     <div className="font-medium mb-2">Productos entregados:</div>
                     <div className="space-y-1">
-                      {entrega.productos_entregados.map((detalle: any, idx: number) => (
+                      {entrega.productos_entregados?.map((detalle: any, idx: number) => (
                         <div
                           key={idx}
                           className="flex justify-between text-sm bg-white p-2 rounded"
                         >
                           <span>
-                            {detalle.unidad_derivada_venta.producto_almacen_venta
-                              .producto_almacen.producto.name}
+                            {detalle.unidad_derivada_venta?.producto_almacen_venta
+                              ?.producto_almacen?.producto?.name || 'Producto'}
                           </span>
                           <span className="font-medium">
                             {Number(detalle.cantidad_entregada).toFixed(2)}{" "}
-                            {detalle.unidad_derivada_venta.unidad_derivada_inmutable.name}
+                            {detalle.unidad_derivada_venta?.unidad_derivada_inmutable?.name || 'UND'}
                           </span>
                         </div>
                       ))}

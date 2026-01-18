@@ -174,7 +174,7 @@ export default function FormSeccionCliente({
                 rules: required ? [{ required: true, message: "Selecciona un cliente" }] : undefined,
               }}
               className="w-full"
-              classNameIcon={`${iconColor} mx-1`}
+               classNameIcon="text-rose-700 mx-1"
               placeholder="DNI/RUC"
               onChange={handleClienteChange}
             />

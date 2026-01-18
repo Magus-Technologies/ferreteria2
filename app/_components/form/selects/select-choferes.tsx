@@ -117,6 +117,8 @@ export default function SelectChoferes({
     <div className='flex items-center gap-4 w-full'>
       <SelectBase
         ref={selectChoferesRef}
+        form={form}
+        propsForm={propsForm}
         showSearch
         uppercase={true}
         filterOption={false}
