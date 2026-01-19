@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { message } from 'antd'
 import { cajaApi, type AperturaYCierreCaja } from '~/lib/api/caja'
+import { authApi } from '~/lib/api'
 import { AperturarCajaFormValues } from '../_components/modals/modal-aperturar-caja'
 
 export default function useAperturarCaja({
@@ -9,11 +10,28 @@ export default function useAperturarCaja({
   onSuccess?: (data: AperturaYCierreCaja) => void
 }) {
   const [loading, setLoading] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Obtener el usuario actual al montar el componente
+    const fetchUser = async () => {
+      try {
+        const response = await authApi.getUser()
+        if (response.data?.id) {
+          setUserId(response.data.id)
+        }
+      } catch (error) {
+        console.error('Error al obtener usuario:', error)
+      }
+    }
+    fetchUser()
+  }, [])
 
   async function crearAperturarCaja(values: AperturarCajaFormValues) {
     setLoading(true)
     try {
       const response = await cajaApi.aperturar({
+        caja_principal_id: values.caja_principal_id,
         monto_apertura: values.monto_apertura,
       })
 
@@ -23,7 +41,7 @@ export default function useAperturarCaja({
       }
 
       if (response.data?.data) {
-        message.success('Apertura de caja creada exitosamente')
+        message.success('Caja aperturada exitosamente')
         onSuccess?.(response.data.data)
       }
     } catch (error) {
@@ -37,5 +55,6 @@ export default function useAperturarCaja({
   return {
     crearAperturarCaja,
     loading,
+    userId,
   }
 }

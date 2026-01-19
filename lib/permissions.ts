@@ -116,6 +116,25 @@ export enum permissions {
   CAJA_UPDATE = 'caja.update',
   CAJA_DELETE = 'caja.delete',
 
+  // Caja Principal
+  CAJA_PRINCIPAL_BASE = 'caja-principal',
+  CAJA_PRINCIPAL_LISTADO = 'caja-principal.listado',
+  CAJA_PRINCIPAL_CREATE = 'caja-principal.create',
+  CAJA_PRINCIPAL_UPDATE = 'caja-principal.update',
+  CAJA_PRINCIPAL_DELETE = 'caja-principal.delete',
+
+  // Sub Caja
+  SUB_CAJA_BASE = 'sub-caja',
+  SUB_CAJA_LISTADO = 'sub-caja.listado',
+  SUB_CAJA_CREATE = 'sub-caja.create',
+  SUB_CAJA_UPDATE = 'sub-caja.update',
+  SUB_CAJA_DELETE = 'sub-caja.delete',
+
+  // Transacción Caja
+  TRANSACCION_CAJA_BASE = 'transaccion-caja',
+  TRANSACCION_CAJA_LISTADO = 'transaccion-caja.listado',
+  TRANSACCION_CAJA_CREATE = 'transaccion-caja.create',
+
   // Egresos Dinero
   EGRESO_DINERO_BASE = 'egreso-dinero',
   EGRESO_DINERO_LISTADO = 'egreso-dinero.listado',
@@ -177,6 +196,9 @@ type PermisosValidos = Exclude<
   | permissions.COMPRAS_BASE
   | permissions.RECEPCION_ALMACEN_BASE
   | permissions.CAJA_BASE
+  | permissions.CAJA_PRINCIPAL_BASE
+  | permissions.SUB_CAJA_BASE
+  | permissions.TRANSACCION_CAJA_BASE
   | permissions.EGRESO_DINERO_BASE
   | permissions.DESPLIEGUE_DE_PAGO_BASE
   | permissions.VENTA_BASE
@@ -278,6 +300,19 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.CAJA_CREATE]: 'Aperturar Caja',
   [permissions.CAJA_UPDATE]: 'Cerrar Caja',
   [permissions.CAJA_DELETE]: 'Eliminar Caja',
+
+  [permissions.CAJA_PRINCIPAL_LISTADO]: 'Ver Listado de Cajas Principales',
+  [permissions.CAJA_PRINCIPAL_CREATE]: 'Crear Caja Principal',
+  [permissions.CAJA_PRINCIPAL_UPDATE]: 'Actualizar Caja Principal',
+  [permissions.CAJA_PRINCIPAL_DELETE]: 'Eliminar Caja Principal',
+
+  [permissions.SUB_CAJA_LISTADO]: 'Ver Listado de Sub-Cajas',
+  [permissions.SUB_CAJA_CREATE]: 'Crear Sub-Caja',
+  [permissions.SUB_CAJA_UPDATE]: 'Actualizar Sub-Caja',
+  [permissions.SUB_CAJA_DELETE]: 'Eliminar Sub-Caja',
+
+  [permissions.TRANSACCION_CAJA_LISTADO]: 'Ver Listado de Transacciones de Caja',
+  [permissions.TRANSACCION_CAJA_CREATE]: 'Crear Transacción de Caja',
 
   [permissions.EGRESO_DINERO_LISTADO]: 'Ver Listado de Egresos Dinero',
   [permissions.EGRESO_DINERO_CREATE]: 'Crear Egreso Dinero',

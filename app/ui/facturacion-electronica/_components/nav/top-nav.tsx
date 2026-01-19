@@ -9,14 +9,20 @@ import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 import { useState } from "react";
 import ModalAperturarCaja from "../modals/modal-aperturar-caja";
+import ModalCrearIngreso from "../modals/modal-crear-ingreso";
+import ModalCrearGasto from "../modals/modal-crear-gasto";
 import useItemsFinanzas from "../../_hooks/use-items-finanzas";
 import useItemsVentas from "../../_hooks/use-items-ventas";
 
 export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
+  const [openCrearIngreso, setOpenCrearIngreso] = useState(false);
+  const [openCrearGasto, setOpenCrearGasto] = useState(false);
 
   const { itemsFinanzas } = useItemsFinanzas({
     setOpenAperturaCaja,
+    setOpenCrearIngreso,
+    setOpenCrearGasto,
   });
   const { itemsVentas } = useItemsVentas();
 
@@ -43,6 +49,14 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalAperturarCaja
         open={openAperturaCaja}
         setOpen={setOpenAperturaCaja}
+      />
+      <ModalCrearIngreso
+        open={openCrearIngreso}
+        setOpen={setOpenCrearIngreso}
+      />
+      <ModalCrearGasto
+        open={openCrearGasto}
+        setOpen={setOpenCrearGasto}
       />
       <DropdownBase menu={{ items: itemsFinanzas }}>
         <ButtonNav withIcon={false} colorActive="text-amber-600">
