@@ -12,8 +12,15 @@ import {
   ModuleRegistry,
   TabStyleParams,
   ValueGetterParams,
+  ColumnMovedEvent,
+  ColumnResizedEvent,
+  ColumnVisibleEvent,
+  GridReadyEvent,
+  FirstDataRenderedEvent,
+  ColDef,
+  GridApi,
 } from "ag-grid-community";
-import { RefObject, useMemo } from "react";
+import { RefObject, useMemo, useCallback, useRef, useEffect } from "react";
 import useColumnTypes from "./hooks/use-column-types";
 import { usePathname } from "next/navigation";
 
@@ -43,43 +50,182 @@ export interface TableBaseProps<T>
   >;
   rowSelection?: boolean;
   withNumberColumn?: boolean;
-  selectionColor?: string; // Color para la fila seleccionada
-  headerColor?: string; // Color para el header de la tabla
+  selectionColor?: string;
+  headerColor?: string;
+  persistColumnState?: boolean;
+  tableKey?: string;
 }
 
 export default function TableBase<T>({
   ref,
   paramsOfThemeTable,
   className = "",
-  rowSelection = true, // Volver a true para que funcione el resaltado
+  rowSelection = true,
   columnDefs,
   withNumberColumn = true,
-  selectionColor = "#005f78", // Color por defecto (azul)
-  headerColor, // Color del header (opcional)
+  selectionColor = "#005f78",
+  headerColor,
+  persistColumnState = true,
+  tableKey,
   ...props
 }: TableBaseProps<T>) {
   const { columnTypes } = useColumnTypes();
   const pathname = usePathname();
+  const gridApiRef = useRef<GridApi | null>(null);
+  const columnStateRef = useRef<any>(null);
+  const isApplyingStateRef = useRef(false);
+  const hasAppliedInitialStateRef = useRef(false);
   
   // Generar un ID único para esta instancia de tabla
   const tableId = useMemo(() => generateTableId(), []);
 
+  // Generar clave de localStorage basada en la ruta o tableKey
+  const storageKey = useMemo(() => {
+    if (tableKey) return `ag-grid-state-${tableKey}`;
+    if (pathname) return `ag-grid-state-${pathname.replace(/\//g, '-')}`;
+    return `ag-grid-state-${tableId}`;
+  }, [tableKey, pathname, tableId]);
+
   // Detectar automáticamente el color del header según la ruta
   const autoHeaderColor = headerColor || (() => {
     if (pathname?.includes('facturacion-electronica')) {
-      return 'var(--color-amber-600)'; // Naranja/ámbar para facturación
+      return 'var(--color-amber-600)';
     }
     if (pathname?.includes('gestion-comercial-e-inventario')) {
-      return 'var(--color-emerald-600)'; // Verde esmeralda para gestión comercial
+      return 'var(--color-emerald-600)';
     }
-    return 'var(--color-slate-600)'; // Gris por defecto
+    return 'var(--color-slate-600)';
   })();
+
+  // Cargar estado guardado al inicio
+  useEffect(() => {
+    if (persistColumnState) {
+      try {
+        const savedState = localStorage.getItem(storageKey);
+        if (savedState) {
+          columnStateRef.current = JSON.parse(savedState);
+        }
+      } catch (error) {
+        console.error('Error cargando estado:', error);
+      }
+    }
+  }, [persistColumnState, storageKey]);
+
+  // Guardar estado de columnas
+  const saveColumnState = useCallback(() => {
+    if (!persistColumnState || !gridApiRef.current || isApplyingStateRef.current) return;
+    
+    try {
+      const state = gridApiRef.current.getColumnState();
+      columnStateRef.current = state;
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch (error) {
+      console.error('Error guardando estado:', error);
+    }
+  }, [persistColumnState, storageKey]);
+
+  // Aplicar estado guardado
+  const applyColumnState = useCallback(() => {
+    if (!columnStateRef.current || !gridApiRef.current || isApplyingStateRef.current) return;
+    
+    isApplyingStateRef.current = true;
+    
+    try {
+      gridApiRef.current.applyColumnState({ 
+        state: columnStateRef.current, 
+        applyOrder: true 
+      });
+      hasAppliedInitialStateRef.current = true;
+    } catch (error) {
+      console.error('Error aplicando estado:', error);
+    } finally {
+      setTimeout(() => {
+        isApplyingStateRef.current = false;
+      }, 100);
+    }
+  }, []);
+
+  // Manejar cuando la grilla está lista
+  const onGridReady = useCallback((event: GridReadyEvent) => {
+    gridApiRef.current = event.api;
+    hasAppliedInitialStateRef.current = false;
+    props.onGridReady?.(event);
+  }, [props]);
+
+  // Manejar cuando se renderizan los primeros datos
+  const onFirstDataRendered = useCallback((event: FirstDataRenderedEvent) => {
+    if (!hasAppliedInitialStateRef.current && columnStateRef.current) {
+      setTimeout(() => {
+        applyColumnState();
+      }, 100); // Aumentado a 100ms para dar más tiempo
+    }
+    props.onFirstDataRendered?.(event);
+  }, [applyColumnState, props]);
+
+  // Manejar cuando se mueve una columna
+  const onColumnMoved = useCallback((event: ColumnMovedEvent) => {
+    if (event.finished && !isApplyingStateRef.current) {
+      saveColumnState();
+    }
+    props.onColumnMoved?.(event);
+  }, [saveColumnState, props]);
+
+  // Manejar cuando se redimensiona una columna
+  const onColumnResized = useCallback((event: ColumnResizedEvent) => {
+    if (event.finished && !isApplyingStateRef.current) {
+      saveColumnState();
+    }
+    props.onColumnResized?.(event);
+  }, [saveColumnState, props]);
+
+  // Manejar cuando se oculta/muestra una columna
+  const onColumnVisible = useCallback((event: ColumnVisibleEvent) => {
+    if (!isApplyingStateRef.current) {
+      saveColumnState();
+    }
+    props.onColumnVisible?.(event);
+  }, [saveColumnState, props]);
+
+  // Aplicar estado cuando cambian los datos
+  useEffect(() => {
+    if (hasAppliedInitialStateRef.current && gridApiRef.current && columnStateRef.current) {
+      // Solo reaplicar si realmente hay datos
+      if (!props.rowData || (Array.isArray(props.rowData) && props.rowData.length === 0)) {
+        return;
+      }
+      
+      const timeoutId = setTimeout(() => {
+        applyColumnState();
+      }, 200); // Aumentado a 200ms
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [props.rowData, applyColumnState]);
+
+  // Memoizar columnDefs
+  const memoizedColumnDefs = useMemo<ColDef<T>[]>(() => [
+    ...(withNumberColumn
+      ? [
+          {
+            headerName: "#",
+            colId: "#",
+            width: props.rowDragManaged ? 65 : 50,
+            valueGetter: (params: ValueGetterParams<T>) =>
+              (params.node?.rowIndex ?? 0) + 1,
+            type: "numberColumn",
+            rowDrag: props.rowDragManaged,
+            suppressNavigable: true,
+            lockPosition: 'left' as const,
+          },
+        ]
+      : []),
+    ...(columnDefs ?? []),
+  ], [withNumberColumn, props.rowDragManaged, columnDefs]);
 
   return (
     <>
       <style>
         {`
-      /* Estilos específicos para esta tabla usando su ID único */
       #${tableId} .ag-selection-checkbox,
       #${tableId} .ag-checkbox,
       #${tableId} .ag-checkbox-input-wrapper,
@@ -107,7 +253,6 @@ export default function TableBase<T>({
         outline: none !important;
       }
       
-      /* Estilos para fila seleccionada - ESPECÍFICOS PARA ESTA TABLA */
       #${tableId} .ag-row-selected,
       #${tableId} .ag-row.ag-row-selected,
       #${tableId}.ag-theme-quartz .ag-row-selected,
@@ -149,7 +294,7 @@ export default function TableBase<T>({
         ref={ref}
         theme={themeTable.withParams({
           ...paramsOfThemeTable,
-          headerBackgroundColor: autoHeaderColor, // Usar el color detectado automáticamente
+          headerBackgroundColor: autoHeaderColor,
         })}
         columnTypes={columnTypes}
         localeText={AG_GRID_LOCALE_ES}
@@ -157,43 +302,24 @@ export default function TableBase<T>({
         className={`shadow-lg rounded-xl overflow-hidden ${className}`}
         rowSelection={rowSelection ? { 
           mode: "singleRow",
-          checkboxes: false, // Ocultar checkboxes
-          enableClickSelection: true // Permitir selección con click
+          checkboxes: false,
+          enableClickSelection: true
         } : undefined}
-        // Scroll infinito sin paginación (desactivada por defecto)
         pagination={props.pagination ?? false}
-        // Si necesitas paginación en alguna tabla específica, pasa: pagination={true}
-        // paginationPageSize={props.paginationPageSize ?? 50}
-        // paginationPageSizeSelector={props.paginationPageSizeSelector ?? [25, 50, 100, 200]}
-        // paginationAutoPageSize={false}
-        // Optimizaciones de rendimiento para scroll infinito
         suppressRowVirtualisation={false}
         suppressColumnVirtualisation={false}
         rowBuffer={20}
         debounceVerticalScrollbar={true}
         suppressAnimationFrame={false}
         suppressRowTransform={true}
-        // Altura de fila optimizada para mejor rendimiento
         rowHeight={props.rowHeight ?? 42}
-        // Mejora el scroll suave
         suppressScrollOnNewData={true}
-        columnDefs={[
-          ...(withNumberColumn
-            ? [
-                {
-                  headerName: "#",
-                  colId: "#",
-                  width: props.rowDragManaged ? 65 : 50,
-                  valueGetter: (params: ValueGetterParams<T>) =>
-                    (params.node?.rowIndex ?? 0) + 1,
-                  type: "numberColumn",
-                  rowDrag: props.rowDragManaged,
-                  suppressNavigable: true,
-                },
-              ]
-            : []),
-          ...(columnDefs ?? []),
-        ]}
+        onGridReady={onGridReady}
+        onFirstDataRendered={onFirstDataRendered}
+        onColumnMoved={onColumnMoved}
+        onColumnResized={onColumnResized}
+        onColumnVisible={onColumnVisible}
+        columnDefs={memoizedColumnDefs}
       />
       </div>
     </>

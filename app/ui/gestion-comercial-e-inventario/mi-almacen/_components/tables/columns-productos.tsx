@@ -24,6 +24,7 @@ import {
 } from "../../_store/store-edit-or-copy-producto";
 import { productosApiV2 } from "~/lib/api/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
+import { useMemo } from "react";
 
 interface UseColumnsProductosProps {
   almacen_id?: number;
@@ -34,7 +35,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
   const setOpen = useStoreEditOrCopyProducto((state) => state.setOpenModal);
   const setProducto = useStoreEditOrCopyProducto((state) => state.setProducto);
 
-  const columns: ColDef<Producto>[] = [
+  const columns: ColDef<Producto>[] = useMemo(() => [
     {
       headerName: "Código de Producto",
       field: "cod_producto",
@@ -366,7 +367,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
       },
       type: "actions",
     },
-  ];
+  ], [almacen_id, can, setOpen, setProducto]);
 
   return columns;
 }

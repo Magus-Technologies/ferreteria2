@@ -189,6 +189,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
       <TableBase<T>
         ref={tableRefInterno}
         {...props}
+        tableKey={id} // Usar el id como tableKey único
         selectionColor={selectionColor} // Pasar el color de selección
         headerColor={headerColor} // Pasar el color del header
         onGridReady={(params) => {

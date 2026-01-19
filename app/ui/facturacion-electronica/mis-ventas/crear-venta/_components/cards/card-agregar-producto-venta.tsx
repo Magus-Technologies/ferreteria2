@@ -117,21 +117,16 @@ export default function CardAgregarProductoVenta({
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_venta: values.precio_venta,
       comision,
+      stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
       // Guardar las unidades derivadas disponibles del producto
       unidades_derivadas_disponibles: unidades_derivadas,
     }
 
     // Si se proporciona onOk, solo llamarlo (usado por cotizaciones)
     // Si no, actualizar el store de ventas (comportamiento por defecto)
-    console.log('🔧 handleOk ejecutado');
-    console.log('📦 valuesFormated:', valuesFormated);
-    console.log('🎯 onOk existe?', !!onOk);
-
     if (onOk) {
-      console.log('✅ Ejecutando onOk (cotizaciones)');
       onOk(valuesFormated)
     } else {
-      console.log('✅ Ejecutando store de ventas');
       setProductoAgregadoVenta(valuesFormated)
     }
     setValues(valuesDefault)

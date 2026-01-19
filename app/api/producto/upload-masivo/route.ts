@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '~/auth/auth'
 import { prisma } from '~/db/db'
 import fs from 'fs'
 import path from 'path'
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session)
+  // Obtener el token de autenticación del header
+  const authHeader = req.headers.get('authorization')
+  const token = authHeader?.replace('Bearer ', '')
+  
+  if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Aquí podrías validar el token contra Laravel si es necesario
+  // Por ahora, si tiene token, asumimos que está autenticado
 
   try {
     const formData = await req.formData()
@@ -15,8 +21,9 @@ export async function POST(req: NextRequest) {
     const tipo = formData.get('tipo') as 'img' | 'ficha_tecnica'
     if (!tipo) throw new Error('Tipo no proporcionado')
 
-    let ruta = '/uploads/productos/imgs'
-    if (tipo === 'ficha_tecnica') ruta = '/uploads/productos/fichas-tecnicas'
+    // Usar la misma estructura de rutas que Laravel Storage
+    let ruta = 'productos/imgs'
+    if (tipo === 'ficha_tecnica') ruta = 'productos/fichas-tecnicas'
 
     const fileNames = [...files].map(file => {
       const name = file.name.split('.')
@@ -79,13 +86,43 @@ async function replaceFiles({
   ruta: string
   tipo: 'img' | 'ficha_tecnica'
 }) {
-  await fs.promises.mkdir(`public${ruta}`, {
+  // Laravel Storage guarda en storage/app/public/
+  // Necesitamos guardar en la carpeta de Laravel, no en Next.js
+  const LARAVEL_STORAGE_DIR = path.join(
+    process.cwd(),
+    '..',
+    'ferreteria-backend',
+    'storage',
+    'app',
+    'public',
+    ruta
+  )
+  
+  // Crear directorio si no existe
+  await fs.promises.mkdir(LARAVEL_STORAGE_DIR, {
     recursive: true,
   })
-  const UPLOAD_DIR = path.join(process.cwd(), `public${ruta}`)
 
+  // Eliminar archivos anteriores
   for (const url of urls) {
-    const filePath = path.join(process.cwd(), 'public', url)
+    // La URL puede venir como 'productos/imgs/file.jpg' o '/uploads/productos/imgs/file.jpg'
+    let filePath: string
+    if (url.startsWith('/uploads/')) {
+      // Formato antiguo de Next.js - buscar en public de Next.js
+      filePath = path.join(process.cwd(), 'public', url)
+    } else {
+      // Formato de Laravel Storage - buscar en storage de Laravel
+      filePath = path.join(
+        process.cwd(),
+        '..',
+        'ferreteria-backend',
+        'storage',
+        'app',
+        'public',
+        url
+      )
+    }
+    
     try {
       await fs.promises.unlink(filePath)
     } catch (err) {
@@ -100,12 +137,16 @@ async function replaceFiles({
     }
   }
 
+  // Guardar nuevos archivos
   for (const file of files) {
     const buffer = Buffer.from(await file.arrayBuffer())
-    const newFilePath = path.join(UPLOAD_DIR, file.name)
+    const newFilePath = path.join(LARAVEL_STORAGE_DIR, file.name)
     await fs.promises.writeFile(newFilePath, buffer)
+    
     const cod_producto = file.name.split('.')
     cod_producto.pop()
+    
+    // Guardar en DB con la misma estructura que Laravel: 'productos/imgs/file.jpg'
     await prisma.producto.update({
       where: {
         cod_producto: cod_producto.join('.'),

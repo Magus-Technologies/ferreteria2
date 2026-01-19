@@ -6,6 +6,7 @@ import { BiLoaderAlt } from 'react-icons/bi'
 import { useEffect, useState } from 'react'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useQueryClient } from '@tanstack/react-query'
+import { getAuthToken } from '~/lib/api'
 
 function useUploadMasivo() {
   const [loading, setLoading] = useState(false)
@@ -15,12 +16,20 @@ function useUploadMasivo() {
   async function handleUploadMasivo(formData: FormData) {
     try {
       setLoading(true)
+      const token = getAuthToken()
+      
       const res = await fetch('/api/producto/upload-masivo', {
         method: 'POST',
         body: formData,
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
       })
 
-      if (!res.ok) throw new Error('Error al subir los archivos')
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Error al subir los archivos')
+      }
 
       const data = (await res.json()) as { data: string[] }
       if (data.data.length)
@@ -45,10 +54,12 @@ function useUploadMasivo() {
         })
 
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
-    } catch {
-      notification.warning({
+      // También invalidar la query de productos por almacén que usa la tabla
+      queryClient.invalidateQueries({ queryKey: ['productos-by-almacen'] })
+    } catch (error) {
+      notification.error({
         message: 'Error',
-        description: 'Error al subir los archivos',
+        description: error instanceof Error ? error.message : 'Error al subir los archivos',
       })
     } finally {
       setLoading(false)
