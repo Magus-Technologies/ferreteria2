@@ -5,15 +5,34 @@ import { apiRequest, type ApiResponse } from '../api'
 
 // ============= INTERFACES =============
 
+export interface SubCajaInfo {
+  id: number
+  codigo: string
+  nombre: string
+  tipo_caja: 'CC' | 'SC'
+  saldo_actual: string
+}
+
+export interface CajaPrincipalInfo {
+  id: number
+  codigo: string
+  nombre: string
+}
+
 export interface AperturaYCierreCaja {
   id: string
-  user_id: number
-  monto_apertura: number
+  caja_principal_id: number
+  sub_caja_id: number
+  user_id: string
+  monto_apertura: string
   fecha_apertura: string
-  monto_cierre: number | null
+  monto_cierre: string | null
   fecha_cierre: string | null
+  estado: 'abierta' | 'cerrada'
+  caja_principal?: CajaPrincipalInfo
+  sub_caja?: SubCajaInfo
   user?: {
-    id: number
+    id: string
     name: string
     email: string
   }
@@ -22,11 +41,34 @@ export interface AperturaYCierreCaja {
 // ============= REQUEST TYPES =============
 
 export interface AperturarCajaRequest {
+  caja_principal_id: number
   monto_apertura: number
 }
 
 export interface CerrarCajaRequest {
-  monto_cierre: number
+  monto_cierre_efectivo: number
+  total_cuentas: number
+  conteo_billetes_monedas?: {
+    billete_200?: number
+    billete_100?: number
+    billete_50?: number
+    billete_20?: number
+    billete_10?: number
+    moneda_5?: number
+    moneda_2?: number
+    moneda_1?: number
+    moneda_050?: number
+    moneda_020?: number
+    moneda_010?: number
+  }
+  conceptos_adicionales?: Array<{
+    concepto: string
+    numero: string
+    cantidad: number
+  }>
+  comentarios?: string
+  supervisor_id?: number
+  forzar_cierre?: boolean
 }
 
 export interface CajaHistorialFilters {
@@ -55,10 +97,18 @@ export interface CajasListResponse {
 
 export const cajaApi = {
   /**
-   * Consulta si el usuario tiene una caja abierta
+   * Consulta si una caja principal tiene una apertura activa
    */
-  consultaApertura(): Promise<ApiResponse<{ data: string }>> {
-    return apiRequest<{ data: string }>('/cajas/consulta-apertura', {
+  consultaApertura(cajaPrincipalId: number): Promise<ApiResponse<{ 
+    success: boolean
+    message: string
+    data: AperturaYCierreCaja | null 
+  }>> {
+    return apiRequest<{ 
+      success: boolean
+      message: string
+      data: AperturaYCierreCaja | null 
+    }>(`/cajas/consulta-apertura/${cajaPrincipalId}`, {
       method: 'GET',
     })
   },
@@ -79,8 +129,28 @@ export const cajaApi = {
   cerrar(
     id: string,
     data: CerrarCajaRequest
-  ): Promise<ApiResponse<CajaResponse>> {
-    return apiRequest<CajaResponse>(`/cajas/${id}/cerrar`, {
+  ): Promise<ApiResponse<{
+    success: boolean
+    message: string
+    data: AperturaYCierreCaja & {
+      diferencias?: {
+        efectivo_esperado: string
+        efectivo_contado: string
+        diferencia_efectivo: string
+        total_esperado: string
+        total_contado: string
+        diferencia_total: string
+        sobrante: string
+        faltante: string
+      }
+      supervisor?: {
+        id: number
+        name: string
+      }
+      comentarios?: string
+    }
+  }>> {
+    return apiRequest<any>(`/cajas/${id}/cerrar`, {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -89,21 +159,101 @@ export const cajaApi = {
   /**
    * Obtener la caja activa del usuario autenticado
    */
-  cajaActiva(): Promise<ApiResponse<{ data: AperturaYCierreCaja | null }>> {
-    return apiRequest<{ data: AperturaYCierreCaja | null }>(
-      '/cajas/activa',
-      {
-        method: 'GET',
+  cajaActiva(userId?: string): Promise<ApiResponse<{ 
+    success: boolean
+    data: AperturaYCierreCaja & {
+      resumen?: {
+        total_ventas: number
+        total_cobros: number
+        total_tarjetas: number
+        total_yape: number
+        total_izipay: number
+        total_transferencias: number
+        total_otros: number
+        total_efectivo_esperado: number
+        total_otros_ingresos: number
+        total_anulados: number
+        total_devoluciones: number
+        total_gastos: number
+        total_pagos: number
+        resumen_ventas: number
+        resumen_ingresos: number
+        resumen_egresos: number
+        total_en_caja: number
       }
-    )
+    } | null
+  }>> {
+    const url = userId ? `/cajas/activa?user_id=${userId}` : '/cajas/activa'
+    return apiRequest<{ 
+      success: boolean
+      data: AperturaYCierreCaja & {
+        resumen?: any
+      } | null
+    }>(url, {
+      method: 'GET',
+    })
   },
 
   /**
-   * Obtener historial de aperturas/cierres de caja
+   * Obtener resumen de movimientos de una caja
+   */
+  resumenMovimientos(id: string): Promise<ApiResponse<{
+    success: boolean
+    data: {
+      ventas: any[]
+      ingresos: any[]
+      egresos: any[]
+      anulaciones: any[]
+      totales_por_metodo: {
+        efectivo: string
+        tarjeta: string
+        yape: string
+        izipay: string
+        transferencia: string
+        otros: string
+      }
+    }
+  }>> {
+    return apiRequest<any>(`/cajas/${id}/resumen-movimientos`, {
+      method: 'GET',
+    })
+  },
+
+  /**
+   * Validar supervisor para autorizar cierres
+   */
+  validarSupervisor(data: {
+    email: string
+    password: string
+  }): Promise<ApiResponse<{
+    success: boolean
+    data: {
+      supervisor_id: number
+      name: string
+      puede_autorizar: boolean
+    }
+  }>> {
+    return apiRequest<any>('/cajas/validar-supervisor', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  /**
+   * Obtener historial de aperturas/cierres del usuario actual
    */
   historial(
     filters?: CajaHistorialFilters
-  ): Promise<ApiResponse<CajasListResponse>> {
+  ): Promise<ApiResponse<{
+    success: boolean
+    data: AperturaYCierreCaja[]
+    pagination?: {
+      total: number
+      per_page: number
+      current_page: number
+      last_page: number
+    }
+  }>> {
     const params = new URLSearchParams()
 
     if (filters) {
@@ -115,9 +265,64 @@ export const cajaApi = {
     }
 
     const queryString = params.toString()
-    const url = queryString ? `/cajas/historial?${queryString}` : '/cajas/historial'
+    const url = queryString
+      ? `/cajas/historial-aperturas?${queryString}`
+      : '/cajas/historial-aperturas'
 
-    return apiRequest<CajasListResponse>(url, {
+    return apiRequest<{
+      success: boolean
+      data: AperturaYCierreCaja[]
+      pagination?: {
+        total: number
+        per_page: number
+        current_page: number
+        last_page: number
+      }
+    }>(url, {
+      method: 'GET',
+    })
+  },
+
+  /**
+   * Obtener historial de TODAS las aperturas/cierres (Admin)
+   */
+  historialTodas(
+    filters?: CajaHistorialFilters & { caja_principal_id?: number }
+  ): Promise<ApiResponse<{
+    success: boolean
+    data: AperturaYCierreCaja[]
+    pagination?: {
+      total: number
+      per_page: number
+      current_page: number
+      last_page: number
+    }
+  }>> {
+    const params = new URLSearchParams()
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value))
+        }
+      })
+    }
+
+    const queryString = params.toString()
+    const url = queryString
+      ? `/cajas/historial-aperturas/todas?${queryString}`
+      : '/cajas/historial-aperturas/todas'
+
+    return apiRequest<{
+      success: boolean
+      data: AperturaYCierreCaja[]
+      pagination?: {
+        total: number
+        per_page: number
+        current_page: number
+        last_page: number
+      }
+    }>(url, {
       method: 'GET',
     })
   },

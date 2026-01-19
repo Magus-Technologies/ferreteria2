@@ -30,4 +30,7 @@ export enum QueryKeys {
   PAQUETES = 'paquetes',
   EMPRESAS = 'empresas',
   UBIGEO = 'ubigeo',
+  VENDEDORES_DISPONIBLES = 'vendedores_disponibles',
+  CAJAS_PRINCIPALES = 'cajas_principales',
+  SUB_CAJAS = 'sub_cajas',
 }
