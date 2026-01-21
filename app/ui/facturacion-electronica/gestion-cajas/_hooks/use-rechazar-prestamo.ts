@@ -10,7 +10,7 @@ export function useRechazarPrestamo() {
     mutationFn: ({ prestamoId, motivo }: { prestamoId: string; motivo?: string }) =>
       transaccionesCajaApi.rechazarPrestamo(prestamoId, motivo),
     onSuccess: (response) => {
-      message.success(response.data.message || 'Préstamo rechazado')
+      message.success(response?.data?.message || 'Préstamo rechazado')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS_PENDIENTES] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJAS_PRINCIPALES] })
     },

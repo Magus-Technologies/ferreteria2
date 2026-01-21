@@ -10,7 +10,7 @@ export function useAprobarPrestamo() {
     mutationFn: ({ prestamoId, subCajaOrigenId }: { prestamoId: string; subCajaOrigenId: number }) =>
       transaccionesCajaApi.aprobarPrestamo(prestamoId, subCajaOrigenId),
     onSuccess: (response) => {
-      message.success(response.data.message || 'Préstamo aprobado exitosamente')
+      message.success(response?.data?.message || 'Préstamo aprobado exitosamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS_PENDIENTES] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJAS_PRINCIPALES] })
     },

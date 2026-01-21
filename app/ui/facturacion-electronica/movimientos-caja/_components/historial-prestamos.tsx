@@ -53,7 +53,7 @@ export default function HistorialPrestamos() {
             ¿Confirmas la devolución del préstamo de <strong>S/ {prestamo.monto}</strong>?
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            De: {prestamo.sub_caja_destino.nombre} → A: {prestamo.sub_caja_origen.nombre}
+            De: {prestamo.sub_caja_destino.nombre} → A: {prestamo.sub_caja_origen?.nombre || 'N/A'}
           </p>
         </div>
       ),
