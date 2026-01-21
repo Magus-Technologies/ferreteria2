@@ -23,14 +23,19 @@ export interface Transaccion {
 
 export interface Prestamo {
   id: string
-  sub_caja_origen_id: number
+  sub_caja_origen_id: number | null
+  caja_principal_origen_id?: number
   sub_caja_destino_id: number
   monto: string
   estado: 'pendiente' | 'devuelto' | 'cancelado'
+  estado_aprobacion: 'pendiente_aprobacion' | 'aprobado' | 'rechazado'
+  aprobado_por_id?: string
+  fecha_aprobacion?: string
+  motivo_rechazo?: string
   motivo?: string
   fecha_prestamo: string
   fecha_devolucion?: string
-  sub_caja_origen: {
+  sub_caja_origen?: {
     id: number
     nombre: string
   }
@@ -38,8 +43,14 @@ export interface Prestamo {
     id: number
     nombre: string
   }
+  caja_principal_origen?: {
+    id: number
+    nombre: string
+    user: Usuario
+  }
   user_presta: Usuario
   user_recibe: Usuario
+  aprobado_por?: Usuario
 }
 
 export interface MovimientoInterno {
@@ -62,7 +73,8 @@ export interface MovimientoInterno {
 }
 
 export interface CrearPrestamoRequest {
-  sub_caja_origen_id: number
+  caja_principal_origen_id?: number // Caja principal de donde se solicita (opcional si se envía sub_caja)
+  sub_caja_origen_id?: number // Sub-caja origen (la selecciona el aprobador)
   sub_caja_destino_id: number
   monto: number
   despliegue_de_pago_id?: string
@@ -86,6 +98,22 @@ export interface RegistrarTransaccionRequest {
   descripcion: string
   referencia_id?: string
   referencia_tipo?: string
+  despliegue_pago_id?: string
+  numero_operacion?: string
+  /** Conteo detallado de billetes y monedas (opcional) */
+  conteo_billetes_monedas?: {
+    billete_200: number
+    billete_100: number
+    billete_50: number
+    billete_20: number
+    billete_10: number
+    moneda_5: number
+    moneda_2: number
+    moneda_1: number
+    moneda_050: number
+    moneda_020: number
+    moneda_010: number
+  }
 }
 
 // ============= RESPONSE TYPES =============
@@ -227,6 +255,36 @@ export const transaccionesCajaApi = {
     return apiRequest<PrestamoResponse>('/cajas/prestamos', {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  },
+
+  /**
+   * Listar préstamos pendientes de aprobación
+   */
+  getPrestamosPendientes(): Promise<ApiResponse<{ success: boolean; data: Prestamo[] }>> {
+    return apiRequest<{ success: boolean; data: Prestamo[] }>('/cajas/prestamos/pendientes')
+  },
+
+  /**
+   * Aprobar préstamo
+   */
+  aprobarPrestamo(id: string, subCajaOrigenId: number): Promise<ApiResponse<PrestamoResponse>> {
+    return apiRequest<PrestamoResponse>(`/cajas/prestamos/${id}/aprobar`, {
+      method: 'POST',
+      body: JSON.stringify({ sub_caja_origen_id: subCajaOrigenId }),
+    })
+  },
+
+  /**
+   * Rechazar préstamo
+   */
+  rechazarPrestamo(
+    id: string,
+    motivo_rechazo?: string
+  ): Promise<ApiResponse<PrestamoResponse>> {
+    return apiRequest<PrestamoResponse>(`/cajas/prestamos/${id}/rechazar`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo_rechazo }),
     })
   },
 

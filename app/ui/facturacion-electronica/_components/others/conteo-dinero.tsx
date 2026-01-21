@@ -4,11 +4,27 @@ import LabelBase from '~/components/form/label-base'
 
 const conteo = [200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1]
 
+export interface ConteoBilletesMonedas {
+  billete_200: number
+  billete_100: number
+  billete_50: number
+  billete_20: number
+  billete_10: number
+  moneda_5: number
+  moneda_2: number
+  moneda_1: number
+  moneda_050: number
+  moneda_020: number
+  moneda_010: number
+}
+
 export default function ConteoDinero({
   onChange,
+  onConteoChange,
   className = '',
 }: {
   onChange?: (value: number) => void
+  onConteoChange?: (conteo: ConteoBilletesMonedas) => void
   className?: string
 }) {
   const [valores, setValores] = useState<Record<number, number>>({})
@@ -24,6 +40,22 @@ export default function ConteoDinero({
     )
     setMonto(total)
     onChange?.(total)
+
+    // Enviar el conteo detallado
+    const conteoDetallado: ConteoBilletesMonedas = {
+      billete_200: nuevosValores[200] || 0,
+      billete_100: nuevosValores[100] || 0,
+      billete_50: nuevosValores[50] || 0,
+      billete_20: nuevosValores[20] || 0,
+      billete_10: nuevosValores[10] || 0,
+      moneda_5: nuevosValores[5] || 0,
+      moneda_2: nuevosValores[2] || 0,
+      moneda_1: nuevosValores[1] || 0,
+      moneda_050: nuevosValores[0.5] || 0,
+      moneda_020: nuevosValores[0.2] || 0,
+      moneda_010: nuevosValores[0.1] || 0,
+    }
+    onConteoChange?.(conteoDetallado)
   }
 
   return (

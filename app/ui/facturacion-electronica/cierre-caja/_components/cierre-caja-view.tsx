@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Input, Checkbox, Button, Table, Spin, message } from 'antd'
+import { Input, Checkbox, Button, Spin, message } from 'antd'
 import dayjs from 'dayjs'
 import ConteoDinero from '../../_components/others/conteo-dinero'
 import { cajaApi } from '~/lib/api/caja'
@@ -47,7 +47,7 @@ export default function CierreCajaView() {
   if (loading) {
     return (
       <div className='flex justify-center items-center h-96'>
-        <Spin size='large' tip='Cargando datos de la caja...' />
+        <Spin size='large' />
       </div>
     )
   }
@@ -63,28 +63,22 @@ export default function CierreCajaView() {
 
   const resumen = cajaActiva.resumen || {}
   const totalEfectivo = conteoEfectivo
-  const resumenVentas = resumen.resumen_ventas || 0
+  const metodosPago = resumen.metodos_pago || {}
   const totalEnCaja = resumen.total_en_caja || 0
-  const totalCuentas = (resumen.total_tarjetas || 0) + (resumen.total_yape || 0) + (resumen.total_izipay || 0) + (resumen.total_transferencias || 0) + (resumen.total_otros || 0)
+  
+  // Calcular total de cuentas (todos los métodos excepto efectivo)
+  const totalCuentas = Object.entries(metodosPago).reduce((total, [metodo, monto]) => {
+    // Excluir efectivo del total de cuentas
+    if (!metodo.toLowerCase().includes('efectivo') && !metodo.toLowerCase().includes('cch')) {
+      return total + (Number(monto) || 0)
+    }
+    return total
+  }, 0)
+  
   const cierreTotal = totalEfectivo + totalCuentas
   const diferencias = cierreTotal - totalEnCaja
   const sobrante = diferencias > 0 ? diferencias : 0
   const faltante = diferencias < 0 ? Math.abs(diferencias) : 0
-
-  const columnasConceptos = [
-    { title: '#', dataIndex: 'numero', key: 'numero', width: 50 },
-    { title: 'CONCEPTO', dataIndex: 'concepto', key: 'concepto' },
-    { title: 'NUMERO', dataIndex: 'numeroDoc', key: 'numeroDoc', width: 100 },
-    { title: 'CANT', dataIndex: 'cantidad', key: 'cantidad', width: 100 },
-  ]
-
-  const datosConceptos = Array.from({ length: 7 }, (_, i) => ({
-    key: i + 1,
-    numero: i + 1,
-    concepto: '',
-    numeroDoc: '',
-    cantidad: '',
-  }))
 
   const handleCerrarCaja = async () => {
     try {
@@ -127,65 +121,43 @@ export default function CierreCajaView() {
             <span className='text-sm text-rose-600 font-semibold'>Apertura Caja</span>
             <Input className='w-24 text-right' value={parseFloat(cajaActiva.monto_apertura).toFixed(2)} readOnly />
           </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total Tarjetas</span>
-            <Input className='w-24 text-right' value={(resumen.total_tarjetas || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center bg-purple-100 px-2 py-1 rounded'>
-            <span className='text-sm font-semibold'>Yape</span>
-            <Input className='w-24 text-right' value={(resumen.total_yape || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center bg-blue-100 px-2 py-1 rounded'>
-            <span className='text-sm font-semibold'>Izipay</span>
-            <Input className='w-24 text-right' value={(resumen.total_izipay || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center bg-green-100 px-2 py-1 rounded'>
-            <span className='text-sm font-semibold'>Transferencias</span>
-            <Input className='w-24 text-right' value={(resumen.total_transferencias || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center bg-gray-100 px-2 py-1 rounded'>
-            <span className='text-sm font-semibold'>Otros</span>
-            <Input className='w-24 text-right' value={(resumen.total_otros || 0).toFixed(2)} readOnly />
-          </div>
+          
+          {/* Métodos de pago dinámicos */}
+          {Object.entries(metodosPago).map(([metodo, monto], index) => {
+            const esEfectivo = metodo.toLowerCase().includes('efectivo') || metodo.toLowerCase().includes('cch')
+            const colores = [
+              'bg-purple-100',
+              'bg-blue-100',
+              'bg-green-100',
+              'bg-yellow-100',
+              'bg-pink-100',
+              'bg-indigo-100',
+            ]
+            const colorClass = colores[index % colores.length]
+            
+            return (
+              <div 
+                key={metodo} 
+                className={`flex justify-between items-center ${!esEfectivo ? `${colorClass} px-2 py-1 rounded` : ''}`}
+              >
+                <span className={`text-sm ${!esEfectivo ? 'font-semibold' : ''}`}>{metodo}</span>
+                <Input className='w-24 text-right' value={(Number(monto) || 0).toFixed(2)} readOnly />
+              </div>
+            )
+          })}
+          
           <div className='flex justify-between items-center border-t pt-2'>
             <span className='text-sm font-bold'>Total Efectivo</span>
             <Input className='w-24 text-right font-bold' value={totalEfectivo.toFixed(2)} readOnly />
           </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total cobros</span>
-            <Input className='w-24 text-right' value={(resumen.total_cobros || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total O. Ingresos</span>
-            <Input className='w-24 text-right' value={(resumen.total_otros_ingresos || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total Anulados</span>
-            <Input className='w-24 text-right' value={(resumen.total_anulados || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total Devoluciones</span>
-            <Input className='w-24 text-right' value={(resumen.total_devoluciones || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total Gastos</span>
-            <Input className='w-24 text-right' value={(resumen.total_gastos || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm'>Total Pagos</span>
-            <Input className='w-24 text-right' value={(resumen.total_pagos || 0).toFixed(2)} readOnly />
-          </div>
+          
           <div className='flex justify-between items-center bg-blue-600 text-white px-2 py-1 rounded'>
-            <span className='text-sm font-bold'>Resumen Ventas</span>
-            <Input className='w-24 text-right font-bold bg-blue-600 text-white border-white' value={resumenVentas.toFixed(2)} readOnly />
+            <span className='text-sm font-bold'>Total Ingresos</span>
+            <Input className='w-24 text-right font-bold bg-blue-600 text-white border-white' value={(resumen.total_ingresos || 0).toFixed(2)} readOnly />
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-sm text-rose-600'>Resumen Ingresos</span>
-            <Input className='w-24 text-right' value={(resumen.resumen_ingresos || 0).toFixed(2)} readOnly />
-          </div>
-          <div className='flex justify-between items-center'>
-            <span className='text-sm text-rose-600'>Resumen Egresos</span>
-            <Input className='w-24 text-right' value={(resumen.resumen_egresos || 0).toFixed(2)} readOnly />
+            <span className='text-sm text-rose-600'>Total Egresos</span>
+            <Input className='w-24 text-right' value={(resumen.total_egresos || 0).toFixed(2)} readOnly />
           </div>
           <div className='flex justify-between items-center border-t-2 border-black pt-2'>
             <span className='text-sm font-bold'>Total en Caja</span>
@@ -257,15 +229,6 @@ export default function CierreCajaView() {
             </div>
 
             <div className='col-span-5'>
-              <Table
-                columns={columnasConceptos}
-                dataSource={datosConceptos}
-                pagination={false}
-                size='small'
-                bordered
-                className='mb-4'
-              />
-              
               <div className='space-y-2'>
                 <div className='flex justify-between items-center'>
                   <span className='font-bold'>Total Efectivo</span>

@@ -135,11 +135,32 @@ export default function HistorialPrestamos() {
       },
     },
     {
+      headerName: 'Aprobación',
+      field: 'estado_aprobacion',
+      width: 150,
+      cellRenderer: (params: any) => {
+        const estado = params.value
+        if (estado === 'pendiente_aprobacion') {
+          return <Tag color="blue">Pendiente Aprobación</Tag>
+        }
+        if (estado === 'aprobado') {
+          return <Tag color="green">Aprobado</Tag>
+        }
+        if (estado === 'rechazado') {
+          return <Tag color="red">Rechazado</Tag>
+        }
+        return null
+      },
+    },
+    {
       headerName: 'Acciones',
       width: 120,
       cellRenderer: (params: any) => {
         const prestamo = params.data as Prestamo
-        if (prestamo.estado !== 'pendiente') return null
+        // Solo se puede devolver si está aprobado y pendiente
+        if (prestamo.estado !== 'pendiente' || prestamo.estado_aprobacion !== 'aprobado') {
+          return null
+        }
 
         return (
           <Button

@@ -163,8 +163,7 @@ export default function ModalMetodosPagoVenta({
     const metodos = metodosPago.map(m => ({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
-      referencia: m.referencia || null,
-      recibe_efectivo: m.recibe_efectivo || null,
+      numero_operacion: m.referencia || undefined,
     }))
 
     // Guardar en el formulario de venta

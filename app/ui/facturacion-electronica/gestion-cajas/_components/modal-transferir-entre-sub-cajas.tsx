@@ -13,6 +13,7 @@ interface Props {
   onClose: () => void
   subCajas: SubCaja[]
   cajaPrincipalId: number
+  onSuccess?: () => void
 }
 
 export default function ModalTransferirEntreSubCajas({
@@ -20,6 +21,7 @@ export default function ModalTransferirEntreSubCajas({
   onClose,
   subCajas,
   cajaPrincipalId,
+  onSuccess,
 }: Props) {
   const [form] = Form.useForm()
   const { mutate: crearMovimiento, isPending } = useCrearMovimientoInterno()
@@ -52,6 +54,7 @@ export default function ModalTransferirEntreSubCajas({
             message.success('Movimiento interno realizado exitosamente')
             form.resetFields()
             setSubCajaOrigenId(null)
+            onSuccess?.()
             onClose()
           },
           onError: (error: any) => {

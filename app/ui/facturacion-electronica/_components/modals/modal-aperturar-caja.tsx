@@ -4,7 +4,7 @@ import { Form } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import dayjs from 'dayjs'
-import ConteoDinero from '../others/conteo-dinero'
+import ConteoDinero, { type ConteoBilletesMonedas } from '../others/conteo-dinero'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import LabelBase from '~/components/form/label-base'
 import { useState, useCallback } from 'react'
@@ -20,6 +20,7 @@ type ModalAperturarCajaProps = {
 export interface AperturarCajaFormValues {
   caja_principal_id: number
   monto_apertura: number
+  conteo_billetes_monedas?: ConteoBilletesMonedas
 }
 
 export default function ModalAperturarCaja({
@@ -29,19 +30,26 @@ export default function ModalAperturarCaja({
 }: ModalAperturarCajaProps) {
   const [form] = Form.useForm<AperturarCajaFormValues>()
   const [conteoTotal, setConteoTotal] = useState(0)
+  const [conteoDetallado, setConteoDetallado] = useState<ConteoBilletesMonedas | undefined>()
 
   const { crearAperturarCaja, loading } = useAperturarCaja({
     onSuccess: () => {
       setOpen(false)
       form.resetFields()
       setConteoTotal(0)
-      onSuccess?.() // Llamar al callback externo para refrescar la tabla
+      setConteoDetallado(undefined)
+      onSuccess?.()
     },
   })
 
   const handleConteoChange = useCallback((value: number) => {
     setConteoTotal(value)
     form.setFieldValue('monto_apertura', value)
+  }, [form])
+
+  const handleConteoDetalladoChange = useCallback((conteo: ConteoBilletesMonedas) => {
+    setConteoDetallado(conteo)
+    form.setFieldValue('conteo_billetes_monedas', conteo)
   }, [form])
 
   return (
@@ -56,6 +64,7 @@ export default function ModalAperturarCaja({
       onCancel={() => {
         form.resetFields()
         setConteoTotal(0)
+        setConteoDetallado(undefined)
       }}
       open={open}
       setOpen={setOpen}
@@ -142,6 +151,7 @@ export default function ModalAperturarCaja({
           <ConteoDinero
             className='mx-auto'
             onChange={handleConteoChange}
+            onConteoChange={handleConteoDetalladoChange}
           />
         </div>
       </div>
