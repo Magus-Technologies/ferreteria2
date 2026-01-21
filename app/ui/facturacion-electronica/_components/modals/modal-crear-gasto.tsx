@@ -12,6 +12,10 @@ import SelectSubCaja from '../selects/select-sub-caja'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { subCajaApi, type SubCaja } from '~/lib/api/sub-caja'
 import { despliegueDePagoApi, type DespliegueDePago } from '~/lib/api/despliegue-de-pago'
+import { useAuth } from '~/lib/auth-context'
+import { useQuery } from '@tanstack/react-query'
+import { cajaPrincipalApi } from '~/lib/api/caja-principal'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 type ModalCrearGastoProps = {
   open: boolean
@@ -38,12 +42,33 @@ export default function ModalCrearGasto({
   onSuccess,
 }: ModalCrearGastoProps) {
   const { message } = App.useApp()
+  const { user } = useAuth()
   const [form] = Form.useForm<CrearGastoFormValues>()
   const [loading, setLoading] = useState(false)
   const [cajaPrincipalId, setCajaPrincipalId] = useState<number | null>(null)
   const [subCajaSeleccionada, setSubCajaSeleccionada] = useState<SubCaja | null>(null)
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<DespliegueDePago | null>(null)
   const [advertencia, setAdvertencia] = useState<string | null>(null)
+
+  // Obtener cajas principales para encontrar la del usuario
+  const { data: cajasPrincipales } = useQuery({
+    queryKey: [QueryKeys.CAJAS_PRINCIPALES],
+    queryFn: async () => {
+      const response = await cajaPrincipalApi.getAll()
+      return response.data?.data || []
+    },
+  })
+
+  // Encontrar la caja principal del usuario actual
+  const miCajaPrincipal = cajasPrincipales?.find((c) => c.user.id === user?.id)
+
+  // Auto-seleccionar la caja principal del usuario al abrir el modal
+  useEffect(() => {
+    if (open && miCajaPrincipal) {
+      form.setFieldValue('caja_principal_id', miCajaPrincipal.id)
+      setCajaPrincipalId(miCajaPrincipal.id)
+    }
+  }, [open, miCajaPrincipal, form])
 
   // Observar cambios en los campos del formulario
   const subCajaId = Form.useWatch('sub_caja_id', form)
@@ -223,12 +248,13 @@ export default function ModalCrearGasto({
 
         <LabelBase label="Caja Principal" orientation="column">
           <SelectCajaPrincipal
-            placeholder="Selecciona la caja"
+            placeholder={miCajaPrincipal ? miCajaPrincipal.nombre : "Tu caja"}
             propsForm={{
               name: 'caja_principal_id',
               rules: [{ required: true, message: 'Selecciona una caja principal' }],
             }}
             onChange={handleCajaPrincipalChange}
+            disabled={true}
           />
         </LabelBase>
 
