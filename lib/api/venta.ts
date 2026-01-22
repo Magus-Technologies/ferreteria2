@@ -59,6 +59,7 @@ export interface UnidadDerivadaVentaRequest {
 export interface DespliegueDePagoVentaRequest {
   despliegue_de_pago_id: string;
   monto: number;
+  numero_operacion?: string;
 }
 
 export interface CreateVentaRequest {

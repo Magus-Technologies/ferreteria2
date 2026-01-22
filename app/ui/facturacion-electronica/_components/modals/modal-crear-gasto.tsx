@@ -1,13 +1,21 @@
 'use client'
 
-import { Form, DatePicker, InputNumber, Input, Select, message } from 'antd'
-import { useState } from 'react'
+import { Form, DatePicker, InputNumber, Input, Alert, App } from 'antd'
+import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import LabelBase from '~/components/form/label-base'
 import { transaccionesCajaApi } from '~/lib/api/transacciones-caja'
 import SelectCajaPrincipal from '../selects/select-caja-principal'
+import SelectSubCaja from '../selects/select-sub-caja'
+import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
+import { subCajaApi, type SubCaja } from '~/lib/api/sub-caja'
+import { despliegueDePagoApi, type DespliegueDePago } from '~/lib/api/despliegue-de-pago'
+import { useAuth } from '~/lib/auth-context'
+import { useQuery } from '@tanstack/react-query'
+import { cajaPrincipalApi } from '~/lib/api/caja-principal'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 type ModalCrearGastoProps = {
   open: boolean
@@ -17,28 +25,104 @@ type ModalCrearGastoProps = {
 
 interface CrearGastoFormValues {
   fecha: dayjs.Dayjs
+  caja_principal_id: number
   sub_caja_id: number
+  despliegue_pago_id: string
   monto: number
   concepto: string
   comentario?: string
-  afecta_caja: 'si' | 'no'
+  numero_operacion?: string
 }
+
+const { TextArea } = Input
 
 export default function ModalCrearGasto({
   open,
   setOpen,
   onSuccess,
 }: ModalCrearGastoProps) {
+  const { message } = App.useApp()
+  const { user } = useAuth()
   const [form] = Form.useForm<CrearGastoFormValues>()
   const [loading, setLoading] = useState(false)
   const [cajaPrincipalId, setCajaPrincipalId] = useState<number | null>(null)
+  const [subCajaSeleccionada, setSubCajaSeleccionada] = useState<SubCaja | null>(null)
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<DespliegueDePago | null>(null)
+  const [advertencia, setAdvertencia] = useState<string | null>(null)
+
+  // Obtener cajas principales para encontrar la del usuario
+  const { data: cajasPrincipales } = useQuery({
+    queryKey: [QueryKeys.CAJAS_PRINCIPALES],
+    queryFn: async () => {
+      const response = await cajaPrincipalApi.getAll()
+      return response.data?.data || []
+    },
+  })
+
+  // Encontrar la caja principal del usuario actual
+  const miCajaPrincipal = cajasPrincipales?.find((c) => c.user.id === user?.id)
+
+  // Auto-seleccionar la caja principal del usuario al abrir el modal
+  useEffect(() => {
+    if (open && miCajaPrincipal) {
+      form.setFieldValue('caja_principal_id', miCajaPrincipal.id)
+      setCajaPrincipalId(miCajaPrincipal.id)
+    }
+  }, [open, miCajaPrincipal, form])
+
+  // Observar cambios en los campos del formulario
+  const subCajaId = Form.useWatch('sub_caja_id', form)
+  const metodoPagoId = Form.useWatch('despliegue_pago_id', form)
+
+  // Cargar sub-caja seleccionada
+  useEffect(() => {
+    if (subCajaId) {
+      subCajaApi.getById(subCajaId).then((response) => {
+        if (response.data?.data) {
+          setSubCajaSeleccionada(response.data.data)
+        }
+      })
+    } else {
+      setSubCajaSeleccionada(null)
+    }
+  }, [subCajaId])
+
+  // Cargar método de pago seleccionado
+  useEffect(() => {
+    if (metodoPagoId) {
+      despliegueDePagoApi.getById(metodoPagoId).then((response) => {
+        if (response.data?.data) {
+          setMetodoPagoSeleccionado(response.data.data)
+        }
+      })
+    } else {
+      setMetodoPagoSeleccionado(null)
+    }
+  }, [metodoPagoId])
+
+  // Validar compatibilidad
+  useEffect(() => {
+    if (subCajaSeleccionada && metodoPagoSeleccionado) {
+      const metodosPermitidos = subCajaSeleccionada.despliegues_pago_ids
+      const aceptaTodos = Array.isArray(metodosPermitidos) && metodosPermitidos.includes('*')
+      const aceptaMetodo = Array.isArray(metodosPermitidos) && metodosPermitidos.includes(metodoPagoSeleccionado.id)
+
+      if (!aceptaTodos && !aceptaMetodo) {
+        setAdvertencia(
+          `⚠️ La sub-caja "${subCajaSeleccionada.nombre}" NO acepta el método de pago "${metodoPagoSeleccionado.name}". Por favor, selecciona otra sub-caja o método de pago.`
+        )
+      } else {
+        setAdvertencia(null)
+      }
+    } else {
+      setAdvertencia(null)
+    }
+  }, [subCajaSeleccionada, metodoPagoSeleccionado])
 
   const handleSubmit = async (values: CrearGastoFormValues) => {
-    if (values.afecta_caja === 'no') {
-      message.info('Gasto registrado sin afectar caja')
-      form.resetFields()
-      setOpen(false)
-      onSuccess?.()
+    // Validar que no haya advertencia
+    if (advertencia) {
+      message.error('No puedes guardar mientras haya advertencias. Corrige la configuración.')
       return
     }
 
@@ -50,6 +134,8 @@ export default function ModalCrearGasto({
         monto: values.monto,
         descripcion: values.concepto,
         referencia_tipo: 'egreso_manual',
+        despliegue_pago_id: values.despliegue_pago_id,
+        numero_operacion: values.numero_operacion,
       })
 
       if (response.error) {
@@ -57,9 +143,12 @@ export default function ModalCrearGasto({
         return
       }
 
-      message.success('Gasto registrado exitosamente')
+      message.success('Gasto registrado exitosamente en la caja')
       form.resetFields()
       setCajaPrincipalId(null)
+      setSubCajaSeleccionada(null)
+      setMetodoPagoSeleccionado(null)
+      setAdvertencia(null)
       setOpen(false)
       onSuccess?.()
     } catch (error) {
@@ -70,18 +159,34 @@ export default function ModalCrearGasto({
     }
   }
 
+  const handleCajaPrincipalChange = (value: unknown) => {
+    setCajaPrincipalId(value as number)
+    form.setFieldValue('sub_caja_id', undefined)
+    form.setFieldValue('despliegue_pago_id', undefined)
+  }
+
+  const handleSubCajaChange = () => {
+    form.setFieldValue('despliegue_pago_id', undefined)
+  }
+
   return (
     <ModalForm
       modalProps={{
         width: 700,
         title: <TitleForm>Registrar Gastos</TitleForm>,
         centered: true,
-        okButtonProps: { loading, disabled: loading },
+        okButtonProps: { 
+          loading, 
+          disabled: loading || !!advertencia
+        },
         okText: 'Guardar',
       }}
       onCancel={() => {
         form.resetFields()
         setCajaPrincipalId(null)
+        setSubCajaSeleccionada(null)
+        setMetodoPagoSeleccionado(null)
+        setAdvertencia(null)
       }}
       open={open}
       setOpen={setOpen}
@@ -91,11 +196,20 @@ export default function ModalCrearGasto({
         layout: 'vertical',
         initialValues: {
           fecha: dayjs(),
-          afecta_caja: 'si',
         },
       }}
     >
       <div className="space-y-4">
+        {advertencia && (
+          <Alert
+            message="Advertencia"
+            description={advertencia}
+            type="error"
+            showIcon
+            closable
+          />
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <LabelBase label="Fecha" orientation="column">
             <Form.Item
@@ -111,45 +225,74 @@ export default function ModalCrearGasto({
             </Form.Item>
           </LabelBase>
 
-          <LabelBase label="Saldo Actual S/." orientation="column">
-            <Input
-              value="0.00"
-              disabled
-              className="bg-gray-100"
-            />
+          <LabelBase label="Egreso S/." orientation="column">
+            <Form.Item
+              name="monto"
+              rules={[
+                { required: true, message: 'Ingresa el monto' },
+                { type: 'number', min: 0.01, message: 'El monto debe ser mayor a 0' },
+              ]}
+              className="mb-0"
+            >
+              <InputNumber
+                className="w-full"
+                placeholder="0.00"
+                min={0}
+                step={0.01}
+                precision={2}
+                prefix="S/"
+              />
+            </Form.Item>
           </LabelBase>
         </div>
 
         <LabelBase label="Caja Principal" orientation="column">
           <SelectCajaPrincipal
-            placeholder="Selecciona la caja"
+            placeholder={miCajaPrincipal ? miCajaPrincipal.nombre : "Tu caja"}
             propsForm={{
               name: 'caja_principal_id',
               rules: [{ required: true, message: 'Selecciona una caja principal' }],
             }}
-            onChange={(value) => setCajaPrincipalId(value as number)}
+            onChange={handleCajaPrincipalChange}
+            disabled={true}
           />
         </LabelBase>
 
-        <LabelBase label="Egreso S/." orientation="column">
-          <Form.Item
-            name="monto"
-            rules={[
-              { required: true, message: 'Ingresa el monto' },
-              { type: 'number', min: 0.01, message: 'El monto debe ser mayor a 0' },
-            ]}
-            className="mb-0"
-          >
-            <InputNumber
-              className="w-full"
-              placeholder="0.00"
-              min={0}
-              step={0.01}
-              precision={2}
-              prefix="S/"
-            />
-          </Form.Item>
+        <LabelBase label="Sub-Caja" orientation="column">
+          <SelectSubCaja
+            cajaPrincipalId={cajaPrincipalId || undefined}
+            propsForm={{
+              name: 'sub_caja_id',
+              rules: [{ required: true, message: 'Selecciona una sub-caja' }],
+            }}
+            onChange={handleSubCajaChange}
+          />
         </LabelBase>
+
+        <LabelBase label="Método de Pago" orientation="column">
+          <SelectDespliegueDePago
+            placeholder="Selecciona el método de pago"
+            propsForm={{
+              name: 'despliegue_pago_id',
+              rules: [{ required: true, message: 'Selecciona un método de pago' }],
+            }}
+          />
+        </LabelBase>
+
+        {metodoPagoSeleccionado?.requiere_numero_serie && (
+          <LabelBase label="Número de Operación" orientation="column">
+            <Form.Item
+              name="numero_operacion"
+              rules={[
+                { required: true, message: 'Ingresa el número de operación' },
+                { max: 100, message: 'Máximo 100 caracteres' },
+              ]}
+              className="mb-0"
+            >
+              <Input placeholder="Ej: YAPE-123456789" maxLength={100} />
+            </Form.Item>
+          </LabelBase>
+        )}
 
         <LabelBase label="Concepto (Max 90 caracteres)" orientation="column">
           <Form.Item
@@ -166,7 +309,7 @@ export default function ModalCrearGasto({
 
         <LabelBase label="Comentario (Max 100 caracteres)" orientation="column">
           <Form.Item name="comentario" className="mb-0">
-            <Input.TextArea
+            <TextArea
               placeholder="Comentario adicional (opcional)"
               rows={3}
               maxLength={100}
@@ -175,25 +318,12 @@ export default function ModalCrearGasto({
           </Form.Item>
         </LabelBase>
 
-        <LabelBase label="Afecta Caja" orientation="column">
-          <Form.Item
-            name="afecta_caja"
-            rules={[{ required: true, message: 'Selecciona una opción' }]}
-            className="mb-0"
-          >
-            <Select placeholder="Selecciona">
-              <Select.Option value="si">Sí</Select.Option>
-              <Select.Option value="no">No</Select.Option>
-            </Select>
-          </Form.Item>
-        </LabelBase>
-
-        <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
-          <p className="text-xs text-yellow-700">
-            <strong>Advertencia:</strong> Este gasto se descontará del saldo de la caja.
+        <div className="p-3 bg-red-50 rounded border border-red-200">
+          <p className="text-xs text-red-700">
+            <strong>Advertencia:</strong> Este gasto se descontará directamente del saldo de la sub-caja seleccionada.
           </p>
-          <p className="text-xs text-yellow-700 mt-1">
-            <strong>SOLO PULSE GUARDAR SI SE REGISTRA EL EGRESO DE DINERO</strong>
+          <p className="text-xs text-red-700 mt-1">
+            <strong>SOLO PULSE GUARDAR SI SE REGISTRA EL EGRESO REAL DE DINERO</strong>
           </p>
         </div>
       </div>

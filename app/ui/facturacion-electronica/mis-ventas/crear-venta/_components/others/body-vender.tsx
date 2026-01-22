@@ -61,6 +61,7 @@ export type FormCreateVenta = {
   metodos_de_pago?: Array<{
     despliegue_de_pago_id: string
     monto: number
+    numero_operacion?: string
   }>
 }
 

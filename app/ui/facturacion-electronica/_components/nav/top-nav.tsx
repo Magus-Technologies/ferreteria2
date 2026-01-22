@@ -13,6 +13,7 @@ import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
 import useItemsFinanzas from "../../_hooks/use-items-finanzas";
 import useItemsVentas from "../../_hooks/use-items-ventas";
+import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
 
 export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
@@ -71,6 +72,11 @@ export default function TopNav({ className }: { className?: string }) {
         <FaClipboardList />
         Kardex
       </ButtonNav>
+      
+      {/* Notificaciones de préstamos pendientes */}
+      <div className="ml-auto">
+        <NotificacionPrestamosPendientes />
+      </div>
     </BaseNav>
   );
 }

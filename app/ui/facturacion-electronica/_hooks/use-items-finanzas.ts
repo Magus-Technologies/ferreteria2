@@ -41,6 +41,11 @@ export default function useItemsFinanzas({
       label: 'Gestión de Cajas',
       onClick: () => router.push('/ui/facturacion-electronica/gestion-cajas'),
     },
+    {
+      key: '6',
+      label: 'Métodos de Pago',
+      onClick: () => router.push('/ui/facturacion-electronica/metodos-pago'),
+    },
   ]
 
   return {

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Modal, Descriptions, Spin, Card } from "antd";
 import { cajaApi, type AperturaYCierreCaja } from "~/lib/api/caja";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 import TableBase from "~/components/tables/table-base";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsCierres } from "./columns-cierres";
@@ -16,17 +18,15 @@ const formatCurrency = (value: number) => {
 };
 
 export default function HistorialCierres() {
-  const [loading, setLoading] = useState(true);
-  const [cierres, setCierres] = useState<AperturaYCierreCaja[]>([]);
   const [selectedCierre, setSelectedCierre] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [movimientos, setMovimientos] = useState<any>(null);
   const [loadingMovimientos, setLoadingMovimientos] = useState(false);
   const gridRef = useRef<AgGridReact<AperturaYCierreCaja>>(null);
 
-  const fetchCierres = async () => {
-    setLoading(true);
-    try {
+  const { data: cierres = [], isLoading } = useQuery({
+    queryKey: [QueryKeys.HISTORIAL_APERTURAS],
+    queryFn: async () => {
       const response = await cajaApi.historial({
         page: 1,
         per_page: 100,
@@ -34,8 +34,7 @@ export default function HistorialCierres() {
 
       if (response.error) {
         console.error("Error al cargar cierres:", response.error);
-        setCierres([]);
-        return;
+        return [];
       }
 
       if (response.data) {
@@ -43,19 +42,14 @@ export default function HistorialCierres() {
         const cierresData = response.data.data.filter(
           (item) => item.estado === "cerrada"
         );
-        setCierres(cierresData || []);
+        return cierresData || [];
       }
-    } catch (error) {
-      console.error("Error al cargar cierres:", error);
-      setCierres([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchCierres();
-  }, []);
+      return [];
+    },
+    refetchOnWindowFocus: true,
+    staleTime: 30000,
+  });
 
   const verDetalles = async (record: AperturaYCierreCaja) => {
     setSelectedCierre(record);
@@ -83,7 +77,7 @@ export default function HistorialCierres() {
     onVerDetalles: verDetalles,
   });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="w-full">
         <div className="flex justify-center items-center h-[500px]">

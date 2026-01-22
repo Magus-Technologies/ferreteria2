@@ -43,6 +43,19 @@ export interface AperturaYCierreCaja {
 export interface AperturarCajaRequest {
   caja_principal_id: number
   monto_apertura: number
+  conteo_billetes_monedas?: {
+    billete_200?: number
+    billete_100?: number
+    billete_50?: number
+    billete_20?: number
+    billete_10?: number
+    moneda_5?: number
+    moneda_2?: number
+    moneda_1?: number
+    moneda_050?: number
+    moneda_020?: number
+    moneda_010?: number
+  }
 }
 
 export interface CerrarCajaRequest {
@@ -215,6 +228,89 @@ export const cajaApi = {
     }
   }>> {
     return apiRequest<any>(`/cajas/${id}/resumen-movimientos`, {
+      method: 'GET',
+    })
+  },
+
+  /**
+   * Obtener detalle completo de movimientos de una caja
+   */
+  detalleMovimientos(id: string): Promise<ApiResponse<{
+    success: boolean
+    data: {
+      movimientos: {
+        ventas: Array<{
+          id: string
+          serie_numero: string
+          fecha: string
+          monto: string
+          metodo_pago: string
+        }>
+        ingresos: Array<{
+          id: string
+          fecha: string
+          descripcion: string
+          monto: string
+          metodo_pago: string
+          sub_caja: string
+          sub_caja_codigo: string
+        }>
+        egresos: Array<{
+          id: string
+          fecha: string
+          descripcion: string
+          monto: string
+          metodo_pago: string
+          sub_caja: string
+          sub_caja_codigo: string
+        }>
+        prestamos_enviados: Array<{
+          id: string
+          fecha: string
+          descripcion: string
+          monto: string
+          metodo_pago: string
+          sub_caja: string
+          sub_caja_codigo: string
+        }>
+        prestamos_recibidos: Array<{
+          id: string
+          fecha: string
+          descripcion: string
+          monto: string
+          metodo_pago: string
+          sub_caja: string
+          sub_caja_codigo: string
+        }>
+        movimientos_internos_salida: Array<{
+          id: string
+          fecha: string
+          descripcion: string
+          monto: string
+          metodo_pago: string
+          sub_caja: string
+          sub_caja_codigo: string
+        }>
+        movimientos_internos_entrada: Array<{
+          id: string
+          fecha: string
+          descripcion: string
+          monto: string
+          metodo_pago: string
+          sub_caja: string
+          sub_caja_codigo: string
+        }>
+      }
+      totales_por_metodo: Record<string, number>
+      resumen: {
+        total_ventas: string
+        total_ingresos: string
+        total_egresos: string
+        total_movimientos: number
+      }
+    }
+  }>> {
+    return apiRequest<any>(`/cajas/${id}/detalle-movimientos`, {
       method: 'GET',
     })
   },

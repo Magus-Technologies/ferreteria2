@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "set NODE_OPTIONS=--max-old-space-size=8192 && next dev --turbopack",
     "build": "next build",
     "build:server": "set NODE_OPTIONS=--max-old-space-size=8192 && next build --no-lint",
     "start": "next start",

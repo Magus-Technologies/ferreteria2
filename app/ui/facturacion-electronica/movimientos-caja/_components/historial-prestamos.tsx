@@ -53,7 +53,7 @@ export default function HistorialPrestamos() {
             ¿Confirmas la devolución del préstamo de <strong>S/ {prestamo.monto}</strong>?
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            De: {prestamo.sub_caja_destino.nombre} → A: {prestamo.sub_caja_origen.nombre}
+            De: {prestamo.sub_caja_destino.nombre} → A: {prestamo.sub_caja_origen?.nombre || 'N/A'}
           </p>
         </div>
       ),
@@ -135,11 +135,32 @@ export default function HistorialPrestamos() {
       },
     },
     {
+      headerName: 'Aprobación',
+      field: 'estado_aprobacion',
+      width: 150,
+      cellRenderer: (params: any) => {
+        const estado = params.value
+        if (estado === 'pendiente_aprobacion') {
+          return <Tag color="blue">Pendiente Aprobación</Tag>
+        }
+        if (estado === 'aprobado') {
+          return <Tag color="green">Aprobado</Tag>
+        }
+        if (estado === 'rechazado') {
+          return <Tag color="red">Rechazado</Tag>
+        }
+        return null
+      },
+    },
+    {
       headerName: 'Acciones',
       width: 120,
       cellRenderer: (params: any) => {
         const prestamo = params.data as Prestamo
-        if (prestamo.estado !== 'pendiente') return null
+        // Solo se puede devolver si está aprobado y pendiente
+        if (prestamo.estado !== 'pendiente' || prestamo.estado_aprobacion !== 'aprobado') {
+          return null
+        }
 
         return (
           <Button
