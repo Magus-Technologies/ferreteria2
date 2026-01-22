@@ -27,6 +27,7 @@ import ModalSeleccionarTipoDespacho from "../modals/modal-seleccionar-tipo-despa
 import ModalVerEntregas from "../modals/modal-ver-entregas";
 import ModalCalendarioEntregas from "../modals/modal-calendario-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
+import { redColors, orangeColors, greenColors } from "~/lib/colors";
 
 interface ValuesFiltersMisVentas {
   almacen_id: number;
@@ -327,6 +328,24 @@ export default function FiltersMisVentas() {
               placeholder="Todos"
             />
           </div>
+          
+          {/* Leyenda de colores */}
+          <div className="col-span-5 flex items-center gap-4 text-xs">
+            <span className="font-semibold text-gray-700">Leyenda:</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: redColors[2] }}></div>
+              <span className="text-gray-600">Crédito Pendiente</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: orangeColors[2] }}></div>
+              <span className="text-gray-600">Contado / En Espera</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: greenColors[2] }}></div>
+              <span className="text-gray-600">Pagado Completo</span>
+            </div>
+          </div>
+          
           <div className="col-span-1 flex items-center gap-2">
             <ButtonBase
               color="info"

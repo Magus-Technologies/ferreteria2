@@ -52,7 +52,7 @@ function TableProductos() {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
       page,
-      per_page: 250, // OPTIMIZACIÓN: Reducido de 10,000 a 250 para mejorar performance
+      per_page: 10000, // Mostrar todos los productos sin paginación
     },
     enabled: !!(filtros?.almacen_id || almacen_id),
   });

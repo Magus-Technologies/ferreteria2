@@ -18,7 +18,7 @@ import { useLocalStorage } from "~/hooks/use-local-storage";
 import { ZodType } from "zod";
 
 export interface TableWithTitleProps<T, schemaType = unknown>
-  extends Omit<TableBaseProps<T>, 'selectionColor' | 'headerColor'> {
+  extends Omit<TableBaseProps<T>, 'selectionColor' | 'headerColor' | 'isVisible'> {
   id: string;
   title: string;
   extraTitle?: React.ReactNode;
@@ -41,6 +41,7 @@ export interface TableWithTitleProps<T, schemaType = unknown>
   children?: React.ReactNode;
   selectionColor?: string; // Color para la fila seleccionada
   headerColor?: string; // Color para el header de la tabla
+  isVisible?: boolean; // Para saber si el componente es visible (modal abierto)
 }
 
 export default function TableWithTitle<T, schemaType = unknown>({
@@ -60,6 +61,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
   children,
   selectionColor, // Recibir el color de selección
   headerColor, // Recibir el color del header
+  isVisible, // Recibir si es visible
   ...props
 }: TableWithTitleProps<T, schemaType>) {
   const tableRefInterno = useRef<AgGridReact<T>>(null);
@@ -192,6 +194,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
         tableKey={id} // Usar el id como tableKey único
         selectionColor={selectionColor} // Pasar el color de selección
         headerColor={headerColor} // Pasar el color del header
+        isVisible={isVisible} // Pasar visibilidad
         onGridReady={(params) => {
           if (defaultColumns.length) {
             setVisibilityColumns({

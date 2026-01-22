@@ -83,29 +83,6 @@ export default function ModalProductoSearch({
   const [costoUnidadDerivada, setCostoUnidadDerivada] =
     useState<CostoUnidadDerivadaSearch>(null);
 
-  // Agregar listener para navegación con teclado
-  useEffect(() => {
-    if (!open) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Solo capturar flechas arriba/abajo cuando NO estamos en un input de texto
-      const target = e.target as HTMLElement;
-      const isInputText = target.tagName === 'INPUT' && 
-        (target as HTMLInputElement).type === 'text';
-      
-      if (isInputText) return; // Permitir navegación normal en inputs de texto
-
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        // TODO: Implementar navegación en la tabla
-        // Por ahora solo prevenimos el comportamiento por defecto
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open]);
-
   return (
     <Modal
       centered
@@ -115,6 +92,7 @@ export default function ModalProductoSearch({
           : "98vw"
       }
       open={open}
+      destroyOnHidden={false}
       classNames={{ content: "min-w-fit xl:min-w-0" }}
       title={"Buscar Producto"}
       okText={"Seleccionar"}
@@ -125,7 +103,6 @@ export default function ModalProductoSearch({
       }}
       maskClosable={false}
       keyboard={false}
-      destroyOnHidden
       styles={{
         body: {
           maxHeight: "calc(100vh - 120px)",
@@ -171,6 +148,7 @@ export default function ModalProductoSearch({
                 onRowDoubleClicked={onRowDoubleClicked}
                 tipoBusqueda={tipoBusqueda}
                 selectionColor={selectionColor}
+                isVisible={open}
               />
             </div>
             {showUltimasCompras && (

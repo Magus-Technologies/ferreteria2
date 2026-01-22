@@ -7,7 +7,7 @@ import { greenColors, orangeColors, redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { CompraCreateInputSchema } from '~/prisma/generated/zod'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
-import { Prisma, EstadoDeCompra, FormaDePago } from '@prisma/client'
+import { Prisma, EstadoDeCompra } from '@prisma/client'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
@@ -122,16 +122,25 @@ const TableCompras = memo(function TableCompras({
     const totalPagado = Number(compra.total_pagado || 0)
     const resta = total - totalPagado
 
+    // Comparar con strings de Laravel (la API devuelve 'co', 'cr', 'ee', 'an')
+    const formaDePago = compra.forma_de_pago as string
+    const estadoDeCompra = compra.estado_de_compra as string
+    
+    const formaDePagoContado = formaDePago === 'co'
+    const formaDePagoCredito = formaDePago === 'cr'
+    const estadoEnEspera = estadoDeCompra === 'ee'
+    const estadoAnulado = estadoDeCompra === 'an'
+
     // Verde: Contado (siempre pagado) o Crédito completamente pagado
-    if (compra.forma_de_pago === FormaDePago.Contado || (compra.forma_de_pago === FormaDePago.cr && resta <= 0.01)) {
+    if (formaDePagoContado || (formaDePagoCredito && resta <= 0.01)) {
       return greenColors[2]
     }
-    // Amarillo/Naranja: En Espera
-    else if (compra.estado_de_compra === EstadoDeCompra.EnEspera) {
+    // Naranja: En Espera o Anulado
+    else if (estadoEnEspera || estadoAnulado) {
       return orangeColors[2]
     }
     // Rojo: Crédito y Pendiente
-    else if (compra.forma_de_pago === FormaDePago.cr && resta > 0.01) {
+    else if (formaDePagoCredito && resta > 0.01) {
       return redColors[2]
     }
 
@@ -192,20 +201,29 @@ const TableCompras = memo(function TableCompras({
     const totalPagado = Number(compra.total_pagado || 0)
     const resta = total - totalPagado
 
+    // Comparar con strings de Laravel (la API devuelve 'co', 'cr', 'ee', 'an')
+    const formaDePago = compra.forma_de_pago as string
+    const estadoDeCompra = compra.estado_de_compra as string
+    
+    const formaDePagoContado = formaDePago === 'co'
+    const formaDePagoCredito = formaDePago === 'cr'
+    const estadoEnEspera = estadoDeCompra === 'ee'
+    const estadoAnulado = estadoDeCompra === 'an'
+
     // Verde: Contado (siempre pagado) o Crédito completamente pagado
-    if (compra.forma_de_pago === FormaDePago.Contado || (compra.forma_de_pago === FormaDePago.cr && resta <= 0.01)) {
+    if (formaDePagoContado || (formaDePagoCredito && resta <= 0.01)) {
       return {
         background: greenColors[2]
       }
     }
-    // Amarillo/Naranja: En Espera
-    if (compra.estado_de_compra === EstadoDeCompra.EnEspera) {
+    // Naranja: En Espera o Anulado
+    if (estadoEnEspera || estadoAnulado) {
       return {
         background: orangeColors[2]
       }
     }
     // Rojo: Crédito y Pendiente
-    if (compra.forma_de_pago === FormaDePago.cr && resta > 0.01) {
+    if (formaDePagoCredito && resta > 0.01) {
       return {
         background: redColors[2]
       }
@@ -277,7 +295,7 @@ const TableCompras = memo(function TableCompras({
   return (
     <TableWithTitle<Compra>
       id={id}
-      selectionColor={selectionColor} // Color dinámico que coincide con el color de la fila
+      selectionColor={greenColors[10]} // Color dinámico que coincide con el color de la fila
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
       onRowDoubleClicked={handleRowDoubleClicked}

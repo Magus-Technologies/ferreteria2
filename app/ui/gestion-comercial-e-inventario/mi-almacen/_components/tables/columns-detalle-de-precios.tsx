@@ -57,7 +57,10 @@ export function useColumnsDetalleDePrecios() {
       minWidth: 80,
       filter: 'agNumberColumnFilter',
       valueFormatter: ({ value, data }) => {
-        return `${value * Number(data!.factor)}`
+        const costo = Number(value)
+        const factor = Number(data!.factor)
+        if (isNaN(costo) || isNaN(factor)) return '0.0000'
+        return `${(costo * factor).toFixed(4)}`
       },
       flex: 1,
       type: 'pen4',
@@ -68,9 +71,14 @@ export function useColumnsDetalleDePrecios() {
       minWidth: 80,
       filter: 'agNumberColumnFilter',
       valueFormatter: ({ value, data }) => {
-        const costoTotal = value * Number(data!.factor)
-        const precioPublico = data!.precio_publico
-        const ganancia = Number(precioPublico) - costoTotal
+        const costo = Number(value)
+        const factor = Number(data!.factor)
+        const precioPublico = Number(data!.precio_publico)
+        
+        if (isNaN(costo) || isNaN(factor) || isNaN(precioPublico)) return '0.00'
+        
+        const costoTotal = costo * factor
+        const ganancia = precioPublico - costoTotal
         const p_venta = costoTotal != 0 ? (ganancia * 100) / costoTotal : 0
         return `${p_venta.toFixed(2)}`
       },
@@ -82,6 +90,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'precio_publico',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const precio = Number(value)
+        return isNaN(precio) ? '0.00' : precio.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -91,9 +103,14 @@ export function useColumnsDetalleDePrecios() {
       minWidth: 80,
       filter: 'agNumberColumnFilter',
       valueFormatter: ({ value, data }) => {
-        const costoTotal = value * Number(data!.factor)
-        const precioPublico = data!.precio_publico
-        const ganancia = Number(precioPublico) - costoTotal
+        const costo = Number(value)
+        const factor = Number(data!.factor)
+        const precioPublico = Number(data!.precio_publico)
+        
+        if (isNaN(costo) || isNaN(factor) || isNaN(precioPublico)) return '0.00'
+        
+        const costoTotal = costo * factor
+        const ganancia = precioPublico - costoTotal
         return `${ganancia.toFixed(2)}`
       },
       flex: 1,
@@ -104,6 +121,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'precio_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const precio = Number(value)
+        return isNaN(precio) ? '0.00' : precio.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -112,6 +133,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'precio_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const precio = Number(value)
+        return isNaN(precio) ? '0.00' : precio.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -120,6 +145,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'precio_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const precio = Number(value)
+        return isNaN(precio) ? '0.00' : precio.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -128,6 +157,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'comision_publico',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const comision = Number(value)
+        return isNaN(comision) ? '0.00' : comision.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -136,6 +169,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'comision_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const comision = Number(value)
+        return isNaN(comision) ? '0.00' : comision.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -144,6 +181,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'comision_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const comision = Number(value)
+        return isNaN(comision) ? '0.00' : comision.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -152,6 +193,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'comision_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const comision = Number(value)
+        return isNaN(comision) ? '0.00' : comision.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -160,6 +205,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'activador_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const activador = Number(value)
+        return isNaN(activador) ? '0.00' : activador.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -168,6 +217,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'activador_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const activador = Number(value)
+        return isNaN(activador) ? '0.00' : activador.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },
@@ -176,6 +229,10 @@ export function useColumnsDetalleDePrecios() {
       field: 'activador_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => {
+        const activador = Number(value)
+        return isNaN(activador) ? '0.00' : activador.toFixed(2)
+      },
       flex: 1,
       type: 'pen',
     },

@@ -137,9 +137,21 @@ export default function CardAgregarProductoVenta({
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
   const precio_ventaRef = useRef<RefSelectBaseProps>(null)
   const buttom_masRef = useRef<HTMLButtonElement>(null)
+  const lastProductoIdRef = useRef<number | undefined>(undefined)
+  
   useEffect(() => {
-    cantidadRef.current?.focus()
+    // Solo enfocar si el producto cambió Y no es la primera vez (para evitar autofocus al abrir modal)
+    if (productoSeleccionadoSearchStore?.id && 
+        productoSeleccionadoSearchStore.id !== lastProductoIdRef.current &&
+        lastProductoIdRef.current !== undefined) {
+      // Pequeño delay para permitir que la tabla procese la selección primero
+      setTimeout(() => {
+        cantidadRef.current?.focus()
+      }, 50)
+    }
+    lastProductoIdRef.current = productoSeleccionadoSearchStore?.id
   }, [productoSeleccionadoSearchStore])
+  
   useEffect(() => {
     const primeraUnidad = unidades_derivadas?.[0]?.unidad_derivada?.id
     if (primeraUnidad) {

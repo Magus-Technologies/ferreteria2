@@ -20,7 +20,7 @@ import {
   ColDef,
   GridApi,
 } from "ag-grid-community";
-import { RefObject, useMemo, useCallback, useRef, useEffect } from "react";
+import { RefObject, useMemo, useCallback, useRef, useEffect, useState } from "react";
 import useColumnTypes from "./hooks/use-column-types";
 import { usePathname } from "next/navigation";
 
@@ -54,6 +54,7 @@ export interface TableBaseProps<T>
   headerColor?: string;
   persistColumnState?: boolean;
   tableKey?: string;
+  isVisible?: boolean; // Para saber si el componente es visible (modal abierto)
 }
 
 export default function TableBase<T>({
@@ -67,6 +68,7 @@ export default function TableBase<T>({
   headerColor,
   persistColumnState = true,
   tableKey,
+  isVisible,
   ...props
 }: TableBaseProps<T>) {
   const { columnTypes } = useColumnTypes();
@@ -75,7 +77,11 @@ export default function TableBase<T>({
   const columnStateRef = useRef<any>(null);
   const isApplyingStateRef = useRef(false);
   const hasAppliedInitialStateRef = useRef(false);
-  
+  const [isGridReady, setIsGridReady] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMoveSourceRef = useRef<string | null>(null);
+  const previousVisibleRef = useRef<boolean | undefined>(undefined);
+
   // Generar un ID único para esta instancia de tabla
   const tableId = useMemo(() => generateTableId(), []);
 
@@ -102,8 +108,10 @@ export default function TableBase<T>({
     if (persistColumnState) {
       try {
         const savedState = localStorage.getItem(storageKey);
+        console.log('🔵 [TableBase] Cargando estado de localStorage:', storageKey, savedState ? 'ENCONTRADO' : 'NO ENCONTRADO');
         if (savedState) {
           columnStateRef.current = JSON.parse(savedState);
+          console.log('🔵 [TableBase] Estado cargado:', columnStateRef.current?.map((c: any) => c.colId));
         }
       } catch (error) {
         console.error('Error cargando estado:', error);
@@ -111,31 +119,49 @@ export default function TableBase<T>({
     }
   }, [persistColumnState, storageKey]);
 
-  // Guardar estado de columnas
+  // Guardar estado de columnas con debounce
   const saveColumnState = useCallback(() => {
     if (!persistColumnState || !gridApiRef.current || isApplyingStateRef.current) return;
-    
-    try {
-      const state = gridApiRef.current.getColumnState();
-      columnStateRef.current = state;
-      localStorage.setItem(storageKey, JSON.stringify(state));
-    } catch (error) {
-      console.error('Error guardando estado:', error);
+
+    // Cancelar el timeout anterior si existe
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
+
+    // Guardar después de 300ms de inactividad
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        const state = gridApiRef.current!.getColumnState();
+        columnStateRef.current = state;
+        localStorage.setItem(storageKey, JSON.stringify(state));
+        console.log('🟢 [TableBase] Estado GUARDADO en localStorage:', storageKey, state?.map((c: any) => c.colId));
+      } catch (error) {
+        console.error('Error guardando estado:', error);
+      }
+    }, 300);
   }, [persistColumnState, storageKey]);
 
   // Aplicar estado guardado
   const applyColumnState = useCallback(() => {
-    if (!columnStateRef.current || !gridApiRef.current || isApplyingStateRef.current) return;
-    
+    if (!columnStateRef.current || !gridApiRef.current || isApplyingStateRef.current) {
+      console.log('🟡 [TableBase] applyColumnState SALTADO:', {
+        hasState: !!columnStateRef.current,
+        hasApi: !!gridApiRef.current,
+        isApplying: isApplyingStateRef.current
+      });
+      return;
+    }
+
     isApplyingStateRef.current = true;
-    
+    console.log('🟣 [TableBase] APLICANDO estado:', columnStateRef.current?.map((c: any) => c.colId));
+
     try {
-      gridApiRef.current.applyColumnState({ 
-        state: columnStateRef.current, 
-        applyOrder: true 
+      gridApiRef.current.applyColumnState({
+        state: columnStateRef.current,
+        applyOrder: true
       });
       hasAppliedInitialStateRef.current = true;
+      console.log('🟣 [TableBase] Estado APLICADO exitosamente');
     } catch (error) {
       console.error('Error aplicando estado:', error);
     } finally {
@@ -147,28 +173,54 @@ export default function TableBase<T>({
 
   // Manejar cuando la grilla está lista
   const onGridReady = useCallback((event: GridReadyEvent) => {
+    console.log('🔶 [TableBase] onGridReady llamado, storageKey:', storageKey);
     gridApiRef.current = event.api;
     hasAppliedInitialStateRef.current = false;
+    setIsGridReady(true);
     props.onGridReady?.(event);
-  }, [props]);
+  }, [props, storageKey]);
 
   // Manejar cuando se renderizan los primeros datos
   const onFirstDataRendered = useCallback((event: FirstDataRenderedEvent) => {
+    console.log('🔶 [TableBase] onFirstDataRendered llamado:', {
+      hasAppliedInitial: hasAppliedInitialStateRef.current,
+      hasColumnState: !!columnStateRef.current,
+      storageKey
+    });
     if (!hasAppliedInitialStateRef.current && columnStateRef.current) {
       setTimeout(() => {
         applyColumnState();
-      }, 100); // Aumentado a 100ms para dar más tiempo
+      }, 100);
     }
     props.onFirstDataRendered?.(event);
-  }, [applyColumnState, props]);
+  }, [applyColumnState, props, storageKey]);
 
   // Manejar cuando se mueve una columna
   const onColumnMoved = useCallback((event: ColumnMovedEvent) => {
     if (event.finished && !isApplyingStateRef.current) {
-      saveColumnState();
+      console.log('🟠 [TableBase] Columna MOVIDA, guardando estado...', event.source);
+      
+      // Solo guardar si es un movimiento real del usuario (uiColumnMoved)
+      if (event.source === 'uiColumnMoved') {
+        // Cancelar cualquier guardado pendiente
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+          saveTimeoutRef.current = null;
+        }
+        
+        // Guardar INMEDIATAMENTE sin debounce
+        try {
+          const state = gridApiRef.current!.getColumnState();
+          columnStateRef.current = state;
+          localStorage.setItem(storageKey, JSON.stringify(state));
+          console.log('🟢 [TableBase] Estado GUARDADO INMEDIATAMENTE en localStorage:', storageKey, state?.map((c: any) => c.colId));
+        } catch (error) {
+          console.error('Error guardando estado:', error);
+        }
+      }
     }
     props.onColumnMoved?.(event);
-  }, [saveColumnState, props]);
+  }, [storageKey, props]);
 
   // Manejar cuando se redimensiona una columna
   const onColumnResized = useCallback((event: ColumnResizedEvent) => {
@@ -193,14 +245,78 @@ export default function TableBase<T>({
       if (!props.rowData || (Array.isArray(props.rowData) && props.rowData.length === 0)) {
         return;
       }
-      
+
       const timeoutId = setTimeout(() => {
         applyColumnState();
       }, 200); // Aumentado a 200ms
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [props.rowData, applyColumnState]);
+
+  // Recargar y aplicar estado cuando el componente se vuelve visible (modal se abre)
+  useEffect(() => {
+    console.log('🔍 [TableBase] useEffect isVisible disparado:', {
+      isVisible,
+      previousVisible: previousVisibleRef.current,
+      persistColumnState,
+      isGridReady,
+      hasGridApi: !!gridApiRef.current,
+      storageKey
+    });
+    
+    // Detectar cuando isVisible cambia de false a true (modal se reabre)
+    const wasHidden = previousVisibleRef.current === false;
+    const isNowVisible = isVisible === true;
+    const isFirstLoad = previousVisibleRef.current === undefined;
+    
+    // Aplicar en dos casos:
+    // 1. Primera carga (isFirstLoad y isVisible es true)
+    // 2. Modal se reabre (wasHidden y isNowVisible)
+    const shouldApply = (isFirstLoad && isNowVisible) || (wasHidden && isNowVisible);
+    
+    console.log('🔍 [TableBase] Condiciones:', {
+      wasHidden,
+      isNowVisible,
+      isFirstLoad,
+      shouldApply
+    });
+    
+    if (shouldApply && persistColumnState && isGridReady && gridApiRef.current) {
+      const action = isFirstLoad ? 'PRIMERA CARGA' : 'REABIERTO';
+      console.log(`🔵 [TableBase] Modal ${action}, recargando estado desde localStorage`);
+      
+      // Recargar estado desde localStorage
+      try {
+        const savedState = localStorage.getItem(storageKey);
+        console.log('🔵 [TableBase] Estado en localStorage:', storageKey, savedState ? 'ENCONTRADO' : 'NO ENCONTRADO');
+        if (savedState) {
+          columnStateRef.current = JSON.parse(savedState);
+          // Aplicar el estado después de que los datos se hayan renderizado
+          setTimeout(() => {
+            if (gridApiRef.current && columnStateRef.current) {
+              isApplyingStateRef.current = true;
+              console.log('🟣 [TableBase] Aplicando estado:', columnStateRef.current?.map((c: any) => c.colId));
+              gridApiRef.current.applyColumnState({
+                state: columnStateRef.current,
+                applyOrder: true
+              });
+              // Forzar refresh del header
+              gridApiRef.current.refreshHeader();
+              setTimeout(() => {
+                isApplyingStateRef.current = false;
+              }, 200);
+            }
+          }, 300);
+        }
+      } catch (error) {
+        console.error('Error recargando estado:', error);
+      }
+    }
+    
+    // Actualizar el ref con el valor actual
+    previousVisibleRef.current = isVisible || false;
+  }, [isVisible, persistColumnState, storageKey, isGridReady]);
 
   // Memoizar columnDefs
   const memoizedColumnDefs = useMemo<ColDef<T>[]>(() => [

@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Button, Popover, Spin } from 'antd'
+import { Badge, Button, Popover } from 'antd'
 import { BellOutlined } from '@ant-design/icons'
 import { usePrestamosPendientes } from '../_hooks/use-prestamos-pendientes'
 import { ModalAprobarPrestamo } from './modal-aprobar-prestamo'
@@ -14,7 +14,8 @@ export function NotificacionPrestamosPendientes() {
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  const prestamos = data?.data || []
+  // data ahora es directamente Prestamo[]
+  const prestamos = data || []
   const count = prestamos.length
 
   if (isLoading || count === 0) {
@@ -36,7 +37,7 @@ export function NotificacionPrestamosPendientes() {
       </div>
 
       <div className="space-y-2 max-h-96 overflow-y-auto">
-        {prestamos.map((prestamo) => (
+        {prestamos.map((prestamo: Prestamo) => (
           <div
             key={prestamo.id}
             className="border rounded-lg p-3 space-y-2 hover:bg-slate-50 cursor-pointer transition-colors"

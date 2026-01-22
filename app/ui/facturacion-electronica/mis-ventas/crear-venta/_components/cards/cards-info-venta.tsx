@@ -12,7 +12,8 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import { MdOutlineSell, MdSell } from 'react-icons/md'
 import { FaPause } from 'react-icons/fa6'
-import PopoverOpcionesEntrega from '../popovers/popover-opciones-entrega'
+import ModalSeleccionarTipoDespacho from '../modals/modal-seleccionar-tipo-despacho'
+import ModalDetallesEntrega from '../modals/modal-detalles-entrega'
 
 export default function CardsInfoVenta({
   form,
@@ -27,8 +28,18 @@ export default function CardsInfoVenta({
     'productos',
     form
   ) as FormCreateVenta['productos']
+  const direccionSeleccionada = Form.useWatch('direccion_seleccionada', form)
+  const clienteNombre = Form.useWatch('cliente_nombre', form)
+
+  // Obtener la dirección seleccionada del cliente
+  const getDireccionCliente = () => {
+    const direccionKey = `_cliente_direccion_${direccionSeleccionada?.replace('D', '')}` as keyof FormCreateVenta
+    return form.getFieldValue(direccionKey) || form.getFieldValue('direccion_entrega')
+  }
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [modalTipoDespachoOpen, setModalTipoDespachoOpen] = useState(false)
+  const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] = useState(false)
   const [tipoDespacho, setTipoDespacho] = useState<'EnTienda' | 'Domicilio' | 'Parcial'>('EnTienda')
   const [entregaConfigurada, setEntregaConfigurada] = useState(false)
 
@@ -148,30 +159,14 @@ export default function CardsInfoVenta({
         />
         
         {/* Botón Configurar Entrega */}
-        <PopoverOpcionesEntrega
-          form={form}
-          tipoDespacho={tipoDespacho}
-          setTipoDespacho={setTipoDespacho}
-          onConfirmar={() => {
-            setEntregaConfigurada(true)
-            // Guardar tipo de despacho en el formulario
-            form.setFieldValue('tipo_despacho', tipoDespacho)
-          }}
-          onEditarCliente={() => {
-            // TODO: Implementar edición de cliente si es necesario
-            console.log('Editar cliente')
-          }}
-          direccion={form.getFieldValue('direccion_entrega')}
-          clienteNombre={form.getFieldValue('cliente_nombre')}
+        <ButtonBase
+          onClick={() => setModalTipoDespachoOpen(true)}
+          color={entregaConfigurada ? 'success' : 'warning'}
+          className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
         >
-          <ButtonBase
-            color={entregaConfigurada ? 'success' : 'warning'}
-            className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
-          >
-            <FaTruck className='min-w-fit' size={30} />
-            {entregaConfigurada ? 'Entrega Configurada ✓' : 'Configurar Entrega'}
-          </ButtonBase>
-        </PopoverOpcionesEntrega>
+          <FaTruck className='min-w-fit' size={30} />
+          {entregaConfigurada ? 'Entrega Configurada ✓' : 'Configurar Entrega'}
+        </ButtonBase>
         
         <ButtonBase
           onClick={() => setModalOpen(true)}
@@ -219,6 +214,35 @@ export default function CardsInfoVenta({
           <FaPause className='min-w-fit' size={30} /> Poner en Espera
         </ButtonBase>
       </div>
+
+      {/* Modal para seleccionar tipo de despacho */}
+      <ModalSeleccionarTipoDespacho
+        open={modalTipoDespachoOpen}
+        setOpen={setModalTipoDespachoOpen}
+        onSelectTipo={(tipo) => {
+          setTipoDespacho(tipo)
+          setModalDetallesEntregaOpen(true)
+        }}
+      />
+
+      {/* Modal para configurar detalles de entrega */}
+      <ModalDetallesEntrega
+        open={modalDetallesEntregaOpen}
+        setOpen={setModalDetallesEntregaOpen}
+        form={form}
+        tipoDespacho={tipoDespacho}
+        onConfirmar={() => {
+          setEntregaConfigurada(true)
+          // Guardar tipo de despacho en el formulario
+          form.setFieldValue('tipo_despacho', tipoDespacho)
+        }}
+        onEditarCliente={() => {
+          // TODO: Implementar edición de cliente si es necesario
+          console.log('Editar cliente')
+        }}
+        direccion={getDireccionCliente()}
+        clienteNombre={clienteNombre}
+      />
 
       <ModalMetodosPagoVenta
         open={modalOpen}
