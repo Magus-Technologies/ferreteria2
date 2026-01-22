@@ -46,6 +46,8 @@ export interface FormCreateCompra {
   tipo_moneda: TipoMoneda
   tipo_de_cambio: number
   proveedor_id?: Proveedor['id']
+  proveedor_razon_social?: string
+  proveedor_ruc?: string
   tipo_documento: TipoDocumento
   serie?: string
   numero?: number

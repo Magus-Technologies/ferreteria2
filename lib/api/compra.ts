@@ -78,6 +78,7 @@ export interface Compra {
   };
   recepciones_almacen_count?: number;
   pagos_de_compras_count?: number;
+  total_pagado?: number;
 }
 
 // ============= REQUEST TYPES =============

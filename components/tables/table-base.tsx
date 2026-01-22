@@ -253,6 +253,36 @@ export default function TableBase<T>({
         outline: none !important;
       }
       
+      ${selectionColor === 'transparent' ? `
+      /* Cuando selectionColor es 'transparent', eliminar TODOS los colores de selección de AG Grid */
+      #${tableId} .ag-row-selected,
+      #${tableId} .ag-row.ag-row-selected,
+      #${tableId}.ag-theme-quartz .ag-row-selected,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected,
+      #${tableId} .ag-row-selected:hover,
+      #${tableId} .ag-row.ag-row-selected:hover,
+      #${tableId}.ag-theme-quartz .ag-row-selected:hover,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected:hover,
+      #${tableId} .ag-row[aria-selected="true"],
+      #${tableId}.ag-theme-quartz .ag-row-selected:before,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected:before {
+        background: none !important;
+        background-color: transparent !important;
+      }
+      
+      #${tableId} .ag-row-selected .ag-cell,
+      #${tableId} .ag-row.ag-row-selected .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row-selected .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected .ag-cell,
+      #${tableId} .ag-row-selected:hover .ag-cell,
+      #${tableId} .ag-row.ag-row-selected:hover .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row-selected:hover .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected:hover .ag-cell,
+      #${tableId} .ag-row[aria-selected="true"] .ag-cell {
+        background: none !important;
+        background-color: transparent !important;
+      }
+      ` : selectionColor !== 'border' ? `
       #${tableId} .ag-row-selected,
       #${tableId} .ag-row.ag-row-selected,
       #${tableId}.ag-theme-quartz .ag-row-selected,
@@ -285,6 +315,32 @@ export default function TableBase<T>({
       #${tableId} .ag-row[aria-selected="true"] .ag-cell {
         background-color: ${selectionColor} !important;
       }
+      ` : `
+      /* Cuando selectionColor es 'border', no aplicar color de fondo a filas seleccionadas */
+      #${tableId} .ag-row-selected,
+      #${tableId} .ag-row.ag-row-selected,
+      #${tableId}.ag-theme-quartz .ag-row-selected,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected,
+      #${tableId} .ag-row-selected:hover,
+      #${tableId} .ag-row.ag-row-selected:hover,
+      #${tableId}.ag-theme-quartz .ag-row-selected:hover,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected:hover,
+      #${tableId} .ag-row[aria-selected="true"] {
+        background: none !important;
+      }
+      
+      #${tableId} .ag-row-selected .ag-cell,
+      #${tableId} .ag-row.ag-row-selected .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row-selected .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected .ag-cell,
+      #${tableId} .ag-row-selected:hover .ag-cell,
+      #${tableId} .ag-row.ag-row-selected:hover .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row-selected:hover .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected:hover .ag-cell,
+      #${tableId} .ag-row[aria-selected="true"] .ag-cell {
+        background: none !important;
+      }
+      `}
     `}
       </style>
 

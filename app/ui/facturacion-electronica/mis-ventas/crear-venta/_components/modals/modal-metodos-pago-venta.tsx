@@ -73,11 +73,21 @@ export default function ModalMetodosPagoVenta({
     return Math.max(0, totalCobrado - totalPagado)
   }, [totalCobrado, totalPagado])
 
-  // Calcular vuelto
+  // Calcular vuelto total de todos los métodos agregados
+  const vueltoTotal = useMemo(() => {
+    return metodosPago.reduce((sum, metodo) => {
+      if (metodo.recibe_efectivo) {
+        return sum + Math.max(0, metodo.recibe_efectivo - metodo.monto)
+      }
+      return sum
+    }, 0)
+  }, [metodosPago])
+
+  // Calcular vuelto del formulario actual (antes de agregar)
   const vuelto = useMemo(() => {
     if (!isEfectivo) return 0
-    return Math.max(0, (Number(recibe_efectivo) || 0) - (Number(monto) || 0))
-  }, [isEfectivo, recibe_efectivo, monto])
+    return Math.max(0, (Number(recibe_efectivo) || 0) - saldoPendiente)
+  }, [isEfectivo, recibe_efectivo, saldoPendiente])
 
   // Resetear formulario al abrir
   useEffect(() => {
@@ -115,9 +125,17 @@ export default function ModalMetodosPagoVenta({
       await modalForm.validateFields()
       const values = modalForm.getFieldsValue()
 
-      // Validar que el monto no exceda el saldo pendiente
-      if (values.monto > saldoPendiente) {
-        message.error(`El monto no puede exceder el saldo pendiente`)
+      // El monto siempre viene de recibe_efectivo
+      // Para efectivo: puede ser mayor que el saldo (hay vuelto)
+      // Para otros métodos: debe ser exactamente lo que pagas (máximo el saldo)
+      const montoRecibido = values.recibe_efectivo || 0
+      
+      // El monto registrado es el menor entre lo que recibe y el saldo pendiente
+      const montoFinal = Math.min(montoRecibido, saldoPendiente)
+
+      // Validar que el monto sea mayor a 0
+      if (montoFinal <= 0) {
+        message.error(`El monto debe ser mayor a 0`)
         return
       }
 
@@ -125,7 +143,7 @@ export default function ModalMetodosPagoVenta({
         id: Date.now().toString(),
         despliegue_de_pago_id: values.despliegue_de_pago_id,
         despliegue_name: despliegueName,
-        monto: values.monto,
+        monto: montoFinal,
         referencia: values.referencia || undefined,
         recibe_efectivo: values.recibe_efectivo || undefined,
       }
@@ -237,7 +255,7 @@ export default function ModalMetodosPagoVenta({
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Tipo de Pago</th>
                     <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Monto</th>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Referencia</th>
-                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Recibe</th>
+                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Monto Recibe</th>
                     <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Vuelto</th>
                     <th className='px-4 py-2 text-center text-sm font-semibold text-slate-700'>Acción</th>
                   </tr>
@@ -298,37 +316,13 @@ export default function ModalMetodosPagoVenta({
                     const name = option?.label || ''
                     setDespliegueName(name)
                     if (!name.toUpperCase().includes('EFECTIVO')) {
-                      modalForm.setFieldValue('recibe_efectivo', undefined)
+                      // Para métodos NO efectivo, limpiar recibe_efectivo y setear monto recibe al saldo
+                      modalForm.setFieldValue('recibe_efectivo', saldoPendiente)
                     } else {
                       modalForm.setFieldValue('referencia', undefined)
+                      // Para efectivo, limpiar monto recibe
+                      modalForm.setFieldValue('recibe_efectivo', undefined)
                     }
-                  }}
-                />
-              </div>
-
-              {/* Monto */}
-              <div className='w-[140px]'>
-                <label className='block text-xs font-medium text-slate-600 mb-1'>Monto</label>
-                <InputNumberBase
-                  prefix={<span className='text-rose-700 font-bold text-xs'>{monedaSymbol}</span>}
-                  placeholder='0.00'
-                  min={0}
-                  max={saldoPendiente}
-                  precision={2}
-                  propsForm={{
-                    name: 'monto',
-                    className: 'w-full',
-                    rules: [
-                      { required: true, message: 'Requerido' },
-                      {
-                        validator: (_, value) => {
-                          if (value > saldoPendiente) {
-                            return Promise.reject(`Máx: ${saldoPendiente.toFixed(2)}`)
-                          }
-                          return Promise.resolve()
-                        },
-                      },
-                    ],
                   }}
                 />
               </div>
@@ -349,45 +343,36 @@ export default function ModalMetodosPagoVenta({
                 </div>
               )}
 
-              {/* Recibe Efectivo (solo si ES efectivo) */}
-              {isEfectivo && (
-                <>
-                  <div className='w-[140px]'>
-                    <label className='block text-xs font-medium text-slate-600 mb-1'>Recibe</label>
-                    <InputNumberBase
-                      prefix={<span className='text-rose-700 font-bold text-xs'>{monedaSymbol}</span>}
-                      placeholder='0.00'
-                      min={0}
-                      precision={2}
-                      propsForm={{
-                        name: 'recibe_efectivo',
-                        className: 'w-full',
-                        rules: [
-                          { required: true, message: 'Requerido' },
-                          {
-                            validator: (_, value) => {
-                              if (value < (monto || 0)) {
-                                return Promise.reject('Debe ser ≥ monto')
-                              }
-                              return Promise.resolve()
-                            },
-                          },
-                        ],
-                      }}
-                    />
-                  </div>
-
-                  {/* Vuelto (calculado automáticamente) */}
-                  <div className='w-[140px]'>
-                    <label className='block text-xs font-medium text-slate-600 mb-1'>Vuelto</label>
-                    <div className='h-8 px-3 flex items-center justify-end bg-yellow-50 border border-yellow-300 rounded-lg'>
-                      <span className='text-sm font-bold text-green-600'>
-                        {monedaSymbol} {vuelto.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
+              {/* Monto Recibe (para TODOS los métodos) */}
+              <div className='w-[140px]'>
+                <label className='block text-xs font-medium text-slate-600 mb-1'>Monto Recibe</label>
+                <InputNumberBase
+                  prefix={<span className='text-rose-700 font-bold text-xs'>{monedaSymbol}</span>}
+                  placeholder='0.00'
+                  min={0}
+                  max={!isEfectivo ? saldoPendiente : undefined}
+                  precision={2}
+                  propsForm={{
+                    name: 'recibe_efectivo',
+                    className: 'w-full',
+                    rules: [
+                      { required: true, message: 'Requerido' },
+                      {
+                        validator: (_, value) => {
+                          if (!value || value <= 0) {
+                            return Promise.reject('Debe ser > 0')
+                          }
+                          // Para métodos NO efectivo, no puede exceder el saldo pendiente
+                          if (!isEfectivo && value > saldoPendiente) {
+                            return Promise.reject(`Máx: ${saldoPendiente.toFixed(2)}`)
+                          }
+                          return Promise.resolve()
+                        },
+                      },
+                    ],
+                  }}
+                />
+              </div>
 
               {/* Botón Agregar */}
               <div className='w-[140px]'>
@@ -405,10 +390,19 @@ export default function ModalMetodosPagoVenta({
         )}
 
         {/* Botones finales */}
-        <div className='flex gap-3 justify-end mt-6 pt-4 border-t'>
+        <div className='flex gap-3 justify-between items-center mt-6 pt-4 border-t'>
           <ButtonBase onClick={handleCancelar} color='default' size='lg'>
             Cancelar
           </ButtonBase>
+          
+          {/* Vuelto Total - Siempre visible */}
+          <div className='flex items-center gap-2 px-4 py-2 bg-yellow-50 border-2 border-yellow-400 rounded-lg'>
+            <span className='text-sm font-medium text-slate-700'>Vuelto Total:</span>
+            <span className='text-xl font-bold text-green-600'>
+              {monedaSymbol} {vueltoTotal.toFixed(2)}
+            </span>
+          </div>
+          
           <ButtonBase
             onClick={handleGuardar}
             color='success'

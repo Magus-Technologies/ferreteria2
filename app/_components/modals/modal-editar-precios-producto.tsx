@@ -34,7 +34,28 @@ export default function ModalEditarPreciosProducto({
   const productoSeleccionado = useStoreProductoSeleccionadoSearch(store => store.producto)
   const setProductoSeleccionado = useStoreProductoSeleccionadoSearch(store => store.setProducto)
 
-  // Cargar datos cuando se abre el modal
+  // Obtener todas las unidades derivadas del producto en el almacén
+  const productoEnAlmacen = (productoSeleccionado as any)?.producto_en_almacenes?.find(
+    (pa: any) => pa.almacen_id === almacen_id
+  )
+  const unidadesDerivadas = productoEnAlmacen?.unidades_derivadas || []
+
+  // Watch para actualizar el factor cuando cambie la unidad derivada
+  const unidad_derivada_id = Form.useWatch('unidad_derivada_id', form)
+
+  useEffect(() => {
+    if (unidad_derivada_id && unidadesDerivadas.length > 0) {
+      const unidadSeleccionada = unidadesDerivadas.find(
+        (ud: any) => ud.unidad_derivada.id === unidad_derivada_id
+      )
+      if (unidadSeleccionada) {
+        form.setFieldValue('factor', unidadSeleccionada.factor)
+        // Recalcular precio de compra con el nuevo factor
+        const costoBase = Number(productoEnAlmacen?.costo || 0)
+        form.setFieldValue('precio_compra', costoBase * Number(unidadSeleccionada.factor))
+      }
+    }
+  }, [unidad_derivada_id, unidadesDerivadas, form, productoEnAlmacen])
   useEffect(() => {
     if (open && detallePrecio) {
       form.setFieldsValue({
@@ -75,37 +96,37 @@ export default function ModalEditarPreciosProducto({
         if (ud.unidad_derivada.id === values.unidad_derivada_id) {
           return {
             unidad_derivada_id: values.unidad_derivada_id,
-            factor: values.factor,
-            precio_publico: values.precio_publico,
-            comision_publico: values.comision_publico || 0,
-            precio_especial: values.precio_especial || 0,
-            comision_especial: values.comision_especial || 0,
-            activador_especial: ud.activador_especial,
-            precio_minimo: values.precio_minimo || 0,
-            comision_minimo: values.comision_minimo || 0,
-            activador_minimo: ud.activador_minimo,
-            precio_ultimo: values.precio_ultimo || 0,
-            comision_ultimo: values.comision_ultimo || 0,
-            activador_ultimo: ud.activador_ultimo,
-            costo: values.precio_compra,
+            factor: Number(values.factor),
+            precio_publico: Number(values.precio_publico),
+            comision_publico: Number(values.comision_publico) || 0,
+            precio_especial: Number(values.precio_especial) || 0,
+            comision_especial: Number(values.comision_especial) || 0,
+            activador_especial: Number(ud.activador_especial) || 0,
+            precio_minimo: Number(values.precio_minimo) || 0,
+            comision_minimo: Number(values.comision_minimo) || 0,
+            activador_minimo: Number(ud.activador_minimo) || 0,
+            precio_ultimo: Number(values.precio_ultimo) || 0,
+            comision_ultimo: Number(values.comision_ultimo) || 0,
+            activador_ultimo: Number(ud.activador_ultimo) || 0,
+            costo: Number(values.precio_compra),
           }
         }
         
         // Si no es la que estamos editando, mantener los valores originales
         return {
           unidad_derivada_id: ud.unidad_derivada.id,
-          factor: ud.factor,
-          precio_publico: ud.precio_publico,
-          comision_publico: ud.comision_publico || 0,
-          precio_especial: ud.precio_especial || 0,
-          comision_especial: ud.comision_especial || 0,
-          activador_especial: ud.activador_especial,
-          precio_minimo: ud.precio_minimo || 0,
-          comision_minimo: ud.comision_minimo || 0,
-          activador_minimo: ud.activador_minimo,
-          precio_ultimo: ud.precio_ultimo || 0,
-          comision_ultimo: ud.comision_ultimo || 0,
-          activador_ultimo: ud.activador_ultimo,
+          factor: Number(ud.factor),
+          precio_publico: Number(ud.precio_publico),
+          comision_publico: Number(ud.comision_publico) || 0,
+          precio_especial: Number(ud.precio_especial) || 0,
+          comision_especial: Number(ud.comision_especial) || 0,
+          activador_especial: Number(ud.activador_especial) || 0,
+          precio_minimo: Number(ud.precio_minimo) || 0,
+          comision_minimo: Number(ud.comision_minimo) || 0,
+          activador_minimo: Number(ud.activador_minimo) || 0,
+          precio_ultimo: Number(ud.precio_ultimo) || 0,
+          comision_ultimo: Number(ud.comision_ultimo) || 0,
+          activador_ultimo: Number(ud.activador_ultimo) || 0,
           costo: Number(productoEnAlmacen.costo) * Number(ud.factor),
         }
       })
@@ -224,16 +245,11 @@ export default function ModalEditarPreciosProducto({
                 rules: [{ required: true, message: 'Requerido' }],
               }}
               prefix={<FaWeightHanging size={15} className="text-rose-700 mx-1" />}
-              disabled
               options={
-                detallePrecio
-                  ? [
-                      {
-                        value: detallePrecio.unidad_derivada.id,
-                        label: detallePrecio.unidad_derivada.name,
-                      },
-                    ]
-                  : []
+                unidadesDerivadas.map((ud: any) => ({
+                  value: ud.unidad_derivada.id,
+                  label: ud.unidad_derivada.name,
+                }))
               }
             />
           </LabelBase>

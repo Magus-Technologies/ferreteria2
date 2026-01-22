@@ -83,6 +83,29 @@ export default function ModalProductoSearch({
   const [costoUnidadDerivada, setCostoUnidadDerivada] =
     useState<CostoUnidadDerivadaSearch>(null);
 
+  // Agregar listener para navegación con teclado
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Solo capturar flechas arriba/abajo cuando NO estamos en un input de texto
+      const target = e.target as HTMLElement;
+      const isInputText = target.tagName === 'INPUT' && 
+        (target as HTMLInputElement).type === 'text';
+      
+      if (isInputText) return; // Permitir navegación normal en inputs de texto
+
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        // TODO: Implementar navegación en la tabla
+        // Por ahora solo prevenimos el comportamiento por defecto
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
+
   return (
     <Modal
       centered

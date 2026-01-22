@@ -26,14 +26,16 @@ export default function useInitCompra({
     if (compra) {
       const dataFormated: FormCreateCompra = {
         fecha: dayjs(compra.fecha),
-        tipo_moneda: compra.tipo_moneda,
+        tipo_moneda: compra.tipo_moneda as any,
         tipo_de_cambio: Number(compra.tipo_de_cambio),
         proveedor_id: compra.proveedor_id || undefined,
-        tipo_documento: compra.tipo_documento,
+        proveedor_razon_social: compra.proveedor?.razon_social || '',
+        proveedor_ruc: compra.proveedor?.ruc || '',
+        tipo_documento: compra.tipo_documento as any,
         serie: compra.serie || undefined,
         numero: compra.numero || undefined,
         guia: compra.guia || undefined,
-        forma_de_pago: compra.forma_de_pago,
+        forma_de_pago: compra.forma_de_pago as any,
         numero_dias: compra.numero_dias || undefined,
         fecha_vencimiento: compra.fecha_vencimiento
           ? dayjs(compra.fecha_vencimiento)

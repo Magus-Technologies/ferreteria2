@@ -174,6 +174,8 @@ export default function CardAgregarProductoVenta({
           value={values.cantidad}
           min={0}
           nextInEnter={false}
+          controls={false}
+          keyboard={false}
           onKeyUp={(e) => {
             if (e.key === 'Enter') precio_ventaRef.current?.focus()
           }}

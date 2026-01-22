@@ -27,7 +27,7 @@ export default function useInitVenta({
         tipo_documento: venta.tipo_documento as any,
         forma_de_pago: venta.forma_de_pago as any,
         // Datos del cliente si existen
-        ruc_dni: venta.ruc_dni || (venta as any).cliente?.numero_documento || undefined,
+        ruc_dni: (venta as any).ruc_dni || (venta as any).cliente?.numero_documento || undefined,
         cliente_nombre: (venta as any).cliente?.razon_social || 
           ((venta as any).cliente?.nombres && (venta as any).cliente?.apellidos 
             ? `${(venta as any).cliente.nombres} ${(venta as any).cliente.apellidos}`.trim() 

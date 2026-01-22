@@ -3,11 +3,11 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
-import { greenColors } from '~/lib/colors'
+import { greenColors, orangeColors, redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { CompraCreateInputSchema } from '~/prisma/generated/zod'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
-import { Prisma, EstadoDeCompra } from '@prisma/client'
+import { Prisma, EstadoDeCompra, FormaDePago } from '@prisma/client'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
@@ -101,13 +101,59 @@ const TableCompras = memo(function TableCompras({
   const total = data?.total ?? 0
   const rowData = data?.data ?? []
 
+  // Calcular el color de una compra basado en su estado
+  const calcularColorCompra = useCallback((compra: Compra | undefined) => {
+    if (!compra) return 'transparent'
+
+    // Calcular el total y lo pagado
+    const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
+      const costo = Number(item.costo ?? 0)
+      for (const u of item.unidades_derivadas ?? []) {
+        const cantidad = Number(u.cantidad ?? 0)
+        const factor = Number(u.factor ?? 0)
+        const flete = Number(u.flete ?? 0)
+        const bonificacion = Boolean(u.bonificacion)
+        const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
+        acc += montoLinea
+      }
+      return acc
+    }, 0)
+
+    const totalPagado = Number(compra.total_pagado || 0)
+    const resta = total - totalPagado
+
+    // Verde: Contado (siempre pagado) o Crédito completamente pagado
+    if (compra.forma_de_pago === FormaDePago.Contado || (compra.forma_de_pago === FormaDePago.cr && resta <= 0.01)) {
+      return greenColors[2]
+    }
+    // Amarillo/Naranja: En Espera
+    else if (compra.estado_de_compra === EstadoDeCompra.EnEspera) {
+      return orangeColors[2]
+    }
+    // Rojo: Crédito y Pendiente
+    else if (compra.forma_de_pago === FormaDePago.cr && resta > 0.01) {
+      return redColors[2]
+    }
+
+    return 'transparent'
+  }, [])
+
+  const [selectionColor, setSelectionColor] = useState('transparent')
+
   // Memoizar callbacks para evitar re-renders innecesarios
   const handleSelectionChanged = useCallback(
     (event: SelectionChangedEvent<Compra>) => {
       const selectedNodes = event.api?.getSelectedNodes() || []
-      setCompraSeleccionada(selectedNodes?.[0]?.data as Compra)
+      const selectedCompra = selectedNodes?.[0]?.data as Compra
+      setCompraSeleccionada(selectedCompra)
+      
+      // Actualizar el color de selección para que coincida con el color de la fila
+      setSelectionColor(calcularColorCompra(selectedCompra))
+      
+      // Forzar redibujado de TODAS las filas para actualizar los bordes
+      event.api?.redrawRows()
     },
-    [setCompraSeleccionada]
+    [setCompraSeleccionada, calcularColorCompra]
   )
 
   const handleRowDoubleClicked = useCallback(
@@ -123,6 +169,51 @@ const TableCompras = memo(function TableCompras({
     },
     []
   )
+
+  // Función para calcular el color de fondo de cada fila
+  const getRowStyle = useCallback((params: any) => {
+    const compra = params.data as Compra
+    if (!compra) return undefined
+
+    // Calcular el total y lo pagado
+    const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
+      const costo = Number(item.costo ?? 0)
+      for (const u of item.unidades_derivadas ?? []) {
+        const cantidad = Number(u.cantidad ?? 0)
+        const factor = Number(u.factor ?? 0)
+        const flete = Number(u.flete ?? 0)
+        const bonificacion = Boolean(u.bonificacion)
+        const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
+        acc += montoLinea
+      }
+      return acc
+    }, 0)
+
+    const totalPagado = Number(compra.total_pagado || 0)
+    const resta = total - totalPagado
+
+    // Verde: Contado (siempre pagado) o Crédito completamente pagado
+    if (compra.forma_de_pago === FormaDePago.Contado || (compra.forma_de_pago === FormaDePago.cr && resta <= 0.01)) {
+      return {
+        background: greenColors[2]
+      }
+    }
+    // Amarillo/Naranja: En Espera
+    if (compra.estado_de_compra === EstadoDeCompra.EnEspera) {
+      return {
+        background: orangeColors[2]
+      }
+    }
+    // Rojo: Crédito y Pendiente
+    if (compra.forma_de_pago === FormaDePago.cr && resta > 0.01) {
+      return {
+        background: redColors[2]
+      }
+    }
+
+    return undefined
+  }, [])
+
 
   // Memoizar opciones de columnas para evitar recreaciones
   const optionsSelectColumns = useMemo(
@@ -174,10 +265,11 @@ const TableCompras = memo(function TableCompras({
         if (firstNode) {
           firstNode.setSelected(true);
           setCompraSeleccionada(firstNode.data);
+          setSelectionColor(calcularColorCompra(firstNode.data));
         }
       }, 100);
     }
-  }, [rowData, setCompraSeleccionada]);
+  }, [rowData, setCompraSeleccionada, calcularColorCompra]);
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
@@ -185,7 +277,7 @@ const TableCompras = memo(function TableCompras({
   return (
     <TableWithTitle<Compra>
       id={id}
-      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
+      selectionColor={selectionColor} // Color dinámico que coincide con el color de la fila
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
       onRowDoubleClicked={handleRowDoubleClicked}
@@ -196,6 +288,7 @@ const TableCompras = memo(function TableCompras({
       columnDefs={columns}
       rowData={rowData}
       optionsSelectColumns={optionsSelectColumns}
+      getRowStyle={getRowStyle}
       // Habilitar lazy loading para mejor rendimiento
       suppressRowTransform={true}
       rowBuffer={10}

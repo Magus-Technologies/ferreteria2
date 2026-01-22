@@ -262,34 +262,47 @@ export function useColumnsVender({
       minWidth: 160,
       width: 160,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const descuento_tipo = form.getFieldValue(['productos', value, 'descuento_tipo'])
-        const isPorcentaje = descuento_tipo === DescuentoTipo.PORCENTAJE
-        
         return (
           <div className='flex items-center h-full gap-1'>
             <SelectDescuentoTipo
+              tipoMoneda={tipo_moneda}
               formWithMessage={false}
               size='small'
               propsForm={{
                 name: [value, 'descuento_tipo'],
                 hasFeedback: false,
               }}
-              onChange={() => calcularSubtotalForm({ form, value })}
-            />
-            <InputNumberBase
-              prefix={isPorcentaje ? '' : (tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. ')}
-              suffix={isPorcentaje ? '%' : ''}
-              size='small'
-              className='w-full'
-              propsForm={{
-                name: [value, 'descuento'],
+              onChange={() => {
+                calcularSubtotalForm({ form, value })
+                // Forzar re-render de la fila para actualizar el prefix del input
+                form.setFieldValue(['productos', value, '_refresh'], Date.now())
               }}
-              precision={isPorcentaje ? 2 : 4}
-              min={0}
-              max={isPorcentaje ? 100 : undefined}
-              formWithMessage={false}
-              onChange={() => calcularSubtotalForm({ form, value })}
             />
+            <Form.Item noStyle shouldUpdate={(prev, curr) => {
+              return prev.productos?.[value]?.descuento_tipo !== curr.productos?.[value]?.descuento_tipo
+            }}>
+              {() => {
+                const descuento_tipo = form.getFieldValue(['productos', value, 'descuento_tipo'])
+                const isPorcentaje = descuento_tipo === DescuentoTipo.PORCENTAJE
+                
+                return (
+                  <InputNumberBase
+                    prefix={isPorcentaje ? undefined : (tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. ')}
+                    suffix={isPorcentaje ? '%' : undefined}
+                    size='small'
+                    className='w-full'
+                    propsForm={{
+                      name: [value, 'descuento'],
+                    }}
+                    precision={isPorcentaje ? 2 : 4}
+                    min={0}
+                    max={isPorcentaje ? 100 : undefined}
+                    formWithMessage={false}
+                    onChange={() => calcularSubtotalForm({ form, value })}
+                  />
+                )
+              }}
+            </Form.Item>
           </div>
         )
       },

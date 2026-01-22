@@ -5,9 +5,35 @@ import { ventaApi, type VentaFilters, type CreateVentaRequest } from '~/lib/api/
 
 /**
  * Tipo para la respuesta de getVenta (venta completa con relaciones)
- * TODO: Definir interfaz completa basada en la respuesta de Laravel
  */
-export type getVentaResponseProps = any
+export type getVentaResponseProps = {
+  id: string;
+  tipo_documento: string;
+  serie: string;
+  numero: number;
+  descripcion?: string;
+  forma_de_pago: 'co' | 'cr'; // contado o crédito
+  tipo_moneda: 's' | 'd'; // soles o dólares
+  tipo_de_cambio: number;
+  fecha: string;
+  estado_de_venta: 'cr' | 'ee' | 'pr' | 'an'; // creado, en espera, procesado, anulado
+  cliente_id?: number;
+  direccion_seleccionada?: string;
+  recomendado_por_id?: number;
+  user_id: string;
+  almacen_id: number;
+  created_at: string;
+  updated_at: string;
+  total_pagado?: number; // Suma de pagos realizados
+  entregas_productos_count?: number;
+  cliente?: any;
+  recomendadoPor?: any;
+  productos_por_almacen?: any[];
+  despliegueDePagoVentas?: any[];
+  user?: { id: string; name: string };
+  almacen?: { id: number; name: string };
+  entregasProductos?: any[];
+}
 
 /**
  * Obtener lista de ventas usando Laravel API

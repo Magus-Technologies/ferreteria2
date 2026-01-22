@@ -21,11 +21,11 @@ export type VentaConUnidadDerivadaNormal = Omit<
   "productos_por_almacen"
 > & {
   productos_por_almacen: (Omit<
-    getVentaResponseProps["productos_por_almacen"][number],
+    NonNullable<getVentaResponseProps["productos_por_almacen"]>[number],
     "unidades_derivadas"
   > & {
-    unidades_derivadas: (getVentaResponseProps["productos_por_almacen"][number]["unidades_derivadas"][number] & {
-      unidad_derivada_normal: getVentaResponseProps["productos_por_almacen"][number]["unidades_derivadas"][number]["unidad_derivada_inmutable"];
+    unidades_derivadas: (NonNullable<getVentaResponseProps["productos_por_almacen"]>[number]["unidades_derivadas"][number] & {
+      unidad_derivada_normal: NonNullable<getVentaResponseProps["productos_por_almacen"]>[number]["unidades_derivadas"][number]["unidad_derivada_inmutable"];
     })[];
   })[];
 };
