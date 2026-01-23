@@ -18,6 +18,8 @@ export enum QueryKeys {
   COMPRAS_EN_ESPERA = 'compras_en_espera',
   RECEPCIONES_ALMACEN = 'recepciones_almacen',
   EGRESOS_DINERO = 'egresos_dinero',
+  METODO_DE_PAGO = 'metodo_de_pago',
+  METODOS_PAGO_AGRUPADOS = 'metodos_pago_agrupados',
   DESPLIEGUE_DE_PAGO = 'despliegue_de_pago',
   CLIENTES = 'clientes',
   CLIENTES_SEARCH = 'clientes_search',

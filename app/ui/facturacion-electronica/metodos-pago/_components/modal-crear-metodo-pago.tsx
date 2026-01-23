@@ -7,18 +7,23 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import LabelBase from '~/components/form/label-base'
 import { useState } from 'react'
+import * as React from 'react'
 import { apiRequest } from '~/lib/api'
 
 interface ModalCrearMetodoPagoProps {
   open: boolean
   setOpen: (open: boolean) => void
   onSuccess?: () => void
+  bancoIdInicial?: string | null
+  nombreBanco?: string
 }
 
 export default function ModalCrearMetodoPago({
   open,
   setOpen,
   onSuccess,
+  bancoIdInicial,
+  nombreBanco,
 }: ModalCrearMetodoPagoProps) {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
@@ -28,9 +33,14 @@ export default function ModalCrearMetodoPago({
   const handleSubmit = async (values: any) => {
     setLoading(true)
     try {
+      // Si hay banco inicial, agregarlo al payload
+      const payload = bancoIdInicial
+        ? { ...values, metodo_de_pago_id: bancoIdInicial }
+        : values
+
       const response = await apiRequest('/despliegues-de-pago', {
         method: 'POST',
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       })
 
       if (response.error) {
@@ -55,7 +65,11 @@ export default function ModalCrearMetodoPago({
     <ModalForm
       modalProps={{
         width: 700,
-        title: <TitleForm>Crear Método de Pago</TitleForm>,
+        title: (
+          <TitleForm>
+            {nombreBanco ? `Crear Método de Pago para ${nombreBanco}` : 'Crear Método de Pago'}
+          </TitleForm>
+        ),
         centered: true,
         okButtonProps: { loading, disabled: loading },
         okText: 'Crear Método',
@@ -79,9 +93,20 @@ export default function ModalCrearMetodoPago({
         },
       }}
     >
+      {nombreBanco && (
+        <div className='mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200'>
+          <p className='text-sm text-slate-700'>
+            <strong>Banco:</strong> {nombreBanco}
+          </p>
+          <p className='text-xs text-slate-500 mt-1'>
+            Este método de pago se asociará automáticamente a este banco.
+          </p>
+        </div>
+      )}
+
       <LabelBase label='Nombre del Método de Pago' orientation='column'>
         <InputBase
-          placeholder='Ej: BCP Yape, Izipay, BBVA Transferencia'
+          placeholder='Ej: Yape, Transferencia, Izipay'
           uppercase={false}
           propsForm={{
             name: 'name',
@@ -91,6 +116,9 @@ export default function ModalCrearMetodoPago({
             ],
           }}
         />
+        <p className='text-xs text-slate-500 mt-1'>
+          Nombre específico del método (ej: si el banco es BCP, el método puede ser "Yape", "Transferencia", etc.)
+        </p>
       </LabelBase>
 
       <LabelBase label='¿Requiere Número de Operación?' className='mt-4' orientation='column'>

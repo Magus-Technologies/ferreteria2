@@ -3,27 +3,36 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { App, Space } from 'antd'
-import { FaPlus, FaDoorOpen, FaExchangeAlt } from 'react-icons/fa'
+import { FaPlus, FaDoorOpen, FaExchangeAlt, FaArrowsAltH } from 'react-icons/fa'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { cajaPrincipalApi, type CajaPrincipal } from '~/lib/api/caja-principal'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useAuth } from '~/lib/auth-context'
 import ModalCrearCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-crear-caja'
 import ModalVerSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-ver-sub-cajas'
 import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
 import ModalTransferirEntreCajasPrincipales from './modal-transferir-entre-cajas-principales'
+import ModalMoverDineroSubCajas from './modal-mover-dinero-subcajas'
 import ButtonBase from '~/components/buttons/button-base'
 import TableBase from '~/components/tables/table-base'
 import { AgGridReact } from 'ag-grid-react'
 import { useColumnsCajasPrincipales } from './columns-cajas-principales'
+import { usePermission } from '~/hooks/use-permission'
+import { permissions } from '~/lib/permissions'
 
 export default function TableCajasPrincipales() {
   const { modal, message } = App.useApp()
+  const { user } = useAuth()
   const [openCrearCaja, setOpenCrearCaja] = useState(false)
   const [openAperturarCaja, setOpenAperturarCaja] = useState(false)
   const [openTransferirCajas, setOpenTransferirCajas] = useState(false)
+  const [openMoverDinero, setOpenMoverDinero] = useState(false)
   const [cajaSeleccionada, setCajaSeleccionada] = useState<CajaPrincipal | null>(null)
   const [openVerSubCajas, setOpenVerSubCajas] = useState(false)
   const gridRef = useRef<AgGridReact<CajaPrincipal>>(null)
+
+  // Verificar si tiene permiso para crear cajas
+  const canCreateCaja = usePermission(permissions.CAJA_CREATE)
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [QueryKeys.CAJAS_PRINCIPALES],
@@ -36,6 +45,11 @@ export default function TableCajasPrincipales() {
   const handleVerSubCajas = (caja: CajaPrincipal) => {
     setCajaSeleccionada(caja)
     setOpenVerSubCajas(true)
+  }
+
+  const handleMoverDinero = (caja: CajaPrincipal) => {
+    setCajaSeleccionada(caja)
+    setOpenMoverDinero(true)
   }
 
   const handleEliminarCaja = (caja: CajaPrincipal) => {
@@ -98,20 +112,35 @@ export default function TableCajasPrincipales() {
           </ButtonBase>
           <ButtonBase
             color='info'
+            onClick={() => {
+              if (data && data.length > 0) {
+                handleMoverDinero(data[0])
+              }
+            }}
+            className='flex items-center gap-2'
+            disabled={!data || data.length === 0}
+          >
+            <FaArrowsAltH />
+            Mover entre Sub-Cajas
+          </ButtonBase>
+          <ButtonBase
+            color='info'
             onClick={() => setOpenAperturarCaja(true)}
             className='flex items-center gap-2'
           >
             <FaDoorOpen />
             Agregar Efectivo
           </ButtonBase>
-          <ButtonBase
-            color='success'
-            onClick={() => setOpenCrearCaja(true)}
-            className='flex items-center gap-2'
-          >
-            <FaPlus />
-            Nueva Caja
-          </ButtonBase>
+          {canCreateCaja && (
+            <ButtonBase
+              color='success'
+              onClick={() => setOpenCrearCaja(true)}
+              className='flex items-center gap-2'
+            >
+              <FaPlus />
+              Nueva Caja
+            </ButtonBase>
+          )}
         </Space>
       </div>
 
@@ -153,6 +182,15 @@ export default function TableCajasPrincipales() {
         onClose={() => setOpenTransferirCajas(false)}
         cajasPrincipales={data || []}
       />
+
+      {cajaSeleccionada && (
+        <ModalMoverDineroSubCajas
+          open={openMoverDinero}
+          setOpen={setOpenMoverDinero}
+          cajaPrincipalId={cajaSeleccionada.id}
+          onSuccess={refetch}
+        />
+      )}
     </div>
   )
 }

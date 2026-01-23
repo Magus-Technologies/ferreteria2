@@ -59,25 +59,25 @@ export default function ConteoDinero({
   }
 
   return (
-    <div className={`max-w-[280px] flex flex-col gap-2 ${className}`}>
-      <div className='grid grid-cols-[20px_1fr_80px] gap-2 items-center justify-center'>
-        <div className='font-bold text-slate-500 text-center'>N°</div>
-        <div className='font-bold text-slate-500 text-center'>Denominación</div>
-        <div className='font-bold text-slate-500 text-center'>Total</div>
+    <div className={`max-w-[280px] flex flex-col ${className}`}>
+      <div className='grid grid-cols-[15px_1fr_70px] gap-2 items-center mb-0.5'>
+        <div className='font-semibold text-slate-500 text-[10px]'>N°</div>
+        <div className='font-semibold text-slate-500 text-[10px]'>Denominación</div>
+        <div className='font-semibold text-slate-500 text-right text-[10px]'>Total</div>
       </div>
       {conteo.map((item, index) => (
         <div
           key={item}
-          className='grid grid-cols-[20px_1fr_80px] gap-4 items-center'
+          className='grid grid-cols-[15px_1fr_70px] gap-2 items-center'
         >
-          <div className='font-bold text-slate-500'>{index + 1}</div>
+          <div className='font-semibold text-slate-500 text-[10px]'>{index + 1}</div>
           <LabelBase
-            className='grid grid-cols-[1fr_auto]'
+            className='grid grid-cols-[1fr_auto] gap-1 items-center'
             classNames={{
-              labelParent: 'justify-end',
+              labelParent: 'justify-end mb-0',
             }}
             label={`${
-              item > 5 ? 'Billete' : 'Moneda'
+              item > 5 ? 'B' : 'M'
             } S/. ${item.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -85,7 +85,7 @@ export default function ConteoDinero({
           >
             <InputNumberBase
               size='small'
-              className='max-w-[50px]'
+              className='max-w-[45px] h-6'
               placeholder='0'
               min={0}
               step={1}
@@ -95,11 +95,10 @@ export default function ConteoDinero({
             />
           </LabelBase>
           <div
-            className={`font-bold text-nowrap ${
-              (valores[item] || 0) > 0 ? 'text-emerald-600' : 'text-slate-500'
+            className={`font-semibold text-nowrap text-right text-xs ${
+              (valores[item] || 0) > 0 ? 'text-slate-800' : 'text-slate-400'
             }`}
           >
-            S/.{' '}
             {((valores[item] || 0) * item).toLocaleString('en-US', {
               minimumFractionDigits: 2,
             })}
@@ -107,9 +106,9 @@ export default function ConteoDinero({
         </div>
       ))}
 
-      <div className='mt-2 font-bold text-xl flex items-center justify-center gap-2'>
-        <div className='text-slate-500'>Total Conteo:</div>
-        <div className='text-emerald-600'>
+      <div className='mt-1 pt-1 border-t border-orange-300 font-bold flex items-center justify-between'>
+        <div className='text-slate-600 text-xs'>Total:</div>
+        <div className='text-orange-600 text-base'>
           S/. {monto.toLocaleString('en-US', { minimumFractionDigits: 2 })}
         </div>
       </div>

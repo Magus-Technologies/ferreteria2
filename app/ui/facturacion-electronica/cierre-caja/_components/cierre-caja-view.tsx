@@ -24,7 +24,7 @@ export default function CierreCajaView() {
     try {
       setLoading(true)
       const response = await cajaApi.cajaActiva()
-      
+
       if (response.error) {
         message.error(response.error.message || 'Error al cargar la caja activa')
         return
@@ -63,20 +63,22 @@ export default function CierreCajaView() {
 
   const resumen = cajaActiva.resumen || {}
   const totalEfectivo = conteoEfectivo
-  const metodosPago = resumen.metodos_pago || {}
-  const totalEnCaja = resumen.total_en_caja || 0
-  
+  const metodosPago = resumen.detalle_metodos_pago || []
+  const montoEsperado = resumen.monto_esperado || 0
+
   // Calcular total de cuentas (todos los métodos excepto efectivo)
-  const totalCuentas = Object.entries(metodosPago).reduce((total, [metodo, monto]) => {
+  const totalCuentas = metodosPago.reduce((total: number, metodo: any) => {
     // Excluir efectivo del total de cuentas
-    if (!metodo.toLowerCase().includes('efectivo') && !metodo.toLowerCase().includes('cch')) {
-      return total + (Number(monto) || 0)
+    const esEfectivo = metodo.metodo_pago?.toLowerCase().includes('efectivo') ||
+      metodo.metodo_pago?.toLowerCase().includes('cch')
+    if (!esEfectivo) {
+      return total + (Number(metodo.total) || 0)
     }
     return total
   }, 0)
-  
+
   const cierreTotal = totalEfectivo + totalCuentas
-  const diferencias = cierreTotal - totalEnCaja
+  const diferencias = cierreTotal - montoEsperado
   const sobrante = diferencias > 0 ? diferencias : 0
   const faltante = diferencias < 0 ? Math.abs(diferencias) : 0
 
@@ -131,19 +133,19 @@ export default function CierreCajaView() {
               <p className='text-sm font-semibold text-slate-700'>{cajaActiva.user?.name || 'N/A'}</p>
             </div>
           </div>
-          
+
           <div className='mt-3 flex items-center gap-4'>
             <div className='flex-1'>
               <label className='text-xs text-slate-600 font-medium'>Supervisor (opcional)</label>
-              <Input 
-                className='mt-1' 
-                size='small' 
-                placeholder='ID del supervisor' 
+              <Input
+                className='mt-1'
+                size='small'
+                placeholder='ID del supervisor'
                 type='number'
                 onChange={(e) => setSupervisorId(e.target.value ? parseInt(e.target.value) : undefined)}
               />
             </div>
-            <Checkbox 
+            <Checkbox
               className='text-xs'
               checked={forzarCierre}
               onChange={(e) => setForzarCierre(e.target.checked)}
@@ -159,69 +161,85 @@ export default function CierreCajaView() {
             <h3 className='text-sm font-bold text-slate-700 mb-3 pb-2 border-b-2 border-slate-200'>
               Resumen de Cierre
             </h3>
-            
+
             <div className='flex justify-between items-center py-2 px-3 bg-rose-50 rounded-lg border border-rose-200'>
               <span className='text-sm font-semibold text-rose-700'>Apertura Caja</span>
               <span className='text-sm font-bold text-rose-700'>
                 S/ {parseFloat(cajaActiva.monto_apertura).toFixed(2)}
               </span>
             </div>
-            
+
             {/* Métodos de pago */}
             <div className='space-y-2'>
-              {Object.entries(metodosPago).map(([metodo, monto], index) => {
-                const esEfectivo = metodo.toLowerCase().includes('efectivo') || metodo.toLowerCase().includes('cch')
-                
-                if (esEfectivo) {
+              <h4 className='text-xs font-bold text-slate-600 uppercase tracking-wide mb-2'>
+                Detalle por Método de Pago
+              </h4>
+              {metodosPago.length === 0 ? (
+                <p className='text-sm text-slate-500 italic py-2'>No hay métodos de pago registrados</p>
+              ) : (
+                metodosPago.map((metodo: any) => {
+                  const esEfectivo = metodo.metodo_pago?.toLowerCase().includes('efectivo') ||
+                    metodo.metodo_pago?.toLowerCase().includes('cch')
+
                   return (
-                    <div key={metodo} className='flex justify-between items-center py-2 px-3'>
-                      <span className='text-sm text-slate-600'>{metodo}</span>
-                      <span className='text-sm font-medium text-slate-700'>
-                        S/ {(Number(monto) || 0).toFixed(2)}
-                      </span>
+                    <div
+                      key={metodo.metodo_pago_id}
+                      className={`py-2 px-3 rounded-lg border ${esEfectivo
+                        ? 'bg-white border-slate-200'
+                        : 'bg-blue-50 border-blue-200'
+                        }`}
+                    >
+                      <div className='flex justify-between items-center'>
+                        <div className='flex-1'>
+                          <span className={`text-sm font-medium ${esEfectivo ? 'text-slate-700' : 'text-blue-700'
+                            }`}>
+                            {metodo.metodo_pago || 'Desconocido'}
+                          </span>
+                          <div className='text-xs text-slate-500 mt-0.5'>
+                            {metodo.cantidad_transacciones} transacciones
+                          </div>
+                          {metodo.sub_cajas && metodo.sub_cajas.length > 0 && (
+                            <div className='text-xs text-slate-400 mt-0.5'>
+                              {metodo.sub_cajas.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                        <span className={`text-sm font-bold ${esEfectivo ? 'text-slate-800' : 'text-blue-700'
+                          }`}>
+                          S/ {(Number(metodo.total) || 0).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   )
-                }
-                
-                return (
-                  <div 
-                    key={metodo} 
-                    className='flex justify-between items-center py-2 px-3 bg-blue-50 rounded-lg border border-blue-200'
-                  >
-                    <span className='text-sm font-medium text-blue-700'>{metodo}</span>
-                    <span className='text-sm font-bold text-blue-700'>
-                      S/ {(Number(monto) || 0).toFixed(2)}
-                    </span>
-                  </div>
-                )
-              })}
+                })
+              )}
             </div>
-            
+
             <div className='flex justify-between items-center py-2 px-3 border-t-2 border-slate-300 mt-3'>
               <span className='text-sm font-bold text-slate-700'>Total Efectivo</span>
               <span className='text-sm font-bold text-slate-800'>
                 S/ {totalEfectivo.toFixed(2)}
               </span>
             </div>
-            
+
             <div className='flex justify-between items-center py-2 px-3 bg-emerald-50 rounded-lg border border-emerald-200'>
               <span className='text-sm font-bold text-emerald-700'>Total Ingresos</span>
               <span className='text-sm font-bold text-emerald-700'>
                 S/ {(resumen.total_ingresos || 0).toFixed(2)}
               </span>
             </div>
-            
+
             <div className='flex justify-between items-center py-2 px-3 bg-rose-50 rounded-lg border border-rose-200'>
               <span className='text-sm font-bold text-rose-700'>Total Egresos</span>
               <span className='text-sm font-bold text-rose-700'>
                 S/ {(resumen.total_egresos || 0).toFixed(2)}
               </span>
             </div>
-            
+
             <div className='flex justify-between items-center py-3 px-3 bg-slate-100 rounded-lg border-2 border-slate-300 mt-3'>
-              <span className='text-base font-bold text-slate-800'>Total en Caja</span>
+              <span className='text-base font-bold text-slate-800'>Monto Esperado</span>
               <span className='text-base font-bold text-slate-900'>
-                S/ {totalEnCaja.toFixed(2)}
+                S/ {montoEsperado.toFixed(2)}
               </span>
             </div>
           </div>
@@ -235,8 +253,8 @@ export default function CierreCajaView() {
                   <label className='text-sm font-semibold text-slate-700 mb-2 block'>
                     Comentarios
                   </label>
-                  <TextArea 
-                    rows={4} 
+                  <TextArea
+                    rows={4}
                     placeholder='Comentarios opcionales...'
                     value={comentarios}
                     onChange={(e) => setComentarios(e.target.value)}
@@ -252,14 +270,14 @@ export default function CierreCajaView() {
                     S/ {totalEfectivo.toFixed(2)}
                   </span>
                 </div>
-                
+
                 <div className='flex justify-between items-center py-2 px-4 bg-slate-50 rounded-lg border border-slate-200'>
                   <span className='font-medium text-slate-600'>Total Cuentas</span>
                   <span className='font-bold text-slate-700'>
                     S/ {totalCuentas.toFixed(2)}
                   </span>
                 </div>
-                
+
                 <div className='flex justify-between items-center py-3 px-4 bg-blue-50 rounded-lg border-2 border-blue-300'>
                   <span className='font-bold text-slate-700'>Cierre Total</span>
                   <span className='text-xl font-bold text-blue-700'>
@@ -278,24 +296,23 @@ export default function CierreCajaView() {
           <div className='flex gap-6'>
             <div className='flex items-center gap-3'>
               <span className='font-bold text-slate-700'>Diferencias</span>
-              <div className={`px-4 py-2 rounded-lg font-bold text-lg ${
-                diferencias < 0 
-                  ? 'bg-red-500 text-white' 
-                  : diferencias > 0 
-                    ? 'bg-amber-400 text-slate-800' 
-                    : 'bg-emerald-500 text-white'
-              }`}>
+              <div className={`px-4 py-2 rounded-lg font-bold text-lg ${diferencias < 0
+                ? 'bg-red-500 text-white'
+                : diferencias > 0
+                  ? 'bg-amber-400 text-slate-800'
+                  : 'bg-emerald-500 text-white'
+                }`}>
                 S/ {diferencias.toFixed(2)}
               </div>
             </div>
-            
+
             {sobrante > 0 && (
               <div className='flex items-center gap-2'>
                 <span className='text-sm font-medium text-slate-600'>Sobrante:</span>
                 <span className='text-sm font-bold text-amber-600'>S/ {sobrante.toFixed(2)}</span>
               </div>
             )}
-            
+
             {faltante > 0 && (
               <div className='flex items-center gap-2'>
                 <span className='text-sm font-medium text-slate-600'>Faltante:</span>
@@ -303,7 +320,7 @@ export default function CierreCajaView() {
               </div>
             )}
           </div>
-          
+
           <div className='flex gap-3'>
             <Button type='default' className='border-slate-300'>
               Ventas Enviar
@@ -311,9 +328,9 @@ export default function CierreCajaView() {
             <Button type='default' className='border-slate-300'>
               Ganancias
             </Button>
-            <Button 
-              type='primary' 
-              size='large' 
+            <Button
+              type='primary'
+              size='large'
               className='bg-blue-600 hover:bg-blue-700 px-8'
               onClick={handleCerrarCaja}
             >
