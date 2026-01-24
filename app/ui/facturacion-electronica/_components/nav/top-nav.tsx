@@ -11,6 +11,8 @@ import { useState } from "react";
 import ModalAperturarCaja from "../modals/modal-aperturar-caja";
 import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
+import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
+import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
 import useItemsFinanzas from "../../_hooks/use-items-finanzas";
 import useItemsVentas from "../../_hooks/use-items-ventas";
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
@@ -19,11 +21,15 @@ export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
   const [openCrearIngreso, setOpenCrearIngreso] = useState(false);
   const [openCrearGasto, setOpenCrearGasto] = useState(false);
+  const [openMoverDinero, setOpenMoverDinero] = useState(false);
+  const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
 
   const { itemsFinanzas } = useItemsFinanzas({
     setOpenAperturaCaja,
     setOpenCrearIngreso,
     setOpenCrearGasto,
+    setOpenMoverDinero,
+    setOpenPedirPrestamo,
   });
   const { itemsVentas } = useItemsVentas();
 
@@ -59,6 +65,15 @@ export default function TopNav({ className }: { className?: string }) {
         open={openCrearGasto}
         setOpen={setOpenCrearGasto}
       />
+      <ModalMoverDineroSubCajas
+        open={openMoverDinero}
+        setOpen={setOpenMoverDinero}
+      />
+      <ModalSolicitarEfectivo
+        open={openPedirPrestamo}
+        setOpen={setOpenPedirPrestamo}
+        aperturaId=""
+      />
       <DropdownBase menu={{ items: itemsFinanzas }}>
         <ButtonNav withIcon={false} colorActive="text-amber-600">
           <FaMoneyBillTrendUp />
@@ -72,7 +87,7 @@ export default function TopNav({ className }: { className?: string }) {
         <FaClipboardList />
         Kardex
       </ButtonNav>
-      
+
       {/* Notificaciones de préstamos pendientes */}
       <div className="ml-auto">
         <NotificacionPrestamosPendientes />

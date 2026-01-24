@@ -36,6 +36,11 @@ export interface AperturaYCierreCaja {
     name: string
     email: string
   }
+  distribuciones_vendedores?: Array<{
+    vendedor_id: string
+    vendedor: string
+    monto: string
+  }>
 }
 
 // ============= REQUEST TYPES =============

@@ -11,6 +11,7 @@ interface SelectDespliegueDePagoProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
   tipoComprobante?: string // '01' = Factura, '03' = Boleta, 'nv' = Nota de Venta
+  filterByTipo?: 'efectivo' | 'banco' | 'billetera' // Filtrar por tipo de método de pago
 }
 
 export default function SelectDespliegueDePago({
@@ -19,6 +20,7 @@ export default function SelectDespliegueDePago({
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 14,
   tipoComprobante,
+  filterByTipo,
   ...props
 }: SelectDespliegueDePagoProps) {
   const [shouldFetch, setShouldFetch] = useState(false)
@@ -27,6 +29,7 @@ export default function SelectDespliegueDePago({
     queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
       const result = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/metodos-para-ventas')
+      console.log('🔍 Métodos de pago recibidos del backend:', result.data?.data)
       return result.data?.data || []
     },
     enabled: shouldFetch,
@@ -34,15 +37,25 @@ export default function SelectDespliegueDePago({
   })
 
   // Filtrar métodos por tipo de comprobante si se proporciona
-  const metodosFiltrados = tipoComprobante
+  let metodosFiltrados = tipoComprobante
     ? data?.filter((metodo: any) => metodo.tipos_comprobante.includes(tipoComprobante))
     : data
+
+  // Filtrar por tipo de método de pago si se proporciona
+  if (filterByTipo && metodosFiltrados) {
+    metodosFiltrados = metodosFiltrados.filter((metodo: any) => {
+      const tipo = metodo.tipo?.toLowerCase()
+      return tipo === filterByTipo
+    })
+  }
 
   // Crear opciones con el formato: SubCaja/Banco/Método/Titular
   const options = metodosFiltrados?.map((metodo: any) => ({
     value: metodo.value,
     label: metodo.label,
   })) || []
+
+  console.log('🔍 Opciones finales para el select:', options)
 
   return (
     <SelectBase
