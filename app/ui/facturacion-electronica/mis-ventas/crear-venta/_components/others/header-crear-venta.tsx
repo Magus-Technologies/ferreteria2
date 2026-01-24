@@ -3,12 +3,12 @@
 import { Modal, message } from "antd";
 import { useState } from "react";
 import { MdOutlineSell, MdSell } from "react-icons/md";
-import { getVentaResponseProps } from "~/app/_actions/venta";
+import type { getVentaResponseProps } from "~/lib/api/venta";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectPaquetes from "~/app/_components/form/selects/select-paquetes";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
-import usePermission from "~/hooks/use-permission";
+import usePermissionHook from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import CardAgregarProductoVenta from "../cards/card-agregar-producto-venta";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
@@ -35,7 +35,7 @@ export default function HeaderCrearVenta({
 }: {
   venta?: VentaConUnidadDerivadaNormal;
 }) {
-  const can = usePermission();
+  const { can } = usePermissionHook();
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] = useState(false);
   const [openModalBuscarPaquete, setOpenModalBuscarPaquete] = useState(false);

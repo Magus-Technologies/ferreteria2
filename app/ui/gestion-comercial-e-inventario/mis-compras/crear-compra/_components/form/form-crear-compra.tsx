@@ -5,7 +5,7 @@ import SelectTipoMoneda from '~/app/_components/form/selects/select-tipo-moneda'
 import { FormInstance } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -21,7 +21,7 @@ export default function FormCrearCompra({
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
 }) {
-  const can = usePermission()
+  const { can } = usePermissionHook()
   return (
     <div className='flex flex-col'>
       <div className='flex gap-6'>

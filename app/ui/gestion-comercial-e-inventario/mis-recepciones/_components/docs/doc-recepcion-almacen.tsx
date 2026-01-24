@@ -8,7 +8,7 @@ import { getDetallesRecepcionAlmacen } from '../../_utils/get-detalles-recepcion
 import DocGeneral from '~/app/_components/docs/doc-general'
 import { styles_docs } from '~/app/_components/docs/styles'
 import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
-import { EmpresaSession } from '~/auth/auth'
+import type { Empresa } from '~/lib/api'
 
 export default function DocRecepcionAlmacen({
   data,
@@ -18,7 +18,7 @@ export default function DocRecepcionAlmacen({
 }: {
   data: getRecepcionesAlmacenResponseProps | undefined
   nro_doc: string
-  empresa: EmpresaSession | undefined
+  empresa: Empresa | null | undefined
   show_logo_html?: boolean
 }) {
   const rowData = getDetallesRecepcionAlmacen({ data })

@@ -8,7 +8,7 @@ import { permissions } from "~/lib/permissions";
 import { Modal } from "antd";
 import CardAgregarProductoCompra from "../cards/card-agregar-producto-compra";
 import { useState } from "react";
-import usePermission from "~/hooks/use-permission";
+import usePermissionHook from "~/hooks/use-permission";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import {
   type Compra,
@@ -34,7 +34,7 @@ export type CompraConUnidadDerivadaNormal = Omit<
 export default function HeaderCrearCompra({
   compra,
 }: { compra?: CompraConUnidadDerivadaNormal } = {}) {
-  const can = usePermission();
+  const { can } = usePermissionHook();
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] =
     useState(false);

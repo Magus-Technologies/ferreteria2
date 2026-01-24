@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import TableWithTitle from "~/components/tables/table-with-title";
-import { getVentaResponseProps } from "~/app/_actions/venta";
+import type { getVentaResponseProps } from "~/lib/api/venta";
 import { useColumnsMisVentas } from "./columns-mis-ventas";
 import { useStoreFiltrosMisVentas } from "../../_store/store-filtros-mis-ventas";
 import useGetVentas from "../../_hooks/use-get-ventas";

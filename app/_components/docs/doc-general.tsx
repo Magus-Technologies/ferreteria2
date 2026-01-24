@@ -1,11 +1,11 @@
-import { Document, Page, Text, View } from '@react-pdf/renderer'
-import { styles_globales } from '~/components/pdf/table-pdf-ag-grid'
-import DocHeader from './doc-header'
-import { styles_docs } from './styles'
-import DocTable from './doc-table'
-import { ColDef } from 'ag-grid-community'
-import { NumeroALetras } from '~/utils/numero-a-letras'
-import { EmpresaSession } from '~/auth/auth'
+import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { styles_globales } from "~/components/pdf/table-pdf-ag-grid";
+import DocHeader from "./doc-header";
+import { styles_docs } from "./styles";
+import DocTable from "./doc-table";
+import { ColDef } from "ag-grid-community";
+import { NumeroALetras } from "~/utils/numero-a-letras";
+import type { Empresa } from "~/lib/api";
 
 export default function DocGeneral<T>({
   empresa,
@@ -20,22 +20,26 @@ export default function DocGeneral<T>({
   totalConLetras = false,
   getEstiloCampo,
 }: {
-  empresa: EmpresaSession | undefined
-  show_logo_html?: boolean
-  tipo_documento: string
-  nro_doc: string
-  children: React.ReactNode
+  empresa: Empresa | null | undefined;
+  show_logo_html?: boolean;
+  tipo_documento: string;
+  nro_doc: string;
+  children: React.ReactNode;
 
-  colDefs: ColDef[]
-  rowData: T[]
-  total: number
-  observaciones: string
-  totalConLetras?: boolean
-  getEstiloCampo?: (campo: string) => { fontFamily?: string; fontSize?: number; fontWeight?: string }
+  colDefs: ColDef[];
+  rowData: T[];
+  total: number;
+  observaciones: string;
+  totalConLetras?: boolean;
+  getEstiloCampo?: (campo: string) => {
+    fontFamily?: string;
+    fontSize?: number;
+    fontWeight?: string;
+  };
 }) {
   return (
     <Document title={nro_doc}>
-      <Page size='A4' style={styles_globales.page}>
+      <Page size="A4" style={styles_globales.page}>
         <DocHeader
           empresa={empresa}
           show_logo_html={show_logo_html}
@@ -45,13 +49,17 @@ export default function DocGeneral<T>({
 
         {children}
 
-        <DocTable colDefs={colDefs} rowData={rowData} getEstiloCampo={getEstiloCampo} />
+        <DocTable
+          colDefs={colDefs}
+          rowData={rowData}
+          getEstiloCampo={getEstiloCampo}
+        />
 
         <View style={styles_docs.section}>
           <View style={styles_docs.total}>
             {totalConLetras && (
               <Text
-                style={{ textAlign: 'left', position: 'absolute', left: 6 }}
+                style={{ textAlign: "left", position: "absolute", left: 6 }}
               >
                 {NumeroALetras(total)}
               </Text>
@@ -62,10 +70,10 @@ export default function DocGeneral<T>({
         </View>
 
         <View style={styles_docs.observaciones}>
-          <Text style={{ fontWeight: 'bold' }}>Observaciones:</Text>
+          <Text style={{ fontWeight: "bold" }}>Observaciones:</Text>
           <Text>{observaciones}</Text>
         </View>
       </Page>
     </Document>
-  )
+  );
 }

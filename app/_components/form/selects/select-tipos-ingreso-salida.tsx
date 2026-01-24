@@ -1,37 +1,38 @@
-'use client'
+"use client";
 
-import { useServerQuery } from '~/hooks/use-server-query'
-import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { QueryKeys } from '~/app/_lib/queryKeys'
-import { getTiposIngresoSalida } from '~/app/_actions/tipos-ingreso-salida'
-import { FaCheckSquare } from 'react-icons/fa'
-import iterarChangeValue from '~/app/_utils/iterar-change-value'
-import { useRef } from 'react'
-import ButtonCreateTiposIngresoSalida from '../buttons/button-create-tipos-ingreso-salida'
+import { useQuery } from "@tanstack/react-query";
+import SelectBase, { RefSelectBaseProps, SelectBaseProps } from "./select-base";
+import { QueryKeys } from "~/app/_lib/queryKeys";
+import { tipoIngresoSalidaApi } from "~/lib/api/tipo-ingreso-salida";
+import { FaCheckSquare } from "react-icons/fa";
+import iterarChangeValue from "~/app/_utils/iterar-change-value";
+import { useRef } from "react";
+import ButtonCreateTiposIngresoSalida from "../buttons/button-create-tipos-ingreso-salida";
 
 interface SelectTiposIngresoSalidaProps extends SelectBaseProps {
-  classNameIcon?: string
-  sizeIcon?: number
-  showButtonCreate?: boolean
+  classNameIcon?: string;
+  sizeIcon?: number;
+  showButtonCreate?: boolean;
 }
 
 export default function SelectTiposIngresoSalida({
-  placeholder = 'Seleccionar Tipo',
-  variant = 'filled',
-  classNameIcon = 'text-cyan-600 mx-1',
+  placeholder = "Seleccionar Tipo",
+  variant = "filled",
+  classNameIcon = "text-cyan-600 mx-1",
   sizeIcon = 18,
   showButtonCreate = false,
   ...props
 }: SelectTiposIngresoSalidaProps) {
-  const selectTiposIngresoSalidaRef = useRef<RefSelectBaseProps>(null)
+  const selectTiposIngresoSalidaRef = useRef<RefSelectBaseProps>(null);
 
-  const { response} = useServerQuery({
-    action: getTiposIngresoSalida,
-    propsQuery: {
-      queryKey: [QueryKeys.TIPOS_INGRESO_SALIDA],
+  const { data: response } = useQuery({
+    queryKey: [QueryKeys.TIPOS_INGRESO_SALIDA],
+    queryFn: async () => {
+      const result = await tipoIngresoSalidaApi.getAll();
+      return result.data || [];
     },
-    params: undefined,
-  })
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
 
   return (
     <>
@@ -41,7 +42,7 @@ export default function SelectTiposIngresoSalida({
         prefix={<FaCheckSquare className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
-        options={response?.map(item => ({
+        options={response?.map((item) => ({
           value: item.id,
           label: item.name,
         }))}
@@ -49,7 +50,7 @@ export default function SelectTiposIngresoSalida({
       />
       {showButtonCreate && (
         <ButtonCreateTiposIngresoSalida
-          onSuccess={res =>
+          onSuccess={(res) =>
             iterarChangeValue({
               refObject: selectTiposIngresoSalidaRef,
               value: res.id,
@@ -58,5 +59,5 @@ export default function SelectTiposIngresoSalida({
         />
       )}
     </>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 import { Popconfirm, Tooltip } from 'antd'
 import { MdDelete, MdEditSquare } from 'react-icons/md'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import {
   UseMutationActionProps,
   useServerMutation,
@@ -32,7 +32,7 @@ export default function ColumnAction<T>({
   titleDelete = 'Eliminar',
   propsDelete,
 }: ColumnActionProps<T>) {
-  const can = usePermission()
+  const { can } = usePermissionHook()
 
   const { disabled, disabledTooltip, action, ...restMutationProps } = propsDelete || {}
 

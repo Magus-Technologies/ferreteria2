@@ -19,7 +19,7 @@ export interface Empresa {
   regimen?: string;
   actividad_economica?: string;
   // Logo
-  logo?: string;
+  logo: string | null;
   logo_url?: string; // URL completa generada por el backend
   // Gerente o Administrador
   gerente_nombre?: string;

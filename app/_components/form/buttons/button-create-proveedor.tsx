@@ -1,6 +1,6 @@
 import { Tooltip } from 'antd'
 import { useState } from 'react'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
 import { Proveedor } from '@prisma/client'
@@ -21,7 +21,7 @@ export default function ButtonCreateProveedor({
 }: ButtonCreateProveedorProps) {
   const [open, setOpen] = useState(false)
 
-  const can = usePermission()
+  const { can } = usePermissionHook()
   if (!can(permissions.MARCA_CREATE)) return null
 
   return (

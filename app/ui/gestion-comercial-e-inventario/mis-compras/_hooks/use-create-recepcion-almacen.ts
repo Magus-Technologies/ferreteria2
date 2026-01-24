@@ -2,7 +2,7 @@ import { useServerMutation } from '~/hooks/use-server-mutation'
 import { toUTCBD } from '~/utils/fechas'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import useApp from 'antd/es/app/useApp'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { Compra, Prisma } from '@prisma/client'
 import { useAuth } from '~/lib/auth-context'
@@ -21,7 +21,7 @@ export default function useCreateRecepcionAlmacen({
   const { user } = useAuth()
   const user_id = user?.id
 
-  const can = usePermission()
+  const { can } = usePermissionHook()
   const { notification } = useApp()
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const { execute, loading } = useServerMutation({

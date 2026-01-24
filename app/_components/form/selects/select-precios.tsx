@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import SelectBase, { SelectBaseProps, RefSelectBaseProps } from './select-base'
-import { ProductoAlmacenUnidadDerivada } from '@prisma/client'
+import type { ProductoAlmacenUnidadDerivada } from '~/app/_types/producto'
 import { FaMoneyBill } from 'react-icons/fa'
 
 interface SelectPreciosProps extends SelectBaseProps {

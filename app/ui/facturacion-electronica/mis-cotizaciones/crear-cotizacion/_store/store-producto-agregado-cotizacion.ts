@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import type { FormCreateCotizacion, TipoMoneda } from '../_types/cotizacion.types'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 
 // Extender el tipo de producto para incluir unidades derivadas disponibles
 export type ProductoCotizacionConUnidades = FormCreateCotizacion['productos'][number] & {
-  unidades_derivadas_disponibles?: getProductosResponseProps['producto_en_almacenes'][number]['unidades_derivadas']
+  unidades_derivadas_disponibles?: Producto['producto_en_almacenes'][number]['unidades_derivadas']
 }
 
 type UseStoreProductoAgregadoCotizacion = {

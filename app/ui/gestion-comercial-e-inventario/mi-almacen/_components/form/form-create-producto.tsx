@@ -15,7 +15,7 @@ import FormCodProducto from '../form/form-cod-producto'
 import { FormInstance } from 'antd'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 
 interface FormCreateProductoProps {
@@ -23,7 +23,7 @@ interface FormCreateProductoProps {
 }
 
 export default function FormCreateProducto({ form }: FormCreateProductoProps) {
-  const can = usePermission()
+  const { can } = usePermissionHook()
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   return (
     <>
