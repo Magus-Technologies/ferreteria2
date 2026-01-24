@@ -1,5 +1,5 @@
 import { Tooltip } from 'antd'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
 import type { Producto } from '~/app/_types/producto'
@@ -28,7 +28,7 @@ export default function ButtonCreateProductoPlus({
     state => state.setFichaTecnicaFile
   )
 
-  const can = usePermission()
+  const { can } = usePermissionHook()
   if (!can(permissions.PRODUCTO_CREATE)) return null
 
   return (

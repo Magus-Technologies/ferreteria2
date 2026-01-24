@@ -169,3 +169,44 @@ export const ventaApi = {
     });
   },
 };
+
+// ============= TIPOS ADICIONALES =============
+
+/**
+ * Tipo para venta completa con todas sus relaciones
+ * (usado en tablas y modales de mis-ventas)
+ */
+export type VentaCompleta = {
+  id: string
+  tipo_documento: string
+  serie: string
+  numero: number
+  descripcion?: string
+  forma_de_pago: 'co' | 'cr'
+  tipo_moneda: 's' | 'd'
+  tipo_de_cambio: number
+  fecha: string
+  estado_de_venta: 'cr' | 'ee' | 'pr' | 'an'
+  cliente_id?: number
+  direccion_seleccionada?: string
+  recomendado_por_id?: number
+  user_id: string
+  almacen_id: number
+  created_at: string
+  updated_at: string
+  total_pagado?: number
+  entregas_productos_count?: number
+  cliente?: any
+  recomendadoPor?: any
+  productos_por_almacen?: any[]
+  despliegueDePagoVentas?: any[]
+  user?: { id: string; name: string }
+  almacen?: { id: number; name: string }
+  entregasProductos?: any[]
+}
+
+/**
+ * Alias para compatibilidad con código existente
+ * @deprecated Usar VentaCompleta en su lugar
+ */
+export type getVentaResponseProps = VentaCompleta

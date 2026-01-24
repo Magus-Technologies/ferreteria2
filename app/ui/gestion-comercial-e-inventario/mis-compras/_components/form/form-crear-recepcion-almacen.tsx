@@ -12,7 +12,7 @@ import SelectProveedorChoferes from '~/app/_components/form/selects/select-prove
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import { ConsultaDni, ConsultaRuc } from '~/app/_types/consulta-ruc'
 import LabelBase from '~/components/form/label-base'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 
 export default function FormCrearRecepcionAlmacen({
@@ -20,7 +20,7 @@ export default function FormCrearRecepcionAlmacen({
 }: {
   form: FormInstance
 }) {
-  const can = usePermission()
+  const { can } = usePermissionHook()
   const [proveedor, setProveedor] = useState<Proveedor>()
 
   return (

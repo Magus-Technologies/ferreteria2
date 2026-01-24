@@ -5,7 +5,15 @@ import {
 } from '@tanstack/react-query'
 import { App } from 'antd'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { ServerResult } from '~/auth/middleware-server-actions'
+
+// Tipo para el resultado de Server Actions
+export type ServerResult<T> = {
+  data?: T
+  error?: {
+    message: string
+    code?: string
+  }
+}
 
 export type ServerAction<TParams, TResult> = (
   params: TParams

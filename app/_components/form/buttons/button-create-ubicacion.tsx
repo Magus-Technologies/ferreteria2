@@ -1,22 +1,21 @@
 'use client'
 
-import { Tooltip } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import { App, Form, Input, Tooltip } from 'antd'
+import { useState } from 'react'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import FormWithName, {
-  GenericFormWithName,
-  ModalFormWithNameRef,
-} from '~/components/modals/modal-form-with-name'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import InputNumberBase from '../inputs/input-number-base'
-import { createUbicacion } from '~/app/_actions/ubicacion'
+import { ubicacionesApi, type Ubicacion } from '~/lib/api/catalogos'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import ModalForm from '~/components/modals/modal-form'
+import TitleForm from '~/components/form/title-form'
+import LabelBase from '~/components/form/label-base'
 
 interface ButtonCreateUbicacionProps {
   className?: string
-  onSuccess?: (res: GenericFormWithName) => void
+  onSuccess?: (res: Ubicacion) => void
 }
 
 export default function ButtonCreateUbicacion({
@@ -24,47 +23,83 @@ export default function ButtonCreateUbicacion({
   onSuccess,
 }: ButtonCreateUbicacionProps) {
   const [open, setOpen] = useState(false)
-  const formRef = useRef<ModalFormWithNameRef<{
-    name: string
-    almacen_id: number
-  }> | null>(null)
-
+  const [form] = Form.useForm()
+  const { message } = App.useApp()
+  const queryClient = useQueryClient()
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  useEffect(() => {
-    if (formRef.current) formRef.current.setFieldValue('almacen_id', almacen_id)
-  }, [almacen_id])
+  const createMutation = useMutation({
+    mutationFn: async (values: { name: string }) => {
+      if (!almacen_id) {
+        throw new Error('No se ha seleccionado un almacén')
+      }
 
-  const can = usePermission()
+      const response = await ubicacionesApi.create({
+        name: values.name,
+        almacen_id,
+      })
+      
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      
+      return response.data!
+    },
+    onSuccess: (data) => {
+      message.success('Ubicación creada exitosamente')
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.UBICACIONES] })
+      form.resetFields()
+      setOpen(false)
+      onSuccess?.(data)
+    },
+    onError: (error: Error) => {
+      message.error(error.message || 'Error al crear la ubicación')
+    },
+  })
+
+  const handleSubmit = (values: { name: string }) => {
+    createMutation.mutate(values)
+  }
+
+  const { can } = usePermissionHook()
   if (!can(permissions.UBICACION_CREATE)) return null
 
   return (
     <>
-      <FormWithName
-        title='Ubicación'
+      <ModalForm
+        modalProps={{
+          title: <TitleForm>Crear Ubicación</TitleForm>,
+          width: 500,
+          centered: true,
+          okText: 'Crear',
+          confirmLoading: createMutation.isPending,
+        }}
         open={open}
         setOpen={setOpen}
-        propsUseServerMutation={{
-          action: createUbicacion,
-          queryKey: [QueryKeys.UBICACIONES],
-          onSuccess: res => onSuccess?.(res.data!),
-          msgSuccess: 'Ubicación creada exitosamente',
+        onCancel={() => {
+          form.resetFields()
+        }}
+        formProps={{
+          form,
+          onFinish: handleSubmit,
+          layout: 'vertical',
         }}
       >
-        <InputNumberBase
-          propsForm={{
-            name: 'almacen_id',
-            initialValue: almacen_id,
-            rules: [
-              {
-                required: true,
-                message: '',
-              },
-            ],
-            hidden: true,
-          }}
-        />
-      </FormWithName>
+        <LabelBase label="*Nombre:" orientation="column">
+          <Form.Item
+            name="name"
+            rules={[
+              { required: true, message: 'El nombre es requerido' },
+              { min: 2, message: 'Mínimo 2 caracteres' },
+              { max: 191, message: 'Máximo 191 caracteres' },
+            ]}
+            noStyle
+          >
+            <Input placeholder="Ej: Estante A1, Pasillo 3, etc." />
+          </Form.Item>
+        </LabelBase>
+      </ModalForm>
+
       <Tooltip title='Crear Ubicación'>
         <ButtonCreateFormWithName
           onClick={() => setOpen(true)}

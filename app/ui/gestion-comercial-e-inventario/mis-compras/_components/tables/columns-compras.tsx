@@ -5,7 +5,7 @@ import { EstadoDeCompra, TipoDocumento, FormaDePago } from '@prisma/client'
 import { IGV } from '~/lib/constantes'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { Popconfirm, Tooltip } from 'antd'
 import { FaTruckLoading } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
@@ -35,7 +35,7 @@ export function useColumnsCompras({
   setOpenModal?: (open: boolean) => void
 } = {}) {
   const router = useRouter()
-  const can = usePermission()
+  const { can } = usePermissionHook()
   const queryClient = useQueryClient()
   const { message } = useApp()
 

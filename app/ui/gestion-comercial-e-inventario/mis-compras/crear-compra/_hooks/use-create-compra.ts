@@ -3,7 +3,7 @@ import { toUTCBD } from '~/utils/fechas'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { EstadoDeCompra, FormaDePago, TipoDocumento, TipoMoneda } from '@prisma/client'
 import { useAuth } from '~/lib/auth-context'
@@ -79,7 +79,7 @@ export default function useCreateCompra({
   const { user } = useAuth()
   const user_id = user?.id
 
-  const can = usePermission()
+  const { can } = usePermissionHook()
   const { notification, message } = useApp()
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 

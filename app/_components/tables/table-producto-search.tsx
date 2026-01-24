@@ -1,4 +1,4 @@
-import { getProductosResponseProps } from "~/app/_actions/producto";
+import type { Producto } from "~/app/_types/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useColumnsProductos } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos";
 import TableWithTitle from "~/components/tables/table-with-title";
@@ -9,7 +9,6 @@ import { useStoreAlmacen } from "~/store/store-almacen";
 import { RefObject, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { useStoreProductoAgregadoCompra } from "~/app/_stores/store-producto-agregado-compra";
 import { useProductosSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_hooks/useProductosSearch";
-import type { Producto } from "~/app/_types/producto";
 import { usePathname } from "next/navigation";
 import { orangeColors, greenColors } from "~/lib/colors";
 
@@ -29,7 +28,7 @@ export default function TableProductoSearch({
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: getProductosResponseProps | undefined;
+    data: Producto | undefined;
   }) => void;
   tipoBusqueda: TipoBusquedaProducto;
   ref?: RefObject<RefTableProductoSearchProps | null>;

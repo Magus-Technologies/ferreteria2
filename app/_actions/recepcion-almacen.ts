@@ -1,7 +1,6 @@
 'use server'
 
 import { EstadoDeCompra, Prisma, RecepcionAlmacen } from '@prisma/client'
-import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import {
@@ -47,7 +46,7 @@ export type getRecepcionesAlmacenResponseProps =
     include: typeof includeRecepcionAlmacen
   }>
 
-async function getRecepcionesAlmacenWA({
+export async function getRecepcionesAlmacen({
   where,
 }: {
   where?: Prisma.RecepcionAlmacenWhereInput
@@ -71,7 +70,6 @@ async function getRecepcionesAlmacenWA({
 
   return { data: convertDecimalsToNumbers(items) }
 }
-export const getRecepcionesAlmacen = withAuth(getRecepcionesAlmacenWA)
 
 async function manejo_de_recepcion({
   db,
@@ -203,7 +201,7 @@ async function manejo_de_recepcion({
   )
 }
 
-async function createRecepcionAlmacenWA(
+export async function createRecepcionAlmacen(
   data: Omit<Prisma.RecepcionAlmacenUncheckedCreateInput, 'numero'>
 ) {
   const puede = await can(permissions.RECEPCION_ALMACEN_CREATE)
@@ -264,9 +262,8 @@ async function createRecepcionAlmacenWA(
     }
   )
 }
-export const createRecepcionAlmacen = withAuth(createRecepcionAlmacenWA)
 
-async function eliminarRecepcionAlmacenWA({
+export async function eliminarRecepcionAlmacen({
   id,
 }: {
   id: RecepcionAlmacen['id']
@@ -327,4 +324,3 @@ async function eliminarRecepcionAlmacenWA({
     }
   )
 }
-export const eliminarRecepcionAlmacen = withAuth(eliminarRecepcionAlmacenWA)

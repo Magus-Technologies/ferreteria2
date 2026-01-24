@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { Text, View } from '@react-pdf/renderer'
-import { TipoDocumento } from '@prisma/client'
-import { TiposDocumentos } from '~/lib/docs'
-import { useColumnsDocIngresoSalida } from '../tables/columns-doc-ingreso-salida'
-import DocGeneral from '~/app/_components/docs/doc-general'
-import { styles_docs } from '~/app/_components/docs/styles'
-import { getIngresoSalidaResponseProps } from '~/app/_actions/ingreso-salida'
-import { EmpresaSession } from '~/auth/auth'
+import { Text, View } from "@react-pdf/renderer";
+import { TipoDocumento } from "@prisma/client";
+import { TiposDocumentos } from "~/lib/docs";
+import { useColumnsDocIngresoSalida } from "../tables/columns-doc-ingreso-salida";
+import DocGeneral from "~/app/_components/docs/doc-general";
+import { styles_docs } from "~/app/_components/docs/styles";
+import type { Empresa } from "~/lib/api";
+import { IngresoSalidaWithRelations } from "~/lib/api/ingreso-salida";
 
-export type DataDocIngresoSalida = getIngresoSalidaResponseProps | undefined
+export type DataDocIngresoSalida = IngresoSalidaWithRelations | undefined;
 
 export default function DocIngresoSalida({
   data,
@@ -17,14 +17,14 @@ export default function DocIngresoSalida({
   empresa,
   show_logo_html = false,
 }: {
-  data: DataDocIngresoSalida
-  nro_doc: string
-  empresa: EmpresaSession | undefined
-  show_logo_html?: boolean
+  data: DataDocIngresoSalida;
+  nro_doc: string;
+  empresa: Empresa | null | undefined;
+  show_logo_html?: boolean;
 }) {
   const rowData =
-    data?.productos_por_almacen.flatMap(pa =>
-      pa.unidades_derivadas.map(ud => ({
+    data?.productos_por_almacen.flatMap((pa) =>
+      pa.unidades_derivadas.map((ud) => ({
         ...ud,
         producto_almacen_ingreso_salida: {
           ...pa,
@@ -34,12 +34,17 @@ export default function DocIngresoSalida({
           },
         },
         unidad_derivada_inmutable: ud.unidad_derivada_inmutable,
-      }))
-    ) ?? []
+      })),
+    ) ?? [];
 
+  // Convertir tipo de documento de Laravel a Prisma para compatibilidad con TiposDocumentos
+  const tipoDocumentoPrisma =
+    data?.tipo_documento === "Ingreso"
+      ? TipoDocumento.Ingreso
+      : TipoDocumento.Salida;
   const tipo_documento = data?.tipo_documento
-    ? TiposDocumentos[data.tipo_documento].name
-    : ''
+    ? TiposDocumentos[tipoDocumentoPrisma].name
+    : "";
 
   return (
     <DocGeneral
@@ -49,7 +54,7 @@ export default function DocIngresoSalida({
       nro_doc={nro_doc}
       colDefs={useColumnsDocIngresoSalida({
         estado: data?.estado || false,
-        tipo_documento: data?.tipo_documento || TipoDocumento.Ingreso,
+        tipo_documento: tipoDocumentoPrisma,
       })}
       rowData={rowData}
       total={rowData.reduce(
@@ -58,9 +63,9 @@ export default function DocIngresoSalida({
           Number(item.cantidad) *
             Number(item.producto_almacen_ingreso_salida.costo) *
             Number(item.factor),
-        0
+        0,
       )}
-      observaciones={data?.descripcion ?? '-'}
+      observaciones={data?.descripcion ?? "-"}
       totalConLetras
     >
       <View style={styles_docs.section}>
@@ -71,10 +76,10 @@ export default function DocIngresoSalida({
                 Fecha de Emisión:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {new Date(data?.fecha || '').toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
+                {new Date(data?.fecha || "").toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
                 })}
               </Text>
             </View>
@@ -101,7 +106,7 @@ export default function DocIngresoSalida({
                 Proveedor:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.proveedor?.razon_social ?? '-'}
+                {data?.proveedor?.razon_social ?? "-"}
               </Text>
             </View>
             <View style={styles_docs.subSectionInformacionGeneral}>
@@ -117,12 +122,12 @@ export default function DocIngresoSalida({
                 Observaciones:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.descripcion ?? '-'}
+                {data?.descripcion ?? "-"}
               </Text>
             </View>
           </View>
         </View>
       </View>
     </DocGeneral>
-  )
+  );
 }

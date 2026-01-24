@@ -4,13 +4,13 @@ import { FormInstance } from 'antd'
 import SelectBase from './select-base'
 import { FaWeightHanging } from 'react-icons/fa6'
 import { DescuentoTipo } from '~/lib/api/venta'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 
 interface SelectUnidadDerivadaEditableProps {
   form: FormInstance
   fieldIndex: number
   productoId: number
-  unidadesDerivadas: getProductosResponseProps['producto_en_almacenes'][number]['unidades_derivadas']
+  unidadesDerivadas: Producto['producto_en_almacenes'][number]['unidades_derivadas']
   onUpdateStore?: (data: {
     productoId: number
     unidad_derivada_id: number

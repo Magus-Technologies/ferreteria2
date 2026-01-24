@@ -1,15 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
-import { useServerQuery } from '~/hooks/use-server-query'
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
 import { Prisma } from '@prisma/client'
 import type { Producto } from '~/app/_types/producto'
-import {
-  getProductosResponseProps,
-  SearchProductos,
-} from '~/app/_actions/producto'
 import { FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -22,6 +17,8 @@ import SelectTipoBusquedaProducto, {
 } from './select-tipo-busqueda-producto'
 import { usePathname } from 'next/navigation'
 import { orangeColors, greenColors } from '~/lib/colors'
+import { useQuery } from '@tanstack/react-query'
+import { productosApiV2 } from '~/lib/api/producto'
 
 export function getFiltrosPorTipoBusqueda({
   tipoBusqueda,
@@ -62,14 +59,14 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
   showButtonCreate?: boolean
-  onChange?: (value: number, producto?: getProductosResponseProps) => void
+  onChange?: (value: number, producto?: Producto) => void
   optionsDefault?: { value: number; label: string }[]
   classIconSearch?: string
   classNameTipoBusqueda?: string
   classIconPlus?: string
   withSearch?: boolean
   withTipoBusqueda?: boolean
-  handleOnlyOneResult?: (producto: getProductosResponseProps) => void
+  handleOnlyOneResult?: (producto: Producto) => void
   showCardAgregarProducto?: boolean
   showCardAgregarProductoVenta?: boolean
   showCardAgregarProductoCotizacion?: boolean
@@ -150,23 +147,32 @@ export default function SelectProductos({
 
   const [productoCreado, setProductoCreado] = useState<Producto>()
   const [productoSeleccionado, setProductoSeleccionado] =
-    useState<getProductosResponseProps>()
+    useState<Producto>()
 
-  const { response, refetch, loading, isFetching } = useServerQuery({
-    action: SearchProductos,
-    propsQuery: {
-      queryKey: [QueryKeys.PRODUCTOS_SEARCH],
-      enabled: false,
+  const { data: responseData, refetch, isLoading: loading, isFetching } = useQuery({
+    queryKey: [QueryKeys.PRODUCTOS_SEARCH, text, tipoBusqueda, almacen_id],
+    queryFn: async () => {
+      if (!text || !almacen_id) return []
+      
+      const response = await productosApiV2.getAllByAlmacen({
+        almacen_id,
+        search: text,
+        estado: 1,
+        per_page: 100,
+      })
+      
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      
+      // response.data tiene la estructura { data: Producto[], ... }
+      return response.data?.data || []
     },
-    params: {
-      where: {
-        ...getFiltrosPorTipoBusqueda({ tipoBusqueda, value: text }),
-        producto_en_almacenes: { some: { almacen_id } },
-        permitido: true,
-        estado: true,
-      },
-    },
+    enabled: false, // Solo se ejecuta manualmente con refetch
   })
+
+  // Renombrar para mayor claridad
+  const productos = responseData
 
   function handleSearch() {
     if (text) {
@@ -185,13 +191,13 @@ export default function SelectProductos({
     }
     if (isFetching) return
     // Solo abrir modal si hay resultados (significa que el usuario buscó algo)
-    if (!response || response.length === 0) return
+    if (!productos || productos.length === 0) return
 
-    if (response.length === 1) handleOnlyOneResult?.(response[0])
+    if (productos.length === 1) handleOnlyOneResult?.(productos[0])
     else if (text) setOpenModalProductoSearch(true) // Solo abrir si hay texto de búsqueda
-  }, [response, isFetching])
+  }, [productos, isFetching])
 
-  function handleSelect({ data }: { data?: getProductosResponseProps } = {}) {
+  function handleSelect({ data }: { data?: Producto } = {}) {
     const producto = data || productoSeleccionadoSearchStore
     if (producto) {
       setProductoSeleccionado(producto)
@@ -224,9 +230,7 @@ export default function SelectProductos({
           setTextDefault('')
         }}
         onChange={(value) => {
-          const producto = response?.find((item) => item.id === value) as
-            | getProductosResponseProps
-            | undefined
+          const producto = productos?.find((item) => item.id === value)
           
           if (producto) {
             // Ejecutar handleOnlyOneResult si existe
@@ -251,7 +255,7 @@ export default function SelectProductos({
         }
         options={[
           ...optionsDefault,
-          ...(response?.map((item) => ({
+          ...(productos?.map((item) => ({
             value: item.id,
             label: `${item.cod_producto} : ${item.name}`,
           })) || []),
@@ -286,8 +290,8 @@ export default function SelectProductos({
               handleSearch()
             } else {
               // Si withSearch está desactivado, seleccionar el primer resultado
-              if (response && response.length > 0) {
-                const primerProducto = response[0]
+              if (productos && productos.length > 0) {
+                const primerProducto = productos[0]
                 handleOnlyOneResult?.(primerProducto)
                 onChange?.(primerProducto.id, primerProducto)
                 // setText('') 

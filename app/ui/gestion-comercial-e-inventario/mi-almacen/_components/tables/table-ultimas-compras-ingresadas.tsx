@@ -4,7 +4,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsUltimasComprasIngresadas } from './columns-ultimas-compras-ingresadas'
 import type { UltimasComprasType } from './columns-ultimas-compras-ingresadas'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 import { greenColors } from '~/lib/colors'
 
 // Importar el tipo desde las columnas para mantener consistencia
@@ -14,7 +14,7 @@ export default function TableUltimasComprasIngresadas({
   productoSeleccionado,
 }: {
   id: string
-  productoSeleccionado: getProductosResponseProps | undefined
+  productoSeleccionado: Producto | undefined
 }) {
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 

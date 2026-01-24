@@ -7,7 +7,7 @@ import { MdOutlineLocalShipping } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import CardAgregarProductoGuia from '../cards/card-agregar-producto-guia'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
@@ -17,7 +17,7 @@ export default function HeaderCrearGuia({
 }: {
   guia?: any
 }) {
-  const can = usePermission()
+  const { can } = usePermissionHook()
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] =
     useState(false)
