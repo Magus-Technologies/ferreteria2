@@ -8,6 +8,7 @@ import { IoMdContact } from "react-icons/io";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ModalAperturarCaja from "../modals/modal-aperturar-caja";
 import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
@@ -16,6 +17,7 @@ import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solici
 import useItemsFinanzas from "../../_hooks/use-items-finanzas";
 import useItemsVentas from "../../_hooks/use-items-ventas";
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
@@ -23,6 +25,20 @@ export default function TopNav({ className }: { className?: string }) {
   const [openCrearGasto, setOpenCrearGasto] = useState(false);
   const [openMoverDinero, setOpenMoverDinero] = useState(false);
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
+
+  // Obtener caja activa (incluye apertura)
+  const { data: cajaActiva } = useQuery({
+    queryKey: [QueryKeys.CAJA_ACTIVA],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/activa`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+      const data = await response.json()
+      return data.data
+    },
+  })
 
   const { itemsFinanzas } = useItemsFinanzas({
     setOpenAperturaCaja,
@@ -72,7 +88,7 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalSolicitarEfectivo
         open={openPedirPrestamo}
         setOpen={setOpenPedirPrestamo}
-        aperturaId=""
+        aperturaId={cajaActiva?.apertura_cierre_caja_id || ''}
       />
       <DropdownBase menu={{ items: itemsFinanzas }}>
         <ButtonNav withIcon={false} colorActive="text-amber-600">

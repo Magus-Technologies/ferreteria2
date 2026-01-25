@@ -38,5 +38,6 @@ export enum QueryKeys {
   HISTORIAL_APERTURAS = 'historial_aperturas',
   HISTORIAL_APERTURAS_TODAS = 'historial_aperturas_todas',
   CAJA_ACTIVA = 'caja_activa',
+  APERTURA_CAJA = 'apertura_caja',
   PRESTAMOS_PENDIENTES = 'prestamos_pendientes',
 }

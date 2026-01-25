@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import useApp from 'antd/es/app/useApp'
-import { prestamoVendedorApi } from '~/lib/api/prestamo-vendedor'
-import type { CrearSolicitudRequest } from '~/lib/api/prestamo-vendedor'
+import { prestamoVendedorApi, type CrearSolicitudRequest } from '~/lib/api/prestamo-vendedor'
 
+// Hook para solicitar efectivo a otro vendedor
 export default function useSolicitarEfectivo(onSuccess?: () => void) {
   const { message, notification } = useApp()
   const [loading, setLoading] = useState(false)
@@ -16,24 +16,26 @@ export default function useSolicitarEfectivo(onSuccess?: () => void) {
 
       if (response.error) {
         notification.error({
-          message: 'Error al solicitar efectivo',
-          description: response.error.message,
+          message: 'Error al crear solicitud',
+          description: response.error.message || 'Error desconocido',
         })
-        return
+        return false
       }
 
       message.success('Solicitud enviada exitosamente')
-      
-      // Invalidar queries relacionadas
+
       queryClient.invalidateQueries({ queryKey: ['solicitudes-efectivo'] })
-      
+      queryClient.invalidateQueries({ queryKey: ['vendedores-con-efectivo'] })
+
       onSuccess?.()
+      return true
     } catch (error) {
       console.error('Error al solicitar efectivo:', error)
       notification.error({
         message: 'Error inesperado',
         description: 'Ocurrió un error al enviar la solicitud',
       })
+      return false
     } finally {
       setLoading(false)
     }

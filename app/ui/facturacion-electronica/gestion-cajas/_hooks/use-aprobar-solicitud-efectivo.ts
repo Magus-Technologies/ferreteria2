@@ -5,6 +5,7 @@ import { prestamoVendedorApi } from '~/lib/api/prestamo-vendedor'
 
 interface AprobarSolicitudData {
   solicitud_id: number
+  sub_caja_origen_id: number
   monto_aprobado: number
 }
 
@@ -18,6 +19,7 @@ export function useAprobarSolicitudEfectivo() {
     try {
       const response = await prestamoVendedorApi.aprobarSolicitud(
         data.solicitud_id,
+        data.sub_caja_origen_id,
         data.monto_aprobado
       )
 
@@ -30,9 +32,11 @@ export function useAprobarSolicitudEfectivo() {
       }
 
       message.success('Solicitud aprobada y efectivo transferido')
-      
+
       queryClient.invalidateQueries({ queryKey: ['solicitudes-efectivo'] })
-      
+      queryClient.invalidateQueries({ queryKey: ['sub-cajas'] })
+      queryClient.invalidateQueries({ queryKey: ['caja-activa'] })
+
       return true
     } catch (error) {
       console.error('Error al aprobar solicitud:', error)

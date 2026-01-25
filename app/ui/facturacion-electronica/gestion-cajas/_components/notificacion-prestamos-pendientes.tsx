@@ -1,106 +1,109 @@
 'use client'
 
-import { Badge, Button, Popover, Spin } from 'antd'
+import { Badge, Dropdown } from 'antd'
 import { BellOutlined } from '@ant-design/icons'
-import { usePrestamosPendientes } from '../_hooks/use-prestamos-pendientes'
-import { ModalAprobarPrestamo } from './modal-aprobar-prestamo'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import type { Prestamo } from '~/lib/api/transacciones-caja'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { prestamoVendedorApi, type SolicitudEfectivo } from '~/lib/api/prestamo-vendedor'
+import ModalAprobarSolicitudEfectivo from './modal-aprobar-solicitud-efectivo'
 
 export function NotificacionPrestamosPendientes() {
-  const { data, isLoading } = usePrestamosPendientes()
-  const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [openAprobar, setOpenAprobar] = useState(false)
+  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null)
 
-  const prestamos = data?.data || []
-  const count = prestamos.length
+  const { data: solicitudesData, refetch } = useQuery({
+    queryKey: ['solicitudes-efectivo-pendientes'],
+    queryFn: async () => {
+      const result = await prestamoVendedorApi.solicitudesPendientes()
+      return result.data || []
+    },
+    refetchInterval: 30000, // Refrescar cada 30 segundos
+  })
 
-  if (isLoading || count === 0) {
-    return null
+  // Asegurar que solicitudes sea siempre un array
+  const solicitudes = Array.isArray(solicitudesData) ? solicitudesData : []
+
+  const handleAprobar = (solicitud: SolicitudEfectivo) => {
+    setSelectedSolicitud(solicitud)
+    setOpenAprobar(true)
   }
 
-  const formatMonto = (monto: number) => {
-    return new Intl.NumberFormat('es-PE', {
-      style: 'currency',
-      currency: 'PEN',
-    }).format(monto)
+  const handleRechazar = async (solicitudId: number) => {
+    await prestamoVendedorApi.rechazarSolicitud(solicitudId)
+    refetch()
   }
 
-  const content = (
-    <div className="w-96">
-      <div className="flex items-center justify-between mb-3 pb-2 border-b">
-        <h4 className="font-semibold text-base">Préstamos Pendientes</h4>
-        <Badge count={count} style={{ backgroundColor: '#52c41a' }} />
-      </div>
-
-      <div className="space-y-2 max-h-96 overflow-y-auto">
-        {prestamos.map((prestamo) => (
-          <div
-            key={prestamo.id}
-            className="border rounded-lg p-3 space-y-2 hover:bg-slate-50 cursor-pointer transition-colors"
-            onClick={() => {
-              setPrestamoSeleccionado(prestamo)
-              setModalOpen(true)
-            }}
-          >
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{prestamo.user_recibe.name}</p>
-                <p className="text-xs text-slate-500">Solicita préstamo de tu caja</p>
-              </div>
-              <p className="text-sm font-bold text-emerald-600">
-                {formatMonto(Number(prestamo.monto))}
-              </p>
-            </div>
-
-            <div className="text-xs text-slate-600 space-y-1">
-              <p>
-                <span className="font-medium">De:</span>{' '}
-                {prestamo.sub_caja_origen?.nombre || 'Por definir al aprobar'}
-              </p>
-              <p>
-                <span className="font-medium">Para:</span> {prestamo.sub_caja_destino.nombre}
-              </p>
-              {prestamo.motivo && (
-                <p>
-                  <span className="font-medium">Motivo:</span> {prestamo.motivo}
-                </p>
-              )}
-              <p className="text-slate-400">
-                {format(new Date(prestamo.fecha_prestamo), "d 'de' MMMM, HH:mm", {
-                  locale: es,
-                })}
-              </p>
-            </div>
+  const items = solicitudes.map((solicitud) => ({
+    key: String(solicitud.id),
+    label: (
+      <div className='py-2 px-1 min-w-[300px]'>
+        <div className='flex justify-between items-start mb-2'>
+          <div>
+            <p className='font-semibold text-sm'>{solicitud.vendedor_solicitante.name}</p>
+            <p className='text-xs text-gray-500'>
+              Solicita S/. {solicitud.monto_solicitado.toFixed(2)}
+            </p>
           </div>
-        ))}
+          <span className='text-xs text-gray-400'>
+            {new Date(solicitud.created_at).toLocaleDateString()}
+          </span>
+        </div>
+        {solicitud.motivo && (
+          <p className='text-xs text-gray-600 mb-2 italic'>"{solicitud.motivo}"</p>
+        )}
+        <div className='flex gap-2'>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAprobar(solicitud)
+            }}
+            className='flex-1 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600'
+          >
+            Aprobar
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleRechazar(solicitud.id)
+            }}
+            className='flex-1 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600'
+          >
+            Rechazar
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    ),
+  }))
+
+  if (solicitudes.length === 0) {
+    items.push({
+      key: 'empty',
+      label: (
+        <div className='py-2 px-1 text-center text-gray-500 text-sm'>
+          No hay solicitudes pendientes
+        </div>
+      ),
+    })
+  }
 
   return (
     <>
-      <Popover content={content} title={null} trigger="click" placement="bottomRight">
-        <Badge count={count} offset={[-5, 5]}>
-          <Button
-            type="default"
-            shape="circle"
-            icon={<BellOutlined style={{ fontSize: '18px' }} />}
-            size="large"
-          />
-        </Badge>
-      </Popover>
+      <Dropdown menu={{ items }} trigger={['click']} placement='bottomRight'>
+        <button className='relative p-2 hover:bg-amber-700 rounded-full transition-colors'>
+          <Badge count={solicitudes.length} offset={[-5, 5]}>
+            <BellOutlined className='text-white text-xl' />
+          </Badge>
+        </button>
+      </Dropdown>
 
-      {prestamoSeleccionado && (
-        <ModalAprobarPrestamo
-          prestamo={prestamoSeleccionado}
-          open={modalOpen}
-          onOpenChange={(open) => {
-            setModalOpen(open)
-            if (!open) setPrestamoSeleccionado(null)
-          }}
+      {selectedSolicitud && (
+        <ModalAprobarSolicitudEfectivo
+          solicitudId={selectedSolicitud.id}
+          open={openAprobar}
+          setOpen={setOpenAprobar}
+          montoSolicitado={selectedSolicitud.monto_solicitado}
+          solicitanteNombre={selectedSolicitud.vendedor_solicitante.name}
+          onSuccess={() => refetch()}
         />
       )}
     </>

@@ -48,14 +48,17 @@ export default function ModalMoverDineroSubCajas({
 
   const cajaPrincipalIdFinal = cajaPrincipalId || cajaPrincipalData?.id
 
-  // Obtener sub-cajas de la caja principal
+  // Obtener sub-cajas de la caja principal con saldo del vendedor
   const { data: subCajas } = useQuery({
-    queryKey: [QueryKeys.SUB_CAJAS, cajaPrincipalIdFinal],
+    queryKey: [QueryKeys.SUB_CAJAS, cajaPrincipalIdFinal, 'con-saldo-vendedor'],
     queryFn: async () => {
-      const response = await subCajaApi.getByCajaPrincipal(cajaPrincipalIdFinal)
+      const response = await subCajaApi.getByCajaPrincipalConSaldoVendedor(cajaPrincipalIdFinal)
+      console.log('📊 Sub-cajas con saldo vendedor:', response.data?.data)
       return response.data?.data || []
     },
     enabled: open && !!cajaPrincipalIdFinal,
+    staleTime: 0, // No usar caché
+    refetchOnMount: 'always', // Siempre refrescar al montar
   })
 
   const handleSubmit = async (values: any) => {
@@ -160,12 +163,15 @@ export default function ModalMoverDineroSubCajas({
           >
             <Select
               placeholder="Selecciona sub-caja origen"
-              options={subCajas?.map(sc => ({
-                label: `${sc.nombre} (S/. ${sc.saldo_actual})`,
+              options={subCajas?.map((sc: any) => ({
+                label: `${sc.nombre} (S/. ${sc.saldo_vendedor || '0.00'})`,
                 value: sc.id,
               }))}
             />
           </Form.Item>
+          <p className="text-xs text-slate-500 mt-1">
+            Se muestra tu saldo individual en cada sub-caja
+          </p>
         </LabelBase>
 
         <LabelBase label="Sub-Caja Destino" orientation="column">
@@ -177,9 +183,9 @@ export default function ModalMoverDineroSubCajas({
             <Select
               placeholder="Selecciona sub-caja destino"
               options={subCajas
-                ?.filter(sc => sc.id !== subCajaOrigenId)
-                ?.map(sc => ({
-                  label: `${sc.nombre} (S/. ${sc.saldo_actual})`,
+                ?.filter((sc: any) => sc.id !== subCajaOrigenId)
+                ?.map((sc: any) => ({
+                  label: `${sc.nombre} (S/. ${sc.saldo_vendedor || '0.00'})`,
                   value: sc.id,
                 }))}
               disabled={!subCajaOrigenId}
