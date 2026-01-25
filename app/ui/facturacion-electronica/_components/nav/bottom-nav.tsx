@@ -1,3 +1,5 @@
+"use client";
+
 import { FaCartShopping } from "react-icons/fa6";
 import { MdPointOfSale } from "react-icons/md";
 import BaseNav from "~/app/_components/nav/base-nav";
@@ -21,31 +23,53 @@ export default function BottomNav({ className }: { className?: string }) {
         <FaCartShopping />
         Mis Ventas
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-cotizaciones">
+
+      <ButtonNav
+        colorActive="text-amber-600"
+        path="/ui/facturacion-electronica/mis-cotizaciones"
+      >
         <MdPointOfSale />
         Mis Cotizaciones
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-guias">
+
+      <ButtonNav
+        colorActive="text-amber-600"
+        path="/ui/facturacion-electronica/mis-guias"
+      >
         <IoDocumentAttach />
         Mis Guias
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-prestamos">
+
+      <ButtonNav
+        colorActive="text-amber-600"
+        path="/ui/facturacion-electronica/mis-prestamos"
+      >
         <GiReceiveMoney />
         Mis Préstamos
       </ButtonNav>
+
       <ButtonNav colorActive="text-amber-600">
         <IoDocuments />
         Mis Notas
       </ButtonNav>
+
       <ButtonNav colorActive="text-amber-600">
         <IoMdContact />
         Mis Contactos
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/mis-aperturas-cierres">
+
+      <ButtonNav
+        colorActive="text-amber-600"
+        path="/ui/facturacion-electronica/mis-aperturas-cierres"
+      >
         <HistoryOutlined className="text-lg" />
         Mis Aperturas y Cierres de Caja
       </ButtonNav>
-      <ButtonNav colorActive="text-amber-600" path="/ui/facturacion-electronica/movimientos-caja">
+
+      <ButtonNav
+        colorActive="text-amber-600"
+        path="/ui/facturacion-electronica/movimientos-caja"
+      >
         <SwapOutlined className="text-lg" />
         Movimientos de Caja
       </ButtonNav>

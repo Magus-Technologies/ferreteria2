@@ -3,11 +3,11 @@
 import { MdAccountBalance } from 'react-icons/md'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 
 export default function HeaderCrearPrestamo() {
-  const can = usePermission()
+  const { can } = usePermissionHook()
 
   return (
     <TituloModulos

@@ -148,8 +148,23 @@ export function useColumnsDetalleDePreciosEdicion({
                 if (!precio_publico) return
 
                 const costo = val ? Number(val) : 0
+                
+                // Validar que el costo sea un número válido
+                if (isNaN(costo) || costo === 0) {
+                  // Si el costo es 0 o NaN, limpiar los campos calculados
+                  form.setFieldValue(
+                    ['unidades_derivadas', value, 'p_venta'],
+                    0
+                  )
+                  form.setFieldValue(
+                    ['unidades_derivadas', value, 'ganancia'],
+                    precio_publico
+                  )
+                  return
+                }
+                
                 const ganancia = precio_publico - costo
-                const p_venta = costo != 0 ? (ganancia * 100) / costo : 0
+                const p_venta = (ganancia * 100) / costo
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'p_venta'],
                   p_venta
@@ -188,15 +203,18 @@ export function useColumnsDetalleDePreciosEdicion({
                   value,
                   'costo',
                 ])
-                if (!costo) return
+                
+                // Validar que el costo sea un número válido y mayor que 0
+                const costoNum = Number(costo)
+                if (!costo || isNaN(costoNum) || costoNum === 0) return
 
                 const p_venta = val ? Number(val) : 0
-                const precio_publico = costo + costo * (p_venta / 100)
+                const precio_publico = costoNum + costoNum * (p_venta / 100)
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'precio_publico'],
                   precio_publico
                 )
-                const ganancia = precio_publico - costo
+                const ganancia = precio_publico - costoNum
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'ganancia'],
                   ganancia
@@ -231,6 +249,8 @@ export function useColumnsDetalleDePreciosEdicion({
               precision={2}
               prefix='S/. '
               onChange={val => {
+                console.log('🔵 P. Público onChange - value:', value, 'val:', val)
+                
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'precio_especial'],
                   val
@@ -249,11 +269,22 @@ export function useColumnsDetalleDePreciosEdicion({
                   value,
                   'costo',
                 ])
-                if (!costo) return
+                
+                console.log('🔵 P. Público - costo:', costo)
+                
+                // Validar que el costo sea un número válido y mayor que 0
+                const costoNum = Number(costo)
+                if (!costo || isNaN(costoNum) || costoNum === 0) {
+                  console.log('🔴 P. Público - costo inválido, retornando')
+                  return
+                }
 
                 const precio_publico = val ? Number(val) : 0
-                const ganancia = precio_publico - costo
-                const p_venta = (ganancia * 100) / costo
+                const ganancia = precio_publico - costoNum
+                const p_venta = (ganancia * 100) / costoNum
+                
+                console.log('🔵 P. Público - calculando p_venta:', p_venta, 'ganancia:', ganancia)
+                
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'p_venta'],
                   p_venta
@@ -292,11 +323,14 @@ export function useColumnsDetalleDePreciosEdicion({
                   value,
                   'costo',
                 ])
-                if (!costo) return
+                
+                // Validar que el costo sea un número válido y mayor que 0
+                const costoNum = Number(costo)
+                if (!costo || isNaN(costoNum) || costoNum === 0) return
 
                 const ganancia = val ? Number(val) : 0
-                const precio_publico = costo + ganancia
-                const p_venta = (ganancia * 100) / costo
+                const precio_publico = costoNum + ganancia
+                const p_venta = (ganancia * 100) / costoNum
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'precio_publico'],
                   precio_publico
@@ -628,6 +662,8 @@ function onChangeComisiones({
   comision_publica?: number
   suffix: string
 }) {
+  console.log('🟡 onChangeComisiones - value:', value, 'suffix:', suffix, 'comision_publica:', comision_publica)
+  
   const precio_publico = form.getFieldValue([
     'unidades_derivadas',
     value,
@@ -644,8 +680,26 @@ function onChangeComisiones({
     comision_publica ??
     form.getFieldValue(['unidades_derivadas', value, 'comision_publico'])
 
-  const comision_suffix =
-    comision_publica_formated - (precio_publico - precio_suffix)
+  console.log('🟡 onChangeComisiones - precio_publico:', precio_publico, 'precio_suffix:', precio_suffix, 'comision_publica_formated:', comision_publica_formated)
+
+  // Validar que todos los valores sean números válidos
+  const precioPublicoNum = Number(precio_publico)
+  const precioSuffixNum = Number(precio_suffix)
+  const comisionPublicaNum = Number(comision_publica_formated)
+
+  // Si algún valor es NaN o undefined, establecer comisión en 0
+  if (isNaN(precioPublicoNum) || isNaN(precioSuffixNum) || isNaN(comisionPublicaNum)) {
+    console.log('🔴 onChangeComisiones - valores inválidos, estableciendo comisión en 0')
+    form.setFieldValue(
+      ['unidades_derivadas', value, `comision_${suffix}`],
+      0
+    )
+    return
+  }
+
+  const comision_suffix = comisionPublicaNum - (precioPublicoNum - precioSuffixNum)
+  console.log('🟡 onChangeComisiones - comision_suffix calculada:', comision_suffix)
+  
   form.setFieldValue(
     ['unidades_derivadas', value, `comision_${suffix}`],
     comision_suffix > 0 ? comision_suffix : 0

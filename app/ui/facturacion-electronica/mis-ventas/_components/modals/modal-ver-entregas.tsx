@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal, Tag, Timeline } from "antd";
-import { getVentaResponseProps } from "~/app/_actions/venta";
+import type { getVentaResponseProps } from "~/lib/api/venta";
 import TitleForm from "~/components/form/title-form";
 import dayjs from "dayjs";
 import { FaTruck, FaStore, FaCheckCircle, FaClock, FaTimesCircle } from "react-icons/fa";

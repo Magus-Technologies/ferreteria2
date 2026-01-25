@@ -11,7 +11,7 @@ import SelectTipoBusquedaProducto, {
   TipoBusquedaProducto,
 } from "../form/selects/select-tipo-busqueda-producto";
 import CardAgregarProductoCompra from "~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/_components/cards/card-agregar-producto-compra";
-import { getProductosResponseProps } from "~/app/_actions/producto";
+import type { Producto } from "~/app/_types/producto";
 import TableDetalleDePreciosSearch from "../tables/table-detalle-de-precios-search";
 import TableUltimasComprasIngresadasSearch from "../tables/table-ultimas-compras-ingresadas-search";
 import CardAgregarProductoVenta from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-agregar-producto-venta";
@@ -24,11 +24,7 @@ type ModalProductoSearchProps = {
   textDefault: string;
   setTextDefault: (textDefault: string) => void;
   tipoBusqueda: TipoBusquedaProducto;
-  onRowDoubleClicked?: ({
-    data,
-  }: {
-    data: getProductosResponseProps | undefined;
-  }) => void;
+  onRowDoubleClicked?: ({ data }: { data: Producto | undefined }) => void;
   setTipoBusqueda: (tipoBusqueda: TipoBusquedaProducto) => void;
   showCardAgregarProducto?: boolean;
   showCardAgregarProductoVenta?: boolean;
@@ -66,7 +62,7 @@ export default function ModalProductoSearch({
   const [value] = useDebounce(text, 1000);
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
-    (store) => store.setProducto
+    (store) => store.setProducto,
   );
 
   useEffect(() => {
@@ -92,6 +88,7 @@ export default function ModalProductoSearch({
           : "98vw"
       }
       open={open}
+      destroyOnHidden
       classNames={{ content: "min-w-fit xl:min-w-0" }}
       title={"Buscar Producto"}
       okText={"Seleccionar"}
@@ -102,7 +99,6 @@ export default function ModalProductoSearch({
       }}
       maskClosable={false}
       keyboard={false}
-      destroyOnHidden
       styles={{
         body: {
           maxHeight: "calc(100vh - 120px)",
@@ -148,6 +144,7 @@ export default function ModalProductoSearch({
                 onRowDoubleClicked={onRowDoubleClicked}
                 tipoBusqueda={tipoBusqueda}
                 selectionColor={selectionColor}
+                isVisible={open}
               />
             </div>
             {showUltimasCompras && (

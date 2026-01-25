@@ -14,7 +14,7 @@ const FiltersMiAlmacen = lazy(
   () => import("./_components/filters/filters-mi-almacen")
 );
 const TableProductos = lazy(
-  () => import("./_components/tables/table-productos")
+  () => import("./_components/tables/table-productos-optimized")
 );
 const TableDetalleDePrecios = lazy(
   () => import("./_components/tables/table-detalle-de-precios")

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
@@ -8,7 +8,10 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 import { useColumnsDetalleDePrecios, DetalleDePreciosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
 import { CostoUnidadDerivadaSearch } from '../modals/modal-producto-search'
 import ModalEditarPreciosProducto from '../modals/modal-editar-precios-producto'
-import { RowDoubleClickedEvent } from 'ag-grid-community'
+import { GetRowIdParams, RowDoubleClickedEvent, ColumnResizedEvent } from 'ag-grid-community'
+import { usePathname } from 'next/navigation'
+import { orangeColors, greenColors } from '~/lib/colors'
+import type { AgGridReact } from 'ag-grid-react'
 
 export default function TableDetalleDePreciosSearch({
   costoUnidadDerivada,
@@ -22,6 +25,25 @@ export default function TableDetalleDePreciosSearch({
 
   const [openModalEditarPrecios, setOpenModalEditarPrecios] = useState(false)
   const [detallePrecioSeleccionado, setDetallePrecioSeleccionado] = useState<DetalleDePreciosProps | null>(null)
+  
+  const gridRef = useRef<AgGridReact<DetalleDePreciosProps>>(null)
+  const STORAGE_KEY = 'detalle-precios-column-state'
+
+  const pathname = usePathname()
+  // Detectar color según la ruta
+  const colorSeleccion = pathname?.includes('facturacion-electronica') 
+    ? orangeColors[10] 
+    : pathname?.includes('gestion-comercial-e-inventario')
+    ? greenColors[10]
+    : undefined
+
+  // Guardar estado de columnas cuando se redimensionan
+  const handleColumnResized = useCallback((event: ColumnResizedEvent) => {
+    if (event.finished && gridRef.current) {
+      const columnState = gridRef.current.api.getColumnState()
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(columnState))
+    }
+  }, [])
 
   const producto_en_almacen = productoSeleccionado?.producto_en_almacenes.find(
     item => item.almacen_id === almacen_id
@@ -40,6 +62,21 @@ export default function TableDetalleDePreciosSearch({
       }))
     : []
 
+  // Restaurar estado de columnas al montar o cuando cambien los datos
+  useEffect(() => {
+    if (gridRef.current && gridRef.current.api) {
+      const savedState = localStorage.getItem(STORAGE_KEY)
+      if (savedState) {
+        try {
+          const columnState = JSON.parse(savedState)
+          gridRef.current.api.applyColumnState({ state: columnState, applyOrder: true })
+        } catch (error) {
+          console.error('Error al restaurar estado de columnas:', error)
+        }
+      }
+    }
+  }, [rowData])
+
   const unidad_derivada = producto_en_almacen?.unidades_derivadas.find(
     item => item.unidad_derivada.id === costoUnidadDerivada?.unidad_derivada_id
   )
@@ -54,9 +91,15 @@ export default function TableDetalleDePreciosSearch({
     }
   }
 
+  // Identificar cada fila por su unidad_derivada.id para mantener la selección
+  const getRowId = useCallback((params: GetRowIdParams<DetalleDePreciosProps>) => {
+    return String(params.data.unidad_derivada?.id || params.data.id)
+  }, [])
+
   return (
     <>
       <TableWithTitle
+        ref={gridRef}
         id='g-c-e-i.detalle-de-precios-search'
         title='Detalle de precios'
         schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
@@ -97,6 +140,9 @@ export default function TableDetalleDePreciosSearch({
         ]}
         rowData={(rowData as unknown) as DetalleDePreciosProps[] ?? []}
         onRowDoubleClicked={handleRowDoubleClicked}
+        selectionColor={colorSeleccion}
+        getRowId={getRowId}
+        onColumnResized={handleColumnResized}
       />
       
       <ModalEditarPreciosProducto

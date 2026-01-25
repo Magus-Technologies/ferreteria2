@@ -30,6 +30,7 @@ import SelectEstadoDeCompra, {
   EstadoDeCompraSelect,
 } from '~/app/_components/form/selects/select-estado-de-compra'
 import SelectPendienteDeRecepcionAlmacen from '~/app/_components/form/selects/select-pendiente-de-recepcion-almacen'
+import { redColors, orangeColors, greenColors } from '~/lib/colors'
 
 interface ValuesFiltersMisCompras {
   almacen_id: number
@@ -341,6 +342,22 @@ export default function FiltersMisCompras() {
           <FaSearch />
           Buscar
         </ButtonBase>
+        
+        {/* Leyenda de colores */}
+        <div className='flex items-center gap-4 ml-auto'>
+          <div className='flex items-center gap-2'>
+            <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: redColors[2] }} />
+            <span className='text-sm font-medium text-gray-700'>Crédito</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: orangeColors[2] }} />
+            <span className='text-sm font-medium text-gray-700'>Contado</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: greenColors[2] }} />
+            <span className='text-sm font-medium text-gray-700'>Pagado</span>
+          </div>
+        </div>
       </div>
 
       {/* Drawer para móvil/tablet */}

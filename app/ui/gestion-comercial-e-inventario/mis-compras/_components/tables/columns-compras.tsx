@@ -1,11 +1,11 @@
 'use client'
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import { EstadoDeCompra, TipoDocumento } from '@prisma/client'
+import { EstadoDeCompra, TipoDocumento, FormaDePago } from '@prisma/client'
 import { IGV } from '~/lib/constantes'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { Popconfirm, Tooltip } from 'antd'
 import { FaTruckLoading } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
@@ -16,6 +16,17 @@ import { compraApi, type Compra } from '~/lib/api/compra'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import useApp from 'antd/es/app/useApp'
 
+// Helper para formatear moneda según el tipo
+const formatCurrency = (value: number, tipoMoneda: string | undefined) => {
+  const formatted = Number(value).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  // Verificar si es dólar (d o D) o soles (s o S o cualquier otro valor)
+  const isDolar = tipoMoneda?.toLowerCase() === 'd'
+  return isDolar ? `$. ${formatted}` : `S/. ${formatted}`
+}
+
 export function useColumnsCompras({
   setCompraRecepcion,
   setOpenModal,
@@ -24,7 +35,7 @@ export function useColumnsCompras({
   setOpenModal?: (open: boolean) => void
 } = {}) {
   const router = useRouter()
-  const can = usePermission()
+  const { can } = usePermissionHook()
   const queryClient = useQueryClient()
   const { message } = useApp()
 
@@ -81,6 +92,7 @@ export function useColumnsCompras({
       width: 100,
       minWidth: 100,
       filter: true,
+      valueGetter: (params) => params.data?.proveedor?.ruc || '',
     },
     {
       headerName: 'Proveedor',
@@ -89,6 +101,7 @@ export function useColumnsCompras({
       minWidth: 200,
       filter: true,
       flex: 1,
+      valueGetter: (params) => params.data?.proveedor?.razon_social || '',
     },
     {
       headerName: 'Subtotal',
@@ -101,7 +114,10 @@ export function useColumnsCompras({
       }: {
         value: Compra['productos_por_almacen']
       }) => String(Number(getSubTotal(value)) / (IGV + 1)),
-      type: 'pen',
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        const subtotal = Number(getSubTotal(params.value)) / (IGV + 1)
+        return formatCurrency(subtotal, params.data?.tipo_moneda)
+      },
     },
     {
       headerName: 'IGV',
@@ -117,7 +133,10 @@ export function useColumnsCompras({
           Number(getSubTotal(value)) - Number(getSubTotal(value)) / (IGV + 1)
         ),
       filter: 'agNumberColumnFilter',
-      type: 'pen',
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        const igv = Number(getSubTotal(params.value)) - Number(getSubTotal(params.value)) / (IGV + 1)
+        return formatCurrency(igv, params.data?.tipo_moneda)
+      },
     },
     {
       headerName: 'Total',
@@ -130,7 +149,10 @@ export function useColumnsCompras({
         value: Compra['productos_por_almacen']
       }) => getSubTotal(value),
       filter: 'agNumberColumnFilter',
-      type: 'pen',
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        const total = Number(getSubTotal(params.value))
+        return formatCurrency(total, params.data?.tipo_moneda)
+      },
     },
     {
       headerName: 'Forma de Pago',
@@ -149,26 +171,93 @@ export function useColumnsCompras({
       field: 'productos_por_almacen',
       width: 90,
       minWidth: 90,
-      valueFormatter: () => '0',
+      valueFormatter: (params) => {
+        const totalPagado = Number(params.data?.total_pagado || 0)
+        return String(totalPagado)
+      },
       filter: 'agNumberColumnFilter',
-      type: 'pen',
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        const totalPagado = Number(params.data?.total_pagado || 0)
+        return formatCurrency(totalPagado, params.data?.tipo_moneda)
+      },
     },
     {
       headerName: 'Resta',
       field: 'productos_por_almacen',
       width: 90,
       minWidth: 90,
-      valueFormatter: () => '0',
+      valueFormatter: (params) => {
+        const total = Number(getSubTotal(params.value))
+        const totalPagado = Number(params.data?.total_pagado || 0)
+        const resta = total - totalPagado
+        return String(resta)
+      },
       filter: 'agNumberColumnFilter',
-      type: 'pen',
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        const total = Number(getSubTotal(params.value))
+        const totalPagado = Number(params.data?.total_pagado || 0)
+        const resta = total - totalPagado
+        return formatCurrency(resta, params.data?.tipo_moneda)
+      },
     },
     {
       headerName: 'Estado de Cuenta',
       field: 'productos_por_almacen',
-      width: 80,
-      minWidth: 80,
-      valueFormatter: () => 'Pagado',
+      width: 120,
+      minWidth: 120,
+      valueFormatter: (params) => {
+        // Si es contado, siempre está pagado
+        if (params.data?.forma_de_pago === FormaDePago.Contado) {
+          return 'Pagado'
+        }
+        
+        // Si es crédito, verificar si está pagado completamente
+        const total = Number(getSubTotal(params.value))
+        const totalPagado = Number(params.data?.total_pagado || 0)
+        const resta = total - totalPagado
+        
+        if (resta <= 0.01) { // Tolerancia de 1 centavo
+          return 'Pagado'
+        } else {
+          return 'Pendiente'
+        }
+      },
       filter: true,
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        // Si es contado, siempre está pagado
+        if (params.data?.forma_de_pago === FormaDePago.Contado) {
+          return (
+            <div className='flex items-center h-full'>
+              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'>
+                Pagado
+              </span>
+            </div>
+          )
+        }
+        
+        // Si es crédito, verificar si está pagado completamente
+        const total = Number(getSubTotal(params.value))
+        const totalPagado = Number(params.data?.total_pagado || 0)
+        const resta = total - totalPagado
+        
+        if (resta <= 0.01) { // Tolerancia de 1 centavo
+          return (
+            <div className='flex items-center h-full'>
+              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'>
+                Pagado
+              </span>
+            </div>
+          )
+        } else {
+          return (
+            <div className='flex items-center h-full'>
+              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800'>
+                Pendiente
+              </span>
+            </div>
+          )
+        }
+      },
     },
     {
       headerName: 'Registrador',

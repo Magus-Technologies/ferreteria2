@@ -4,10 +4,10 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import FormWithName, {
   GenericFormWithName,
 } from '~/components/modals/modal-form-with-name'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
-import { createUnidadDerivada } from '~/app/_actions/unidadDerivada'
+import { unidadesDerivadas } from '~/lib/api/catalogos'
 
 interface ButtonCreateUnidadDerivadaProps {
   className?: string
@@ -20,7 +20,7 @@ export default function ButtonCreateUnidadDerivada({
 }: ButtonCreateUnidadDerivadaProps) {
   const [open, setOpen] = useState(false)
 
-  const can = usePermission()
+  const { can } = usePermissionHook()
   if (!can(permissions.UNIDAD_DERIVADA_CREATE)) return null
 
   return (
@@ -30,7 +30,11 @@ export default function ButtonCreateUnidadDerivada({
         open={open}
         setOpen={setOpen}
         propsUseServerMutation={{
-          action: createUnidadDerivada,
+          action: async (payload: { name: string }) => {
+            const res = await unidadesDerivadas.create({ name: payload.name });
+            if (res.error) throw new Error(res.error.message);
+            return { data: res.data };
+          },
           queryKey: [QueryKeys.UNIDADES_DERIVADAS],
           onSuccess: res => onSuccess?.(res.data!),
           msgSuccess: 'Unidad derivada creada exitosamente',

@@ -126,48 +126,66 @@ function useInputImport<TParams, TResult>({
     ...propsUseServerMutation,
     showNotificationError: false,
     onErrorControled: err => {
-      const error = err?.data
-      if (!Array.isArray(error))
+      // err es { message: string; code?: string }
+      // No tiene propiedad 'data', el mensaje de error ya está en err.message
+      if (!err?.message) {
         return notification.error({
           message: 'Error',
-          description: err?.message,
+          description: 'Error desconocido al importar',
         })
-      const errors = error as ZodIssue[]
-      const filas = errors.reduce((acc, error) => {
-        const fila = error.path[0]
-        if (!acc[fila]) acc[fila] = []
-        acc[fila].push(error.path[1] as string)
-        return acc
-      }, {} as Record<string, string[]>)
+      }
 
-      const colDefsPrev = tableRef.current?.api.getAllGridColumns() as Column[]
-      const columnDefs = colDefsPrev.map(col => ({
-        headerName: col.getColDef().headerName,
-        field: col.getColDef().field,
-      }))
+      // Intentar parsear el mensaje como JSON por si contiene errores de validación
+      try {
+        const errorData = JSON.parse(err.message)
+        if (Array.isArray(errorData)) {
+          const errors = errorData as ZodIssue[]
+          const filas = errors.reduce((acc, error) => {
+            const fila = error.path[0]
+            if (!acc[fila]) acc[fila] = []
+            acc[fila].push(error.path[1] as string)
+            return acc
+          }, {} as Record<string, string[]>)
 
-      notification.error({
-        message: 'Se encontraron los siguientes errores',
-        description: (
-          <div className='max-h-[60dvh] overflow-y-auto'>
-            {Object.entries(filas).map(([fila, columnas], index) => (
-              <div key={index} className='pr-4'>
-                <strong>Fila {Number(fila) + 2}:</strong>
-                <div className='grid grid-cols-3 gap-x-4 pl-8'>
-                  {columnas.map((columna, index) => (
-                    <span className='text-red-500 text-nowrap' key={index}>
-                      {
-                        columnDefs.find(col => col.field === columna)
-                          ?.headerName
-                      }
-                    </span>
-                  ))}
-                </div>
+          const colDefsPrev = tableRef.current?.api.getAllGridColumns() as Column[]
+          const columnDefs = colDefsPrev.map(col => ({
+            headerName: col.getColDef().headerName,
+            field: col.getColDef().field,
+          }))
+
+          notification.error({
+            message: 'Se encontraron los siguientes errores',
+            description: (
+              <div className='max-h-[60dvh] overflow-y-auto'>
+                {Object.entries(filas).map(([fila, columnas], index) => (
+                  <div key={index} className='pr-4'>
+                    <strong>Fila {Number(fila) + 2}:</strong>
+                    <div className='grid grid-cols-3 gap-x-4 pl-8'>
+                      {columnas.map((columna, index) => (
+                        <span className='text-red-500 text-nowrap' key={index}>
+                          {
+                            columnDefs.find(col => col.field === columna)
+                              ?.headerName
+                          }
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ),
-        duration: 0,
+            ),
+            duration: 0,
+          })
+          return
+        }
+      } catch (parseError) {
+        // Si no se puede parsear como JSON, mostrar el mensaje de error directamente
+      }
+
+      // Mostrar mensaje de error simple
+      notification.error({
+        message: 'Error',
+        description: err.message,
       })
     },
   })

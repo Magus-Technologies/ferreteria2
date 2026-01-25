@@ -7,14 +7,14 @@ import SelectProductos from '~/app/_components/form/selects/select-productos'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import SelectTiposIngresoSalida from '~/app/_components/form/selects/select-tipos-ingreso-salida'
 import LabelBase from '~/components/form/label-base'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import StockIngresoSalida from '../others/stock-ingreso-salida'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { TipoDocumento } from '@prisma/client'
 import { FormInstance } from 'antd'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 
 export default function FormSelectUnidadDerivadaProducto({
   form,
@@ -25,13 +25,13 @@ export default function FormSelectUnidadDerivadaProducto({
   open: boolean
   tipo: TipoDocumento
 }) {
-  const can = usePermission()
+  const { can } = usePermissionHook()
 
   const productoSeleccionado = useStoreProductoSeleccionado(
     store => store.producto
   )
   const [producto, setProducto] = useState<
-    getProductosResponseProps | undefined
+    Producto | undefined
   >(productoSeleccionado)
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)

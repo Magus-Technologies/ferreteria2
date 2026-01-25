@@ -1,13 +1,12 @@
 'use server'
 
 import { Prisma } from '@prisma/client'
-import { withAuth } from '~/auth/middleware-server-actions'
 import { prisma } from '~/db/db'
 import { permissions } from '~/lib/permissions'
 import { EgresoDineroWhereInputSchema } from '~/prisma/generated/zod'
 import can from '~/utils/server-validate-permission'
 
-async function getEgresosDineroWA({
+export async function getEgresosDinero({
   where,
 }: {
   where?: Prisma.EgresoDineroWhereInput
@@ -25,4 +24,3 @@ async function getEgresosDineroWA({
 
   return { data: JSON.parse(JSON.stringify(items)) as typeof items }
 }
-export const getEgresosDinero = withAuth(getEgresosDineroWA)

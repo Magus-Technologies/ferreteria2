@@ -1,4 +1,4 @@
-import { getProductosResponseProps } from "~/app/_actions/producto";
+import type { Producto } from "~/app/_types/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useColumnsProductos } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos";
 import TableWithTitle from "~/components/tables/table-with-title";
@@ -6,10 +6,9 @@ import { TipoBusquedaProducto } from "../form/selects/select-tipo-busqueda-produ
 import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import { useStoreAlmacen } from "~/store/store-almacen";
-import { RefObject, useEffect, useImperativeHandle, useMemo } from "react";
+import { RefObject, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { useStoreProductoAgregadoCompra } from "~/app/_stores/store-producto-agregado-compra";
 import { useProductosSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_hooks/useProductosSearch";
-import type { Producto } from "~/app/_types/producto";
 import { usePathname } from "next/navigation";
 import { orangeColors, greenColors } from "~/lib/colors";
 
@@ -23,18 +22,21 @@ export default function TableProductoSearch({
   tipoBusqueda,
   ref,
   selectionColor: selectionColorProp, // Recibir el color como prop
+  isVisible, // Prop para saber si el modal está visible
 }: {
   value: string;
   onRowDoubleClicked?: ({
     data,
   }: {
-    data: getProductosResponseProps | undefined;
+    data: Producto | undefined;
   }) => void;
   tipoBusqueda: TipoBusquedaProducto;
   ref?: RefObject<RefTableProductoSearchProps | null>;
   selectionColor?: string; // Agregar el prop
+  isVisible?: boolean; // Prop para saber si el modal está visible
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
+  const tableGridRef = useRef<any>(null);
 
   // Determinar el campo de búsqueda según el tipo
   const getSearchField = () => {
@@ -100,6 +102,23 @@ export default function TableProductoSearch({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, tipoBusqueda]);
 
+  // Seleccionar automáticamente el primer producto cuando cambian los datos
+  useEffect(() => {
+    if (productosFiltrados && productosFiltrados.length > 0 && tableGridRef.current) {
+      // Esperar a que AG Grid renderice los datos
+      setTimeout(() => {
+        const firstNode = tableGridRef.current.api?.getDisplayedRowAtIndex(0);
+        if (firstNode) {
+          firstNode.setSelected(true);
+          setProductoSeleccionadoSearchStore(firstNode.data as any);
+        }
+      }, 100);
+    } else {
+      setProductoSeleccionadoSearchStore(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productosFiltrados]);
+
   useImperativeHandle(ref, () => ({
     handleRefetch: () => handleRefetch(),
   }));
@@ -116,6 +135,7 @@ export default function TableProductoSearch({
 
   return (
     <TableWithTitle<Producto>
+      tableRef={tableGridRef}
       id="g-c-e-i.table-producto-search"
       onSelectionChanged={({ selectedNodes }) => {
         const producto = selectedNodes?.[0]?.data as Producto;
@@ -138,6 +158,7 @@ export default function TableProductoSearch({
       }}
       rowData={productosFiltrados}
       selectionColor={colorSeleccion}
+      isVisible={isVisible}
       optionsSelectColumns={[
         {
           label: "Default",

@@ -69,6 +69,13 @@ export function useColumnsVender({
             }}
             formWithMessage={false}
           />
+          <InputNumberBase
+            propsForm={{
+              name: [value, 'stock_fraccion'],
+              hidden: true,
+            }}
+            formWithMessage={false}
+          />
           <Tooltip
             classNames={{ body: 'text-center!' }}
             title={form.getFieldValue(['productos', value, 'producto_name'])}
@@ -167,23 +174,43 @@ export function useColumnsVender({
     {
       headerName: 'Cantidad',
       field: 'name',
-      minWidth: 85,
-      width: 85,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <InputNumberBase
-            size='small'
-            propsForm={{
-              name: [value, 'cantidad'],
-              rules: [{ required: true, message: '' }],
-            }}
-            precision={2}
-            min={0}
-            formWithMessage={false}
-            onChange={() => calcularSubtotalForm({ form, value })}
-          />
-        </div>
-      ),
+      minWidth: 120,
+      width: 120,
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const cantidad = form.getFieldValue(['productos', value, 'cantidad'])
+        const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor'])
+        const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion'])
+        const unidad_derivada_name = form.getFieldValue(['productos', value, 'unidad_derivada_name'])
+
+        // Calcular si hay stock insuficiente
+        const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1)
+        const stockDisponible = Number(stock_fraccion || 0)
+        const stockEnUnidad = stockDisponible / Number(unidad_derivada_factor || 1)
+        const stockInsuficiente = cantidadEnFraccion > stockDisponible
+
+        return (
+          <div className='flex flex-col justify-center w-full py-2'>
+            <InputNumberBase
+              size='small'
+              propsForm={{
+                name: [value, 'cantidad'],
+                rules: [{ required: true, message: '' }],
+              }}
+              precision={2}
+              min={0}
+              formWithMessage={false}
+              onChange={() => calcularSubtotalForm({ form, value })}
+            />
+            {stockInsuficiente && cantidad && (
+              <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight'>
+                ⚠️ Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)} {unidad_derivada_name}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       headerName: 'Precio',
@@ -235,34 +262,47 @@ export function useColumnsVender({
       minWidth: 160,
       width: 160,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const descuento_tipo = form.getFieldValue(['productos', value, 'descuento_tipo'])
-        const isPorcentaje = descuento_tipo === DescuentoTipo.PORCENTAJE
-        
         return (
           <div className='flex items-center h-full gap-1'>
             <SelectDescuentoTipo
+              tipoMoneda={tipo_moneda}
               formWithMessage={false}
               size='small'
               propsForm={{
                 name: [value, 'descuento_tipo'],
                 hasFeedback: false,
               }}
-              onChange={() => calcularSubtotalForm({ form, value })}
-            />
-            <InputNumberBase
-              prefix={isPorcentaje ? '' : (tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. ')}
-              suffix={isPorcentaje ? '%' : ''}
-              size='small'
-              className='w-full'
-              propsForm={{
-                name: [value, 'descuento'],
+              onChange={() => {
+                calcularSubtotalForm({ form, value })
+                // Forzar re-render de la fila para actualizar el prefix del input
+                form.setFieldValue(['productos', value, '_refresh'], Date.now())
               }}
-              precision={isPorcentaje ? 2 : 4}
-              min={0}
-              max={isPorcentaje ? 100 : undefined}
-              formWithMessage={false}
-              onChange={() => calcularSubtotalForm({ form, value })}
             />
+            <Form.Item noStyle shouldUpdate={(prev, curr) => {
+              return prev.productos?.[value]?.descuento_tipo !== curr.productos?.[value]?.descuento_tipo
+            }}>
+              {() => {
+                const descuento_tipo = form.getFieldValue(['productos', value, 'descuento_tipo'])
+                const isPorcentaje = descuento_tipo === DescuentoTipo.PORCENTAJE
+                
+                return (
+                  <InputNumberBase
+                    prefix={isPorcentaje ? undefined : (tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. ')}
+                    suffix={isPorcentaje ? '%' : undefined}
+                    size='small'
+                    className='w-full'
+                    propsForm={{
+                      name: [value, 'descuento'],
+                    }}
+                    precision={isPorcentaje ? 2 : 4}
+                    min={0}
+                    max={isPorcentaje ? 100 : undefined}
+                    formWithMessage={false}
+                    onChange={() => calcularSubtotalForm({ form, value })}
+                  />
+                )
+              }}
+            </Form.Item>
           </div>
         )
       },

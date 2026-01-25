@@ -11,6 +11,89 @@ import type {
   DetallePreciosResponse,
 } from '~/app/_types/producto';
 
+// ============================================
+// TIPOS PARA COMPATIBILIDAD CON CÓDIGO LEGACY
+// ============================================
+
+export interface ProductoAlmacenUnidadDerivada {
+  id: number
+  producto_almacen_id: number
+  unidad_derivada_id: number
+  factor: number
+  unidad_derivada: {
+    id: number
+    name: string
+  }
+}
+
+export interface ProductoAlmacen {
+  id: number
+  producto_id: number
+  almacen_id: number
+  ubicacion_id: number | null
+  stock_fraccion: number
+  costo: number
+  unidades_derivadas: ProductoAlmacenUnidadDerivada[]
+  almacen: {
+    id: number
+    name: string
+  }
+  ubicacion: {
+    id: number
+    name: string
+  } | null
+  compras: Array<{
+    id: number
+    costo: number
+    compra: {
+      id: number
+      fecha: string
+      proveedor: {
+        id: number
+        razon_social: string
+      }
+    }
+    unidades_derivadas: Array<{
+      cantidad: number
+      factor: number
+      unidad_derivada_inmutable: {
+        id: number
+        name: string
+      }
+    }>
+  }>
+}
+
+export interface getProductosResponseProps {
+  id: number
+  cod_producto: string
+  cod_barra: string | null
+  name: string
+  descripcion: string | null
+  unidades_contenidas: number
+  marca_id: number
+  categoria_id: number
+  unidad_medida_id: number
+  permitido: boolean
+  producto_en_almacenes: ProductoAlmacen[]
+  marca: {
+    id: number
+    name: string
+  }
+  categoria: {
+    id: number
+    name: string
+  }
+  unidad_medida: {
+    id: number
+    name: string
+  }
+}
+
+// ============================================
+// API CLIENT
+// ============================================
+
 export const productosApiV2 = {
   /**
    * Obtener productos de un almacén específico con todas sus relaciones

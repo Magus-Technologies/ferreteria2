@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getVentaResponseProps } from '~/app/_actions/venta'
+import type { getVentaResponseProps } from '~/lib/api/venta'
 
 export type ProductoEntrega = {
   id: number

@@ -3,7 +3,7 @@
 import { Form, message, Modal } from 'antd'
 import { useState, useEffect } from 'react'
 import TitleForm from '~/components/form/title-form'
-import { getVentaResponseProps } from '~/app/_actions/venta'
+import type { getVentaResponseProps } from '~/lib/api/venta'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import ButtonBase from '~/components/buttons/button-base'
 import TablaProductosEntrega from '../tables/tabla-productos-entrega'
@@ -55,7 +55,7 @@ export default function ModalSeleccionarProductosEntrega({
   const { productosEntrega, setProductosEntrega } = useProductosEntrega(venta, open)
 
   // Debug: verificar si el modal se renderiza con open=true
-  console.log('🎯 ModalSeleccionarProductosEntrega - open:', open, 'venta:', !!venta, 'productos:', productosEntrega.length)
+  // console.log('🎯 ModalSeleccionarProductosEntrega - open:', open, 'venta:', !!venta, 'productos:', productosEntrega.length)
 
   // Inicializar formulario cuando se abre el modal
   useEffect(() => {

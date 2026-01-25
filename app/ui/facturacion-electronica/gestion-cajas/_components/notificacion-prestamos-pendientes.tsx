@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Dropdown } from 'antd'
+import { Badge, Button, Popover } from 'antd'
 import { BellOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -11,14 +11,9 @@ export function NotificacionPrestamosPendientes() {
   const [openAprobar, setOpenAprobar] = useState(false)
   const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null)
 
-  const { data: solicitudesData, refetch } = useQuery({
-    queryKey: ['solicitudes-efectivo-pendientes'],
-    queryFn: async () => {
-      const result = await prestamoVendedorApi.solicitudesPendientes()
-      return result.data || []
-    },
-    refetchInterval: 30000, // Refrescar cada 30 segundos
-  })
+  // data ahora es directamente Prestamo[]
+  const prestamos = data || []
+  const count = prestamos.length
 
   // Asegurar que solicitudes sea siempre un array
   const solicitudes = Array.isArray(solicitudesData) ? solicitudesData : []
@@ -33,16 +28,52 @@ export function NotificacionPrestamosPendientes() {
     refetch()
   }
 
-  const items = solicitudes.map((solicitud) => ({
-    key: String(solicitud.id),
-    label: (
-      <div className='py-2 px-1 min-w-[300px]'>
-        <div className='flex justify-between items-start mb-2'>
-          <div>
-            <p className='font-semibold text-sm'>{solicitud.vendedor_solicitante.name}</p>
-            <p className='text-xs text-gray-500'>
-              Solicita S/. {solicitud.monto_solicitado.toFixed(2)}
-            </p>
+  const content = (
+    <div className="w-96">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b">
+        <h4 className="font-semibold text-base">Préstamos Pendientes</h4>
+        <Badge count={count} style={{ backgroundColor: '#52c41a' }} />
+      </div>
+
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+        {prestamos.map((prestamo: Prestamo) => (
+          <div
+            key={prestamo.id}
+            className="border rounded-lg p-3 space-y-2 hover:bg-slate-50 cursor-pointer transition-colors"
+            onClick={() => {
+              setPrestamoSeleccionado(prestamo)
+              setModalOpen(true)
+            }}
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{prestamo.user_recibe.name}</p>
+                <p className="text-xs text-slate-500">Solicita préstamo de tu caja</p>
+              </div>
+              <p className="text-sm font-bold text-emerald-600">
+                {formatMonto(Number(prestamo.monto))}
+              </p>
+            </div>
+
+            <div className="text-xs text-slate-600 space-y-1">
+              <p>
+                <span className="font-medium">De:</span>{' '}
+                {prestamo.sub_caja_origen?.nombre || 'Por definir al aprobar'}
+              </p>
+              <p>
+                <span className="font-medium">Para:</span> {prestamo.sub_caja_destino.nombre}
+              </p>
+              {prestamo.motivo && (
+                <p>
+                  <span className="font-medium">Motivo:</span> {prestamo.motivo}
+                </p>
+              )}
+              <p className="text-slate-400">
+                {format(new Date(prestamo.fecha_prestamo), "d 'de' MMMM, HH:mm", {
+                  locale: es,
+                })}
+              </p>
+            </div>
           </div>
           <span className='text-xs text-gray-400'>
             {new Date(solicitud.created_at).toLocaleDateString()}

@@ -11,7 +11,7 @@ import { useStoreAlmacen } from "~/store/store-almacen";
 import InputImport from "~/app/_components/form/inputs/input-import";
 import { useRef, useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
-import usePermission from "~/hooks/use-permission";
+import usePermissionHook from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
 import InputUploadMasivo from "../inputs/input-upload-masivo";
@@ -36,7 +36,7 @@ function TableProductos() {
 
   const filtros = useStoreFiltrosProductos((state) => state.filtros);
 
-  const can = usePermission();
+  const { can } = usePermissionHook();
 
   const columns = useColumnsProductos({ almacen_id });
 
@@ -52,7 +52,7 @@ function TableProductos() {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
       page,
-      per_page: 250, // OPTIMIZACIÓN: Reducido de 10,000 a 250 para mejorar performance
+      per_page: 10000, // Mostrar todos los productos sin paginación
     },
     enabled: !!(filtros?.almacen_id || almacen_id),
   });

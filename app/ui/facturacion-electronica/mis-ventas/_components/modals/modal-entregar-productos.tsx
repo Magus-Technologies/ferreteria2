@@ -3,7 +3,7 @@
 import { Form, message, Modal } from "antd";
 import { useState, useEffect } from "react";
 import TitleForm from "~/components/form/title-form";
-import { getVentaResponseProps } from "~/app/_actions/venta";
+import type { getVentaResponseProps } from "~/lib/api/venta";
 import useCreateEntrega from "../../_hooks/use-create-entrega";
 import dayjs from "dayjs";
 import 'dayjs/locale/es';

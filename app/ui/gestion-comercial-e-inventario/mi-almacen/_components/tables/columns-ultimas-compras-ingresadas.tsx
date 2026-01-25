@@ -1,11 +1,11 @@
 import { ColDef } from 'ag-grid-community'
-import type { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 
 export type UltimasComprasType = Pick<
-  getProductosResponseProps['producto_en_almacenes'][number]['compras'][number],
+  Producto['producto_en_almacenes'][number]['compras'][number],
   'compra' | 'costo'
 > &
-  getProductosResponseProps['producto_en_almacenes'][number]['compras'][number]['unidades_derivadas'][number] & {
+  Producto['producto_en_almacenes'][number]['compras'][number]['unidades_derivadas'][number] & {
   bonificacion?: boolean
   compra: {
     tipo_documento: string

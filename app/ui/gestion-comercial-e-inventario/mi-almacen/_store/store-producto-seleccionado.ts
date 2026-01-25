@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { getProductosResponseProps } from '~/app/_actions/producto'
+import type { Producto } from '~/app/_types/producto'
 
 type UseStoreProductoSeleccionadoProps = {
-  producto?: getProductosResponseProps
-  setProducto: (value: getProductosResponseProps | undefined) => void
+  producto?: Producto
+  setProducto: (value: Producto | undefined) => void
 }
 
 export const useStoreProductoSeleccionado =

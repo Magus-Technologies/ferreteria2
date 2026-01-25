@@ -116,6 +116,14 @@ export default function useCreateVenta() {
       })
     }
 
+    // Validar cliente obligatorio para ventas a crédito
+    if (!cliente_id && restValues.forma_de_pago === FormaDePago.CREDITO) {
+      return notification.error({
+        message: 'Por favor, selecciona un cliente',
+        description: 'Las ventas a crédito requieren obligatoriamente un cliente registrado.',
+      })
+    }
+
     // Para Boleta/NV: enviar cliente_id si existe, o undefined para que backend use "CLIENTE VARIOS"
     const clienteIdFinal = cliente_id || undefined
 

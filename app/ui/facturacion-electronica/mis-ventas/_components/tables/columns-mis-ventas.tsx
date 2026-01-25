@@ -1,7 +1,7 @@
 "use client";
 
 import { ColDef } from "ag-grid-community";
-import { getVentaResponseProps } from "~/app/_actions/venta";
+import type { getVentaResponseProps } from "~/lib/api/venta";
 import dayjs from "dayjs";
 import CellAccionesVenta from "./cell-acciones-venta";
 

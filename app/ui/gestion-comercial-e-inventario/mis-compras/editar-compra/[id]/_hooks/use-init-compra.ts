@@ -11,6 +11,16 @@ import {
 } from '@prisma/client'
 import { useStoreAlmacen } from '~/store/store-almacen'
 
+// Helper para mapear valores de Laravel a enums de Prisma
+function mapTipoMoneda(tipoMoneda: TipoMoneda): TipoMoneda {
+  // El backend devuelve TipoMoneda.Soles o TipoMoneda.d
+  // pero necesitamos asegurarnos de que sea el valor correcto del enum
+  if (tipoMoneda === TipoMoneda.Soles) return TipoMoneda.Soles
+  if (tipoMoneda === TipoMoneda.d) return TipoMoneda.d
+  // Fallback: si viene como string 's' o 'd' (por si acaso)
+  return (tipoMoneda as any) === 's' ? TipoMoneda.Soles : TipoMoneda.d
+}
+
 export default function useInitCompra({
   compra,
   form,
@@ -26,14 +36,16 @@ export default function useInitCompra({
     if (compra) {
       const dataFormated: FormCreateCompra = {
         fecha: dayjs(compra.fecha),
-        tipo_moneda: compra.tipo_moneda,
+        tipo_moneda: mapTipoMoneda(compra.tipo_moneda),
         tipo_de_cambio: Number(compra.tipo_de_cambio),
         proveedor_id: compra.proveedor_id || undefined,
-        tipo_documento: compra.tipo_documento,
+        proveedor_razon_social: compra.proveedor?.razon_social || '',
+        proveedor_ruc: compra.proveedor?.ruc || '',
+        tipo_documento: compra.tipo_documento as any,
         serie: compra.serie || undefined,
         numero: compra.numero || undefined,
         guia: compra.guia || undefined,
-        forma_de_pago: compra.forma_de_pago,
+        forma_de_pago: compra.forma_de_pago as any,
         numero_dias: compra.numero_dias || undefined,
         fecha_vencimiento: compra.fecha_vencimiento
           ? dayjs(compra.fecha_vencimiento)

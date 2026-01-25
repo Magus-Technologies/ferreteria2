@@ -1,7 +1,6 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
-import { ServerAction } from "./use-server-mutation";
-import { ServerResult } from "~/auth/middleware-server-actions";
+import { ServerAction, ServerResult } from "./use-server-mutation";
 import { useEffect, useMemo, useState } from "react";
 import { App } from "antd";
 

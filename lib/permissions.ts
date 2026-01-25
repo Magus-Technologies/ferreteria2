@@ -1,9 +1,71 @@
 export enum permissions {
-  // Gestion Comercial e Inventario
+  // ============================================
+  // MÓDULOS PRINCIPALES
+  // ============================================
   GESTION_COMERCIAL_E_INVENTARIO_INDEX = 'gestion-comercial-e-inventario.index',
+  FACTURACION_ELECTRONICA_INDEX = 'facturacion-electronica.index',
+  GESTION_CONTABLE_Y_FINANCIERA_INDEX = 'gestion-contable-y-financiera.index',
+  REPORTES_INDEX = 'reportes.index',
+  CONFIGURACION_INDEX = 'configuracion.index',
+
+  // ============================================
+  // SUBMÓDULOS - GESTIÓN COMERCIAL E INVENTARIO
+  // ============================================
+  GESTION_COMERCIAL_E_INVENTARIO_DASHBOARD_INDEX = 'gestion-comercial-e-inventario.dashboard.index',
   GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX = 'gestion-comercial-e-inventario.mi-almacen.index',
   GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX = 'gestion-comercial-e-inventario.mis-compras.index',
   GESTION_COMERCIAL_E_INVENTARIO_MIS_RECEPCIONES_INDEX = 'gestion-comercial-e-inventario.mis-recepciones.index',
+  GESTION_COMERCIAL_E_INVENTARIO_CREAR_COMPRA_INDEX = 'gestion-comercial-e-inventario.crear-compra.index',
+  GESTION_COMERCIAL_E_INVENTARIO_CREAR_RECEPCION_INDEX = 'gestion-comercial-e-inventario.crear-recepcion.index',
+  GESTION_COMERCIAL_E_INVENTARIO_CONFIGURACION_INDEX = 'gestion-comercial-e-inventario.configuracion.index',
+
+  // ============================================
+  // SUBMÓDULOS - FACTURACIÓN ELECTRÓNICA
+  // ============================================
+  FACTURACION_ELECTRONICA_DASHBOARD_INDEX = 'facturacion-electronica.dashboard.index',
+  FACTURACION_ELECTRONICA_MIS_VENTAS_INDEX = 'facturacion-electronica.mis-ventas.index',
+  FACTURACION_ELECTRONICA_MIS_COTIZACIONES_INDEX = 'facturacion-electronica.mis-cotizaciones.index',
+  FACTURACION_ELECTRONICA_MIS_GUIAS_INDEX = 'facturacion-electronica.mis-guias.index',
+  FACTURACION_ELECTRONICA_MIS_PRESTAMOS_INDEX = 'facturacion-electronica.mis-prestamos.index',
+  FACTURACION_ELECTRONICA_MIS_NOTAS_INDEX = 'facturacion-electronica.mis-notas.index',
+  FACTURACION_ELECTRONICA_MIS_CONTACTOS_INDEX = 'facturacion-electronica.mis-contactos.index',
+  FACTURACION_ELECTRONICA_MIS_APERTURAS_CIERRES_INDEX = 'facturacion-electronica.mis-aperturas-cierres.index',
+  FACTURACION_ELECTRONICA_MOVIMIENTOS_CAJA_INDEX = 'facturacion-electronica.movimientos-caja.index',
+  FACTURACION_ELECTRONICA_CREAR_VENTA_INDEX = 'facturacion-electronica.crear-venta.index',
+  FACTURACION_ELECTRONICA_CREAR_COTIZACION_INDEX = 'facturacion-electronica.crear-cotizacion.index',
+  FACTURACION_ELECTRONICA_CREAR_GUIA_INDEX = 'facturacion-electronica.crear-guia.index',
+  FACTURACION_ELECTRONICA_CREAR_PRESTAMO_INDEX = 'facturacion-electronica.crear-prestamo.index',
+
+  // ============================================
+  // SUBMÓDULOS - GESTIÓN CONTABLE Y FINANCIERA
+  // ============================================
+  GESTION_CONTABLE_Y_FINANCIERA_DASHBOARD_INDEX = 'gestion-contable-y-financiera.dashboard.index',
+  GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_COBRAR_INDEX = 'gestion-contable-y-financiera.cuentas-por-cobrar.index',
+  GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_PAGAR_INDEX = 'gestion-contable-y-financiera.cuentas-por-pagar.index',
+  GESTION_CONTABLE_Y_FINANCIERA_LIBRO_DIARIO_INDEX = 'gestion-contable-y-financiera.libro-diario.index',
+  GESTION_CONTABLE_Y_FINANCIERA_BALANCE_GENERAL_INDEX = 'gestion-contable-y-financiera.balance-general.index',
+
+  // ============================================
+  // SUBMÓDULOS - REPORTES
+  // ============================================
+  REPORTES_VENTAS_INDEX = 'reportes.ventas.index',
+  REPORTES_COMPRAS_INDEX = 'reportes.compras.index',
+  REPORTES_INVENTARIO_INDEX = 'reportes.inventario.index',
+  REPORTES_FINANCIEROS_INDEX = 'reportes.financieros.index',
+  REPORTES_CLIENTES_INDEX = 'reportes.clientes.index',
+  REPORTES_PROVEEDORES_INDEX = 'reportes.proveedores.index',
+
+  // ============================================
+  // SUBMÓDULOS - CONFIGURACIÓN
+  // ============================================
+  CONFIGURACION_USUARIOS_INDEX = 'configuracion.usuarios.index',
+  CONFIGURACION_ROLES_INDEX = 'configuracion.roles.index',
+  CONFIGURACION_PERMISOS_INDEX = 'configuracion.permisos.index',
+  CONFIGURACION_EMPRESA_INDEX = 'configuracion.empresa.index',
+  CONFIGURACION_ALMACENES_INDEX = 'configuracion.almacenes.index',
+  CONFIGURACION_CAJAS_INDEX = 'configuracion.cajas.index',
+  CONFIGURACION_SERIES_INDEX = 'configuracion.series.index',
+  CONFIGURACION_IMPRESION_INDEX = 'configuracion.impresion.index',
 
   // Gestion Comercial e Inventario - Mi Almacén
   PRODUCTO_BASE = 'producto',
@@ -17,12 +79,6 @@ export enum permissions {
   PRODUCTO_IMPORT = 'producto.import',
 
   DETALLES_DE_PRECIOS_IMPORT = 'detalle-de-precios.import',
-
-  // Facturacion Electronica
-  FACTURACION_ELECTRONICA_INDEX = 'facturacion-electronica.index',
-
-  // Gestion Contable y Financiera
-  GESTION_CONTABLE_Y_FINANCIERA_INDEX = 'gestion-contable-y-financiera.index',
 
   // Marcas
   MARCA_BASE = 'marca',
@@ -207,15 +263,93 @@ type PermisosValidos = Exclude<
   | permissions.GUIA_BASE
 >
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
+  // MÓDULOS PRINCIPALES
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_INDEX]:
     'Ver Página Gestion Comercial e Inventario',
+  [permissions.FACTURACION_ELECTRONICA_INDEX]:
+    'Ver Página Facturación Electronica',
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX]:
+    'Ver Página Gestion Contable y Financiera',
+  [permissions.REPORTES_INDEX]: 'Ver Página Reportes',
+  [permissions.CONFIGURACION_INDEX]: 'Ver Página Configuración',
+
+  // SUBMÓDULOS - GESTIÓN COMERCIAL E INVENTARIO
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_DASHBOARD_INDEX]:
+    'Ver Dashboard Gestión Comercial e Inventario',
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX]:
     'Ver Página Mi Almacén',
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX]:
     'Ver Página Mis Compras',
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_RECEPCIONES_INDEX]:
     'Ver Página Mis Recepciones',
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_CREAR_COMPRA_INDEX]:
+    'Ver Página Crear Compra',
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_CREAR_RECEPCION_INDEX]:
+    'Ver Página Crear Recepción',
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_CONFIGURACION_INDEX]:
+    'Ver Configuración Gestión Comercial e Inventario',
 
+  // SUBMÓDULOS - FACTURACIÓN ELECTRÓNICA
+  [permissions.FACTURACION_ELECTRONICA_DASHBOARD_INDEX]:
+    'Ver Dashboard Facturación Electrónica',
+  [permissions.FACTURACION_ELECTRONICA_MIS_VENTAS_INDEX]:
+    'Ver Página Mis Ventas',
+  [permissions.FACTURACION_ELECTRONICA_MIS_COTIZACIONES_INDEX]:
+    'Ver Página Mis Cotizaciones',
+  [permissions.FACTURACION_ELECTRONICA_MIS_GUIAS_INDEX]:
+    'Ver Página Mis Guías',
+  [permissions.FACTURACION_ELECTRONICA_MIS_PRESTAMOS_INDEX]:
+    'Ver Página Mis Préstamos',
+  [permissions.FACTURACION_ELECTRONICA_MIS_NOTAS_INDEX]:
+    'Ver Página Mis Notas',
+  [permissions.FACTURACION_ELECTRONICA_MIS_CONTACTOS_INDEX]:
+    'Ver Página Mis Contactos',
+  [permissions.FACTURACION_ELECTRONICA_MIS_APERTURAS_CIERRES_INDEX]:
+    'Ver Página Aperturas y Cierres',
+  [permissions.FACTURACION_ELECTRONICA_MOVIMIENTOS_CAJA_INDEX]:
+    'Ver Página Movimientos de Caja',
+  [permissions.FACTURACION_ELECTRONICA_CREAR_VENTA_INDEX]:
+    'Ver Página Crear Venta',
+  [permissions.FACTURACION_ELECTRONICA_CREAR_COTIZACION_INDEX]:
+    'Ver Página Crear Cotización',
+  [permissions.FACTURACION_ELECTRONICA_CREAR_GUIA_INDEX]:
+    'Ver Página Crear Guía',
+  [permissions.FACTURACION_ELECTRONICA_CREAR_PRESTAMO_INDEX]:
+    'Ver Página Crear Préstamo',
+
+  // SUBMÓDULOS - GESTIÓN CONTABLE Y FINANCIERA
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_DASHBOARD_INDEX]:
+    'Ver Dashboard Gestión Contable y Financiera',
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_COBRAR_INDEX]:
+    'Ver Página Cuentas por Cobrar',
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_PAGAR_INDEX]:
+    'Ver Página Cuentas por Pagar',
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_LIBRO_DIARIO_INDEX]:
+    'Ver Página Libro Diario',
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_BALANCE_GENERAL_INDEX]:
+    'Ver Página Balance General',
+
+  // SUBMÓDULOS - REPORTES
+  [permissions.REPORTES_VENTAS_INDEX]: 'Ver Reportes de Ventas',
+  [permissions.REPORTES_COMPRAS_INDEX]: 'Ver Reportes de Compras',
+  [permissions.REPORTES_INVENTARIO_INDEX]: 'Ver Reportes de Inventario',
+  [permissions.REPORTES_FINANCIEROS_INDEX]: 'Ver Reportes Financieros',
+  [permissions.REPORTES_CLIENTES_INDEX]: 'Ver Reportes de Clientes',
+  [permissions.REPORTES_PROVEEDORES_INDEX]: 'Ver Reportes de Proveedores',
+
+  // SUBMÓDULOS - CONFIGURACIÓN
+  [permissions.CONFIGURACION_USUARIOS_INDEX]: 'Ver Página Usuarios',
+  [permissions.CONFIGURACION_ROLES_INDEX]: 'Ver Página Roles',
+  [permissions.CONFIGURACION_PERMISOS_INDEX]: 'Ver Página Permisos',
+  [permissions.CONFIGURACION_EMPRESA_INDEX]: 'Ver Página Mi Empresa',
+  [permissions.CONFIGURACION_ALMACENES_INDEX]: 'Ver Página Almacenes',
+  [permissions.CONFIGURACION_CAJAS_INDEX]: 'Ver Página Cajas',
+  [permissions.CONFIGURACION_SERIES_INDEX]: 'Ver Página Series',
+  [permissions.CONFIGURACION_IMPRESION_INDEX]: 'Ver Página Impresión',
+
+  // PRODUCTOS
+
+  // PRODUCTOS
   [permissions.PRODUCTO_LISTADO]: 'Ver Listado de Productos',
   [permissions.PRODUCTO_CREATE]: 'Crear Producto',
   [permissions.PRODUCTO_UPDATE]: 'Actualizar Producto',
@@ -227,15 +361,15 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
 
   [permissions.DETALLES_DE_PRECIOS_IMPORT]: 'Importar Detalles de Precios',
 
-  [permissions.FACTURACION_ELECTRONICA_INDEX]:
-    'Ver Página Facturación Electronica',
-  [permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX]:
-    'Ver Página Gestion Contable y Financiera',
+  // MARCAS
 
+  // MARCAS
   [permissions.MARCA_LISTADO]: 'Ver Listado de Marcas',
   [permissions.MARCA_CREATE]: 'Crear Marca',
   [permissions.MARCA_UPDATE]: 'Actualizar Marca',
   [permissions.MARCA_DELETE]: 'Eliminar Marca',
+
+  // ALMACENES
 
   [permissions.ALMACEN_LISTADO]: 'Ver Listado de Almacenes',
   [permissions.ALMACEN_CREATE]: 'Crear Almacén',

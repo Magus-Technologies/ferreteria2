@@ -3,7 +3,7 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsDetalleDePrecios } from './columns-detalle-de-precios'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import usePermission from '~/hooks/use-permission'
+import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -21,7 +21,7 @@ import { greenColors } from '~/lib/colors'
 
 export default function TableDetalleDePrecios() {
   const tableRef = useRef<AgGridReact>(null)
-  const can = usePermission()
+  const { can } = usePermissionHook()
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const filtros = useStoreFiltrosProductos((state) => state.filtros)

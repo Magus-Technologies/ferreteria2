@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
       '@ant-design/nextjs-registry',
       'antd',
       'ag-grid-react',
+      '@tanstack/react-query',
     ],
     serverActions: {
       bodySizeLimit: '10mb',
