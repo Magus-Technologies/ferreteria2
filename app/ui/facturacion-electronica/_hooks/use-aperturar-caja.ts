@@ -33,32 +33,39 @@ export default function useAperturarCaja({
   async function crearAperturarCaja(values: AperturarCajaFormValues) {
     setLoading(true)
     try {
-      const response = await cajaApi.aperturar({
-        caja_principal_id: values.caja_principal_id,
-        monto_apertura: values.monto_apertura,
-        conteo_billetes_monedas: values.conteo_billetes_monedas,
-      })
+      // Calcular el monto total
+      const montoTotal = values.vendedores.reduce((sum, v) => sum + v.monto, 0)
 
-      if (response.error) {
-        message.error(response.error.message || 'Error al aperturar caja')
-        return
+      // Preparar los datos para el backend
+      const payload = {
+        caja_principal_id: values.caja_origen_id,
+        monto_apertura: montoTotal,
+        vendedores: values.vendedores.map(v => ({
+          user_id: v.user_id,
+          monto: v.monto,
+          conteo_billetes_monedas: null, // Por ahora null, se puede agregar después
+        })),
       }
 
+      const response = await cajaApi.aperturar(payload)
+
       if (response.data?.data) {
-        message.success('Caja aperturada exitosamente')
-        
-        // Invalidar todas las queries relacionadas con cajas
+        message.success(`Efectivo distribuido exitosamente a ${values.vendedores.length} vendedor(es)`)
+
+        // Invalidar queries
         queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJAS_PRINCIPALES] })
         queryClient.invalidateQueries({ queryKey: [QueryKeys.SUB_CAJAS] })
         queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS] })
         queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS] })
         queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJA_ACTIVA] })
-        
+
         onSuccess?.(response.data.data)
+      } else {
+        message.error('Error al distribuir efectivo')
       }
     } catch (error) {
       console.error('Error al aperturar caja:', error)
-      message.error('Error inesperado al aperturar caja')
+      message.error('Error inesperado al distribuir efectivo')
     } finally {
       setLoading(false)
     }

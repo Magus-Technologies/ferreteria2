@@ -90,7 +90,12 @@ export default function ModalCrearGasto({
   // Cargar método de pago seleccionado
   useEffect(() => {
     if (metodoPagoId) {
-      despliegueDePagoApi.getById(metodoPagoId).then((response) => {
+      // Extraer el despliegue_pago_id del valor compuesto "sub_caja_id-despliegue_pago_id"
+      const desplieguePagoIdReal = metodoPagoId.includes('-')
+        ? metodoPagoId.split('-')[1]
+        : metodoPagoId
+
+      despliegueDePagoApi.getById(desplieguePagoIdReal).then((response) => {
         if (response.data?.data) {
           setMetodoPagoSeleccionado(response.data.data)
         }
@@ -128,13 +133,18 @@ export default function ModalCrearGasto({
 
     setLoading(true)
     try {
+      // Extraer el despliegue_pago_id del valor compuesto "sub_caja_id-despliegue_pago_id"
+      const desplieguePagoId = values.despliegue_pago_id.includes('-')
+        ? values.despliegue_pago_id.split('-')[1]
+        : values.despliegue_pago_id
+
       const response = await transaccionesCajaApi.registrarTransaccion({
         sub_caja_id: values.sub_caja_id,
         tipo_transaccion: 'egreso',
         monto: values.monto,
         descripcion: values.concepto,
         referencia_tipo: 'egreso_manual',
-        despliegue_pago_id: values.despliegue_pago_id,
+        despliegue_pago_id: desplieguePagoId,
         numero_operacion: values.numero_operacion,
       })
 

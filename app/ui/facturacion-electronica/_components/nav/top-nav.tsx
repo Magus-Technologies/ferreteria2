@@ -10,10 +10,16 @@ import { IoMdContact } from "react-icons/io";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ModalAperturarCaja from "../modals/modal-aperturar-caja";
 import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
+import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
+import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
+import useItemsFinanzas from "../../_hooks/use-items-finanzas";
+import useItemsVentas from "../../_hooks/use-items-ventas";
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
 
 // Mapa de iconos
@@ -31,6 +37,22 @@ export default function TopNav({ className }: { className?: string }) {
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
   const [openCrearIngreso, setOpenCrearIngreso] = useState(false);
   const [openCrearGasto, setOpenCrearGasto] = useState(false);
+  const [openMoverDinero, setOpenMoverDinero] = useState(false);
+  const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
+
+  // Obtener caja activa (incluye apertura)
+  const { data: cajaActiva } = useQuery({
+    queryKey: [QueryKeys.CAJA_ACTIVA],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/activa`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+      const data = await response.json()
+      return data.data
+    },
+  })
 
   const moduleId = "facturacion-electronica";
   const nav = getModuleNav(moduleId);
@@ -44,6 +66,16 @@ export default function TopNav({ className }: { className?: string }) {
     openCrearIngreso: () => setOpenCrearIngreso(true),
     openCrearGasto: () => setOpenCrearGasto(true),
   };
+
+  // Hooks personalizados para items de dropdowns
+  const { itemsFinanzas } = useItemsFinanzas({
+    setOpenAperturaCaja,
+    setOpenCrearIngreso,
+    setOpenCrearGasto,
+    setOpenMoverDinero,
+    setOpenPedirPrestamo,
+  });
+  const { itemsVentas } = useItemsVentas();
 
   return (
     <BaseNav className={className} bgColorClass={nav.topNav.bgColor}>
@@ -98,8 +130,23 @@ export default function TopNav({ className }: { className?: string }) {
         open={openAperturaCaja}
         setOpen={setOpenAperturaCaja}
       />
-      <ModalCrearIngreso open={openCrearIngreso} setOpen={setOpenCrearIngreso} />
-      <ModalCrearGasto open={openCrearGasto} setOpen={setOpenCrearGasto} />
+      <ModalCrearIngreso 
+        open={openCrearIngreso} 
+        setOpen={setOpenCrearIngreso} 
+      />
+      <ModalCrearGasto 
+        open={openCrearGasto} 
+        setOpen={setOpenCrearGasto} 
+      />
+      <ModalMoverDineroSubCajas
+        open={openMoverDinero}
+        setOpen={setOpenMoverDinero}
+      />
+      <ModalSolicitarEfectivo
+        open={openPedirPrestamo}
+        setOpen={setOpenPedirPrestamo}
+        aperturaId={cajaActiva?.id || ''}
+      />
     </BaseNav>
   );
 }

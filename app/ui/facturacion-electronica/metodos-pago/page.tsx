@@ -8,7 +8,7 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import TableMetodosPago from './_components/table-metodos-pago'
+import TableMetodosPagoUnificado from './_components/table-metodos-pago-unificado'
 
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
@@ -29,7 +29,7 @@ export default function MetodosPagoPage() {
       />
       <div className='w-full mt-4'>
         <Suspense fallback={<ComponentLoading />}>
-          <TableMetodosPago />
+          <TableMetodosPagoUnificado />
         </Suspense>
       </div>
     </ContenedorGeneral>

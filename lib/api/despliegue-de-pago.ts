@@ -11,6 +11,14 @@ export interface DespliegueDePago {
   requiere_numero_serie: boolean;
   sobrecargo_porcentaje: number;
   tipo_sobrecargo: 'porcentaje' | 'monto_fijo' | 'ninguno';
+  numero_celular?: string;
+  activo: boolean;
+  metodo_de_pago?: {
+    id: string;
+    name: string;
+    cuenta_bancaria?: string;
+    nombre_titular?: string;
+  };
 }
 
 export interface NumeroOperacionPago {
@@ -83,6 +91,15 @@ class DespliegueDePagoApi {
   async getById(id: string): Promise<ApiResponse<LaravelResponse<DespliegueDePago>>> {
     return apiRequest<LaravelResponse<DespliegueDePago>>(`/despliegues-de-pago/${id}`, {
       method: 'GET',
+    });
+  }
+
+  /**
+   * Delete a despliegue de pago
+   */
+  async delete(id: string): Promise<ApiResponse<any>> {
+    return apiRequest(`/despliegues-de-pago/${id}`, {
+      method: 'DELETE',
     });
   }
 }

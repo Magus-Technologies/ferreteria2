@@ -1,117 +1,104 @@
-import { useState } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
-import LabelBase from '~/components/form/label-base'
 
-const conteo = [200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1]
-
-export interface ConteoBilletesMonedas {
-  billete_200: number
-  billete_100: number
-  billete_50: number
-  billete_20: number
-  billete_10: number
-  moneda_5: number
-  moneda_2: number
-  moneda_1: number
-  moneda_050: number
-  moneda_020: number
-  moneda_010: number
+interface ConteoDineroProps {
+  onChange?: (total: number) => void
+  className?: string
+  initialValues?: { [key: string]: number }
 }
 
-export default function ConteoDinero({
-  onChange,
-  onConteoChange,
-  className = '',
-}: {
-  onChange?: (value: number) => void
-  onConteoChange?: (conteo: ConteoBilletesMonedas) => void
-  className?: string
-}) {
-  const [valores, setValores] = useState<Record<number, number>>({})
-  const [monto, setMonto] = useState(0)
+const denominaciones = [
+  { label: 'Billete S/. 200.00', valor: 200, key: 'b200' },
+  { label: 'Billete S/. 100.00', valor: 100, key: 'b100' },
+  { label: 'Billete S/. 50.00', valor: 50, key: 'b50' },
+  { label: 'Billete S/. 20.00', valor: 20, key: 'b20' },
+  { label: 'Billete S/. 10.00', valor: 10, key: 'b10' },
+  { label: 'Moneda S/. 5.00', valor: 5, key: 'm5' },
+  { label: 'Moneda S/. 2.00', valor: 2, key: 'm2' },
+  { label: 'Moneda S/. 1.00', valor: 1, key: 'm1' },
+  { label: 'Moneda S/. 0.50', valor: 0.5, key: 'm050' },
+  { label: 'Moneda S/. 0.20', valor: 0.2, key: 'm020' },
+  { label: 'Moneda S/. 0.10', valor: 0.1, key: 'm010' },
+  { label: 'Moneda S/. 0.05', valor: 0.05, key: 'm005' },
+]
 
-  const handleChange = (denominacion: number, cantidad: number) => {
-    const nuevosValores = { ...valores, [denominacion]: cantidad || 0 }
-    setValores(nuevosValores)
+export default function ConteoDinero({ onChange, className = '', initialValues = {} }: ConteoDineroProps) {
+  const [cantidades, setCantidades] = useState<{ [key: string]: number }>(() => {
+    const initial: { [key: string]: number } = {}
+    denominaciones.forEach(d => {
+      initial[d.key] = initialValues[d.key] || 0
+    })
+    return initial
+  })
 
-    const total = conteo.reduce(
-      (acc, item) => acc + (nuevosValores[item] || 0) * item,
-      0
-    )
-    setMonto(total)
+  const calcularTotal = () => {
+    return denominaciones.reduce((sum, d) => {
+      return sum + (cantidades[d.key] || 0) * d.valor
+    }, 0)
+  }
+
+  useEffect(() => {
+    const total = calcularTotal()
     onChange?.(total)
+  }, [cantidades])
 
-    // Enviar el conteo detallado
-    const conteoDetallado: ConteoBilletesMonedas = {
-      billete_200: nuevosValores[200] || 0,
-      billete_100: nuevosValores[100] || 0,
-      billete_50: nuevosValores[50] || 0,
-      billete_20: nuevosValores[20] || 0,
-      billete_10: nuevosValores[10] || 0,
-      moneda_5: nuevosValores[5] || 0,
-      moneda_2: nuevosValores[2] || 0,
-      moneda_1: nuevosValores[1] || 0,
-      moneda_050: nuevosValores[0.5] || 0,
-      moneda_020: nuevosValores[0.2] || 0,
-      moneda_010: nuevosValores[0.1] || 0,
-    }
-    onConteoChange?.(conteoDetallado)
+  const handleCantidadChange = (key: string, value: number) => {
+    setCantidades(prev => ({
+      ...prev,
+      [key]: value || 0
+    }))
   }
 
   return (
-    <div className={`max-w-[280px] flex flex-col gap-2 ${className}`}>
-      <div className='grid grid-cols-[20px_1fr_80px] gap-2 items-center justify-center'>
-        <div className='font-bold text-slate-500 text-center'>N°</div>
-        <div className='font-bold text-slate-500 text-center'>Denominación</div>
-        <div className='font-bold text-slate-500 text-center'>Total</div>
-      </div>
-      {conteo.map((item, index) => (
-        <div
-          key={item}
-          className='grid grid-cols-[20px_1fr_80px] gap-4 items-center'
-        >
-          <div className='font-bold text-slate-500'>{index + 1}</div>
-          <LabelBase
-            className='grid grid-cols-[1fr_auto]'
-            classNames={{
-              labelParent: 'justify-end',
-            }}
-            label={`${
-              item > 5 ? 'Billete' : 'Moneda'
-            } S/. ${item.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`}
-          >
-            <InputNumberBase
-              size='small'
-              className='max-w-[50px]'
-              placeholder='0'
-              min={0}
-              step={1}
-              precision={0}
-              value={valores[item] || 0}
-              onChange={value => handleChange(item, Number(value) ?? 0)}
-            />
-          </LabelBase>
-          <div
-            className={`font-bold text-nowrap ${
-              (valores[item] || 0) > 0 ? 'text-emerald-600' : 'text-slate-500'
-            }`}
-          >
-            S/.{' '}
-            {((valores[item] || 0) * item).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
+    <div className={`${className}`}>
+      <div className='bg-slate-50 rounded p-1.5'>
+        <table className='w-full text-[11px]'>
+          <thead>
+            <tr className='border-b border-slate-300'>
+              <th className='text-left py-0.5 px-1 text-slate-600 font-medium text-[10px]'>#</th>
+              <th className='text-left py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Denominación</th>
+              <th className='text-center py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Cant.</th>
+              <th className='text-right py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {denominaciones.map((denom, index) => {
+              const cantidad = cantidades[denom.key] || 0
+              const subtotal = cantidad * denom.valor
+              return (
+                <tr key={denom.key} className='border-b border-slate-100 hover:bg-white'>
+                  <td className='py-0.5 px-1 text-slate-500'>{index + 1}</td>
+                  <td className='py-0.5 px-1 text-slate-700'>{denom.label}</td>
+                  <td className='py-0.5 px-1'>
+                    <InputNumberBase
+                      value={cantidad}
+                      onChange={(value) => handleCantidadChange(denom.key, Number(value) || 0)}
+                      min={0}
+                      precision={0}
+                      className='w-full text-[11px]'
+                      size='small'
+                    />
+                  </td>
+                  <td className='py-0.5 px-1 text-right font-medium text-slate-800'>
+                    {subtotal.toFixed(2)}
+                  </td>
+                </tr>
+              )
             })}
-          </div>
-        </div>
-      ))}
-
-      <div className='mt-2 font-bold text-xl flex items-center justify-center gap-2'>
-        <div className='text-slate-500'>Total Conteo:</div>
-        <div className='text-emerald-600'>
-          S/. {monto.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-        </div>
+          </tbody>
+          <tfoot>
+            <tr className='bg-orange-100 border-t border-orange-400'>
+              <td colSpan={3} className='py-1 px-1 text-right font-bold text-slate-800 text-xs'>
+                TOTAL:
+              </td>
+              <td className='py-1 px-1 text-right font-bold text-orange-600 text-sm'>
+                S/. {calcularTotal().toFixed(2)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   )

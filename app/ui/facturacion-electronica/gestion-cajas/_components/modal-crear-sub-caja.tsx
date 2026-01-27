@@ -4,7 +4,7 @@ import { Form, Checkbox } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import InputBase from '~/app/_components/form/inputs/input-base'
-import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
+import SelectBase from '~/app/_components/form/selects/select-base'
 import LabelBase from '~/components/form/label-base'
 import useCrearSubCaja from '../_hooks/use-crear-sub-caja'
 import { useState, useEffect } from 'react'
@@ -43,6 +43,7 @@ export default function ModalCrearSubCaja({
   const [aceptaTodos, setAceptaTodos] = useState(false)
   const [tiposComprobante, setTiposComprobante] = useState<string[]>([])
   const [metodosSeleccionados, setMetodosSeleccionados] = useState<string[]>([])
+  const [nombreBase, setNombreBase] = useState('')
 
   // Obtener todos los métodos de pago para validar
   const { data: metodosPago } = useQuery({
@@ -53,6 +54,41 @@ export default function ModalCrearSubCaja({
     },
   })
 
+  // Función para generar el nombre de la sub-caja
+  const generarNombreSubCaja = () => {
+    if (!nombreBase.trim()) return ''
+
+    if (aceptaTodos) {
+      return `${nombreBase} (Todos los métodos)`
+    }
+
+    if (metodosSeleccionados.length === 0) return nombreBase
+
+    // Obtener información de los métodos seleccionados
+    const metodosInfo = metodosSeleccionados
+      .map(id => metodosPago?.find(m => m.id === id))
+      .filter(Boolean) as any[]
+
+    if (metodosInfo.length === 0) return nombreBase
+
+    // Generar lista de métodos para mostrar
+    const metodosNombres = metodosInfo.map(metodo => {
+      const nombreMetodo = metodo?.name || ''
+      const banco = metodo?.metodo_de_pago?.name
+      return banco ? `${nombreMetodo} (${banco})` : nombreMetodo
+    }).join(', ')
+
+    return `${nombreBase} - ${metodosNombres}`
+  }
+
+  // Actualizar el nombre automáticamente cuando cambian los métodos
+  useEffect(() => {
+    const nombreGenerado = generarNombreSubCaja()
+    if (nombreGenerado && nombreBase) {
+      form.setFieldsValue({ nombre: nombreGenerado })
+    }
+  }, [metodosSeleccionados, aceptaTodos, nombreBase, metodosPago])
+
   const { crearSubCaja, loading } = useCrearSubCaja({
     cajaPrincipalId,
     onSuccess: () => {
@@ -61,6 +97,7 @@ export default function ModalCrearSubCaja({
       setAceptaTodos(false)
       setTiposComprobante([])
       setMetodosSeleccionados([])
+      setNombreBase('')
       onSuccess?.()
     },
   })
@@ -68,13 +105,13 @@ export default function ModalCrearSubCaja({
   // Verificar si hay efectivo seleccionado
   const tieneEfectivo = () => {
     if (aceptaTodos) return true // Si acepta todos, incluye efectivo
-    
+
     if (!metodosPago || metodosSeleccionados.length === 0) return false
-    
+
     return metodosSeleccionados.some((id) => {
       const metodo = metodosPago.find((m) => m.id === id)
-      return metodo?.name?.toLowerCase().includes('efectivo') || 
-             metodo?.name?.toLowerCase().includes('cch')
+      return metodo?.name?.toLowerCase().includes('efectivo') ||
+        metodo?.name?.toLowerCase().includes('cch')
     })
   }
 
@@ -125,11 +162,11 @@ export default function ModalCrearSubCaja({
   return (
     <ModalForm
       modalProps={{
-        width: 700,
+        width: 900,
         title: <TitleForm>Crear Sub-Caja</TitleForm>,
         centered: true,
-        okButtonProps: { 
-          loading, 
+        okButtonProps: {
+          loading,
           disabled: loading || (tieneEfectivo() && tieneFacturaOBoleta())
         },
         okText: 'Crear Sub-Caja',
@@ -139,6 +176,7 @@ export default function ModalCrearSubCaja({
         setAceptaTodos(false)
         setTiposComprobante([])
         setMetodosSeleccionados([])
+        setNombreBase('')
       }}
       open={open}
       setOpen={setOpen}
@@ -148,18 +186,37 @@ export default function ModalCrearSubCaja({
         layout: 'vertical',
       }}
     >
-      <LabelBase label='Nombre de la Sub-Caja' orientation='column'>
+      <LabelBase label='Nombre Base de la Sub-Caja' orientation='column'>
         <InputBase
-          placeholder='Ej: BCP Yape - Facturas'
+          placeholder='Ej: Caja Chica, Caja Ahorro, Caja Ventas'
           uppercase={false}
-          propsForm={{
-            name: 'nombre',
-            rules: [
-              { required: true, message: 'Ingresa el nombre de la sub-caja' },
-              { max: 255, message: 'Máximo 255 caracteres' },
-            ],
-          }}
+          value={nombreBase}
+          onChange={(e) => setNombreBase(e.target.value)}
         />
+        <p className='text-xs text-slate-500 mt-1'>
+          El nombre completo se generará automáticamente según los métodos de pago
+        </p>
+      </LabelBase>
+
+      <LabelBase label='Nombre Completo (Generado Automáticamente)' className='mt-4' orientation='column'>
+        <Form.Item
+          name='nombre'
+          rules={[
+            { required: true, message: 'Ingresa el nombre base primero' },
+          ]}
+        >
+          <InputBase
+            placeholder='Se generará automáticamente...'
+            uppercase={false}
+            disabled
+          />
+        </Form.Item>
+
+        {metodosSeleccionados.length > 1 && (
+          <p className='text-xs text-blue-600 mt-2'>
+            ℹ️ Esta sub-caja aceptará {metodosSeleccionados.length} métodos de pago diferentes
+          </p>
+        )}
       </LabelBase>
 
       <LabelBase label='Métodos de Pago' className='mt-4' orientation='column'>
@@ -174,8 +231,8 @@ export default function ModalCrearSubCaja({
         {aceptaTodos ? (
           <>
             {/* Campo oculto que mantiene el valor ["*"] */}
-            <Form.Item 
-              name='despliegues_pago_ids' 
+            <Form.Item
+              name='despliegues_pago_ids'
               initialValue={['*']}
               hidden
             >
@@ -188,17 +245,26 @@ export default function ModalCrearSubCaja({
             </div>
           </>
         ) : (
-          <SelectDespliegueDePago
-            mode='multiple'
-            placeholder='Selecciona uno o varios métodos de pago'
-            onChange={handleMetodosChange}
-            propsForm={{
-              name: 'despliegues_pago_ids',
-              rules: [
-                { required: true, message: 'Selecciona al menos un método de pago' },
-              ],
-            }}
-          />
+          <Form.Item
+            name='despliegues_pago_ids'
+            rules={[
+              { required: true, message: 'Selecciona al menos un método de pago' },
+            ]}
+            className='w-full'
+          >
+            <SelectBase
+              mode='multiple'
+              placeholder='Selecciona uno o varios métodos de pago'
+              onChange={handleMetodosChange}
+              options={metodosPago?.map((metodo: any) => ({
+                value: metodo.id,
+                label: `${metodo.name}${metodo.metodo_de_pago?.name ? ` (${metodo.metodo_de_pago.name})` : ''}`,
+              })) || []}
+              showSearch
+              className='w-full'
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
         )}
       </LabelBase>
 
@@ -224,7 +290,7 @@ export default function ModalCrearSubCaja({
       {tieneEfectivo() && tieneFacturaOBoleta() && (
         <div className='mt-2 p-3 bg-red-50 rounded-lg border border-red-200'>
           <p className='text-sm text-red-700'>
-            <strong>⚠️ Restricción:</strong> No puedes usar efectivo para Facturas o Boletas. 
+            <strong>⚠️ Restricción:</strong> No puedes usar efectivo para Facturas o Boletas.
             Solo la Caja Chica (creada automáticamente) acepta efectivo para estos comprobantes.
             <br />
             <span className='text-xs'>Para Notas de Venta sí puedes usar efectivo.</span>

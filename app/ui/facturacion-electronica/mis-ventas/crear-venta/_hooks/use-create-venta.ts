@@ -15,6 +15,7 @@ import {
   ventaApi
 } from '~/lib/api/venta'
 import { ventaEvents } from './venta-events'
+import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -205,9 +206,12 @@ export default function useCreateVenta() {
       user_id: user_id,
       almacen_id: almacen_id,
       productos_por_almacen: productos_por_almacen,
-      // Agregar métodos de pago si existen
+      // Agregar métodos de pago si existen, extrayendo correctamente los IDs
       despliegue_de_pago_ventas: metodos_de_pago && metodos_de_pago.length > 0
-        ? metodos_de_pago
+        ? metodos_de_pago.map(mp => ({
+            ...mp,
+            despliegue_de_pago_id: extractDesplieguePagoId(mp.despliegue_de_pago_id)
+          }))
         : undefined,
     }
 

@@ -5,10 +5,14 @@ export default function useItemsFinanzas({
   setOpenAperturaCaja,
   setOpenCrearIngreso,
   setOpenCrearGasto,
+  setOpenMoverDinero,
+  setOpenPedirPrestamo,
 }: {
   setOpenAperturaCaja: (open: boolean) => void
   setOpenCrearIngreso: (open: boolean) => void
   setOpenCrearGasto: (open: boolean) => void
+  setOpenMoverDinero: (open: boolean) => void
+  setOpenPedirPrestamo: (open: boolean) => void
 }) {
   const router = useRouter()
 
@@ -34,15 +38,25 @@ export default function useItemsFinanzas({
       onClick: () => setOpenCrearGasto(true),
     },
     {
+      key: '5',
+      label: 'Mover Dinero entre Sub-Cajas',
+      onClick: () => setOpenMoverDinero(true),
+    },
+    {
+      key: '6',
+      label: 'Pedir Préstamo',
+      onClick: () => setOpenPedirPrestamo(true),
+    },
+    {
       type: 'divider',
     },
     {
-      key: '5',
+      key: '7',
       label: 'Gestión de Cajas',
       onClick: () => router.push('/ui/facturacion-electronica/gestion-cajas'),
     },
     {
-      key: '6',
+      key: '8',
       label: 'Métodos de Pago',
       onClick: () => router.push('/ui/facturacion-electronica/metodos-pago'),
     },

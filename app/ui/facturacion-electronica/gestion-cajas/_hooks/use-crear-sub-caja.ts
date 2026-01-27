@@ -41,9 +41,12 @@ export default function useCrearSubCaja({
           return
         }
 
+        // Extraer solo el nombre base (la primera parte antes del primer " - ")
+        const nombreBase = values.nombre.split(' - ')[0] || values.nombre
+
         const payload = {
           caja_principal_id: cajaPrincipalId,
-          nombre: values.nombre,
+          nombre: nombreBase.trim(), // Solo el nombre base, no toda la descripción
           despliegues_pago_ids: desplieguesPagoIds,
           tipos_comprobante: values.tipos_comprobante,
           proposito: values.proposito,
