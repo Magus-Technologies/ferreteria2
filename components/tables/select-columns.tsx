@@ -10,6 +10,7 @@ import {
   SetStateAction,
   useEffect,
   useImperativeHandle,
+  useRef,
   useState,
 } from "react";
 const CheckboxGroup = Checkbox.Group;
@@ -26,13 +27,13 @@ export function setVisibilityColumns({
     gridColumns.filter((col) => {
       return !checkedList.includes(col.getColDef().headerName!);
     }),
-    false
+    false,
   );
   gridApi?.setColumnsVisible(
     gridColumns.filter((col) =>
-      checkedList.includes(col.getColDef().headerName!)
+      checkedList.includes(col.getColDef().headerName!),
     ),
-    true
+    true,
   );
 }
 
@@ -43,7 +44,7 @@ export interface SelectColumnsRef {
 interface SelectColumnsProps {
   defaultColumns: string[];
   setDefaultColumns: (
-    value: string[] | ((value: string[]) => string[])
+    value: string[] | ((value: string[]) => string[]),
   ) => void;
   gridRef: RefObject<AgGridReact | null>;
   children?: React.ReactNode;
@@ -66,7 +67,7 @@ export default function SelectColumns({
       ?.map((col) => col.getColDef().headerName)
       .filter(
         (name): name is string =>
-          name !== undefined && name !== null && name !== ""
+          name !== undefined && name !== null && name !== "",
       ) ?? [];
 
   const [checkedList, setCheckedList] = useState<string[]>([]);
@@ -92,18 +93,36 @@ export default function SelectColumns({
   // Inicializar checkedList cuando plainOptions esté disponible
   useEffect(() => {
     if (plainOptions.length > 0 && !isInitialized) {
-      const validColumns =
-        defaultColumns.length > 0
-          ? defaultColumns.filter((col) => plainOptions.includes(col))
-          : plainOptions;
-      setCheckedList(validColumns.length > 0 ? validColumns : plainOptions);
+      // Obtener el estado REAL de visibilidad desde AG Grid
+      const visibleColumns =
+        gridApi
+          ?.getAllGridColumns()
+          ?.filter((col) => col.isVisible())
+          ?.map((col) => col.getColDef().headerName)
+          ?.filter(
+            (name): name is string =>
+              name !== undefined && name !== null && name !== "",
+          ) ?? [];
+
+      // Si hay columnas visibles según AG Grid, usar esas
+      // Si no, usar defaultColumns o todas las columnas
+      const initialColumns =
+        visibleColumns.length > 0
+          ? visibleColumns
+          : defaultColumns.length > 0
+            ? defaultColumns.filter((col) => plainOptions.includes(col))
+            : plainOptions;
+
+      setCheckedList(initialColumns.length > 0 ? initialColumns : plainOptions);
       setIsInitialized(true);
     }
-  }, [plainOptions.length, isInitialized, defaultColumns]);
+  }, [plainOptions.length, isInitialized, defaultColumns, gridApi]);
 
+  // Aplicar visibilidad de columnas cuando cambia checkedList
   useEffect(() => {
     if (!gridRef.current) return;
     if (checkedList.length === 0) return;
+
     setVisibilityColumns({ gridApi, checkedList });
     setDefaultColumns(checkedList);
   }, [checkedList, gridApi, gridRef, setDefaultColumns]);

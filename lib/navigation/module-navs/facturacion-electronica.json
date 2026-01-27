@@ -1,0 +1,150 @@
+{
+  "moduleId": "facturacion-electronica",
+  "topNav": {
+    "bgColor": "bg-amber-600",
+    "activeColor": "text-amber-600",
+    "items": [
+      {
+        "id": "dashboard",
+        "type": "button",
+        "label": "Dashboard",
+        "icon": "MdSpaceDashboard",
+        "route": "/ui/facturacion-electronica",
+        "permission": "facturacion-electronica.dashboard.index"
+      },
+      {
+        "id": "ventas-dropdown",
+        "type": "dropdown",
+        "label": "Ventas",
+        "icon": "FaCartShopping",
+        "permission": null,
+        "items": [
+          {
+            "key": "crear-venta",
+            "label": "Crear Venta",
+            "route": "/ui/facturacion-electronica/mis-ventas/crear-venta",
+            "permission": "facturacion-electronica.crear-venta.index"
+          },
+          {
+            "key": "crear-cotizacion",
+            "label": "Crear Cotización",
+            "route": "/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion",
+            "permission": "facturacion-electronica.crear-cotizacion.index"
+          },
+          {
+            "key": "prestar-pedir",
+            "label": "Prestar / Pedir",
+            "route": "/ui/facturacion-electronica/mis-prestamos/crear-prestamo",
+            "permission": "facturacion-electronica.crear-prestamo.index"
+          },
+          {
+            "key": "crear-guia",
+            "label": "Crear Guía",
+            "route": "/ui/facturacion-electronica/mis-guias/crear-guia",
+            "permission": "facturacion-electronica.crear-guia.index"
+          }
+        ]
+      },
+      {
+        "id": "crear-contacto",
+        "type": "button",
+        "label": "Crear Contacto",
+        "icon": "IoMdContact",
+        "route": null,
+        "permission": "cliente.create",
+        "action": "openModalCrearContacto"
+      },
+      {
+        "id": "finanzas-dropdown",
+        "type": "dropdown",
+        "label": "Finanzas",
+        "icon": "FaMoneyBillTrendUp",
+        "permission": null,
+        "items": [
+          {
+            "key": "aperturar-caja",
+            "label": "Aperturar Caja",
+            "action": "openAperturaCaja",
+            "permission": "caja.create"
+          },
+          {
+            "key": "crear-gasto",
+            "label": "Crear Gasto",
+            "action": "openCrearGasto",
+            "permission": "egreso-dinero.create"
+          }
+        ]
+      },
+      {
+        "id": "kardex",
+        "type": "button",
+        "label": "Kardex",
+        "icon": "FaClipboardList",
+        "route": "/ui/gestion-comercial-e-inventario/mi-almacen",
+        "permission": "gestion-comercial-e-inventario.mi-almacen.index"
+      }
+    ]
+  },
+  "bottomNav": {
+    "bgColor": "bg-amber-600",
+    "activeColor": "text-amber-600",
+    "items": [
+      {
+        "id": "mis-ventas",
+        "label": "Mis Ventas",
+        "icon": "FaCartShopping",
+        "route": "/ui/facturacion-electronica/mis-ventas",
+        "permission": "facturacion-electronica.mis-ventas.index"
+      },
+      {
+        "id": "mis-cotizaciones",
+        "label": "Mis Cotizaciones",
+        "icon": "MdPointOfSale",
+        "route": "/ui/facturacion-electronica/mis-cotizaciones",
+        "permission": "facturacion-electronica.mis-cotizaciones.index"
+      },
+      {
+        "id": "mis-guias",
+        "label": "Mis Guías",
+        "icon": "IoDocumentAttach",
+        "route": "/ui/facturacion-electronica/mis-guias",
+        "permission": "facturacion-electronica.mis-guias.index"
+      },
+      {
+        "id": "mis-prestamos",
+        "label": "Mis Préstamos",
+        "icon": "GiReceiveMoney",
+        "route": "/ui/facturacion-electronica/mis-prestamos",
+        "permission": "facturacion-electronica.mis-prestamos.index"
+      },
+      {
+        "id": "mis-notas",
+        "label": "Mis Notas",
+        "icon": "IoDocuments",
+        "route": null,
+        "permission": "facturacion-electronica.mis-notas.index"
+      },
+      {
+        "id": "mis-contactos",
+        "label": "Mis Contactos",
+        "icon": "IoMdContact",
+        "route": null,
+        "permission": "facturacion-electronica.mis-contactos.index"
+      },
+      {
+        "id": "aperturas-cierres",
+        "label": "Mis Aperturas y Cierres de Caja",
+        "icon": "HistoryOutlined",
+        "route": "/ui/facturacion-electronica/mis-aperturas-cierres",
+        "permission": "facturacion-electronica.mis-aperturas-cierres.index"
+      },
+      {
+        "id": "movimientos-caja",
+        "label": "Movimientos de Caja",
+        "icon": "SwapOutlined",
+        "route": "/ui/facturacion-electronica/movimientos-caja",
+        "permission": "facturacion-electronica.movimientos-caja.index"
+      }
+    ]
+  }
+}

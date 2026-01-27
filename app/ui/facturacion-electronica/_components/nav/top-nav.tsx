@@ -1,5 +1,7 @@
 "use client";
 
+import { getTopNavItems, getModuleNav } from "~/lib/navigation";
+import usePermissionHook from "~/hooks/use-permission";
 import { MdSpaceDashboard } from "react-icons/md";
 import { FaClipboardList } from "react-icons/fa";
 import { FaCartShopping, FaMoneyBillTrendUp } from "react-icons/fa6";
@@ -11,72 +13,93 @@ import { useState } from "react";
 import ModalAperturarCaja from "../modals/modal-aperturar-caja";
 import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
-import useItemsFinanzas from "../../_hooks/use-items-finanzas";
-import useItemsVentas from "../../_hooks/use-items-ventas";
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
+import { useRouter } from "next/navigation";
+
+// Mapa de iconos
+const iconMap: Record<string, any> = {
+  MdSpaceDashboard,
+  FaCartShopping,
+  IoMdContact,
+  FaMoneyBillTrendUp,
+  FaClipboardList,
+};
 
 export default function TopNav({ className }: { className?: string }) {
+  const router = useRouter();
+  const { can } = usePermissionHook();
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
   const [openCrearIngreso, setOpenCrearIngreso] = useState(false);
   const [openCrearGasto, setOpenCrearGasto] = useState(false);
 
-  const { itemsFinanzas } = useItemsFinanzas({
-    setOpenAperturaCaja,
-    setOpenCrearIngreso,
-    setOpenCrearGasto,
-  });
-  const { itemsVentas } = useItemsVentas();
+  const moduleId = "facturacion-electronica";
+  const nav = getModuleNav(moduleId);
+  const items = getTopNavItems(moduleId, can);
+
+  if (!nav) return null;
+
+  // Mapa de acciones
+  const actionHandlers: Record<string, () => void> = {
+    openAperturaCaja: () => setOpenAperturaCaja(true),
+    openCrearIngreso: () => setOpenCrearIngreso(true),
+    openCrearGasto: () => setOpenCrearGasto(true),
+  };
 
   return (
-    <BaseNav className={className} bgColorClass="bg-amber-600">
-      <ButtonNav
-        path="/ui/facturacion-electronica"
-        colorActive="text-amber-600"
-      >
-        <MdSpaceDashboard />
-        Dashboard
-      </ButtonNav>
+    <BaseNav className={className} bgColorClass={nav.topNav.bgColor}>
+      {items.map((item) => {
+        const Icon = iconMap[item.icon];
 
-      <DropdownBase menu={{ items: itemsVentas }}>
-        <ButtonNav withIcon={false} colorActive="text-amber-600">
-          <FaCartShopping />
-          Ventas
-        </ButtonNav>
-      </DropdownBase>
-      <ButtonNav colorActive="text-amber-600">
-        <IoMdContact />
-        Crear Contacto
-      </ButtonNav>
-      <ModalAperturarCaja
-        open={openAperturaCaja}
-        setOpen={setOpenAperturaCaja}
-      />
-      <ModalCrearIngreso
-        open={openCrearIngreso}
-        setOpen={setOpenCrearIngreso}
-      />
-      <ModalCrearGasto
-        open={openCrearGasto}
-        setOpen={setOpenCrearGasto}
-      />
-      <DropdownBase menu={{ items: itemsFinanzas }}>
-        <ButtonNav withIcon={false} colorActive="text-amber-600">
-          <FaMoneyBillTrendUp />
-          Finanzas
-        </ButtonNav>
-      </DropdownBase>
-      <ButtonNav
-        path="/ui/gestion-comercial-e-inventario/mi-almacen"
-        colorActive="text-emerald-600"
-      >
-        <FaClipboardList />
-        Kardex
-      </ButtonNav>
-      
+        if (item.type === "dropdown" && item.items) {
+          const menuItems = item.items.map((sub) => ({
+            key: sub.key,
+            label: sub.label,
+            onClick: sub.route
+              ? () => router.push(sub.route as string)
+              : sub.action && actionHandlers[sub.action]
+              ? actionHandlers[sub.action]
+              : undefined,
+          }));
+
+          return (
+            <DropdownBase key={item.id} menu={{ items: menuItems }}>
+              <ButtonNav withIcon={false} colorActive={nav.topNav.activeColor}>
+                {Icon && <Icon />}
+                {item.label}
+              </ButtonNav>
+            </DropdownBase>
+          );
+        }
+
+        return (
+          <ButtonNav
+            key={item.id}
+            path={item.route || undefined}
+            colorActive={nav.topNav.activeColor}
+            onClick={
+              item.action && actionHandlers[item.action]
+                ? actionHandlers[item.action]
+                : undefined
+            }
+          >
+            {Icon && <Icon />}
+            {item.label}
+          </ButtonNav>
+        );
+      })}
+
       {/* Notificaciones de préstamos pendientes */}
       <div className="ml-auto">
         <NotificacionPrestamosPendientes />
       </div>
+
+      {/* Modales */}
+      <ModalAperturarCaja
+        open={openAperturaCaja}
+        setOpen={setOpenAperturaCaja}
+      />
+      <ModalCrearIngreso open={openCrearIngreso} setOpen={setOpenCrearIngreso} />
+      <ModalCrearGasto open={openCrearGasto} setOpen={setOpenCrearGasto} />
     </BaseNav>
   );
 }

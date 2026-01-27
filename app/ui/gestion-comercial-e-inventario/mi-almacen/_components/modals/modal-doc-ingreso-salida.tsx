@@ -6,6 +6,7 @@ import { useAuth } from "~/lib/auth-context";
 import DocIngresoSalidaTicket from "../docs/doc-ingreso-salida-ticket";
 import { useState, useMemo } from "react";
 import { useConfiguracionImpresion } from "~/hooks/use-configuracion-impresion";
+import { TipoDocumento } from "@prisma/client";
 
 export default function ModalDocIngresoSalida({
   open,
@@ -16,8 +17,16 @@ export default function ModalDocIngresoSalida({
   setOpen: (open: boolean) => void;
   data: IngresoSalidaWithRelations | undefined;
 }) {
+  // Convertir el tipo_documento del backend (Laravel usa códigos: 'in', 'sa') al enum de Prisma
+  const tipoDocumentoPrisma =
+    data?.tipo_documento === "Ingreso" || data?.tipo_documento === "in"
+      ? TipoDocumento.Ingreso
+      : data?.tipo_documento === "Salida" || data?.tipo_documento === "sa"
+        ? TipoDocumento.Salida
+        : undefined;
+
   const nro_doc = getNroDoc({
-    tipo_documento: data?.tipo_documento,
+    tipo_documento: tipoDocumentoPrisma,
     serie: data?.serie ?? 0,
     numero: data?.numero ?? 0,
   });

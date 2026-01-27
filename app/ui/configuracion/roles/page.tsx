@@ -10,6 +10,7 @@ import { MdAdd, MdEdit, MdDelete, MdSecurity } from 'react-icons/md'
 import ModalRolForm from './_components/modals/modal-rol-form'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
+import NoAutorizado from '~/components/others/no-autorizado'
 
 export default function RolesPage() {
   const { message, modal } = App.useApp()
@@ -82,13 +83,7 @@ export default function RolesPage() {
   if (!can(permissions.CONFIGURACION_ROLES_INDEX)) {
     return (
       <ContenedorGeneral>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <MdSecurity className="text-6xl text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-700 mb-2">Acceso Denegado</h2>
-            <p className="text-gray-500">No tienes permisos para ver esta página</p>
-          </div>
-        </div>
+        <NoAutorizado />
       </ContenedorGeneral>
     )
   }
