@@ -4,7 +4,7 @@ import useApp from 'antd/es/app/useApp'
 import { prestamoVendedorApi } from '~/lib/api/prestamo-vendedor'
 
 interface AprobarSolicitudData {
-  solicitud_id: number
+  solicitud_id: string
   sub_caja_origen_id: number
   monto_aprobado: number
 }
@@ -34,6 +34,7 @@ export function useAprobarSolicitudEfectivo() {
       message.success('Solicitud aprobada y efectivo transferido')
 
       queryClient.invalidateQueries({ queryKey: ['solicitudes-efectivo'] })
+      queryClient.invalidateQueries({ queryKey: ['solicitudes-efectivo-pendientes'] })
       queryClient.invalidateQueries({ queryKey: ['sub-cajas'] })
       queryClient.invalidateQueries({ queryKey: ['caja-activa'] })
 

@@ -41,6 +41,7 @@ export default function ModalMoverDineroSubCajas({
         },
       })
       const data = await response.json()
+      // Si el usuario no tiene caja asignada, data será null
       return data.data
     },
     enabled: open && !cajaPrincipalId,
@@ -48,15 +49,31 @@ export default function ModalMoverDineroSubCajas({
 
   const cajaPrincipalIdFinal = cajaPrincipalId || cajaPrincipalData?.id
 
-  // Obtener sub-cajas de la caja principal con saldo del vendedor
+  // Obtener sub-cajas con saldo del vendedor
+  // Si el usuario tiene caja asignada, obtener solo las de su caja
+  // Si no tiene caja asignada, obtener TODAS las sub-cajas
   const { data: subCajas } = useQuery({
-    queryKey: [QueryKeys.SUB_CAJAS, cajaPrincipalIdFinal, 'con-saldo-vendedor'],
+    queryKey: [QueryKeys.SUB_CAJAS, cajaPrincipalIdFinal || 'todas', 'con-saldo-vendedor'],
     queryFn: async () => {
-      const response = await subCajaApi.getByCajaPrincipalConSaldoVendedor(cajaPrincipalIdFinal)
-      console.log('📊 Sub-cajas con saldo vendedor:', response.data?.data)
-      return response.data?.data || []
+      let url
+      if (cajaPrincipalIdFinal) {
+        // Usuario con caja asignada: obtener solo sus sub-cajas
+        url = `${process.env.NEXT_PUBLIC_API_URL}/cajas/cajas-principales/${cajaPrincipalIdFinal}/sub-cajas/con-saldo-vendedor`
+      } else {
+        // Usuario sin caja asignada: obtener TODAS las sub-cajas
+        url = `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-vendedor`
+      }
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+      const data = await response.json()
+      console.log('📊 Sub-cajas con saldo vendedor:', data?.data)
+      return data?.data || []
     },
-    enabled: open && !!cajaPrincipalIdFinal,
+    enabled: open,
     staleTime: 0, // No usar caché
     refetchOnMount: 'always', // Siempre refrescar al montar
   })

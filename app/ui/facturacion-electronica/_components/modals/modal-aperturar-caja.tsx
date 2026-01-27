@@ -10,7 +10,7 @@ import SelectCajaPrincipal from '~/app/ui/facturacion-electronica/_components/se
 import SelectVendedor from '~/app/ui/facturacion-electronica/_components/selects/select-vendedor'
 import useAperturarCaja from '../../_hooks/use-aperturar-caja'
 import { FaPlus, FaTrash, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa'
-import ConteoDinero from '../others/conteo-dinero'
+import ConteoDinero from '~/app/ui/facturacion-electronica/_components/others/conteo-dinero'
 import { useQuery } from '@tanstack/react-query'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -287,7 +287,7 @@ export default function ModalAperturarCaja({
             {vendedorSeleccionado ? (
               <ConteoDinero
                 key={vendedorSeleccionado.id}
-                onChange={(total) => actualizarVendedor(vendedorSeleccionado.id, 'monto', total)}
+                onChange={(total: number) => actualizarVendedor(vendedorSeleccionado.id, 'monto', total)}
                 className='w-full'
               />
             ) : (

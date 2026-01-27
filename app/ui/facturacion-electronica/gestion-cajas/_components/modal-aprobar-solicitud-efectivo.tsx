@@ -10,7 +10,7 @@ import { useAprobarSolicitudEfectivo } from '../_hooks/use-aprobar-solicitud-efe
 import { subCajaApi, type SubCaja } from '~/lib/api/sub-caja'
 
 interface ModalAprobarSolicitudEfectivoProps {
-  solicitudId: number
+  solicitudId: string
   open: boolean
   setOpen: (open: boolean) => void
   montoSolicitado: number
@@ -49,17 +49,26 @@ export default function ModalAprobarSolicitudEfectivo({
     enabled: open,
   })
 
-  // Obtener sub-cajas del usuario
+  // Obtener sub-cajas del usuario con saldo del vendedor
   const { data: subCajasResponse, isLoading: loadingSubCajas } = useQuery({
-    queryKey: ['sub-cajas', cajaActiva?.caja_principal_id],
+    queryKey: ['sub-cajas-con-saldo-vendedor', cajaActiva?.caja_principal_id],
     queryFn: async () => {
       if (!cajaActiva?.caja_principal_id) return null
-      return await subCajaApi.getByCajaPrincipal(cajaActiva.caja_principal_id)
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/cajas/cajas-principales/${cajaActiva.caja_principal_id}/sub-cajas/con-saldo-vendedor`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        }
+      )
+      const data = await response.json()
+      return data
     },
     enabled: open && !!cajaActiva?.caja_principal_id,
   })
 
-  const subCajas = subCajasResponse?.data?.data || []
+  const subCajas = subCajasResponse?.data || []
 
   useEffect(() => {
     if (open) {
@@ -118,9 +127,9 @@ export default function ModalAprobarSolicitudEfectivo({
             placeholder='Selecciona la sub-caja'
             loading={loadingSubCajas}
             showSearch
-            options={subCajas.map((sc: SubCaja) => ({
+            options={subCajas.map((sc: any) => ({
               value: sc.id,
-              label: `${sc.nombre} - Saldo: S/. ${parseFloat(sc.saldo_actual || '0').toFixed(2)}`,
+              label: `${sc.nombre} - Saldo disponible: S/. ${parseFloat(sc.saldo_vendedor || '0').toFixed(2)}`,
             }))}
             filterOption={(input, option) =>
               String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())

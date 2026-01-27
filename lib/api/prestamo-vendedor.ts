@@ -1,20 +1,20 @@
 import { apiRequest, type ApiResponse } from '../api'
 
 export interface VendedorConEfectivo {
-    vendedor_id: number
+    vendedor_id: string
     vendedor_nombre: string
     efectivo_inicial: string
     efectivo_disponible: string
 }
 
 export interface SolicitudEfectivo {
-    id: number
+    id: string
     vendedor_solicitante: {
-        id: number
+        id: string
         name: string
     }
-    vendedor_prestamista: {
-        id: number
+    vendedor_prestamista?: {
+        id: string
         name: string
     }
     monto_solicitado: number
@@ -40,7 +40,7 @@ export interface TransferenciaEfectivo {
 
 export interface CrearSolicitudRequest {
     apertura_cierre_caja_id: string
-    vendedor_prestamista_id: number
+    vendedor_prestamista_id: string
     monto_solicitado: number
     motivo?: string
 }
@@ -65,7 +65,7 @@ export const prestamoVendedorApi = {
 
     // Aprobar solicitud
     aprobarSolicitud: async (
-        solicitudId: number,
+        solicitudId: string,
         subCajaOrigenId: number,
         montoAprobado?: number
     ): Promise<ApiResponse<any>> => {
@@ -80,7 +80,7 @@ export const prestamoVendedorApi = {
     },
 
     // Rechazar solicitud
-    rechazarSolicitud: async (solicitudId: number, comentario?: string): Promise<ApiResponse<any>> => {
+    rechazarSolicitud: async (solicitudId: string, comentario?: string): Promise<ApiResponse<any>> => {
         const data: RechazarSolicitudRequest = {
             ...(comentario && { comentario }),
         }

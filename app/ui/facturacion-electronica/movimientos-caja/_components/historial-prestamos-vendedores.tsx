@@ -1,46 +1,35 @@
 "use client";
 
-import { Table, Tag, Space, Button, message } from "antd";
-import { CheckCircle, XCircle, PlusCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { App } from "antd";
+import { PlusCircle } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
 import ModalSolicitarEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo";
-
-interface SolicitudEfectivo {
-  id: number;
-  vendedor_solicitante: {
-    id: number;
-    name: string;
-  };
-  vendedor_prestamista: {
-    id: number;
-    name: string;
-  };
-  monto_solicitado: number;
-  estado: "pendiente" | "aprobada" | "rechazada";
-  motivo?: string;
-  created_at: string;
-}
-
-const formatCurrency = (amount: number) => {
-  return `S/ ${amount.toFixed(2)}`;
-};
+import ButtonBase from "~/components/buttons/button-base";
+import TableBase from "~/components/tables/table-base";
+import { AgGridReact } from "ag-grid-react";
+import { useColumnsPrestamosVendedores, type SolicitudEfectivo } from "./columns-prestamos-vendedores";
 
 export default function HistorialPrestamosVendedores() {
+  const { message } = App.useApp();
   const [solicitudes, setSolicitudes] = useState<SolicitudEfectivo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSolicitud, setSelectedSolicitud] = useState<number | null>(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null);
   const [openAprobar, setOpenAprobar] = useState(false);
   const [openSolicitar, setOpenSolicitar] = useState(false);
+  const [aperturaId, setAperturaId] = useState<string>('');
+  const gridRef = useRef<AgGridReact<SolicitudEfectivo>>(null);
 
   const cargarSolicitudes = async () => {
     setLoading(true);
     try {
       const response = await prestamoVendedorApi.listarSolicitudes();
-      setSolicitudes(response.data || []);
+      const data = Array.isArray((response as any).data?.data) ? (response as any).data.data : [];
+      setSolicitudes(data);
     } catch (error) {
       message.error("Error al cargar solicitudes");
+      setSolicitudes([]);
     } finally {
       setLoading(false);
     }
@@ -48,14 +37,33 @@ export default function HistorialPrestamosVendedores() {
 
   useEffect(() => {
     cargarSolicitudes();
+
+    // Obtener apertura activa
+    const fetchAperturaActiva = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/activa`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+        const data = await response.json();
+        if (data.data?.id) {
+          setAperturaId(data.data.id);
+        }
+      } catch (error) {
+        // Error silencioso
+      }
+    };
+
+    fetchAperturaActiva();
   }, []);
 
-  const handleAprobar = (id: number) => {
-    setSelectedSolicitud(id);
+  const handleAprobar = (solicitud: SolicitudEfectivo) => {
+    setSelectedSolicitud(solicitud);
     setOpenAprobar(true);
   };
 
-  const handleRechazar = async (id: number) => {
+  const handleRechazar = async (id: string) => {
     try {
       await prestamoVendedorApi.rechazarSolicitud(id);
       message.success("Solicitud rechazada");
@@ -65,117 +73,48 @@ export default function HistorialPrestamosVendedores() {
     }
   };
 
-  const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: 80,
-    },
-    {
-      title: "Solicitante",
-      dataIndex: ["vendedor_solicitante", "name"],
-      key: "solicitante",
-    },
-    {
-      title: "Prestamista",
-      dataIndex: ["vendedor_prestamista", "name"],
-      key: "prestamista",
-    },
-    {
-      title: "Monto",
-      dataIndex: "monto_solicitado",
-      key: "monto",
-      render: (monto: number) => formatCurrency(monto),
-    },
-    {
-      title: "Estado",
-      dataIndex: "estado",
-      key: "estado",
-      render: (estado: string) => {
-        const colors = {
-          pendiente: "orange",
-          aprobada: "green",
-          rechazada: "red",
-        };
-        return (
-          <Tag color={colors[estado as keyof typeof colors]}>
-            {estado.toUpperCase()}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "Motivo",
-      dataIndex: "motivo",
-      key: "motivo",
-      render: (motivo: string) => motivo || "-",
-    },
-    {
-      title: "Fecha",
-      dataIndex: "created_at",
-      key: "fecha",
-      render: (fecha: string) => new Date(fecha).toLocaleString(),
-    },
-    {
-      title: "Acciones",
-      key: "acciones",
-      render: (_: any, record: SolicitudEfectivo) => {
-        if (record.estado !== "pendiente") return null;
-
-        return (
-          <Space>
-            <Button
-              type="primary"
-              size="small"
-              icon={<CheckCircle className="h-4 w-4" />}
-              onClick={() => handleAprobar(record.id)}
-            >
-              Aprobar
-            </Button>
-            <Button
-              danger
-              size="small"
-              icon={<XCircle className="h-4 w-4" />}
-              onClick={() => handleRechazar(record.id)}
-            >
-              Rechazar
-            </Button>
-          </Space>
-        );
-      },
-    },
-  ];
+  const columns = useColumnsPrestamosVendedores({
+    onAprobar: handleAprobar,
+    onRechazar: handleRechazar,
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button
-          type="primary"
-          icon={<PlusCircle className="h-4 w-4" />}
+    <div className='w-full'>
+      <div className='flex justify-between items-center mb-4'>
+        <div className='text-lg font-semibold text-slate-700'>
+          Préstamos entre Vendedores
+        </div>
+        <ButtonBase
+          color='success'
           onClick={() => setOpenSolicitar(true)}
+          className='flex items-center gap-2'
         >
+          <PlusCircle className="h-4 w-4" />
           Solicitar Efectivo
-        </Button>
+        </ButtonBase>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={solicitudes}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `Total: ${total} solicitudes`,
-        }}
-      />
+      <div className='h-[500px] w-full'>
+        <TableBase<SolicitudEfectivo>
+          ref={gridRef}
+          rowData={solicitudes}
+          columnDefs={columns}
+          loading={loading}
+          rowSelection={false}
+          withNumberColumn={true}
+          headerColor='var(--color-amber-600)'
+        />
+      </div>
 
       {selectedSolicitud && (
         <ModalAprobarSolicitudEfectivo
           open={openAprobar}
           setOpen={setOpenAprobar}
-          solicitudId={selectedSolicitud}
+          solicitudId={selectedSolicitud.id}
+          montoSolicitado={typeof selectedSolicitud.monto_solicitado === 'string' 
+            ? parseFloat(selectedSolicitud.monto_solicitado) 
+            : selectedSolicitud.monto_solicitado}
+          solicitanteNombre={selectedSolicitud.vendedor_solicitante.name}
           onSuccess={cargarSolicitudes}
         />
       )}
@@ -183,7 +122,7 @@ export default function HistorialPrestamosVendedores() {
       <ModalSolicitarEfectivo
         open={openSolicitar}
         setOpen={setOpenSolicitar}
-        aperturaId=""
+        aperturaId={aperturaId}
       />
     </div>
   );

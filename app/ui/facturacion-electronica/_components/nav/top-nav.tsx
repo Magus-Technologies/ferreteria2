@@ -88,7 +88,7 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalSolicitarEfectivo
         open={openPedirPrestamo}
         setOpen={setOpenPedirPrestamo}
-        aperturaId={cajaActiva?.apertura_cierre_caja_id || ''}
+        aperturaId={cajaActiva?.id || ''}
       />
       <DropdownBase menu={{ items: itemsFinanzas }}>
         <ButtonNav withIcon={false} colorActive="text-amber-600">

@@ -1,12 +1,13 @@
 'use client'
 
-import { Form, InputNumber } from 'antd'
+import { Form, InputNumber, Select } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import useSolicitarEfectivo from '../_hooks/use-solicitar-efectivo'
-import SelectVendedor from '~/app/ui/facturacion-electronica/_components/selects/select-vendedor'
+import { useQuery } from '@tanstack/react-query'
+import { prestamoVendedorApi } from '~/lib/api/prestamo-vendedor'
 
 interface ModalSolicitarEfectivoProps {
     open: boolean
@@ -16,7 +17,7 @@ interface ModalSolicitarEfectivoProps {
 }
 
 interface FormValues {
-    vendedor_prestamista_id: string
+    vendedor_prestamista_id: number
     monto_solicitado: number
     motivo?: string
 }
@@ -34,11 +35,28 @@ export default function ModalSolicitarEfectivo({
         onSuccess?.()
     })
 
+    // Obtener vendedores con efectivo disponible
+    const { data: vendedoresData, isLoading: loadingVendedores } = useQuery({
+        queryKey: ['vendedores-con-efectivo-real-time'],
+        queryFn: async () => {
+            // Usar el nuevo endpoint que calcula en tiempo real
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/vendedores-con-efectivo`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                },
+            })
+            const data = await response.json()
+            return data
+        },
+        enabled: open,
+    })
+
+    const vendedores = Array.isArray(vendedoresData?.data) ? vendedoresData.data : []
+
     const handleSubmit = (values: FormValues) => {
         console.log('📤 Enviando solicitud:', {
             aperturaId,
             values,
-            vendedor_prestamista_id_parsed: parseInt(values.vendedor_prestamista_id)
         })
         
         if (!aperturaId) {
@@ -48,7 +66,7 @@ export default function ModalSolicitarEfectivo({
         
         solicitarEfectivo({
             apertura_cierre_caja_id: aperturaId,
-            vendedor_prestamista_id: parseInt(values.vendedor_prestamista_id),
+            vendedor_prestamista_id: values.vendedor_prestamista_id,
             monto_solicitado: values.monto_solicitado,
             motivo: values.motivo,
         })
@@ -109,17 +127,38 @@ export default function ModalSolicitarEfectivo({
                 </p>
             </div>
 
-            <LabelBase label='Vendedor' orientation='column'>
-                <SelectVendedor
-                    placeholder='Selecciona el vendedor'
-                    soloVendedores={false}
-                    sinCaja={false}
-                    mostrarDocumento={true}
-                    propsForm={{
-                        name: 'vendedor_prestamista_id',
-                        rules: [{ required: true, message: 'Selecciona un vendedor' }],
-                    }}
-                />
+            <LabelBase label='Vendedor con Efectivo' orientation='column'>
+                <Form.Item
+                    name='vendedor_prestamista_id'
+                    rules={[{ required: true, message: 'Selecciona un vendedor' }]}
+                >
+                    <Select
+                        placeholder='Selecciona el vendedor'
+                        loading={loadingVendedores}
+                        showSearch
+                        filterOption={(input, option) =>
+                            String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={vendedores.map((v: any) => ({
+                            value: v.vendedor_id,
+                            label: `${v.vendedor_nombre} - Disponible: S/ ${v.efectivo_disponible}`,
+                        }))}
+                        notFoundContent={
+                            loadingVendedores 
+                                ? 'Cargando...' 
+                                : vendedores.length === 0 
+                                    ? 'No hay vendedores con efectivo disponible. Asegúrate de que otros vendedores hayan aperturado caja con efectivo.'
+                                    : 'No se encontraron resultados'
+                        }
+                    />
+                </Form.Item>
+                {vendedores.length === 0 && !loadingVendedores && (
+                    <div className='mt-2 p-2 bg-yellow-50 rounded border border-yellow-200'>
+                        <p className='text-xs text-yellow-700'>
+                            ℹ️ Para solicitar efectivo, otros vendedores deben tener una caja abierta con efectivo disponible.
+                        </p>
+                    </div>
+                )}
             </LabelBase>
 
             <LabelBase label='Monto a Solicitar' orientation='column'>

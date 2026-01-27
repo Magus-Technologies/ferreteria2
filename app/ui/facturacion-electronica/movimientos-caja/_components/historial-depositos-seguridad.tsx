@@ -1,17 +1,17 @@
 "use client";
 
-import { Table, Tag } from "antd";
-import { useEffect, useState } from "react";
-import { movimientoInternoApi, type DepositoSeguridad } from "~/lib/api/movimiento-interno";
-import { message } from "antd";
-
-const formatCurrency = (amount: number) => {
-    return `S/ ${amount.toFixed(2)}`;
-};
+import { App } from "antd";
+import { useEffect, useState, useRef } from "react";
+import { movimientoInternoApi } from "~/lib/api/movimiento-interno";
+import TableBase from "~/components/tables/table-base";
+import { AgGridReact } from "ag-grid-react";
+import { useColumnsDepositosSeguridad, type DepositoSeguridad } from "./columns-depositos-seguridad";
 
 export default function HistorialDepositosSeguridad() {
+    const { message } = App.useApp();
     const [depositos, setDepositos] = useState<DepositoSeguridad[]>([]);
     const [loading, setLoading] = useState(false);
+    const gridRef = useRef<AgGridReact<DepositoSeguridad>>(null);
 
     const cargarDepositos = async () => {
         setLoading(true);
@@ -31,98 +31,32 @@ export default function HistorialDepositosSeguridad() {
         cargarDepositos();
     }, []);
 
-    const columns = [
-        {
-            title: "ID",
-            dataIndex: "id",
-            key: "id",
-            width: 100,
-            render: (id: string) => id.substring(0, 8) + "...",
-        },
-        {
-            title: "Vendedor",
-            dataIndex: "vendedor",
-            key: "vendedor",
-        },
-        {
-            title: "Origen",
-            dataIndex: "sub_caja_origen",
-            key: "origen",
-            render: (origen: string) => (
-                <div>
-                    <div className="font-medium">{origen}</div>
-                    <div className="text-xs text-gray-500">Efectivo</div>
-                </div>
-            ),
-        },
-        {
-            title: "Destino",
-            key: "destino",
-            render: (_: any, record: DepositoSeguridad) => (
-                <div>
-                    <div className="font-medium">{record.sub_caja_destino}</div>
-                    <div className="text-xs text-gray-500">
-                        {record.metodo_destino} - {record.banco_destino}
-                    </div>
-                    {record.titular && (
-                        <div className="text-xs text-gray-400">
-                            Titular: {record.titular}
-                        </div>
-                    )}
-                </div>
-            ),
-        },
-        {
-            title: "Monto",
-            dataIndex: "monto",
-            key: "monto",
-            render: (monto: number) => (
-                <span className="font-semibold text-green-600">
-                    {formatCurrency(monto)}
-                </span>
-            ),
-        },
-        {
-            title: "Motivo",
-            dataIndex: "motivo",
-            key: "motivo",
-            render: (motivo: string) => (
-                <span className="text-sm">{motivo || "-"}</span>
-            ),
-        },
-        {
-            title: "Tipo",
-            dataIndex: "tipo",
-            key: "tipo",
-            render: () => <Tag color="blue">DEPÓSITO SEGURIDAD</Tag>,
-        },
-        {
-            title: "Fecha",
-            dataIndex: "fecha",
-            key: "fecha",
-            render: (fecha: string) => new Date(fecha).toLocaleString("es-PE"),
-        },
-    ];
+    const columns = useColumnsDepositosSeguridad();
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <p className="text-gray-600">
-                    Historial de depósitos de efectivo a banco/billetera para seguridad
-                </p>
+        <div className='w-full'>
+            <div className='flex justify-between items-center mb-4'>
+                <div>
+                    <div className='text-lg font-semibold text-slate-700'>
+                        Depósitos de Seguridad
+                    </div>
+                    <p className='text-sm text-slate-600 mt-1'>
+                        Historial de depósitos de efectivo a banco/billetera para seguridad
+                    </p>
+                </div>
             </div>
 
-            <Table
-                columns={columns}
-                dataSource={depositos}
-                loading={loading}
-                rowKey="id"
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (total) => `Total: ${total} depósitos`,
-                }}
-            />
+            <div className='h-[500px] w-full'>
+                <TableBase<DepositoSeguridad>
+                    ref={gridRef}
+                    rowData={depositos}
+                    columnDefs={columns}
+                    loading={loading}
+                    rowSelection={false}
+                    withNumberColumn={true}
+                    headerColor='var(--color-amber-600)'
+                />
+            </div>
         </div>
     );
 }
