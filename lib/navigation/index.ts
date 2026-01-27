@@ -29,10 +29,11 @@ export interface NavItem {
 
 export interface DropdownItem {
   key: string
-  label: string
+  label?: string
   route?: string | null
   action?: string
   permission?: string | null
+  type?: 'divider'
 }
 
 export interface BottomNavItem {

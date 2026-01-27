@@ -16,8 +16,6 @@ import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
 import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
 import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
-import useItemsFinanzas from "../../_hooks/use-items-finanzas";
-import useItemsVentas from "../../_hooks/use-items-ventas";
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
@@ -65,17 +63,13 @@ export default function TopNav({ className }: { className?: string }) {
     openAperturaCaja: () => setOpenAperturaCaja(true),
     openCrearIngreso: () => setOpenCrearIngreso(true),
     openCrearGasto: () => setOpenCrearGasto(true),
+    openMoverDinero: () => setOpenMoverDinero(true),
+    openPedirPrestamo: () => setOpenPedirPrestamo(true),
   };
 
-  // Hooks personalizados para items de dropdowns
-  const { itemsFinanzas } = useItemsFinanzas({
-    setOpenAperturaCaja,
-    setOpenCrearIngreso,
-    setOpenCrearGasto,
-    setOpenMoverDinero,
-    setOpenPedirPrestamo,
-  });
-  const { itemsVentas } = useItemsVentas();
+  // Hooks personalizados para items de dropdowns (ya no se usan, ahora viene del JSON)
+  // const { itemsFinanzas } = useItemsFinanzas({...});
+  // const { itemsVentas } = useItemsVentas();
 
   return (
     <BaseNav className={className} bgColorClass={nav.topNav.bgColor}>
@@ -83,15 +77,22 @@ export default function TopNav({ className }: { className?: string }) {
         const Icon = iconMap[item.icon];
 
         if (item.type === "dropdown" && item.items) {
-          const menuItems = item.items.map((sub) => ({
-            key: sub.key,
-            label: sub.label,
-            onClick: sub.route
-              ? () => router.push(sub.route as string)
-              : sub.action && actionHandlers[sub.action]
-              ? actionHandlers[sub.action]
-              : undefined,
-          }));
+          const menuItems = item.items.map((sub) => {
+            // Manejar divider
+            if (sub.key === 'divider' || (sub as any).type === 'divider') {
+              return { type: 'divider' as const };
+            }
+            
+            return {
+              key: sub.key,
+              label: sub.label,
+              onClick: sub.route
+                ? () => router.push(sub.route as string)
+                : sub.action && actionHandlers[sub.action]
+                ? actionHandlers[sub.action]
+                : undefined,
+            };
+          });
 
           return (
             <DropdownBase key={item.id} menu={{ items: menuItems }}>

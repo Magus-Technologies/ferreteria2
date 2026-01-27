@@ -42,6 +42,24 @@
             "label": "Crear Guía",
             "route": "/ui/facturacion-electronica/mis-guias/crear-guia",
             "permission": "facturacion-electronica.crear-guia.index"
+          },
+          {
+            "key": "nota-credito",
+            "label": "Crear Nota de Crédito",
+            "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-credito",
+            "permission": null
+          },
+          {
+            "key": "nota-debito",
+            "label": "Crear Nota de Débito",
+            "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-debito",
+            "permission": null
+          },
+          {
+            "key": "envios-sunat",
+            "label": "Envíos a Sunat",
+            "route": null,
+            "permission": null
           }
         ]
       },
@@ -68,10 +86,50 @@
             "permission": "caja.create"
           },
           {
+            "key": "cerrar-caja",
+            "label": "Cerrar Caja",
+            "route": "/ui/facturacion-electronica/cierre-caja",
+            "permission": null
+          },
+          {
+            "key": "crear-ingreso",
+            "label": "Crear Ingreso",
+            "action": "openCrearIngreso",
+            "permission": null
+          },
+          {
             "key": "crear-gasto",
             "label": "Crear Gasto",
             "action": "openCrearGasto",
             "permission": "egreso-dinero.create"
+          },
+          {
+            "key": "mover-dinero",
+            "label": "Mover Dinero entre Sub-Cajas",
+            "action": "openMoverDinero",
+            "permission": null
+          },
+          {
+            "key": "pedir-prestamo",
+            "label": "Pedir Préstamo",
+            "action": "openPedirPrestamo",
+            "permission": null
+          },
+          {
+            "key": "divider",
+            "type": "divider"
+          },
+          {
+            "key": "gestion-cajas",
+            "label": "Gestión de Cajas",
+            "route": "/ui/facturacion-electronica/gestion-cajas",
+            "permission": null
+          },
+          {
+            "key": "metodos-pago",
+            "label": "Métodos de Pago",
+            "route": "/ui/facturacion-electronica/metodos-pago",
+            "permission": null
           }
         ]
       },
