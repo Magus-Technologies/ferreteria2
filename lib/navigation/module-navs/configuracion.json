@@ -1,0 +1,111 @@
+{
+  "moduleId": "configuracion",
+  "topNav": {
+    "bgColor": "bg-blue-600",
+    "activeColor": "text-blue-600",
+    "items": [
+      {
+        "id": "inicio",
+        "type": "button",
+        "label": "Inicio",
+        "icon": "MdSpaceDashboard",
+        "route": "/ui",
+        "permission": null
+      },
+      {
+        "id": "usuarios",
+        "type": "button",
+        "label": "Usuarios",
+        "icon": "FaUsers",
+        "route": "/ui/configuracion/usuarios",
+        "permission": "configuracion.usuarios.index"
+      },
+      {
+        "id": "roles",
+        "type": "button",
+        "label": "Roles",
+        "icon": "FaShieldAlt",
+        "route": "/ui/configuracion/roles",
+        "permission": "configuracion.roles.index"
+      },
+      {
+        "id": "permisos",
+        "type": "button",
+        "label": "Permisos",
+        "icon": "FaKey",
+        "route": "/ui/configuracion/permisos",
+        "permission": "configuracion.permisos.index"
+      },
+      {
+        "id": "mi-empresa",
+        "type": "button",
+        "label": "Mi Empresa",
+        "icon": "FaBuilding",
+        "route": "/ui/configuracion/mi-empresa",
+        "permission": "configuracion.empresa.index"
+      }
+    ]
+  },
+  "bottomNav": {
+    "bgColor": "bg-blue-600",
+    "activeColor": "text-blue-600",
+    "items": [
+      {
+        "id": "usuarios",
+        "label": "Usuarios",
+        "icon": "FaUsers",
+        "route": "/ui/configuracion/usuarios",
+        "permission": "configuracion.usuarios.index"
+      },
+      {
+        "id": "roles",
+        "label": "Roles",
+        "icon": "FaShieldAlt",
+        "route": "/ui/configuracion/roles",
+        "permission": "configuracion.roles.index"
+      },
+      {
+        "id": "permisos",
+        "label": "Permisos",
+        "icon": "FaKey",
+        "route": "/ui/configuracion/permisos",
+        "permission": "configuracion.permisos.index"
+      },
+      {
+        "id": "mi-empresa",
+        "label": "Mi Empresa",
+        "icon": "FaBuilding",
+        "route": "/ui/configuracion/mi-empresa",
+        "permission": "configuracion.empresa.index"
+      },
+      {
+        "id": "almacenes",
+        "label": "Almacenes",
+        "icon": "FaWarehouse",
+        "route": null,
+        "permission": "configuracion.almacenes.index"
+      },
+      {
+        "id": "cajas",
+        "label": "Cajas",
+        "icon": "FaCashRegister",
+        "route": null,
+        "permission": "configuracion.cajas.index"
+      },
+      {
+        "id": "series",
+        "label": "Series",
+        "icon": "FaFileInvoice",
+        "route": null,
+        "permission": "configuracion.series.index"
+      },
+      {
+        "id": "impresion",
+        "label": "Impresión",
+        "icon": "FaPrint",
+        "route": null,
+        "permission": "configuracion.impresion.index"
+      }
+    ]
+  }
+}

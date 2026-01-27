@@ -18,6 +18,7 @@ import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
 import InputUploadMasivo from "../inputs/input-upload-masivo";
 import { useStoreProductoSeleccionado } from "../../_store/store-producto-seleccionado";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
+import { useStoreQuickFilter } from "../../_store/store-quick-filter";
 import { App } from "antd";
 import { useProductosInfiniteScroll } from "../../_hooks/useProductosInfiniteScroll";
 import ActionButtonsWrapper from "../others/action-buttons-wrapper";
@@ -44,6 +45,7 @@ function TableProductosOptimized() {
   );
 
   const filtros = useStoreFiltrosProductos((state) => state.filtros);
+  const quickFilter = useStoreQuickFilter((state) => state.quickFilter);
   const { can } = usePermissionHook();
   const columns = useColumnsProductos({ almacen_id });
 
@@ -98,21 +100,41 @@ function TableProductosOptimized() {
     hasSelectedFirstProduct.current = false;
   }, [filtros]);
 
-  // Mostrar información de carga en consola
+  // Aplicar Quick Filter cuando cambia el texto de búsqueda
   useEffect(() => {
-    if (loaded > 0) {
-      console.log(
-        `📊 Productos cargados: ${loaded}/${total} (${Math.round((loaded / total) * 100)}%)`,
-      );
+    if (tableRef.current?.api) {
+      tableRef.current.api.setGridOption("quickFilterText", quickFilter || "");
+
+      // Esperar un momento para que se aplique el filtro y luego seleccionar la primera fila visible
+      setTimeout(() => {
+        if (tableRef.current?.api) {
+          const firstNode = tableRef.current.api.getDisplayedRowAtIndex(0);
+          if (firstNode) {
+            // Deseleccionar todas las filas primero
+            tableRef.current.api.deselectAll();
+            // Seleccionar la primera fila visible
+            firstNode.setSelected(true);
+            setProductoSeleccionado(firstNode.data);
+            // Ocultar overlay si hay resultados
+            tableRef.current.api.hideOverlay();
+          } else {
+            // Mostrar overlay cuando no hay resultados del filtro
+            if (quickFilter) {
+              tableRef.current.api.showNoRowsOverlay();
+            } else {
+              tableRef.current.api.hideOverlay();
+            }
+          }
+        }
+      }, 100);
     }
-  }, [loaded, total]);
+  }, [quickFilter, setProductoSeleccionado]);
 
   // Cargar automáticamente todas las páginas en segundo plano
   useEffect(() => {
     if (!loading && hasMore && !loadingMore) {
       // Esperar 500ms antes de cargar la siguiente página
       const timer = setTimeout(() => {
-        console.log("🔄 Cargando siguiente página automáticamente...");
         fetchNextPage();
       }, 500);
 
@@ -141,6 +163,8 @@ function TableProductosOptimized() {
         // CRÍTICO: getRowId permite que AG Grid mantenga el estado de filtros
         // cuando se agregan más datos (infinite scroll)
         getRowId={getRowId}
+        cacheQuickFilter={true} // Habilita caché para mejor rendimiento de Quick Filter
+        quickFilterText={quickFilter} // Aplicar Quick Filter directamente como prop
         extraTitle={
           can(permissions.PRODUCTO_IMPORT) && (
             <ActionButtonsWrapper>

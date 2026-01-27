@@ -1,0 +1,64 @@
+{
+  "modules": [
+    {
+      "id": "gestion-comercial-e-inventario",
+      "name": "Gestión Comercial e Inventario",
+      "icon": "FaWarehouse",
+      "color": "success",
+      "bgColor": "bg-emerald-600",
+      "activeColor": "text-emerald-600",
+      "route": "/ui/gestion-comercial-e-inventario",
+      "permission": "gestion-comercial-e-inventario.index",
+      "order": 1,
+      "enabled": true
+    },
+    {
+      "id": "facturacion-electronica",
+      "name": "Facturación Electrónica",
+      "icon": "IoDocumentText",
+      "color": "warning",
+      "bgColor": "bg-amber-600",
+      "activeColor": "text-amber-600",
+      "route": "/ui/facturacion-electronica",
+      "permission": "facturacion-electronica.index",
+      "order": 2,
+      "enabled": true
+    },
+    {
+      "id": "gestion-contable-y-financiera",
+      "name": "Gestión Contable y Financiera",
+      "icon": "FaCalculator",
+      "color": "danger",
+      "bgColor": "bg-red-600",
+      "activeColor": "text-red-600",
+      "route": "/ui/gestion-contable-y-financiera",
+      "permission": "gestion-contable-y-financiera.index",
+      "order": 3,
+      "enabled": true
+    },
+    {
+      "id": "reportes",
+      "name": "Reportes",
+      "icon": "BiSolidReport",
+      "color": "info",
+      "bgColor": "bg-blue-600",
+      "activeColor": "text-blue-600",
+      "route": "/ui/reportes",
+      "permission": "reportes.index",
+      "order": 4,
+      "enabled": true
+    },
+    {
+      "id": "configuracion",
+      "name": "Configuración",
+      "icon": "MdSettings",
+      "color": "info",
+      "bgColor": "bg-gray-600",
+      "activeColor": "text-gray-600",
+      "route": "/ui/configuracion",
+      "permission": "configuracion.index",
+      "order": 5,
+      "enabled": true
+    }
+  ]
+}

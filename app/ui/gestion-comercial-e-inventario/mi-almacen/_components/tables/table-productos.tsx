@@ -17,6 +17,7 @@ import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
 import InputUploadMasivo from "../inputs/input-upload-masivo";
 import { useStoreProductoSeleccionado } from "../../_store/store-producto-seleccionado";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
+import { useStoreQuickFilter } from "../../_store/store-quick-filter";
 import { App } from "antd";
 import PaginationControls from "~/app/_components/tables/pagination-controls";
 import { useProductosByAlmacen } from "../../_hooks/useProductosByAlmacen";
@@ -31,11 +32,11 @@ function TableProductos() {
   const [page, setPage] = useState(1);
 
   const setProductoSeleccionado = useStoreProductoSeleccionado(
-    (store) => store.setProducto
+    (store) => store.setProducto,
   );
 
   const filtros = useStoreFiltrosProductos((state) => state.filtros);
-
+  const quickFilter = useStoreQuickFilter((state) => state.quickFilter);
   const { can } = usePermissionHook();
 
   const columns = useColumnsProductos({ almacen_id });
@@ -52,10 +53,17 @@ function TableProductos() {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
       page,
-      per_page: 10000, // Mostrar todos los productos sin paginación
+      per_page: 10000, // Cargar todos los productos (filtrado local)
     },
     enabled: !!(filtros?.almacen_id || almacen_id),
   });
+
+  // Aplicar Quick Filter cuando cambia el texto de búsqueda
+  useEffect(() => {
+    if (tableRef.current?.api) {
+      tableRef.current.api.setGridOption("quickFilterText", quickFilter || "");
+    }
+  }, [quickFilter]);
 
   // Resetear página a 1 cuando cambien los filtros
   useEffect(() => {
@@ -97,6 +105,8 @@ function TableProductos() {
       loading={loading}
       columnDefs={columns}
       rowData={response}
+      cacheQuickFilter={true} // Habilita caché para mejor rendimiento de Quick Filter
+      quickFilterText={quickFilter} // Aplicar Quick Filter directamente como prop
       extraTitle={
         can(permissions.PRODUCTO_IMPORT) && (
           <ActionButtonsWrapper>
@@ -114,32 +124,43 @@ function TableProductos() {
 
                 if (data.some((item) => !item["Ubicación en Almacén"]))
                   throw new Error(
-                    "Todos los productos deben tener una ubicación obligatoriamente"
+                    "Todos los productos deben tener una ubicación obligatoriamente",
                   );
 
                 const ubicacionesNames = new Set(
-                  data.map((item) => item["Ubicación en Almacén"] as string)
+                  data.map((item) => item["Ubicación en Almacén"] as string),
                 );
 
-                console.log('📍 Ubicaciones a importar:', Array.from(ubicacionesNames));
+                console.log(
+                  "📍 Ubicaciones a importar:",
+                  Array.from(ubicacionesNames),
+                );
 
                 try {
                   const ubicaciones = await ubicacionesApi.importMany(
                     Array.from(ubicacionesNames).map((name) => ({
                       name,
                       almacen_id,
-                    }))
+                    })),
                   );
 
-                  console.log('✅ Respuesta de importarUbicaciones:', ubicaciones);
+                  console.log(
+                    "✅ Respuesta de importarUbicaciones:",
+                    ubicaciones,
+                  );
 
                   // Verificar si hay error en la respuesta
-                  if ('error' in ubicaciones && ubicaciones.error) {
-                    throw new Error(ubicaciones.error.message || "Error al importar ubicaciones");
+                  if ("error" in ubicaciones && ubicaciones.error) {
+                    throw new Error(
+                      ubicaciones.error.message ||
+                        "Error al importar ubicaciones",
+                    );
                   }
 
                   if (!ubicaciones?.data || ubicaciones.data.length === 0) {
-                    throw new Error("No se pudieron crear/encontrar las ubicaciones");
+                    throw new Error(
+                      "No se pudieron crear/encontrar las ubicaciones",
+                    );
                   }
 
                   const newData = data.map((item) => {
@@ -149,13 +170,15 @@ function TableProductos() {
                       "Ubicación en Almacén": ubicacion,
                       ...rest
                     } = item;
-                    
+
                     const ubicacionEncontrada = ubicaciones.data!.find(
-                      (u) => u.name === ubicacion
+                      (u) => u.name === ubicacion,
                     );
 
                     if (!ubicacionEncontrada) {
-                      throw new Error(`No se encontró la ubicación: ${ubicacion}`);
+                      throw new Error(
+                        `No se encontró la ubicación: ${ubicacion}`,
+                      );
                     }
 
                     return {
@@ -173,12 +196,14 @@ function TableProductos() {
 
                   return newData;
                 } catch (error) {
-                  console.error('❌ Error en preProcessData:', error);
+                  console.error("❌ Error en preProcessData:", error);
                   throw error;
                 }
               }}
               propsUseServerMutation={{
-                action: async (data: { data: Array<Record<string, unknown>> }) => {
+                action: async (data: {
+                  data: Array<Record<string, unknown>>;
+                }) => {
                   const res = await productosApiV2.import(data);
                   if (res.error) {
                     throw new Error(res.error.message);
@@ -189,7 +214,7 @@ function TableProductos() {
                 onSuccess: (res) => {
                   // Invalidar queries de productos por almacén para refrescar tabla
                   queryClient.invalidateQueries({
-                    queryKey: ['productos-by-almacen']
+                    queryKey: ["productos-by-almacen"],
                   });
 
                   if (res.data?.length)
@@ -205,7 +230,7 @@ function TableProductos() {
                             <div key={index} className="pr-4">
                               <div className="grid grid-cols-3 gap-x-4 pl-8">
                                 <span className="text-red-500 text-nowrap">
-                                  {String(item.name || '')}
+                                  {String(item.name || "")}
                                 </span>
                               </div>
                             </div>

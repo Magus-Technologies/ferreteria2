@@ -1,5 +1,7 @@
 "use client";
 
+import { getBottomNavItems, getModuleNav } from "~/lib/navigation";
+import usePermissionHook from "~/hooks/use-permission";
 import { FaCartShopping } from "react-icons/fa6";
 import { MdPointOfSale } from "react-icons/md";
 import BaseNav from "~/app/_components/nav/base-nav";
@@ -9,70 +11,46 @@ import { GiReceiveMoney } from "react-icons/gi";
 import { IoMdContact } from "react-icons/io";
 import { HistoryOutlined, SwapOutlined } from "@ant-design/icons";
 
+// Mapa de iconos
+const iconMap: Record<string, any> = {
+  FaCartShopping,
+  MdPointOfSale,
+  IoDocumentAttach,
+  GiReceiveMoney,
+  IoDocuments,
+  IoMdContact,
+  HistoryOutlined,
+  SwapOutlined,
+};
+
 export default function BottomNav({ className }: { className?: string }) {
+  const { can } = usePermissionHook();
+  const moduleId = "facturacion-electronica";
+  const nav = getModuleNav(moduleId);
+  const items = getBottomNavItems(moduleId, can);
+
+  if (!nav) return null;
+
   return (
     <BaseNav
       className={className}
       withDropdownUser={false}
-      bgColorClass="bg-amber-600"
+      bgColorClass={nav.bottomNav.bgColor}
     >
-      <ButtonNav
-        colorActive="text-amber-600"
-        path="/ui/facturacion-electronica/mis-ventas"
-      >
-        <FaCartShopping />
-        Mis Ventas
-      </ButtonNav>
+      {items.map((item) => {
+        const Icon = iconMap[item.icon];
 
-      <ButtonNav
-        colorActive="text-amber-600"
-        path="/ui/facturacion-electronica/mis-cotizaciones"
-      >
-        <MdPointOfSale />
-        Mis Cotizaciones
-      </ButtonNav>
-
-      <ButtonNav
-        colorActive="text-amber-600"
-        path="/ui/facturacion-electronica/mis-guias"
-      >
-        <IoDocumentAttach />
-        Mis Guias
-      </ButtonNav>
-
-      <ButtonNav
-        colorActive="text-amber-600"
-        path="/ui/facturacion-electronica/mis-prestamos"
-      >
-        <GiReceiveMoney />
-        Mis Préstamos
-      </ButtonNav>
-
-      <ButtonNav colorActive="text-amber-600">
-        <IoDocuments />
-        Mis Notas
-      </ButtonNav>
-
-      <ButtonNav colorActive="text-amber-600">
-        <IoMdContact />
-        Mis Contactos
-      </ButtonNav>
-
-      <ButtonNav
-        colorActive="text-amber-600"
-        path="/ui/facturacion-electronica/mis-aperturas-cierres"
-      >
-        <HistoryOutlined className="text-lg" />
-        Mis Aperturas y Cierres de Caja
-      </ButtonNav>
-
-      <ButtonNav
-        colorActive="text-amber-600"
-        path="/ui/facturacion-electronica/movimientos-caja"
-      >
-        <SwapOutlined className="text-lg" />
-        Movimientos de Caja
-      </ButtonNav>
+        return (
+          <ButtonNav
+            key={item.id}
+            colorActive={nav.bottomNav.activeColor}
+            path={item.route || undefined}
+          >
+            {Icon && <Icon className={item.icon.includes("Outlined") ? "text-lg" : ""} />}
+            {item.label}
+          </ButtonNav>
+        );
+      })}
     </BaseNav>
   );
 }

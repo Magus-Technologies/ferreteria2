@@ -446,15 +446,13 @@ export default function TableBase<T>({
           return orderA - orderB;
         });
 
-        // Aplicar también la visibilidad desde el estado guardado
+        // Aplicar el ancho desde el estado guardado (NO la visibilidad, eso lo maneja SelectColumns)
         sortedColumns.forEach((col) => {
           const colId = (col as any).colId || (col as any).field;
           const savedState = columnStateForRender.find(
             (s: any) => s.colId === colId,
           );
-          if (savedState && savedState.hide !== undefined) {
-            (col as any).hide = savedState.hide;
-          }
+          // NO aplicar hide aquí porque SelectColumns maneja la visibilidad
           if (savedState && savedState.width !== undefined) {
             (col as any).width = savedState.width;
           }
@@ -613,6 +611,13 @@ export default function TableBase<T>({
             headerBackgroundColor: autoHeaderColor,
           })}
           columnTypes={columnTypes}
+          defaultColDef={{
+            filter: true, // Habilita filtros para todas las columnas por defecto
+            floatingFilter: false, // Desactiva filtros flotantes (opcionales)
+            sortable: true, // Habilita ordenamiento
+            resizable: true, // Habilita redimensionamiento
+            ...props.defaultColDef, // Permite sobrescribir desde props
+          }}
           localeText={AG_GRID_LOCALE_ES}
           enableFilterHandlers={true}
           className={`shadow-lg rounded-xl overflow-hidden ${className}`}

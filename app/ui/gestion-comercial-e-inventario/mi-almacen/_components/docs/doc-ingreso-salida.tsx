@@ -23,8 +23,8 @@ export default function DocIngresoSalida({
   show_logo_html?: boolean;
 }) {
   const rowData =
-    data?.productos_por_almacen.flatMap((pa) =>
-      pa.unidades_derivadas.map((ud) => ({
+    data?.productos_por_almacen?.flatMap((pa) =>
+      pa.unidades_derivadas?.map((ud) => ({
         ...ud,
         producto_almacen_ingreso_salida: {
           ...pa,
@@ -37,9 +37,9 @@ export default function DocIngresoSalida({
       })),
     ) ?? [];
 
-  // Convertir tipo de documento de Laravel a Prisma para compatibilidad con TiposDocumentos
+  // Convertir tipo de documento de Laravel (usa códigos: 'in', 'sa') a Prisma
   const tipoDocumentoPrisma =
-    data?.tipo_documento === "Ingreso"
+    data?.tipo_documento === "Ingreso" || data?.tipo_documento === "in"
       ? TipoDocumento.Ingreso
       : TipoDocumento.Salida;
   const tipo_documento = data?.tipo_documento
@@ -88,7 +88,7 @@ export default function DocIngresoSalida({
                 Almacén:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.almacen.name}
+                {data?.almacen?.name ?? "-"}
               </Text>
             </View>
             <View style={styles_docs.subSectionInformacionGeneral}>
@@ -96,7 +96,7 @@ export default function DocIngresoSalida({
                 Usuario:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.user.name}
+                {data?.user?.name ?? "-"}
               </Text>
             </View>
           </View>
@@ -114,7 +114,7 @@ export default function DocIngresoSalida({
                 Tipo de {tipo_documento}:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.tipo_ingreso.name}
+                {data?.tipo_ingreso?.name ?? "-"}
               </Text>
             </View>
             <View style={styles_docs.subSectionInformacionGeneral}>

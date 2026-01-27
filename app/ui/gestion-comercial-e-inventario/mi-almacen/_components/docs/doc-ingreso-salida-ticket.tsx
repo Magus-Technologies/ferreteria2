@@ -25,6 +25,11 @@ export default function DocIngresoSalidaTicket({
     { fontFamily?: string; fontSize?: number; fontWeight?: string }
   >;
 }) {
+  console.log("📄 DocIngresoSalidaTicket recibió data:", data);
+  console.log("📄 data.almacen:", data?.almacen);
+  console.log("📄 data.user:", data?.user);
+  console.log("📄 data.tipo_ingreso:", data?.tipo_ingreso);
+  console.log("📄 data.productos_por_almacen:", data?.productos_por_almacen);
   // Función para obtener estilos de un campo
   const getEstiloCampo = (campo: string) => {
     const estilo = estilosCampos?.[campo] || {
@@ -51,8 +56,8 @@ export default function DocIngresoSalidaTicket({
   };
 
   const rowData =
-    data?.productos_por_almacen.flatMap((pa) =>
-      pa.unidades_derivadas.map((ud) => ({
+    data?.productos_por_almacen?.flatMap((pa) =>
+      pa.unidades_derivadas?.map((ud) => ({
         ...ud,
         producto_almacen_ingreso_salida: {
           ...pa,
@@ -65,9 +70,9 @@ export default function DocIngresoSalidaTicket({
       })),
     ) ?? [];
 
-  // Convertir tipo de documento de Laravel a Prisma para compatibilidad con TiposDocumentos
+  // Convertir tipo de documento de Laravel (usa códigos: 'in', 'sa') a Prisma
   const tipoDocumentoPrisma =
-    data?.tipo_documento === "Ingreso"
+    data?.tipo_documento === "Ingreso" || data?.tipo_documento === "in"
       ? TipoDocumento.Ingreso
       : TipoDocumento.Salida;
   const tipo_documento = data?.tipo_documento
@@ -150,7 +155,7 @@ export default function DocIngresoSalidaTicket({
                   ...getEstiloCampo("almacen"),
                 }}
               >
-                {data?.almacen.name}
+                {data?.almacen?.name ?? "-"}
               </Text>
             </View>
             <View style={styles_ticket.subSectionInformacionGeneral}>
@@ -163,7 +168,7 @@ export default function DocIngresoSalidaTicket({
                   ...getEstiloCampo("usuario"),
                 }}
               >
-                {data?.user.name}
+                {data?.user?.name ?? "-"}
               </Text>
             </View>
           </View>
@@ -195,7 +200,7 @@ export default function DocIngresoSalidaTicket({
                   ...getEstiloCampo("tipo_ingreso"),
                 }}
               >
-                {data?.tipo_ingreso.name}
+                {data?.tipo_ingreso?.name ?? "-"}
               </Text>
             </View>
             <View style={styles_ticket.subSectionInformacionGeneral}>

@@ -37,6 +37,9 @@ export default function useCreateIngresoSalida({
 
       const res = await ingresosSalidasApi.create(data);
 
+      console.log("🔍 Respuesta del backend:", res);
+      console.log("🔍 Datos recibidos:", res.data);
+
       if (res.error) {
         notification.error({
           message: "Error",
@@ -49,13 +52,25 @@ export default function useCreateIngresoSalida({
         message: `${tipo_documento === TipoDocumento.Ingreso ? "Ingreso" : "Salida"} creado exitosamente`,
       });
 
-      // El API ya devuelve el tipo correcto IngresoSalidaWithRelations
-      if (!res.data) {
+      // El backend devuelve { data: { data: {...} } } debido a doble wrapping
+      // Extraer los datos correctos
+      const ingresoSalidaData = (res.data as any)?.data || res.data;
+
+      if (!ingresoSalidaData) {
         throw new Error("No se recibieron datos del servidor");
       }
 
-      // Llamar onSuccess primero
-      onSuccess?.(res.data);
+      console.log("✅ Datos EXTRAÍDOS correctamente:", ingresoSalidaData);
+      console.log("✅ Tiene almacen?", ingresoSalidaData.almacen);
+      console.log("✅ Tiene user?", ingresoSalidaData.user);
+      console.log("✅ Tiene tipo_ingreso?", ingresoSalidaData.tipo_ingreso);
+      console.log(
+        "✅ Tiene productos_por_almacen?",
+        ingresoSalidaData.productos_por_almacen,
+      );
+
+      // Llamar onSuccess con los datos correctos
+      onSuccess?.(ingresoSalidaData);
 
       // Invalidar las queries de productos para que se recarguen con los datos actualizados
       // En lugar de intentar actualizar manualmente el caché, es más seguro invalidar

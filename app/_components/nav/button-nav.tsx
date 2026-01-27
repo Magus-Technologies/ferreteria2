@@ -10,6 +10,7 @@ interface ButtonNavProps {
   className?: string
   path?: string
   colorActive: string
+  onClick?: () => void
 }
 
 function ButtonNavBase({
@@ -18,12 +19,14 @@ function ButtonNavBase({
   className = '',
   path,
   colorActive,
+  onClick,
 }: ButtonNavProps) {
   const pathname = usePathname()
   const isActive = pathname === path
 
   return (
     <div
+      onClick={onClick}
       className={`cursor-pointer transition-all flex items-center group w-full
                   py-2 lg:py-0.5 xl:py-1
                   text-sm lg:text-sm xl:text-base
@@ -50,6 +53,7 @@ export default function ButtonNav({
   className,
   path,
   colorActive,
+  onClick,
 }: ButtonNavProps) {
   return path ? (
     <Link href={path}>
@@ -58,6 +62,7 @@ export default function ButtonNav({
         className={className}
         path={path}
         colorActive={colorActive}
+        onClick={onClick}
       >
         {children}
       </ButtonNavBase>
@@ -67,6 +72,7 @@ export default function ButtonNav({
       withIcon={withIcon}
       className={className}
       colorActive={colorActive}
+      onClick={onClick}
     >
       {children}
     </ButtonNavBase>
