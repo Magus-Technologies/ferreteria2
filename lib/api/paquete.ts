@@ -1,11 +1,11 @@
 /**
  * API Client para Paquetes (Laravel Backend)
- * 
+ *
  * Un paquete es un conjunto predefinido de productos que se pueden
  * agregar rápidamente a una venta.
  */
 
-import { apiRequest, type ApiResponse } from '../api';
+import { apiRequest, type ApiResponse } from "../api";
 
 // ============= INTERFACES =============
 
@@ -30,6 +30,14 @@ export interface PaqueteProducto {
       id: number;
       name: string;
     } | null;
+    // Unidades derivadas con precios del producto
+    unidades_derivadas_con_precios?: Array<{
+      unidad_derivada: {
+        id: number;
+        name: string;
+      };
+      precio_publico?: number | null;
+    }>;
   };
   unidad_derivada?: {
     id: number;
@@ -125,10 +133,10 @@ export interface DeletePaqueteResponse {
 export const paqueteApi = {
   /**
    * Listar paquetes con filtros y paginación
-   * 
+   *
    * @param filters - Filtros opcionales (búsqueda, activo, paginación)
    * @returns Lista de paquetes con paginación
-   * 
+   *
    * @example
    * ```typescript
    * const response = await paqueteApi.list({ search: 'kit', activo: true });
@@ -138,29 +146,31 @@ export const paqueteApi = {
    * }
    * ```
    */
-  async list(filters?: PaqueteFilters): Promise<ApiResponse<PaquetesListResponse>> {
+  async list(
+    filters?: PaqueteFilters,
+  ): Promise<ApiResponse<PaquetesListResponse>> {
     const params = new URLSearchParams();
 
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value !== undefined && value !== null && value !== "") {
           params.append(key, String(value));
         }
       });
     }
 
     const queryString = params.toString();
-    const url = queryString ? `/paquetes?${queryString}` : '/paquetes';
+    const url = queryString ? `/paquetes?${queryString}` : "/paquetes";
 
     return apiRequest<PaquetesListResponse>(url);
   },
 
   /**
    * Obtener un paquete por ID con todos sus productos
-   * 
+   *
    * @param id - ID del paquete
    * @returns Paquete con productos y relaciones cargadas
-   * 
+   *
    * @example
    * ```typescript
    * const response = await paqueteApi.getById(1);
@@ -176,10 +186,10 @@ export const paqueteApi = {
 
   /**
    * Crear un nuevo paquete con sus productos
-   * 
+   *
    * @param data - Datos del paquete a crear
    * @returns Paquete creado con productos
-   * 
+   *
    * @example
    * ```typescript
    * const response = await paqueteApi.create({
@@ -197,25 +207,27 @@ export const paqueteApi = {
    * });
    * ```
    */
-  async create(data: CreatePaqueteRequest): Promise<ApiResponse<PaqueteResponse>> {
-    return apiRequest<PaqueteResponse>('/paquetes', {
-      method: 'POST',
+  async create(
+    data: CreatePaqueteRequest,
+  ): Promise<ApiResponse<PaqueteResponse>> {
+    return apiRequest<PaqueteResponse>("/paquetes", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   },
 
   /**
    * Actualizar un paquete existente
-   * 
+   *
    * @param id - ID del paquete a actualizar
    * @param data - Datos a actualizar (parciales)
    * @returns Paquete actualizado
-   * 
+   *
    * @example
    * ```typescript
    * // Actualizar solo el nombre
    * await paqueteApi.update(1, { nombre: 'Nuevo nombre' });
-   * 
+   *
    * // Actualizar productos (reemplaza todos)
    * await paqueteApi.update(1, {
    *   productos: [
@@ -224,21 +236,24 @@ export const paqueteApi = {
    * });
    * ```
    */
-  async update(id: number, data: UpdatePaqueteRequest): Promise<ApiResponse<PaqueteResponse>> {
+  async update(
+    id: number,
+    data: UpdatePaqueteRequest,
+  ): Promise<ApiResponse<PaqueteResponse>> {
     return apiRequest<PaqueteResponse>(`/paquetes/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
   },
 
   /**
    * Eliminar un paquete
-   * 
+   *
    * Los productos del paquete se eliminan automáticamente (CASCADE)
-   * 
+   *
    * @param id - ID del paquete a eliminar
    * @returns Mensaje de confirmación
-   * 
+   *
    * @example
    * ```typescript
    * const response = await paqueteApi.delete(1);
@@ -249,8 +264,29 @@ export const paqueteApi = {
    */
   async delete(id: number): Promise<ApiResponse<DeletePaqueteResponse>> {
     return apiRequest<DeletePaqueteResponse>(`/paquetes/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
-};
 
+  /**
+   * Buscar paquetes que contengan un producto específico
+   *
+   * @param productoId - ID del producto a buscar
+   * @returns Lista de paquetes que contienen el producto
+   *
+   * @example
+   * ```typescript
+   * const response = await paqueteApi.getByProducto(123);
+   * if (response.data) {
+   *   console.log(`El producto está en ${response.data.data.length} paquetes`);
+   * }
+   * ```
+   */
+  async getByProducto(
+    productoId: number,
+  ): Promise<ApiResponse<PaquetesListResponse>> {
+    return apiRequest<PaquetesListResponse>(
+      `/paquetes/by-producto/${productoId}`,
+    );
+  },
+};

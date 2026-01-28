@@ -1,7 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react'
 import { FaBoxes, FaPiggyBank, FaPlusCircle } from 'react-icons/fa'
-import { FaMoneyBillTrendUp, FaWeightHanging } from 'react-icons/fa6'
+import { FaMoneyBillTrendUp, FaWeightHanging, FaBoxOpen } from 'react-icons/fa6'
+import { useQuery } from '@tanstack/react-query'
+import { paqueteApi } from '~/lib/api/paquete'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectBase, {
   RefSelectBaseProps,
@@ -10,7 +12,7 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { App } from 'antd'
+import { App, Badge, Button, Modal } from 'antd'
 import { FormCreateVenta } from '../others/body-vender'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
@@ -48,6 +50,8 @@ export default function CardAgregarProductoVenta({
   const [values, setValues] =
     useState<ValuesCardAgregarProductoVenta>(valuesDefault)
 
+  const [openModalPaquetes, setOpenModalPaquetes] = useState(false)
+
   const setProductoAgregadoVenta = useStoreProductoAgregadoVenta(
     (store) => store.setProductoAgregado
   )
@@ -69,6 +73,20 @@ export default function CardAgregarProductoVenta({
     (store) => store.producto
   )
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
+
+  // Buscar paquetes que contengan este producto
+  const { data: paquetesData } = useQuery({
+    queryKey: ['paquetes-by-producto', productoSeleccionadoSearchStore?.id],
+    queryFn: async () => {
+      if (!productoSeleccionadoSearchStore?.id) return null
+      const response = await paqueteApi.getByProducto(productoSeleccionadoSearchStore.id)
+      return response.data?.data || []
+    },
+    enabled: !!productoSeleccionadoSearchStore?.id,
+  })
+
+  const paquetes = paquetesData || []
+  const tienePaquetes = paquetes.length > 0
 
   const producto_en_almacen =
     productoSeleccionadoSearchStore?.producto_en_almacenes?.find(
@@ -200,8 +218,8 @@ export default function CardAgregarProductoVenta({
           
           if (cantidadEnFraccion > stockDisponible) {
             return (
-              <div className='text-red-600 text-sm mt-1 font-medium'>
-                ⚠️ Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)} {unidad_derivada_seleccionada.unidad_derivada.name}
+              <div className='text-red-600 text-xs mt-1 font-medium'>
+                ⚠️ Stock: {stockEnUnidad.toFixed(2)}
               </div>
             );
           }
@@ -317,6 +335,113 @@ export default function CardAgregarProductoVenta({
           <FaPlusCircle className='min-w-fit' size={12} /> Más y Salir
         </ButtonBase>
       </div>
+
+      {/* Badge de paquetes disponibles */}
+      {tienePaquetes && (
+        <div className='mt-2'>
+          <Badge count={paquetes.length} showZero={false}>
+            <Button
+              type="dashed"
+              icon={<FaBoxOpen />}
+              onClick={() => setOpenModalPaquetes(true)}
+              className='w-full'
+            >
+              🎁 Disponible en {paquetes.length} paquete{paquetes.length > 1 ? 's' : ''}
+            </Button>
+          </Badge>
+        </div>
+      )}
+
+      {/* Modal para seleccionar paquete */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <FaBoxOpen className="text-cyan-600" />
+            <span>Paquetes disponibles</span>
+          </div>
+        }
+        open={openModalPaquetes}
+        onCancel={() => setOpenModalPaquetes(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-2">
+          <p className="text-gray-600 mb-4">
+            Este producto está incluido en los siguientes paquetes. Selecciona uno para agregar todos sus productos a la venta:
+          </p>
+          {paquetes.map((paquete) => (
+            <div
+              key={paquete.id}
+              className="border border-gray-200 rounded-lg p-3 hover:border-cyan-400 hover:shadow-md transition-all cursor-pointer"
+              onClick={() => {
+                // Agregar todos los productos del paquete a la venta
+                const agregarPaqueteCompleto = async () => {
+                  if (!paquete.productos || paquete.productos.length === 0) {
+                    notification.warning({
+                      message: 'Paquete vacío',
+                      description: 'Este paquete no tiene productos',
+                    })
+                    return
+                  }
+
+                  let productosAgregados = 0
+
+                  // Agregar cada producto del paquete
+                  for (const paqueteProducto of paquete.productos) {
+                    if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
+                      setProductoAgregadoVenta({
+                        producto_id: paqueteProducto.producto_id,
+                        producto_name: paqueteProducto.producto.name,
+                        producto_codigo: paqueteProducto.producto.cod_producto,
+                        marca_name: paqueteProducto.producto.marca?.name || '',
+                        unidad_derivada_id: paqueteProducto.unidad_derivada_id,
+                        unidad_derivada_name: paqueteProducto.unidad_derivada.name,
+                        unidad_derivada_factor: 1,
+                        cantidad: Number(paqueteProducto.cantidad),
+                        precio_venta: Number(paqueteProducto.precio_sugerido || 0),
+                        recargo: 0,
+                        descuento: 0,
+                        descuento_tipo: DescuentoTipo.MONTO,
+                        subtotal: 0,
+                        comision: 0,
+                      })
+
+                      productosAgregados++
+                      // Pequeño delay para que se procesen los productos
+                      await new Promise(resolve => setTimeout(resolve, 50))
+                    }
+                  }
+
+                  notification.success({
+                    message: 'Paquete agregado',
+                    description: `Se agregaron ${productosAgregados} producto${productosAgregados !== 1 ? 's' : ''} del paquete "${paquete.nombre}"`,
+                  })
+
+                  setOpenModalPaquetes(false)
+                  setOpen(false) // Cerrar también el modal de agregar producto
+                }
+
+                agregarPaqueteCompleto()
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-gray-800">{paquete.nombre}</h4>
+                  {paquete.descripcion && (
+                    <p className="text-sm text-gray-500">{paquete.descripcion}</p>
+                  )}
+                </div>
+                <Badge
+                  count={paquete.productos_count || paquete.productos?.length || 0}
+                  showZero
+                  style={{ backgroundColor: '#52c41a' }}
+                  title="Cantidad de productos"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
     </div>
   )
 }

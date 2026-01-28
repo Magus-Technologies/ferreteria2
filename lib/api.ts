@@ -2,7 +2,7 @@
  * Cliente API para comunicarse con el backend de Laravel
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface ApiResponse<T = unknown> {
   data?: T;
@@ -35,7 +35,7 @@ export interface LoginResponse {
     image: string | null;
     efectivo: number;
     empresa: Empresa | null;
-    all_permissions: string[];
+    all_restrictions: string[];
   };
   token: string;
 }
@@ -55,24 +55,24 @@ export interface ProductoData {
  * Obtener el token de autenticación del localStorage
  */
 export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token');
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("auth_token");
 }
 
 /**
  * Guardar el token de autenticación en localStorage
  */
 export function setAuthToken(token: string): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('auth_token', token);
+  if (typeof window === "undefined") return;
+  localStorage.setItem("auth_token", token);
 }
 
 /**
  * Eliminar el token de autenticación del localStorage
  */
 export function removeAuthToken(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem('auth_token');
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("auth_token");
 }
 
 /**
@@ -80,7 +80,7 @@ export function removeAuthToken(): void {
  */
 export async function apiRequest<T = unknown>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<ApiResponse<T>> {
   const token = getAuthToken();
 
@@ -88,12 +88,12 @@ export async function apiRequest<T = unknown>(
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
-      credentials: 'include',
+      credentials: "include",
     });
 
     const data = await response.json();
@@ -102,13 +102,13 @@ export async function apiRequest<T = unknown>(
       // Manejar errores de validación de Laravel
       if (response.status === 422) {
         // Obtener el primer mensaje de error
-        const firstError = data.errors 
-          ? Object.values(data.errors as Record<string, string[]>)[0]?.[0] 
+        const firstError = data.errors
+          ? Object.values(data.errors as Record<string, string[]>)[0]?.[0]
           : data.message;
-        
+
         return {
           error: {
-            message: firstError || data.message || 'Error de validación',
+            message: firstError || data.message || "Error de validación",
             errors: data.errors,
           },
         };
@@ -119,24 +119,28 @@ export async function apiRequest<T = unknown>(
         removeAuthToken();
         return {
           error: {
-            message: data.message || 'No autenticado',
+            message: data.message || "No autenticado",
           },
         };
       }
 
       return {
         error: {
-          message: data.error?.message || data.message || 'Error en la petición',
+          message:
+            data.error?.message || data.message || "Error en la petición",
         },
       };
     }
 
     return { data };
   } catch (error) {
-    console.error('API Request Error:', error);
+    console.error("API Request Error:", error);
     return {
       error: {
-        message: error instanceof Error ? error.message : 'Error de conexión con el servidor',
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error de conexión con el servidor",
       },
     };
   }
@@ -149,9 +153,12 @@ export const authApi = {
   /**
    * Login con email y password
    */
-  async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
-    const response = await apiRequest<LoginResponse>('/auth/login', {
-      method: 'POST',
+  async login(
+    email: string,
+    password: string,
+  ): Promise<ApiResponse<LoginResponse>> {
+    const response = await apiRequest<LoginResponse>("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
@@ -166,16 +173,16 @@ export const authApi = {
   /**
    * Obtener el usuario actual autenticado
    */
-  async getUser(): Promise<ApiResponse<LoginResponse['user']>> {
-    return apiRequest<LoginResponse['user']>('/auth/user');
+  async getUser(): Promise<ApiResponse<LoginResponse["user"]>> {
+    return apiRequest<LoginResponse["user"]>("/auth/user");
   },
 
   /**
    * Logout (cerrar sesión)
    */
   async logout(): Promise<ApiResponse> {
-    const response = await apiRequest('/auth/logout', {
-      method: 'POST',
+    const response = await apiRequest("/auth/logout", {
+      method: "POST",
     });
 
     // Eliminar el token del localStorage
@@ -188,8 +195,8 @@ export const authApi = {
    * Cerrar sesión en todos los dispositivos
    */
   async logoutAll(): Promise<ApiResponse> {
-    const response = await apiRequest('/auth/logout-all', {
-      method: 'POST',
+    const response = await apiRequest("/auth/logout-all", {
+      method: "POST",
     });
 
     // Eliminar el token del localStorage
@@ -215,15 +222,19 @@ export const productosApi = {
     page?: number;
   }): Promise<ApiResponse> {
     const queryString = params
-      ? '?' + new URLSearchParams(
-          Object.entries(params).reduce((acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = String(value);
-            }
-            return acc;
-          }, {} as Record<string, string>)
+      ? "?" +
+        new URLSearchParams(
+          Object.entries(params).reduce(
+            (acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
         ).toString()
-      : '';
+      : "";
     return apiRequest(`/productos${queryString}`);
   },
 
@@ -238,8 +249,8 @@ export const productosApi = {
    * Crear un nuevo producto
    */
   async create(data: ProductoData): Promise<ApiResponse> {
-    return apiRequest('/productos', {
-      method: 'POST',
+    return apiRequest("/productos", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   },
@@ -249,7 +260,7 @@ export const productosApi = {
    */
   async update(id: number, data: ProductoData): Promise<ApiResponse> {
     return apiRequest(`/productos/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
   },
@@ -259,16 +270,16 @@ export const productosApi = {
    */
   async delete(id: number): Promise<ApiResponse> {
     return apiRequest(`/productos/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
 
 // Exportar módulos nuevos de API
-export { almacenesApi } from './api/almacen';
-export { productosApiV2 } from './api/producto';
-export { clienteApi } from './api/cliente';
-export { paqueteApi } from './api/paquete';
+export { almacenesApi } from "./api/almacen";
+export { productosApiV2 } from "./api/producto";
+export { clienteApi } from "./api/cliente";
+export { paqueteApi } from "./api/paquete";
 
 // Exportar por defecto (mantener compatibilidad)
 const api = {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Select, Modal, FormInstance } from 'antd'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -9,6 +9,7 @@ import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
 import TitleForm from '~/components/form/title-form'
 import dynamic from 'next/dynamic'
+import useCreateVenta from '../../_hooks/use-create-venta'
 
 // Importar el mapa dinámicamente para evitar problemas de SSR
 const MapaDireccion = dynamic(
@@ -25,7 +26,6 @@ interface ModalDetallesEntregaProps {
   onEditarCliente: () => void
   direccion?: string
   clienteNombre?: string
-  loading?: boolean
 }
 
 export default function ModalDetallesEntrega({
@@ -37,13 +37,29 @@ export default function ModalDetallesEntrega({
   onEditarCliente,
   direccion,
   clienteNombre,
-  loading,
 }: ModalDetallesEntregaProps) {
   const [mostrarMapa, setMostrarMapa] = useState(false)
+  
+  // Hook para crear venta
+  const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta()
 
   const handleEditarCliente = () => {
     setOpen(false) // Cerrar el modal primero
     onEditarCliente() // Luego abrir el modal de cliente
+  }
+
+  const handleConfirmar = async () => {
+    // Obtener todos los valores del formulario de venta
+    const ventaValues = form.getFieldsValue()
+
+    // Crear la venta
+    await crearVenta(ventaValues)
+    
+    // Cerrar el modal después de crear la venta
+    setOpen(false)
+    
+    // Llamar a onConfirmar si existe
+    onConfirmar()
   }
 
   const getTipoDespachoLabel = () => {
@@ -83,13 +99,10 @@ export default function ModalDetallesEntrega({
           <ButtonBase
             color="success"
             size="md"
-            onClick={() => {
-              onConfirmar()
-              setOpen(false)
-            }}
-            disabled={loading}
+            onClick={handleConfirmar}
+            disabled={creandoVenta}
           >
-            {loading
+            {creandoVenta
               ? 'Procesando...'
               : tipoDespacho === 'EnTienda'
               ? 'Entregar Ahora'

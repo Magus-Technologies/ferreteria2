@@ -8,7 +8,6 @@ import { FaSave, FaPlus, FaTrash } from 'react-icons/fa'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { FaHashtag } from 'react-icons/fa6'
-import useCreateVenta from '../../_hooks/use-create-venta'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
 import { useQuery } from '@tanstack/react-query'
@@ -29,19 +28,18 @@ export default function ModalMetodosPagoVenta({
   form: ventaForm,
   totalCobrado,
   tipo_moneda,
+  onContinuar,
 }: {
   open: boolean
   onCancel: () => void
   form: FormInstance
   totalCobrado: number
   tipo_moneda: TipoMoneda
+  onContinuar?: () => void
 }) {
   const [modalForm] = Form.useForm()
   const [metodosPago, setMetodosPago] = useState<MetodoPago[]>([])
   const [despliegueName, setDespliegueName] = useState<string>('')
-
-  // Hook para crear venta
-  const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta()
 
   // Cargar despliegues de pago para obtener el ID de CCH/Efectivo
   const { data: desplieguesPago } = useQuery({
@@ -188,16 +186,13 @@ export default function ModalMetodosPagoVenta({
     ventaForm.setFieldValue('metodos_de_pago', metodos)
     ventaForm.setFieldValue('estado_de_venta', EstadoDeVenta.CREADO)
 
-    // Obtener todos los valores del formulario de venta
-    const ventaValues = ventaForm.getFieldsValue()
-
-    // Crear la venta
-    await crearVenta(ventaValues)
-    
-    // Cerrar el modal después de crear la venta
+    // Cerrar el modal y llamar a onContinuar para abrir el modal de detalles de entrega
     onCancel()
     modalForm.resetFields()
     setMetodosPago([])
+    
+    // Llamar a onContinuar si existe
+    onContinuar?.()
   }
 
   const handleCancelar = () => {
@@ -406,11 +401,11 @@ export default function ModalMetodosPagoVenta({
             onClick={handleGuardar}
             color='success'
             size='lg'
-            disabled={creandoVenta || metodosPago.length === 0 || saldoPendiente > 0}
+            disabled={metodosPago.length === 0 || saldoPendiente > 0}
             className='flex items-center gap-2'
           >
             <FaSave size={16} />
-            {creandoVenta ? 'Guardando...' : 'Guardar Venta'}
+            Continuar
           </ButtonBase>
         </div>
       </div>

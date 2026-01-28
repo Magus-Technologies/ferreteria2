@@ -15,6 +15,7 @@ import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e
 import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
 import ModalBuscarPaquete from "~/app/_components/modals/modal-buscar-paquete";
 import { useStorePaqueteSeleccionado } from "../../../store/store-paquete-seleccionado";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export type VentaConUnidadDerivadaNormal = Omit<
   getVentaResponseProps,
@@ -24,8 +25,12 @@ export type VentaConUnidadDerivadaNormal = Omit<
     NonNullable<getVentaResponseProps["productos_por_almacen"]>[number],
     "unidades_derivadas"
   > & {
-    unidades_derivadas: (NonNullable<getVentaResponseProps["productos_por_almacen"]>[number]["unidades_derivadas"][number] & {
-      unidad_derivada_normal: NonNullable<getVentaResponseProps["productos_por_almacen"]>[number]["unidades_derivadas"][number]["unidad_derivada_inmutable"];
+    unidades_derivadas: (NonNullable<
+      getVentaResponseProps["productos_por_almacen"]
+    >[number]["unidades_derivadas"][number] & {
+      unidad_derivada_normal: NonNullable<
+        getVentaResponseProps["productos_por_almacen"]
+      >[number]["unidades_derivadas"][number]["unidad_derivada_inmutable"];
     })[];
   })[];
 };
@@ -37,25 +42,26 @@ export default function HeaderCrearVenta({
 }) {
   const { can } = usePermissionHook();
 
-  const [openModalAgregarProducto, setOpenModalAgregarProducto] = useState(false);
+  const [openModalAgregarProducto, setOpenModalAgregarProducto] =
+    useState(false);
   const [openModalBuscarPaquete, setOpenModalBuscarPaquete] = useState(false);
   const [textDefaultPaquete, setTextDefaultPaquete] = useState("");
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
-    (store) => store.setProducto
+    (store) => store.setProducto,
   );
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
-    (store) => store.producto
+    (store) => store.producto,
   );
 
   // Store para agregar productos a la venta
   const setProductoAgregado = useStoreProductoAgregadoVenta(
-    (store) => store.setProductoAgregado
+    (store) => store.setProductoAgregado,
   );
 
   // Store para paquete seleccionado
   const paqueteSeleccionadoStore = useStorePaqueteSeleccionado(
-    (store) => store.paquete
+    (store) => store.paquete,
   );
 
   /**
@@ -63,14 +69,14 @@ export default function HeaderCrearVenta({
    */
   const handleAgregarPaquete = async () => {
     const paquete = paqueteSeleccionadoStore;
-    
+
     if (!paquete) {
-      message.warning('Selecciona un paquete');
+      message.warning("Selecciona un paquete");
       return;
     }
 
     if (!paquete.productos || paquete.productos.length === 0) {
-      message.warning('Este paquete no tiene productos');
+      message.warning("Este paquete no tiene productos");
       return;
     }
 
@@ -83,7 +89,7 @@ export default function HeaderCrearVenta({
           producto_id: paqueteProducto.producto_id,
           producto_name: paqueteProducto.producto.name,
           producto_codigo: paqueteProducto.producto.cod_producto,
-          marca_name: paqueteProducto.producto.marca?.name || '',
+          marca_name: paqueteProducto.producto.marca?.name || "",
           unidad_derivada_id: paqueteProducto.unidad_derivada_id,
           unidad_derivada_name: paqueteProducto.unidad_derivada.name,
           unidad_derivada_factor: 1,
@@ -94,14 +100,14 @@ export default function HeaderCrearVenta({
         });
 
         productosAgregados++;
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
     message.success(
       `Paquete "${paquete.nombre}" agregado con ${productosAgregados} producto${
-        productosAgregados !== 1 ? 's' : ''
-      }`
+        productosAgregados !== 1 ? "s" : ""
+      }`,
     );
   };
 
@@ -117,45 +123,60 @@ export default function HeaderCrearVenta({
       }
       extra={
         <div className="pl-0 lg:pl-8 flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-4 w-full lg:w-auto">
-          <SelectProductos
-            autoFocus
-            allowClear
-            size="large"
-            className="w-full lg:!min-w-[400px] lg:!w-[400px] lg:!max-w-[400px] font-normal!"
-            classNameIcon="text-cyan-600 mx-1"
-            classIconSearch="!mb-0"
-            classIconPlus="mb-0!"
-            showButtonCreate={can(permissions.PRODUCTO_CREATE)}
-            withSearch
-            withTipoBusqueda
-            showCardAgregarProductoVenta
-            showUltimasCompras={false}
-            handleOnlyOneResult={(producto) => {
-              setProductoSeleccionadoSearchStore(producto);
-              if (producto) setOpenModalAgregarProducto(true);
-            }}
-            onChange={(_, producto) => {
-              setProductoSeleccionadoSearchStore(producto);
-              if (producto) setOpenModalAgregarProducto(true);
-            }}
-          />
-          
-          <SelectPaquetes
-            placeholder="Buscar Paquete..."
-            className="w-full lg:!min-w-[300px] lg:!w-[300px] lg:!max-w-[300px]"
-            classNameIcon="text-cyan-600"
-            onSelect={(paquete) => {
-              // Guardar en store y abrir modal
-              setTextDefaultPaquete(paquete.nombre);
-              setOpenModalBuscarPaquete(true);
-            }}
-            onOpenModal={() => setOpenModalBuscarPaquete(true)}
-          />
+          <ConfigurableElement
+            componentId="crear-venta.buscar-producto"
+            label="Buscar Producto"
+          >
+            <SelectProductos
+              autoFocus
+              allowClear
+              size="large"
+              className="w-full lg:!min-w-[400px] lg:!w-[400px] lg:!max-w-[400px] font-normal!"
+              classNameIcon="text-cyan-600 mx-1"
+              classIconSearch="!mb-0"
+              classIconPlus="mb-0!"
+              showButtonCreate={can(permissions.PRODUCTO_CREATE)}
+              withSearch
+              withTipoBusqueda
+              showCardAgregarProductoVenta
+              showUltimasCompras={false}
+              handleOnlyOneResult={(producto) => {
+                setProductoSeleccionadoSearchStore(producto);
+                if (producto) setOpenModalAgregarProducto(true);
+              }}
+              onChange={(_, producto) => {
+                setProductoSeleccionadoSearchStore(producto);
+                if (producto) setOpenModalAgregarProducto(true);
+              }}
+            />
+          </ConfigurableElement>
+
+          <ConfigurableElement
+            componentId="crear-venta.buscar-paquete"
+            label="Buscar Paquete"
+          >
+            <SelectPaquetes
+              placeholder="Buscar Paquete..."
+              className="w-full lg:!min-w-[300px] lg:!w-[300px] lg:!max-w-[300px]"
+              classNameIcon="text-cyan-600"
+              onSelect={(paquete) => {
+                // Guardar en store y abrir modal
+                setTextDefaultPaquete(paquete.nombre);
+                setOpenModalBuscarPaquete(true);
+              }}
+              onOpenModal={() => setOpenModalBuscarPaquete(true)}
+            />
+          </ConfigurableElement>
         </div>
       }
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-        <SelectAlmacen className="w-full" disabled={!!venta} />
+        <ConfigurableElement
+          componentId="crear-venta.select-almacen"
+          label="Selector de Almacén"
+        >
+          <SelectAlmacen className="w-full" disabled={!!venta} />
+        </ConfigurableElement>
 
         <Modal
           open={openModalAgregarProducto}

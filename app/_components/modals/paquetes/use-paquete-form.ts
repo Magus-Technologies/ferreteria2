@@ -42,6 +42,8 @@ export function usePaqueteForm(
         unidad_derivada_name: p.unidad_derivada?.name || '',
         cantidad: p.cantidad,
         precio_sugerido: p.precio_sugerido || undefined,
+        // Cargar las unidades derivadas disponibles del producto
+        unidades_derivadas_disponibles: p.producto?.unidades_derivadas_con_precios || [],
       }))
       setProductos(productosFormateados)
     }

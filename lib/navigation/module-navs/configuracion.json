@@ -33,7 +33,7 @@
         "type": "button",
         "label": "Permisos",
         "icon": "FaKey",
-        "route": "/ui/configuracion/permisos",
+        "route": "/ui/configuracion/permisos-visuales",
         "permission": "configuracion.permisos.index"
       },
       {
@@ -68,7 +68,7 @@
         "id": "permisos",
         "label": "Permisos",
         "icon": "FaKey",
-        "route": "/ui/configuracion/permisos",
+        "route": "/ui/configuracion/permisos-visuales",
         "permission": "configuracion.permisos.index"
       },
       {

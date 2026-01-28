@@ -120,9 +120,8 @@ export default function CardAgregarProductoPaquete({
 
           if (cantidadEnFraccion > stockDisponible) {
             return (
-              <div className="text-red-600 text-sm mt-1 font-medium">
-                ⚠️ Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)}{' '}
-                {unidad_derivada_seleccionada.unidad_derivada.name}
+              <div className="text-red-600 text-xs mt-1 font-medium">
+                ⚠️ Stock: {stockEnUnidad.toFixed(2)}
               </div>
             )
           }

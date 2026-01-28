@@ -208,10 +208,17 @@ export default function useCreateVenta() {
       productos_por_almacen: productos_por_almacen,
       // Agregar métodos de pago si existen, extrayendo correctamente los IDs
       despliegue_de_pago_ventas: metodos_de_pago && metodos_de_pago.length > 0
-        ? metodos_de_pago.map(mp => ({
-            ...mp,
-            despliegue_de_pago_id: extractDesplieguePagoId(mp.despliegue_de_pago_id)
-          }))
+        ? metodos_de_pago
+            .map(mp => {
+              const id = extractDesplieguePagoId(mp.despliegue_de_pago_id)
+              // Filtrar valores null y convertir a string
+              if (id === null) return null
+              return {
+                ...mp,
+                despliegue_de_pago_id: String(id)
+              }
+            })
+            .filter((mp): mp is NonNullable<typeof mp> => mp !== null)
         : undefined,
     }
 

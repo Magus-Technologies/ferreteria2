@@ -205,7 +205,7 @@ export function useColumnsVender({
             />
             {stockInsuficiente && cantidad && (
               <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight'>
-                ⚠️ Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)} {unidad_derivada_name}
+                ⚠️ Stock: {stockEnUnidad.toFixed(2)}
               </div>
             )}
           </div>

@@ -16,8 +16,8 @@ export default function TablePermisos() {
   })
 
   // Extraer los datos de la respuesta
-  const permissionsData = Array.isArray(permissionsResponse?.data?.data)
-    ? permissionsResponse.data.data
+  const permissionsData = Array.isArray(permissionsResponse?.data)
+    ? permissionsResponse.data
     : []
 
   // Agrupar permisos por módulo
