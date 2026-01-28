@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, Button, Input, Checkbox, Tabs, Spin, Empty } from 'antd'
 import { FaCheckCircle, FaSearch } from 'react-icons/fa'
 import ConteoDinero from '../../_components/others/conteo-dinero'
+import ResumenDetalleCierre from './resumen-detalle-cierre'
 import { useCierreCaja } from '../_hooks/use-cierre-caja'
 import { useCerrarCaja } from '../_hooks/use-cerrar-caja'
 import { useRouter } from 'next/navigation'
@@ -14,7 +15,7 @@ export default function CierreCajaView() {
   const router = useRouter()
   const { cajaActiva, loading, error } = useCierreCaja()
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
-  
+
   const [totalEfectivo, setTotalEfectivo] = useState(0)
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
@@ -41,16 +42,6 @@ export default function CierreCajaView() {
   const diferencia = totalEfectivo - montoEsperado
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
-
-  // Agrupar métodos de pago por tipo
-  const metodosPagoAgrupados = resumen.detalle_metodos_pago.reduce((acc: any, metodo: any) => {
-    const nombre = metodo.metodo_pago
-    if (!acc[nombre]) {
-      acc[nombre] = 0
-    }
-    acc[nombre] += metodo.total
-    return acc
-  }, {})
 
   const handleFinalizarCaja = async () => {
     if (totalEfectivo === 0) {
@@ -81,8 +72,8 @@ export default function CierreCajaView() {
             </div>
           </div>
           <div className='flex items-center gap-2'>
-            <Input 
-              placeholder='Supervisor' 
+            <Input
+              placeholder='Supervisor'
               size='small'
               className='w-40'
               suffix={<FaSearch className='text-slate-400' />}
@@ -106,13 +97,13 @@ export default function CierreCajaView() {
               <div className='space-y-3'>
                 <div className='grid grid-cols-[minmax(550px,1.2fr)_minmax(450px,550px)] gap-4 w-full'>
                   {/* Columna Izquierda: Resumen de Cierre */}
-                  <Card 
+                  <Card
                     title={<span className='text-base font-semibold'>Resumen de Cierre</span>}
                     className='shadow-sm w-full'
                     bodyStyle={{ padding: '16px' }}
                     headStyle={{ padding: '10px 16px', minHeight: 'auto' }}
                     extra={
-                      <Checkbox 
+                      <Checkbox
                         checked={verCamposCiegoCierre}
                         onChange={(e) => setVerCamposCiegoCierre(e.target.checked)}
                         className='text-xs'
@@ -122,35 +113,65 @@ export default function CierreCajaView() {
                     }
                   >
                     <div className='space-y-0.5'>
-                      {/* Apertura Caja */}
-                      <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
-                        <span className='text-base text-slate-700'>Apertura Caja</span>
+                      {/* Efectivo Inicial */}
+                      <div className='flex justify-between items-center py-2 px-4 bg-blue-50 border-b border-blue-200'>
+                        <span className='text-base font-semibold text-blue-700'>Efectivo Inicial</span>
                         <div className='flex items-center gap-2.5'>
-                          <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {resumen.monto_apertura.toFixed(2)}
+                          <span className='text-base font-semibold text-blue-700 min-w-[100px] text-right'>
+                            {(resumen.efectivo_inicial || 0).toFixed(2)}
                           </span>
                           <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                         </div>
                       </div>
 
-                      {/* Métodos de pago dinámicos */}
-                      {Object.entries(metodosPagoAgrupados).map(([metodo, total]: [string, any]) => (
-                        <div key={metodo} className={`flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50 ${metodo === 'Yape' ? 'bg-purple-50' : ''}`}>
-                          <div className='flex items-center gap-2.5'>
-                            {metodo === 'Yape' && (
-                              <div className='w-7 h-7 bg-purple-600 rounded flex items-center justify-center'>
-                                <span className='text-white font-bold text-sm'>Y</span>
-                              </div>
-                            )}
-                            <span className='text-base text-slate-700'>{metodo}</span>
+                      {/* Métodos de pago dinámicos (cada uno por separado) */}
+                      {resumen.detalle_metodos_pago && resumen.detalle_metodos_pago.length > 0 ? (
+                        resumen.detalle_metodos_pago.map((metodo: any) => (
+                          <div key={metodo.despliegue_pago_id} className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
+                            <div className='flex items-center gap-2.5'>
+                              <span className='text-sm text-slate-700'>{metodo.label}</span>
+                            </div>
+                            <div className='flex items-center gap-2.5'>
+                              <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
+                                {Number(metodo.total).toFixed(2)}
+                              </span>
+                              <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                            </div>
                           </div>
-                          <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {Number(total).toFixed(2)}
-                          </span>
+                        ))
+                      ) : (
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
+                          <span className='text-sm text-slate-500 italic'>Sin cobros registrados</span>
                         </div>
-                      ))}
+                      )}
 
                       <div className='border-t border-slate-300 my-1'></div>
+
+                      {/* Préstamos Recibidos */}
+                      {(resumen.total_prestamos_recibidos || 0) > 0 && (
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-green-50'>
+                          <span className='text-base text-green-700'>Préstamos Recibidos</span>
+                          <div className='flex items-center gap-2.5'>
+                            <span className='text-base font-semibold text-green-700 min-w-[100px] text-right'>
+                              {(resumen.total_prestamos_recibidos || 0).toFixed(2)}
+                            </span>
+                            <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Préstamos Dados */}
+                      {(resumen.total_prestamos_dados || 0) > 0 && (
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
+                          <span className='text-base text-red-700'>Préstamos Dados</span>
+                          <div className='flex items-center gap-2.5'>
+                            <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
+                              {(resumen.total_prestamos_dados || 0).toFixed(2)}
+                            </span>
+                            <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Movimientos */}
                       <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
@@ -167,7 +188,7 @@ export default function CierreCajaView() {
                         <span className='text-base text-slate-700'>Total O. Ingresos</span>
                         <div className='flex items-center gap-2.5'>
                           <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {(resumen.total_ingresos - resumen.total_ventas).toFixed(2)}
+                            {((resumen.total_ingresos || 0) - (resumen.total_ventas || 0) - (resumen.total_prestamos_recibidos || 0)).toFixed(2)}
                           </span>
                           <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                         </div>
@@ -177,7 +198,7 @@ export default function CierreCajaView() {
                         <span className='text-base text-slate-700'>Total Gastos</span>
                         <div className='flex items-center gap-2.5'>
                           <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {resumen.total_egresos.toFixed(2)}
+                            {((resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)).toFixed(2)}
                           </span>
                           <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                         </div>
@@ -216,7 +237,7 @@ export default function CierreCajaView() {
                   </Card>
 
                   {/* Columna Derecha: Conteo de Efectivo */}
-                  <Card 
+                  <Card
                     title={
                       <div className='flex justify-between items-center w-full'>
                         <span className='text-base font-semibold'>Conteo de Efectivo</span>
@@ -233,16 +254,16 @@ export default function CierreCajaView() {
                     headStyle={{ padding: '10px 16px', minHeight: 'auto' }}
                   >
                     <ConteoDinero onChange={setTotalEfectivo} />
-                    
+
                     <div className='mt-3 space-y-2.5'>
-                      <Checkbox 
+                      <Checkbox
                         checked={ticketCaja}
                         onChange={(e) => setTicketCaja(e.target.checked)}
                         className='text-sm'
                       >
                         Ticket Caja
                       </Checkbox>
-                      
+
                       <div>
                         <div className='text-sm font-medium text-slate-600 mb-1'>Comentarios</div>
                         <TextArea
@@ -273,23 +294,23 @@ export default function CierreCajaView() {
 
                       {/* Botones de acción */}
                       <div className='flex gap-2 pt-1'>
-                        <Button 
-                          type='primary' 
+                        <Button
+                          type='primary'
                           icon={<FaCheckCircle />}
                           className='flex-1 bg-green-600 hover:bg-green-700 text-sm'
                           size='large'
                         >
                           Ventas Enviar
                         </Button>
-                        <Button 
+                        <Button
                           type='default'
                           className='flex-1 text-sm'
                           size='large'
                         >
                           + Ganancias
                         </Button>
-                        <Button 
-                          type='primary' 
+                        <Button
+                          type='primary'
                           icon={<FaCheckCircle />}
                           className='flex-1 bg-green-600 hover:bg-green-700 text-sm'
                           size='large'
@@ -309,10 +330,11 @@ export default function CierreCajaView() {
           {
             key: '2',
             label: 'Resumen detalle',
-            children: <div className='p-4'>Contenido del resumen detallado...</div>,
+            children: <ResumenDetalleCierre resumen={resumen} montoEsperado={montoEsperado} />,
           },
         ]}
       />
     </div>
   )
 }
+

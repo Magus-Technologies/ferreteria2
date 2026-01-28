@@ -13,6 +13,7 @@ export interface ResumenCajaResponse {
         monto_cierre: number | null
         estado: 'abierta' | 'cerrada'
         resumen: {
+            efectivo_inicial: number
             monto_apertura: number
             total_ingresos: number
             total_egresos: number
@@ -31,6 +32,10 @@ export interface ResumenCajaResponse {
             detalle_ingresos: Record<string, any>
             detalle_egresos: Record<string, any>
             detalle_ventas: any[]
+            prestamos_recibidos: any[]
+            total_prestamos_recibidos: number
+            prestamos_dados: any[]
+            total_prestamos_dados: number
             movimientos_internos: any[]
             prestamos: any[]
             prestamos_vendedores: any[]
