@@ -47,18 +47,7 @@
       "permission": "reportes.index",
       "order": 4,
       "enabled": true
-    },
-    {
-      "id": "configuracion",
-      "name": "Configuración",
-      "icon": "MdSettings",
-      "color": "info",
-      "bgColor": "bg-gray-600",
-      "activeColor": "text-gray-600",
-      "route": "/ui/configuracion",
-      "permission": "configuracion.index",
-      "order": 5,
-      "enabled": true
     }
+ 
   ]
 }
