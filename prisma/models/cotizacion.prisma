@@ -1,0 +1,62 @@
+model Cotizacion {
+  id                     String                     @id @default(cuid())
+  numero                 String                     @unique
+  fecha                  DateTime
+  vigencia_dias          Int                        @default(7)
+  fecha_vencimiento      DateTime
+  tipo_moneda            TipoMoneda                 @default(Soles)
+  tipo_de_cambio         Decimal                    @default(1) @db.Decimal(9, 4)
+  observaciones          String?                    @db.Text
+  estado_cotizacion      EstadoCotizacion           @default(Pendiente)
+  cliente_id             Int?
+  user_id                String
+  almacen_id             Int
+  venta_id               String?                    @unique
+  created_at             DateTime                   @default(now())
+  updated_at             DateTime                   @updatedAt
+  productos_por_almacen  ProductoAlmacenCotizacion[]
+  almacen                Almacen                    @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
+  cliente                Cliente?                   @relation(fields: [cliente_id], references: [id], onDelete: Restrict)
+  user                   User                       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  venta                  Venta?                     @relation(fields: [venta_id], references: [id], onDelete: Restrict)
+
+  @@index([fecha])
+  @@index([estado_cotizacion])
+  @@index([cliente_id])
+  @@index([almacen_id])
+}
+
+model ProductoAlmacenCotizacion {
+  id                  Int                                   @id @default(autoincrement())
+  cotizacion_id       String
+  costo               Decimal                               @db.Decimal(9, 4)
+  producto_almacen_id Int
+  producto_almacen    ProductoAlmacen                       @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade)
+  cotizacion          Cotizacion                            @relation(fields: [cotizacion_id], references: [id], onDelete: Cascade)
+  unidades_derivadas  UnidadDerivadaInmutableCotizacion[]
+
+  @@unique([cotizacion_id, producto_almacen_id])
+}
+
+model UnidadDerivadaInmutableCotizacion {
+  id                                Int                          @id @default(autoincrement())
+  unidad_derivada_inmutable_id      Int
+  producto_almacen_cotizacion_id    Int
+  factor                            Decimal                      @db.Decimal(9, 3)
+  cantidad                          Decimal                      @db.Decimal(9, 3)
+  precio                            Decimal                      @db.Decimal(9, 4)
+  recargo                           Decimal                      @default(0) @db.Decimal(9, 4)
+  descuento_tipo                    DescuentoTipo                @default(Monto)
+  descuento                         Decimal                      @default(0) @db.Decimal(9, 4)
+  producto_almacen_cotizacion       ProductoAlmacenCotizacion    @relation(fields: [producto_almacen_cotizacion_id], references: [id], onDelete: Cascade)
+  unidad_derivada_inmutable         UnidadDerivadaInmutable      @relation(fields: [unidad_derivada_inmutable_id], references: [id])
+
+  @@unique([producto_almacen_cotizacion_id, unidad_derivada_inmutable_id])
+}
+
+enum EstadoCotizacion {
+  Pendiente   @map("pe")
+  Convertida  @map("co")
+  Vencida     @map("ve")
+  Cancelada   @map("ca")
+}

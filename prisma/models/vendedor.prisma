@@ -1,0 +1,29 @@
+model IngresoDinero {
+  id                    String           @id @default(cuid())
+  monto                 Decimal          @default(0) @db.Decimal(9, 2)
+  observaciones         String?
+  despliegue_de_pago_id String
+  user_id               String
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id])
+  user                  User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model EgresoDinero {
+  id                    String           @id @default(cuid())
+  monto                 Decimal          @default(0) @db.Decimal(9, 2)
+  vuelto                Decimal?         @db.Decimal(9, 2)
+  observaciones         String?
+  estado                Boolean          @default(true)
+  despliegue_de_pago_id String
+  user_id               String
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  compras               Compra[]
+  despliegue_de_pago    DespliegueDePago @relation(fields: [despliegue_de_pago_id], references: [id])
+  user                  User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([vuelto])
+  @@index([createdAt])
+}

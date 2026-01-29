@@ -1,0 +1,57 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
+
+on:
+  push:
+    branches: ['master']
+  pull_request:
+    branches: ['master']
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_TRUST_HOST: ${{ secrets.AUTH_TRUST_HOST }}
+      AUTH_URL: ${{ secrets.AUTH_URL }}
+      RENIEC_TOKEN: ${{ secrets.RENIEC_TOKEN }}
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # Cache para .next/cache
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
+      - run: npm i # Cambiar a ci en producción
+      - run: npx prisma generate
+      - run: npm run lint
+      # - run: npx tsc --noEmit # Comentado porque consume mucha ram, se debe validar haciendo `npm run build` antes de hacer push a github
+      - run: npm run build:server
+      - run: npx prisma migrate deploy
+      - run: npm run seed
+      - run: |
+          # Crear symlink solo si no existe
+          [ -L ./public/uploads ] || ln -s /var/ferreteria_uploads ./public/uploads
+          pm2 delete ferreteriav2 || true
+          pm2 start ecosystem.config.js --only ferreteriav2 --update-env

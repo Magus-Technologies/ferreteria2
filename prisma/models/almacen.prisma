@@ -1,0 +1,79 @@
+model Almacen {
+  id                   Int                @id @default(autoincrement())
+  name                 String             @unique
+  created_at           DateTime           @default(now())
+  updated_at           DateTime           @updatedAt
+  compras              Compra[]
+  empresas             Empresa[]
+  entregas_productos   EntregaProducto[]
+  ingresos_salidas     IngresoSalida[]
+  productos_en_almacen ProductoAlmacen[]
+  series_documentos    SerieDocumento[]
+  ubicaciones          Ubicacion[]
+  ventas               Venta[]
+  cotizaciones         Cotizacion[]
+}
+
+model ProductoAlmacen {
+  id                  Int                             @id @default(autoincrement())
+  producto_id         Int
+  almacen_id          Int
+  stock_fraccion      Decimal                         @default(0) @db.Decimal(9, 3)
+  costo               Decimal                         @default(0) @db.Decimal(9, 4)
+  ubicacion_id        Int
+  created_at          DateTime                        @default(now())
+  updated_at          DateTime                        @updatedAt
+  almacen             Almacen                         @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
+  producto            Producto                        @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  ubicacion           Ubicacion                       @relation(fields: [ubicacion_id], references: [id])
+  compras             ProductoAlmacenCompra[]
+  ingresos_salidas    ProductoAlmacenIngresoSalida[]
+  recepciones_almacen ProductoAlmacenRecepcion[]
+  unidades_derivadas  ProductoAlmacenUnidadDerivada[]
+  ventas              ProductoAlmacenVenta[]
+  cotizaciones        ProductoAlmacenCotizacion[]
+
+  @@unique([producto_id, almacen_id])
+}
+
+model Ubicacion {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  almacen_id          Int
+  estado              Boolean           @default(true)
+  productos_almacenes ProductoAlmacen[]
+  almacen             Almacen           @relation(fields: [almacen_id], references: [id], onDelete: Cascade)
+
+  @@unique([almacen_id, name])
+  @@index([name])
+}
+
+model UnidadDerivada {
+  id                                  Int                             @id @default(autoincrement())
+  name                                String                          @unique
+  estado                              Boolean                         @default(true)
+  productos_almacenes_unidad_derivada ProductoAlmacenUnidadDerivada[]
+}
+
+model ProductoAlmacenUnidadDerivada {
+  id                  Int             @id @default(autoincrement())
+  producto_almacen_id Int
+  unidad_derivada_id  Int
+  factor              Decimal         @db.Decimal(9, 3)
+  precio_publico      Decimal         @db.Decimal(9, 3)
+  comision_publico    Decimal?        @default(0) @db.Decimal(9, 3)
+  precio_especial     Decimal?        @db.Decimal(9, 3)
+  comision_especial   Decimal?        @default(0) @db.Decimal(9, 3)
+  activador_especial  Decimal?        @db.Decimal(9, 3)
+  precio_minimo       Decimal?        @db.Decimal(9, 3)
+  comision_minimo     Decimal?        @default(0) @db.Decimal(9, 3)
+  activador_minimo    Decimal?        @db.Decimal(9, 3)
+  precio_ultimo       Decimal?        @db.Decimal(9, 3)
+  comision_ultimo     Decimal?        @default(0) @db.Decimal(9, 3)
+  activador_ultimo    Decimal?        @db.Decimal(9, 3)
+  producto_almacen    ProductoAlmacen @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade)
+  unidad_derivada     UnidadDerivada  @relation(fields: [unidad_derivada_id], references: [id])
+
+  @@unique([producto_almacen_id, unidad_derivada_id])
+  @@unique([producto_almacen_id, factor])
+}

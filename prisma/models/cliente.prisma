@@ -1,0 +1,20 @@
+model Cliente {
+  id               Int           @id @default(autoincrement())
+  tipo_cliente     TipoCliente   @default(Persona)
+  numero_documento String        @unique
+  nombres          String
+  apellidos        String
+  razon_social     String?
+  direccion        String?
+  telefono         String?
+  email            String?
+  estado           Boolean       @default(true)
+  ventas           Venta[]       @relation("cliente")
+  recomendaciones  Venta[]       @relation("recomendado_por")
+  cotizaciones     Cotizacion[]
+}
+
+enum TipoCliente {
+  Persona @map("p")
+  Empresa @map("e")
+}

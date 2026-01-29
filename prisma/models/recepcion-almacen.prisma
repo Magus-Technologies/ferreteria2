@@ -1,0 +1,64 @@
+model RecepcionAlmacen {
+  id                          Int                        @id @default(autoincrement())
+  numero                      Int
+  observaciones               String?
+  fecha                       DateTime
+  transportista_razon_social  String?
+  transportista_ruc           String?
+  transportista_placa         String?
+  transportista_licencia      String?
+  transportista_dni           String?
+  transportista_name          String?
+  transportista_guia_remision String?
+  estado                      Boolean                    @default(true)
+  user_id                     String
+  compra_id                   String
+  created_at                  DateTime                   @default(now())
+  updated_at                  DateTime                   @updatedAt
+  productos_por_almacen       ProductoAlmacenRecepcion[]
+  compra                      Compra                     @relation(fields: [compra_id], references: [id], onDelete: Cascade)
+  user                        User                       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([fecha])
+}
+
+model ProductoAlmacenRecepcion {
+  id                  Int                                @id @default(autoincrement())
+  recepcion_id        Int
+  costo               Decimal                            @db.Decimal(9, 4)
+  producto_almacen_id Int
+  producto_almacen    ProductoAlmacen                    @relation(fields: [producto_almacen_id], references: [id], onDelete: Cascade)
+  recepcion           RecepcionAlmacen                   @relation(fields: [recepcion_id], references: [id], onDelete: Cascade)
+  unidades_derivadas  UnidadDerivadaInmutableRecepcion[]
+
+  @@unique([recepcion_id, producto_almacen_id])
+}
+
+model UnidadDerivadaInmutableRecepcion {
+  id                            Int                                         @id @default(autoincrement())
+  unidad_derivada_inmutable_id  Int
+  producto_almacen_recepcion_id Int
+  factor                        Decimal                                     @db.Decimal(9, 3)
+  cantidad                      Decimal                                     @db.Decimal(9, 3)
+  cantidad_restante             Decimal                                     @db.Decimal(9, 3)
+  lote                          String?
+  vencimiento                   DateTime?
+  flete                         Decimal                                     @default(0) @db.Decimal(9, 4)
+  bonificacion                  Boolean                                     @default(false)
+  historial                     HistorialUnidadDerivadaInmutableRecepcion[]
+  producto_almacen_recepcion    ProductoAlmacenRecepcion                    @relation(fields: [producto_almacen_recepcion_id], references: [id], onDelete: Cascade)
+  unidad_derivada_inmutable     UnidadDerivadaInmutable                     @relation(fields: [unidad_derivada_inmutable_id], references: [id])
+
+  @@unique([producto_almacen_recepcion_id, unidad_derivada_inmutable_id, bonificacion])
+}
+
+model HistorialUnidadDerivadaInmutableRecepcion {
+  id                                     Int                              @id @default(autoincrement())
+  unidad_derivada_inmutable_recepcion_id Int
+  stock_anterior                         Decimal                          @db.Decimal(9, 3)
+  stock_nuevo                            Decimal                          @db.Decimal(9, 3)
+  created_at                             DateTime                         @default(now())
+  unidad_derivada_inmutable_recepcion    UnidadDerivadaInmutableRecepcion @relation(fields: [unidad_derivada_inmutable_recepcion_id], references: [id], onDelete: Cascade)
+
+  @@index([created_at])
+}

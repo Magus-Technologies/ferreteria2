@@ -1,0 +1,42 @@
+model SubCaja {
+  id              String         @id @default(cuid())
+  name            String         @unique
+  metodos_de_pago MetodoDePago[]
+}
+
+model MetodoDePago {
+  id                  String             @id @default(cuid())
+  name                String             @unique
+  cuenta_bancaria     String?
+  monto               Decimal            @default(0) @db.Decimal(9, 2)
+  subcaja_id          String
+  despliegue_de_pagos DespliegueDePago[]
+  subcaja             SubCaja            @relation(fields: [subcaja_id], references: [id], onDelete: Cascade)
+}
+
+model DespliegueDePago {
+  id                        String                  @id @default(cuid())
+  name                      String                  @unique
+  adicional                 Decimal                 @default(0) @db.Decimal(9, 2)
+  mostrar                   Boolean                 @default(true)
+  metodo_de_pago_id         String
+  compras                   Compra[]
+  metodo_de_pago            MetodoDePago            @relation(fields: [metodo_de_pago_id], references: [id], onDelete: Cascade)
+  despliegues_de_pago_venta DespliegueDePagoVenta[]
+  egresos_dinero            EgresoDinero[]
+  ingresos_dinero           IngresoDinero[]
+  pagos_de_compras          PagoDeCompra[]
+}
+
+model AperturaYCierreCaja {
+  id             String    @id @default(cuid())
+  fecha_apertura DateTime  @default(now())
+  monto_apertura Decimal   @default(0) @db.Decimal(9, 2)
+  fecha_cierre   DateTime?
+  monto_cierre   Decimal?  @db.Decimal(9, 2)
+  user_id        String
+  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([fecha_apertura])
+  @@index([fecha_cierre])
+}
