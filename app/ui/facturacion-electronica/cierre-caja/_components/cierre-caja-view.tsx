@@ -17,6 +17,8 @@ export default function CierreCajaView() {
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
 
   const [totalEfectivo, setTotalEfectivo] = useState(0)
+  const [totalCuentas, setTotalCuentas] = useState(0)
+  const [conteoDenominaciones, setConteoDenominaciones] = useState<Record<string, number>>({})
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
@@ -49,8 +51,10 @@ export default function CierreCajaView() {
     }
 
     const success = await cerrarCaja(cajaActiva.id, {
-      monto_cierre: totalEfectivo,
-      observaciones: comentarios || undefined,
+      monto_cierre_efectivo: totalEfectivo,
+      total_cuentas: totalCuentas || 0, // Por ahora 0 si no hay cuentas
+      comentarios: comentarios || undefined,
+      conteo_billetes_monedas: conteoDenominaciones,
     })
 
     if (success) {
@@ -124,12 +128,13 @@ export default function CierreCajaView() {
                         </div>
                       </div>
 
-                      {/* Métodos de pago dinámicos (cada uno por separado) */}
+                      {/* Métodos de pago dinámicos agrupados (ej: todas las Transferencias juntas) */}
                       {resumen.detalle_metodos_pago && resumen.detalle_metodos_pago.length > 0 ? (
-                        resumen.detalle_metodos_pago.map((metodo: any) => (
-                          <div key={metodo.despliegue_pago_id} className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
+                        resumen.detalle_metodos_pago.map((metodo: any, index: number) => (
+                          <div key={index} className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
                             <div className='flex items-center gap-2.5'>
                               <span className='text-sm text-slate-700'>{metodo.label}</span>
+                              <span className='text-xs text-slate-500'>({metodo.cantidad_transacciones})</span>
                             </div>
                             <div className='flex items-center gap-2.5'>
                               <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
@@ -147,6 +152,19 @@ export default function CierreCajaView() {
 
                       <div className='border-t border-slate-300 my-1'></div>
 
+                      {/* Otros Ingresos */}
+                      {((resumen.total_ingresos || 0) - (resumen.total_ventas || 0) - (resumen.total_prestamos_recibidos || 0)) > 0 && (
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-blue-50'>
+                          <span className='text-base text-blue-700'>Otros Ingresos</span>
+                          <div className='flex items-center gap-2.5'>
+                            <span className='text-base font-semibold text-blue-700 min-w-[100px] text-right'>
+                              {((resumen.total_ingresos || 0) - (resumen.total_ventas || 0) - (resumen.total_prestamos_recibidos || 0)).toFixed(2)}
+                            </span>
+                            <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                          </div>
+                        </div>
+                      )}
+
                       {/* Préstamos Recibidos */}
                       {(resumen.total_prestamos_recibidos || 0) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-green-50'>
@@ -154,6 +172,19 @@ export default function CierreCajaView() {
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-green-700 min-w-[100px] text-right'>
                               {(resumen.total_prestamos_recibidos || 0).toFixed(2)}
+                            </span>
+                            <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Gastos */}
+                      {((resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)) > 0 && (
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
+                          <span className='text-base text-red-700'>Gastos</span>
+                          <div className='flex items-center gap-2.5'>
+                            <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
+                              {((resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)).toFixed(2)}
                             </span>
                             <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                           </div>
@@ -173,37 +204,24 @@ export default function CierreCajaView() {
                         </div>
                       )}
 
-                      {/* Movimientos */}
-                      <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
-                        <span className='text-base text-slate-700'>Total cobros</span>
-                        <div className='flex items-center gap-2.5'>
-                          <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {resumen.total_ventas.toFixed(2)}
-                          </span>
-                          <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                      {/* Movimientos Internos (informativo, no afecta total) */}
+                      {resumen.movimientos_internos && resumen.movimientos_internos.length > 0 && (
+                        <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 bg-blue-50'>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-sm text-blue-700'>Movimientos Internos</span>
+                            <span className='text-xs text-blue-500'>({resumen.movimientos_internos.length})</span>
+                            <span className='text-xs text-blue-600 italic'>(no afecta total)</span>
+                          </div>
+                          <div className='flex items-center gap-2.5'>
+                            <span className='text-sm font-semibold text-blue-700 min-w-[100px] text-right'>
+                              {resumen.movimientos_internos.reduce((sum: number, m: any) => sum + Number(m.monto), 0).toFixed(2)}
+                            </span>
+                            <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
-                        <span className='text-base text-slate-700'>Total O. Ingresos</span>
-                        <div className='flex items-center gap-2.5'>
-                          <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {((resumen.total_ingresos || 0) - (resumen.total_ventas || 0) - (resumen.total_prestamos_recibidos || 0)).toFixed(2)}
-                          </span>
-                          <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
-                        </div>
-                      </div>
-
-                      <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
-                        <span className='text-base text-slate-700'>Total Gastos</span>
-                        <div className='flex items-center gap-2.5'>
-                          <span className='text-base font-semibold text-slate-800 min-w-[100px] text-right'>
-                            {((resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)).toFixed(2)}
-                          </span>
-                          <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
-                        </div>
-                      </div>
-
+                      <div className='border-t border-slate-300 my-1'></div>
                       {/* Resumen Ventas */}
                       <div className='flex justify-between items-center py-2.5 px-4 bg-blue-50 border border-blue-300 rounded mt-1'>
                         <span className='text-base font-bold text-blue-800'>Resumen Ventas</span>

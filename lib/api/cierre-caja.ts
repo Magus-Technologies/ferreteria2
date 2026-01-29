@@ -44,10 +44,17 @@ export interface ResumenCajaResponse {
 }
 
 export interface CerrarCajaRequest {
-    monto_cierre: number
+    monto_cierre_efectivo: number
+    total_cuentas: number
     supervisor_id?: string
-    observaciones?: string
-    conteo_denominaciones?: Record<string, number>
+    comentarios?: string
+    conteo_billetes_monedas?: Record<string, number>
+    conceptos_adicionales?: Array<{
+        concepto: string
+        numero?: string
+        cantidad: number
+    }>
+    forzar_cierre?: boolean
 }
 
 export interface CerrarCajaResponse {

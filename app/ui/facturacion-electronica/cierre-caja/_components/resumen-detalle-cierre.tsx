@@ -35,6 +35,26 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado }: Resumen
       flex: 1,
     },
     {
+      headerName: 'Pagos (Sub-Caja/Método)',
+      field: 'pagos',
+      flex: 2,
+      cellRenderer: (params: any) => {
+        if (!params.value || params.value.length === 0) {
+          return '<span class="text-gray-400">Sin pagos registrados</span>'
+        }
+        return params.value
+          .map((pago: any) => 
+            `<div class="text-xs">
+              <span class="font-semibold">${pago.sub_caja}</span> - 
+              <span class="text-blue-600">${pago.metodo_pago}</span>: 
+              <span class="font-bold">S/. ${Number(pago.monto).toFixed(2)}</span>
+              ${pago.numero_operacion ? `<span class="text-gray-500"> (Op: ${pago.numero_operacion})</span>` : ''}
+            </div>`
+          )
+          .join('')
+      },
+    },
+    {
       headerName: 'Monto',
       field: 'total',
       width: 120,
@@ -248,6 +268,11 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado }: Resumen
               rowSelection={false}
               withNumberColumn={true}
               headerColor='var(--color-amber-600)'
+              getRowHeight={(params) => {
+                // Calcular altura dinámica basada en cantidad de pagos
+                const pagosCount = params.data?.pagos?.length || 0
+                return pagosCount > 1 ? 30 + (pagosCount * 25) : 50
+              }}
             />
           </div>
           <div className='mt-3 p-3 bg-blue-50 rounded flex justify-between items-center'>
