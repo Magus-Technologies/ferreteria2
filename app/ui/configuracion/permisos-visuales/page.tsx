@@ -56,6 +56,9 @@ const CrearPrestamo = lazy(
 const MisPrestamos = lazy(
   () => import("~/app/ui/facturacion-electronica/mis-prestamos/page"),
 );
+const MisEntregas = lazy(
+  () => import("~/app/ui/facturacion-electronica/mis-entregas/page"),
+);
 
 // Gestión Comercial e Inventario - vistas para modo configuración
 const DashboardGestionComercial = lazy(
@@ -88,6 +91,7 @@ const ICON_MAP: Record<string, string> = {
   "facturacion-electronica.crear-prestamo.index": "🤝",
   "facturacion-electronica.crear-guia.index": "📋",
   "facturacion-electronica.mis-ventas.index": "🛒",
+  "facturacion-electronica.mis-entregas.index": "🚚",
   "facturacion-electronica.mis-cotizaciones.index": "💰",
   "facturacion-electronica.mis-guias.index": "📄",
   "facturacion-electronica.mis-prestamos.index": "💸",
@@ -120,6 +124,7 @@ const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any>>> = {
   "facturacion-electronica.dashboard.index": DashboardFE,
   "facturacion-electronica.mis-ventas.index": MisVentas,
   "facturacion-electronica.crear-venta.index": CrearVenta,
+  "facturacion-electronica.mis-entregas.index": MisEntregas,
   "facturacion-electronica.mis-guias.index": MisGuias,
   "facturacion-electronica.mis-cotizaciones.index": MisCotizaciones,
   "facturacion-electronica.crear-cotizacion.index": CrearCotizacion,

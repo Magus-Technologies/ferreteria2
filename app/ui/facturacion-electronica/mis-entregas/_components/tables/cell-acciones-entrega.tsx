@@ -7,6 +7,7 @@ import useApp from 'antd/es/app/useApp'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 interface CellAccionesEntregaProps {
   entrega?: any
@@ -93,36 +94,54 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   return (
     <Space size="small" className="flex items-center justify-center h-full">
-      <Button
-        type="link"
-        size="small"
-        icon={<FaMapMarkedAlt />}
-        onClick={handleVerMapa}
-        title="Ver Mapa"
-      />
-      
-      {estadoEntrega === 'PENDIENTE' && (
+      <ConfigurableElement
+        componentId="mis-entregas.boton-ver-mapa"
+        label="Botón Ver Mapa"
+        noFullWidth
+      >
         <Button
           type="link"
           size="small"
-          icon={<FaTruck />}
-          onClick={handleEnCamino}
-          loading={loading}
-          title="Marcar En Camino"
-          className="text-blue-600"
+          icon={<FaMapMarkedAlt />}
+          onClick={handleVerMapa}
+          title="Ver Mapa"
         />
+      </ConfigurableElement>
+      
+      {estadoEntrega === 'PENDIENTE' && (
+        <ConfigurableElement
+          componentId="mis-entregas.boton-en-camino"
+          label="Botón En Camino"
+          noFullWidth
+        >
+          <Button
+            type="link"
+            size="small"
+            icon={<FaTruck />}
+            onClick={handleEnCamino}
+            loading={loading}
+            title="Marcar En Camino"
+            className="text-blue-600"
+          />
+        </ConfigurableElement>
       )}
       
       {estadoEntrega === 'EN_CAMINO' && (
-        <Button
-          type="link"
-          size="small"
-          icon={<FaCheck />}
-          onClick={handleEntregar}
-          loading={loading}
-          title="Marcar como Entregado"
-          className="text-green-600"
-        />
+        <ConfigurableElement
+          componentId="mis-entregas.boton-entregar"
+          label="Botón Entregar"
+          noFullWidth
+        >
+          <Button
+            type="link"
+            size="small"
+            icon={<FaCheck />}
+            onClick={handleEntregar}
+            loading={loading}
+            title="Marcar como Entregado"
+            className="text-green-600"
+          />
+        </ConfigurableElement>
       )}
     </Space>
   )

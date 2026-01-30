@@ -79,26 +79,10 @@ export interface GroupedPermissions {
 
 export const permissionsApi = {
   /**
-   * Listar todos los permisos
+   * Listar todas las restricciones
    */
-  getAll: async (): Promise<ApiResponse<Permission[]>> => {
-    return apiRequest<Permission[]>("/permissions", { method: "GET" });
-  },
-
-  /**
-   * Obtener permisos agrupados por módulo
-   */
-  getGrouped: async (): Promise<ApiResponse<GroupedPermissions>> => {
-    return apiRequest<GroupedPermissions>("/permissions/grouped", {
-      method: "GET",
-    });
-  },
-
-  /**
-   * Obtener estadísticas del sistema de permisos
-   */
-  getStats: async (): Promise<ApiResponse<PermissionStats>> => {
-    return apiRequest<PermissionStats>("/permissions/stats", { method: "GET" });
+  getAll: async (): Promise<ApiResponse<Restriction[]>> => {
+    return apiRequest<Restriction[]>("/restrictions", { method: "GET" });
   },
 
   /**
@@ -122,7 +106,7 @@ export const permissionsApi = {
     name: string;
     descripcion: string;
   }): Promise<ApiResponse<Role>> => {
-    return apiRequest<Role>("/permissions/roles", {
+    return apiRequest<Role>("/restrictions/roles", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -138,7 +122,7 @@ export const permissionsApi = {
       descripcion: string;
     },
   ): Promise<ApiResponse<Role>> => {
-    return apiRequest<Role>(`/permissions/roles/${roleId}`, {
+    return apiRequest<Role>(`/restrictions/roles/${roleId}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
@@ -150,98 +134,25 @@ export const permissionsApi = {
   deleteRole: async (
     roleId: number,
   ): Promise<ApiResponse<{ message: string }>> => {
-    return apiRequest<{ message: string }>(`/permissions/roles/${roleId}`, {
+    return apiRequest<{ message: string }>(`/restrictions/roles/${roleId}`, {
       method: "DELETE",
     });
   },
 
   /**
-   * Asignar permisos a un rol
+   * Asignar restricciones a un rol
    */
-  assignPermissionsToRole: async (
+  assignRestrictionsToRole: async (
     roleId: number,
-    permissionIds: number[],
+    restrictionIds: number[],
   ): Promise<ApiResponse<{ message: string }>> => {
     return apiRequest<{ message: string }>(
-      `/permissions/roles/${roleId}/permissions`,
+      `/restrictions/roles/${roleId}/restrictions`,
       {
         method: "POST",
-        body: JSON.stringify({ permission_ids: permissionIds }),
+        body: JSON.stringify({ restriction_ids: restrictionIds }),
       },
     );
-  },
-
-  /**
-   * Listar todos los usuarios con sus roles y permisos
-   */
-  getUsers: async (): Promise<ApiResponse<UserWithPermissions[]>> => {
-    return apiRequest<UserWithPermissions[]>("/permissions/users", {
-      method: "GET",
-    });
-  },
-
-  /**
-   * Obtener permisos de un usuario específico
-   */
-  getUserPermissions: async (
-    userId: string,
-  ): Promise<ApiResponse<UserPermissions>> => {
-    return apiRequest<UserPermissions>(`/permissions/users/${userId}`, {
-      method: "GET",
-    });
-  },
-
-  /**
-   * Asignar permisos directos a un usuario
-   */
-  assignPermissionsToUser: async (
-    userId: string,
-    permissionIds: number[],
-  ): Promise<ApiResponse<{ message: string }>> => {
-    return apiRequest<{ message: string }>(
-      `/permissions/users/${userId}/permissions`,
-      {
-        method: "POST",
-        body: JSON.stringify({ permission_ids: permissionIds }),
-      },
-    );
-  },
-
-  /**
-   * Asignar roles a un usuario
-   */
-  assignRolesToUser: async (
-    userId: string,
-    roleIds: number[],
-  ): Promise<ApiResponse<{ message: string }>> => {
-    return apiRequest<{ message: string }>(
-      `/permissions/users/${userId}/roles`,
-      {
-        method: "POST",
-        body: JSON.stringify({ role_ids: roleIds }),
-      },
-    );
-  },
-
-  /**
-   * Verificar si un usuario tiene un permiso específico
-   */
-  checkPermission: async (
-    userId: string,
-    permission: string,
-  ): Promise<
-    ApiResponse<{
-      has_permission: boolean;
-      reason: "admin_global" | "direct_or_role" | "no_permission";
-    }>
-  > => {
-    return apiRequest<{
-      has_permission: boolean;
-      reason: "admin_global" | "direct_or_role" | "no_permission";
-    }>(`/permissions/users/${userId}/check`, {
-      method: "POST",
-      body: JSON.stringify({ permission }),
-    });
   },
 
   /**
@@ -259,5 +170,26 @@ export const permissionsApi = {
         body: JSON.stringify({ permission_name: permissionName, mostrar }),
       },
     );
+  },
+
+  /**
+   * Verificar si un usuario tiene acceso a una funcionalidad
+   */
+  checkAccess: async (
+    userId: string,
+    permission: string,
+  ): Promise<
+    ApiResponse<{
+      has_access: boolean;
+      reason: "admin_global" | "not_restricted" | "restricted";
+    }>
+  > => {
+    return apiRequest<{
+      has_access: boolean;
+      reason: "admin_global" | "not_restricted" | "restricted";
+    }>(`/restrictions/users/${userId}/check-access`, {
+      method: "POST",
+      body: JSON.stringify({ permission }),
+    });
   },
 };

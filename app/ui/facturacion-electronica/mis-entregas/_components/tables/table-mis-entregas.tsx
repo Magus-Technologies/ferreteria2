@@ -9,6 +9,7 @@ import { create } from 'zustand'
 import type { AgGridReact } from 'ag-grid-react'
 import type { RowStyle } from 'ag-grid-community'
 import { orangeColors, greenColors, blueColors, redColors } from '~/lib/colors'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 type UseStoreEntregaSeleccionada = {
   entrega?: Entrega
@@ -73,26 +74,31 @@ export default function TableMisEntregas() {
   }
 
   return (
-    <div className="w-full" style={{ height: '600px' }}>
-      <TableWithTitle<Entrega>
-        id="mis-entregas"
-        title="MIS ENTREGAS"
-        loading={loading}
-        columnDefs={useColumnsMisEntregas(refetch)}
-        rowData={entregas || []}
-        tableRef={tableRef}
-        getRowStyle={getRowStyle}
-        onRowClicked={(event) => {
-          event.node.setSelected(true)
-        }}
-        onSelectionChanged={({ selectedNodes }) => {
-          const selectedEntrega = selectedNodes?.[0]?.data as Entrega
-          setEntregaSeleccionada(selectedEntrega)
-        }}
-        onRowDoubleClicked={({ data }) => {
-          setEntregaSeleccionada(data)
-        }}
-      />
-    </div>
+    <ConfigurableElement
+      componentId="mis-entregas.tabla"
+      label="Tabla de Entregas"
+    >
+      <div className="w-full" style={{ height: '600px' }}>
+        <TableWithTitle<Entrega>
+          id="mis-entregas"
+          title="MIS ENTREGAS"
+          loading={loading}
+          columnDefs={useColumnsMisEntregas(refetch)}
+          rowData={entregas || []}
+          tableRef={tableRef}
+          getRowStyle={getRowStyle}
+          onRowClicked={(event) => {
+            event.node.setSelected(true)
+          }}
+          onSelectionChanged={({ selectedNodes }) => {
+            const selectedEntrega = selectedNodes?.[0]?.data as Entrega
+            setEntregaSeleccionada(selectedEntrega)
+          }}
+          onRowDoubleClicked={({ data }) => {
+            setEntregaSeleccionada(data)
+          }}
+        />
+      </div>
+    </ConfigurableElement>
   )
 }

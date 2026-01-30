@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import useGetEntregas from '../../_hooks/use-get-entregas'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 function CardMiniInfo({
   title,
@@ -60,33 +61,57 @@ export default function CardsInfoEntregas() {
 
   return (
     <>
-      <CardMiniInfo
-        title="Total Entregas"
-        value={totalEntregas}
-        icon="📦"
-        color="blue"
-      />
+      <ConfigurableElement
+        componentId="mis-entregas.card-total"
+        label="Card Total Entregas"
+        noFullWidth
+      >
+        <CardMiniInfo
+          title="Total Entregas"
+          value={totalEntregas}
+          icon="📦"
+          color="blue"
+        />
+      </ConfigurableElement>
       
-      <CardMiniInfo
-        title="Pendientes"
-        value={entregasPendientes}
-        icon="⏳"
-        color="orange"
-      />
+      <ConfigurableElement
+        componentId="mis-entregas.card-pendientes"
+        label="Card Pendientes"
+        noFullWidth
+      >
+        <CardMiniInfo
+          title="Pendientes"
+          value={entregasPendientes}
+          icon="⏳"
+          color="orange"
+        />
+      </ConfigurableElement>
       
-      <CardMiniInfo
-        title="En Camino"
-        value={entregasEnCamino}
-        icon="🚚"
-        color="cyan"
-      />
+      <ConfigurableElement
+        componentId="mis-entregas.card-en-camino"
+        label="Card En Camino"
+        noFullWidth
+      >
+        <CardMiniInfo
+          title="En Camino"
+          value={entregasEnCamino}
+          icon="🚚"
+          color="cyan"
+        />
+      </ConfigurableElement>
       
-      <CardMiniInfo
-        title="Completadas"
-        value={entregasCompletadas}
-        icon="✅"
-        color="green"
-      />
+      <ConfigurableElement
+        componentId="mis-entregas.card-completadas"
+        label="Card Completadas"
+        noFullWidth
+      >
+        <CardMiniInfo
+          title="Completadas"
+          value={entregasCompletadas}
+          icon="✅"
+          color="green"
+        />
+      </ConfigurableElement>
     </>
   )
 }

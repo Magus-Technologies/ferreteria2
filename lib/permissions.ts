@@ -252,6 +252,22 @@ export enum permissions {
   ENTREGA_LISTADO = "entrega.listado",
   ENTREGA_UPDATE = "entrega.update",
   ENTREGA_FINALIZAR = "entrega.finalizar",
+
+  // Mis Entregas - Elementos Configurables
+  MIS_ENTREGAS_FILTRO_FECHA_DESDE = "mis-entregas.filtro-fecha-desde",
+  MIS_ENTREGAS_FILTRO_FECHA_HASTA = "mis-entregas.filtro-fecha-hasta",
+  MIS_ENTREGAS_FILTRO_ESTADO = "mis-entregas.filtro-estado",
+  MIS_ENTREGAS_FILTRO_TIPO_DESPACHO = "mis-entregas.filtro-tipo-despacho",
+  MIS_ENTREGAS_FILTRO_BUSCAR = "mis-entregas.filtro-buscar",
+  MIS_ENTREGAS_BOTON_BUSCAR = "mis-entregas.boton-buscar",
+  MIS_ENTREGAS_TABLA = "mis-entregas.tabla",
+  MIS_ENTREGAS_CARD_TOTAL = "mis-entregas.card-total",
+  MIS_ENTREGAS_CARD_PENDIENTES = "mis-entregas.card-pendientes",
+  MIS_ENTREGAS_CARD_EN_CAMINO = "mis-entregas.card-en-camino",
+  MIS_ENTREGAS_CARD_COMPLETADAS = "mis-entregas.card-completadas",
+  MIS_ENTREGAS_BOTON_VER_MAPA = "mis-entregas.boton-ver-mapa",
+  MIS_ENTREGAS_BOTON_EN_CAMINO = "mis-entregas.boton-en-camino",
+  MIS_ENTREGAS_BOTON_ENTREGAR = "mis-entregas.boton-entregar",
 }
 
 type PermisosValidos = Exclude<
@@ -507,6 +523,22 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.ENTREGA_LISTADO]: "Ver Listado de Entregas",
   [permissions.ENTREGA_UPDATE]: "Actualizar Estado de Entrega",
   [permissions.ENTREGA_FINALIZAR]: "Finalizar Entrega",
+
+  // Mis Entregas - Elementos Configurables
+  [permissions.MIS_ENTREGAS_FILTRO_FECHA_DESDE]: "Filtro Fecha Desde",
+  [permissions.MIS_ENTREGAS_FILTRO_FECHA_HASTA]: "Filtro Fecha Hasta",
+  [permissions.MIS_ENTREGAS_FILTRO_ESTADO]: "Filtro Estado",
+  [permissions.MIS_ENTREGAS_FILTRO_TIPO_DESPACHO]: "Filtro Tipo Despacho",
+  [permissions.MIS_ENTREGAS_FILTRO_BUSCAR]: "Filtro Buscar",
+  [permissions.MIS_ENTREGAS_BOTON_BUSCAR]: "Botón Buscar",
+  [permissions.MIS_ENTREGAS_TABLA]: "Tabla de Entregas",
+  [permissions.MIS_ENTREGAS_CARD_TOTAL]: "Card Total Entregas",
+  [permissions.MIS_ENTREGAS_CARD_PENDIENTES]: "Card Pendientes",
+  [permissions.MIS_ENTREGAS_CARD_EN_CAMINO]: "Card En Camino",
+  [permissions.MIS_ENTREGAS_CARD_COMPLETADAS]: "Card Completadas",
+  [permissions.MIS_ENTREGAS_BOTON_VER_MAPA]: "Botón Ver Mapa",
+  [permissions.MIS_ENTREGAS_BOTON_EN_CAMINO]: "Botón En Camino",
+  [permissions.MIS_ENTREGAS_BOTON_ENTREGAR]: "Botón Entregar",
 };
 
 export function getAllPermissions() {
