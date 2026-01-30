@@ -1,66 +1,51 @@
-import { FaCalculator, FaCartShopping, FaWarehouse } from 'react-icons/fa6'
-import { BiTransferAlt } from 'react-icons/bi'
-import { MdOutlinePendingActions } from 'react-icons/md'
-import { FaTruck, FaTruckLoading } from 'react-icons/fa'
-import BaseNav from '~/app/_components/nav/base-nav'
-import ButtonNav from '~/app/_components/nav/button-nav'
+"use client";
+
+import { getBottomNavItems, getModuleNav } from "~/lib/navigation";
+import usePermissionHook from "~/hooks/use-permission";
+import { FaWarehouse, FaCartShopping, FaCalculator } from "react-icons/fa6";
+import { BiTransferAlt } from "react-icons/bi";
+import { MdOutlinePendingActions } from "react-icons/md";
+import { FaTruck, FaTruckLoading } from "react-icons/fa";
+import BaseNav from "~/app/_components/nav/base-nav";
+import ButtonNav from "~/app/_components/nav/button-nav";
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  FaWarehouse,
+  BiTransferAlt,
+  FaCalculator,
+  FaCartShopping,
+  MdOutlinePendingActions,
+  FaTruck,
+  FaTruckLoading,
+};
 
 export default function BottomNav({ className }: { className?: string }) {
+  const { can } = usePermissionHook();
+  const moduleId = "gestion-comercial-e-inventario";
+  const nav = getModuleNav(moduleId);
+  const items = getBottomNavItems(moduleId, can);
+
+  if (!nav) return null;
+
   return (
     <BaseNav
       className={className}
       withDropdownUser={false}
-      bgColorClass='bg-emerald-600'
+      bgColorClass={nav.bottomNav.bgColor}
     >
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/mi-almacen'
-      >
-        <FaWarehouse />
-        Mi Almacén
-      </ButtonNav>
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/mis-transferencias'
-      >
-        <BiTransferAlt />
-        Mis Transferencias
-      </ButtonNav>
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/cuadres'
-      >
-        <FaCalculator />
-        Cuadres
-      </ButtonNav>
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/mis-compras'
-      >
-        <FaCartShopping />
-        Mis Compras
-      </ButtonNav>
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra'
-      >
-        <MdOutlinePendingActions />
-        Mis Ordenes de Compra
-      </ButtonNav>
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/mis-proveedores'
-      >
-        <FaTruck />
-        Mis Proveedores
-      </ButtonNav>
-      <ButtonNav
-        colorActive='text-emerald-600'
-        path='/ui/gestion-comercial-e-inventario/mis-recepciones'
-      >
-        <FaTruckLoading />
-        Mis Recepciones
-      </ButtonNav>
+      {items.map((item) => {
+        const Icon = iconMap[item.icon];
+        return (
+          <ButtonNav
+            key={item.id}
+            colorActive={nav.bottomNav.activeColor}
+            path={item.route || undefined}
+          >
+            {Icon && <Icon />}
+            {item.label}
+          </ButtonNav>
+        );
+      })}
     </BaseNav>
-  )
+  );
 }

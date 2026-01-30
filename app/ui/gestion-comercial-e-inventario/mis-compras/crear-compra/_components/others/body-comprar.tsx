@@ -5,6 +5,7 @@ import CardsInfoCompra from './cards-info-compra'
 import { Form } from 'antd'
 import FormTableComprar from '../form/form-table-comprar'
 import FormBase from '~/components/form/form-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import { useEffect } from 'react'
 import {
@@ -99,9 +100,11 @@ export default function BodyComprar({
       onFinish={handleSubmit}
     >
       <div className='flex-1 flex flex-col gap-2 xl:gap-3 min-w-0 min-h-0'>
-        <div className='flex-1 min-h-0'>
-          <FormTableComprar form={form} compra={compra} />
-        </div>
+        <ConfigurableElement componentId='gestion-comercial.crear-compra.tabla-productos' label='Tabla de Productos'>
+          <div className='flex-1 min-h-0'>
+            <FormTableComprar form={form} compra={compra} />
+          </div>
+        </ConfigurableElement>
         <FormCrearCompra form={form} compra={compra} />
       </div>
       <div className='w-full xl:w-auto'>

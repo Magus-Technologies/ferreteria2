@@ -63,6 +63,15 @@ export type FormCreateVenta = {
     monto: number
     numero_operacion?: string
   }>
+  // ✅ Campos de entrega
+  tipo_despacho?: 'EnTienda' | 'Domicilio' | 'Parcial'
+  despachador_id?: string
+  fecha_programada?: Dayjs
+  hora_inicio?: string
+  hora_fin?: string
+  direccion_entrega?: string
+  observaciones?: string
+  quien_entrega?: 'vendedor' | 'almacen'
 }
 
 // Componente interno que se recrea completamente cuando cambia la key

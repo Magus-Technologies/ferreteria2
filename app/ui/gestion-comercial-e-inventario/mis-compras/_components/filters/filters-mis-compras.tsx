@@ -2,6 +2,7 @@
 
 import { Form, Drawer, Badge } from 'antd'
 import { FaPlusCircle, FaSearch, FaFilter } from 'react-icons/fa'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
@@ -131,18 +132,9 @@ export default function FiltersMisCompras() {
         icon={<FaCartShopping className='text-cyan-600' />}
         extra={
           <div className='hidden lg:flex items-center gap-6 ml-6'>
-            {/* <Link href='/ui/gestion-comercial-e-inventario/mis-compras/crear-compra'>
-              <ButtonBase
-                color='success'
-                size='lg'
-                type='button'
-                className='flex items-center gap-2 w-fit'
-              >
-                <FaPlusCircle />
-                Crear Compra
-              </ButtonBase>
-            </Link> */}
-            <TotalCompras />
+            <ConfigurableElement componentId='gestion-comercial.mis-compras.total-compras' label='Total Compras'>
+              <TotalCompras />
+            </ConfigurableElement>
           </div>
         }
       >
@@ -150,214 +142,247 @@ export default function FiltersMisCompras() {
         <div className='flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 w-full'>
           {/* Desktop: Mostrar todos los filtros principales */}
           <div className='hidden lg:flex items-center gap-4'>
-            <SelectAlmacen
-              propsForm={{
-                name: 'almacen_id',
-                hasFeedback: false,
-                className: '!min-w-[220px] !w-[220px] !max-w-[220px]',
-                rules: [{ required: true, message: '' }],
-              }}
-              className='w-full'
-              formWithMessage={false}
-              form={form}
-            />
-            <SelectProveedores
-              autoFocus
-              propsForm={{
-                name: 'proveedor_id',
-                hasFeedback: false,
-                className: '!min-w-[400px] !w-[400px] !max-w-[400px]',
-              }}
-              size='large'
-              className='w-full'
-              classIconSearch='!mb-0'
-              formWithMessage={false}
-              allowClear
-              form={form}
-            />
-          </div>
-
-          {/* Mobile/Tablet: Solo almacén y botones */}
-          <div className='flex lg:hidden items-center gap-2 w-full'>
-            <div className='flex-1'>
+            <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-almacen' label='Filtro Almacén'>
               <SelectAlmacen
                 propsForm={{
                   name: 'almacen_id',
                   hasFeedback: false,
+                  className: '!min-w-[220px] !w-[220px] !max-w-[220px]',
                   rules: [{ required: true, message: '' }],
                 }}
                 className='w-full'
                 formWithMessage={false}
                 form={form}
               />
+            </ConfigurableElement>
+            <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-proveedor' label='Filtro Proveedor'>
+              <SelectProveedores
+                autoFocus
+                propsForm={{
+                  name: 'proveedor_id',
+                  hasFeedback: false,
+                  className: '!min-w-[400px] !w-[400px] !max-w-[400px]',
+                }}
+                size='large'
+                className='w-full'
+                classIconSearch='!mb-0'
+                formWithMessage={false}
+                allowClear
+                form={form}
+              />
+            </ConfigurableElement>
+          </div>
+
+          {/* Mobile/Tablet: Solo almacén y botones */}
+          <div className='flex lg:hidden items-center gap-2 w-full'>
+            <div className='flex-1'>
+              <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-almacen-mobile' label='Filtro Almacén (móvil)'>
+                <SelectAlmacen
+                  propsForm={{
+                    name: 'almacen_id',
+                    hasFeedback: false,
+                    rules: [{ required: true, message: '' }],
+                  }}
+                  className='w-full'
+                  formWithMessage={false}
+                  form={form}
+                />
+              </ConfigurableElement>
             </div>
-            <ButtonBase
-              color='info'
-              size='md'
-              type='submit'
-              className='flex items-center gap-2 flex-shrink-0'
-            >
-              <FaSearch />
-            </ButtonBase>
-            <Badge count={activeFiltersCount} offset={[-5, 5]}>
+            <ConfigurableElement componentId='gestion-comercial.mis-compras.boton-buscar-mobile' label='Botón Buscar (móvil)'>
               <ButtonBase
-                color='warning'
+                color='info'
                 size='md'
-                type='button'
-                onClick={() => setDrawerOpen(true)}
-                className='flex items-center gap-2 whitespace-nowrap'
+                type='submit'
+                className='flex items-center gap-2 flex-shrink-0'
               >
-                <FaFilter />
-                Filtros
+                <FaSearch />
               </ButtonBase>
-            </Badge>
+            </ConfigurableElement>
+            <ConfigurableElement componentId='gestion-comercial.mis-compras.boton-filtros-mobile' label='Botón Filtros (móvil)'>
+              <Badge count={activeFiltersCount} offset={[-5, 5]}>
+                <ButtonBase
+                  color='warning'
+                  size='md'
+                  type='button'
+                  onClick={() => setDrawerOpen(true)}
+                  className='flex items-center gap-2 whitespace-nowrap'
+                >
+                  <FaFilter />
+                  Filtros
+                </ButtonBase>
+              </Badge>
+            </ConfigurableElement>
           </div>
         </div>
 
         {/* Mobile/Tablet: Botón Crear Compra abajo del título */}
         <div className='lg:hidden mt-3 flex items-center gap-3'>
-          <Link href='/ui/gestion-comercial-e-inventario/mis-compras/crear-compra' className='flex-1'>
-            <ButtonBase
-              color='success'
-              size='md'
-              type='button'
-              className='flex items-center justify-center gap-2 w-full'
-            >
-              <FaPlusCircle />
-              Crear Compra
-            </ButtonBase>
-          </Link>
-          <TotalCompras />
+          <ConfigurableElement componentId='gestion-comercial.mis-compras.boton-crear-compra-mobile' label='Botón Crear Compra (móvil)'>
+            <Link href='/ui/gestion-comercial-e-inventario/mis-compras/crear-compra' className='flex-1'>
+              <ButtonBase
+                color='success'
+                size='md'
+                type='button'
+                className='flex items-center justify-center gap-2 w-full'
+              >
+                <FaPlusCircle />
+                Crear Compra
+              </ButtonBase>
+            </Link>
+          </ConfigurableElement>
+          <ConfigurableElement componentId='gestion-comercial.mis-compras.total-compras-mobile' label='Total Compras (móvil)'>
+            <TotalCompras />
+          </ConfigurableElement>
         </div>
       </TituloModulos>
 
       {/* Filtros secundarios - Solo desktop */}
       <div className='hidden lg:flex items-center gap-4 mt-4'>
-        <LabelBase label='Fecha Compra:'>
-          <DatePickerBase
-            propsForm={{
-              name: 'desde',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            placeholder='Fecha Compra'
-            formWithMessage={false}
-            prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Hasta:'>
-          <DatePickerBase
-            propsForm={{
-              name: 'hasta',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            placeholder='Hasta'
-            formWithMessage={false}
-            prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Forma de Pago:'>
-          <SelectFormaDePago
-            propsForm={{
-              name: 'forma_de_pago',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Tipo Documento:'>
-          <SelectTipoDocumento
-            propsForm={{
-              name: 'tipo_documento',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Usuario:'>
-          <SelectUsuarios
-            propsForm={{
-              name: 'user_id',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-fecha-desde' label='Filtro Fecha Compra'>
+          <LabelBase label='Fecha Compra:'>
+            <DatePickerBase
+              propsForm={{
+                name: 'desde',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              placeholder='Fecha Compra'
+              formWithMessage={false}
+              prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-fecha-hasta' label='Filtro Hasta'>
+          <LabelBase label='Hasta:'>
+            <DatePickerBase
+              propsForm={{
+                name: 'hasta',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              placeholder='Hasta'
+              formWithMessage={false}
+              prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-forma-pago' label='Filtro Forma de Pago'>
+          <LabelBase label='Forma de Pago:'>
+            <SelectFormaDePago
+              propsForm={{
+                name: 'forma_de_pago',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              className='w-full'
+              formWithMessage={false}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-tipo-documento' label='Filtro Tipo Documento'>
+          <LabelBase label='Tipo Documento:'>
+            <SelectTipoDocumento
+              propsForm={{
+                name: 'tipo_documento',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              className='w-full'
+              formWithMessage={false}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-usuario' label='Filtro Usuario'>
+          <LabelBase label='Usuario:'>
+            <SelectUsuarios
+              propsForm={{
+                name: 'user_id',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              className='w-full'
+              formWithMessage={false}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
       </div>
       <div className='hidden lg:flex items-center gap-4 mt-4'>
-        <LabelBase label='Estado de Cuenta:'>
-          <SelectEstadoDeCuenta
-            propsForm={{
-              name: 'estado_de_cuenta',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Estado de Compra:'>
-          <SelectEstadoDeCompra
-            propsForm={{
-              name: 'estado_de_compra',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <LabelBase label='Pendiente de Recepción:'>
-          <SelectPendienteDeRecepcionAlmacen
-            propsForm={{
-              name: 'pendiente_de_recepcion',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
-            allowClear
-          />
-        </LabelBase>
-        <ButtonBase
-          color='info'
-          size='md'
-          type='submit'
-          className='flex items-center gap-2 w-fit'
-        >
-          <FaSearch />
-          Buscar
-        </ButtonBase>
-        
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-estado-cuenta' label='Filtro Estado de Cuenta'>
+          <LabelBase label='Estado de Cuenta:'>
+            <SelectEstadoDeCuenta
+              propsForm={{
+                name: 'estado_de_cuenta',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              className='w-full'
+              formWithMessage={false}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-estado-compra' label='Filtro Estado de Compra'>
+          <LabelBase label='Estado de Compra:'>
+            <SelectEstadoDeCompra
+              propsForm={{
+                name: 'estado_de_compra',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              className='w-full'
+              formWithMessage={false}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.filtro-pendiente-recepcion' label='Filtro Pendiente de Recepción'>
+          <LabelBase label='Pendiente de Recepción:'>
+            <SelectPendienteDeRecepcionAlmacen
+              propsForm={{
+                name: 'pendiente_de_recepcion',
+                hasFeedback: false,
+                className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
+              }}
+              className='w-full'
+              formWithMessage={false}
+              allowClear
+            />
+          </LabelBase>
+        </ConfigurableElement>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.boton-buscar' label='Botón Buscar'>
+          <ButtonBase
+            color='info'
+            size='md'
+            type='submit'
+            className='flex items-center gap-2 w-fit'
+          >
+            <FaSearch />
+            Buscar
+          </ButtonBase>
+        </ConfigurableElement>
         {/* Leyenda de colores */}
-        <div className='flex items-center gap-4 ml-auto'>
-          <div className='flex items-center gap-2'>
-            <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: redColors[2] }} />
-            <span className='text-sm font-medium text-gray-700'>Crédito</span>
+        <ConfigurableElement componentId='gestion-comercial.mis-compras.leyenda-colores' label='Leyenda de colores'>
+          <div className='flex items-center gap-4 ml-auto'>
+            <div className='flex items-center gap-2'>
+              <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: redColors[2] }} />
+              <span className='text-sm font-medium text-gray-700'>Crédito</span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: orangeColors[2] }} />
+              <span className='text-sm font-medium text-gray-700'>Contado</span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: greenColors[2] }} />
+              <span className='text-sm font-medium text-gray-700'>Pagado</span>
+            </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: orangeColors[2] }} />
-            <span className='text-sm font-medium text-gray-700'>Contado</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <div className='w-6 h-6 rounded border border-gray-300' style={{ backgroundColor: greenColors[2] }} />
-            <span className='text-sm font-medium text-gray-700'>Pagado</span>
-          </div>
-        </div>
+        </ConfigurableElement>
       </div>
 
       {/* Drawer para móvil/tablet */}

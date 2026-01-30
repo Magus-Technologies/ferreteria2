@@ -1,0 +1,137 @@
+{
+  "moduleId": "gestion-comercial-e-inventario",
+  "topNav": {
+    "bgColor": "bg-emerald-600",
+    "activeColor": "text-emerald-600",
+    "items": [
+      {
+        "id": "dashboard",
+        "type": "button",
+        "label": "Dashboard",
+        "icon": "MdSpaceDashboard",
+        "route": "/ui/gestion-comercial-e-inventario",
+        "permission": "gestion-comercial-e-inventario.dashboard.index"
+      },
+      {
+        "id": "inventario-dropdown",
+        "type": "dropdown",
+        "label": "Inventario",
+        "icon": "FaBoxOpen",
+        "permission": null,
+        "items": [
+          {
+            "key": "crear-producto",
+            "label": "Crear Producto",
+            "route": "/ui/gestion-comercial-e-inventario/mi-almacen",
+            "permission": "producto.create"
+          },
+          {
+            "key": "transferir-stock",
+            "label": "Transferir Stock",
+            "route": null,
+            "permission": null
+          }
+        ]
+      },
+      {
+        "id": "compras-dropdown",
+        "type": "dropdown",
+        "label": "Compras",
+        "icon": "FaCartShopping",
+        "permission": null,
+        "items": [
+          {
+            "key": "crear-compra",
+            "label": "Crear Compra",
+            "route": "/ui/gestion-comercial-e-inventario/mis-compras/crear-compra",
+            "permission": "gestion-comercial-e-inventario.crear-compra.index"
+          },
+          {
+            "key": "crear-orden-compra",
+            "label": "Crear Orden de Compra",
+            "route": null,
+            "permission": null
+          }
+        ]
+      },
+      {
+        "id": "kardex",
+        "type": "button",
+        "label": "Kardex",
+        "icon": "FaClipboardList",
+        "route": "/ui/gestion-comercial-e-inventario/mi-almacen",
+        "permission": "gestion-comercial-e-inventario.mi-almacen.index"
+      },
+      {
+        "id": "contactos-dropdown",
+        "type": "dropdown",
+        "label": "Contactos",
+        "icon": "IoMdContact",
+        "permission": null,
+        "items": [
+          {
+            "key": "crear-proveedor",
+            "label": "Crear Proveedor",
+            "route": "/ui/gestion-comercial-e-inventario/mis-proveedores",
+            "permission": "proveedor.create"
+          }
+        ]
+      }
+    ]
+  },
+  "bottomNav": {
+    "bgColor": "bg-emerald-600",
+    "activeColor": "text-emerald-600",
+    "items": [
+      {
+        "id": "mi-almacen",
+        "label": "Mi Almacén",
+        "icon": "FaWarehouse",
+        "route": "/ui/gestion-comercial-e-inventario/mi-almacen",
+        "permission": "gestion-comercial-e-inventario.mi-almacen.index"
+      },
+      {
+        "id": "mis-transferencias",
+        "label": "Mis Transferencias",
+        "icon": "BiTransferAlt",
+        "route": "/ui/gestion-comercial-e-inventario/mis-transferencias",
+        "permission": null
+      },
+      {
+        "id": "cuadres",
+        "label": "Cuadres",
+        "icon": "FaCalculator",
+        "route": "/ui/gestion-comercial-e-inventario/cuadres",
+        "permission": null
+      },
+      {
+        "id": "mis-compras",
+        "label": "Mis Compras",
+        "icon": "FaCartShopping",
+        "route": "/ui/gestion-comercial-e-inventario/mis-compras",
+        "permission": "gestion-comercial-e-inventario.mis-compras.index"
+      },
+      {
+        "id": "mis-ordenes-de-compra",
+        "label": "Mis Ordenes de Compra",
+        "icon": "MdOutlinePendingActions",
+        "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra",
+        "permission": null
+      },
+      {
+        "id": "mis-proveedores",
+        "label": "Mis Proveedores",
+        "icon": "FaTruck",
+        "route": "/ui/gestion-comercial-e-inventario/mis-proveedores",
+        "permission": "proveedor.listado"
+      },
+      {
+        "id": "mis-recepciones",
+        "label": "Mis Recepciones",
+        "icon": "FaTruckLoading",
+        "route": "/ui/gestion-comercial-e-inventario/mis-recepciones",
+        "permission": "gestion-comercial-e-inventario.mis-recepciones.index"
+      }
+    ]
+  }
+}

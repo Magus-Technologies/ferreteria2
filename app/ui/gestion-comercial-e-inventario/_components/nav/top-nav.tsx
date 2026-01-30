@@ -1,85 +1,71 @@
 "use client";
+
+import { getTopNavItems, getModuleNav } from "~/lib/navigation";
+import usePermissionHook from "~/hooks/use-permission";
 import { MdSpaceDashboard } from "react-icons/md";
 import { FaBoxOpen, FaClipboardList } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
-import DropdownBase from "~/components/dropdown/dropdown-base";
 import { IoMdContact } from "react-icons/io";
-import { MenuProps } from "antd";
+import DropdownBase from "~/components/dropdown/dropdown-base";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 import { useRouter } from "next/navigation";
 
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  MdSpaceDashboard,
+  FaBoxOpen,
+  FaCartShopping,
+  FaClipboardList,
+  IoMdContact,
+};
+
 export default function TopNav({ className }: { className?: string }) {
   const router = useRouter();
+  const { can } = usePermissionHook();
+  const moduleId = "gestion-comercial-e-inventario";
+  const nav = getModuleNav(moduleId);
+  const items = getTopNavItems(moduleId, can);
 
-  const itemsInventario: MenuProps["items"] = [
-    {
-      key: "1",
-      label: "Crear Producto",
-    },
-    {
-      key: "2",
-      label: "Transferir Stock",
-    },
-  ];
+  if (!nav) return null;
 
-  const itemsCompras: MenuProps["items"] = [
-    {
-      key: "1",
-      label: "Crear Compra",
-      onClick: () => {
-        router.push(
-          "/ui/gestion-comercial-e-inventario/mis-compras/crear-compra"
-        );
-      },
-    },
-    {
-      key: "2",
-      label: "Crear Orden de Compra",
-    },
-  ];
-
-  const itemsContactos: MenuProps["items"] = [
-    {
-      key: "1",
-      label: "Crear Proveedor",
-    },
-  ];
   return (
-    <BaseNav className={className} bgColorClass="bg-emerald-600">
-      <ButtonNav
-        path="/ui/gestion-comercial-e-inventario"
-        colorActive="text-emerald-600"
-      >
-        <MdSpaceDashboard />
-        Dashboard
-      </ButtonNav>
+    <BaseNav className={className} bgColorClass={nav.topNav.bgColor}>
+      {items.map((item) => {
+        const Icon = iconMap[item.icon];
 
-      <DropdownBase menu={{ items: itemsInventario }}>
-        <ButtonNav withIcon={false} colorActive="text-emerald-600">
-          <FaBoxOpen />
-          Inventario
-        </ButtonNav>
-      </DropdownBase>
-      <DropdownBase menu={{ items: itemsCompras }}>
-        <ButtonNav withIcon={false} colorActive="text-emerald-600">
-          <FaCartShopping />
-          Compras
-        </ButtonNav>
-      </DropdownBase>
-      <ButtonNav
-        path="/ui/gestion-comercial-e-inventario/mi-almacen"
-        colorActive="text-emerald-600"
-      >
-        <FaClipboardList />
-        Kardex
-      </ButtonNav>
-      <DropdownBase menu={{ items: itemsContactos }}>
-        <ButtonNav withIcon={false} colorActive="text-emerald-600">
-          <IoMdContact />
-          Contactos
-        </ButtonNav>
-      </DropdownBase>
+        if (item.type === "dropdown" && item.items && item.items.length > 0) {
+          const menuItems = item.items.map((sub) => {
+            if (sub.key === "divider" || (sub as { type?: string }).type === "divider") {
+              return { type: "divider" as const };
+            }
+            return {
+              key: sub.key,
+              label: sub.label,
+              onClick: sub.route ? () => router.push(sub.route as string) : undefined,
+            };
+          });
+
+          return (
+            <DropdownBase key={item.id} menu={{ items: menuItems }}>
+              <ButtonNav withIcon={false} colorActive={nav.topNav.activeColor}>
+                {Icon && <Icon />}
+                {item.label}
+              </ButtonNav>
+            </DropdownBase>
+          );
+        }
+
+        return (
+          <ButtonNav
+            key={item.id}
+            path={item.route || undefined}
+            colorActive={nav.topNav.activeColor}
+          >
+            {Icon && <Icon />}
+            {item.label}
+          </ButtonNav>
+        );
+      })}
     </BaseNav>
   );
 }

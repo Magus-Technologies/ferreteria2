@@ -16,6 +16,15 @@ import {
 } from '~/lib/api/venta'
 import { ventaEvents } from './venta-events'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
+import { 
+  entregaProductoApi, 
+  TipoEntrega, 
+  TipoDespacho, 
+  EstadoEntrega,
+  QuienEntrega,
+  type CreateEntregaProductoRequest 
+} from '~/lib/api/entrega-producto'
+import dayjs from 'dayjs'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -92,9 +101,18 @@ export default function useCreateVenta() {
       _cliente_direccion_3,
       _cliente_direccion_4,
       direccion,
-      direccion_seleccionada, // ✅ Ahora SÍ se usará
+      direccion_seleccionada,
       ruc_dni,
       telefono,
+      // ✅ Extraer datos de entrega
+      tipo_despacho,
+      despachador_id,
+      fecha_programada,
+      hora_inicio,
+      hora_fin,
+      direccion_entrega,
+      observaciones,
+      quien_entrega,
       ...restValues
     } = values
     
@@ -255,6 +273,128 @@ export default function useCreateVenta() {
       if (response.data?.data) {
         console.log('📢 Emitiendo evento ventaCreada')
         ventaEvents.emit(response.data.data)
+      }
+
+      // ✅ CREAR ENTREGA AUTOMÁTICAMENTE SI ES DESPACHO A DOMICILIO
+      const ventaCreada = response.data?.data
+
+      console.log('🔍 DEBUG - Datos de entrega:')
+      console.log('  tipo_despacho:', tipo_despacho)
+      console.log('  despachador_id:', despachador_id)
+      console.log('  fecha_programada:', fecha_programada)
+      console.log('  hora_inicio:', hora_inicio)
+      console.log('  hora_fin:', hora_fin)
+      console.log('  direccion_entrega:', direccion_entrega)
+
+      if (ventaCreada && tipo_despacho === 'Domicilio' && despachador_id) {
+        console.log('🚚 Creando entrega automáticamente...')
+        
+        try {
+          // Obtener los IDs de unidades derivadas de venta desde la respuesta
+          const productosVenta = ventaCreada.productos_por_almacen || []
+          const unidadesDerivadas: any[] = []
+          
+          productosVenta.forEach((productoAlmacen: any) => {
+            if (productoAlmacen.unidades_derivadas) {
+              productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                unidadesDerivadas.push({
+                  unidad_derivada_venta_id: unidad.id,
+                  cantidad_entregada: Number(unidad.cantidad),
+                  ubicacion: undefined,
+                })
+              })
+            }
+          })
+
+          console.log('📦 Unidades derivadas para entrega:', unidadesDerivadas)
+
+          // Preparar datos de la entrega
+          const entregaData: CreateEntregaProductoRequest = {
+            venta_id: ventaCreada.id,
+            tipo_entrega: TipoEntrega.DESPACHO,
+            tipo_despacho: TipoDespacho.PROGRAMADO,
+            estado_entrega: EstadoEntrega.PENDIENTE,
+            fecha_entrega: dayjs().format('YYYY-MM-DD'),
+            fecha_programada: fecha_programada ? dayjs(fecha_programada).format('YYYY-MM-DD') : undefined,
+            hora_inicio: hora_inicio,
+            hora_fin: hora_fin,
+            direccion_entrega: direccion_entrega,
+            observaciones: observaciones,
+            almacen_salida_id: almacen_id,
+            chofer_id: String(despachador_id), // ✅ Usar chofer_id para guardar el despachador
+            quien_entrega: QuienEntrega.CHOFER,
+            user_id: user_id,
+            productos_entregados: unidadesDerivadas,
+          }
+
+          console.log('📤 Datos de entrega a enviar:', entregaData)
+
+          // Crear la entrega
+          const entregaResponse = await entregaProductoApi.create(entregaData)
+          
+          if (entregaResponse.error) {
+            console.error('❌ Error al crear entrega:', entregaResponse.error)
+            notification.warning({
+              message: 'Venta creada pero entrega no pudo ser registrada',
+              description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
+            })
+          } else {
+            console.log('✅ Entrega creada automáticamente:', entregaResponse.data)
+            message.success('Entrega programada exitosamente para el despachador')
+          }
+        } catch (error) {
+          console.error('❌ Error al crear entrega automática:', error)
+          notification.warning({
+            message: 'Venta creada pero entrega no pudo ser registrada',
+            description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
+          })
+        }
+      } else if (tipo_despacho === 'EnTienda' && quien_entrega) {
+        console.log('🏪 Creando entrega en tienda automáticamente...')
+        
+        try {
+          // Obtener los IDs de unidades derivadas de venta desde la respuesta
+          const productosVenta = ventaCreada.productos_por_almacen || []
+          const unidadesDerivadas: any[] = []
+          
+          productosVenta.forEach((productoAlmacen: any) => {
+            if (productoAlmacen.unidades_derivadas) {
+              productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                unidadesDerivadas.push({
+                  unidad_derivada_venta_id: unidad.id,
+                  cantidad_entregada: Number(unidad.cantidad),
+                  ubicacion: undefined,
+                })
+              })
+            }
+          })
+
+          // Preparar datos de la entrega en tienda
+          const entregaData: CreateEntregaProductoRequest = {
+            venta_id: ventaCreada.id,
+            tipo_entrega: TipoEntrega.RECOJO_EN_TIENDA,
+            tipo_despacho: TipoDespacho.INMEDIATO,
+            estado_entrega: EstadoEntrega.ENTREGADO, // En tienda se entrega inmediatamente
+            fecha_entrega: dayjs().format('YYYY-MM-DD'),
+            almacen_salida_id: almacen_id,
+            quien_entrega: quien_entrega as QuienEntrega,
+            user_id: user_id,
+            productos_entregados: unidadesDerivadas,
+          }
+
+          console.log('📤 Datos de entrega en tienda a enviar:', entregaData)
+
+          // Crear la entrega
+          const entregaResponse = await entregaProductoApi.create(entregaData)
+          
+          if (entregaResponse.error) {
+            console.error('❌ Error al crear entrega en tienda:', entregaResponse.error)
+          } else {
+            console.log('✅ Entrega en tienda creada automáticamente:', entregaResponse.data)
+          }
+        } catch (error) {
+          console.error('❌ Error al crear entrega en tienda automática:', error)
+        }
       }
 
       // Actualizar caché de productos para bloquear botón eliminar

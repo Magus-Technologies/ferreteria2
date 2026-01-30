@@ -2,7 +2,7 @@
 
 import { getBottomNavItems, getModuleNav } from "~/lib/navigation";
 import usePermissionHook from "~/hooks/use-permission";
-import { FaCartShopping } from "react-icons/fa6";
+import { FaCartShopping, FaTruck } from "react-icons/fa6";
 import { MdPointOfSale } from "react-icons/md";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
@@ -14,6 +14,7 @@ import { HistoryOutlined, SwapOutlined } from "@ant-design/icons";
 // Mapa de iconos
 const iconMap: Record<string, any> = {
   FaCartShopping,
+  FaTruck,
   MdPointOfSale,
   IoDocumentAttach,
   GiReceiveMoney,

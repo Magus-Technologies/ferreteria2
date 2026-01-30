@@ -9,6 +9,8 @@ interface ConfigurableElementProps {
   label: string; // Label legible (ej: "Botón Crear Producto")
   children: ReactNode;
   className?: string;
+  /** Si true, el wrapper no fuerza width:100% (útil para sidebars que deben mantener su ancho) */
+  noFullWidth?: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export default function ConfigurableElement({
   label,
   children,
   className = "",
+  noFullWidth = false,
 }: ConfigurableElementProps) {
   const configMode = useConfigMode();
   const [isHovered, setIsHovered] = useState(false);
@@ -61,12 +64,19 @@ export default function ConfigurableElement({
         display: 'contents' // Hace que el wrapper sea transparente para el layout
       }}
     >
-      {/* Wrapper interno para mantener el posicionamiento relativo - con width: 100% */}
-      <div style={{ position: 'relative', width: '100%' }}>
+      {/* Wrapper interno: no forzar width en sidebars para no romper el layout */}
+      <div
+        style={{
+          position: 'relative',
+          width: noFullWidth ? undefined : '100%',
+          minWidth: noFullWidth ? undefined : 0,
+        }}
+        className={noFullWidth ? 'shrink-0' : ''}
+      >
         {/* Contenido original */}
         <div
           className={`${isRestricted ? "opacity-40 grayscale" : ""} pointer-events-none select-none`}
-          style={{ userSelect: "none", width: '100%' }}
+          style={{ userSelect: "none", width: noFullWidth ? undefined : '100%' }}
         >
           {children}
         </div>

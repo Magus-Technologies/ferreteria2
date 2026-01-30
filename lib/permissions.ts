@@ -35,6 +35,7 @@ export enum permissions {
   // ============================================
   FACTURACION_ELECTRONICA_DASHBOARD_INDEX = "facturacion-electronica.dashboard.index",
   FACTURACION_ELECTRONICA_MIS_VENTAS_INDEX = "facturacion-electronica.mis-ventas.index",
+  FACTURACION_ELECTRONICA_MIS_ENTREGAS_INDEX = "facturacion-electronica.mis-entregas.index",
   FACTURACION_ELECTRONICA_MIS_COTIZACIONES_INDEX = "facturacion-electronica.mis-cotizaciones.index",
   FACTURACION_ELECTRONICA_MIS_GUIAS_INDEX = "facturacion-electronica.mis-guias.index",
   FACTURACION_ELECTRONICA_MIS_PRESTAMOS_INDEX = "facturacion-electronica.mis-prestamos.index",
@@ -245,6 +246,12 @@ export enum permissions {
   GUIA_CREATE = "guia.create",
   GUIA_UPDATE = "guia.update",
   GUIA_DELETE = "guia.delete",
+
+  // Entregas
+  ENTREGA_BASE = "entrega",
+  ENTREGA_LISTADO = "entrega.listado",
+  ENTREGA_UPDATE = "entrega.update",
+  ENTREGA_FINALIZAR = "entrega.finalizar",
 }
 
 type PermisosValidos = Exclude<
@@ -272,6 +279,7 @@ type PermisosValidos = Exclude<
   | permissions.CLIENTE_BASE
   | permissions.COTIZACION_BASE
   | permissions.GUIA_BASE
+  | permissions.ENTREGA_BASE
 >;
 const permissionstoDescripcion: Record<PermisosValidos, string> = {
   // MÓDULOS PRINCIPALES
@@ -305,6 +313,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Dashboard Facturación Electrónica",
   [permissions.FACTURACION_ELECTRONICA_MIS_VENTAS_INDEX]:
     "Ver Página Mis Ventas",
+  [permissions.FACTURACION_ELECTRONICA_MIS_ENTREGAS_INDEX]:
+    "Ver Página Mis Entregas",
   [permissions.FACTURACION_ELECTRONICA_MIS_COTIZACIONES_INDEX]:
     "Ver Página Mis Cotizaciones",
   [permissions.FACTURACION_ELECTRONICA_MIS_GUIAS_INDEX]: "Ver Página Mis Guías",
@@ -492,6 +502,11 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.GUIA_CREATE]: "Crear Guía de Remisión",
   [permissions.GUIA_UPDATE]: "Actualizar Guía de Remisión",
   [permissions.GUIA_DELETE]: "Eliminar Guía de Remisión",
+
+  // Entregas
+  [permissions.ENTREGA_LISTADO]: "Ver Listado de Entregas",
+  [permissions.ENTREGA_UPDATE]: "Actualizar Estado de Entrega",
+  [permissions.ENTREGA_FINALIZAR]: "Finalizar Entrega",
 };
 
 export function getAllPermissions() {

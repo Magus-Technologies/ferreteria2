@@ -1,6 +1,7 @@
 import modulesData from './modules.json'
 import facturacionNav from './module-navs/facturacion-electronica.json'
 import configuracionNav from './module-navs/configuracion.json'
+import gestionComercialNav from './module-navs/gestion-comercial-e-inventario.json'
 
 // Tipos
 export interface Module {
@@ -62,7 +63,7 @@ export interface ModuleNav {
 const moduleNavs: Record<string, ModuleNav> = {
   'facturacion-electronica': facturacionNav as ModuleNav,
   'configuracion': configuracionNav as ModuleNav,
-  // Agregar más módulos aquí cuando se creen sus JSON
+  'gestion-comercial-e-inventario': gestionComercialNav as ModuleNav,
 }
 
 /**

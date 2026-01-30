@@ -1,7 +1,7 @@
 'use client'
 
 import { Select, Modal, FormInstance } from 'antd'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -47,6 +47,13 @@ export default function ModalDetallesEntrega({
     // NO cerrar el modal, solo abrir el modal de cliente encima
     onEditarCliente()
   }
+
+  // ✅ Setear tipo_despacho en el formulario cuando se abre el modal
+  useEffect(() => {
+    if (open) {
+      form.setFieldValue('tipo_despacho', tipoDespacho)
+    }
+  }, [open, tipoDespacho, form])
 
   const handleConfirmar = async () => {
     // Obtener todos los valores del formulario de venta

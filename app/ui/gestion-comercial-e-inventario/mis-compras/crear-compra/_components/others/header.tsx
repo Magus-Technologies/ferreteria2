@@ -9,6 +9,7 @@ import { Modal } from "antd";
 import CardAgregarProductoCompra from "../cards/card-agregar-producto-compra";
 import { useState } from "react";
 import usePermissionHook from "~/hooks/use-permission";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import {
   type Compra,
@@ -59,8 +60,12 @@ export default function HeaderCrearCompra({
       extra={
         (compra?.recepciones_almacen_count ?? 0) > 0 ||
         (compra?.pagos_de_compras_count ?? 0) > 0 ? null : (
-          <div className="pl-8 flex items-center gap-4">
-            <SelectProductos
+          <ConfigurableElement
+            componentId="gestion-comercial.crear-compra.agregar-producto"
+            label="Selector Agregar Producto"
+          >
+            <div className="pl-8 flex items-center gap-4">
+              <SelectProductos
             autoFocus
               allowClear
               size="large"
@@ -81,31 +86,42 @@ export default function HeaderCrearCompra({
                 if (producto) setOpenModalAgregarProducto(true);
               }}
             />
-          </div>
+            </div>
+          </ConfigurableElement>
         )
       }
     >
       <div className="flex items-center gap-4">
-        <SelectAlmacen className="w-full" disabled={!!compra} />
-
-        <Modal
-          open={openModalAgregarProducto}
-          onCancel={() => setOpenModalAgregarProducto(false)}
-          footer={null}
-          title={
-            <div className="text-xl font-bold text-left text-balance mb-3">
-              <span className="text-slate-400 block">AGREGAR:</span>{" "}
-              {productoSeleccionadoSearchStore?.name}
-            </div>
-          }
-          width={300}
-          classNames={{ content: "min-w-fit" }}
-          destroyOnHidden
-          maskClosable={false}
-          keyboard={false}
+        <ConfigurableElement
+          componentId="gestion-comercial.crear-compra.filtro-almacen"
+          label="Filtro Almacén"
         >
-          <CardAgregarProductoCompra setOpen={setOpenModalAgregarProducto} />
-        </Modal>
+          <SelectAlmacen className="w-full" disabled={!!compra} />
+        </ConfigurableElement>
+
+        <ConfigurableElement
+          componentId="gestion-comercial.crear-compra.modal-agregar-producto"
+          label="Modal Agregar Producto"
+        >
+          <Modal
+            open={openModalAgregarProducto}
+            onCancel={() => setOpenModalAgregarProducto(false)}
+            footer={null}
+            title={
+              <div className="text-xl font-bold text-left text-balance mb-3">
+                <span className="text-slate-400 block">AGREGAR:</span>{" "}
+                {productoSeleccionadoSearchStore?.name}
+              </div>
+            }
+            width={300}
+            classNames={{ content: "min-w-fit" }}
+            destroyOnHidden
+            maskClosable={false}
+            keyboard={false}
+          >
+            <CardAgregarProductoCompra setOpen={setOpenModalAgregarProducto} />
+          </Modal>
+        </ConfigurableElement>
       </div>
     </TituloModulos>
   );

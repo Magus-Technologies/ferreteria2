@@ -7,6 +7,7 @@ import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
 import ProgressiveLoader from '~/app/_components/others/progressive-loader'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 // Lazy loading de componentes pesados
 const FiltersMisCompras = lazy(() => import('./_components/filters/filters-mis-compras'))
@@ -34,27 +35,31 @@ export default function MisCompras() {
       {/* Layout responsivo */}
       <div className="w-full mt-4">
         <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
-          <div className="h-[250px]">
-            <ProgressiveLoader
-              identifier="mis-compras-table-compras"
-              priority="critical"
-            >
-              <Suspense fallback={<ComponentLoading />}>
-                <TableMisCompras />
-              </Suspense>
-            </ProgressiveLoader>
-          </div>
-          <div className="h-[200px]">
-            <ProgressiveLoader
-              identifier="mis-compras-detalle-compra"
-              priority="medium"
-              delay={800}
-            >
-              <Suspense fallback={<ComponentLoading />}>
-                <TableDetalleDeCompraMisCompras />
-              </Suspense>
-            </ProgressiveLoader>
-          </div>
+          <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-compras" label="Tabla de Compras">
+            <div className="h-[250px]">
+              <ProgressiveLoader
+                identifier="mis-compras-table-compras"
+                priority="critical"
+              >
+                <Suspense fallback={<ComponentLoading />}>
+                  <TableMisCompras />
+                </Suspense>
+              </ProgressiveLoader>
+            </div>
+          </ConfigurableElement>
+          <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-detalle-compra" label="Tabla Detalle de Compra">
+            <div className="h-[200px]">
+              <ProgressiveLoader
+                identifier="mis-compras-detalle-compra"
+                priority="medium"
+                delay={800}
+              >
+                <Suspense fallback={<ComponentLoading />}>
+                  <TableDetalleDeCompraMisCompras />
+                </Suspense>
+              </ProgressiveLoader>
+            </div>
+          </ConfigurableElement>
         </div>
       </div>
     </ContenedorGeneral>

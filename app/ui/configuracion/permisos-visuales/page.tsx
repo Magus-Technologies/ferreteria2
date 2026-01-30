@@ -31,6 +31,7 @@ import { FaUsers } from 'react-icons/fa'
 
 // Importar JSONs de navegación
 import facturacionElectronicaNav from "~/lib/navigation/module-navs/facturacion-electronica.json";
+import gestionComercialNav from "~/lib/navigation/module-navs/gestion-comercial-e-inventario.json";
 
 // Lazy load de vistas reales
 const DashboardFE = lazy(() => import("~/app/ui/facturacion-electronica/page"));
@@ -54,6 +55,17 @@ const CrearPrestamo = lazy(
 );
 const MisPrestamos = lazy(
   () => import("~/app/ui/facturacion-electronica/mis-prestamos/page"),
+);
+
+// Gestión Comercial e Inventario - vistas para modo configuración
+const DashboardGestionComercial = lazy(
+  () => import("~/app/ui/gestion-comercial-e-inventario/page"),
+);
+const CrearCompraGestionComercial = lazy(
+  () => import("~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/page"),
+);
+const MisComprasGestionComercial = lazy(
+  () => import("~/app/ui/gestion-comercial-e-inventario/mis-compras/page"),
 );
 
 interface NavItem {
@@ -84,12 +96,26 @@ const ICON_MAP: Record<string, string> = {
   "facturacion-electronica.mis-aperturas-cierres.index": "🔐",
   "facturacion-electronica.movimientos-caja.index": "💳",
   "gestion-comercial-e-inventario.mi-almacen.index": "📦",
+  "gestion-comercial-e-inventario.dashboard.index": "📊",
+  "gestion-comercial-e-inventario.mis-compras.index": "🛒",
+  "gestion-comercial-e-inventario.mis-recepciones.index": "📥",
+  "gestion-comercial-e-inventario.crear-compra.index": "📝",
+  "producto.create": "📦",
+  "proveedor.create": "🏢",
+  "proveedor.listado": "🏢",
   "cliente.create": "👤",
   "caja.create": "🏦",
   "egreso-dinero.create": "💵",
 };
 
-// Mapeo de permisos a componentes
+// Etiquetas de área para el card de vista activa
+const MODULE_LABELS: Record<string, string> = {
+  "facturacion-electronica": "💰 Facturación Electrónica",
+  "gestion-comercial-e-inventario": "📦 Gestión Comercial e Inventario",
+  "gestion-contable": "📊 Gestión Contable y Financiera",
+};
+
+// Mapeo de permisos a componentes (vistas que se abren en modo configuración al hacer click)
 const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any>>> = {
   "facturacion-electronica.dashboard.index": DashboardFE,
   "facturacion-electronica.mis-ventas.index": MisVentas,
@@ -99,6 +125,9 @@ const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any>>> = {
   "facturacion-electronica.crear-cotizacion.index": CrearCotizacion,
   "facturacion-electronica.crear-prestamo.index": CrearPrestamo,
   "facturacion-electronica.mis-prestamos.index": MisPrestamos,
+  "gestion-comercial-e-inventario.dashboard.index": DashboardGestionComercial,
+  "gestion-comercial-e-inventario.crear-compra.index": CrearCompraGestionComercial,
+  "gestion-comercial-e-inventario.mis-compras.index": MisComprasGestionComercial,
 };
 
 export default function PermisosVisualesPage() {
@@ -172,11 +201,13 @@ export default function PermisosVisualesPage() {
       const bottomItems = extraerItems(
         facturacionElectronicaNav.bottomNav.items,
       );
+      return { topNav: topItems, bottomNav: bottomItems };
+    }
 
-      return {
-        topNav: topItems,
-        bottomNav: bottomItems,
-      };
+    if (moduloSeleccionado === "gestion-comercial-e-inventario") {
+      const topItems = extraerItems(gestionComercialNav.topNav.items);
+      const bottomItems = extraerItems(gestionComercialNav.bottomNav.items);
+      return { topNav: topItems, bottomNav: bottomItems };
     }
 
     return { topNav: [], bottomNav: [] };
@@ -309,8 +340,7 @@ export default function PermisosVisualesPage() {
                   },
                   {
                     label: "📦 Gestión Comercial e Inventario",
-                    value: "gestion-comercial",
-                    disabled: true,
+                    value: "gestion-comercial-e-inventario",
                   },
                   {
                     label: "📊 Gestión Contable y Financiera",
@@ -358,7 +388,7 @@ export default function PermisosVisualesPage() {
                 <strong className="text-blue-600">{rolNombre}</strong>
                 <Divider type="vertical" />
                 <span className="text-gray-600">Área:</span>{" "}
-                <strong>💰 Facturación Electrónica</strong>
+                <strong>{MODULE_LABELS[moduloSeleccionado] ?? moduloSeleccionado}</strong>
               </div>
 
               <Alert

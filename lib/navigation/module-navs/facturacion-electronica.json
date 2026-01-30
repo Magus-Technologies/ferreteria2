@@ -155,6 +155,13 @@
         "permission": "facturacion-electronica.mis-ventas.index"
       },
       {
+        "id": "mis-entregas",
+        "label": "Mis Entregas",
+        "icon": "FaTruck",
+        "route": "/ui/facturacion-electronica/mis-entregas",
+        "permission": "facturacion-electronica.mis-entregas.index"
+      },
+      {
         "id": "mis-cotizaciones",
         "label": "Mis Cotizaciones",
         "icon": "MdPointOfSale",
