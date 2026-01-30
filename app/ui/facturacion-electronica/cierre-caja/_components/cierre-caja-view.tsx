@@ -168,7 +168,10 @@ export default function CierreCajaView() {
                       {/* Préstamos Recibidos */}
                       {(resumen.total_prestamos_recibidos || 0) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-green-50'>
-                          <span className='text-base text-green-700'>Préstamos Recibidos</span>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-base text-green-700'>Préstamos Recibidos</span>
+                            <span className='text-xs text-green-600'>({resumen.prestamos_recibidos?.length || 0})</span>
+                          </div>
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-green-700 min-w-[100px] text-right'>
                               {(resumen.total_prestamos_recibidos || 0).toFixed(2)}
@@ -194,7 +197,10 @@ export default function CierreCajaView() {
                       {/* Préstamos Dados */}
                       {(resumen.total_prestamos_dados || 0) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
-                          <span className='text-base text-red-700'>Préstamos Dados</span>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-base text-red-700'>Préstamos Dados</span>
+                            <span className='text-xs text-red-600'>({resumen.prestamos_dados?.length || 0})</span>
+                          </div>
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
                               {(resumen.total_prestamos_dados || 0).toFixed(2)}
