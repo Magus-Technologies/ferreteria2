@@ -72,7 +72,7 @@ export default function DocIngresoSalidaTicket({
 
   // Convertir tipo de documento de Laravel (usa códigos: 'in', 'sa') a Prisma
   const tipoDocumentoPrisma =
-    data?.tipo_documento === "Ingreso" || data?.tipo_documento === "in"
+    data?.tipo_documento === "Ingreso"
       ? TipoDocumento.Ingreso
       : TipoDocumento.Salida;
   const tipo_documento = data?.tipo_documento

@@ -7,7 +7,6 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
 import useSolicitarEfectivo from '../_hooks/use-solicitar-efectivo'
 import { useQuery } from '@tanstack/react-query'
-import { prestamoVendedorApi } from '~/lib/api/prestamo-vendedor'
 
 interface ModalSolicitarEfectivoProps {
     open: boolean
@@ -17,7 +16,7 @@ interface ModalSolicitarEfectivoProps {
 }
 
 interface FormValues {
-    vendedor_prestamista_id: number
+    vendedor_prestamista_id: string
     monto_solicitado: number
     motivo?: string
 }

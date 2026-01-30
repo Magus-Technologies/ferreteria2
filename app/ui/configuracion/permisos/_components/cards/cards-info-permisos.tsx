@@ -4,32 +4,35 @@ import { useQuery } from '@tanstack/react-query'
 import { permissionsApi } from '~/lib/api/permissions'
 import CardInfoPermiso from './card-info-permiso'
 import { MdSecurity } from 'react-icons/md'
-import { FaUserShield, FaUsers } from 'react-icons/fa'
+import { FaUserShield } from 'react-icons/fa'
 
 export default function CardsInfoPermisos() {
-  // Obtener estadísticas
-  const { data: statsResponse, isLoading: loadingStats } = useQuery({
-    queryKey: ['permissions-stats'],
-    queryFn: () => permissionsApi.getStats(),
-  })
-
-  // Obtener todos los permisos para contar
-  const { data: permissionsResponse, isLoading: loadingPerms } = useQuery({
-    queryKey: ['permissions'],
+  // Obtener todas las restricciones para contar
+  const { data: restrictionsResponse, isLoading: loadingRestrictions } = useQuery({
+    queryKey: ['restrictions'],
     queryFn: () => permissionsApi.getAll(),
   })
 
+  // Obtener todos los roles
+  const { data: rolesResponse, isLoading: loadingRoles } = useQuery({
+    queryKey: ['roles'],
+    queryFn: () => permissionsApi.getRoles(),
+  })
+
   // Extraer los datos de las respuestas
-  const statsData = statsResponse?.data?.data
-  const permissionsData = Array.isArray(permissionsResponse?.data?.data) 
-    ? permissionsResponse.data.data 
+  const restrictionsData = Array.isArray(restrictionsResponse?.data) 
+    ? restrictionsResponse.data 
+    : []
+  
+  const rolesData = Array.isArray(rolesResponse?.data) 
+    ? rolesResponse.data 
     : []
 
-  if (loadingStats || loadingPerms) {
+  if (loadingRestrictions || loadingRoles) {
     return (
       <>
         <CardInfoPermiso
-          title="Total Permisos"
+          title="Total Restricciones"
           value="..."
           icon={<MdSecurity className="text-purple-600" />}
           className="border-purple-300"
@@ -40,12 +43,6 @@ export default function CardsInfoPermisos() {
           icon={<FaUserShield className="text-blue-600" />}
           className="border-blue-300"
         />
-        <CardInfoPermiso
-          title="Total Usuarios"
-          value="..."
-          icon={<FaUsers className="text-green-600" />}
-          className="border-green-300"
-        />
       </>
     )
   }
@@ -53,24 +50,17 @@ export default function CardsInfoPermisos() {
   return (
     <>
       <CardInfoPermiso
-        title="Total Permisos"
-        value={statsData?.total_permissions || permissionsData.length}
+        title="Total Restricciones"
+        value={restrictionsData.length}
         icon={<MdSecurity className="text-purple-600" />}
         className="border-purple-300"
       />
       
       <CardInfoPermiso
         title="Total Roles"
-        value={statsData?.total_roles || 0}
+        value={rolesData.length}
         icon={<FaUserShield className="text-blue-600" />}
         className="border-blue-300"
-      />
-      
-      <CardInfoPermiso
-        title="Total Usuarios"
-        value={statsData?.total_users || 0}
-        icon={<FaUsers className="text-green-600" />}
-        className="border-green-300"
       />
     </>
   )

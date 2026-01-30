@@ -6,17 +6,7 @@ import { useEffect, useState } from "react";
 import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
 
-interface SolicitudEfectivo {
-  id: number;
-  vendedor_solicitante: {
-    id: number;
-    name: string;
-  };
-  monto_solicitado: number;
-  estado: "pendiente" | "aprobada" | "rechazada";
-  motivo?: string;
-  created_at: string;
-}
+import type { SolicitudEfectivo } from "~/lib/api/prestamo-vendedor";
 
 const formatCurrency = (amount: number) => {
   return `S/ ${amount.toFixed(2)}`;
@@ -25,14 +15,14 @@ const formatCurrency = (amount: number) => {
 export default function TablaSolicitudesEfectivo() {
   const [solicitudes, setSolicitudes] = useState<SolicitudEfectivo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSolicitud, setSelectedSolicitud] = useState<number | null>(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null);
   const [openAprobar, setOpenAprobar] = useState(false);
 
   const cargarSolicitudes = async () => {
     setLoading(true);
     try {
       const response = await prestamoVendedorApi.listarSolicitudes();
-      setSolicitudes(response.data || []);
+      setSolicitudes(response.data as SolicitudEfectivo[] || []);
     } catch (error) {
       message.error("Error al cargar solicitudes");
     } finally {
@@ -44,14 +34,14 @@ export default function TablaSolicitudesEfectivo() {
     cargarSolicitudes();
   }, []);
 
-  const handleAprobar = (id: number) => {
-    setSelectedSolicitud(id);
+  const handleAprobar = (solicitud: SolicitudEfectivo) => {
+    setSelectedSolicitud(solicitud);
     setOpenAprobar(true);
   };
 
-  const handleRechazar = async (id: number) => {
+  const handleRechazar = async (id: string) => {
     try {
-      const response = await prestamoVendedorApi.rechazarSolicitud(id);
+      await prestamoVendedorApi.rechazarSolicitud(id);
       message.success("Solicitud rechazada");
       cargarSolicitudes();
     } catch (error) {
@@ -118,7 +108,7 @@ export default function TablaSolicitudesEfectivo() {
               type="primary"
               size="small"
               icon={<CheckCircle className="h-4 w-4" />}
-              onClick={() => handleAprobar(record.id)}
+              onClick={() => handleAprobar(record)}
             >
               Aprobar
             </Button>
@@ -154,7 +144,9 @@ export default function TablaSolicitudesEfectivo() {
         <ModalAprobarSolicitudEfectivo
           open={openAprobar}
           setOpen={setOpenAprobar}
-          solicitudId={selectedSolicitud}
+          solicitudId={selectedSolicitud.id}
+          montoSolicitado={selectedSolicitud.monto_solicitado}
+          solicitanteNombre={selectedSolicitud.vendedor_solicitante.name}
           onSuccess={cargarSolicitudes}
         />
       )}
