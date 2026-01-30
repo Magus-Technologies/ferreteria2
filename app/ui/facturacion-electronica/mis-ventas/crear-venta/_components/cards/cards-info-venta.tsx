@@ -13,6 +13,8 @@ import { MdSell } from "react-icons/md";
 import { FaPause } from "react-icons/fa6";
 import ModalDetallesEntrega from "../modals/modal-detalles-entrega";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
+import type { Cliente } from "~/lib/api/cliente";
 
 export default function CardsInfoVenta({ form }: { form: FormInstance }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
@@ -41,6 +43,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] =
     useState(false);
+  const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
 
   // Calcular SubTotal (suma de productos sin descuento)
   const subTotal = useMemo(
@@ -263,8 +266,8 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
           console.log("Entrega configurada");
         }}
         onEditarCliente={() => {
-          // TODO: Implementar edición de cliente si es necesario
-          console.log("Editar cliente");
+          // Abrir el modal de editar cliente encima del modal de detalles
+          setModalEditarClienteOpen(true);
         }}
         direccion={getDireccionCliente()}
         clienteNombre={clienteNombre}
@@ -280,6 +283,48 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
           // Al dar continuar, abrir el modal de detalles de entrega
           setModalOpen(false);
           setModalDetallesEntregaOpen(true);
+        }}
+      />
+
+      {/* Modal para editar cliente - Se abre encima del modal de detalles */}
+      <ModalCreateCliente
+        open={modalEditarClienteOpen}
+        setOpen={setModalEditarClienteOpen}
+        dataEdit={
+          form.getFieldValue("cliente_id") ? {
+            id: form.getFieldValue("cliente_id"),
+            tipo_cliente: form.getFieldValue("tipo_cliente") || "PERSONA",
+            tipo_documento: form.getFieldValue("tipo_documento"),
+            numero_documento: form.getFieldValue("numero_documento"),
+            razon_social: form.getFieldValue("razon_social") || null,
+            nombres: form.getFieldValue("nombres") || "",
+            apellidos: form.getFieldValue("apellidos") || "",
+            direccion: form.getFieldValue("_cliente_direccion_1") || null,
+            direccion_2: form.getFieldValue("_cliente_direccion_2") || null,
+            direccion_3: form.getFieldValue("_cliente_direccion_3") || null,
+            direccion_4: form.getFieldValue("_cliente_direccion_4") || null,
+            telefono: form.getFieldValue("telefono") || null,
+            email: form.getFieldValue("email") || null,
+            estado: true,
+          } as Cliente : undefined
+        }
+        onSuccess={(cliente) => {
+          // Actualizar las direcciones en el formulario cuando se edita el cliente
+          form.setFieldValue("_cliente_direccion_1", cliente.direccion || "");
+          form.setFieldValue("_cliente_direccion_2", cliente.direccion_2 || "");
+          form.setFieldValue("_cliente_direccion_3", cliente.direccion_3 || "");
+          form.setFieldValue("_cliente_direccion_4", cliente.direccion_4 || "");
+          
+          // Actualizar la dirección de entrega según la dirección seleccionada
+          const direccionSeleccionada = form.getFieldValue("direccion_seleccionada") || "D1";
+          const direccionKey = `_cliente_direccion_${direccionSeleccionada.replace("D", "")}`;
+          const nuevaDireccion = form.getFieldValue(direccionKey) || "";
+          
+          form.setFieldValue("direccion_entrega", nuevaDireccion);
+          form.setFieldValue("direccion", nuevaDireccion);
+          form.setFieldValue("punto_llegada", nuevaDireccion);
+          
+          setModalEditarClienteOpen(false);
         }}
       />
     </>

@@ -21,9 +21,16 @@ import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import { usuariosApi, CreateUsuarioRequest, Usuario } from "~/lib/api/usuarios";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useAuth } from "~/lib/auth-context";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { consultaReniec } from "~/app/_actions/consulta-reniec";
 import { ConsultaDni } from "~/app/_types/consulta-ruc";
+
+// Tipo para el formulario que acepta Dayjs
+interface UsuarioFormValues extends Omit<CreateUsuarioRequest, 'fecha_nacimiento' | 'fecha_inicio' | 'fecha_baja'> {
+  fecha_nacimiento?: Dayjs | string;
+  fecha_inicio?: Dayjs | string;
+  fecha_baja?: Dayjs | string;
+}
 
 interface ModalUsuarioFormProps {
   open: boolean;
@@ -38,7 +45,7 @@ export default function ModalUsuarioForm({
   usuarioEdit,
   onSuccess,
 }: ModalUsuarioFormProps) {
-  const [form] = Form.useForm<CreateUsuarioRequest>();
+  const [form] = Form.useForm<UsuarioFormValues>();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isEdit = !!usuarioEdit;
@@ -102,12 +109,12 @@ export default function ModalUsuarioForm({
         direccion_linea2: usuarioEdit.direccion_linea2 || undefined,
         ciudad: usuarioEdit.ciudad || undefined,
         nacionalidad: usuarioEdit.nacionalidad || "PERUANA",
-        fecha_nacimiento: usuarioEdit.fecha_nacimiento || undefined,
+        fecha_nacimiento: usuarioEdit.fecha_nacimiento ? dayjs(usuarioEdit.fecha_nacimiento) : undefined,
         // Información de Contrato
         rol_sistema: usuarioEdit.rol_sistema || undefined,
         cargo: usuarioEdit.cargo || undefined,
-        fecha_inicio: usuarioEdit.fecha_inicio || undefined,
-        fecha_baja: usuarioEdit.fecha_baja || undefined,
+        fecha_inicio: usuarioEdit.fecha_inicio ? dayjs(usuarioEdit.fecha_inicio) : undefined,
+        fecha_baja: usuarioEdit.fecha_baja ? dayjs(usuarioEdit.fecha_baja) : undefined,
         vacaciones_dias: usuarioEdit.vacaciones_dias || 15,
         sueldo_boleta: usuarioEdit.sueldo_boleta || undefined,
         estado: usuarioEdit.estado,
@@ -524,6 +531,7 @@ export default function ModalUsuarioForm({
                     { value: "VENDEDOR", label: "Vendedor" },
                     { value: "ALMACENERO", label: "Almacenero" },
                     { value: "CONTADOR", label: "Contador" },
+                    { value: "DESPACHADOR", label: "Despachador" },
                     { value: "CONDUCTOR", label: "Conductor" },
                   ]}
                 />

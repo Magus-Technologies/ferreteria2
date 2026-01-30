@@ -46,6 +46,15 @@ const MisGuias = lazy(
 const MisCotizaciones = lazy(
   () => import("~/app/ui/facturacion-electronica/mis-cotizaciones/page"),
 );
+const CrearCotizacion = lazy(
+  () => import("~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/page"),
+);
+const CrearPrestamo = lazy(
+  () => import("~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/page"),
+);
+const MisPrestamos = lazy(
+  () => import("~/app/ui/facturacion-electronica/mis-prestamos/page"),
+);
 
 interface NavItem {
   id?: string;
@@ -87,6 +96,9 @@ const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any>>> = {
   "facturacion-electronica.crear-venta.index": CrearVenta,
   "facturacion-electronica.mis-guias.index": MisGuias,
   "facturacion-electronica.mis-cotizaciones.index": MisCotizaciones,
+  "facturacion-electronica.crear-cotizacion.index": CrearCotizacion,
+  "facturacion-electronica.crear-prestamo.index": CrearPrestamo,
+  "facturacion-electronica.mis-prestamos.index": MisPrestamos,
 };
 
 export default function PermisosVisualesPage() {
@@ -224,6 +236,7 @@ export default function PermisosVisualesPage() {
       setModalVisible(false);
       setItemSeleccionado(null);
 
+      // Recargar los roles para ver las restricciones actualizadas
       queryClient.invalidateQueries({ queryKey: ["roles"] });
     },
     onError: (error: any) => {
@@ -387,29 +400,39 @@ export default function PermisosVisualesPage() {
                   <div
                     key={idx}
                     className={`
-                      p-3 rounded-lg border-2 cursor-pointer transition-all
+                      p-3 rounded-lg border-2 transition-all
                       ${visible ? "border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md" : "border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md"}
                     `}
-                    onClick={() =>
-                      handleModuloClick(
-                        item.label || '',
-                        item.permission!,
-                        hasComponent,
-                      )
-                    }
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div 
+                        className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                        onClick={() =>
+                          hasComponent && handleModuloClick(
+                            item.label || '',
+                            item.permission!,
+                            hasComponent,
+                          )
+                        }
+                      >
                         <span className="text-lg">{icon}</span>
                         <span className="text-sm font-medium truncate">
                           {item.label}
                         </span>
                       </div>
-                      {visible ? (
-                        <EyeOutlined className="text-green-600 flex-shrink-0" />
-                      ) : (
-                        <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
-                      )}
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setItemSeleccionado({ label: item.label || '', permission: item.permission! });
+                          setModalVisible(true);
+                        }}
+                      >
+                        {visible ? (
+                          <EyeOutlined className="text-green-600 flex-shrink-0" />
+                        ) : (
+                          <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -435,29 +458,39 @@ export default function PermisosVisualesPage() {
                   <div
                     key={idx}
                     className={`
-                      p-3 rounded-lg border-2 cursor-pointer transition-all
+                      p-3 rounded-lg border-2 transition-all
                       ${visible ? "border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md" : "border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md"}
                     `}
-                    onClick={() =>
-                      handleModuloClick(
-                        item.label || '',
-                        item.permission!,
-                        hasComponent,
-                      )
-                    }
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div 
+                        className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                        onClick={() =>
+                          hasComponent && handleModuloClick(
+                            item.label || '',
+                            item.permission!,
+                            hasComponent,
+                          )
+                        }
+                      >
                         <span className="text-lg">{icon}</span>
                         <span className="text-sm font-medium truncate">
                           {item.label}
                         </span>
                       </div>
-                      {visible ? (
-                        <EyeOutlined className="text-green-600 flex-shrink-0" />
-                      ) : (
-                        <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
-                      )}
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setItemSeleccionado({ label: item.label || '', permission: item.permission! });
+                          setModalVisible(true);
+                        }}
+                      >
+                        {visible ? (
+                          <EyeOutlined className="text-green-600 flex-shrink-0" />
+                        ) : (
+                          <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { prestamoApi, type Prestamo, EstadoPrestamo, TipoOperacion } from '~/lib/api/prestamo'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoPrestamos() {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
@@ -85,48 +86,68 @@ export default function CardsInfoPrestamos() {
 
   return (
     <>
-      <CardMiniInfo 
-        title='Total Préstamos' 
-        value={totales.totalPrestamos} 
-        className='h-full'
-        valueColor='text-blue-700'
-      />
-      <CardMiniInfo 
-        title='Pendientes' 
-        value={totales.pendientes} 
-        className='h-full'
-        valueColor='text-orange-600'
-      />
-      <CardMiniInfo 
-        title='Devuelto Parcial' 
-        value={totales.devueltoParcial} 
-        className='h-full'
-        valueColor='text-yellow-600'
-      />
-      <CardMiniInfo 
-        title='Devuelto Total' 
-        value={totales.devueltoTotal} 
-        className='h-full'
-        valueColor='text-green-600'
-      />
-      <CardMiniInfo 
-        title='Vencidos' 
-        value={totales.vencidos} 
-        className='h-full'
-        valueColor='text-red-600'
-      />
-      <CardMiniInfo 
-        title='Prestados' 
-        value={totales.prestados} 
-        className='h-full'
-        valueColor='text-blue-600'
-      />
-      <CardMiniInfo 
-        title='Emprestados' 
-        value={totales.emprestados} 
-        className='h-full'
-        valueColor='text-purple-600'
-      />
+      <ConfigurableElement componentId="mis-prestamos.card-total" label="Card Total Préstamos">
+        <CardMiniInfo 
+          title='Total Préstamos' 
+          value={totales.totalPrestamos} 
+          className='h-full'
+          valueColor='text-blue-700'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-prestamos.card-pendientes" label="Card Pendientes">
+        <CardMiniInfo 
+          title='Pendientes' 
+          value={totales.pendientes} 
+          className='h-full'
+          valueColor='text-orange-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-prestamos.card-devuelto-parcial" label="Card Devuelto Parcial">
+        <CardMiniInfo 
+          title='Devuelto Parcial' 
+          value={totales.devueltoParcial} 
+          className='h-full'
+          valueColor='text-yellow-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-prestamos.card-devuelto-total" label="Card Devuelto Total">
+        <CardMiniInfo 
+          title='Devuelto Total' 
+          value={totales.devueltoTotal} 
+          className='h-full'
+          valueColor='text-green-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-prestamos.card-vencidos" label="Card Vencidos">
+        <CardMiniInfo 
+          title='Vencidos' 
+          value={totales.vencidos} 
+          className='h-full'
+          valueColor='text-red-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-prestamos.card-prestados" label="Card Prestados">
+        <CardMiniInfo 
+          title='Prestados' 
+          value={totales.prestados} 
+          className='h-full'
+          valueColor='text-blue-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-prestamos.card-emprestados" label="Card Emprestados">
+        <CardMiniInfo 
+          title='Emprestados' 
+          value={totales.emprestados} 
+          className='h-full'
+          valueColor='text-purple-600'
+        />
+      </ConfigurableElement>
     </>
   )
 }

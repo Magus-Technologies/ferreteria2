@@ -249,11 +249,25 @@ export default function FormCrearVenta({
 
                   // Actualizar email
                   form.setFieldValue("email", cliente.email || "");
+                  
+                  // Actualizar las 4 direcciones del cliente en campos ocultos
+                  form.setFieldValue("_cliente_direccion_1", cliente.direccion || "");
+                  form.setFieldValue("_cliente_direccion_2", cliente.direccion_2 || "");
+                  form.setFieldValue("_cliente_direccion_3", cliente.direccion_3 || "");
+                  form.setFieldValue("_cliente_direccion_4", cliente.direccion_4 || "");
+                  
+                  // Actualizar direccion_entrega con la dirección principal
+                  form.setFieldValue("direccion_entrega", cliente.direccion || "");
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
                   form.setFieldValue("telefono", "");
                   form.setFieldValue("email", "");
+                  form.setFieldValue("_cliente_direccion_1", "");
+                  form.setFieldValue("_cliente_direccion_2", "");
+                  form.setFieldValue("_cliente_direccion_3", "");
+                  form.setFieldValue("_cliente_direccion_4", "");
+                  form.setFieldValue("direccion_entrega", "");
                 }
               }}
             />

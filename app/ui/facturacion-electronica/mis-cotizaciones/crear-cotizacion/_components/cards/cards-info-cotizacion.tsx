@@ -7,6 +7,7 @@ import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
 import CardInfoCotizacion from "./card-info-cotizacion";
 import { MdSell } from "react-icons/md";
 import { FaPrint } from "react-icons/fa";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export default function CardsInfoCotizacion({
   form,
@@ -59,47 +60,74 @@ export default function CardsInfoCotizacion({
 
   return (
     <div className="flex flex-col gap-4 max-w-64">
-      <CardInfoCotizacion
-        title="SubTotal"
-        value={subTotal}
-        moneda={tipo_moneda}
-      />
-      <CardInfoCotizacion
-        title="Total Dscto"
-        value={totalDescuento}
-        moneda={tipo_moneda}
-      />
-      <CardInfoCotizacion
-        title="Total"
-        value={total}
-        moneda={tipo_moneda}
-        className="border-cyan-500 border-2"
-      />
-
-      <ButtonBase
-        onClick={() => {
-          console.log('🔘 CLICK en botón Guardar Cotización');
-          console.log('📋 Valores actuales del formulario:', form.getFieldsValue());
-          form.submit();
-        }}
-        color="success"
-        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+      <ConfigurableElement
+        componentId="crear-cotizacion.card-subtotal"
+        label="Card SubTotal"
       >
-        <MdSell className="min-w-fit" size={30} />
-        Guardar Cotización
-      </ButtonBase>
+        <CardInfoCotizacion
+          title="SubTotal"
+          value={subTotal}
+          moneda={tipo_moneda}
+        />
+      </ConfigurableElement>
 
-      {/* <ButtonBase
-        type="button"
-        color="info"
-        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
-        onClick={() => {
-          console.log("Imprimir cotización");
-        }}
+      <ConfigurableElement
+        componentId="crear-cotizacion.card-descuento"
+        label="Card Total Descuento"
       >
-        <FaPrint className="min-w-fit" size={30} />
-        Imprimir
-      </ButtonBase> */}
+        <CardInfoCotizacion
+          title="Total Dscto"
+          value={totalDescuento}
+          moneda={tipo_moneda}
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement
+        componentId="crear-cotizacion.card-total"
+        label="Card Total"
+      >
+        <CardInfoCotizacion
+          title="Total"
+          value={total}
+          moneda={tipo_moneda}
+          className="border-cyan-500 border-2"
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement
+        componentId="crear-cotizacion.boton-guardar"
+        label="Botón Guardar Cotización"
+      >
+        <ButtonBase
+          onClick={() => {
+            console.log('🔘 CLICK en botón Guardar Cotización');
+            console.log('📋 Valores actuales del formulario:', form.getFieldsValue());
+            form.submit();
+          }}
+          color="success"
+          className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+        >
+          <MdSell className="min-w-fit" size={30} />
+          Guardar Cotización
+        </ButtonBase>
+      </ConfigurableElement>
+
+      {/* <ConfigurableElement
+        componentId="crear-cotizacion.boton-imprimir"
+        label="Botón Imprimir"
+      >
+        <ButtonBase
+          type="button"
+          color="info"
+          className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+          onClick={() => {
+            console.log("Imprimir cotización");
+          }}
+        >
+          <FaPrint className="min-w-fit" size={30} />
+          Imprimir
+        </ButtonBase>
+      </ConfigurableElement> */}
     </div>
   );
 }

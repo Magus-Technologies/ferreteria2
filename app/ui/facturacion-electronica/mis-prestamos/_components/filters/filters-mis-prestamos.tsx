@@ -21,6 +21,7 @@ import { useStoreFiltrosMisPrestamos } from '../../store/store-filtros-mis-prest
 import { UseStorePrestamoSeleccionada } from '../tables/table-mis-prestamos'
 import ModalRegistrarDevolucion from '../modals/modal-registrar-devolucion'
 import ModalVerDevoluciones from '../modals/modal-ver-devoluciones'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 interface ValuesFiltersMisPrestamos {
   almacen_id: number
@@ -235,15 +236,17 @@ export default function FiltersMisPrestamos() {
             />
           </div>
           <div className='col-span-2 flex items-center gap-2'>
-            <ButtonBase
-              color='info'
-              size='md'
-              type='submit'
-              className='flex items-center gap-2 w-full justify-center'
-            >
-              <FaSearch />
-              Buscar
-            </ButtonBase>
+            <ConfigurableElement componentId="mis-prestamos.boton-buscar" label="Botón Buscar">
+              <ButtonBase
+                color='info'
+                size='md'
+                type='submit'
+                className='flex items-center gap-2 w-full justify-center'
+              >
+                <FaSearch />
+                Buscar
+              </ButtonBase>
+            </ConfigurableElement>
           </div>
 
           {/* Fila 2 */}
@@ -309,30 +312,34 @@ export default function FiltersMisPrestamos() {
 
           {/* Fila 3 - Botones de acción */}
           <div className='col-span-2 flex items-center gap-2'>
-            <ButtonBase
-              color='success'
-              size='md'
-              type='button'
-              className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
-              onClick={() => prestamoSeleccionado && setModalDevolucionOpen(true)}
-              disabled={!prestamoSeleccionado}
-            >
-              <FaBoxOpen />
-              Registrar Devolución
-            </ButtonBase>
+            <ConfigurableElement componentId="mis-prestamos.boton-registrar-devolucion" label="Botón Registrar Devolución">
+              <ButtonBase
+                color='success'
+                size='md'
+                type='button'
+                className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
+                onClick={() => prestamoSeleccionado && setModalDevolucionOpen(true)}
+                disabled={!prestamoSeleccionado}
+              >
+                <FaBoxOpen />
+                Registrar Devolución
+              </ButtonBase>
+            </ConfigurableElement>
           </div>
           <div className='col-span-2 flex items-center gap-2'>
-            <ButtonBase
-              color='info'
-              size='md'
-              type='button'
-              className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
-              onClick={() => prestamoSeleccionado && setModalVerDevolucionesOpen(true)}
-              disabled={!prestamoSeleccionado}
-            >
-              <FaClockRotateLeft />
-              Ver Devoluciones
-            </ButtonBase>
+            <ConfigurableElement componentId="mis-prestamos.boton-ver-devoluciones" label="Botón Ver Devoluciones">
+              <ButtonBase
+                color='info'
+                size='md'
+                type='button'
+                className='flex items-center gap-2 whitespace-nowrap w-full justify-center'
+                onClick={() => prestamoSeleccionado && setModalVerDevolucionesOpen(true)}
+                disabled={!prestamoSeleccionado}
+              >
+                <FaClockRotateLeft />
+                Ver Devoluciones
+              </ButtonBase>
+            </ConfigurableElement>
           </div>
         </div>
       </div>

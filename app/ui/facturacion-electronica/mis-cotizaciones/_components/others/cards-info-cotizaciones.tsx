@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { cotizacionesApi, type Cotizacion } from '~/lib/api/cotizaciones'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoCotizaciones() {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
@@ -105,47 +106,67 @@ export default function CardsInfoCotizaciones() {
 
   return (
     <>
-      <CardMiniInfo 
-        title='Pendientes' 
-        value={totales.pendientes} 
-        className='h-full'
-        valueColor='text-orange-600'
-      />
-      <CardMiniInfo 
-        title='Confirmadas' 
-        value={totales.confirmadas} 
-        className='h-full'
-        valueColor='text-blue-600'
-      />
-      <CardMiniInfo 
-        title='Vendidas' 
-        value={totales.vendidas} 
-        className='h-full'
-        valueColor='text-green-600'
-      />
-      <CardMiniInfo 
-        title='Canceladas' 
-        value={totales.canceladas} 
-        className='h-full'
-        valueColor='text-red-600'
-      />
-      <CardMiniInfo 
-        title='Total Cotizaciones' 
-        value={totales.totalCotizaciones} 
-        className='h-full'
-        valueColor='text-blue-700'
-      />
-      <CardMiniInfo 
-        title='Cotización Promedio' 
-        value={totales.cotizacionPromedio} 
-        className='h-full'
-      />
-      <CardMiniInfo 
-        title='Stock Reservado' 
-        value={totales.stockReservado} 
-        className='h-full'
-        valueColor='text-purple-600'
-      />
+      <ConfigurableElement componentId="mis-cotizaciones.card-pendientes" label="Card Pendientes">
+        <CardMiniInfo 
+          title='Pendientes' 
+          value={totales.pendientes} 
+          className='h-full'
+          valueColor='text-orange-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-cotizaciones.card-confirmadas" label="Card Confirmadas">
+        <CardMiniInfo 
+          title='Confirmadas' 
+          value={totales.confirmadas} 
+          className='h-full'
+          valueColor='text-blue-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-cotizaciones.card-vendidas" label="Card Vendidas">
+        <CardMiniInfo 
+          title='Vendidas' 
+          value={totales.vendidas} 
+          className='h-full'
+          valueColor='text-green-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-cotizaciones.card-canceladas" label="Card Canceladas">
+        <CardMiniInfo 
+          title='Canceladas' 
+          value={totales.canceladas} 
+          className='h-full'
+          valueColor='text-red-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-cotizaciones.card-total" label="Card Total Cotizaciones">
+        <CardMiniInfo 
+          title='Total Cotizaciones' 
+          value={totales.totalCotizaciones} 
+          className='h-full'
+          valueColor='text-blue-700'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-cotizaciones.card-promedio" label="Card Cotización Promedio">
+        <CardMiniInfo 
+          title='Cotización Promedio' 
+          value={totales.cotizacionPromedio} 
+          className='h-full'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-cotizaciones.card-stock-reservado" label="Card Stock Reservado">
+        <CardMiniInfo 
+          title='Stock Reservado' 
+          value={totales.stockReservado} 
+          className='h-full'
+          valueColor='text-purple-600'
+        />
+      </ConfigurableElement>
     </>
   )
 }

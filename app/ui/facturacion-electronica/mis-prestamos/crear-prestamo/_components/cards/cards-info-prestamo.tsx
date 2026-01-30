@@ -6,6 +6,7 @@ import ButtonBase from "~/components/buttons/button-base";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
 import CardInfoPrestamo from "./card-info-prestamo";
 import { MdSave, MdAccountBalance } from "react-icons/md";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export default function CardsInfoPrestamo({
   form,
@@ -44,8 +45,20 @@ export default function CardsInfoPrestamo({
 
   return (
     <div className="flex flex-col gap-4 max-w-64">
-      <CardInfoPrestamo title="Total Items" value={totalItems} moneda={tipo_moneda} />
-      <CardInfoPrestamo title="Total Unidades" value={totalCantidad} moneda={tipo_moneda} />
+      <ConfigurableElement
+        componentId="crear-prestamo.card-total-items"
+        label="Card Total Items"
+      >
+        <CardInfoPrestamo title="Total Items" value={totalItems} moneda={tipo_moneda} />
+      </ConfigurableElement>
+
+      <ConfigurableElement
+        componentId="crear-prestamo.card-total-unidades"
+        label="Card Total Unidades"
+      >
+        <CardInfoPrestamo title="Total Unidades" value={totalCantidad} moneda={tipo_moneda} />
+      </ConfigurableElement>
+
       {/* Comentado: Solo se maneja por cantidad
       <CardInfoPrestamo
         title="Monto Total"
@@ -55,16 +68,21 @@ export default function CardsInfoPrestamo({
       />
       */}
 
-      <ButtonBase
-        onClick={() => {
-          form.submit();
-        }}
-        color="success"
-        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+      <ConfigurableElement
+        componentId="crear-prestamo.boton-crear"
+        label="Botón Crear Préstamo"
       >
-        <MdAccountBalance className="min-w-fit" size={30} />
-        Crear Préstamo
-      </ButtonBase>
+        <ButtonBase
+          onClick={() => {
+            form.submit();
+          }}
+          color="success"
+          className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+        >
+          <MdAccountBalance className="min-w-fit" size={30} />
+          Crear Préstamo
+        </ButtonBase>
+      </ConfigurableElement>
     </div>
   );
 }

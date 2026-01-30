@@ -4,6 +4,7 @@ import CardMiniInfo from '../cards/card-mini-info'
 import { useStoreFiltrosMisVentas } from '../../_store/store-filtros-mis-ventas'
 import { useMemo } from 'react'
 import useGetVentas from '../../_hooks/use-get-ventas'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoVentas() {
   const filtros = useStoreFiltrosMisVentas(state => state.filtros)
@@ -96,58 +97,84 @@ export default function CardsInfoVentas() {
 
   return (
     <>
-      <CardMiniInfo 
-        title='Vía Contado' 
-        value={totales.viaContado} 
-        className='h-full'
-        valueColor='text-green-600'
-      />
-      <CardMiniInfo 
-        title='Anulados' 
-        value={totales.anulados} 
-        className='h-full'
-        valueColor='text-red-600'
-      />
-      <CardMiniInfo 
-        title='Vía Crédito' 
-        value={totales.viaCredito} 
-        className='h-full'
-        valueColor='text-orange-600'
-      />
-      <CardMiniInfo 
-        title='Crédito (Total Paga)' 
-        value={totales.creditoPagado} 
-        className='h-full'
-        valueColor='text-blue-600'
-      />
-      <CardMiniInfo 
-        title='Crédito (Deuda)' 
-        value={totales.creditoDeuda} 
-        className='h-full'
-        valueColor='text-red-500'
-      />
-      <CardMiniInfo 
-        title='Total ICBPER' 
-        value={totales.totalICBPER} 
-        className='h-full'
-      />
-      <CardMiniInfo 
-        title='Total Ventas' 
-        value={totales.totalVentas} 
-        className='h-full'
-        valueColor='text-blue-700'
-      />
-      <CardMiniInfo 
-        title='Venta Promedio' 
-        value={totales.ventaPromedio} 
-        className='h-full'
-      />
-      <CardMiniInfo 
-        title='Comisión' 
-        value={totales.comision} 
-        className='h-full'
-        valueColor='text-purple-600'
-      />
+      <ConfigurableElement componentId="mis-ventas.card-via-contado" label="Card Vía Contado">
+        <CardMiniInfo 
+          title='Vía Contado' 
+          value={totales.viaContado} 
+          className='h-full'
+          valueColor='text-green-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-anulados" label="Card Anulados">
+        <CardMiniInfo 
+          title='Anulados' 
+          value={totales.anulados} 
+          className='h-full'
+          valueColor='text-red-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-via-credito" label="Card Vía Crédito">
+        <CardMiniInfo 
+          title='Vía Crédito' 
+          value={totales.viaCredito} 
+          className='h-full'
+          valueColor='text-orange-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-credito-pagado" label="Card Crédito Pagado">
+        <CardMiniInfo 
+          title='Crédito (Total Paga)' 
+          value={totales.creditoPagado} 
+          className='h-full'
+          valueColor='text-blue-600'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-credito-deuda" label="Card Crédito Deuda">
+        <CardMiniInfo 
+          title='Crédito (Deuda)' 
+          value={totales.creditoDeuda} 
+          className='h-full'
+          valueColor='text-red-500'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-total-icbper" label="Card Total ICBPER">
+        <CardMiniInfo 
+          title='Total ICBPER' 
+          value={totales.totalICBPER} 
+          className='h-full'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-total-ventas" label="Card Total Ventas">
+        <CardMiniInfo 
+          title='Total Ventas' 
+          value={totales.totalVentas} 
+          className='h-full'
+          valueColor='text-blue-700'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-venta-promedio" label="Card Venta Promedio">
+        <CardMiniInfo 
+          title='Venta Promedio' 
+          value={totales.ventaPromedio} 
+          className='h-full'
+        />
+      </ConfigurableElement>
+
+      <ConfigurableElement componentId="mis-ventas.card-comision" label="Card Comisión">
+        <CardMiniInfo 
+          title='Comisión' 
+          value={totales.comision} 
+          className='h-full'
+          valueColor='text-purple-600'
+        />
+      </ConfigurableElement>
     </>
   )
 }

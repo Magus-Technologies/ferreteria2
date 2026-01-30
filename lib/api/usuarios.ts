@@ -44,7 +44,7 @@ export interface Usuario {
   fecha_baja: string | null;
   vacaciones_dias: number;
   sueldo_boleta: number | null;
-  rol_sistema: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'CONDUCTOR' | null;
+  rol_sistema: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR' | null;
   
   // Estado
   estado: boolean;
@@ -85,7 +85,7 @@ export interface CreateUsuarioRequest {
   fecha_baja?: string;
   vacaciones_dias?: number;
   sueldo_boleta?: number;
-  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'CONDUCTOR';
+  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
   
   // Otros
   efectivo?: number;
@@ -121,7 +121,7 @@ export interface UpdateUsuarioRequest {
   fecha_baja?: string;
   vacaciones_dias?: number;
   sueldo_boleta?: number;
-  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'CONDUCTOR';
+  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
   
   // Otros
   efectivo?: number;
@@ -132,6 +132,7 @@ interface GetUsuariosParams {
   search?: string;
   empresa_id?: number;
   estado?: boolean;
+  rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
 }
 
 // ============= RESPONSES =============

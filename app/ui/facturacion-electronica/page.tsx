@@ -47,7 +47,7 @@ const ChartLoading = () => (
 );
 
 export default function FacturacionElectronica() {
-  const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_INDEX);
+  const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_DASHBOARD_INDEX);
 
   if (!canAccess) return <NoAutorizado />;
 

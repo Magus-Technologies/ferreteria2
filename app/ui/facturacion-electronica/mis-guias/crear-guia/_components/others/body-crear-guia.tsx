@@ -55,16 +55,17 @@ export default function BodyCrearGuia({
     <FormBase<FormCreateGuia>
       form={form}
       name='guia'
+      className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
       onFinish={handleSubmit}
     >
-      <div className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full'>
-        <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0'>
+      <div className='flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0'>
+        <div className='flex-1 min-h-0'>
           <FormTableGuia form={form} guia={guia} />
-          <FormCrearGuia form={form} guia={guia} />
         </div>
-        <div className='w-full xl:w-80 xl:min-w-[320px]'>
-          <CardsInfoGuia form={form} guia={guia} />
-        </div>
+        <FormCrearGuia form={form} guia={guia} />
+      </div>
+      <div className='w-full xl:w-auto'>
+        <CardsInfoGuia form={form} guia={guia} />
       </div>
     </FormBase>
   )

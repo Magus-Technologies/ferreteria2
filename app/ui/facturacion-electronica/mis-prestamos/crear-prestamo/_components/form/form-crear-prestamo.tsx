@@ -19,6 +19,7 @@ import { prestamoApi } from "~/lib/api/prestamo";
 import { useStoreProductoAgregadoPrestamo } from "../../_store/store-producto-agregado-prestamo";
 import FormSeccionCliente from "~/app/_components/form/form-seccion-cliente";
 import SelectBase from "~/app/_components/form/selects/select-base";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export default function FormCrearPrestamo({
   form,
@@ -68,64 +69,72 @@ export default function FormCrearPrestamo({
       {/* Fila 1: Fecha, Fecha Vencimiento, Tipo Operación, Tipo Entidad */}
       <div className="flex gap-4">
         <LabelBase label="Fecha:" classNames={{ labelParent: "mb-6" }}>
-          <DatePickerBase
-            propsForm={{
-              name: "fecha",
-              initialValue: dayjs(),
-              rules: [{ required: true, message: "Requerido" }],
-            }}
-            className="!w-[150px]"
-            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
-          />
+          <ConfigurableElement componentId="field-fecha-prestamo" label="Campo Fecha">
+            <DatePickerBase
+              propsForm={{
+                name: "fecha",
+                initialValue: dayjs(),
+                rules: [{ required: true, message: "Requerido" }],
+              }}
+              className="!w-[150px]"
+              prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
+            />
+          </ConfigurableElement>
         </LabelBase>
 
         <LabelBase label="F. Vencimiento:" classNames={{ labelParent: "mb-6" }}>
-          <DatePickerBase
-            propsForm={{
-              name: "fecha_vencimiento",
-              initialValue: dayjs().add(30, "days"),
-              rules: [{ required: true, message: "Requerido" }],
-            }}
-            className="!w-[150px]"
-            prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
-          />
+          <ConfigurableElement componentId="field-fecha-vencimiento-prestamo" label="Campo Fecha Vencimiento">
+            <DatePickerBase
+              propsForm={{
+                name: "fecha_vencimiento",
+                initialValue: dayjs().add(30, "days"),
+                rules: [{ required: true, message: "Requerido" }],
+              }}
+              className="!w-[150px]"
+              prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
+            />
+          </ConfigurableElement>
         </LabelBase>
 
         <LabelBase label="Operación:" classNames={{ labelParent: "mb-6" }}>
-          <SelectBase
-            propsForm={{
-              name: "tipo_operacion",
-              initialValue: TipoOperacion.PRESTAR,
-              rules: [{ required: true }],
-            }}
-            className="!w-[170px]"
-            onChange={(value) => setTipoOperacion(value as TipoOperacion)}
-            prefix={<FaClipboardList size={15} className="text-rose-700 mx-1" />}
-            options={[
-              { value: TipoOperacion.PRESTAR, label: "PRESTAR" },
-              {
-                value: TipoOperacion.PEDIR_PRESTADO,
-                label: "PEDIR PRESTADO",
-              },
-            ]}
-          />
+          <ConfigurableElement componentId="field-tipo-operacion-prestamo" label="Campo Tipo Operación">
+            <SelectBase
+              propsForm={{
+                name: "tipo_operacion",
+                initialValue: TipoOperacion.PRESTAR,
+                rules: [{ required: true }],
+              }}
+              className="!w-[170px]"
+              onChange={(value) => setTipoOperacion(value as TipoOperacion)}
+              prefix={<FaClipboardList size={15} className="text-rose-700 mx-1" />}
+              options={[
+                { value: TipoOperacion.PRESTAR, label: "PRESTAR" },
+                {
+                  value: TipoOperacion.PEDIR_PRESTADO,
+                  label: "PEDIR PRESTADO",
+                },
+              ]}
+            />
+          </ConfigurableElement>
         </LabelBase>
 
         <LabelBase label="Tipo:" classNames={{ labelParent: "mb-6" }}>
-          <SelectBase
-            propsForm={{
-              name: "tipo_entidad",
-              initialValue: TipoEntidad.CLIENTE,
-              rules: [{ required: true }],
-            }}
-            className="!w-[150px]"
-            onChange={(value) => setTipoEntidad(value as TipoEntidad)}
-            prefix={<MdCategory size={15} className="text-rose-700 mx-1" />}
-            options={[
-              { value: TipoEntidad.CLIENTE, label: "CLIENTE" },
-              { value: TipoEntidad.PROVEEDOR, label: "PROVEEDOR" },
-            ]}
-          />
+          <ConfigurableElement componentId="field-tipo-entidad-prestamo" label="Campo Tipo Entidad">
+            <SelectBase
+              propsForm={{
+                name: "tipo_entidad",
+                initialValue: TipoEntidad.CLIENTE,
+                rules: [{ required: true }],
+              }}
+              className="!w-[150px]"
+              onChange={(value) => setTipoEntidad(value as TipoEntidad)}
+              prefix={<MdCategory size={15} className="text-rose-700 mx-1" />}
+              options={[
+                { value: TipoEntidad.CLIENTE, label: "CLIENTE" },
+                { value: TipoEntidad.PROVEEDOR, label: "PROVEEDOR" },
+              ]}
+            />
+          </ConfigurableElement>
         </LabelBase>
 {/* 
         <LabelBase label="Moneda:" classNames={{ labelParent: "mb-6" }}>
@@ -157,25 +166,29 @@ export default function FormCrearPrestamo({
       {/* Fila 3: Teléfono y Garantía */}
       <div className="flex flex-wrap gap-4">
         <LabelBase label="Teléfono:" classNames={{ labelParent: "mb-6" }}>
-          <InputBase
-            propsForm={{
-              name: "telefono",
-              hasFeedback: false,
-              className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
-            }}
-            placeholder="999999999"
-            readOnly
-            uppercase={false}
-          />
+          <ConfigurableElement componentId="field-telefono-prestamo" label="Campo Teléfono">
+            <InputBase
+              propsForm={{
+                name: "telefono",
+                hasFeedback: false,
+                className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
+              }}
+              placeholder="999999999"
+              readOnly
+              uppercase={false}
+            />
+          </ConfigurableElement>
         </LabelBase>
 
         <LabelBase label="Garantía:" classNames={{ labelParent: "mb-6" }} className="flex-1">
-          <InputBase
-            propsForm={{ name: "garantia" }}
-            className="w-full"
-            placeholder="Ej: DNI 12345678, Taladro Bosch, etc."
-            prefix={<FaShieldAlt size={15} className="text-cyan-600 mx-1" />}
-          />
+          <ConfigurableElement componentId="field-garantia-prestamo" label="Campo Garantía">
+            <InputBase
+              propsForm={{ name: "garantia" }}
+              className="w-full"
+              placeholder="Ej: DNI 12345678, Taladro Bosch, etc."
+              prefix={<FaShieldAlt size={15} className="text-cyan-600 mx-1" />}
+            />
+          </ConfigurableElement>
         </LabelBase>
       </div>
 
@@ -188,11 +201,13 @@ export default function FormCrearPrestamo({
           orientation="column"
           className="flex-1"
         >
-          <TextareaBase
-            propsForm={{ name: "observaciones" }}
-            rows={2}
-            placeholder="Observaciones adicionales del préstamo"
-          />
+          <ConfigurableElement componentId="field-observaciones-prestamo" label="Campo Observaciones">
+            <TextareaBase
+              propsForm={{ name: "observaciones" }}
+              rows={2}
+              placeholder="Observaciones adicionales del préstamo"
+            />
+          </ConfigurableElement>
         </LabelBase>
       </div>
     </div>

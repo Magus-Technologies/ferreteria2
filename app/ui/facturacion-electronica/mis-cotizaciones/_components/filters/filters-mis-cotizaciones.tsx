@@ -14,6 +14,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import InputBase from "~/app/_components/form/inputs/input-base";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 interface ValuesFiltersMisCotizaciones {
   almacen_id: number;
@@ -146,15 +147,17 @@ export default function FiltersMisCotizaciones() {
               formWithMessage={false}
             />
           </div>
-               <ButtonBase
-            color="info"
-            size="md"
-            type="submit"
-            className="flex items-center gap-2"
-          >
-            <FaSearch />
-            Buscar
-          </ButtonBase>
+          <ConfigurableElement componentId="mis-cotizaciones.boton-buscar" label="Botón Buscar">
+            <ButtonBase
+              color="info"
+              size="md"
+              type="submit"
+              className="flex items-center gap-2"
+            >
+              <FaSearch />
+              Buscar
+            </ButtonBase>
+          </ConfigurableElement>
         </div>
 
         {/* Fila 2: N° Proforma, Modalidad, Sucursal, Botón Buscar */}

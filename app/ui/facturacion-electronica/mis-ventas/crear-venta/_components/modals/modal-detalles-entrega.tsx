@@ -5,7 +5,7 @@ import { useState } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
-import SelectChoferes from '~/app/_components/form/selects/select-choferes'
+import SelectDespachadores from '~/app/_components/form/selects/select-despachadores'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
 import TitleForm from '~/components/form/title-form'
 import dynamic from 'next/dynamic'
@@ -44,8 +44,8 @@ export default function ModalDetallesEntrega({
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta()
 
   const handleEditarCliente = () => {
-    setOpen(false) // Cerrar el modal primero
-    onEditarCliente() // Luego abrir el modal de cliente
+    // NO cerrar el modal, solo abrir el modal de cliente encima
+    onEditarCliente()
   }
 
   const handleConfirmar = async () => {
@@ -140,19 +140,19 @@ export default function ModalDetallesEntrega({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Designar Chofer: <span className="text-red-500">*</span>
+                  Designar Despachador: <span className="text-red-500">*</span>
                 </label>
-                <SelectChoferes
+                <SelectDespachadores
                   propsForm={{
-                    name: 'chofer_id',
+                    name: 'despachador_id',
                     rules: [
                       {
                         required: true,
-                        message: 'Por favor, selecciona un chofer',
+                        message: 'Por favor, selecciona un despachador',
                       },
                     ],
                   }}
-                  placeholder="Seleccionar chofer"
+                  placeholder="Seleccionar despachador"
                   className="w-full"
                 />
               </div>
