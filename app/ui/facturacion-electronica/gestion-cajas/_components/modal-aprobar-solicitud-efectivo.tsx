@@ -7,7 +7,6 @@ import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import LabelBase from '~/components/form/label-base'
 import { useAprobarSolicitudEfectivo } from '../_hooks/use-aprobar-solicitud-efectivo'
-import { subCajaApi, type SubCaja } from '~/lib/api/sub-caja'
 
 interface ModalAprobarSolicitudEfectivoProps {
   solicitudId: string
@@ -34,28 +33,13 @@ export default function ModalAprobarSolicitudEfectivo({
   const [form] = Form.useForm<FormValues>()
   const { aprobar, loading } = useAprobarSolicitudEfectivo()
 
-  // Obtener caja activa del usuario
-  const { data: cajaActiva } = useQuery({
-    queryKey: ['caja-activa'],
-    queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/activa`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
-      const data = await response.json()
-      return data.data
-    },
-    enabled: open,
-  })
-
-  // Obtener sub-cajas del usuario con saldo del vendedor
+  // Obtener TODAS las sub-cajas del usuario con saldo del vendedor
+  // Esto funciona tanto para cajeros con caja asignada como para vendedores sin caja
   const { data: subCajasResponse, isLoading: loadingSubCajas } = useQuery({
-    queryKey: ['sub-cajas-con-saldo-vendedor', cajaActiva?.caja_principal_id],
+    queryKey: ['todas-sub-cajas-con-saldo-vendedor'],
     queryFn: async () => {
-      if (!cajaActiva?.caja_principal_id) return null
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/cajas/cajas-principales/${cajaActiva.caja_principal_id}/sub-cajas/con-saldo-vendedor`,
+        `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-vendedor`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -65,7 +49,7 @@ export default function ModalAprobarSolicitudEfectivo({
       const data = await response.json()
       return data
     },
-    enabled: open && !!cajaActiva?.caja_principal_id,
+    enabled: open,
   })
 
   const subCajas = subCajasResponse?.data || []

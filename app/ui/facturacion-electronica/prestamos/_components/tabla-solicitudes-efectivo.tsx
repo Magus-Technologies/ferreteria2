@@ -3,8 +3,20 @@
 import { Table, Tag, Space, Button, message } from "antd";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { prestamoVendedorApi, type SolicitudEfectivo } from "~/lib/api/prestamo-vendedor";
+import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
+
+interface SolicitudEfectivo {
+  id: number;
+  vendedor_solicitante: {
+    id: number;
+    name: string;
+  };
+  monto_solicitado: number;
+  estado: "pendiente" | "aprobada" | "rechazada";
+  motivo?: string;
+  created_at: string;
+}
 
 const formatCurrency = (amount: number) => {
   return `S/ ${amount.toFixed(2)}`;
@@ -13,7 +25,7 @@ const formatCurrency = (amount: number) => {
 export default function TablaSolicitudesEfectivo() {
   const [solicitudes, setSolicitudes] = useState<SolicitudEfectivo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<number | null>(null);
   const [openAprobar, setOpenAprobar] = useState(false);
 
   const cargarSolicitudes = async () => {
@@ -32,12 +44,12 @@ export default function TablaSolicitudesEfectivo() {
     cargarSolicitudes();
   }, []);
 
-  const handleAprobar = (solicitud: SolicitudEfectivo) => {
-    setSelectedSolicitud(solicitud);
+  const handleAprobar = (id: number) => {
+    setSelectedSolicitud(id);
     setOpenAprobar(true);
   };
 
-  const handleRechazar = async (id: string) => {
+  const handleRechazar = async (id: number) => {
     try {
       const response = await prestamoVendedorApi.rechazarSolicitud(id);
       message.success("Solicitud rechazada");
@@ -106,7 +118,7 @@ export default function TablaSolicitudesEfectivo() {
               type="primary"
               size="small"
               icon={<CheckCircle className="h-4 w-4" />}
-              onClick={() => handleAprobar(record)}
+              onClick={() => handleAprobar(record.id)}
             >
               Aprobar
             </Button>
@@ -142,9 +154,7 @@ export default function TablaSolicitudesEfectivo() {
         <ModalAprobarSolicitudEfectivo
           open={openAprobar}
           setOpen={setOpenAprobar}
-          solicitudId={selectedSolicitud.id}
-          montoSolicitado={selectedSolicitud.monto_solicitado}
-          solicitanteNombre={selectedSolicitud.vendedor_solicitante.name}
+          solicitudId={selectedSolicitud}
           onSuccess={cargarSolicitudes}
         />
       )}

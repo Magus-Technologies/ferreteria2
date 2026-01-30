@@ -66,7 +66,7 @@ export default function ModalSolicitarEfectivo({
         
         solicitarEfectivo({
             apertura_cierre_caja_id: aperturaId,
-            vendedor_prestamista_id: String(values.vendedor_prestamista_id),
+            vendedor_prestamista_id: values.vendedor_prestamista_id,
             monto_solicitado: values.monto_solicitado,
             motivo: values.motivo,
         })

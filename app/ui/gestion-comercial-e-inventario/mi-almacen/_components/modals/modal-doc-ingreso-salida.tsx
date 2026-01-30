@@ -17,11 +17,11 @@ export default function ModalDocIngresoSalida({
   setOpen: (open: boolean) => void;
   data: IngresoSalidaWithRelations | undefined;
 }) {
-  // Convertir el tipo_documento al enum de Prisma
+  // Convertir el tipo_documento del backend (Laravel usa códigos: 'in', 'sa') al enum de Prisma
   const tipoDocumentoPrisma =
-    data?.tipo_documento === "Ingreso"
+    data?.tipo_documento === "Ingreso" || data?.tipo_documento === "in"
       ? TipoDocumento.Ingreso
-      : data?.tipo_documento === "Salida"
+      : data?.tipo_documento === "Salida" || data?.tipo_documento === "sa"
         ? TipoDocumento.Salida
         : undefined;
 

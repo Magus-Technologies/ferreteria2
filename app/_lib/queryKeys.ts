@@ -25,7 +25,6 @@ export enum QueryKeys {
   CLIENTES_SEARCH = 'clientes_search',
   CHOFERES = 'choferes',
   VENTAS = 'ventas',
-  ENTREGAS = 'entregas',
   ENTREGAS_PRODUCTOS = 'entregas_productos',
   TIPO_CAMBIO = "TIPO_CAMBIO",
   COTIZACIONES = 'cotizaciones',
@@ -41,5 +40,4 @@ export enum QueryKeys {
   CAJA_ACTIVA = 'caja_activa',
   APERTURA_CAJA = 'apertura_caja',
   PRESTAMOS_PENDIENTES = 'prestamos_pendientes',
-  MOTIVOS_TRASLADO = 'motivos_traslado',
 }

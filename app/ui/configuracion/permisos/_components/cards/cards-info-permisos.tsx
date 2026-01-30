@@ -20,9 +20,9 @@ export default function CardsInfoPermisos() {
   })
 
   // Extraer los datos de las respuestas
-  const statsData = statsResponse?.data
-  const permissionsData = Array.isArray(permissionsResponse?.data) 
-    ? permissionsResponse.data 
+  const statsData = statsResponse?.data?.data
+  const permissionsData = Array.isArray(permissionsResponse?.data?.data) 
+    ? permissionsResponse.data.data 
     : []
 
   if (loadingStats || loadingPerms) {
