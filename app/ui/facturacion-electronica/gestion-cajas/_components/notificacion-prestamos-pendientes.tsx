@@ -26,7 +26,7 @@ export function NotificacionPrestamosPendientes() {
   })
 
   // La respuesta tiene estructura: {data: {success: true, data: [...]}}
-  const solicitudes = Array.isArray(data?.data) ? data.data : []
+  const solicitudes = Array.isArray(data?.data?.data) ? data.data.data : []
 
   console.log('🔔 Solicitudes procesadas:', solicitudes)
   console.log('🔔 Cantidad de solicitudes:', solicitudes.length)

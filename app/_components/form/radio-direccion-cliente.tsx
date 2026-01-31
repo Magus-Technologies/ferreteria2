@@ -16,7 +16,7 @@ export default function RadioDireccionCliente({ form }: RadioDireccionClientePro
     // PRIMERO actualizar la selección
     form.setFieldValue('direccion_seleccionada', opcion)
 
-    // LUEGO actualizar la dirección (tanto 'direccion' como 'direccion_entrega' y 'punto_llegada')
+    // LUEGO actualizar la dirección (tanto 'direccion' como 'direccion_entrega')
     let direccionSeleccionada = ''
     if (opcion === 'D1') {
       direccionSeleccionada = direccion1 || ''
@@ -30,7 +30,6 @@ export default function RadioDireccionCliente({ form }: RadioDireccionClientePro
 
     form.setFieldValue('direccion', direccionSeleccionada)
     form.setFieldValue('direccion_entrega', direccionSeleccionada)
-    form.setFieldValue('punto_llegada', direccionSeleccionada) // Agregado para guías
   }
 
   return (

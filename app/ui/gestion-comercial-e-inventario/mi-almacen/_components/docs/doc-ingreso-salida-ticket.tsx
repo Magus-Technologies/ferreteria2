@@ -70,7 +70,7 @@ export default function DocIngresoSalidaTicket({
       })),
     ) ?? [];
 
-  // Convertir tipo de documento a enum de Prisma
+  // Convertir tipo de documento de Laravel (usa códigos: 'in', 'sa') a Prisma
   const tipoDocumentoPrisma =
     data?.tipo_documento === "Ingreso"
       ? TipoDocumento.Ingreso

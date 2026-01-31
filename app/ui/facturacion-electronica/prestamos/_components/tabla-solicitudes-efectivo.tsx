@@ -3,8 +3,10 @@
 import { Table, Tag, Space, Button, message } from "antd";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { prestamoVendedorApi, type SolicitudEfectivo } from "~/lib/api/prestamo-vendedor";
+import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
+
+import type { SolicitudEfectivo } from "~/lib/api/prestamo-vendedor";
 
 const formatCurrency = (amount: number) => {
   return `S/ ${amount.toFixed(2)}`;
@@ -20,7 +22,7 @@ export default function TablaSolicitudesEfectivo() {
     setLoading(true);
     try {
       const response = await prestamoVendedorApi.listarSolicitudes();
-      setSolicitudes(response.data || []);
+      setSolicitudes(response.data as SolicitudEfectivo[] || []);
     } catch (error) {
       message.error("Error al cargar solicitudes");
     } finally {
@@ -39,7 +41,7 @@ export default function TablaSolicitudesEfectivo() {
 
   const handleRechazar = async (id: string) => {
     try {
-      const response = await prestamoVendedorApi.rechazarSolicitud(id);
+      await prestamoVendedorApi.rechazarSolicitud(id);
       message.success("Solicitud rechazada");
       cargarSolicitudes();
     } catch (error) {
