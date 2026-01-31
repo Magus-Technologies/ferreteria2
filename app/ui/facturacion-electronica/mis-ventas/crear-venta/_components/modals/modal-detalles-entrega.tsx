@@ -150,6 +150,7 @@ export default function ModalDetallesEntrega({
                   Designar Despachador: <span className="text-red-500">*</span>
                 </label>
                 <SelectDespachadores
+                  form={form}
                   propsForm={{
                     name: 'despachador_id',
                     rules: [

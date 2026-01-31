@@ -18,9 +18,11 @@ import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 export default function FormCrearGuia({
   form,
   guia,
+  venta,
 }: {
   form: FormInstance
   guia?: any
+  venta?: any
 }) {
   // Inicializar D1 al montar el componente
   useEffect(() => {
@@ -151,6 +153,7 @@ export default function FormCrearGuia({
             <SelectClientes
               form={form}
               showOnlyDocument={true}
+              clienteOptionsDefault={venta?.cliente ? [venta.cliente] : []}
               propsForm={{
                 name: 'cliente_id',
                 hasFeedback: false,

@@ -55,26 +55,30 @@ export default function ModalAsignarPermisos({
   const { data: userPermissions, isLoading: loadingUserPermissions, refetch: refetchUserPermissions } = useQuery({
     queryKey: ['user-permissions', userId],
     queryFn: async () => {
-      const response = await permissionsApi.getUserPermissions(userId)
-      return response.data
+      // TODO: Este sistema usa el modelo antiguo de permisos (whitelist)
+      // Ahora usamos restricciones (blacklist) en permisos-visuales
+      return null
     },
-    enabled: open && !!userId && userId !== '',
+    enabled: false, // Deshabilitado porque usamos el nuevo sistema de restricciones
   })
 
   useEffect(() => {
-    if (userPermissions?.direct_permissions && userPermissions?.roles) {
-      const permissionIds = userPermissions.direct_permissions.map(p => p.id)
-      const roleIds = userPermissions.roles.map(r => r.id)
-      
-      setSelectedPermissions(permissionIds)
-      setSelectedRoles(roleIds)
-    }
+    // Sistema antiguo deshabilitado
+    // if (userPermissions?.direct_permissions && userPermissions?.roles) {
+    //   const permissionIds = userPermissions.direct_permissions.map(p => p.id)
+    //   const roleIds = userPermissions.roles.map(r => r.id)
+    //   
+    //   setSelectedPermissions(permissionIds)
+    //   setSelectedRoles(roleIds)
+    // }
   }, [userPermissions])
 
   const assignMutation = useMutation({
     mutationFn: async () => {
-      await permissionsApi.assignRolesToUser(userId, selectedRoles)
-      await permissionsApi.assignPermissionsToUser(userId, selectedPermissions)
+      // Sistema antiguo deshabilitado - ahora se usa restricciones
+      // await permissionsApi.assignRolesToUser(userId, selectedRoles)
+      // await permissionsApi.assignPermissionsToUser(userId, selectedPermissions)
+      message.warning('Este sistema usa restricciones ahora. Usa el módulo de Permisos Visuales.')
     },
     onSuccess: () => {
       message.success('Permisos y roles asignados correctamente')
@@ -142,7 +146,7 @@ export default function ModalAsignarPermisos({
               key: 'roles',
               label: (
                 <span className="flex items-center gap-2">
-                  <Badge count={userPermissions?.roles?.length || 0} showZero>
+                  <Badge count={0} showZero>
                     👥 Asignar Roles
                   </Badge>
                 </span>
@@ -159,7 +163,7 @@ export default function ModalAsignarPermisos({
               key: 'permissions',
               label: (
                 <span className="flex items-center gap-2">
-                  <Badge count={userPermissions?.direct_permissions?.length || 0} showZero>
+                  <Badge count={0} showZero>
                     🔐 Permisos Directos
                   </Badge>
                 </span>
@@ -175,7 +179,7 @@ export default function ModalAsignarPermisos({
             {
               key: 'summary',
               label: '📋 Resumen',
-              children: <TabResumen userPermissions={userPermissions} />,
+              children: <TabResumen userPermissions={undefined} />,
             },
           ]}
         />

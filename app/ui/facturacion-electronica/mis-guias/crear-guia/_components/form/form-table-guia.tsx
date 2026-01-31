@@ -9,7 +9,7 @@ export default function FormTableGuia({
   guia?: any
 }) {
   return (
-    <div className='h-[300px] md:h-[400px] lg:h-[500px]'>
+    <div className='h-[250px] md:h-[350px] lg:h-[400px]'>
       <Form.List name='productos'>
         {(fields, { add, remove }) => (
           <TableGuia

@@ -268,6 +268,28 @@ export enum permissions {
   MIS_ENTREGAS_BOTON_VER_MAPA = "mis-entregas.boton-ver-mapa",
   MIS_ENTREGAS_BOTON_EN_CAMINO = "mis-entregas.boton-en-camino",
   MIS_ENTREGAS_BOTON_ENTREGAR = "mis-entregas.boton-entregar",
+
+  // Mis Ventas - Elementos Configurables
+  MIS_VENTAS_BOTON_VER_PDF = "mis-ventas.boton-ver-pdf",
+  MIS_VENTAS_BOTON_CREAR_GUIA = "mis-ventas.boton-crear-guia",
+
+  // Mis Guías - Elementos Configurables
+  MIS_GUIAS_FILTRO_FECHA_DESDE = "mis-guias.filtro-fecha-desde",
+  MIS_GUIAS_FILTRO_FECHA_HASTA = "mis-guias.filtro-fecha-hasta",
+  MIS_GUIAS_FILTRO_ESTADO = "mis-guias.filtro-estado",
+  MIS_GUIAS_FILTRO_TIPO_GUIA = "mis-guias.filtro-tipo-guia",
+  MIS_GUIAS_FILTRO_BUSCAR = "mis-guias.filtro-buscar",
+  MIS_GUIAS_BOTON_BUSCAR = "mis-guias.boton-buscar",
+  MIS_GUIAS_TABLA = "mis-guias.tabla",
+  MIS_GUIAS_CARD_TOTAL = "mis-guias.card-total",
+  MIS_GUIAS_CARD_BORRADORES = "mis-guias.card-borradores",
+  MIS_GUIAS_CARD_EMITIDAS = "mis-guias.card-emitidas",
+  MIS_GUIAS_CARD_ANULADAS = "mis-guias.card-anuladas",
+  MIS_GUIAS_BOTON_VER_PDF = "mis-guias.boton-ver-pdf",
+  MIS_GUIAS_BOTON_EDITAR = "mis-guias.boton-editar",
+  MIS_GUIAS_BOTON_EMITIR = "mis-guias.boton-emitir",
+  MIS_GUIAS_BOTON_ANULAR = "mis-guias.boton-anular",
+  MIS_GUIAS_BOTON_ELIMINAR = "mis-guias.boton-eliminar",
 }
 
 type PermisosValidos = Exclude<
@@ -539,6 +561,28 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.MIS_ENTREGAS_BOTON_VER_MAPA]: "Botón Ver Mapa",
   [permissions.MIS_ENTREGAS_BOTON_EN_CAMINO]: "Botón En Camino",
   [permissions.MIS_ENTREGAS_BOTON_ENTREGAR]: "Botón Entregar",
+
+  // Mis Ventas - Elementos Configurables
+  [permissions.MIS_VENTAS_BOTON_VER_PDF]: "Botón Ver PDF",
+  [permissions.MIS_VENTAS_BOTON_CREAR_GUIA]: "Botón Crear Guía",
+
+  // Mis Guías - Elementos Configurables
+  [permissions.MIS_GUIAS_FILTRO_FECHA_DESDE]: "Filtro Fecha Desde",
+  [permissions.MIS_GUIAS_FILTRO_FECHA_HASTA]: "Filtro Fecha Hasta",
+  [permissions.MIS_GUIAS_FILTRO_ESTADO]: "Filtro Estado",
+  [permissions.MIS_GUIAS_FILTRO_TIPO_GUIA]: "Filtro Tipo de Guía",
+  [permissions.MIS_GUIAS_FILTRO_BUSCAR]: "Filtro Buscar",
+  [permissions.MIS_GUIAS_BOTON_BUSCAR]: "Botón Buscar",
+  [permissions.MIS_GUIAS_TABLA]: "Tabla de Guías",
+  [permissions.MIS_GUIAS_CARD_TOTAL]: "Card Total Guías",
+  [permissions.MIS_GUIAS_CARD_BORRADORES]: "Card Borradores",
+  [permissions.MIS_GUIAS_CARD_EMITIDAS]: "Card Emitidas",
+  [permissions.MIS_GUIAS_CARD_ANULADAS]: "Card Anuladas",
+  [permissions.MIS_GUIAS_BOTON_VER_PDF]: "Botón Ver PDF",
+  [permissions.MIS_GUIAS_BOTON_EDITAR]: "Botón Editar",
+  [permissions.MIS_GUIAS_BOTON_EMITIR]: "Botón Emitir",
+  [permissions.MIS_GUIAS_BOTON_ANULAR]: "Botón Anular",
+  [permissions.MIS_GUIAS_BOTON_ELIMINAR]: "Botón Eliminar",
 };
 
 export function getAllPermissions() {

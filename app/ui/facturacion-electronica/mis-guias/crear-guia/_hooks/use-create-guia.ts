@@ -1,114 +1,88 @@
-import { FormCreateGuia } from '../_components/others/body-crear-guia'
-import { useServerMutation } from '~/hooks/use-server-mutation'
-import { toUTCBD } from '~/utils/fechas'
-import { useStoreAlmacen } from '~/store/store-almacen'
-import useApp from 'antd/es/app/useApp'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { App, FormInstance } from 'antd'
 import { useRouter } from 'next/navigation'
-import usePermissionHook from '~/hooks/use-permission'
-import { permissions } from '~/lib/permissions'
-import { useAuth } from '~/lib/auth-context'
+import { guiaRemisionApi, type CreateGuiaRemisionRequest, type GuiaRemisionResponse } from '~/lib/api/guia-remision'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import type { FormCreateGuia } from '../_components/others/body-crear-guia'
 
-type ProductoAgrupado = Pick<
-  FormCreateGuia['productos'][number],
-  'producto_id' | 'marca_name' | 'producto_name'
-> & {
-  unidades_derivadas: Array<
-    Omit<
-      FormCreateGuia['productos'][number],
-      'producto_id' | 'marca_name' | 'producto_name'
-    >
-  >
-}
-
-export function agruparProductos({
-  productos,
-}: {
-  productos: FormCreateGuia['productos']
-}) {
-  const mapa = new Map<number, ProductoAgrupado>()
-  for (const p of productos) {
-    if (!mapa.has(p.producto_id)) {
-      mapa.set(p.producto_id, {
-        producto_id: p.producto_id,
-        marca_name: p.marca_name,
-        producto_name: p.producto_name,
-        unidades_derivadas: [],
-      })
-    }
-    const grupo = mapa.get(p.producto_id)!
-    grupo.unidades_derivadas.push({
-      cantidad: p.cantidad,
-      unidad_derivada_id: p.unidad_derivada_id,
-      unidad_derivada_name: p.unidad_derivada_name,
-      unidad_derivada_factor: p.unidad_derivada_factor,
-      costo: p.costo,
-      precio_venta: p.precio_venta,
-      producto_codigo: p.producto_codigo,
-    })
-  }
-  return Array.from(mapa.values())
-}
-
-// Función temporal - reemplazar con la acción real del servidor
-async function createGuiaTemp(data: any) {
-  console.log('📦 Creando guía:', data)
-  // Simular delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  return { data: { id: 1, ...data } }
-}
-
-export default function useCreateGuia(form?: any) {
+export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
+  const { message } = App.useApp()
+  const queryClient = useQueryClient()
   const router = useRouter()
-  const { user } = useAuth()
-  const user_id = user?.id
-  const { can } = usePermissionHook()
-  const { notification } = useApp()
-  const almacen_id = useStoreAlmacen((store) => store.almacen_id)
-  const { execute, loading } = useServerMutation({
-    action: createGuiaTemp, // TODO: Reemplazar con createGuia real
-    onSuccess: async () => {
-      if (form) {
-        form.resetFields()
+
+  const mutation = useMutation({
+    mutationFn: async (data: CreateGuiaRemisionRequest) => {
+      console.log('📦 Creando guía de remisión:', data)
+      
+      const response = await guiaRemisionApi.create(data)
+
+      if (response.error) {
+        throw new Error(response.error.message)
       }
-      router.push(`/ui/facturacion-electronica/mis-guias`)
+
+      return response.data
     },
-    msgSuccess: `Guía de remisión creada exitosamente`,
+    onSuccess: (data) => {
+      console.log('✅ Guía creada exitosamente:', data)
+      
+      message.success('Guía de remisión creada exitosamente')
+      
+      // Invalidar caché de guías
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
+      
+      // Redirigir a Mis Guías
+      router.push('/ui/facturacion-electronica/mis-guias')
+    },
+    onError: (error: Error) => {
+      console.error('❌ Error al crear guía:', error)
+      message.error(error.message || 'Error al crear guía de remisión')
+    },
   })
 
-  async function handleSubmit(values: FormCreateGuia) {
-    console.log('🚀 ~ handleSubmit ~ values:', values)
-
-    if (!can(permissions.GUIA_CREATE))
-      return notification.error({
-        message: 'No tienes permiso para crear una guía',
-      })
-    if (!user_id)
-      return notification.error({ message: 'No hay un usuario seleccionado' })
-    if (!almacen_id)
-      return notification.error({ message: 'No hay un almacen seleccionado' })
+  const handleSubmit = async (values: FormCreateGuia) => {
+    console.log('📝 Valores del formulario:', values)
     
-    const { productos, cliente_id, ...restValues } = values
+    // Obtener user_id del localStorage o contexto
+    const userId = localStorage.getItem('user_id') || 'cmj8o0pf70001uk0o4d3tbyyx'
     
-    if (!productos || productos.length === 0)
-      return notification.error({
-        message: 'Por favor, ingresa al menos un producto',
-      })
-
-    const productos_agrupados = agruparProductos({ productos })
-    
-    const dataFormated = {
-      ...restValues,
-      user_id,
-      almacen_id,
-      cliente_id,
-      fecha_emision: toUTCBD({ date: restValues.fecha_emision })!,
-      fecha_traslado: toUTCBD({ date: restValues.fecha_traslado })!,
-      productos_por_almacen: productos_agrupados,
+    // Transformar los datos del formulario al formato de la API
+    const data: CreateGuiaRemisionRequest = {
+      venta_id: values.venta_id,
+      fecha_emision: values.fecha_emision?.format('YYYY-MM-DD') || '',
+      fecha_traslado: values.fecha_traslado?.format('YYYY-MM-DD') || '',
+      serie: values.serie,
+      numero: values.numero,
+      tipo_guia: values.tipo_guia as any,
+      modalidad_transporte: values.modalidad_transporte as any,
+      motivo_traslado_id: Number(values.motivo_traslado) || 1,
+      punto_partida: values.punto_partida || '',
+      punto_llegada: values.punto_llegada || '',
+      cliente_id: values.cliente_id,
+      almacen_origen_id: 1, // TODO: Obtener del contexto o formulario
+      almacen_destino_id: values.destino_id,
+      chofer_id: values.chofer_id,
+      vehiculo_placa: values.vehiculo_placa,
+      referencia: values.referencia,
+      afecta_stock: values.afecta_stock === 'true' || values.afecta_stock === true,
+      user_id: userId,
+      detalles: values.productos?.map((p) => ({
+        producto_id: p.producto_id,
+        producto_almacen_id: p.producto_almacen_id || p.producto_id,
+        unidad_derivada_inmutable_id: p.unidad_derivada_id,
+        unidad_derivada_inmutable_name: p.unidad_derivada_name,
+        factor: p.unidad_derivada_factor || 1,
+        cantidad: p.cantidad,
+        peso_total: p.peso_total,
+      })) || [],
     }
-    
-    console.log('📤 Datos a enviar:', JSON.stringify(dataFormated, null, 2))
-    execute(dataFormated)
+
+    mutation.mutate(data)
   }
 
-  return { handleSubmit, loading }
+  return {
+    handleSubmit,
+    createGuia: mutation.mutate,
+    isCreating: mutation.isPending,
+    error: mutation.error,
+  }
 }

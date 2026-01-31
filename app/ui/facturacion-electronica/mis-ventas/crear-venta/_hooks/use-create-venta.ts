@@ -279,12 +279,17 @@ export default function useCreateVenta() {
       const ventaCreada = response.data?.data
 
       console.log('🔍 DEBUG - Datos de entrega:')
-      console.log('  tipo_despacho:', tipo_despacho)
-      console.log('  despachador_id:', despachador_id)
+      console.log('  ventaCreada:', ventaCreada ? 'SÍ' : 'NO')
+      console.log('  tipo_despacho:', tipo_despacho, '(tipo:', typeof tipo_despacho, ')')
+      console.log('  despachador_id:', despachador_id, '(tipo:', typeof despachador_id, ')')
       console.log('  fecha_programada:', fecha_programada)
       console.log('  hora_inicio:', hora_inicio)
       console.log('  hora_fin:', hora_fin)
       console.log('  direccion_entrega:', direccion_entrega)
+      console.log('  Condición 1 - ventaCreada:', !!ventaCreada)
+      console.log('  Condición 2 - tipo_despacho === "Domicilio":', tipo_despacho === 'Domicilio')
+      console.log('  Condición 3 - despachador_id:', !!despachador_id)
+      console.log('  ¿Se cumple la condición completa?:', !!(ventaCreada && tipo_despacho === 'Domicilio' && despachador_id))
 
       if (ventaCreada && tipo_despacho === 'Domicilio' && despachador_id) {
         console.log('🚚 Creando entrega automáticamente...')

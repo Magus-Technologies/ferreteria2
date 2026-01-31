@@ -280,6 +280,7 @@ export { almacenesApi } from "./api/almacen";
 export { productosApiV2 } from "./api/producto";
 export { clienteApi } from "./api/cliente";
 export { paqueteApi } from "./api/paquete";
+export { guiaRemisionApi } from "./api/guia-remision";
 
 // Exportar por defecto (mantener compatibilidad)
 const api = {

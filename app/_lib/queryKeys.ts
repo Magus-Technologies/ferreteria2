@@ -42,4 +42,5 @@ export enum QueryKeys {
   APERTURA_CAJA = 'apertura_caja',
   PRESTAMOS_PENDIENTES = 'prestamos_pendientes',
   MOTIVOS_TRASLADO = 'motivos_traslado',
+  GUIAS_REMISION = 'guias_remision',
 }

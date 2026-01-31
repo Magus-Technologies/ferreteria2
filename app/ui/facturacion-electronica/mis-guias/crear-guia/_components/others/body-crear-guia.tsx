@@ -12,6 +12,7 @@ import CardsInfoGuia from '../cards/cards-info-guia'
 export type FormCreateGuia = {
   productos: Array<{
     producto_id: number
+    producto_almacen_id?: number
     producto_name: string
     producto_codigo: string
     marca_name: string
@@ -21,10 +22,12 @@ export type FormCreateGuia = {
     cantidad: number
     costo: number
     precio_venta: number
+    peso_total?: number
   }>
+  venta_id?: string
   fecha_emision: Dayjs
   fecha_traslado: Dayjs
-  afecta_stock: string // 'true' | 'false'
+  afecta_stock: string | boolean // 'true' | 'false' | true | false
   serie?: string
   numero?: number
   destino_id?: number
@@ -47,7 +50,7 @@ export default function BodyCrearGuia({
 }: { guia?: any } = {}) {
   const [form] = Form.useForm<FormCreateGuia>()
 
-  useInitGuia({ guia, form })
+  const { venta } = useInitGuia({ guia, form })
 
   const { handleSubmit } = useCreateGuia(form)
 
@@ -62,7 +65,7 @@ export default function BodyCrearGuia({
         <div className='flex-1 min-h-0'>
           <FormTableGuia form={form} guia={guia} />
         </div>
-        <FormCrearGuia form={form} guia={guia} />
+        <FormCrearGuia form={form} guia={guia} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
         <CardsInfoGuia form={form} guia={guia} />

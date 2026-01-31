@@ -2,7 +2,6 @@
 
 import React, { useRef } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
-import type { Entrega } from '~/lib/api/entregas'
 import { useColumnsMisEntregas } from './columns-mis-entregas'
 import useGetEntregas from '../../_hooks/use-get-entregas'
 import { create } from 'zustand'
@@ -11,9 +10,34 @@ import type { RowStyle } from 'ag-grid-community'
 import { orangeColors, greenColors, blueColors, redColors } from '~/lib/colors'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
+// Tipo para las entregas que vienen de la API (con códigos de DB)
+interface EntregaDB {
+  id: number
+  venta_id: string
+  tipo_entrega: string
+  tipo_despacho: string
+  estado_entrega: 'pe' | 'ec' | 'en' | 'ca' // Códigos de la DB
+  fecha_entrega: string
+  fecha_programada?: string
+  hora_inicio?: string
+  hora_fin?: string
+  direccion_entrega?: string
+  observaciones?: string
+  almacen_salida_id: number
+  chofer_id?: string
+  quien_entrega?: string
+  user_id: string
+  created_at: string
+  updated_at: string
+  venta?: any
+  chofer?: any
+  almacenSalida?: any
+  productosEntregados?: any[]
+}
+
 type UseStoreEntregaSeleccionada = {
-  entrega?: Entrega
-  setEntrega: (entrega: Entrega | undefined) => void
+  entrega?: EntregaDB
+  setEntrega: (entrega: EntregaDB | undefined) => void
 }
 
 export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
@@ -24,17 +48,17 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
 )
 
 // Función para calcular el color de una entrega
-function calcularColorEntrega(entrega: Entrega): string {
+function calcularColorEntrega(entrega: EntregaDB): string {
   const estado = entrega.estado_entrega
 
   switch (estado) {
-    case 'PENDIENTE':
+    case 'pe': // Pendiente
       return orangeColors[2]
-    case 'EN_CAMINO':
+    case 'ec': // En Camino
       return blueColors[2]
-    case 'ENTREGADO':
+    case 'en': // Entregado
       return greenColors[2]
-    case 'CANCELADO':
+    case 'ca': // Cancelado
       return redColors[2]
     default:
       return 'transparent'
@@ -44,6 +68,10 @@ function calcularColorEntrega(entrega: Entrega): string {
 export default function TableMisEntregas() {
   const tableRef = useRef<AgGridReact>(null)
   const { entregas, loading, refetch } = useGetEntregas()
+
+  console.log('📊 TableMisEntregas - entregas:', entregas)
+  console.log('📊 TableMisEntregas - loading:', loading)
+  console.log('📊 TableMisEntregas - entregas.length:', entregas?.length)
 
   const setEntregaSeleccionada = useStoreEntregaSeleccionada(
     (state) => state.setEntrega
@@ -63,7 +91,7 @@ export default function TableMisEntregas() {
   }, [entregas, setEntregaSeleccionada])
 
   // Función para aplicar estilos a las filas
-  const getRowStyle = (params: { data?: Entrega }): RowStyle | undefined => {
+  const getRowStyle = (params: { data?: EntregaDB }): RowStyle | undefined => {
     if (!params.data) return undefined
     
     const color = calcularColorEntrega(params.data)
@@ -79,10 +107,11 @@ export default function TableMisEntregas() {
       label="Tabla de Entregas"
     >
       <div className="w-full" style={{ height: '600px' }}>
-        <TableWithTitle<Entrega>
+        <TableWithTitle<EntregaDB>
           id="mis-entregas"
           title="MIS ENTREGAS"
           loading={loading}
+          selectionColor={orangeColors[10]} 
           columnDefs={useColumnsMisEntregas(refetch)}
           rowData={entregas || []}
           tableRef={tableRef}
@@ -91,7 +120,7 @@ export default function TableMisEntregas() {
             event.node.setSelected(true)
           }}
           onSelectionChanged={({ selectedNodes }) => {
-            const selectedEntrega = selectedNodes?.[0]?.data as Entrega
+            const selectedEntrega = selectedNodes?.[0]?.data as EntregaDB
             setEntregaSeleccionada(selectedEntrega)
           }}
           onRowDoubleClicked={({ data }) => {
