@@ -24,6 +24,7 @@ import {
   QuienEntrega,
   type CreateEntregaProductoRequest 
 } from '~/lib/api/entrega-producto'
+import { fcmApi } from '~/lib/api/fcm'
 import dayjs from 'dayjs'
 
 type ProductoAgrupado = Pick<
@@ -111,6 +112,8 @@ export default function useCreateVenta() {
       hora_inicio,
       hora_fin,
       direccion_entrega,
+      latitud,
+      longitud,
       observaciones,
       quien_entrega,
       ...restValues
@@ -324,9 +327,11 @@ export default function useCreateVenta() {
             hora_inicio: hora_inicio,
             hora_fin: hora_fin,
             direccion_entrega: direccion_entrega,
+            latitud: latitud ? Number(latitud) : undefined,
+            longitud: longitud ? Number(longitud) : undefined,
             observaciones: observaciones,
             almacen_salida_id: almacen_id,
-            chofer_id: String(despachador_id), // ✅ Usar chofer_id para guardar el despachador
+            chofer_id: String(despachador_id),
             quien_entrega: QuienEntrega.CHOFER,
             user_id: user_id,
             productos_entregados: unidadesDerivadas,
@@ -346,6 +351,25 @@ export default function useCreateVenta() {
           } else {
             console.log('✅ Entrega creada automáticamente:', entregaResponse.data)
             message.success('Entrega programada exitosamente para el despachador')
+            
+            // 🔔 Enviar notificación push al despachador
+            try {
+              const clienteNombre = ventaCreada.cliente?.nombres 
+                ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
+                : ventaCreada.cliente?.razon_social || 'Cliente'
+              
+              await fcmApi.notifyEntregaProgramada({
+                despachador_id: String(despachador_id),
+                venta_serie: ventaCreada.serie || '',
+                venta_numero: ventaCreada.numero || '',
+                direccion: direccion_entrega || '',
+                fecha_programada: fecha_programada ? dayjs(fecha_programada).format('DD/MM/YYYY') : 'Hoy',
+                cliente_nombre: clienteNombre,
+              })
+              console.log('🔔 Notificación enviada al despachador')
+            } catch (notifError) {
+              console.warn('⚠️ No se pudo enviar notificación push:', notifError)
+            }
           }
         } catch (error) {
           console.error('❌ Error al crear entrega automática:', error)

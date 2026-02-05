@@ -1,7 +1,7 @@
 'use client'
 
 import { Select, Modal, FormInstance } from 'antd'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -11,11 +11,16 @@ import TitleForm from '~/components/form/title-form'
 import dynamic from 'next/dynamic'
 import useCreateVenta from '../../_hooks/use-create-venta'
 
-// Importar el mapa dinámicamente para evitar problemas de SSR
-const MapaDireccion = dynamic(
-  () => import('../../../_components/maps/mapa-direccion'),
+// Importar el mapa de Mapbox dinámicamente para evitar problemas de SSR
+const MapaDireccionMapbox = dynamic(
+  () => import('../../../_components/maps/mapa-direccion-mapbox'),
   { ssr: false }
 )
+
+interface Coordenadas {
+  lat: number
+  lng: number
+}
 
 interface ModalDetallesEntregaProps {
   open: boolean
@@ -39,14 +44,22 @@ export default function ModalDetallesEntrega({
   clienteNombre,
 }: ModalDetallesEntregaProps) {
   const [mostrarMapa, setMostrarMapa] = useState(false)
+  const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null)
   
   // Hook para crear venta
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta()
 
   const handleEditarCliente = () => {
-    // NO cerrar el modal, solo abrir el modal de cliente encima
     onEditarCliente()
   }
+
+  // Callback para cuando el usuario marca una ubicación en el mapa
+  const handleCoordenadaChange = useCallback((nuevasCoordenadas: Coordenadas) => {
+    setCoordenadas(nuevasCoordenadas)
+    // Guardar en el formulario
+    form.setFieldValue('latitud', nuevasCoordenadas.lat)
+    form.setFieldValue('longitud', nuevasCoordenadas.lng)
+  }, [form])
 
   // ✅ Setear tipo_despacho en el formulario cuando se abre el modal
   useEffect(() => {
@@ -290,16 +303,25 @@ export default function ModalDetallesEntrega({
 
               {/* Columna derecha: Mapa */}
               <div>
-                {mostrarMapa && direccion ? (
+                {mostrarMapa ? (
                   <div className="h-full min-h-[300px]">
-                    <MapaDireccion
-                      direccion={direccion}
+                    <MapaDireccionMapbox
+                      direccion={direccion || ''}
                       clienteNombre={clienteNombre}
+                      onCoordenadaChange={handleCoordenadaChange}
+                      coordenadasIniciales={coordenadas}
+                      editable={true}
                     />
                   </div>
                 ) : (
-                  <div className="h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-                    {direccion ? 'Click en "Ver Mapa" para visualizar' : 'Sin dirección'}
+                  <div className="h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
+                    <FaMapMarkedAlt size={32} className="text-gray-300" />
+                    <span>{direccion ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
+                    {coordenadas && (
+                      <span className="text-xs text-green-600 font-mono">
+                        ✅ Ubicación guardada: {coordenadas.lat.toFixed(4)}, {coordenadas.lng.toFixed(4)}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
