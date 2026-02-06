@@ -121,35 +121,35 @@ export default function useCreateCompra({
       // Transform to Laravel API format
       const dataFormated = {
         ...(compra?.id ? { id: compra.id } : {}), // Solo enviar ID si es edición
-        tipo_documento: tipoDocumentoMap[restValues.tipo_documento],
-        serie: restValues.serie ?? null,
-        numero: restValues.numero ?? null,
-        descripcion: restValues.descripcion ?? null,
-        forma_de_pago: formaDePagoMap[restValues.forma_de_pago],
+        tipo_documento: tipoDocumentoMap[values.tipo_documento],
+        serie: values.serie ?? null,
+        numero: values.numero ?? null,
+        descripcion: values.descripcion ?? null,
+        forma_de_pago: formaDePagoMap[values.forma_de_pago],
         tipo_moneda: tipoMonedaMap[tipo_moneda],
         tipo_de_cambio: tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
-        percepcion: restValues.percepcion ?? 0,
+        percepcion: values.percepcion ?? 0,
         numero_dias:
-          restValues.forma_de_pago === FormaDePago.Contado
+          values.forma_de_pago === FormaDePago.Contado
             ? null
-            : restValues.numero_dias ?? null,
+            : values.numero_dias ?? null,
         fecha_vencimiento:
-          restValues.forma_de_pago === FormaDePago.cr &&
-          restValues.fecha_vencimiento
+          values.forma_de_pago === FormaDePago.cr &&
+          values.fecha_vencimiento
             ? toUTCBD({
-                date: restValues.fecha_vencimiento,
+                date: values.fecha_vencimiento,
               })
             : null,
         fecha: toUTCBD({
-          date: restValues.fecha,
+          date: values.fecha,
         })!,
-        guia: restValues.guia ?? null,
-        estado_de_compra: estadoDeCompraMap[restValues.estado_de_compra ?? EstadoDeCompra.EnEspera],
-        egreso_dinero_id: restValues.egreso_dinero_id ?? null,
-        despliegue_de_pago_id: restValues.despliegue_de_pago_id ?? null,
+        guia: values.guia ?? null,
+        estado_de_compra: estadoDeCompraMap[values.estado_de_compra ?? EstadoDeCompra.EnEspera],
+        egreso_dinero_id: values.egreso_dinero_id ?? null,
+        despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
         user_id: user_id!,
         almacen_id: almacen_id!,
-        proveedor_id: restValues.proveedor_id!,
+        proveedor_id: values.proveedor_id!,
         productos_por_almacen: productos_agrupados.map(p => {
           const unidad_derivada = p.unidades_derivadas[0]
           const costo_unidad =

@@ -745,9 +745,15 @@ function onChangeCosto({
   unidades_derivadas.forEach((item, index) => {
     const factor = Number(item.factor)
     if (costo && index === value) return
+    
+    // Si no hay costo disponible, establecer en 0 en lugar de undefined
+    const costoCalculado = costo_disponible 
+      ? Number(Prisma.Decimal(factor).mul(costo_unidad))
+      : 0
+    
     form.setFieldValue(
       ['unidades_derivadas', index, 'costo'],
-      costo_disponible ? Prisma.Decimal(factor).mul(costo_unidad) : undefined
+      costoCalculado
     )
   })
 }
