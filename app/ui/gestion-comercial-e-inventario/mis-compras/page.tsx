@@ -11,6 +11,7 @@ import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_compo
 
 // Lazy loading de componentes pesados
 const FiltersMisCompras = lazy(() => import('./_components/filters/filters-mis-compras'))
+const BotonesAccionesCompra = lazy(() => import('./_components/others/botones-acciones-compra'))
 const TableMisCompras = lazy(() => import('./_components/tables/table-mis-compras'))
 const TableDetalleDeCompraMisCompras = lazy(() => import('./_components/tables/table-detalle-de-compra-mis-compras'))
 
@@ -47,6 +48,14 @@ export default function MisCompras() {
               </ProgressiveLoader>
             </div>
           </ConfigurableElement>
+
+          {/* Botones de acciones */}
+          <div className="mt-2">
+            <Suspense fallback={<ComponentLoading />}>
+              <BotonesAccionesCompra />
+            </Suspense>
+          </div>
+
           <ConfigurableElement componentId="gestion-comercial.mis-compras.tabla-detalle-compra" label="Tabla Detalle de Compra">
             <div className="h-[200px]">
               <ProgressiveLoader

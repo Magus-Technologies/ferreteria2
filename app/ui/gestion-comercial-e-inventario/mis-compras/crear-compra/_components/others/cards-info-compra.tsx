@@ -13,6 +13,7 @@ import { EstadoDeCompra } from '@prisma/client'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import ButtonRecuperarCompraEnEspera from '../buttons/button-recuperar-compra-en-espera'
 import ButtonRecuperarCompraAnulada from '../buttons/button-recuperar-compra-anulada'
+import ButtonRecuperarOrdenCompra from '../buttons/button-recuperar-orden-compra'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoCompra({
@@ -48,10 +49,7 @@ export default function CardsInfoCompra({
   return (
     <div className='flex flex-col gap-4 w-full xl:w-64'>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-recuperar-orden' label='Botón Recuperar Orden de Compra'>
-        <ButtonBase className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-orange-500'>
-          <BsFillCartCheckFill className='text-orange-600 min-w-fit' size={30} />{' '}
-          Recuperar Orden de Compra
-        </ButtonBase>
+        <ButtonRecuperarOrdenCompra form={form} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-recuperar-anulada' label='Botón Recuperar Compra Anulada'>
         <ButtonRecuperarCompraAnulada />

@@ -36,6 +36,7 @@ export interface LoginResponse {
     efectivo: number;
     empresa: Empresa | null;
     all_restrictions: string[];
+    rol_sistema: string | null;
   };
   token: string;
 }

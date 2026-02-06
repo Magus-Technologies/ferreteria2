@@ -427,4 +427,23 @@ export const cajaApi = {
       method: 'GET',
     })
   },
+
+  /**
+   * Obtener un cierre específico con su resumen completo
+   */
+  obtenerCierre(id: string): Promise<ApiResponse<{
+    success: boolean
+    data: AperturaYCierreCaja & {
+      resumen?: any
+    }
+  }>> {
+    return apiRequest<{
+      success: boolean
+      data: AperturaYCierreCaja & {
+        resumen?: any
+      }
+    }>(`/cajas/${id}/cierre`, {
+      method: 'GET',
+    })
+  },
 }

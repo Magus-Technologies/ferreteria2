@@ -100,11 +100,14 @@ export default function FiltersMisCompras() {
           desde,
           hasta,
           estado_de_compra,
+          estado_de_cuenta,
           pendiente_de_recepcion,
+          almacen_id,
           ...rest
         } = values
-        delete rest.estado_de_cuenta
+        
         const data = {
+          almacen_id: almacen_id || almacen_id,
           ...rest,
           fecha: {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
@@ -122,6 +125,7 @@ export default function FiltersMisCompras() {
                     : estado_de_compra,
               }
             : {}),
+          // Nota: estado_de_cuenta no se envía al backend porque se calcula en el frontend
         } satisfies Prisma.CompraWhereInput
         setFiltros(data)
         setDrawerOpen(false)

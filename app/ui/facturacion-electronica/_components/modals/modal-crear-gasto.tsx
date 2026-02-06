@@ -213,7 +213,7 @@ export default function ModalCrearGasto({
   return (
     <ModalForm
       modalProps={{
-        width: 700,
+        width: 600,
         title: <TitleForm>Registrar Gastos</TitleForm>,
         centered: true,
         okButtonProps: { 
@@ -240,7 +240,7 @@ export default function ModalCrearGasto({
         },
       }}
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         {advertencia && (
           <Alert
             message="Advertencia"
@@ -248,10 +248,11 @@ export default function ModalCrearGasto({
             type="error"
             showIcon
             closable
+            className="text-xs"
           />
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <LabelBase label="Fecha" orientation="column">
             <Form.Item
               name="fecha"
@@ -327,6 +328,7 @@ export default function ModalCrearGasto({
         <LabelBase label="Método de Pago" orientation="column">
           <SelectDespliegueDePago
             placeholder="Selecciona el método de pago"
+            subCajaId={subCajaId}
             propsForm={{
               name: 'despliegue_pago_id',
               rules: [{ required: true, message: 'Selecciona un método de pago' }],
@@ -344,12 +346,16 @@ export default function ModalCrearGasto({
               ]}
               className="mb-0"
             >
-              <Input placeholder="Ej: YAPE-123456789" maxLength={100} />
+              <Input 
+                placeholder="Ej: YAPE-123456789" 
+                maxLength={100}
+                style={{ minWidth: '400px' }}
+              />
             </Form.Item>
           </LabelBase>
         )}
 
-        <LabelBase label="Concepto (Max 90 caracteres)" orientation="column">
+        <LabelBase label="Concepto" orientation="column">
           <Form.Item
             name="concepto"
             rules={[
@@ -358,22 +364,28 @@ export default function ModalCrearGasto({
             ]}
             className="mb-0"
           >
-            <Input placeholder="Ej: Pago de servicios, Compra de suministros" maxLength={90} />
-          </Form.Item>
-        </LabelBase>
-
-        <LabelBase label="Comentario (Max 100 caracteres)" orientation="column">
-          <Form.Item name="comentario" className="mb-0">
-            <TextArea
-              placeholder="Comentario adicional (opcional)"
-              rows={3}
-              maxLength={100}
+            <Input 
+              placeholder="Ej: Pago de servicios, Compra de suministros" 
+              maxLength={90}
               showCount
+              style={{ minWidth: '400px' }}
             />
           </Form.Item>
         </LabelBase>
 
-        <div className="p-3 bg-red-50 rounded border border-red-200">
+        <LabelBase label="Comentario (Opcional)" orientation="column">
+          <Form.Item name="comentario" className="mb-0">
+            <TextArea
+              placeholder="Comentario adicional (opcional)"
+              rows={2}
+              maxLength={100}
+              showCount
+              style={{ minWidth: '400px' }}
+            />
+          </Form.Item>
+        </LabelBase>
+
+        <div className="p-2.5 bg-red-50 rounded border border-red-200">
           <p className="text-xs text-red-700">
             <strong>Advertencia:</strong> Este gasto se descontará de TU efectivo disponible en la sub-caja seleccionada.
           </p>

@@ -11,6 +11,7 @@ import { Prisma, EstadoDeCompra } from '@prisma/client'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
+import { exportComprasToExcel } from '~/utils/export-compras-excel'
 
 interface TableComprasProps {
   columns: ColDef<Compra>[]
@@ -41,12 +42,28 @@ const TableCompras = memo(function TableCompras({
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
 
-    // Mapeo de estados de Prisma a valores de Laravel
-    const estadoMap: Record<EstadoDeCompra, string> = {
-      [EstadoDeCompra.Creado]: 'cr',
-      [EstadoDeCompra.EnEspera]: 'ee',
-      [EstadoDeCompra.Anulado]: 'an',
-      [EstadoDeCompra.Procesado]: 'pr',
+    // Mapeo de estados de Prisma a valores del backend
+    const estadoMap: Record<string, string> = {
+      'Creado': 'cr',
+      'EnEspera': 'ee',
+      'Anulado': 'an',
+      'Procesado': 'pr',
+    };
+
+    // Mapeo de forma de pago
+    const formaPagoMap: Record<string, string> = {
+      'Contado': 'co',
+      'Credito': 'cr',
+    };
+
+    // Mapeo de tipo de documento
+    const tipoDocumentoMap: Record<string, string> = {
+      'Factura': '01',
+      'Boleta': '03',
+      'NotaDeVenta': 'nv',
+      'Ingreso': 'in',
+      'Salida': 'sa',
+      'RecepcionAlmacen': 'rc',
     };
 
     // Extraer estado_de_compra
@@ -54,14 +71,28 @@ const TableCompras = memo(function TableCompras({
     if (filtros.estado_de_compra) {
       const estadoFilter = filtros.estado_de_compra as any;
       if (estadoFilter.equals) {
-        estadoDeCompra = estadoMap[estadoFilter.equals as EstadoDeCompra];
+        estadoDeCompra = estadoMap[estadoFilter.equals] || estadoFilter.equals;
       } else if (estadoFilter.in && Array.isArray(estadoFilter.in) && estadoFilter.in.length > 0) {
-        // Si hay múltiples estados, tomar el primero (o podrías enviar todos)
-        // Por ahora, el backend no soporta múltiples estados, así que omitimos este filtro
+        // Si hay múltiples estados, el backend no soporta múltiples valores
+        // No enviamos el filtro para que muestre todos los estados del array
         estadoDeCompra = undefined;
       } else if (typeof estadoFilter === 'string') {
-        estadoDeCompra = estadoMap[estadoFilter as EstadoDeCompra];
+        estadoDeCompra = estadoMap[estadoFilter] || estadoFilter;
       }
+    }
+
+    // Extraer forma_de_pago
+    let formaDePago: string | undefined;
+    if (filtros.forma_de_pago) {
+      const formaPago = filtros.forma_de_pago as string;
+      formaDePago = formaPagoMap[formaPago] || formaPago;
+    }
+
+    // Extraer tipo_documento
+    let tipoDocumento: string | undefined;
+    if (filtros.tipo_documento) {
+      const tipoDoc = filtros.tipo_documento as string;
+      tipoDocumento = tipoDocumentoMap[tipoDoc] || tipoDoc;
     }
 
     // Extraer fechas
@@ -73,8 +104,8 @@ const TableCompras = memo(function TableCompras({
       almacen_id: filtros.almacen_id as number | undefined,
       estado_de_compra: estadoDeCompra,
       proveedor_id: filtros.proveedor_id as number | undefined,
-      forma_de_pago: filtros.forma_de_pago as string | undefined,
-      tipo_documento: filtros.tipo_documento as string | undefined,
+      forma_de_pago: formaDePago,
+      tipo_documento: tipoDocumento,
       user_id: filtros.user_id as string | undefined,
       desde,
       hasta,
@@ -99,7 +130,47 @@ const TableCompras = memo(function TableCompras({
 
   const totalPages = data?.last_page ?? 0
   const total = data?.total ?? 0
-  const rowData = data?.data ?? []
+  
+  // Filtrar por estado_de_cuenta en el frontend si está presente
+  const rowData = useMemo(() => {
+    let compras = data?.data ?? []
+    
+    // Aplicar filtro de estado_de_cuenta si existe
+    const estadoDeCuenta = (filtros as any)?.estado_de_cuenta
+    if (estadoDeCuenta) {
+      compras = compras.filter(compra => {
+        // Calcular el total y lo pagado
+        const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
+          const costo = Number(item.costo ?? 0)
+          for (const u of item.unidades_derivadas ?? []) {
+            const cantidad = Number(u.cantidad ?? 0)
+            const factor = Number(u.factor ?? 0)
+            const flete = Number(u.flete ?? 0)
+            const bonificacion = Boolean(u.bonificacion)
+            const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
+            acc += montoLinea
+          }
+          return acc
+        }, 0)
+
+        const totalPagado = Number(compra.total_pagado || 0)
+        const resta = total - totalPagado
+
+        // Determinar el estado de cuenta
+        const isPagado = resta <= 0.01
+        const isDeuda = resta > 0.01
+
+        if (estadoDeCuenta === 'Pagado') {
+          return isPagado
+        } else if (estadoDeCuenta === 'Deuda') {
+          return isDeuda
+        }
+        return true
+      })
+    }
+    
+    return compras
+  }, [data?.data, filtros])
 
   // Calcular el color de una compra basado en su estado
   const calcularColorCompra = useCallback((compra: Compra | undefined) => {
@@ -243,11 +314,13 @@ const TableCompras = memo(function TableCompras({
           'Documento',
           'Serie',
           'Número',
-          'Fecha',
+          'Fecha Emisión',
+          'Fecha Vencimiento',
           'RUC',
           'Proveedor',
           'Subtotal',
           'IGV',
+          'Percepción',
           'Total',
           'Forma de Pago',
           'Total Pagado',
@@ -273,6 +346,57 @@ const TableCompras = memo(function TableCompras({
       setPage(p => p - 1)
     }
   }, [page])
+
+  // Función para exportar todas las compras con los filtros actuales
+  const handleExportExcel = useCallback(async () => {
+    try {
+      // Obtener todas las compras haciendo múltiples peticiones si es necesario
+      let allCompras: Compra[] = []
+      let currentPage = 1
+      let hasMorePages = true
+      const perPage = 100 // Máximo permitido por el backend
+
+      while (hasMorePages) {
+        const result = await compraApi.getAll({
+          ...apiFilters,
+          per_page: perPage,
+          page: currentPage,
+        })
+        
+        if (result.error) {
+          throw new Error(result.error.message)
+        }
+
+        const pageData = result.data?.data ?? []
+        allCompras = [...allCompras, ...pageData]
+
+        // Verificar si hay más páginas
+        const lastPage = result.data?.last_page ?? 1
+        hasMorePages = currentPage < lastPage
+        currentPage++
+      }
+      
+      if (allCompras.length === 0) {
+        alert('No hay datos para exportar')
+        return
+      }
+
+      // Extraer fechas de los filtros para el reporte
+      const fechaFilter = filtros?.fecha as any
+      const fechaDesde = fechaFilter?.gte ? new Date(fechaFilter.gte).toLocaleDateString('es-PE') : undefined
+      const fechaHasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toLocaleDateString('es-PE') : undefined
+
+      exportComprasToExcel({
+        compras: allCompras,
+        nameFile: 'Reporte_Compras',
+        fechaDesde,
+        fechaHasta,
+      })
+    } catch (error: any) {
+      console.error('Error al exportar:', error)
+      alert(`Error al exportar los datos: ${error.message || 'Error desconocido'}`)
+    }
+  }, [apiFilters, filtros])
 
   // Seleccionar automáticamente la primera fila cuando se cargan los datos
   useEffect(() => {
@@ -307,6 +431,10 @@ const TableCompras = memo(function TableCompras({
       rowData={rowData}
       optionsSelectColumns={optionsSelectColumns}
       getRowStyle={getRowStyle}
+      exportExcel={true} // Mantener el botón de Excel
+      exportPdf={true} // Mantener los botones de PDF
+      selectColumns={true}
+      onExportExcel={handleExportExcel} // Custom Excel export handler
       // Habilitar lazy loading para mejor rendimiento
       suppressRowTransform={true}
       rowBuffer={10}

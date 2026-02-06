@@ -122,7 +122,7 @@ export default function ModalSolicitarEfectivo({
         >
             <div className='mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200'>
                 <p className='text-sm text-blue-700'>
-                    💡 Solicita efectivo a otro vendedor cuando necesites dar vuelto
+                    💡 Solicita efectivo a otro vendedor indicando cuánto necesitas. El vendedor decidirá de qué caja darte al aprobar.
                 </p>
             </div>
 
@@ -140,7 +140,7 @@ export default function ModalSolicitarEfectivo({
                         }
                         options={vendedores.map((v: any) => ({
                             value: v.vendedor_id,
-                            label: `${v.vendedor_nombre} - Disponible: S/ ${v.efectivo_disponible}`,
+                            label: v.vendedor_nombre,
                         }))}
                         notFoundContent={
                             loadingVendedores 
@@ -160,11 +160,11 @@ export default function ModalSolicitarEfectivo({
                 )}
             </LabelBase>
 
-            <LabelBase label='Monto a Solicitar' orientation='column'>
+            <LabelBase label='Monto que Necesitas' orientation='column'>
                 <Form.Item
                     name='monto_solicitado'
                     rules={[
-                        { required: true, message: 'Ingresa el monto' },
+                        { required: true, message: 'Ingresa el monto que necesitas' },
                         { type: 'number', min: 0.01, message: 'El monto debe ser mayor a 0' },
                     ]}
                 >
@@ -181,7 +181,7 @@ export default function ModalSolicitarEfectivo({
 
             <LabelBase label='Motivo (Opcional)' orientation='column'>
                 <InputBase
-                    placeholder='Ej: Necesito dar vuelto de S/. 50'
+                    placeholder='Ej: Necesito dar vuelto'
                     uppercase={false}
                     propsForm={{
                         name: 'motivo',

@@ -11,7 +11,8 @@ interface SelectDespliegueDePagoProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
   tipoComprobante?: string // '01' = Factura, '03' = Boleta, 'nv' = Nota de Venta
-  filterByTipo?: 'efectivo' | 'banco' | 'billetera' // Filtrar por tipo de método de pago
+  filterByTipo?: 'efectivo' | 'banco' | 'billetera' | string[] // Filtrar por tipo de método de pago (puede ser array)
+  subCajaId?: number // Filtrar por sub-caja específica
 }
 
 export default function SelectDespliegueDePago({
@@ -21,6 +22,7 @@ export default function SelectDespliegueDePago({
   sizeIcon = 14,
   tipoComprobante,
   filterByTipo,
+  subCajaId,
   ...props
 }: SelectDespliegueDePagoProps) {
   const [shouldFetch, setShouldFetch] = useState(false)
@@ -41,11 +43,25 @@ export default function SelectDespliegueDePago({
     ? data?.filter((metodo: any) => metodo.tipos_comprobante.includes(tipoComprobante))
     : data
 
+  // Filtrar por sub-caja si se proporciona
+  if (subCajaId && metodosFiltrados) {
+    metodosFiltrados = metodosFiltrados.filter((metodo: any) => {
+      return metodo.sub_caja_id === subCajaId
+    })
+  }
+
   // Filtrar por tipo de método de pago si se proporciona
   if (filterByTipo && metodosFiltrados) {
     metodosFiltrados = metodosFiltrados.filter((metodo: any) => {
       const tipo = metodo.tipo?.toLowerCase()
-      return tipo === filterByTipo
+      
+      // Si filterByTipo es un array, verificar si el tipo está en el array
+      if (Array.isArray(filterByTipo)) {
+        return filterByTipo.some(t => tipo === t.toLowerCase())
+      }
+      
+      // Si es un string, comparar directamente
+      return tipo === filterByTipo.toLowerCase()
     })
   }
 

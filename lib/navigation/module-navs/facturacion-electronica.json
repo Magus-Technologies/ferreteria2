@@ -52,7 +52,7 @@
           {
             "key": "nota-debito",
             "label": "Crear Nota de Débito",
-            "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-debito",
+            "route": "/ui/facturacion-electronica/mis-notas-debito",
             "permission": null
           },
           {
@@ -89,7 +89,7 @@
             "key": "cerrar-caja",
             "label": "Cerrar Caja",
             "route": "/ui/facturacion-electronica/cierre-caja",
-            "permission": null
+            "permission": "caja.update"
           },
           {
             "key": "crear-ingreso",
@@ -183,11 +183,25 @@
         "permission": "facturacion-electronica.mis-prestamos.index"
       },
       {
-        "id": "mis-notas",
-        "label": "Mis Notas",
-        "icon": "IoDocuments",
-        "route": null,
-        "permission": "facturacion-electronica.mis-notas.index"
+        "id": "mis-facturas",
+        "label": "Mis Facturas",
+        "icon": "FaFileInvoice",
+        "route": "/ui/facturacion-electronica/mis-facturas",
+        "permission": "facturacion-electronica.mis-facturas.index"
+      },
+      {
+        "id": "mis-notas-credito",
+        "label": "Mis Notas de Crédito",
+        "icon": "FaFileInvoice",
+        "route": "/ui/facturacion-electronica/mis-notas-credito",
+        "permission": "facturacion-electronica.mis-notas-credito.index"
+      },
+      {
+        "id": "mis-notas-debito",
+        "label": "Mis Notas de Débito",
+        "icon": "FaFileInvoice",
+        "route": "/ui/facturacion-electronica/mis-notas-debito",
+        "permission": "facturacion-electronica.mis-notas-debito.index"
       },
       {
         "id": "mis-contactos",

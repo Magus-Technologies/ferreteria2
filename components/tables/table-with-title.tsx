@@ -42,6 +42,7 @@ export interface TableWithTitleProps<T, schemaType = unknown>
   selectionColor?: string; // Color para la fila seleccionada
   headerColor?: string; // Color para el header de la tabla
   isVisible?: boolean; // Para saber si el componente es visible (modal abierto)
+  onExportExcel?: () => void | Promise<void>; // Custom Excel export handler
 }
 
 export default function TableWithTitle<T, schemaType = unknown>({
@@ -62,6 +63,7 @@ export default function TableWithTitle<T, schemaType = unknown>({
   selectionColor, // Recibir el color de selección
   headerColor, // Recibir el color del header
   isVisible, // Recibir si es visible
+  onExportExcel, // Custom Excel export handler
   ...props
 }: TableWithTitleProps<T, schemaType>) {
   const tableRefInterno = useRef<AgGridReact<T>>(null);
@@ -132,13 +134,18 @@ export default function TableWithTitle<T, schemaType = unknown>({
             <Tooltip title="Exportar a Excel">
               <ButtonBase
                 onClick={() => {
-                  if (tableRefInterno.current)
+                  if (onExportExcel) {
+                    // Use custom export handler if provided
+                    onExportExcel();
+                  } else if (tableRefInterno.current) {
+                    // Use default export
                     exportAGGridDataToJSON({
                       gridOptions: tableRefInterno.current,
                       nameFile: title,
                       schema,
                       headersRequired,
                     });
+                  }
                 }}
                 color="success"
                 size="md"

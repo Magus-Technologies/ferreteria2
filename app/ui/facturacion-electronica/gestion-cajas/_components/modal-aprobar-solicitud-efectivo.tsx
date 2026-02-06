@@ -33,13 +33,12 @@ export default function ModalAprobarSolicitudEfectivo({
   const [form] = Form.useForm<FormValues>()
   const { aprobar, loading } = useAprobarSolicitudEfectivo()
 
-  // Obtener TODAS las sub-cajas del usuario con saldo del vendedor
-  // Esto funciona tanto para cajeros con caja asignada como para vendedores sin caja
+  // Obtener TODAS las sub-cajas del usuario con saldo SOLO EN EFECTIVO
   const { data: subCajasResponse, isLoading: loadingSubCajas } = useQuery({
-    queryKey: ['todas-sub-cajas-con-saldo-vendedor'],
+    queryKey: ['todas-sub-cajas-con-saldo-efectivo'],
     queryFn: async () => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-vendedor`,
+        `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-efectivo`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
@@ -79,7 +78,7 @@ export default function ModalAprobarSolicitudEfectivo({
   return (
     <ModalForm
       modalProps={{
-        width: 600,
+        width: 700,
         title: <TitleForm>Aprobar Solicitud de Efectivo</TitleForm>,
         centered: true,
         okButtonProps: { loading },
@@ -102,7 +101,7 @@ export default function ModalAprobarSolicitudEfectivo({
         </p>
       </div>
 
-      <LabelBase label='Sub-Caja Origen' orientation='column'>
+      <LabelBase label='Sub-Caja Origen (Solo Efectivo)' orientation='column'>
         <Form.Item
           name='sub_caja_origen_id'
           rules={[{ required: true, message: 'Selecciona la sub-caja de donde saldrá el dinero' }]}
@@ -111,9 +110,12 @@ export default function ModalAprobarSolicitudEfectivo({
             placeholder='Selecciona la sub-caja'
             loading={loadingSubCajas}
             showSearch
+            size='large'
+            className='w-full'
+            popupMatchSelectWidth={false}
             options={subCajas.map((sc: any) => ({
               value: sc.id,
-              label: `${sc.nombre} - Saldo disponible: S/. ${parseFloat(sc.saldo_vendedor || '0').toFixed(2)}`,
+              label: `${sc.nombre} - Efectivo disponible: S/. ${parseFloat(sc.saldo_efectivo || '0').toFixed(2)}`,
             }))}
             filterOption={(input, option) =>
               String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())

@@ -5,15 +5,20 @@ import { Card, Button, Input, Checkbox, Tabs, Spin, Empty } from 'antd'
 import { FaCheckCircle, FaSearch } from 'react-icons/fa'
 import ConteoDinero from '../../_components/others/conteo-dinero'
 import ResumenDetalleCierre from './resumen-detalle-cierre'
+import SelectSupervisor from '../../_components/selects/select-supervisor'
+import ModalValidarSupervisor from './modal-validar-supervisor'
 import { useCierreCaja } from '../_hooks/use-cierre-caja'
 import { useCerrarCaja } from '../_hooks/use-cerrar-caja'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const { TextArea } = Input
 
 export default function CierreCajaView() {
   const router = useRouter()
-  const { cajaActiva, loading, error } = useCierreCaja()
+  const searchParams = useSearchParams()
+  const cierreId = searchParams.get('cierre_id')
+  
+  const { cajaActiva, loading, error, esEdicion } = useCierreCaja(cierreId || undefined)
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
 
   const [totalEfectivo, setTotalEfectivo] = useState(0)
@@ -22,11 +27,47 @@ export default function CierreCajaView() {
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
+  
+  // Nuevos campos para reporte y supervisión
+  const [emailReporte, setEmailReporte] = useState('')
+  const [whatsappReporte, setWhatsappReporte] = useState('')
+  const [supervisorId, setSupervisorId] = useState<string | undefined>(undefined)
+  const [supervisorNombre, setSupervisorNombre] = useState('')
+  const [supervisorPassword, setSupervisorPassword] = useState('')
+  const [modalSupervisorOpen, setModalSupervisorOpen] = useState(false)
+
+  const handleSupervisorChange = (value: string | undefined, option: any) => {
+    if (value) {
+      setSupervisorId(value)
+      setSupervisorNombre(option?.label || '')
+      setSupervisorPassword('') // Limpiar contraseña anterior
+      setModalSupervisorOpen(true) // Abrir modal para validar
+    } else {
+      setSupervisorId(undefined)
+      setSupervisorNombre('')
+      setSupervisorPassword('')
+    }
+  }
+
+  const handleSupervisorPasswordConfirm = (password: string) => {
+    setSupervisorPassword(password)
+    setModalSupervisorOpen(false)
+  }
+
+  const handleSupervisorPasswordCancel = () => {
+    // Si cancela, limpiar la selección
+    setSupervisorId(undefined)
+    setSupervisorNombre('')
+    setSupervisorPassword('')
+    setModalSupervisorOpen(false)
+  }
 
   if (loading) {
     return (
       <div className='flex justify-center items-center h-96'>
-        <Spin size='large' tip='Cargando información de caja...' />
+        <Spin size='large'>
+          <div className='text-slate-600 mt-4'>Cargando información de caja...</div>
+        </Spin>
       </div>
     )
   }
@@ -40,7 +81,17 @@ export default function CierreCajaView() {
   }
 
   const resumen = cajaActiva.resumen
-  const montoEsperado = resumen.monto_esperado
+  
+  // Validar que resumen existe antes de continuar
+  if (!resumen) {
+    return (
+      <div className='flex justify-center items-center h-96'>
+        <Empty description='No se pudo cargar el resumen de la caja' />
+      </div>
+    )
+  }
+
+  const montoEsperado = resumen?.monto_esperado || 0
   const diferencia = totalEfectivo - montoEsperado
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
@@ -52,13 +103,18 @@ export default function CierreCajaView() {
 
     const success = await cerrarCaja(cajaActiva.id, {
       monto_cierre_efectivo: totalEfectivo,
-      total_cuentas: totalCuentas || 0, // Por ahora 0 si no hay cuentas
+      total_cuentas: totalCuentas || 0,
       comentarios: comentarios || undefined,
       conteo_billetes_monedas: conteoDenominaciones,
+      email_reporte: emailReporte || undefined,
+      whatsapp_reporte: whatsappReporte || undefined,
+      supervisor_id: supervisorId || undefined,
+      supervisor_password: supervisorPassword || undefined,
     })
 
     if (success) {
-      router.push('/facturacion-electronica/mis-aperturas-cierres')
+      // No redirigir - permitir continuar operaciones
+      // router.push('/ui/facturacion-electronica/mis-aperturas-cierres')
     }
   }
 
@@ -75,19 +131,41 @@ export default function CierreCajaView() {
               <span>Estado: <strong className='text-slate-800'>{cajaActiva.estado === 'abierta' ? 'ABIERTA' : 'CERRADA'}</strong></span>
             </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <Input
-              placeholder='Supervisor'
+        </div>
+      </Card>
+
+      {/* Campo de Supervisor - ARRIBA */}
+      <Card className='bg-amber-50 border border-amber-200 w-full' bodyStyle={{ padding: '16px' }}>
+        <div className='text-sm font-semibold text-amber-800 mb-3'>Supervisión (Opcional)</div>
+        <div className='grid grid-cols-1 gap-3'>
+          <div>
+            <div className='text-xs font-medium text-slate-600 mb-1'>
+              Supervisor (opcional)
+              {supervisorId && supervisorPassword && (
+                <span className='ml-2 text-green-600'>✓ Validado</span>
+              )}
+            </div>
+            <SelectSupervisor
+              value={supervisorId}
+              onChange={handleSupervisorChange}
               size='small'
-              className='w-40'
-              suffix={<FaSearch className='text-slate-400' />}
             />
-            <Checkbox checked={false} className='text-xs'>
-              Forzar Cierre
-            </Checkbox>
+            {supervisorId && !supervisorPassword && (
+              <div className='mt-2 text-xs text-orange-600'>
+                ⚠️ Debes validar la contraseña del supervisor
+              </div>
+            )}
           </div>
         </div>
       </Card>
+
+      {/* Modal de validación de supervisor */}
+      <ModalValidarSupervisor
+        open={modalSupervisorOpen}
+        supervisorNombre={supervisorNombre}
+        onConfirm={handleSupervisorPasswordConfirm}
+        onCancel={handleSupervisorPasswordCancel}
+      />
 
       {/* Tabs principales */}
       <Tabs
@@ -122,14 +200,14 @@ export default function CierreCajaView() {
                         <span className='text-base font-semibold text-blue-700'>Efectivo Inicial</span>
                         <div className='flex items-center gap-2.5'>
                           <span className='text-base font-semibold text-blue-700 min-w-[100px] text-right'>
-                            {(resumen.efectivo_inicial || 0).toFixed(2)}
+                            {Number(resumen?.efectivo_inicial || 0).toFixed(2)}
                           </span>
                           <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                         </div>
                       </div>
 
                       {/* Métodos de pago dinámicos agrupados (ej: todas las Transferencias juntas) */}
-                      {resumen.detalle_metodos_pago && resumen.detalle_metodos_pago.length > 0 ? (
+                      {resumen?.detalle_metodos_pago && resumen.detalle_metodos_pago.length > 0 ? (
                         resumen.detalle_metodos_pago.map((metodo: any, index: number) => (
                           <div key={index} className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-slate-50'>
                             <div className='flex items-center gap-2.5'>
@@ -153,12 +231,12 @@ export default function CierreCajaView() {
                       <div className='border-t border-slate-300 my-1'></div>
 
                       {/* Otros Ingresos */}
-                      {((resumen.total_ingresos || 0) - (resumen.total_ventas || 0) - (resumen.total_prestamos_recibidos || 0)) > 0 && (
+                      {((resumen?.total_ingresos || 0) - (resumen?.total_ventas || 0) - (resumen?.total_prestamos_recibidos || 0)) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-blue-50'>
                           <span className='text-base text-blue-700'>Otros Ingresos</span>
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-blue-700 min-w-[100px] text-right'>
-                              {((resumen.total_ingresos || 0) - (resumen.total_ventas || 0) - (resumen.total_prestamos_recibidos || 0)).toFixed(2)}
+                              {((resumen?.total_ingresos || 0) - (resumen?.total_ventas || 0) - (resumen?.total_prestamos_recibidos || 0)).toFixed(2)}
                             </span>
                             <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                           </div>
@@ -166,15 +244,15 @@ export default function CierreCajaView() {
                       )}
 
                       {/* Préstamos Recibidos */}
-                      {(resumen.total_prestamos_recibidos || 0) > 0 && (
+                      {(resumen?.total_prestamos_recibidos || 0) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-green-50'>
                           <div className='flex items-center gap-2'>
                             <span className='text-base text-green-700'>Préstamos Recibidos</span>
-                            <span className='text-xs text-green-600'>({resumen.prestamos_recibidos?.length || 0})</span>
+                            <span className='text-xs text-green-600'>({resumen?.prestamos_recibidos?.length || 0})</span>
                           </div>
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-green-700 min-w-[100px] text-right'>
-                              {(resumen.total_prestamos_recibidos || 0).toFixed(2)}
+                              {(resumen?.total_prestamos_recibidos || 0).toFixed(2)}
                             </span>
                             <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                           </div>
@@ -182,12 +260,12 @@ export default function CierreCajaView() {
                       )}
 
                       {/* Gastos */}
-                      {((resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)) > 0 && (
+                      {((resumen?.total_egresos || 0) - (resumen?.total_prestamos_dados || 0)) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
                           <span className='text-base text-red-700'>Gastos</span>
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
-                              {((resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)).toFixed(2)}
+                              {((resumen?.total_egresos || 0) - (resumen?.total_prestamos_dados || 0)).toFixed(2)}
                             </span>
                             <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                           </div>
@@ -195,15 +273,15 @@ export default function CierreCajaView() {
                       )}
 
                       {/* Préstamos Dados */}
-                      {(resumen.total_prestamos_dados || 0) > 0 && (
+                      {(resumen?.total_prestamos_dados || 0) > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
                           <div className='flex items-center gap-2'>
                             <span className='text-base text-red-700'>Préstamos Dados</span>
-                            <span className='text-xs text-red-600'>({resumen.prestamos_dados?.length || 0})</span>
+                            <span className='text-xs text-red-600'>({resumen?.prestamos_dados?.length || 0})</span>
                           </div>
                           <div className='flex items-center gap-2.5'>
                             <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
-                              {(resumen.total_prestamos_dados || 0).toFixed(2)}
+                              {(resumen?.total_prestamos_dados || 0).toFixed(2)}
                             </span>
                             <Button size='small' type='text' icon={<FaSearch className='text-sm' />} className='h-7 w-7 p-0' />
                           </div>
@@ -211,7 +289,7 @@ export default function CierreCajaView() {
                       )}
 
                       {/* Movimientos Internos (informativo, no afecta total) */}
-                      {resumen.movimientos_internos && resumen.movimientos_internos.length > 0 && (
+                      {resumen?.movimientos_internos && resumen.movimientos_internos.length > 0 && (
                         <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 bg-blue-50'>
                           <div className='flex items-center gap-2'>
                             <span className='text-sm text-blue-700'>Movimientos Internos</span>
@@ -232,7 +310,7 @@ export default function CierreCajaView() {
                       <div className='flex justify-between items-center py-2.5 px-4 bg-blue-50 border border-blue-300 rounded mt-1'>
                         <span className='text-base font-bold text-blue-800'>Resumen Ventas</span>
                         <span className='text-lg font-bold text-blue-800'>
-                          {resumen.total_ventas.toFixed(2)}
+                          {(resumen?.total_ventas || 0).toFixed(2)}
                         </span>
                       </div>
 
@@ -240,13 +318,13 @@ export default function CierreCajaView() {
                       <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
                         <span className='text-base text-slate-700'>Resumen Ingresos</span>
                         <span className='text-base font-semibold text-slate-800'>
-                          {resumen.total_ingresos.toFixed(2)}
+                          {(resumen?.total_ingresos || 0).toFixed(2)}
                         </span>
                       </div>
                       <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100'>
                         <span className='text-base text-slate-700'>Resumen Egresos</span>
                         <span className='text-base font-semibold text-slate-800'>
-                          {resumen.total_egresos.toFixed(2)}
+                          {(resumen?.total_egresos || 0).toFixed(2)}
                         </span>
                       </div>
 
@@ -287,6 +365,30 @@ export default function CierreCajaView() {
                       >
                         Ticket Caja
                       </Checkbox>
+
+                      <div>
+                        <div className='text-sm font-medium text-slate-600 mb-1'>Email para reporte (opcional)</div>
+                        <Input
+                          type='email'
+                          placeholder='correo@ejemplo.com'
+                          value={emailReporte}
+                          onChange={(e) => setEmailReporte(e.target.value)}
+                          size='small'
+                          className='text-sm'
+                        />
+                      </div>
+
+                      <div>
+                        <div className='text-sm font-medium text-slate-600 mb-1'>WhatsApp para reporte (opcional)</div>
+                        <Input
+                          type='tel'
+                          placeholder='999999999'
+                          value={whatsappReporte}
+                          onChange={(e) => setWhatsappReporte(e.target.value)}
+                          size='small'
+                          className='text-sm'
+                        />
+                      </div>
 
                       <div>
                         <div className='text-sm font-medium text-slate-600 mb-1'>Comentarios</div>

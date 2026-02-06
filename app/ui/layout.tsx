@@ -37,7 +37,10 @@ export default function ProtectedLayout({
         <div className='absolute top-0 z-[-2] size-full bg-white
                         bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]
                         md:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]'></div>
-        {children}
+        {Array.isArray(children) 
+          ? children.map((child, index) => <div key={index}>{child}</div>)
+          : children
+        }
       </div>
     </div>
   )

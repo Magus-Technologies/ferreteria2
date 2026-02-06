@@ -127,13 +127,61 @@ export interface CreateCompraRequest {
 
 export interface UpdateCompraRequest extends Partial<Omit<CreateCompraRequest, 'id'>> {}
 
+// ============= PAGO DE COMPRA TYPES =============
+
+export interface PagoDeCompra {
+  id: string; // ULID
+  compra_id: string;
+  despliegue_de_pago_id: string; // ULID
+  monto: number;
+  fecha: string; // ISO date string
+  observacion: string | null;
+  estado: boolean;
+  created_at?: string;
+  despliegue_de_pago?: {
+    id: string; // ULID
+    numero_celular: string;
+    metodo_de_pago?: {
+      id: string; // ULID
+      name: string;
+      cuenta_bancaria: string | null;
+    };
+  };
+}
+
+export interface CreatePagoCompraRequest {
+  despliegue_de_pago_id: string; // ULID
+  monto: number;
+  fecha: string; // ISO date string
+  observacion?: string | null;
+  afecta_caja: boolean;
+  numero_operacion?: string | null;
+}
+
 export interface CompraFilters {
   almacen_id?: number;
   estado_de_compra?: string; // EstadoDeCompra enum value
   proveedor_id?: number;
+  forma_de_pago?: string; // FormaDePago enum value
+  tipo_documento?: string; // TipoDocumento enum value
+  user_id?: string;
+  desde?: string; // ISO date string (YYYY-MM-DD)
+  hasta?: string; // ISO date string (YYYY-MM-DD)
   search?: string;
   per_page?: number;
   page?: number;
+}
+
+// ============= UPDATE LOTES Y VENCIMIENTOS =============
+
+export interface UpdateLoteVencimientoRequest {
+  id: number; // ID de la unidad derivada inmutable compra
+  lote?: string | null;
+  vencimiento?: string | null; // ISO date string
+}
+
+export interface UpdateLotesVencimientosRequest {
+  unidades_derivadas: UpdateLoteVencimientoRequest[];
 }
 
 // ============= RESPONSE TYPES =============
@@ -207,6 +255,33 @@ export const compraApi = {
   delete: async (id: string): Promise<ApiResponse<{ data: string }>> => {
     return apiRequest<{ data: string }>(`/compras/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  /**
+   * Obtener pagos de una compra
+   */
+  getPagos: async (id: string): Promise<ApiResponse<{ data: PagoDeCompra[] }>> => {
+    return apiRequest<{ data: PagoDeCompra[] }>(`/compras/${id}/pagos`);
+  },
+
+  /**
+   * Registrar pago de compra
+   */
+  storePago: async (id: string, data: CreatePagoCompraRequest): Promise<ApiResponse<{ data: PagoDeCompra; message: string }>> => {
+    return apiRequest<{ data: PagoDeCompra; message: string }>(`/compras/${id}/pagos`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Actualizar lotes y vencimientos de unidades derivadas
+   */
+  updateLotesVencimientos: async (id: string, data: UpdateLotesVencimientosRequest): Promise<ApiResponse<CompraResponse>> => {
+    return apiRequest<CompraResponse>(`/compras/${id}/lotes-vencimientos`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
     });
   },
 };

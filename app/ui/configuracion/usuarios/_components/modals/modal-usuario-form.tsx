@@ -504,6 +504,85 @@ export default function ModalUsuarioForm({
                   </LabelBase>
                 </div>
               </div>
+
+              {/* Contraseña de Supervisor (opcional) */}
+              <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <p className="text-sm font-semibold text-amber-800 mb-2">
+                  🔐 Contraseña de Supervisor (Opcional)
+                </p>
+                <p className="text-xs text-amber-700 mb-3">
+                  Si este usuario supervisará cierres de caja, asigna una contraseña de supervisor. 
+                  Esta contraseña se usará para validar y aprobar cierres de caja de otros vendedores.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <LabelBase label="Contraseña de Supervisor:" orientation="column">
+                      <Form.Item
+                        name="supervisor_password"
+                        rules={[
+                          { min: 6, message: "Mínimo 6 caracteres" },
+                        ]}
+                        hasFeedback
+                        className="w-full"
+                      >
+                        <Input.Password
+                          placeholder="Contraseña de supervisor (opcional)"
+                          prefix={
+                            <FaLock size={14} className="text-amber-600 mx-1" />
+                          }
+                          variant="filled"
+                          autoComplete="new-password"
+                        />
+                      </Form.Item>
+                    </LabelBase>
+                  </div>
+                  <div>
+                    <LabelBase
+                      label="Confirmar Contraseña de Supervisor:"
+                      orientation="column"
+                    >
+                      <Form.Item
+                        name="supervisor_password_confirmation"
+                        dependencies={["supervisor_password"]}
+                        rules={[
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              const supervisorPassword = getFieldValue("supervisor_password");
+                              // Solo validar si se ingresó una contraseña de supervisor
+                              if (!supervisorPassword) {
+                                return Promise.resolve();
+                              }
+                              if (!value) {
+                                return Promise.reject(
+                                  new Error("Confirma la contraseña de supervisor")
+                                );
+                              }
+                              if (supervisorPassword === value) {
+                                return Promise.resolve();
+                              }
+                              return Promise.reject(
+                                new Error("Las contraseñas de supervisor no coinciden")
+                              );
+                            },
+                          }),
+                        ]}
+                        hasFeedback
+                        className="w-full"
+                      >
+                        <Input.Password
+                          placeholder="Confirmar contraseña de supervisor"
+                          prefix={
+                            <FaLock size={14} className="text-amber-600 mx-1" />
+                          }
+                          variant="filled"
+                          autoComplete="new-password"
+                        />
+                      </Form.Item>
+                    </LabelBase>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -614,6 +693,86 @@ export default function ModalUsuarioForm({
               </LabelBase>
             </div>
           </div>
+
+          {/* Contraseña de Supervisor (al editar) */}
+          {isEdit && (
+            <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-sm font-semibold text-amber-800 mb-2">
+                🔐 Actualizar Contraseña de Supervisor (Opcional)
+              </p>
+              <p className="text-xs text-amber-700 mb-3">
+                Si deseas cambiar o asignar una contraseña de supervisor, ingrésala aquí. 
+                Déjalo en blanco si no deseas modificarla.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <LabelBase label="Nueva Contraseña de Supervisor:" orientation="column">
+                    <Form.Item
+                      name="supervisor_password"
+                      rules={[
+                        { min: 6, message: "Mínimo 6 caracteres" },
+                      ]}
+                      hasFeedback
+                      className="w-full"
+                    >
+                      <Input.Password
+                        placeholder="Nueva contraseña de supervisor (opcional)"
+                        prefix={
+                          <FaLock size={14} className="text-amber-600 mx-1" />
+                        }
+                        variant="filled"
+                        autoComplete="new-password"
+                      />
+                    </Form.Item>
+                  </LabelBase>
+                </div>
+                <div>
+                  <LabelBase
+                    label="Confirmar Contraseña de Supervisor:"
+                    orientation="column"
+                  >
+                    <Form.Item
+                      name="supervisor_password_confirmation"
+                      dependencies={["supervisor_password"]}
+                      rules={[
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            const supervisorPassword = getFieldValue("supervisor_password");
+                            if (!supervisorPassword) {
+                              return Promise.resolve();
+                            }
+                            if (!value) {
+                              return Promise.reject(
+                                new Error("Confirma la contraseña de supervisor")
+                              );
+                            }
+                            if (supervisorPassword === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(
+                              new Error("Las contraseñas de supervisor no coinciden")
+                            );
+                          },
+                        }),
+                      ]}
+                      hasFeedback
+                      className="w-full"
+                    >
+                      <Input.Password
+                        placeholder="Confirmar contraseña de supervisor"
+                        prefix={
+                          <FaLock size={14} className="text-amber-600 mx-1" />
+                        }
+                        variant="filled"
+                        autoComplete="new-password"
+                      />
+                    </Form.Item>
+                  </LabelBase>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ),
     },

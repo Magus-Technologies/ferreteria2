@@ -5,7 +5,7 @@ import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import LabelBase from '~/components/form/label-base'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import SelectCajaPrincipal from '~/app/ui/facturacion-electronica/_components/selects/select-caja-principal'
 import SelectVendedor from '~/app/ui/facturacion-electronica/_components/selects/select-vendedor'
 import useAperturarCaja from '../../_hooks/use-aperturar-caja'
@@ -14,6 +14,7 @@ import ConteoDinero from '~/app/ui/facturacion-electronica/_components/others/co
 import { useQuery } from '@tanstack/react-query'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useAuth } from '~/lib/auth-context'
 
 type ModalAperturarCajaProps = {
   open: boolean
@@ -38,6 +39,7 @@ export default function ModalAperturarCaja({
   setOpen,
   onSuccess,
 }: ModalAperturarCajaProps) {
+  const { user } = useAuth()
   const [form] = Form.useForm<AperturarCajaFormValues>()
   const [vendedores, setVendedores] = useState<VendedorAsignacion[]>([
     { id: Date.now().toString(), user_id: undefined, caja_principal_id: undefined, monto: 0 }
@@ -55,6 +57,30 @@ export default function ModalAperturarCaja({
     },
     enabled: open,
   })
+
+  // Auto-completar con el usuario actual cuando se abre el modal (solo si NO es admin)
+  useEffect(() => {
+    if (open && user) {
+      // Verificar si el usuario es admin
+      const esAdmin = (user as any).roles?.some((role: any) => 
+        role.name?.toLowerCase() === 'admin' || 
+        role.name?.toLowerCase() === 'administrador'
+      )
+      
+      // Si NO es admin, auto-completar con su usuario (vendedor)
+      if (!esAdmin) {
+        const nuevoId = Date.now().toString()
+        setVendedores([{
+          id: nuevoId,
+          user_id: user.id,
+          caja_principal_id: undefined, // Los vendedores no tienen caja asignada
+          monto: 0
+        }])
+        setVendedorSeleccionadoId(nuevoId)
+      }
+      // Si es admin, dejar el vendedor vacío para que pueda seleccionar
+    }
+  }, [open, user])
 
   const { crearAperturarCaja, loading } = useAperturarCaja({
     onSuccess: () => {
@@ -89,6 +115,17 @@ export default function ModalAperturarCaja({
   }, [cajaOrigenId, totalAsignado, vendedores])
 
   const agregarVendedor = () => {
+    // Verificar si el usuario es admin
+    const esAdmin = (user as any)?.roles?.some((role: any) => 
+      role.name?.toLowerCase() === 'admin' || 
+      role.name?.toLowerCase() === 'administrador'
+    )
+    
+    // Solo permitir agregar más vendedores si es admin
+    if (!esAdmin) {
+      return
+    }
+    
     const nuevoId = Date.now().toString()
     setVendedores([...vendedores, {
       id: nuevoId,
@@ -100,13 +137,22 @@ export default function ModalAperturarCaja({
   }
 
   const eliminarVendedor = (id: string) => {
-    if (vendedores.length > 1) {
-      const nuevosVendedores = vendedores.filter(v => v.id !== id)
-      setVendedores(nuevosVendedores)
-      // Si se elimina el vendedor seleccionado, seleccionar el primero
-      if (vendedorSeleccionadoId === id) {
-        setVendedorSeleccionadoId(nuevosVendedores[0]?.id || null)
-      }
+    // Verificar si el usuario es admin
+    const esAdmin = (user as any)?.roles?.some((role: any) => 
+      role.name?.toLowerCase() === 'admin' || 
+      role.name?.toLowerCase() === 'administrador'
+    )
+    
+    // Solo permitir eliminar si es admin y hay más de un vendedor
+    if (!esAdmin || vendedores.length <= 1) {
+      return
+    }
+    
+    const nuevosVendedores = vendedores.filter(v => v.id !== id)
+    setVendedores(nuevosVendedores)
+    // Si se elimina el vendedor seleccionado, seleccionar el primero
+    if (vendedorSeleccionadoId === id) {
+      setVendedorSeleccionadoId(nuevosVendedores[0]?.id || null)
     }
   }
 
@@ -204,6 +250,10 @@ export default function ModalAperturarCaja({
               icon={<FaPlus />}
               size='small'
               type='primary'
+              disabled={!(user as any)?.roles?.some((role: any) => 
+                role.name?.toLowerCase() === 'admin' || 
+                role.name?.toLowerCase() === 'administrador'
+              )}
             >
               Agregar
             </Button>
@@ -230,6 +280,13 @@ export default function ModalAperturarCaja({
                     value={vendedor.user_id}
                     soloVendedores={false}
                     mostrarDocumento={false}
+                    disabled={
+                      // Bloquear si NO es admin Y es el usuario actual
+                      !(user as any)?.roles?.some((role: any) => 
+                        role.name?.toLowerCase() === 'admin' || 
+                        role.name?.toLowerCase() === 'administrador'
+                      ) && vendedor.user_id === user?.id
+                    }
                     onChange={(value) => {
                       const userId = value as string
                       const caja = cajasPrincipales?.find(c => c.user.id === userId)
@@ -255,7 +312,10 @@ export default function ModalAperturarCaja({
                     readOnly
                   />
                 </div>
-                {vendedores.length > 1 && (
+                {vendedores.length > 1 && (user as any)?.roles?.some((role: any) => 
+                  role.name?.toLowerCase() === 'admin' || 
+                  role.name?.toLowerCase() === 'administrador'
+                ) && (
                   <Button
                     danger
                     icon={<FaTrash />}

@@ -169,7 +169,7 @@ export default function ModalCrearIngreso({
   return (
     <ModalForm
       modalProps={{
-        width: 700,
+        width: 600,
         title: <TitleForm>Registrar Otros Ingresos</TitleForm>,
         centered: true,
         okButtonProps: { loading, disabled: loading },
@@ -193,7 +193,7 @@ export default function ModalCrearIngreso({
         },
       }}
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         {advertencia && (
           <Alert
             message="Advertencia"
@@ -201,10 +201,11 @@ export default function ModalCrearIngreso({
             type="error"
             showIcon
             closable
+            className="text-xs"
           />
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <LabelBase label="Fecha" orientation="column">
             <Form.Item
               name="fecha"
@@ -271,6 +272,7 @@ export default function ModalCrearIngreso({
         <LabelBase label="Método de Pago" orientation="column">
           <SelectDespliegueDePago
             placeholder="Selecciona el método de pago"
+            subCajaId={subCajaId}
             propsForm={{
               name: 'despliegue_pago_id',
               rules: [{ required: true, message: 'Selecciona un método de pago' }],
@@ -288,12 +290,16 @@ export default function ModalCrearIngreso({
               ]}
               className="mb-0"
             >
-              <Input placeholder="Ej: YAPE-123456789" maxLength={100} />
+              <Input 
+                placeholder="Ej: YAPE-123456789" 
+                maxLength={100}
+                style={{ minWidth: '400px' }}
+              />
             </Form.Item>
           </LabelBase>
         )}
 
-        <LabelBase label="Concepto (Max 90 caracteres)" orientation="column">
+        <LabelBase label="Concepto" orientation="column">
           <Form.Item
             name="concepto"
             rules={[
@@ -302,22 +308,28 @@ export default function ModalCrearIngreso({
             ]}
             className="mb-0"
           >
-            <Input placeholder="Ej: Venta de producto, Cobro de servicio" maxLength={90} />
-          </Form.Item>
-        </LabelBase>
-
-        <LabelBase label="Comentario (Max 100 caracteres)" orientation="column">
-          <Form.Item name="comentario" className="mb-0">
-            <Input.TextArea
-              placeholder="Comentario adicional (opcional)"
-              rows={3}
-              maxLength={100}
+            <Input 
+              placeholder="Ej: Venta de producto, Cobro de servicio" 
+              maxLength={90}
               showCount
+              style={{ minWidth: '400px' }}
             />
           </Form.Item>
         </LabelBase>
 
-        <div className="p-3 bg-amber-50 rounded border border-amber-200">
+        <LabelBase label="Comentario (Opcional)" orientation="column">
+          <Form.Item name="comentario" className="mb-0">
+            <Input.TextArea
+              placeholder="Comentario adicional (opcional)"
+              rows={2}
+              maxLength={100}
+              showCount
+              style={{ minWidth: '400px' }}
+            />
+          </Form.Item>
+        </LabelBase>
+
+        <div className="p-2.5 bg-amber-50 rounded border border-amber-200">
           <p className="text-xs text-amber-700">
             <strong>Nota:</strong> Este ingreso afectará directamente el saldo de la sub-caja seleccionada.
           </p>
