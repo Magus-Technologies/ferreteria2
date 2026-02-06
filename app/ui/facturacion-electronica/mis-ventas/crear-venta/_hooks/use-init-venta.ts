@@ -68,6 +68,9 @@ export default function useInitVenta({
         tipo_de_cambio: 1,
         productos: [], // Asegurar que la tabla esté vacía
         estado_de_venta: 'cr' as any, // Creado
+        // ✅ Valores por defecto para horarios de entrega
+        hora_inicio: '09:00',
+        hora_fin: '18:00',
       })
       console.log('✅ Default values set, productos should be empty array')
     }

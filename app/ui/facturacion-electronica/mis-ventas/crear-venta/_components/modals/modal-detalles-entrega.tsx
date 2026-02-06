@@ -1,6 +1,6 @@
 'use client'
 
-import { Select, Modal, FormInstance } from 'antd'
+import { Select, Modal, FormInstance, Form } from 'antd'
 import { useState, useEffect, useCallback } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
@@ -196,54 +196,54 @@ export default function ModalDetallesEntrega({
 
             {/* Fila 2: Horarios */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hora Inicio:
-                </label>
-                <Select
-                  placeholder="Hora"
-                  value={form.getFieldValue('hora_inicio')}
-                  onChange={(value) => form.setFieldValue('hora_inicio', value)}
-                  options={[
-                    { value: '08:00', label: '08:00' },
-                    { value: '09:00', label: '09:00' },
-                    { value: '10:00', label: '10:00' },
-                    { value: '11:00', label: '11:00' },
-                    { value: '12:00', label: '12:00' },
-                    { value: '13:00', label: '13:00' },
-                    { value: '14:00', label: '14:00' },
-                    { value: '15:00', label: '15:00' },
-                    { value: '16:00', label: '16:00' },
-                    { value: '17:00', label: '17:00' },
-                    { value: '18:00', label: '18:00' },
-                  ]}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hora Fin:
-                </label>
-                <Select
-                  placeholder="Hora"
-                  value={form.getFieldValue('hora_fin')}
-                  onChange={(value) => form.setFieldValue('hora_fin', value)}
-                  options={[
-                    { value: '09:00', label: '09:00' },
-                    { value: '10:00', label: '10:00' },
-                    { value: '11:00', label: '11:00' },
-                    { value: '12:00', label: '12:00' },
-                    { value: '13:00', label: '13:00' },
-                    { value: '14:00', label: '14:00' },
-                    { value: '15:00', label: '15:00' },
-                    { value: '16:00', label: '16:00' },
-                    { value: '17:00', label: '17:00' },
-                    { value: '18:00', label: '18:00' },
-                    { value: '19:00', label: '19:00' },
-                  ]}
-                  className="w-full"
-                />
-              </div>
+              <Form.Item name="hora_inicio" className="mb-0">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hora Inicio:
+                  </label>
+                  <Select
+                    placeholder="Hora"
+                    options={[
+                      { value: '08:00', label: '08:00' },
+                      { value: '09:00', label: '09:00' },
+                      { value: '10:00', label: '10:00' },
+                      { value: '11:00', label: '11:00' },
+                      { value: '12:00', label: '12:00' },
+                      { value: '13:00', label: '13:00' },
+                      { value: '14:00', label: '14:00' },
+                      { value: '15:00', label: '15:00' },
+                      { value: '16:00', label: '16:00' },
+                      { value: '17:00', label: '17:00' },
+                      { value: '18:00', label: '18:00' },
+                    ]}
+                    className="w-full"
+                  />
+                </div>
+              </Form.Item>
+              <Form.Item name="hora_fin" className="mb-0">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hora Fin:
+                  </label>
+                  <Select
+                    placeholder="Hora"
+                    options={[
+                      { value: '09:00', label: '09:00' },
+                      { value: '10:00', label: '10:00' },
+                      { value: '11:00', label: '11:00' },
+                      { value: '12:00', label: '12:00' },
+                      { value: '13:00', label: '13:00' },
+                      { value: '14:00', label: '14:00' },
+                      { value: '15:00', label: '15:00' },
+                      { value: '16:00', label: '16:00' },
+                      { value: '17:00', label: '17:00' },
+                      { value: '18:00', label: '18:00' },
+                      { value: '19:00', label: '19:00' },
+                    ]}
+                    className="w-full"
+                  />
+                </div>
+              </Form.Item>
             </div>
 
             {/* Fila 3: Dirección y Mapa en dos columnas */}

@@ -170,6 +170,7 @@ export default function TableVender({
           venta,
         })}
         suppressCellFocus={true}
+        withNumberColumn={false}
       />
     </>
   )

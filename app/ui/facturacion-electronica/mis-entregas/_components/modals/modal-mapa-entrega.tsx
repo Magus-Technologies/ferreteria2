@@ -4,13 +4,13 @@ import { Modal } from 'antd'
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
 
-// Importar el mapa dinámicamente para evitar problemas con SSR
-const MapaEntrega = dynamic(
-  () => import('./mapa-entrega'),
+// Importar el mapa de Mapbox dinámicamente para evitar problemas con SSR
+const MapaEntregaMapbox = dynamic(
+  () => import('./mapa-entrega-mapbox'),
   { 
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center h-[500px]">
+      <div className="flex items-center justify-center h-[400px]">
         <div className="text-gray-500">Cargando mapa...</div>
       </div>
     )
@@ -47,6 +47,8 @@ export default function ModalMapaEntrega({ open, onClose, entrega }: ModalMapaEn
       telefono: cliente?.telefono || '',
       observaciones: entrega.observaciones || '',
       estado: entrega.estado_entrega,
+      latitud: entrega.latitud ? Number(entrega.latitud) : null,
+      longitud: entrega.longitud ? Number(entrega.longitud) : null,
     }
   }, [entrega])
 
@@ -90,21 +92,13 @@ export default function ModalMapaEntrega({ open, onClose, entrega }: ModalMapaEn
             )}
           </div>
 
-          {/* Mapa */}
-          <div className="border rounded-lg overflow-hidden">
-            <MapaEntrega direccion={infoEntrega.direccion} />
-          </div>
-
-          {/* Instrucciones */}
-          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-            <p className="font-semibold mb-1">💡 Instrucciones:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>El marcador muestra la ubicación aproximada basada en la dirección</li>
-              <li>Puedes hacer zoom con la rueda del mouse o los botones +/-</li>
-              <li>Arrastra el mapa para explorar el área</li>
-              <li>Haz clic en "Ver en Google Maps" para abrir la navegación</li>
-            </ul>
-          </div>
+          {/* Mapa con navegación */}
+          <MapaEntregaMapbox
+            direccion={infoEntrega.direccion}
+            latitud={infoEntrega.latitud}
+            longitud={infoEntrega.longitud}
+            clienteNombre={infoEntrega.clienteNombre}
+          />
         </div>
       )}
     </Modal>

@@ -97,6 +97,9 @@ export default function HeaderCrearVenta({
           precio_venta: paqueteProducto.precio_sugerido || 0,
           recargo: 0,
           subtotal: 0,
+          // ✅ Agregar información del paquete
+          paquete_id: paquete.id,
+          paquete_nombre: paquete.nombre,
         });
 
         productosAgregados++;

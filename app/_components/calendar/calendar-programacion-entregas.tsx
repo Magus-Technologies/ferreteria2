@@ -65,12 +65,32 @@ export default function CalendarProgramacionEntregas({
     chofer_id,
   })
 
+  // DEBUG: Log para ver qué entregas llegan
+  console.log('📅 Calendario - Entregas recibidas:', entregas)
+  console.log('📅 Calendario - Rango de fechas:', { fecha_desde, fecha_hasta })
+  console.log('📅 Calendario - Fecha actual del calendario:', date)
+
   // Transformar entregas a eventos del calendario
   const events: EntregaEvent[] = useMemo(() => {
+    console.log('🔄 Transformando entregas a eventos...')
+    console.log('📦 Total de entregas:', entregas.length)
+    console.log('📦 Array completo de entregas:', JSON.stringify(entregas, null, 2))
+    
     const choferColorMap = new Map<string, string>()
     let colorIndex = 0
 
-    const entregasEvents = entregas.map((entrega: any) => {
+    const entregasEvents = entregas.map((entrega: any, index: number) => {
+      console.log(`📦 Entrega ${index + 1}:`, {
+        id: entrega.id,
+        fecha_programada: entrega.fecha_programada,
+        fecha_entrega: entrega.fecha_entrega,
+        hora_inicio: entrega.hora_inicio,
+        hora_fin: entrega.hora_fin,
+        estado: entrega.estado_entrega,
+        despachador: entrega.despachador,
+        chofer: entrega.chofer,
+      })
+      
       // Determinar color según estado
       let color: string
       
@@ -91,25 +111,56 @@ export default function CalendarProgramacionEntregas({
 
       // Parsear fecha y horas
       const fechaProgramada = entrega.fecha_programada || entrega.fecha_entrega
-      const horaInicio = entrega.hora_inicio || '08:00'
-      const horaFin = entrega.hora_fin || '09:00'
+      // Si no hay horas, usar horario laboral por defecto (9:00 AM - 6:00 PM)
+      const horaInicio = entrega.hora_inicio || '09:00'
+      const horaFin = entrega.hora_fin || '18:00'
 
-      const start = dayjs(`${fechaProgramada} ${horaInicio}`).toDate()
-      const end = dayjs(`${fechaProgramada} ${horaFin}`).toDate()
+      console.log(`  📅 Fecha original:`, fechaProgramada)
+      console.log(`  📅 Tipo de fecha:`, typeof fechaProgramada)
+      
+      // Extraer solo la fecha (YYYY-MM-DD) del formato datetime de Laravel
+      let fechaSoloFecha = fechaProgramada
+      if (typeof fechaProgramada === 'string') {
+        // Formato Laravel: "2026-02-05 00:00:00.000" o "2026-02-05 00:00:00"
+        // Extraer solo YYYY-MM-DD
+        fechaSoloFecha = fechaProgramada.split(' ')[0]
+      } else if (fechaProgramada instanceof Date) {
+        // Si ya es un objeto Date, convertir a string YYYY-MM-DD
+        fechaSoloFecha = dayjs(fechaProgramada).format('YYYY-MM-DD')
+      }
+      
+      console.log(`  📅 Fecha procesada:`, fechaSoloFecha)
+
+      // Crear fechas con dayjs en formato correcto
+      const start = dayjs(`${fechaSoloFecha} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
+      const end = dayjs(`${fechaSoloFecha} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
+      
+      console.log(`  ⏰ Fecha/hora parseada:`, {
+        fechaSoloFecha,
+        horaInicio,
+        horaFin,
+        start,
+        end,
+        startValid: start instanceof Date && !isNaN(start.getTime()),
+        endValid: end instanceof Date && !isNaN(end.getTime()),
+      })
 
       const clienteNombre = entrega.venta?.cliente?.razon_social ||
         `${entrega.venta?.cliente?.nombres || ''} ${entrega.venta?.cliente?.apellidos || ''}`.trim() ||
         'Cliente'
+      
+      // ✅ CORRECCIÓN: Usar SOLO 'despachador' (no 'chofer')
+      const despachadorNombre = entrega.despachador?.name || 'Sin asignar'
 
       return {
         id: entrega.id,
-        title: `${entrega.chofer?.name || 'Chofer'} - ${clienteNombre}`,
+        title: `${despachadorNombre} - ${clienteNombre}`,
         start,
         end,
         resource: {
           venta_id: entrega.venta_id,
           chofer_id: entrega.chofer_id,
-          chofer_nombre: entrega.chofer?.name || 'Chofer',
+          chofer_nombre: despachadorNombre,
           cliente_nombre: clienteNombre,
           direccion: entrega.direccion_entrega || '',
           productos_count: entrega.productos_entregados?.length || 0,
@@ -117,6 +168,8 @@ export default function CalendarProgramacionEntregas({
         },
       }
     })
+
+    console.log('✅ Eventos generados:', entregasEvents.length)
 
     // Agregar evento temporal para la selección actual (PERSISTENTE)
     if (selectedSlot) {

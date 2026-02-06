@@ -32,35 +32,42 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
  * Solicita permiso y obtiene el token FCM del usuario
  */
 export async function requestNotificationPermission(): Promise<string | null> {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') {
+    console.log('❌ requestNotificationPermission: No estamos en el navegador')
+    return null
+  }
   
   try {
+    console.log('🔔 Solicitando permiso de notificaciones al usuario...')
     const permission = await Notification.requestPermission()
+    console.log('🔔 Permiso obtenido:', permission)
     
     if (permission !== 'granted') {
-      console.log('Permiso de notificaciones denegado')
+      console.log('❌ Permiso de notificaciones denegado por el usuario')
       return null
     }
 
     if (!messaging) {
-      console.error('Firebase Messaging no está inicializado')
+      console.error('❌ Firebase Messaging no está inicializado')
       return null
     }
 
+    console.log('🔔 Registrando Service Worker...')
     // Registrar Service Worker
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    console.log('Service Worker registrado:', registration)
+    console.log('✅ Service Worker registrado:', registration.scope)
 
+    console.log('🔔 Obteniendo token FCM...')
     // Obtener token FCM
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
       serviceWorkerRegistration: registration,
     })
 
-    console.log('Token FCM obtenido:', token)
+    console.log('✅ Token FCM obtenido:', token.substring(0, 20) + '...')
     return token
   } catch (error) {
-    console.error('Error obteniendo token FCM:', error)
+    console.error('❌ Error obteniendo token FCM:', error)
     return null
   }
 }

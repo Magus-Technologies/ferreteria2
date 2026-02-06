@@ -338,17 +338,18 @@ export default function CardAgregarProductoVenta({
 
       {/* Badge de paquetes disponibles */}
       {tienePaquetes && (
-        <div className='mt-2'>
-          <Badge count={paquetes.length} showZero={false}>
-            <Button
-              type="dashed"
-              icon={<FaBoxOpen />}
-              onClick={() => setOpenModalPaquetes(true)}
-              className='w-full'
-            >
-              🎁 Disponible en {paquetes.length} paquete{paquetes.length > 1 ? 's' : ''}
-            </Button>
-          </Badge>
+        <div className='mt-2 w-full'>
+          <Button
+            type="dashed"
+            icon={<FaBoxOpen />}
+            onClick={() => setOpenModalPaquetes(true)}
+            className='w-full'
+            style={{ overflow: 'hidden' }}
+          >
+            <div className='flex items-center justify-center gap-2 overflow-hidden'>
+              <span>🎁 Disponible en {paquetes.length} paquete{paquetes.length > 1 ? 's' : ''}</span>
+            </div>
+          </Button>
         </div>
       )}
 
@@ -404,6 +405,9 @@ export default function CardAgregarProductoVenta({
                         descuento_tipo: DescuentoTipo.MONTO,
                         subtotal: 0,
                         comision: 0,
+                        // ✅ Agregar información del paquete
+                        paquete_id: paquete.id,
+                        paquete_nombre: paquete.nombre,
                       })
 
                       productosAgregados++

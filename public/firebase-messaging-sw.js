@@ -53,6 +53,11 @@ self.addEventListener('notificationclick', (event) => {
           // Buscar si ya hay una ventana abierta
           for (const client of windowClients) {
             if (client.url.includes('/ui') && 'focus' in client) {
+              // Enviar mensaje al cliente para que invalide el caché
+              client.postMessage({
+                type: 'INVALIDATE_ENTREGAS_CACHE',
+                timestamp: Date.now()
+              })
               client.navigate(urlToOpen)
               return client.focus()
             }

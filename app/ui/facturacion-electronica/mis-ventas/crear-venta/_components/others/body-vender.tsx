@@ -37,6 +37,9 @@ export type FormCreateVenta = {
     descuento_tipo?: DescuentoTipo
     descuento?: number
     comision?: number
+    // Campos para identificar si el producto pertenece a un paquete
+    paquete_id?: number
+    paquete_nombre?: string
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago

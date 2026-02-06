@@ -1,22 +1,72 @@
 'use client'
 
 import { Modal } from 'antd'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import TitleForm from '~/components/form/title-form'
 import CalendarProgramacionEntregas from '~/app/_components/calendar/calendar-programacion-entregas'
 import { EntregaEvent } from '~/app/_components/calendar/event-entrega'
 import ButtonBase from '~/components/buttons/button-base'
+import { useEntregasProgramadas } from '~/hooks/use-entregas-programadas'
+import dayjs from 'dayjs'
 
 interface ModalCalendarioEntregasProps {
   open: boolean
   setOpen: (open: boolean) => void
 }
 
+// Colores por despachador (mismo que en el calendario)
+const CHOFER_COLORS = [
+  '#86efac', // verde claro
+  '#fde047', // amarillo
+  '#93c5fd', // azul claro
+  '#fca5a5', // rojo claro
+  '#c4b5fd', // morado claro
+  '#fdba74', // naranja claro
+]
+
 export default function ModalCalendarioEntregas({
   open,
   setOpen,
 }: ModalCalendarioEntregasProps) {
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
+
+  // Obtener entregas para generar la leyenda de despachadores
+  const { data: entregas = [], isLoading, error } = useEntregasProgramadas({
+    fecha_desde: dayjs().subtract(7, 'days').format('YYYY-MM-DD'),
+    fecha_hasta: dayjs().add(30, 'days').format('YYYY-MM-DD'),
+  })
+
+  // 🔍 DEBUG: Ver qué entregas llegan al modal
+  console.log('🔍 MODAL - Entregas recibidas:', entregas)
+  console.log('🔍 MODAL - isLoading:', isLoading)
+  console.log('🔍 MODAL - error:', error)
+  console.log('🔍 MODAL - Rango de fechas:', {
+    desde: dayjs().subtract(7, 'days').format('YYYY-MM-DD'),
+    hasta: dayjs().add(30, 'days').format('YYYY-MM-DD'),
+  })
+
+  // Generar lista única de despachadores con sus colores
+  const despachadores = useMemo(() => {
+    const choferMap = new Map<string, { id: string; nombre: string; color: string }>()
+    let colorIndex = 0
+
+    entregas.forEach((entrega: any) => {
+      if (entrega.chofer_id && !choferMap.has(entrega.chofer_id)) {
+        // Solo agregar si la entrega está pendiente (no entregada ni en camino)
+        if (entrega.estado_entrega === 'pe') {
+          const despachadorNombre = entrega.despachador?.name || entrega.chofer?.name || 'Despachador'
+          choferMap.set(entrega.chofer_id, {
+            id: entrega.chofer_id,
+            nombre: despachadorNombre,
+            color: CHOFER_COLORS[colorIndex % CHOFER_COLORS.length],
+          })
+          colorIndex++
+        }
+      }
+    })
+
+    return Array.from(choferMap.values())
+  }, [entregas])
 
   const handleSelectEvent = (event: EntregaEvent) => {
     // Ignorar el evento temporal de selección
@@ -74,22 +124,20 @@ export default function ModalCalendarioEntregas({
           </div>
           
           {/* Separador */}
-          <div className="h-6 w-px bg-gray-300"></div>
+          {despachadores.length > 0 && <div className="h-6 w-px bg-gray-300"></div>}
           
-          {/* Choferes */}
-          <div className="text-xs font-medium text-gray-600">Choferes:</div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
-            <div className="w-5 h-5 rounded" style={{ backgroundColor: '#86efac' }}></div>
-            <span className="text-xs font-semibold text-gray-700">Chofer 1</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
-            <div className="w-5 h-5 rounded" style={{ backgroundColor: '#fde047' }}></div>
-            <span className="text-xs font-semibold text-gray-700">Chofer 2</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
-            <div className="w-5 h-5 rounded" style={{ backgroundColor: '#93c5fd' }}></div>
-            <span className="text-xs font-semibold text-gray-700">Chofer 3</span>
-          </div>
+          {/* Despachadores dinámicos */}
+          {despachadores.length > 0 && (
+            <>
+              <div className="text-xs font-medium text-gray-600">Despachadores:</div>
+              {despachadores.map((despachador) => (
+                <div key={despachador.id} className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
+                  <div className="w-5 h-5 rounded" style={{ backgroundColor: despachador.color }}></div>
+                  <span className="text-xs font-semibold text-gray-700">{despachador.nombre}</span>
+                </div>
+              ))}
+            </>
+          )}
         </div>
 
         {/* Calendario */}
@@ -108,7 +156,7 @@ export default function ModalCalendarioEntregas({
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="font-medium text-gray-700">Chofer:</span>{' '}
+                <span className="font-medium text-gray-700">Despachador:</span>{' '}
                 <span className="text-gray-900">{eventoSeleccionado.resource.chofer_nombre}</span>
               </div>
               <div>

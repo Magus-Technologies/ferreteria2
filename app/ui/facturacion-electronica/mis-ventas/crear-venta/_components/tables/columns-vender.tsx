@@ -24,8 +24,89 @@ export function useColumnsVender({
   console.log('🚀 ~ useColumnsVender ~ venta:', venta)
   console.log('🚀 ~ useColumnsVender ~ cantidad_pendiente:', cantidad_pendiente)
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
+  const productos = Form.useWatch('productos', form) || []
 
   const columns: ColDef<FormListFieldData>[] = [
+    {
+      headerName: '#',
+      field: 'name',
+      colId: '#',
+      width: 50,
+      minWidth: 50,
+      suppressNavigable: true,
+      lockPosition: 'left',
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
+        
+        if (!paqueteId) {
+          // Producto sin paquete - contar solo productos individuales y primeros de paquetes
+          let numeroGrupo = 0
+          const paquetesVistos = new Set<number>()
+          
+          for (let i = 0; i <= value; i++) {
+            const itemPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
+            
+            if (itemPaqueteId) {
+              if (!paquetesVistos.has(itemPaqueteId)) {
+                paquetesVistos.add(itemPaqueteId)
+                numeroGrupo++
+              }
+            } else {
+              numeroGrupo++
+            }
+          }
+          
+          return (
+            <div className='flex items-center h-full justify-center'>
+              <span className='font-semibold text-gray-700'>{numeroGrupo}</span>
+            </div>
+          )
+        }
+
+        // Producto de paquete - verificar si es el primero del grupo
+        let esPrimeroDelGrupo = true
+        for (let i = 0; i < value; i++) {
+          const prevPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
+          if (prevPaqueteId === paqueteId) {
+            esPrimeroDelGrupo = false
+            break
+          }
+        }
+
+        if (esPrimeroDelGrupo) {
+          // Es el primero del paquete - mostrar número
+          let numeroGrupo = 0
+          const paquetesVistos = new Set<number>()
+          
+          for (let i = 0; i <= value; i++) {
+            const itemPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
+            
+            if (itemPaqueteId) {
+              if (!paquetesVistos.has(itemPaqueteId)) {
+                paquetesVistos.add(itemPaqueteId)
+                numeroGrupo++
+              }
+            } else {
+              numeroGrupo++
+            }
+          }
+          
+          return (
+            <div className='flex items-center h-full justify-center'>
+              <span className='font-semibold text-gray-700'>{numeroGrupo}</span>
+            </div>
+          )
+        }
+
+        // No es el primero del paquete - NO mostrar número
+        return (
+          <div className='flex items-center h-full justify-center'>
+            <span className='text-gray-400 text-xs'>↳</span>
+          </div>
+        )
+      },
+      type: 'numberColumn',
+    },
     {
       headerName: 'Código',
       field: 'name',
@@ -59,44 +140,88 @@ export function useColumnsVender({
       field: 'name',
       minWidth: 250,
       width: 250,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <InputNumberBase
-            propsForm={{
-              name: [value, 'producto_id'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            formWithMessage={false}
-          />
-          <InputNumberBase
-            propsForm={{
-              name: [value, 'stock_fraccion'],
-              hidden: true,
-            }}
-            formWithMessage={false}
-          />
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue(['productos', value, 'producto_name'])}
-          >
-            <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'producto_name'])}
-            </div>
-          </Tooltip>
-          <InputBase
-            propsForm={{
-              name: [value, 'producto_name'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
-        </div>
-      ),
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
+        const paqueteNombre = form.getFieldValue(['productos', value, 'paquete_nombre'])
+        const productoName = form.getFieldValue(['productos', value, 'producto_name'])
+        
+        // Verificar si es el primero del paquete
+        let esPrimeroDelGrupo = true
+        if (paqueteId) {
+          for (let i = 0; i < value; i++) {
+            const prevPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
+            if (prevPaqueteId === paqueteId) {
+              esPrimeroDelGrupo = false
+              break
+            }
+          }
+        }
+        
+        return (
+          <div className='flex flex-col h-full justify-center gap-1'>
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'producto_id'],
+                rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'stock_fraccion'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            {/* Campos hidden para información del paquete */}
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'paquete_id'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputBase
+              propsForm={{
+                name: [value, 'paquete_nombre'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            
+            {/* Mostrar nombre del paquete solo en el primer producto del grupo */}
+            {paqueteId && esPrimeroDelGrupo && (
+              <div className='px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-bold w-fit'>
+                📦 {paqueteNombre}
+              </div>
+            )}
+            
+            {/* Nombre del producto */}
+            <Tooltip
+              classNames={{ body: 'text-center!' }}
+              title={productoName}
+            >
+              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                {productoName}
+              </div>
+            </Tooltip>
+            <InputBase
+              propsForm={{
+                name: [value, 'producto_name'],
+                rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              readOnly
+              variant='borderless'
+              formWithMessage={false}
+            />
+          </div>
+        )
+      },
       flex: 1,
+      wrapText: true,
+      autoHeight: true,
     },
     {
       headerName: 'Marca',
