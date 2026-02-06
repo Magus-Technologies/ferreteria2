@@ -1,13 +1,16 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { type Compra, type ProductoAlmacenCompra, type UnidadDerivadaInmutableCompra } from '~/lib/api/compra'
+import { type ProductoAlmacenCompra, type UnidadDerivadaInmutableCompra } from '~/lib/api/compra'
 
 export type TableDetalleDeCompraProps = Pick<
   ProductoAlmacenCompra,
   'producto_almacen' | 'costo'
 > &
-  UnidadDerivadaInmutableCompra
+  UnidadDerivadaInmutableCompra & {
+    descuento?: number
+    percepcion?: number
+  }
 
 export function useColumnsDetalleDeCompra() {
   const columns: ColDef<TableDetalleDeCompraProps>[] = [
@@ -97,6 +100,39 @@ export function useColumnsDetalleDeCompra() {
           : String(Number(data?.costo ?? 0) * Number(data?.factor ?? 1)),
     },
     {
+      headerName: '%',
+      field: 'descuento' as any,
+      width: 60,
+      minWidth: 60,
+      filter: 'agNumberColumnFilter',
+      cellStyle: { textAlign: 'center' },
+      valueFormatter: ({
+        data,
+      }: {
+        data: TableDetalleDeCompraProps | undefined
+      }) => {
+        const descuento = Number(data?.descuento ?? 0)
+        return descuento > 0 ? `${descuento}%` : '-'
+      },
+    },
+    {
+      headerName: 'Perc',
+      field: 'percepcion' as any,
+      width: 80,
+      minWidth: 80,
+      filter: 'agNumberColumnFilter',
+      type: 'pen4',
+      cellStyle: { textAlign: 'right' },
+      valueFormatter: ({
+        data,
+      }: {
+        data: TableDetalleDeCompraProps | undefined
+      }) => {
+        const percepcion = Number(data?.percepcion ?? 0)
+        return percepcion > 0 ? String(percepcion) : '-'
+      },
+    },
+    {
       headerName: 'Importe',
       field: 'producto_almacen',
       width: 90,
@@ -130,6 +166,39 @@ export function useColumnsDetalleDeCompra() {
       width: 80,
       minWidth: 80,
       filter: true,
+    },
+    {
+      headerName: 'TotalUnd',
+      field: 'cantidad',
+      width: 90,
+      minWidth: 90,
+      filter: 'agNumberColumnFilter',
+      cellStyle: { textAlign: 'center' },
+      valueFormatter: ({
+        data,
+      }: {
+        data: TableDetalleDeCompraProps | undefined
+      }) => {
+        const cantidad = Number(data?.cantidad ?? 0)
+        const factor = Number(data?.factor ?? 1)
+        const totalUnidades = cantidad * factor
+        return String(totalUnidades)
+      },
+    },
+    {
+      headerName: 'IdProd',
+      field: 'producto_almacen',
+      width: 80,
+      minWidth: 80,
+      filter: true,
+      cellStyle: { textAlign: 'center', fontSize: '11px' },
+      valueFormatter: ({
+        value,
+      }: {
+        value: TableDetalleDeCompraProps['producto_almacen']
+      }) => {
+        return String(value?.producto?.id ?? '')
+      },
     },
   ]
 

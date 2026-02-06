@@ -61,6 +61,8 @@ export interface CreateUsuarioRequest {
   email: string;
   password: string;
   password_confirmation: string;
+  supervisor_password?: string;
+  supervisor_password_confirmation?: string;
   empresa_id: number;
   
   // Información personal (opcionales)
@@ -97,6 +99,8 @@ export interface UpdateUsuarioRequest {
   email?: string;
   password?: string;
   password_confirmation?: string;
+  supervisor_password?: string;
+  supervisor_password_confirmation?: string;
   empresa_id?: number;
   
   // Información personal
@@ -205,5 +209,13 @@ export const usuariosApi = {
     return apiRequest<{ message: string }>(`/usuarios/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  /**
+   * Obtener lista de supervisores (usuarios con contraseña de supervisor)
+   * GET /api/usuarios/supervisores
+   */
+  async getSupervisores(): Promise<ApiResponse<UsuariosListResponse>> {
+    return apiRequest<UsuariosListResponse>('/usuarios/supervisores');
   },
 };

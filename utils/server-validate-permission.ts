@@ -12,3 +12,8 @@ export default async function can(permiso: string) {
   console.warn('⚠️ can() está deshabilitado - validar permisos en Laravel')
   return true
 }
+
+// Alias para compatibilidad
+export async function serverValidatePermission(permiso: string) {
+  return can(permiso)
+}

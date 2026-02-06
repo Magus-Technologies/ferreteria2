@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_OPTIONS=--max-old-space-size=8192 && next dev --turbopack",
-    "build": "next build",
+    "dev:https": "set NODE_OPTIONS=--max-old-space-size=8192 && next dev --turbopack & npx local-ssl-proxy --source 3001 --target 3000",
+    "build": "set NODE_OPTIONS=--max-old-space-size=8192 && next build",
     "build:server": "set NODE_OPTIONS=--max-old-space-size=8192 && next build --no-lint",
     "start": "next start",
     "lint": "next lint",

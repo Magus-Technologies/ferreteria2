@@ -47,6 +47,9 @@ export interface CerrarCajaRequest {
     monto_cierre_efectivo: number
     total_cuentas: number
     supervisor_id?: string
+    supervisor_password?: string
+    email_reporte?: string
+    whatsapp_reporte?: string
     comentarios?: string
     conteo_billetes_monedas?: Record<string, number>
     conceptos_adicionales?: Array<{

@@ -16,7 +16,7 @@ type UseStoreFiltrosMisComprasProps = {
 export const useStoreFiltrosMisCompras = create<UseStoreFiltrosMisComprasProps>(
   set => {
     return {
-      filtros: undefined,
+      filtros: {}, // Inicializar con objeto vacío en lugar de undefined
       setFiltros: value =>
         set(state => ({
           filtros: typeof value === 'function' ? value(state.filtros) : value,

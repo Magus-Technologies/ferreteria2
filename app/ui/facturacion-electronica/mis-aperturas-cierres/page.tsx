@@ -24,7 +24,7 @@ export default function MisAperturasCierresPage() {
       label: (
         <span className="flex items-center gap-2">
           <HistoryOutlined />
-          Mis Aperturas
+          Historial de Aperturas
         </span>
       ),
       children: <HistorialAperturas />,
@@ -34,7 +34,7 @@ export default function MisAperturasCierresPage() {
       label: (
         <span className="flex items-center gap-2">
           <CloseCircleOutlined />
-          Mis Cierres
+          Historial de Cierres
         </span>
       ),
       children: <HistorialCierres />,

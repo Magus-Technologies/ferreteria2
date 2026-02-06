@@ -79,12 +79,24 @@ export function useColumnsCompras({
       filter: 'agNumberColumnFilter',
     },
     {
-      headerName: 'Fecha',
+      headerName: 'Fecha Emisión',
       field: 'fecha',
-      width: 90,
-      minWidth: 90,
+      width: 110,
+      minWidth: 110,
       type: 'date',
       filter: 'agDateColumnFilter',
+    },
+    {
+      headerName: 'Fecha Vencimiento',
+      field: 'fecha_vencimiento',
+      width: 130,
+      minWidth: 130,
+      type: 'date',
+      filter: 'agDateColumnFilter',
+      valueFormatter: ({ value }) => {
+        if (!value) return '-'
+        return value
+      },
     },
     {
       headerName: 'RUC',
@@ -136,6 +148,18 @@ export function useColumnsCompras({
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const igv = Number(getSubTotal(params.value)) - Number(getSubTotal(params.value)) / (IGV + 1)
         return formatCurrency(igv, params.data?.tipo_moneda)
+      },
+    },
+    {
+      headerName: 'Percepción',
+      field: 'percepcion',
+      width: 90,
+      minWidth: 90,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value }) => String(Number(value || 0)),
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        const percepcion = Number(params.value || 0)
+        return formatCurrency(percepcion, params.data?.tipo_moneda)
       },
     },
     {

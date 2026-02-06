@@ -9,9 +9,9 @@ import SelectDespliegueDePago from '~/app/_components/form/selects/select-despli
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { FaHashtag } from 'react-icons/fa6'
 import InputBase from '~/app/_components/form/inputs/input-base'
-import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { apiRequest } from '~/lib/api'
 
 interface MetodoPago {
   id: string
@@ -43,9 +43,9 @@ export default function ModalMetodosPagoVenta({
 
   // Cargar despliegues de pago para obtener el ID de CCH/Efectivo
   const { data: desplieguesPago } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+    queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
-      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      const result = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/metodos-para-ventas')
       return result.data?.data || []
     },
     enabled: open,
@@ -95,21 +95,30 @@ export default function ModalMetodosPagoVenta({
       setMetodosPago([])
       // Setear el monto inicial al saldo pendiente
       modalForm.setFieldValue('monto', totalCobrado)
+    }
+  }, [open, modalForm, totalCobrado])
+
+  // Setear Efectivo por defecto cuando los datos estén disponibles
+  useEffect(() => {
+    if (open && desplieguesPago && desplieguesPago.length > 0) {
+      // Buscar el método que contenga "Efectivo" en su label
+      const efectivo = desplieguesPago.find((d: any) => 
+        d.label?.toUpperCase().includes('EFECTIVO') || 
+        d.label?.toUpperCase().includes('CCH')
+      )
       
-      // Buscar y setear CCH/Efectivo por defecto
-      if (desplieguesPago && desplieguesPago.length > 0) {
-        const efectivo = desplieguesPago.find(d => 
-          d.name.toUpperCase().includes('EFECTIVO') || 
-          d.name.toUpperCase().includes('CCH')
-        )
-        
-        if (efectivo) {
-          modalForm.setFieldValue('despliegue_de_pago_id', efectivo.id)
-          setDespliegueName(efectivo.name)
-        }
+      if (efectivo) {
+        console.log('🎯 Efectivo encontrado:', efectivo)
+        // Usar setTimeout para asegurar que el select esté renderizado
+        setTimeout(() => {
+          modalForm.setFieldValue('despliegue_de_pago_id', efectivo.value)
+          setDespliegueName(efectivo.label)
+        }, 100)
+      } else {
+        console.log('⚠️ No se encontró efectivo en:', desplieguesPago)
       }
     }
-  }, [open, modalForm, totalCobrado, desplieguesPago])
+  }, [open, desplieguesPago, modalForm])
 
   // Actualizar monto cuando cambia el saldo pendiente
   useEffect(() => {

@@ -42,21 +42,21 @@ export default function useInitCompra({
         proveedor_razon_social: compra.proveedor?.razon_social || '',
         proveedor_ruc: compra.proveedor?.ruc || '',
         tipo_documento: compra.tipo_documento as any,
-        serie: compra.serie || undefined,
-        numero: compra.numero || undefined,
-        guia: compra.guia || undefined,
+        serie: compra.serie ?? '',
+        numero: compra.numero ?? undefined,
+        guia: compra.guia ?? '',
         forma_de_pago: compra.forma_de_pago as any,
-        numero_dias: compra.numero_dias || undefined,
+        numero_dias: compra.numero_dias ?? undefined,
         fecha_vencimiento: compra.fecha_vencimiento
           ? dayjs(compra.fecha_vencimiento)
           : undefined,
-        percepcion: compra.percepcion ? Number(compra.percepcion) : undefined,
+        percepcion: compra.percepcion != null ? Number(compra.percepcion) : undefined,
         productos: compra.productos_por_almacen.flatMap(ppa =>
           ppa.unidades_derivadas.map(ud => ({
             cantidad: Number(ud.cantidad),
             unidad_derivada_id: ud.unidad_derivada_normal.id,
             precio_compra: Number(ppa.costo) * Number(ud.factor),
-            lote: ud.lote || undefined,
+            lote: ud.lote ?? undefined,
             vencimiento: ud.vencimiento ? dayjs(ud.vencimiento) : undefined,
             bonificacion: ud.bonificacion,
             flete: Number(ud.flete),

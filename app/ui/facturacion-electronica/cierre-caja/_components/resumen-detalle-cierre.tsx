@@ -281,7 +281,7 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado }: Resumen
           </div>
           <div className='mt-3 p-3 bg-blue-50 rounded flex justify-between items-center'>
             <span className='font-semibold text-slate-700'>Total Ventas:</span>
-            <span className='text-lg font-bold text-slate-800'>S/. {resumen.total_ventas.toFixed(2)}</span>
+            <span className='text-lg font-bold text-slate-800'>S/. {Number(resumen?.total_ventas || 0).toFixed(2)}</span>
           </div>
         </div>
       ),
@@ -310,7 +310,7 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado }: Resumen
             </div>
             <div className='flex justify-between items-center'>
               <span className='font-semibold text-slate-700'>Total Cobros:</span>
-              <span className='text-lg font-bold text-slate-800'>S/. {resumen.total_ventas.toFixed(2)}</span>
+              <span className='text-lg font-bold text-slate-800'>S/. {Number(resumen?.total_ventas || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -445,12 +445,12 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado }: Resumen
               
               <div className='flex justify-between items-center text-lg border-b pb-2'>
                 <span className='font-semibold text-slate-700'>Total Ingresos:</span>
-                <span className='font-bold text-green-600'>+ S/. {resumen.total_ingresos.toFixed(2)}</span>
+                <span className='font-bold text-green-600'>+ S/. {Number(resumen?.total_ingresos || 0).toFixed(2)}</span>
               </div>
               
               <div className='flex justify-between items-center text-lg border-b pb-2'>
                 <span className='font-semibold text-slate-700'>Total Egresos:</span>
-                <span className='font-bold text-red-600'>- S/. {resumen.total_egresos.toFixed(2)}</span>
+                <span className='font-bold text-red-600'>- S/. {Number(resumen?.total_egresos || 0).toFixed(2)}</span>
               </div>
               
               <div className='h-px bg-slate-300 my-4'></div>

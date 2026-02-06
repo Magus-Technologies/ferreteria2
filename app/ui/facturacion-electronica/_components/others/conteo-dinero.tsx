@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
+import { Input, Tabs } from 'antd'
+import { FaCalculator, FaMoneyBillWave } from 'react-icons/fa'
 
 interface ConteoDineroProps {
   onChange?: (total: number) => void
   className?: string
   initialValues?: { [key: string]: number }
+  initialTotal?: number
 }
 
 const denominaciones = [
@@ -24,7 +27,12 @@ const denominaciones = [
   { label: 'Moneda S/. 0.05', valor: 0.05, key: 'm005' },
 ]
 
-export default function ConteoDinero({ onChange, className = '', initialValues = {} }: ConteoDineroProps) {
+export default function ConteoDinero({ 
+  onChange, 
+  className = '', 
+  initialValues = {},
+  initialTotal = 0 
+}: ConteoDineroProps) {
   const [cantidades, setCantidades] = useState<{ [key: string]: number }>(() => {
     const initial: { [key: string]: number } = {}
     denominaciones.forEach(d => {
@@ -32,6 +40,9 @@ export default function ConteoDinero({ onChange, className = '', initialValues =
     })
     return initial
   })
+  
+  const [montoDirecto, setMontoDirecto] = useState<number>(initialTotal)
+  const [modoActivo, setModoActivo] = useState<'desglose' | 'directo'>('directo')
 
   const calcularTotal = () => {
     return denominaciones.reduce((sum, d) => {
@@ -40,9 +51,13 @@ export default function ConteoDinero({ onChange, className = '', initialValues =
   }
 
   useEffect(() => {
-    const total = calcularTotal()
-    onChange?.(total)
-  }, [cantidades])
+    if (modoActivo === 'desglose') {
+      const total = calcularTotal()
+      onChange?.(total)
+    } else {
+      onChange?.(montoDirecto)
+    }
+  }, [cantidades, montoDirecto, modoActivo])
 
   const handleCantidadChange = (key: string, value: number) => {
     setCantidades(prev => ({
@@ -51,55 +66,114 @@ export default function ConteoDinero({ onChange, className = '', initialValues =
     }))
   }
 
+  const handleMontoDirectoChange = (value: number | string | null) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value
+    setMontoDirecto(numValue || 0)
+  }
+
+  const handleTabChange = (key: string) => {
+    setModoActivo(key as 'desglose' | 'directo')
+  }
+
   return (
     <div className={`${className}`}>
-      <div className='bg-slate-50 rounded p-1.5'>
-        <table className='w-full text-[11px]'>
-          <thead>
-            <tr className='border-b border-slate-300'>
-              <th className='text-left py-0.5 px-1 text-slate-600 font-medium text-[10px]'>#</th>
-              <th className='text-left py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Denominación</th>
-              <th className='text-center py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Cant.</th>
-              <th className='text-right py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {denominaciones.map((denom, index) => {
-              const cantidad = cantidades[denom.key] || 0
-              const subtotal = cantidad * denom.valor
-              return (
-                <tr key={denom.key} className='border-b border-slate-100 hover:bg-white'>
-                  <td className='py-0.5 px-1 text-slate-500'>{index + 1}</td>
-                  <td className='py-0.5 px-1 text-slate-700'>{denom.label}</td>
-                  <td className='py-0.5 px-1'>
-                    <InputNumberBase
-                      value={cantidad}
-                      onChange={(value) => handleCantidadChange(denom.key, Number(value) || 0)}
-                      min={0}
-                      precision={0}
-                      className='w-full text-[11px]'
-                      size='small'
-                    />
-                  </td>
-                  <td className='py-0.5 px-1 text-right font-medium text-slate-800'>
-                    {subtotal.toFixed(2)}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-          <tfoot>
-            <tr className='bg-orange-100 border-t border-orange-400'>
-              <td colSpan={3} className='py-1 px-1 text-right font-bold text-slate-800 text-xs'>
-                TOTAL:
-              </td>
-              <td className='py-1 px-1 text-right font-bold text-orange-600 text-sm'>
-                S/. {calcularTotal().toFixed(2)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+      <Tabs
+        activeKey={modoActivo}
+        onChange={handleTabChange}
+        items={[
+          {
+            key: 'directo',
+            label: (
+              <span className='flex items-center gap-1.5 text-xs'>
+                <FaMoneyBillWave size={12} />
+                Monto Directo
+              </span>
+            ),
+            children: (
+              <div className='p-3 bg-slate-50 rounded'>
+                <label className='block text-xs font-medium text-slate-600 mb-2'>
+                  Ingrese el monto total
+                </label>
+                <InputNumberBase
+                  prefix='S/. '
+                  placeholder='0.00'
+                  value={montoDirecto}
+                  onChange={handleMontoDirectoChange}
+                  precision={2}
+                  min={0}
+                  className='w-full'
+                  size='large'
+                  style={{ fontSize: '16px', fontWeight: 'bold' }}
+                />
+                <div className='mt-3 p-2 bg-orange-100 rounded border border-orange-300'>
+                  <div className='text-xs text-slate-600'>Total:</div>
+                  <div className='text-lg font-bold text-orange-600'>
+                    S/. {montoDirecto.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: 'desglose',
+            label: (
+              <span className='flex items-center gap-1.5 text-xs'>
+                <FaCalculator size={12} />
+                Desglose
+              </span>
+            ),
+            children: (
+              <div className='bg-slate-50 rounded p-1.5'>
+                <table className='w-full text-[11px]'>
+                  <thead>
+                    <tr className='border-b border-slate-300'>
+                      <th className='text-left py-0.5 px-1 text-slate-600 font-medium text-[10px]'>#</th>
+                      <th className='text-left py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Denominación</th>
+                      <th className='text-center py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Cant.</th>
+                      <th className='text-right py-0.5 px-1 text-slate-600 font-medium text-[10px]'>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {denominaciones.map((denom, index) => {
+                      const cantidad = cantidades[denom.key] || 0
+                      const subtotal = cantidad * denom.valor
+                      return (
+                        <tr key={denom.key} className='border-b border-slate-100 hover:bg-white'>
+                          <td className='py-0.5 px-1 text-slate-500'>{index + 1}</td>
+                          <td className='py-0.5 px-1 text-slate-700'>{denom.label}</td>
+                          <td className='py-0.5 px-1'>
+                            <InputNumberBase
+                              value={cantidad}
+                              onChange={(value) => handleCantidadChange(denom.key, Number(value) || 0)}
+                              min={0}
+                              precision={0}
+                              className='w-full text-[11px]'
+                              size='small'
+                            />
+                          </td>
+                          <td className='py-0.5 px-1 text-right font-medium text-slate-800'>
+                            {subtotal.toFixed(2)}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className='bg-orange-100 border-t border-orange-400'>
+                      <td colSpan={3} className='py-1 px-1 text-right font-bold text-slate-800 text-xs'>
+                        TOTAL:
+                      </td>
+                      <td className='py-1 px-1 text-right font-bold text-orange-600 text-sm'>
+                        S/. {calcularTotal().toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   )
 }
