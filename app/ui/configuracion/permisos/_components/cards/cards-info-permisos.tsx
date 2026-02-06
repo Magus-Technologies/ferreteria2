@@ -13,7 +13,7 @@ export default function CardsInfoPermisos() {
     queryFn: () => permissionsApi.getAll(),
   })
 
-  // Obtener todos los roles
+  // Obtener todos los roles para contar
   const { data: rolesResponse, isLoading: loadingRoles } = useQuery({
     queryKey: ['roles'],
     queryFn: () => permissionsApi.getRoles(),
@@ -24,8 +24,8 @@ export default function CardsInfoPermisos() {
     ? restrictionsResponse.data 
     : []
   
-  const rolesData = Array.isArray(rolesResponse?.data) 
-    ? rolesResponse.data 
+  const rolesData = Array.isArray(rolesResponse?.data)
+    ? rolesResponse.data
     : []
 
   if (loadingRestrictions || loadingRoles) {

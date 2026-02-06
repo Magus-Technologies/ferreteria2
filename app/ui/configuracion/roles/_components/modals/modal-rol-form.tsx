@@ -67,7 +67,7 @@ export default function ModalRolForm({
       })
       
       if (response.data && values.permission_ids.length > 0) {
-        await permissionsApi.assignPermissionsToRole(response.data.id, values.permission_ids)
+        await permissionsApi.assignRestrictionsToRole(response.data.id, values.permission_ids)
       }
       
       return response
@@ -93,7 +93,7 @@ export default function ModalRolForm({
         descripcion: values.descripcion,
       })
       
-      await permissionsApi.assignPermissionsToRole(role.id, values.permission_ids)
+      await permissionsApi.assignRestrictionsToRole(role.id, values.permission_ids)
     },
     onSuccess: () => {
       message.success('Rol actualizado correctamente')

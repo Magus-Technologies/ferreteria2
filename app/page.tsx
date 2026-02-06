@@ -22,14 +22,28 @@ export default function Home() {
   const [modalRecuperarOpen, setModalRecuperarOpen] = useState(false)
 
   const handleLogin = async (values: LoginValues) => {
+    console.log('🚀 [LoginPage] Iniciando proceso de login...');
     setLoading(true)
     try {
+      console.log('🚀 [LoginPage] Llamando a login()...');
       const result = await login(values.email, values.password)
 
+      console.log('🚀 [LoginPage] Resultado de login:', JSON.stringify(result, null, 2));
+
       if (result.success) {
+        console.log('✅ [LoginPage] Login exitoso, redirigiendo a /ui');
         message.success('Inicio de sesión exitoso')
+        
+        // Pequeño delay para asegurar que el token se guardó
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verificar token antes de redirigir
+        const token = localStorage.getItem('auth_token');
+        console.log('🔍 [LoginPage] Token antes de redirigir:', token ? 'SÍ (length: ' + token.length + ')' : '❌ NO');
+        
         window.location.href = '/ui'
       } else {
+        console.log('❌ [LoginPage] Login fallido:', result.error);
         message.error(result.error || 'Error al iniciar sesión')
         
         if (result.error?.includes('credenciales')) {
@@ -46,6 +60,7 @@ export default function Home() {
         }
       }
     } catch (error) {
+      console.error('❌ [LoginPage] Excepción durante login:', error);
       message.error('Error al iniciar sesión')
     } finally {
       setLoading(false)

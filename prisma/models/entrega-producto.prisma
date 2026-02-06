@@ -9,6 +9,8 @@ model EntregaProducto {
   hora_inicio          String?
   hora_fin             String?
   direccion_entrega    String?
+  latitud              Decimal?                 @db.Decimal(10, 7)
+  longitud             Decimal?                 @db.Decimal(10, 7)
   observaciones        String?
   almacen_salida_id    Int
   chofer_id            String?

@@ -147,12 +147,25 @@ export const facturacionElectronicaApi = {
         ).toString()
       : "";
     return apiRequest<{ data: Factura[]; total: number }>(
-      `/facturacion-electronica/facturas${queryString}`
+      `/facturas${queryString}`
     );
   },
 
   async getFacturaById(id: number) {
-    return apiRequest<Factura>(`/facturacion-electronica/facturas/${id}`);
+    return apiRequest<Factura>(`/facturas/${id}`);
+  },
+
+  async generarComprobanteDesdeVenta(ventaId: string) {
+    return apiRequest(`/facturas/generar`, {
+      method: "POST",
+      body: JSON.stringify({ venta_id: ventaId }),
+    });
+  },
+
+  async enviarFacturaSunat(ventaId: string) {
+    return apiRequest(`/facturas/${ventaId}/enviar-sunat`, {
+      method: "POST",
+    });
   },
 
   // Notas de Crédito
@@ -175,23 +188,23 @@ export const facturacionElectronicaApi = {
         ).toString()
       : "";
     return apiRequest<{ data: NotaCredito[]; total: number }>(
-      `/facturacion-electronica/notas-credito${queryString}`
+      `/notas-credito${queryString}`
     );
   },
 
   async getNotaCreditoById(id: number) {
-    return apiRequest<NotaCredito>(`/facturacion-electronica/notas-credito/${id}`);
+    return apiRequest<NotaCredito>(`/notas-credito/${id}`);
   },
 
   async crearNotaCredito(data: CrearNotaCreditoData) {
-    return apiRequest<NotaCredito>("/facturacion-electronica/notas-credito", {
+    return apiRequest<NotaCredito>("/notas-credito", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
 
   async enviarNotaCreditoSunat(id: number) {
-    return apiRequest(`/facturacion-electronica/notas-credito/${id}/enviar-sunat`, {
+    return apiRequest(`/notas-credito/${id}/enviar-sunat`, {
       method: "POST",
     });
   },
@@ -216,23 +229,23 @@ export const facturacionElectronicaApi = {
         ).toString()
       : "";
     return apiRequest<{ data: NotaDebito[]; total: number }>(
-      `/facturacion-electronica/notas-debito${queryString}`
+      `/notas-debito${queryString}`
     );
   },
 
   async getNotaDebitoById(id: number) {
-    return apiRequest<NotaDebito>(`/facturacion-electronica/notas-debito/${id}`);
+    return apiRequest<NotaDebito>(`/notas-debito/${id}`);
   },
 
   async crearNotaDebito(data: CrearNotaDebitoData) {
-    return apiRequest<NotaDebito>("/facturacion-electronica/notas-debito", {
+    return apiRequest<NotaDebito>("/notas-debito", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
 
   async enviarNotaDebitoSunat(id: number) {
-    return apiRequest(`/facturacion-electronica/notas-debito/${id}/enviar-sunat`, {
+    return apiRequest(`/notas-debito/${id}/enviar-sunat`, {
       method: "POST",
     });
   },
@@ -240,6 +253,6 @@ export const facturacionElectronicaApi = {
   // Motivos de Nota
   async getMotivosNota(tipo?: "credito" | "debito") {
     const queryString = tipo ? `?tipo=${tipo}` : "";
-    return apiRequest<MotivoNota[]>(`/facturacion-electronica/motivos-nota${queryString}`);
+    return apiRequest<MotivoNota[]>(`/motivos-nota${queryString}`);
   },
 };

@@ -11,6 +11,8 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import NotificationPermissionButton from '~/components/notifications/notification-permission-button'
+import { useAuth } from '~/lib/auth-context'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -23,6 +25,8 @@ interface ValuesFiltersMisEntregas {
 export default function FiltersMisEntregas() {
   const [form] = Form.useForm<ValuesFiltersMisEntregas>()
   const setFiltros = useStoreFiltrosMisEntregas((state) => state.setFiltros)
+  const { user } = useAuth()
+  const esDespachador = user?.rol_sistema === 'DESPACHADOR'
 
   const handleFinish = (values: ValuesFiltersMisEntregas) => {
     const { fecha_desde, fecha_hasta, ...rest } = values
@@ -54,10 +58,16 @@ export default function FiltersMisEntregas() {
       className="w-full"
       onFinish={handleFinish}
     >
-      <TituloModulos
-        title="Mis Entregas"
-        icon={<FaTruck className="text-amber-600" />}
-      />
+      <div className="flex items-center justify-between">
+        <TituloModulos
+          title="Mis Entregas"
+          icon={<FaTruck className="text-amber-600" />}
+        />
+        {/* Botón de notificaciones para despachadores */}
+        {esDespachador && (
+          <NotificationPermissionButton showLabel size="small" />
+        )}
+      </div>
 
       {/* Filtros Desktop */}
       <div className="mt-4">

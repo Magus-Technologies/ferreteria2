@@ -24,6 +24,7 @@ import {
   QuienEntrega,
   type CreateEntregaProductoRequest 
 } from '~/lib/api/entrega-producto'
+import { fcmApi } from '~/lib/api/fcm'
 import dayjs from 'dayjs'
 
 type ProductoAgrupado = Pick<
@@ -111,6 +112,8 @@ export default function useCreateVenta() {
       hora_inicio,
       hora_fin,
       direccion_entrega,
+      latitud,
+      longitud,
       observaciones,
       quien_entrega,
       ...restValues
@@ -279,12 +282,17 @@ export default function useCreateVenta() {
       const ventaCreada = response.data?.data
 
       console.log('🔍 DEBUG - Datos de entrega:')
-      console.log('  tipo_despacho:', tipo_despacho)
-      console.log('  despachador_id:', despachador_id)
+      console.log('  ventaCreada:', ventaCreada ? 'SÍ' : 'NO')
+      console.log('  tipo_despacho:', tipo_despacho, '(tipo:', typeof tipo_despacho, ')')
+      console.log('  despachador_id:', despachador_id, '(tipo:', typeof despachador_id, ')')
       console.log('  fecha_programada:', fecha_programada)
       console.log('  hora_inicio:', hora_inicio)
       console.log('  hora_fin:', hora_fin)
       console.log('  direccion_entrega:', direccion_entrega)
+      console.log('  Condición 1 - ventaCreada:', !!ventaCreada)
+      console.log('  Condición 2 - tipo_despacho === "Domicilio":', tipo_despacho === 'Domicilio')
+      console.log('  Condición 3 - despachador_id:', !!despachador_id)
+      console.log('  ¿Se cumple la condición completa?:', !!(ventaCreada && tipo_despacho === 'Domicilio' && despachador_id))
 
       if (ventaCreada && tipo_despacho === 'Domicilio' && despachador_id) {
         console.log('🚚 Creando entrega automáticamente...')
@@ -319,9 +327,11 @@ export default function useCreateVenta() {
             hora_inicio: hora_inicio,
             hora_fin: hora_fin,
             direccion_entrega: direccion_entrega,
+            latitud: latitud ? Number(latitud) : undefined,
+            longitud: longitud ? Number(longitud) : undefined,
             observaciones: observaciones,
             almacen_salida_id: almacen_id,
-            chofer_id: String(despachador_id), // ✅ Usar chofer_id para guardar el despachador
+            chofer_id: String(despachador_id),
             quien_entrega: QuienEntrega.CHOFER,
             user_id: user_id,
             productos_entregados: unidadesDerivadas,
@@ -341,6 +351,25 @@ export default function useCreateVenta() {
           } else {
             console.log('✅ Entrega creada automáticamente:', entregaResponse.data)
             message.success('Entrega programada exitosamente para el despachador')
+            
+            // 🔔 Enviar notificación push al despachador
+            try {
+              const clienteNombre = ventaCreada.cliente?.nombres 
+                ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
+                : ventaCreada.cliente?.razon_social || 'Cliente'
+              
+              await fcmApi.notifyEntregaProgramada({
+                despachador_id: String(despachador_id),
+                venta_serie: ventaCreada.serie || '',
+                venta_numero: ventaCreada.numero || '',
+                direccion: direccion_entrega || '',
+                fecha_programada: fecha_programada ? dayjs(fecha_programada).format('DD/MM/YYYY') : 'Hoy',
+                cliente_nombre: clienteNombre,
+              })
+              console.log('🔔 Notificación enviada al despachador')
+            } catch (notifError) {
+              console.warn('⚠️ No se pudo enviar notificación push:', notifError)
+            }
           }
         } catch (error) {
           console.error('❌ Error al crear entrega automática:', error)
@@ -398,33 +427,36 @@ export default function useCreateVenta() {
       }
 
       // Actualizar caché de productos para bloquear botón eliminar
-      // Obtener IDs de productos vendidos
-      const productosVendidosIds = productos.map((p) => p.producto_id)
+      // Obtener IDs de productos vendidos desde la respuesta del servidor
+      const productosVendidos = ventaCreada?.productos_por_almacen || []
+      const productosVendidosIds = productosVendidos.map((p: any) => p.producto_almacen?.producto_id).filter(Boolean)
       const uniqueProductoIds = [...new Set(productosVendidosIds)]
 
-      queryClient.setQueriesData(
-        {
-          predicate: (query) =>
-            query.queryKey[0] === 'productos-by-almacen' ||
-            query.queryKey[0] === 'productos-search',
-        },
-        (oldData: any) => {
-          if (!oldData?.data) return oldData
+      if (uniqueProductoIds.length > 0) {
+        queryClient.setQueriesData(
+          {
+            predicate: (query) =>
+              query.queryKey[0] === 'productos-by-almacen' ||
+              query.queryKey[0] === 'productos-search',
+          },
+          (oldData: any) => {
+            if (!oldData?.data || !Array.isArray(oldData.data)) return oldData
 
-          return {
-            ...oldData,
-            data: oldData.data.map((producto: any) => {
-              if (uniqueProductoIds.includes(producto.id)) {
-                return {
-                  ...producto,
-                  tiene_ingresos: true, // Bloquear botón eliminar inmediatamente
+            return {
+              ...oldData,
+              data: oldData.data.map((producto: any) => {
+                if (uniqueProductoIds.includes(producto.id)) {
+                  return {
+                    ...producto,
+                    tiene_ingresos: true, // Bloquear botón eliminar inmediatamente
+                  }
                 }
-              }
-              return producto
-            }),
+                return producto
+              }),
+            }
           }
-        }
-      )
+        )
+      }
     } catch (error) {
       console.error('Error al crear venta:', error)
       notification.error({

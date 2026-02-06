@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error loading user:', error);
+      console.error('Error al cargar usuario:', error);
       removeAuthToken();
       setUser(null);
     } finally {
@@ -56,7 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.login(email, password);
 
       if (response.data) {
+        // ✅ SOLUCIÓN: Establecer el usuario directamente desde la respuesta del login
+        // NO llamar a loadUser() porque causa el error 401
         setUser(response.data.user);
+        setLoading(false); // Importante: marcar como cargado
         return { success: true };
       }
 
@@ -65,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error: response.error?.message || 'Error al iniciar sesión',
       };
     } catch (error) {
+      console.error('Error durante login:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Error al iniciar sesión',

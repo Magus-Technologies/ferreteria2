@@ -52,13 +52,13 @@
           {
             "key": "nota-debito",
             "label": "Crear Nota de Débito",
-            "route": "/ui/facturacion-electronica/mis-notas-debito",
+            "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-debito",
             "permission": null
           },
           {
             "key": "envios-sunat",
             "label": "Envíos a Sunat",
-            "route": null,
+            "route": "/ui/facturacion-electronica/mis-facturas",
             "permission": null
           }
         ]

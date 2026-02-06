@@ -11,6 +11,10 @@ export default function useGetEntregas() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id],
     queryFn: async () => {
+      console.log('🚚 useGetEntregas - user:', user)
+      console.log('🚚 useGetEntregas - user.id:', user?.id)
+      console.log('🚚 useGetEntregas - filtros:', filtros)
+      
       const response = await entregaProductoApi.list({
         fecha_desde: filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta: filtros.fecha_hasta?.format('YYYY-MM-DD'),
@@ -18,10 +22,18 @@ export default function useGetEntregas() {
         // Filtrar solo entregas del despachador actual
         chofer_id: user?.id,
       })
+      
+      console.log('🚚 useGetEntregas - response:', response)
+      console.log('🚚 useGetEntregas - response.data:', response.data)
+      console.log('🚚 useGetEntregas - response.data?.data:', response.data?.data)
+      
       return response.data?.data || []
     },
     enabled: !!user?.id,
   })
+
+  console.log('🚚 useGetEntregas - data final:', data)
+  console.log('🚚 useGetEntregas - isLoading:', isLoading)
 
   return {
     entregas: (data || []) as any[],

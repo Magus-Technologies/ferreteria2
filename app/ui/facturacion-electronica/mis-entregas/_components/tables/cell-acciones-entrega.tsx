@@ -8,6 +8,7 @@ import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import ModalMapaEntrega from '../modals/modal-mapa-entrega'
 
 interface CellAccionesEntregaProps {
   entrega?: any
@@ -16,15 +17,14 @@ interface CellAccionesEntregaProps {
 
 export default function CellAccionesEntrega({ entrega, onRefetch }: CellAccionesEntregaProps) {
   const [loading, setLoading] = useState(false)
+  const [modalMapaOpen, setModalMapaOpen] = useState(false)
   const { message } = useApp()
   const queryClient = useQueryClient()
 
   if (!entrega) return null
 
   const handleVerMapa = () => {
-    // TODO: Abrir modal con mapa
-    message.info('Función de mapa en desarrollo')
-    console.log('Ver mapa:', entrega)
+    setModalMapaOpen(true)
   }
 
   const handleEnCamino = async () => {
@@ -93,56 +93,65 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     : entrega.estado_entrega
 
   return (
-    <Space size="small" className="flex items-center justify-center h-full">
-      <ConfigurableElement
-        componentId="mis-entregas.boton-ver-mapa"
-        label="Botón Ver Mapa"
-        noFullWidth
-      >
-        <Button
-          type="link"
-          size="small"
-          icon={<FaMapMarkedAlt />}
-          onClick={handleVerMapa}
-          title="Ver Mapa"
-        />
-      </ConfigurableElement>
-      
-      {estadoEntrega === 'PENDIENTE' && (
+    <>
+      <Space size="small" className="flex items-center justify-center h-full">
         <ConfigurableElement
-          componentId="mis-entregas.boton-en-camino"
-          label="Botón En Camino"
+          componentId="mis-entregas.boton-ver-mapa"
+          label="Botón Ver Mapa"
           noFullWidth
         >
           <Button
             type="link"
             size="small"
-            icon={<FaTruck />}
-            onClick={handleEnCamino}
-            loading={loading}
-            title="Marcar En Camino"
-            className="text-blue-600"
+            icon={<FaMapMarkedAlt />}
+            onClick={handleVerMapa}
+            title="Ver Mapa"
           />
         </ConfigurableElement>
-      )}
-      
-      {estadoEntrega === 'EN_CAMINO' && (
-        <ConfigurableElement
-          componentId="mis-entregas.boton-entregar"
-          label="Botón Entregar"
-          noFullWidth
-        >
-          <Button
-            type="link"
-            size="small"
-            icon={<FaCheck />}
-            onClick={handleEntregar}
-            loading={loading}
-            title="Marcar como Entregado"
-            className="text-green-600"
-          />
-        </ConfigurableElement>
-      )}
-    </Space>
+        
+        {estadoEntrega === 'PENDIENTE' && (
+          <ConfigurableElement
+            componentId="mis-entregas.boton-en-camino"
+            label="Botón En Camino"
+            noFullWidth
+          >
+            <Button
+              type="link"
+              size="small"
+              icon={<FaTruck />}
+              onClick={handleEnCamino}
+              loading={loading}
+              title="Marcar En Camino"
+              className="text-blue-600"
+            />
+          </ConfigurableElement>
+        )}
+        
+        {estadoEntrega === 'EN_CAMINO' && (
+          <ConfigurableElement
+            componentId="mis-entregas.boton-entregar"
+            label="Botón Entregar"
+            noFullWidth
+          >
+            <Button
+              type="link"
+              size="small"
+              icon={<FaCheck />}
+              onClick={handleEntregar}
+              loading={loading}
+              title="Marcar como Entregado"
+              className="text-green-600"
+            />
+          </ConfigurableElement>
+        )}
+      </Space>
+
+      {/* Modal del Mapa */}
+      <ModalMapaEntrega
+        open={modalMapaOpen}
+        onClose={() => setModalMapaOpen(false)}
+        entrega={entrega}
+      />
+    </>
   )
 }

@@ -48,10 +48,12 @@ export interface CreateEntregaProductoRequest {
   hora_inicio?: string; // Format: "HH:mm"
   hora_fin?: string; // Format: "HH:mm"
   direccion_entrega?: string;
+  latitud?: number;
+  longitud?: number;
   observaciones?: string;
   almacen_salida_id: number;
   chofer_id?: string;
-  quien_entrega?: QuienEntrega; // Nuevo: quién realiza la entrega física
+  quien_entrega?: QuienEntrega;
   user_id: string;
   productos_entregados: ProductoEntregadoRequest[];
 }
@@ -65,10 +67,12 @@ export interface UpdateEntregaProductoRequest {
   hora_inicio?: string;
   hora_fin?: string;
   direccion_entrega?: string;
+  latitud?: number;
+  longitud?: number;
   observaciones?: string;
   almacen_salida_id?: number;
   chofer_id?: string;
-  quien_entrega?: QuienEntrega; // Nuevo: quién realiza la entrega física
+  quien_entrega?: QuienEntrega;
 }
 
 export interface EntregaProductoFilters {

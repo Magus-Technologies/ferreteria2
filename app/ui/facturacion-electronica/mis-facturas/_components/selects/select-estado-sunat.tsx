@@ -1,8 +1,7 @@
 "use client";
 
-import { Select } from "antd";
+import { Select, Form } from "antd";
 import { FormItemProps } from "antd/lib/form";
-import FormBase from "~/components/form/form-base";
 
 interface SelectEstadoSunatProps {
   propsForm?: FormItemProps;
@@ -29,7 +28,7 @@ export default function SelectEstadoSunat({
   onChange,
 }: SelectEstadoSunatProps) {
   return (
-    <FormBase.Item {...propsForm} className={className}>
+    <Form.Item {...propsForm} className={className}>
       <Select
         placeholder={placeholder}
         allowClear={allowClear}
@@ -37,6 +36,6 @@ export default function SelectEstadoSunat({
         options={estadosSunat}
         className="w-full"
       />
-    </FormBase.Item>
+    </Form.Item>
   );
 }

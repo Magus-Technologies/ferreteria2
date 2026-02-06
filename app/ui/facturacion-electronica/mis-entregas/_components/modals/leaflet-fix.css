@@ -1,0 +1,36 @@
+/* Fix para iconos de Leaflet con Tailwind */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-container a {
+  color: inherit;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #757575;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #000;
+}
+
+/* Fix para el z-index del popup */
+.leaflet-popup {
+  z-index: 1000;
+}
+
+/* Fix para los controles de zoom */
+.leaflet-control-zoom {
+  border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+.leaflet-control-zoom a {
+  background-color: #fff;
+  color: #000;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #f4f4f4;
+}

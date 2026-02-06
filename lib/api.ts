@@ -85,19 +85,29 @@ export async function apiRequest<T = unknown>(
 ): Promise<ApiResponse<T>> {
   const token = getAuthToken();
 
+  console.log(`🌐 [apiRequest] ${options.method || 'GET'} ${endpoint}`);
+  console.log(`🌐 [apiRequest] Token disponible:`, token ? 'SÍ (length: ' + token.length + ')' : '❌ NO');
+
+  const headers = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  console.log(`🌐 [apiRequest] Headers:`, JSON.stringify(headers, null, 2));
+
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
+      headers,
       credentials: "include",
     });
 
+    console.log(`🌐 [apiRequest] Response status:`, response.status, response.statusText);
+
     const data = await response.json();
+    console.log(`🌐 [apiRequest] Response data:`, JSON.stringify(data, null, 2));
 
     if (!response.ok) {
       // Manejar errores de validación de Laravel
@@ -158,14 +168,45 @@ export const authApi = {
     email: string,
     password: string,
   ): Promise<ApiResponse<LoginResponse>> {
+    console.log('🔵 [authApi.login] Iniciando login...');
+    console.log('🔵 [authApi.login] Email:', email);
+    console.log('🔵 [authApi.login] API_URL:', API_URL);
+    
     const response = await apiRequest<LoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
+    console.log('🔵 [authApi.login] Respuesta recibida:', JSON.stringify(response, null, 2));
+
     // Si el login fue exitoso, guardar el token
     if (response.data?.token) {
-      setAuthToken(response.data.token);
+      const token = response.data.token;
+      console.log('✅ [authApi.login] Token recibido (primeros 30 chars):', token.substring(0, 30) + '...');
+      console.log('✅ [authApi.login] Token completo length:', token.length);
+      
+      // Guardar el token
+      setAuthToken(token);
+      console.log('✅ [authApi.login] setAuthToken ejecutado');
+      
+      // Verificar que se guardó correctamente
+      const savedToken = getAuthToken();
+      console.log('🔍 [authApi.login] Token guardado verificado:', savedToken ? 'SÍ (length: ' + savedToken.length + ')' : '❌ NO SE GUARDÓ');
+      
+      if (savedToken) {
+        console.log('🔍 [authApi.login] Primeros 30 chars del token guardado:', savedToken.substring(0, 30) + '...');
+        console.log('🔍 [authApi.login] ¿Tokens coinciden?', token === savedToken ? '✅ SÍ' : '❌ NO');
+      }
+      
+      // Verificar localStorage directamente
+      if (typeof window !== 'undefined') {
+        const directToken = localStorage.getItem('auth_token');
+        console.log('🔍 [authApi.login] Token en localStorage (directo):', directToken ? 'SÍ (length: ' + directToken.length + ')' : '❌ NO');
+      }
+    } else {
+      console.log('🔴 [authApi.login] No se recibió token en la respuesta');
+      console.log('🔴 [authApi.login] response.data:', response.data);
+      console.log('🔴 [authApi.login] response.error:', response.error);
     }
 
     return response;
@@ -175,7 +216,20 @@ export const authApi = {
    * Obtener el usuario actual autenticado
    */
   async getUser(): Promise<ApiResponse<LoginResponse["user"]>> {
-    return apiRequest<LoginResponse["user"]>("/auth/user");
+    const token = getAuthToken();
+    console.log('🔵 [authApi.getUser] Iniciando getUser...');
+    console.log('🔵 [authApi.getUser] Token disponible:', token ? 'SÍ (length: ' + token.length + ')' : '❌ NO');
+    if (token) {
+      console.log('🔵 [authApi.getUser] Primeros 30 chars:', token.substring(0, 30) + '...');
+    }
+    
+    const response = await apiRequest<LoginResponse["user"]>("/auth/user", {
+      method: "GET",
+    });
+    
+    console.log('🔵 [authApi.getUser] Respuesta recibida:', JSON.stringify(response, null, 2));
+    
+    return response;
   },
 
   /**
@@ -281,6 +335,7 @@ export { almacenesApi } from "./api/almacen";
 export { productosApiV2 } from "./api/producto";
 export { clienteApi } from "./api/cliente";
 export { paqueteApi } from "./api/paquete";
+export { guiaRemisionApi } from "./api/guia-remision";
 
 // Exportar por defecto (mantener compatibilidad)
 const api = {

@@ -1,8 +1,7 @@
 "use client";
 
-import { Select } from "antd";
+import { Select, Form } from "antd";
 import { FormItemProps } from "antd/lib/form";
-import FormBase from "~/components/form/form-base";
 import { useServerQuery } from "~/hooks/use-server-query";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 
@@ -42,7 +41,7 @@ export default function SelectMotivoNota({
   }));
 
   return (
-    <FormBase.Item {...propsForm} className={className}>
+    <Form.Item {...propsForm} className={className}>
       <Select
         placeholder={placeholder}
         allowClear={allowClear}
@@ -55,6 +54,6 @@ export default function SelectMotivoNota({
           (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
         }
       />
-    </FormBase.Item>
+    </Form.Item>
   );
 }

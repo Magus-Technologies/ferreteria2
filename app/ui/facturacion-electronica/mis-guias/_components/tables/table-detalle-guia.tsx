@@ -1,109 +1,72 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import TableBase from '~/components/tables/table-base'
-import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import { Tooltip } from 'antd'
-
-type DetalleGuiaRow = {
-  id: number
-  producto_codigo: string
-  producto_nombre: string
-  marca_nombre: string
-  unidad_derivada: string
-  cantidad: number
-  costo: number
-  precio_venta: number
-}
-
-function useColumnsDetalleGuia() {
-  const columns: ColDef<DetalleGuiaRow>[] = [
-    {
-      headerName: 'Código',
-      field: 'producto_codigo',
-      minWidth: 100,
-      width: 100,
-    },
-    {
-      headerName: 'Producto',
-      field: 'producto_nombre',
-      minWidth: 250,
-      flex: 1,
-      cellRenderer: ({ value }: ICellRendererParams<DetalleGuiaRow>) => (
-        <div className='flex items-center h-full'>
-          <Tooltip title={value}>
-            <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {value}
-            </div>
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
-      headerName: 'Marca',
-      field: 'marca_nombre',
-      minWidth: 120,
-      width: 120,
-    },
-    {
-      headerName: 'U. Medida',
-      field: 'unidad_derivada',
-      minWidth: 100,
-      width: 100,
-    },
-    {
-      headerName: 'Cantidad',
-      field: 'cantidad',
-      minWidth: 100,
-      width: 100,
-      cellRenderer: ({ value }: ICellRendererParams<DetalleGuiaRow>) => (
-        <div className='flex items-center h-full justify-end font-semibold'>
-          {Number(value).toFixed(2)}
-        </div>
-      ),
-    },
-    {
-      headerName: 'Costo',
-      field: 'costo',
-      minWidth: 110,
-      width: 110,
-      cellRenderer: ({ value }: ICellRendererParams<DetalleGuiaRow>) => (
-        <div className='flex items-center h-full justify-end'>
-          S/. {Number(value).toFixed(4)}
-        </div>
-      ),
-    },
-    {
-      headerName: 'P. Venta',
-      field: 'precio_venta',
-      minWidth: 110,
-      width: 110,
-      cellRenderer: ({ value }: ICellRendererParams<DetalleGuiaRow>) => (
-        <div className='flex items-center h-full justify-end'>
-          S/. {Number(value).toFixed(4)}
-        </div>
-      ),
-    },
-  ]
-
-  return columns
-}
+import React, { useRef } from "react";
+import TableWithTitle from "~/components/tables/table-with-title";
+import { AgGridReact } from "ag-grid-react";
+import { useStoreGuiaSeleccionada } from "./table-mis-guias";
+import { ColDef } from "ag-grid-community";
+import type { DetalleGuia } from "~/lib/api/guia-remision";
 
 export default function TableDetalleGuia() {
-  // TODO: Obtener datos del detalle de la guía seleccionada
-  const data = useMemo(() => [], [])
+  const tableRef = useRef<AgGridReact>(null);
+  const guiaSeleccionada = useStoreGuiaSeleccionada((state) => state.guia);
+
+  const columnDefs: ColDef<DetalleGuia>[] = [
+    {
+      headerName: "Código",
+      field: "producto.cod_producto",
+      width: 120,
+      filter: true,
+      valueGetter: (params) => params.data?.producto?.cod_producto || '',
+    },
+    {
+      headerName: "Producto",
+      field: "producto.name",
+      flex: 1,
+      filter: true,
+      valueGetter: (params) => params.data?.producto?.name || '',
+    },
+    {
+      headerName: "Unidad",
+      field: "unidadDerivadaInmutable.name",
+      width: 100,
+      filter: true,
+      valueGetter: (params) => params.data?.unidadDerivadaInmutable?.name || params.data?.unidad_derivada_inmutable_name || '',
+    },
+    {
+      headerName: "Cantidad",
+      field: "cantidad",
+      width: 100,
+      type: "numericColumn",
+      valueFormatter: (params) => {
+        if (params.value == null) return "";
+        return Number(params.value).toFixed(2);
+      },
+    },
+    {
+      headerName: "Almacén",
+      colId: "almacen",
+      width: 150,
+      filter: true,
+      valueGetter: (params) => {
+        // El almacén viene del producto_almacen, no directamente del detalle
+        return 'N/A'; // TODO: Agregar relación con almacén en el backend
+      },
+    },
+  ];
+
+  const detalles = guiaSeleccionada?.detalles || [];
 
   return (
-    <div className='mt-4'>
-      <h3 className='text-lg font-semibold mb-2 text-gray-700'>
-        Detalle de Productos
-      </h3>
-      <TableBase
-        className='h-[250px]'
-        rowSelection={false}
-        rowData={data}
-        columnDefs={useColumnsDetalleGuia()}
+    <div className="w-full mt-4" style={{ height: "250px" }}>
+      <TableWithTitle<DetalleGuia>
+        id="detalle-guia"
+        title="DETALLE DE PRODUCTOS"
+        loading={false}
+        columnDefs={columnDefs}
+        rowData={detalles}
+        tableRef={tableRef}
       />
     </div>
-  )
+  );
 }

@@ -1,19 +1,40 @@
 "use client";
 
 import { AgGridReact } from "ag-grid-react";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ColDef } from "ag-grid-community";
 import { useStoreFiltrosMisNotasDebito } from "../../_store/store-filtros-mis-notas-debito";
 import useGetNotasDebito from "../../_hooks/use-get-notas-debito";
-import { Tag } from "antd";
+import { Tag, message } from "antd";
 import dayjs from "dayjs";
 import ButtonBase from "~/components/buttons/button-base";
 import { FaFilePdf, FaPaperPlane } from "react-icons/fa";
+import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
+import TableBase from "~/components/tables/table-base";
 
 export default function TableMisNotasDebito() {
   const gridRef = useRef<AgGridReact>(null);
   const filtros = useStoreFiltrosMisNotasDebito((state) => state.filtros);
-  const { response, isLoading } = useGetNotasDebito({ where: filtros });
+  const { response, isLoading, refetch } = useGetNotasDebito({ where: filtros });
+  const [enviandoId, setEnviandoId] = useState<number | null>(null);
+
+  const handleEnviarSunat = async (id: number) => {
+    try {
+      setEnviandoId(id);
+      const result = await facturacionElectronicaApi.enviarNotaDebitoSunat(id);
+      
+      if (result.error) {
+        message.error(result.error.message || "Error al enviar a SUNAT");
+      } else {
+        message.success("Nota de débito enviada a SUNAT exitosamente");
+        refetch();
+      }
+    } catch (error) {
+      message.error("Error al enviar a SUNAT");
+    } finally {
+      setEnviandoId(null);
+    }
+  };
 
   const columnDefs = useMemo<ColDef[]>(
     () => [
@@ -69,33 +90,45 @@ export default function TableMisNotasDebito() {
       {
         headerName: "Acciones",
         width: 200,
-        cellRenderer: (params: any) => (
-          <div className="flex gap-2 items-center h-full">
-            <ButtonBase size="sm" color="info" className="flex items-center gap-1">
-              <FaPaperPlane />
-              Enviar
-            </ButtonBase>
-            <ButtonBase size="sm" color="danger" className="flex items-center gap-1">
-              <FaFilePdf />
-              PDF
-            </ButtonBase>
-          </div>
-        ),
+        cellRenderer: (params: any) => {
+          const isEnviando = enviandoId === params.data.id;
+          const puedeEnviar = params.data.estado_sunat === "Pendiente";
+          
+          return (
+            <div className="flex gap-2 items-center h-full">
+              <ButtonBase 
+                size="sm" 
+                color="info" 
+                className="flex items-center gap-1"
+                onClick={() => handleEnviarSunat(params.data.id)}
+                disabled={!puedeEnviar || isEnviando}
+              >
+                <FaPaperPlane />
+                {isEnviando ? "Enviando..." : "Enviar"}
+              </ButtonBase>
+              <ButtonBase size="sm" color="danger" className="flex items-center gap-1">
+                <FaFilePdf />
+                PDF
+              </ButtonBase>
+            </div>
+          );
+        },
       },
     ],
-    []
+    [enviandoId]
   );
 
   return (
-    <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
-      <AgGridReact
+    <div style={{ height: 500, width: "100%" }}>
+      <TableBase
         ref={gridRef}
         rowData={response}
         columnDefs={columnDefs}
         loading={isLoading}
         pagination={true}
         paginationPageSize={20}
-        domLayout="normal"
+        tableKey="mis-notas-debito"
+        persistColumnState={true}
       />
     </div>
   );

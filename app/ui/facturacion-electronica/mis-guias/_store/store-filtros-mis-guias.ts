@@ -5,8 +5,9 @@ type UseStoreFiltrosMisGuiasProps = {
   filtros: {
     fecha_desde?: Dayjs
     fecha_hasta?: Dayjs
-    tipo_guia?: string
-    afecta_stock?: string // 'true' | 'false'
+    estado?: string // 'BORRADOR' | 'EMITIDA' | 'ANULADA'
+    tipo_guia?: string // 'ELECTRONICA_REMITENTE' | 'ELECTRONICA_TRANSPORTISTA' | 'FISICA'
+    search?: string
   }
   setFiltros: (filtros: UseStoreFiltrosMisGuiasProps['filtros']) => void
 }
