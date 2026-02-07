@@ -2,7 +2,7 @@
 
 import { Select, Form } from "antd";
 import { FormItemProps } from "antd/lib/form";
-import { useServerQuery } from "~/hooks/use-server-query";
+import { useQuery } from "@tanstack/react-query";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 
 interface SelectMotivoNotaProps {
@@ -24,20 +24,24 @@ export default function SelectMotivoNota({
   placeholder = "Seleccionar motivo",
   onChange,
 }: SelectMotivoNotaProps) {
-  const { data: motivos, isLoading } = useServerQuery({
+  const { data: motivos, isLoading } = useQuery({
     queryKey: ["motivos-nota", tipo],
     queryFn: async () => {
-      const response = await facturacionElectronicaApi.getMotivosNota(tipo);
+      const response = tipo === "credito" 
+        ? await facturacionElectronicaApi.getMotivosCredito()
+        : await facturacionElectronicaApi.getMotivosDebito();
+      
       if (response.error) {
         throw new Error(response.error.message);
       }
-      return response.data || [];
+      return response.data?.data || [];
     },
+    staleTime: 1000 * 60 * 60, // 1 hora
   });
 
   const options = (motivos || []).map((motivo: any) => ({
     value: motivo.id,
-    label: `${motivo.codigo} - ${motivo.descripcion}`,
+    label: `${motivo.codigo_sunat} - ${motivo.descripcion}`,
   }));
 
   return (

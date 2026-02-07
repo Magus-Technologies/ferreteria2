@@ -18,7 +18,7 @@ export const loadCompraIntoForm = (
     }
 
     // Validar que tenga productos
-    if (!compra.productosPorAlmacen || compra.productosPorAlmacen.length === 0) {
+    if (!compra.productos_por_almacen || compra.productos_por_almacen.length === 0) {
       return {
         success: false,
         message: 'Esta compra no tiene productos para cargar',
@@ -38,10 +38,10 @@ export const loadCompraIntoForm = (
     form.setFieldValue('percepcion', compra.percepcion)
 
     // Transformar productos
-    const productos = compra.productosPorAlmacen
+    const productos = compra.productos_por_almacen
       .map(pac => {
         // Validar que el producto almacén exista
-        if (!pac.productoAlmacen) {
+        if (!pac.producto_almacen) {
           message.warning(
             `Producto con ID ${pac.producto_almacen_id} ya no existe`
           )
@@ -51,7 +51,7 @@ export const loadCompraIntoForm = (
         return {
           producto_almacen_id: pac.producto_almacen_id,
           costo: pac.costo,
-          unidades_derivadas: pac.unidadesDerivadas.map(ud => ({
+          unidades_derivadas: pac.unidades_derivadas?.map(ud => ({
             unidad_derivada_inmutable_id: ud.unidad_derivada_inmutable_id,
             factor: ud.factor,
             cantidad: ud.cantidad,
@@ -60,7 +60,7 @@ export const loadCompraIntoForm = (
             vencimiento: null, // Clear expiration date
             flete: ud.flete || 0,
             bonificacion: ud.bonificacion || false,
-          })),
+          })) || [],
         }
       })
       .filter(Boolean) // Remove null entries

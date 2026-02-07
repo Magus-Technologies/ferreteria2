@@ -1,7 +1,7 @@
 "use client";
 
 import { AgGridReact } from "ag-grid-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { ColDef } from "ag-grid-community";
 import { useStoreFiltrosMisFacturas } from "../../_store/store-filtros-mis-facturas";
 import useGetFacturas from "../../_hooks/use-get-facturas";
@@ -9,17 +9,12 @@ import { Tag } from "antd";
 import dayjs from "dayjs";
 import { FaFilePdf } from "react-icons/fa";
 import ButtonBase from "~/components/buttons/button-base";
-import ModalCrearNotaCredito from "../modals/modal-crear-nota-credito";
-import ModalCrearNotaDebito from "../modals/modal-crear-nota-debito";
 import TableBase from "~/components/tables/table-base";
 
 export default function TableMisFacturas() {
   const gridRef = useRef<AgGridReact>(null);
   const filtros = useStoreFiltrosMisFacturas((state) => state.filtros);
   const { response, isLoading } = useGetFacturas({ where: filtros });
-  const [facturaSeleccionada, setFacturaSeleccionada] = useState<any>(null);
-  const [modalNCOpen, setModalNCOpen] = useState(false);
-  const [modalNDOpen, setModalNDOpen] = useState(false);
 
   const columnDefs = useMemo<ColDef[]>(
     () => [
@@ -112,10 +107,10 @@ export default function TableMisFacturas() {
                   size="sm"
                   color="success"
                   onClick={() => {
-                    setFacturaSeleccionada(params.data);
-                    setModalNCOpen(true);
+                  // TODO: Implementar creación de nota de crédito
                   }}
                   title="Crear Nota de Crédito"
+                  disabled
                 >
                   N. Crédito
                 </ButtonBase>
@@ -127,10 +122,10 @@ export default function TableMisFacturas() {
                   size="sm"
                   color="danger"
                   onClick={() => {
-                    setFacturaSeleccionada(params.data);
-                    setModalNDOpen(true);
+                    // TODO: Implementar creación de nota de débito
                   }}
                   title="Crear Nota de Débito"
+                  disabled
                 >
                   N. Débito
                 </ButtonBase>
@@ -172,18 +167,6 @@ export default function TableMisFacturas() {
           persistColumnState={true}
         />
       </div>
-
-      <ModalCrearNotaCredito
-        open={modalNCOpen}
-        setOpen={setModalNCOpen}
-        factura={facturaSeleccionada}
-      />
-
-      <ModalCrearNotaDebito
-        open={modalNDOpen}
-        setOpen={setModalNDOpen}
-        factura={facturaSeleccionada}
-      />
     </>
   );
 }

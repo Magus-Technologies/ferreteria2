@@ -1,4 +1,4 @@
-'use client'
+  'use client'
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'

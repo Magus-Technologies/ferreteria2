@@ -1,13 +1,16 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { type Compra, type ProductoAlmacenCompra, type UnidadDerivadaInmutableCompra } from '~/lib/api/compra'
+import { type ProductoAlmacenCompra, type UnidadDerivadaInmutableCompra } from '~/lib/api/compra'
 
 export type TableDetalleDeCompraProps = Pick<
   ProductoAlmacenCompra,
   'producto_almacen' | 'costo'
 > &
-  UnidadDerivadaInmutableCompra
+  UnidadDerivadaInmutableCompra & {
+    descuento?: number
+    percepcion?: number
+  }
 
 export function useColumnsDetalleDeCompra() {
   const columns: ColDef<TableDetalleDeCompraProps>[] = [
@@ -98,7 +101,7 @@ export function useColumnsDetalleDeCompra() {
     },
     {
       headerName: '%',
-      field: 'descuento',
+      field: 'descuento' as any,
       width: 60,
       minWidth: 60,
       filter: 'agNumberColumnFilter',
@@ -114,7 +117,7 @@ export function useColumnsDetalleDeCompra() {
     },
     {
       headerName: 'Perc',
-      field: 'percepcion',
+      field: 'percepcion' as any,
       width: 80,
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -194,7 +197,7 @@ export function useColumnsDetalleDeCompra() {
       }: {
         value: TableDetalleDeCompraProps['producto_almacen']
       }) => {
-        return value?.producto?.id ?? ''
+        return String(value?.producto?.id ?? '')
       },
     },
   ]

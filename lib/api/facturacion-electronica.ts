@@ -93,35 +93,57 @@ export interface DetalleComprobanteElectronico {
 
 export interface MotivoNota {
   id: number;
-  codigo: string;
+  tipo: "NC" | "ND";
+  codigo_sunat: string;
   descripcion: string;
-  tipo: "credito" | "debito";
-  activo: boolean;
+  estado: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CrearNotaCreditoData {
-  comprobante_afectado_id: number;
-  motivo_nota_id: number;
-  fecha_emision: string;
-  tipo_moneda: string;
+  venta_id: number;
+  motivo_id: number;
+  serie: string;
+  almacen_id: number;
+  numero?: number;
+  descripcion: string;
+  monto_total: number;
+  monto_igv: number;
+  monto_subtotal: number;
+  fecha?: string;
   observaciones?: string;
-  detalles: {
+  items: {
     producto_id: number;
+    unidad_derivada_id: number;
     cantidad: number;
     precio_unitario: number;
+    subtotal: number;
+    igv: number;
+    total: number;
   }[];
 }
 
 export interface CrearNotaDebitoData {
-  comprobante_afectado_id: number;
-  motivo_nota_id: number;
-  fecha_emision: string;
-  tipo_moneda: string;
+  venta_id: number;
+  motivo_id: number;
+  serie: string;
+  almacen_id: number;
+  numero?: number;
+  descripcion: string;
+  monto_total: number;
+  monto_igv: number;
+  monto_subtotal: number;
+  fecha?: string;
   observaciones?: string;
-  detalles: {
+  items: {
     producto_id: number;
+    unidad_derivada_id: number;
     cantidad: number;
     precio_unitario: number;
+    subtotal: number;
+    igv: number;
+    total: number;
   }[];
 }
 
@@ -197,7 +219,7 @@ export const facturacionElectronicaApi = {
   },
 
   async crearNotaCredito(data: CrearNotaCreditoData) {
-    return apiRequest<NotaCredito>("/notas-credito", {
+    return apiRequest<{ data: NotaCredito }>("/notas-credito", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -207,6 +229,10 @@ export const facturacionElectronicaApi = {
     return apiRequest(`/notas-credito/${id}/enviar-sunat`, {
       method: "POST",
     });
+  },
+
+  async validarVentaParaNotaCredito(ventaId: number) {
+    return apiRequest(`/notas-credito/validar-venta/${ventaId}`);
   },
 
   // Notas de Débito
@@ -238,7 +264,7 @@ export const facturacionElectronicaApi = {
   },
 
   async crearNotaDebito(data: CrearNotaDebitoData) {
-    return apiRequest<NotaDebito>("/notas-debito", {
+    return apiRequest<{ data: NotaDebito }>("/notas-debito", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -250,9 +276,24 @@ export const facturacionElectronicaApi = {
     });
   },
 
+  async validarVentaParaNotaDebito(ventaId: number) {
+    return apiRequest(`/notas-debito/validar-venta/${ventaId}`);
+  },
+
   // Motivos de Nota
-  async getMotivosNota(tipo?: "credito" | "debito") {
-    const queryString = tipo ? `?tipo=${tipo}` : "";
-    return apiRequest<MotivoNota[]>(`/motivos-nota${queryString}`);
+  async getMotivosNota() {
+    return apiRequest<{ data: MotivoNota[] }>(`/motivos-nota`);
+  },
+
+  async getMotivosCredito() {
+    return apiRequest<{ data: MotivoNota[] }>(`/motivos-nota/credito`);
+  },
+
+  async getMotivosDebito() {
+    return apiRequest<{ data: MotivoNota[] }>(`/motivos-nota/debito`);
+  },
+
+  async getMotivoNotaById(id: number) {
+    return apiRequest<{ data: MotivoNota }>(`/motivos-nota/${id}`);
   },
 };

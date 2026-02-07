@@ -6,6 +6,7 @@ import { permissions } from "~/lib/permissions";
 import { usePermission } from "~/hooks/use-permission";
 import { Suspense, lazy } from "react";
 import { Spin } from "antd";
+import HeaderCrearNotaDebito from "./_components/header-crear-nota-debito";
 
 const BodyCrearNotaDebito = lazy(() => import("./_components/body-crear-nota-debito"));
 
@@ -22,6 +23,7 @@ export default function CrearNotaDebitoPage() {
 
   return (
     <ContenedorGeneral className="h-full">
+      <HeaderCrearNotaDebito />
       <Suspense fallback={<ComponentLoading />}>
         <BodyCrearNotaDebito />
       </Suspense>

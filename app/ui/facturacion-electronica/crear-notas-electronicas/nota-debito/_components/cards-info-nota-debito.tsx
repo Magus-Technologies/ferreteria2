@@ -1,118 +1,80 @@
 "use client";
 
 import { Form, FormInstance } from "antd";
-import { FormCreateNotaDebito } from "./body-crear-nota-debito";
 import ButtonBase from "~/components/buttons/button-base";
-import { FaSave, FaPrint, FaFileAlt } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 import { useMemo } from "react";
+import CardInfoVenta from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-info-venta";
+import { TipoMoneda } from "~/lib/api/venta";
 
 interface CardsInfoNotaDebitoProps {
-  form: FormInstance<FormCreateNotaDebito>;
-  loading: boolean;
+  form: FormInstance;
 }
 
-export default function CardsInfoNotaDebito({ form, loading }: CardsInfoNotaDebitoProps) {
+export default function CardsInfoNotaDebito({ form }: CardsInfoNotaDebitoProps) {
   const productos = Form.useWatch("productos", form) || [];
+  const tipo_moneda = Form.useWatch("tipo_moneda", form) || "PEN";
 
-  const totales = useMemo(() => {
-    const subtotal = productos.reduce((sum: number, p: any) => sum + (p.subtotal || 0), 0);
-    const igv = subtotal * 0.18;
-    const total = subtotal + igv;
-    const comision = 0; // Por ahora en 0
+  // Calcular SubTotal (base imponible sin IGV)
+  const subTotal = useMemo(
+    () =>
+      (productos || []).reduce(
+        (acc: number, item: any) =>
+          acc + Number(item?.precio_venta ?? 0) * Number(item?.cantidad ?? 0),
+        0
+      ),
+    [productos]
+  );
 
-    return {
-      subtotal: subtotal.toFixed(2),
-      igv: igv.toFixed(2),
-      total: total.toFixed(2),
-      comision: comision.toFixed(2),
-    };
-  }, [productos]);
+  // Calcular IGV (18%)
+  const igv = useMemo(() => subTotal * 0.18, [subTotal]);
+
+  // Calcular Total
+  const total = useMemo(() => subTotal + igv, [subTotal, igv]);
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Card de Totales */}
-      <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 font-medium">Subtotal</span>
-            <span className="text-xl font-bold text-gray-800">
-              {totales.subtotal}
-            </span>
-          </div>
+    <div className="flex flex-col gap-4 max-w-64 p-4">
+      <CardInfoVenta
+        title="SubTotal"
+        value={subTotal}
+        moneda={tipo_moneda === "USD" ? TipoMoneda.DOLARES : TipoMoneda.SOLES}
+      />
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 font-medium">IGV</span>
-            <span className="text-xl font-bold text-gray-800">
-              {totales.igv}
-            </span>
-          </div>
+      <CardInfoVenta
+        title="IGV (18%)"
+        value={igv}
+        moneda={tipo_moneda === "USD" ? TipoMoneda.DOLARES : TipoMoneda.SOLES}
+      />
 
-          <div className="border-t pt-3 flex justify-between items-center">
-            <span className="text-gray-700 font-bold text-lg">Total</span>
-            <span className="text-2xl font-bold text-red-600">
-              {totales.total}
-            </span>
-          </div>
+      <CardInfoVenta
+        title="Total"
+        value={total}
+        moneda={tipo_moneda === "USD" ? TipoMoneda.DOLARES : TipoMoneda.SOLES}
+        className="border-orange-500 border-2"
+      />
 
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Comisión</span>
-            <span className="text-gray-800 font-semibold">
-              {totales.comision}
-            </span>
-          </div>
-        </div>
-      </div>
+      <CardInfoVenta
+        title="Comisión"
+        value={0}
+        moneda={tipo_moneda === "USD" ? TipoMoneda.DOLARES : TipoMoneda.SOLES}
+      />
 
-      {/* Botones de Acción */}
-      <div className="flex flex-col gap-2">
-        <ButtonBase
-          type="submit"
-          color="success"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2"
-        >
-          <FaSave />
-          {loading ? "Guardando..." : "Guardar [F10]"}
-        </ButtonBase>
-
-        <ButtonBase
-          type="button"
-          color="primary"
-          className="w-full flex items-center justify-center gap-2"
-        >
-          <FaPrint />
-          Impr [Ctrl + B]
-        </ButtonBase>
-
-        <ButtonBase
-          type="button"
-          color="default"
-          className="w-full flex items-center justify-center gap-2"
-        >
-          <FaFileAlt />
-          Enviar [Ctrl + E]
-        </ButtonBase>
-      </div>
-
-      {/* Información Adicional */}
-      <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-        <h4 className="font-semibold text-red-800 mb-2 text-sm">Valor Refer.</h4>
-        <div className="text-xs text-gray-600">
-          <p>Ninguno</p>
-        </div>
-      </div>
-
-      {/* Ayuda */}
-      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-        <div className="flex items-center justify-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-            <FaFileAlt className="text-red-600 text-2xl" />
-          </div>
-        </div>
-        <p className="text-xs text-center text-gray-600 mt-2">
-          Complete los datos del documento que modifica y agregue los productos
-        </p>
-      </div>
+      <ButtonBase
+        type="submit"
+        color="success"
+        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+      >
+        <FaSave className="min-w-fit" size={30} />
+        Guardar [F10]
+      </ButtonBase>
+      
+      <ButtonBase
+        type="button"
+        color="default"
+        className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+      >
+        Buscar ND
+      </ButtonBase>
     </div>
   );
 }
