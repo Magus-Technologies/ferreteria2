@@ -114,4 +114,40 @@ export const cierreCajaApi = {
         })
         return response.data
     },
+
+    /**
+     * Enviar ticket de cierre por email
+     */
+    enviarTicketEmail: async (cierreId: string, email: string, pdfBlob: Blob) => {
+        const formData = new FormData()
+        formData.append('email', email)
+        formData.append('pdf', pdfBlob, `ticket-cierre-${cierreId}.pdf`)
+
+        // Para FormData, no usar apiRequest porque establece Content-Type JSON
+        // Usar fetch directamente
+        const token = localStorage.getItem('auth_token') // ✅ Usar la clave correcta
+        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+        
+        const response = await fetch(`${baseURL}/cajas/cierre/${cierreId}/enviar-email`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                // NO establecer Content-Type, el navegador lo hace automáticamente con boundary
+            },
+            body: formData,
+        })
+
+        if (!response.ok) {
+            // Intentar parsear como JSON, si falla mostrar el status
+            try {
+                const errorData = await response.json()
+                throw new Error(errorData.message || 'Error al enviar el ticket')
+            } catch (e) {
+                // Si no es JSON, mostrar el status HTTP
+                throw new Error(`Error ${response.status}: ${response.statusText}`)
+            }
+        }
+
+        return await response.json()
+    },
 }

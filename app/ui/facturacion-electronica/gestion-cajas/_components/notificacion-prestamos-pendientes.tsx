@@ -11,7 +11,7 @@ export function NotificacionPrestamosPendientes() {
   const [openAprobar, setOpenAprobar] = useState(false)
   const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null)
 
-  const { data, refetch, isError, error } = useQuery({
+  const { data: responseData, refetch, isError, error } = useQuery({
     queryKey: ['solicitudes-efectivo-pendientes'],
     queryFn: async () => {
       console.log('🔔 Llamando a solicitudesPendientes...')
@@ -26,7 +26,9 @@ export function NotificacionPrestamosPendientes() {
   })
 
   // La respuesta tiene estructura: {data: {success: true, data: [...]}}
-  const solicitudes = Array.isArray(data?.data) ? data.data : []
+  const solicitudes = Array.isArray((responseData?.data as any)?.data) 
+    ? (responseData?.data as any).data 
+    : []
 
   console.log('🔔 Solicitudes procesadas:', solicitudes)
   console.log('🔔 Cantidad de solicitudes:', solicitudes.length)

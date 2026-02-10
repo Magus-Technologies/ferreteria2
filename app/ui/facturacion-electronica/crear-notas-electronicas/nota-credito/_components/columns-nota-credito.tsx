@@ -17,108 +17,117 @@ export function useColumnsNotaCredito({
     {
       headerName: "#",
       field: "name",
-      width: 40,
+      width: 60,
+      pinned: "left",
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full justify-center text-[10px]">
+        <div className="flex items-center h-full justify-center bg-gray-50">
           {(value ?? 0) + 1}
         </div>
       ),
-      pinned: "left",
-      cellStyle: { padding: "0 2px", border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
-      headerName: "#",
+      headerName: "Acciones",
       field: "name",
-      width: 40,
+      width: 80,
+      pinned: "left",
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full justify-center">
+        <div className="flex items-center h-full justify-center bg-gray-50">
           <button
             type="button"
             onClick={() => remove(value)}
-            className="text-destructive hover:text-destructive/80 p-0"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded p-1 transition-colors"
+            title="Eliminar producto"
           >
-            <MdDelete size={14} />
+            <MdDelete size={18} />
           </button>
         </div>
       ),
-      pinned: "left",
-      cellStyle: { padding: "0 2px", border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
       headerName: "Código",
       field: "name",
-      width: 100,
+      width: 120,
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full p-0">
+        <div className="flex items-center h-full px-2">
           <InputBase
             propsForm={{
               name: [value, "codigo"],
             }}
-            placeholder=""
-            className="w-full !border-0 !shadow-none !rounded-none text-[10px] h-full"
+            placeholder="Código"
+            className="w-full bg-white border border-gray-200"
             size="small"
           />
         </div>
       ),
-      cellStyle: { padding: 0, border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
       headerName: "Descripción",
       field: "name",
-      width: 300,
+      width: 350,
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full p-0">
+        <div className="flex items-center h-full px-2">
           <InputBase
             propsForm={{
               name: [value, "descripcion"],
-              rules: [{ required: true, message: "" }],
+              rules: [{ required: true, message: "Requerido" }],
             }}
             placeholder="Descripción del producto"
-            className="w-full !border-0 !shadow-none !rounded-none text-[10px] h-full"
+            className="w-full bg-white border border-gray-200"
             size="small"
             uppercase={false}
           />
         </div>
       ),
-      cellStyle: { padding: 0, border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
       headerName: "U. Medida",
       field: "name",
-      width: 80,
+      width: 110,
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full p-0">
+        <div className="flex items-center h-full px-2">
           <InputBase
             propsForm={{
               name: [value, "unidad_medida"],
             }}
             placeholder="NIU"
-            className="w-full !border-0 !shadow-none !rounded-none text-[10px] h-full"
+            className="w-full bg-white border border-gray-200"
             size="small"
           />
         </div>
       ),
-      cellStyle: { padding: 0, border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
       headerName: "Cantidad",
       field: "name",
-      width: 80,
+      width: 120,
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full p-0">
+        <div className="flex items-center h-full px-2">
           <InputNumberBase
             propsForm={{
               name: [value, "cantidad"],
-              rules: [{ required: true, message: "" }],
+              rules: [{ required: true, message: "Requerido" }],
             }}
             min={0}
             precision={2}
-            className="w-full !border-0 !shadow-none !rounded-none text-[10px] h-full"
+            className="w-full bg-blue-50 border-blue-200"
             size="small"
             onChange={(cantidad) => {
               const precio = Number(form.getFieldValue(["productos", value, "precio_venta"]) || 0);
@@ -128,23 +137,24 @@ export function useColumnsNotaCredito({
           />
         </div>
       ),
-      cellStyle: { padding: 0, border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
       headerName: "P. Unitario",
       field: "name",
-      width: 100,
+      width: 130,
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full p-0">
+        <div className="flex items-center h-full px-2">
           <InputNumberBase
             propsForm={{
               name: [value, "precio_venta"],
-              rules: [{ required: true, message: "" }],
+              rules: [{ required: true, message: "Requerido" }],
             }}
             min={0}
             precision={2}
-            className="w-full !border-0 !shadow-none !rounded-none text-[10px] h-full"
+            className="w-full bg-green-50 border-green-200"
             size="small"
             onChange={(precio) => {
               const cantidad = Number(form.getFieldValue(["productos", value, "cantidad"]) || 0);
@@ -154,26 +164,23 @@ export function useColumnsNotaCredito({
           />
         </div>
       ),
-      cellStyle: { padding: 0, border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
     },
     {
       headerName: "Subtotal",
       field: "name",
-      width: 100,
+      width: 140,
+      pinned: "right",
+      suppressSizeToFit: true,
+      filter: false,
+      sortable: false,
       cellRenderer: ({ value }: ICellRendererParams) => {
-        const cantidad = Number(form.getFieldValue(["productos", value, "cantidad"]) || 0);
-        const precio = Number(form.getFieldValue(["productos", value, "precio_venta"]) || 0);
-        const subtotal = cantidad * precio;
+        const subtotal = Number(form.getFieldValue(["productos", value, "subtotal"]) || 0);
         return (
-          <div className="flex items-center h-full justify-end pr-1 text-[10px] font-semibold">
+          <div className="flex items-center h-full justify-end pr-4 font-bold text-gray-700 bg-gray-50">
             {subtotal.toFixed(2)}
           </div>
         );
       },
-      cellStyle: { padding: "0 2px", border: "1px solid var(--color-border)" },
-      headerClass: "text-[10px] font-bold",
-      pinned: "right",
     },
   ];
 }

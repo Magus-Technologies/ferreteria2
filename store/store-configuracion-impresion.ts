@@ -8,6 +8,7 @@ export type TipoDocumento =
   | 'prestamo' 
   | 'recepcion_almacen' 
   | 'compra'
+  | 'cierre_caja'
 
 export interface ConfiguracionCampo {
   font_family: string

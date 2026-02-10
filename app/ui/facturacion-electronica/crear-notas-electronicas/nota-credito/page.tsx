@@ -5,8 +5,9 @@ import NoAutorizado from "~/components/others/no-autorizado";
 import { permissions } from "~/lib/permissions";
 import { usePermission } from "~/hooks/use-permission";
 import { Suspense, lazy } from "react";
-import { Spin } from "antd";
+import { Spin, Form } from "antd";
 import HeaderCrearNotaCredito from "./_components/header-crear-nota-credito";
+import { FormCreateNotaCredito } from "./_components/body-crear-nota-credito";
 
 const BodyCrearNotaCredito = lazy(() => import("./_components/body-crear-nota-credito"));
 
@@ -18,14 +19,15 @@ const ComponentLoading = () => (
 
 export default function CrearNotaCreditoPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_INDEX);
+  const [form] = Form.useForm<FormCreateNotaCredito>();
 
   if (!canAccess) return <NoAutorizado />;
 
   return (
     <ContenedorGeneral className="h-full">
-      <HeaderCrearNotaCredito />
+      <HeaderCrearNotaCredito form={form} />
       <Suspense fallback={<ComponentLoading />}>
-        <BodyCrearNotaCredito />
+        <BodyCrearNotaCredito form={form} />
       </Suspense>
     </ContenedorGeneral>
   );
