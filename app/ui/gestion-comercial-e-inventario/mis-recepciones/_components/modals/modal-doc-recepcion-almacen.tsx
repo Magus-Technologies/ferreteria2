@@ -2,10 +2,9 @@ import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getNroDoc } from '~/app/_utils/get-nro-doc'
 import { useAuth } from '~/lib/auth-context'
 import DocRecepcionAlmacen from '../docs/doc-recepcion-almacen'
-import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
-import { TipoDocumento } from '@prisma/client'
 import { useState } from 'react'
 import DocRecepcionAlmacenTicket from '../docs/doc-recepcion-almacen-ticket'
+import type { RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
 
 export default function ModalDocRecepcionAlmacen({
   open,
@@ -14,13 +13,13 @@ export default function ModalDocRecepcionAlmacen({
 }: {
   open: boolean
   setOpen: (open: boolean) => void
-  data: getRecepcionesAlmacenResponseProps | undefined
+  data: RecepcionAlmacenResponse | undefined
 }) {
   const { user } = useAuth()
   const empresa = user?.empresa
 
   const nro_doc = getNroDoc({
-    tipo_documento: TipoDocumento.RecepcionAlmacen,
+    tipo_documento: 'RecepcionAlmacen' as any,
     serie: empresa?.serie_recepcion_almacen ?? 0,
     numero: data?.numero ?? 0,
   })

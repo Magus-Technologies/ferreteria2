@@ -1,9 +1,9 @@
-import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
+import type { RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
 
 export function getDetallesRecepcionAlmacen({
   data,
 }: {
-  data: getRecepcionesAlmacenResponseProps | undefined
+  data: RecepcionAlmacenResponse | undefined
 }) {
   return (
     data?.productos_por_almacen?.flatMap(ppa =>

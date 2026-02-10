@@ -1,15 +1,15 @@
 import { create } from 'zustand'
-import { Prisma } from '@prisma/client'
+import { RecepcionAlmacenFilters } from '~/lib/api/recepcion-almacen'
 
 type UseStoreFiltrosMisRecepcionesProps = {
-  filtros?: Prisma.RecepcionAlmacenWhereInput
+  filtros?: RecepcionAlmacenFilters
   setFiltros: (
     value:
-      | Prisma.RecepcionAlmacenWhereInput
+      | RecepcionAlmacenFilters
       | undefined
       | ((
-          prev?: Prisma.RecepcionAlmacenWhereInput
-        ) => Prisma.RecepcionAlmacenWhereInput | undefined)
+          prev?: RecepcionAlmacenFilters
+        ) => RecepcionAlmacenFilters | undefined)
   ) => void
 }
 

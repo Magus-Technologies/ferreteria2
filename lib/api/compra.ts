@@ -1,5 +1,4 @@
 import { apiRequest, type ApiResponse } from '../api';
-import { EstadoDeCompra, FormaDePago, TipoDocumento, TipoMoneda } from '@prisma/client';
 
 // ============= INTERFACES =============
 
@@ -46,19 +45,19 @@ export interface ProductoAlmacenCompra {
 
 export interface Compra {
   id: string;
-  tipo_documento: TipoDocumento;
+  tipo_documento: string;
   serie: string | null;
   numero: number | null;
   descripcion: string | null;
-  forma_de_pago: FormaDePago;
-  tipo_moneda: TipoMoneda;
+  forma_de_pago: string;
+  tipo_moneda: string;
   tipo_de_cambio: number | null;
   percepcion: number | null;
   numero_dias: number | null;
   fecha_vencimiento: string | null; // ISO date string
   fecha: string; // ISO date string
   guia: string | null;
-  estado_de_compra: EstadoDeCompra;
+  estado_de_compra: string;
   egreso_dinero_id: string | null;
   despliegue_de_pago_id: number | null;
   user_id: string;

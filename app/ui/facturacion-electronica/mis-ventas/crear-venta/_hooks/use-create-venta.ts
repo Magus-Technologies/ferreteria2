@@ -116,6 +116,7 @@ export default function useCreateVenta() {
       longitud,
       observaciones,
       quien_entrega,
+      cantidades_parciales,
       ...restValues
     } = values
     
@@ -377,6 +378,62 @@ export default function useCreateVenta() {
             message: 'Venta creada pero entrega no pudo ser registrada',
             description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
           })
+        }
+      } else if (tipo_despacho === 'Parcial' && ventaCreada) {
+        // DESPACHO PARCIAL: entregar solo las cantidades especificadas
+        if (cantidades_parciales && cantidades_parciales.some(c => c.entregar > 0)) {
+          try {
+            const productosVenta = ventaCreada.productos_por_almacen || []
+            const unidadesDerivadas: any[] = []
+
+            productosVenta.forEach((productoAlmacen: any) => {
+              if (productoAlmacen.unidades_derivadas) {
+                productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                  // Buscar la cantidad parcial correspondiente
+                  const parcial = cantidades_parciales.find(
+                    (c) => c.unidad_derivada_id === unidad.unidad_derivada_normal_id
+                  )
+                  if (parcial && parcial.entregar > 0) {
+                    unidadesDerivadas.push({
+                      unidad_derivada_venta_id: unidad.id,
+                      cantidad_entregada: parcial.entregar,
+                      ubicacion: undefined,
+                    })
+                  }
+                })
+              }
+            })
+
+            if (unidadesDerivadas.length > 0) {
+              const entregaData: CreateEntregaProductoRequest = {
+                venta_id: ventaCreada.id,
+                tipo_entrega: TipoEntrega.PARCIAL,
+                tipo_despacho: TipoDespacho.INMEDIATO,
+                estado_entrega: EstadoEntrega.ENTREGADO,
+                fecha_entrega: dayjs().format('YYYY-MM-DD'),
+                almacen_salida_id: almacen_id,
+                quien_entrega: (quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN,
+                user_id: user_id,
+                productos_entregados: unidadesDerivadas,
+              }
+
+              const entregaResponse = await entregaProductoApi.create(entregaData)
+
+              if (entregaResponse.error) {
+                notification.warning({
+                  message: 'Venta creada pero entrega parcial no pudo ser registrada',
+                  description: 'Puedes crearla manualmente desde "Mis Ventas".',
+                })
+              } else {
+                message.success('Entrega parcial registrada exitosamente')
+              }
+            }
+          } catch (error) {
+            notification.warning({
+              message: 'Venta creada pero entrega parcial no pudo ser registrada',
+              description: 'Puedes crearla manualmente desde "Mis Ventas".',
+            })
+          }
         }
       } else if (tipo_despacho === 'EnTienda' && quien_entrega) {
         console.log('🏪 Creando entrega en tienda automáticamente...')

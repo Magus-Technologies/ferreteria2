@@ -3,7 +3,7 @@
 import { Text, View } from '@react-pdf/renderer'
 import { TiposDocumentos } from '~/lib/docs'
 import { useColumnsDetalleDeRecepcion } from '../tables/columns-detalle-de-recepcion'
-import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
+import type { RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
 import { getDetallesRecepcionAlmacen } from '../../_utils/get-detalles-recepcion-almacen'
 import DocGeneral from '~/app/_components/docs/doc-general'
 import { styles_docs } from '~/app/_components/docs/styles'
@@ -16,7 +16,7 @@ export default function DocRecepcionAlmacen({
   empresa,
   show_logo_html = false,
 }: {
-  data: getRecepcionesAlmacenResponseProps | undefined
+  data: RecepcionAlmacenResponse | undefined
   nro_doc: string
   empresa: Empresa | null | undefined
   show_logo_html?: boolean

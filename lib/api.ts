@@ -130,15 +130,18 @@ export async function apiRequest<T = unknown>(
     if (!response.ok) {
       // Manejar errores de validación de Laravel
       if (response.status === 422) {
-        // Obtener el primer mensaje de error
-        const firstError = data.errors
-          ? Object.values(data.errors as Record<string, string[]>)[0]?.[0]
-          : data.message;
+        // Soportar ambos formatos: { errors, message } y { error: { errors, message } }
+        const errors = data.errors || data.error?.errors;
+        const msg = data.message || data.error?.message;
+
+        const firstError = errors
+          ? Object.values(errors as Record<string, string[]>)[0]?.[0]
+          : msg;
 
         return {
           error: {
-            message: firstError || data.message || "Error de validación",
-            errors: data.errors,
+            message: firstError || msg || "Error de validación",
+            errors: errors,
           },
         };
       }

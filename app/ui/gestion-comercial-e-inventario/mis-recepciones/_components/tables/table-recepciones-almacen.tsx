@@ -1,24 +1,22 @@
 'use client'
 
 import TableWithTitle from '~/components/tables/table-with-title'
-import { useServerQuery } from '~/hooks/use-server-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useEffect, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { CompraCreateInputSchema } from '~/prisma/generated/zod'
 import { useStoreRecepcionAlmacenSeleccionada } from '../../_store/store-recepcion-almacen-seleccionado'
 import { useStoreFiltrosMisRecepciones } from '../../_store/store-filtros-mis-recepciones'
-import {
-  getRecepcionesAlmacen,
-  getRecepcionesAlmacenResponseProps,
-} from '~/app/_actions/recepcion-almacen'
 import { useColumnsRecepcionesAlmacen } from './columns-recepciones-almacen'
 import ModalDocRecepcionAlmacen from '../modals/modal-doc-recepcion-almacen'
 import { greenColors } from '~/lib/colors'
+import { useQuery } from '@tanstack/react-query'
+import { recepcionAlmacenApi, type RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
+import { App } from 'antd'
 
 
 export default function TableRecepcionesAlmacen() {
   const tableRef = useRef<AgGridReact>(null)
+  const { notification } = App.useApp()
 
   const [primera_vez, setPrimeraVez] = useState(true)
 
@@ -28,15 +26,27 @@ export default function TableRecepcionesAlmacen() {
 
   const filtros = useStoreFiltrosMisRecepciones(state => state.filtros)
 
-  const { response, refetch, loading } = useServerQuery({
-    action: getRecepcionesAlmacen,
-    propsQuery: {
-      queryKey: [QueryKeys.RECEPCIONES_ALMACEN],
+  const { data, refetch, isPending, isFetching } = useQuery({
+    queryKey: [QueryKeys.RECEPCIONES_ALMACEN],
+    queryFn: async () => {
+      const res = await recepcionAlmacenApi.list(filtros)
+      if (res.error) {
+        notification.error({
+          message: 'Error',
+          description: res.error.message,
+        })
+        return []
+      }
+      return res.data?.data ?? []
     },
-    params: {
-      where: filtros,
-    },
+    enabled: !!filtros,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
+
+  const response = data ?? []
+  const loading = isPending || isFetching
 
   useEffect(() => {
     if (!loading && filtros) setPrimeraVez(false)
@@ -49,7 +59,7 @@ export default function TableRecepcionesAlmacen() {
   const [openModalDocRecepcionAlmacen, setOpenModalDocRecepcionAlmacen] =
     useState(false)
   const [dataModalDocRecepcionAlmacen, setDataModalDocRecepcionAlmacen] =
-    useState<getRecepcionesAlmacenResponseProps>()
+    useState<RecepcionAlmacenResponse>()
 
   return (
     <>
@@ -58,17 +68,16 @@ export default function TableRecepcionesAlmacen() {
         setOpen={setOpenModalDocRecepcionAlmacen}
         data={dataModalDocRecepcionAlmacen}
       />
-      <TableWithTitle<getRecepcionesAlmacenResponseProps>
+      <TableWithTitle<RecepcionAlmacenResponse>
         id='g-c-e-i.mis-recepciones.recepciones-almacen'
-        selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
+        selectionColor={greenColors[10]}
         onSelectionChanged={({ selectedNodes }) =>
           setRecepcionAlmacenSeleccionada(
-            selectedNodes?.[0]?.data as getRecepcionesAlmacenResponseProps
+            selectedNodes?.[0]?.data as RecepcionAlmacenResponse
           )
         }
         tableRef={tableRef}
         title='Recepciones de Almacén'
-        schema={CompraCreateInputSchema}
         loading={loading}
         columnDefs={useColumnsRecepcionesAlmacen({
           setDataModalDocRecepcionAlmacen,
