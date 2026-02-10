@@ -7,8 +7,9 @@ import { FaAngleRight, FaSpinner, FaUserTie } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import { useAuth } from '~/lib/auth-context'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ModalRecuperarPassword from './_components/modals/modal-recuperar-password'
+import { useRouter } from 'next/navigation'
 
 export interface LoginValues {
   email: string
@@ -16,34 +17,33 @@ export interface LoginValues {
 }
 
 export default function Home() {
+  const router = useRouter()
   const [form] = Form.useForm()
   const { login, user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [modalRecuperarOpen, setModalRecuperarOpen] = useState(false)
 
+  // Redirigir si ya está autenticado (useEffect para evitar setState durante render)
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push('/ui')
+    }
+  }, [user, authLoading, router])
+
   const handleLogin = async (values: LoginValues) => {
-    console.log('🚀 [LoginPage] Iniciando proceso de login...');
     setLoading(true)
     try {
-      console.log('🚀 [LoginPage] Llamando a login()...');
       const result = await login(values.email, values.password)
 
-      console.log('🚀 [LoginPage] Resultado de login:', JSON.stringify(result, null, 2));
-
       if (result.success) {
-        console.log('✅ [LoginPage] Login exitoso, redirigiendo a /ui');
         message.success('Inicio de sesión exitoso')
         
         // Pequeño delay para asegurar que el token se guardó
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Verificar token antes de redirigir
-        const token = localStorage.getItem('auth_token');
-        console.log('🔍 [LoginPage] Token antes de redirigir:', token ? 'SÍ (length: ' + token.length + ')' : '❌ NO');
-        
-        window.location.href = '/ui'
+        // Usar router.push en lugar de window.location.href para navegación SPA
+        router.push('/ui')
       } else {
-        console.log('❌ [LoginPage] Login fallido:', result.error);
         message.error(result.error || 'Error al iniciar sesión')
         
         if (result.error?.includes('credenciales')) {
@@ -60,21 +60,14 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error('❌ [LoginPage] Excepción durante login:', error);
       message.error('Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
   }
 
-  // Si está cargando, mostrar nada
-  if (authLoading) return null
-
-  // Si ya está autenticado, redirigir
-  if (user) {
-    window.location.href = '/ui'
-    return null
-  }
+  // Si está cargando o ya autenticado, mostrar nada (la redirección se maneja en useEffect)
+  if (authLoading || user) return null
 
   return (
     <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative overflow-hidden">
@@ -166,6 +159,7 @@ export default function Home() {
             />
           </Form.Item>
           <RainbowButton
+            type='submit'
             className='w-full mt-2 active:scale-95 transition-all hover:scale-105
                        text-base sm:text-lg
                        h-10 sm:h-11 md:h-12'

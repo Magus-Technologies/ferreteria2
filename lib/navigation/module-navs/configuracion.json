@@ -21,14 +21,6 @@
         "permission": "configuracion.usuarios.index"
       },
       {
-        "id": "roles",
-        "type": "button",
-        "label": "Roles",
-        "icon": "FaShieldAlt",
-        "route": "/ui/configuracion/roles",
-        "permission": "configuracion.roles.index"
-      },
-      {
         "id": "permisos",
         "type": "button",
         "label": "Permisos",
@@ -56,13 +48,6 @@
         "icon": "FaUsers",
         "route": "/ui/configuracion/usuarios",
         "permission": "configuracion.usuarios.index"
-      },
-      {
-        "id": "roles",
-        "label": "Roles",
-        "icon": "FaShieldAlt",
-        "route": "/ui/configuracion/roles",
-        "permission": "configuracion.roles.index"
       },
       {
         "id": "permisos",

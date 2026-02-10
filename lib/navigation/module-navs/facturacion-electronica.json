@@ -64,6 +64,27 @@
         ]
       },
       {
+        "id": "vales-compra-dropdown",
+        "type": "dropdown",
+        "label": "Vales de Compra",
+        "icon": "FaGift",
+        "permission": null,
+        "items": [
+          {
+            "key": "crear-vale",
+            "label": "Crear Vale",
+            "route": "/ui/facturacion-electronica/vales-compra/crear-vale",
+            "permission": "facturacion-electronica.crear-vale.index"
+          },
+          {
+            "key": "mis-vales",
+            "label": "Mis Vales",
+            "route": "/ui/facturacion-electronica/vales-compra",
+            "permission": "facturacion-electronica.mis-vales.index"
+          }
+        ]
+      },
+      {
         "id": "crear-contacto",
         "type": "button",
         "label": "Crear Contacto",

@@ -214,39 +214,54 @@ export const ubicacionesApi = {
   async importMany(
     ubicaciones: { name: string; almacen_id: number }[],
   ): Promise<ApiResponse<Ubicacion[]>> {
-    // Crear ubicaciones una por una (el backend no tiene endpoint de bulk create)
     const results: Ubicacion[] = [];
+    const errors: string[] = [];
 
     for (const ubicacion of ubicaciones) {
-      // Primero intentar obtener si ya existe
-      const existing = await this.getAll({
-        almacen_id: ubicacion.almacen_id,
-        search: ubicacion.name,
-      });
-
-      if (existing.data?.data && existing.data.data.length > 0) {
-        // Buscar coincidencia exacta
-        const match = existing.data.data.find((u) => u.name === ubicacion.name);
-        if (match) {
-          results.push(match);
-          continue;
-        }
-      }
-
-      // Si no existe, crear
-      const created = await this.create(ubicacion);
-      if (created.data) {
-        results.push(created.data);
-      } else if (created.error) {
-        // Si falla por duplicado, intentar obtener de nuevo
-        const retry = await this.getAll({
+      try {
+        // Primero intentar obtener si ya existe
+        const existing = await this.getAll({
           almacen_id: ubicacion.almacen_id,
           search: ubicacion.name,
         });
-        const match = retry.data?.data.find((u) => u.name === ubicacion.name);
-        if (match) {
-          results.push(match);
+
+        if (existing.data?.data && existing.data.data.length > 0) {
+          const match = existing.data.data.find(
+            (u) => u.name.trim().toUpperCase() === ubicacion.name.trim().toUpperCase()
+          );
+          if (match) {
+            results.push(match);
+            continue;
+          }
         }
+
+        // Si no existe, crear
+        const created = await this.create(ubicacion);
+        
+        if (created.data) {
+          // El backend devuelve { data: Ubicacion, message: string }
+          // y apiRequest lo envuelve en otro { data: ... }, causando doble wrapping
+          const ubicacionData = (created.data as any).data ?? created.data;
+          results.push(ubicacionData);
+        } else if (created.error) {
+          // Si falla por duplicado, intentar obtener de nuevo
+          const retry = await this.getAll({
+            almacen_id: ubicacion.almacen_id,
+            search: ubicacion.name,
+          });
+          
+          const match = retry.data?.data.find(
+            (u) => u.name.trim().toUpperCase() === ubicacion.name.trim().toUpperCase()
+          );
+          if (match) {
+            results.push(match);
+          } else {
+            errors.push(`No se pudo crear ni encontrar la ubicación "${ubicacion.name}"`);
+          }
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+        errors.push(`Error en "${ubicacion.name}": ${errorMsg}`);
       }
     }
 
