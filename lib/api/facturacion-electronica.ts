@@ -39,8 +39,8 @@ export interface NotaCredito {
   almacen_id: number;
   usuario_id: string;
   observaciones?: string;
-  comprobante_electronico?: ComprobanteElectronico;
-  comprobante_afectado?: ComprobanteElectronico;
+  comprobante_electronico?: ComprobanteElectronico; // Comprobante de la nota de crédito
+  comprobante_referencia?: ComprobanteElectronico; // Comprobante que se está afectando (factura/boleta original)
   motivo_nota?: MotivoNota;
   venta?: {
     id: string;

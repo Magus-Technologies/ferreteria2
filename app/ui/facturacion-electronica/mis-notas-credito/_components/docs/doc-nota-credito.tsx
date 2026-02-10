@@ -135,21 +135,21 @@ export default function DocNotaCredito({
                 Fecha de Emisión:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {new Date(data.fecha).toLocaleDateString('es-ES', {
+                {data.fecha ? new Date(data.fecha).toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
-                })}
+                }) : 'Invalid Date'}
               </Text>
             </View>
 
             {/* RUC/DNI del Cliente */}
             <View style={styles_docs.subSectionInformacionGeneral}>
               <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>
-                {data.cliente.numero_documento.length === 11 ? 'RUC:' : 'DNI:'}
+                {data.cliente.numero_documento?.length === 11 ? 'RUC:' : 'DNI:'}
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data.cliente.numero_documento}
+                {data.cliente.numero_documento || 'N/A'}
               </Text>
             </View>
 
@@ -159,7 +159,7 @@ export default function DocNotaCredito({
                 Cliente:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {nombreCliente}
+                {nombreCliente || 'Cliente no especificado'}
               </Text>
             </View>
           </View>
@@ -183,7 +183,7 @@ export default function DocNotaCredito({
                 Comprobante Afectado:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data.comprobante_afectado.tipo} {data.comprobante_afectado.numero}
+                {data.comprobante_afectado?.tipo || 'COMPROBANTE'} {data.comprobante_afectado?.numero || 'N/A'}
               </Text>
             </View>
 
@@ -193,7 +193,7 @@ export default function DocNotaCredito({
                 Motivo:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data.motivo}
+                {data.motivo || 'Sin motivo especificado'}
               </Text>
             </View>
           </View>
