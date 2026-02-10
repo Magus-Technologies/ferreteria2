@@ -153,12 +153,12 @@ export default function ModalShowDoc({
           `}
         </style>
         <div
-          className='border rounded-xl overflow-y-auto custom-scrollbar'
+          className='border rounded-xl overflow-y-auto custom-scrollbar mx-auto'
           style={{
             width: esTicket ? 226.77 : 595.28,
             maxWidth: esTicket ? 226.77 : 595.28,
-            maxHeight: '60vh',
-            zoom: esTicket ? 1.3 : 1.2,
+            maxHeight: '500px',
+            zoom: esTicket ? 1.5 : 1.2,
           }}
         >
           {childrenWithProps}

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { message, Modal } from 'antd'
-import { CheckCircleOutlined } from '@ant-design/icons'
+import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { cierreCajaApi, type CerrarCajaRequest } from '../../../../../lib/api/cierre-caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -11,7 +11,9 @@ export function useCerrarCaja() {
 
     const cerrarCaja = async (
         aperturaId: string,
-        data: CerrarCajaRequest
+        data: CerrarCajaRequest,
+        cajaActiva?: any,
+        empresaData?: any
     ): Promise<boolean> => {
         try {
             setLoading(true)
@@ -23,6 +25,34 @@ export function useCerrarCaja() {
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS] })
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS] })
                 
+                // Si hay email, enviar el ticket automáticamente
+                if (data.email_reporte && cajaActiva && empresaData) {
+                    try {
+                        // Generar el PDF usando react-pdf
+                        const { pdf } = await import('@react-pdf/renderer')
+                        const { default: DocCierreCajaTicket } = await import('../_components/docs/doc-cierre-caja-ticket')
+                        
+                        // Crear el documento PDF
+                        const doc = <DocCierreCajaTicket
+                            data={cajaActiva as any}
+                            nro_doc={cajaActiva.id}
+                            empresa={empresaData}
+                            show_logo_html={false}
+                        />
+                        
+                        // Generar el blob del PDF
+                        const pdfBlob = await pdf(doc).toBlob()
+                        
+                        // Enviar el PDF al backend
+                        await cierreCajaApi.enviarTicketEmail(aperturaId, data.email_reporte, pdfBlob)
+                        
+                        console.log('✅ Ticket enviado automáticamente a:', data.email_reporte)
+                    } catch (emailError) {
+                        console.error('⚠️ Error al enviar ticket automáticamente:', emailError)
+                        // No fallar el cierre si falla el envío del email
+                    }
+                }
+                
                 // Mostrar modal de éxito
                 Modal.success({
                     title: '¡Arqueo Diario Registrado Exitosamente!',
@@ -30,6 +60,11 @@ export function useCerrarCaja() {
                     content: (
                         <div className='space-y-2'>
                             <p className='text-base'>El arqueo diario se ha registrado correctamente.</p>
+                            {data.email_reporte && (
+                                <p className='text-sm text-green-600'>
+                                    ✓ Ticket enviado automáticamente a: <strong>{data.email_reporte}</strong>
+                                </p>
+                            )}
                             <p className='text-sm text-blue-600'>Puede continuar operando normalmente. La caja se reiniciará automáticamente al día siguiente.</p>
                             <div className='bg-gray-50 p-3 rounded mt-3'>
                                 <p className='text-sm text-gray-600'>
@@ -38,11 +73,6 @@ export function useCerrarCaja() {
                                 {data.comentarios && (
                                     <p className='text-sm text-gray-600 mt-1'>
                                         <strong>Comentarios:</strong> {data.comentarios}
-                                    </p>
-                                )}
-                                {data.email_reporte && (
-                                    <p className='text-sm text-gray-600 mt-1'>
-                                        <strong>Reporte enviado a:</strong> {data.email_reporte}
                                     </p>
                                 )}
                             </div>
@@ -57,9 +87,47 @@ export function useCerrarCaja() {
                 return false
             }
         } catch (err: any) {
-            const errorMsg = err.response?.data?.message || 'Error al registrar arqueo'
-            message.error(errorMsg)
             console.error('Error al registrar arqueo:', err)
+            
+            // Extraer mensaje de error detallado
+            const errorData = err.response?.data
+            let errorMsg = 'Error al registrar arqueo'
+            
+            if (errorData) {
+                // Si hay errores de validación específicos
+                if (errorData.errors) {
+                    const firstError = Object.values(errorData.errors)[0]
+                    errorMsg = Array.isArray(firstError) ? firstError[0] : String(firstError)
+                } 
+                // Si hay mensaje general
+                else if (errorData.message) {
+                    errorMsg = errorData.message
+                }
+            }
+            
+            // Mostrar modal de error con más detalles
+            Modal.error({
+                title: 'Error al Registrar Arqueo',
+                icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+                content: (
+                    <div className='space-y-2'>
+                        <p className='text-base'>{errorMsg}</p>
+                        {errorData?.errors && (
+                            <div className='bg-red-50 p-3 rounded mt-3'>
+                                <p className='text-sm font-semibold text-red-800 mb-2'>Detalles:</p>
+                                {Object.entries(errorData.errors).map(([field, errors]: [string, any]) => (
+                                    <p key={field} className='text-sm text-red-600'>
+                                        • {Array.isArray(errors) ? errors.join(', ') : errors}
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ),
+                okText: 'Entendido',
+                width: 500,
+            })
+            
             return false
         } finally {
             setLoading(false)

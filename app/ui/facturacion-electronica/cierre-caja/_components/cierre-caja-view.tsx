@@ -1,15 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, Button, Input, Checkbox, Tabs, Spin, Empty } from 'antd'
+import { Card, Button, Input, Checkbox, Tabs, Spin, Empty, message, Modal } from 'antd'
 import { FaCheckCircle, FaSearch } from 'react-icons/fa'
 import ConteoDinero from '../../_components/others/conteo-dinero'
 import ResumenDetalleCierre from './resumen-detalle-cierre'
 import SelectSupervisor from '../../_components/selects/select-supervisor'
 import ModalValidarSupervisor from './modal-validar-supervisor'
+import ModalTicketCierre from './modal-ticket-cierre'
 import { useCierreCaja } from '../_hooks/use-cierre-caja'
 import { useCerrarCaja } from '../_hooks/use-cerrar-caja'
+import { cierreCajaApi } from '../../../../../lib/api/cierre-caja'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 
 const { TextArea } = Input
 
@@ -20,6 +23,7 @@ export default function CierreCajaView() {
   
   const { cajaActiva, loading, error, esEdicion } = useCierreCaja(cierreId || undefined)
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
+  const { data: empresaData } = useEmpresaPublica()
 
   const [totalEfectivo, setTotalEfectivo] = useState(0)
   const [totalCuentas, setTotalCuentas] = useState(0)
@@ -35,6 +39,10 @@ export default function CierreCajaView() {
   const [supervisorNombre, setSupervisorNombre] = useState('')
   const [supervisorPassword, setSupervisorPassword] = useState('')
   const [modalSupervisorOpen, setModalSupervisorOpen] = useState(false)
+  const [enviandoTicket, setEnviandoTicket] = useState(false)
+  const [modalTicketOpen, setModalTicketOpen] = useState(false)
+  const [modalExitoOpen, setModalExitoOpen] = useState(false)
+  const [emailEnviado, setEmailEnviado] = useState('')
 
   const handleSupervisorChange = (value: string | undefined, option: any) => {
     if (value) {
@@ -60,6 +68,59 @@ export default function CierreCajaView() {
     setSupervisorNombre('')
     setSupervisorPassword('')
     setModalSupervisorOpen(false)
+  }
+
+  const handleEnviarTicket = async () => {
+    if (!emailReporte) {
+      message.warning('Por favor ingrese un email para enviar el ticket')
+      return
+    }
+
+    if (!cajaActiva?.id) {
+      message.error('No hay caja activa para enviar el ticket')
+      return
+    }
+
+    if (!empresaData) {
+      message.error('No se pudieron cargar los datos de la empresa')
+      return
+    }
+
+    try {
+      setEnviandoTicket(true)
+      
+      // Generar el PDF usando react-pdf
+      const { pdf } = await import('@react-pdf/renderer')
+      const { default: DocCierreCajaTicket } = await import('./docs/doc-cierre-caja-ticket')
+      
+      // Crear el documento PDF
+      const doc = <DocCierreCajaTicket
+        data={cajaActiva as any}
+        nro_doc={cajaActiva.id}
+        empresa={empresaData}
+        show_logo_html={false}
+      />
+      
+      // Generar el blob del PDF
+      const pdfBlob = await pdf(doc).toBlob()
+      
+      // Enviar el PDF al backend
+      await cierreCajaApi.enviarTicketEmail(cajaActiva.id, emailReporte, pdfBlob)
+      
+      // Guardar el email y mostrar modal de éxito
+      setEmailEnviado(emailReporte)
+      setModalExitoOpen(true)
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Error al enviar el ticket'
+      message.error(errorMsg)
+      console.error('Error al enviar ticket:', error)
+    } finally {
+      setEnviandoTicket(false)
+    }
+  }
+
+  const handleVerTicket = () => {
+    setModalTicketOpen(true)
   }
 
   if (loading) {
@@ -91,7 +152,15 @@ export default function CierreCajaView() {
     )
   }
 
-  const montoEsperado = resumen?.monto_esperado || 0
+  // Calcular el efectivo esperado (solo el método "Efectivo")
+  const efectivoEsperado = resumen.detalle_metodos_pago
+    ?.filter((metodo: any) => 
+      metodo.label?.toLowerCase().includes('efectivo')
+    )
+    .reduce((sum: number, metodo: any) => sum + Number(metodo.total), 0) || 0
+
+  // Monto esperado de EFECTIVO = Efectivo Inicial + Efectivo de ventas
+  const montoEsperado = (resumen.efectivo_inicial || 0) + efectivoEsperado
   const diferencia = totalEfectivo - montoEsperado
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
@@ -101,16 +170,29 @@ export default function CierreCajaView() {
       return
     }
 
-    const success = await cerrarCaja(cajaActiva.id, {
+    // Preparar datos
+    const dataCierre: any = {
       monto_cierre_efectivo: totalEfectivo,
       total_cuentas: totalCuentas || 0,
       comentarios: comentarios || undefined,
       conteo_billetes_monedas: conteoDenominaciones,
       email_reporte: emailReporte || undefined,
       whatsapp_reporte: whatsappReporte || undefined,
-      supervisor_id: supervisorId || undefined,
-      supervisor_password: supervisorPassword || undefined,
-    })
+    }
+
+    // Incluir supervisor si fue validado
+    if (supervisorId && supervisorPassword) {
+      dataCierre.supervisor_id = supervisorId
+      dataCierre.supervisor_password = supervisorPassword
+      console.log('🔍 Enviando supervisor:', { supervisorId, supervisorNombre })
+    } else {
+      console.log('⚠️ No se envía supervisor (no seleccionado o no validado)')
+    }
+
+    console.log('📤 Datos de cierre a enviar:', dataCierre)
+
+    // Pasar cajaActiva y empresaData para el envío automático del PDF
+    const success = await cerrarCaja(cajaActiva.id, dataCierre, cajaActiva, empresaData)
 
     if (success) {
       // No redirigir - permitir continuar operaciones
@@ -419,33 +501,48 @@ export default function CierreCajaView() {
                       </div>
 
                       {/* Botones de acción */}
-                      <div className='flex gap-2 pt-1'>
-                        <Button
-                          type='primary'
-                          icon={<FaCheckCircle />}
-                          className='flex-1 bg-green-600 hover:bg-green-700 text-sm'
-                          size='large'
-                        >
-                          Ventas Enviar
-                        </Button>
-                        <Button
-                          type='default'
-                          className='flex-1 text-sm'
-                          size='large'
-                        >
-                          + Ganancias
-                        </Button>
-                        <Button
-                          type='primary'
-                          icon={<FaCheckCircle />}
-                          className='flex-1 bg-green-600 hover:bg-green-700 text-sm'
-                          size='large'
-                          loading={loadingCierre}
-                          onClick={handleFinalizarCaja}
-                          disabled={totalEfectivo === 0}
-                        >
-                          Finalizar caja [F10]
-                        </Button>
+                      <div className='space-y-2 pt-1'>
+                        <div className='flex gap-2'>
+                          <Button
+                            type='primary'
+                            icon={<FaCheckCircle />}
+                            className='flex-1 bg-green-600 hover:bg-green-700 text-sm'
+                            size='large'
+                            loading={enviandoTicket}
+                            onClick={handleEnviarTicket}
+                            disabled={!emailReporte}
+                          >
+                            Ventas Enviar
+                          </Button>
+                          <Button
+                            type='default'
+                            className='flex-1 text-sm'
+                            size='large'
+                          >
+                            + Ganancias
+                          </Button>
+                        </div>
+                        <div className='flex gap-2'>
+                          <Button
+                            type='default'
+                            className='flex-1 text-sm border-blue-400 text-blue-600 hover:bg-blue-50'
+                            size='large'
+                            onClick={handleVerTicket}
+                          >
+                            Ver Ticket
+                          </Button>
+                          <Button
+                            type='primary'
+                            icon={<FaCheckCircle />}
+                            className='flex-1 bg-green-600 hover:bg-green-700 text-sm'
+                            size='large'
+                            loading={loadingCierre}
+                            onClick={handleFinalizarCaja}
+                            disabled={totalEfectivo === 0}
+                          >
+                            Finalizar caja [F10]
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -460,6 +557,45 @@ export default function CierreCajaView() {
           },
         ]}
       />
+
+      {/* Modal de Ticket de Cierre */}
+      <ModalTicketCierre
+        open={modalTicketOpen}
+        setOpen={setModalTicketOpen}
+        data={cajaActiva}
+      />
+
+      {/* Modal de Éxito al Enviar */}
+      <Modal
+        open={modalExitoOpen}
+        onOk={() => setModalExitoOpen(false)}
+        onCancel={() => setModalExitoOpen(false)}
+        footer={[
+          <Button key='ok' type='primary' onClick={() => setModalExitoOpen(false)}>
+            Entendido
+          </Button>
+        ]}
+        width={500}
+        centered
+      >
+        <div className='text-center py-4'>
+          <div className='mb-4'>
+            <FaCheckCircle className='text-6xl text-green-500 mx-auto' />
+          </div>
+          <h2 className='text-2xl font-bold text-slate-800 mb-3'>
+            ¡Ticket enviado exitosamente!
+          </h2>
+          <p className='text-base text-slate-600 mb-2'>
+            El ticket de cierre de caja ha sido enviado correctamente a:
+          </p>
+          <p className='text-lg font-semibold text-blue-600 mb-4'>
+            {emailEnviado}
+          </p>
+          <p className='text-sm text-slate-500'>
+            Por favor, revise su bandeja de entrada. Si no lo encuentra, verifique la carpeta de spam.
+          </p>
+        </div>
+      </Modal>
     </div>
   )
 }
