@@ -1,7 +1,9 @@
 "use client";
 
-import { Form } from "antd";
+import { Form, FormInstance } from "antd";
 import { Dayjs } from "dayjs";
+import dayjs from "dayjs";
+import { useEffect } from "react";
 import FormBase from "~/components/form/form-base";
 import FormNotaCredito from "./form-nota-credito";
 import CardsInfoNotaCredito from "./cards-info-nota-credito";
@@ -9,6 +11,9 @@ import FormTableNotaCredito from "./form-table-nota-credito";
 import useCreateNotaCredito from "../_hooks/use-create-nota-credito";
 
 export type FormCreateNotaCredito = {
+  // ID de la venta (requerido por backend)
+  venta_id?: string;
+  
   // Datos del comprobante afectado
   tipo_documento_modifica: "01" | "03"; // 01=Factura, 03=Boleta
   serie_documento_modifica: string;
@@ -54,25 +59,43 @@ export type FormCreateNotaCredito = {
   observaciones?: string;
 };
 
-export default function BodyCrearNotaCredito() {
-  const [form] = Form.useForm<FormCreateNotaCredito>();
-  const { handleSubmit, loading } = useCreateNotaCredito();
+export default function BodyCrearNotaCredito({ form }: { form?: FormInstance<FormCreateNotaCredito> }) {
+  const [internalForm] = Form.useForm<FormCreateNotaCredito>();
+  const formToUse = form || internalForm;
+  const { handleSubmit, loading } = useCreateNotaCredito(formToUse);
+
+  // ✅ Inicializar fecha_emision con la fecha actual
+  useEffect(() => {
+    if (!formToUse.getFieldValue('fecha_emision')) {
+      formToUse.setFieldValue('fecha_emision', dayjs());
+    }
+  }, [formToUse]);
 
   return (
     <FormBase<FormCreateNotaCredito>
-      form={form}
+      form={formToUse}
       name="nota-credito"
       className="flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full"
       onFinish={handleSubmit}
+      initialValues={{
+        fecha_emision: dayjs(), // Valor inicial por defecto
+        tipo_moneda: 'PEN',
+        tipo_de_cambio: 1,
+      }}
     >
+      {/* Campo oculto para venta_id - Ant Design maneja el valor internamente */}
+      <Form.Item name="venta_id" hidden>
+        <input />
+      </Form.Item>
+      
       <div className="flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 min-h-0">
         <div className="flex-1 min-h-0">
-          <FormTableNotaCredito form={form} />
+          <FormTableNotaCredito form={formToUse} />
         </div>
-        <FormNotaCredito form={form} />
+        <FormNotaCredito form={formToUse} />
       </div>
       <div className="w-full xl:w-auto">
-        <CardsInfoNotaCredito form={form} />
+        <CardsInfoNotaCredito form={formToUse} />
       </div>
     </FormBase>
   );

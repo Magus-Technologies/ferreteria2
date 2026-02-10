@@ -22,31 +22,47 @@ export interface Factura {
 }
 
 export interface NotaCredito {
-  id: number;
-  comprobante_electronico_id: number;
-  comprobante_afectado_id: number;
-  motivo_nota_id: number;
+  id: string;  // UUID
+  tipo_documento: string;
   serie: string;
   numero: number;
+  numero_completo: string;  // Serie-Número completo
+  venta_id: string;
+  motivo_id: number;
+  descripcion?: string;
+  monto_total: number;
+  monto_igv: number;
+  monto_subtotal: number;
+  referencia_documento?: string;
   fecha_emision: string;
-  tipo_moneda: string;
-  total: number;
-  estado_sunat: string;
+  estado: string;
+  almacen_id: number;
+  usuario_id: string;
   observaciones?: string;
   comprobante_electronico?: ComprobanteElectronico;
   comprobante_afectado?: ComprobanteElectronico;
   motivo_nota?: MotivoNota;
+  venta?: {
+    id: string;
+    cliente?: {
+      numero_documento: string;
+      razon_social?: string;
+      nombres?: string;
+      apellidos?: string;
+      direccion?: string;
+    };
+  };
   created_at: string;
   updated_at: string;
 }
 
 export interface NotaDebito {
-  id: number;
+  id: string;  // UUID
   comprobante_electronico_id: number;
   comprobante_afectado_id: number;
   motivo_nota_id: number;
   serie: string;
-  numero: number;
+  numero: string;  // Número completo con serie
   fecha_emision: string;
   tipo_moneda: string;
   total: number;
@@ -62,19 +78,48 @@ export interface NotaDebito {
 export interface ComprobanteElectronico {
   id: number;
   tipo_comprobante: string;
+  tipo_comprobante_nombre?: string;
   serie: string;
-  numero: number;
+  correlativo: number;
+  numero: string;  // Número completo con serie (ej: "F001-00000123")
+  serie_numero?: string;
   fecha_emision: string;
-  cliente_id: number;
-  tipo_moneda: string;
-  total: number;
+  cliente_id?: number;
+  moneda?: "PEN" | "USD"; // Campo principal
+  tipo_moneda?: "PEN" | "USD"; // Alias para compatibilidad
+  subtotal?: number;
+  igv?: number;
+  total?: number;
   estado_sunat: string;
   xml_path?: string;
   cdr_path?: string;
   pdf_path?: string;
   hash?: string;
-  cliente?: any;
+  tiene_xml?: boolean; // ✅ Indica si tiene XML disponible
+  tiene_cdr?: boolean; // ✅ Indica si tiene CDR disponible
+  // Datos del cliente almacenados directamente en el comprobante
+  cliente_tipo_documento?: string;
+  cliente_numero_documento?: string;
+  cliente_razon_social?: string;
+  cliente_direccion?: string;
+  cliente_email?: string;
+  cliente_telefono?: string;
+  // Relación con cliente (opcional, puede no estar cargada)
+  cliente?: {
+    id: number;
+    tipo_cliente?: string;
+    tipo_documento?: string;
+    numero_documento: string;
+    nombres?: string;
+    apellidos?: string;
+    razon_social?: string;
+    nombre: string;
+    direccion?: string;
+    telefono?: string;
+    email?: string;
+  };
   detalles?: DetalleComprobanteElectronico[];
+  venta_id?: number;
   created_at: string;
   updated_at: string;
 }
@@ -82,13 +127,15 @@ export interface ComprobanteElectronico {
 export interface DetalleComprobanteElectronico {
   id: number;
   comprobante_electronico_id: number;
-  producto_id: number;
+  codigo_producto: string; // Código del producto (directo de la tabla)
+  descripcion: string; // Descripción del producto
+  unidad_medida: string; // Unidad de medida SUNAT (directo de la tabla)
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
   igv: number;
   total: number;
-  producto?: any;
+  tipo_moneda?: string;
 }
 
 export interface MotivoNota {
@@ -102,7 +149,7 @@ export interface MotivoNota {
 }
 
 export interface CrearNotaCreditoData {
-  venta_id: number;
+  venta_id: string;
   motivo_id: number;
   serie: string;
   almacen_id: number;
@@ -148,6 +195,31 @@ export interface CrearNotaDebitoData {
 }
 
 export const facturacionElectronicaApi = {
+  // Comprobantes Electrónicos
+  async buscarComprobantes(params: {
+    query: string;
+    tipo?: "01" | "03"; // 01=Factura, 03=Boleta
+    limit?: number;
+  }) {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    ).toString();
+    return apiRequest<{ data: ComprobanteElectronico[] }>(
+      `/facturacion-electronica/comprobantes/buscar?${queryString}`
+    );
+  },
+
+  async getComprobanteById(id: number) {
+    return apiRequest<{ data: ComprobanteElectronico }>(
+      `/facturacion-electronica/comprobantes/${id}`
+    );
+  },
+
   // Facturas
   async getFacturas(params?: {
     search?: string;
@@ -214,7 +286,7 @@ export const facturacionElectronicaApi = {
     );
   },
 
-  async getNotaCreditoById(id: number) {
+  async getNotaCreditoById(id: string) {
     return apiRequest<NotaCredito>(`/facturacion-electronica/notas-credito/${id}`);
   },
 
@@ -229,6 +301,10 @@ export const facturacionElectronicaApi = {
     return apiRequest(`/facturacion-electronica/notas-credito/${id}/enviar-sunat`, {
       method: "POST",
     });
+  },
+
+  async generarPdfNotaCredito(id: number | string) {
+    return apiRequest<NotaCredito>(`/facturacion-electronica/notas-credito/${id}/pdf`);
   },
 
   async validarVentaParaNotaCredito(ventaId: number) {

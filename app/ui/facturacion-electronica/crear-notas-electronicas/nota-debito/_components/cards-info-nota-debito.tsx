@@ -15,8 +15,11 @@ export default function CardsInfoNotaDebito({ form }: CardsInfoNotaDebitoProps) 
   const productos = Form.useWatch("productos", form) || [];
   const tipo_moneda = Form.useWatch("tipo_moneda", form) || "PEN";
 
-  // Calcular SubTotal (base imponible sin IGV)
-  const subTotal = useMemo(
+  // IMPORTANTE: precio_venta ya incluye IGV (es el precio final con impuesto)
+  // Por lo tanto, primero calculamos el TOTAL con IGV, luego extraemos el subtotal e IGV
+  
+  // Calcular Total CON IGV (precio_venta ya incluye IGV)
+  const total = useMemo(
     () =>
       (productos || []).reduce(
         (acc: number, item: any) =>
@@ -26,11 +29,12 @@ export default function CardsInfoNotaDebito({ form }: CardsInfoNotaDebitoProps) 
     [productos]
   );
 
-  // Calcular IGV (18%)
-  const igv = useMemo(() => subTotal * 0.18, [subTotal]);
+  // Calcular SubTotal SIN IGV (base imponible)
+  // Fórmula: Si total = subtotal * 1.18, entonces subtotal = total / 1.18
+  const subTotal = useMemo(() => total / 1.18, [total]);
 
-  // Calcular Total
-  const total = useMemo(() => subTotal + igv, [subTotal, igv]);
+  // Calcular IGV (18%)
+  const igv = useMemo(() => total - subTotal, [total, subTotal]);
 
   return (
     <div className="flex flex-col gap-4 max-w-64 p-4">

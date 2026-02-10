@@ -7,6 +7,7 @@ import SelectTipoMoneda from "~/app/_components/form/selects/select-tipo-moneda"
 import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectBase from "~/app/_components/form/selects/select-base";
+import SelectMotivoNota from "~/app/_components/form/selects/select-motivo-nota";
 import { FaCalendar } from "react-icons/fa6";
 
 interface FormNotaDebitoProps {
@@ -187,21 +188,17 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
           className="w-full sm:flex-1"
         >
-          <SelectBase
+          <SelectMotivoNota
+            tipo="debito"
             propsForm={{
               name: "motivo_nota_id",
               rules: [{ required: true, message: "Selecciona el motivo" }],
               hasFeedback: false,
               className: "w-full",
             }}
-            placeholder="Seleccione motivo"
+            placeholder="Seleccione motivo de nota de débito"
             className="w-full"
-            options={[
-              { value: 1, label: "01 - Intereses por mora" },
-              { value: 2, label: "02 - Aumento en el valor" },
-              { value: 3, label: "03 - Penalidades" },
-              { value: 4, label: "04 - Otros conceptos" },
-            ]}
+            showSearch
           />
         </LabelBase>
       </div>

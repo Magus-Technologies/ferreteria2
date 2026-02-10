@@ -10,14 +10,14 @@ export default function FormTableNotaCredito({
 }) {
   return (
     <Form.List name="productos">
-      {(fields, { add, remove }) => (
+      {(fields, { remove }) => (
         <TableProductosNotaCredito
           form={form}
           fields={fields}
           remove={remove}
-          add={add}
         />
       )}
     </Form.List>
   );
 }
+

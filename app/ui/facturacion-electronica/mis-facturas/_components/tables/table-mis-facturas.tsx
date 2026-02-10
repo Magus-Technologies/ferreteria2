@@ -80,8 +80,10 @@ export default function TableMisFacturas() {
         headerName: "Total",
         field: "importe_total",
         width: 120,
-        valueFormatter: (params) =>
-          params.value ? `S/ ${Number(params.value).toFixed(2)}` : "S/ 0.00",
+        valueFormatter: (params) => {
+          const moneda = params.data?.moneda === 'USD' ? '$' : 'S/';
+          return params.value ? `${moneda} ${Number(params.value).toFixed(2)}` : `${moneda} 0.00`;
+        },
         cellStyle: { textAlign: "right", fontWeight: "600" },
       },
       {
