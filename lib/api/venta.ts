@@ -91,6 +91,7 @@ export interface VentaFilters {
   cliente_id?: number;
   tipo_documento?: TipoDocumento;
   search?: string;
+  entrega?: 'pendiente' | 'completa';
   per_page?: number;
   page?: number;
 }

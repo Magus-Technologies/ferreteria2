@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Drawer, Badge } from "antd";
+import { Form, Drawer, Badge, Select } from "antd";
 import { FaSearch, FaFilter, FaPlus } from "react-icons/fa";
 import { FaCartShopping, FaTruckFast } from "react-icons/fa6";
 import { useState, useMemo } from "react";
@@ -24,8 +24,7 @@ import dayjs from "dayjs";
 import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import ModalEntregarProductos from "../modals/modal-entregar-productos";
-import ModalSeleccionarTipoDespacho from "../modals/modal-seleccionar-tipo-despacho";
+import ModalEntregaDirecta from "../modals/modal-entrega-directa";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
 import ModalCalendarioEntregas from "../modals/modal-calendario-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
@@ -42,17 +41,13 @@ interface ValuesFiltersMisVentas {
   user_id?: string;
   estado_de_venta?: EstadoDeVenta;
   serie_numero?: string;
+  entrega?: 'pendiente' | 'completa';
 }
 
 export default function FiltersMisVentas() {
   const router = useRouter();
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
-  const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] =
-    useState(false);
-  const [modalEntregarOpen, setModalEntregarOpen] = useState(false);
-  const [tipoDespachoSeleccionado, setTipoDespachoSeleccionado] = useState<
-    "EnTienda" | "Domicilio" | "Parcial"
-  >("EnTienda");
+  const [modalEntregaDirectaOpen, setModalEntregaDirectaOpen] = useState(false);
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
   const [modalCalendarioOpen, setModalCalendarioOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -83,6 +78,7 @@ export default function FiltersMisVentas() {
     if (values.estado_de_venta) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
+    if (values.entrega) count++;
     return count;
   }, [form]);
 
@@ -90,7 +86,7 @@ export default function FiltersMisVentas() {
     console.log("📝 Valores del formulario:", values);
     console.log("📝 Texto de búsqueda del cliente:", clienteSearchText);
 
-    const { desde, hasta, estado_de_venta, serie_numero, cliente_id, ...rest } =
+    const { desde, hasta, estado_de_venta, serie_numero, cliente_id, entrega, ...rest } =
       values;
 
     let serie: string | undefined;
@@ -119,6 +115,7 @@ export default function FiltersMisVentas() {
       ...(serie ? { serie } : {}),
       ...(numero ? { numero } : {}),
       ...(estado_de_venta ? { estado_de_venta } : {}),
+      ...(entrega ? { entrega } : {}),
     };
 
     // Limpiar valores undefined, null o vacíos
@@ -351,6 +348,24 @@ export default function FiltersMisVentas() {
           </div>
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              Entrega:
+            </label>
+            <ConfigurableElement componentId="field-entrega" label="Campo Entrega">
+              <Form.Item name="entrega" noStyle>
+                <Select
+                  allowClear
+                  placeholder="Todas"
+                  className="w-full"
+                  options={[
+                    { value: 'pendiente', label: 'Pendiente' },
+                    { value: 'completa', label: 'Completa' },
+                  ]}
+                />
+              </Form.Item>
+            </ConfigurableElement>
+          </div>
+          <div className="col-span-2 flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               VEND:
             </label>
             <ConfigurableElement componentId="field-vendedor" label="Campo Vendedor">
@@ -417,7 +432,7 @@ export default function FiltersMisVentas() {
                 type="button"
                 className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
                 onClick={() =>
-                  ventaSeleccionada && setModalSeleccionarTipoOpen(true)
+                  ventaSeleccionada && setModalEntregaDirectaOpen(true)
                 }
                 disabled={!ventaSeleccionada}
               >
@@ -581,6 +596,22 @@ export default function FiltersMisVentas() {
           </div>
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
+              Entrega:
+            </label>
+            <Form.Item name="entrega" noStyle>
+              <Select
+                allowClear
+                placeholder="Todas"
+                className="w-full"
+                options={[
+                  { value: 'pendiente', label: 'Pendiente' },
+                  { value: 'completa', label: 'Completa' },
+                ]}
+              />
+            </Form.Item>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-700 block mb-2">
               Vendedor:
             </label>
             <SelectUsuarios
@@ -617,25 +648,10 @@ export default function FiltersMisVentas() {
         </div>
       </Drawer>
 
-      <ModalSeleccionarTipoDespacho
-        open={modalSeleccionarTipoOpen}
-        setOpen={setModalSeleccionarTipoOpen}
-        onSelectTipo={(tipo) => {
-          setTipoDespachoSeleccionado(tipo);
-          setModalEntregarOpen(true);
-        }}
-        ventaNumero={
-          ventaSeleccionada
-            ? `${ventaSeleccionada.serie}-${ventaSeleccionada.numero}`
-            : undefined
-        }
-      />
-
-      <ModalEntregarProductos
-        open={modalEntregarOpen}
-        setOpen={setModalEntregarOpen}
+      <ModalEntregaDirecta
+        open={modalEntregaDirectaOpen}
+        setOpen={setModalEntregaDirectaOpen}
         venta={ventaSeleccionada}
-        tipoDespacho={tipoDespachoSeleccionado}
       />
 
       <ModalVerEntregas

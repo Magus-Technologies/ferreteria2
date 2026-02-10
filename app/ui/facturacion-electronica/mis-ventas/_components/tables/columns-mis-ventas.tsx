@@ -190,6 +190,33 @@ export function useColumnsMisVentas() {
       },
     },
     {
+      headerName: "Entrega",
+      colId: "entrega_estado",
+      width: 130,
+      valueGetter: (params) => {
+        const productos = params.data?.productos_por_almacen || [];
+        let totalPendiente = 0;
+        let totalCantidad = 0;
+        productos.forEach((producto: any) => {
+          (producto.unidades_derivadas || []).forEach((unidad: any) => {
+            totalCantidad += Number(unidad.cantidad || 0);
+            totalPendiente += Number(unidad.cantidad_pendiente || 0);
+          });
+        });
+        if (totalCantidad === 0) return 'Sin productos';
+        if (totalPendiente === 0) return 'Completa';
+        if (totalPendiente < totalCantidad) return 'Parcial';
+        return 'Pendiente';
+      },
+      cellStyle: (params) => {
+        const value = params.value;
+        if (value === 'Completa') return { color: '#16a34a', fontWeight: 'bold' };
+        if (value === 'Parcial') return { color: '#d97706', fontWeight: 'bold' };
+        if (value === 'Pendiente') return { color: '#dc2626', fontWeight: 'bold' };
+        return null;
+      },
+    },
+    {
       headerName: "Usuario",
       colId: "usuario_nombre",
       field: "user.name",
