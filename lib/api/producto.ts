@@ -232,27 +232,72 @@ export const productosApiV2 = {
   },
 
   /**
-   * Importar productos desde Excel
+   * Importar productos desde Excel (ASYNC con progress)
    * POST /api/productos/import
+   * 
+   * Retorna un import_id para hacer seguimiento del progreso
    */
   async import(data: {
     data: Array<Record<string, unknown>>;
-  }): Promise<ApiResponse<Array<Record<string, unknown>>>> {
-    const response = await apiRequest<{
-      data: Array<Record<string, unknown>>;
+  }): Promise<ApiResponse<{
+    import_id: string;
+    message: string;
+    total_products: number;
+  }>> {
+    return apiRequest<{
+      import_id: string;
+      message: string;
+      total_products: number;
     }>(`/productos/import`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
 
-    // Extraer data.data
-    if (response.data) {
-      return {
-        data: response.data.data,
-      };
-    }
+  /**
+   * Obtener progreso de importación
+   * GET /api/productos/import-progress/{importId}
+   */
+  async getImportProgress(importId: string): Promise<ApiResponse<{
+    status: 'processing' | 'completed' | 'failed' | 'cancelled';
+    progress: number;
+    message: string;
+    total_products: number;
+    processed: number;
+    imported: number;
+    duplicates: number;
+    errors: number;
+    started_at: string;
+    estimated_remaining?: number;
+  }>> {
+    return apiRequest(`/productos/import-progress/${importId}`);
+  },
 
-    return response as ApiResponse<Array<Record<string, unknown>>>;
+  /**
+   * Obtener resultados finales de importación
+   * GET /api/productos/import-results/{importId}
+   */
+  async getImportResults(importId: string): Promise<ApiResponse<{
+    status: string;
+    total_products: number;
+    imported: number;
+    duplicates: number;
+    errors: number;
+    duration_seconds: number;
+    duplicate_codes: string[];
+    error_details: Array<{ code: string; error: string }>;
+  }>> {
+    return apiRequest(`/productos/import-results/${importId}`);
+  },
+
+  /**
+   * Cancelar importación en progreso
+   * POST /api/productos/import-cancel/{importId}
+   */
+  async cancelImport(importId: string): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest(`/productos/import-cancel/${importId}`, {
+      method: 'POST',
+    });
   },
 
   /**

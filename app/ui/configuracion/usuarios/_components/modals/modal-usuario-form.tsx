@@ -17,6 +17,9 @@ import TitleForm from "~/components/form/title-form";
 import LabelBase from "~/components/form/label-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectBase from "~/app/_components/form/selects/select-base";
+import SelectEstadoCivil from "~/app/_components/form/selects/select-estado-civil";
+import SelectRolSistema from "~/app/_components/form/selects/select-rol-sistema";
+import SelectCargo from "~/app/_components/form/selects/select-cargo";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import { usuariosApi, CreateUsuarioRequest, Usuario } from "~/lib/api/usuarios";
 import { QueryKeys } from "~/app/_lib/queryKeys";
@@ -333,16 +336,9 @@ export default function ModalUsuarioForm({
             </div>
             <div>
               <LabelBase label="Estado Civil:" orientation="column">
-                <SelectBase
+                <SelectEstadoCivil
                   propsForm={{ name: "estado_civil" }}
-                  placeholder="Seleccionar"
-                  options={[
-                    { value: "SOLTERO", label: "Soltero" },
-                    { value: "CASADO", label: "Casado" },
-                    { value: "DIVORCIADO", label: "Divorciado" },
-                    { value: "VIUDO", label: "Viudo" },
-                    { value: "CONVIVIENTE", label: "Conviviente" },
-                  ]}
+                  placeholder="Seleccionar estado civil"
                 />
               </LabelBase>
             </div>
@@ -597,7 +593,7 @@ export default function ModalUsuarioForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <LabelBase label="Rol del Sistema: *" orientation="column">
-                <SelectBase
+                <SelectRolSistema
                   propsForm={{
                     name: "rol_sistema",
                     rules: [
@@ -605,20 +601,12 @@ export default function ModalUsuarioForm({
                     ],
                   }}
                   placeholder="Seleccionar rol"
-                  options={[
-                    { value: "ADMINISTRADOR", label: "Administrador" },
-                    { value: "VENDEDOR", label: "Vendedor" },
-                    { value: "ALMACENERO", label: "Almacenero" },
-                    { value: "CONTADOR", label: "Contador" },
-                    { value: "DESPACHADOR", label: "Despachador" },
-                    { value: "CONDUCTOR", label: "Conductor" },
-                  ]}
                 />
               </LabelBase>
             </div>
             <div>
               <LabelBase label="Cargo u Ocupación: *" orientation="column">
-                <SelectBase
+                <SelectCargo
                   propsForm={{
                     name: "cargo",
                     rules: [
@@ -626,16 +614,6 @@ export default function ModalUsuarioForm({
                     ],
                   }}
                   placeholder="Seleccionar cargo"
-                  options={[
-                    { value: "ADMINISTRADOR GERENCIA", label: "Administrador Gerencia" },
-                    { value: "GERENTE GENERAL GERENCIA", label: "Gerente General Gerencia" },
-                    { value: "VENDEDOR", label: "Vendedor" },
-                    { value: "ASISTENTE CONTABLE", label: "Asistente Contable" },
-                    { value: "ALMACENERO", label: "Almacenero" },
-                    { value: "CONDUCTOR MOTO-OBRERO", label: "Conductor Moto-Obrero" },
-                    { value: "OBRERO-CONDUCTOR", label: "Obrero-Conductor" },
-                    { value: "AYUDANTE DE CAMION", label: "Ayudante de Camión" },
-                  ]}
                 />
               </LabelBase>
             </div>

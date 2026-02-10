@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi, getAuthToken, removeAuthToken, LoginResponse } from './api';
+import { useRouter } from 'next/navigation';
 
 export type User = LoginResponse['user'] | null;
 
@@ -18,11 +19,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   // Cargar el usuario al montar el componente
   useEffect(() => {
+    // Evitar doble llamada en Strict Mode
+    if (initialized) return;
+    setInitialized(true);
     loadUser();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadUser = async () => {
     const token = getAuthToken();
@@ -84,10 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
       removeAuthToken();
-      // Redirigir al login
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
     }
   };
 
@@ -113,12 +114,13 @@ export function useAuth() {
 // Hook para verificar si el usuario está autenticado
 export function useRequireAuth() {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
-      window.location.href = '/';
+      router.push('/');
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   return { user, loading };
 }

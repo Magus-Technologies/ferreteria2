@@ -131,22 +131,12 @@ function TableProductos() {
                   data.map((item) => item["Ubicación en Almacén"] as string),
                 );
 
-                console.log(
-                  "📍 Ubicaciones a importar:",
-                  Array.from(ubicacionesNames),
-                );
-
                 try {
                   const ubicaciones = await ubicacionesApi.importMany(
                     Array.from(ubicacionesNames).map((name) => ({
                       name,
                       almacen_id,
                     })),
-                  );
-
-                  console.log(
-                    "✅ Respuesta de importarUbicaciones:",
-                    ubicaciones,
                   );
 
                   // Verificar si hay error en la respuesta
@@ -196,7 +186,6 @@ function TableProductos() {
 
                   return newData;
                 } catch (error) {
-                  console.error("❌ Error en preProcessData:", error);
                   throw error;
                 }
               }}
@@ -208,36 +197,31 @@ function TableProductos() {
                   if (res.error) {
                     throw new Error(res.error.message);
                   }
-                  return { data: res.data };
+
+                  const resultData = (res.data as any)?.data ?? res.data;
+
+                  return {
+                    data: {
+                      imported: resultData?.imported ?? 0,
+                      duplicates: resultData?.duplicates ?? 0,
+                      errors: resultData?.errors ?? 0,
+                      total: resultData?.total ?? 0,
+                    },
+                  };
                 },
                 msgSuccess: "Productos importados exitosamente",
                 onSuccess: (res) => {
-                  // Invalidar queries de productos por almacén para refrescar tabla
                   queryClient.invalidateQueries({
                     queryKey: ["productos-by-almacen"],
                   });
 
-                  if (res.data?.length)
+                  const result = res.data as any;
+                  if (result?.duplicates > 0) {
                     notification.info({
-                      message: "Productos duplicados",
-                      description: (
-                        <div className="max-h-[60dvh] overflow-y-auto">
-                          <p>
-                            Los siguientes productos no se subieron porque ya
-                            existen:
-                          </p>
-                          {res.data.map((item, index) => (
-                            <div key={index} className="pr-4">
-                              <div className="grid grid-cols-3 gap-x-4 pl-8">
-                                <span className="text-red-500 text-nowrap">
-                                  {String(item.name || "")}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ),
+                      message: "Resultado de importación",
+                      description: `Importados: ${result.imported}, Duplicados: ${result.duplicates}, Errores: ${result.errors}`,
                     });
+                  }
                 },
                 queryKey: [
                   QueryKeys.PRODUCTOS,

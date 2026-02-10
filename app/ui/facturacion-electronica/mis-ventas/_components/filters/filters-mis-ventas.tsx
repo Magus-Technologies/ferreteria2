@@ -1,9 +1,10 @@
 "use client";
 
 import { Form, Drawer, Badge } from "antd";
-import { FaSearch, FaFilter } from "react-icons/fa";
+import { FaSearch, FaFilter, FaPlus } from "react-icons/fa";
 import { FaCartShopping, FaTruckFast } from "react-icons/fa6";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
@@ -44,6 +45,7 @@ interface ValuesFiltersMisVentas {
 }
 
 export default function FiltersMisVentas() {
+  const router = useRouter();
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
   const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] =
     useState(false);
@@ -158,6 +160,16 @@ export default function FiltersMisVentas() {
             formWithMessage={false}
             form={form}
           />
+
+          <ButtonBase
+            color="success"
+            size="md"
+            onClick={() => router.push('/ui/facturacion-electronica/mis-ventas/crear-venta')}
+            className="flex items-center gap-2"
+          >
+            <FaPlus />
+            Crear Venta
+          </ButtonBase>
 
           {/* Mobile/Tablet: Botón para abrir drawer */}
           <div className="flex lg:hidden items-center gap-2">

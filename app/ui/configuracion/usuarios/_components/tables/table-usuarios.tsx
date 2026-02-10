@@ -68,6 +68,13 @@ export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
         },
       },
       {
+        headerName: 'Código',
+        field: 'codigo',
+        width: 100,
+        filter: 'agTextColumnFilter',
+        valueGetter: (params) => params.data?.codigo || '-',
+      },
+      {
         headerName: 'Documento',
         field: 'numero_documento',
         width: 120,

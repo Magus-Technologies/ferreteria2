@@ -9,7 +9,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: process.env.IGNORE_BUILD_ERRORS !== 'false',
   },
 
-  reactStrictMode: true,
+  // Desactivar Strict Mode para evitar dobles peticiones en desarrollo
+  reactStrictMode: false,
 
   experimental: {
     optimizePackageImports: [

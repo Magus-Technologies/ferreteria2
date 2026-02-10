@@ -13,9 +13,7 @@ export default function NotificationInitializer() {
   const { enableNotifications, permissionStatus } = useNotifications()
 
   useEffect(() => {
-    console.log('🔔 NotificationInitializer montado')
-    console.log('🔔 Usuario:', user?.name, 'Rol:', user?.rol_sistema)
-    console.log('🔔 Estado de permisos:', permissionStatus)
+
 
     // Solo para usuarios DESPACHADOR
     if (user?.rol_sistema === 'DESPACHADOR') {

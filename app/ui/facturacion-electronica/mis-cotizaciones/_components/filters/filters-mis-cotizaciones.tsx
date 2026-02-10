@@ -1,8 +1,9 @@
 "use client";
 
 import { Form } from "antd";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaPlus } from "react-icons/fa";
 import { MdPointOfSale } from "react-icons/md";
+import { useRouter } from "next/navigation";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
@@ -25,6 +26,7 @@ interface ValuesFiltersMisCotizaciones {
 }
 
 export default function FiltersMisCotizaciones() {
+  const router = useRouter();
   const [form] = Form.useForm<ValuesFiltersMisCotizaciones>();
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
 
@@ -51,17 +53,29 @@ export default function FiltersMisCotizaciones() {
         title="Mis Cotizaciones"
         icon={<MdPointOfSale className="text-amber-600" />}
       >
-        <SelectAlmacen
-          propsForm={{
-            name: "almacen_id",
-            hasFeedback: false,
-            className: "!min-w-[220px] !w-[220px] !max-w-[220px]",
-            rules: [{ required: true, message: "" }],
-          }}
-          className="w-full"
-          formWithMessage={false}
-          form={form}
-        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <SelectAlmacen
+            propsForm={{
+              name: "almacen_id",
+              hasFeedback: false,
+              className: "!min-w-[220px] !w-[220px] !max-w-[220px]",
+              rules: [{ required: true, message: "" }],
+            }}
+            className="w-full"
+            formWithMessage={false}
+            form={form}
+          />
+
+          <ButtonBase
+            color="success"
+            size="md"
+            onClick={() => router.push('/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion')}
+            className="flex items-center gap-2"
+          >
+            <FaPlus />
+            Crear Cotización
+          </ButtonBase>
+        </div>
       </TituloModulos>
 
       {/* Filtros con labels inline */}

@@ -41,7 +41,7 @@ export default function DocHeaderTicket({
       </View>
       <View style={styles_ticket.headerDocument}>
         <Text style={styles_ticket.headerTitle}>
-          {tipo_documento} ELECTRÓNICA
+          {tipo_documento.includes('VALE') ? tipo_documento : `${tipo_documento} ELECTRÓNICA`}
         </Text>
         <Text>{nro_doc}</Text>
       </View>

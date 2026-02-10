@@ -25,6 +25,7 @@ export interface Usuario {
   // Información personal
   tipo_documento: 'DNI' | 'RUC' | 'CE' | 'PASAPORTE' | null;
   numero_documento: string | null;
+  codigo: string | null;
   telefono: string | null;
   celular: string | null;
   genero: 'M' | 'F' | 'O' | null;
@@ -68,6 +69,7 @@ export interface CreateUsuarioRequest {
   // Información personal (opcionales)
   tipo_documento?: 'DNI' | 'RUC' | 'CE' | 'PASAPORTE';
   numero_documento?: string;
+  codigo?: string;
   telefono?: string;
   celular?: string;
   genero?: 'M' | 'F' | 'O';
@@ -106,6 +108,7 @@ export interface UpdateUsuarioRequest {
   // Información personal
   tipo_documento?: 'DNI' | 'RUC' | 'CE' | 'PASAPORTE';
   numero_documento?: string;
+  codigo?: string;
   telefono?: string;
   celular?: string;
   genero?: 'M' | 'F' | 'O';
