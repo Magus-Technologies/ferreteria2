@@ -1,10 +1,10 @@
 import { create } from 'zustand'
-import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
+import type { RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
 
 type UseStoreRecepcionAlmacenSeleccionadaProps = {
-  recepcionAlmacen?: getRecepcionesAlmacenResponseProps
+  recepcionAlmacen?: RecepcionAlmacenResponse
   setRecepcionAlmacen: (
-    value: getRecepcionesAlmacenResponseProps | undefined
+    value: RecepcionAlmacenResponse | undefined
   ) => void
 }
 

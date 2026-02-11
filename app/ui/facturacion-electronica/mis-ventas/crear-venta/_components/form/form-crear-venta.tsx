@@ -197,12 +197,7 @@ export default function FormCrearVenta({
 
       {/* 2da fila */}
       <div className="flex gap-3 sm:gap-4 lg:gap-6">
-        <ConfigurableElement
-          componentId="crear-venta.forma-pago"
-          label="Forma de Pago"
-        >
-          <FormFormaDePago form={form} />
-        </ConfigurableElement>
+        <FormFormaDePago form={form} />
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}

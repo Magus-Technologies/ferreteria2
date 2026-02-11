@@ -93,6 +93,7 @@ export default function ModalTicketCierre({
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='cierre_caja'
+      cierreId={data?.id}
     >
       {esTicket ? (
         <DocCierreCajaTicket

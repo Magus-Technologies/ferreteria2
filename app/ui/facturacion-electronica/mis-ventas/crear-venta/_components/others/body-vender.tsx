@@ -76,7 +76,18 @@ export type FormCreateVenta = {
   latitud?: number
   longitud?: number
   observaciones?: string
-  quien_entrega?: 'vendedor' | 'almacen'
+  quien_entrega?: 'vendedor' | 'almacen' | 'chofer'
+  cantidades_parciales?: Array<{
+    producto_id: number
+    producto_name: string
+    producto_codigo: string
+    unidad_derivada_id: number
+    unidad_derivada_name: string
+    total: number
+    entregado: number
+    pendiente: number
+    entregar: number
+  }>
 }
 
 // Componente interno que se recrea completamente cuando cambia la key

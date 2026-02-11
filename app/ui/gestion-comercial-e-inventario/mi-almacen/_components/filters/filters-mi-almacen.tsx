@@ -25,6 +25,9 @@ import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { useStoreQuickFilter } from "../../_store/store-quick-filter";
 import { useEffect, useState, useMemo } from "react";
 import type { GetProductosParams } from "~/app/_types/producto";
+import { useQuery } from "@tanstack/react-query";
+import { marcasApi } from "~/lib/api/catalogos";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface FiltersMiAlmacenProps {
   // marca_predeterminada?: number // Ya no se usa
@@ -50,6 +53,32 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const setFiltros = useStoreFiltrosProductos((state) => state.setFiltros);
   const filtros = useStoreFiltrosProductos((state) => state.filtros);
   const setQuickFilter = useStoreQuickFilter((state) => state.setQuickFilter);
+
+  // Obtener el ID de "ACEROS AREQUIPA" dinámicamente
+  const { data: marcas } = useQuery({
+    queryKey: [QueryKeys.MARCAS],
+    queryFn: async () => {
+      const response = await marcasApi.getAll();
+      if (response.error) throw new Error(response.error.message);
+      return response.data?.data || [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const acerosArequipaId = useMemo(() => {
+    return marcas?.find(m => m.name.toUpperCase() === 'ACEROS AREQUIPA')?.id;
+  }, [marcas]);
+
+  // Establecer marca_id cuando se carga
+  useEffect(() => {
+    if (acerosArequipaId) {
+      form.setFieldValue('marca_id', acerosArequipaId);
+      // Disparar submit automáticamente si ya hay filtros
+      if (filtros) {
+        form.submit();
+      }
+    }
+  }, [acerosArequipaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Inicializar filtros automáticamente al montar el componente
   useEffect(() => {
@@ -89,13 +118,13 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
       unidad_medida_id,
     } = values;
 
-    // El campo de búsqueda (cod_producto) se maneja con Quick Filter local
-    setQuickFilter(cod_producto || "");
+    // Enviar búsqueda al backend en lugar de usar Quick Filter local
+    setQuickFilter(""); // Limpiar quick filter para usar búsqueda del backend
 
-    // Los demás filtros van al backend (NO incluir search)
+    // Los demás filtros van al backend
     const filtros: Partial<GetProductosParams> = {
       almacen_id,
-      // NO enviar search al backend, se usa Quick Filter local
+      search: cod_producto || undefined, // ENVIAR búsqueda al backend
       marca_id: marca_id || undefined,
       categoria_id: categoria_id || undefined,
       unidad_medida_id: unidad_medida_id || undefined,
@@ -130,7 +159,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
         estado: 1,
         cs_stock: CSStock.ALL,
         cs_comision: CSComision.ALL,
-        marca_id: 1, // ACEROS AREQUIPA por defecto
+        // marca_id se establece dinámicamente en el useEffect
       }}
       className="w-full"
       onFinish={handleFinish}
@@ -154,10 +183,9 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
             prefix={<FaBoxOpen size={15} className="text-cyan-600 mx-1" />}
             formWithMessage={false}
             allowClear
-            onChange={(e) => {
-              // Actualizar Quick Filter en tiempo real mientras se escribe
-              const valor = e.target.value || "";
-              setQuickFilter(valor);
+            onPressEnter={() => {
+              // Enviar al backend cuando presiona Enter
+              form.submit();
             }}
           />
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import { EstadoDeCompra, TipoDocumento, FormaDePago } from '@prisma/client'
+
 import { IGV } from '~/lib/constantes'
 import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
@@ -60,7 +60,7 @@ export function useColumnsCompras({
       width: 80,
       minWidth: 80,
       valueFormatter: ({ value }) => {
-        return value == TipoDocumento.NotaDeVenta ? 'Nota de Venta' : value
+        return value === 'nv' ? 'Nota de Venta' : value
       },
       filter: true,
     },
@@ -231,7 +231,7 @@ export function useColumnsCompras({
       minWidth: 120,
       valueFormatter: (params) => {
         // Si es contado, siempre está pagado
-        if (params.data?.forma_de_pago === FormaDePago.Contado) {
+        if (params.data?.forma_de_pago === 'co') {
           return 'Pagado'
         }
         
@@ -249,7 +249,7 @@ export function useColumnsCompras({
       filter: true,
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         // Si es contado, siempre está pagado
-        if (params.data?.forma_de_pago === FormaDePago.Contado) {
+        if (params.data?.forma_de_pago === 'co') {
           return (
             <div className='flex items-center h-full'>
               <span className='px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'>
@@ -331,8 +331,8 @@ export function useColumnsCompras({
                   id={params.value}
                   permiso={permissions.COMPRAS_BASE}
                   showDelete={
-                    params.data?.estado_de_compra !== EstadoDeCompra.Anulado &&
-                    params.data?.estado_de_compra !== EstadoDeCompra.Procesado
+                    params.data?.estado_de_compra !== 'an' &&
+                    params.data?.estado_de_compra !== 'pr'
                   }
                   propsDelete={{
                     action: async ({ id }: { id: string }) => {
@@ -354,28 +354,23 @@ export function useColumnsCompras({
                   {can(permissions.RECEPCION_ALMACEN_CREATE) && (
                     <Tooltip
                       title={
-                        params.data?.estado_de_compra === EstadoDeCompra.Creado
+                        params.data?.estado_de_compra === 'cr'
                           ? 'Recepcionar en Almacén'
-                          : params.data?.estado_de_compra ===
-                            EstadoDeCompra.Procesado
+                          : params.data?.estado_de_compra === 'pr'
                           ? 'Recepcionada en Almacén'
                           : 'No se puede Recepcionar'
                       }
                     >
                       <FaTruckLoading
                         onClick={() => {
-                          if (
-                            params.data?.estado_de_compra ===
-                            EstadoDeCompra.Creado
-                          ) {
+                          if (params.data?.estado_de_compra === 'cr') {
                             setCompraRecepcion(params.data)
                             setOpenModal(true)
                           }
                         }}
                         size={15}
                         className={`cursor-pointer ${
-                          params.data?.estado_de_compra ===
-                          EstadoDeCompra.Creado
+                          params.data?.estado_de_compra === 'cr'
                             ? 'text-cyan-600'
                             : 'text-gray-500'
                         } hover:scale-105 transition-all active:scale-95 min-w-fit`}
@@ -383,7 +378,7 @@ export function useColumnsCompras({
                     </Tooltip>
                   )}
                   {can(permissions.RECEPCION_ALMACEN_FINALIZAR) &&
-                    params.data?.estado_de_compra === EstadoDeCompra.Creado && (
+                    params.data?.estado_de_compra === 'cr' && (
                       <Tooltip title='Finalizar Recepción'>
                         <Popconfirm
                           title='Finalizar Recepción'
@@ -391,7 +386,7 @@ export function useColumnsCompras({
                           onConfirm={() =>
                             updateMutation.mutate({
                               id: params.value,
-                              data: { estado_de_compra: EstadoDeCompra.Procesado },
+                              data: { estado_de_compra: 'pr' },
                             })
                           }
                           okText='Si'

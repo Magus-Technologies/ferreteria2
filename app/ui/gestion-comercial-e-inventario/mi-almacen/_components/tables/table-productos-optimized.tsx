@@ -187,8 +187,14 @@ function TableProductosOptimized() {
                     );
 
                   const ubicacionesNames = new Set(
-                    data.map((item) => item["Ubicación en Almacén"] as string),
+                    data.map((item) => item["Ubicación en Almacén"] as string).filter(Boolean), // Filtrar undefined/null
                   );
+
+                  if (ubicacionesNames.size === 0) {
+                    throw new Error(
+                      "No se encontraron ubicaciones en el Excel. Asegúrate de que la columna 'Ubicación en Almacén' tenga valores.",
+                    );
+                  }
 
                   const ubicaciones = await ubicacionesApi.importMany(
                     Array.from(ubicacionesNames).map((name) => ({
@@ -206,11 +212,11 @@ function TableProductosOptimized() {
 
                   if (!ubicaciones?.data || ubicaciones.data.length === 0) {
                     throw new Error(
-                      "No se pudieron crear/encontrar las ubicaciones",
+                      "No se pudieron crear/encontrar las ubicaciones. Puede ser un problema de permisos o el almacén no existe.",
                     );
                   }
 
-                  const newData = data.map((item) => {
+                  const newData = data.map((item, index) => {
                     const {
                       "Stock Fracción en Almacén": stock_fraccion,
                       "Costo en Almacén": costo,
@@ -218,13 +224,20 @@ function TableProductosOptimized() {
                       ...rest
                     } = item;
 
+                    if (!ubicacion) {
+                      throw new Error(
+                        `Fila ${index + 2}: Falta la columna 'Ubicación en Almacén'`,
+                      );
+                    }
+
+                    const ubicacionStr = String(ubicacion).trim().toUpperCase();
                     const ubicacionEncontrada = ubicaciones.data!.find(
-                      (u) => u.name === ubicacion,
+                      (u) => u.name.trim().toUpperCase() === ubicacionStr,
                     );
 
                     if (!ubicacionEncontrada) {
                       throw new Error(
-                        `No se encontró la ubicación: ${ubicacion}`,
+                        `Fila ${index + 2}: No se encontró la ubicación "${ubicacion}". Disponibles: ${ubicaciones.data!.map(u => u.name).join(', ')}`,
                       );
                     }
 
@@ -251,7 +264,18 @@ function TableProductosOptimized() {
                     if (res.error) {
                       throw new Error(res.error.message);
                     }
-                    return { data: res.data };
+
+                    // El backend procesa síncronamente y devuelve el resultado directo
+                    const resultData = (res.data as any)?.data ?? res.data;
+
+                    return {
+                      data: {
+                        imported: resultData?.imported ?? 0,
+                        duplicates: resultData?.duplicates ?? 0,
+                        errors: resultData?.errors ?? 0,
+                        total: resultData?.total ?? 0,
+                      },
+                    };
                   },
                   msgSuccess: "Productos importados exitosamente",
                   onSuccess: (res) => {
@@ -259,27 +283,13 @@ function TableProductosOptimized() {
                       queryKey: ["productos-infinite"],
                     });
 
-                    if (res.data?.length)
+                    const result = res.data as any;
+                    if (result?.duplicates > 0) {
                       notification.info({
-                        message: "Productos duplicados",
-                        description: (
-                          <div className="max-h-[60dvh] overflow-y-auto">
-                            <p>
-                              Los siguientes productos no se subieron porque ya
-                              existen:
-                            </p>
-                            {res.data.map((item, index) => (
-                              <div key={index} className="pr-4">
-                                <div className="grid grid-cols-3 gap-x-4 pl-8">
-                                  <span className="text-red-500 text-nowrap">
-                                    {String(item.name || "")}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ),
+                        message: "Resultado de importación",
+                        description: `Importados: ${result.imported}, Duplicados: ${result.duplicates}, Errores: ${result.errors}`,
                       });
+                    }
                   },
                   queryKey: [
                     QueryKeys.PRODUCTOS,

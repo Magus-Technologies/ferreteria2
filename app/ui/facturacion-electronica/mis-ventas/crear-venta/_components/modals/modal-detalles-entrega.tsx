@@ -1,7 +1,7 @@
 'use client'
 
 import { Select, Modal, FormInstance, Form } from 'antd'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -10,6 +10,9 @@ import TextareaBase from '~/app/_components/form/inputs/textarea-base'
 import TitleForm from '~/components/form/title-form'
 import dynamic from 'next/dynamic'
 import useCreateVenta from '../../_hooks/use-create-venta'
+import type { FormCreateVenta } from '../others/body-vender'
+import TablaProductosEntrega from '../../../_components/tables/tabla-productos-entrega'
+import type { ProductoEntrega } from '../../../_hooks/use-productos-entrega'
 
 // Importar el mapa de Mapbox dinámicamente para evitar problemas de SSR
 const MapaDireccionMapbox = dynamic(
@@ -45,9 +48,31 @@ export default function ModalDetallesEntrega({
 }: ModalDetallesEntregaProps) {
   const [mostrarMapa, setMostrarMapa] = useState(false)
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null)
+  const [productosEntrega, setProductosEntrega] = useState<ProductoEntrega[]>([])
+  const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
   
   // Hook para crear venta
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta()
+
+  // Obtener productos del formulario
+  const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
+
+  // Inicializar cantidades de entrega cuando se abre el modal en modo Parcial
+  useEffect(() => {
+    if (open && tipoDespacho === 'Parcial' && productos && productos.length > 0) {
+      const items: ProductoEntrega[] = productos.map((p, index) => ({
+        id: index + 1,
+        producto: p.producto_name,
+        ubicacion: '',
+        total: Number(p.cantidad),
+        entregado: 0,
+        pendiente: Number(p.cantidad),
+        entregar: 0,
+        unidad_derivada_venta_id: p.unidad_derivada_id,
+      }))
+      setProductosEntrega(items)
+    }
+  }, [open, tipoDespacho, productos])
 
   const handleEditarCliente = () => {
     onEditarCliente()
@@ -56,40 +81,55 @@ export default function ModalDetallesEntrega({
   // Callback para cuando el usuario marca una ubicación en el mapa
   const handleCoordenadaChange = useCallback((nuevasCoordenadas: Coordenadas) => {
     setCoordenadas(nuevasCoordenadas)
-    // Guardar en el formulario
     form.setFieldValue('latitud', nuevasCoordenadas.lat)
     form.setFieldValue('longitud', nuevasCoordenadas.lng)
   }, [form])
 
-  // ✅ Setear tipo_despacho en el formulario cuando se abre el modal
+  // Setear tipo_despacho en el formulario cuando se abre el modal
   useEffect(() => {
     if (open) {
       form.setFieldValue('tipo_despacho', tipoDespacho)
     }
   }, [open, tipoDespacho, form])
 
+  // Verificar si hay algo que entregar
+  const totalAEntregar = useMemo(
+    () => productosEntrega.reduce((acc, item) => acc + item.entregar, 0),
+    [productosEntrega],
+  )
+
   const handleConfirmar = async () => {
-    // Obtener todos los valores del formulario de venta
     const ventaValues = form.getFieldsValue()
 
-    // Crear la venta
+    if (tipoDespacho === 'Parcial') {
+      // Convertir ProductoEntrega[] a cantidades_parciales para use-create-venta
+      ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
+        producto_id: 0,
+        producto_name: p.producto,
+        producto_codigo: '',
+        unidad_derivada_id: p.unidad_derivada_venta_id,
+        unidad_derivada_name: '',
+        total: p.total,
+        entregado: p.entregado,
+        pendiente: p.pendiente,
+        entregar: p.entregar,
+      }))
+      ventaValues.quien_entrega = quienEntregaParcial
+    }
+
     await crearVenta(ventaValues)
-    
-    // Cerrar el modal después de crear la venta
     setOpen(false)
-    
-    // Llamar a onConfirmar si existe
     onConfirmar()
   }
 
   const getTipoDespachoLabel = () => {
     switch (tipoDespacho) {
       case 'EnTienda':
-        return '🏪 Despacho en Tienda'
+        return 'Despacho en Tienda'
       case 'Domicilio':
-        return '🚚 Despacho a Domicilio'
+        return 'Despacho a Domicilio'
       case 'Parcial':
-        return '📦 Despacho Parcial'
+        return 'Despacho Parcial'
     }
   }
 
@@ -105,7 +145,7 @@ export default function ModalDetallesEntrega({
       }
       open={open}
       onCancel={() => setOpen(false)}
-      width={800}
+      width={tipoDespacho === 'Parcial' ? 900 : 800}
       centered
       footer={
         <div className="flex justify-end gap-2">
@@ -120,14 +160,14 @@ export default function ModalDetallesEntrega({
             color="success"
             size="md"
             onClick={handleConfirmar}
-            disabled={creandoVenta}
+            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0)}
           >
             {creandoVenta
               ? 'Procesando...'
               : tipoDespacho === 'EnTienda'
               ? 'Entregar Ahora'
               : tipoDespacho === 'Parcial'
-              ? 'Entregar Parcial'
+              ? 'Entregar'
               : 'Programar Entrega'}
           </ButtonBase>
         </div>
@@ -145,16 +185,16 @@ export default function ModalDetallesEntrega({
               value={form.getFieldValue('quien_entrega')}
               onChange={(value) => form.setFieldValue('quien_entrega', value)}
               options={[
-                { value: 'vendedor', label: '👤 Vendedor' },
-                { value: 'almacen', label: '📦 Almacén' },
+                { value: 'vendedor', label: 'Vendedor' },
+                { value: 'almacen', label: 'Almacen' },
               ]}
               className="w-full"
             />
           </div>
         )}
 
-        {/* Campos para Despacho a Domicilio */}
-        {(tipoDespacho === 'Domicilio' || tipoDespacho === 'Parcial') && (
+        {/* Campos para Despacho a Domicilio (solo Domicilio, ya no Parcial) */}
+        {tipoDespacho === 'Domicilio' && (
           <div className="space-y-4">
             {/* Fila 1: Chofer y Fecha */}
             <div className="grid grid-cols-2 gap-4">
@@ -319,13 +359,51 @@ export default function ModalDetallesEntrega({
                     <span>{direccion ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
                     {coordenadas && (
                       <span className="text-xs text-green-600 font-mono">
-                        ✅ Ubicación guardada: {coordenadas.lat.toFixed(4)}, {coordenadas.lng.toFixed(4)}
+                        Ubicación guardada: {coordenadas.lat.toFixed(4)}, {coordenadas.lng.toFixed(4)}
                       </span>
                     )}
                   </div>
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Campos para Despacho Parcial - Tabla de productos */}
+        {tipoDespacho === 'Parcial' && (
+          <div className="space-y-4">
+            {/* Selector de quién entrega */}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                ¿Quién entrega? <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={quienEntregaParcial}
+                onChange={(value) => setQuienEntregaParcial(value)}
+                options={[
+                  { value: 'almacen', label: 'Almacen' },
+                  { value: 'chofer', label: 'Chofer en Tienda' },
+                ]}
+                className="w-60"
+              />
+            </div>
+
+            {/* Tabla AG Grid de productos */}
+            <TablaProductosEntrega
+              productos={productosEntrega}
+              onProductoChange={setProductosEntrega}
+            />
+
+            {/* Resumen */}
+            {totalAEntregar > 0 && (
+              <div className="flex justify-end">
+                <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-sm">
+                  <span className="text-green-800 font-medium">
+                    Total a entregar: {totalAEntregar} unidad(es)
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

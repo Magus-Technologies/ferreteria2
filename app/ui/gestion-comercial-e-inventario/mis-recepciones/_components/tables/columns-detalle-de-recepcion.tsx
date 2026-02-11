@@ -1,21 +1,45 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { getRecepcionesAlmacenResponseProps } from '~/app/_actions/recepcion-almacen'
 import { getStock } from '~/app/_utils/get-stock'
-import { getHistorial } from '../../../mi-almacen/_components/tables/columns-doc-ingreso-salida'
-import { RecepcionAlmacen } from '@prisma/client'
+import type { RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
 
 export type TableDetalleDeRecepcionProps = Pick<
-  getRecepcionesAlmacenResponseProps['productos_por_almacen'][number],
+  RecepcionAlmacenResponse['productos_por_almacen'][number],
   'producto_almacen' | 'costo'
 > &
-  getRecepcionesAlmacenResponseProps['productos_por_almacen'][number]['unidades_derivadas'][number]
+  RecepcionAlmacenResponse['productos_por_almacen'][number]['unidades_derivadas'][number]
+
+function getHistorialFromResponse({
+  historial,
+  estado,
+}: {
+  historial: { stock_anterior: number; stock_nuevo: number }[] | undefined | null
+  estado: boolean
+}) {
+  if (!historial || historial.length === 0) {
+    return { stock_anterior: 0, stock_nuevo: 0 }
+  }
+
+  const stock_anterior = Number(historial[0]?.stock_anterior ?? 0)
+  const stock_nuevo = Number(historial[0]?.stock_nuevo ?? 0)
+  let index = 0
+  if (
+    (estado && stock_anterior > stock_nuevo) ||
+    (!estado && stock_anterior < stock_nuevo)
+  )
+    index = 1
+
+  return {
+    stock_anterior: Number(historial[index]?.stock_anterior ?? 0),
+    stock_nuevo: Number(historial[index]?.stock_nuevo ?? 0),
+  }
+}
 
 export function useColumnsDetalleDeRecepcion({
   estado,
 }: {
-  estado: RecepcionAlmacen['estado']
+  estado: boolean
 }) {
   const columns: ColDef<TableDetalleDeRecepcionProps>[] = [
     {
@@ -98,7 +122,7 @@ export function useColumnsDetalleDeRecepcion({
         data: TableDetalleDeRecepcionProps | undefined
         value: TableDetalleDeRecepcionProps['historial']
       }) => {
-        const historial = getHistorial({
+        const historial = getHistorialFromResponse({
           historial: value,
           estado,
         })
@@ -125,7 +149,7 @@ export function useColumnsDetalleDeRecepcion({
         data: TableDetalleDeRecepcionProps | undefined
         value: TableDetalleDeRecepcionProps['historial']
       }) => {
-        const historial = getHistorial({
+        const historial = getHistorialFromResponse({
           historial: value,
           estado,
         })

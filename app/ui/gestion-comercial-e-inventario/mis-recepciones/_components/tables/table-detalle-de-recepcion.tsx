@@ -2,7 +2,6 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
-import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
 import { useEffect, useRef } from 'react'
 import { useStoreRecepcionAlmacenSeleccionada } from '../../_store/store-recepcion-almacen-seleccionado'
 import {
@@ -32,7 +31,6 @@ export default function TableDetalleDeRecepcion() {
       tableRef={tableRef}
       id='g-c-e-i.mis-recepciones.detalle-de-recepcion'
       title='Detalle de Recepción'
-      schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
       headersRequired={['Cod. Producto']}
       columnDefs={useColumnsDetalleDeRecepcion({
         estado: recepcionSeleccionada?.estado ?? false,

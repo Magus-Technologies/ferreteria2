@@ -7,7 +7,6 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
-import { Almacen, Prisma } from '@prisma/client'
 import { FaCalendar } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
@@ -18,9 +17,10 @@ import { useEffect } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosMisRecepciones } from '../../_store/store-filtros-mis-recepciones'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
+import type { RecepcionAlmacenFilters } from '~/lib/api/recepcion-almacen'
 
 interface ValuesFiltersMisRecepciones {
-  almacen_id: Almacen['id']
+  almacen_id: number
   desde?: Dayjs
   hasta?: Dayjs
   user_id?: string
@@ -35,15 +35,11 @@ export default function FiltersMisRecepciones() {
   const setFiltros = useStoreFiltrosMisRecepciones(state => state.setFiltros)
 
   useEffect(() => {
-    const data = {
-      compra: {
-        almacen_id,
-      },
-      fecha: {
-        gte: toUTCBD({ date: dayjs().startOf('day') }),
-        lte: toUTCBD({ date: dayjs().endOf('day') }),
-      },
-    } satisfies Prisma.RecepcionAlmacenWhereInput
+    const data: RecepcionAlmacenFilters = {
+      almacen_id,
+      fecha_desde: toUTCBD({ date: dayjs().startOf('day') }),
+      fecha_hasta: toUTCBD({ date: dayjs().endOf('day') }),
+    }
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -58,22 +54,14 @@ export default function FiltersMisRecepciones() {
       }}
       className='w-full'
       onFinish={values => {
-        const { desde, hasta, almacen_id, estado, ...rest } = values
-        console.log(
-          '🚀 ~ file: filters-mis-recepciones.tsx:62 ~ estado:',
-          estado
-        )
-        const data = {
-          ...rest,
-          compra: {
-            almacen_id,
-          },
-          fecha: {
-            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
-          },
+        const { desde, hasta, almacen_id, estado, user_id } = values
+        const data: RecepcionAlmacenFilters = {
+          almacen_id,
+          fecha_desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
+          fecha_hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
+          user_id,
           estado: estado !== undefined ? estado === 1 : undefined,
-        } satisfies Prisma.RecepcionAlmacenWhereInput
+        }
         setFiltros(data)
       }}
     >

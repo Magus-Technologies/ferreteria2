@@ -59,55 +59,44 @@ export default function ConfigurableElement({
       className={`configurable-wrapper ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ 
+      style={{
         position: 'relative',
-        display: 'contents' // Hace que el wrapper sea transparente para el layout
       }}
     >
-      {/* Wrapper interno: no forzar width en sidebars para no romper el layout */}
+      {/* Contenido original - sin forzar anchos */}
       <div
-        style={{
-          position: 'relative',
-          width: noFullWidth ? undefined : '100%',
-          minWidth: noFullWidth ? undefined : 0,
-        }}
-        className={noFullWidth ? 'shrink-0' : ''}
+        className={`${isRestricted ? "opacity-40 grayscale" : ""} pointer-events-none select-none`}
+        style={{ userSelect: "none" }}
       >
-        {/* Contenido original */}
-        <div
-          className={`${isRestricted ? "opacity-40 grayscale" : ""} pointer-events-none select-none`}
-          style={{ userSelect: "none", width: noFullWidth ? undefined : '100%' }}
-        >
-          {children}
-        </div>
+        {children}
+      </div>
 
-        {/* Overlay clickeable */}
-        <div
-          className="absolute inset-0 cursor-pointer z-[9999]"
-          onClick={handleClick}
-          onMouseDown={(e) => e.stopPropagation()}
-          title={`Click para configurar: ${label}`}
-        />
+      {/* Overlay clickeable */}
+      <div
+        className="absolute inset-0 cursor-pointer z-[9999]"
+        onClick={handleClick}
+        onMouseDown={(e) => e.stopPropagation()}
+        title={`Click para configurar: ${label}`}
+      />
 
-        {/* Borde hover */}
-        {isHovered && (
-          <div className="absolute inset-0 pointer-events-none border-2 border-blue-500 rounded bg-blue-500/10 z-[9998]">
-            <div className="absolute -top-6 left-0 bg-blue-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg">
-              {label} {isRestricted ? "❌ OCULTO" : "✅ VISIBLE"}
-            </div>
+      {/* Borde hover */}
+      {isHovered && (
+        <div className="absolute inset-0 pointer-events-none border-2 border-blue-500 rounded bg-blue-500/10 z-[9998]">
+          <div className="absolute -top-6 left-0 bg-blue-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg z-[10000]">
+            {label} {isRestricted ? "❌ OCULTO" : "✅ VISIBLE"}
           </div>
-        )}
-
-        {/* Badge de estado */}
-        <div
-          className={`absolute -top-2 -right-2 w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center z-[9998] ${
-            isRestricted ? "bg-red-500" : "bg-green-500"
-          }`}
-        >
-          <span className="text-white text-[10px] font-bold">
-            {isRestricted ? "✗" : "✓"}
-          </span>
         </div>
+      )}
+
+      {/* Badge de estado */}
+      <div
+        className={`absolute -top-2 -right-2 w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center z-[9998] ${
+          isRestricted ? "bg-red-500" : "bg-green-500"
+        }`}
+      >
+        <span className="text-white text-[10px] font-bold">
+          {isRestricted ? "✗" : "✓"}
+        </span>
       </div>
     </div>
   );

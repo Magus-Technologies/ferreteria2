@@ -81,12 +81,9 @@ export function removeAuthToken(): void {
  */
 export async function apiRequest<T = unknown>(
   endpoint: string,
-  options: RequestInit = {},
+  options: RequestInit & { data?: any; params?: Record<string, any> } = {},
 ): Promise<ApiResponse<T>> {
   const token = getAuthToken();
-
-  console.log(`🌐 [apiRequest] ${options.method || 'GET'} ${endpoint}`);
-  console.log(`🌐 [apiRequest] Token disponible:`, token ? 'SÍ (length: ' + token.length + ')' : '❌ NO');
 
   const headers = {
     "Content-Type": "application/json",
@@ -95,32 +92,56 @@ export async function apiRequest<T = unknown>(
     ...options.headers,
   };
 
-  console.log(`🌐 [apiRequest] Headers:`, JSON.stringify(headers, null, 2));
+  // Procesar data para convertirlo en body
+  const { data, params, ...fetchOptions } = options;
+  
+  if (data) {
+    fetchOptions.body = JSON.stringify(data);
+  }
+
+  // Agregar parámetros de query string si existen
+  let url = `${API_URL}${endpoint}`;
+  if (params) {
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined && value !== null) {
+            acc[key] = String(value);
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
+    ).toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
+  }
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
+    const response = await fetch(url, {
+      ...fetchOptions,
       headers,
       credentials: "include",
     });
 
-    console.log(`🌐 [apiRequest] Response status:`, response.status, response.statusText);
-
     const data = await response.json();
-    console.log(`🌐 [apiRequest] Response data:`, JSON.stringify(data, null, 2));
 
     if (!response.ok) {
       // Manejar errores de validación de Laravel
       if (response.status === 422) {
-        // Obtener el primer mensaje de error
-        const firstError = data.errors
-          ? Object.values(data.errors as Record<string, string[]>)[0]?.[0]
-          : data.message;
+        // Soportar ambos formatos: { errors, message } y { error: { errors, message } }
+        const errors = data.errors || data.error?.errors;
+        const msg = data.message || data.error?.message;
+
+        const firstError = errors
+          ? Object.values(errors as Record<string, string[]>)[0]?.[0]
+          : msg;
 
         return {
           error: {
-            message: firstError || data.message || "Error de validación",
-            errors: data.errors,
+            message: firstError || msg || "Error de validación",
+            errors: errors,
           },
         };
       }
@@ -168,45 +189,14 @@ export const authApi = {
     email: string,
     password: string,
   ): Promise<ApiResponse<LoginResponse>> {
-    console.log('🔵 [authApi.login] Iniciando login...');
-    console.log('🔵 [authApi.login] Email:', email);
-    console.log('🔵 [authApi.login] API_URL:', API_URL);
-    
     const response = await apiRequest<LoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
-    console.log('🔵 [authApi.login] Respuesta recibida:', JSON.stringify(response, null, 2));
-
     // Si el login fue exitoso, guardar el token
     if (response.data?.token) {
-      const token = response.data.token;
-      console.log('✅ [authApi.login] Token recibido (primeros 30 chars):', token.substring(0, 30) + '...');
-      console.log('✅ [authApi.login] Token completo length:', token.length);
-      
-      // Guardar el token
-      setAuthToken(token);
-      console.log('✅ [authApi.login] setAuthToken ejecutado');
-      
-      // Verificar que se guardó correctamente
-      const savedToken = getAuthToken();
-      console.log('🔍 [authApi.login] Token guardado verificado:', savedToken ? 'SÍ (length: ' + savedToken.length + ')' : '❌ NO SE GUARDÓ');
-      
-      if (savedToken) {
-        console.log('🔍 [authApi.login] Primeros 30 chars del token guardado:', savedToken.substring(0, 30) + '...');
-        console.log('🔍 [authApi.login] ¿Tokens coinciden?', token === savedToken ? '✅ SÍ' : '❌ NO');
-      }
-      
-      // Verificar localStorage directamente
-      if (typeof window !== 'undefined') {
-        const directToken = localStorage.getItem('auth_token');
-        console.log('🔍 [authApi.login] Token en localStorage (directo):', directToken ? 'SÍ (length: ' + directToken.length + ')' : '❌ NO');
-      }
-    } else {
-      console.log('🔴 [authApi.login] No se recibió token en la respuesta');
-      console.log('🔴 [authApi.login] response.data:', response.data);
-      console.log('🔴 [authApi.login] response.error:', response.error);
+      setAuthToken(response.data.token);
     }
 
     return response;
@@ -216,20 +206,9 @@ export const authApi = {
    * Obtener el usuario actual autenticado
    */
   async getUser(): Promise<ApiResponse<LoginResponse["user"]>> {
-    const token = getAuthToken();
-    console.log('🔵 [authApi.getUser] Iniciando getUser...');
-    console.log('🔵 [authApi.getUser] Token disponible:', token ? 'SÍ (length: ' + token.length + ')' : '❌ NO');
-    if (token) {
-      console.log('🔵 [authApi.getUser] Primeros 30 chars:', token.substring(0, 30) + '...');
-    }
-    
-    const response = await apiRequest<LoginResponse["user"]>("/auth/user", {
+    return await apiRequest<LoginResponse["user"]>("/auth/user", {
       method: "GET",
     });
-    
-    console.log('🔵 [authApi.getUser] Respuesta recibida:', JSON.stringify(response, null, 2));
-    
-    return response;
   },
 
   /**

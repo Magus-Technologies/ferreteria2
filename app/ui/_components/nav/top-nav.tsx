@@ -53,12 +53,13 @@ export default function TopNavUI({ className }: { className?: string }) {
         },
       ],
     },
+   
     {
-      key: '4',
+      key: '5',
       label: 'Cambiar mi Contraseña',
     },
     {
-      key: '5',
+      key: '6',
       label: 'Cerrar Sesión',
       className: '!text-red-500',
       extra: <FaSignOutAlt className='text-red-500' />,

@@ -1,26 +1,31 @@
 'use client'
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import {
-  eliminarRecepcionAlmacen,
-  getRecepcionesAlmacenResponseProps,
-} from '~/app/_actions/recepcion-almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
 import ColumnAction from '~/components/tables/column-action'
 import { TiposDocumentos } from '~/lib/docs'
 import { permissions } from '~/lib/permissions'
+import { recepcionAlmacenApi, type RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
+
+const eliminarRecepcionAction = async ({ id }: { id: number }) => {
+  const res = await recepcionAlmacenApi.delete(id)
+  if (res.error) {
+    return { error: { message: res.error.message } }
+  }
+  return { data: res.data }
+}
 
 export function useColumnsRecepcionesAlmacen({
   setDataModalDocRecepcionAlmacen,
   setOpenModalDocRecepcionAlmacen,
 }: {
   setDataModalDocRecepcionAlmacen: (
-    data: getRecepcionesAlmacenResponseProps | undefined
+    data: RecepcionAlmacenResponse | undefined
   ) => void
   setOpenModalDocRecepcionAlmacen: (open: boolean) => void
 }) {
-  const columns: ColDef<getRecepcionesAlmacenResponseProps>[] = [
+  const columns: ColDef<RecepcionAlmacenResponse>[] = [
     {
       headerName: 'N° Documento',
       field: 'numero',
@@ -33,7 +38,7 @@ export function useColumnsRecepcionesAlmacen({
       cellRenderer: ({
         value,
         data,
-      }: ICellRendererParams<getRecepcionesAlmacenResponseProps>) => {
+      }: ICellRendererParams<RecepcionAlmacenResponse>) => {
         return (
           <div
             className='cursor-pointer text-sky-500 hover:underline hover:text-sky-700 transition-colors'
@@ -93,14 +98,14 @@ export function useColumnsRecepcionesAlmacen({
       field: 'id',
       width: 80,
       cellRenderer: (
-        params: ICellRendererParams<getRecepcionesAlmacenResponseProps>
+        params: ICellRendererParams<RecepcionAlmacenResponse>
       ) => {
         return params.data?.estado ? (
           <ColumnAction
             id={params.value}
             permiso={permissions.RECEPCION_ALMACEN_BASE}
             propsDelete={{
-              action: eliminarRecepcionAlmacen,
+              action: eliminarRecepcionAction,
               msgSuccess: 'Recepción eliminada correctamente',
               queryKey: [QueryKeys.RECEPCIONES_ALMACEN],
             }}

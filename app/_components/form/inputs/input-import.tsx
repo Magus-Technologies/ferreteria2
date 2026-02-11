@@ -271,11 +271,15 @@ export default function InputImport<TParams, TResult, schemaType>({
       beforeUpload={() => false}
       onChange={({ file }) => {
         try {
+          // Evitar ejecución duplicada: solo procesar cuando el archivo es nuevo
+          if (loading) return
+          if (file.status && file.status !== 'removed') return
+
           const gridApi = tableRef.current?.api
           if (!gridApi)
             throw new Error('No se ha encontrado la tabla de referencia')
 
-          const originFileObj = file as unknown as File
+          const originFileObj = file.originFileObj ?? (file as unknown as File)
           if (!originFileObj) throw new Error('No hay archivo para importar')
 
           handleImport({

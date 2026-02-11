@@ -9,6 +9,7 @@ export type TipoDocumento =
   | 'recepcion_almacen' 
   | 'compra'
   | 'cierre_caja'
+  | 'apertura_caja'
 
 export interface ConfiguracionCampo {
   font_family: string

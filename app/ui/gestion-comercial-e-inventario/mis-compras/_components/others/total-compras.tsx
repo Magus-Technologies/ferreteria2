@@ -3,7 +3,7 @@ import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compra
 import { compraApi } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { EstadoDeCompra } from '@prisma/client'
+
 
 export default function TotalCompras() {
   const filtros = useStoreFiltrosMisCompras(state => state.filtros)
@@ -15,7 +15,7 @@ export default function TotalCompras() {
     return {
       almacen_id: filtros.almacen_id as number | undefined,
       estado_de_compra: filtros.estado_de_compra
-        ? (filtros.estado_de_compra as { equals?: EstadoDeCompra })?.equals
+        ? (filtros.estado_de_compra as { equals?: string })?.equals
         : undefined,
       proveedor_id: filtros.proveedor_id as number | undefined,
       per_page: 9999, // Get all records for total calculation

@@ -446,4 +446,33 @@ export const cajaApi = {
       method: 'GET',
     })
   },
+
+  /**
+   * Enviar ticket de apertura por email con PDF adjunto
+   */
+  enviarTicketAperturaEmail: async (aperturaId: string, email: string, pdfBlob: Blob) => {
+    const formData = new FormData()
+    formData.append('email', email)
+    formData.append('pdf', pdfBlob, `ticket-apertura-${aperturaId}.pdf`)
+
+    // Para FormData, usar fetch directamente (no apiRequest que convierte a JSON)
+    const token = localStorage.getItem('auth_token')
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    
+    const response = await fetch(`${API_URL}/cajas/apertura/${aperturaId}/enviar-email`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // NO establecer Content-Type, el navegador lo hace automáticamente con boundary
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Error al enviar el ticket')
+    }
+
+    return response.json()
+  },
 }

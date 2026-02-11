@@ -1,13 +1,16 @@
-import { Modal, Tooltip } from 'antd'
+import { Modal, Tooltip, Input, message as antdMessage } from 'antd'
 import { cloneElement, Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { FaDownload, FaShareNodes } from 'react-icons/fa6'
 import { HiClipboardDocument } from 'react-icons/hi2'
+import { MdEmail } from 'react-icons/md'
 import ButtonBase from '~/components/buttons/button-base'
 import { useJSXToPdf } from '~/hooks/use-react-to-pdf'
 import { classOkButtonModal } from '~/lib/clases'
 import { TipoDocumento } from '~/store/store-configuracion-impresion'
 import ButtonConfiguracionImpresion from '~/components/buttons/button-configuracion-impresion'
 import ModalConfiguracionImpresion from '~/components/modals/modal-configuracion-impresion'
+import { cajaApi } from '~/lib/api/caja'
+import { cierreCajaApi } from '~/lib/api/cierre-caja'
 
 interface ModalEntradaStockProps {
   open: boolean
@@ -17,6 +20,8 @@ interface ModalEntradaStockProps {
   setEsTicket?: Dispatch<SetStateAction<boolean>>
   esTicket?: boolean
   tipoDocumento?: TipoDocumento
+  aperturaId?: string | number  // ID de apertura para enviar email
+  cierreId?: string | number     // ID de cierre para enviar email
 }
 export default function ModalShowDoc({
   open,
@@ -26,9 +31,14 @@ export default function ModalShowDoc({
   setEsTicket,
   esTicket = false,
   tipoDocumento,
+  aperturaId,
+  cierreId,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [emailDestino, setEmailDestino] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   // Solo cargar configuraciones cuando se abre el modal de configuración
   const handleOpenConfig = () => {
@@ -40,10 +50,48 @@ export default function ModalShowDoc({
     show_logo_html: true,
   })
 
-  const { download, print, share } = useJSXToPdf({
+  const { download, print, share, getPdfBlob } = useJSXToPdf({
     jsx: <>{children}</>,
     name: nro_doc,
   })
+
+  // Función para enviar email
+  const handleSendEmail = async () => {
+    console.log('🔵 handleSendEmail llamado', { aperturaId, cierreId, emailDestino })
+    
+    if (!emailDestino || !emailDestino.includes('@')) {
+      antdMessage.error('Por favor ingresa un email válido')
+      return
+    }
+
+    setSendingEmail(true)
+    try {
+      console.log('🔵 Generando PDF...')
+      const pdfBlob = await getPdfBlob()
+      console.log('🔵 PDF generado:', pdfBlob.size, 'bytes')
+
+      // Enviar según el tipo de documento
+      if (aperturaId) {
+        const idString = typeof aperturaId === 'number' ? aperturaId.toString() : aperturaId
+        console.log('🔵 Enviando apertura email:', idString, emailDestino)
+        await cajaApi.enviarTicketAperturaEmail(idString, emailDestino, pdfBlob)
+        antdMessage.success('Ticket de apertura enviado exitosamente')
+      } else if (cierreId) {
+        const idString = typeof cierreId === 'number' ? cierreId.toString() : cierreId
+        console.log('🔵 Enviando cierre email:', idString, emailDestino)
+        await cierreCajaApi.enviarTicketEmail(idString, emailDestino, pdfBlob)
+        antdMessage.success('Ticket de cierre enviado exitosamente')
+      }
+
+      setEmailModalOpen(false)
+      setEmailDestino('')
+    } catch (error: any) {
+      console.error('❌ Error al enviar email:', error)
+      antdMessage.error(error.message || 'Error al enviar el ticket por email')
+    } finally {
+      setSendingEmail(false)
+    }
+  }
   
   // Suprimir warnings de @react-pdf/renderer sobre casing de elementos
   // Estos warnings son causados por la librería al renderizar en el navegador para preview
@@ -100,6 +148,18 @@ export default function ModalShowDoc({
                   <FaShareNodes />
                 </ButtonBase>
               </Tooltip>
+              {(aperturaId || cierreId) && (
+                <Tooltip title='Enviar por Email'>
+                  <ButtonBase
+                    onClick={() => setEmailModalOpen(true)}
+                    color='info'
+                    size='md'
+                    className='!px-3'
+                  >
+                    <MdEmail />
+                  </ButtonBase>
+                </Tooltip>
+              )}
               {setEsTicket && (
                 <Tooltip title='Cambiar modelo'>
                   <ButtonBase
@@ -162,6 +222,36 @@ export default function ModalShowDoc({
           }}
         >
           {childrenWithProps}
+        </div>
+      </Modal>
+
+      {/* Modal para ingresar email */}
+      <Modal
+        title="Enviar Ticket por Email"
+        open={emailModalOpen}
+        onOk={handleSendEmail}
+        onCancel={() => {
+          setEmailModalOpen(false)
+          setEmailDestino('')
+        }}
+        okText="Enviar"
+        cancelText="Cancelar"
+        confirmLoading={sendingEmail}
+        okButtonProps={{ className: classOkButtonModal }}
+        cancelButtonProps={{ className: 'rounded-xl' }}
+      >
+        <div className="py-4">
+          <label className="block text-sm font-medium mb-2">
+            Email de destino:
+          </label>
+          <Input
+            type="email"
+            placeholder="ejemplo@correo.com"
+            value={emailDestino}
+            onChange={(e) => setEmailDestino(e.target.value)}
+            onPressEnter={handleSendEmail}
+            autoFocus
+          />
         </div>
       </Modal>
 

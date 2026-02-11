@@ -64,7 +64,7 @@ export default function DropdownUser() {
       extra: <FaSignOutAlt className='text-red-500' />,
       onClick: async () => {
         await logout()
-        window.location.href = '/'
+        router.push('/')
       },
     },
   ]

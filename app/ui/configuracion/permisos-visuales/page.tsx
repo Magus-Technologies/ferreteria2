@@ -411,11 +411,13 @@ export default function PermisosVisualesPage() {
             onTogglePermiso={handleElementClick}
             permisosActivos={restriccionesActivas}
           >
-            <Suspense
-              fallback={<Spin size="large" tip="Cargando vista real..." />}
-            >
-              <vistaActiva.component />
-            </Suspense>
+            <div className="h-[calc(100vh-250px)] overflow-hidden">
+              <Suspense
+                fallback={<Spin size="large" tip="Cargando vista real..." />}
+              >
+                <vistaActiva.component />
+              </Suspense>
+            </div>
           </ConfigModeProvider>
         </Card>
       ) : (

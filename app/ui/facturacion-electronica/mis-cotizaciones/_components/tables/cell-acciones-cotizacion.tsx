@@ -1,7 +1,7 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileInvoice } from "react-icons/fa6";
+import { FaFilePdf, FaFileInvoice, FaPencil } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfCotizacion } from "../../_store/store-modal-pdf-cotizacion";
@@ -25,6 +25,10 @@ export default function CellAccionesCotizacion(
     router.push(`/ui/facturacion-electronica/mis-ventas/crear-venta?cotizacion=${cotizacionId}`);
   };
 
+  const handleEditar = () => {
+    router.push(`/ui/facturacion-electronica/mis-cotizaciones/editar-cotizacion/${cotizacionId}`);
+  };
+
   return (
     <div
       style={{
@@ -35,6 +39,17 @@ export default function CellAccionesCotizacion(
         alignItems: "center",
       }}
     >
+      <ButtonBase
+        color="info"
+        size="md"
+        onClick={handleEditar}
+        className="flex items-center !px-3"
+        title="Editar Cotización"
+        disabled={estadoCotizacion === 'co' || estadoCotizacion === 've' || estadoCotizacion === 'ca'}
+      >
+        <FaPencil />
+      </ButtonBase>
+
       <ButtonBase
         color="success"
         size="md"
