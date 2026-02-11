@@ -1,6 +1,6 @@
 "use client";
 
-import { FormInstance } from "antd";
+import { Form, FormInstance, Alert } from "antd";
 import LabelBase from "~/components/form/label-base";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectTipoMoneda from "~/app/_components/form/selects/select-tipo-moneda";
@@ -8,13 +8,25 @@ import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectBase from "~/app/_components/form/selects/select-base";
 import SelectMotivoNota from "~/app/_components/form/selects/select-motivo-nota";
-import { FaCalendar } from "react-icons/fa6";
+import { FaCalendar } from "react-icons/fa";
+import { useMotivoInfo } from "../_hooks/use-motivo-info";
 
 interface FormNotaDebitoProps {
   form: FormInstance;
 }
 
 export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
+  // Observar el motivo seleccionado para mostrar ayuda contextual
+  const motivoNotaId = Form.useWatch("motivo_nota_id", form);
+  const observaciones = Form.useWatch("observaciones", form) || "";
+  
+  // Obtener información del motivo seleccionado
+  const motivoInfo = useMotivoInfo(motivoNotaId);
+  
+  // Validar longitud de observaciones para motivos que lo requieren
+  const longitudObservaciones = observaciones.length;
+  const requiereDescripcion = motivoInfo?.requiereDescripcion || false;
+  const descripcionValida = !requiereDescripcion || longitudObservaciones >= 20;
   return (
     <div className="flex flex-col gap-4">
       {/* Primera fila: Fecha, Tipo Doc, Serie, Número */}
@@ -182,11 +194,11 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
       </div>
 
       {/* Cuarta fila: Motivo de Nota */}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
+      <div className="flex flex-col gap-3">
         <LabelBase
           label="Motivo:"
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-          className="w-full sm:flex-1"
+          className="w-full"
         >
           <SelectMotivoNota
             tipo="debito"
@@ -201,6 +213,32 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
             showSearch
           />
         </LabelBase>
+        
+        {/* Ayuda contextual del motivo seleccionado */}
+        {motivoInfo && (
+          <Alert
+            message={
+              <div className="flex items-start gap-2">
+                <span className="text-lg">{motivoInfo.emoji}</span>
+                <div className="flex-1">
+                  <div className="font-semibold text-sm">{motivoInfo.texto}</div>
+                  {motivoInfo.requiereDescripcion && (
+                    <div className="text-xs mt-1 text-orange-600">
+                      {descripcionValida ? (
+                        <span className="text-green-600">✓ Descripción válida ({longitudObservaciones} caracteres)</span>
+                      ) : (
+                        <span>⚠️ Faltan {20 - longitudObservaciones} caracteres en observaciones</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            }
+            type={motivoInfo.requiereDescripcion && !descripcionValida ? "warning" : "info"}
+            showIcon={false}
+            className="!border-orange-200 !bg-orange-50"
+          />
+        )}
       </div>
 
       {/* Quinta fila: Moneda, Tipo de Cambio, Observaciones */}
@@ -241,19 +279,37 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
         </LabelBase>
         
         <LabelBase
-          label="Observaciones:"
+          label={
+            <div className="flex items-center gap-2">
+              <span>Observaciones:</span>
+              {requiereDescripcion && (
+                <span className="text-orange-600 text-xs font-normal">
+                  (Requerido - mín. 20 caracteres)
+                </span>
+              )}
+            </div>
+          }
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
           className="w-full sm:flex-1"
         >
           <InputBase
             propsForm={{
               name: "observaciones",
-              hasFeedback: false,
+              rules: requiereDescripcion ? [
+                { required: true, message: "Las observaciones son requeridas para este motivo" },
+                { min: 20, message: "Debe ingresar al menos 20 caracteres" },
+              ] : undefined,
+              hasFeedback: requiereDescripcion,
               className: "w-full",
             }}
-            placeholder="Observaciones adicionales"
+            placeholder={
+              requiereDescripcion
+                ? "Describa detalladamente el motivo de la nota de débito (mínimo 20 caracteres)"
+                : "Observaciones adicionales"
+            }
             className="w-full"
             uppercase={false}
+            maxLength={500}
           />
         </LabelBase>
       </div>
