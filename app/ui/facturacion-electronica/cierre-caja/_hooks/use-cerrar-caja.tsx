@@ -26,16 +26,30 @@ export function useCerrarCaja() {
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS] })
                 
                 // Si hay email, enviar el ticket automáticamente
-                if (data.email_reporte && cajaActiva && empresaData) {
+                if (data.email_reporte && empresaData) {
                     try {
-                        // Generar el PDF usando react-pdf
+                        // IMPORTANTE: Obtener los datos ACTUALIZADOS desde el backend
+                        console.log('📥 Obteniendo datos actualizados del cierre...')
+                        const cajaActualizada = await cierreCajaApi.obtenerCajaActiva()
+                        
+                        if (!cajaActualizada.success || !cajaActualizada.data) {
+                            throw new Error('No se pudieron obtener los datos actualizados del cierre')
+                        }
+                        
+                        console.log('✅ Datos actualizados obtenidos:', {
+                            monto_cierre_efectivo: cajaActualizada.data.monto_cierre_efectivo,
+                            monto_cierre_cuentas: cajaActualizada.data.monto_cierre_cuentas,
+                            conteo_billetes_monedas: cajaActualizada.data.conteo_billetes_monedas
+                        })
+                        
+                        // Generar el PDF usando react-pdf con los datos ACTUALIZADOS
                         const { pdf } = await import('@react-pdf/renderer')
                         const { default: DocCierreCajaTicket } = await import('../_components/docs/doc-cierre-caja-ticket')
                         
-                        // Crear el documento PDF
+                        // Crear el documento PDF con datos actualizados
                         const doc = <DocCierreCajaTicket
-                            data={cajaActiva as any}
-                            nro_doc={cajaActiva.id}
+                            data={cajaActualizada.data as any}
+                            nro_doc={cajaActualizada.data.id}
                             empresa={empresaData}
                             show_logo_html={false}
                         />

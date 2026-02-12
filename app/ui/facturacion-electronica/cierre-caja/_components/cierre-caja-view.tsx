@@ -27,7 +27,7 @@ export default function CierreCajaView() {
 
   const [totalEfectivo, setTotalEfectivo] = useState(0)
   const [totalCuentas, setTotalCuentas] = useState(0)
-  const [conteoDenominaciones, setConteoDenominaciones] = useState<Record<string, number>>({})
+  const [conteoDenominaciones, setConteoDenominaciones] = useState<Record<string, number> | null>(null)
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
@@ -175,7 +175,7 @@ export default function CierreCajaView() {
       monto_cierre_efectivo: totalEfectivo,
       total_cuentas: totalCuentas || 0,
       comentarios: comentarios || undefined,
-      conteo_billetes_monedas: conteoDenominaciones,
+      conteo_billetes_monedas: conteoDenominaciones || undefined,
       email_reporte: emailReporte || undefined,
       whatsapp_reporte: whatsappReporte || undefined,
     }
@@ -437,7 +437,11 @@ export default function CierreCajaView() {
                     bodyStyle={{ padding: '16px' }}
                     headStyle={{ padding: '10px 16px', minHeight: 'auto' }}
                   >
-                    <ConteoDinero onChange={setTotalEfectivo} />
+                    <ConteoDinero onChange={(total, conteo) => {
+                      console.log('📊 ConteoDinero onChange recibido:', { total, conteo })
+                      setTotalEfectivo(total)
+                      setConteoDenominaciones(conteo)
+                    }} />
 
                     <div className='mt-3 space-y-2.5'>
                       <Checkbox

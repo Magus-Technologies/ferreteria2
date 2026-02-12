@@ -24,6 +24,10 @@ export default function DocCierreCajaTicket({
 
   const resumen = data.resumen
 
+  // Convert string values from backend to numbers
+  const montoCierre = Number(data.monto_cierre_efectivo) || 0
+  const totalCuentas = Number(data.total_cuentas || data.monto_cierre_cuentas) || 0
+
   // Calcular el efectivo esperado (solo el método "Efectivo")
   const efectivoEsperado = resumen.detalle_metodos_pago
     ?.filter((metodo: MetodoPagoCierrePDF) => 
@@ -33,7 +37,6 @@ export default function DocCierreCajaTicket({
 
   // Calcular diferencias basadas en EFECTIVO, no en el total
   const montoEsperado = resumen.efectivo_inicial + efectivoEsperado
-  const montoCierre = data.monto_cierre_efectivo || 0
   const diferencia = montoCierre - montoEsperado
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0
   const sobrante = diferencia > 0 ? diferencia : 0
@@ -256,11 +259,11 @@ export default function DocCierreCajaTicket({
             </View>
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4, paddingVertical: 1 }}>
               <Text style={{ fontSize: 5 }}>Total Cuentas:</Text>
-              <Text style={{ fontSize: 5 }}>S/ {(data.total_cuentas || 0).toFixed(2)}</Text>
+              <Text style={{ fontSize: 5 }}>S/ {totalCuentas.toFixed(2)}</Text>
             </View>
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4, paddingVertical: 2, backgroundColor: '#f0f0f0', marginTop: 1 }}>
               <Text style={{ fontSize: 6, fontWeight: 'bold' }}>Total Cierre Físico:</Text>
-              <Text style={{ fontSize: 6, fontWeight: 'bold' }}>S/ {(montoCierre + (data.total_cuentas || 0)).toFixed(2)}</Text>
+              <Text style={{ fontSize: 6, fontWeight: 'bold' }}>S/ {(montoCierre + totalCuentas).toFixed(2)}</Text>
             </View>
           </>
         ) : (
@@ -271,6 +274,65 @@ export default function DocCierreCajaTicket({
           </View>
         )}
       </View>
+
+      {/* Desglose de Denominaciones (si existe) */}
+      {data.conteo_billetes_monedas && (() => {
+        const denominaciones = [
+          { label: 'Billete S/. 200', valor: 200, key: 'b200' },
+          { label: 'Billete S/. 100', valor: 100, key: 'b100' },
+          { label: 'Billete S/. 50', valor: 50, key: 'b50' },
+          { label: 'Billete S/. 20', valor: 20, key: 'b20' },
+          { label: 'Billete S/. 10', valor: 10, key: 'b10' },
+          { label: 'Moneda S/. 5', valor: 5, key: 'm5' },
+          { label: 'Moneda S/. 2', valor: 2, key: 'm2' },
+          { label: 'Moneda S/. 1', valor: 1, key: 'm1' },
+          { label: 'Moneda S/. 0.50', valor: 0.5, key: 'm050' },
+          { label: 'Moneda S/. 0.20', valor: 0.2, key: 'm020' },
+          { label: 'Moneda S/. 0.10', valor: 0.1, key: 'm010' },
+          { label: 'Moneda S/. 0.05', valor: 0.05, key: 'm005' },
+        ]
+
+        const conteo = data.conteo_billetes_monedas
+        const denominacionesConValor = denominaciones.filter(d => conteo[d.key] > 0)
+
+        if (denominacionesConValor.length === 0) return null
+
+        return (
+          <View style={{ marginBottom: 4, paddingTop: 4, borderTop: '1px dashed #ccc' }}>
+            <Text style={{ fontSize: 6, fontWeight: 'bold', marginBottom: 2, textAlign: 'center' }}>
+              DESGLOSE DE DENOMINACIONES
+            </Text>
+            
+            {/* Header de la tabla */}
+            <View style={{ display: 'flex', flexDirection: 'row', borderBottom: '1px solid #000', paddingBottom: 1, marginBottom: 1 }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', flex: 1 }}>Denominación</Text>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', width: 30, textAlign: 'center' }}>Cant.</Text>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', width: 40, textAlign: 'right' }}>Total</Text>
+            </View>
+            
+            {/* Filas de datos */}
+            {denominacionesConValor.map((denom, index) => {
+              const cantidad = conteo[denom.key] || 0
+              const subtotal = cantidad * denom.valor
+              return (
+                <View key={denom.key} style={{ display: 'flex', flexDirection: 'row', paddingVertical: 0.5, backgroundColor: index % 2 === 0 ? '#ffffff' : '#f9f9f9' }}>
+                  <Text style={{ fontSize: 5, flex: 1 }}>{denom.label}</Text>
+                  <Text style={{ fontSize: 5, width: 30, textAlign: 'center' }}>{cantidad}</Text>
+                  <Text style={{ fontSize: 5, width: 40, textAlign: 'right' }}>S/ {subtotal.toFixed(2)}</Text>
+                </View>
+              )
+            })}
+
+            {/* Total */}
+            <View style={{ display: 'flex', flexDirection: 'row', paddingVertical: 1, backgroundColor: '#f0f0f0', borderTop: '1px solid #000', marginTop: 1 }}>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', flex: 1 }}>Total</Text>
+              <Text style={{ fontSize: 5, fontWeight: 'bold', width: 40, textAlign: 'right' }}>
+                S/ {montoCierre.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        )
+      })()}
 
       {/* Diferencias - SIEMPRE mostrar */}
       <View style={{ marginBottom: 4, paddingTop: 4, borderTop: '1px dashed #ccc' }}>

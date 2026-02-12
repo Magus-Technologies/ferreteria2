@@ -47,26 +47,6 @@ export default function ModalCrearIngreso({
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<DespliegueDePago | null>(null)
   const [advertencia, setAdvertencia] = useState<string | null>(null)
 
-  // Obtener cajas principales para encontrar la del usuario
-  const { data: cajasPrincipales } = useQuery({
-    queryKey: [QueryKeys.CAJAS_PRINCIPALES],
-    queryFn: async () => {
-      const response = await cajaPrincipalApi.getAll()
-      return response.data?.data || []
-    },
-  })
-
-  // Encontrar la caja principal del usuario actual
-  const miCajaPrincipal = cajasPrincipales?.find((c) => c.user.id === user?.id)
-
-  // Auto-seleccionar la caja principal del usuario al abrir el modal
-  useEffect(() => {
-    if (open && miCajaPrincipal) {
-      form.setFieldValue('caja_principal_id', miCajaPrincipal.id)
-      setCajaPrincipalId(miCajaPrincipal.id)
-    }
-  }, [open, miCajaPrincipal, form])
-
   // Observar cambios en los campos del formulario
   const subCajaId = Form.useWatch('sub_caja_id', form)
   const metodoPagoId = Form.useWatch('despliegue_pago_id', form)
@@ -243,7 +223,7 @@ export default function ModalCrearIngreso({
 
         <LabelBase label="Caja Principal" orientation="column">
           <SelectCajaPrincipal
-            placeholder={miCajaPrincipal ? miCajaPrincipal.nombre : "Tu caja"}
+            placeholder="Selecciona una caja"
             propsForm={{
               name: 'caja_principal_id',
               rules: [{ required: true, message: 'Selecciona una caja principal' }],
@@ -252,7 +232,7 @@ export default function ModalCrearIngreso({
               setCajaPrincipalId(value as number)
               form.setFieldValue('sub_caja_id', undefined)
             }}
-            disabled={true}
+            disabled={false}
           />
         </LabelBase>
 
