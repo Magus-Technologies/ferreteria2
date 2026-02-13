@@ -50,6 +50,7 @@ function TableProductosOptimized() {
   const columns = useColumnsProductos({ almacen_id });
 
   // Hook optimizado con infinite scroll
+  // Solo se activa cuando hay filtros del store (después de que el formulario haga submit)
   const {
     data: productos,
     loading,
@@ -63,7 +64,7 @@ function TableProductosOptimized() {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
     },
-    enabled: !!(filtros?.almacen_id || almacen_id),
+    enabled: !!filtros?.almacen_id,
     perPage: 1000, // 1000 productos por página (cacheable, no causa error)
   });
 

@@ -25,11 +25,6 @@ export default function DocIngresoSalidaTicket({
     { fontFamily?: string; fontSize?: number; fontWeight?: string }
   >;
 }) {
-  console.log("📄 DocIngresoSalidaTicket recibió data:", data);
-  console.log("📄 data.almacen:", data?.almacen);
-  console.log("📄 data.user:", data?.user);
-  console.log("📄 data.tipo_ingreso:", data?.tipo_ingreso);
-  console.log("📄 data.productos_por_almacen:", data?.productos_por_almacen);
   // Función para obtener estilos de un campo
   const getEstiloCampo = (campo: string) => {
     const estilo = estilosCampos?.[campo] || {
@@ -70,9 +65,9 @@ export default function DocIngresoSalidaTicket({
       })),
     ) ?? [];
 
-  // Convertir tipo de documento de Laravel (usa códigos: 'in', 'sa') a Prisma
+  // Convertir tipo de documento de Laravel (usa códigos: 'in', 'sa', 'Ingreso', 'Salida') a Prisma
   const tipoDocumentoPrisma =
-    data?.tipo_documento === "Ingreso"
+    data?.tipo_documento === "Ingreso" || data?.tipo_documento === "in"
       ? TipoDocumento.Ingreso
       : TipoDocumento.Salida;
   const tipo_documento = data?.tipo_documento
