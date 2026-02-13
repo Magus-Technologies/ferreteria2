@@ -15,151 +15,124 @@ export function useColumnsNotaCredito({
 }): ColDef[] {
   return [
     {
-      headerName: "#",
+      headerName: "Ítem",
+      colId: "item",
       field: "name",
-      width: 60,
-      pinned: "left",
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      width: 70,
+      lockPosition: "left",
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full justify-center bg-gray-50">
+        <div className="flex items-center justify-center h-full">
           {(value ?? 0) + 1}
         </div>
       ),
     },
     {
-      headerName: "Acciones",
-      field: "name",
-      width: 80,
-      pinned: "left",
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
-      cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full justify-center bg-gray-50">
-          <button
-            type="button"
-            onClick={() => remove(value)}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded p-1 transition-colors"
-            title="Eliminar producto"
-          >
-            <MdDelete size={18} />
-          </button>
-        </div>
-      ),
-    },
-    {
       headerName: "Código",
+      colId: "codigo",
       field: "name",
-      width: 120,
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      width: 130,
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full px-2">
+        <div className="flex items-center h-full py-1">
           <InputBase
-            propsForm={{
-              name: [value, "codigo"],
-            }}
+            propsForm={{ name: [value, "codigo"], hasFeedback: false }}
             placeholder="Código"
-            className="w-full bg-white border border-gray-200"
             size="small"
+            uppercase={false}
+            formWithMessage={false}
           />
         </div>
       ),
     },
     {
       headerName: "Descripción",
+      colId: "descripcion",
       field: "name",
-      width: 350,
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      flex: 1,
+      minWidth: 300,
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full px-2">
+        <div className="flex items-center h-full py-1">
           <InputBase
             propsForm={{
               name: [value, "descripcion"],
               rules: [{ required: true, message: "Requerido" }],
+              hasFeedback: false,
             }}
-            placeholder="Descripción del producto"
-            className="w-full bg-white border border-gray-200"
+            placeholder="Descripción"
             size="small"
             uppercase={false}
+            formWithMessage={false}
           />
         </div>
       ),
     },
     {
-      headerName: "U. Medida",
+      headerName: "U.M",
+      colId: "unidad_medida",
       field: "name",
-      width: 110,
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      width: 90,
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full px-2">
+        <div className="flex items-center h-full py-1">
           <InputBase
-            propsForm={{
-              name: [value, "unidad_medida"],
-            }}
+            propsForm={{ name: [value, "unidad_medida"], hasFeedback: false }}
             placeholder="NIU"
-            className="w-full bg-white border border-gray-200"
             size="small"
+            uppercase={false}
+            formWithMessage={false}
           />
         </div>
       ),
     },
     {
-      headerName: "Cantidad",
+      headerName: "Cant.",
+      colId: "cantidad",
       field: "name",
-      width: 120,
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      width: 100,
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full px-2">
+        <div className="flex items-center h-full py-1">
           <InputNumberBase
             propsForm={{
               name: [value, "cantidad"],
               rules: [{ required: true, message: "Requerido" }],
+              hasFeedback: false,
             }}
             min={0}
             precision={2}
-            className="w-full bg-blue-50 border-blue-200"
             size="small"
+            formWithMessage={false}
             onChange={(cantidad) => {
               const precio = Number(form.getFieldValue(["productos", value, "precio_venta"]) || 0);
-              const subtotal = Number(cantidad || 0) * precio;
-              form.setFieldValue(["productos", value, "subtotal"], subtotal);
+              form.setFieldValue(["productos", value, "subtotal"], Number(cantidad || 0) * precio);
             }}
           />
         </div>
       ),
     },
     {
-      headerName: "P. Unitario",
+      headerName: "P. Unit",
+      colId: "precio_unitario",
       field: "name",
-      width: 130,
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      width: 110,
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className="flex items-center h-full px-2">
+        <div className="flex items-center h-full py-1">
           <InputNumberBase
             propsForm={{
               name: [value, "precio_venta"],
               rules: [{ required: true, message: "Requerido" }],
+              hasFeedback: false,
             }}
             min={0}
             precision={2}
-            className="w-full bg-green-50 border-green-200"
             size="small"
+            formWithMessage={false}
             onChange={(precio) => {
               const cantidad = Number(form.getFieldValue(["productos", value, "cantidad"]) || 0);
-              const subtotal = cantidad * Number(precio || 0);
-              form.setFieldValue(["productos", value, "subtotal"], subtotal);
+              form.setFieldValue(["productos", value, "subtotal"], cantidad * Number(precio || 0));
             }}
           />
         </div>
@@ -167,20 +140,39 @@ export function useColumnsNotaCredito({
     },
     {
       headerName: "Subtotal",
+      colId: "subtotal",
       field: "name",
-      width: 140,
-      pinned: "right",
-      suppressSizeToFit: true,
-      filter: false,
-      sortable: false,
+      width: 120,
+      suppressMovable: true,
       cellRenderer: ({ value }: ICellRendererParams) => {
         const subtotal = Number(form.getFieldValue(["productos", value, "subtotal"]) || 0);
         return (
-          <div className="flex items-center h-full justify-end pr-4 font-bold text-gray-700 bg-gray-50">
-            {subtotal.toFixed(2)}
+          <div className="flex items-center h-full font-semibold">
+            S/ {subtotal.toFixed(2)}
           </div>
         );
       },
+    },
+    {
+      headerName: "Acciones",
+      colId: "acciones",
+      field: "name",
+      width: 90,
+      pinned: "right",
+      lockPosition: "right",
+      suppressMovable: true,
+      cellRenderer: ({ value }: ICellRendererParams) => (
+        <div className="flex items-center justify-center h-full">
+          <button
+            type="button"
+            onClick={() => remove(value)}
+            className="text-red-500 hover:text-red-700"
+            title="Eliminar"
+          >
+            <MdDelete size={18} />
+          </button>
+        </div>
+      ),
     },
   ];
 }

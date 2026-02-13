@@ -6,19 +6,27 @@ import { FaEdit, FaEye, FaMoneyBillWave, FaFileInvoiceDollar } from 'react-icons
 import ButtonBase from '~/components/buttons/button-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreCompraSeleccionada } from '../../_store/store-compra-seleccionada'
+import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 import ModalRegistrarPagoCompra from '../modals/modal-registrar-pago-compra'
 import ModalVerDetallesPagos from '../modals/modal-ver-detalles-pagos'
 import ModalModificarLotesVencimientos from '../modals/modal-modificar-lotes-vencimientos'
+import ModalDocCompra from '../modals/modal-doc-compra'
 
 export default function BotonesAccionesCompra() {
   const compraSeleccionada = useStoreCompraSeleccionada(state => state.compra)
+  const productoSeleccionado = useStoreProductoSeleccionado(state => state.productoSeleccionado)
   const [openModalPago, setOpenModalPago] = useState(false)
   const [openModalDetallesPagos, setOpenModalDetallesPagos] = useState(false)
   const [openModalLotesVencimientos, setOpenModalLotesVencimientos] = useState(false)
+  const [openModalDocCompra, setOpenModalDocCompra] = useState(false)
 
   const handleModificarLotes = () => {
     if (!compraSeleccionada) {
       message.warning('Seleccione una compra primero')
+      return
+    }
+    if (!productoSeleccionado) {
+      message.warning('Seleccione un producto de la tabla de detalle')
       return
     }
     setOpenModalLotesVencimientos(true)
@@ -29,8 +37,7 @@ export default function BotonesAccionesCompra() {
       message.warning('Seleccione una compra primero')
       return
     }
-    // Abrir el PDF en una nueva pestaña
-    window.open(`/api/pdf/compra/${compraSeleccionada.id}`, '_blank')
+    setOpenModalDocCompra(true)
   }
 
   const handleRegistrarPagos = () => {
@@ -66,6 +73,12 @@ export default function BotonesAccionesCompra() {
       <ModalModificarLotesVencimientos
         open={openModalLotesVencimientos}
         setOpen={setOpenModalLotesVencimientos}
+        compra={compraSeleccionada}
+      />
+
+      <ModalDocCompra
+        open={openModalDocCompra}
+        setOpen={setOpenModalDocCompra}
         compra={compraSeleccionada}
       />
       

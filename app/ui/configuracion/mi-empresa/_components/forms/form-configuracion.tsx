@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, App, Button, Checkbox } from "antd";
+import { Form, App, Button, Switch, Checkbox } from "antd";
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import LabelBase from "~/components/form/label-base";

@@ -268,7 +268,7 @@ export default function DocAperturaTicket({
                   <View style={{ display: 'flex', flexDirection: 'row', paddingVertical: 1, backgroundColor: '#f0f0f0', borderTop: '1px solid #000', marginTop: 1 }}>
                     <Text style={{ fontSize: 5, fontWeight: 'bold', flex: 1 }}>Subtotal</Text>
                     <Text style={{ fontSize: 5, fontWeight: 'bold', width: 40, textAlign: 'right' }}>
-                      S/ {dist.monto.toFixed(2)}
+                      S/ {(dist.monto || 0).toFixed(2)}
                     </Text>
                   </View>
                 </View>

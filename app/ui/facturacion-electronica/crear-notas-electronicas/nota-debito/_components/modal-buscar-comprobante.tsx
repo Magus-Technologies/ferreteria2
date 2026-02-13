@@ -134,6 +134,7 @@ export default function ModalBuscarComprobante({
             onRowDoubleClicked={handleRowDoubleClicked}
             tipoDocumento={tipoDocumento}
             isVisible={open}
+            paraNotaDebito={true}
           />
         </div>
 

@@ -1,211 +1,8 @@
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  Image,
-} from '@react-pdf/renderer'
+import { Text, View } from '@react-pdf/renderer'
 import { CompraConRelaciones } from './generar-pdf-compra'
-
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    fontSize: 8,
-    fontFamily: "Helvetica",
-    backgroundColor: "#ffffff",
-  },
-  headerContainer: {
-    flexDirection: "row",
-    marginBottom: 15,
-  },
-  logoSection: {
-    width: "55%",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  logo: {
-    width: 100,
-    marginRight: 15,
-  },
-  companyInfo: {
-    fontSize: 7,
-    color: "#000",
-    lineHeight: 1.4,
-    paddingTop: 0,
-    flex: 1,
-  },
-  companyName: {
-    fontSize: 10,
-    fontWeight: "bold",
-    marginBottom: 3,
-  },
-  documentSection: {
-    width: "45%",
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
-  documentBox: {
-    border: "0.5px solid #fadc06",
-    borderRadius: 12,
-    padding: 12,
-    width: 220,
-  },
-  rucText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  documentTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  documentNumber: {
-    fontSize: 14,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  proveedorBox: {
-    border: "0.5px solid #fadc06",
-    marginBottom: 10,
-  },
-  proveedorRow: {
-    flexDirection: "row",
-    minHeight: 18,
-  },
-  proveedorCellLeft: {
-    width: "12%",
-    padding: 4,
-    fontSize: 7,
-    fontWeight: "bold",
-  },
-  proveedorCellValueLeft: {
-    width: "38%",
-    padding: 4,
-    fontSize: 7,
-  },
-  proveedorCellRight: {
-    width: "15%",
-    padding: 4,
-    fontSize: 7,
-    fontWeight: "bold",
-  },
-  proveedorCellValueRight: {
-    width: "35%",
-    padding: 4,
-    fontSize: 7,
-  },
-  tableContainer: {
-    border: "2px solid #fadc06",
-  },
-  tableHeader: {
-    flexDirection: "row",
-    padding: 4,
-    fontSize: 7,
-    fontWeight: "bold",
-    borderBottom: "1px solid #fadc06",
-    backgroundColor: "#fadc06",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottom: "1px solid #fadc06",
-    minHeight: 20,
-  },
-  tableCell: {
-    padding: 3,
-    fontSize: 7,
-    borderRight: "1px solid #fadc06",
-  },
-  colItem: { width: "5%", textAlign: "center" },
-  colCodigo: { width: "10%", textAlign: "center" },
-  colDescripcion: { width: "35%", textAlign: "left" },
-  colMarca: { width: "12%", textAlign: "center" },
-  colUnidad: { width: "8%", textAlign: "center" },
-  colCant: { width: "8%", textAlign: "center" },
-  colPrecio: { width: "10%", textAlign: "right" },
-  colSubtotal: { width: "12%", textAlign: "right", borderRight: "none" },
-  bottomRow: {
-    flexDirection: "row",
-    minHeight: 120,
-  },
-  observacionesCell: {
-    width: "65%",
-    padding: 15,
-    borderRight: "1px solid #fff",
-    justifyContent: "center",
-  },
-  observacionesBox: {
-    border: "2px solid #fadc06",
-    borderRadius: 8,
-    padding: 8,
-  },
-  observacionesTitle: {
-    fontSize: 8,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  observacionesList: {
-    fontSize: 6,
-    lineHeight: 1.5,
-  },
-  totalesCell: {
-    width: "35%",
-  },
-  totalRow: {
-    flexDirection: "row",
-    borderBottom: "1px solid #fadc06",
-  },
-  totalLabelCell: {
-    width: "60%",
-    borderRight: "1px solid #fadc06",
-    borderLeft: "1px solid #fadc06",
-    padding: 6,
-  },
-  totalLabelText: {
-    fontSize: 8,
-    fontWeight: "bold",
-    textAlign: "right",
-  },
-  totalValueCell: {
-    width: "40%",
-    padding: 6,
-    borderRight: "1px solid #fadc06",
-  },
-  totalValueText: {
-    fontSize: 8,
-    textAlign: "right",
-  },
-  footerText: {
-    textAlign: "center",
-    fontSize: 8,
-    marginTop: 15,
-    marginBottom: 10,
-  },
-  footerBold: {
-    fontWeight: "bold",
-  },
-  deudaBox: {
-    marginTop: 10,
-    padding: 8,
-    border: "1px solid #fadc06",
-    borderRadius: 4,
-  },
-  deudaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  deudaLabel: {
-    fontSize: 8,
-    fontWeight: "bold",
-  },
-  deudaValue: {
-    fontSize: 8,
-  },
-})
+import DocGeneral from '~/app/_components/docs/doc-general'
+import { styles_docs } from '~/app/_components/docs/styles'
+import { ColDef } from 'ag-grid-community'
 
 export default function PDFCompraDocument({
   compra,
@@ -215,7 +12,10 @@ export default function PDFCompraDocument({
   logoDataURI: string;
 }) {
   // Obtener datos de la empresa
-  const empresa = compra.user.empresa as any
+  const empresa = compra.user.empresa ? {
+    ...compra.user.empresa,
+    logo: logoDataURI
+  } : null
 
   // Calcular productos
   const productos = compra.productos_por_almacen.flatMap((pa) =>
@@ -235,14 +35,14 @@ export default function PDFCompraDocument({
     })
   )
 
-  const subtotal = productos.reduce((sum: number, p: any) => sum + p.subtotal, 0)
+  const subtotalTotal = productos.reduce((sum: number, p: any) => sum + p.subtotal, 0)
 
   // Calcular deuda
   const totalPagado = compra.pagos_de_compras?.reduce(
     (sum, pago) => sum + Number(pago.monto),
     0
   ) || 0
-  const deuda = subtotal - totalPagado
+  const deuda = subtotalTotal - totalPagado
 
   const fechaEmision = new Date(compra.fecha)
 
@@ -262,191 +62,89 @@ export default function PDFCompraDocument({
     return `${String(horas12).padStart(2, "0")}:${minutos}:${segundos} ${periodo}`;
   }
 
-  // Formatear número de comprobante
-  const numeroComprobante = `${compra.serie || '001'}-${String(compra.numero || 0).padStart(6, '0')}`
+  const colDefs: ColDef[] = [
+    { headerName: 'CÓDIGO', field: 'codigo', width: 60 },
+    { headerName: 'DESCRIPCIÓN', field: 'nombre', flex: 1 },
+    { headerName: 'MARCA', field: 'marca', width: 70 },
+    { headerName: 'U.Medida', field: 'unidad', width: 60 },
+    { headerName: 'Cantidad', field: 'cantidad', width: 50, valueFormatter: ({ value }) => Number(value).toFixed(2) },
+    { headerName: 'Precio', field: 'precio', width: 60, valueFormatter: ({ value }) => Number(value).toFixed(5) },
+    { headerName: 'SubTotal', field: 'subtotal', width: 70, valueFormatter: ({ value }) => Number(value).toFixed(2) },
+  ]
 
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.headerContainer}>
-          <View style={styles.logoSection}>
-            {logoDataURI && (
-              <Image
-                src={logoDataURI}
-                style={styles.logo}
-              />
-            )}
-            <View style={styles.companyInfo}>
-              <Text style={styles.companyName}>{empresa?.razon_social || 'GRUPO MI REDENTOR S.A.C'}</Text>
-              <Text>{empresa?.direccion || 'CAL.SINCHI ROCA MZA. 6 LOTE. 15 P.J.'}</Text>
-              <Text>{empresa?.distrito || 'EL MILAGRO (SECTOR III)'}</Text>
-              <Text>{"\n"}Cel: {empresa?.celular || '908846540 / 952686345'}</Text>
-              <Text>{"\n"}Email: {empresa?.email || 'grupomiredentorsac@gmail.com'}</Text>
+    <DocGeneral
+      empresa={empresa as any}
+      show_logo_html={true}
+      tipo_documento="VISTA PREVIA DE FACTURA DE COMPRAS"
+      nro_doc={`${compra.serie || '001'}-${String(compra.numero || 0).padStart(6, '0')}`}
+      colDefs={colDefs}
+      rowData={productos}
+      total={subtotalTotal}
+      observaciones={compra.descripcion || '- NINGUNA'}
+    >
+      {/* Información del Proveedor y Compra */}
+      <View style={styles_docs.section}>
+        <View style={styles_docs.sectionInformacionGeneral}>
+          <View style={styles_docs.sectionInformacionGeneralColumn}>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>TIPO DOC:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>{compra.tipo_documento}</Text>
+            </View>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>PROVEEDOR:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+                {compra.proveedor?.ruc || ''} {compra.proveedor?.razon_social || ''}
+              </Text>
+            </View>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>FECHA:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
+                {formatFecha(fechaEmision)} {formatHora(fechaEmision)}
+              </Text>
+            </View>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>ALMACÉN:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>{compra.almacen?.name || 'N/A'}</Text>
             </View>
           </View>
 
-          <View style={styles.documentSection}>
-            <View style={styles.documentBox}>
-              <Text style={styles.documentTitle}>VISTA PREVIA DE</Text>
-              <Text style={styles.documentTitle}>FACTURA DE COMPRAS</Text>
+          <View style={styles_docs.sectionInformacionGeneralColumn}>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>FORMA PAGO:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>{compra.forma_de_pago}</Text>
             </View>
-          </View>
-        </View>
-
-        {/* Información del Proveedor */}
-        <View style={styles.proveedorBox}>
-          <View style={styles.proveedorRow}>
-            <Text style={styles.proveedorCellLeft}>FACTURA</Text>
-            <Text style={styles.proveedorCellValueLeft}>: {compra.tipo_documento}</Text>
-            <Text style={styles.proveedorCellRight}>FECHA</Text>
-            <Text style={styles.proveedorCellValueRight}>
-              : {formatFecha(fechaEmision)} {formatHora(fechaEmision)}
-            </Text>
-          </View>
-
-          <View style={styles.proveedorRow}>
-            <Text style={styles.proveedorCellLeft}>PROVEEDOR</Text>
-            <Text style={styles.proveedorCellValueLeft}>
-              : {compra.proveedor?.ruc || ''} {compra.proveedor?.razon_social || ''}
-            </Text>
-            <Text style={styles.proveedorCellRight}>FORMA PAGO</Text>
-            <Text style={styles.proveedorCellValueRight}>: {compra.forma_de_pago}</Text>
-          </View>
-
-          <View style={styles.proveedorRow}>
-            <Text style={styles.proveedorCellLeft}>TOTAL PAGA</Text>
-            <Text style={styles.proveedorCellValueLeft}>: {totalPagado.toFixed(2)}</Text>
-            <Text style={styles.proveedorCellRight}>DEUDA</Text>
-            <Text style={styles.proveedorCellValueRight}>: {deuda.toFixed(2)}</Text>
-          </View>
-
-          <View style={styles.proveedorRow}>
-            <Text style={styles.proveedorCellLeft}>CUOTAS</Text>
-            <Text style={styles.proveedorCellValueLeft}>: {compra.numero_dias || 0}</Text>
-            <Text style={styles.proveedorCellRight}>PERIODO (Días)</Text>
-            <Text style={styles.proveedorCellValueRight}>: </Text>
-          </View>
-
-          <View style={styles.proveedorRow}>
-            <Text style={styles.proveedorCellLeft}></Text>
-            <Text style={styles.proveedorCellValueLeft}></Text>
-            <Text style={styles.proveedorCellRight}>Pago Letra (Cuota)</Text>
-            <Text style={styles.proveedorCellValueRight}>: {(deuda / (compra.numero_dias || 1)).toFixed(2)}</Text>
-          </View>
-        </View>
-
-        {/* Tabla de Productos */}
-        <View style={styles.tableContainer}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCell, styles.colItem]}>ITEM</Text>
-            <Text style={[styles.tableCell, styles.colCodigo]}>CÓDIGO</Text>
-            <Text style={[styles.tableCell, styles.colDescripcion]}>DESCRIPCIÓN</Text>
-            <Text style={[styles.tableCell, styles.colMarca]}>MARCA</Text>
-            <Text style={[styles.tableCell, styles.colUnidad]}>U.Medida</Text>
-            <Text style={[styles.tableCell, styles.colCant]}>Cantidad</Text>
-            <Text style={[styles.tableCell, styles.colPrecio]}>Precio</Text>
-            <Text style={[styles.tableCell, styles.colSubtotal]}>SubTotal</Text>
-          </View>
-
-          {productos.map((producto: any, idx: number) => (
-            <View key={idx} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.colItem]}>{idx + 1}</Text>
-              <Text style={[styles.tableCell, styles.colCodigo]}>
-                {producto.codigo}
-              </Text>
-              <Text style={[styles.tableCell, styles.colDescripcion]}>
-                {producto.nombre}
-              </Text>
-              <Text style={[styles.tableCell, styles.colMarca]}>
-                {producto.marca}
-              </Text>
-              <Text style={[styles.tableCell, styles.colUnidad]}>
-                {producto.unidad}
-              </Text>
-              <Text style={[styles.tableCell, styles.colCant]}>
-                {producto.cantidad.toFixed(2)}
-              </Text>
-              <Text style={[styles.tableCell, styles.colPrecio]}>
-                {producto.precio.toFixed(5)}
-              </Text>
-              <Text style={[styles.tableCell, styles.colSubtotal]}>
-                {producto.subtotal.toFixed(2)}
-              </Text>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>TOTAL PAGADO:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>{totalPagado.toFixed(2)}</Text>
             </View>
-          ))}
-
-          {/* Espacio vacío si hay pocos productos */}
-          {productos.length < 10 && (
-            <View
-              style={{
-                minHeight: (10 - productos.length) * 20,
-                borderBottom: "1px solid #fadc06",
-              }}
-            />
-          )}
-        </View>
-
-        {/* Sección de observaciones y totales */}
-        <View style={styles.bottomRow}>
-          <View style={styles.observacionesCell}>
-            <View style={styles.observacionesBox}>
-              <Text style={styles.observacionesTitle}>OBSERVACIONES</Text>
-              <Text style={styles.observacionesList}>
-                {compra.descripcion || "- NINGUNA"}
-              </Text>
-              <Text style={[styles.observacionesList, { marginTop: 8 }]}>
-                Almacén: {compra.almacen.name}
-              </Text>
-              <Text style={styles.observacionesList}>
-                Usuario: {compra.user.name}
-              </Text>
-              {compra.guia && (
-                <Text style={styles.observacionesList}>
-                  Guía: {compra.guia}
-                </Text>
-              )}
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>DEUDA:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>{deuda.toFixed(2)}</Text>
             </View>
-          </View>
-
-          <View style={styles.totalesCell}>
-            <View style={styles.totalRow}>
-              <View style={styles.totalLabelCell}>
-                <Text style={styles.totalLabelText}>SUBTOTAL</Text>
-              </View>
-              <View style={styles.totalValueCell}>
-                <Text style={styles.totalValueText}>
-                  {(subtotal / 1.18).toFixed(2)}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.totalRow}>
-              <View style={styles.totalLabelCell}>
-                <Text style={styles.totalLabelText}>IGV (18%)</Text>
-              </View>
-              <View style={styles.totalValueCell}>
-                <Text style={styles.totalValueText}>{(subtotal - subtotal / 1.18).toFixed(2)}</Text>
-              </View>
-            </View>
-            <View style={styles.totalRow}>
-              <View style={styles.totalLabelCell}>
-                <Text style={styles.totalLabelText}>TOTAL</Text>
-              </View>
-              <View style={styles.totalValueCell}>
-                <Text style={styles.totalValueText}>{subtotal.toFixed(2)}</Text>
-              </View>
+            <View style={styles_docs.subSectionInformacionGeneral}>
+              <Text style={styles_docs.textTitleSubSectionInformacionGeneral}>USUARIO:</Text>
+              <Text style={styles_docs.textValueSubSectionInformacionGeneral}>{compra.user?.name || 'N/A'}</Text>
             </View>
           </View>
         </View>
+      </View>
 
-        {/* Footer */}
-        <Text style={styles.footerText}>
-          <Text style={styles.footerBold}>
-            DOCUMENTO GENERADO PARA CONTROL INTERNO
-          </Text>
-        </Text>
-      </Page>
-    </Document>
+      <View style={{ ...styles_docs.section, marginTop: 4 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+          <View style={{ width: 150 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 4, borderBottom: '1px solid #ccc' }}>
+              <Text style={{ fontSize: 9, fontWeight: 'bold' }}>SUBTOTAL:</Text>
+              <Text style={{ fontSize: 9 }}>S/ {(subtotalTotal / 1.18).toFixed(2)}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 4, borderBottom: '1px solid #ccc' }}>
+              <Text style={{ fontSize: 9, fontWeight: 'bold' }}>IGV (18%):</Text>
+              <Text style={{ fontSize: 9 }}>S/ {(subtotalTotal - subtotalTotal / 1.18).toFixed(2)}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </DocGeneral>
   )
 }
 

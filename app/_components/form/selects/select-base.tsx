@@ -29,14 +29,19 @@ function Base({
   innerRef,
   uppercase = false,
   onSearch,
+  showSearch,
   ...props
 }: SelectBaseProps & { innerRef?: React.Ref<any> }) {
   const [open, setOpen] = useState(false);
+
+  // Si se proporciona onSearch, automáticamente habilitar showSearch
+  const shouldShowSearch = showSearch !== undefined ? showSearch : !!onSearch;
 
   return (
     <Select
       ref={innerRef}
       {...props}
+      showSearch={shouldShowSearch}
       onSearch={(value) => {
         if (uppercase && value) {
           const uppercased = value.toUpperCase();
@@ -74,6 +79,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
   variant = "filled",
   uppercase = false,
   onSearch,
+  showSearch,
   ...props
 }, ref) {
   const {
@@ -134,6 +140,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
         variant={variant}
         uppercase={uppercase}
         onSearch={onSearch}
+        showSearch={showSearch}
         {...props}
       />
     </Form.Item>
@@ -153,6 +160,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
       variant={variant}
       uppercase={uppercase}
       onSearch={onSearch}
+      showSearch={showSearch}
       {...props}
     />
   );

@@ -66,6 +66,8 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
         const totalConIgv = Number(p.subtotal) // cantidad * precio_con_igv
         const valorVenta = totalConIgv / 1.18 // Valor sin IGV
         const igvItem = totalConIgv - valorVenta
+        const precioUnitario = Number(p.precio_unitario || p.precio_venta || 0)
+        const valorUnitario = precioUnitario / 1.18 // Precio unitario sin IGV
         
         return {
           producto_id: p.producto_id!,
@@ -73,7 +75,7 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
           codigo: p.codigo || p.producto_codigo || '',
           descripcion: p.descripcion || p.producto_name || '',
           cantidad: Number(p.cantidad),
-          precio_unitario: Number(p.precio_unitario || p.precio_venta || 0),
+          valor_unitario: valorUnitario, // ✅ Backend espera valor_unitario (sin IGV)
           valor_venta: valorVenta, // Valor sin IGV
           subtotal: valorVenta, // Backend espera subtotal sin IGV
           igv: igvItem,
@@ -82,7 +84,8 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
       })
 
       // Auto-generar descripción si está vacía
-      let descripcion = restValues.observaciones || restValues.motivo_descripcion || ''
+      // Priorizar motivo_sustento sobre observaciones (para motivo 10)
+      let descripcion = restValues.motivo_sustento || restValues.observaciones || restValues.motivo_descripcion || ''
       if (!descripcion || descripcion.trim() === '') {
         // Generar descripción automática basada en el motivo
         const tipoDoc = restValues.tipo_documento_modifica === '01' ? 'Factura' : 'Boleta'

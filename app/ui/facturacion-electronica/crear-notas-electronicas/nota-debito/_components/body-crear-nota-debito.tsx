@@ -31,6 +31,7 @@ export type FormCreateNotaDebito = {
   // Motivo y fecha
   motivo_nota_id: number;
   motivo_descripcion?: string;
+  motivo_sustento?: string; // Campo específico para motivo 10 (Otros conceptos)
   fecha_emision: Dayjs;
   
   // Moneda

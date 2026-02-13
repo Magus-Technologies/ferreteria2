@@ -26,7 +26,7 @@ export default function DocCierreCajaTicket({
 
   // Convert string values from backend to numbers
   const montoCierre = Number(data.monto_cierre_efectivo) || 0
-  const totalCuentas = Number(data.total_cuentas || data.monto_cierre_cuentas) || 0
+  const totalCuentas = Number(data.total_cuentas) || 0
 
   // Calcular el efectivo esperado (solo el método "Efectivo")
   const efectivoEsperado = resumen.detalle_metodos_pago

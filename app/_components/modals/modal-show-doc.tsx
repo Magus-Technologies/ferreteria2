@@ -93,7 +93,7 @@ export default function ModalShowDoc({
     }
   }
   
-  // Suprimir warnings de @react-pdf/renderer sobre casing de elementos
+  // Suprimir warnings de @react-pdf/renderer
   // Estos warnings son causados por la librería al renderizar en el navegador para preview
   // y no afectan la generación del PDF real
   useEffect(() => {
@@ -101,11 +101,13 @@ export default function ModalShowDoc({
     
     const originalError = console.error
     console.error = (...args: any[]) => {
-      // Filtrar warnings específicos de @react-pdf/renderer sobre casing
+      // Filtrar warnings de @react-pdf/renderer
       if (
         typeof args[0] === 'string' && 
         (args[0].includes('is using incorrect casing') ||
-         args[0].includes('Use PascalCase for React components'))
+         args[0].includes('Use PascalCase for React components') ||
+         args[0].includes('is unrecognized in this browser') ||
+         args[0].includes('If you meant to render a React component'))
       ) {
         return
       }

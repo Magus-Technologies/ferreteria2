@@ -36,11 +36,7 @@ export function useCerrarCaja() {
                             throw new Error('No se pudieron obtener los datos actualizados del cierre')
                         }
                         
-                        console.log('✅ Datos actualizados obtenidos:', {
-                            monto_cierre_efectivo: cajaActualizada.data.monto_cierre_efectivo,
-                            monto_cierre_cuentas: cajaActualizada.data.monto_cierre_cuentas,
-                            conteo_billetes_monedas: cajaActualizada.data.conteo_billetes_monedas
-                        })
+                        console.log('✅ Datos actualizados obtenidos:', cajaActualizada.data)
                         
                         // Generar el PDF usando react-pdf con los datos ACTUALIZADOS
                         const { pdf } = await import('@react-pdf/renderer')

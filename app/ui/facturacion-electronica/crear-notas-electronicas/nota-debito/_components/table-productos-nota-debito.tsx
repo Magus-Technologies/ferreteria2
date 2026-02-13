@@ -2,11 +2,11 @@
 
 import { FormInstance, FormListFieldData, Button, Form } from "antd";
 import { FormCreateNotaDebito } from "./body-crear-nota-debito";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import CellFocusWithoutStyle from "~/components/tables/cell-focus-without-style";
 import { useColumnsNotaDebito } from "./columns-nota-debito";
 import { PlusOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModalAgregarItem from "./modal-agregar-item";
 import { useMotivoInfo } from "../_hooks/use-motivo-info";
 
@@ -24,6 +24,7 @@ export default function TableProductosNotaDebito({
   add,
 }: TableProductosNotaDebitoProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [gridApi, setGridApi] = useState<any>(null);
   
   // Obtener el motivo seleccionado para pasar al modal
   const motivoNotaId = Form.useWatch("motivo_nota_id", form);
@@ -34,6 +35,25 @@ export default function TableProductosNotaDebito({
   const handleAgregarItem = (item: any) => {
     add(item);
   };
+
+  // Limpiar localStorage al montar el componente
+  useEffect(() => {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.includes('ag-grid') || key?.includes('agGrid')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  }, []);
+
+  // Forzar redibujado cuando cambian los fields
+  useEffect(() => {
+    if (gridApi) {
+      gridApi.refreshCells({ force: true });
+    }
+  }, [fields.length, gridApi]);
 
   return (
     <div className="flex flex-col gap-2 h-full">
@@ -54,7 +74,9 @@ export default function TableProductosNotaDebito({
       
       <div className="flex-1 min-h-0">
         <CellFocusWithoutStyle />
-        <TableBase
+        <TableWithTitle
+          id="table-productos-nota-debito"
+          title=""
           className="h-full"
           rowSelection={false}
           rowData={fields}
@@ -63,6 +85,10 @@ export default function TableProductosNotaDebito({
             form,
           })}
           suppressCellFocus={true}
+          withNumberColumn={false}
+          persistColumnState={false}
+          rowHeight={48}
+          onGridReady={(params) => setGridApi(params.api)}
         />
       </div>
 

@@ -90,8 +90,23 @@ export default function useAperturarCaja({
           },
           distribuciones_vendedores: (backendData.distribuciones || []).map((d: any) => ({
             vendedor_id: d.vendedor_id,
-            vendedor: d.vendedor,
-            monto: parseFloat(d.monto) || 0,
+            vendedor_nombre: d.vendedor,
+            monto_asignado: parseFloat(d.monto) || 0,
+            conteo_billetes_monedas: d.conteo_billetes_monedas,
+          })),
+        }
+        
+        // Transformar datos para el PDF (compatible con AperturaDataPDF)
+        const aperturaDataPDF = {
+          id: aperturaData.id,
+          fecha_apertura: aperturaData.fecha_apertura,
+          monto_apertura: aperturaData.monto_apertura,
+          conteo_apertura_billetes_monedas: aperturaData.conteo_apertura_billetes_monedas,
+          caja_principal: aperturaData.caja_principal,
+          user: aperturaData.user,
+          distribuciones_vendedores: (aperturaData.distribuciones_vendedores || []).map(d => ({
+            vendedor: d.vendedor_nombre,
+            monto: d.monto_asignado,
             conteo_billetes_monedas: d.conteo_billetes_monedas,
           })),
         }
@@ -108,7 +123,7 @@ export default function useAperturarCaja({
             
             // Crear el documento PDF
             const doc = React.createElement(DocAperturaTicket, {
-              data: aperturaData,
+              data: aperturaDataPDF,
               nro_doc: String(aperturaData.id),
               empresa: empresaData,
               show_logo_html: false

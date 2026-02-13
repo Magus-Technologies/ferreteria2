@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Drawer, Badge, Select } from "antd";
+import { Form, Drawer, Badge, Select, Switch, App } from "antd";
 import { FaSearch, FaFilter, FaPlus } from "react-icons/fa";
 import { FaCartShopping, FaTruckFast } from "react-icons/fa6";
 import { useState, useMemo } from "react";
@@ -29,6 +29,9 @@ import ModalVerEntregas from "../modals/modal-ver-entregas";
 import ModalCalendarioEntregas from "../modals/modal-calendario-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
 import { redColors, orangeColors, greenColors } from "~/lib/colors";
+import { configuracionApi } from "~/lib/api/configuracion";
+import { ventaApi, type VentaCompleta } from "~/lib/api/venta";
+import { Input } from "antd";
 
 interface ValuesFiltersMisVentas {
   almacen_id: number;
@@ -46,17 +49,66 @@ interface ValuesFiltersMisVentas {
 
 export default function FiltersMisVentas() {
   const router = useRouter();
+  const { message } = App.useApp();
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
   const [modalEntregaDirectaOpen, setModalEntregaDirectaOpen] = useState(false);
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
   const [modalCalendarioOpen, setModalCalendarioOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [clienteSearchText, setClienteSearchText] = useState<string>(""); // Nuevo: guardar texto de búsqueda
+  const [clienteSearchText, setClienteSearchText] = useState<string>("");
+  const [autoSendEnabled, setAutoSendEnabled] = useState(false);
+  const [loadingSwitch, setLoadingSwitch] = useState(false);
+  const [serieNumeroInput, setSerieNumeroInput] = useState("");
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const ventaSeleccionada = useStoreVentaSeleccionada((state) => state.venta);
 
+  const filtros = useStoreFiltrosMisVentas((state) => state.filtros);
   const setFiltros = useStoreFiltrosMisVentas((state) => state.setFiltros);
+
+  // Cargar el estado del envío automático al montar el componente
+  useEffect(() => {
+    const loadAutoSendStatus = async () => {
+      try {
+        const response = await configuracionApi.getAutoSendStatus();
+        if (response.data) {
+          setAutoSendEnabled(response.data.enabled);
+        }
+      } catch (error) {
+        console.error("Error al cargar estado de envío automático:", error);
+      }
+    };
+
+    loadAutoSendStatus();
+  }, []);
+
+  // Función para cambiar el estado del envío automático
+  const handleAutoSendChange = async (checked: boolean) => {
+    // Actualizar el estado localmente de inmediato para mejor UX
+    setAutoSendEnabled(checked);
+    setLoadingSwitch(true);
+    
+    try {
+      // Hacer la llamada al backend en segundo plano
+      const response = await configuracionApi.updateAutoSendStatus({ enabled: checked });
+      
+      if (response.data) {
+        // Confirmar que se guardó correctamente
+        message.success(response.data.message);
+      } else if (response.error) {
+        // Si falla, revertir el cambio
+        setAutoSendEnabled(!checked);
+        message.error(response.error.message || "Error al actualizar configuración");
+      }
+    } catch (error) {
+      // Si hay error de conexión, asumir que se guardó (porque al recargar sí cambia)
+      // Solo mostrar advertencia
+      console.warn("Advertencia al actualizar configuración:", error);
+      message.warning("Configuración guardada (la conexión se cerró antes de confirmar)");
+    } finally {
+      setLoadingSwitch(false);
+    }
+  };
 
   useEffect(() => {
     const data = {
@@ -81,6 +133,53 @@ export default function FiltersMisVentas() {
     if (values.entrega) count++;
     return count;
   }, [form]);
+
+  // Función para buscar venta por serie-número
+  const handleBuscarVentaPorSerieNumero = async (serieNumero: string) => {
+    if (!serieNumero || !serieNumero.includes("-")) return;
+
+    const parts = serieNumero.split("-");
+    if (parts.length !== 2) return;
+
+    const serie = parts[0].trim();
+    const numero = parseInt(parts[1].trim());
+
+    if (!serie || isNaN(numero)) return;
+
+    try {
+      // Buscar la venta con serie y número específicos
+      const response = await ventaApi.list({
+        almacen_id,
+        serie,
+        numero,
+      } as any);
+
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        const venta = response.data.data[0] as VentaCompleta;
+        
+        // Autocompletar los filtros con los datos de la venta encontrada
+        form.setFieldsValue({
+          tipo_documento: venta.tipo_documento as TipoDocumento,
+          cliente_id: venta.cliente_id,
+          forma_de_pago: venta.forma_de_pago as FormaDePago,
+          estado_de_venta: venta.estado_de_venta as EstadoDeVenta,
+          user_id: venta.user_id,
+          desde: dayjs(venta.fecha),
+          hasta: dayjs(venta.fecha),
+        });
+
+        // Aplicar los filtros automáticamente
+        form.submit();
+        
+        message.success(`Venta ${serie}-${numero} encontrada y filtros aplicados`);
+      } else {
+        message.warning(`No se encontró la venta ${serie}-${numero}`);
+      }
+    } catch (error) {
+      console.error("Error al buscar venta:", error);
+      message.error("Error al buscar la venta");
+    }
+  };
 
   const handleFinish = (values: ValuesFiltersMisVentas) => {
     console.log("📝 Valores del formulario:", values);
@@ -197,10 +296,10 @@ export default function FiltersMisVentas() {
       {/* Filtros Desktop - Ocupan todo el espacio */}
       <div className="hidden lg:block mt-4">
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
-          {/* Fila 1 */}
-          <div className="col-span-2 flex items-center gap-2">
+          {/* Fila 1 - Optimizada con menos espacio */}
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Fecha Venta:
+              Desde:
             </label>
             <ConfigurableElement componentId="field-fecha-desde" label="Campo Fecha Desde">
               <DatePickerBase
@@ -212,13 +311,13 @@ export default function FiltersMisVentas() {
                 placeholder="Fecha"
                 formWithMessage={false}
                 prefix={
-                  <FaCalendar size={15} className="text-amber-600 mx-1" />
+                  <FaCalendar size={13} className="text-amber-600 mx-1" />
                 }
                 allowClear
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Hasta:
             </label>
@@ -232,13 +331,13 @@ export default function FiltersMisVentas() {
                 placeholder="Hasta"
                 formWithMessage={false}
                 prefix={
-                  <FaCalendar size={15} className="text-amber-600 mx-1" />
+                  <FaCalendar size={13} className="text-amber-600 mx-1" />
                 }
                 allowClear
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-4 flex items-center gap-2">
+          <div className="col-span-3 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Cliente:
             </label>
@@ -255,18 +354,16 @@ export default function FiltersMisVentas() {
                 formWithMessage={false}
                 allowClear
                 form={form}
-                placeholder="Digite nombre del cliente"
+                placeholder="Nombre del cliente"
                 onSearchChange={(text) => {
                   console.log("🔵 Texto de búsqueda:", text);
                   setClienteSearchText(text);
                 }}
                 onChange={(value) => {
                   console.log("🔵 Cliente seleccionado - ID:", value);
-                  // Cuando se selecciona un cliente, limpiar el texto de búsqueda
                   if (value) {
                     setClienteSearchText("");
                   }
-                  // Cuando se limpia el cliente, asegurarse de que el valor sea undefined
                   if (!value) {
                     form.setFieldValue("cliente_id", undefined);
                   }
@@ -274,7 +371,7 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               T.Doc:
             </label>
@@ -292,25 +389,32 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-3 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Serie N°:
+              Serie:
             </label>
             <ConfigurableElement componentId="field-serie-numero" label="Campo Serie y Número">
-              <InputBase
-                propsForm={{
-                  name: "serie_numero",
-                  hasFeedback: false,
-                  className: "!w-full",
+              <Input
+                value={serieNumeroInput}
+                onChange={(e) => {
+                  setSerieNumeroInput(e.target.value);
+                  form.setFieldValue("serie_numero", e.target.value);
                 }}
-                placeholder="000-0000000"
-                formWithMessage={false}
+                onPressEnter={(e) => {
+                  const value = (e.target as HTMLInputElement).value;
+                  if (value && value.includes("-")) {
+                    // Si tiene formato serie-número, buscar automáticamente
+                    handleBuscarVentaPorSerieNumero(value);
+                  }
+                }}
+                placeholder="B01-15"
+                className="w-full"
               />
             </ConfigurableElement>
           </div>
 
-          {/* Fila 2 */}
-          <div className="col-span-2 flex items-center gap-2">
+          {/* Fila 2 - Optimizada */}
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               F.Pago:
             </label>
@@ -328,7 +432,7 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Estado:
             </label>
@@ -346,7 +450,7 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Entrega:
             </label>
@@ -364,9 +468,9 @@ export default function FiltersMisVentas() {
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              VEND:
+              Vend:
             </label>
             <ConfigurableElement componentId="field-vendedor" label="Campo Vendedor">
               <SelectUsuarios
@@ -382,8 +486,22 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
+          <div className="col-span-4 flex items-center gap-1">
+            <ConfigurableElement componentId="switch-envio-automatico" label="Switch Envío Automático">
+              <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 w-fit">
+                <Switch
+                  checked={autoSendEnabled}
+                  onChange={handleAutoSendChange}
+                  loading={loadingSwitch}
+                />
+                <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
+                  Envío Automático SUNAT
+                </span>
+              </div>
+            </ConfigurableElement>
+          </div>
 
-          {/* Leyenda de colores */}
+          {/* Fila 3 - Leyenda y botones de acción */}
           <div className="col-span-5 flex items-center gap-4 text-xs">
             <span className="font-semibold text-gray-700">Leyenda:</span>
             <div className="flex items-center gap-1.5">
@@ -423,7 +541,6 @@ export default function FiltersMisVentas() {
             </ConfigurableElement>
           </div>
 
-          {/* Fila 3 - Botones de acción */}
           <div className="col-span-2 flex items-center gap-2">
             <ConfigurableElement componentId="button-entregar" label="Botón Entregar">
               <ButtonBase

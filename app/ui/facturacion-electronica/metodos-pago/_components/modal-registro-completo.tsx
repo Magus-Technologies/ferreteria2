@@ -1,4 +1,4 @@
-  // Cargar datos del banco si está en modo edición'use client'
+// Cargar datos del banco si está en modo edición'use client'
 
 import { useState, useEffect } from 'react'
 import { Form, Switch, Radio, App, Divider, Card, Button, Select } from 'antd'
@@ -59,7 +59,7 @@ export default function ModalRegistroCompleto({
       const response = await cajaPrincipalApi.getAll()
       if (response.data) {
         // Extraer todas las sub-cajas que NO sean Caja Chica (tipo_caja !== 'CC')
-        const todasSubCajas = response.data.flatMap((caja: any) =>
+        const todasSubCajas = response.data.data.flatMap((caja: any) =>
           (caja.sub_cajas || []).filter((sc: any) => sc.tipo_caja !== 'CC')
         )
         setSubCajasDigitales(todasSubCajas)
@@ -170,7 +170,6 @@ export default function ModalRegistroCompleto({
           name: nombreBanco,
           cuenta_bancaria: values.cuenta_bancaria,
           nombre_titular: values.nombre_titular,
-          monto_inicial: montoInicial,
         })
 
         if (responseBanco.error) {
@@ -340,28 +339,14 @@ export default function ModalRegistroCompleto({
               precision={2}
               prefix='S/. '
               value={montoInicial}
-              onChange={(value) => setMontoInicial(value || 0)}
+              onChange={(value) => setMontoInicial(Number(value) || 0)}
             />
             <p className='text-xs text-slate-500 mt-1'>
               Saldo inicial con el que se registra la cuenta bancaria.
             </p>
           </LabelBase>
 
-          {/* Selector de sub-caja (solo si hay monto inicial y no es edición) */}
-          {montoInicial > 0 && !modoEdicion && (
-            <div className='col-span-2'>
-              <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
-                <p className='text-sm text-blue-800 mb-3'>
-                  <strong>ℹ️ Nota importante:</strong> El monto inicial se registrará automáticamente cuando crees una sub-caja digital con los métodos de pago vinculados de este banco.
-                </p>
-                <p className='text-xs text-blue-600'>
-                  • Solo se registra una vez por banco<br />
-                  • Solo en sub-cajas digitales (no efectivo)<br />
-                  • Aparecerá en el ticket de cierre de caja
-                </p>
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
 

@@ -41,6 +41,7 @@ export interface CierreCajaDataPDF {
   }
   monto_cierre_efectivo?: number
   total_cuentas?: number
+  conteo_billetes_monedas?: any
   comentarios?: string
   supervisor?: {
     name: string

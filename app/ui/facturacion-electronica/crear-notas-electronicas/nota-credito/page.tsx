@@ -25,7 +25,7 @@ export default function CrearNotaCreditoPage() {
 
   return (
     <ContenedorGeneral className="h-full">
-      <HeaderCrearNotaCredito form={form} />
+      <HeaderCrearNotaCredito />
       <Suspense fallback={<ComponentLoading />}>
         <BodyCrearNotaCredito form={form} />
       </Suspense>

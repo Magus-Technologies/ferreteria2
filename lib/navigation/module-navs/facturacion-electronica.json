@@ -54,12 +54,6 @@
             "label": "Crear Nota de Débito",
             "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-debito",
             "permission": null
-          },
-          {
-            "key": "envios-sunat",
-            "label": "Envíos a Sunat",
-            "route": "/ui/facturacion-electronica/mis-facturas",
-            "permission": null
           }
         ]
       },
@@ -202,13 +196,6 @@
         "icon": "GiReceiveMoney",
         "route": "/ui/facturacion-electronica/mis-prestamos",
         "permission": "facturacion-electronica.mis-prestamos.index"
-      },
-      {
-        "id": "mis-facturas",
-        "label": "Mis Facturas",
-        "icon": "FaFileInvoice",
-        "route": "/ui/facturacion-electronica/mis-facturas",
-        "permission": "facturacion-electronica.mis-facturas.index"
       },
       {
         "id": "mis-notas-credito",

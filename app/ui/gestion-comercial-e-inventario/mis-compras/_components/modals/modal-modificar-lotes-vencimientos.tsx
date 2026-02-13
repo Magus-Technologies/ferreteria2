@@ -1,12 +1,14 @@
 'use client'
 
-import { Modal, Form, Input, DatePicker, message, Table } from 'antd'
+import { Form, Input, DatePicker, App } from 'antd'
 import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
-import ButtonBase from '~/components/buttons/button-base'
-import { classOkButtonModal } from '~/lib/clases'
 import { Compra, compraApi, UpdateLoteVencimientoRequest } from '~/lib/api/compra'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
+import ModalForm from '~/components/modals/modal-form'
+import TitleForm from '~/components/form/title-form'
+import LabelBase from '~/components/form/label-base'
 
 interface ModalModificarLotesVencimientosProps {
   open: boolean
@@ -14,14 +16,9 @@ interface ModalModificarLotesVencimientosProps {
   compra?: Compra
 }
 
-interface ProductoRow {
-  key: string
-  unidad_derivada_id: number
-  producto: string
-  unidad: string
-  cantidad: number
-  lote: string | null
-  vencimiento: string | null
+interface FormValues {
+  lote: string
+  vencimiento: dayjs.Dayjs | null
 }
 
 export default function ModalModificarLotesVencimientos({
@@ -29,43 +26,22 @@ export default function ModalModificarLotesVencimientos({
   setOpen,
   compra,
 }: ModalModificarLotesVencimientosProps) {
-  const [form] = Form.useForm()
+  const { message } = App.useApp()
+  const [form] = Form.useForm<FormValues>()
   const queryClient = useQueryClient()
-  const [dataSource, setDataSource] = useState<ProductoRow[]>([])
+  const productoSeleccionado = useStoreProductoSeleccionado(state => state.productoSeleccionado)
   const [hasVencimiento, setHasVencimiento] = useState(true)
 
-  // Preparar datos cuando se abre el modal
+  // Inicializar valores del formulario cuando se abre el modal
   useEffect(() => {
-    if (open && compra?.productos_por_almacen) {
-      const rows: ProductoRow[] = []
-      
-      compra.productos_por_almacen.forEach((productoAlmacen) => {
-        productoAlmacen.unidades_derivadas?.forEach((unidadDerivada) => {
-          rows.push({
-            key: `${unidadDerivada.id}`,
-            unidad_derivada_id: unidadDerivada.id,
-            producto: productoAlmacen.producto_almacen?.producto.name || '',
-            unidad: unidadDerivada.unidad_derivada_inmutable?.name || '',
-            cantidad: unidadDerivada.cantidad,
-            lote: unidadDerivada.lote,
-            vencimiento: unidadDerivada.vencimiento,
-          })
-        })
+    if (open && productoSeleccionado) {
+      form.setFieldsValue({
+        lote: productoSeleccionado.lote || '',
+        vencimiento: productoSeleccionado.vencimiento ? dayjs(productoSeleccionado.vencimiento) : null,
       })
-
-      setDataSource(rows)
-      
-      // Inicializar valores del formulario
-      const initialValues: any = {}
-      rows.forEach((row) => {
-        initialValues[`lote_${row.unidad_derivada_id}`] = row.lote || ''
-        if (row.vencimiento) {
-          initialValues[`vencimiento_${row.unidad_derivada_id}`] = dayjs(row.vencimiento)
-        }
-      })
-      form.setFieldsValue(initialValues)
+      setHasVencimiento(!!productoSeleccionado.vencimiento)
     }
-  }, [open, compra, form])
+  }, [open, productoSeleccionado, form])
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateLoteVencimientoRequest[]) => {
@@ -82,32 +58,31 @@ export default function ModalModificarLotesVencimientos({
       return response.data
     },
     onSuccess: () => {
-      message.success('Lotes y vencimientos actualizados correctamente')
+      message.success('Lote y vencimiento actualizados correctamente')
       queryClient.invalidateQueries({ queryKey: ['compras'] })
       setOpen(false)
       form.resetFields()
     },
     onError: (error: any) => {
-      message.error(error.message || 'Error al actualizar lotes y vencimientos')
+      message.error(error.message || 'Error al actualizar lote y vencimiento')
     },
   })
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields()
-      
-      const unidadesActualizadas: UpdateLoteVencimientoRequest[] = dataSource.map((row) => ({
-        id: row.unidad_derivada_id,
-        lote: values[`lote_${row.unidad_derivada_id}`] || null,
-        vencimiento: hasVencimiento && values[`vencimiento_${row.unidad_derivada_id}`]
-          ? values[`vencimiento_${row.unidad_derivada_id}`].toISOString()
-          : null,
-      }))
-
-      mutation.mutate(unidadesActualizadas)
-    } catch (error) {
-      console.error('Error en validación:', error)
+  const handleSubmit = async (values: FormValues) => {
+    if (!productoSeleccionado?.id) {
+      message.error('No hay producto seleccionado')
+      return
     }
+
+    const unidadActualizada: UpdateLoteVencimientoRequest = {
+      id: productoSeleccionado.id,
+      lote: values.lote || null,
+      vencimiento: hasVencimiento && values.vencimiento
+        ? values.vencimiento.toISOString()
+        : null,
+    }
+
+    mutation.mutate([unidadActualizada])
   }
 
   const handleCancel = () => {
@@ -115,140 +90,172 @@ export default function ModalModificarLotesVencimientos({
     form.resetFields()
   }
 
-  const columns = [
-    {
-      title: 'Producto',
-      dataIndex: 'producto',
-      key: 'producto',
-      width: '30%',
-    },
-    {
-      title: 'Unidad',
-      dataIndex: 'unidad',
-      key: 'unidad',
-      width: '10%',
-    },
-    {
-      title: 'Cantidad',
-      dataIndex: 'cantidad',
-      key: 'cantidad',
-      width: '10%',
-      render: (cantidad: number) => Number(cantidad).toFixed(2),
-    },
-    {
-      title: 'Lote',
-      key: 'lote',
-      width: '20%',
-      render: (_: any, record: ProductoRow) => (
-        <Form.Item
-          name={`lote_${record.unidad_derivada_id}`}
-          className='mb-0'
-        >
-          <Input placeholder='Ingrese lote' />
-        </Form.Item>
-      ),
-    },
-    {
-      title: 'F. Vencimiento',
-      key: 'vencimiento',
-      width: '30%',
-      render: (_: any, record: ProductoRow) => (
-        <Form.Item
-          name={`vencimiento_${record.unidad_derivada_id}`}
-          className='mb-0'
-        >
-          <DatePicker
-            format='DD/MM/YYYY'
-            placeholder='Seleccione fecha'
-            className='w-full'
-            disabled={!hasVencimiento}
-          />
-        </Form.Item>
-      ),
-    },
-  ]
+  if (!productoSeleccionado) return null
 
   return (
-    <Modal
-      title='Modificar Lotes y Fechas de Vencimiento'
+    <ModalForm
+      modalProps={{
+        width: 700,
+        title: <TitleForm>Modificar Lote y Fecha de Vencimiento</TitleForm>,
+        centered: true,
+        okText: 'Guardar Cambios',
+        okButtonProps: { 
+          loading: mutation.isPending,
+          className: 'bg-green-600 hover:bg-green-700',
+        },
+      }}
       open={open}
+      setOpen={setOpen}
+      formProps={{
+        form,
+        onFinish: handleSubmit,
+        layout: 'vertical',
+      }}
       onCancel={handleCancel}
-      width={1000}
-      footer={[
-        <ButtonBase
-          key='cancel'
-          onClick={handleCancel}
-          color='default'
-          size='md'
-        >
-          Cancelar
-        </ButtonBase>,
-        <ButtonBase
-          key='submit'
-          onClick={handleSubmit}
-          color='success'
-          size='md'
-          disabled={mutation.isPending}
-          className={classOkButtonModal}
-        >
-          {mutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
-        </ButtonBase>,
-      ]}
     >
-      <div className='mb-4 flex items-center gap-2'>
-        <input
-          type='radio'
-          id='tiene-vencimiento'
-          name='vencimiento-option'
-          checked={hasVencimiento}
-          onChange={() => setHasVencimiento(true)}
-          className='cursor-pointer'
-        />
-        <label htmlFor='tiene-vencimiento' className='cursor-pointer'>
-          Tiene F.Vencimiento (F7)
-        </label>
-
-        <input
-          type='radio'
-          id='no-tiene-vencimiento'
-          name='vencimiento-option'
-          checked={!hasVencimiento}
-          onChange={() => setHasVencimiento(false)}
-          className='ml-4 cursor-pointer'
-        />
-        <label htmlFor='no-tiene-vencimiento' className='cursor-pointer'>
-          No Tiene F.Vencimiento (F8)
-        </label>
-      </div>
-
-      <div className='mb-4'>
-        <div className='text-sm text-gray-600'>
-          <strong>Proveedor:</strong> {compra?.proveedor?.razon_social || 'N/A'}
+      <div className="space-y-4">
+        {/* Información de la compra */}
+        <div className="bg-gradient-to-r from-blue-50 to-gray-50 p-4 rounded-lg border border-blue-200 shadow-sm">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium min-w-[100px]">Proveedor:</span>
+              <div className="font-bold text-sm text-gray-800">
+                {compra?.proveedor?.razon_social || 'N/A'}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium min-w-[100px]">Documento:</span>
+              <div className="font-semibold text-sm text-gray-700">
+                {compra?.tipo_documento || 'N/A'} {compra?.serie || 'S/'}-{compra?.numero || '0'}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium min-w-[100px]">Fecha:</span>
+              <div className="font-semibold text-sm text-gray-700">
+                {compra?.fecha ? dayjs(compra.fecha).format('DD/MM/YYYY') : 'N/A'}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className='text-sm text-gray-600'>
-          <strong>T.Doc:</strong> {compra?.tipo_documento || 'N/A'} | 
-          <strong> Ser.Num:</strong> {compra?.serie || 'S/'}-{compra?.numero || '0'}
-        </div>
-        <div className='text-sm text-gray-600'>
-          <strong>Fecha:</strong> {compra?.fecha ? dayjs(compra.fecha).format('DD/MM/YYYY') : 'N/A'}
-        </div>
-      </div>
 
-      <Form form={form} layout='vertical'>
-        <Table
-          dataSource={dataSource}
-          columns={columns}
-          pagination={false}
-          size='small'
-          scroll={{ y: 400, x: 'max-content' }}
-          bordered
-        />
-      </Form>
+        {/* Información del producto seleccionado */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 shadow-sm">
+          <div className="mb-2 font-bold text-sm text-green-800">Producto Seleccionado:</div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 font-medium min-w-[100px]">Código:</span>
+              <div className="font-semibold text-sm text-gray-800">
+                {(() => {
+                  const productoAlmacen = compra?.productos_por_almacen?.find(p => 
+                    p.unidades_derivadas?.some(u => u.id === productoSeleccionado?.id)
+                  )
+                  return productoAlmacen?.producto_almacen?.producto?.cod_producto || 'N/A'
+                })()}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 font-medium min-w-[100px]">Nombre:</span>
+              <div className="font-bold text-sm text-gray-800">
+                {(() => {
+                  const productoAlmacen = compra?.productos_por_almacen?.find(p => 
+                    p.unidades_derivadas?.some(u => u.id === productoSeleccionado?.id)
+                  )
+                  return productoAlmacen?.producto_almacen?.producto?.name || 'N/A'
+                })()}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 font-medium min-w-[100px]">Unidad:</span>
+              <div className="font-semibold text-sm text-gray-700">
+                {productoSeleccionado?.unidad_derivada_inmutable?.name || 'N/A'}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600 font-medium min-w-[100px]">Cantidad:</span>
+              <div className="font-semibold text-sm text-gray-700">
+                {Number(productoSeleccionado.cantidad || 0).toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div className='mt-4 text-xs text-gray-500'>
-        <p>* Los campos de lote y vencimiento son opcionales</p>
-        <p>* Si no tiene fecha de vencimiento, seleccione la opción "No Tiene F.Vencimiento"</p>
+        {/* Opciones de vencimiento */}
+        <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2">
+            <input
+              type="radio"
+              id="tiene-vencimiento"
+              name="vencimiento-option"
+              checked={hasVencimiento}
+              onChange={() => setHasVencimiento(true)}
+              className="cursor-pointer w-4 h-4"
+            />
+            <label htmlFor="tiene-vencimiento" className="cursor-pointer text-sm font-medium text-gray-700">
+              Tiene F.Vencimiento (F7)
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="radio"
+              id="no-tiene-vencimiento"
+              name="vencimiento-option"
+              checked={!hasVencimiento}
+              onChange={() => {
+                setHasVencimiento(false)
+                form.setFieldValue('vencimiento', null)
+              }}
+              className="cursor-pointer w-4 h-4"
+            />
+            <label htmlFor="no-tiene-vencimiento" className="cursor-pointer text-sm font-medium text-gray-700">
+              No Tiene F.Vencimiento (F8)
+            </label>
+          </div>
+        </div>
+
+        {/* Formulario */}
+        <div className="grid grid-cols-2 gap-3">
+          <LabelBase label="Lote:" orientation="column">
+            <Form.Item name="lote" className="mb-0">
+              <Input 
+                placeholder="Ingrese el número de lote (opcional)" 
+                className="rounded-lg"
+                size="large"
+              />
+            </Form.Item>
+          </LabelBase>
+
+          <LabelBase label="Fecha de Vencimiento:" orientation="column">
+            <Form.Item 
+              name="vencimiento" 
+              className="mb-0"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (hasVencimiento && !value) {
+                      return Promise.reject('La fecha de vencimiento es requerida')
+                    }
+                    return Promise.resolve()
+                  }
+                }
+              ]}
+            >
+              <DatePicker
+                format="DD/MM/YYYY"
+                placeholder="Seleccione la fecha de vencimiento"
+                className="w-full rounded-lg"
+                size="large"
+                disabled={!hasVencimiento}
+                disabledDate={(current) => {
+                  // No permitir fechas anteriores a hoy
+                  return current && current < dayjs().startOf('day')
+                }}
+              />
+            </Form.Item>
+          </LabelBase>
+        </div>
+
       </div>
-    </Modal>
+    </ModalForm>
   )
 }

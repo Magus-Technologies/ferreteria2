@@ -31,11 +31,11 @@ export default function DocHeader({
         <Text>{empresa?.direccion}</Text>
         <Text>
           <Text style={{ fontWeight: "bold" }}>Cel: </Text>
-          {empresa?.telefono}
+          <Text>{empresa?.telefono}</Text>
         </Text>
         <Text style={{ marginTop: 6 }}>
           <Text style={{ fontWeight: "bold" }}>Email: </Text>
-          {empresa?.email}
+          <Text>{empresa?.email}</Text>
         </Text>
       </View>
       <View style={styles_docs.headerDocument}>
