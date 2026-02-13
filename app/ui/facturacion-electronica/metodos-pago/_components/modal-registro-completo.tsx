@@ -1,7 +1,7 @@
-'use client'
+// Cargar datos del banco si está en modo edición'use client'
 
 import { useState, useEffect } from 'react'
-import { Form, Switch, Radio, App, Divider, Card, Button } from 'antd'
+import { Form, Switch, Radio, App, Divider, Card, Button, Select } from 'antd'
 import { FaPlus, FaTrash } from 'react-icons/fa'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
@@ -10,6 +10,7 @@ import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import LabelBase from '~/components/form/label-base'
 import { metodoDePagoApi, type MetodoDePago } from '~/lib/api/metodo-de-pago'
 import { apiRequest } from '~/lib/api'
+import { cajaPrincipalApi } from '~/lib/api/caja-principal'
 
 interface MetodoPagoItem {
   id: string
@@ -41,18 +42,40 @@ export default function ModalRegistroCompleto({
   const [loading, setLoading] = useState(false)
   const [metodosPago, setMetodosPago] = useState<MetodoPagoItem[]>([])
   const [bancoId, setBancoId] = useState<string | null>(null)
+  const [subCajasDigitales, setSubCajasDigitales] = useState<any[]>([])
+  const [montoInicial, setMontoInicial] = useState<number>(0)
   const { message } = App.useApp()
   const modoEdicion = !!bancoInicial
 
-  // Cargar datos del banco si está en modo edición
+  // Cargar sub-cajas digitales disponibles
+  useEffect(() => {
+    if (open && !modoEdicion) {
+      cargarSubCajasDigitales()
+    }
+  }, [open, modoEdicion])
+
+  const cargarSubCajasDigitales = async () => {
+    try {
+      const response = await cajaPrincipalApi.getAll()
+      if (response.data) {
+        // Extraer todas las sub-cajas que NO sean Caja Chica (tipo_caja !== 'CC')
+        const todasSubCajas = response.data.data.flatMap((caja: any) =>
+          (caja.sub_cajas || []).filter((sc: any) => sc.tipo_caja !== 'CC')
+        )
+        setSubCajasDigitales(todasSubCajas)
+      }
+    } catch (error) {
+      console.error('Error al cargar sub-cajas:', error)
+    }
+  }
   useEffect(() => {
     if (open && bancoInicial) {
       form.setFieldsValue({
         nombre_banco: bancoInicial.name,
         cuenta_bancaria: bancoInicial.cuenta_bancaria,
         nombre_titular: bancoInicial.nombre_titular,
-        monto_inicial: bancoInicial.monto_inicial,
       })
+      setMontoInicial(bancoInicial.monto_inicial || 0)
       setBancoId(bancoInicial.id)
       // Cargar métodos existentes del banco
       if (bancoInicial.despliegues_de_pagos) {
@@ -105,6 +128,8 @@ export default function ModalRegistroCompleto({
     form.resetFields()
     setMetodosPago([])
     setBancoId(null)
+    setMontoInicial(0)
+    setLoading(false)
   }
 
   const handleSubmit = async (values: any) => {
@@ -130,7 +155,7 @@ export default function ModalRegistroCompleto({
           name: nombreBanco,
           cuenta_bancaria: values.cuenta_bancaria,
           nombre_titular: values.nombre_titular,
-          monto_inicial: values.monto_inicial,
+          monto_inicial: montoInicial,
         })
 
         if (responseBanco.error) {
@@ -308,26 +333,20 @@ export default function ModalRegistroCompleto({
           </LabelBase>
 
           <LabelBase label='Monto Inicial (Opcional)' orientation='column'>
-            <InputBase
+            <InputNumberBase
               placeholder='0.00'
-              uppercase={false}
-              type='number'
-              propsForm={{
-                name: 'monto_inicial',
-                rules: [
-                  {
-                    type: 'number',
-                    min: 0,
-                    message: 'El monto debe ser mayor o igual a 0',
-                    transform: (value) => Number(value) || 0
-                  },
-                ],
-              }}
+              min={0}
+              precision={2}
+              prefix='S/. '
+              value={montoInicial}
+              onChange={(value) => setMontoInicial(Number(value) || 0)}
             />
             <p className='text-xs text-slate-500 mt-1'>
               Saldo inicial con el que se registra la cuenta bancaria.
             </p>
           </LabelBase>
+
+
         </div>
       </div>
 
@@ -402,10 +421,18 @@ export default function ModalRegistroCompleto({
                     <Switch
                       checked={metodo.tiene_numero_celular}
                       onChange={(checked) => {
-                        actualizarMetodo(metodo.id, 'tiene_numero_celular', checked)
-                        if (!checked) {
-                          actualizarMetodo(metodo.id, 'numero_celular', '')
-                        }
+                        // Actualizar el estado del switch
+                        const nuevosMetodos = metodosPago.map(m => {
+                          if (m.id === metodo.id) {
+                            return {
+                              ...m,
+                              tiene_numero_celular: checked,
+                              numero_celular: checked ? m.numero_celular : ''
+                            }
+                          }
+                          return m
+                        })
+                        setMetodosPago(nuevosMetodos)
                       }}
                       checkedChildren="Sí"
                       unCheckedChildren="No"

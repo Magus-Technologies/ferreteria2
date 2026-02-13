@@ -30,6 +30,7 @@ export type FormCreateNotaCredito = {
   
   // Motivo y fecha
   motivo_nota_id: number;
+  motivo_sustento?: string; // ⭐ NUEVO: Sustento específico del motivo (requerido para código 10)
   motivo_descripcion?: string;
   fecha_emision: Dayjs;
   

@@ -58,19 +58,38 @@ export interface NotaCredito {
 
 export interface NotaDebito {
   id: string;  // UUID
-  comprobante_electronico_id: number;
-  comprobante_afectado_id: number;
-  motivo_nota_id: number;
+  tipo_documento: string;
   serie: string;
-  numero: string;  // Número completo con serie
-  fecha_emision: string;
-  tipo_moneda: string;
-  total: number;
-  estado_sunat: string;
+  numero: number;
+  numero_completo: string;  // Serie-Número completo
+  venta_id: string;
+  motivo_id: number;
+  descripcion?: string;
+  monto_total: number;
+  monto_igv: number;
+  monto_subtotal: number;
+  referencia_documento?: string;
+  fecha: string;
+  estado: string;
+  almacen_id: number;
+  usuario_id: string;
   observaciones?: string;
-  comprobante_electronico?: ComprobanteElectronico;
-  comprobante_afectado?: ComprobanteElectronico;
-  motivo_nota?: MotivoNota;
+  comprobante_electronico?: ComprobanteElectronico; // Comprobante de la nota de débito
+  comprobante_referencia?: ComprobanteElectronico; // Comprobante que se está afectando (factura/boleta original)
+  motivo?: MotivoNota;
+  venta?: {
+    id: string;
+    serie: string;
+    numero: number;
+    cliente?: {
+      numero_documento: string;
+      razon_social?: string;
+      nombres?: string;
+      apellidos?: string;
+      direccion?: string;
+    };
+  };
+  puede_enviarse?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -172,7 +191,7 @@ export interface CrearNotaCreditoData {
 }
 
 export interface CrearNotaDebitoData {
-  venta_id: number;
+  venta_id: string;
   motivo_id: number;
   serie: string;
   almacen_id: number;
@@ -184,10 +203,13 @@ export interface CrearNotaDebitoData {
   fecha?: string;
   observaciones?: string;
   items: {
-    producto_id: number;
-    unidad_derivada_id: number;
+    producto_id?: number;
+    unidad_derivada_id?: number;
+    codigo: string;
+    descripcion: string;
     cantidad: number;
-    precio_unitario: number;
+    valor_unitario: number; // Precio unitario SIN IGV
+    valor_venta: number; // Total del item SIN IGV
     subtotal: number;
     igv: number;
     total: number;
@@ -200,6 +222,7 @@ export const facturacionElectronicaApi = {
     query: string;
     tipo?: "01" | "03"; // 01=Factura, 03=Boleta
     limit?: number;
+    para_nota_debito?: boolean; // Filtrar comprobantes sin ND aceptada
   }) {
     const queryString = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
@@ -335,8 +358,8 @@ export const facturacionElectronicaApi = {
     );
   },
 
-  async getNotaDebitoById(id: number) {
-    return apiRequest<NotaDebito>(`/facturacion-electronica/notas-debito/${id}`);
+  async getNotaDebitoById(id: string) {
+    return apiRequest<{ data: NotaDebito }>(`/facturacion-electronica/notas-debito/${id}`);
   },
 
   async crearNotaDebito(data: CrearNotaDebitoData) {
@@ -346,13 +369,13 @@ export const facturacionElectronicaApi = {
     });
   },
 
-  async enviarNotaDebitoSunat(id: number) {
+  async enviarNotaDebitoSunat(id: string) {
     return apiRequest(`/facturacion-electronica/notas-debito/${id}/enviar-sunat`, {
       method: "POST",
     });
   },
 
-  async validarVentaParaNotaDebito(ventaId: number) {
+  async validarVentaParaNotaDebito(ventaId: string) {
     return apiRequest(`/facturacion-electronica/notas-debito/validar-venta/${ventaId}`);
   },
 

@@ -9,6 +9,7 @@ import {
 } from './columns-detalle-de-compra'
 import { type Compra } from '~/lib/api/compra'
 import { RowClickedEvent } from 'ag-grid-community'
+import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
 
 export default function TableDetalleDeCompra({
   id,
@@ -19,16 +20,26 @@ export default function TableDetalleDeCompra({
   compraSeleccionada: Compra | undefined
   setCompraSeleccionada: (value: Compra | undefined) => void
 }) {
+  const setProductoSeleccionado = useStoreProductoSeleccionado(state => state.setProductoSeleccionado)
+
   useEffect(() => {
     setCompraSeleccionada(undefined)
+    setProductoSeleccionado(undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleRowClicked = useCallback(
     (event: RowClickedEvent<TableDetalleDeCompraProps>) => {
       event.node.setSelected(true)
+      // Store the selected product with its unidad_derivada data
+      if (event.data) {
+        setProductoSeleccionado({
+          ...event.data,
+          producto_almacen_id: event.data.producto_almacen?.id,
+        })
+      }
     },
-    []
+    [setProductoSeleccionado]
   )
 
   return (

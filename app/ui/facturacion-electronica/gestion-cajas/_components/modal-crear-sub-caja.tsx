@@ -258,7 +258,7 @@ export default function ModalCrearSubCaja({
               onChange={handleMetodosChange}
               options={metodosPago?.map((metodo: any) => ({
                 value: metodo.id,
-                label: `${metodo.name}${metodo.metodo_de_pago?.name ? ` (${metodo.metodo_de_pago.name})` : ''}`,
+                label: metodo.label || metodo.name,
               })) || []}
               showSearch
               className='w-full'

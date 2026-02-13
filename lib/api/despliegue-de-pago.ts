@@ -5,6 +5,7 @@ import { apiRequest, type ApiResponse } from '../api';
 export interface DespliegueDePago {
   id: string;
   name: string;
+  label?: string; // Label con formato "Titular/Banco/Método" o "Banco/Método"
   adicional: number;
   mostrar: boolean;
   metodo_de_pago_id: string;

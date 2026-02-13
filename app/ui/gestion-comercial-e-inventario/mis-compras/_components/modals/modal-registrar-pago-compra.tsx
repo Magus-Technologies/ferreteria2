@@ -33,6 +33,7 @@ interface PagoCompraValues {
   tipo_cambio?: number
   aplica_letra?: string
   banco_cuenta?: string
+  numero_letra?: string
 }
 
 export default function ModalRegistrarPagoCompra({
@@ -46,24 +47,37 @@ export default function ModalRegistrarPagoCompra({
   const tableRefPagos = useRef<AgGridReact>(null)
   const [hasChanges, setHasChanges] = useState(false)
 
+  const [isEfectivo, setIsEfectivo] = useState(false)
+
   // Manejar cambio de método de pago
   const handleMetodoPagoChange = (value: string, option: any) => {
     // El option contiene el label que tiene el formato: "SubCaja/Banco/Método/Titular"
     if (option && option.label) {
+      const label = (option.label as string).toUpperCase()
+      const cashDetected = label.includes('EFECTIVO')
+      setIsEfectivo(cashDetected)
+
+      // Si es efectivo, limpiar el número de operación
+      if (cashDetected) {
+        form.setFieldValue('numero_operacion', undefined)
+      }
+
       // Extraer banco, método y titular del label
       const parts = option.label.split('/')
       if (parts.length >= 2) {
         const banco = parts[1]?.trim() || ''
         const metodo = parts[2]?.trim() || ''
         const titular = parts[3]?.trim() || ''
-        
+
         // Construir el texto de banco y cuenta
-        const bancoCuenta = titular 
+        const bancoCuenta = titular
           ? `${banco} / ${metodo} / ${titular}`
           : `${banco} / ${metodo}`
-        
+
         form.setFieldValue('banco_cuenta', bancoCuenta)
       }
+    } else {
+      setIsEfectivo(false)
     }
   }
 
@@ -139,6 +153,26 @@ export default function ModalRegistrarPagoCompra({
     }
   }, [open, compra?.id])
 
+  // Calcular siguiente letra correlativa
+  const siguienteLetra = useMemo(() => {
+    // Buscar el máximo número de letra actual
+    const letrasActuales = pagosRealizados
+      .filter((p) => p.numero_letra && p.numero_letra.startsWith('L'))
+      .map((p) => parseInt(p.numero_letra!.substring(1)))
+      .filter((n) => !isNaN(n))
+
+    const maxLetra = letrasActuales.length > 0 ? Math.max(...letrasActuales) : 0
+    const nextNum = maxLetra + 1
+    return `L${nextNum.toString().padStart(3, '0')}`
+  }, [pagosRealizados])
+
+  // Cargar siguiente letra al abrir o cuando cambian pagos
+  useEffect(() => {
+    if (open) {
+      form.setFieldValue('numero_letra', siguienteLetra)
+    }
+  }, [open, siguienteLetra, form])
+
   // Reset form cuando se cierra el modal
   useEffect(() => {
     if (!open) {
@@ -155,7 +189,7 @@ export default function ModalRegistrarPagoCompra({
     setHasChanges(!!hasData)
   }
 
-  const handleSubmit = (values: PagoCompraValues) => {
+  const handleSubmit = (values: PagoCompraValues & { numero_letra?: string }) => {
     if (!compra) return
 
     // Validar que el monto no exceda el saldo
@@ -165,8 +199,8 @@ export default function ModalRegistrarPagoCompra({
     }
 
     // Extraer solo el despliegue_pago_id del value (formato: "sub_caja_id-despliegue_pago_id")
-    const desplieguePagoId = typeof values.despliegue_de_pago_id === 'string' 
-      ? values.despliegue_de_pago_id.split('-')[1] 
+    const desplieguePagoId = typeof values.despliegue_de_pago_id === 'string'
+      ? values.despliegue_de_pago_id.split('-')[1]
       : values.despliegue_de_pago_id
 
     registrarPago({
@@ -176,20 +210,14 @@ export default function ModalRegistrarPagoCompra({
       observacion: values.observacion,
       afecta_caja: values.afecta_caja,
       numero_operacion: values.numero_operacion,
+      numero_letra: values.numero_letra,
     })
   }
 
   // Columnas de la tabla de pagos realizados
   const columnasPagos: ColDef<PagoDeCompra>[] = [
     {
-      headerName: '#',
-      valueGetter: 'node.rowIndex + 1',
-      width: 50,
-      cellStyle: { textAlign: 'center', fontWeight: '600' },
-    },
-    {
       headerName: 'M.PAGO',
-      field: 'despliegue_de_pago.metodo_de_pago.name',
       width: 120,
       valueGetter: (params) => params.data?.despliegue_de_pago?.metodo_de_pago?.name || '-',
     },
@@ -203,10 +231,18 @@ export default function ModalRegistrarPagoCompra({
       },
     },
     {
-      headerName: 'APLICA',
+      headerName: 'LETRA',
+      field: 'numero_letra',
       width: 90,
-      valueGetter: () => 'FACTURA',
-      cellStyle: { textAlign: 'center', fontSize: '11px' },
+      cellStyle: { textAlign: 'center', fontWeight: 'bold' },
+      valueFormatter: (params) => params.value || '-',
+    },
+    {
+      headerName: 'NRO.OPER',
+      field: 'numero_operacion',
+      width: 100,
+      cellStyle: { textAlign: 'center' },
+      valueFormatter: (params) => params.value || '-',
     },
     {
       headerName: 'FECHA',
@@ -270,7 +306,7 @@ export default function ModalRegistrarPagoCompra({
         title: <TitleForm>Cuentas por Pagar - Comprobantes de Compras</TitleForm>,
         centered: true,
         okText: 'Guardar',
-        okButtonProps: { 
+        okButtonProps: {
           loading: isPending,
           disabled: isGuardarDisabled,
           className: 'bg-green-600 hover:bg-green-700',
@@ -284,7 +320,7 @@ export default function ModalRegistrarPagoCompra({
         layout: 'vertical',
         initialValues: {
           fecha_pago: dayjs(),
-          afecta_caja: false,
+          afecta_caja: true,
         },
         onValuesChange: handleFormChange,
       }}
@@ -292,8 +328,8 @@ export default function ModalRegistrarPagoCompra({
     >
       <div className="space-y-4">
         {/* Información del proveedor y documento - Jerarquía Visual Mejorada */}
-        <div className="bg-gradient-to-r from-blue-50 to-gray-50 p-4 rounded-lg border border-blue-200 shadow-sm">
-          <div className="grid grid-cols-2 gap-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 shadow-sm">
+          <div className="grid grid-cols-3 gap-6">
             {/* Bloque Izquierdo: Datos del Proveedor */}
             <div className="space-y-2 border-r border-gray-300 pr-4">
               <div className="flex items-start gap-2">
@@ -316,8 +352,8 @@ export default function ModalRegistrarPagoCompra({
               </div>
             </div>
 
-            {/* Bloque Derecho: Datos del Crédito */}
-            <div className="space-y-2 pl-2">
+            {/* Bloque Central: Datos del Crédito */}
+            <div className="space-y-2 border-r border-gray-300 pr-4">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 font-medium min-w-[110px]">Documento [F2]:</span>
                 <div className="font-bold text-sm text-gray-800">
@@ -336,14 +372,24 @@ export default function ModalRegistrarPagoCompra({
                   {compra.forma_de_pago === 'cr' ? 'CRÉDITO' : 'CONTADO'}
                 </div>
               </div>
-              {compra.fecha_vencimiento && (
-                <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-300 rounded px-2 py-1 mt-2">
-                  <span className="text-xs text-yellow-700 font-bold">⏰ F.VENCE:</span>
-                  <div className="font-bold text-sm text-yellow-800">
-                    {toLocalString({ date: dayjs(compra.fecha_vencimiento), format: 'DD/MM/YYYY' })}
-                  </div>
-                </div>
-              )}
+            </div>
+
+            {/* Bloque Derecho: Totales (Saldos) */}
+            <div className="flex flex-col justify-center gap-2 pl-4">
+              <div className="flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-blue-100">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Total Neto</span>
+                <span className="text-gray-800 font-bold text-lg">S/ {totales.totalNeto.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-green-100">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Cancelado</span>
+                <span className="text-green-600 font-bold text-lg">S/ {totales.montoCancelado.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-red-100">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Saldo</span>
+                <span className={`font-bold text-lg ${totales.saldo > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                  S/ {totales.saldo.toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -368,7 +414,7 @@ export default function ModalRegistrarPagoCompra({
 
           <LabelBase label="Banco y Cuenta:" orientation="column">
             <Form.Item name="banco_cuenta" className="mb-0">
-              <Input 
+              <Input
                 placeholder="Se llenará automáticamente"
                 disabled
                 className="bg-gray-50 rounded-lg text-gray-700 font-medium"
@@ -381,7 +427,7 @@ export default function ModalRegistrarPagoCompra({
               name="monto"
               rules={[
                 { required: true, message: 'Requerido' },
-                { 
+                {
                   validator: (_, value) => {
                     const num = Number(value)
                     if (isNaN(num) || num <= 0) {
@@ -416,6 +462,10 @@ export default function ModalRegistrarPagoCompra({
           </LabelBase>
         </div>
 
+        <Form.Item name="afecta_caja" hidden>
+          <Input type="hidden" />
+        </Form.Item>
+
         <div className="grid grid-cols-4 gap-3">
           <LabelBase label="Fecha Pago:" orientation="column">
             <Form.Item name="fecha_pago" className="mb-0">
@@ -428,40 +478,25 @@ export default function ModalRegistrarPagoCompra({
           </LabelBase>
 
           <LabelBase label="Aplica Letra:" orientation="column">
-            <Form.Item name="aplica_letra" className="mb-0">
-              <Select
-                placeholder="Seleccione letra"
-                allowClear
-                className="rounded-lg"
-                options={[
-                  { label: 'Letra 001', value: 'L001' },
-                  { label: 'Letra 002', value: 'L002' },
-                  { label: 'Letra 003', value: 'L003' },
-                ]}
-              />
-            </Form.Item>
-          </LabelBase>
-
-          <LabelBase label="Afecta Caja:" orientation="column">
-            <Form.Item name="afecta_caja" className="mb-0">
-              <Select
-                className="rounded-lg"
-                options={[
-                  { label: 'No', value: false },
-                  { label: 'Sí', value: true },
-                ]}
+            <Form.Item name="numero_letra" className="mb-0">
+              <Input
+                placeholder="L001"
+                readOnly
+                className="rounded-lg bg-gray-50 font-bold text-center"
               />
             </Form.Item>
           </LabelBase>
 
           <LabelBase label="Nº Recibo:" orientation="column">
             <Form.Item name="numero_operacion" className="mb-0">
-              <Input placeholder="Nº operación" className="rounded-lg" />
+              <Input
+                placeholder={isEfectivo ? 'No aplica (Efectivo)' : 'Nº operación'}
+                disabled={isEfectivo}
+                className={`rounded-lg ${isEfectivo ? 'bg-gray-100' : ''}`}
+              />
             </Form.Item>
           </LabelBase>
-        </div>
 
-        <div className="grid grid-cols-1 gap-3">
           <LabelBase label="Observación:" orientation="column">
             <Form.Item name="observacion" className="mb-0">
               <Input placeholder="Observaciones (opcional)" className="rounded-lg" />
@@ -486,43 +521,13 @@ export default function ModalRegistrarPagoCompra({
               loading={false}
               pagination={false}
               domLayout="normal"
+              withNumberColumn={true}
             />
           </div>
         </div>
 
-        {/* Totales - Contraste Mejorado */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border-2 border-blue-300 shadow-md">
-          <div className="flex justify-center gap-12 text-base">
-            <div className="flex flex-col items-center">
-              <span className="text-gray-700 text-xs font-semibold mb-1 uppercase tracking-wide">Total Neto</span>
-              <span className="text-gray-800 font-bold text-2xl">
-                S/ {totales.totalNeto.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-gray-700 text-xs font-semibold mb-1 uppercase tracking-wide">Monto Cancelado</span>
-              <span className="text-green-600 font-bold text-2xl">
-                S/ {totales.montoCancelado.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-gray-700 text-xs font-semibold mb-1 uppercase tracking-wide">Saldo Pendiente</span>
-              <span className={`font-bold text-2xl ${totales.saldo > 0 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-                S/ {totales.saldo.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Alerta Dinámica */}
-        {totales.saldo > 0 && montoActual && montoActual > totales.saldo && (
-          <div className="text-center text-white font-bold text-sm bg-red-600 p-3 rounded-lg border-2 border-red-800 animate-pulse shadow-lg">
-            ERROR: El monto ingresado (S/ {montoActual?.toFixed(2)}) excede el saldo pendiente (S/ {totales.saldo.toFixed(2)})
-          </div>
-        )}
-
         {totales.saldo <= 0 && (
-          <div className="text-center text-green-700 font-bold text-sm bg-green-100 p-3 rounded-lg border-2 border-green-400 shadow-md">
+          <div className="text-center text-green-700 font-bold text-sm bg-green-50 p-2 rounded border border-green-200">
             COMPRA TOTALMENTE CANCELADA
           </div>
         )}

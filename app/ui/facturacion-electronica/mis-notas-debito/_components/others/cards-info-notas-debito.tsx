@@ -17,9 +17,10 @@ export default function CardsInfoNotasDebito() {
     response.forEach((nd: any) => {
       const monto = Number(nd.total || 0);
       total += monto;
-      if (nd.estado_sunat === "Aceptado") aceptadas += monto;
-      else if (nd.estado_sunat === "Pendiente") pendientes += monto;
-      else if (nd.estado_sunat === "Rechazado") rechazadas += monto;
+      // Los estados SUNAT vienen en MAYÚSCULAS desde el backend
+      if (nd.estado_sunat === "ACEPTADO") aceptadas += monto;
+      else if (nd.estado_sunat === "PENDIENTE") pendientes += monto;
+      else if (nd.estado_sunat === "RECHAZADO") rechazadas += monto;
     });
     return { total, aceptadas, pendientes, rechazadas };
   }, [response]);

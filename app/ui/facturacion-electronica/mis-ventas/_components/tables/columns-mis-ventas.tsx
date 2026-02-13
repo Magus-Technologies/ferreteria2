@@ -3,7 +3,7 @@
 import { ColDef } from "ag-grid-community";
 import type { getVentaResponseProps } from "~/lib/api/venta";
 import dayjs from "dayjs";
-import CellAccionesVenta from "./cell-acciones-venta";
+import CellAccionesVentaDropdown from "./cell-acciones-venta-dropdown";
 
 export function useColumnsMisVentas() {
   const columnDefs: ColDef<getVentaResponseProps>[] = [
@@ -229,7 +229,7 @@ export function useColumnsMisVentas() {
       field: "id",
       width: 100,
       pinned: "right",
-      cellRenderer: CellAccionesVenta,
+      cellRenderer: CellAccionesVentaDropdown,
       cellRendererParams: (params: { data?: getVentaResponseProps }) => ({
         ventaId: params.data?.id || "",
       }),

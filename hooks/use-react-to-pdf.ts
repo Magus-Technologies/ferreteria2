@@ -1,6 +1,8 @@
 import { JSX } from 'react'
 import { compartir } from './use-share'
 import { pdf } from '@react-pdf/renderer'
+import { message, Modal, Input } from 'antd'
+import { useState } from 'react'
 
 export function useJSXToPdf({ jsx, name }: { jsx: JSX.Element; name: string }) {
   const print = async () => {
@@ -45,7 +47,14 @@ export function useJSXToPdf({ jsx, name }: { jsx: JSX.Element; name: string }) {
     downloadPdf({ jsx, name })
   }
 
-  return { share, print, download }
+  /**
+   * Genera el PDF como blob para enviar por email
+   */
+  async function getPdfBlob(): Promise<Blob> {
+    return await pdf(jsx).toBlob()
+  }
+
+  return { share, print, download, getPdfBlob }
 }
 
 export async function downloadPdf({

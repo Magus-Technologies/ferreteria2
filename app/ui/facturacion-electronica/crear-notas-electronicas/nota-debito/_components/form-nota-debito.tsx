@@ -1,6 +1,6 @@
 "use client";
 
-import { FormInstance } from "antd";
+import { Form, FormInstance, Spin } from "antd";
 import LabelBase from "~/components/form/label-base";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectTipoMoneda from "~/app/_components/form/selects/select-tipo-moneda";
@@ -8,17 +8,62 @@ import InputNumberBase from "~/app/_components/form/inputs/input-number-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectBase from "~/app/_components/form/selects/select-base";
 import SelectMotivoNota from "~/app/_components/form/selects/select-motivo-nota";
-import { FaCalendar } from "react-icons/fa6";
+import { FaCalendar, FaSearch } from "react-icons/fa";
+import ModalBuscarComprobante from "./modal-buscar-comprobante";
+import useBuscarComprobanteInteligente from "../_hooks/use-buscar-comprobante-inteligente";
 
 interface FormNotaDebitoProps {
   form: FormInstance;
 }
 
 export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
+  const {
+    searchQuery,
+    setSearchQuery,
+    modalOpen,
+    setModalOpen,
+    cargarComprobante,
+    isSearching,
+  } = useBuscarComprobanteInteligente(form);
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Primera fila: Fecha, Tipo Doc, Serie, Número */}
+      {/* Modal de búsqueda */}
+      <ModalBuscarComprobante
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSelect={cargarComprobante}
+        searchQueryProp={searchQuery}
+      />
+
+      {/* Primera fila: Búsqueda, Fecha, Tipo Doc, Serie, Número */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
+        <LabelBase
+          label="Búsqueda:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:flex-1"
+        >
+          <InputBase
+            propsForm={{
+              name: "busqueda_comprobante",
+              hasFeedback: false,
+              className: "w-full",
+            }}
+            placeholder="Buscar por serie-número (B01-1) o cliente..."
+            className="w-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            prefix={
+              isSearching ? (
+                <Spin size="small" className="mx-1" />
+              ) : (
+                <FaSearch className="text-orange-600 mx-1" />
+              )
+            }
+            uppercase={false}
+          />
+        </LabelBase>
+        
         <LabelBase
           label="Fecha:"
           classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
@@ -203,7 +248,57 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
         </LabelBase>
       </div>
 
-      {/* Quinta fila: Moneda, Tipo de Cambio, Observaciones */}
+      {/* Quinta fila: Sustento del Motivo (siempre visible cuando hay motivo seleccionado) */}
+      <Form.Item noStyle shouldUpdate={(prev, curr) => prev.motivo_nota_id !== curr.motivo_nota_id}>
+        {({ getFieldValue }) => {
+          const motivoId = getFieldValue('motivo_nota_id');
+          
+          // Determinar si el motivo requiere sustento obligatorio
+          // Código 10 (Otros conceptos) requiere mínimo 20 caracteres
+          const requiereObligatorio = motivoId === 10;
+          
+          return motivoId ? (
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
+              <LabelBase
+                label={requiereObligatorio ? "Sustento del Motivo: *" : "Sustento del Motivo:"}
+                classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+                className="w-full"
+              >
+                <InputBase
+                  propsForm={{
+                    name: "motivo_sustento",
+                    rules: [
+                      {
+                        required: requiereObligatorio,
+                        message: 'El sustento es obligatorio para el motivo "Otros conceptos"',
+                      },
+                      {
+                        validator: async (_, value) => {
+                          // Si hay valor, validar longitud mínima
+                          if (value && value.trim().length > 0 && value.trim().length < 20) {
+                            throw new Error('El sustento debe tener al menos 20 caracteres');
+                          }
+                        },
+                      },
+                    ],
+                    hasFeedback: false,
+                    className: "w-full",
+                  }}
+                  placeholder={
+                    requiereObligatorio
+                      ? "Explique detalladamente el motivo (OBLIGATORIO, mínimo 20 caracteres)"
+                      : "Explique detalladamente el motivo de esta nota de débito (opcional, recomendado mínimo 20 caracteres)"
+                  }
+                  className="w-full"
+                  uppercase={false}
+                />
+              </LabelBase>
+            </div>
+          ) : null;
+        }}
+      </Form.Item>
+
+      {/* Sexta fila: Moneda, Tipo de Cambio, Observaciones */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Moneda:"

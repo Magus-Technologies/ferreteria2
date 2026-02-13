@@ -7,21 +7,18 @@ import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import LabelBase from '~/components/form/label-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
-import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 
 interface ModalMoverDineroSubCajasProps {
   open: boolean
   setOpen: (open: boolean) => void
-  cajaPrincipalId?: number
   onSuccess?: () => void
 }
 
 export default function ModalMoverDineroSubCajas({
   open,
   setOpen,
-  cajaPrincipalId,
   onSuccess,
 }: ModalMoverDineroSubCajasProps) {
   const [form] = Form.useForm()
@@ -29,6 +26,28 @@ export default function ModalMoverDineroSubCajas({
   const { message } = App.useApp()
 
   const subCajaOrigenId = Form.useWatch('sub_caja_origen_id', form)
+  const subCajaDestinoId = Form.useWatch('sub_caja_destino_id', form)
+
+  // Obtener TODAS las sub-cajas del vendedor (con cualquier saldo)
+  const { data: subCajasOrigen, isLoading: loadingSubCajas } = useQuery({
+    queryKey: [QueryKeys.SUB_CAJAS, 'todas-con-saldo-vendedor'],
+    queryFn: async () => {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-vendedor`
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+      const data = await response.json()
+      console.log('💵 Sub-cajas del vendedor:', data?.data)
+      console.log('🔍 Estructura de datos:', JSON.stringify(data?.data?.[0], null, 2))
+      return data?.data || []
+    },
+    enabled: open,
+    staleTime: 0, // No usar caché
+    refetchOnMount: 'always', // Siempre refrescar al montar
+  })
 
   // Limpiar el despliegue de pago origen cuando cambie la sub-caja origen
   const prevSubCajaOrigenId = React.useRef(subCajaOrigenId)
@@ -39,45 +58,26 @@ export default function ModalMoverDineroSubCajas({
     prevSubCajaOrigenId.current = subCajaOrigenId
   }, [subCajaOrigenId, form])
 
-  // Obtener sub-cajas con saldo EN EFECTIVO del vendedor
-  const { data: subCajasEfectivo } = useQuery({
-    queryKey: [QueryKeys.SUB_CAJAS, 'todas-con-saldo-efectivo'],
-    queryFn: async () => {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-efectivo`
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
-      const data = await response.json()
-      console.log('💵 Sub-cajas con efectivo del vendedor:', data?.data)
-      return data?.data || []
-    },
-    enabled: open,
-    staleTime: 0, // No usar caché
-    refetchOnMount: 'always', // Siempre refrescar al montar
-  })
+  // Limpiar el despliegue de pago destino cuando cambie la sub-caja destino
+  const prevSubCajaDestinoId = React.useRef(subCajaDestinoId)
+  React.useEffect(() => {
+    if (prevSubCajaDestinoId.current !== subCajaDestinoId && prevSubCajaDestinoId.current !== undefined) {
+      form.setFieldValue('despliegue_de_pago_destino_id', undefined)
+    }
+    prevSubCajaDestinoId.current = subCajaDestinoId
+  }, [subCajaDestinoId, form])
 
-  // Obtener TODAS las sub-cajas para el destino (sin filtrar por efectivo)
-  const { data: todasSubCajas } = useQuery({
-    queryKey: [QueryKeys.SUB_CAJAS, 'todas'],
-    queryFn: async () => {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-vendedor`
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
-      const data = await response.json()
-      console.log('Todas las sub-cajas:', data?.data)
-      return data?.data || []
-    },
-    enabled: open,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  })
+  // Encontrar la sub-caja origen seleccionada para mostrar sus métodos de pago
+  const subCajaSeleccionada = React.useMemo(() => {
+    if (!subCajaOrigenId || !subCajasOrigen) return null
+    return subCajasOrigen.find((sc: any) => sc.id === subCajaOrigenId)
+  }, [subCajaOrigenId, subCajasOrigen])
+
+  // Encontrar la sub-caja destino seleccionada para mostrar sus métodos de pago
+  const subCajaDestinoSeleccionada = React.useMemo(() => {
+    if (!subCajaDestinoId || !subCajasOrigen) return null
+    return subCajasOrigen.find((sc: any) => sc.id === subCajaDestinoId)
+  }, [subCajaDestinoId, subCajasOrigen])
 
   const handleSubmit = async (values: any) => {
     if (values.sub_caja_origen_id === values.sub_caja_destino_id) {
@@ -170,60 +170,91 @@ export default function ModalMoverDineroSubCajas({
         {/* Información del proceso */}
         <div className="p-2.5 bg-blue-50 rounded border border-blue-200">
           <p className="text-xs text-blue-700">
-            <strong>Transferencia Digital:</strong> Retira efectivo que tengas en tu sub-caja y transfiérelo a pagos digitales (Yape, Plin, Banco) en otra sub-caja.
+            <strong>Transferencia entre Sub-Cajas:</strong> Mueve dinero de un método de pago a otro. Puedes transferir efectivo a digital, o entre diferentes pagos digitales (Ej: Yape → Banco, Plin → Yape).
           </p>
         </div>
 
         {/* Sección: Origen */}
         <div className="space-y-2.5">
           <div className="text-xs font-semibold text-slate-700 border-b pb-1">
-            📤 Origen (Tu efectivo disponible)
+            📤 Origen (De dónde sale el dinero)
           </div>
 
           <LabelBase label="Sub-Caja Origen" orientation="column">
             <Form.Item
               name="sub_caja_origen_id"
               rules={[{ required: true, message: 'Selecciona la sub-caja origen' }]}
-              className="mb-1"
+              className="mb-0"
             >
               <Select
-                placeholder="Selecciona sub-caja con tu efectivo"
+                placeholder="Selecciona sub-caja origen"
                 showSearch
                 filterOption={(input, option) =>
                   String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
-                options={subCajasEfectivo?.map((sc: any) => ({
-                  label: `${sc.nombre} - Efectivo: S/. ${sc.saldo_efectivo || '0.00'}`,
+                options={subCajasOrigen?.map((sc: any) => ({
+                  label: `${sc.nombre} - S/. ${Number(sc.saldo_vendedor || 0).toFixed(2)}`,
                   value: sc.id,
                 }))}
               />
             </Form.Item>
-            <p className="text-xs text-slate-500 -mt-1">
-              Solo se muestran sub-cajas donde tienes efectivo disponible
-            </p>
           </LabelBase>
 
-          <LabelBase label="Efectivo a Retirar" orientation="column">
-            <SelectDespliegueDePago
-              placeholder="Selecciona el efectivo a retirar"
-              propsForm={{
-                name: 'despliegue_de_pago_origen_id',
-                rules: [{ required: true, message: 'Selecciona el efectivo origen' }],
-              }}
-              filterByTipo="efectivo"
-              subCajaId={subCajaOrigenId}
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              Solo puedes mover efectivo físico que tengas
-            </p>
+          <LabelBase label="Método de Pago Origen" orientation="column">
+            <Form.Item
+              name="despliegue_de_pago_origen_id"
+              rules={[{ required: true, message: 'Selecciona el método de pago origen' }]}
+              className="mb-0"
+            >
+              <Select
+                placeholder="Selecciona el método de pago origen"
+                showSearch
+                disabled={!subCajaOrigenId}
+                filterOption={(input, option) =>
+                  String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={subCajaSeleccionada?.metodos_pago?.map((mp: any) => {
+                  // Construir label con formato: SubCaja/Banco/Titular/Método - S/. SALDO
+                  const partes = []
+                  
+                  // Agregar nombre de la sub-caja
+                  if (subCajaSeleccionada?.nombre) {
+                    partes.push(subCajaSeleccionada.nombre)
+                  }
+                  
+                  // Agregar banco (metodo_de_pago_nombre)
+                  if (mp.metodo_de_pago_nombre) {
+                    partes.push(mp.metodo_de_pago_nombre)
+                  }
+                  
+                  // Agregar titular si existe
+                  if (mp.nombre_titular) {
+                    partes.push(mp.nombre_titular)
+                  }
+                  
+                  // Agregar nombre del método (despliegue)
+                  if (mp.nombre) {
+                    partes.push(mp.nombre)
+                  }
+                  
+                  const label = partes.join('/')
+                  const saldo = ` - S/. ${Number(mp.saldo_vendedor || 0).toFixed(2)}`
+                  
+                  return {
+                    label: `${label}${saldo}`,
+                    value: mp.despliegue_pago_id,
+                  }
+                }) || []}
+              />
+            </Form.Item>
           </LabelBase>
         </div>
 
         {/* Sección: Destino */}
         <div className="space-y-2.5">
           <div className="text-xs font-semibold text-slate-700 border-b pb-1">
+            Destino (A dónde va el dinero)
           </div>
-            📥 Destino (Pago digital)
 
           <LabelBase label="Sub-Caja Destino" orientation="column">
             <Form.Item
@@ -237,7 +268,7 @@ export default function ModalMoverDineroSubCajas({
                 filterOption={(input, option) =>
                   String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
-                options={todasSubCajas
+                options={subCajasOrigen
                   ?.filter((sc: any) => sc.id !== subCajaOrigenId)
                   ?.map((sc: any) => ({
                     label: `${sc.nombre}`,
@@ -248,17 +279,55 @@ export default function ModalMoverDineroSubCajas({
             </Form.Item>
           </LabelBase>
 
-          <LabelBase label="Método de Pago Digital Destino" orientation="column">
-            <SelectDespliegueDePago
-              placeholder="Selecciona Yape, Plin, Banco, etc."
-              propsForm={{
-                name: 'despliegue_de_pago_destino_id',
-                rules: [{ required: true, message: 'Selecciona el método de pago destino' }],
-              }}
-              filterByTipo={['banco', 'billetera']}
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              Selecciona el método digital donde se registrará el dinero
+          <LabelBase label="Método de Pago Destino" orientation="column">
+            <Form.Item
+              name="despliegue_de_pago_destino_id"
+              rules={[{ required: true, message: 'Selecciona el método de pago destino' }]}
+              className="mb-1"
+            >
+              <Select
+                placeholder="Selecciona el método de pago destino"
+                showSearch
+                disabled={!subCajaDestinoId}
+                filterOption={(input, option) =>
+                  String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={subCajaDestinoSeleccionada?.metodos_pago?.map((mp: any) => {
+                  // Construir label con formato: SubCaja/Banco/Titular/Método - S/. SALDO
+                  const partes = []
+                  
+                  // Agregar nombre de la sub-caja
+                  if (subCajaDestinoSeleccionada?.nombre) {
+                    partes.push(subCajaDestinoSeleccionada.nombre)
+                  }
+                  
+                  // Agregar banco (metodo_de_pago_nombre)
+                  if (mp.metodo_de_pago_nombre) {
+                    partes.push(mp.metodo_de_pago_nombre)
+                  }
+                  
+                  // Agregar titular si existe
+                  if (mp.nombre_titular) {
+                    partes.push(mp.nombre_titular)
+                  }
+                  
+                  // Agregar nombre del método (despliegue)
+                  if (mp.nombre) {
+                    partes.push(mp.nombre)
+                  }
+                  
+                  const label = partes.join('/')
+                  const saldo = ` - S/. ${Number(mp.saldo_vendedor || 0).toFixed(2)}`
+                  
+                  return {
+                    label: `${label}${saldo}`,
+                    value: mp.despliegue_pago_id,
+                  }
+                }) || []}
+              />
+            </Form.Item>
+            <p className="text-xs text-slate-500 -mt-1">
+              Puede ser efectivo o cualquier pago digital
             </p>
           </LabelBase>
         </div>
@@ -330,7 +399,7 @@ export default function ModalMoverDineroSubCajas({
         {/* Nota informativa */}
         <div className="p-2.5 bg-amber-50 rounded border border-amber-200">
           <p className="text-xs text-amber-700">
-            <strong>⚠️ Nota:</strong> Esta operación registrará un egreso de efectivo en tu sub-caja origen y un ingreso digital en la sub-caja destino.
+            <strong>⚠️ Nota:</strong> Esta operación registrará un egreso en el método de pago origen y un ingreso en el método de pago destino.
           </p>
         </div>
       </div>

@@ -11,7 +11,7 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useStoreFiltrosMisNotasCredito } from "../../_store/store-filtros-mis-notas-credito";
-import SelectEstadoSunat from "../../../mis-facturas/_components/selects/select-estado-sunat";
+import SelectEstadoSunat from "~/app/_components/form/selects/select-estado-sunat";
 
 interface ValuesFilters {
   desde?: Dayjs;
@@ -76,7 +76,9 @@ export default function FiltersMisNotasCredito() {
         </div>
         <div className="col-span-3 flex items-center gap-2">
           <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Estado:</label>
-          <SelectEstadoSunat propsForm={{ name: "estado_sunat", hasFeedback: false, className: "!w-full" }} className="w-full" formWithMessage={false} allowClear placeholder="Todos" />
+          <Form.Item name="estado_sunat" className="!mb-0 !w-full">
+            <SelectEstadoSunat allowClear placeholder="Todos" />
+          </Form.Item>
         </div>
         <div className="col-span-2 flex items-center gap-2">
           <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Serie-N°:</label>

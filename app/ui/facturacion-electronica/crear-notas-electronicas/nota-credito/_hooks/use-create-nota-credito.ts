@@ -82,7 +82,7 @@ export default function useCreateNotaCredito(form?: FormInstance<FormCreateNotaC
       })
 
       // Auto-generar descripción si está vacía
-      let descripcion = restValues.observaciones || restValues.motivo_descripcion || ''
+      let descripcion = restValues.motivo_sustento || restValues.observaciones || restValues.motivo_descripcion || '';
       if (!descripcion || descripcion.trim() === '') {
         // Generar descripción automática basada en el motivo
         const tipoDoc = restValues.tipo_documento_modifica === '01' ? 'Factura' : 'Boleta'

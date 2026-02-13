@@ -13,6 +13,7 @@ interface SelectVendedorProps extends SelectBaseProps {
   soloVendedores?: boolean
   sinCaja?: boolean
   mostrarDocumento?: boolean
+  excludeIds?: string[]
 }
 
 export default function SelectVendedor({
@@ -23,6 +24,7 @@ export default function SelectVendedor({
   soloVendedores = true,
   sinCaja = false,
   mostrarDocumento = true,
+  excludeIds = [],
   ...props
 }: SelectVendedorProps) {
   const [shouldFetch, setShouldFetch] = useState(false)
@@ -47,12 +49,14 @@ export default function SelectVendedor({
       variant={variant}
       placeholder={placeholder}
       loading={isLoading}
-      options={data?.map((vendedor: Usuario) => ({
-        value: vendedor.id,
-        label: mostrarDocumento 
-          ? `${vendedor.name} - ${vendedor.numero_documento || vendedor.email}`
-          : vendedor.name,
-      }))}
+      options={data
+        ?.filter((v: Usuario) => !excludeIds.includes(v.id))
+        .map((vendedor: Usuario) => ({
+          value: vendedor.id,
+          label: mostrarDocumento
+            ? `${vendedor.name} - ${vendedor.numero_documento || vendedor.email}`
+            : vendedor.name,
+        }))}
       filterOption={(input, option) =>
         String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
       }

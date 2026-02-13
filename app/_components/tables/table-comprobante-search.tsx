@@ -19,14 +19,15 @@ interface TableComprobanteSearchProps {
   tipoDocumento?: "01" | "03";
   ref?: RefObject<RefTableComprobanteSearchProps | null>;
   isVisible?: boolean;
+  paraNotaDebito?: boolean; // Nuevo parámetro para filtrar comprobantes sin ND aceptada
 }
 
 const TableComprobanteSearch = forwardRef<RefTableComprobanteSearchProps, TableComprobanteSearchProps>(
-  ({ value, onRowClicked, onRowDoubleClicked, tipoDocumento, isVisible }, ref) => {
+  ({ value, onRowClicked, onRowDoubleClicked, tipoDocumento, isVisible, paraNotaDebito }, ref) => {
     const tableGridRef = useRef<any>(null);
 
     const { data, isLoading, refetch } = useQuery({
-      queryKey: ["comprobantes-search", value, tipoDocumento],
+      queryKey: ["comprobantes-search", value, tipoDocumento, paraNotaDebito],
       queryFn: async () => {
         if (!value || value.length < 1) {
           return [];
@@ -36,6 +37,7 @@ const TableComprobanteSearch = forwardRef<RefTableComprobanteSearchProps, TableC
           query: value,
           tipo: tipoDocumento,
           limit: 50,
+          para_nota_debito: paraNotaDebito,
         });
 
         if (response.error) {
@@ -179,6 +181,7 @@ const TableComprobanteSearch = forwardRef<RefTableComprobanteSearchProps, TableC
         pagination={false}
         domLayout="normal"
         getRowHeight={() => 55}
+        withNumberColumn={false}
       />
     );
   }

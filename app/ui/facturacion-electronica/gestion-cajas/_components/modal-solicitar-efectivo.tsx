@@ -77,7 +77,7 @@ export default function ModalSolicitarEfectivo({
             <ModalForm
                 modalProps={{
                     width: 600,
-                    title: <TitleForm>Solicitar Efectivo</TitleForm>,
+                    title: <TitleForm>Solicitar Préstamo</TitleForm>,
                     centered: true,
                 }}
                 open={open}
@@ -101,7 +101,7 @@ export default function ModalSolicitarEfectivo({
         <ModalForm
             modalProps={{
                 width: 600,
-                title: <TitleForm>Solicitar Efectivo</TitleForm>,
+                title: <TitleForm>Solicitar Préstamo</TitleForm>,
                 centered: true,
                 okButtonProps: {
                     loading,
@@ -122,7 +122,10 @@ export default function ModalSolicitarEfectivo({
         >
             <div className='mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200'>
                 <p className='text-sm text-blue-700'>
-                    💡 Solicita efectivo a otro vendedor indicando cuánto necesitas. El vendedor decidirá de qué caja darte al aprobar.
+                    💡 Solicita un préstamo a otro vendedor indicando cuánto necesitas. El vendedor decidirá de qué caja darte al aprobar.
+                </p>
+                <p className='text-xs text-blue-600 mt-2'>
+                    ℹ️ Tu caja debe estar abierta para poder solicitar préstamos.
                 </p>
             </div>
 
@@ -154,7 +157,7 @@ export default function ModalSolicitarEfectivo({
                 {vendedores.length === 0 && !loadingVendedores && (
                     <div className='mt-2 p-2 bg-yellow-50 rounded border border-yellow-200'>
                         <p className='text-xs text-yellow-700'>
-                            ℹ️ Para solicitar efectivo, otros vendedores deben tener una caja abierta con efectivo disponible.
+                            ℹ️ Para solicitar un préstamo, otros vendedores deben tener una caja abierta con efectivo disponible.
                         </p>
                     </div>
                 )}

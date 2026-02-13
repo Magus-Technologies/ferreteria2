@@ -7,7 +7,6 @@ import { FaPlus, FaDoorOpen, FaExchangeAlt, FaArrowsAltH } from 'react-icons/fa'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { cajaPrincipalApi, type CajaPrincipal } from '~/lib/api/caja-principal'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useAuth } from '~/lib/auth-context'
 import ModalCrearCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-crear-caja'
 import ModalVerSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-ver-sub-cajas'
 import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
@@ -22,7 +21,6 @@ import { permissions } from '~/lib/permissions'
 
 export default function TableCajasPrincipales() {
   const { modal, message } = App.useApp()
-  const { user } = useAuth()
   const [openCrearCaja, setOpenCrearCaja] = useState(false)
   const [openAperturarCaja, setOpenAperturarCaja] = useState(false)
   const [openTransferirCajas, setOpenTransferirCajas] = useState(false)
@@ -183,14 +181,11 @@ export default function TableCajasPrincipales() {
         cajasPrincipales={data || []}
       />
 
-      {cajaSeleccionada && (
-        <ModalMoverDineroSubCajas
-          open={openMoverDinero}
-          setOpen={setOpenMoverDinero}
-          cajaPrincipalId={cajaSeleccionada.id}
-          onSuccess={refetch}
-        />
-      )}
+      <ModalMoverDineroSubCajas
+        open={openMoverDinero}
+        setOpen={setOpenMoverDinero}
+        onSuccess={refetch}
+      />
     </div>
   )
 }

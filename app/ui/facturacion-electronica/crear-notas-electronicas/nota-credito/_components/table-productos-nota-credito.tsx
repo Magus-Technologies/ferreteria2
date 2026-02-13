@@ -1,7 +1,7 @@
 "use client";
 
 import { FormInstance, FormListFieldData } from "antd";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { useColumnsNotaCredito } from "./columns-nota-credito";
 
@@ -19,6 +19,34 @@ export default function TableProductosNotaCredito({
   const tableGridRef = useRef<any>(null);
   const columnDefs = useColumnsNotaCredito({ remove, form });
 
+  // Limpiar cualquier estado guardado en localStorage al montar el componente
+  useEffect(() => {
+    const storageKey = "ag-grid-state-f-e.table-productos-nota-credito";
+    localStorage.removeItem(storageKey);
+  }, []);
+
+  // Forzar redibujado y resetear orden de columnas cuando cambien los fields
+  useEffect(() => {
+    if (tableGridRef.current?.api) {
+      setTimeout(() => {
+        // Resetear el orden de columnas al orden definido en columnDefs
+        const columnState = columnDefs.map((col: any, index) => ({
+          colId: col.colId,
+          hide: false,
+          width: col.width || undefined,
+        }));
+        
+        tableGridRef.current.api.applyColumnState({
+          state: columnState,
+          applyOrder: true,
+        });
+        
+        tableGridRef.current.api.refreshCells({ force: true });
+        tableGridRef.current.api.sizeColumnsToFit();
+      }, 100);
+    }
+  }, [fields.length, columnDefs]);
+
   return (
     <TableWithTitle
       tableRef={tableGridRef}
@@ -30,12 +58,14 @@ export default function TableProductosNotaCredito({
       rowSelection={false}
       pagination={false}
       domLayout="autoHeight"
-      getRowHeight={() => 35}
+      rowHeight={48}
+      headerHeight={40}
       exportExcel={false}
       exportPdf={false}
       selectColumns={false}
       suppressRowHoverHighlight={true}
-      getRowStyle={() => ({ background: 'white' })}
+      persistColumnState={false}
+      withNumberColumn={false}
     />
   );
 }

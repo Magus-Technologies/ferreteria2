@@ -204,6 +204,25 @@ export type VentaCompleta = {
   user?: { id: string; name: string }
   almacen?: { id: number; name: string }
   entregasProductos?: any[]
+  comprobante_electronico?: {
+    id: number
+    tipo_comprobante: string
+    serie: string
+    correlativo: number
+    numero: string
+    fecha_emision: string
+    estado_sunat: string
+    xml_path?: string
+    xml_firmado?: string
+    cdr_path?: string
+    pdf_path?: string
+    tiene_xml?: boolean
+    tiene_cdr?: boolean
+    moneda?: 'PEN' | 'USD'
+    subtotal?: number
+    igv?: number
+    total?: number
+  }
 }
 
 /**

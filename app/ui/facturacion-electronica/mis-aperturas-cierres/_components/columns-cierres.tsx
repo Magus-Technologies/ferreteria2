@@ -1,7 +1,7 @@
 import { ColDef } from 'ag-grid-community'
 import { AperturaYCierreCaja } from '~/lib/api/caja'
 import { Button, Tag, Tooltip } from 'antd'
-import { EyeOutlined, SyncOutlined } from '@ant-design/icons'
+import { FaFilePdf } from 'react-icons/fa6'
 import dayjs from 'dayjs'
 
 const formatCurrency = (value: number) => {
@@ -12,21 +12,11 @@ const formatCurrency = (value: number) => {
 }
 
 export const useColumnsCierres = ({
-  onVerDetalles,
-  isAdmin = false,
+  onVerTicket,
 }: {
-  onVerDetalles: (cierre: AperturaYCierreCaja) => void
-  isAdmin?: boolean
+  onVerTicket: (cierre: AperturaYCierreCaja) => void
 }): ColDef<AperturaYCierreCaja>[] => {
-  
-  console.log('🔐 useColumnsCierres - isAdmin:', isAdmin);
-  
-  const handleActualizar = (cierre: AperturaYCierreCaja) => {
-    // Redirigir a la vista de cierre de caja con el ID del cierre
-    window.location.href = `/ui/facturacion-electronica/cierre-caja?cierre_id=${cierre.id}`;
-  }
-
-  const baseColumns: ColDef<AperturaYCierreCaja>[] = [
+  return [
     {
       headerName: 'Fecha Cierre',
       field: 'fecha_cierre',
@@ -62,6 +52,13 @@ export const useColumnsCierres = ({
           </div>
         )
       },
+    },
+    {
+      headerName: 'Caja Principal',
+      field: 'caja_principal',
+      flex: 1,
+      minWidth: 180,
+      cellRenderer: (params: any) => params.value?.nombre,
     },
     {
       headerName: 'Monto Apertura',
@@ -103,49 +100,35 @@ export const useColumnsCierres = ({
       headerName: 'Estado',
       field: 'estado',
       width: 120,
-      cellRenderer: () => (
+      cellRenderer: (params: any) => (
         <div className='flex justify-center'>
-          <Tag color='blue'>CERRADA</Tag>
+          <Tag color={params.value === 'abierta' ? 'orange' : 'blue'}>
+            {params.value === 'abierta' ? 'ABIERTA' : 'CERRADA'}
+          </Tag>
         </div>
       ),
     },
     {
       headerName: 'Acciones',
       field: 'id',
-      width: isAdmin ? 260 : 130,
+      width: 100,
       pinned: 'right',
       cellRenderer: (params: any) => {
-        console.log('🎯 Renderizando acciones - isAdmin:', isAdmin);
         return (
-          <div className='flex gap-1 items-center justify-start'>
-            <Tooltip title='Ver Detalles'>
+          <div className='flex gap-1 items-center justify-center'>
+            <Tooltip title='Ver Ticket de Cierre'>
               <Button
                 type='link'
                 size='small'
-                icon={<EyeOutlined />}
-                onClick={() => onVerDetalles(params.data)}
+                className='flex items-center gap-1'
+                onClick={() => onVerTicket(params.data)}
               >
-                Detalles
+                <FaFilePdf className='text-red-600 text-lg' />
               </Button>
             </Tooltip>
-            {isAdmin && (
-              <Tooltip title='Editar/Actualizar Cierre (Solo Admin)'>
-                <Button
-                  type='link'
-                  size='small'
-                  icon={<SyncOutlined />}
-                  style={{ color: '#ea580c' }}
-                  onClick={() => handleActualizar(params.data)}
-                >
-                  Actualizar
-                </Button>
-              </Tooltip>
-            )}
           </div>
         );
       },
     },
   ]
-  
-  return baseColumns
 }

@@ -20,18 +20,18 @@ export default function CierreCajaView() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const cierreId = searchParams.get('cierre_id')
-  
+
   const { cajaActiva, loading, error, esEdicion } = useCierreCaja(cierreId || undefined)
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
   const { data: empresaData } = useEmpresaPublica()
 
   const [totalEfectivo, setTotalEfectivo] = useState(0)
   const [totalCuentas, setTotalCuentas] = useState(0)
-  const [conteoDenominaciones, setConteoDenominaciones] = useState<Record<string, number>>({})
+  const [conteoDenominaciones, setConteoDenominaciones] = useState<Record<string, number> | null>(null)
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
-  
+
   // Nuevos campos para reporte y supervisión
   const [emailReporte, setEmailReporte] = useState('')
   const [whatsappReporte, setWhatsappReporte] = useState('')
@@ -88,11 +88,11 @@ export default function CierreCajaView() {
 
     try {
       setEnviandoTicket(true)
-      
+
       // Generar el PDF usando react-pdf
       const { pdf } = await import('@react-pdf/renderer')
       const { default: DocCierreCajaTicket } = await import('./docs/doc-cierre-caja-ticket')
-      
+
       // Crear el documento PDF
       const doc = <DocCierreCajaTicket
         data={cajaActiva as any}
@@ -100,13 +100,13 @@ export default function CierreCajaView() {
         empresa={empresaData}
         show_logo_html={false}
       />
-      
+
       // Generar el blob del PDF
       const pdfBlob = await pdf(doc).toBlob()
-      
+
       // Enviar el PDF al backend
       await cierreCajaApi.enviarTicketEmail(cajaActiva.id, emailReporte, pdfBlob)
-      
+
       // Guardar el email y mostrar modal de éxito
       setEmailEnviado(emailReporte)
       setModalExitoOpen(true)
@@ -142,7 +142,7 @@ export default function CierreCajaView() {
   }
 
   const resumen = cajaActiva.resumen
-  
+
   // Validar que resumen existe antes de continuar
   if (!resumen) {
     return (
@@ -154,7 +154,7 @@ export default function CierreCajaView() {
 
   // Calcular el efectivo esperado (solo el método "Efectivo")
   const efectivoEsperado = resumen.detalle_metodos_pago
-    ?.filter((metodo: any) => 
+    ?.filter((metodo: any) =>
       metodo.label?.toLowerCase().includes('efectivo')
     )
     .reduce((sum: number, metodo: any) => sum + Number(metodo.total), 0) || 0
@@ -175,7 +175,7 @@ export default function CierreCajaView() {
       monto_cierre_efectivo: totalEfectivo,
       total_cuentas: totalCuentas || 0,
       comentarios: comentarios || undefined,
-      conteo_billetes_monedas: conteoDenominaciones,
+      conteo_billetes_monedas: conteoDenominaciones || undefined,
       email_reporte: emailReporte || undefined,
       whatsapp_reporte: whatsappReporte || undefined,
     }
@@ -195,8 +195,7 @@ export default function CierreCajaView() {
     const success = await cerrarCaja(cajaActiva.id, dataCierre, cajaActiva, empresaData)
 
     if (success) {
-      // No redirigir - permitir continuar operaciones
-      // router.push('/ui/facturacion-electronica/mis-aperturas-cierres')
+      // No redirigir - la caja permanece abierta (solo es arqueo diario)
     }
   }
 
@@ -437,7 +436,11 @@ export default function CierreCajaView() {
                     bodyStyle={{ padding: '16px' }}
                     headStyle={{ padding: '10px 16px', minHeight: 'auto' }}
                   >
-                    <ConteoDinero onChange={setTotalEfectivo} />
+                    <ConteoDinero onChange={(total, conteo) => {
+                      console.log('📊 ConteoDinero onChange recibido:', { total, conteo })
+                      setTotalEfectivo(total)
+                      setConteoDenominaciones(conteo)
+                    }} />
 
                     <div className='mt-3 space-y-2.5'>
                       <Checkbox

@@ -157,14 +157,14 @@ export const cajaPrincipalApi = {
   },
 
   /**
-   * Obtener caja principal del usuario actual
+   * Obtener cajas principales del usuario actual
    */
-  getByUsuarioActual(userId?: string): Promise<ApiResponse<CajaPrincipalResponse>> {
+  getByUsuarioActual(userId?: string): Promise<ApiResponse<CajasPrincipalesListResponse>> {
     const url = userId
       ? `/cajas/cajas-principales/usuario/actual?user_id=${userId}`
       : '/cajas/cajas-principales/usuario/actual'
 
-    return apiRequest<CajaPrincipalResponse>(url)
+    return apiRequest<CajasPrincipalesListResponse>(url)
   },
 
   /**

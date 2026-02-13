@@ -52,6 +52,7 @@ export default function ModalCrearCaja({ open, setOpen, onSuccess }: ModalCrearC
     >
       <LabelBase label='Responsable de la Caja' orientation='column'>
         <SelectUsuarioResponsable
+          sinCaja={false}
           propsForm={{
             name: 'user_id',
             rules: [{ required: true, message: 'Selecciona un responsable' }],

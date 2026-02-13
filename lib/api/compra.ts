@@ -124,7 +124,7 @@ export interface CreateCompraRequest {
   productos_por_almacen: CreateProductoAlmacenCompraRequest[];
 }
 
-export interface UpdateCompraRequest extends Partial<Omit<CreateCompraRequest, 'id'>> {}
+export interface UpdateCompraRequest extends Partial<Omit<CreateCompraRequest, 'id'>> { }
 
 // ============= PAGO DE COMPRA TYPES =============
 
@@ -135,6 +135,8 @@ export interface PagoDeCompra {
   monto: number;
   fecha: string; // ISO date string
   observacion: string | null;
+  numero_letra: string | null;
+  numero_operacion: string | null;
   estado: boolean;
   created_at?: string;
   despliegue_de_pago?: {
@@ -155,6 +157,7 @@ export interface CreatePagoCompraRequest {
   observacion?: string | null;
   afecta_caja: boolean;
   numero_operacion?: string | null;
+  numero_letra?: string | null;
 }
 
 export interface CompraFilters {

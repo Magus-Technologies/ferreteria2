@@ -13,8 +13,6 @@ import { subCajaApi, type SubCaja } from '~/lib/api/sub-caja'
 import { despliegueDePagoApi, type DespliegueDePago } from '~/lib/api/despliegue-de-pago'
 import { useAuth } from '~/lib/auth-context'
 import { useQuery } from '@tanstack/react-query'
-import { cajaPrincipalApi } from '~/lib/api/caja-principal'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 
 type ModalCrearGastoProps = {
   open: boolean
@@ -49,18 +47,6 @@ export default function ModalCrearGasto({
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<DespliegueDePago | null>(null)
   const [advertencia, setAdvertencia] = useState<string | null>(null)
 
-  // Obtener cajas principales para encontrar la del usuario
-  const { data: cajasPrincipales } = useQuery({
-    queryKey: [QueryKeys.CAJAS_PRINCIPALES],
-    queryFn: async () => {
-      const response = await cajaPrincipalApi.getAll()
-      return response.data?.data || []
-    },
-  })
-
-  // Encontrar la caja principal del usuario actual
-  const miCajaPrincipal = cajasPrincipales?.find((c) => c.user.id === user?.id)
-
   // Obtener sub-cajas con saldo del vendedor (solo efectivo)
   const { data: subCajasConSaldo, isLoading: loadingSubCajas } = useQuery({
     queryKey: ['todas-sub-cajas-con-saldo-vendedor-efectivo'],
@@ -85,21 +71,6 @@ export default function ModalCrearGasto({
     },
     enabled: open,
   })
-
-  // Auto-seleccionar la caja principal del usuario al abrir el modal
-  useEffect(() => {
-    if (open && miCajaPrincipal) {
-      form.setFieldValue('caja_principal_id', miCajaPrincipal.id)
-      setCajaPrincipalId(miCajaPrincipal.id)
-    }
-    
-    // Si el usuario no tiene caja principal, usar la primera sub-caja disponible
-    if (open && !miCajaPrincipal && subCajasConSaldo && subCajasConSaldo.length > 0) {
-      const primeraCaja = subCajasConSaldo[0]
-      setCajaPrincipalId(primeraCaja.caja_principal_id)
-      form.setFieldValue('caja_principal_id', primeraCaja.caja_principal_id)
-    }
-  }, [open, miCajaPrincipal, subCajasConSaldo, form])
 
   // Observar cambios en los campos del formulario
   const subCajaId = Form.useWatch('sub_caja_id', form)
@@ -290,13 +261,13 @@ export default function ModalCrearGasto({
 
         <LabelBase label="Caja Principal" orientation="column">
           <SelectCajaPrincipal
-            placeholder={miCajaPrincipal ? miCajaPrincipal.nombre : "Tu caja"}
+            placeholder="Selecciona una caja"
             propsForm={{
               name: 'caja_principal_id',
               rules: [{ required: true, message: 'Selecciona una caja principal' }],
             }}
             onChange={handleCajaPrincipalChange}
-            disabled={true}
+            disabled={false}
           />
         </LabelBase>
 

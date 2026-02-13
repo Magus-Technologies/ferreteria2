@@ -10,6 +10,7 @@ import { useState } from 'react'
 interface SelectCajaPrincipalProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
+  filterByUserId?: string
 }
 
 export default function SelectCajaPrincipal({
@@ -17,6 +18,7 @@ export default function SelectCajaPrincipal({
   variant = 'filled',
   classNameIcon = 'text-emerald-600 mx-1',
   sizeIcon = 14,
+  filterByUserId,
   ...props
 }: SelectCajaPrincipalProps) {
   const [shouldFetch, setShouldFetch] = useState(false)
@@ -31,6 +33,11 @@ export default function SelectCajaPrincipal({
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
+  // Filter by user if filterByUserId is provided
+  const filteredData = filterByUserId 
+    ? data?.filter((caja: CajaPrincipal) => caja.user.id === filterByUserId)
+    : data
+
   return (
     <SelectBase
       showSearch
@@ -38,7 +45,7 @@ export default function SelectCajaPrincipal({
       variant={variant}
       placeholder={placeholder}
       loading={isLoading}
-      options={data?.map((caja: CajaPrincipal) => ({
+      options={filteredData?.map((caja: CajaPrincipal) => ({
         value: caja.id,
         label: `${caja.codigo} - ${caja.nombre} (${caja.user.name})`,
       }))}
