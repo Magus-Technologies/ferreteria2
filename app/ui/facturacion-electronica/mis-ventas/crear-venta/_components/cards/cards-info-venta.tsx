@@ -19,6 +19,7 @@ import type { Cliente } from "~/lib/api/cliente";
 export default function CardsInfoVenta({ form }: { form: FormInstance }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
+  const tipo_documento = Form.useWatch("tipo_documento", form);
   const tipo_despacho = Form.useWatch("tipo_despacho", form) as
     | "EnTienda"
     | "Domicilio"
@@ -279,6 +280,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
         form={form}
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
+        tipo_documento={tipo_documento}
         onContinuar={() => {
           // Al dar continuar, abrir el modal de detalles de entrega
           setModalOpen(false);

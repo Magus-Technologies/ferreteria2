@@ -34,7 +34,7 @@ export default function DocTableTicket<T>({
       'Descripción': 'tabla_descripcion',
       'P.U.': 'tabla_precio',
       'Subt.': 'tabla_subtotal',
-      // Campos de cotización
+      // Campos de cotización y unidades
       'Unid.': 'tabla_unidad',
       'P. Unit.': 'tabla_precio',
       'Desc.': 'tabla_descuento',

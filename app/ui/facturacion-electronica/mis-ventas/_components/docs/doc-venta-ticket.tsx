@@ -52,53 +52,58 @@ export default function DocVentaTicket({
     }
   }
 
-  // Definir columnas para la tabla de productos (formato ticket)
-  const colDefs: ColDef<ProductoVentaPDF>[] = [
-    {
-      headerName: 'Cant.',
-      field: 'cantidad',
-      width: 25,
-      minWidth: 25,
-    },
-    {
-      headerName: 'Unidad Derivada',
-      field: 'unidad',
-      width: 30,
-      minWidth: 30,
-    },
-    {
-      headerName: 'Descripción',
-      field: 'descripcion',
-      flex: 1,
-      minWidth: 60,
-    },
-    {
-      headerName: 'P.U.',
-      field: 'precio_unitario',
-      width: 30,
-      minWidth: 30,
-      valueFormatter: ({ value }: { value?: number }) => {
-        const num = Number(value)
-        return !isNaN(num) ? num.toFixed(2) : '0.00'
-      },
-    },
-    {
-      headerName: 'Subt.',
-      field: 'subtotal',
-      width: 35,
-      minWidth: 35,
-      valueFormatter: ({ value }: { value?: number }) => {
-        const num = Number(value)
-        return !isNaN(num) ? num.toFixed(2) : '0.00'
-      },
-    },
-  ]
-
   // Preparar empresa con logo URL
   const empresaConLogo = empresa ? {
     ...empresa,
     logo: getLogoUrl(empresa.logo),
   } : undefined
+
+  // Tabla normal de 5 columnas
+  const renderTablaProductos = () => {
+    return (
+      <View style={{ marginBottom: 6, borderTop: '1px dashed #000000', paddingTop: 6 }}>
+        {/* Headers de las 5 columnas */}
+        <View style={{ display: 'flex', flexDirection: 'row', borderBottom: '1px solid #000000', fontWeight: 'bold', marginBottom: 2, fontSize: 7 }}>
+          <Text style={{ width: 90, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>Descripción</Text>
+          <Text style={{ width: 30, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>Cant.</Text>
+          <Text style={{ width: 35, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>Unid.</Text>
+          <Text style={{ width: 35, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>P.U.</Text>
+          <Text style={{ width: 36, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>Subt.</Text>
+        </View>
+        
+        {/* Rows de productos */}
+        {data.productos.map((producto, idx) => (
+          <View 
+            key={idx}
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'row', 
+              borderBottom: '1px solid #000000',
+              paddingVertical: 2,
+              fontSize: 6,
+              backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9f9f9'
+            }}
+          >
+            <Text style={{ width: 90, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>
+              {producto.descripcion}
+            </Text>
+            <Text style={{ width: 30, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>
+              {producto.cantidad}
+            </Text>
+            <Text style={{ width: 35, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>
+              {producto.unidad}
+            </Text>
+            <Text style={{ width: 35, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>
+              {Number(producto.precio_unitario).toFixed(2)}
+            </Text>
+            <Text style={{ width: 36, paddingLeft: 4, paddingRight: 4, paddingTop: 3, paddingBottom: 3 }}>
+              {Number(producto.subtotal).toFixed(2)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )
+  }
 
   return (
     <DocGeneralTicket
@@ -106,11 +111,11 @@ export default function DocVentaTicket({
       show_logo_html={show_logo_html}
       tipo_documento={getTipoDocumentoLabel(data.tipo_documento)}
       nro_doc={nro_doc}
-      colDefs={colDefs}
-      rowData={data.productos}
+      colDefs={[]}
+      rowData={[]}
       total={data.total}
       observaciones={data.observaciones || '-'}
-      headerNameAl100='Descripción'
+      headerNameAl100=''
       totalConLetras
       getEstiloCampo={getEstiloCampo}
       total_descuento={data.total_descuento}
@@ -245,6 +250,9 @@ export default function DocVentaTicket({
         metodos_de_pago={data.metodos_de_pago || []}
         getEstiloCampo={getEstiloCampo}
       />
+      
+      {/* Tabla de productos - 5 columnas */}
+      {renderTablaProductos()}
     </DocGeneralTicket>
   )
 }

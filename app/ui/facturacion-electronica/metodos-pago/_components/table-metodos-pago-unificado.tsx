@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { App, Space, Tag, Button, Tooltip } from 'antd'
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
+import { Eye } from 'lucide-react'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { AgGridReact } from 'ag-grid-react'
 import { ColDef } from 'ag-grid-community'
@@ -18,7 +19,11 @@ interface BancoConMetodos extends MetodoDePago {
   metodos?: DespliegueDePago[]
 }
 
-export default function TableMetodosPagoUnificado() {
+interface Props {
+  onBancoDoubleClick?: (banco: MetodoDePago) => void
+}
+
+export default function TableMetodosPagoUnificado({ onBancoDoubleClick }: Props) {
   const { message, modal } = App.useApp()
   const [openRegistro, setOpenRegistro] = useState(false)
   const [bancoParaEditar, setBancoParaEditar] = useState<MetodoDePago | null>(null)
@@ -93,6 +98,20 @@ export default function TableMetodosPagoUnificado() {
       cellRenderer: (params: any) => (
         <span className='font-semibold text-slate-700'>{params.value}</span>
       ),
+      onCellDoubleClicked: (params) => {
+        // Solo permitir doble clic en bancos digitales (no efectivo)
+        // Filtrar bancos que son de efectivo (Caja Chica, Efectivo, etc.)
+        const bancosEfectivo = ['efectivo', 'caja chica', 'caja', 'cash']
+        const esEfectivo = bancosEfectivo.some(term => 
+          params.data?.name?.toLowerCase().includes(term)
+        )
+        
+        if (params.data && onBancoDoubleClick && !esEfectivo) {
+          onBancoDoubleClick(params.data)
+        } else if (esEfectivo) {
+          message.info('Los métodos de pago en efectivo no tienen resumen detallado')
+        }
+      },
     },
     {
       headerName: 'Titular',
@@ -179,27 +198,45 @@ export default function TableMetodosPagoUnificado() {
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 120,
-      cellRenderer: (params: any) => (
-        <Space size='small'>
-          <Tooltip title='Editar banco'>
-            <Button
-              type='primary'
-              size='small'
-              icon={<FaEdit />}
-              onClick={() => handleEditarBanco(params.data)}
-            />
-          </Tooltip>
-          <Tooltip title='Eliminar banco'>
-            <Button
-              danger
-              size='small'
-              icon={<FaTrash />}
-              onClick={() => handleEliminarBanco(params.data)}
-            />
-          </Tooltip>
-        </Space>
-      ),
+      width: 160,
+      cellRenderer: (params: any) => {
+        // Verificar si es un banco digital (no efectivo)
+        const bancosEfectivo = ['efectivo', 'caja chica', 'caja', 'cash']
+        const esEfectivo = bancosEfectivo.some(term => 
+          params.data?.name?.toLowerCase().includes(term)
+        )
+        
+        return (
+          <Space size='small'>
+            {!esEfectivo && (
+              <Tooltip title='Ver resumen detallado'>
+                <Button
+                  type='default'
+                  size='small'
+                  icon={<Eye className="h-4 w-4" />}
+                  onClick={() => onBancoDoubleClick?.(params.data)}
+                />
+              </Tooltip>
+            )}
+            <Tooltip title='Editar banco'>
+              <Button
+                type='primary'
+                size='small'
+                icon={<FaEdit />}
+                onClick={() => handleEditarBanco(params.data)}
+              />
+            </Tooltip>
+            <Tooltip title='Eliminar banco'>
+              <Button
+                danger
+                size='small'
+                icon={<FaTrash />}
+                onClick={() => handleEliminarBanco(params.data)}
+              />
+            </Tooltip>
+          </Space>
+        )
+      },
     },
   ]
 

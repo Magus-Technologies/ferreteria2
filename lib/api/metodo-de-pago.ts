@@ -98,6 +98,34 @@ class MetodoDePagoApi {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Get resumen detallado de un banco con filtros
+   */
+  async getResumenDetallado(
+    id: string,
+    filters?: {
+      fecha_inicio?: string;
+      fecha_fin?: string;
+      vendedor_id?: string;
+      sub_caja_id?: string;
+      despliegue_pago_id?: string;
+    }
+  ): Promise<ApiResponse<{ success: boolean; data: any }>> {
+    const params = new URLSearchParams();
+    if (filters?.fecha_inicio) params.append('fecha_inicio', filters.fecha_inicio);
+    if (filters?.fecha_fin) params.append('fecha_fin', filters.fecha_fin);
+    if (filters?.vendedor_id) params.append('vendedor_id', filters.vendedor_id);
+    if (filters?.sub_caja_id) params.append('sub_caja_id', filters.sub_caja_id);
+    if (filters?.despliegue_pago_id) params.append('despliegue_pago_id', filters.despliegue_pago_id);
+
+    const queryString = params.toString();
+    const url = `/metodos-de-pago/${id}/resumen-detallado${queryString ? `?${queryString}` : ''}`;
+
+    return apiRequest<{ success: boolean; data: any }>(url, {
+      method: 'GET',
+    });
+  }
 }
 
 export const metodoDePagoApi = new MetodoDePagoApi();

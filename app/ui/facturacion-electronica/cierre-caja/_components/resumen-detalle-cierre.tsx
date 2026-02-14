@@ -469,9 +469,6 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado }: Resumen
       label: `Movimientos Internos (${movimientosData.length})`,
       children: (
         <div className='w-full'>
-          <div className='text-sm text-blue-600 mb-3 p-2 bg-blue-50 rounded'>
-            ℹ️ Estos movimientos NO afectan el total en caja (solo traslados entre sub-cajas)
-          </div>
           <div className='h-[400px] w-full'>
             <TableBase<any>
               ref={gridMovimientosRef}

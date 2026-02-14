@@ -176,8 +176,10 @@ export default function HistorialCierres() {
     onVerTicket: handleVerTicket,
   });
 
-  // Mostrar mensaje si no hay cierres
-  if (!isLoading && !error && cierres.length === 0) {
+  // Mostrar mensaje si no hay cierres Y no hay filtros aplicados
+  const hayFiltrosAplicados = selectedUserId || dateRange;
+  
+  if (!isLoading && !error && cierres.length === 0 && !hayFiltrosAplicados) {
     return (
       <div className="w-full">
         <div className="flex justify-center items-center h-[500px] flex-col gap-4">
