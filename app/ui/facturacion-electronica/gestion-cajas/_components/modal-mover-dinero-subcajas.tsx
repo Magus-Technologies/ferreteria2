@@ -167,13 +167,6 @@ export default function ModalMoverDineroSubCajas({
       }}
     >
       <div className="space-y-3">
-        {/* Información del proceso */}
-        <div className="p-2.5 bg-blue-50 rounded border border-blue-200">
-          <p className="text-xs text-blue-700">
-            <strong>Transferencia entre Sub-Cajas:</strong> Mueve dinero de un método de pago a otro. Puedes transferir efectivo a digital, o entre diferentes pagos digitales (Ej: Yape → Banco, Plin → Yape).
-          </p>
-        </div>
-
         {/* Sección: Origen */}
         <div className="space-y-2.5">
           <div className="text-xs font-semibold text-slate-700 border-b pb-1">
@@ -394,13 +387,6 @@ export default function ModalMoverDineroSubCajas({
               />
             </Form.Item>
           </LabelBase>
-        </div>
-
-        {/* Nota informativa */}
-        <div className="p-2.5 bg-amber-50 rounded border border-amber-200">
-          <p className="text-xs text-amber-700">
-            <strong>⚠️ Nota:</strong> Esta operación registrará un egreso en el método de pago origen y un ingreso en el método de pago destino.
-          </p>
         </div>
       </div>
     </ModalForm>
