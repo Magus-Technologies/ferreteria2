@@ -24,6 +24,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   form?: FormInstance
   showOnlyDocument?: boolean
   autoFocus?: boolean
+  open?: boolean // Permitir controlar si se abre el dropdown
 }
 
 export default function SelectClientes({
@@ -40,6 +41,7 @@ export default function SelectClientes({
   form,
   showOnlyDocument = false,
   autoFocus = false,
+  open, // Nueva prop para controlar el dropdown
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
@@ -225,6 +227,11 @@ export default function SelectClientes({
             value: cliente.id,
             label: getLabel(cliente),
           })),
+          // Agregar resultados de búsqueda si están disponibles
+          ...(response || []).map(cliente => ({
+            value: cliente.id,
+            label: getLabel(cliente),
+          })),
         ].filter(
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
@@ -232,7 +239,7 @@ export default function SelectClientes({
         onKeyUp={e => {
           if (e.key === 'Enter') setOpenModalClienteSearch(true)
         }}
-        open={false}
+        open={open !== undefined ? open : undefined} // Usar la prop open si se proporciona, sino usar comportamiento por defecto
         {...props}
       />
       <FaSearch

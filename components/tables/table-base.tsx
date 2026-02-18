@@ -135,6 +135,9 @@ export default function TableBase<T>({
       if (pathname?.includes("gestion-comercial-e-inventario")) {
         return "var(--color-emerald-600)";
       }
+      if (pathname?.includes("gestion-contable-y-financiera")) {
+        return "var(--color-rose-600)";
+      }
       return "var(--color-slate-600)";
     })();
 

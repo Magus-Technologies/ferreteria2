@@ -225,6 +225,26 @@ export const compraApi = {
   },
 
   /**
+   * Listar compras por pagar (crédito con saldo pendiente)
+   */
+  getComprasPorPagar: async (filters?: Omit<CompraFilters, 'forma_de_pago' | 'estado_de_compra'>): Promise<ApiResponse<ComprasListResponse>> => {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/compras/por-pagar?${queryString}` : '/compras/por-pagar';
+
+    return apiRequest<ComprasListResponse>(url);
+  },
+
+  /**
    * Obtener compra por ID
    */
   getById: async (id: string): Promise<ApiResponse<CompraResponse>> => {

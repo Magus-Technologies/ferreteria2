@@ -31,7 +31,7 @@ const ChartLoading = () => (
 
 export default function GestionContableYFinanciera() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
-  
+
   if (!canAccess) return <NoAutorizado />
 
   return (

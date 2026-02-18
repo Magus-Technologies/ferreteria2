@@ -296,7 +296,6 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
           form.getFieldValue("cliente_id") ? {
             id: form.getFieldValue("cliente_id"),
             tipo_cliente: form.getFieldValue("tipo_cliente") || "PERSONA",
-            tipo_documento: form.getFieldValue("tipo_documento"),
             numero_documento: form.getFieldValue("numero_documento"),
             razon_social: form.getFieldValue("razon_social") || null,
             nombres: form.getFieldValue("nombres") || "",
@@ -306,6 +305,12 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
             direccion_3: form.getFieldValue("_cliente_direccion_3") || null,
             direccion_4: form.getFieldValue("_cliente_direccion_4") || null,
             telefono: form.getFieldValue("telefono") || null,
+            celular: null,
+            horario_atencion: null,
+            fecha_nacimiento: null,
+            puntos: 0,
+            centimos: 0,
+            contacto_referencia: null,
             email: form.getFieldValue("email") || null,
             estado: true,
           } as Cliente : undefined

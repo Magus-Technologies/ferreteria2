@@ -21,8 +21,16 @@ export interface Cliente {
   direccion_3: string | null;
   direccion_4: string | null;
   telefono: string | null;
+  celular: string | null;
+  horario_atencion: string | null;
+  fecha_nacimiento: string | null;
+  puntos: number;
+  centimos: number;
+  contacto_referencia: string | null;
   email: string | null;
   estado: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // ============= REQUEST TYPES =============
@@ -38,6 +46,10 @@ export interface CreateClienteRequest {
   direccion_3?: string | null;
   direccion_4?: string | null;
   telefono?: string | null;
+  celular?: string | null;
+  horario_atencion?: string | null;
+  fecha_nacimiento?: string | null;
+  contacto_referencia?: string | null;
   email?: string | null;
   estado?: boolean;
 }
@@ -67,6 +79,19 @@ export interface ClientesListResponse {
   total: number;
   from: number;
   to: number;
+}
+
+export interface ClienteEstadisticas {
+  activos: number;
+  inactivos: number;
+  vip: number;
+  frecuentes: number;
+  problematicos: number;
+  nuevos: number;
+}
+
+export interface ClienteEstadisticasResponse {
+  data: ClienteEstadisticas;
 }
 
 // ============= API METHODS =============
@@ -139,5 +164,12 @@ export const clienteApi = {
         exclude_id,
       }),
     });
+  },
+
+  /**
+   * Obtener estadísticas de clientes
+   */
+  getEstadisticas: async (): Promise<ApiResponse<ClienteEstadisticasResponse>> => {
+    return apiRequest<ClienteEstadisticasResponse>('/clientes/estadisticas');
   },
 };
