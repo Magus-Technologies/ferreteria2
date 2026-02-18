@@ -164,15 +164,20 @@ export default function SelectProveedores({
             self.findIndex(i => i.value === item.value) === index
         )}
         onKeyUp={e => {
-          if (e.key === 'Enter') setOpenModalProveedorSearch(true)
+          if (e.key === 'Enter') {
+            setTextDefault(text || '')
+            setOpenModalProveedorSearch(true)
+          }
         }}
-        open={false}
         {...props}
       />
       <FaSearch
-        className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
+        className={`text-yellow-600 mb-1 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
-        onClick={() => setOpenModalProveedorSearch(true)}
+        onClick={() => {
+          setTextDefault(text || '')
+          setOpenModalProveedorSearch(true)
+        }}
       />
       <ModalProveedorSearch
         open={openModalProveedorSearch}

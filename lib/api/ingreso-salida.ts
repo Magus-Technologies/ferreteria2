@@ -62,6 +62,10 @@ export interface IngresoSalidaWithRelations {
         id: number;
         name: string;
         cod_producto: string;
+        marca: {
+          id: number;
+          name: string;
+        } | null;
       };
     };
     unidades_derivadas: Array<{
@@ -75,11 +79,6 @@ export interface IngresoSalidaWithRelations {
         id: number;
         name: string;
       };
-      historial: Array<{
-        id: number;
-        stock_anterior: number;
-        stock_nuevo: number;
-      }>;
     }>;
   }>;
 }
@@ -103,6 +102,13 @@ export interface CreateIngresoSalidaParams {
 export interface GetIngresosSalidasParams {
   almacen_id?: number;
   tipo_documento?: "Ingreso" | "Salida";
+  desde?: string;
+  hasta?: string;
+  search_producto?: string;
+  search_proveedor?: string;
+  observacion?: string;
+  tipo?: string;
+  listar_no_anuladas?: boolean;
   per_page?: number;
   page?: number;
 }

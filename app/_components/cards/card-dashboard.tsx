@@ -18,21 +18,32 @@ export default function CardDashboard({
   decimal = 2,
 }: CardDashboardProps) {
   return (
-    <div className='flex flex-col justify-center gap-0 bg-white px-3 py-1.5 rounded-xl shadow-md h-full'>
-      <div className='flex items-center justify-between gap-1.5'>
-        <div className='flex items-center gap-1.5 text-slate-500'>
-          {icon}
-          <div className='font-semibold text-[10px] leading-tight'>{title}</div>
+    <div className='flex flex-col justify-between bg-white px-4 py-4 rounded-xl shadow-md h-full'>
+      {/* Header con título e icono */}
+      <div className='flex items-start justify-between gap-2'>
+        <div className='font-semibold text-lg leading-tight text-slate-600 flex-1'>
+          {title}
         </div>
-        {iconRight}
+        <div className='flex items-center gap-2'>
+          {icon && (
+            <div className='flex-shrink-0 text-slate-500'>
+              {icon}
+            </div>
+          )}
+          {iconRight}
+        </div>
       </div>
-      <div className='text-base font-bold mt-0.5'>
-        {prefix}
-        {value.toLocaleString('en-US', {
-          minimumFractionDigits: decimal,
-          maximumFractionDigits: decimal,
-        })}
-        {suffix}
+      
+      {/* Contenido principal con valor */}
+      <div className='flex items-end justify-start mt-4'>
+        <div className='text-3xl font-bold text-slate-800'>
+          {prefix}
+          {value.toLocaleString('en-US', {
+            minimumFractionDigits: decimal,
+            maximumFractionDigits: decimal,
+          })}
+          {suffix}
+        </div>
       </div>
     </div>
   )

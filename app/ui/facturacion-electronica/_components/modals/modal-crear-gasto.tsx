@@ -47,9 +47,9 @@ export default function ModalCrearGasto({
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<DespliegueDePago | null>(null)
   const [advertencia, setAdvertencia] = useState<string | null>(null)
 
-  // Obtener sub-cajas con saldo del vendedor (solo efectivo)
+  // Obtener sub-cajas con saldo del vendedor (efectivo y bancos)
   const { data: subCajasConSaldo, isLoading: loadingSubCajas } = useQuery({
-    queryKey: ['todas-sub-cajas-con-saldo-vendedor-efectivo'],
+    queryKey: ['todas-sub-cajas-con-saldo-vendedor'],
     queryFn: async () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/cajas/sub-cajas/todas-con-saldo-vendedor`,
@@ -61,13 +61,13 @@ export default function ModalCrearGasto({
       )
       const data = await response.json()
       
-      // Filtrar solo sub-cajas con saldo > 0 y que sean de efectivo (Caja Chica)
-      const subCajasConEfectivo = (data.data || []).filter((sc: any) => {
+      // Filtrar solo sub-cajas con saldo > 0
+      const subCajasConSaldo = (data.data || []).filter((sc: any) => {
         const saldo = parseFloat(sc.saldo_vendedor || '0')
-        return saldo > 0 && sc.tipo_caja === 'CC' // Solo Caja Chica (efectivo)
+        return saldo > 0
       })
       
-      return subCajasConEfectivo
+      return subCajasConSaldo
     },
     enabled: open,
   })
@@ -271,26 +271,26 @@ export default function ModalCrearGasto({
           />
         </LabelBase>
 
-        <LabelBase label="Sub-Caja (Solo efectivo disponible)" orientation="column">
+        <LabelBase label="Sub-Caja" orientation="column">
           <Form.Item
             name="sub_caja_id"
             rules={[{ required: true, message: 'Selecciona una sub-caja' }]}
             className="mb-0"
           >
             <Select
-              placeholder="Selecciona la sub-caja con tu efectivo"
+              placeholder="Selecciona la sub-caja"
               loading={loadingSubCajas}
               showSearch
               onChange={handleSubCajaChange}
               options={(subCajasConSaldo || []).map((sc: any) => ({
                 value: sc.id,
-                label: `${sc.nombre} - Efectivo disponible: S/. ${parseFloat(sc.saldo_vendedor || '0').toFixed(2)}`,
+                label: `${sc.nombre} - Saldo disponible: S/. ${parseFloat(sc.saldo_vendedor || '0').toFixed(2)}`,
               }))}
               filterOption={(input, option) =>
                 String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
               notFoundContent={
-                loadingSubCajas ? 'Cargando...' : 'No tienes efectivo disponible en ninguna caja'
+                loadingSubCajas ? 'Cargando...' : 'No tienes saldo disponible en ninguna caja'
               }
             />
           </Form.Item>
@@ -355,15 +355,6 @@ export default function ModalCrearGasto({
             />
           </Form.Item>
         </LabelBase>
-
-        <div className="p-2.5 bg-red-50 rounded border border-red-200">
-          <p className="text-xs text-red-700">
-            <strong>Advertencia:</strong> Este gasto se descontará de TU efectivo disponible en la sub-caja seleccionada.
-          </p>
-          <p className="text-xs text-red-700 mt-1">
-            <strong>SOLO PULSE GUARDAR SI SE REGISTRA EL EGRESO REAL DE DINERO</strong>
-          </p>
-        </div>
       </div>
     </ModalForm>
   )

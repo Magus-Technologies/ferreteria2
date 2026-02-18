@@ -19,6 +19,7 @@ import type { Cliente } from "~/lib/api/cliente";
 export default function CardsInfoVenta({ form }: { form: FormInstance }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
+  const tipo_documento = Form.useWatch("tipo_documento", form);
   const tipo_despacho = Form.useWatch("tipo_despacho", form) as
     | "EnTienda"
     | "Domicilio"
@@ -279,6 +280,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
         form={form}
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
+        tipo_documento={tipo_documento}
         onContinuar={() => {
           // Al dar continuar, abrir el modal de detalles de entrega
           setModalOpen(false);
@@ -294,7 +296,6 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
           form.getFieldValue("cliente_id") ? {
             id: form.getFieldValue("cliente_id"),
             tipo_cliente: form.getFieldValue("tipo_cliente") || "PERSONA",
-            tipo_documento: form.getFieldValue("tipo_documento"),
             numero_documento: form.getFieldValue("numero_documento"),
             razon_social: form.getFieldValue("razon_social") || null,
             nombres: form.getFieldValue("nombres") || "",
@@ -304,6 +305,12 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
             direccion_3: form.getFieldValue("_cliente_direccion_3") || null,
             direccion_4: form.getFieldValue("_cliente_direccion_4") || null,
             telefono: form.getFieldValue("telefono") || null,
+            celular: null,
+            horario_atencion: null,
+            fecha_nacimiento: null,
+            puntos: 0,
+            centimos: 0,
+            contacto_referencia: null,
             email: form.getFieldValue("email") || null,
             estado: true,
           } as Cliente : undefined

@@ -28,6 +28,7 @@ export default function ModalMetodosPagoVenta({
   form: ventaForm,
   totalCobrado,
   tipo_moneda,
+  tipo_documento,
   onContinuar,
 }: {
   open: boolean
@@ -35,6 +36,7 @@ export default function ModalMetodosPagoVenta({
   form: FormInstance
   totalCobrado: number
   tipo_moneda: TipoMoneda
+  tipo_documento?: string
   onContinuar?: () => void
 }) {
   const [modalForm] = Form.useForm()
@@ -311,6 +313,7 @@ export default function ModalMetodosPagoVenta({
                 <SelectDespliegueDePago
                   classNameIcon='text-rose-700 mx-1'
                   className='w-full'
+                  tipoComprobante={tipo_documento}
                   propsForm={{
                     name: 'despliegue_de_pago_id',
                     rules: [{ required: true, message: 'Requerido' }],

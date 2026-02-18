@@ -14,8 +14,9 @@ export interface DepositoSeguridad {
   fecha: string
 }
 
-const formatCurrency = (amount: number) => {
-  return `S/ ${amount.toFixed(2)}`
+const formatCurrency = (amount: number | string) => {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+  return `S/ ${numAmount.toFixed(2)}`
 }
 
 export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {

@@ -81,11 +81,10 @@
       {
         "id": "crear-contacto",
         "type": "button",
-        "label": "Crear Contacto",
+        "label": "Mis Contactos",
         "icon": "IoMdContact",
-        "route": null,
-        "permission": "cliente.create",
-        "action": "openModalCrearContacto"
+        "route": "/ui/facturacion-electronica/mis-contactos",
+        "permission": "cliente.create"
       },
       {
         "id": "finanzas-dropdown",

@@ -1,4 +1,4 @@
-import { TipoCliente } from '@prisma/client'
+import { TipoCliente } from '~/lib/api/cliente'
 import SelectBase, { SelectBaseProps } from './select-base'
 
 export default function SelectTipoCliente({
@@ -10,8 +10,8 @@ export default function SelectTipoCliente({
       {...props}
       variant={variant}
       options={[
-        { label: TipoCliente.Persona, value: TipoCliente.Persona },
-        { label: TipoCliente.Empresa, value: TipoCliente.Empresa },
+        { label: 'Persona', value: TipoCliente.PERSONA },
+        { label: 'Empresa', value: TipoCliente.EMPRESA },
       ]}
     />
   )
