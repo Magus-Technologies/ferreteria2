@@ -2,123 +2,58 @@
 
 import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
+import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ICellRendererParams } from 'ag-grid-community'
 import { useStoreFiltrosMisGastos } from '../../_store/store-filtros-mis-gastos'
+import { useGetGastos } from '../../_hooks/use-get-gastos'
+import { type Gasto } from '~/lib/api/gastos'
 import dayjs from 'dayjs'
 import TableBase from '~/components/tables/table-base'
 
-// Mock interface for gastos
-interface Gasto {
-  id: string
-  fecha: string
-  monto: number
-  destino: string
-  motivo: string
-  comprobante: string
-  cajero: string
-  autoriza: string
-  anulado: boolean
+// Componente para renderizar el estado
+const EstadoCellRenderer = (props: ICellRendererParams) => {
+  const anulado = Boolean(props.value)
+  
+  if (anulado) {
+    return (
+      <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        Anulado
+      </span>
+    )
+  }
+  
+  return (
+    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+      Activo
+    </span>
+  )
 }
 
 const TableMisGastos = memo(function TableMisGastos() {
   const filtros = useStoreFiltrosMisGastos(state => state.filtros)
 
-  // Mock data - replace with actual API call
-  const mockData: Gasto[] = [
-    {
-      id: '1',
-      fecha: '2024-02-17',
-      monto: 250.00,
-      destino: 'MI REDENTOR',
-      motivo: 'Compra de materiales de oficina',
-      comprobante: 'EFRAIN',
-      cajero: 'Juan Pérez',
-      autoriza: 'María García',
-      anulado: false
-    },
-    {
-      id: '2',
-      fecha: '2024-02-17',
-      monto: 180.50,
-      destino: 'PROVEEDOR ABC',
-      motivo: 'Gastos de transporte',
-      comprobante: 'EFRAIN',
-      cajero: 'Ana López',
-      autoriza: 'Carlos Ruiz',
-      anulado: false
-    },
-    {
-      id: '3',
-      fecha: '2024-02-16',
-      monto: 420.00,
-      destino: 'SERVICIOS GENERALES',
-      motivo: 'Mantenimiento de equipos',
-      comprobante: 'EFRAIN',
-      cajero: 'Pedro Sánchez',
-      autoriza: 'María García',
-      anulado: true
-    },
-    {
-      id: '4',
-      fecha: '2024-02-15',
-      monto: 150.00,
-      destino: 'LIMPIEZA',
-      motivo: 'Productos de limpieza',
-      comprobante: 'EFRAIN',
-      cajero: 'Luis Torres',
-      autoriza: 'María García',
-      anulado: false
-    },
-    {
-      id: '5',
-      fecha: '2024-02-14',
-      monto: 320.75,
-      destino: 'MANTENIMIENTO',
-      motivo: 'Reparación de equipos',
-      comprobante: 'EFRAIN',
-      cajero: 'Carlos Ruiz',
-      autoriza: 'María García',
-      anulado: false
+  // Convert store filters to API filters
+  const apiFilters = useMemo(() => {
+    if (!filtros) return null
+    
+    return {
+      fechaDesde: filtros.fechaDesde,
+      fechaHasta: filtros.fechaHasta,
+      motivoGasto: filtros.motivoGasto,
+      cajeroRegistra: filtros.cajeroRegistra,
+      sucursal: filtros.sucursal,
+      busqueda: filtros.busqueda,
+      per_page: 100,
+      page: 1
     }
-  ]
-
-  const filteredData = useMemo(() => {
-    if (!filtros) return []
-
-    let data = mockData
-
-    if (filtros.fechaDesde) {
-      data = data.filter(item => 
-        dayjs(item.fecha).isAfter(dayjs(filtros.fechaDesde).subtract(1, 'day'))
-      )
-    }
-    if (filtros.fechaHasta) {
-      data = data.filter(item => 
-        dayjs(item.fecha).isBefore(dayjs(filtros.fechaHasta).add(1, 'day'))
-      )
-    }
-    if (filtros.motivoGasto) {
-      data = data.filter(item => 
-        item.motivo.toLowerCase().includes(filtros.motivoGasto!.toLowerCase())
-      )
-    }
-    if (filtros.cajeroRegistra) {
-      data = data.filter(item => 
-        item.cajero.toLowerCase().includes(filtros.cajeroRegistra!.toLowerCase())
-      )
-    }
-    if (filtros.busqueda) {
-      const search = filtros.busqueda.toLowerCase()
-      data = data.filter(item => 
-        item.motivo.toLowerCase().includes(search) ||
-        item.destino.toLowerCase().includes(search) ||
-        item.cajero.toLowerCase().includes(search) ||
-        item.autoriza.toLowerCase().includes(search)
-      )
-    }
-
-    return data
   }, [filtros])
+
+  // Fetch gastos data
+  const { data: gastosResponse, isLoading, error } = useGetGastos(
+    apiFilters || {},
+    !!apiFilters
+  )
+
+  const gastosData = gastosResponse?.data || []
 
   // Definir columnas según la imagen
   const columns: ColDef<Gasto>[] = useMemo(() => [
@@ -172,15 +107,9 @@ const TableMisGastos = memo(function TableMisGastos() {
     {
       headerName: 'ESTADO',
       field: 'anulado',
-      width: 80,
-      cellRenderer: (params: any) => {
-        const anulado = Boolean(params.value)
-        const className = anulado
-          ? 'bg-red-100 text-red-800'
-          : 'bg-green-100 text-green-800'
-        const texto = anulado ? 'Anulado' : 'Activo'
-        return `<span class="px-2 py-1 rounded-full text-xs font-medium ${className}">${texto}</span>`
-      },
+      width: 100,
+      cellRenderer: EstadoCellRenderer,
+      cellClass: 'flex items-center',
     },
   ], [])
 
@@ -189,11 +118,29 @@ const TableMisGastos = memo(function TableMisGastos() {
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className='h-full flex items-center justify-center'>
+        <div className='text-slate-500'>Cargando gastos...</div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className='h-full flex items-center justify-center'>
+        <div className='text-red-500'>Error al cargar gastos: {error.message}</div>
+      </div>
+    )
+  }
+
   return (
     <div className='h-full'>
       <TableBase<Gasto>
         columnDefs={columns}
-        rowData={filteredData}
+        rowData={gastosData}
         getRowId={getRowId}
         headerColor='var(--color-rose-600)'
         selectionColor='#fef2f2'
