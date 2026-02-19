@@ -11,12 +11,6 @@ export default function TableSalidasCuadres() {
     const { salidas, loading } = useCuadresContext();
 
     const columns = useMemo<ColDef[]>(() => [
-        {
-            headerName: "#",
-            valueGetter: "node.rowIndex + 1",
-            width: 50,
-            pinned: "left"
-        },
         { headerName: "Fecha", field: "fecha", width: 100 },
         { headerName: "Numero", field: "numero", width: 110, cellClass: "font-mono" },
         { headerName: "Descripcion", field: "descripcion", flex: 1, minWidth: 200 },
