@@ -4,18 +4,20 @@ import CardMiniInfo from '../cards/card-mini-info'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
 import { useMemo } from 'react'
-import { useProductosSearch } from '../../_hooks/useProductosSearch'
+import { useProductosInfiniteScroll } from '../../_hooks/useProductosInfiniteScroll'
 
 export default function CardsInfo() {
   const filtros = useStoreFiltrosProductos(state => state.filtros)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { data: response } = useProductosSearch({
+  // Reutilizar el mismo hook y queryKey que la tabla principal para evitar peticiones duplicadas
+  const { data: response } = useProductosInfiniteScroll({
     filtros: {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
     },
-    enabled: !!(filtros?.almacen_id || almacen_id),
+    enabled: !!filtros?.almacen_id,
+    perPage: 1000,
   })
 
   // Memoizar los cálculos para evitar recálculos innecesarios

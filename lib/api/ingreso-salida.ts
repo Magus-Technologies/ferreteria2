@@ -8,7 +8,7 @@ import type { ApiResponse, PaginatedResponse } from "~/app/_types/api";
 // Tipo para el Ingreso/Salida básico (sin relaciones)
 export interface IngresoSalida {
   id: number;
-  tipo_documento: "Ingreso" | "Salida";
+  tipo_documento: "Ingreso" | "Salida" | "in" | "sa";
   serie: number;
   numero: number;
   fecha: string;
@@ -25,7 +25,7 @@ export interface IngresoSalida {
 // Tipo para el Ingreso/Salida completo con relaciones (respuesta de Laravel)
 export interface IngresoSalidaWithRelations {
   id: number;
-  tipo_documento: "Ingreso" | "Salida";
+  tipo_documento: "Ingreso" | "Salida" | "in" | "sa";
   serie: number;
   numero: number;
   fecha: string;

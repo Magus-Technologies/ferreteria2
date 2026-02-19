@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
 import { TipoDocumento } from "@prisma/client";
 import { toUTCBD } from "~/utils/fechas";
@@ -37,9 +37,6 @@ export default function useCreateIngresoSalida({
 
       const res = await ingresosSalidasApi.create(data);
 
-      console.log("🔍 Respuesta del backend:", res);
-      console.log("🔍 Datos recibidos:", res.data);
-
       if (res.error) {
         notification.error({
           message: "Error",
@@ -60,29 +57,47 @@ export default function useCreateIngresoSalida({
         throw new Error("No se recibieron datos del servidor");
       }
 
-      console.log("✅ Datos EXTRAÍDOS correctamente:", ingresoSalidaData);
-      console.log("✅ Tiene almacen?", ingresoSalidaData.almacen);
-      console.log("✅ Tiene user?", ingresoSalidaData.user);
-      console.log("✅ Tiene tipo_ingreso?", ingresoSalidaData.tipo_ingreso);
-      console.log(
-        "✅ Tiene productos_por_almacen?",
-        ingresoSalidaData.productos_por_almacen,
-      );
+      // Actualizar SOLO el producto afectado en el cache de la tabla (sin refetch)
+      const paiData = ingresoSalidaData.productos_por_almacen?.[0];
+      const productoId = paiData?.producto_almacen?.producto?.id;
+      const nuevoStock = paiData?.producto_almacen?.stock_fraccion;
 
-      // Llamar onSuccess con los datos correctos
+      if (productoId) {
+        queryClient.setQueriesData<InfiniteData<any>>(
+          { predicate: (query) => query.queryKey[0] === "productos-infinite" },
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page: any) => ({
+                ...page,
+                data: page.data.map((producto: any) => {
+                  if (producto.id !== productoId) return producto;
+                  // Actualizar stock y tiene_ingresos directamente con dato del backend
+                  return {
+                    ...producto,
+                    tiene_ingresos: true,
+                    producto_en_almacenes: producto.producto_en_almacenes?.map(
+                      (pa: any) => ({
+                        ...pa,
+                        stock_fraccion: nuevoStock ?? pa.stock_fraccion,
+                      })
+                    ),
+                  };
+                }),
+              })),
+            };
+          }
+        );
+      }
+
+      // Llamar onSuccess con los datos correctos (cierra modal, abre doc)
       onSuccess?.(ingresoSalidaData);
-
-      // Invalidar las queries de productos para que se recarguen con los datos actualizados
-      // En lugar de intentar actualizar manualmente el caché, es más seguro invalidar
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          query.queryKey[0] === "productos-by-almacen" ||
-          query.queryKey[0] === "productos-search",
-      });
-    } catch {
+    } catch (error) {
+      console.error("Error en crearIngresoSalidaForm:", error);
       notification.error({
         message: "Error",
-        description: "Error al procesar la solicitud",
+        description: error instanceof Error ? error.message : "Error al procesar la solicitud",
       });
     } finally {
       setLoading(false);

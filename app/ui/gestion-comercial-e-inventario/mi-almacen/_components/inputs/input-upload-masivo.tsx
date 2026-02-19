@@ -278,9 +278,11 @@ export default function InputUploadMasivo({
               <span className='font-semibold text-red-600'>{progress.failed}</span> fallidos{' '}
               de <span className='font-semibold'>{progress.total}</span> total
             </div>
-            <div className='text-xs text-gray-500'>
-              Procesando en lotes de {CHUNK_SIZE} archivos
-            </div>
+            {progress.total > CHUNK_SIZE && (
+              <div className='text-xs text-gray-500'>
+                Procesando en lotes de {CHUNK_SIZE} archivos
+              </div>
+            )}
           </div>
         </div>
       </Modal>

@@ -69,27 +69,13 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
     return marcas?.find(m => m.name.toUpperCase() === 'ACEROS AREQUIPA')?.id;
   }, [marcas]);
 
-  // Establecer marca_id cuando se carga
+  // Inicializar: esperar a que las marcas carguen, setear marca_id y hacer submit una sola vez
   useEffect(() => {
     if (acerosArequipaId) {
       form.setFieldValue('marca_id', acerosArequipaId);
-      // Disparar submit automáticamente si ya hay filtros
-      if (filtros) {
-        form.submit();
-      }
+      form.submit();
     }
   }, [acerosArequipaId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Inicializar filtros automáticamente al montar el componente
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!filtros) {
-        form.submit();
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Contar filtros activos
   const activeFiltersCount = useMemo(() => {
@@ -121,11 +107,14 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
     // Enviar búsqueda al backend en lugar de usar Quick Filter local
     setQuickFilter(""); // Limpiar quick filter para usar búsqueda del backend
 
+    // Validar que marca_id sea un ID real de las marcas cargadas
+    const marcaValida = marca_id && marcas?.some(m => m.id === marca_id);
+
     // Los demás filtros van al backend
     const filtros: Partial<GetProductosParams> = {
       almacen_id,
       search: cod_producto || undefined, // ENVIAR búsqueda al backend
-      marca_id: marca_id || undefined,
+      marca_id: marcaValida ? marca_id : undefined,
       categoria_id: categoria_id || undefined,
       unidad_medida_id: unidad_medida_id || undefined,
       ubicacion_id: ubicacion_id || undefined,

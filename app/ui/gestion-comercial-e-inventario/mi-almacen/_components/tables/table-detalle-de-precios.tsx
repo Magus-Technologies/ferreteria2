@@ -15,8 +15,8 @@ import { detallePreciosApi, ImportDetallePreciosItem } from '~/lib/api/detalle-p
 import { useQueryClient } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
 import ActionButtonsWrapper from '../others/action-buttons-wrapper'
-import { useProductosByAlmacen } from '../../_hooks/useProductosByAlmacen'
 import { useStoreFiltrosProductos } from '../../_store/store-filtros-productos'
+import { useProductosInfiniteScroll } from '../../_hooks/useProductosInfiniteScroll'
 import { greenColors } from '~/lib/colors'
 
 export default function TableDetalleDePrecios() {
@@ -38,14 +38,17 @@ export default function TableDetalleDePrecios() {
 
   const queryClient = useQueryClient()
 
-  // Usar el hook correcto para obtener productos
-  const { data: productosData, refetch } = useProductosByAlmacen({
+  // Reutilizar el mismo hook y queryKey que la tabla principal para evitar peticiones duplicadas
+  const {
+    data: productosData,
+    refetch,
+  } = useProductosInfiniteScroll({
     filtros: {
       ...filtros,
       almacen_id: filtros?.almacen_id || almacen_id || 1,
-      per_page: 10000, // NOTA: Se mantiene 10000 para detalle de precios porque necesita todos los productos con sus unidades derivadas
     },
-    enabled: !!(filtros?.almacen_id || almacen_id),
+    enabled: !!filtros?.almacen_id,
+    perPage: 1000,
   })
 
   const [primeraData, setPrimeraData] = useState(0)
