@@ -63,6 +63,21 @@
         "permission": "gestion-comercial-e-inventario.mi-almacen.index"
       },
       {
+        "id": "registros-dropdown",
+        "type": "dropdown",
+        "label": "Registros",
+        "icon": "FaClipboardList",
+        "permission": null,
+        "items": [
+          {
+            "key": "proveedores-desactivados",
+            "label": "Proveedores Desactivados",
+            "route": "/ui/gestion-comercial-e-inventario/proveedores-desactivados",
+            "permission": null
+          }
+        ]
+      },
+      {
         "id": "contactos-dropdown",
         "type": "dropdown",
         "label": "Contactos",

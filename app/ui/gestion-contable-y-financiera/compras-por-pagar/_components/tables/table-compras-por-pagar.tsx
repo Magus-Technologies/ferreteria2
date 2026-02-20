@@ -263,13 +263,6 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     []
   )
 
-  // Función para calcular el color de fondo de cada fila (todas rojas por ser vencidas)
-  const getRowStyle = useCallback(() => {
-    return {
-      background: redColors[2]
-    }
-  }, [])
-
   // Memoizar opciones de columnas para evitar recreaciones
   const optionsSelectColumns = useMemo(
     () => [
@@ -357,26 +350,13 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     }
   }, [apiFilters, filtros])
 
-  // Seleccionar automáticamente la primera fila cuando se cargan los datos
-  useEffect(() => {
-    if (rowData && rowData.length > 0 && tableRef.current) {
-      // Esperar un momento para que la tabla se renderice completamente
-      setTimeout(() => {
-        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
-        if (firstNode) {
-          firstNode.setSelected(true);
-        }
-      }, 100);
-    }
-  }, [rowData]);
-
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
 
   return (
     <TableWithTitle<Compra>
       id='table-compras-por-pagar'
-      selectionColor={redColors[10]}
+      selectionColor="#fee2e2"
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
       onRowDoubleClicked={handleRowDoubleClicked}
@@ -387,7 +367,6 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
       columnDefs={columns}
       rowData={rowData}
       optionsSelectColumns={optionsSelectColumns}
-      getRowStyle={getRowStyle}
       exportExcel={true}
       exportPdf={true}
       selectColumns={true}

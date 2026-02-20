@@ -106,7 +106,12 @@ export async function apiRequest<T = unknown>(
       Object.entries(params).reduce(
         (acc, [key, value]) => {
           if (value !== undefined && value !== null) {
-            acc[key] = String(value);
+            // Formatear fechas correctamente
+            if (value instanceof Date) {
+              acc[key] = value.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            } else {
+              acc[key] = String(value);
+            }
           }
           return acc;
         },

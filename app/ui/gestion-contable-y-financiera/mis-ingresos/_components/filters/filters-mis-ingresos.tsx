@@ -12,7 +12,6 @@ import LabelBase from '~/components/form/label-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
-import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
 import { useEffect, useState, useMemo } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -50,10 +49,8 @@ export default function FiltersMisIngresos() {
   useEffect(() => {
     const data = {
       almacen_id,
-      fecha: {
-        gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
-        lte: toUTCBD({ date: dayjs().endOf('day') }),
-      },
+      desde: dayjs().subtract(30, 'days').startOf('day').format('YYYY-MM-DD'),
+      hasta: dayjs().endOf('day').format('YYYY-MM-DD'),
     }
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,24 +77,11 @@ export default function FiltersMisIngresos() {
         
         const data = {
           almacen_id: almacen_id || almacen_id,
+          desde: desde?.format('YYYY-MM-DD'),
+          hasta: hasta?.format('YYYY-MM-DD'),
+          concepto: concepto_ingreso,
+          search: busqueda,
           ...rest,
-          fecha: {
-            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
-          },
-          // Agregar búsqueda si existe
-          ...(busqueda && {
-            OR: [
-              { concepto: { contains: busqueda } },
-              { comentario: { contains: busqueda } },
-              // Para monto, intentar convertir a número si es posible
-              ...(isNaN(Number(busqueda)) ? [] : [{ monto: Number(busqueda) }]),
-            ]
-          }),
-          // Agregar búsqueda de concepto si existe
-          ...(concepto_ingreso && {
-            concepto: { contains: concepto_ingreso }
-          }),
         }
         setFiltros(data)
         setDrawerOpen(false)
@@ -348,10 +332,8 @@ export default function FiltersMisIngresos() {
                 // Aplicar filtros con valores por defecto
                 const data = {
                   almacen_id,
-                  fecha: {
-                    gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
-                    lte: toUTCBD({ date: dayjs().endOf('day') }),
-                  },
+                  desde: dayjs().subtract(30, 'days').startOf('day').format('YYYY-MM-DD'),
+                  hasta: dayjs().endOf('day').format('YYYY-MM-DD'),
                 }
                 setFiltros(data)
                 setDrawerOpen(false)

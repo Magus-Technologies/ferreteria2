@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 
+// API-compatible filter interface for gastos
 interface FiltrosMisGastos {
-  fechaDesde?: Date
-  fechaHasta?: Date
+  almacen_id?: number
+  fechaDesde?: string
+  fechaHasta?: string
   motivoGasto?: string
   cajeroRegistra?: string
   sucursal?: string

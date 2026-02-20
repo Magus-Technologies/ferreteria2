@@ -1,27 +1,23 @@
 import { create } from 'zustand'
 
-// Simple filter interface for ingresos
+// API-compatible filter interface for ingresos
 interface FiltrosIngresos {
   almacen_id?: number
-  fecha?: {
-    gte?: string
-    lte?: string
-  }
+  desde?: string
+  hasta?: string
   user_id?: string
-  OR?: Array<{
-    concepto?: { contains: string }
-    comentario?: { contains: string }
-    monto?: number
-  }>
-  concepto?: { contains: string }
+  concepto?: string
+  search?: string
 }
 
 interface StoreFiltrosMisIngresos {
   filtros: FiltrosIngresos | null
   setFiltros: (filtros: FiltrosIngresos) => void
+  resetFiltros: () => void
 }
 
 export const useStoreFiltrosMisIngresos = create<StoreFiltrosMisIngresos>(set => ({
   filtros: null,
   setFiltros: filtros => set({ filtros }),
+  resetFiltros: () => set({ filtros: null }),
 }))

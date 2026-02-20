@@ -2,93 +2,36 @@
 
 import { useMemo, useCallback } from 'react'
 import { useStoreFiltrosMisIngresos } from '../../_store/store-filtros-mis-ingresos'
-import dayjs from 'dayjs'
+import { useGetIngresos } from '../../_hooks/use-get-ingresos'
 import TableBase from '~/components/tables/table-base'
 import { ColDef } from 'ag-grid-community'
-
-// Mock interface for ingresos
-interface Ingreso {
-  id: string
-  fecha: string
-  monto: number
-  concepto: string
-  comentario: string
-  cajero: string
-  autoriza: string
-  anulado: boolean
-}
+import type { Ingreso } from '~/lib/api/ingresos'
 
 export default function TableMisIngresos() {
   const filtros = useStoreFiltrosMisIngresos(state => state.filtros)
 
-  // Mock data - replace with actual API call
-  const mockData: Ingreso[] = [
-    {
-      id: '1',
-      fecha: '2024-02-17',
-      monto: 1500.00,
-      concepto: 'Venta de productos',
-      comentario: 'Venta al contado - Cliente frecuente',
-      cajero: 'Juan Pérez',
-      autoriza: 'María García',
-      anulado: false
-    },
-    {
-      id: '2',
-      fecha: '2024-02-17',
-      monto: 850.50,
-      concepto: 'Cobro de servicios',
-      comentario: 'Servicio de instalación',
-      cajero: 'Ana López',
-      autoriza: 'Carlos Ruiz',
-      anulado: false
-    },
-    {
-      id: '3',
-      fecha: '2024-02-16',
-      monto: 2200.00,
-      concepto: 'Venta mayorista',
-      comentario: 'Venta a empresa constructora',
-      cajero: 'Pedro Sánchez',
-      autoriza: 'María García',
-      anulado: true
-    },
-    {
-      id: '4',
-      fecha: '2024-02-15',
-      monto: 650.00,
-      concepto: 'Cobro de deuda',
-      comentario: 'Pago de factura pendiente',
-      cajero: 'Luis Torres',
-      autoriza: 'María García',
-      anulado: false
+  // Convert store filters to API filters
+  const apiFilters = useMemo(() => {
+    if (!filtros) return null
+    
+    return {
+      desde: filtros.desde,
+      hasta: filtros.hasta,
+      user_id: filtros.user_id,
+      concepto: filtros.concepto,
+      search: filtros.search,
+      per_page: 50,
+      page: 1,
     }
-  ]
-
-  const filteredData = useMemo(() => {
-    if (!filtros) return []
-
-    let data = mockData
-
-    // Aplicar filtros de fecha
-    if (filtros.fecha?.gte) {
-      data = data.filter(item => 
-        dayjs(item.fecha).isAfter(dayjs(filtros.fecha?.gte).subtract(1, 'day'))
-      )
-    }
-    if (filtros.fecha?.lte) {
-      data = data.filter(item => 
-        dayjs(item.fecha).isBefore(dayjs(filtros.fecha?.lte).add(1, 'day'))
-      )
-    }
-
-    // Aplicar filtros de búsqueda
-    if (filtros.OR) {
-      // Implementar lógica de búsqueda si es necesario
-    }
-
-    return data
   }, [filtros])
+
+  // Usar datos reales de la API
+  const { data: response, isLoading, error } = useGetIngresos(
+    apiFilters || {},
+    !!apiFilters
+  )
+
+  const data = response?.data || []
 
   const columns: ColDef<Ingreso>[] = useMemo(() => [
     {
@@ -97,7 +40,8 @@ export default function TableMisIngresos() {
       width: 120,
       valueFormatter: (params) => {
         if (!params.value) return ''
-        return dayjs(params.value).format('DD/MM/YYYY')
+        // La fecha ya viene formateada desde el backend
+        return params.value
       },
       sort: 'desc',
     },
@@ -105,10 +49,11 @@ export default function TableMisIngresos() {
       headerName: 'Monto',
       field: 'monto',
       width: 140,
-      cellRenderer: (params: any) => {
+      valueFormatter: (params) => {
         const monto = Number(params.value || 0)
-        return `<span class="font-semibold text-rose-600">S/. ${monto.toFixed(2)}</span>`
+        return `S/. ${monto.toFixed(2)}`
       },
+      cellClass: 'font-semibold text-rose-600',
       type: 'numericColumn',
     },
     {
@@ -133,36 +78,45 @@ export default function TableMisIngresos() {
       field: 'autoriza',
       width: 150,
     },
-    {
-      headerName: 'Estado',
-      field: 'anulado',
-      width: 100,
-      cellRenderer: (params: any) => {
-        const anulado = Boolean(params.value)
-        const className = anulado
-          ? 'bg-red-100 text-red-800'
-          : 'bg-green-100 text-green-800'
-        const texto = anulado ? 'Anulado' : 'Activo'
-        return `<span class="px-2 py-1 rounded-full text-xs font-medium ${className}">${texto}</span>`
-      },
-    },
   ], [])
 
   const getRowId = useCallback((params: any) => params.data.id, [])
 
+  // Mostrar loading o error
+  if (isLoading) {
+    return (
+      <div className='h-full flex items-center justify-center'>
+        <div className='text-gray-500'>Cargando ingresos...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className='h-full flex items-center justify-center'>
+        <div className='text-red-500'>Error al cargar los ingresos</div>
+      </div>
+    )
+  }
+
   // Solo renderizar cuando hay filtros
-  if (!filtros) return null
+  if (!apiFilters) {
+    return (
+      <div className='h-full flex items-center justify-center'>
+        <div className='text-gray-500'>Selecciona los filtros para ver los ingresos</div>
+      </div>
+    )
+  }
 
   return (
     <div className='h-full'>
       <TableBase<Ingreso>
         columnDefs={columns}
-        rowData={filteredData}
+        rowData={data}
         getRowId={getRowId}
         headerColor='var(--color-rose-600)'
-        selectionColor='#fef2f2'
+        selectionColor='#fee2e2'
         pagination={false}
-        suppressRowClickSelection={false}
         rowSelection={true}
         tableKey='mis-ingresos'
       />
