@@ -483,7 +483,7 @@ export default function ReporteClientesPage() {
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip
                 formatter={(value: number) => `S/. ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`}
-                labelFormatter={(_label: string, payload: any[]) => payload?.[0]?.payload?.fullName || _label}
+                labelFormatter={(_label: string, payload: readonly any[]) => payload?.[0]?.payload?.fullName || _label}
                 labelStyle={{ fontWeight: 'bold' }}
               />
               <Bar dataKey='monto' name='Monto' radius={[4, 4, 0, 0]}>
@@ -491,7 +491,7 @@ export default function ReporteClientesPage() {
                   dataKey='monto'
                   position='top'
                   style={{ fontSize: 10, fill: '#475569' }}
-                  formatter={(value: number) => Number(value).toLocaleString('es-PE', { maximumFractionDigits: 2 })}
+                  formatter={(value: any) => Number(value).toLocaleString('es-PE', { maximumFractionDigits: 2 })}
                 />
                 {topClientes.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={getBarColor(index)} />
