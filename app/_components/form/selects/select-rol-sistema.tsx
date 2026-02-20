@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import SelectBase, { SelectBaseProps } from './select-base'
 import { catalogosGeneralesApi } from '~/lib/api/catalogos-generales'
@@ -18,8 +17,6 @@ export default function SelectRolSistema({
   sizeIcon = 18,
   ...props
 }: SelectRolSistemaProps) {
-  const [shouldFetch, setShouldFetch] = useState(false)
-
   const { data, isLoading } = useQuery({
     queryKey: ['catalogos', 'roles-sistema'],
     queryFn: async () => {
@@ -30,7 +27,6 @@ export default function SelectRolSistema({
       return response.data?.data || []
     },
     staleTime: 30 * 60 * 1000, // Cache por 30 minutos
-    enabled: shouldFetch,
   })
 
   return (
@@ -44,16 +40,6 @@ export default function SelectRolSistema({
         value: item.codigo,
         label: item.descripcion,
       }))}
-      onFocus={() => {
-        if (!shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
-      onOpenChange={(open) => {
-        if (open && !shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
       {...props}
     />
   )

@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { categoriasApi } from "~/lib/api/catalogos";
 import ButtonCreateCategoria from "../buttons/button-create-categoria";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import iterarChangeValue from "~/app/_utils/iterar-change-value";
 
 interface SelectCategoriasProps extends SelectBaseProps {
@@ -24,8 +24,6 @@ export default function SelectCategorias({
   ...props
 }: SelectCategoriasProps) {
   const selectCategoriasRef = useRef<RefSelectBaseProps>(null);
-  const [shouldFetch, setShouldFetch] = useState(false);
-
   const { data } = useQuery({
     queryKey: [QueryKeys.CATEGORIAS],
     queryFn: async () => {
@@ -36,7 +34,6 @@ export default function SelectCategorias({
       // response.data tiene la estructura { data: Categoria[] }
       return response.data?.data || [];
     },
-    enabled: shouldFetch,
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
@@ -54,16 +51,7 @@ export default function SelectCategorias({
           value: item.id,
           label: item.name,
         }))}
-        onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true);
-          }
-        }}
-        onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true);
-          }
-        }}
+
         {...props}
       />
       {showButtonCreate && (

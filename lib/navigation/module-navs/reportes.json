@@ -1,0 +1,98 @@
+{
+  "moduleId": "reportes",
+  "topNav": {
+    "bgColor": "bg-blue-600",
+    "activeColor": "text-blue-600",
+    "items": [
+      {
+        "id": "dashboard",
+        "type": "button",
+        "label": "Categorías",
+        "icon": "MdSpaceDashboard",
+        "route": "/ui/reportes",
+        "permission": "reportes.index"
+      },
+      {
+        "id": "ventas",
+        "type": "button",
+        "label": "Ventas",
+        "icon": "FaDollarSign",
+        "route": "/ui/reportes/ventas",
+        "permission": "reportes.ventas.index"
+      },
+      {
+        "id": "compras",
+        "type": "button",
+        "label": "Compras",
+        "icon": "FaBoxOpen",
+        "route": "/ui/reportes/compras",
+        "permission": "reportes.compras.index"
+      },
+      {
+        "id": "inventario",
+        "type": "button",
+        "label": "Productos",
+        "icon": "FaCartShopping",
+        "route": "/ui/reportes/inventario",
+        "permission": "reportes.inventario.index"
+      },
+      {
+        "id": "clientes",
+        "type": "button",
+        "label": "Clientes",
+        "icon": "FaUsers",
+        "route": "/ui/reportes/clientes",
+        "permission": "reportes.clientes.index"
+      },
+      {
+        "id": "financieros",
+        "type": "button",
+        "label": "Administrativos",
+        "icon": "FaBuilding",
+        "route": "/ui/reportes/financieros",
+        "permission": "reportes.financieros.index"
+      }
+    ]
+  },
+  "bottomNav": {
+    "bgColor": "bg-blue-600",
+    "activeColor": "text-blue-600",
+    "items": [
+      {
+        "id": "ventas",
+        "label": "Ventas",
+        "icon": "FaDollarSign",
+        "route": "/ui/reportes/ventas",
+        "permission": "reportes.ventas.index"
+      },
+      {
+        "id": "compras",
+        "label": "Compras",
+        "icon": "FaBoxOpen",
+        "route": "/ui/reportes/compras",
+        "permission": "reportes.compras.index"
+      },
+      {
+        "id": "inventario",
+        "label": "Productos",
+        "icon": "FaCartShopping",
+        "route": "/ui/reportes/inventario",
+        "permission": "reportes.inventario.index"
+      },
+      {
+        "id": "clientes",
+        "label": "Clientes",
+        "icon": "FaUsers",
+        "route": "/ui/reportes/clientes",
+        "permission": "reportes.clientes.index"
+      },
+      {
+        "id": "financieros",
+        "label": "Administrativos",
+        "icon": "FaBuilding",
+        "route": "/ui/reportes/financieros",
+        "permission": "reportes.financieros.index"
+      }
+    ]
+  }
+}

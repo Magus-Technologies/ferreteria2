@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { unidadesDerivadas } from '~/lib/api/catalogos'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonCreateUnidadDerivada from '../buttons/button-create-unidad-derivada'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectUnidadDerivadaProps extends SelectBaseProps {
@@ -24,8 +24,6 @@ export default function SelectUnidadDerivada({
   ...props
 }: SelectUnidadDerivadaProps) {
   const selectUnidadDerivadaRef = useRef<RefSelectBaseProps>(null)
-  const [shouldFetch, setShouldFetch] = useState(false)
-
   const { data } = useQuery({
     queryKey: [QueryKeys.UNIDADES_DERIVADAS],
     queryFn: async () => {
@@ -35,7 +33,6 @@ export default function SelectUnidadDerivada({
       }
       return response.data?.data || []
     },
-    enabled: shouldFetch,
     staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
@@ -51,16 +48,7 @@ export default function SelectUnidadDerivada({
           value: item.id,
           label: item.name,
         }))}
-        onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
-        onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
+
         {...props}
       />
       {showButtonCreate && (

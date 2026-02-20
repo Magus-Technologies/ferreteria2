@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
 import { FaUser } from 'react-icons/fa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useState } from 'react'
 
 interface SelectUsuarioResponsableProps extends Omit<SelectBaseProps, 'placeholder' | 'variant'> {
   classNameIcon?: string
@@ -23,8 +22,6 @@ export default function SelectUsuarioResponsable({
   sinCaja = true,
   ...props
 }: SelectUsuarioResponsableProps) {
-  const [shouldFetch, setShouldFetch] = useState(false)
-
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENDEDORES_DISPONIBLES, sinCaja],
     queryFn: async () => {
@@ -33,7 +30,6 @@ export default function SelectUsuarioResponsable({
       })
       return response.data?.data || []
     },
-    enabled: shouldFetch,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
@@ -51,16 +47,6 @@ export default function SelectUsuarioResponsable({
       filterOption={(input, option) =>
         String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
       }
-      onFocus={() => {
-        if (!shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
-      onOpenChange={(open) => {
-        if (open && !shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
       {...props}
     />
   )

@@ -69,6 +69,8 @@ export interface CreateVentaRequest {
   numero?: number; // Opcional: Se genera automáticamente en el backend
   descripcion?: string;
   forma_de_pago: FormaDePago;
+  numero_dias?: number;
+  fecha_vencimiento?: string;
   tipo_moneda: TipoMoneda;
   tipo_de_cambio?: number;
   fecha: string;
@@ -169,7 +171,112 @@ export const ventaApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Obtener ventas por cobrar (crédito con saldo pendiente)
+   */
+  async getVentasPorCobrar(filters?: {
+    almacen_id?: number;
+    cliente_id?: number;
+    user_id?: string;
+    desde?: string;
+    hasta?: string;
+    search?: string;
+    per_page?: number;
+    page?: number;
+  }): Promise<ApiResponse<{
+    data: VentaCompleta[];
+    total: number;
+    current_page: number;
+    per_page: number;
+    last_page: number;
+  }>> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/ventas/por-cobrar?${queryString}` : '/ventas/por-cobrar';
+
+    return apiRequest(url);
+  },
+
+  /**
+   * Obtener historial de ediciones de una venta
+   */
+  async getHistorial(id: string): Promise<ApiResponse<{ data: VentaHistorialItem[] }>> {
+    return apiRequest(`/ventas/${id}/historial`);
+  },
+
+  /**
+   * Obtener historial general de todas las ventas
+   */
+  async getHistorialGeneral(filters?: {
+    desde?: string;
+    hasta?: string;
+    user_id?: string;
+    accion?: string;
+    search?: string;
+    per_page?: number;
+    page?: number;
+  }): Promise<ApiResponse<{
+    data: VentaHistorialItem[];
+    total: number;
+    current_page: number;
+    per_page: number;
+    last_page: number;
+  }>> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/ventas/historial?${queryString}` : '/ventas/historial';
+
+    return apiRequest(url);
+  },
 };
+
+// ============= TIPOS DE HISTORIAL =============
+
+export interface VentaHistorialItem {
+  id: number
+  venta_id: string
+  accion: string
+  descripcion: string | null
+  datos_anteriores: Record<string, any> | null
+  datos_nuevos: Record<string, any> | null
+  user_id: string
+  fecha: string
+  usuario?: { id: string; name: string }
+  venta?: {
+    id: string
+    tipo_documento: string
+    serie: string
+    numero: number
+    cliente_id: number
+    fecha: string
+    cliente?: {
+      id: number
+      numero_documento: string
+      razon_social: string
+      nombres: string
+      apellidos: string
+    }
+  }
+}
 
 // ============= TIPOS ADICIONALES =============
 
@@ -184,6 +291,8 @@ export type VentaCompleta = {
   numero: number
   descripcion?: string
   forma_de_pago: 'co' | 'cr'
+  numero_dias?: number
+  fecha_vencimiento?: string
   tipo_moneda: 's' | 'd'
   tipo_de_cambio: number
   fecha: string

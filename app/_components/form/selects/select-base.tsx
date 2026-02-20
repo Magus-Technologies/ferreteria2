@@ -42,14 +42,14 @@ function Base({
       ref={innerRef}
       {...props}
       showSearch={shouldShowSearch}
-      onSearch={(value) => {
+      onSearch={onSearch ? (value) => {
         if (uppercase && value) {
           const uppercased = value.toUpperCase();
           onSearch?.(uppercased);
         } else {
           onSearch?.(value);
         }
-      }}
+      } : undefined}
       onOpenChange={(open) => {
         setOpen(open);
         onOpenChange?.(open);

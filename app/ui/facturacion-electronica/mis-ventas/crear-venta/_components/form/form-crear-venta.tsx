@@ -223,6 +223,13 @@ export default function FormCrearVenta({
               className="w-full"
               classNameIcon="text-rose-700 mx-1"
               placeholder="DNI/RUC"
+              clienteOptionsDefault={venta?.cliente ? [{
+                id: venta.cliente.id,
+                numero_documento: venta.cliente.numero_documento || '',
+                razon_social: venta.cliente.razon_social || '',
+                nombres: venta.cliente.nombres || '',
+                apellidos: venta.cliente.apellidos || '',
+              }] : []}
               onChange={(_, cliente) => {
                 // Actualizar los campos relacionados
                 if (cliente) {

@@ -201,6 +201,63 @@ export interface ComprasListResponse {
   total: number;
 }
 
+// ============= REPORTE TYPES =============
+
+export interface CompraResumenMensual {
+  mes: string; // '2025-01'
+  total: number;
+  cantidad: number;
+}
+
+export interface CompraResumen {
+  total_compras: number;
+  total_transacciones: number;
+  total_contado: number;
+  total_credito: number;
+  total_pagado: number;
+  saldo_pendiente: number;
+}
+
+export interface CompraReporteItem {
+  id: string;
+  fecha: string;
+  tipo_documento: string;
+  serie: string | null;
+  numero: number | null;
+  proveedor_ruc: string;
+  proveedor_nombre: string;
+  total: number;
+  forma_de_pago: string;
+  estado_de_compra: string;
+  total_pagado: number;
+  saldo: number;
+}
+
+export interface CompraReporteResponse {
+  data: CompraReporteItem[];
+  resumen: {
+    total: number;
+    total_pagado: number;
+    saldo: number;
+    cantidad: number;
+  };
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface CompraReporteFilters {
+  almacen_id?: number;
+  desde?: string;
+  hasta?: string;
+  proveedor_id?: number;
+  forma_de_pago?: string;
+  estado_de_compra?: string;
+  per_page?: number;
+  page?: number;
+}
+
 // ============= API METHODS =============
 
 export const compraApi = {
@@ -305,5 +362,49 @@ export const compraApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+  },
+
+  // ============= REPORTES =============
+
+  getResumenMensual: async (filters?: CompraReporteFilters): Promise<ApiResponse<{ data: CompraResumenMensual[] }>> => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/compras/resumen-mensual?${queryString}` : '/compras/resumen-mensual';
+    return apiRequest<{ data: CompraResumenMensual[] }>(url);
+  },
+
+  getResumen: async (filters?: CompraReporteFilters): Promise<ApiResponse<{ data: CompraResumen }>> => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/compras/resumen?${queryString}` : '/compras/resumen';
+    return apiRequest<{ data: CompraResumen }>(url);
+  },
+
+  getReporte: async (filters?: CompraReporteFilters): Promise<ApiResponse<CompraReporteResponse>> => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/compras/reporte?${queryString}` : '/compras/reporte';
+    return apiRequest<CompraReporteResponse>(url);
   },
 };

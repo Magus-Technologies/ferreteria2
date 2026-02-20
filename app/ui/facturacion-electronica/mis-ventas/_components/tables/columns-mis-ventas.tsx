@@ -177,6 +177,13 @@ export function useColumnsMisVentas() {
       },
     },
     {
+      headerName: "F.Vencimiento",
+      field: "fecha_vencimiento",
+      width: 130,
+      valueFormatter: (params) =>
+        params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+    },
+    {
       headerName: "Estado",
       field: "estado_de_venta",
       width: 100,
@@ -227,7 +234,7 @@ export function useColumnsMisVentas() {
     {
       headerName: "Acciones",
       field: "id",
-      width: 100,
+      width: 110,
       pinned: "right",
       cellRenderer: CellAccionesVentaDropdown,
       cellRendererParams: (params: { data?: getVentaResponseProps }) => ({

@@ -4,7 +4,6 @@ import SelectBase, { SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { FaMoneyCheckAlt } from 'react-icons/fa'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
 import { apiRequest } from '~/lib/api'
 
 interface SelectDespliegueDePagoProps extends SelectBaseProps {
@@ -25,8 +24,6 @@ export default function SelectDespliegueDePago({
   subCajaId,
   ...props
 }: SelectDespliegueDePagoProps) {
-  const [shouldFetch, setShouldFetch] = useState(false)
-
   const { data } = useQuery({
     queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
@@ -34,7 +31,6 @@ export default function SelectDespliegueDePago({
       console.log('🔍 Métodos de pago recibidos del backend:', result.data?.data)
       return result.data?.data || []
     },
-    enabled: shouldFetch,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
@@ -80,16 +76,6 @@ export default function SelectDespliegueDePago({
       variant={variant}
       placeholder={placeholder}
       options={options}
-      onFocus={() => {
-        if (!shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
-      onOpenChange={(open) => {
-        if (open && !shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
       {...props}
     />
   )

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import SelectBase, { SelectBaseProps } from './select-base'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -19,10 +18,6 @@ export default function SelectUsuarios({
   sizeIcon = 18,
   ...props
 }: SelectUsuariosProps) {
-  // Cargar datos solo cuando el usuario interactúe
-  const [shouldFetch, setShouldFetch] = useState(false)
-
-  // Usar React Query para obtener usuarios desde Laravel API
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.USUARIOS],
     queryFn: async () => {
@@ -33,7 +28,6 @@ export default function SelectUsuarios({
       return response.data?.data || []
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    enabled: shouldFetch, // Solo cargar cuando sea necesario
   })
 
   return (
@@ -48,16 +42,6 @@ export default function SelectUsuarios({
           value: item.id,
           label: item.name,
         }))}
-        onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
-        onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
         {...props}
       />
     </>

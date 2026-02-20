@@ -43,6 +43,8 @@ export type FormCreateVenta = {
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago
+  numero_dias?: number
+  fecha_vencimiento?: Dayjs
   tipo_documento: TipoDocumento
   tipo_moneda: TipoMoneda
   tipo_de_cambio?: number
@@ -134,7 +136,7 @@ export default function BodyVender({
   const [ventaData, setVentaData] = useState<VentaResponse>()
   const [formKey, setFormKey] = useState(0)
 
-  const { handleSubmit } = useCreateVenta()
+  const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
   
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
