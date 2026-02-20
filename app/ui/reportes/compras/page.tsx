@@ -5,7 +5,7 @@ import { FaBoxOpen, FaMoneyBillWave, FaCreditCard, FaExclamationTriangle } from 
 import { MdPointOfSale } from 'react-icons/md'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Legend, Tooltip, ResponsiveContainer } from 'recharts'
 import { useQuery } from '@tanstack/react-query'
-import { DatePicker } from 'antd'
+import { DatePicker, message } from 'antd'
 import dayjs from 'dayjs'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
@@ -14,6 +14,7 @@ import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
 import CardReporteAvanzado from '../_components/cards/card-reporte-avanzado'
 import { compraApi, type CompraReporteFilters } from '~/lib/api/compra'
+import { empresaApi } from '~/lib/api/empresa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { exportReporteComprasToExcel } from '~/utils/export-reporte-compras-excel'
@@ -30,7 +31,7 @@ export default function ReporteComprasPage() {
     hasta: dayjs().endOf('month').format('YYYY-MM-DD'),
   })
 
-  const [exportingExcel, setExportingExcel] = useState(false)
+  const [exportingExcel, setExportingExcel] = useState<string | null>(null)
 
   useEffect(() => {
     setFiltros((prev) => ({ ...prev, almacen_id }))
@@ -50,7 +51,15 @@ export default function ReporteComprasPage() {
     enabled: !!filtros.almacen_id,
   })
 
+  // Query: Empresa para header Excel
+  const { data: empresaData } = useQuery({
+    queryKey: [QueryKeys.EMPRESAS, 1],
+    queryFn: () => empresaApi.getById(1),
+  })
+
   if (!canAccess) return <NoAutorizado />
+
+  const empresa = empresaData?.data?.data
 
   const resumen = resumenData?.data?.data
   const datosMensuales = (resumenMensualData?.data?.data || []).map((item) => ({
@@ -69,26 +78,32 @@ export default function ReporteComprasPage() {
     }
   }
 
-  const handleExportExcel = async () => {
-    setExportingExcel(true)
+  const handleExportExcel = async (reporteKey: string, extraFilters?: Partial<CompraReporteFilters>, filePrefix?: string) => {
+    setExportingExcel(reporteKey)
     try {
       const res = await compraApi.getReporte({
         ...filtros,
+        ...extraFilters,
         per_page: 10000,
         page: 1,
       })
-      if (res.data?.data) {
-        exportReporteComprasToExcel({
-          items: res.data.data,
-          nameFile: `Reporte_Compras_${dayjs().format('YYYYMMDD_HHmmss')}`,
-          fechaDesde: filtros.desde ? dayjs(filtros.desde).format('DD/MM/YYYY') : undefined,
-          fechaHasta: filtros.hasta ? dayjs(filtros.hasta).format('DD/MM/YYYY') : undefined,
-        })
+      const items = res.data?.data
+      if (!items || items.length === 0) {
+        message.warning('No hay datos de compras para exportar en el rango seleccionado')
+        return
       }
+      exportReporteComprasToExcel({
+        items,
+        nameFile: `${filePrefix || 'Reporte_Compras'}_${dayjs().format('YYYYMMDD_HHmmss')}`,
+        fechaDesde: filtros.desde ? dayjs(filtros.desde).format('DD/MM/YYYY') : undefined,
+        fechaHasta: filtros.hasta ? dayjs(filtros.hasta).format('DD/MM/YYYY') : undefined,
+        empresa: empresa ? { razon_social: empresa.razon_social, ruc: empresa.ruc, direccion: empresa.direccion } : undefined,
+      })
+      message.success('Reporte Excel descargado correctamente')
     } catch {
-      alert('Error al exportar el reporte')
+      message.error('Error al generar el reporte. Intente nuevamente.')
     } finally {
-      setExportingExcel(false)
+      setExportingExcel(null)
     }
   }
 
@@ -213,14 +228,30 @@ export default function ReporteComprasPage() {
         <h3 className='font-bold text-slate-700 text-base uppercase mb-3'>Reportes Avanzados</h3>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
           <CardReporteAvanzado
-            titulo='Compras'
-            onExcel={handleExportExcel}
-            loadingExcel={exportingExcel}
+            titulo='Compras General'
+            onExcel={() => handleExportExcel('general', {}, 'Compras_General')}
+            loadingExcel={exportingExcel === 'general'}
           />
-          <CardReporteAvanzado titulo='Detalle de Compras' />
-          <CardReporteAvanzado titulo='Ordenes de Compra' />
-          <CardReporteAvanzado titulo='Recepcion de Productos' />
-          <CardReporteAvanzado titulo='Exportar Ordenes de Compra' />
+          <CardReporteAvanzado
+            titulo='Compras al Contado'
+            onExcel={() => handleExportExcel('contado', { forma_de_pago: 'co' }, 'Compras_Contado')}
+            loadingExcel={exportingExcel === 'contado'}
+          />
+          <CardReporteAvanzado
+            titulo='Compras al Crédito'
+            onExcel={() => handleExportExcel('credito', { forma_de_pago: 'cr' }, 'Compras_Credito')}
+            loadingExcel={exportingExcel === 'credito'}
+          />
+          <CardReporteAvanzado
+            titulo='Compras por Proveedor'
+            onExcel={() => handleExportExcel('proveedor', {}, 'Compras_Por_Proveedor')}
+            loadingExcel={exportingExcel === 'proveedor'}
+          />
+          <CardReporteAvanzado
+            titulo='Compras Anuladas'
+            onExcel={() => handleExportExcel('anuladas', { estado_de_compra: 'an' }, 'Compras_Anuladas')}
+            loadingExcel={exportingExcel === 'anuladas'}
+          />
         </div>
       </div>
     </ContenedorGeneral>

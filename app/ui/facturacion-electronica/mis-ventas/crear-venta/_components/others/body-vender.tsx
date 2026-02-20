@@ -90,6 +90,15 @@ export type FormCreateVenta = {
     pendiente: number
     entregar: number
   }>
+  // Datos para programar la entrega del resto en despacho parcial mixto
+  parcial_resto_programado?: {
+    despachador_id?: string
+    fecha_programada?: string
+    hora_inicio?: string
+    hora_fin?: string
+    direccion_entrega?: string
+    observaciones?: string
+  }
 }
 
 // Componente interno que se recrea completamente cuando cambia la key

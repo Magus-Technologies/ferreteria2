@@ -218,7 +218,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
             <ButtonBase
               onClick={() => {
                 form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
-                form.submit();
+                setModalDetallesEntregaOpen(true);
               }}
               color="success"
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"

@@ -2,25 +2,31 @@ import { utils, writeFile } from "xlsx-js-style";
 import { type CompraReporteItem } from "~/lib/api/compra";
 import dayjs from 'dayjs';
 
+export interface EmpresaExcelInfo {
+  razon_social?: string;
+  ruc?: string;
+  direccion?: string;
+}
+
 interface ExportReporteComprasExcelParams {
   items: CompraReporteItem[];
   nameFile: string;
   fechaDesde?: string;
   fechaHasta?: string;
+  empresa?: EmpresaExcelInfo;
 }
 
-export function exportReporteComprasToExcel({ items, nameFile, fechaDesde, fechaHasta }: ExportReporteComprasExcelParams) {
+export function exportReporteComprasToExcel({ items, nameFile, fechaDesde, fechaHasta, empresa }: ExportReporteComprasExcelParams) {
   if (!items || items.length === 0) {
-    alert("No hay datos para exportar");
     return;
   }
 
   const data: any[][] = [];
 
   // ENCABEZADO
-  data.push(['Sistema de FxFerreterias2.2 (Software Ferretero Con aplicaciones de benchmarking)']);
-  data.push(['', '', '', '', '', '', '', '', `Fecha Desde: ${fechaDesde || dayjs().format('DD/MM/YYYY')}`]);
-  data.push(['', '', '', '', '', '', '', '', `Hasta: ${fechaHasta || dayjs().format('DD/MM/YYYY')}`]);
+  data.push([empresa?.razon_social || 'Mi Empresa']);
+  data.push([empresa?.ruc ? `RUC: ${empresa.ruc}` : '', '', '', '', '', '', '', '', `Fecha Desde: ${fechaDesde || dayjs().format('DD/MM/YYYY')}`]);
+  data.push([empresa?.direccion || '', '', '', '', '', '', '', '', `Hasta: ${fechaHasta || dayjs().format('DD/MM/YYYY')}`]);
   data.push(['REPORTE DE COMPRAS']);
   data.push([]);
 

@@ -121,6 +121,7 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
       observaciones,
       quien_entrega,
       cantidades_parciales,
+      parcial_resto_programado,
       ...restValues
     } = values
 
@@ -444,6 +445,79 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
                 })
               } else {
                 message.success('Entrega parcial registrada exitosamente')
+
+                // ✅ CREAR SEGUNDA ENTREGA PROGRAMADA para el resto (si se configuró)
+                if (parcial_resto_programado?.despachador_id) {
+                  const unidadesDerivadas2: any[] = []
+
+                  productosVenta.forEach((productoAlmacen: any) => {
+                    if (productoAlmacen.unidades_derivadas) {
+                      productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                        const parcial = cantidades_parciales.find(
+                          (c) => c.unidad_derivada_id === unidad.unidad_derivada_normal_id
+                        )
+                        if (parcial && (parcial.total - parcial.entregar) > 0) {
+                          unidadesDerivadas2.push({
+                            unidad_derivada_venta_id: unidad.id,
+                            cantidad_entregada: parcial.total - parcial.entregar,
+                            ubicacion: undefined,
+                          })
+                        }
+                      })
+                    }
+                  })
+
+                  if (unidadesDerivadas2.length > 0) {
+                    const entregaRestoData: CreateEntregaProductoRequest = {
+                      venta_id: ventaCreada.id,
+                      tipo_entrega: TipoEntrega.PARCIAL,
+                      tipo_despacho: TipoDespacho.PROGRAMADO,
+                      estado_entrega: EstadoEntrega.PENDIENTE,
+                      fecha_entrega: dayjs().format('YYYY-MM-DD'),
+                      fecha_programada: parcial_resto_programado.fecha_programada,
+                      hora_inicio: parcial_resto_programado.hora_inicio,
+                      hora_fin: parcial_resto_programado.hora_fin,
+                      direccion_entrega: parcial_resto_programado.direccion_entrega,
+                      observaciones: parcial_resto_programado.observaciones,
+                      almacen_salida_id: almacen_id,
+                      chofer_id: parcial_resto_programado.despachador_id,
+                      quien_entrega: QuienEntrega.CHOFER,
+                      user_id: user_id,
+                      productos_entregados: unidadesDerivadas2,
+                    }
+
+                    const entregaRestoResponse = await entregaProductoApi.create(entregaRestoData)
+
+                    if (entregaRestoResponse.error) {
+                      notification.warning({
+                        message: 'Entrega del resto no pudo ser programada',
+                        description: 'Puedes crearla manualmente desde "Mis Ventas".',
+                      })
+                    } else {
+                      message.success('Entrega del resto programada exitosamente')
+
+                      // 🔔 Notificar al despachador del resto
+                      try {
+                        const clienteNombre = ventaCreada.cliente?.nombres
+                          ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
+                          : ventaCreada.cliente?.razon_social || 'Cliente'
+
+                        await fcmApi.notifyEntregaProgramada({
+                          despachador_id: parcial_resto_programado.despachador_id,
+                          venta_serie: ventaCreada.serie || '',
+                          venta_numero: ventaCreada.numero || '',
+                          direccion: parcial_resto_programado.direccion_entrega || '',
+                          fecha_programada: parcial_resto_programado.fecha_programada
+                            ? dayjs(parcial_resto_programado.fecha_programada).format('DD/MM/YYYY')
+                            : 'Por confirmar',
+                          cliente_nombre: clienteNombre,
+                        })
+                      } catch (notifError) {
+                        console.warn('⚠️ No se pudo enviar notificación push al despachador del resto:', notifError)
+                      }
+                    }
+                  }
+                }
               }
             }
           } catch (error) {
