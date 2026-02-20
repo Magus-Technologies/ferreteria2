@@ -311,4 +311,25 @@ export const productosApiV2 = {
     }
     return apiRequest<string | null>(`/productos/validar-codigo?${queryParams.toString()}`);
   },
+
+  /**
+   * Obtener productos por vencer
+   * GET /api/productos/vencimientos?almacen_id={id}&dias={id}
+   */
+  async getVencimientos(almacen_id: number, dias: number): Promise<ApiResponse<any[]>> {
+    const queryParams = new URLSearchParams({
+      almacen_id: String(almacen_id),
+      dias: String(dias)
+    });
+
+    const response = await apiRequest<{ data: any[] }>(`/productos/vencimientos?${queryParams.toString()}`);
+
+    if (response.data) {
+      return {
+        data: response.data.data,
+      };
+    }
+
+    return response as ApiResponse<any[]>;
+  },
 };
