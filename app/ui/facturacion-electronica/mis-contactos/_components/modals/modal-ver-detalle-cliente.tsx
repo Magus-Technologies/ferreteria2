@@ -1,10 +1,11 @@
 "use client";
 
-import { Descriptions, Tag } from "antd";
-import { Cliente, TipoCliente } from "~/lib/api/cliente";
+import { Descriptions, Tag, Spin } from "antd";
+import { Cliente, TipoCliente, clienteApi, type DireccionCliente } from "~/lib/api/cliente";
 import { FaUser, FaBuilding, FaPhone, FaEnvelope, FaMapMarkerAlt, FaCalendarAlt, FaIdCard } from "react-icons/fa";
 import ModalForm from "~/components/modals/modal-form";
 import TitleForm from "~/components/form/title-form";
+import { useQuery } from "@tanstack/react-query";
 
 interface ModalVerDetalleClienteProps {
   open: boolean;
@@ -17,6 +18,13 @@ export default function ModalVerDetalleCliente({
   setOpen,
   cliente,
 }: ModalVerDetalleClienteProps) {
+  // Cargar direcciones del cliente cuando se abre el modal
+  const { data: direccionesData, isLoading: cargandoDirecciones } = useQuery({
+    queryKey: ['direcciones-cliente', cliente?.id],
+    queryFn: () => clienteApi.listarDirecciones(cliente!.id),
+    enabled: open && !!cliente?.id,
+  });
+
   if (!cliente) return null;
 
   const esPersona = cliente.tipo_cliente === TipoCliente.PERSONA;
@@ -102,23 +110,30 @@ export default function ModalVerDetalleCliente({
   }
 
   // Direcciones
-  const direcciones = [
-    cliente.direccion,
-    cliente.direccion_2,
-    cliente.direccion_3,
-    cliente.direccion_4,
-  ].filter(Boolean);
+  const direcciones: DireccionCliente[] = direccionesData?.data?.data || [];
 
   if (direcciones.length > 0) {
     items.push({
       key: "direcciones",
       label: "Direcciones",
-      children: (
+      children: cargandoDirecciones ? (
+        <Spin size="small" />
+      ) : (
         <div className="space-y-2">
-          {direcciones.map((direccion, index) => (
-            <div key={index} className="flex items-start gap-2">
+          {direcciones.map((dir) => (
+            <div key={dir.id} className="flex items-start gap-2">
               <FaMapMarkerAlt className="text-red-600 mt-1 flex-shrink-0" />
-              <span>{direccion}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Tag color={dir.es_principal ? "blue" : "default"} className="!m-0">
+                    {dir.tipo}
+                  </Tag>
+                  {dir.es_principal && (
+                    <Tag color="green" className="!m-0">Principal</Tag>
+                  )}
+                </div>
+                <span className="block mt-1">{dir.direccion}</span>
+              </div>
             </div>
           ))}
         </div>

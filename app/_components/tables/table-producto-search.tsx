@@ -23,6 +23,7 @@ export default function TableProductoSearch({
   ref,
   selectionColor: selectionColorProp, // Recibir el color como prop
   isVisible, // Prop para saber si el modal está visible
+  quickFilterValue, // Filtro local por coincidencia (sobre resultados ya cargados)
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -34,6 +35,7 @@ export default function TableProductoSearch({
   ref?: RefObject<RefTableProductoSearchProps | null>;
   selectionColor?: string; // Agregar el prop
   isVisible?: boolean; // Prop para saber si el modal está visible
+  quickFilterValue?: string; // Filtro local por coincidencia
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const tableGridRef = useRef<any>(null);
@@ -102,6 +104,13 @@ export default function TableProductoSearch({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, tipoBusqueda]);
 
+  // Aplicar quickFilter local cuando cambia el texto
+  useEffect(() => {
+    if (tableGridRef.current?.api) {
+      tableGridRef.current.api.setGridOption('quickFilterText', quickFilterValue || '');
+    }
+  }, [quickFilterValue]);
+
   // Seleccionar automáticamente el primer producto cuando cambian los datos
   useEffect(() => {
     if (productosFiltrados && productosFiltrados.length > 0 && tableGridRef.current) {
@@ -137,6 +146,8 @@ export default function TableProductoSearch({
     <TableWithTitle<Producto>
       tableRef={tableGridRef}
       id="g-c-e-i.table-producto-search"
+      cacheQuickFilter={true}
+      quickFilterText={quickFilterValue}
       onSelectionChanged={({ selectedNodes }) => {
         const producto = selectedNodes?.[0]?.data as Producto;
         setProductoSeleccionadoSearchStore(producto as any);

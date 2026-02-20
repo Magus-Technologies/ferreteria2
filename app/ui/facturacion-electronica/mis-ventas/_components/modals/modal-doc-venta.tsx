@@ -266,19 +266,17 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
   let direccionFinal = clienteData.direccion || ''
   
   if (venta.cliente && venta.direccion_seleccionada) {
-    switch (venta.direccion_seleccionada) {
-      case 'D1':
-        direccionFinal = venta.cliente.direccion || ''
-        break
-      case 'D2':
-        direccionFinal = venta.cliente.direccion_2 || ''
-        break
-      case 'D3':
-        direccionFinal = venta.cliente.direccion_3 || ''
-        break
-      case 'D4':
-        direccionFinal = venta.cliente.direccion_4 || ''
-        break
+    const clienteConDirecciones = venta.cliente as any;
+    if (clienteConDirecciones.direcciones && Array.isArray(clienteConDirecciones.direcciones)) {
+      const direcciones = clienteConDirecciones.direcciones;
+      const direccionSeleccionada = direcciones.find((d: any) => d.tipo === venta.direccion_seleccionada);
+      direccionFinal = direccionSeleccionada?.direccion || '';
+      
+      // Fallback: si no se encuentra, usar la principal o la primera
+      if (!direccionFinal) {
+        const principal = direcciones.find((d: any) => d.es_principal);
+        direccionFinal = principal?.direccion || direcciones[0]?.direccion || '';
+      }
     }
   }
 

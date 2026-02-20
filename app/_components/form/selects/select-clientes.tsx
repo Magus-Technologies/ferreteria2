@@ -138,32 +138,68 @@ export default function SelectClientes({
           form.setFieldValue('telefono', cliente.telefono)
         }
 
-        // Guardar las 3 direcciones en el formulario (campos ocultos para referencia)
-        form.setFieldValue('_cliente_direccion_1', cliente.direccion || '')
-        form.setFieldValue('_cliente_direccion_2', cliente.direccion_2 || '')
-        form.setFieldValue('_cliente_direccion_3', cliente.direccion_3 || '')
-        form.setFieldValue('_cliente_direccion_4', cliente.direccion_4 || '')
-
-        // Llenar campo de dirección según el checkbox seleccionado (por defecto D1)
-        const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1'
-
-        if (direccionSeleccionada === 'D1' && cliente.direccion) {
-          form.setFieldValue('direccion', cliente.direccion)
-        } else if (direccionSeleccionada === 'D2' && cliente.direccion_2) {
-          form.setFieldValue('direccion', cliente.direccion_2)
-        } else if (direccionSeleccionada === 'D3' && cliente.direccion_3) {
-          form.setFieldValue('direccion', cliente.direccion_3)
-        } else if (direccionSeleccionada === 'D4' && cliente.direccion_4) {
-          form.setFieldValue('direccion', cliente.direccion_4)
-        } else if (cliente.direccion) {
-          // Fallback a dirección 1 si la seleccionada no existe
-          form.setFieldValue('direccion', cliente.direccion)
-        }
+        // Cargar direcciones desde la tabla direcciones_cliente
+        cargarDireccionesCliente(cliente.id)
       }
 
       setClienteSeleccionadoStore(undefined)
       setOpenModalClienteSearch(false)
       onChange?.(cliente.id, cliente)
+    }
+  }
+
+  // Función para cargar direcciones desde la API
+  const cargarDireccionesCliente = async (clienteId: number) => {
+    if (!form) return
+
+    try {
+      const { clienteApi } = await import('~/lib/api/cliente')
+      const response = await clienteApi.listarDirecciones(clienteId)
+      
+      if (response.data?.data) {
+        const direcciones = response.data.data
+
+        // Limpiar direcciones previas
+        form.setFieldValue('_cliente_direccion_1', '')
+        form.setFieldValue('_cliente_direccion_2', '')
+        form.setFieldValue('_cliente_direccion_3', '')
+        form.setFieldValue('_cliente_direccion_4', '')
+
+        // Mapear direcciones por tipo
+        direcciones.forEach((dir) => {
+          switch (dir.tipo) {
+            case 'D1':
+              form.setFieldValue('_cliente_direccion_1', dir.direccion)
+              break
+            case 'D2':
+              form.setFieldValue('_cliente_direccion_2', dir.direccion)
+              break
+            case 'D3':
+              form.setFieldValue('_cliente_direccion_3', dir.direccion)
+              break
+            case 'D4':
+              form.setFieldValue('_cliente_direccion_4', dir.direccion)
+              break
+          }
+        })
+
+        // Llenar campo de dirección según el checkbox seleccionado (por defecto D1)
+        const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1'
+        const direccionKey = `_cliente_direccion_${direccionSeleccionada.replace('D', '')}`
+        const direccionActual = form.getFieldValue(direccionKey)
+
+        if (direccionActual) {
+          form.setFieldValue('direccion', direccionActual)
+        } else {
+          // Fallback a dirección 1 si la seleccionada no existe
+          const direccion1 = form.getFieldValue('_cliente_direccion_1')
+          if (direccion1) {
+            form.setFieldValue('direccion', direccion1)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando direcciones del cliente:', error)
     }
   }
 

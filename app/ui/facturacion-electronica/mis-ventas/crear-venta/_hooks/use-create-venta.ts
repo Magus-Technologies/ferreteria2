@@ -575,37 +575,14 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
         }
       }
 
-      // Actualizar caché de productos para bloquear botón eliminar
-      // Obtener IDs de productos vendidos desde la respuesta del servidor
-      const productosVendidos = ventaCreada?.productos_por_almacen || []
-      const productosVendidosIds = productosVendidos.map((p: any) => p.producto_almacen?.producto_id).filter(Boolean)
-      const uniqueProductoIds = [...new Set(productosVendidosIds)]
-
-      if (uniqueProductoIds.length > 0) {
-        queryClient.setQueriesData(
-          {
-            predicate: (query) =>
-              query.queryKey[0] === 'productos-by-almacen' ||
-              query.queryKey[0] === 'productos-search',
-          },
-          (oldData: any) => {
-            if (!oldData?.data || !Array.isArray(oldData.data)) return oldData
-
-            return {
-              ...oldData,
-              data: oldData.data.map((producto: any) => {
-                if (uniqueProductoIds.includes(producto.id)) {
-                  return {
-                    ...producto,
-                    tiene_ingresos: true, // Bloquear botón eliminar inmediatamente
-                  }
-                }
-                return producto
-              }),
-            }
-          }
-        )
-      }
+      // ✅ Invalidar caché de productos para que se recarguen con tiene_ingresos actualizado
+      // Esto forzará una recarga automática de la tabla de productos en mi-almacen
+      queryClient.invalidateQueries({ 
+        queryKey: ['productos-by-almacen', almacen_id] 
+      })
+      queryClient.invalidateQueries({ 
+        queryKey: ['productos-search'] 
+      })
     } catch (error) {
       console.error('Error al crear venta:', error)
       notification.error({

@@ -252,14 +252,21 @@ export default function FormCrearVenta({
                   // Actualizar email
                   form.setFieldValue("email", cliente.email || "");
                   
-                  // Actualizar las 4 direcciones del cliente en campos ocultos
-                  form.setFieldValue("_cliente_direccion_1", cliente.direccion || "");
-                  form.setFieldValue("_cliente_direccion_2", cliente.direccion_2 || "");
-                  form.setFieldValue("_cliente_direccion_3", cliente.direccion_3 || "");
-                  form.setFieldValue("_cliente_direccion_4", cliente.direccion_4 || "");
+                  // Actualizar las 4 direcciones del cliente en campos ocultos (desde el nuevo sistema)
+                  const direcciones = cliente.direcciones || [];
+                  const d1 = direcciones.find(d => d.tipo === 'D1')?.direccion || '';
+                  const d2 = direcciones.find(d => d.tipo === 'D2')?.direccion || '';
+                  const d3 = direcciones.find(d => d.tipo === 'D3')?.direccion || '';
+                  const d4 = direcciones.find(d => d.tipo === 'D4')?.direccion || '';
+                  
+                  form.setFieldValue("_cliente_direccion_1", d1);
+                  form.setFieldValue("_cliente_direccion_2", d2);
+                  form.setFieldValue("_cliente_direccion_3", d3);
+                  form.setFieldValue("_cliente_direccion_4", d4);
                   
                   // Actualizar direccion_entrega con la dirección principal
-                  form.setFieldValue("direccion_entrega", cliente.direccion || "");
+                  const direccionPrincipal = direcciones.find(d => d.es_principal);
+                  form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");

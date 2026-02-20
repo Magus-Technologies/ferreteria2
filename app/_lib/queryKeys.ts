@@ -70,4 +70,6 @@ export enum QueryKeys {
   CLIENTES_LISTADO = 'clientes_listado',
   CLIENTES_FRECUENTES = 'clientes_frecuentes',
   CLIENTES_RECIENTES = 'clientes_recientes',
+  DIRECCIONES_CLIENTE = 'direcciones_cliente',
+  DIRECCION_CLIENTE = 'direccion_cliente',
 }

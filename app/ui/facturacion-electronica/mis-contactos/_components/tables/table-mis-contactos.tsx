@@ -111,11 +111,16 @@ export default function TableMisContactos() {
       },
     },
     {
-      headerName: "Dirección",
-      field: "direccion",
+      headerName: "Dirección Principal",
+      field: "direcciones",
       flex: 1,
       minWidth: 150,
-      valueGetter: (params) => params.data?.direccion || "-",
+      valueGetter: (params) => {
+        const direcciones = params.data?.direcciones;
+        if (!direcciones || direcciones.length === 0) return "-";
+        const principal = direcciones.find(d => d.es_principal);
+        return principal?.direccion || direcciones[0]?.direccion || "-";
+      },
     },
     {
       headerName: "Teléfono",
