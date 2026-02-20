@@ -2,10 +2,8 @@
 
 import { useMemo } from 'react'
 import { FaMoneyBillWave, FaCalendarDay, FaListAlt, FaChartLine } from 'react-icons/fa'
-import CardDashboard from '~/app/_components/cards/card-dashboard'
 import { useStoreFiltrosMisGastos } from '../../_store/store-filtros-mis-gastos'
 import { useGetResumenGastos } from '../../_hooks/use-get-gastos'
-import dayjs from 'dayjs'
 
 export default function CardsInfoMisGastos() {
   const filtros = useStoreFiltrosMisGastos(state => state.filtros)
@@ -33,12 +31,10 @@ export default function CardsInfoMisGastos() {
   const resumen = resumenResponse?.data
 
   // Default values while loading or no data
-  const {
-    totalGastos = 0,
-    gastosHoy = 0,
-    totalTransacciones = 0,
-    promedioGasto = 0
-  } = resumen || {}
+  const totalGastos = resumen?.total_gastos ?? 0
+  const gastosHoy = resumen?.gastos_hoy ?? 0
+  const totalTransacciones = resumen?.total_transacciones ?? 0
+  const promedioGasto = resumen?.promedio_gasto ?? 0
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null

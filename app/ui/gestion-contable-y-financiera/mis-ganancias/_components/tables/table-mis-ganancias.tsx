@@ -122,6 +122,7 @@ export default function TableMisGanancias() {
       rowData={rowData}
       className='h-full w-full'
       headerColor='var(--color-rose-600)'
+      selectionColor="#fee2e2"
       noRowsOverlayComponent={() => (
         <div className="flex flex-col items-center justify-center py-8">
           <p className="text-gray-500 mb-2">No hay datos de ganancias</p>

@@ -71,10 +71,11 @@ const TableMisGastos = memo(function TableMisGastos() {
       headerName: 'MONTO',
       field: 'monto',
       width: 100,
-      cellRenderer: (params: any) => {
+      valueFormatter: (params) => {
         const monto = Number(params.value || 0)
-        return `<span class="font-semibold text-rose-600">S/. ${monto.toFixed(2)}</span>`
+        return `S/. ${monto.toFixed(2)}`
       },
+      cellClass: 'font-semibold text-rose-600',
       type: 'numericColumn',
     },
     {
@@ -143,7 +144,7 @@ const TableMisGastos = memo(function TableMisGastos() {
         rowData={gastosData}
         getRowId={getRowId}
         headerColor='var(--color-rose-600)'
-        selectionColor='#fef2f2'
+        selectionColor='#fee2e2'
         pagination={false}
         suppressRowClickSelection={false}
         rowSelection={true}
