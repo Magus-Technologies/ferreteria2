@@ -9,7 +9,6 @@ import NoAutorizado from '~/components/others/no-autorizado'
 import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import TableMetodosPagoUnificado from './_components/table-metodos-pago-unificado'
-import ResumenDetalleBanco from './_components/resumen-detalle-banco'
 import type { MetodoDePago } from '~/lib/api/metodo-de-pago'
 
 const ComponentLoading = () => (
@@ -24,10 +23,10 @@ export default function MetodosPagoPage() {
 
   if (!canAccess) return <NoAutorizado />
 
-  // Si hay un banco seleccionado, mostrar vista detallada
+  /* Si hay un banco seleccionado, mostrar vista detallada
   if (selectedBanco) {
     return <ResumenDetalleBanco banco={selectedBanco} onClose={() => setSelectedBanco(null)} />
-  }
+  }*/
 
   // Vista principal de métodos de pago
   return (

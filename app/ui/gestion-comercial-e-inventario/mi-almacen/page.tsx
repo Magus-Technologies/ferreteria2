@@ -30,6 +30,10 @@ const ButtonCreateIngresoSalida = lazy(
   () => import("./_components/buttons/button-create-ingreso-salida")
 );
 const CardsInfo = lazy(() => import("./_components/others/cards-info"));
+const ButtonProductosVencidos = lazy(
+  () => import("./_components/buttons/button-productos-vencidos")
+);
+
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -51,8 +55,8 @@ export default function MiAlmacen() {
   return (
     <ContenedorGeneral>
       <Suspense fallback={<ComponentLoading />}>
-      {/*<FiltersMiAlmacen marca_predeterminada={user?.empresa?.marca_id} /> */}
-        <FiltersMiAlmacen /> 
+        {/*<FiltersMiAlmacen marca_predeterminada={user?.empresa?.marca_id} /> */}
+        <FiltersMiAlmacen />
       </Suspense>
       {/* Layout responsivo */}
       <div className="w-full mt-4">
@@ -80,6 +84,11 @@ export default function MiAlmacen() {
                 </div>
               </Suspense>
             )}
+            <Suspense fallback={<Spin />}>
+              <div className="flex-shrink-0 min-w-[150px]">
+                <ButtonProductosVencidos />
+              </div>
+            </Suspense>
           </div>
         </div>
 
@@ -137,6 +146,9 @@ export default function MiAlmacen() {
                 <ButtonCreateIngresoSalida tipo={TipoDocumento.Salida} />
               </Suspense>
             )}
+            <Suspense fallback={<Spin />}>
+              <ButtonProductosVencidos />
+            </Suspense>
             <Suspense fallback={<Spin />}>
               <CardsInfo />
             </Suspense>
