@@ -47,6 +47,7 @@ export default function SelectClientes({
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
   const [lastSelectedDocument, setLastSelectedDocument] = useState('')
+  const clienteSeleccionadoRef = useRef(false)
 
   // Aplicar autoFocus cuando el componente se monta
   useEffect(() => {
@@ -80,35 +81,39 @@ export default function SelectClientes({
     }
   }, [text, onSearchChange])
 
-  // Detectar cuando el usuario modifica el texto y limpiar campos relacionados
+  // Detectar cuando el usuario modifica manualmente el texto y limpiar campos relacionados
   useEffect(() => {
-    if (showOnlyDocument && lastSelectedDocument && text !== lastSelectedDocument) {
-      // El usuario modificó el DNI/RUC, limpiar campos relacionados
-      if (form) {
-        form.setFieldValue('cliente_nombre', '')
-        form.setFieldValue('direccion', '')
-        form.setFieldValue('telefono', '')
-        form.setFieldValue('email', '')
-        form.setFieldValue('_cliente_direccion_1', '')
-        form.setFieldValue('_cliente_direccion_2', '')
-        form.setFieldValue('_cliente_direccion_3', '')
-        form.setFieldValue('_cliente_direccion_4', '')
-      }
-      setClienteSeleccionado(undefined)
-      // Limpiar el cliente_id si el texto no coincide
-      if (text !== lastSelectedDocument) {
-        iterarChangeValue({
-          refObject: selectClientesRef,
-          value: undefined,
-        })
-      }
+    // Solo limpiar si: hay un documento previo seleccionado, el usuario está escribiendo algo diferente,
+    // y realmente hay un cliente seleccionado que limpiar
+    if (!showOnlyDocument || !lastSelectedDocument || !clienteSeleccionadoRef.current) return
+    // No limpiar si text está vacío (blur del Select) o es igual al documento seleccionado
+    if (!text || text === lastSelectedDocument) return
+
+    // El usuario está escribiendo algo diferente → limpiar campos
+    clienteSeleccionadoRef.current = false
+    if (form) {
+      form.setFieldValue('cliente_nombre', '')
+      form.setFieldValue('direccion', '')
+      form.setFieldValue('telefono', '')
+      form.setFieldValue('email', '')
+      form.setFieldValue('_cliente_direccion_1', '')
+      form.setFieldValue('_cliente_direccion_2', '')
+      form.setFieldValue('_cliente_direccion_3', '')
+      form.setFieldValue('_cliente_direccion_4', '')
     }
+    setClienteSeleccionado(undefined)
+    iterarChangeValue({
+      refObject: selectClientesRef,
+      value: undefined,
+    })
   }, [text, lastSelectedDocument, showOnlyDocument, form])
 
   function handleSelect({ data }: { data?: Cliente } = {}) {
     const cliente = data || clienteSeleccionadoStore
-    // console.log('handleselect - cliente', cliente)
     if (cliente) {
+      // Marcar que hay un cliente seleccionado
+      clienteSeleccionadoRef.current = true
+
       setClienteSeleccionado(cliente)
 
       // Mostrar solo el documento o el formato completo según la prop
@@ -118,7 +123,7 @@ export default function SelectClientes({
         ? `${cliente.numero_documento} : ${cliente.razon_social}`
         : `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
       setText(clienteLabel)
-      
+
       // Guardar el documento seleccionado para detectar cambios
       if (showOnlyDocument && cliente.numero_documento) {
         setLastSelectedDocument(cliente.numero_documento)
@@ -208,13 +213,21 @@ export default function SelectClientes({
   const { response, loading } = useSearchClientes({ value })
 
   useEffect(() => {
-    // Autoseleccionar si hay exactamente 1 resultado
-    if (response && response.length === 1) {
+    if (!response || response.length === 0) return
+    const textoLimpio = text.trim()
+    if (!textoLimpio) return
+
+    // Buscar coincidencia exacta del documento entre todos los resultados
+    const exactMatch = response.find(c => c.numero_documento === textoLimpio)
+    if (exactMatch) {
+      handleSelect({ data: exactMatch })
+      return
+    }
+
+    // Si hay exactamente 1 resultado y el texto es suficientemente largo, autoseleccionar
+    if (response.length === 1) {
       const cliente = response[0]
-      // Autoseleccionar si el texto coincide con el documento (exacto o parcial al final)
-      const textoLimpio = text.trim()
-      if (cliente.numero_documento === textoLimpio || 
-          (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio))) {
+      if (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio)) {
         handleSelect({ data: cliente })
       }
     }
@@ -223,6 +236,13 @@ export default function SelectClientes({
   }, [response])
 
   const getLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
+      if (showOnlyDocument) return cliente.numero_documento || ''
+      if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
+      return `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+  }
+
+  // Label completo para el dropdown (siempre mostrar nombre para identificar)
+  const getDropdownLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
       if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
       return `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
   }
@@ -235,19 +255,28 @@ export default function SelectClientes({
         showSearch
         uppercase={true}
         filterOption={false}
-        onSearch={setText}
+        onSearch={(val) => {
+          // Evitar que el blur del Select resetee el texto a vacío cuando ya hay un cliente seleccionado
+          if (val === '' && clienteSeleccionadoRef.current) return
+          setText(val)
+        }}
         searchValue={text}
         prefix={<FaUser className={classNameIcon} size={sizeIcon} />}
         variant={variant}
         placeholder={placeholder}
         loading={loading}
         autoFocus={autoFocus}
+        optionRender={showOnlyDocument ? (option) => {
+          // En el dropdown siempre mostrar el label completo con nombre
+          return <span>{(option.data as any).fullLabel || option.label}</span>
+        } : undefined}
         options={[
           ...(clienteCreado
             ? [
                 {
                   value: clienteCreado.id,
                   label: getLabel(clienteCreado),
+                  fullLabel: getDropdownLabel(clienteCreado),
                 },
               ]
             : []),
@@ -256,17 +285,20 @@ export default function SelectClientes({
                 {
                   value: clienteSeleccionado.id,
                   label: getLabel(clienteSeleccionado),
+                  fullLabel: getDropdownLabel(clienteSeleccionado),
                 },
               ]
             : []),
           ...clienteOptionsDefault.map(cliente => ({
             value: cliente.id,
             label: getLabel(cliente),
+            fullLabel: getDropdownLabel(cliente),
           })),
           // Agregar resultados de búsqueda si están disponibles
           ...(response || []).map(cliente => ({
             value: cliente.id,
             label: getLabel(cliente),
+            fullLabel: getDropdownLabel(cliente),
           })),
         ].filter(
           (item, index, self) =>

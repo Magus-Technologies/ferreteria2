@@ -33,6 +33,7 @@ interface ModalDetallesEntregaProps {
   open: boolean
   setOpen: (open: boolean) => void
   form: FormInstance
+  ventaId?: string
   tipoDespacho: 'EnTienda' | 'Domicilio' | 'Parcial'
   onConfirmar: () => void
   onEditarCliente: () => void
@@ -45,6 +46,7 @@ export default function ModalDetallesEntrega({
   open,
   setOpen,
   form,
+  ventaId,
   tipoDespacho,
   onConfirmar,
   onEditarCliente,
@@ -58,14 +60,17 @@ export default function ModalDetallesEntrega({
   const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<TipoDireccion | null>(null)
   // Estado para programar el resto del parcial
-  const [programarResto, setProgramarResto] = useState(false)
+  const [programarResto, setProgramarResto] = useState(true)
   const [horaInicioResto, setHoraInicioResto] = useState<string | undefined>(undefined)
   const [horaFinResto, setHoraFinResto] = useState<string | undefined>(undefined)
   const [direccionResto, setDireccionResto] = useState<string>('')
   const [observacionesResto, setObservacionesResto] = useState<string>('')
+  const [mostrarMapaResto, setMostrarMapaResto] = useState(false)
+  const [coordenadasResto, setCoordenadasResto] = useState<Coordenadas | null>(null)
+  const [direccionSeleccionadaResto, setDireccionSeleccionadaResto] = useState<TipoDireccion | null>(null)
 
-  // Hook para crear venta
-  const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta()
+  // Hook para crear/actualizar venta
+  const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
 
   // Cargar direcciones del cliente
   const { data: direccionesData, isLoading: cargandoDirecciones } = useQuery({
@@ -77,7 +82,7 @@ export default function ModalDetallesEntrega({
       console.log('📍 Direcciones cargadas:', response.data)
       return response
     },
-    enabled: open && !!clienteId && tipoDespacho === 'Domicilio',
+    enabled: open && !!clienteId && (tipoDespacho === 'Domicilio' || tipoDespacho === 'Parcial'),
   })
 
   const direcciones = direccionesData?.data?.data || []
@@ -204,6 +209,32 @@ export default function ModalDetallesEntrega({
     }
   }, [direcciones, form])
 
+  // Callback para cambio de dirección en sección "resto" del parcial
+  const handleDireccionChangeResto = useCallback((tipo: TipoDireccion) => {
+    setDireccionSeleccionadaResto(tipo)
+    const direccionObj = direcciones.find(d => d.tipo === tipo)
+
+    if (direccionObj) {
+      setDireccionResto(direccionObj.direccion)
+
+      if (direccionObj.latitud && direccionObj.longitud) {
+        const coords = {
+          lat: Number(direccionObj.latitud),
+          lng: Number(direccionObj.longitud)
+        }
+        setCoordenadasResto(coords)
+        setMostrarMapaResto(true)
+      } else {
+        setCoordenadasResto(null)
+      }
+    }
+  }, [direcciones])
+
+  // Callback para coordenadas del mapa del resto
+  const handleCoordenadaChangeResto = useCallback((nuevasCoordenadas: Coordenadas) => {
+    setCoordenadasResto(nuevasCoordenadas)
+  }, [])
+
   // Setear tipo_despacho en el formulario cuando se abre el modal
   useEffect(() => {
     if (open) {
@@ -283,7 +314,7 @@ export default function ModalDetallesEntrega({
       }
       open={open}
       onCancel={() => setOpen(false)}
-      width={tipoDespacho === 'Parcial' ? 900 : 800}
+      width={tipoDespacho === 'Parcial' ? 950 : 800}
       centered
       footer={
         <div className="flex justify-end gap-2">
@@ -615,7 +646,7 @@ export default function ModalDetallesEntrega({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Despachador: <span className="text-red-500">*</span>
+                        Designar Despachador: <span className="text-red-500">*</span>
                       </label>
                       <SelectDespachadores
                         form={form}
@@ -689,30 +720,125 @@ export default function ModalDetallesEntrega({
                     </div>
                   </div>
 
-                  {/* Dirección */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección de entrega:
-                    </label>
-                    <Input.TextArea
-                      value={direccionResto}
-                      onChange={(e) => setDireccionResto(e.target.value)}
-                      placeholder="Dirección de entrega del resto"
-                      rows={2}
-                    />
-                  </div>
+                  {/* Selector de dirección del cliente */}
+                  <div className="space-y-3">
+                    {direcciones.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Seleccionar dirección del cliente:
+                        </label>
+                        <Select
+                          placeholder="Seleccionar dirección"
+                          value={direccionSeleccionadaResto}
+                          onChange={handleDireccionChangeResto}
+                          className="w-full"
+                          options={direcciones.map(d => ({
+                            value: d.tipo,
+                            label: (
+                              <div className="flex items-center justify-between">
+                                <span>{d.direccion}</span>
+                                <div className="flex items-center gap-2">
+                                  {d.es_principal && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                      Principal
+                                    </span>
+                                  )}
+                                  {d.latitud && d.longitud && (
+                                    <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                                      📍 GPS
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ),
+                          }))}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {direccionSeleccionadaResto && direcciones.find(d => d.tipo === direccionSeleccionadaResto)?.latitud
+                            ? '✓ Coordenadas GPS cargadas automáticamente'
+                            : 'Selecciona una dirección o ingresa una nueva abajo'}
+                        </p>
+                      </div>
+                    )}
 
-                  {/* Observaciones */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Observaciones:
-                    </label>
-                    <Input.TextArea
-                      value={observacionesResto}
-                      onChange={(e) => setObservacionesResto(e.target.value)}
-                      placeholder="Observaciones (opcional)"
-                      rows={2}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Columna izquierda: Dirección y botones */}
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dirección de entrega: <span className="text-red-500">*</span>
+                          </label>
+                          <Input.TextArea
+                            value={direccionResto}
+                            onChange={(e) => setDireccionResto(e.target.value)}
+                            placeholder="Dirección de entrega del resto"
+                            rows={3}
+                          />
+                        </div>
+
+                        <div className="flex gap-2">
+                          <ButtonBase
+                            color="info"
+                            size="sm"
+                            type="button"
+                            className="flex items-center gap-2 text-sm flex-1"
+                            onClick={() => setMostrarMapaResto(!mostrarMapaResto)}
+                          >
+                            <FaMapMarkedAlt size={14} />
+                            {mostrarMapaResto ? 'Ocultar' : 'Ver'} Mapa
+                          </ButtonBase>
+
+                          <ButtonBase
+                            color="warning"
+                            size="sm"
+                            type="button"
+                            className="flex items-center gap-2 text-sm flex-1"
+                            onClick={onEditarCliente}
+                          >
+                            <FaUserEdit size={14} />
+                            Editar Cliente
+                          </ButtonBase>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Observaciones:
+                          </label>
+                          <Input.TextArea
+                            value={observacionesResto}
+                            onChange={(e) => setObservacionesResto(e.target.value)}
+                            placeholder="Observaciones (opcional)"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Columna derecha: Mapa */}
+                      <div>
+                        {mostrarMapaResto ? (
+                          <div className="h-full min-h-[300px]">
+                            <MapaDireccionMapbox
+                              key={`resto-${direccionSeleccionadaResto}-${coordenadasResto?.lat}-${coordenadasResto?.lng}`}
+                              direccion={direccionResto || ''}
+                              clienteNombre={clienteNombre}
+                              onCoordenadaChange={handleCoordenadaChangeResto}
+                              coordenadasIniciales={coordenadasResto}
+                              editable={true}
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
+                            <FaMapMarkedAlt size={32} className="text-gray-300" />
+                            <span>{direccionResto ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
+                            {coordenadasResto && (
+                              <span className="text-xs text-green-600 font-mono">
+                                Ubicación guardada: {coordenadasResto.lat.toFixed(4)}, {coordenadasResto.lng.toFixed(4)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

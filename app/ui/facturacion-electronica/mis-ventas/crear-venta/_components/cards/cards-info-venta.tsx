@@ -16,7 +16,7 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
 
-export default function CardsInfoVenta({ form }: { form: FormInstance }) {
+export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; ventaId?: string }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
   const tipo_documento = Form.useWatch("tipo_documento", form);
@@ -225,7 +225,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
             >
               <MdSell className="min-w-fit" size={30} />
-              Crear Venta a Crédito
+              {ventaId ? 'Editar Venta a Crédito' : 'Crear Venta a Crédito'}
             </ButtonBase>
           </ConfigurableElement>
         )}
@@ -262,6 +262,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
         open={modalDetallesEntregaOpen}
         setOpen={setModalDetallesEntregaOpen}
         form={form}
+        ventaId={ventaId}
         tipoDespacho={tipo_despacho || "EnTienda"}
         onConfirmar={() => {
           // El tipo de despacho ya está guardado en el formulario

@@ -87,6 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
+      // Limpiar keys de birthday alert para que se muestre al volver a iniciar sesión
+      Object.keys(sessionStorage)
+        .filter(key => key.startsWith('birthday_alert_shown_'))
+        .forEach(key => sessionStorage.removeItem(key));
       setUser(null);
       removeAuthToken();
     }

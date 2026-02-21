@@ -128,7 +128,7 @@ function FormVentaInternal({
         <FormCrearVenta form={form} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} />
+        <CardsInfoVenta form={form} ventaId={venta?.id} />
       </div>
     </FormBase>
   )
