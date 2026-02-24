@@ -12,8 +12,8 @@ import { useColumnsAperturas } from "./columns-aperturas";
 import { useServerQuery } from "~/hooks/use-server-query";
 import dayjs, { Dayjs } from "dayjs";
 import ModalTicketApertura from "../../_components/modals/modal-ticket-apertura";
-import ModalVendedoresApertura from "./modal-vendedores-apertura";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
+import { cajaPrincipalApi, type CajaPrincipal } from "~/lib/api/caja-principal";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import { FaCalendar } from "react-icons/fa6";
 import { Select } from "antd";
@@ -33,20 +33,31 @@ export default function HistorialAperturas() {
   const gridRef = useRef<AgGridReact<AperturaYCierreCaja>>(null);
   const [selectedApertura, setSelectedApertura] = useState<AperturaYCierreCaja | null>(null);
   const [modalTicketVisible, setModalTicketVisible] = useState(false);
-  const [modalVendedoresVisible, setModalVendedoresVisible] = useState(false);
   const [selectedVendedor, setSelectedVendedor] = useState<any>(null);
-  
+
   // Filtros
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
   const [selectedEstado, setSelectedEstado] = useState<string | undefined>(undefined);
+  const [selectedCajaPrincipalId, setSelectedCajaPrincipalId] = useState<number | undefined>(undefined);
+
+  // Cajas principales para el filtro
+  const { data: cajasPrincipales = [] } = useQuery({
+    queryKey: ['cajas-principales-lista'],
+    queryFn: async () => {
+      const response = await cajaPrincipalApi.getAll();
+      return response.data?.data || [];
+    },
+  });
 
   const { data: aperturas = [], isLoading, refetch } = useQuery({
-    queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS, selectedUserId, dateRange, selectedEstado],
+    queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS, selectedUserId, dateRange, selectedEstado, selectedCajaPrincipalId],
     queryFn: async () => {
       const response = await cajaApi.historialTodas({
         page: 1,
         per_page: 1000,
+        caja_principal_id: selectedCajaPrincipalId,
+        // user_id and other filters are currently done in frontend below, but could be passed here.
       });
 
       if (response.error) {
@@ -56,33 +67,33 @@ export default function HistorialAperturas() {
 
       if (response.data) {
         let aperturasData = response.data.data || [];
-        
-        // Filtrar por usuario si está seleccionado
+
+        // Filtrar por usuario (vendedor) si está seleccionado
         if (selectedUserId) {
           aperturasData = aperturasData.filter(
-            (item) => item.user_id === selectedUserId
+            (item) => item.vendedor_id === selectedUserId || item.user_id === selectedUserId
           );
         }
-        
+
         // Filtrar por estado si está seleccionado
         if (selectedEstado) {
           aperturasData = aperturasData.filter(
             (item) => item.estado === selectedEstado
           );
         }
-        
+
         // Filtrar por rango de fechas si está seleccionado
         if (dateRange && dateRange[0] && dateRange[1]) {
           const startDate = dateRange[0].startOf('day');
           const endDate = dateRange[1].endOf('day');
-          
+
           aperturasData = aperturasData.filter((item) => {
             if (!item.fecha_apertura) return false;
             const fechaApertura = dayjs(item.fecha_apertura);
             return fechaApertura.isAfter(startDate) && fechaApertura.isBefore(endDate);
           });
         }
-        
+
         return aperturasData;
       }
 
@@ -93,38 +104,22 @@ export default function HistorialAperturas() {
   });
 
   const handleVerTicket = (apertura: AperturaYCierreCaja) => {
-    console.log('🎫 Ver ticket de apertura:', apertura);
+    console.log('🎫 Ver ticket de apertura (vendedor específico):', apertura);
     setSelectedApertura(apertura);
-    
-    // Verificar si hay múltiples vendedores
-    const tieneMultiplesVendedores = apertura.distribuciones_vendedores && 
-                                      apertura.distribuciones_vendedores.length > 1;
-    
-    if (tieneMultiplesVendedores) {
-      // Mostrar modal de vendedores primero
-      console.log('👥 Apertura con múltiples vendedores, mostrando modal de selección');
-      setModalVendedoresVisible(true);
-    } else {
-      // Mostrar ticket directamente
-      console.log('👤 Apertura con un solo vendedor o sin distribución, mostrando ticket directo');
-      setModalTicketVisible(true);
-    }
-  };
 
-  const handleVerTicketVendedor = (vendedor: any) => {
-    console.log('🎫 Ver ticket de vendedor específico:', vendedor);
-    setSelectedVendedor(vendedor);
-    setModalVendedoresVisible(false);
+    // Si la fila tiene un vendedor específico, lo pre-seleccionamos para el ticket
+    if (apertura.vendedor) {
+      setSelectedVendedor(apertura.vendedor);
+    } else {
+      setSelectedVendedor(null);
+    }
+
     setModalTicketVisible(true);
   };
 
   const handleCloseTicketModal = () => {
     setModalTicketVisible(false);
     setSelectedVendedor(null);
-  };
-
-  const handleCloseVendedoresModal = () => {
-    setModalVendedoresVisible(false);
     setSelectedApertura(null);
   };
 
@@ -132,7 +127,7 @@ export default function HistorialAperturas() {
     console.log('🔍 Aplicando filtros:', values);
     setSelectedUserId(values.user_id);
     setSelectedEstado(values.estado);
-    
+
     if (values.desde && values.hasta) {
       setDateRange([values.desde, values.hasta]);
     } else {
@@ -145,6 +140,7 @@ export default function HistorialAperturas() {
     setSelectedUserId(undefined);
     setDateRange(null);
     setSelectedEstado(undefined);
+    setSelectedCajaPrincipalId(undefined);
   };
 
   const columns = useColumnsAperturas({
@@ -197,21 +193,22 @@ export default function HistorialAperturas() {
               </div>
               <div className="col-span-2 flex items-center gap-2">
                 <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-                  Estado:
+                  Caja:
                 </label>
-                <Form.Item name="estado" noStyle>
-                  <Select
-                    placeholder="Todos"
-                    className="w-full"
-                    allowClear
-                    onChange={(value) => setSelectedEstado(value)}
-                    options={[
-                      { value: 'abierta', label: 'Abierta' },
-                      { value: 'cerrada', label: 'Cerrada' },
-                    ]}
-                  />
-                </Form.Item>
+                <Select
+                  className="w-full"
+                  placeholder="Todas las cajas"
+                  allowClear
+                  value={selectedCajaPrincipalId}
+                  onChange={(value) => setSelectedCajaPrincipalId(value)}
+                  options={cajasPrincipales.map((c: CajaPrincipal) => ({
+                    label: c.nombre,
+                    value: c.id,
+                  }))}
+                  size="middle"
+                />
               </div>
+              {/* Ocultamos el filtro de Estado para ahorrar espacio, o podemos dejarlo si reducimos botones al igual que en cierres */}
               <div className="col-span-2 flex items-center gap-2">
                 <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
                   Desde:
@@ -283,13 +280,6 @@ export default function HistorialAperturas() {
                 >
                   Limpiar
                 </ButtonBase>
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => refetch()}
-                  className="w-full"
-                >
-                  Actualizar
-                </Button>
               </div>
             </div>
           </div>
@@ -312,16 +302,6 @@ export default function HistorialAperturas() {
           />
         </div>
       </div>
-
-      {/* Modal para seleccionar vendedor (cuando hay múltiples) */}
-      {selectedApertura && (
-        <ModalVendedoresApertura
-          open={modalVendedoresVisible}
-          onClose={handleCloseVendedoresModal}
-          apertura={selectedApertura}
-          onVerTicketVendedor={handleVerTicketVendedor}
-        />
-      )}
 
       {/* Modal para ver ticket de apertura */}
       {selectedApertura && (

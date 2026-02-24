@@ -1,25 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
-import { getIngresos, getResumenIngresos, type FiltrosIngresos } from '~/lib/api/ingresos'
+import { getIngresosExtras, getResumenIngresosExtras } from '~/lib/api/ingreso-extra'
 
 export const useGetIngresos = (
-  filtros: FiltrosIngresos & { per_page?: number; page?: number },
+  filtros: any,
   enabled: boolean = true
 ) => {
   return useQuery({
-    queryKey: ['ingresos', filtros],
-    queryFn: () => getIngresos(filtros),
+    queryKey: ['ingresos-extras', filtros],
+    queryFn: () => getIngresosExtras(),
     enabled: enabled && !!filtros,
     staleTime: 1000 * 60 * 5, // 5 minutos
   })
 }
 
 export const useGetResumenIngresos = (
-  filtros: FiltrosIngresos,
+  filtros: any,
   enabled: boolean = true
 ) => {
   return useQuery({
-    queryKey: ['ingresos-resumen', filtros],
-    queryFn: () => getResumenIngresos(filtros),
+    queryKey: ['ingresos-extras-resumen', filtros],
+    queryFn: () => getResumenIngresosExtras(),
     enabled: enabled && !!filtros,
     staleTime: 1000 * 60 * 2, // 2 minutos
   })

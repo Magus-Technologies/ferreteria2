@@ -9,6 +9,7 @@ interface ConteoDineroProps {
   className?: string
   initialValues?: { [key: string]: number }
   initialTotal?: number
+  disabled?: boolean
 }
 
 const denominaciones = [
@@ -30,7 +31,8 @@ export default function ConteoDinero({
   onChange, 
   className = '', 
   initialValues = {},
-  initialTotal = 0 
+  initialTotal = 0,
+  disabled = false
 }: ConteoDineroProps) {
   const [cantidades, setCantidades] = useState<{ [key: string]: number }>(() => {
     const initial: { [key: string]: number } = {}
@@ -111,6 +113,7 @@ export default function ConteoDinero({
                       className='w-full text-[10px]'
                       size='small'
                       style={{ padding: '1px 4px', height: '22px' }}
+                      disabled={disabled}
                     />
                   </td>
                   <td className='py-0.5 px-0.5 text-right font-medium text-slate-800 text-[10px]'>
@@ -147,6 +150,7 @@ export default function ConteoDinero({
               className='w-full'
               size='small'
               style={{ fontSize: '12px', fontWeight: 'bold', height: '28px' }}
+              disabled={disabled}
             />
           </div>
         )}

@@ -29,9 +29,16 @@ export interface AperturaYCierreCaja {
   monto_cierre: string | null
   fecha_cierre: string | null
   estado: 'abierta' | 'cerrada'
+  estado_cierre?: 'pendiente' | 'en_proceso' | 'aprobado' | 'no_realizado' | null
   caja_principal?: CajaPrincipalInfo
   sub_caja?: SubCajaInfo
   user?: {
+    id: string
+    name: string
+    email: string
+  }
+  vendedor_id?: string
+  vendedor?: {
     id: string
     name: string
     email: string
@@ -117,15 +124,15 @@ export const cajaApi = {
   /**
    * Consulta si una caja principal tiene una apertura activa
    */
-  consultaApertura(cajaPrincipalId: number): Promise<ApiResponse<{ 
+  consultaApertura(cajaPrincipalId: number): Promise<ApiResponse<{
     success: boolean
     message: string
-    data: AperturaYCierreCaja | null 
+    data: AperturaYCierreCaja | null
   }>> {
-    return apiRequest<{ 
+    return apiRequest<{
       success: boolean
       message: string
-      data: AperturaYCierreCaja | null 
+      data: AperturaYCierreCaja | null
     }>(`/cajas/consulta-apertura/${cajaPrincipalId}`, {
       method: 'GET',
     })
@@ -177,7 +184,7 @@ export const cajaApi = {
   /**
    * Obtener la caja activa del usuario autenticado
    */
-  cajaActiva(userId?: string): Promise<ApiResponse<{ 
+  cajaActiva(userId?: string): Promise<ApiResponse<{
     success: boolean
     data: AperturaYCierreCaja & {
       resumen?: {
@@ -202,7 +209,7 @@ export const cajaApi = {
     } | null
   }>> {
     const url = userId ? `/cajas/activa?user_id=${userId}` : '/cajas/activa'
-    return apiRequest<{ 
+    return apiRequest<{
       success: boolean
       data: AperturaYCierreCaja & {
         resumen?: any
@@ -442,9 +449,53 @@ export const cajaApi = {
       data: AperturaYCierreCaja & {
         resumen?: any
       }
-    }>(`/cajas/${id}/cierre`, {
+    }>(`/cajas/cierre/${id}`, {
       method: 'GET',
     })
+  },
+
+  /**
+   * Listar arqueos diarios (para historial de cierres)
+   */
+  listarArqueos(filters?: {
+    user_id?: string
+    fecha_inicio?: string
+    fecha_fin?: string
+    caja_principal_id?: string | number
+  }): Promise<ApiResponse<{
+    success: boolean
+    data: { data: AperturaYCierreCaja[] }
+  }>> {
+    const params = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value))
+        }
+      })
+    }
+    const queryString = params.toString()
+    const url = queryString
+      ? `/cajas/cierre/arqueos?${queryString}`
+      : '/cajas/cierre/arqueos'
+
+    return apiRequest<{
+      success: boolean
+      data: { data: AperturaYCierreCaja[] }
+    }>(url, { method: 'GET' })
+  },
+
+  /**
+   * Aprobar un arqueo/cierre pendiente
+   */
+  aprobarArqueo(id: string, data: {
+    supervisor_id: string
+    supervisor_password: string
+  }): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return apiRequest<{ success: boolean; message: string }>(
+      `/cajas/cierre/${id}/aprobar`,
+      { method: 'POST', body: JSON.stringify(data) }
+    )
   },
 
   /**
@@ -458,7 +509,7 @@ export const cajaApi = {
     // Para FormData, usar fetch directamente (no apiRequest que convierte a JSON)
     const token = localStorage.getItem('auth_token')
     const API_URL = process.env.NEXT_PUBLIC_API_URL
-    
+
     const response = await fetch(`${API_URL}/cajas/apertura/${aperturaId}/enviar-email`, {
       method: 'POST',
       headers: {

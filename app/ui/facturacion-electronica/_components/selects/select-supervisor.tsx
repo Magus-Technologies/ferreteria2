@@ -11,6 +11,7 @@ interface SelectSupervisorProps {
   size?: 'small' | 'middle' | 'large'
   placeholder?: string
   allowClear?: boolean
+  disabled?: boolean
 }
 
 export default function SelectSupervisor({
@@ -19,6 +20,7 @@ export default function SelectSupervisor({
   size = 'middle',
   placeholder = 'Seleccione supervisor',
   allowClear = true,
+  disabled = false,
 }: SelectSupervisorProps) {
   const [shouldFetch, setShouldFetch] = useState(false)
 
@@ -46,6 +48,7 @@ export default function SelectSupervisor({
       size={size}
       placeholder={placeholder}
       allowClear={allowClear}
+      disabled={disabled}
       loading={isLoading}
       showSearch
       filterOption={(input, option) =>

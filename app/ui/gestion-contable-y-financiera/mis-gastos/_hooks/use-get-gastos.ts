@@ -1,25 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
-import { getGastos, getResumenGastos, type FiltrosGastos } from '~/lib/api/gastos'
+import { getGastosExtras, getResumenGastosExtras } from '~/lib/api/gasto-extra'
 
 export const useGetGastos = (
-  filtros: FiltrosGastos & { per_page?: number; page?: number },
+  filtros: any,
   enabled: boolean = true
 ) => {
   return useQuery({
-    queryKey: ['gastos', filtros],
-    queryFn: () => getGastos(filtros),
+    queryKey: ['gastos-extras', filtros],
+    queryFn: () => getGastosExtras(),
     enabled: enabled && !!filtros,
     staleTime: 1000 * 60 * 5, // 5 minutos
   })
 }
 
 export const useGetResumenGastos = (
-  filtros: FiltrosGastos,
+  filtros: any,
   enabled: boolean = true
 ) => {
   return useQuery({
-    queryKey: ['gastos-resumen', filtros],
-    queryFn: () => getResumenGastos(filtros),
+    queryKey: ['gastos-extras-resumen', filtros],
+    queryFn: () => getResumenGastosExtras(),
     enabled: enabled && !!filtros,
     staleTime: 1000 * 60 * 2, // 2 minutos
   })

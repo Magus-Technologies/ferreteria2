@@ -1,23 +1,24 @@
 import { create } from 'zustand'
 
-// API-compatible filter interface for ingresos
-interface FiltrosIngresos {
+// API-compatible filter interface for Ingresos
+interface FiltrosMisIngresos {
   almacen_id?: number
-  desde?: string
-  hasta?: string
-  user_id?: string
-  concepto?: string
-  search?: string
+  fechaDesde?: string
+  fechaHasta?: string
+  motivoIngreso?: string
+  cajeroRegistra?: string
+  sucursal?: string
+  busqueda?: string
 }
 
 interface StoreFiltrosMisIngresos {
-  filtros: FiltrosIngresos | null
-  setFiltros: (filtros: FiltrosIngresos) => void
+  filtros: FiltrosMisIngresos | null
+  setFiltros: (filtros: FiltrosMisIngresos) => void
   resetFiltros: () => void
 }
 
-export const useStoreFiltrosMisIngresos = create<StoreFiltrosMisIngresos>(set => ({
+export const useStoreFiltrosMisIngresos = create<StoreFiltrosMisIngresos>((set) => ({
   filtros: null,
-  setFiltros: filtros => set({ filtros }),
+  setFiltros: (filtros) => set({ filtros }),
   resetFiltros: () => set({ filtros: null }),
 }))

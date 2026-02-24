@@ -47,11 +47,15 @@ export default function ModalCrearSubCaja({
 
   // Obtener todos los métodos de pago para validar
   const { data: metodosPago } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO, cajaPrincipalId],
     queryFn: async () => {
-      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      const result = await despliegueDePagoApi.getAll({
+        mostrar: true,
+        exclude_used_by_caja_principal_id: cajaPrincipalId
+      })
       return result.data?.data || []
     },
+    enabled: !!cajaPrincipalId && open,
   })
 
   // Función para generar el nombre de la sub-caja
@@ -102,42 +106,8 @@ export default function ModalCrearSubCaja({
     },
   })
 
-  // Verificar si hay efectivo seleccionado
-  const tieneEfectivo = () => {
-    if (aceptaTodos) return true // Si acepta todos, incluye efectivo
-
-    if (!metodosPago || metodosSeleccionados.length === 0) return false
-
-    return metodosSeleccionados.some((id) => {
-      const metodo = metodosPago.find((m) => m.id === id)
-      return metodo?.name?.toLowerCase().includes('efectivo') ||
-        metodo?.name?.toLowerCase().includes('cch')
-    })
-  }
-
-  // Verificar si tiene factura o boleta
-  const tieneFacturaOBoleta = () => {
-    return tiposComprobante.includes('01') || tiposComprobante.includes('03')
-  }
-
-  // Validación personalizada
-  useEffect(() => {
-    if (tieneEfectivo() && tieneFacturaOBoleta()) {
-      form.setFields([
-        {
-          name: 'despliegues_pago_ids',
-          errors: ['No puedes usar efectivo para Facturas o Boletas. Solo la Caja Chica acepta efectivo para estos comprobantes.'],
-        },
-      ])
-    } else {
-      form.setFields([
-        {
-          name: 'despliegues_pago_ids',
-          errors: [],
-        },
-      ])
-    }
-  }, [metodosSeleccionados, tiposComprobante, aceptaTodos, form, metodosPago])
+  // ELIMINADO: Validación de efectivo para Facturas/Boletas
+  // Ahora se permite efectivo en todas las sub-cajas
 
   const handleAceptaTodosChange = (checked: boolean) => {
     setAceptaTodos(checked)
@@ -167,7 +137,7 @@ export default function ModalCrearSubCaja({
         centered: true,
         okButtonProps: {
           loading,
-          disabled: loading || (tieneEfectivo() && tieneFacturaOBoleta())
+          disabled: loading
         },
         okText: 'Crear Sub-Caja',
       }}
@@ -287,16 +257,7 @@ export default function ModalCrearSubCaja({
         </Form.Item>
       </LabelBase>
 
-      {tieneEfectivo() && tieneFacturaOBoleta() && (
-        <div className='mt-2 p-3 bg-red-50 rounded-lg border border-red-200'>
-          <p className='text-sm text-red-700'>
-            <strong>⚠️ Restricción:</strong> No puedes usar efectivo para Facturas o Boletas.
-            Solo la Caja Chica (creada automáticamente) acepta efectivo para estos comprobantes.
-            <br />
-            <span className='text-xs'>Para Notas de Venta sí puedes usar efectivo.</span>
-          </p>
-        </div>
-      )}
+
 
       <LabelBase label='Propósito (Opcional)' className='mt-4' orientation='column'>
         <InputBase
@@ -309,17 +270,7 @@ export default function ModalCrearSubCaja({
         />
       </LabelBase>
 
-      <div className='mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200'>
-        <p className='text-sm text-slate-600'>
-          <strong>Importante:</strong> No se pueden crear dos sub-cajas con la misma configuración (métodos de pago + tipos de comprobante).
-        </p>
-        <p className='text-xs text-slate-500 mt-2'>
-          <strong>Ejemplos:</strong>
-          <br />• Notas de Venta con todos los métodos de pago
-          <br />• Facturas solo con Yape BCP
-          <br />• Boletas y Facturas con todos los métodos BCP
-        </p>
-      </div>
+
     </ModalForm>
   )
 }

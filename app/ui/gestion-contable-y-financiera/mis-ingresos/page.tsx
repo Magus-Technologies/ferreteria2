@@ -21,7 +21,7 @@ export default function MisIngresosPage() {
           <FiltersMisIngresos />
         </Suspense>
 
-        {/* Layout: Cards a la derecha, Tabla a la izquierda */}
+        {/* Layout: Tabla a la izquierda, Cards a la derecha */}
         <div className='flex gap-4 w-full'>
           {/* Tabla - Ocupa el espacio principal */}
           <div className='flex-1 h-[calc(100vh-280px)] min-w-0'>

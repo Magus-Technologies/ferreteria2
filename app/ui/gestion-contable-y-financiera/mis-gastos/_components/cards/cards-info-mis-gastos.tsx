@@ -1,17 +1,21 @@
 'use client'
 
-import { useMemo } from 'react'
-import { FaMoneyBillWave, FaCalendarDay, FaListAlt, FaChartLine } from 'react-icons/fa'
+import { useMemo, useState } from 'react'
+import { FaMoneyBillWave, FaCalendarDay, FaListAlt, FaChartLine, FaPrint, FaPlus } from 'react-icons/fa'
 import { useStoreFiltrosMisGastos } from '../../_store/store-filtros-mis-gastos'
 import { useGetResumenGastos } from '../../_hooks/use-get-gastos'
+import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import ModalCrearGastoExtra from '../others/modal-crear-gasto-extra'
 
 export default function CardsInfoMisGastos() {
   const filtros = useStoreFiltrosMisGastos(state => state.filtros)
+  const [openCrear, setOpenCrear] = useState(false)
 
   // Convert store filters to API filters
   const apiFilters = useMemo(() => {
     if (!filtros) return null
-    
+
     return {
       fechaDesde: filtros.fechaDesde,
       fechaHasta: filtros.fechaHasta,
@@ -84,6 +88,24 @@ export default function CardsInfoMisGastos() {
           {isLoading ? '...' : promedioGasto.toFixed(2)}
         </div>
       </div>
+
+
+
+      {/* Botón Agregar */}
+      <ConfigurableElement componentId='gestion-contable.mis-gastos.boton-agregar' label='Botón Agregar'>
+        <ButtonBase
+          onClick={() => setOpenCrear(true)}
+          className='bg-rose-600 hover:bg-rose-700 border-rose-600 hover:border-rose-700 text-white flex items-center justify-center gap-2 mt-2 w-full py-3 h-auto text-base'
+        >
+          <FaPlus />
+          Agregar Gasto Extra
+        </ButtonBase>
+      </ConfigurableElement>
+
+      <ModalCrearGastoExtra
+        open={openCrear}
+        onClose={() => setOpenCrear(false)}
+      />
     </div>
   )
 }
