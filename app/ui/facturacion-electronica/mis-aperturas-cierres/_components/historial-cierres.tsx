@@ -254,7 +254,7 @@ export default function HistorialCierres() {
 
     setVerificandoReCerrar(true);
     try {
-      // Usar un endpoint genérico de validación de supervisor
+      // Validar supervisor usando el endpoint genérico
       const response: any = await apiRequest('/cajas/cierre/validar-supervisor', {
         method: 'POST',
         body: JSON.stringify({
@@ -266,8 +266,12 @@ export default function HistorialCierres() {
       if (response?.data?.success) {
         message.success('Autorización confirmada');
         setModalReCerrarVisible(false);
+        
+        // CORREGIDO: Pasar supervisor validado en la URL para que no se pida nuevamente
         const redirectId = (cierreParaReCerrar as any)?.apertura_id || cierreParaReCerrar.id;
-        router.push(`/ui/facturacion-electronica/cierre-caja?cierre_id=${redirectId}&re_cierre=true`);
+        router.push(
+          `/ui/facturacion-electronica/cierre-caja?cierre_id=${redirectId}&re_cierre=true&supervisor_id=${supervisorId}&supervisor_validado=true`
+        );
       } else {
         message.error(response?.data?.message || response?.error || 'Contraseña de supervisor incorrecta');
       }

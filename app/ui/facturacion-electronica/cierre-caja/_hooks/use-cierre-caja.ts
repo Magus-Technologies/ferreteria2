@@ -20,7 +20,11 @@ export function useCierreCaja(cierreId?: string, options?: { optional?: boolean 
         // Cargar el cierre completo con su resumen desde el endpoint específico
         const response = await cajaApi.obtenerCierre(cierreId)
 
+        console.log('📦 Respuesta de obtenerCierre:', response)
+
         if (response.data?.data) {
+          console.log('✅ Caja cargada:', response.data.data)
+          console.log('📊 Estado de la caja:', response.data.data.estado)
           setCajaActiva(response.data.data)
         } else {
           setError('No se encontró el cierre')
@@ -32,7 +36,11 @@ export function useCierreCaja(cierreId?: string, options?: { optional?: boolean 
         // Cargar caja activa usando el endpoint refactorizado
         const response: any = await cierreCajaApi.obtenerCajaActiva()
 
+        console.log('📦 Respuesta de obtenerCajaActiva:', response)
+
         if (response.success && response.data) {
+          console.log('✅ Caja activa cargada:', response.data)
+          console.log('📊 Estado de la caja:', response.data.estado)
           setCajaActiva(response.data)
         } else {
           const errorMsg = response.error?.message || response.message || 'No tienes una caja abierta o hubo un problema al consultarla'

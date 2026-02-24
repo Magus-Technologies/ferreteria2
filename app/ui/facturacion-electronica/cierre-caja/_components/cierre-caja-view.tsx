@@ -24,6 +24,8 @@ export default function CierreCajaView() {
   const searchParams = useSearchParams()
   const cierreId = searchParams.get('cierre_id')
   const isReCierre = searchParams.get('re_cierre') === 'true'
+  const supervisorValidadoUrl = searchParams.get('supervisor_validado') === 'true'
+  const supervisorIdUrl = searchParams.get('supervisor_id')
 
   const { cajaActiva, loading, error, esEdicion } = useCierreCaja(cierreId || undefined)
   const { cerrarCaja, loading: loadingCierre } = useCerrarCaja()
@@ -33,8 +35,7 @@ export default function CierreCajaView() {
   const [totalCuentas, setTotalCuentas] = useState(0)
   const [conteoDenominaciones, setConteoDenominaciones] = useState<Record<string, number> | null>(null)
 
-  // Estado que controla si el arqueo ya fue completado para mostrar el resumen o bloquear formulario
-  const [arqueoFinalizado, setArqueoFinalizado] = useState(false)
+  // ELIMINADO: arqueoFinalizado ya no se usa, se reemplaza por cajaYaFinalizada del backend
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
@@ -48,12 +49,21 @@ export default function CierreCajaView() {
   const [modalExitoOpen, setModalExitoOpen] = useState(false)
   const [emailEnviado, setEmailEnviado] = useState('')
 
-  // Supervisión
+  // Supervisión - Si viene de re-cierre con supervisor validado, pre-cargar
   const [modalSupervisorOpen, setModalSupervisorOpen] = useState(false)
   const [validandoSupervisor, setValidandoSupervisor] = useState(false)
-  const [supervisorValidado, setSupervisorValidado] = useState(false)
+  const [supervisorValidado, setSupervisorValidado] = useState(supervisorValidadoUrl)
   const [enviandoTicket, setEnviandoTicket] = useState(false)
   const [modalTicketOpen, setModalTicketOpen] = useState(false)
+
+  // Si viene de re-cierre con supervisor validado, pre-cargar el ID
+  useEffect(() => {
+    if (isReCierre && supervisorValidadoUrl && supervisorIdUrl) {
+      setSupervisorId(supervisorIdUrl)
+      setSupervisorValidado(true)
+      console.log('✅ Supervisor pre-cargado desde URL:', supervisorIdUrl)
+    }
+  }, [isReCierre, supervisorValidadoUrl, supervisorIdUrl])
 
   // Estados para modal de detalle (lupa)
   const [modalDetalleOpen, setModalDetalleOpen] = useState(false)
@@ -65,6 +75,7 @@ export default function CierreCajaView() {
   }
 
   // Cargar datos guardados cuando la caja ya está cerrada (persiste al refrescar)
+  // En modo re-cierre, cargar datos del cierre anterior como referencia
   useEffect(() => {
     if (cajaActiva && cajaActiva.estado === 'cerrada') {
       // Cargar monto de efectivo del cierre
@@ -102,7 +113,14 @@ export default function CierreCajaView() {
       setSupervisorId(value)
       setSupervisorNombre(option?.label || '')
       setSupervisorPassword('') // Limpiar contraseña anterior
-      setModalSupervisorOpen(true) // Abrir modal para validar
+      
+      // CORREGIDO: En modo re-cierre con supervisor ya validado, no pedir contraseña nuevamente
+      if (isReCierre && supervisorValidadoUrl && value === supervisorIdUrl) {
+        setSupervisorValidado(true)
+        console.log('✅ Supervisor ya validado, no se requiere contraseña')
+      } else {
+        setModalSupervisorOpen(true) // Abrir modal para validar
+      }
     } else {
       setSupervisorId(undefined)
       setSupervisorNombre('')
@@ -251,7 +269,7 @@ export default function CierreCajaView() {
   const sobrante = diferencia > 0 ? diferencia : 0
 
   const handleFinalizarCaja = async () => {
-    if (totalEfectivo === 0 || (cajaYaFinalizada && !isReCierre) || arqueoFinalizado) {
+    if (totalEfectivo === 0 || (cajaYaFinalizada && !isReCierre)) {
       return
     }
 
@@ -265,13 +283,15 @@ export default function CierreCajaView() {
       whatsapp_reporte: whatsappReporte || undefined,
     }
 
-    // Incluir supervisor si fue validado
+    // CORREGIDO: Solo incluir supervisor si tenemos el password
+    // En modo re-cierre con supervisor pre-validado, NO enviar supervisor_id
+    // porque el backend ya lo tiene registrado del cierre anterior
     if (supervisorId && supervisorPassword) {
       dataCierre.supervisor_id = supervisorId
       dataCierre.supervisor_password = supervisorPassword
-      console.log('🔍 Enviando supervisor:', { supervisorId, supervisorNombre })
+      console.log('🔍 Enviando supervisor:', { supervisorId, supervisorNombre, tienePassword: true })
     } else {
-      console.log('⚠️ No se envía supervisor (no seleccionado o no validado)')
+      console.log('⚠️ No se envía supervisor (no validado con password en esta sesión)')
     }
 
     console.log('📤 Datos de cierre a enviar:', dataCierre)
@@ -281,11 +301,10 @@ export default function CierreCajaView() {
 
     if (success) {
       if (isReCierre) {
-        message.success('Caja re-cerrada exitosamente')
-        router.push('/ui/facturacion-electronica/mis-aperturas-cierres')
+        // CORREGIDO: Después de re-cerrar exitosamente, quitar re_cierre=true de la URL
+        // para que la vista vuelva a modo solo lectura
+        router.replace(`/ui/facturacion-electronica/cierre-caja?cierre_id=${cajaActiva.id}`)
       } else {
-        message.success('Caja arqueada exitosamente. Revise su resumen.')
-        setArqueoFinalizado(true)
         // Persistir el ID en la URL para que no se pierda al recargar
         router.replace(`/ui/facturacion-electronica/cierre-caja?cierre_id=${cajaActiva.id}`)
       }
@@ -295,16 +314,23 @@ export default function CierreCajaView() {
   // Determinar si la caja ya fue finalizada previamente (viene cerrada del backend)
   const cajaYaFinalizada = cajaActiva.estado === 'cerrada';
 
-  // Lógica de visualización y permisos de solo-lectura:
-  // Si está finalizado (en esta sesión o previamente) o es un Re-Cierre, mostrar los resúmenes.
-  // IMPORTANTE: El resumen solo se muestra persistente si la fecha de apertura/cierre es de hoy.
-  // Si es de un día anterior, el usuario debe abrir una nueva caja (el resumen desaparece para dar paso a la nueva jornada).
-  const esDeHoy = dayjs(cajaActiva.fecha_apertura).isSame(dayjs(), 'day');
-  const mostrarResumen = (arqueoFinalizado || cajaYaFinalizada || isReCierre) && (esDeHoy || isReCierre);
+  // CORREGIDO: El resumen se muestra SIEMPRE que la caja esté cerrada, sin importar la fecha
+  // Solo en modo re-cierre se permite editar
+  const mostrarResumen = cajaYaFinalizada || isReCierre;
 
-  // Si está finalizado (y NO es re-cierre), TODO está bloqueado.
-  // En modo Re-Cierre se permite editar el conteo, pero se requiere supervisor para finalizar.
-  const isFormDisabled = (cajaYaFinalizada && !isReCierre) || arqueoFinalizado;
+  // CORREGIDO: Si está finalizado (y NO es re-cierre), TODO está bloqueado basado ÚNICAMENTE en el backend
+  // En modo Re-Cierre se permite editar el conteo
+  const isFormDisabled = cajaYaFinalizada && !isReCierre;
+
+  // DEBUG: Logs para verificar el estado
+  console.log('🔍 Estado de cierre:', {
+    'cajaActiva.estado': cajaActiva.estado,
+    cajaYaFinalizada,
+    isReCierre,
+    mostrarResumen,
+    isFormDisabled,
+    'tiene resumen': !!resumen
+  });
 
   return (
     <div className='p-3 space-y-2 w-full'>
@@ -330,17 +356,17 @@ export default function CierreCajaView() {
           <div>
             <div className='text-xs font-medium text-slate-600 mb-1'>
               Supervisor (opcional)
-              {supervisorId && supervisorPassword && (
-                <span className='ml-2 text-green-600'>✓ Validado</span>
+              {supervisorId && supervisorValidado && (
+              <span className='ml-2 text-green-600'>✓ Validado</span>
               )}
             </div>
             <SelectSupervisor
               value={supervisorId}
               onChange={handleSupervisorChange}
               size='small'
-              disabled={(arqueoFinalizado || cajaYaFinalizada) && !isReCierre}
+              disabled={cajaYaFinalizada && !isReCierre}
             />
-            {supervisorId && !supervisorPassword && (
+            {supervisorId && !supervisorValidado && (
               <div className='mt-2 text-xs text-orange-600'>
                 ⚠️ Debes validar la contraseña del supervisor
               </div>
@@ -648,7 +674,7 @@ export default function CierreCajaView() {
                       </div>
 
                       {/* Diferencias (Solo se muestra luego de finalizar para no influenciar conteo ciego) */}
-                      {(arqueoFinalizado || cajaYaFinalizada) && (
+                      {cajaYaFinalizada && (
                         <div className='bg-slate-50 rounded p-3 space-y-1.5'>
                           <div className='flex justify-between items-center'>
                             <span className='text-sm font-medium text-slate-700'>Diferencias</span>
@@ -698,7 +724,7 @@ export default function CierreCajaView() {
                           </Button>
 
                           {/* Estado 1: Caja abierta - Botón Finalizar */}
-                          {!cajaYaFinalizada && !arqueoFinalizado && !isReCierre && (
+                          {!cajaYaFinalizada && !isReCierre && (
                             <Button
                               type='primary'
                               icon={<FaCheckCircle />}
@@ -712,8 +738,8 @@ export default function CierreCajaView() {
                             </Button>
                           )}
 
-                          {/* Estado 2: Caja cerrada (solo lectura) o recién finalizada - Botón Volver */}
-                          {(cajaYaFinalizada || arqueoFinalizado) && !isReCierre && (
+                          {/* Estado 2: Caja cerrada (solo lectura) - Botón Volver (SIEMPRE visible cuando está cerrada) */}
+                          {cajaYaFinalizada && !isReCierre && (
                             <Button
                               type='primary'
                               className='flex-1 text-sm bg-amber-600 hover:bg-amber-700'
@@ -726,25 +752,17 @@ export default function CierreCajaView() {
 
                           {/* Estado 3: Re-Cierre - Botón Re-Cerrar */}
                           {isReCierre && (
-                            <>
-                              {console.log('🔍 DEBUG Re-Cierre:', { 
-                                supervisorId, 
-                                supervisorPassword: supervisorPassword ? '***' : null,
-                                supervisorValidado,
-                                isDisabled: !supervisorId || !supervisorPassword 
-                              })}
-                              <Button
-                                type='primary'
-                                icon={<FaCheckCircle />}
-                                className='flex-1 text-sm bg-orange-600 hover:bg-orange-700'
-                                size='large'
-                                loading={loadingCierre}
-                                onClick={handleFinalizarCaja}
-                                disabled={!supervisorId || !supervisorPassword}
-                              >
-                                Re-Cerrar Caja
-                              </Button>
-                            </>
+                            <Button
+                              type='primary'
+                              icon={<FaCheckCircle />}
+                              className='flex-1 text-sm bg-orange-600 hover:bg-orange-700'
+                              size='large'
+                              loading={loadingCierre}
+                              onClick={handleFinalizarCaja}
+                              disabled={totalEfectivo === 0}
+                            >
+                              Re-Cerrar Caja
+                            </Button>
                           )}
                         </div>
                       </div>
