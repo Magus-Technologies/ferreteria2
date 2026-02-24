@@ -12,6 +12,7 @@ export interface ResumenCajaResponse {
         fecha_cierre: string | null
         monto_cierre: number | null
         estado: 'abierta' | 'cerrada'
+        estado_cierre?: 'pendiente' | 'en_proceso' | 'aprobado' | 'no_realizado' | null
         resumen: {
             efectivo_inicial: number
             monto_apertura: number
@@ -74,10 +75,15 @@ export const cierreCajaApi = {
      * Obtener la caja activa del vendedor actual con su resumen
      */
     obtenerCajaActiva: async () => {
-        const response = await apiRequest<ResumenCajaResponse>('/cajas/cierre/activa', {
+        const response: any = await apiRequest<ResumenCajaResponse>('/cajas/cierre/activa', {
             method: 'GET',
         })
-        return response.data as ResumenCajaResponse
+        // apiRequest retorna { data: { success, data, ... } } en éxito
+        // o { error: { message } } en error HTTP
+        if (response?.error) {
+            return { success: false, message: response.error.message }
+        }
+        return response?.data || { success: false, message: 'Respuesta vacía' }
     },
 
     /**
@@ -87,11 +93,31 @@ export const cierreCajaApi = {
         aperturaId: string,
         data: CerrarCajaRequest
     ) => {
-        const response = await apiRequest<CerrarCajaResponse>(`/cajas/cierre/${aperturaId}`, {
+        const response: any = await apiRequest<CerrarCajaResponse>(`/cajas/cierre/${aperturaId}/cerrar`, {
             method: 'POST',
             body: JSON.stringify(data),
         })
-        return response.data as CerrarCajaResponse
+        if (response?.error) {
+            return { success: false, message: response.error.message }
+        }
+        return response?.data || { success: false, message: 'Respuesta vacía' }
+    },
+
+    /**
+     * Volver a cerrar una caja ya cerrada (Re-Cierre)
+     */
+    reCerrarCaja: async (
+        aperturaId: string,
+        data: CerrarCajaRequest
+    ) => {
+        const response: any = await apiRequest<CerrarCajaResponse>(`/cajas/cierre/${aperturaId}/re-cerrar`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        })
+        if (response?.error) {
+            return { success: false, message: response.error.message }
+        }
+        return response?.data || { success: false, message: 'Respuesta vacía' }
     },
 
     /**
@@ -127,7 +153,7 @@ export const cierreCajaApi = {
         // Usar fetch directamente
         const token = localStorage.getItem('auth_token') // ✅ Usar la clave correcta
         const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-        
+
         const response = await fetch(`${baseURL}/cajas/cierre/${cierreId}/enviar-email`, {
             method: 'POST',
             headers: {
@@ -149,5 +175,19 @@ export const cierreCajaApi = {
         }
 
         return await response.json()
+    },
+
+    /**
+     * Aprobar un cierre pendiente con clave de supervisor
+     */
+    aprobarCierre: async (cierreId: string, supervisorId: string, supervisorPassword: string) => {
+        const response = await apiRequest(`/cajas/cierre/${cierreId}/aprobar`, {
+            method: 'POST',
+            body: JSON.stringify({
+                supervisor_id: supervisorId,
+                supervisor_password: supervisorPassword,
+            }),
+        })
+        return response.data
     },
 }

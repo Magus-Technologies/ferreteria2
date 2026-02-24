@@ -24,9 +24,9 @@ export const useColumnsAperturas = ({
       cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
     },
     {
-      headerName: 'Usuario',
-      field: 'user',
-      width: 180,
+      headerName: 'Vendedor',
+      field: 'vendedor',
+      width: 220,
       cellRenderer: (params: any) => {
         const user = params.value
         return (
@@ -39,21 +39,6 @@ export const useColumnsAperturas = ({
     },
     {
       headerName: 'Caja',
-      field: 'sub_caja',
-      flex: 1,
-      minWidth: 200,
-      cellRenderer: (params: any) => {
-        const subCaja = params.value
-        return (
-          <div>
-            <div className='font-medium'>{subCaja?.nombre}</div>
-            <div className='text-xs text-slate-500'>{subCaja?.codigo}</div>
-          </div>
-        )
-      },
-    },
-    {
-      headerName: 'Caja Principal',
       field: 'caja_principal',
       flex: 1,
       minWidth: 180,

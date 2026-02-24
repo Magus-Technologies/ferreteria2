@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { message } from 'antd'
 import { cajaApi } from '~/lib/api/caja'
+import { cierreCajaApi } from '~/lib/api/cierre-caja'
 
 export function useCierreCaja(cierreId?: string, options?: { optional?: boolean }) {
   const [loading, setLoading] = useState(false)
@@ -12,13 +13,13 @@ export function useCierreCaja(cierreId?: string, options?: { optional?: boolean 
     try {
       setLoading(true)
       setError(null)
-      
+
       // Si hay cierreId, cargar ese cierre específico para edición
       if (cierreId) {
         setEsEdicion(true)
         // Cargar el cierre completo con su resumen desde el endpoint específico
         const response = await cajaApi.obtenerCierre(cierreId)
-        
+
         if (response.data?.data) {
           setCajaActiva(response.data.data)
         } else {
@@ -28,18 +29,13 @@ export function useCierreCaja(cierreId?: string, options?: { optional?: boolean 
           }
         }
       } else {
-        // Cargar caja activa normal (sin cerrar)
-        const response = await cajaApi.cajaActiva()
-        
-        console.log('=== RESPONSE CAJA ACTIVA ===', response)
-        console.log('=== RESPONSE.DATA ===', response.data)
-        
-        if (response.data?.data) {
-          console.log('=== TIENE RESUMEN? ===', !!(response.data.data as any).resumen)
-          console.log('=== RESUMEN ===', (response.data.data as any).resumen)
-          setCajaActiva(response.data.data)
+        // Cargar caja activa usando el endpoint refactorizado
+        const response: any = await cierreCajaApi.obtenerCajaActiva()
+
+        if (response.success && response.data) {
+          setCajaActiva(response.data)
         } else {
-          const errorMsg = 'No tienes una caja abierta'
+          const errorMsg = response.error?.message || response.message || 'No tienes una caja abierta o hubo un problema al consultarla'
           setError(errorMsg)
           // Solo mostrar error si no es opcional
           if (!options?.optional) {

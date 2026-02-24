@@ -4,9 +4,9 @@ import { FaPlus } from 'react-icons/fa'
 import { useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
-import ModalCrearGastoExtra from './modal-crear-gasto-extra'
+import ModalCrearIngresoExtra from './modal-crear-ingreso-extra'
 
-export default function BotonesAccionesGastos() {
+export default function BotonesAccionesIngresos() {
   const [openCrear, setOpenCrear] = useState(false)
 
   const handleAgregar = () => {
@@ -15,7 +15,7 @@ export default function BotonesAccionesGastos() {
 
   return (
     <div className='flex items-center gap-2 p-4 bg-gray-50 border-t'>
-      <ConfigurableElement componentId='gestion-contable.mis-gastos.boton-agregar' label='Botón Agregar'>
+      <ConfigurableElement componentId='gestion-contable.mis-Ingresos.boton-agregar' label='Botón Agregar'>
         <ButtonBase
           onClick={handleAgregar}
           className='bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 text-white flex items-center gap-2'
@@ -27,7 +27,7 @@ export default function BotonesAccionesGastos() {
 
 
 
-      <ModalCrearGastoExtra
+      <ModalCrearIngresoExtra
         open={openCrear}
         onClose={() => setOpenCrear(false)}
       />

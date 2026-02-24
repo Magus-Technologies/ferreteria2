@@ -8,6 +8,7 @@ interface ModalValidarSupervisorProps {
   supervisorNombre: string
   onConfirm: (password: string) => void
   onCancel: () => void
+  loading?: boolean
 }
 
 export default function ModalValidarSupervisor({

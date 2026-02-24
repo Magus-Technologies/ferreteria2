@@ -47,11 +47,15 @@ export default function ModalCrearSubCaja({
 
   // Obtener todos los métodos de pago para validar
   const { data: metodosPago } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO, cajaPrincipalId],
     queryFn: async () => {
-      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      const result = await despliegueDePagoApi.getAll({
+        mostrar: true,
+        exclude_used_by_caja_principal_id: cajaPrincipalId
+      })
       return result.data?.data || []
     },
+    enabled: !!cajaPrincipalId && open,
   })
 
   // Función para generar el nombre de la sub-caja

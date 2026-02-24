@@ -1,24 +1,28 @@
 'use client'
 
-import { useMemo } from 'react'
-import { FaDollarSign, FaCalendarDay, FaListAlt, FaChartLine } from 'react-icons/fa'
+import { useMemo, useState } from 'react'
+import { FaMoneyBillWave, FaCalendarDay, FaListAlt, FaChartLine, FaPrint, FaPlus } from 'react-icons/fa'
 import { useStoreFiltrosMisIngresos } from '../../_store/store-filtros-mis-ingresos'
 import { useGetResumenIngresos } from '../../_hooks/use-get-ingresos'
-import dayjs from 'dayjs'
+import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import ModalCrearIngresoExtra from '../others/modal-crear-ingreso-extra'
 
 export default function CardsInfoMisIngresos() {
   const filtros = useStoreFiltrosMisIngresos(state => state.filtros)
+  const [openCrear, setOpenCrear] = useState(false)
 
   // Convert store filters to API filters
   const apiFilters = useMemo(() => {
     if (!filtros) return null
-    
+
     return {
-      desde: filtros.desde,
-      hasta: filtros.hasta,
-      user_id: filtros.user_id,
-      concepto: filtros.concepto,
-      search: filtros.search,
+      fechaDesde: filtros.fechaDesde,
+      fechaHasta: filtros.fechaHasta,
+      motivoIngreso: filtros.motivoIngreso,
+      cajeroRegistra: filtros.cajeroRegistra,
+      sucursal: filtros.sucursal,
+      busqueda: filtros.busqueda,
     }
   }, [filtros])
 
@@ -31,12 +35,10 @@ export default function CardsInfoMisIngresos() {
   const resumen = resumenResponse?.data
 
   // Default values while loading or no data
-  const {
-    total_ingresos: totalIngresos = 0,
-    ingresos_hoy: ingresosHoy = 0,
-    total_transacciones: totalTransacciones = 0,
-    promedio_ingreso: promedioIngreso = 0
-  } = resumen || {}
+  const totalIngresos = resumen?.total_ingresos ?? 0
+  const ingresosHoy = resumen?.ingresos_hoy ?? 0
+  const totalTransacciones = resumen?.total_transacciones ?? 0
+  const promedioIngreso = resumen?.promedio_ingreso ?? 0
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
@@ -46,7 +48,7 @@ export default function CardsInfoMisIngresos() {
       {/* Total Ingresos */}
       <div className='bg-white border border-slate-200 rounded-lg p-4'>
         <div className='flex items-center justify-center gap-2 mb-2'>
-          <FaDollarSign className='text-rose-600' size={16} />
+          <FaMoneyBillWave className='text-rose-600' size={16} />
           <div className='text-sm text-slate-600 font-medium'>Total Ingresos</div>
         </div>
         <div className='text-2xl font-bold text-rose-600 text-center'>
@@ -86,6 +88,24 @@ export default function CardsInfoMisIngresos() {
           {isLoading ? '...' : promedioIngreso.toFixed(2)}
         </div>
       </div>
+
+
+
+      {/* Botón Agregar */}
+      <ConfigurableElement componentId='gestion-contable.mis-ingresos.boton-agregar' label='Botón Agregar'>
+        <ButtonBase
+          onClick={() => setOpenCrear(true)}
+          className='bg-rose-600 hover:bg-rose-700 border-rose-600 hover:border-rose-700 text-white flex items-center justify-center gap-2 mt-2 w-full py-3 h-auto text-base'
+        >
+          <FaPlus />
+          Agregar Ingreso Extra
+        </ButtonBase>
+      </ConfigurableElement>
+
+      <ModalCrearIngresoExtra
+        open={openCrear}
+        onClose={() => setOpenCrear(false)}
+      />
     </div>
   )
 }

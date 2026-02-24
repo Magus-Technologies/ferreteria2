@@ -13,35 +13,38 @@ export function useCerrarCaja() {
         aperturaId: string,
         data: CerrarCajaRequest,
         cajaActiva?: any,
-        empresaData?: any
+        empresaData?: any,
+        isReCierre: boolean = false
     ): Promise<boolean> => {
         try {
             setLoading(true)
-            const response = await cierreCajaApi.cerrarCaja(aperturaId, data)
+            const response = isReCierre
+                ? await cierreCajaApi.reCerrarCaja(aperturaId, data)
+                : await cierreCajaApi.cerrarCaja(aperturaId, data)
 
-            if (response.success) {
+            if (response?.success) {
                 // Invalidar cachés relacionadas
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJA_ACTIVA] })
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS] })
                 queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_APERTURAS_TODAS] })
-                
+
                 // Si hay email, enviar el ticket automáticamente
                 if (data.email_reporte && empresaData) {
                     try {
                         // IMPORTANTE: Obtener los datos ACTUALIZADOS desde el backend
                         console.log('📥 Obteniendo datos actualizados del cierre...')
-                        const cajaActualizada = await cierreCajaApi.obtenerCajaActiva()
-                        
-                        if (!cajaActualizada.success || !cajaActualizada.data) {
+                        const cajaActualizada: any = await cierreCajaApi.obtenerCajaActiva()
+
+                        if (!cajaActualizada?.success || !cajaActualizada?.data) {
                             throw new Error('No se pudieron obtener los datos actualizados del cierre')
                         }
-                        
+
                         console.log('✅ Datos actualizados obtenidos:', cajaActualizada.data)
-                        
+
                         // Generar el PDF usando react-pdf con los datos ACTUALIZADOS
                         const { pdf } = await import('@react-pdf/renderer')
                         const { default: DocCierreCajaTicket } = await import('../_components/docs/doc-cierre-caja-ticket')
-                        
+
                         // Crear el documento PDF con datos actualizados
                         const doc = <DocCierreCajaTicket
                             data={cajaActualizada.data as any}
@@ -49,20 +52,20 @@ export function useCerrarCaja() {
                             empresa={empresaData}
                             show_logo_html={false}
                         />
-                        
+
                         // Generar el blob del PDF
                         const pdfBlob = await pdf(doc).toBlob()
-                        
+
                         // Enviar el PDF al backend
                         await cierreCajaApi.enviarTicketEmail(aperturaId, data.email_reporte, pdfBlob)
-                        
+
                         console.log('✅ Ticket enviado automáticamente a:', data.email_reporte)
                     } catch (emailError) {
                         console.error('⚠️ Error al enviar ticket automáticamente:', emailError)
                         // No fallar el cierre si falla el envío del email
                     }
                 }
-                
+
                 // Mostrar modal de éxito
                 Modal.success({
                     title: '¡Arqueo Diario Registrado Exitosamente!',
@@ -93,28 +96,29 @@ export function useCerrarCaja() {
                 })
                 return true
             } else {
-                message.error('No se pudo registrar el arqueo')
+                const errorMsg = response?.message || 'No se pudo registrar el arqueo'
+                message.error(errorMsg)
                 return false
             }
         } catch (err: any) {
             console.error('Error al registrar arqueo:', err)
-            
+
             // Extraer mensaje de error detallado
             const errorData = err.response?.data
             let errorMsg = 'Error al registrar arqueo'
-            
+
             if (errorData) {
                 // Si hay errores de validación específicos
                 if (errorData.errors) {
                     const firstError = Object.values(errorData.errors)[0]
                     errorMsg = Array.isArray(firstError) ? firstError[0] : String(firstError)
-                } 
+                }
                 // Si hay mensaje general
                 else if (errorData.message) {
                     errorMsg = errorData.message
                 }
             }
-            
+
             // Mostrar modal de error con más detalles
             Modal.error({
                 title: 'Error al Registrar Arqueo',
@@ -137,7 +141,7 @@ export function useCerrarCaja() {
                 okText: 'Entendido',
                 width: 500,
             })
-            
+
             return false
         } finally {
             setLoading(false)

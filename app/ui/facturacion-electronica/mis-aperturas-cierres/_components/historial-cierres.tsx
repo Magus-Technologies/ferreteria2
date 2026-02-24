@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Spin, Button, Form, message } from "antd";
+import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Spin, Button, Form, message, Modal, Input } from "antd";
 import { FilterOutlined, ReloadOutlined } from "@ant-design/icons";
 import { cajaApi, type AperturaYCierreCaja } from "~/lib/api/caja";
+import { apiRequest } from "~/lib/api";
+import { deudaPersonalApi } from "~/lib/api/deuda-personal";
+import { cierreCajaApi } from "~/lib/api/cierre-caja";
+import { cajaPrincipalApi, type CajaPrincipal } from "~/lib/api/caja-principal";
+import { Select } from "antd";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import TableBase from "~/components/tables/table-base";
 import { AgGridReact } from "ag-grid-react";
@@ -14,7 +20,8 @@ import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
 import ModalTicketCierre from "../../cierre-caja/_components/modal-ticket-cierre";
 import ModalVendedoresCierre from "./modal-vendedores-cierre";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
-import { FaCalendar, FaSearch } from "react-icons/fa";
+import SelectSupervisor from "../../_components/selects/select-supervisor";
+import { FaCalendar, FaSearch, FaMoneyBillWave, FaRedo } from "react-icons/fa";
 import FormBase from "~/components/form/form-base";
 import ButtonBase from "~/components/buttons/button-base";
 
@@ -33,65 +40,74 @@ export default function HistorialCierres() {
   const [selectedVendedor, setSelectedVendedor] = useState<any>(null);
   const [loadingCierre, setLoadingCierre] = useState(false);
   const gridRef = useRef<AgGridReact<AperturaYCierreCaja>>(null);
-  
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  // Estado para pagar deuda
+  const [modalPagarDeudaVisible, setModalPagarDeudaVisible] = useState(false);
+  const [cierreParaDeuda, setCierreParaDeuda] = useState<AperturaYCierreCaja | null>(null);
+  const [pagandoDeuda, setPagandoDeuda] = useState(false);
+  const [observacionDeuda, setObservacionDeuda] = useState('');
+
+  // Estado para aprobar cierre
+  const [modalAprobarVisible, setModalAprobarVisible] = useState(false);
+  const [cierreParaAprobar, setCierreParaAprobar] = useState<AperturaYCierreCaja | null>(null);
+  const [supervisorId, setSupervisorId] = useState<string | undefined>(undefined);
+  const [supervisorNombre, setSupervisorNombre] = useState('');
+  const [supervisorPassword, setSupervisorPassword] = useState('');
+  const [aprobandoCierre, setAprobandoCierre] = useState(false);
+
+  // Estado para ReCerrar
+  const [modalReCerrarVisible, setModalReCerrarVisible] = useState(false);
+  const [cierreParaReCerrar, setCierreParaReCerrar] = useState<AperturaYCierreCaja | null>(null);
+  const [verificandoReCerrar, setVerificandoReCerrar] = useState(false);
+
   // Filtros
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  const [selectedCajaPrincipalId, setSelectedCajaPrincipalId] = useState<number | undefined>(undefined);
+
+  // Cajas principales para el filtro
+  const { data: cajasPrincipales = [] } = useQuery({
+    queryKey: ['cajas-principales-lista'],
+    queryFn: async () => {
+      const response = await cajaPrincipalApi.getAll();
+      return response.data?.data || [];
+    },
+  });
 
   const { data: cierres = [], isLoading, refetch, error } = useQuery({
-    queryKey: [QueryKeys.HISTORIAL_CIERRES, selectedUserId, dateRange],
+    queryKey: [QueryKeys.HISTORIAL_CIERRES, selectedUserId, dateRange, selectedCajaPrincipalId],
     queryFn: async () => {
-      console.log('📊 Cargando historial de cierres...');
-      console.log('🔍 Filtros aplicados:', { selectedUserId, dateRange });
-      
-      const response = await cajaApi.historialTodas({
-        page: 1,
-        per_page: 1000,
-      });
+      console.log('📊 Cargando historial de arqueos diarios...');
 
-      console.log('📦 Respuesta completa del backend:', response);
+      const filters: any = {};
+      if (selectedUserId) {
+        filters.user_id = selectedUserId;
+      }
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        filters.fecha_inicio = dateRange[0].format('YYYY-MM-DD');
+        filters.fecha_fin = dateRange[1].format('YYYY-MM-DD');
+      }
+      if (selectedCajaPrincipalId) {
+        filters.caja_principal_id = selectedCajaPrincipalId;
+      }
+
+      const response = await cajaApi.listarArqueos(filters);
+
+      console.log('📦 Respuesta arqueos diarios:', response);
 
       if (response.error) {
-        console.error("❌ Error al cargar cierres:", response.error);
+        console.error("❌ Error al cargar arqueos:", response.error);
         return [];
       }
 
       if (response.data) {
-        console.log('✅ Total de registros recibidos:', response.data.data?.length);
-        
-        // Filtrar solo los cierres (que tienen fecha_cierre)
-        let cierresData = response.data.data.filter(
-          (item) => item.fecha_cierre !== null
-        );
-        
-        console.log('📋 Registros con fecha_cierre:', cierresData.length);
-        
-        // Filtrar por usuario si está seleccionado
-        if (selectedUserId) {
-          cierresData = cierresData.filter(
-            (item) => item.user_id === selectedUserId
-          );
-          console.log('👤 Después de filtrar por usuario:', cierresData.length);
-        }
-        
-        // Filtrar por rango de fechas si está seleccionado
-        if (dateRange && dateRange[0] && dateRange[1]) {
-          const startDate = dateRange[0].startOf('day');
-          const endDate = dateRange[1].endOf('day');
-          
-          cierresData = cierresData.filter((item) => {
-            if (!item.fecha_cierre) return false;
-            const fechaCierre = dayjs(item.fecha_cierre);
-            return fechaCierre.isAfter(startDate) && fechaCierre.isBefore(endDate);
-          });
-          console.log('📅 Después de filtrar por fecha:', cierresData.length);
-        }
-        
-        console.log('✨ Cierres finales a mostrar:', cierresData.length);
-        return cierresData || [];
+        const arqueosData = response.data.data?.data || response.data.data || [];
+        console.log('✨ Arqueos diarios a mostrar:', arqueosData.length);
+        return arqueosData;
       }
 
-      console.log('⚠️ No hay response.data');
       return [];
     },
     refetchOnWindowFocus: true,
@@ -103,21 +119,21 @@ export default function HistorialCierres() {
   const handleVerTicket = async (cierre: AperturaYCierreCaja) => {
     console.log('🎫 Ver ticket de cierre:', cierre);
     setSelectedCierre(cierre);
-    
+
     // Cargar el cierre completo con resumen desde el backend
     setLoadingCierre(true);
     try {
       const response = await cajaApi.obtenerCierre(cierre.id);
       console.log('📦 Cierre completo con resumen:', response);
-      
+
       if (response.data?.data) {
         const cierreCompleto = response.data.data;
         setCierreConResumen(cierreCompleto);
-        
+
         // Verificar si hay múltiples vendedores
-        const tieneMultiplesVendedores = cierre.distribuciones_vendedores && 
-                                          cierre.distribuciones_vendedores.length > 1;
-        
+        const tieneMultiplesVendedores = cierre.distribuciones_vendedores &&
+          cierre.distribuciones_vendedores.length > 1;
+
         if (tieneMultiplesVendedores) {
           // Mostrar modal de vendedores primero
           console.log('👥 Cierre con múltiples vendedores, mostrando modal de selección');
@@ -158,7 +174,7 @@ export default function HistorialCierres() {
   const handleFinish = (values: FilterValues) => {
     console.log('🔍 Aplicando filtros:', values);
     setSelectedUserId(values.user_id);
-    
+
     if (values.desde && values.hasta) {
       setDateRange([values.desde, values.hasta]);
     } else {
@@ -170,15 +186,152 @@ export default function HistorialCierres() {
     form.resetFields();
     setSelectedUserId(undefined);
     setDateRange(null);
+    setSelectedCajaPrincipalId(undefined);
+  };
+
+  // === Aprobar Cierre ===
+  const handleAprobarCierre = (cierre: AperturaYCierreCaja) => {
+    setCierreParaAprobar(cierre);
+    setSupervisorId(undefined);
+    setSupervisorNombre('');
+    setSupervisorPassword('');
+    setModalAprobarVisible(true);
+  };
+
+  const handleConfirmarAprobacion = async () => {
+    if (!cierreParaAprobar || !supervisorId || !supervisorPassword) {
+      message.warning('Seleccione un supervisor e ingrese la contraseña');
+      return;
+    }
+
+    setAprobandoCierre(true);
+    try {
+      const response: any = await cierreCajaApi.aprobarCierre(
+        cierreParaAprobar.id,
+        supervisorId,
+        supervisorPassword
+      );
+
+      if (response?.success) {
+        message.success('Cierre aprobado exitosamente');
+        setModalAprobarVisible(false);
+        setCierreParaAprobar(null);
+        // Refrescar la lista
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_CIERRES] });
+        refetch();
+      } else {
+        message.error(response?.message || 'Error al aprobar el cierre');
+      }
+    } catch (err: any) {
+      console.error('Error al aprobar cierre:', err);
+      message.error(err?.message || 'Error al aprobar el cierre');
+    } finally {
+      setAprobandoCierre(false);
+    }
+  };
+
+  const handleCancelarAprobacion = () => {
+    setModalAprobarVisible(false);
+    setCierreParaAprobar(null);
+    setSupervisorId(undefined);
+    setSupervisorNombre('');
+    setSupervisorPassword('');
+  };
+
+  const handleReCerrarCaja = (cierre: AperturaYCierreCaja) => {
+    setCierreParaReCerrar(cierre);
+    setSupervisorId(undefined);
+    setSupervisorNombre('');
+    setSupervisorPassword('');
+    setModalReCerrarVisible(true);
+  };
+
+  const handleConfirmarReCerrar = async () => {
+    if (!cierreParaReCerrar || !supervisorId || !supervisorPassword) {
+      message.warning('Seleccione un supervisor e ingrese la contraseña para autorizar el Re-Cierre');
+      return;
+    }
+
+    setVerificandoReCerrar(true);
+    try {
+      // Usar un endpoint genérico de validación de supervisor
+      const response: any = await apiRequest('/cajas/cierre/validar-supervisor', {
+        method: 'POST',
+        body: JSON.stringify({
+          supervisor_id: supervisorId,
+          supervisor_password: supervisorPassword
+        })
+      });
+
+      if (response?.data?.success) {
+        message.success('Autorización confirmada');
+        setModalReCerrarVisible(false);
+        const redirectId = (cierreParaReCerrar as any)?.apertura_id || cierreParaReCerrar.id;
+        router.push(`/ui/facturacion-electronica/cierre-caja?cierre_id=${redirectId}&re_cierre=true`);
+      } else {
+        message.error(response?.data?.message || response?.error || 'Contraseña de supervisor incorrecta');
+      }
+    } catch (err: any) {
+      console.error('Error al autorizar re-cierre:', err);
+      message.error(err?.message || 'Error al validar credenciales del supervisor');
+    } finally {
+      setVerificandoReCerrar(false);
+    }
+  };
+
+  const handleCancelarReCerrar = () => {
+    setModalReCerrarVisible(false);
+    setCierreParaReCerrar(null);
+    setSupervisorId(undefined);
+    setSupervisorNombre('');
+    setSupervisorPassword('');
+  };
+
+  const handlePagarDeuda = (cierre: AperturaYCierreCaja) => {
+    setCierreParaDeuda(cierre);
+    setObservacionDeuda('');
+    setModalPagarDeudaVisible(true);
+  };
+
+  const handleConfirmarPagoDeuda = async () => {
+    if (!(cierreParaDeuda as any)?.deuda) return;
+
+    setPagandoDeuda(true);
+    try {
+      const response = await deudaPersonalApi.pagar((cierreParaDeuda as any).deuda.id, observacionDeuda);
+      if (response?.success) {
+        message.success('Deuda registrada como pagada exitosamente');
+        setModalPagarDeudaVisible(false);
+        setCierreParaDeuda(null);
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_CIERRES] });
+        refetch();
+      } else {
+        message.error(response?.message || 'Error al pagar deuda');
+      }
+    } catch (err: any) {
+      console.error('Error al pagar deuda:', err);
+      message.error(err.message || 'Error al pagar deuda');
+    } finally {
+      setPagandoDeuda(false);
+    }
+  };
+
+  const handleCancelarPagoDeuda = () => {
+    setModalPagarDeudaVisible(false);
+    setCierreParaDeuda(null);
+    setObservacionDeuda('');
   };
 
   const columns = useColumnsCierres({
     onVerTicket: handleVerTicket,
+    onAprobarCierre: handleAprobarCierre,
+    onReCerrarCaja: handleReCerrarCaja,
+    onPagarDeuda: handlePagarDeuda,
   });
 
   // Mostrar mensaje si no hay cierres Y no hay filtros aplicados
   const hayFiltrosAplicados = selectedUserId || dateRange;
-  
+
   if (!isLoading && !error && cierres.length === 0 && !hayFiltrosAplicados) {
     return (
       <div className="w-full">
@@ -254,6 +407,23 @@ export default function HistorialCierres() {
               </div>
               <div className="col-span-2 flex items-center gap-2">
                 <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+                  Caja:
+                </label>
+                <Select
+                  className="w-full"
+                  placeholder="Todas las cajas"
+                  allowClear
+                  value={selectedCajaPrincipalId}
+                  onChange={(value) => setSelectedCajaPrincipalId(value)}
+                  options={cajasPrincipales.map((c: CajaPrincipal) => ({
+                    label: c.nombre,
+                    value: c.id,
+                  }))}
+                  size="middle"
+                />
+              </div>
+              <div className="col-span-2 flex items-center gap-2">
+                <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
                   Desde:
                 </label>
                 <DatePickerBase
@@ -304,7 +474,7 @@ export default function HistorialCierres() {
                   }}
                 />
               </div>
-              <div className="col-span-5 flex items-center gap-2">
+              <div className="col-span-3 flex items-center gap-2">
                 <ButtonBase
                   color="info"
                   size="md"
@@ -323,13 +493,7 @@ export default function HistorialCierres() {
                 >
                   Limpiar
                 </ButtonBase>
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => refetch()}
-                  className="w-full"
-                >
-                  Actualizar
-                </Button>
+
               </div>
             </div>
           </div>
@@ -377,6 +541,152 @@ export default function HistorialCierres() {
           data={cierreConResumen}
         />
       )}
+
+      {/* Modal para aprobar cierre pendiente */}
+      <Modal
+        title={
+          <div className='text-lg font-semibold text-slate-800'>
+            Aprobar Cierre de Caja
+          </div>
+        }
+        open={modalAprobarVisible}
+        onOk={handleConfirmarAprobacion}
+        onCancel={handleCancelarAprobacion}
+        confirmLoading={aprobandoCierre}
+        okText='Aprobar'
+        cancelText='Cancelar'
+        width={500}
+        destroyOnClose
+      >
+        <div className='py-4 space-y-4'>
+          <div className='p-3 bg-amber-50 border border-amber-200 rounded'>
+            <p className='text-sm text-slate-700'>
+              Para aprobar este cierre, seleccione un supervisor e ingrese su contraseña.
+            </p>
+          </div>
+
+          <div>
+            <div className='text-sm font-medium text-slate-600 mb-1'>Supervisor</div>
+            <SelectSupervisor
+              value={supervisorId}
+              onChange={(value: string | undefined, option: any) => {
+                setSupervisorId(value);
+                setSupervisorNombre(option?.label || '');
+              }}
+              size='middle'
+            />
+          </div>
+
+          {supervisorId && (
+            <div>
+              <div className='text-sm font-medium text-slate-600 mb-1'>
+                Contraseña de Supervisor
+                {supervisorNombre && (
+                  <span className='ml-1 text-blue-600'>({supervisorNombre})</span>
+                )}
+              </div>
+              <Input.Password
+                placeholder='Ingrese la contraseña de supervisor'
+                value={supervisorPassword}
+                onChange={(e) => setSupervisorPassword(e.target.value)}
+                size='large'
+                autoFocus
+              />
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal para Re-Cerrar Caja */}
+      <Modal
+        title={
+          <div className='text-lg font-semibold text-slate-800 flex items-center gap-2'>
+            <FaRedo className="text-blue-600" />
+            Autorizar Re-Cierre
+          </div>
+        }
+        open={modalReCerrarVisible}
+        onOk={handleConfirmarReCerrar}
+        onCancel={handleCancelarReCerrar}
+        confirmLoading={verificandoReCerrar}
+        okText='Autorizar y Continuar'
+        cancelText='Cancelar'
+        width={500}
+        destroyOnClose
+      >
+        <div className='py-4 space-y-4'>
+          <div className='p-3 bg-blue-50 border border-blue-200 rounded'>
+            <p className='text-sm text-slate-700'>
+              Para habilitar el re-cierre de esta caja, se requiere autorización de un supervisor. Por favor, seleccione un supervisor e ingrese su contraseña.
+            </p>
+          </div>
+
+          <div>
+            <div className='text-sm font-medium text-slate-600 mb-1'>Supervisor</div>
+            <SelectSupervisor
+              value={supervisorId}
+              onChange={(value: string | undefined, option: any) => {
+                setSupervisorId(value);
+                setSupervisorNombre(option?.label || '');
+              }}
+              size='middle'
+            />
+          </div>
+
+          {supervisorId && (
+            <div>
+              <div className='text-sm font-medium text-slate-600 mb-1'>
+                Contraseña de Supervisor
+                {supervisorNombre && (
+                  <span className='ml-1 text-blue-600'>({supervisorNombre})</span>
+                )}
+              </div>
+              <Input.Password
+                placeholder='Ingrese la contraseña de supervisor'
+                value={supervisorPassword}
+                onChange={(e) => setSupervisorPassword(e.target.value)}
+                size='large'
+                autoFocus
+              />
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal para Pagar Deuda */}
+      <Modal
+        title={
+          <div className='text-lg font-semibold text-slate-800 flex items-center gap-2'>
+            <FaMoneyBillWave className="text-amber-600" />
+            Abonar a Deuda Faltante
+          </div>
+        }
+        open={modalPagarDeudaVisible}
+        onOk={handleConfirmarPagoDeuda}
+        onCancel={handleCancelarPagoDeuda}
+        confirmLoading={pagandoDeuda}
+        okText='Registrar Pago'
+        cancelText='Cancelar'
+        width={500}
+        destroyOnClose
+      >
+        <div className='py-4 space-y-4'>
+          <div className='p-3 bg-amber-50 border border-amber-200 rounded'>
+            <p className='text-sm text-slate-700'>
+              Se registrará el pago de la deuda pendiente por <strong>S/ {(cierreParaDeuda as any)?.deuda?.monto}</strong> asociada al cierre de caja.
+            </p>
+          </div>
+          <div>
+            <div className='text-sm font-medium text-slate-600 mb-1'>Observaciones (Opcional)</div>
+            <Input.TextArea
+              rows={3}
+              placeholder='Ej: Dinero depositado en cuenta, entregado en efectivo, etc.'
+              value={observacionDeuda}
+              onChange={(e) => setObservacionDeuda(e.target.value)}
+            />
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
