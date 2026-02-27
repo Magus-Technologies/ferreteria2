@@ -3,8 +3,7 @@
 import { Select, Modal, FormInstance, Form, Input, Switch } from 'antd'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
-import { FaCalendar, FaMapMarkedAlt, FaUserEdit } from 'react-icons/fa'
+import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import SelectDespachadores from '~/app/_components/form/selects/select-despachadores'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
@@ -15,8 +14,12 @@ import type { FormCreateVenta } from '../others/body-vender'
 import TablaProductosEntrega from '../../../_components/tables/tabla-productos-entrega'
 import type { ProductoEntrega } from '../../../_hooks/use-productos-entrega'
 import dayjs from 'dayjs'
+import 'dayjs/locale/es'
 import { clienteApi, type TipoDireccion } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import ModalCalendarioSlot from './modal-calendario-slot'
+
+dayjs.locale('es')
 
 // Importar el mapa de Mapbox dinámicamente para evitar problemas de SSR
 const MapaDireccionMapbox = dynamic(
@@ -68,6 +71,12 @@ export default function ModalDetallesEntrega({
   const [mostrarMapaResto, setMostrarMapaResto] = useState(false)
   const [coordenadasResto, setCoordenadasResto] = useState<Coordenadas | null>(null)
   const [direccionSeleccionadaResto, setDireccionSeleccionadaResto] = useState<TipoDireccion | null>(null)
+
+  // Estados para el modal de calendario de slots
+  const [modalCalendarioDomicilio, setModalCalendarioDomicilio] = useState(false)
+  const [modalCalendarioResto, setModalCalendarioResto] = useState(false)
+  const [slotDomicilio, setSlotDomicilio] = useState<{ start: Date; end: Date } | null>(null)
+  const [slotResto, setSlotResto] = useState<{ start: Date; end: Date } | null>(null)
 
   // Hook para crear/actualizar venta
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
@@ -172,6 +181,23 @@ export default function ModalDetallesEntrega({
 
   const handleEditarCliente = () => {
     onEditarCliente()
+  }
+
+  // Aplicar slot seleccionado desde el calendario (domicilio)
+  const handleAplicarSlotDomicilio = (slot: { start: Date; end: Date }) => {
+    setSlotDomicilio(slot)
+    // Guardar como string para que getFieldsValue() lo lea correctamente
+    form.setFieldValue('fecha_programada', dayjs(slot.start).format('YYYY-MM-DD'))
+    form.setFieldValue('hora_inicio', dayjs(slot.start).format('HH:mm'))
+    form.setFieldValue('hora_fin', dayjs(slot.end).format('HH:mm'))
+  }
+
+  // Aplicar slot seleccionado desde el calendario (resto parcial)
+  const handleAplicarSlotResto = (slot: { start: Date; end: Date }) => {
+    setSlotResto(slot)
+    form.setFieldValue('_resto_fecha_programada', dayjs(slot.start).format('YYYY-MM-DD'))
+    setHoraInicioResto(dayjs(slot.start).format('HH:mm'))
+    setHoraFinResto(dayjs(slot.end).format('HH:mm'))
   }
 
   // Callback para cuando el usuario marca una ubicación en el mapa
@@ -365,7 +391,7 @@ export default function ModalDetallesEntrega({
         {/* Campos para Despacho a Domicilio (solo Domicilio, ya no Parcial) */}
         {tipoDespacho === 'Domicilio' && (
           <div className="space-y-4">
-            {/* Fila 1: Chofer y Fecha */}
+            {/* Fila 1: Despachador + botón calendario */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -388,71 +414,45 @@ export default function ModalDetallesEntrega({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha: <span className="text-red-500">*</span>
+                  Fecha y Hora: <span className="text-red-500">*</span>
                 </label>
-                <DatePickerBase
-                  propsForm={{
-                    name: 'fecha_programada',
-                  }}
-                  placeholder="Fecha"
-                  prefix={
-                    <FaCalendar size={14} className="text-blue-600 mx-1" />
-                  }
-                  className="w-full"
-                />
+                {slotDomicilio ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-800 font-medium flex items-center gap-2">
+                      <FaCheck size={11} className="text-emerald-600 flex-shrink-0" />
+                      <span>
+                        {dayjs(slotDomicilio.start).format('ddd D MMM')},{' '}
+                        {dayjs(slotDomicilio.start).format('HH:mm')} —{' '}
+                        {dayjs(slotDomicilio.end).format('HH:mm')}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setModalCalendarioDomicilio(true)}
+                      className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                ) : (
+                  <ButtonBase
+                    color="info"
+                    size="md"
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => setModalCalendarioDomicilio(true)}
+                  >
+                    <FaCalendarAlt size={14} />
+                    Elegir en Calendario
+                  </ButtonBase>
+                )}
+                {/* Campos ocultos — registrados en el form para que getFieldsValue() los incluya */}
+                <div style={{ display: 'none' }}>
+                  <Form.Item name="fecha_programada"><Input /></Form.Item>
+                  <Form.Item name="hora_inicio"><Input /></Form.Item>
+                  <Form.Item name="hora_fin"><Input /></Form.Item>
+                </div>
               </div>
-            </div>
-
-            {/* Fila 2: Horarios */}
-            <div className="grid grid-cols-2 gap-4">
-              <Form.Item name="hora_inicio" className="mb-0">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hora Inicio:
-                  </label>
-                  <Select
-                    placeholder="Hora"
-                    options={[
-                      { value: '08:00', label: '08:00' },
-                      { value: '09:00', label: '09:00' },
-                      { value: '10:00', label: '10:00' },
-                      { value: '11:00', label: '11:00' },
-                      { value: '12:00', label: '12:00' },
-                      { value: '13:00', label: '13:00' },
-                      { value: '14:00', label: '14:00' },
-                      { value: '15:00', label: '15:00' },
-                      { value: '16:00', label: '16:00' },
-                      { value: '17:00', label: '17:00' },
-                      { value: '18:00', label: '18:00' },
-                    ]}
-                    className="w-full"
-                  />
-                </div>
-              </Form.Item>
-              <Form.Item name="hora_fin" className="mb-0">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hora Fin:
-                  </label>
-                  <Select
-                    placeholder="Hora"
-                    options={[
-                      { value: '09:00', label: '09:00' },
-                      { value: '10:00', label: '10:00' },
-                      { value: '11:00', label: '11:00' },
-                      { value: '12:00', label: '12:00' },
-                      { value: '13:00', label: '13:00' },
-                      { value: '14:00', label: '14:00' },
-                      { value: '15:00', label: '15:00' },
-                      { value: '16:00', label: '16:00' },
-                      { value: '17:00', label: '17:00' },
-                      { value: '18:00', label: '18:00' },
-                      { value: '19:00', label: '19:00' },
-                    ]}
-                    className="w-full"
-                  />
-                </div>
-              </Form.Item>
             </div>
 
             {/* Fila 3: Selector de dirección, Dirección y Mapa */}
@@ -642,7 +642,7 @@ export default function ModalDetallesEntrega({
                     {productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} producto(s) restante(s)
                   </p>
 
-                  {/* Despachador y Fecha */}
+                  {/* Despachador y botón calendario */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -657,66 +657,42 @@ export default function ModalDetallesEntrega({
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fecha programada: <span className="text-red-500">*</span>
+                        Fecha y Hora: <span className="text-red-500">*</span>
                       </label>
-                      <DatePickerBase
-                        propsForm={{ name: '_resto_fecha_programada' }}
-                        placeholder="Fecha"
-                        prefix={<FaCalendar size={14} className="text-blue-600 mx-1" />}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Horarios */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Hora Inicio:
-                      </label>
-                      <Select
-                        value={horaInicioResto}
-                        onChange={setHoraInicioResto}
-                        placeholder="Hora inicio"
-                        options={[
-                          { value: '08:00', label: '08:00' },
-                          { value: '09:00', label: '09:00' },
-                          { value: '10:00', label: '10:00' },
-                          { value: '11:00', label: '11:00' },
-                          { value: '12:00', label: '12:00' },
-                          { value: '13:00', label: '13:00' },
-                          { value: '14:00', label: '14:00' },
-                          { value: '15:00', label: '15:00' },
-                          { value: '16:00', label: '16:00' },
-                          { value: '17:00', label: '17:00' },
-                          { value: '18:00', label: '18:00' },
-                        ]}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Hora Fin:
-                      </label>
-                      <Select
-                        value={horaFinResto}
-                        onChange={setHoraFinResto}
-                        placeholder="Hora fin"
-                        options={[
-                          { value: '09:00', label: '09:00' },
-                          { value: '10:00', label: '10:00' },
-                          { value: '11:00', label: '11:00' },
-                          { value: '12:00', label: '12:00' },
-                          { value: '13:00', label: '13:00' },
-                          { value: '14:00', label: '14:00' },
-                          { value: '15:00', label: '15:00' },
-                          { value: '16:00', label: '16:00' },
-                          { value: '17:00', label: '17:00' },
-                          { value: '18:00', label: '18:00' },
-                          { value: '19:00', label: '19:00' },
-                        ]}
-                        className="w-full"
-                      />
+                      {slotResto ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-800 font-medium flex items-center gap-2">
+                            <FaCheck size={11} className="text-emerald-600 flex-shrink-0" />
+                            <span>
+                              {dayjs(slotResto.start).format('ddd D MMM')},{' '}
+                              {dayjs(slotResto.start).format('HH:mm')} —{' '}
+                              {dayjs(slotResto.end).format('HH:mm')}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setModalCalendarioResto(true)}
+                            className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
+                          >
+                            Cambiar
+                          </button>
+                        </div>
+                      ) : (
+                        <ButtonBase
+                          color="info"
+                          size="md"
+                          type="button"
+                          className="w-full flex items-center justify-center gap-2"
+                          onClick={() => setModalCalendarioResto(true)}
+                        >
+                          <FaCalendarAlt size={14} />
+                          Elegir en Calendario
+                        </ButtonBase>
+                      )}
+                      {/* Campo oculto registrado en form */}
+                      <div style={{ display: 'none' }}>
+                        <Form.Item name="_resto_fecha_programada"><Input /></Form.Item>
+                      </div>
                     </div>
                   </div>
 
@@ -846,6 +822,20 @@ export default function ModalDetallesEntrega({
           </div>
         )}
       </div>
+
+      {/* Modal de calendario para seleccionar slot - Domicilio */}
+      <ModalCalendarioSlot
+        open={modalCalendarioDomicilio}
+        onClose={() => setModalCalendarioDomicilio(false)}
+        onAplicar={handleAplicarSlotDomicilio}
+      />
+
+      {/* Modal de calendario para seleccionar slot - Resto Parcial */}
+      <ModalCalendarioSlot
+        open={modalCalendarioResto}
+        onClose={() => setModalCalendarioResto(false)}
+        onAplicar={handleAplicarSlotResto}
+      />
     </Modal>
   )
 }

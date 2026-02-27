@@ -1,6 +1,6 @@
 import { Modal, Tooltip, Input, message as antdMessage } from 'antd'
 import { cloneElement, Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { FaDownload, FaShareNodes } from 'react-icons/fa6'
+import { FaDownload, FaShareNodes, FaPrint } from 'react-icons/fa6'
 import { HiClipboardDocument } from 'react-icons/hi2'
 import { MdEmail } from 'react-icons/md'
 import ButtonBase from '~/components/buttons/button-base'
@@ -11,6 +11,9 @@ import ButtonConfiguracionImpresion from '~/components/buttons/button-configurac
 import ModalConfiguracionImpresion from '~/components/modals/modal-configuracion-impresion'
 import { cajaApi } from '~/lib/api/caja'
 import { cierreCajaApi } from '~/lib/api/cierre-caja'
+import { useQzPrint } from '~/hooks/use-qz-print'
+import ModalSeleccionImpresora from './modal-seleccion-impresora'
+import type { TipoFormato } from '~/store/store-impresora'
 
 interface ModalEntradaStockProps {
   open: boolean
@@ -39,6 +42,9 @@ export default function ModalShowDoc({
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [emailDestino, setEmailDestino] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [openImpresoraModal, setOpenImpresoraModal] = useState(false)
+
+  const formato: TipoFormato = esTicket ? 'ticket' : 'a4'
 
   // Solo cargar configuraciones cuando se abre el modal de configuración
   const handleOpenConfig = () => {
@@ -54,6 +60,29 @@ export default function ModalShowDoc({
     jsx: <>{children}</>,
     name: nro_doc,
   })
+
+  // QZ Tray - impresión directa
+  const qz = useQzPrint({
+    jsx: <>{children}</>,
+    name: nro_doc,
+    formato,
+  })
+
+  // Imprimir: si hay impresora default → directo, si no → abrir modal de selección
+  const handlePrint = async () => {
+    const imprimioDirecto = await qz.imprimirDefault()
+    if (!imprimioDirecto) {
+      // No hay impresora por defecto, cargar lista y abrir modal
+      await qz.listarImpresoras()
+      setOpenImpresoraModal(true)
+    }
+  }
+
+  // Abrir modal de selección de impresora (para elegir/cambiar impresora)
+  const handleOpenImpresoraModal = async () => {
+    await qz.listarImpresoras()
+    setOpenImpresoraModal(true)
+  }
 
   // Función para enviar email
   const handleSendEmail = async () => {
@@ -174,6 +203,16 @@ export default function ModalShowDoc({
                   </ButtonBase>
                 </Tooltip>
               )}
+              <Tooltip title={qz.impresoraDefault ? `Impresora: ${qz.impresoraDefault}` : 'Seleccionar impresora'}>
+                <ButtonBase
+                  onClick={handleOpenImpresoraModal}
+                  color={qz.impresoraDefault ? 'info' : 'default'}
+                  size='md'
+                  className='!px-3'
+                >
+                  <FaPrint />
+                </ButtonBase>
+              </Tooltip>
               {tipoDocumento && (
                 <ButtonConfiguracionImpresion
                   tipoDocumento={tipoDocumento}
@@ -183,8 +222,13 @@ export default function ModalShowDoc({
             </div>
           </div>
         }
-        okText={'Imprimir'}
-        onOk={print}
+        okText={
+          qz.impresoraDefault
+            ? `Imprimir (${qz.impresoraDefault.length > 20 ? qz.impresoraDefault.slice(0, 20) + '...' : qz.impresoraDefault})`
+            : 'Imprimir'
+        }
+        onOk={handlePrint}
+        confirmLoading={qz.imprimiendo}
         cancelText='Cerrar'
         cancelButtonProps={{ className: 'rounded-xl' }}
         okButtonProps={{
@@ -264,6 +308,17 @@ export default function ModalShowDoc({
           tipoDocumento={tipoDocumento}
         />
       )}
+
+      <ModalSeleccionImpresora
+        open={openImpresoraModal}
+        setOpen={setOpenImpresoraModal}
+        impresoras={qz.impresoras}
+        cargando={qz.cargando}
+        imprimiendo={qz.imprimiendo}
+        formato={formato}
+        onImprimir={qz.guardarYImprimir}
+        onRefrescar={qz.listarImpresoras}
+      />
     </>
   )
 }

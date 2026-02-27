@@ -6,25 +6,14 @@ import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import { useState } from "react";
-import { redColors, orangeColors, greenColors } from "~/lib/colors";
-
-interface ValuesFiltersValesCompra {
-  search?: string;
-  estado?: 'ACTIVO' | 'PAUSADO' | 'FINALIZADO';
-  tipo_promocion?: string;
-  modalidad?: string;
-  vigentes?: boolean;
-}
+import { useStoreFiltrosVales, type FiltrosVales } from "../../_store/store-filtros-vales";
 
 export default function FiltersValesCompra() {
-  const [form] = Form.useForm<ValuesFiltersValesCompra>();
-  const [filters, setFilters] = useState<ValuesFiltersValesCompra>({});
+  const [form] = Form.useForm<FiltrosVales>();
+  const setFiltros = useStoreFiltrosVales((s) => s.setFiltros);
 
-  const handleSearch = (values: ValuesFiltersValesCompra) => {
-    console.log("Filtros:", values);
-    setFilters(values);
-    // Aquí se conectará con React Query para refetch
+  const handleSearch = (values: FiltrosVales) => {
+    setFiltros(values);
   };
 
   return (
@@ -33,7 +22,6 @@ export default function FiltersValesCompra() {
       name="filtros-vales-compra"
       initialValues={{
         estado: 'ACTIVO',
-        vigentes: true,
       }}
       className="w-full"
       onFinish={handleSearch}

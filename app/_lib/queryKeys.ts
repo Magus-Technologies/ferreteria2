@@ -72,4 +72,5 @@ export enum QueryKeys {
   CLIENTES_RECIENTES = 'clientes_recientes',
   DIRECCIONES_CLIENTE = 'direcciones_cliente',
   DIRECCION_CLIENTE = 'direccion_cliente',
+  CONFIGURACION_NOTIFICACIONES = 'configuracion_notificaciones',
 }

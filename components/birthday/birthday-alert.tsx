@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Modal, App } from 'antd'
 import { useAuth } from '~/lib/auth-context'
 import { cumpleanosApi, CumpleanosUsuario } from '~/lib/api/cumpleanos'
+import { configuracionNotificacionesApi } from '~/lib/api/configuracion-notificaciones'
+import { fcmApi } from '~/lib/api/fcm'
 
 const SESSION_KEY_PREFIX = 'birthday_alert_shown_'
 
@@ -23,11 +25,18 @@ export default function BirthdayAlert() {
 
     const fetchCumpleanos = async () => {
       try {
-        const res = await cumpleanosApi.getProximos()
+        // 1. Obtener configuración de días de anticipación del usuario
+        const configRes = await configuracionNotificacionesApi.getCumpleanos()
+        const configCumple = configRes.data?.data ?? { habilitado: true, dias_anticipacion: 7 }
 
+        // Si el usuario deshabilitó esta notificación, salir
+        if (!configCumple.habilitado) return
+
+        // 2. Obtener cumpleaños pasando los días configurados al backend
+        const res = await cumpleanosApi.getProximos(configCumple.dias_anticipacion)
         if (res.error) return
 
-        const datos = res.data?.data || []
+        const datos: CumpleanosUsuario[] = res.data?.data || []
         if (datos.length === 0) return
 
         sessionStorage.setItem(sessionKey, new Date().toDateString())
@@ -36,39 +45,61 @@ export default function BirthdayAlert() {
         const cumpleHoy = datos.filter((d: CumpleanosUsuario) => d.tipo === 'hoy')
         const cumpleProximo = datos.filter((d: CumpleanosUsuario) => d.tipo !== 'hoy')
 
-        // Mostrar modal para cumpleaños de HOY
+        // 3. Mostrar modal para cumpleaños de HOY
         if (cumpleHoy.length > 0) {
           const esElUsuario = cumpleHoy.find((c: CumpleanosUsuario) => c.id === user.id)
-          setBirthdayUser(esElUsuario || cumpleHoy[0])
+          const principal = esElUsuario || cumpleHoy[0]
+          setBirthdayUser(principal)
           setModalOpen(true)
 
+          // Notificaciones in-app para los demás de hoy
           cumpleHoy
-            .filter((c: CumpleanosUsuario) => c.id !== (esElUsuario?.id || cumpleHoy[0].id))
+            .filter((c: CumpleanosUsuario) => c.id !== principal.id)
             .forEach((c: CumpleanosUsuario, i: number) => {
               setTimeout(() => {
                 notification.success({
-                  message: 'Cumplea\u00f1os Hoy',
-                  description: `Hoy es el cumplea\u00f1os de ${c.nombre}. Cumple ${c.edad} a\u00f1os!`,
+                  message: 'Cumpleaños Hoy 🎉',
+                  description: `Hoy es el cumpleaños de ${c.nombre}. ¡Cumple ${c.edad} años!`,
                   placement: 'topRight',
                   duration: 15,
                 })
               }, (i + 1) * 2000)
             })
+
+          // 4. Firebase push para cumpleaños de HOY
+          cumpleHoy.forEach((c: CumpleanosUsuario) => {
+            fcmApi.sendNotification({
+              user_id: user.id,
+              title: c.id === user.id ? '🎂 ¡Feliz Cumpleaños!' : '🎉 ¡Cumpleaños Hoy!',
+              body: c.id === user.id
+                ? `¡Hoy cumples ${c.edad} años! ¡Que todos tus deseos se hagan realidad!`
+                : `Hoy es el cumpleaños de ${c.nombre}. ¡Cumple ${c.edad} años!`,
+              data: { type: 'cumpleanos', dias_restantes: '0' },
+            }).catch(() => { /* sin FCM habilitado */ })
+          })
         }
 
-        // Notificaciones para próximos cumpleaños (3 y 7 días)
+        // 5. Notificaciones in-app para próximos cumpleaños
         cumpleProximo.forEach((c: CumpleanosUsuario, i: number) => {
           const delay = cumpleHoy.length > 0 ? (cumpleHoy.length + i) * 2000 : i * 1500
           setTimeout(() => {
             notification.info({
               message: c.dias_restantes <= 3
-                ? `Cumplea\u00f1os en ${c.dias_restantes} d\u00eda${c.dias_restantes > 1 ? 's' : ''}`
-                : 'Cumplea\u00f1os Pr\u00f3ximo',
-              description: `${c.nombre} cumple ${c.edad} a\u00f1os en ${c.dias_restantes} d\u00eda${c.dias_restantes > 1 ? 's' : ''} (${c.fecha_nacimiento})`,
+                ? `Cumpleaños en ${c.dias_restantes} día${c.dias_restantes > 1 ? 's' : ''} 🎈`
+                : 'Cumpleaños Próximo 🎁',
+              description: `${c.nombre} cumple ${c.edad} años en ${c.dias_restantes} día${c.dias_restantes > 1 ? 's' : ''} (${c.fecha_nacimiento})`,
               placement: 'topRight',
               duration: 12,
             })
           }, delay + 1000)
+
+          // 6. Firebase push para próximos cumpleaños
+          fcmApi.sendNotification({
+            user_id: user.id,
+            title: `🎈 Cumpleaños en ${c.dias_restantes} día${c.dias_restantes > 1 ? 's' : ''}`,
+            body: `${c.nombre} cumple ${c.edad} años el ${c.fecha_nacimiento}`,
+            data: { type: 'cumpleanos', dias_restantes: String(c.dias_restantes) },
+          }).catch(() => { /* sin FCM habilitado */ })
         })
       } catch (err) {
         console.error('[BirthdayAlert] Error:', err)

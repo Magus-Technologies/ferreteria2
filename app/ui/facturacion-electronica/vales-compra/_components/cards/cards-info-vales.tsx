@@ -5,12 +5,21 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getValesCompra } from '~/lib/api/vales-compra'
 import { valesCompraKeys } from '~/lib/api/vales-compra'
+import { useStoreFiltrosVales } from '../../_store/store-filtros-vales'
 
 export default function CardsInfoVales() {
+  const filtros = useStoreFiltrosVales((s) => s.filtros)
+
   const { data: response } = useQuery({
-    queryKey: valesCompraKeys.lists(),
+    queryKey: valesCompraKeys.list(filtros),
     queryFn: async () => {
-      const result = await getValesCompra({ per_page: 100 })
+      const result = await getValesCompra({
+        per_page: 100,
+        search: filtros.search || undefined,
+        estado: filtros.estado || undefined,
+        tipo_promocion: filtros.tipo_promocion || undefined,
+        modalidad: filtros.modalidad || undefined,
+      })
       return result.data?.data || []
     },
   })

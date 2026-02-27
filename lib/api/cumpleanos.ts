@@ -11,7 +11,8 @@ export interface CumpleanosUsuario {
 }
 
 export const cumpleanosApi = {
-  async getProximos() {
-    return apiRequest<{ data: CumpleanosUsuario[] }>('/cumpleanos/proximos')
+  async getProximos(dias?: number) {
+    const query = dias !== undefined ? `?dias=${dias}` : ''
+    return apiRequest<{ data: CumpleanosUsuario[] }>(`/cumpleanos/proximos${query}`)
   },
 }

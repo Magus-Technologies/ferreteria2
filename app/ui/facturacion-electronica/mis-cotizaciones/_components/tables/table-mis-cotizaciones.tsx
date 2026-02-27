@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsMisCotizaciones } from './columns-mis-cotizaciones'
 import { create } from 'zustand'
@@ -59,8 +59,6 @@ export default function TableMisCotizaciones() {
     (state) => state.setCotizacion
   )
 
-  const [selectionColor, setSelectionColor] = useState<string>('transparent');
-
   // Seleccionar automáticamente el primer registro cuando se cargan los datos
   React.useEffect(() => {
     if (response && response.length > 0 && tableRef.current) {
@@ -69,9 +67,6 @@ export default function TableMisCotizaciones() {
         if (firstNode) {
           firstNode.setSelected(true);
           setCotizacionSeleccionada(firstNode.data);
-          // Calcular color de la primera fila
-          const color = calcularColorCotizacion(firstNode.data);
-          setSelectionColor(color);
         }
       }, 100);
     }
@@ -97,23 +92,14 @@ export default function TableMisCotizaciones() {
         columnDefs={useColumnsMisCotizaciones()}
         rowData={response || []}
         tableRef={tableRef}
-        selectionColor={selectionColor}
+        selectionColor="overlay"
         getRowStyle={getRowStyle}
         onRowClicked={(event) => {
           event.node.setSelected(true);
         }}
-        onSelectionChanged={({ selectedNodes, api }) => {
+        onSelectionChanged={({ selectedNodes }) => {
           const selectedCotizacion = selectedNodes?.[0]?.data as Cotizacion;
           setCotizacionSeleccionada(selectedCotizacion);
-          
-          // Actualizar el color de selección dinámicamente
-          if (selectedCotizacion) {
-            const color = calcularColorCotizacion(selectedCotizacion);
-            setSelectionColor(color);
-            
-            // Forzar redibujado de filas para aplicar el nuevo color inmediatamente
-            api?.redrawRows();
-          }
         }}
         onRowDoubleClicked={({ data }) => {
           setCotizacionSeleccionada(data)

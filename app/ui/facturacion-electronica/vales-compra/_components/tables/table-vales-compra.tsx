@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { valesCompraKeys } from '~/lib/api/vales-compra'
 import { AgGridReact } from 'ag-grid-react'
 import { orangeColors } from '~/lib/colors'
+import { useStoreFiltrosVales } from '../../_store/store-filtros-vales'
 
 type UseStoreValeSeleccionado = {
   vale?: ValeCompra
@@ -23,13 +24,17 @@ export const useStoreValeSeleccionado =
 
 export default function TableValesCompra() {
   const tableRef = useRef<AgGridReact>(null);
+  const filtros = useStoreFiltrosVales((s) => s.filtros);
 
   const { data: response, isLoading: loading } = useQuery({
-    queryKey: valesCompraKeys.lists(),
+    queryKey: valesCompraKeys.list(filtros),
     queryFn: async () => {
-      const result = await getValesCompra({ 
+      const result = await getValesCompra({
         per_page: 100,
-        activos: true 
+        search: filtros.search || undefined,
+        estado: filtros.estado || undefined,
+        tipo_promocion: filtros.tipo_promocion || undefined,
+        modalidad: filtros.modalidad || undefined,
       })
       return result.data?.data || []
     },
@@ -71,7 +76,6 @@ export default function TableValesCompra() {
         }}
         onRowDoubleClicked={({ data }) => {
           setValeSeleccionado(data)
-          // Abrir modal de PDF
           if (data?.id) {
             const { openModal } = require('../../_store/store-modal-pdf-vale').useStoreModalPdfVale.getState()
             openModal(data.id)

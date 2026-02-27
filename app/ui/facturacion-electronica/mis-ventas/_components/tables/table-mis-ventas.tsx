@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import TableWithTitle from "~/components/tables/table-with-title";
 import type { getVentaResponseProps } from "~/lib/api/venta";
 import { useColumnsMisVentas } from "./columns-mis-ventas";
@@ -9,7 +9,7 @@ import useGetVentas from "../../_hooks/use-get-ventas";
 import { create } from "zustand";
 import { AgGridReact } from "ag-grid-react";
 import { orangeColors, greenColors, redColors } from "~/lib/colors";
-import { GetRowIdParams, RowStyle } from "ag-grid-community";
+import { RowStyle } from "ag-grid-community";
 
 type UseStoreVentaSeleccionada = {
   venta?: getVentaResponseProps;
@@ -85,8 +85,6 @@ export default function TableMisVentas() {
     (state) => state.setVenta
   );
 
-  const [selectionColor, setSelectionColor] = useState<string>('transparent');
-
   // Seleccionar automáticamente el primer registro cuando se cargan los datos
   React.useEffect(() => {
     if (response && response.length > 0 && tableRef.current) {
@@ -95,9 +93,6 @@ export default function TableMisVentas() {
         if (firstNode) {
           firstNode.setSelected(true);
           setVentaSeleccionada(firstNode.data);
-          // Calcular color de la primera fila
-          const color = calcularColorVenta(firstNode.data);
-          setSelectionColor(color);
         }
       }, 100);
     }
@@ -146,23 +141,14 @@ export default function TableMisVentas() {
         columnDefs={useColumnsMisVentas()}
         rowData={response || []}
         tableRef={tableRef}
-        selectionColor={selectionColor}
+        selectionColor="overlay"
         getRowStyle={getRowStyle}
         onRowClicked={(event) => {
           event.node.setSelected(true);
         }}
-        onSelectionChanged={({ selectedNodes, api }) => {
+        onSelectionChanged={({ selectedNodes }) => {
           const selectedVenta = selectedNodes?.[0]?.data as getVentaResponseProps;
           setVentaSeleccionada(selectedVenta);
-          
-          // Actualizar el color de selección dinámicamente
-          if (selectedVenta) {
-            const color = calcularColorVenta(selectedVenta);
-            setSelectionColor(color);
-            
-            // Forzar redibujado de filas para aplicar el nuevo color inmediatamente
-            api?.redrawRows();
-          }
         }}
         onRowDoubleClicked={({ data }) => {
           setVentaSeleccionada(data);

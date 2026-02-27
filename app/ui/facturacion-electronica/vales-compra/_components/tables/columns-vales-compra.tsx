@@ -2,11 +2,12 @@
 
 import { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
-import { ValeCompra } from "~/lib/api/vales-compra";
-import { Tag } from "antd";
-import { FaFilePdf } from "react-icons/fa6";
+import { ValeCompra, cambiarEstadoVale, valesCompraKeys } from "~/lib/api/vales-compra";
+import { Tag, Tooltip, Popconfirm, message } from "antd";
+import { FaFilePdf, FaPause, FaPlay, FaStop } from "react-icons/fa6";
 import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfVale } from "../../_store/store-modal-pdf-vale";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Cell Renderer para Estado
 function CellEstado({ value }: { value: 'ACTIVO' | 'PAUSADO' | 'FINALIZADO' }) {
@@ -61,7 +62,7 @@ function CellModalidad({ value }: { value: string }) {
 function CellDescuento({ data }: { data: ValeCompra }) {
   if (!data.descuento_valor) return <div className="flex items-center justify-center h-full">-</div>;
 
-  const texto = data.descuento_tipo === 'PORCENTAJE' 
+  const texto = data.descuento_tipo === 'PORCENTAJE'
     ? `${data.descuento_valor}%`
     : `S/ ${data.descuento_valor}`;
 
@@ -91,23 +92,100 @@ function CellStock({ data }: { data: ValeCompra }) {
 // Cell Renderer para Acciones
 function CellAcciones({ data }: { data: ValeCompra }) {
   const openModal = useStoreModalPdfVale((state) => state.openModal);
+  const queryClient = useQueryClient();
 
   const handleVerPDF = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar que se seleccione la fila
+    e.stopPropagation();
     openModal(data.id);
   };
 
+  const handleCambiarEstado = async (nuevoEstado: 'ACTIVO' | 'PAUSADO' | 'FINALIZADO') => {
+    try {
+      const res = await cambiarEstadoVale(data.id, { estado: nuevoEstado });
+      if (res.error) {
+        message.error(res.error.message || 'Error al cambiar estado');
+        return;
+      }
+      message.success(`Vale ${nuevoEstado.toLowerCase()} correctamente`);
+      queryClient.invalidateQueries({ queryKey: valesCompraKeys.lists() });
+    } catch {
+      message.error('Error al cambiar estado');
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center gap-2 h-full">
-      <ButtonBase
-        color="danger"
-        size="md"
-        onClick={handleVerPDF}
-        className="flex items-center !px-3"
-        title="Ver Ticket PDF"
-      >
-        <FaFilePdf />
-      </ButtonBase>
+    <div className="flex items-center justify-center gap-1 h-full">
+      <Tooltip title="Ver Ticket">
+        <ButtonBase
+          color="danger"
+          size="sm"
+          onClick={handleVerPDF}
+          className="!px-2"
+        >
+          <FaFilePdf size={12} />
+        </ButtonBase>
+      </Tooltip>
+
+      {data.estado === 'ACTIVO' && (
+        <Tooltip title="Pausar">
+          <Popconfirm
+            title="¿Pausar este vale?"
+            onConfirm={() => handleCambiarEstado('PAUSADO')}
+            okText="Sí"
+            cancelText="No"
+          >
+            <ButtonBase
+              color="warning"
+              size="sm"
+              className="!px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FaPause size={12} />
+            </ButtonBase>
+          </Popconfirm>
+        </Tooltip>
+      )}
+
+      {data.estado === 'PAUSADO' && (
+        <Tooltip title="Activar">
+          <Popconfirm
+            title="¿Activar este vale?"
+            onConfirm={() => handleCambiarEstado('ACTIVO')}
+            okText="Sí"
+            cancelText="No"
+          >
+            <ButtonBase
+              color="success"
+              size="sm"
+              className="!px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FaPlay size={12} />
+            </ButtonBase>
+          </Popconfirm>
+        </Tooltip>
+      )}
+
+      {data.estado !== 'FINALIZADO' && (
+        <Tooltip title="Finalizar">
+          <Popconfirm
+            title="¿Finalizar este vale? Esta acción no se puede deshacer."
+            onConfirm={() => handleCambiarEstado('FINALIZADO')}
+            okText="Sí, finalizar"
+            cancelText="No"
+            okButtonProps={{ danger: true }}
+          >
+            <ButtonBase
+              color="danger"
+              size="sm"
+              className="!px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FaStop size={12} />
+            </ButtonBase>
+          </Popconfirm>
+        </Tooltip>
+      )}
     </div>
   );
 }
@@ -186,7 +264,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
     },
     {
       headerName: "Acciones",
-      width: 100,
+      width: 150,
       pinned: 'right',
       cellRenderer: CellAcciones,
       cellRendererParams: (params: any) => ({ data: params.data }),
