@@ -7,6 +7,7 @@ import FormInformacionEmpresa from "./forms/form-informacion-basica";
 import FormContactos from "./forms/form-contactos";
 import FormLogo from "./forms/form-logo";
 import FormConfiguracion from "./forms/form-configuracion";
+import FormEnvioSunat from "./forms/form-envio-sunat";
 
 interface TabsEmpresaProps {
   empresaId: number;
@@ -14,24 +15,29 @@ interface TabsEmpresaProps {
 export default function TabsEmpresa({ empresaId }: TabsEmpresaProps) {
   const tabsItems = [
     {
-        key: '1',
-        label: 'Información Básica',
-        children: <FormInformacionEmpresa empresaId={empresaId} />
+      key: '1',
+      label: 'Información Básica',
+      children: <FormInformacionEmpresa empresaId={empresaId} />
     },
     {
-        key: '2',
-        label: 'Logo',
-        children: <FormLogo empresaId={empresaId} />
+      key: '2',
+      label: 'Logo',
+      children: <FormLogo empresaId={empresaId} />
     },
     {
-        key: '3',
-        label: 'Configuraciones',
-        children: <FormConfiguracion empresaId={empresaId} />
+      key: '3',
+      label: 'Configuraciones',
+      children: <FormConfiguracion empresaId={empresaId} />
     },
     {
-        key: '4',
-        label: 'Contactos',
-        children: <FormContactos empresaId={empresaId} />
+      key: '4',
+      label: 'Contactos',
+      children: <FormContactos empresaId={empresaId} />
+    },
+    {
+      key: '5',
+      label: 'Envío SUNAT',
+      children: <FormEnvioSunat empresaId={empresaId} />
     }
   ];
   return <Tabs defaultActiveKey="1" items={tabsItems} />;

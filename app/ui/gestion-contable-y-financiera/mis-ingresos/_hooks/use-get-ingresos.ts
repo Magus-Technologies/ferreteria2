@@ -9,7 +9,7 @@ export const useGetIngresos = (
     queryKey: ['ingresos-extras', filtros],
     queryFn: () => getIngresosExtras(),
     enabled: enabled && !!filtros,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 0,
   })
 }
 
@@ -21,6 +21,6 @@ export const useGetResumenIngresos = (
     queryKey: ['ingresos-extras-resumen', filtros],
     queryFn: () => getResumenIngresosExtras(),
     enabled: enabled && !!filtros,
-    staleTime: 1000 * 60 * 2, // 2 minutos
+    staleTime: 0,
   })
 }

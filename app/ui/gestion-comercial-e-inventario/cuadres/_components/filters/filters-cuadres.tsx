@@ -24,7 +24,7 @@ export default function FiltersCuadres() {
                 initialValues={{
                     desde: dayjs().startOf('month'),
                     hasta: dayjs(),
-                    listar_no_anuladas: true,
+                    listar_no_anuladas: false,
                     tipo: 'TODOS'
                 }}
                 onFinish={handleSearch}

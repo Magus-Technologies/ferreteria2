@@ -173,18 +173,20 @@ const TableMisGastos = memo(function TableMisGastos() {
         if (!data) return null
 
         const isRowLoading = loadingActionId === data.id
+        const isAnulado = data.estado === 'anulado'
+        const isAprobado = data.estado === 'aprobado'
 
         return (
           <div className="flex gap-2 items-center h-full">
-            <Tooltip title="Aprobar Gasto">
+            <Tooltip title={isAprobado ? "Gasto ya aprobado" : "Aprobar Gasto"}>
               <Button
                 type='text'
                 size='small'
                 icon={<FaCheck size={16} />}
-                style={{ color: '#059669' }}
+                style={{ color: isAprobado ? '#94a3b8' : '#059669' }}
                 className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
                 loading={isRowLoading}
-                disabled={isRowLoading}
+                disabled={isRowLoading || isAprobado}
                 onClick={() => handleAprobarClicked(data.id)}
               />
             </Tooltip>
@@ -202,7 +204,7 @@ const TableMisGastos = memo(function TableMisGastos() {
                 }}
               />
             </Tooltip>
-            <Tooltip title="Anular Gasto">
+            <Tooltip title={isAnulado ? "Gasto ya anulado" : "Anular Gasto"}>
               <Popconfirm
                 title='¿Estás seguro de anular este gasto?'
                 description='Si estaba aprobado, el monto se revertirá regresando el dinero a la caja.'
@@ -213,16 +215,16 @@ const TableMisGastos = memo(function TableMisGastos() {
                 okText='Sí, Anular'
                 cancelText='Cancelar'
                 okButtonProps={{ danger: true }}
-                disabled={isRowLoading}
+                disabled={isRowLoading || isAnulado}
               >
                 <Button
                   type='text'
                   size='small'
                   icon={<MdDelete size={18} />}
-                  style={{ color: '#e11d48' }}
+                  style={{ color: isAnulado ? '#94a3b8' : '#e11d48' }}
                   className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
                   loading={isRowLoading && anularMutation.isPending}
-                  disabled={isRowLoading}
+                  disabled={isRowLoading || isAnulado}
                 />
               </Popconfirm>
             </Tooltip>

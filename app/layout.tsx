@@ -1,3 +1,4 @@
+import '@ant-design/v5-patch-for-react-19'
 import type { Metadata } from 'next'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { App, ConfigProvider } from 'antd'
@@ -33,20 +34,20 @@ export default function RootLayout({
       )}
       <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
         <AuthProvider>
-            <AntdRegistry>
-              <ConfigProvider
-                theme={{
-                  token: {
-                    fontSize: 13,
-                  },
-                }}
-                locale={esES}
-              >
-                <App>
-                  <Providers>{children}</Providers>
-                </App>
-              </ConfigProvider>
-            </AntdRegistry>
+          <AntdRegistry>
+            <ConfigProvider
+              theme={{
+                token: {
+                  fontSize: 13,
+                },
+              }}
+              locale={esES}
+            >
+              <App>
+                <Providers>{children}</Providers>
+              </App>
+            </ConfigProvider>
+          </AntdRegistry>
         </AuthProvider>
       </body>
     </html>

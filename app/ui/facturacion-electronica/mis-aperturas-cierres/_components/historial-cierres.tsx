@@ -266,7 +266,7 @@ export default function HistorialCierres() {
       if (response?.data?.success) {
         message.success('Autorización confirmada');
         setModalReCerrarVisible(false);
-        
+
         // CORREGIDO: Pasar supervisor validado en la URL para que no se pida nuevamente
         const redirectId = (cierreParaReCerrar as any)?.apertura_id || cierreParaReCerrar.id;
         router.push(
@@ -387,11 +387,7 @@ export default function HistorialCierres() {
           onFinish={handleFinish}
           className="w-full"
         >
-          <div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-3 mb-3">
-              <FilterOutlined className="text-amber-600" />
-              <span className="font-semibold text-slate-700">Filtros</span>
-            </div>
+          <div className="mb-6">
             <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
               <div className="col-span-3 flex items-center gap-2">
                 <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">

@@ -56,8 +56,6 @@ export default function FiltersMisVentas() {
   const [modalCalendarioOpen, setModalCalendarioOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
-  const [autoSendEnabled, setAutoSendEnabled] = useState(false);
-  const [loadingSwitch, setLoadingSwitch] = useState(false);
   const [serieNumeroInput, setSerieNumeroInput] = useState("");
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
@@ -66,49 +64,6 @@ export default function FiltersMisVentas() {
   const filtros = useStoreFiltrosMisVentas((state) => state.filtros);
   const setFiltros = useStoreFiltrosMisVentas((state) => state.setFiltros);
 
-  // Cargar el estado del envío automático al montar el componente
-  useEffect(() => {
-    const loadAutoSendStatus = async () => {
-      try {
-        const response = await configuracionApi.getAutoSendStatus();
-        if (response.data) {
-          setAutoSendEnabled(response.data.enabled);
-        }
-      } catch (error) {
-        console.error("Error al cargar estado de envío automático:", error);
-      }
-    };
-
-    loadAutoSendStatus();
-  }, []);
-
-  // Función para cambiar el estado del envío automático
-  const handleAutoSendChange = async (checked: boolean) => {
-    // Actualizar el estado localmente de inmediato para mejor UX
-    setAutoSendEnabled(checked);
-    setLoadingSwitch(true);
-    
-    try {
-      // Hacer la llamada al backend en segundo plano
-      const response = await configuracionApi.updateAutoSendStatus({ enabled: checked });
-      
-      if (response.data) {
-        // Confirmar que se guardó correctamente
-        message.success(response.data.message);
-      } else if (response.error) {
-        // Si falla, revertir el cambio
-        setAutoSendEnabled(!checked);
-        message.error(response.error.message || "Error al actualizar configuración");
-      }
-    } catch (error) {
-      // Si hay error de conexión, asumir que se guardó (porque al recargar sí cambia)
-      // Solo mostrar advertencia
-      console.warn("Advertencia al actualizar configuración:", error);
-      message.warning("Configuración guardada (la conexión se cerró antes de confirmar)");
-    } finally {
-      setLoadingSwitch(false);
-    }
-  };
 
   useEffect(() => {
     const data = {
@@ -156,7 +111,7 @@ export default function FiltersMisVentas() {
 
       if (response.data && response.data.data && response.data.data.length > 0) {
         const venta = response.data.data[0] as VentaCompleta;
-        
+
         // Autocompletar los filtros con los datos de la venta encontrada
         form.setFieldsValue({
           tipo_documento: venta.tipo_documento as TipoDocumento,
@@ -170,7 +125,7 @@ export default function FiltersMisVentas() {
 
         // Aplicar los filtros automáticamente
         form.submit();
-        
+
         message.success(`Venta ${serie}-${numero} encontrada y filtros aplicados`);
       } else {
         message.warning(`No se encontró la venta ${serie}-${numero}`);
@@ -484,20 +439,6 @@ export default function FiltersMisVentas() {
                 allowClear
                 placeholder="Todos"
               />
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-4 flex items-center gap-1">
-            <ConfigurableElement componentId="switch-envio-automatico" label="Switch Envío Automático">
-              <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 w-fit">
-                <Switch
-                  checked={autoSendEnabled}
-                  onChange={handleAutoSendChange}
-                  loading={loadingSwitch}
-                />
-                <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
-                  Envío Automático SUNAT
-                </span>
-              </div>
             </ConfigurableElement>
           </div>
 
