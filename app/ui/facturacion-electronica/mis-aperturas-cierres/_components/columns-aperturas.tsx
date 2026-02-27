@@ -20,13 +20,14 @@ export const useColumnsAperturas = ({
     {
       headerName: 'Fecha Apertura',
       field: 'fecha_apertura',
-      width: 180,
+      width: 160,
       cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
     },
     {
       headerName: 'Vendedor',
       field: 'vendedor',
-      width: 220,
+      flex: 1,
+      minWidth: 180,
       cellRenderer: (params: any) => {
         const user = params.value
         return (
@@ -40,14 +41,13 @@ export const useColumnsAperturas = ({
     {
       headerName: 'Caja',
       field: 'caja_principal',
-      flex: 1,
-      minWidth: 180,
+      width: 140,
       cellRenderer: (params: any) => params.value?.nombre,
     },
     {
       headerName: 'Monto Apertura',
       field: 'monto_apertura',
-      width: 150,
+      width: 130,
       cellRenderer: (params: any) => (
         <div className='text-right font-semibold text-green-600'>
           {formatCurrency(parseFloat(params.value))}
@@ -57,7 +57,7 @@ export const useColumnsAperturas = ({
     {
       headerName: 'Estado',
       field: 'estado',
-      width: 120,
+      width: 100,
       cellRenderer: (params: any) => (
         <div className='flex justify-center'>
           <Tag color={params.value === 'abierta' ? 'green' : 'blue'}>
@@ -69,7 +69,7 @@ export const useColumnsAperturas = ({
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 100,
+      width: 90,
       pinned: 'right',
       cellRenderer: (params: any) => {
         return (

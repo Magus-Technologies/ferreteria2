@@ -41,7 +41,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Fecha Cierre',
       field: 'fecha_cierre',
-      width: 170,
+      width: 155,
       cellRenderer: (params: any) =>
         params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
     },
@@ -49,7 +49,7 @@ export const useColumnsCierres = ({
       headerName: 'Vendedor',
       field: 'vendedor' as any,
       flex: 1,
-      minWidth: 180,
+      minWidth: 160,
       cellRenderer: (params: any) => {
         const vendedor = params.value
         return (
@@ -63,7 +63,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Caja',
       field: 'caja_principal',
-      width: 150,
+      width: 120,
       cellRenderer: (params: any) => {
         const caja = params.value
         return (
@@ -74,7 +74,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Monto Apertura',
       field: 'monto_apertura',
-      width: 140,
+      width: 125,
       cellRenderer: (params: any) => (
         <div className='text-right'>
           {formatCurrency(parseFloat(params.value || 0))}
@@ -84,7 +84,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Monto Cierre',
       field: 'monto_cierre',
-      width: 140,
+      width: 125,
       cellRenderer: (params: any) => (
         <div className='text-right font-semibold text-blue-600'>
           {params.value ? formatCurrency(parseFloat(params.value)) : '-'}
@@ -94,7 +94,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Diferencia',
       field: 'diferencia_efectivo' as any,
-      width: 130,
+      width: 120,
       cellRenderer: (params: any) => {
         const diferencia = parseFloat(params.value || 0)
         const deuda = params.data.deuda
@@ -115,7 +115,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Estado Cierre',
       field: 'estado_cierre',
-      width: 140,
+      width: 125,
       cellRenderer: (params: any) => {
         const config = getEstadoCierreConfig(params.value)
         return (
@@ -130,7 +130,7 @@ export const useColumnsCierres = ({
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 130,
+      width: 120,
       pinned: 'right',
       cellRenderer: (params: any) => {
         const estadoCierre = params.data.estado_cierre
