@@ -1,17 +1,20 @@
 'use client'
 
 import { MenuProps } from 'antd/lib'
-import { FaSignOutAlt, FaUserSlash } from 'react-icons/fa'
+import { FaSignOutAlt, FaBell } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
 import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-proveedores-desactivados'
+import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
 import ModalProveedoresDesactivados from '~/app/_components/modals/modal-proveedores-desactivados'
+import ModalConfiguraciones from '~/app/_components/modals/modal-configuraciones'
 
 export default function TopNavUI({ className }: { className?: string }) {
   const { logout, user } = useAuth()
   const router = useRouter()
   const { openModal } = useModalProveedoresDesactivados()
+  const { openModal: openConfiguraciones } = useModalConfiguraciones()
 
   const items: MenuProps['items'] = [
     {
@@ -65,6 +68,14 @@ export default function TopNavUI({ className }: { className?: string }) {
     },
    
     {
+      key: '4',
+      label: 'Configuraciones',
+      extra: <FaBell className='text-slate-500' />,
+      onClick: () => {
+        openConfiguraciones()
+      },
+    },
+    {
       key: '5',
       label: 'Cambiar mi Contraseña',
     },
@@ -98,6 +109,7 @@ export default function TopNavUI({ className }: { className?: string }) {
         <span className='inline sm:hidden'>Hola, {user?.empresa?.razon_social?.substring(0, 3) || 'GMR'}</span>
       </DropdownBase>
       <ModalProveedoresDesactivados />
+      <ModalConfiguraciones />
     </>
   )
 }

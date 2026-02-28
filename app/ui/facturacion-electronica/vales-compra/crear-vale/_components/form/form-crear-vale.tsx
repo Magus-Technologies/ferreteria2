@@ -1,12 +1,12 @@
 "use client";
 
-import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Divider } from "antd";
+import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch } from "antd";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import { FaGift, FaCalendar, FaHashtag, FaPercentage, FaDollarSign, FaBoxOpen, FaUsers } from "react-icons/fa";
 import { useState } from "react";
 import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
-import { message } from "antd";
+import SelectCategorias from "~/app/_components/form/selects/select-categorias";
 
 const { TextArea } = Input;
 
@@ -29,7 +29,7 @@ export default function FormCrearVale({
           <FaGift className="text-amber-600" />
           Información Básica
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Form.Item
             name="nombre"
@@ -86,7 +86,6 @@ export default function FormCrearVale({
             rules={[{ required: true, message: 'Seleccione la modalidad' }]}
           >
             <Select
-              
               onChange={(value) => setModalidad(value)}
               options={[
                 { label: '📊 Solamente por Cantidad Mínima', value: 'CANTIDAD_MINIMA' },
@@ -106,7 +105,6 @@ export default function FormCrearVale({
             ]}
           >
             <InputNumber
-              
               className="w-full"
               placeholder="Ej: 55"
               min={0.001}
@@ -116,28 +114,22 @@ export default function FormCrearVale({
           </Form.Item>
         </div>
 
-        {/* Mostrar selector de categorías si aplica */}
+        {/* Selector de categorías desde la API */}
         {(modalidad === 'POR_CATEGORIA' || modalidad === 'MIXTO') && (
           <Form.Item
             name="categoria_ids"
             label="Categorías Aplicables"
             rules={[{ required: true, message: 'Seleccione al menos una categoría' }]}
           >
-            <Select
+            <SelectCategorias
               mode="multiple"
-              
               placeholder="Seleccione las categorías..."
-              // Aquí se conectaría con un hook de categorías
-              options={[
-                { label: 'Herramientas', value: 1 },
-                { label: 'Construcción', value: 2 },
-                { label: 'Electricidad', value: 3 },
-              ]}
+              showButtonCreate
             />
           </Form.Item>
         )}
 
-        {/* Mostrar selector de productos si aplica */}
+        {/* Selector de productos con modal de búsqueda */}
         {(modalidad === 'POR_PRODUCTOS' || modalidad === 'MIXTO') && (
           <Form.Item
             name="producto_ids"
@@ -146,9 +138,10 @@ export default function FormCrearVale({
           >
             <SelectProductos
               mode="multiple"
-              
               placeholder="Busque y seleccione productos..."
               className="w-full"
+              withSearch
+              withTipoBusqueda
             />
           </Form.Item>
         )}
@@ -170,7 +163,6 @@ export default function FormCrearVale({
               rules={[{ required: true, message: 'Seleccione el tipo' }]}
             >
               <Select
-                
                 onChange={(value) => setDescuentoTipo(value)}
                 options={[
                   { label: '% Porcentaje', value: 'PORCENTAJE' },
@@ -188,7 +180,6 @@ export default function FormCrearVale({
               ]}
             >
               <InputNumber
-                
                 className="w-full"
                 placeholder={descuentoTipo === 'PORCENTAJE' ? 'Ej: 10' : 'Ej: 50.00'}
                 min={0}
@@ -207,7 +198,6 @@ export default function FormCrearVale({
             rules={[{ required: true, message: 'La fecha de validez es requerida' }]}
           >
             <DatePicker
-              
               className="w-full"
               placeholder="Seleccione fecha límite"
               format="DD/MM/YYYY"
@@ -226,9 +216,10 @@ export default function FormCrearVale({
               rules={[{ required: true, message: 'Seleccione el producto' }]}
             >
               <SelectProductos
-                
-                placeholder="Busque el producto..."
+                placeholder="Busque el producto a regalar..."
                 className="w-full"
+                withSearch
+                withTipoBusqueda
               />
             </Form.Item>
 
@@ -237,7 +228,6 @@ export default function FormCrearVale({
               label="Cantidad a Regalar"
             >
               <InputNumber
-                
                 className="w-full"
                 placeholder="1"
                 min={0.001}
@@ -251,7 +241,7 @@ export default function FormCrearVale({
         {tipoPromocion === 'SORTEO' && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-700">
-              ℹ️ Para sorteos, la descripción debe incluir los detalles del premio y las condiciones de participación.
+              Para sorteos, la descripción debe incluir los detalles del premio y las condiciones de participación.
             </p>
           </div>
         )}
@@ -271,7 +261,6 @@ export default function FormCrearVale({
             rules={[{ required: true, message: 'La fecha de inicio es requerida' }]}
           >
             <DatePicker
-              
               className="w-full"
               format="DD/MM/YYYY"
               disabledDate={(current) => current && current < dayjs().startOf('day')}
@@ -283,7 +272,6 @@ export default function FormCrearVale({
             label="Fecha de Fin (opcional)"
           >
             <DatePicker
-              
               className="w-full"
               format="DD/MM/YYYY"
               placeholder="Sin fecha de fin"
@@ -321,7 +309,6 @@ export default function FormCrearVale({
                 className="mb-0"
               >
                 <InputNumber
-                  
                   className="w-full"
                   placeholder="Máximo de usos por cliente"
                   min={1}
@@ -347,7 +334,6 @@ export default function FormCrearVale({
                 className="mb-0"
               >
                 <InputNumber
-                  
                   className="w-full"
                   placeholder="Cantidad de promociones disponibles"
                   min={1}

@@ -1,10 +1,11 @@
 'use client'
 
-import { ColDef, CellValueChangedEvent } from 'ag-grid-community'
+import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
 import { ProductoEntrega } from '../../_hooks/use-productos-entrega'
 import { useRef, useCallback } from 'react'
+import { InputNumber } from 'antd'
 
 interface TablaProductosEntregaProps {
   productos: ProductoEntrega[]
@@ -22,20 +23,18 @@ export default function TablaProductosEntrega({
   const onProductoChangeRef = useRef(onProductoChange)
   onProductoChangeRef.current = onProductoChange
 
-  const handleCellValueChanged = useCallback((params: CellValueChangedEvent<ProductoEntrega>) => {
-    if (params.colDef.field === 'entregar') {
-      let newValue = Number(params.newValue) || 0
-      const pendiente = params.data.pendiente
+  const handleEntregarChange = useCallback((id: number, value: number | null) => {
+    let newValue = Number(value) || 0
+    const producto = productosRef.current.find(p => p.id === id)
+    if (!producto) return
 
-      // Validar que no exceda el pendiente
-      if (newValue > pendiente) newValue = pendiente
-      if (newValue < 0) newValue = 0
+    if (newValue > producto.pendiente) newValue = producto.pendiente
+    if (newValue < 0) newValue = 0
 
-      const updated = productosRef.current.map((p) =>
-        p.id === params.data.id ? { ...p, entregar: newValue } : p
-      )
-      onProductoChangeRef.current(updated)
-    }
+    const updated = productosRef.current.map((p) =>
+      p.id === id ? { ...p, entregar: newValue } : p
+    )
+    onProductoChangeRef.current(updated)
   }, [])
 
   const handleDelete = useCallback((id: number) => {
@@ -77,28 +76,26 @@ export default function TablaProductosEntrega({
     {
       headerName: 'Entregar',
       field: 'entregar',
-      width: 120,
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: 'agNumberCellEditor',
-      cellEditorParams: {
-        min: 0,
-        precision: 2,
+      width: 130,
+      cellRenderer: (params: { data: ProductoEntrega }) => {
+        if (!params.data) return null
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumber
+              size='small'
+              value={params.data.entregar}
+              min={0}
+              max={params.data.pendiente}
+              precision={2}
+              onChange={(val) => handleEntregarChange(params.data.id, val)}
+              style={{ width: '100%' }}
+            />
+          </div>
+        )
       },
-      valueSetter: (params) => {
-        let newValue = Number(params.newValue) || 0
-        if (newValue > params.data.pendiente) newValue = params.data.pendiente
-        if (newValue < 0) newValue = 0
-        params.data.entregar = newValue
-        return true
-      },
-      valueFormatter: (params) => Number(params.value).toFixed(2),
       cellStyle: {
         backgroundColor: '#f0fdf4',
-        color: '#000000',
-        fontWeight: '500',
       },
-      cellClass: 'ag-cell-editable',
     },
     {
       headerName: 'Eliminar',
@@ -126,7 +123,6 @@ export default function TablaProductosEntrega({
         selectionColor={orangeColors[10]}
         columnDefs={columnDefs}
         rowData={productos}
-        onCellValueChanged={handleCellValueChanged}
       />
     </div>
   )

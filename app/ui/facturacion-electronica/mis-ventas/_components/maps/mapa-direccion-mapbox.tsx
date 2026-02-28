@@ -14,7 +14,7 @@ interface Coordenadas {
 interface MapaDireccionMapboxProps {
   direccion: string
   clienteNombre?: string
-  onCoordenadaChange?: (coordenadas: Coordenadas) => void
+  onCoordenadaChange?: (coordenadas: Coordenadas, direccion?: string) => void
   coordenadasIniciales?: Coordenadas | null
   editable?: boolean
 }
@@ -33,7 +33,7 @@ export default function MapaDireccionMapbox({
   const [error, setError] = useState<string | null>(null)
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(coordenadasIniciales || null)
 
-  const actualizarMarcador = useCallback((lngLat: { lng: number; lat: number }) => {
+  const actualizarMarcador = useCallback(async (lngLat: { lng: number; lat: number }) => {
     if (!map.current) return
 
     if (marker.current) {
@@ -60,20 +60,40 @@ export default function MapaDireccionMapbox({
         .addTo(map.current)
 
       if (editable) {
-        marker.current.on('dragend', () => {
+        marker.current.on('dragend', async () => {
           const newLngLat = marker.current?.getLngLat()
           if (newLngLat) {
             const nuevasCoordenadas = { lat: newLngLat.lat, lng: newLngLat.lng }
             setCoordenadas(nuevasCoordenadas)
-            onCoordenadaChange?.(nuevasCoordenadas)
+            // Obtener dirección mediante geocodificación inversa
+            const direccionObtenida = await obtenerDireccionDesdeCoordenadas(newLngLat.lng, newLngLat.lat)
+            onCoordenadaChange?.(nuevasCoordenadas, direccionObtenida)
           }
         })
       }
     }
 
     setCoordenadas({ lat: lngLat.lat, lng: lngLat.lng })
-    onCoordenadaChange?.({ lat: lngLat.lat, lng: lngLat.lng })
+    // Obtener dirección mediante geocodificación inversa
+    const direccionObtenida = await obtenerDireccionDesdeCoordenadas(lngLat.lng, lngLat.lat)
+    onCoordenadaChange?.({ lat: lngLat.lat, lng: lngLat.lng }, direccionObtenida)
   }, [clienteNombre, direccion, editable, onCoordenadaChange])
+
+  const obtenerDireccionDesdeCoordenadas = async (lng: number, lat: number): Promise<string | undefined> => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1&language=es`
+      )
+      const data = await response.json()
+      
+      if (data.features && data.features.length > 0) {
+        return data.features[0].place_name
+      }
+    } catch (err) {
+      console.error('Error en geocodificación inversa:', err)
+    }
+    return undefined
+  }
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_ACCESS_TOKEN) {

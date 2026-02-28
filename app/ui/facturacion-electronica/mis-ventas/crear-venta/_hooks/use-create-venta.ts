@@ -16,13 +16,13 @@ import {
 } from '~/lib/api/venta'
 import { ventaEvents } from './venta-events'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
-import { 
-  entregaProductoApi, 
-  TipoEntrega, 
-  TipoDespacho, 
+import {
+  entregaProductoApi,
+  TipoEntrega,
+  TipoDespacho,
   EstadoEntrega,
   QuienEntrega,
-  type CreateEntregaProductoRequest 
+  type CreateEntregaProductoRequest
 } from '~/lib/api/entrega-producto'
 import { fcmApi } from '~/lib/api/fcm'
 import dayjs from 'dayjs'
@@ -70,7 +70,7 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateVenta() {
+export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
   const router = useRouter()
   const { user } = useAuth()
   const user_id = user?.id
@@ -78,6 +78,7 @@ export default function useCreateVenta() {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
   const [loading, setLoading] = useState(false)
   const queryClient = useQueryClient()
+  const isEditing = !!ventaId
 
   const handleSubmit = useCallback(async (values: FormCreateVenta) => {
     console.log('🚀 ~ handleSubmit ~ values:', values)
@@ -88,7 +89,7 @@ export default function useCreateVenta() {
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
-    
+
     const {
       productos,
       tipo_de_cambio,
@@ -105,6 +106,9 @@ export default function useCreateVenta() {
       direccion_seleccionada,
       ruc_dni,
       telefono,
+      // Extraer campos de crédito
+      numero_dias,
+      fecha_vencimiento,
       // ✅ Extraer datos de entrega
       tipo_despacho,
       despachador_id,
@@ -117,11 +121,12 @@ export default function useCreateVenta() {
       observaciones,
       quien_entrega,
       cantidades_parciales,
+      parcial_resto_programado,
       ...restValues
     } = values
-    
 
-    
+
+
     if (!productos || productos.length === 0)
       return notification.error({
         message: 'Por favor, ingresa al menos un producto',
@@ -216,6 +221,10 @@ export default function useCreateVenta() {
       tipo_documento: restValues.tipo_documento as TipoDocumento,
       // serie y numero se generan automáticamente en el backend
       forma_de_pago: restValues.forma_de_pago as FormaDePago,
+      ...(restValues.forma_de_pago === FormaDePago.CREDITO && {
+        numero_dias: numero_dias || undefined,
+        fecha_vencimiento: fecha_vencimiento ? fecha_vencimiento.format('YYYY-MM-DD HH:mm:ss') : undefined,
+      }),
       tipo_moneda: tipo_moneda as TipoMoneda,
       tipo_de_cambio: tipoMonedaValue === 's' ? 1 : (tipo_de_cambio || 1),
       fecha: restValues.fecha.format('YYYY-MM-DD HH:mm:ss'),
@@ -247,11 +256,13 @@ export default function useCreateVenta() {
     console.log('📤 Datos a enviar a Laravel:', JSON.stringify(dataFormated, null, 2))
     console.log('🔍 dataFormated.direccion_seleccionada:', dataFormated.direccion_seleccionada)
     console.log('🔍 forma_de_pago:', restValues.forma_de_pago, 'tipo:', typeof restValues.forma_de_pago)
-    
+
     setLoading(true)
     try {
-      // Usar la API de Laravel en lugar del action de Prisma
-      const response = await ventaApi.create(dataFormated)
+      // Usar create o update según el modo
+      const response = isEditing
+        ? await ventaApi.update(ventaId!, dataFormated)
+        : await ventaApi.create(dataFormated)
 
       console.log('📥 Response completa:', response)
       console.log('📦 response.data:', response.data)
@@ -260,7 +271,7 @@ export default function useCreateVenta() {
       if (response.error) {
         notification.error({
           message: response.error.message || 'Error al crear venta',
-          description: response.error.errors 
+          description: response.error.errors
             ? Object.entries(response.error.errors).map(([key, value]) => `${key}: ${value}`).join('\n')
             : undefined
         })
@@ -268,12 +279,20 @@ export default function useCreateVenta() {
       }
 
       // Éxito
-      message.success('Venta creada exitosamente')
+      message.success(isEditing ? 'Venta actualizada exitosamente' : 'Venta creada exitosamente')
 
-      console.log('✅ Venta creada exitosamente')
+      console.log(isEditing ? '✅ Venta actualizada exitosamente' : '✅ Venta creada exitosamente')
       console.log('📦 response.data?.data:', response.data?.data)
 
-      // Emitir evento de venta creada
+      // En modo edición, invalidar queries y redirigir
+      if (isEditing) {
+        queryClient.invalidateQueries({ queryKey: ['venta', ventaId] })
+        queryClient.invalidateQueries({ queryKey: ['ventas'] })
+        router.push('/ui/facturacion-electronica/mis-ventas')
+        return
+      }
+
+      // Emitir evento de venta creada (solo en modo creación)
       if (response.data?.data) {
         console.log('📢 Emitiendo evento ventaCreada')
         ventaEvents.emit(response.data.data)
@@ -297,12 +316,12 @@ export default function useCreateVenta() {
 
       if (ventaCreada && tipo_despacho === 'Domicilio' && despachador_id) {
         console.log('🚚 Creando entrega automáticamente...')
-        
+
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
-          
+
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
               productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
@@ -342,7 +361,7 @@ export default function useCreateVenta() {
 
           // Crear la entrega
           const entregaResponse = await entregaProductoApi.create(entregaData)
-          
+
           if (entregaResponse.error) {
             console.error('❌ Error al crear entrega:', entregaResponse.error)
             notification.warning({
@@ -352,13 +371,13 @@ export default function useCreateVenta() {
           } else {
             console.log('✅ Entrega creada automáticamente:', entregaResponse.data)
             message.success('Entrega programada exitosamente para el despachador')
-            
+
             // 🔔 Enviar notificación push al despachador
             try {
-              const clienteNombre = ventaCreada.cliente?.nombres 
+              const clienteNombre = ventaCreada.cliente?.nombres
                 ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
                 : ventaCreada.cliente?.razon_social || 'Cliente'
-              
+
               await fcmApi.notifyEntregaProgramada({
                 despachador_id: String(despachador_id),
                 venta_serie: ventaCreada.serie || '',
@@ -426,6 +445,79 @@ export default function useCreateVenta() {
                 })
               } else {
                 message.success('Entrega parcial registrada exitosamente')
+
+                // ✅ CREAR SEGUNDA ENTREGA PROGRAMADA para el resto (si se configuró)
+                if (parcial_resto_programado?.despachador_id) {
+                  const unidadesDerivadas2: any[] = []
+
+                  productosVenta.forEach((productoAlmacen: any) => {
+                    if (productoAlmacen.unidades_derivadas) {
+                      productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                        const parcial = cantidades_parciales.find(
+                          (c) => c.unidad_derivada_id === unidad.unidad_derivada_normal_id
+                        )
+                        if (parcial && (parcial.total - parcial.entregar) > 0) {
+                          unidadesDerivadas2.push({
+                            unidad_derivada_venta_id: unidad.id,
+                            cantidad_entregada: parcial.total - parcial.entregar,
+                            ubicacion: undefined,
+                          })
+                        }
+                      })
+                    }
+                  })
+
+                  if (unidadesDerivadas2.length > 0) {
+                    const entregaRestoData: CreateEntregaProductoRequest = {
+                      venta_id: ventaCreada.id,
+                      tipo_entrega: TipoEntrega.PARCIAL,
+                      tipo_despacho: TipoDespacho.PROGRAMADO,
+                      estado_entrega: EstadoEntrega.PENDIENTE,
+                      fecha_entrega: dayjs().format('YYYY-MM-DD'),
+                      fecha_programada: parcial_resto_programado.fecha_programada,
+                      hora_inicio: parcial_resto_programado.hora_inicio,
+                      hora_fin: parcial_resto_programado.hora_fin,
+                      direccion_entrega: parcial_resto_programado.direccion_entrega,
+                      observaciones: parcial_resto_programado.observaciones,
+                      almacen_salida_id: almacen_id,
+                      chofer_id: parcial_resto_programado.despachador_id,
+                      quien_entrega: QuienEntrega.CHOFER,
+                      user_id: user_id,
+                      productos_entregados: unidadesDerivadas2,
+                    }
+
+                    const entregaRestoResponse = await entregaProductoApi.create(entregaRestoData)
+
+                    if (entregaRestoResponse.error) {
+                      notification.warning({
+                        message: 'Entrega del resto no pudo ser programada',
+                        description: 'Puedes crearla manualmente desde "Mis Ventas".',
+                      })
+                    } else {
+                      message.success('Entrega del resto programada exitosamente')
+
+                      // 🔔 Notificar al despachador del resto
+                      try {
+                        const clienteNombre = ventaCreada.cliente?.nombres
+                          ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
+                          : ventaCreada.cliente?.razon_social || 'Cliente'
+
+                        await fcmApi.notifyEntregaProgramada({
+                          despachador_id: parcial_resto_programado.despachador_id,
+                          venta_serie: ventaCreada.serie || '',
+                          venta_numero: ventaCreada.numero || '',
+                          direccion: parcial_resto_programado.direccion_entrega || '',
+                          fecha_programada: parcial_resto_programado.fecha_programada
+                            ? dayjs(parcial_resto_programado.fecha_programada).format('DD/MM/YYYY')
+                            : 'Por confirmar',
+                          cliente_nombre: clienteNombre,
+                        })
+                      } catch (notifError) {
+                        console.warn('⚠️ No se pudo enviar notificación push al despachador del resto:', notifError)
+                      }
+                    }
+                  }
+                }
               }
             }
           } catch (error) {
@@ -437,12 +529,12 @@ export default function useCreateVenta() {
         }
       } else if (tipo_despacho === 'EnTienda' && quien_entrega) {
         console.log('🏪 Creando entrega en tienda automáticamente...')
-        
+
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
-          
+
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
               productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
@@ -472,7 +564,7 @@ export default function useCreateVenta() {
 
           // Crear la entrega
           const entregaResponse = await entregaProductoApi.create(entregaData)
-          
+
           if (entregaResponse.error) {
             console.error('❌ Error al crear entrega en tienda:', entregaResponse.error)
           } else {
@@ -483,37 +575,14 @@ export default function useCreateVenta() {
         }
       }
 
-      // Actualizar caché de productos para bloquear botón eliminar
-      // Obtener IDs de productos vendidos desde la respuesta del servidor
-      const productosVendidos = ventaCreada?.productos_por_almacen || []
-      const productosVendidosIds = productosVendidos.map((p: any) => p.producto_almacen?.producto_id).filter(Boolean)
-      const uniqueProductoIds = [...new Set(productosVendidosIds)]
-
-      if (uniqueProductoIds.length > 0) {
-        queryClient.setQueriesData(
-          {
-            predicate: (query) =>
-              query.queryKey[0] === 'productos-by-almacen' ||
-              query.queryKey[0] === 'productos-search',
-          },
-          (oldData: any) => {
-            if (!oldData?.data || !Array.isArray(oldData.data)) return oldData
-
-            return {
-              ...oldData,
-              data: oldData.data.map((producto: any) => {
-                if (uniqueProductoIds.includes(producto.id)) {
-                  return {
-                    ...producto,
-                    tiene_ingresos: true, // Bloquear botón eliminar inmediatamente
-                  }
-                }
-                return producto
-              }),
-            }
-          }
-        )
-      }
+      // ✅ Invalidar caché de productos para que se recarguen con tiene_ingresos actualizado
+      // Esto forzará una recarga automática de la tabla de productos en mi-almacen
+      queryClient.invalidateQueries({ 
+        queryKey: ['productos-by-almacen', almacen_id] 
+      })
+      queryClient.invalidateQueries({ 
+        queryKey: ['productos-search'] 
+      })
     } catch (error) {
       console.error('Error al crear venta:', error)
       notification.error({
@@ -522,7 +591,7 @@ export default function useCreateVenta() {
     } finally {
       setLoading(false)
     }
-  }, [router, user_id, notification, message, almacen_id, queryClient])
+  }, [router, user_id, notification, message, almacen_id, queryClient, isEditing, ventaId])
 
   return { handleSubmit, loading }
 }

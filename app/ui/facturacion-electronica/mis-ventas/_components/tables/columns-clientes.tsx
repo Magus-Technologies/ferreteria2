@@ -34,11 +34,16 @@ export function useColumnsClientes({
       },
     },
     {
-      headerName: 'Dirección',
-      field: 'direccion',
+      headerName: 'Dirección Principal',
+      field: 'direcciones',
       width: 120,
       minWidth: 120,
-      valueFormatter: (params) => params.value || '-',
+      valueGetter: (params) => {
+        const direcciones = params.data?.direcciones;
+        if (!direcciones || direcciones.length === 0) return '-';
+        const principal = direcciones.find(d => d.es_principal);
+        return principal?.direccion || direcciones[0]?.direccion || '-';
+      },
       filter: true,
     },
     {

@@ -26,7 +26,6 @@ import { useStoreAlmacen } from "~/store/store-almacen";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import ModalEntregaDirecta from "../modals/modal-entrega-directa";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
-import ModalCalendarioEntregas from "../modals/modal-calendario-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
 import { redColors, orangeColors, greenColors } from "~/lib/colors";
 import { configuracionApi } from "~/lib/api/configuracion";
@@ -53,7 +52,6 @@ export default function FiltersMisVentas() {
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
   const [modalEntregaDirectaOpen, setModalEntregaDirectaOpen] = useState(false);
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
-  const [modalCalendarioOpen, setModalCalendarioOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
   const [serieNumeroInput, setSerieNumeroInput] = useState("");
@@ -68,8 +66,8 @@ export default function FiltersMisVentas() {
   useEffect(() => {
     const data = {
       almacen_id,
-      // Laravel API no usa objetos gte/lte, envía las fechas directamente
-      // El backend manejará el filtrado de rangos
+      desde: dayjs().format("YYYY-MM-DD"),
+      hasta: dayjs().format("YYYY-MM-DD"),
     };
     setFiltros(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -523,7 +521,7 @@ export default function FiltersMisVentas() {
                 size="md"
                 type="button"
                 className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
-                onClick={() => setModalCalendarioOpen(true)}
+                onClick={() => router.push('/ui/facturacion-electronica/mis-ventas/calendario')}
               >
                 <FaCalendar />
                 Ver Calendario
@@ -718,10 +716,6 @@ export default function FiltersMisVentas() {
         venta={ventaSeleccionada}
       />
 
-      <ModalCalendarioEntregas
-        open={modalCalendarioOpen}
-        setOpen={setModalCalendarioOpen}
-      />
     </FormBase>
   );
 }

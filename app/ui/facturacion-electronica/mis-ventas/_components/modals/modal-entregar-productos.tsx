@@ -352,8 +352,11 @@ export default function ModalEntregarProductos({
         dataEdit={venta?.cliente}
         onSuccess={(cliente) => {
           // Actualizar la dirección en el formulario si el usuario editó el cliente
-          if (cliente.direccion) {
-            form.setFieldValue("direccion_entrega", cliente.direccion);
+          const direccionPrincipal = cliente.direcciones?.find(d => d.es_principal);
+          if (direccionPrincipal) {
+            form.setFieldValue("direccion_entrega", direccionPrincipal.direccion);
+          } else if (cliente.direcciones && cliente.direcciones.length > 0) {
+            form.setFieldValue("direccion_entrega", cliente.direcciones[0].direccion);
           }
           setModalEditarClienteOpen(false);
         }}

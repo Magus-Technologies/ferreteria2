@@ -226,9 +226,12 @@ export default function FormCrearCotizacion({
                     : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim();
                   form.setFieldValue('cliente_nombre', nombreCompleto);
                   
-                  // Actualizar dirección
-                  if (cliente.direccion) {
-                    form.setFieldValue('direccion', cliente.direccion);
+                  // Actualizar dirección (usar dirección principal del nuevo sistema)
+                  const direccionPrincipal = cliente.direcciones?.find(d => d.es_principal);
+                  if (direccionPrincipal) {
+                    form.setFieldValue('direccion', direccionPrincipal.direccion);
+                  } else if (cliente.direcciones && cliente.direcciones.length > 0) {
+                    form.setFieldValue('direccion', cliente.direcciones[0].direccion);
                   }
                   
                   // Actualizar teléfono

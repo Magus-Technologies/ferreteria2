@@ -1,19 +1,22 @@
 'use client'
 
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar'
-import { format, parse, startOfWeek, getDay, addHours } from 'date-fns'
+import { format, parse, startOfWeek, getDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import './calendar-styles.css'
 import { useEntregasProgramadas } from '~/hooks/use-entregas-programadas'
 import EventEntrega, { EntregaEvent } from './event-entrega'
 import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+import { Select } from 'antd'
+import { FaChevronLeft, FaChevronRight, FaCalendarDay, FaTruck } from 'react-icons/fa'
+
+dayjs.locale('es')
 
 // Configurar localizador en español
-const locales = {
-  es: es,
-}
+const locales = { es }
 
 const localizer = dateFnsLocalizer({
   format,
@@ -23,21 +26,176 @@ const localizer = dateFnsLocalizer({
   locales,
 })
 
-// Colores por chofer (se pueden personalizar)
+// Colores por chofer
 const CHOFER_COLORS = [
-  '#86efac', // verde claro
-  '#fde047', // amarillo
-  '#93c5fd', // azul claro
-  '#fca5a5', // rojo claro
-  '#c4b5fd', // morado claro
-  '#fdba74', // naranja claro
+  '#86efac',
+  '#fde047',
+  '#93c5fd',
+  '#fca5a5',
+  '#c4b5fd',
+  '#fdba74',
 ]
 
+// ─── Toolbar personalizado ────────────────────────────────────────────────────
+interface CustomToolbarProps {
+  label: string
+  onNavigate: (action: 'PREV' | 'NEXT' | 'TODAY') => void
+  onView: (view: View) => void
+  view: View
+}
+
+function CustomToolbar({ label, onNavigate, onView, view }: CustomToolbarProps) {
+  const viewOptions = [
+    { value: 'day', label: 'Día' },
+    { value: 'week', label: 'Semana' },
+    { value: 'month', label: 'Mes' },
+    { value: 'agenda', label: 'Agenda' },
+  ]
+
+  return (
+    <div className="flex items-center justify-between gap-3 mb-3 px-1">
+      {/* Navegación */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onNavigate('TODAY')}
+          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+        >
+          Hoy
+        </button>
+        <button
+          onClick={() => onNavigate('PREV')}
+          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+        >
+          <FaChevronLeft size={12} />
+        </button>
+        <button
+          onClick={() => onNavigate('NEXT')}
+          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+        >
+          <FaChevronRight size={12} />
+        </button>
+      </div>
+
+      {/* Título */}
+      <span className="text-sm font-semibold text-slate-700 capitalize">
+        {label}
+      </span>
+
+      {/* Select de vista */}
+      <Select
+        value={view}
+        onChange={(v) => onView(v as View)}
+        size="small"
+        style={{ width: 110 }}
+        options={viewOptions}
+        suffixIcon={<FaCalendarDay size={11} className="text-slate-400" />}
+      />
+    </div>
+  )
+}
+
+// ─── Popup de slot seleccionado (estilo Google Calendar) ──────────────────────
+interface SlotPopupProps {
+  slot: { start: Date; end: Date }
+  position: { top: number; left: number }
+  onAplicar: () => void
+  onCerrar: () => void
+  /** true = modo solo selección (modal de entrega): muestra "Aplicar" */
+  soloSeleccion: boolean
+}
+
+function SlotPopup({ slot, position, onAplicar, onCerrar, soloSeleccion }: SlotPopupProps) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Ajustar posición para que no se salga de la pantalla
+  useEffect(() => {
+    if (!ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    if (rect.right > vw - 8) {
+      ref.current.style.left = `${vw - rect.width - 16}px`
+    }
+    if (rect.bottom > vh - 8) {
+      ref.current.style.top = `${vh - rect.height - 16}px`
+    }
+  }, [position])
+
+  const fechaFormato = dayjs(slot.start).format('dddd D [de] MMMM')
+  const horaInicio = dayjs(slot.start).format('HH:mm')
+  const horaFin = dayjs(slot.end).format('HH:mm')
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-[9999] bg-white rounded-xl shadow-2xl border border-slate-200 w-[280px] overflow-hidden"
+      style={{ top: position.top, left: position.left }}
+    >
+      {/* Header azul */}
+      <div className="bg-blue-600 px-4 py-3 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-white text-sm font-semibold">
+            <FaTruck size={13} />
+            <span>Entrega programada</span>
+          </div>
+          <div className="text-blue-100 text-xs mt-0.5 capitalize">
+            {fechaFormato}
+          </div>
+        </div>
+        <button
+          onClick={onCerrar}
+          className="text-blue-200 hover:text-white text-lg leading-none mt-0.5 flex-shrink-0"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Contenido */}
+      <div className="px-4 py-3 space-y-2">
+        <div className="flex items-center gap-2 text-slate-600 text-sm">
+          <span className="w-4 text-slate-400 flex-shrink-0">🕐</span>
+          <span className="font-medium">
+            {horaInicio} — {horaFin}
+          </span>
+        </div>
+        <p className="text-xs text-slate-400">
+          Arrastra para ajustar el horario, luego haz clic en{' '}
+          <span className="font-semibold text-blue-600">
+            {soloSeleccion ? 'Aplicar' : 'confirmar'}
+          </span>
+          .
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-2.5 border-t border-slate-100 flex justify-end gap-2">
+        <button
+          onClick={onCerrar}
+          className="text-sm text-slate-500 hover:text-slate-700 px-3 py-1"
+        >
+          Cancelar
+        </button>
+        {soloSeleccion && (
+          <button
+            onClick={onAplicar}
+            className="text-sm bg-blue-600 text-white px-4 py-1 rounded-lg hover:bg-blue-700 font-medium"
+          >
+            Aplicar
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Props del componente principal ──────────────────────────────────────────
 interface CalendarProgramacionEntregasProps {
   onSelectSlot?: (slotInfo: { start: Date; end: Date }) => void
   onSelectEvent?: (event: EntregaEvent) => void
   selectedDate?: Date
   chofer_id?: string
+  /** Si es true, no carga entregas del backend (solo selección de slot) */
+  soloSeleccion?: boolean
 }
 
 export default function CalendarProgramacionEntregas({
@@ -45,11 +203,13 @@ export default function CalendarProgramacionEntregas({
   onSelectEvent,
   selectedDate,
   chofer_id,
+  soloSeleccion = false,
 }: CalendarProgramacionEntregasProps) {
   const [view, setView] = useState<View>('day')
   const [date, setDate] = useState(selectedDate || new Date())
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null)
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null)
 
   // Calcular rango de fechas para la consulta
   const { fecha_desde, fecha_hasta } = useMemo(() => {
@@ -58,50 +218,26 @@ export default function CalendarProgramacionEntregas({
     return { fecha_desde: desde, fecha_hasta: hasta }
   }, [date])
 
-  // Obtener entregas programadas
+  // Obtener entregas programadas (deshabilitado en modo soloSeleccion)
   const { data: entregas = [], isLoading } = useEntregasProgramadas({
     fecha_desde,
     fecha_hasta,
     chofer_id,
+    enabled: !soloSeleccion,
   })
-
-  // DEBUG: Log para ver qué entregas llegan
-  console.log('📅 Calendario - Entregas recibidas:', entregas)
-  console.log('📅 Calendario - Rango de fechas:', { fecha_desde, fecha_hasta })
-  console.log('📅 Calendario - Fecha actual del calendario:', date)
 
   // Transformar entregas a eventos del calendario
   const events: EntregaEvent[] = useMemo(() => {
-    console.log('🔄 Transformando entregas a eventos...')
-    console.log('📦 Total de entregas:', entregas.length)
-    console.log('📦 Array completo de entregas:', JSON.stringify(entregas, null, 2))
-    
     const choferColorMap = new Map<string, string>()
     let colorIndex = 0
 
-    const entregasEvents = entregas.map((entrega: any, index: number) => {
-      console.log(`📦 Entrega ${index + 1}:`, {
-        id: entrega.id,
-        fecha_programada: entrega.fecha_programada,
-        fecha_entrega: entrega.fecha_entrega,
-        hora_inicio: entrega.hora_inicio,
-        hora_fin: entrega.hora_fin,
-        estado: entrega.estado_entrega,
-        despachador: entrega.despachador,
-        chofer: entrega.chofer,
-      })
-      
-      // Determinar color según estado
+    const entregasEvents = entregas.map((entrega: any) => {
       let color: string
-      
       if (entrega.estado_entrega === 'en') {
-        // Entregado = Verde brillante
         color = '#22c55e'
       } else if (entrega.estado_entrega === 'ec') {
-        // En Camino = Amarillo brillante
         color = '#eab308'
       } else {
-        // Pendiente = Asignar color por chofer
         if (!choferColorMap.has(entrega.chofer_id)) {
           choferColorMap.set(entrega.chofer_id, CHOFER_COLORS[colorIndex % CHOFER_COLORS.length])
           colorIndex++
@@ -109,47 +245,16 @@ export default function CalendarProgramacionEntregas({
         color = choferColorMap.get(entrega.chofer_id) || CHOFER_COLORS[0]
       }
 
-      // Parsear fecha y horas
       const fechaProgramada = entrega.fecha_programada || entrega.fecha_entrega
-      // Si no hay horas, usar horario laboral por defecto (9:00 AM - 6:00 PM)
       const horaInicio = entrega.hora_inicio || '09:00'
       const horaFin = entrega.hora_fin || '18:00'
-
-      console.log(`  📅 Fecha original:`, fechaProgramada)
-      console.log(`  📅 Tipo de fecha:`, typeof fechaProgramada)
-      
-      // Extraer solo la fecha (YYYY-MM-DD) del formato datetime de Laravel
-      let fechaSoloFecha = fechaProgramada
-      if (typeof fechaProgramada === 'string') {
-        // Formato Laravel: "2026-02-05 00:00:00.000" o "2026-02-05 00:00:00"
-        // Extraer solo YYYY-MM-DD
-        fechaSoloFecha = fechaProgramada.split(' ')[0]
-      } else if (fechaProgramada instanceof Date) {
-        // Si ya es un objeto Date, convertir a string YYYY-MM-DD
-        fechaSoloFecha = dayjs(fechaProgramada).format('YYYY-MM-DD')
-      }
-      
-      console.log(`  📅 Fecha procesada:`, fechaSoloFecha)
-
-      // Crear fechas con dayjs en formato correcto
+      const fechaSoloFecha = dayjs(fechaProgramada).format('YYYY-MM-DD')
       const start = dayjs(`${fechaSoloFecha} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
       const end = dayjs(`${fechaSoloFecha} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
-      
-      console.log(`  ⏰ Fecha/hora parseada:`, {
-        fechaSoloFecha,
-        horaInicio,
-        horaFin,
-        start,
-        end,
-        startValid: start instanceof Date && !isNaN(start.getTime()),
-        endValid: end instanceof Date && !isNaN(end.getTime()),
-      })
 
       const clienteNombre = entrega.venta?.cliente?.razon_social ||
         `${entrega.venta?.cliente?.nombres || ''} ${entrega.venta?.cliente?.apellidos || ''}`.trim() ||
         'Cliente'
-      
-      // ✅ CORRECCIÓN: Usar SOLO 'despachador' (no 'chofer')
       const despachadorNombre = entrega.despachador?.name || 'Sin asignar'
 
       return {
@@ -169,23 +274,21 @@ export default function CalendarProgramacionEntregas({
       }
     })
 
-    console.log('✅ Eventos generados:', entregasEvents.length)
-
-    // Agregar evento temporal para la selección actual (PERSISTENTE)
+    // Evento temporal de selección actual
     if (selectedSlot) {
       entregasEvents.push({
         id: -1,
-        title: '📅 Selección Actual',
+        title: '📅 Entrega a programar',
         start: selectedSlot.start,
         end: selectedSlot.end,
         resource: {
           venta_id: '',
           chofer_id: '',
-          chofer_nombre: '📅 Nueva Entrega',
-          cliente_nombre: 'Click para programar',
+          chofer_nombre: '',
+          cliente_nombre: '',
           direccion: '',
           productos_count: 0,
-          color: '#60a5fa', // Azul más visible
+          color: '#3b82f6',
         },
       })
     }
@@ -193,7 +296,7 @@ export default function CalendarProgramacionEntregas({
     return entregasEvents
   }, [entregas, selectedSlot])
 
-  // Personalizar formatos de fecha en español
+  // Formatos de fecha en español
   const formats = {
     dateFormat: 'dd',
     dayFormat: (date: Date) => format(date, 'EEEE', { locale: es }),
@@ -202,10 +305,10 @@ export default function CalendarProgramacionEntregas({
       `${format(start, 'd MMM', { locale: es })} - ${format(end, 'd MMM', { locale: es })}`,
     monthHeaderFormat: (date: Date) => format(date, 'MMMM yyyy', { locale: es }),
     weekdayFormat: (date: Date) => format(date, 'EEEE', { locale: es }),
-    timeGutterFormat: (date: Date) => format(date, 'HH:mm', { locale: es }),
+    timeGutterFormat: (date: Date) => format(date, 'h aa', { locale: es }),
   }
 
-  // Personalizar mensajes en español
+  // Mensajes en español
   const messages = {
     allDay: 'Todo el día',
     previous: 'Anterior',
@@ -222,29 +325,50 @@ export default function CalendarProgramacionEntregas({
     showMore: (total: number) => `+ Ver más (${total})`,
   }
 
-  // Configurar horario de trabajo (7 AM - 7 PM)
+  // Horario de trabajo (7 AM - 7 PM)
   const minTime = useMemo(() => new Date(1970, 1, 1, 7, 0, 0), [])
   const maxTime = useMemo(() => new Date(1970, 1, 1, 19, 0, 0), [])
 
-  // Manejar selección de slot (crear nueva entrega)
+  // Selección de slot — guarda posición para el popup
   const handleSelectSlot = useCallback(
-    (slotInfo: { start: Date; end: Date; action: string }) => {
-      if (slotInfo.action === 'select' || slotInfo.action === 'click') {
-        setSelectedSlot({ start: slotInfo.start, end: slotInfo.end })
-        onSelectSlot?.(slotInfo)
+    (slotInfo: { start: Date; end: Date; action: string; bounds?: any; box?: any }) => {
+      if (slotInfo.action !== 'select' && slotInfo.action !== 'click') return
+
+      setSelectedSlot({ start: slotInfo.start, end: slotInfo.end })
+
+      // Calcular posición del popup
+      let top = 200
+      let left = 200
+      if (slotInfo.bounds) {
+        top = slotInfo.bounds.top + window.scrollY + 10
+        left = slotInfo.bounds.right + 12
+      } else if (slotInfo.box) {
+        top = slotInfo.box.clientY + window.scrollY - 40
+        left = slotInfo.box.clientX + 12
       }
+      setPopupPos({ top, left })
+
+      // NO llamar onSelectSlot aquí — se llama solo al confirmar con "Aplicar"
     },
-    [onSelectSlot]
+    []
   )
 
-  // Manejar clic en evento (ver/editar entrega)
+  const handleAplicarSlot = useCallback(() => {
+    if (selectedSlot) {
+      onSelectSlot?.(selectedSlot)
+    }
+    setPopupPos(null)
+  }, [selectedSlot, onSelectSlot])
+
+  const handleCerrarPopup = useCallback(() => {
+    setSelectedSlot(null)
+    setPopupPos(null)
+  }, [])
+
+  // Clic en evento
   const handleSelectEvent = useCallback(
     (event: EntregaEvent) => {
-      // Si es el evento temporal de selección, no hacer nada
-      if (event.id === -1) {
-        return
-      }
-      
+      if (event.id === -1) return
       setSelectedEventId(event.id)
       onSelectEvent?.(event)
     },
@@ -260,7 +384,7 @@ export default function CalendarProgramacionEntregas({
   }
 
   return (
-    <div className="h-[500px] bg-white rounded-lg p-4">
+    <div className="h-full bg-white rounded-lg">
       <Calendar
         localizer={localizer}
         events={events}
@@ -277,12 +401,13 @@ export default function CalendarProgramacionEntregas({
         selectable
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleSelectEvent}
-        step={30} // Intervalos de 30 minutos
-        timeslots={2} // 2 slots por hora
+        step={30}
+        timeslots={2}
         min={minTime}
         max={maxTime}
         components={{
           event: EventEntrega,
+          toolbar: CustomToolbar as any,
         }}
         eventPropGetter={(event: EntregaEvent) => ({
           style: {
@@ -290,12 +415,23 @@ export default function CalendarProgramacionEntregas({
             borderColor: event.resource.color,
             color: '#000',
             border: event.id === -1 ? '2px dashed #3b82f6' : '1px solid rgba(0,0,0,0.1)',
-            opacity: event.id === -1 ? 0.9 : 1,
+            opacity: event.id === -1 ? 0.85 : 1,
             fontWeight: '600',
-            boxShadow: event.id === selectedEventId ? '0 0 0 3px rgba(59, 130, 246, 0.5)' : undefined,
+            boxShadow: event.id === selectedEventId ? '0 0 0 3px rgba(59,130,246,0.5)' : undefined,
           },
         })}
       />
+
+      {/* Popup estilo Google Calendar */}
+      {selectedSlot && popupPos && (
+        <SlotPopup
+          slot={selectedSlot}
+          position={popupPos}
+          onAplicar={handleAplicarSlot}
+          onCerrar={handleCerrarPopup}
+          soloSeleccion={soloSeleccion}
+        />
+      )}
     </div>
   )
 }

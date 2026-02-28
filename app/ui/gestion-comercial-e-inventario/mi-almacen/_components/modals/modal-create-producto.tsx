@@ -132,8 +132,6 @@ export default function ModalCreateProducto({
               costo,
               p_venta,
               ganancia,
-              // NO incluir id y producto_almacen_id en el form para evitar conflictos
-              // Se agregarán al guardar si es necesario
             }
           }),
           ...(producto?.id ? { cod_producto } : {}),

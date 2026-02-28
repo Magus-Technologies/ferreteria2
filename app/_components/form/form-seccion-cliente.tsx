@@ -85,18 +85,24 @@ export default function FormSeccionCliente({
         : `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim();
       form.setFieldValue(entidadNombreField, nombreCompleto);
 
-      // Actualizar direcciones ocultas
-      form.setFieldValue("_cliente_direccion_1", cliente.direccion || "");
-      form.setFieldValue("_cliente_direccion_2", cliente.direccion_2 || "");
-      form.setFieldValue("_cliente_direccion_3", cliente.direccion_3 || "");
-      form.setFieldValue("_cliente_direccion_4", cliente.direccion_4 || "");
+      // Actualizar direcciones ocultas (desde el nuevo sistema)
+      const direcciones = cliente.direcciones || [];
+      const d1 = direcciones.find((d: any) => d.tipo === 'D1')?.direccion || '';
+      const d2 = direcciones.find((d: any) => d.tipo === 'D2')?.direccion || '';
+      const d3 = direcciones.find((d: any) => d.tipo === 'D3')?.direccion || '';
+      const d4 = direcciones.find((d: any) => d.tipo === 'D4')?.direccion || '';
+      
+      form.setFieldValue("_cliente_direccion_1", d1);
+      form.setFieldValue("_cliente_direccion_2", d2);
+      form.setFieldValue("_cliente_direccion_3", d3);
+      form.setFieldValue("_cliente_direccion_4", d4);
 
       // Actualizar dirección visible según selección
       const direccionSeleccionada = form.getFieldValue("direccion_seleccionada") || "D1";
-      let direccionActual = cliente.direccion || "";
-      if (direccionSeleccionada === "D2") direccionActual = cliente.direccion_2 || "";
-      if (direccionSeleccionada === "D3") direccionActual = cliente.direccion_3 || "";
-      if (direccionSeleccionada === "D4") direccionActual = cliente.direccion_4 || "";
+      let direccionActual = d1;
+      if (direccionSeleccionada === "D2") direccionActual = d2;
+      if (direccionSeleccionada === "D3") direccionActual = d3;
+      if (direccionSeleccionada === "D4") direccionActual = d4;
       form.setFieldValue(direccionField, direccionActual);
 
       // Actualizar teléfono y email

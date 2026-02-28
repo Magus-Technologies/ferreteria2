@@ -33,8 +33,6 @@ export default function SelectUbicaciones({
     useState(true);
 
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
-  const [shouldFetch, setShouldFetch] = useState(false);
-
   const { data, refetch, isLoading } = useQuery({
     queryKey: [QueryKeys.UBICACIONES, almacen_id],
     queryFn: async () => {
@@ -44,7 +42,7 @@ export default function SelectUbicaciones({
       }
       return response.data?.data || [];
     },
-    enabled: shouldFetch && !!almacen_id,
+    enabled: !!almacen_id,
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
@@ -80,16 +78,6 @@ export default function SelectUbicaciones({
           value: item.id,
           label: item.name,
         }))}
-        onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true);
-          }
-        }}
-        onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true);
-          }
-        }}
         {...props}
       />
       {showButtonCreate && (

@@ -3,6 +3,7 @@
 import { getBottomNavItems, getModuleNav } from "~/lib/navigation";
 import usePermissionHook from "~/hooks/use-permission";
 import { FaCartShopping, FaTruck } from "react-icons/fa6";
+import { FaHistory } from "react-icons/fa";
 import { MdPointOfSale } from "react-icons/md";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
@@ -22,6 +23,7 @@ const iconMap: Record<string, any> = {
   IoMdContact,
   HistoryOutlined,
   SwapOutlined,
+  FaHistory,
 };
 
 export default function BottomNav({ className }: { className?: string }) {

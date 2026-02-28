@@ -540,7 +540,7 @@ export default function TableBase<T>({
         background-color: transparent !important;
       }
       `
-          : selectionColor !== "border"
+          : selectionColor !== "border" && selectionColor !== "overlay"
             ? `
       #${tableId} .ag-row-selected,
       #${tableId} .ag-row.ag-row-selected,
@@ -573,6 +573,21 @@ export default function TableBase<T>({
       #${tableId} .ag-row[aria-selected="true"],
       #${tableId} .ag-row[aria-selected="true"] .ag-cell {
         background-color: ${selectionColor} !important;
+      }
+      `
+            : selectionColor === "overlay"
+            ? `
+      /* overlay: tema maneja el fondo oscuro, texto blanco con sombra para legibilidad */
+      #${tableId} .ag-row-selected .ag-cell,
+      #${tableId} .ag-row.ag-row-selected .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row-selected .ag-cell,
+      #${tableId}.ag-theme-quartz .ag-row.ag-row-selected .ag-cell,
+      #${tableId} .ag-row-selected:hover .ag-cell,
+      #${tableId} .ag-row.ag-row-selected:hover .ag-cell,
+      #${tableId} .ag-row[aria-selected="true"] .ag-cell {
+        color: rgba(255, 255, 255, 0.95) !important;
+        font-weight: 600 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
       }
       `
             : `
@@ -612,6 +627,11 @@ export default function TableBase<T>({
           theme={themeTable.withParams({
             ...paramsOfThemeTable,
             headerBackgroundColor: autoHeaderColor,
+            ...(selectionColor === "overlay"
+              ? { selectedRowBackgroundColor: "rgba(0, 0, 0, 0.28)" }
+              : selectionColor && selectionColor !== "transparent" && selectionColor !== "border"
+              ? { selectedRowBackgroundColor: selectionColor }
+              : {}),
           })}
           columnTypes={columnTypes}
           defaultColDef={{

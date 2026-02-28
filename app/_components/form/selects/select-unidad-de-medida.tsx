@@ -6,7 +6,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useQuery } from '@tanstack/react-query'
 import { unidadesMedidaApi } from '~/lib/api/catalogos'
 import ButtonCreateUnidadMedida from '../buttons/button-create-unidad-medida'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
 
 interface SelectUnidadDeMedidaProps extends SelectBaseProps {
@@ -24,8 +24,6 @@ export default function SelectUnidadDeMedida({
   ...props
 }: SelectUnidadDeMedidaProps) {
   const selectUnidadDeMedidaRef = useRef<RefSelectBaseProps>(null)
-  const [shouldFetch, setShouldFetch] = useState(false)
-
   const { data } = useQuery({
     queryKey: [QueryKeys.UNIDADES_MEDIDA],
     queryFn: async () => {
@@ -35,7 +33,6 @@ export default function SelectUnidadDeMedida({
       }
       return response.data?.data || []
     },
-    enabled: shouldFetch,
     staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
@@ -51,16 +48,7 @@ export default function SelectUnidadDeMedida({
           value: item.id,
           label: item.name,
         }))}
-        onFocus={() => {
-          if (!shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
-        onOpenChange={(open) => {
-          if (open && !shouldFetch) {
-            setShouldFetch(true)
-          }
-        }}
+
         {...props}
       />
       {showButtonCreate && (

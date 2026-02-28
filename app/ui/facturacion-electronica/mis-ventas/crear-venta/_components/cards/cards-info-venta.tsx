@@ -16,7 +16,7 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
 
-export default function CardsInfoVenta({ form }: { form: FormInstance }) {
+export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; ventaId?: string }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
   const tipo_documento = Form.useWatch("tipo_documento", form);
@@ -30,6 +30,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
   ) as FormCreateVenta["productos"];
   const direccionSeleccionada = Form.useWatch("direccion_seleccionada", form);
   const clienteNombre = Form.useWatch("cliente_nombre", form);
+  const clienteId = Form.useWatch("cliente_id", form);
 
   // Obtener la dirección seleccionada del cliente
   const getDireccionCliente = () => {
@@ -218,13 +219,13 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
             <ButtonBase
               onClick={() => {
                 form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
-                form.submit();
+                setModalDetallesEntregaOpen(true);
               }}
               color="success"
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
             >
               <MdSell className="min-w-fit" size={30} />
-              Crear Venta a Crédito
+              {ventaId ? 'Editar Venta a Crédito' : 'Crear Venta a Crédito'}
             </ButtonBase>
           </ConfigurableElement>
         )}
@@ -261,6 +262,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
         open={modalDetallesEntregaOpen}
         setOpen={setModalDetallesEntregaOpen}
         form={form}
+        ventaId={ventaId}
         tipoDespacho={tipo_despacho || "EnTienda"}
         onConfirmar={() => {
           // El tipo de despacho ya está guardado en el formulario
@@ -272,6 +274,7 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
         }}
         direccion={getDireccionCliente()}
         clienteNombre={clienteNombre}
+        clienteId={clienteId}
       />
 
       <ModalMetodosPagoVenta
@@ -293,17 +296,13 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
         open={modalEditarClienteOpen}
         setOpen={setModalEditarClienteOpen}
         dataEdit={
-          form.getFieldValue("cliente_id") ? {
-            id: form.getFieldValue("cliente_id"),
+          clienteId ? {
+            id: clienteId,
             tipo_cliente: form.getFieldValue("tipo_cliente") || "PERSONA",
             numero_documento: form.getFieldValue("numero_documento"),
             razon_social: form.getFieldValue("razon_social") || null,
             nombres: form.getFieldValue("nombres") || "",
             apellidos: form.getFieldValue("apellidos") || "",
-            direccion: form.getFieldValue("_cliente_direccion_1") || null,
-            direccion_2: form.getFieldValue("_cliente_direccion_2") || null,
-            direccion_3: form.getFieldValue("_cliente_direccion_3") || null,
-            direccion_4: form.getFieldValue("_cliente_direccion_4") || null,
             telefono: form.getFieldValue("telefono") || null,
             celular: null,
             horario_atencion: null,
@@ -316,21 +315,8 @@ export default function CardsInfoVenta({ form }: { form: FormInstance }) {
           } as Cliente : undefined
         }
         onSuccess={(cliente) => {
-          // Actualizar las direcciones en el formulario cuando se edita el cliente
-          form.setFieldValue("_cliente_direccion_1", cliente.direccion || "");
-          form.setFieldValue("_cliente_direccion_2", cliente.direccion_2 || "");
-          form.setFieldValue("_cliente_direccion_3", cliente.direccion_3 || "");
-          form.setFieldValue("_cliente_direccion_4", cliente.direccion_4 || "");
-          
-          // Actualizar la dirección de entrega según la dirección seleccionada
-          const direccionSeleccionada = form.getFieldValue("direccion_seleccionada") || "D1";
-          const direccionKey = `_cliente_direccion_${direccionSeleccionada.replace("D", "")}`;
-          const nuevaDireccion = form.getFieldValue(direccionKey) || "";
-          
-          form.setFieldValue("direccion_entrega", nuevaDireccion);
-          form.setFieldValue("direccion", nuevaDireccion);
-          form.setFieldValue("punto_llegada", nuevaDireccion);
-          
+          // Recargar las direcciones del cliente desde la API
+          // TODO: Implementar recarga de direcciones desde la tabla direcciones_cliente
           setModalEditarClienteOpen(false);
         }}
       />

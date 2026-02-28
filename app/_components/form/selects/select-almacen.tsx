@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface SelectAlmacenProps extends SelectBaseProps {
   classNameIcon?: string
@@ -28,9 +28,6 @@ export default function SelectAlmacen({
   const selectAlmacenRef = useRef<RefSelectBaseProps>(null)
   const setAlmacenId = useStoreAlmacen(store => store.setAlmacenId)
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
-  // Cargar inmediatamente si hay un valor inicial o en el store
-  const [shouldFetch, setShouldFetch] = useState(!!props.value || !!almacen_id)
-
   const { data } = useQuery({
     queryKey: [QueryKeys.ALMACENES],
     queryFn: async () => {
@@ -40,7 +37,6 @@ export default function SelectAlmacen({
       }
       return response.data?.data || []
     },
-    enabled: shouldFetch,
     staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
@@ -61,16 +57,6 @@ export default function SelectAlmacen({
         value: item.id,
         label: item.name,
       }))}
-      onFocus={() => {
-        if (!shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
-      onOpenChange={(open) => {
-        if (open && !shouldFetch) {
-          setShouldFetch(true)
-        }
-      }}
       onChange={value => {
         if (afecta_store) setAlmacenId(value)
         onChange?.(value)

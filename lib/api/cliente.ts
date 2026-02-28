@@ -7,7 +7,37 @@ export enum TipoCliente {
   EMPRESA = 'e',
 }
 
+export enum TipoDireccion {
+  D1 = 'D1',
+  D2 = 'D2',
+  D3 = 'D3',
+  D4 = 'D4',
+}
+
 // ============= INTERFACES =============
+
+export interface DireccionCliente {
+  id: number;
+  cliente_id: number;
+  tipo: TipoDireccion;
+  direccion: string;
+  latitud: number | null;
+  longitud: number | null;
+  es_principal: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DireccionFormValues {
+  direccion: string;
+  latitud?: number | null;
+  longitud?: number | null;
+}
+
+export interface Coordenadas {
+  lat: number;
+  lng: number;
+}
 
 export interface Cliente {
   id: number;
@@ -16,10 +46,6 @@ export interface Cliente {
   nombres: string;
   apellidos: string;
   razon_social: string | null;
-  direccion: string | null;
-  direccion_2: string | null;
-  direccion_3: string | null;
-  direccion_4: string | null;
   telefono: string | null;
   celular: string | null;
   horario_atencion: string | null;
@@ -31,6 +57,7 @@ export interface Cliente {
   estado: boolean;
   created_at?: string;
   updated_at?: string;
+  direcciones?: DireccionCliente[];
 }
 
 // ============= REQUEST TYPES =============
@@ -41,10 +68,6 @@ export interface CreateClienteRequest {
   nombres: string;
   apellidos: string;
   razon_social?: string | null;
-  direccion?: string | null;
-  direccion_2?: string | null;
-  direccion_3?: string | null;
-  direccion_4?: string | null;
   telefono?: string | null;
   celular?: string | null;
   horario_atencion?: string | null;
@@ -171,5 +194,54 @@ export const clienteApi = {
    */
   getEstadisticas: async (): Promise<ApiResponse<ClienteEstadisticasResponse>> => {
     return apiRequest<ClienteEstadisticasResponse>('/clientes/estadisticas');
+  },
+
+  // ============================================
+  // MÉTODOS DE DIRECCIONES
+  // ============================================
+
+  /**
+   * Listar todas las direcciones de un cliente
+   */
+  listarDirecciones: async (clienteId: number): Promise<ApiResponse<{ data: DireccionCliente[] }>> => {
+    return apiRequest<{ data: DireccionCliente[] }>(`/clientes/${clienteId}/direcciones`);
+  },
+
+  /**
+   * Crear una nueva dirección para un cliente
+   */
+  crearDireccion: async (clienteId: number, data: DireccionFormValues): Promise<ApiResponse<{ data: DireccionCliente; message: string }>> => {
+    return apiRequest<{ data: DireccionCliente; message: string }>(`/clientes/${clienteId}/direcciones`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Actualizar una dirección existente
+   */
+  actualizarDireccion: async (direccionId: number, data: DireccionFormValues): Promise<ApiResponse<{ data: DireccionCliente; message: string }>> => {
+    return apiRequest<{ data: DireccionCliente; message: string }>(`/direcciones/${direccionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Eliminar una dirección
+   */
+  eliminarDireccion: async (direccionId: number): Promise<ApiResponse<{ message: string }>> => {
+    return apiRequest<{ message: string }>(`/direcciones/${direccionId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * Marcar una dirección como principal
+   */
+  marcarDireccionPrincipal: async (direccionId: number): Promise<ApiResponse<{ data: DireccionCliente; message: string }>> => {
+    return apiRequest<{ data: DireccionCliente; message: string }>(`/direcciones/${direccionId}/marcar-principal`, {
+      method: 'POST',
+    });
   },
 };

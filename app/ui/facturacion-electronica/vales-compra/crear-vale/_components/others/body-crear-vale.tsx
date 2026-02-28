@@ -39,12 +39,21 @@ export default function BodyCrearVale() {
     console.log('📝 Valores del formulario:', values)
     setLoading(true)
     try {
+      // Asegurar que producto_ids y categoria_ids sean siempre arrays
+      const toArray = (val: unknown): number[] | undefined => {
+        if (!val) return undefined
+        if (Array.isArray(val)) return val
+        return [val as number]
+      }
+
       // Convertir fechas de dayjs a string
       const payload = {
         ...values,
         fecha_inicio: values.fecha_inicio ? dayjs(values.fecha_inicio).format('YYYY-MM-DD') : undefined,
         fecha_fin: values.fecha_fin ? dayjs(values.fecha_fin).format('YYYY-MM-DD') : undefined,
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,
+        producto_ids: toArray(values.producto_ids),
+        categoria_ids: toArray(values.categoria_ids),
       }
 
       console.log('📦 Payload a enviar:', payload)

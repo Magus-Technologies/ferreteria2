@@ -43,6 +43,8 @@ export type FormCreateVenta = {
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago
+  numero_dias?: number
+  fecha_vencimiento?: Dayjs
   tipo_documento: TipoDocumento
   tipo_moneda: TipoMoneda
   tipo_de_cambio?: number
@@ -88,6 +90,15 @@ export type FormCreateVenta = {
     pendiente: number
     entregar: number
   }>
+  // Datos para programar la entrega del resto en despacho parcial mixto
+  parcial_resto_programado?: {
+    despachador_id?: string
+    fecha_programada?: string
+    hora_inicio?: string
+    hora_fin?: string
+    direccion_entrega?: string
+    observaciones?: string
+  }
 }
 
 // Componente interno que se recrea completamente cuando cambia la key
@@ -117,7 +128,7 @@ function FormVentaInternal({
         <FormCrearVenta form={form} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} />
+        <CardsInfoVenta form={form} ventaId={venta?.id} />
       </div>
     </FormBase>
   )
@@ -134,7 +145,7 @@ export default function BodyVender({
   const [ventaData, setVentaData] = useState<VentaResponse>()
   const [formKey, setFormKey] = useState(0)
 
-  const { handleSubmit } = useCreateVenta()
+  const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
   
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)

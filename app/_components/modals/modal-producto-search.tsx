@@ -59,6 +59,8 @@ export default function ModalProductoSearch({
     setText(textDefault);
   }, [textDefault]);
 
+  // value: con debounce 1s → dispara petición al servidor
+  // text: sin debounce → filtra local e instantáneamente sobre los resultados cargados
   const [value] = useDebounce(text, 1000);
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
@@ -141,6 +143,7 @@ export default function ModalProductoSearch({
               <TableProductoSearch
                 ref={tableRef}
                 value={value}
+                quickFilterValue={text}
                 onRowDoubleClicked={onRowDoubleClicked}
                 tipoBusqueda={tipoBusqueda}
                 selectionColor={selectionColor}

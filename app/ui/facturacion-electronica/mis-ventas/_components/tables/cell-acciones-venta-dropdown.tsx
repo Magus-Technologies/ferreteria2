@@ -1,7 +1,7 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaTruck, FaFileCode, FaPaperPlane, FaDownload } from "react-icons/fa";
+import { FaFilePdf, FaTruck, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory } from "react-icons/fa";
 import { MoreOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { Dropdown, message } from "antd";
@@ -11,6 +11,7 @@ import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfVenta } from "../../_store/store-modal-pdf-venta";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
+import ModalHistorialVenta from "../modals/modal-historial-venta";
 
 export default function CellAccionesVentaDropdown(
   props: ICellRendererParams & { ventaId?: string }
@@ -20,6 +21,7 @@ export default function CellAccionesVentaDropdown(
   const router = useRouter();
   const openModal = useStoreModalPdfVenta((state) => state.openModal);
   const [loading, setLoading] = useState(false);
+  const [historialOpen, setHistorialOpen] = useState(false);
 
   if (!ventaId) return null;
 
@@ -41,6 +43,21 @@ export default function CellAccionesVentaDropdown(
   }, [venta?.comprobante_electronico]);
 
   const { comprobanteElectronico, estadoSunat, tieneXml, tieneCdr, isAceptado } = comprobanteInfo;
+
+  // Determinar label de edición según tipo de documento
+  const tipoDocumento = venta?.tipo_documento;
+  const editLabel = tipoDocumento === '01' ? 'Editar Factura'
+    : tipoDocumento === '03' ? 'Editar Boleta'
+    : tipoDocumento === 'nv' ? 'Editar Nota de Venta'
+    : 'Editar Venta';
+
+  // Verificar si se puede editar (no anulado ni procesado)
+  const estadoVenta = venta?.estado_de_venta;
+  const canEdit = estadoVenta !== 'an' && estadoVenta !== 'pr';
+
+  const handleEditar = () => {
+    router.push(`/ui/facturacion-electronica/mis-ventas/editar-venta/${ventaId}`);
+  };
 
   const handleVerPDF = () => {
     openModal(ventaId);
@@ -161,13 +178,24 @@ export default function CellAccionesVentaDropdown(
   // Construir el menú del dropdown
   const menuItems: MenuProps['items'] = [
     {
+      key: 'editar',
+      label: <span className="flex items-center gap-2"><FaEdit className="text-amber-600" /> {editLabel}</span>,
+      onClick: handleEditar,
+      disabled: !canEdit,
+    },
+    {
+      key: 'historial',
+      label: <span className="flex items-center gap-2"><FaHistory className="text-slate-600" /> Historial</span>,
+      onClick: () => setHistorialOpen(true),
+    },
+    {
       key: 'pdf',
-      label: <FaFilePdf className="text-red-600 text-lg" title="Ver PDF" />,
+      label: <span className="flex items-center gap-2"><FaFilePdf className="text-red-600" /> Ver PDF</span>,
       onClick: handleVerPDF,
     },
     {
       key: 'guia',
-      label: <FaTruck className="text-blue-600 text-lg" title="Crear Guía" />,
+      label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Crear Guía</span>,
       onClick: handleCrearGuia,
     },
     {
@@ -175,19 +203,19 @@ export default function CellAccionesVentaDropdown(
     },
     {
       key: 'ver-xml',
-      label: <FaFileCode className="text-green-600 text-lg" title="Ver XML" />,
+      label: <span className="flex items-center gap-2"><FaFileCode className="text-green-600" /> Ver XML</span>,
       onClick: handleVerXML,
       disabled: !tieneXml,
     },
     {
       key: 'enviar-sunat',
-      label: <FaPaperPlane className="text-purple-600 text-lg" title="Enviar a SUNAT" />,
+      label: <span className="flex items-center gap-2"><FaPaperPlane className="text-purple-600" /> Enviar a SUNAT</span>,
       onClick: handleEnviarSunat,
       disabled: loading || !tieneXml || isAceptado,
     },
     {
       key: 'descargar-cdr',
-      label: <FaDownload className="text-orange-600 text-lg" title="Descargar CDR" />,
+      label: <span className="flex items-center gap-2"><FaDownload className="text-orange-600" /> Descargar CDR</span>,
       onClick: handleDescargarCDR,
       disabled: !tieneCdr,
     },
@@ -224,6 +252,14 @@ export default function CellAccionesVentaDropdown(
           </ButtonBase>
         </Dropdown>
       </ConfigurableElement>
+
+      <ModalHistorialVenta
+        open={historialOpen}
+        onClose={() => setHistorialOpen(false)}
+        ventaId={ventaId}
+        ventaSerie={venta?.serie}
+        ventaNumero={venta?.numero}
+      />
     </div>
   );
 }

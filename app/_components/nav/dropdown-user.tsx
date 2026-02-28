@@ -4,14 +4,17 @@ import { MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { BiSolidReport } from 'react-icons/bi'
 import { FaCalculator, FaSignOutAlt, FaWarehouse } from 'react-icons/fa'
-import { IoDocumentText } from 'react-icons/io5'
+import { IoDocumentText, IoSettingsSharp } from 'react-icons/io5'
 import { MdOutlineMenuOpen } from 'react-icons/md'
 import { useAuth } from '~/lib/auth-context'
 import DropdownBase from '~/components/dropdown/dropdown-base'
+import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
+import ModalConfiguraciones from '~/app/_components/modals/modal-configuraciones'
 
 export default function DropdownUser() {
   const router = useRouter()
   const { logout, user } = useAuth()
+  const { openModal: openConfiguraciones } = useModalConfiguraciones()
 
   const items: MenuProps['items'] = [
     {
@@ -52,13 +55,19 @@ export default function DropdownUser() {
     },
     {
       key: '2',
+      label: 'Configuraciones',
+      extra: <IoSettingsSharp className='text-slate-500' size={15} />,
+      onClick: () => openConfiguraciones(),
+    },
+    {
+      key: '3',
       label: 'Cambiar Contraseña',
     },
     {
       type: 'divider',
     },
     {
-      key: '3',
+      key: '4',
       label: 'Cerrar Sesión',
       className: '!text-red-500',
       extra: <FaSignOutAlt className='text-red-500' />,
@@ -70,8 +79,11 @@ export default function DropdownUser() {
   ]
 
   return (
-    <DropdownBase menu={{ items }}>
-      <span className='font-bold'>Hola, {user?.name || 'Usuario'}</span>
-    </DropdownBase>
+    <>
+      <DropdownBase menu={{ items }}>
+        <span className='font-bold'>Hola, {user?.name || 'Usuario'}</span>
+      </DropdownBase>
+      <ModalConfiguraciones />
+    </>
   )
 }

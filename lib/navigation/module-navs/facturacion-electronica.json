@@ -169,6 +169,13 @@
         "permission": "facturacion-electronica.mis-ventas.index"
       },
       {
+        "id": "historial-ventas",
+        "label": "Historial de Ventas",
+        "icon": "FaHistory",
+        "route": "/ui/facturacion-electronica/mis-ventas/historial",
+        "permission": "facturacion-electronica.mis-ventas.index"
+      },
+      {
         "id": "mis-entregas",
         "label": "Mis Entregas",
         "icon": "FaTruck",
