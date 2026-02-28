@@ -106,8 +106,8 @@ export default function ModalCrearSubCaja({
     },
   })
 
-  // ELIMINADO: Validación de efectivo para Facturas/Boletas
-  // Ahora se permite efectivo en todas las sub-cajas
+  // Validación de exclusividad de métodos de pago
+  // Se excluyen los métodos que ya están en uso en otras sub-cajas de la misma caja principal
 
   const handleAceptaTodosChange = (checked: boolean) => {
     setAceptaTodos(checked)
@@ -195,7 +195,7 @@ export default function ModalCrearSubCaja({
           onChange={(e) => handleAceptaTodosChange(e.target.checked)}
           className='mb-2'
         >
-          Aceptar TODOS los métodos de pago (incluye efectivo)
+          Aceptar TODOS los métodos de pago
         </Checkbox>
 
         {aceptaTodos ? (
