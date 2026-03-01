@@ -81,6 +81,13 @@ export interface CreateVentaRequest {
   user_id: string;
   almacen_id: number;
   productos_por_almacen: ProductoVentaRequest[];
+  servicios_venta?: Array<{
+    servicio_id: number;
+    cantidad: number;
+    precio_unitario: number;
+    subtotal: number;
+    referencia?: string | null;
+  }>;
   despliegue_de_pago_ventas?: DespliegueDePagoVentaRequest[];
   ingreso_dinero_id?: string;
 }
@@ -313,6 +320,22 @@ export type VentaCompleta = {
   user?: { id: string; name: string }
   almacen?: { id: number; name: string }
   entregasProductos?: any[]
+  servicios_venta?: Array<{
+    id: number
+    venta_id: string
+    servicio_id: number
+    cantidad: number
+    precio_unitario: number
+    subtotal: number
+    referencia: string | null
+    servicio?: {
+      id: number
+      nombre: string
+      precio: number
+      codigo_sunat: string | null
+      activo: boolean
+    }
+  }>
   comprobante_electronico?: {
     id: number
     tipo_comprobante: string

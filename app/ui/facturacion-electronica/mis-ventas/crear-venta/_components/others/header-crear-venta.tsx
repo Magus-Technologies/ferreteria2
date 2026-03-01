@@ -7,6 +7,7 @@ import type { getVentaResponseProps } from "~/lib/api/venta";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectPaquetes from "~/app/_components/form/selects/select-paquetes";
+import SelectServicios from "~/app/_components/form/selects/select-servicios";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import usePermissionHook from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
@@ -14,7 +15,9 @@ import CardAgregarProductoVenta from "../cards/card-agregar-producto-venta";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
 import ModalBuscarPaquete from "~/app/_components/modals/modal-buscar-paquete";
+import ModalBuscarServicio from "~/app/_components/modals/modal-buscar-servicio";
 import { useStorePaqueteSeleccionado } from "../../../store/store-paquete-seleccionado";
+import { useStoreServicioSeleccionado } from "../../../store/store-servicio-seleccionado";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export type VentaConUnidadDerivadaNormal = Omit<
@@ -46,6 +49,8 @@ export default function HeaderCrearVenta({
     useState(false);
   const [openModalBuscarPaquete, setOpenModalBuscarPaquete] = useState(false);
   const [textDefaultPaquete, setTextDefaultPaquete] = useState("");
+  const [openModalBuscarServicio, setOpenModalBuscarServicio] = useState(false);
+  const [textDefaultServicio, setTextDefaultServicio] = useState("");
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
@@ -62,6 +67,11 @@ export default function HeaderCrearVenta({
   // Store para paquete seleccionado
   const paqueteSeleccionadoStore = useStorePaqueteSeleccionado(
     (store) => store.paquete,
+  );
+
+  // Store para servicio seleccionado
+  const servicioSeleccionadoStore = useStoreServicioSeleccionado(
+    (store) => store.servicio,
   );
 
   /**
@@ -112,6 +122,62 @@ export default function HeaderCrearVenta({
         productosAgregados !== 1 ? "s" : ""
       }`,
     );
+  };
+
+  /**
+   * Agregar un servicio a la venta
+   */
+  const handleAgregarServicio = (seleccion: {
+    servicio: { id: number; nombre: string; precio: number; codigo_sunat: string | null };
+    cantidad: number;
+    precio_unitario: number;
+    referencia?: string;
+  }) => {
+    const { servicio, cantidad, precio_unitario, referencia } = seleccion;
+
+    setProductoAgregado({
+      _tipo: 'servicio',
+      producto_id: -servicio.id, // Negativo para no colisionar con producto_id
+      producto_name: servicio.nombre,
+      producto_codigo: servicio.codigo_sunat || 'SRV',
+      marca_name: '-',
+      unidad_derivada_id: 0,
+      unidad_derivada_name: 'SERVICIO',
+      unidad_derivada_factor: 1,
+      cantidad,
+      precio_venta: precio_unitario,
+      recargo: 0,
+      subtotal: Number((cantidad * precio_unitario).toFixed(2)),
+      servicio_id: servicio.id,
+      servicio_nombre: servicio.nombre,
+      servicio_codigo_sunat: servicio.codigo_sunat,
+      servicio_referencia: referencia,
+    });
+
+    message.success(`Servicio "${servicio.nombre}" agregado`);
+  };
+
+  /**
+   * Agregar servicio seleccionado desde el modal de búsqueda (via store)
+   */
+  const handleAgregarServicioFromModal = () => {
+    const servicio = servicioSeleccionadoStore;
+
+    if (!servicio) {
+      message.warning("Selecciona un servicio");
+      return;
+    }
+
+    handleAgregarServicio({
+      servicio: {
+        id: servicio.id,
+        nombre: servicio.nombre,
+        precio: Number(servicio.precio),
+        codigo_sunat: servicio.codigo_sunat,
+      },
+      cantidad: 1,
+      precio_unitario: Number(servicio.precio),
+    });
   };
 
   return (
@@ -170,6 +236,25 @@ export default function HeaderCrearVenta({
               onOpenModal={() => setOpenModalBuscarPaquete(true)}
             />
           </ConfigurableElement>
+
+          <ConfigurableElement
+            componentId="crear-venta.buscar-servicio"
+            label="Buscar Servicio"
+          >
+            <SelectServicios
+              placeholder="Buscar Servicio..."
+              className="w-full lg:!min-w-[250px] lg:!w-[250px] lg:!max-w-[250px]"
+              classNameIcon="text-violet-600"
+              onSelect={(servicio) => {
+                handleAgregarServicio({
+                  servicio,
+                  cantidad: 1,
+                  precio_unitario: Number(servicio.precio),
+                });
+              }}
+              onOpenModal={() => setOpenModalBuscarServicio(true)}
+            />
+          </ConfigurableElement>
         </div>
       }
     >
@@ -216,6 +301,22 @@ export default function HeaderCrearVenta({
             if (data) {
               await handleAgregarPaquete();
               setOpenModalBuscarPaquete(false);
+            }
+          }}
+        />
+
+        <ModalBuscarServicio
+          open={openModalBuscarServicio}
+          setOpen={setOpenModalBuscarServicio}
+          onOk={() => {
+            handleAgregarServicioFromModal();
+            setOpenModalBuscarServicio(false);
+          }}
+          textDefault={textDefaultServicio}
+          onRowDoubleClicked={({ data }) => {
+            if (data) {
+              handleAgregarServicioFromModal();
+              setOpenModalBuscarServicio(false);
             }
           }}
         />

@@ -58,33 +58,12 @@
         ]
       },
       {
-        "id": "vales-compra-dropdown",
-        "type": "dropdown",
-        "label": "Vales de Compra",
-        "icon": "FaGift",
-        "permission": null,
-        "items": [
-          {
-            "key": "crear-vale",
-            "label": "Crear Vale",
-            "route": "/ui/facturacion-electronica/vales-compra/crear-vale",
-            "permission": "facturacion-electronica.crear-vale.index"
-          },
-          {
-            "key": "mis-vales",
-            "label": "Mis Vales",
-            "route": "/ui/facturacion-electronica/vales-compra",
-            "permission": "facturacion-electronica.mis-vales.index"
-          }
-        ]
-      },
-      {
-        "id": "crear-contacto",
+        "id": "crear-vale",
         "type": "button",
-        "label": "Mis Contactos",
-        "icon": "IoMdContact",
-        "route": "/ui/facturacion-electronica/mis-contactos",
-        "permission": "cliente.create"
+        "label": "Crear Vale",
+        "icon": "FaGift",
+        "route": "/ui/facturacion-electronica/vales-compra/crear-vale",
+        "permission": "facturacion-electronica.crear-vale.index"
       },
       {
         "id": "finanzas-dropdown",
@@ -237,6 +216,13 @@
         "icon": "SwapOutlined",
         "route": "/ui/facturacion-electronica/movimientos-caja",
         "permission": "facturacion-electronica.movimientos-caja.index"
+      },
+      {
+        "id": "mis-vales",
+        "label": "Mis Vales",
+        "icon": "FaGift",
+        "route": "/ui/facturacion-electronica/vales-compra",
+        "permission": "facturacion-electronica.mis-vales.index"
       }
     ]
   }

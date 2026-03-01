@@ -35,25 +35,48 @@ export default function useInitVenta({
         telefono: (venta as any).telefono || (venta as any).cliente?.telefono || undefined,
         direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
         email: (venta as any).cliente?.email || undefined,
-        productos: venta.productos_por_almacen.flatMap((ppa) =>
-          ppa.unidades_derivadas.map((ud) => ({
-            cantidad: Number(ud.cantidad),
-            unidad_derivada_id: ud.unidad_derivada_normal.id,
-            recargo: Number(ud.recargo),
-            precio_venta:
-              (Number(ud.precio) + Number(ud.recargo)) * Number(ud.factor),
-            subtotal:
-              (Number(ud.precio) + Number(ud.recargo)) *
-              Number(ud.factor) *
-              Number(ud.cantidad),
-            marca_name: ppa.producto_almacen.producto.marca.name,
-            producto_name: ppa.producto_almacen.producto.name,
-            producto_codigo: ppa.producto_almacen.producto.cod_producto,
-            unidad_derivada_name: ud.unidad_derivada_normal.name,
-            unidad_derivada_factor: Number(ud.factor),
-            producto_id: ppa.producto_almacen.producto_id,
-          }))
-        ),
+        productos: [
+          // Productos normales
+          ...venta.productos_por_almacen.flatMap((ppa) =>
+            ppa.unidades_derivadas.map((ud) => ({
+              _tipo: 'producto' as const,
+              cantidad: Number(ud.cantidad),
+              unidad_derivada_id: ud.unidad_derivada_normal.id,
+              recargo: Number(ud.recargo),
+              precio_venta:
+                (Number(ud.precio) + Number(ud.recargo)) * Number(ud.factor),
+              subtotal:
+                (Number(ud.precio) + Number(ud.recargo)) *
+                Number(ud.factor) *
+                Number(ud.cantidad),
+              marca_name: ppa.producto_almacen.producto.marca.name,
+              producto_name: ppa.producto_almacen.producto.name,
+              producto_codigo: ppa.producto_almacen.producto.cod_producto,
+              unidad_derivada_name: ud.unidad_derivada_normal.name,
+              unidad_derivada_factor: Number(ud.factor),
+              producto_id: ppa.producto_almacen.producto_id,
+            }))
+          ),
+          // Servicios de la venta
+          ...((venta as any).servicios_venta || []).map((sv: any) => ({
+            _tipo: 'servicio' as const,
+            producto_id: -sv.servicio_id,
+            producto_name: sv.servicio?.nombre || 'Servicio',
+            producto_codigo: sv.servicio?.codigo_sunat || 'SRV',
+            marca_name: '-',
+            unidad_derivada_id: 0,
+            unidad_derivada_name: 'SERVICIO',
+            unidad_derivada_factor: 1,
+            cantidad: Number(sv.cantidad),
+            precio_venta: Number(sv.precio_unitario),
+            recargo: 0,
+            subtotal: Number(sv.subtotal),
+            servicio_id: sv.servicio_id,
+            servicio_nombre: sv.servicio?.nombre || 'Servicio',
+            servicio_codigo_sunat: sv.servicio?.codigo_sunat || null,
+            servicio_referencia: sv.referencia || undefined,
+          })),
+        ],
       }
 
       form.setFieldsValue(dataFormated)

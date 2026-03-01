@@ -4,7 +4,7 @@ import { getTopNavItems, getModuleNav } from "~/lib/navigation";
 import usePermissionHook from "~/hooks/use-permission";
 import { MdSpaceDashboard } from "react-icons/md";
 import { FaClipboardList } from "react-icons/fa";
-import { FaCartShopping, FaMoneyBillTrendUp } from "react-icons/fa6";
+import { FaCartShopping, FaGift, FaMoneyBillTrendUp } from "react-icons/fa6";
 import DropdownBase from "~/components/dropdown/dropdown-base";
 import { IoMdContact } from "react-icons/io";
 import BaseNav from "~/app/_components/nav/base-nav";
@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 const iconMap: Record<string, any> = {
   MdSpaceDashboard,
   FaCartShopping,
+  FaGift,
   IoMdContact,
   FaMoneyBillTrendUp,
   FaClipboardList,

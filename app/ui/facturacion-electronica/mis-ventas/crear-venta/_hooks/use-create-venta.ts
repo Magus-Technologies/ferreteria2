@@ -127,9 +127,13 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
 
 
 
-    if (!productos || productos.length === 0)
+    // Separar productos y servicios
+    const soloProductos = (productos || []).filter(p => p._tipo !== 'servicio')
+    const soloServicios = (productos || []).filter(p => p._tipo === 'servicio')
+
+    if (soloProductos.length === 0 && soloServicios.length === 0)
       return notification.error({
-        message: 'Por favor, ingresa al menos un producto',
+        message: 'Por favor, ingresa al menos un producto o servicio',
       })
 
     // IMPORTANTE: Laravel backend permite cliente_id nullable para Boleta/NV
@@ -184,8 +188,8 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
     console.log('  tipo_moneda:', tipo_moneda, typeof tipo_moneda)
     console.log('  estado_de_venta:', estadoVenta, typeof estadoVenta)
 
-    // Agrupar productos por producto_id
-    const productos_agrupados = agruparProductos({ productos })
+    // Agrupar productos por producto_id (solo productos, no servicios)
+    const productos_agrupados = agruparProductos({ productos: soloProductos })
 
     // Mapear DescuentoTipo de Prisma a Laravel
     const mapDescuentoTipo = (tipo?: any): '%' | 'm' | null => {
@@ -237,6 +241,16 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
       user_id: user_id,
       almacen_id: almacen_id,
       productos_por_almacen: productos_por_almacen,
+      // Agregar servicios si existen
+      servicios_venta: soloServicios.length > 0
+        ? soloServicios.map(s => ({
+            servicio_id: s.servicio_id!,
+            cantidad: Number(s.cantidad),
+            precio_unitario: Number(s.precio_venta),
+            subtotal: Number((Number(s.cantidad) * Number(s.precio_venta)).toFixed(4)),
+            referencia: s.servicio_referencia || null,
+          }))
+        : undefined,
       // Agregar métodos de pago si existen, extrayendo correctamente los IDs
       despliegue_de_pago_ventas: metodos_de_pago && metodos_de_pago.length > 0
         ? metodos_de_pago

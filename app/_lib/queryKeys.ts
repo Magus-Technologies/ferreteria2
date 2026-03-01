@@ -30,6 +30,7 @@ export enum QueryKeys {
   COTIZACIONES = 'cotizaciones',
   PRESTAMOS = 'prestamos',
   PAQUETES = 'paquetes',
+  SERVICIOS = 'servicios',
   EMPRESAS = 'empresas',
   UBIGEO = 'ubigeo',
   VENDEDORES_DISPONIBLES = 'vendedores_disponibles',

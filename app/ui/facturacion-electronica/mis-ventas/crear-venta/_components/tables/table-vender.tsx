@@ -74,6 +74,12 @@ export default function TableVender({
       Object.keys(productoAgregadoVenta).length &&
       productoAgregadoVenta.producto_id
     ) {
+      // Los servicios siempre se agregan como filas nuevas (no se agrupan)
+      if (productoAgregadoVenta._tipo === 'servicio') {
+        agregarProducto({ producto: productoAgregadoVenta })
+        return
+      }
+
       if (
         !productosVenta.find(
           (item) => item.producto_id === productoAgregadoVenta.producto_id

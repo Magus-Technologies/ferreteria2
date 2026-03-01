@@ -144,7 +144,10 @@ export function useColumnsVender({
         const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
         const paqueteNombre = form.getFieldValue(['productos', value, 'paquete_nombre'])
         const productoName = form.getFieldValue(['productos', value, 'producto_name'])
-        
+        const tipo = form.getFieldValue(['productos', value, '_tipo'])
+        const servicioNombre = form.getFieldValue(['productos', value, 'servicio_nombre'])
+        const servicioReferencia = form.getFieldValue(['productos', value, 'servicio_referencia'])
+
         // Verificar si es el primero del paquete
         let esPrimeroDelGrupo = true
         if (paqueteId) {
@@ -156,7 +159,7 @@ export function useColumnsVender({
             }
           }
         }
-        
+
         return (
           <div className='flex flex-col h-full justify-center gap-1'>
             <InputNumberBase
@@ -189,23 +192,72 @@ export function useColumnsVender({
               }}
               formWithMessage={false}
             />
-            
+            {/* Campos hidden para servicios */}
+            <InputBase
+              propsForm={{
+                name: [value, '_tipo'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'servicio_id'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputBase
+              propsForm={{
+                name: [value, 'servicio_nombre'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputBase
+              propsForm={{
+                name: [value, 'servicio_codigo_sunat'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+            <InputBase
+              propsForm={{
+                name: [value, 'servicio_referencia'],
+                hidden: true,
+              }}
+              formWithMessage={false}
+            />
+
+            {/* Badge de servicio */}
+            {tipo === 'servicio' && (
+              <div className='px-2 py-0.5 bg-violet-100 text-violet-800 rounded text-xs font-bold w-fit'>
+                SERVICIO
+              </div>
+            )}
+
             {/* Mostrar nombre del paquete solo en el primer producto del grupo */}
             {paqueteId && esPrimeroDelGrupo && (
               <div className='px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-bold w-fit'>
                 📦 {paqueteNombre}
               </div>
             )}
-            
-            {/* Nombre del producto */}
+
+            {/* Nombre del producto/servicio */}
             <Tooltip
               classNames={{ body: 'text-center!' }}
-              title={productoName}
+              title={tipo === 'servicio' ? servicioNombre : productoName}
             >
               <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-                {productoName}
+                {tipo === 'servicio' ? servicioNombre : productoName}
               </div>
             </Tooltip>
+            {/* Referencia del servicio */}
+            {tipo === 'servicio' && servicioReferencia && (
+              <div className='text-xs text-gray-400 italic overflow-hidden text-ellipsis whitespace-nowrap'>
+                {servicioReferencia}
+              </div>
+            )}
             <InputBase
               propsForm={{
                 name: [value, 'producto_name'],
@@ -228,28 +280,35 @@ export function useColumnsVender({
       field: 'name',
       minWidth: 120,
       width: 120,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue(['productos', value, 'marca_name'])}
-          >
-            <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'marca_name'])}
-            </div>
-          </Tooltip>
-          <InputBase
-            propsForm={{
-              name: [value, 'marca_name'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
-        </div>
-      ),
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const tipo = form.getFieldValue(['productos', value, '_tipo'])
+        return (
+          <div className='flex items-center h-full'>
+            {tipo === 'servicio' ? (
+              <span className='text-gray-400'>-</span>
+            ) : (
+              <Tooltip
+                classNames={{ body: 'text-center!' }}
+                title={form.getFieldValue(['productos', value, 'marca_name'])}
+              >
+                <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                  {form.getFieldValue(['productos', value, 'marca_name'])}
+                </div>
+              </Tooltip>
+            )}
+            <InputBase
+              propsForm={{
+                name: [value, 'marca_name'],
+                rules: tipo === 'servicio' ? undefined : [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              readOnly
+              variant='borderless'
+              formWithMessage={false}
+            />
+          </div>
+        )
+      },
     },
     {
       headerName: 'Unidad Derivada',
@@ -258,18 +317,23 @@ export function useColumnsVender({
       width: 150,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         const productoId = form.getFieldValue(['productos', value, 'producto_id']);
-        
+        const tipo = form.getFieldValue(['productos', value, '_tipo']);
+
         return (
           <div className='flex items-center h-full'>
-            <SelectUnidadDerivadaVenta
-              form={form}
-              fieldIndex={value}
-              productoId={productoId}
-            />
+            {tipo === 'servicio' ? (
+              <span className='text-violet-600 text-xs font-medium'>SERVICIO</span>
+            ) : (
+              <SelectUnidadDerivadaVenta
+                form={form}
+                fieldIndex={value}
+                productoId={productoId}
+              />
+            )}
             <InputNumberBase
               propsForm={{
                 name: [value, 'unidad_derivada_id'],
-                rules: [{ required: true, message: '' }],
+                rules: tipo === 'servicio' ? undefined : [{ required: true, message: '' }],
                 hidden: true,
               }}
               formWithMessage={false}
@@ -277,7 +341,7 @@ export function useColumnsVender({
             <InputNumberBase
               propsForm={{
                 name: [value, 'unidad_derivada_factor'],
-                rules: [{ required: true, message: '' }],
+                rules: tipo === 'servicio' ? undefined : [{ required: true, message: '' }],
                 hidden: true,
               }}
               formWithMessage={false}
@@ -285,7 +349,7 @@ export function useColumnsVender({
             <InputBase
               propsForm={{
                 name: [value, 'unidad_derivada_name'],
-                rules: [{ required: true, message: '' }],
+                rules: tipo === 'servicio' ? undefined : [{ required: true, message: '' }],
                 hidden: true,
               }}
               readOnly
@@ -307,13 +371,13 @@ export function useColumnsVender({
         const cantidad = form.getFieldValue(['productos', value, 'cantidad'])
         const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor'])
         const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion'])
-        const unidad_derivada_name = form.getFieldValue(['productos', value, 'unidad_derivada_name'])
+        const tipo = form.getFieldValue(['productos', value, '_tipo'])
 
-        // Calcular si hay stock insuficiente
+        // Calcular si hay stock insuficiente (solo para productos)
         const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1)
         const stockDisponible = Number(stock_fraccion || 0)
         const stockEnUnidad = stockDisponible / Number(unidad_derivada_factor || 1)
-        const stockInsuficiente = cantidadEnFraccion > stockDisponible
+        const stockInsuficiente = tipo !== 'servicio' && cantidadEnFraccion > stockDisponible
 
         return (
           <div className='flex flex-col justify-center w-full py-2'>

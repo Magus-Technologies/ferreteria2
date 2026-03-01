@@ -23,6 +23,7 @@ import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agreg
 
 export type FormCreateVenta = {
   productos: Array<{
+    _tipo?: 'producto' | 'servicio'
     producto_id: number
     producto_name: string
     producto_codigo: string
@@ -40,6 +41,11 @@ export type FormCreateVenta = {
     // Campos para identificar si el producto pertenece a un paquete
     paquete_id?: number
     paquete_nombre?: string
+    // Campos para servicios
+    servicio_id?: number
+    servicio_nombre?: string
+    servicio_codigo_sunat?: string | null
+    servicio_referencia?: string
   }>
   fecha: Dayjs
   forma_de_pago: FormaDePago
