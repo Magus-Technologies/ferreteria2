@@ -49,8 +49,19 @@ export async function GET(
       )
     }
 
+    // Obtener QR del comprobante electrónico (si existe)
+    let codigoQr: string | null = null
+    if (venta.serie && venta.numero) {
+      const comprobante = await prisma.$queryRaw<{ codigo_qr: string | null }[]>`
+        SELECT codigo_qr FROM comprobantes_electronicos
+        WHERE serie = ${venta.serie} AND correlativo = ${venta.numero}
+        LIMIT 1
+      `
+      codigoQr = comprobante[0]?.codigo_qr ?? null
+    }
+
     // Generar el PDF
-    const pdfBuffer = await generarPDFVenta(venta)
+    const pdfBuffer = await generarPDFVenta(venta, codigoQr)
 
     // Retornar el PDF
     return new NextResponse(pdfBuffer, {

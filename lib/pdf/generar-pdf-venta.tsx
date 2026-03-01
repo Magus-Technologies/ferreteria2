@@ -67,12 +67,13 @@ function getLogoDataURI(): string {
 }
 
 export async function generarPDFVenta(
-  venta: VentaConRelaciones
+  venta: VentaConRelaciones,
+  codigoQr?: string | null
 ): Promise<Buffer> {
   const logoDataURI = getLogoDataURI();
 
   const blob = await pdf(
-    <PDFVentaDocument venta={venta} logoDataURI={logoDataURI} />
+    <PDFVentaDocument venta={venta} logoDataURI={logoDataURI} codigoQr={codigoQr ?? undefined} />
   ).toBlob();
   const arrayBuffer = await blob.arrayBuffer();
   return Buffer.from(arrayBuffer);

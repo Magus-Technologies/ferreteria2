@@ -159,6 +159,10 @@ export default function ModalDetallesEntrega({
     }
   }, [open, tipoDespacho, direcciones, form])
 
+  // Obtener despachadores seleccionados del formulario (reactivo)
+  const despachadorId = Form.useWatch('despachador_id', form) as string | undefined
+  const restoDespachadorId = Form.useWatch('_resto_despachador_id', form) as string | undefined
+
   // Obtener productos del formulario
   const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
 
@@ -828,6 +832,7 @@ export default function ModalDetallesEntrega({
         open={modalCalendarioDomicilio}
         onClose={() => setModalCalendarioDomicilio(false)}
         onAplicar={handleAplicarSlotDomicilio}
+        chofer_id={despachadorId}
       />
 
       {/* Modal de calendario para seleccionar slot - Resto Parcial */}
@@ -835,6 +840,7 @@ export default function ModalDetallesEntrega({
         open={modalCalendarioResto}
         onClose={() => setModalCalendarioResto(false)}
         onAplicar={handleAplicarSlotResto}
+        chofer_id={restoDespachadorId}
       />
     </Modal>
   )

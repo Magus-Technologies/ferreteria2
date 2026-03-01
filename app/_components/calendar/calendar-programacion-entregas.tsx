@@ -218,12 +218,12 @@ export default function CalendarProgramacionEntregas({
     return { fecha_desde: desde, fecha_hasta: hasta }
   }, [date])
 
-  // Obtener entregas programadas (deshabilitado en modo soloSeleccion)
+  // Obtener entregas programadas (en modo soloSeleccion, solo si hay chofer_id)
   const { data: entregas = [], isLoading } = useEntregasProgramadas({
     fecha_desde,
     fecha_hasta,
     chofer_id,
-    enabled: !soloSeleccion,
+    enabled: !soloSeleccion || !!chofer_id,
   })
 
   // Transformar entregas a eventos del calendario

@@ -207,9 +207,11 @@ const styles = StyleSheet.create({
 export default function PDFVentaDocument({
   venta,
   logoDataURI,
+  codigoQr,
 }: {
   venta: VentaConRelaciones;
   logoDataURI: string;
+  codigoQr?: string;
 }) {
   // Obtener datos de la empresa
   const empresa = venta.user.empresa as any
@@ -456,12 +458,26 @@ export default function PDFVentaDocument({
           </View>
         </View>
 
-        {/* Footer */}
-        <Text style={styles.footerText}>
-          <Text style={styles.footerBold}>
-            ¡GRACIAS POR SU PREFERENCIA! ¡DIOS LES BENDIGA!
+        {/* QR Code + Footer */}
+        {codigoQr ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10, marginBottom: 5, gap: 15 }}>
+            <Image src={codigoQr} style={{ width: 80, height: 80 }} />
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 7, color: '#666', marginBottom: 2 }}>
+                Representación impresa del comprobante electrónico
+              </Text>
+              <Text style={styles.footerBold}>
+                ¡GRACIAS POR SU PREFERENCIA! ¡DIOS LES BENDIGA!
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.footerText}>
+            <Text style={styles.footerBold}>
+              ¡GRACIAS POR SU PREFERENCIA! ¡DIOS LES BENDIGA!
+            </Text>
           </Text>
-        </Text>
+        )}
       </Page>
     </Document>
   )

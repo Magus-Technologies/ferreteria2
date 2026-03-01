@@ -23,12 +23,14 @@ interface ModalCalendarioSlotProps {
   open: boolean
   onClose: () => void
   onAplicar: (slot: SlotSeleccionado) => void
+  chofer_id?: string
 }
 
 export default function ModalCalendarioSlot({
   open,
   onClose,
   onAplicar,
+  chofer_id,
 }: ModalCalendarioSlotProps) {
   const [slotPendiente, setSlotPendiente] = useState<SlotSeleccionado | null>(null)
 
@@ -112,6 +114,7 @@ export default function ModalCalendarioSlot({
             onSelectSlot={handleSelectSlot}
             onSelectEvent={() => {}}
             soloSeleccion
+            chofer_id={chofer_id}
           />
         </div>
       </Suspense>
