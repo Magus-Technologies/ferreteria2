@@ -186,7 +186,6 @@ export default function ModalVerSubCajas({
                                     headerColor='var(--color-amber-600)'
                                     suppressDragLeaveHidesColumns={true}
                                     suppressMovableColumns={true}
-                                    tableKey="sub-cajas-v2"
                                 />
                             </div>
                         )}
