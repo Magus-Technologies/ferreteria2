@@ -62,8 +62,8 @@ const TableMisIngresos = memo(function TableMisIngresos() {
     mutationFn: anularIngresoExtra,
     onSuccess: () => {
       message.success('Ingreso anulado correctamente')
-      queryClient.invalidateQueries({ queryKey: ['Ingresos-extras'] })
-      queryClient.invalidateQueries({ queryKey: ['Ingresos-extras-resumen'] })
+      queryClient.invalidateQueries({ queryKey: ['ingresos-extras'] })
+      queryClient.invalidateQueries({ queryKey: ['ingresos-extras-resumen'] })
     },
     onError: (error: Error) => {
       message.error(error.message || 'Error al anular el Ingreso')
@@ -137,7 +137,7 @@ const TableMisIngresos = memo(function TableMisIngresos() {
         const monto = Number(params.value || 0)
         return `S/. ${monto.toFixed(2)}`
       },
-      cellClass: 'font-semibold text-rose-600',
+      cellClass: 'font-semibold text-emerald-600',
       type: 'numericColumn',
     },
     {
@@ -188,18 +188,20 @@ const TableMisIngresos = memo(function TableMisIngresos() {
         if (!data) return null
 
         const isRowLoading = loadingActionId === data.id
+        const isAnulado = data.estado === 'anulado'
+        const isAprobado = data.estado === 'aprobado'
 
         return (
           <div className="flex gap-2 items-center h-full">
-            <Tooltip title="Aprobar Ingreso">
+            <Tooltip title={isAprobado ? "Ingreso ya aprobado" : "Aprobar Ingreso"}>
               <Button
                 type='text'
                 size='small'
                 icon={<FaCheck size={16} />}
-                style={{ color: '#059669' }}
+                style={{ color: isAprobado ? '#94a3b8' : '#059669' }}
                 className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
                 loading={isRowLoading}
-                disabled={isRowLoading}
+                disabled={isRowLoading || isAprobado}
                 onClick={() => handleAprobarClicked(data.id)}
               />
             </Tooltip>
@@ -217,17 +219,29 @@ const TableMisIngresos = memo(function TableMisIngresos() {
                 }}
               />
             </Tooltip>
-            <Tooltip title="Anular Ingreso">
-              <Button
-                type='text'
-                size='small'
-                icon={<MdDelete size={18} />}
-                style={{ color: '#e11d48' }}
-                className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
-                loading={isRowLoading && anularMutation.isPending}
-                disabled={isRowLoading}
-                onClick={() => handleAnularClicked(data.id)}
-              />
+            <Tooltip title={isAnulado ? "Ingreso ya anulado" : "Anular Ingreso"}>
+              <Popconfirm
+                title='¿Estás seguro de anular este ingreso?'
+                description='Si estaba aprobado, el monto se revertirá regresando el dinero a la caja.'
+                onConfirm={() => {
+                  setLoadingActionId(data.id)
+                  anularMutation.mutate(data.id)
+                }}
+                okText='Sí, Anular'
+                cancelText='Cancelar'
+                okButtonProps={{ danger: true }}
+                disabled={isRowLoading || isAnulado}
+              >
+                <Button
+                  type='text'
+                  size='small'
+                  icon={<MdDelete size={18} />}
+                  style={{ color: isAnulado ? '#94a3b8' : '#e11d48' }}
+                  className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
+                  loading={isRowLoading && anularMutation.isPending}
+                  disabled={isRowLoading || isAnulado}
+                />
+              </Popconfirm>
             </Tooltip>
           </div>
         )

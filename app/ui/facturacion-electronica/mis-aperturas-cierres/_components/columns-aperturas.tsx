@@ -11,6 +11,8 @@ const formatCurrency = (value: number) => {
   }).format(value)
 }
 
+const centerCell = { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+
 export const useColumnsAperturas = ({
   onVerTicket,
 }: {
@@ -20,13 +22,17 @@ export const useColumnsAperturas = ({
     {
       headerName: 'Fecha Apertura',
       field: 'fecha_apertura',
-      width: 180,
+      flex: 1,
+      minWidth: 130,
+      cellStyle: centerCell,
       cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
     },
     {
+      // Sin centrado — texto izquierda por defecto
       headerName: 'Vendedor',
       field: 'vendedor',
-      width: 220,
+      flex: 1,
+      minWidth: 150,
       cellRenderer: (params: any) => {
         const user = params.value
         return (
@@ -38,39 +44,43 @@ export const useColumnsAperturas = ({
       },
     },
     {
+      // Sin centrado — texto izquierda por defecto
       headerName: 'Caja',
       field: 'caja_principal',
       flex: 1,
-      minWidth: 180,
+      minWidth: 80,
       cellRenderer: (params: any) => params.value?.nombre,
     },
     {
       headerName: 'Monto Apertura',
       field: 'monto_apertura',
-      width: 150,
+      flex: 1,
+      minWidth: 100,
+      cellStyle: centerCell,
       cellRenderer: (params: any) => (
-        <div className='text-right font-semibold text-green-600'>
+        <span className='font-semibold text-green-600'>
           {formatCurrency(parseFloat(params.value))}
-        </div>
+        </span>
       ),
     },
     {
       headerName: 'Estado',
       field: 'estado',
-      width: 120,
+      flex: 1,
+      minWidth: 90,
+      cellStyle: centerCell,
       cellRenderer: (params: any) => (
-        <div className='flex justify-center'>
-          <Tag color={params.value === 'abierta' ? 'green' : 'blue'}>
-            {params.value === 'abierta' ? 'ABIERTA' : 'CERRADA'}
-          </Tag>
-        </div>
+        <Tag color={params.value === 'abierta' ? 'green' : 'blue'}>
+          {params.value === 'abierta' ? 'ABIERTA' : 'CERRADA'}
+        </Tag>
       ),
     },
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 100,
+      width: 90,
       pinned: 'right',
+      cellStyle: centerCell,
       cellRenderer: (params: any) => {
         return (
           <div className='flex gap-1 items-center justify-center'>
@@ -85,7 +95,7 @@ export const useColumnsAperturas = ({
               </Button>
             </Tooltip>
           </div>
-        );
+        )
       },
     },
   ]

@@ -36,8 +36,8 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
         mutationFn: crearIngresoExtra,
         onSuccess: () => {
             message.success('Ingreso registrado con éxito')
-            queryClient.invalidateQueries({ queryKey: ['Ingresos-extras'] })
-            queryClient.invalidateQueries({ queryKey: ['Ingresos-extras-resumen'] })
+            queryClient.invalidateQueries({ queryKey: ['ingresos-extras'] })
+            queryClient.invalidateQueries({ queryKey: ['ingresos-extras-resumen'] })
             handleClose()
         },
         onError: (error: Error) => {
@@ -50,8 +50,8 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
         mutationFn: updateIngresoExtra,
         onSuccess: () => {
             message.success('Ingreso actualizado con éxito')
-            queryClient.invalidateQueries({ queryKey: ['Ingresos-extras'] })
-            queryClient.invalidateQueries({ queryKey: ['Ingresos-extras-resumen'] })
+            queryClient.invalidateQueries({ queryKey: ['ingresos-extras'] })
+            queryClient.invalidateQueries({ queryKey: ['ingresos-extras-resumen'] })
             handleClose()
         },
         onError: (error: Error) => {

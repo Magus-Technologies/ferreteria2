@@ -3,12 +3,22 @@
 import TableWithTitle from "~/components/tables/table-with-title";
 import { ColDef } from "ag-grid-community";
 import { useMemo } from "react";
-import { Checkbox } from "antd";
+import { Button, Checkbox, Popconfirm, message, Tag } from "antd";
+import { FaBan } from "react-icons/fa6";
 
 import { useCuadresContext } from "../../_contexts/cuadres-context";
 
 export default function TableIngresosCuadres() {
-    const { ingresos, loading } = useCuadresContext();
+    const { ingresos, loading, anular } = useCuadresContext();
+
+    const handleAnular = async (headerId: number) => {
+        try {
+            await anular(headerId);
+            message.success("Documento anulado correctamente");
+        } catch (error) {
+            message.error("Error al anular el documento");
+        }
+    };
 
     const columns = useMemo<ColDef[]>(() => [
         { headerName: "Fecha", field: "fecha", width: 100 },
@@ -34,12 +44,16 @@ export default function TableIngresosCuadres() {
         { headerName: "Observacion", field: "observacion", width: 150 },
         { headerName: "Registra", field: "usuario", width: 100 },
         {
-            headerName: "Anulado",
+            headerName: "Estado",
             field: "anulado",
-            width: 80,
+            width: 90,
             cellRenderer: (p: any) => (
                 <div className="flex items-center justify-center h-full">
-                    <Checkbox checked={p.value} disabled />
+                    {p.value ? (
+                        <Tag color="error">ANULADO</Tag>
+                    ) : (
+                        <Tag color="success">ACTIVO</Tag>
+                    )}
                 </div>
             )
         },
@@ -52,7 +66,36 @@ export default function TableIngresosCuadres() {
             cellClass: "font-bold text-blue-700 text-right",
             valueFormatter: (p) => `S/. ${p.value?.toFixed(2) || "0.00"}`
         },
-    ], []);
+        {
+            headerName: "Acciones",
+            field: "headerId",
+            width: 100,
+            pinned: "right",
+            cellRenderer: (p: any) => {
+                const isAnulado = p.data.anulado;
+                return (
+                    <div className="flex items-center justify-center h-full">
+                        <Popconfirm
+                            title="¿Estás seguro de anular este documento?"
+                            onConfirm={() => handleAnular(p.value)}
+                            okText="Sí"
+                            cancelText="No"
+                            disabled={isAnulado}
+                        >
+                            <Button
+                                type="text"
+                                danger
+                                icon={<FaBan />}
+                                disabled={isAnulado}
+                                size="small"
+                                className="flex items-center justify-center"
+                            />
+                        </Popconfirm>
+                    </div>
+                );
+            }
+        },
+    ], [anular]);
 
     return (
         <TableWithTitle

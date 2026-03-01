@@ -55,6 +55,7 @@ export enum QueryKeys {
   GANANCIAS = 'ganancias',
   GANANCIAS_RESUMEN = 'ganancias_resumen',
   MIS_GASTOS = 'mis_gastos',
+  CONFIGURACION = 'configuracion',
   VENTA_HISTORIAL = 'venta_historial',
   VENTAS_HISTORIAL_GENERAL = 'ventas_historial_general',
   COMPRAS_RESUMEN_MENSUAL = 'compras_resumen_mensual',

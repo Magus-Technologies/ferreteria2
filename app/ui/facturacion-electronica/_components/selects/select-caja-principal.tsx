@@ -34,7 +34,7 @@ export default function SelectCajaPrincipal({
   })
 
   // Filter by user if filterByUserId is provided
-  const filteredData = filterByUserId 
+  const filteredData = filterByUserId
     ? data?.filter((caja: CajaPrincipal) => caja.user.id === filterByUserId)
     : data
 

@@ -9,7 +9,7 @@ export const useGetGastos = (
     queryKey: ['gastos-extras', filtros],
     queryFn: () => getGastosExtras(),
     enabled: enabled && !!filtros,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 0,
   })
 }
 
@@ -21,6 +21,6 @@ export const useGetResumenGastos = (
     queryKey: ['gastos-extras-resumen', filtros],
     queryFn: () => getResumenGastosExtras(),
     enabled: enabled && !!filtros,
-    staleTime: 1000 * 60 * 2, // 2 minutos
+    staleTime: 0,
   })
 }

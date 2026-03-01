@@ -243,6 +243,12 @@ export const facturacionElectronicaApi = {
     );
   },
 
+  async getPendientesAlerta() {
+    return apiRequest<{ data: ComprobanteElectronico[] }>(
+      `/facturacion-electronica/comprobantes/pendientes-alerta`
+    );
+  },
+
   // Facturas
   async getFacturas(params?: {
     search?: string;
@@ -255,13 +261,13 @@ export const facturacionElectronicaApi = {
   }) {
     const queryString = params
       ? "?" + new URLSearchParams(
-          Object.entries(params).reduce((acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = String(value);
-            }
-            return acc;
-          }, {} as Record<string, string>)
-        ).toString()
+        Object.entries(params).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = String(value);
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      ).toString()
       : "";
     return apiRequest<{ data: Factura[]; total: number }>(
       `/facturacion-electronica/facturas${queryString}`
@@ -296,13 +302,13 @@ export const facturacionElectronicaApi = {
   }) {
     const queryString = params
       ? "?" + new URLSearchParams(
-          Object.entries(params).reduce((acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = String(value);
-            }
-            return acc;
-          }, {} as Record<string, string>)
-        ).toString()
+        Object.entries(params).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = String(value);
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      ).toString()
       : "";
     return apiRequest<{ data: NotaCredito[]; total: number }>(
       `/facturacion-electronica/notas-credito${queryString}`
@@ -345,13 +351,13 @@ export const facturacionElectronicaApi = {
   }) {
     const queryString = params
       ? "?" + new URLSearchParams(
-          Object.entries(params).reduce((acc, [key, value]) => {
-            if (value !== undefined) {
-              acc[key] = String(value);
-            }
-            return acc;
-          }, {} as Record<string, string>)
-        ).toString()
+        Object.entries(params).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = String(value);
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      ).toString()
       : "";
     return apiRequest<{ data: NotaDebito[]; total: number }>(
       `/facturacion-electronica/notas-debito${queryString}`

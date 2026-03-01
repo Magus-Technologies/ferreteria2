@@ -32,8 +32,8 @@ export default function ModalAprobarIngresoExtra({ open, onClose, IngresoId }: M
         mutationFn: (data: any) => aprobarIngresoExtra(IngresoId!, data),
         onSuccess: () => {
             message.success('Ingreso aprobado y debitado de caja con éxito')
-            queryClient.invalidateQueries({ queryKey: ['Ingresos-extras'] })
-            queryClient.invalidateQueries({ queryKey: ['Ingresos-extras-resumen'] })
+            queryClient.invalidateQueries({ queryKey: ['ingresos-extras'] })
+            queryClient.invalidateQueries({ queryKey: ['ingresos-extras-resumen'] })
             handleClose()
         },
         onError: (error: Error) => {

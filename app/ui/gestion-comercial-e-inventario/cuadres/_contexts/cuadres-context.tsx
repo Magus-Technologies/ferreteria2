@@ -16,6 +16,7 @@ interface CuadresContextType {
     loading: boolean;
     refetch: () => void;
     handleSearch: (newFilters: any) => void;
+    anular: (headerId: number) => Promise<void>;
 }
 
 const CuadresContext = createContext<CuadresContextType | undefined>(undefined);

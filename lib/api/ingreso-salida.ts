@@ -148,4 +148,14 @@ export const ingresosSalidasApi = {
       body: JSON.stringify(data),
     });
   },
+
+  /**
+   * Anular un ingreso/salida
+   * DELETE /api/ingresos-salidas/{id}
+   */
+  async anular(id: number): Promise<ApiResponse<any>> {
+    return apiRequest<any>(`/ingresos-salidas/${id}`, {
+      method: "DELETE",
+    });
+  },
 };

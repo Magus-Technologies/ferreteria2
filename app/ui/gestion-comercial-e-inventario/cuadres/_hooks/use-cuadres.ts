@@ -21,13 +21,14 @@ export interface MovimientoCuadre {
     anulado: boolean;
     tipo_ingreso: string;
     total: number;
+    headerId: number;
 }
 
 export function useCuadres() {
     const [filters, setFilters] = useState<GetIngresosSalidasParams>({
         desde: dayjs().startOf('month').format('YYYY-MM-DD'),
         hasta: dayjs().format('YYYY-MM-DD'),
-        listar_no_anuladas: true,
+        listar_no_anuladas: false,
         tipo: 'TODOS',
         per_page: 500 // Traemos bastantes para el reporte
     });
@@ -82,6 +83,7 @@ export function useCuadres() {
                         anulado,
                         tipo_ingreso,
                         total,
+                        headerId,
                         tipo_documento: header.tipo_documento // Agregamos temporalmente para filtrar
                     } as any);
                 });
@@ -91,10 +93,10 @@ export function useCuadres() {
         const ingresosList = transformed.filter((m: any) => m.tipo_documento === 'in');
         const salidasList = transformed.filter((m: any) => m.tipo_documento === 'sa');
 
-        const totalIngresosUnd = ingresosList.reduce((acc, curr) => acc + curr.cantidad, 0);
-        const totalIngresosSol = ingresosList.reduce((acc, curr) => acc + curr.total, 0);
-        const totalSalidasUnd = salidasList.reduce((acc, curr) => acc + curr.cantidad, 0);
-        const totalSalidasSol = salidasList.reduce((acc, curr) => acc + curr.total, 0);
+        const totalIngresosUnd = ingresosList.filter((m: any) => !m.anulado).reduce((acc, curr) => acc + curr.cantidad, 0);
+        const totalIngresosSol = ingresosList.filter((m: any) => !m.anulado).reduce((acc, curr) => acc + curr.total, 0);
+        const totalSalidasUnd = salidasList.filter((m: any) => !m.anulado).reduce((acc, curr) => acc + curr.cantidad, 0);
+        const totalSalidasSol = salidasList.filter((m: any) => !m.anulado).reduce((acc, curr) => acc + curr.total, 0);
 
         return {
             ingresos: ingresosList,
@@ -118,12 +120,23 @@ export function useCuadres() {
         });
     };
 
+    const anular = async (headerId: number) => {
+        try {
+            await ingresosSalidasApi.anular(headerId);
+            refetch();
+        } catch (error) {
+            console.error("Error al anular:", error);
+            throw error;
+        }
+    };
+
     return {
         ingresos,
         salidas,
         totals,
         loading,
         refetch,
-        handleSearch
+        handleSearch,
+        anular
     };
 }

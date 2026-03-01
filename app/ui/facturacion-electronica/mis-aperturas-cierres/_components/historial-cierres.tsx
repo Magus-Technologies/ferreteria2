@@ -19,6 +19,7 @@ import dayjs, { Dayjs } from "dayjs";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
 import ModalTicketCierre from "../../cierre-caja/_components/modal-ticket-cierre";
 import ModalVendedoresCierre from "./modal-vendedores-cierre";
+import ModalGestionDeudas from "./modals/modal-gestion-deudas";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectSupervisor from "../../_components/selects/select-supervisor";
 import { FaCalendar, FaSearch, FaMoneyBillWave, FaRedo } from "react-icons/fa";
@@ -43,11 +44,9 @@ export default function HistorialCierres() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // Estado para pagar deuda
-  const [modalPagarDeudaVisible, setModalPagarDeudaVisible] = useState(false);
-  const [cierreParaDeuda, setCierreParaDeuda] = useState<AperturaYCierreCaja | null>(null);
-  const [pagandoDeuda, setPagandoDeuda] = useState(false);
-  const [observacionDeuda, setObservacionDeuda] = useState('');
+  // Estado para pagar deuda - NUEVO MODAL PROFESIONAL
+  const [modalGestionDeudasVisible, setModalGestionDeudasVisible] = useState(false);
+  const [userIdParaDeudas, setUserIdParaDeudas] = useState<string | undefined>();
 
   // Estado para aprobar cierre
   const [modalAprobarVisible, setModalAprobarVisible] = useState(false);
@@ -266,7 +265,7 @@ export default function HistorialCierres() {
       if (response?.data?.success) {
         message.success('Autorización confirmada');
         setModalReCerrarVisible(false);
-        
+
         // CORREGIDO: Pasar supervisor validado en la URL para que no se pida nuevamente
         const redirectId = (cierreParaReCerrar as any)?.apertura_id || cierreParaReCerrar.id;
         router.push(
@@ -292,38 +291,10 @@ export default function HistorialCierres() {
   };
 
   const handlePagarDeuda = (cierre: AperturaYCierreCaja) => {
-    setCierreParaDeuda(cierre);
-    setObservacionDeuda('');
-    setModalPagarDeudaVisible(true);
-  };
-
-  const handleConfirmarPagoDeuda = async () => {
-    if (!(cierreParaDeuda as any)?.deuda) return;
-
-    setPagandoDeuda(true);
-    try {
-      const response = await deudaPersonalApi.pagar((cierreParaDeuda as any).deuda.id, observacionDeuda);
-      if (response?.success) {
-        message.success('Deuda registrada como pagada exitosamente');
-        setModalPagarDeudaVisible(false);
-        setCierreParaDeuda(null);
-        queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_CIERRES] });
-        refetch();
-      } else {
-        message.error(response?.message || 'Error al pagar deuda');
-      }
-    } catch (err: any) {
-      console.error('Error al pagar deuda:', err);
-      message.error(err.message || 'Error al pagar deuda');
-    } finally {
-      setPagandoDeuda(false);
-    }
-  };
-
-  const handleCancelarPagoDeuda = () => {
-    setModalPagarDeudaVisible(false);
-    setCierreParaDeuda(null);
-    setObservacionDeuda('');
+    // Abrir el modal profesional de gestión de deudas
+    const userId = (cierre as any)?.deuda?.user_id || cierre.user_id;
+    setUserIdParaDeudas(userId);
+    setModalGestionDeudasVisible(true);
   };
 
   const columns = useColumnsCierres({
@@ -387,11 +358,7 @@ export default function HistorialCierres() {
           onFinish={handleFinish}
           className="w-full"
         >
-          <div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-3 mb-3">
-              <FilterOutlined className="text-amber-600" />
-              <span className="font-semibold text-slate-700">Filtros</span>
-            </div>
+          <div className="mb-6">
             <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
               <div className="col-span-3 flex items-center gap-2">
                 <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
@@ -657,40 +624,18 @@ export default function HistorialCierres() {
         </div>
       </Modal>
 
-      {/* Modal para Pagar Deuda */}
-      <Modal
-        title={
-          <div className='text-lg font-semibold text-slate-800 flex items-center gap-2'>
-            <FaMoneyBillWave className="text-amber-600" />
-            Abonar a Deuda Faltante
-          </div>
-        }
-        open={modalPagarDeudaVisible}
-        onOk={handleConfirmarPagoDeuda}
-        onCancel={handleCancelarPagoDeuda}
-        confirmLoading={pagandoDeuda}
-        okText='Registrar Pago'
-        cancelText='Cancelar'
-        width={500}
-        destroyOnClose
-      >
-        <div className='py-4 space-y-4'>
-          <div className='p-3 bg-amber-50 border border-amber-200 rounded'>
-            <p className='text-sm text-slate-700'>
-              Se registrará el pago de la deuda pendiente por <strong>S/ {(cierreParaDeuda as any)?.deuda?.monto}</strong> asociada al cierre de caja.
-            </p>
-          </div>
-          <div>
-            <div className='text-sm font-medium text-slate-600 mb-1'>Observaciones (Opcional)</div>
-            <Input.TextArea
-              rows={3}
-              placeholder='Ej: Dinero depositado en cuenta, entregado en efectivo, etc.'
-              value={observacionDeuda}
-              onChange={(e) => setObservacionDeuda(e.target.value)}
-            />
-          </div>
-        </div>
-      </Modal>
+      {/* Modal para Gestión Profesional de Deudas */}
+      <ModalGestionDeudas
+        open={modalGestionDeudasVisible}
+        onClose={() => {
+          setModalGestionDeudasVisible(false);
+          setUserIdParaDeudas(undefined);
+          // Refrescar la lista de cierres
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.HISTORIAL_CIERRES] });
+          refetch();
+        }}
+        userId={userIdParaDeudas}
+      />
     </>
   );
 }
