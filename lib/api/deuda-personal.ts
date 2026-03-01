@@ -75,7 +75,7 @@ export const deudaPersonalApi = {
     // El backend retorna { success: true, data: {...} }
     // apiRequest retorna { data: { success: true, data: {...} } }
     // Necesitamos extraer response.data.data
-    return response.data?.data || response.data;
+    return (response.data as any)?.data || response.data;
   },
   
   /**
@@ -86,7 +86,8 @@ export const deudaPersonalApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
-    return response.data?.data || response.data;
+    // Retornar la respuesta completa con success, message y data
+    return response.data;
   },
   
   /**
@@ -94,7 +95,28 @@ export const deudaPersonalApi = {
    */
   getHistorialAbonos: async (deudaId: number) => {
     const response = await apiRequest(`/cajas/deudas-personal/${deudaId}/historial`);
-    return response.data?.data || response.data;
+    return (response.data as any)?.data || response.data;
+  },
+  
+  /**
+   * Actualizar un abono existente
+   */
+  actualizarAbono: async (abonoId: number, data: Partial<RegistrarAbonoData>) => {
+    const response = await apiRequest(`/cajas/deudas-personal/abono/${abonoId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  
+  /**
+   * Eliminar un abono
+   */
+  eliminarAbono: async (abonoId: number) => {
+    const response = await apiRequest(`/cajas/deudas-personal/abono/${abonoId}`, {
+      method: 'DELETE',
+    });
+    return response.data;
   },
   
   /**

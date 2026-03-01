@@ -26,6 +26,9 @@ const getEstadoCierreConfig = (estadoCierre: string | null | undefined) => {
   }
 }
 
+// Estilo reutilizable para centrar el contenido de la celda
+const centerCell = { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+
 export const useColumnsCierres = ({
   onVerTicket,
   onAprobarCierre,
@@ -41,71 +44,88 @@ export const useColumnsCierres = ({
     {
       headerName: 'Fecha Cierre',
       field: 'fecha_cierre',
-      width: 155,
+      flex: 1,
+      minWidth: 130,
+      cellStyle: centerCell,
       cellRenderer: (params: any) =>
         params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
     },
     {
+      // Sin centrado — texto izquierda por defecto
       headerName: 'Vendedor',
       field: 'vendedor' as any,
       flex: 1,
-      minWidth: 160,
+      minWidth: 100,
       cellRenderer: (params: any) => {
         const vendedor = params.value
         return (
-          <div>
-            <div className='font-medium text-slate-700'>{vendedor?.name || '-'}</div>
-            <div className='text-xs text-slate-500'>{vendedor?.email || ''}</div>
+          <div className='truncate'>
+            <div className='font-medium text-slate-700 truncate'>{vendedor?.name || '-'}</div>
           </div>
         )
       },
     },
     {
+      // Sin centrado — texto izquierda por defecto
       headerName: 'Caja',
       field: 'caja_principal',
-      width: 120,
+      flex: 1,
+      minWidth: 80,
       cellRenderer: (params: any) => {
         const caja = params.value
         return (
-          <div className='font-medium'>{caja?.nombre || '-'}</div>
+          <div className='font-medium truncate'>{caja?.nombre || '-'}</div>
         )
       },
     },
     {
-      headerName: 'Monto Apertura',
+      headerName: 'M. Apertura',
       field: 'monto_apertura',
-      width: 125,
+      flex: 1,
+      minWidth: 100,
+      cellStyle: centerCell,
       cellRenderer: (params: any) => (
-        <div className='text-right'>
-          {formatCurrency(parseFloat(params.value || 0))}
-        </div>
+        <span>{formatCurrency(parseFloat(params.value || 0))}</span>
       ),
     },
     {
-      headerName: 'Monto Cierre',
+      headerName: 'M. Cierre',
       field: 'monto_cierre',
-      width: 125,
+      flex: 1,
+      minWidth: 100,
+      cellStyle: centerCell,
       cellRenderer: (params: any) => (
-        <div className='text-right font-semibold text-blue-600'>
+        <span className='font-semibold text-blue-600'>
           {params.value ? formatCurrency(parseFloat(params.value)) : '-'}
-        </div>
+        </span>
       ),
     },
     {
       headerName: 'Diferencia',
       field: 'diferencia_efectivo' as any,
-      width: 120,
+      flex: 1,
+      minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
       cellRenderer: (params: any) => {
         const diferencia = parseFloat(params.value || 0)
         const deuda = params.data.deuda
         return (
-          <div className='flex flex-col items-end pb-1'>
-            <span className={`text-right font-semibold ${diferencia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className='flex flex-col items-center'>
+            <span className={`font-semibold ${diferencia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {diferencia >= 0 ? '+' : ''}{formatCurrency(diferencia)}
             </span>
             {deuda && (
-              <Tag color={deuda.estado === 'pendiente' ? 'red' : 'green'} className='mt-0.5 mr-0 text-[10px] leading-tight'>
-                {deuda.estado === 'pendiente' ? 'DEUDA PEND.' : 'DEUDA PAG.'}
+              <Tag
+                color={
+                  deuda.estado === 'pendiente' ? 'red' :
+                  deuda.estado === 'parcialmente_pagada' ? 'orange' :
+                  'green'
+                }
+                className='mt-0.5 mr-0 text-[10px] leading-tight'
+              >
+                {deuda.estado === 'pendiente' ? 'DEUDA PEND.' :
+                 deuda.estado === 'parcialmente_pagada' ? 'DEUDA PARC.' :
+                 'DEUDA PAG.'}
               </Tag>
             )}
           </div>
@@ -113,17 +133,17 @@ export const useColumnsCierres = ({
       },
     },
     {
-      headerName: 'Estado Cierre',
+      headerName: 'Estado',
       field: 'estado_cierre',
-      width: 125,
+      flex: 1,
+      minWidth: 100,
+      cellStyle: centerCell,
       cellRenderer: (params: any) => {
         const config = getEstadoCierreConfig(params.value)
         return (
-          <div className='flex justify-center'>
-            <Tag color={config.color}>
-              {config.label}
-            </Tag>
-          </div>
+          <Tag color={config.color}>
+            {config.label}
+          </Tag>
         )
       },
     },
@@ -132,6 +152,7 @@ export const useColumnsCierres = ({
       field: 'id',
       width: 120,
       pinned: 'right',
+      cellStyle: centerCell,
       cellRenderer: (params: any) => {
         const estadoCierre = params.data.estado_cierre
         return (
@@ -170,7 +191,7 @@ export const useColumnsCierres = ({
                 </Button>
               </Tooltip>
             )}
-            {params.data.deuda?.estado === 'pendiente' && onPagarDeuda && (
+            {(params.data.deuda?.estado === 'pendiente' || params.data.deuda?.estado === 'parcialmente_pagada') && onPagarDeuda && (
               <Tooltip title='Pagar Deuda Faltante'>
                 <Button
                   type='link'
@@ -182,8 +203,20 @@ export const useColumnsCierres = ({
                 </Button>
               </Tooltip>
             )}
+            {params.data.deuda?.estado === 'pagada' && onPagarDeuda && (
+              <Tooltip title='Ver Historial de Abonos'>
+                <Button
+                  type='link'
+                  size='small'
+                  className='flex items-center gap-1'
+                  onClick={() => onPagarDeuda(params.data)}
+                >
+                  <FaMoneyBillWave className='text-green-600 text-lg' />
+                </Button>
+              </Tooltip>
+            )}
           </div>
-        );
+        )
       },
     },
   ]

@@ -16,6 +16,7 @@ import ModalCrearIngreso from "../modals/modal-crear-ingreso";
 import ModalCrearGasto from "../modals/modal-crear-gasto";
 import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
 import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
+import ModalTrasladoBoveda from "../../mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
@@ -37,18 +38,20 @@ export default function TopNav({ className }: { className?: string }) {
   const [openCrearGasto, setOpenCrearGasto] = useState(false);
   const [openMoverDinero, setOpenMoverDinero] = useState(false);
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
+  const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false);
 
-  // Obtener caja activa (incluye apertura)
+  // Obtener caja activa (incluye apertura) - usa el endpoint nuevo
   const { data: cajaActiva } = useQuery({
     queryKey: [QueryKeys.CAJA_ACTIVA],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/activa`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/cierre/activa`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Accept': 'application/json',
         },
       })
-      const data = await response.json()
-      return data.data
+      const json = await response.json()
+      return json.data || null
     },
   })
 
@@ -65,6 +68,7 @@ export default function TopNav({ className }: { className?: string }) {
     openCrearGasto: () => setOpenCrearGasto(true),
     openMoverDinero: () => setOpenMoverDinero(true),
     openPedirPrestamo: () => setOpenPedirPrestamo(true),
+    openTrasladoBoveda: () => setOpenTrasladoBoveda(true),
   };
 
   // Hooks personalizados para items de dropdowns (ya no se usan, ahora viene del JSON)
@@ -82,15 +86,15 @@ export default function TopNav({ className }: { className?: string }) {
             if (sub.key === 'divider' || (sub as any).type === 'divider') {
               return { type: 'divider' as const };
             }
-            
+
             return {
               key: sub.key,
               label: sub.label,
               onClick: sub.route
                 ? () => router.push(sub.route as string)
                 : sub.action && actionHandlers[sub.action]
-                ? actionHandlers[sub.action]
-                : undefined,
+                  ? actionHandlers[sub.action]
+                  : undefined,
             };
           });
 
@@ -131,13 +135,13 @@ export default function TopNav({ className }: { className?: string }) {
         open={openAperturaCaja}
         setOpen={setOpenAperturaCaja}
       />
-      <ModalCrearIngreso 
-        open={openCrearIngreso} 
-        setOpen={setOpenCrearIngreso} 
+      <ModalCrearIngreso
+        open={openCrearIngreso}
+        setOpen={setOpenCrearIngreso}
       />
-      <ModalCrearGasto 
-        open={openCrearGasto} 
-        setOpen={setOpenCrearGasto} 
+      <ModalCrearGasto
+        open={openCrearGasto}
+        setOpen={setOpenCrearGasto}
       />
       <ModalMoverDineroSubCajas
         open={openMoverDinero}
@@ -147,6 +151,13 @@ export default function TopNav({ className }: { className?: string }) {
         open={openPedirPrestamo}
         setOpen={setOpenPedirPrestamo}
         aperturaId={cajaActiva?.id || ''}
+      />
+      <ModalTrasladoBoveda
+        open={openTrasladoBoveda}
+        onCancel={() => setOpenTrasladoBoveda(false)}
+        onSuccess={() => setOpenTrasladoBoveda(false)}
+        aperturaCierreId={cajaActiva?.id || ''}
+        vendedorId={cajaActiva?.user?.id || cajaActiva?.user_id || (() => { try { return JSON.parse(localStorage.getItem('user') || '{}')?.id || '' } catch { return '' } })()}
       />
     </BaseNav>
   );

@@ -25,7 +25,11 @@ import { type ApiResponse } from "../../../../../../lib/api";
 
 const { Text, Paragraph } = Typography;
 
-export default function FormEnvioSunat() {
+interface FormEnvioSunatProps {
+    empresaId: number;
+}
+
+export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
     const { message } = App.useApp();
     const queryClient = useQueryClient();
 

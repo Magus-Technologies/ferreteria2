@@ -65,10 +65,11 @@ export function CardDeuda({ deuda, onSelect }: CardDeudaProps) {
   return (
     <Card
       className={cn(
-        "group hover:shadow-xl transition-all duration-300 border-none rounded-2xl overflow-hidden mb-4",
+        "group hover:shadow-xl transition-all duration-300 border-none rounded-2xl overflow-hidden mb-4 cursor-pointer",
         "bg-white shadow-md relative"
       )}
       bodyStyle={{ padding: '0' }}
+      onClick={onSelect}
     >
       <div className="flex h-full">
         {/* Borde lateral de estado */}
@@ -171,17 +172,25 @@ export function CardDeuda({ deuda, onSelect }: CardDeudaProps) {
 
             <div className="flex items-center gap-2 border-l border-slate-200 pl-6 shrink-0">
               <ButtonBase
-                color={deuda.estado === 'pagada' ? 'default' : 'warning'}
+                color={deuda.estado === 'pagada' ? 'info' : 'warning'}
                 size="sm"
-                disabled={deuda.estado === 'pagada'}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelect();
                 }}
                 className="flex items-center gap-2"
               >
-                <FaMoneyBillWave />
-                {deuda.estado === 'pagada' ? 'Pagada' : 'Realizar Abono'}
+                {deuda.estado === 'pagada' ? (
+                  <>
+                    <FaCheckCircle />
+                    Ver Historial
+                  </>
+                ) : (
+                  <>
+                    <FaMoneyBillWave />
+                    Realizar Abono
+                  </>
+                )}
               </ButtonBase>
             </div>
           </div>

@@ -23,15 +23,28 @@ export default function ModalGestionDeudas({
   const [selectedDeuda, setSelectedDeuda] = useState<DeudaPersonal | null>(
     null
   );
+  const [abonoToEdit, setAbonoToEdit] = useState<any>(null);
 
   const handleSelectDeuda = (deuda: DeudaPersonal) => {
     setSelectedDeuda(deuda);
+    setAbonoToEdit(null); // Limpiar abono a editar
+    // Si la deuda está pagada, ir directo al historial
+    if (deuda.estado === 'pagada') {
+      setActiveTab("historial");
+    } else {
+      setActiveTab("abono");
+    }
+  };
+
+  const handleEditarAbono = (abono: any) => {
+    setAbonoToEdit(abono);
     setActiveTab("abono");
   };
 
   const handleAbonoSuccess = () => {
-    setActiveTab("lista");
-    setSelectedDeuda(null);
+    setAbonoToEdit(null); // Limpiar modo edición
+    // Cambiar a la pestaña de historial después de registrar el abono
+    setActiveTab("historial");
   };
 
   const tabItems: TabsProps['items'] = useMemo(
@@ -55,15 +68,16 @@ export default function ModalGestionDeudas({
         label: (
           <span className="flex items-center gap-2 px-2">
             <FaHandHoldingUsd className="text-sm" />
-            Registrar Abono
+            {abonoToEdit ? 'Editar Abono' : 'Registrar Abono'}
           </span>
         ),
-        disabled: !selectedDeuda,
+        disabled: !selectedDeuda || (selectedDeuda.estado === 'pagada' && !abonoToEdit),
         children: selectedDeuda ? (
           <div className="pt-2 animate-in slide-in-from-right-4 duration-500">
             <FormRegistrarAbono
               deuda={selectedDeuda}
               onSuccess={handleAbonoSuccess}
+              abonoToEdit={abonoToEdit}
             />
           </div>
         ) : null,
@@ -76,15 +90,24 @@ export default function ModalGestionDeudas({
             Registro de Abonos
           </span>
         ),
-        disabled: !selectedDeuda,
+        disabled: false,
         children: selectedDeuda ? (
           <div className="pt-2 animate-in slide-in-from-right-4 duration-500">
-            <HistorialAbonos deuda={selectedDeuda} />
+            <HistorialAbonos 
+              deuda={selectedDeuda} 
+              onEditarAbono={handleEditarAbono}
+            />
           </div>
-        ) : null,
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[400px] text-slate-400">
+            <FaHistory size={48} className="mb-4" />
+            <p className="text-lg font-semibold">Selecciona una deuda primero</p>
+            <p className="text-sm">Ve a "Catálogo de Deudas" y selecciona una deuda para ver su historial de abonos</p>
+          </div>
+        ),
       },
     ],
-    [selectedDeuda, userId]
+    [selectedDeuda, userId, abonoToEdit]
   );
 
   return (

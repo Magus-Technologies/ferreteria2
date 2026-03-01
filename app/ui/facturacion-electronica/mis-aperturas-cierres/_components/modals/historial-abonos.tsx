@@ -1,31 +1,31 @@
-import { useQuery } from "@tanstack/react-query";
-import { Spin } from "antd";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Spin, Button, Tooltip, Modal, Descriptions, message } from "antd";
 import CardDashboard from "~/app/_components/cards/card-dashboard";
-import { FaHashtag, FaMoneyBillWave, FaClock, FaCheckCircle, FaHistory, FaCalendarCheck } from "react-icons/fa";
+import { FaMoneyBillWave, FaClock, FaCheckCircle, FaHistory, FaCalendarCheck, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import TableBase from "~/components/tables/table-base";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
 import { deudaPersonalApi, type DeudaPersonal } from "~/lib/api/deuda-personal";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 interface AbonoDeuda {
   id: number;
   deuda_personal_id: number;
-  monto: number;
-  metodo_pago_id: number;
+  monto: string | number;
+  metodo_pago_id: number | null;
   numero_operacion: string | null;
   observaciones: string | null;
-  saldo_anterior: number;
-  saldo_despues: number;
+  saldo_anterior: string | number;
+  saldo_despues: string | number;
   fecha_abono: string;
-  registrado_por_id: string;
+  registrado_por_user_id: string;
   created_at: string;
   updated_at: string;
   metodo_pago?: {
     id: number;
-    nombre: string;
-  };
+    name: string;
+  } | null;
   registrado_por?: {
     id: string;
     name: string;
@@ -34,19 +34,58 @@ interface AbonoDeuda {
 
 interface HistorialAbonosProps {
   deuda: DeudaPersonal;
+  onEditarAbono: (abono: AbonoDeuda) => void;
 }
 
-export function HistorialAbonos({ deuda }: HistorialAbonosProps) {
+export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) {
   const gridRef = useRef<AgGridReact<AbonoDeuda>>(null);
-  const { data: historial, isLoading } = useQuery({
+  const queryClient = useQueryClient();
+  const [selectedAbono, setSelectedAbono] = useState<AbonoDeuda | null>(null);
+  const [modalDetalleVisible, setModalDetalleVisible] = useState(false);
+  
+  const { data: historial, isLoading, refetch } = useQuery({
     queryKey: ["historial-abonos", deuda.id],
     queryFn: async () => {
       const response = await deudaPersonalApi.getHistorialAbonos(deuda.id);
-      return response.data;
+      console.log('📊 Historial de abonos recibido:', response);
+      return response;
     },
   });
 
   const abonos = historial || [];
+
+  const handleVerDetalle = (abono: AbonoDeuda) => {
+    setSelectedAbono(abono);
+    setModalDetalleVisible(true);
+  };
+
+  const handleEditar = (abono: AbonoDeuda) => {
+    onEditarAbono(abono);
+  };
+
+  const handleEliminar = (abono: AbonoDeuda) => {
+    Modal.confirm({
+      title: '¿Eliminar este abono?',
+      content: `Se eliminará el abono de S/ ${parseFloat(String(abono.monto)).toFixed(2)} y se recalcularán los saldos.`,
+      okText: 'Eliminar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          const response = await deudaPersonalApi.eliminarAbono(abono.id) as any;
+          if (response.success) {
+            message.success('Abono eliminado exitosamente');
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ["resumen-deudas"] });
+          } else {
+            message.error(response.message || 'Error al eliminar abono');
+          }
+        } catch (error: any) {
+          message.error(error.message || 'Error al eliminar abono');
+        }
+      },
+    });
+  };
 
   const columns: ColDef<AbonoDeuda>[] = [
     {
@@ -71,11 +110,11 @@ export function HistorialAbonos({ deuda }: HistorialAbonosProps) {
     },
     {
       headerName: "Método de Pago",
-      field: "metodo_pago.nombre",
+      field: "metodo_pago",
       width: 150,
       cellRenderer: (params: any) => (
         <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-bold uppercase">
-          {params.value || "-"}
+          {params.value?.name || "Efectivo"}
         </span>
       ),
     },
@@ -118,6 +157,47 @@ export function HistorialAbonos({ deuda }: HistorialAbonosProps) {
       flex: 1,
       minWidth: 200,
       cellClass: "text-slate-500 italic text-xs",
+    },
+    {
+      headerName: "Acciones",
+      field: "id",
+      width: 140,
+      pinned: "right",
+      cellRenderer: (params: any) => (
+        <div className="flex gap-1 items-center justify-center">
+          <Tooltip title="Ver Detalles">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleVerDetalle(params.data)}
+              className="flex items-center"
+            >
+              <FaEye className="text-blue-600 text-base" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Editar Abono">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleEditar(params.data)}
+              className="flex items-center"
+            >
+              <FaEdit className="text-amber-600 text-base" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Eliminar Abono">
+            <Button
+              type="link"
+              size="small"
+              onClick={() => handleEliminar(params.data)}
+              className="flex items-center"
+              danger
+            >
+              <FaTrash className="text-red-600 text-base" />
+            </Button>
+          </Tooltip>
+        </div>
+      ),
     },
   ];
 
@@ -177,6 +257,62 @@ export function HistorialAbonos({ deuda }: HistorialAbonosProps) {
           />
         </div>
       </div>
+
+      {/* Modal de Detalles del Abono */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <FaEye className="text-blue-600" />
+            <span>Detalles del Abono</span>
+          </div>
+        }
+        open={modalDetalleVisible}
+        onCancel={() => {
+          setModalDetalleVisible(false);
+          setSelectedAbono(null);
+        }}
+        footer={null}
+        width={700}
+      >
+        {selectedAbono && (
+          <Descriptions bordered column={2} size="small" className="mt-4">
+            <Descriptions.Item label="ID de Abono" span={2}>
+              #{selectedAbono.id}
+            </Descriptions.Item>
+            <Descriptions.Item label="Fecha de Abono" span={2}>
+              {dayjs(selectedAbono.fecha_abono).format("DD/MM/YYYY HH:mm:ss")}
+            </Descriptions.Item>
+            <Descriptions.Item label="Monto Abonado">
+              <span className="font-bold text-emerald-600">
+                S/ {parseFloat(String(selectedAbono.monto)).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+              </span>
+            </Descriptions.Item>
+            <Descriptions.Item label="Método de Pago">
+              {selectedAbono.metodo_pago?.name || "Efectivo"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Saldo Anterior">
+              S/ {parseFloat(String(selectedAbono.saldo_anterior)).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+            </Descriptions.Item>
+            <Descriptions.Item label="Saldo Después">
+              <span className={parseFloat(String(selectedAbono.saldo_despues)) === 0 ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
+                S/ {parseFloat(String(selectedAbono.saldo_despues)).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+              </span>
+            </Descriptions.Item>
+            <Descriptions.Item label="Número de Operación" span={2}>
+              {selectedAbono.numero_operacion || "Sin número de operación"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Registrado Por" span={2}>
+              {selectedAbono.registrado_por?.name || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Observaciones" span={2}>
+              {selectedAbono.observaciones || "Sin observaciones"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Fecha de Registro" span={2}>
+              {dayjs(selectedAbono.created_at).format("DD/MM/YYYY HH:mm:ss")}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
     </div>
   );
 }

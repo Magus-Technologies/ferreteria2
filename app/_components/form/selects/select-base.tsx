@@ -26,6 +26,7 @@ function Base({
   nextWithPrevent,
   onKeyUp,
   onOpenChange,
+  onDropdownVisibleChange,
   innerRef,
   uppercase = false,
   onSearch,
@@ -50,9 +51,10 @@ function Base({
           onSearch?.(value);
         }
       } : undefined}
-      onOpenChange={(open) => {
+      onDropdownVisibleChange={(open) => {
         setOpen(open);
         onOpenChange?.(open);
+        onDropdownVisibleChange?.(open);
       }}
       onKeyUp={(e) => {
         if (e.key === "Enter" && nextInEnter) {
@@ -99,9 +101,9 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
           form.setFieldValue(
             propsFormItem.name instanceof Array
               ? [
-                  ...(propsFormItem.prefix_array_name ?? []),
-                  ...propsFormItem.name,
-                ]
+                ...(propsFormItem.prefix_array_name ?? []),
+                ...propsFormItem.name,
+              ]
               : propsFormItem.name,
             value
           );

@@ -130,6 +130,12 @@
             "permission": null
           },
           {
+            "key": "traslado-boveda",
+            "label": "Traslado a Bóveda",
+            "action": "openTrasladoBoveda",
+            "permission": null
+          },
+          {
             "key": "divider",
             "type": "divider"
           },

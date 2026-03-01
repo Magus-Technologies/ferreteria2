@@ -1,14 +1,16 @@
 import { ColDef } from 'ag-grid-community'
 import { SubCaja } from '~/lib/api/caja-principal'
 import { Button, Space, Tag, Tooltip } from 'antd'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { FaEdit, FaTrash, FaWarehouse } from 'react-icons/fa'
 
 export const useColumnsSubCajas = ({
   onEditar,
   onEliminar,
+  onVerHistorialTraslados,
 }: {
   onEditar: (subCaja: SubCaja) => void
   onEliminar: (subCaja: SubCaja) => void
+  onVerHistorialTraslados?: (subCaja: SubCaja) => void
 }): ColDef<SubCaja>[] => {
   return [
     {
@@ -60,11 +62,11 @@ export const useColumnsSubCajas = ({
             </Tag>
           )
         }
-        
+
         if (!record.despliegues_pago || record.despliegues_pago.length === 0) {
           return <span className='text-slate-400'>-</span>
         }
-        
+
         return (
           <Space size={[0, 4]} wrap>
             {record.despliegues_pago.map((despliegue: any) => (
@@ -128,13 +130,24 @@ export const useColumnsSubCajas = ({
     {
       headerName: 'Acciones',
       field: 'id',
-      width: 120,
+      width: 160,
       lockPosition: true,
       suppressMovable: true,
       cellRenderer: (params: any) => {
         const record = params.data
         return (
           <Space size='small'>
+            {record.es_caja_chica && onVerHistorialTraslados && (
+              <Tooltip title='Historial de Traslados a Bóveda'>
+                <Button
+                  type='default'
+                  icon={<FaWarehouse />}
+                  size='small'
+                  className='text-amber-600 hover:text-amber-700 border-amber-300 hover:border-amber-400'
+                  onClick={() => onVerHistorialTraslados(record)}
+                />
+              </Tooltip>
+            )}
             {record.puede_modificar && (
               <Tooltip title='Editar'>
                 <Button
