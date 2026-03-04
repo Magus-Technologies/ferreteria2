@@ -49,7 +49,7 @@
           {
             "key": "crear-orden-compra",
             "label": "Crear Orden de Compra",
-            "route": null,
+            "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra/crear-orden-compra",
             "permission": null
           }
         ]
@@ -91,6 +91,14 @@
             "permission": "proveedor.create"
           }
         ]
+      },
+      {
+        "id": "requerimientos-internos",
+        "type": "button",
+        "label": "Requerimientos Internos",
+        "icon": "FaClipboardList",
+        "route": null,
+        "permission": null
       }
     ]
   },
@@ -146,6 +154,13 @@
         "icon": "FaTruckLoading",
         "route": "/ui/gestion-comercial-e-inventario/mis-recepciones",
         "permission": "gestion-comercial-e-inventario.mis-recepciones.index"
+      },
+      {
+        "id": "mis-ordenes-de-servicio",
+        "label": "Mis Órdenes de Servicio",
+        "icon": "FaWrench",
+        "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-servicio",
+        "permission": null
       }
     ]
   }

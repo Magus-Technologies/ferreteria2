@@ -26,7 +26,6 @@ function Base({
   nextWithPrevent,
   onKeyUp,
   onOpenChange,
-  onDropdownVisibleChange,
   innerRef,
   uppercase = false,
   onSearch,
@@ -51,10 +50,9 @@ function Base({
           onSearch?.(value);
         }
       } : undefined}
-      onDropdownVisibleChange={(open) => {
+      onOpenChange={(open) => {
         setOpen(open);
         onOpenChange?.(open);
-        onDropdownVisibleChange?.(open);
       }}
       onKeyUp={(e) => {
         if (e.key === "Enter" && nextInEnter) {

@@ -50,6 +50,8 @@ export default function DocRecepcionAlmacen({
   const i_lote = colDefs.findIndex(col => col.headerName === 'Lote')
   colDefs.splice(i_lote, 1)
 
+  const src = data?.compra ?? data?.orden_compra
+
   return (
     <DocGeneral
       empresa={empresa}
@@ -81,7 +83,7 @@ export default function DocRecepcionAlmacen({
                 Almacén:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.compra.almacen.name}
+                {src?.almacen?.name ?? '-'}
               </Text>
             </View>
           </View>
@@ -91,7 +93,7 @@ export default function DocRecepcionAlmacen({
                 Fecha de Compra:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {new Date(data?.compra.fecha || '').toLocaleDateString(
+                {new Date(src?.fecha ?? '').toLocaleDateString(
                   'es-ES',
                   {
                     day: '2-digit',
@@ -121,7 +123,7 @@ export default function DocRecepcionAlmacen({
                 RUC:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.compra.proveedor?.ruc}
+                {src?.proveedor?.ruc}
               </Text>
             </View>
             <View style={styles_docs.subSectionInformacionGeneral}>
@@ -129,7 +131,9 @@ export default function DocRecepcionAlmacen({
                 Documento:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {getNroDocCompra({ compra: data?.compra })}
+                {data?.compra
+                  ? getNroDocCompra({ compra: data.compra })
+                  : (data?.orden_compra?.codigo ?? '-')}
               </Text>
             </View>
           </View>
@@ -139,7 +143,7 @@ export default function DocRecepcionAlmacen({
                 Razón Social:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.compra.proveedor?.razon_social}
+                {src?.proveedor?.razon_social}
               </Text>
             </View>
             <View style={styles_docs.subSectionInformacionGeneral}>
@@ -147,7 +151,7 @@ export default function DocRecepcionAlmacen({
                 Guía Remisión:
               </Text>
               <Text style={styles_docs.textValueSubSectionInformacionGeneral}>
-                {data?.compra.guia ?? '-'}
+                {src?.guia ?? '-'}
               </Text>
             </View>
           </View>
