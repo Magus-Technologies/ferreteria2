@@ -87,7 +87,7 @@ export default function DocRecepcionAlmacenTicket({
                 Almacén:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {data?.compra.almacen.name}
+                {data?.compra?.almacen?.name}
               </Text>
             </View>
           </View>
@@ -97,7 +97,7 @@ export default function DocRecepcionAlmacenTicket({
                 Fecha de Compra:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {new Date(data?.compra.fecha || '').toLocaleDateString(
+                {new Date(data?.compra?.fecha || '').toLocaleDateString(
                   'es-ES',
                   {
                     day: '2-digit',
@@ -112,7 +112,7 @@ export default function DocRecepcionAlmacenTicket({
                 Usuario:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {data?.user.name}
+                {data?.user?.name}
               </Text>
             </View>
           </View>
@@ -127,7 +127,7 @@ export default function DocRecepcionAlmacenTicket({
                 RUC:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {data?.compra.proveedor?.ruc}
+                {data?.compra?.proveedor?.ruc}
               </Text>
             </View>
             <View style={styles_ticket.subSectionInformacionGeneral}>
@@ -135,7 +135,7 @@ export default function DocRecepcionAlmacenTicket({
                 Documento:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {getNroDocCompra({ compra: data?.compra })}
+                {getNroDocCompra({ compra: data?.compra ?? undefined })}
               </Text>
             </View>
           </View>
@@ -145,7 +145,7 @@ export default function DocRecepcionAlmacenTicket({
                 Razón Social:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {data?.compra.proveedor?.razon_social}
+                {data?.compra?.proveedor?.razon_social}
               </Text>
             </View>
             <View style={styles_ticket.subSectionInformacionGeneral}>
@@ -153,7 +153,7 @@ export default function DocRecepcionAlmacenTicket({
                 Guía Remisión:
               </Text>
               <Text style={styles_ticket.textValueSubSectionInformacionGeneral}>
-                {data?.compra.guia ?? '-'}
+                {data?.compra?.guia ?? '-'}
               </Text>
             </View>
           </View>

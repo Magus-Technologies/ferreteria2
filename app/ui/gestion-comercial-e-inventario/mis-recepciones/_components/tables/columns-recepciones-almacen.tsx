@@ -72,20 +72,24 @@ export function useColumnsRecepcionesAlmacen({
     },
     {
       headerName: 'Proveedor',
-      field: 'compra',
       width: 200,
       minWidth: 200,
       filter: true,
-      valueFormatter: ({ value }) => value.proveedor.razon_social,
+      valueGetter: ({ data }) =>
+        data?.compra?.proveedor?.razon_social ??
+        data?.orden_compra?.proveedor?.razon_social ??
+        '',
       flex: 1,
     },
     {
-      headerName: 'Compra',
-      field: 'compra',
+      headerName: 'Compra / Orden',
       width: 90,
       minWidth: 90,
       filter: true,
-      valueFormatter: ({ value }) => getNroDocCompra({ compra: value }),
+      valueGetter: ({ data }) =>
+        data?.compra
+          ? getNroDocCompra({ compra: data.compra })
+          : (data?.orden_compra?.codigo ?? ''),
     },
     {
       headerName: 'Activo',

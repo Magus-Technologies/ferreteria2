@@ -133,6 +133,15 @@ export interface UserResponse {
   name: string
 }
 
+export interface OrdenCompraRecepcionResponse {
+  id: number
+  codigo: string
+  fecha: string
+  guia: string | null
+  proveedor: ProveedorResponse | null
+  almacen: AlmacenResponse | null
+}
+
 export interface RecepcionAlmacenResponse {
   id: number
   numero: number
@@ -147,8 +156,9 @@ export interface RecepcionAlmacenResponse {
   transportista_guia_remision: string | null
   estado: boolean
   user_id: string
-  compra_id: string
-  compra: CompraResponse
+  compra_id: string | null
+  compra: CompraResponse | null
+  orden_compra: OrdenCompraRecepcionResponse | null
   productos_por_almacen: ProductoAlmacenRecepcionResponse[]
   user: UserResponse
 }

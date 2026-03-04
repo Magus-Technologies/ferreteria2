@@ -5,7 +5,7 @@ import usePermissionHook from "~/hooks/use-permission";
 import { FaWarehouse, FaCartShopping, FaCalculator } from "react-icons/fa6";
 import { BiTransferAlt } from "react-icons/bi";
 import { MdOutlinePendingActions } from "react-icons/md";
-import { FaTruck, FaTruckLoading } from "react-icons/fa";
+import { FaTruck, FaTruckLoading, FaWrench } from "react-icons/fa";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 
@@ -17,6 +17,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   MdOutlinePendingActions,
   FaTruck,
   FaTruckLoading,
+  FaWrench,
 };
 
 export default function BottomNav({ className }: { className?: string }) {

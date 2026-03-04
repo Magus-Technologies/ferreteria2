@@ -13,6 +13,7 @@ export enum QueryKeys {
   PROVEEDORES_SEARCH = 'proveedores_search',
   TIPOS_INGRESO_SALIDA = 'tipos_ingreso_salida',
   USUARIOS = 'usuarios',
+  ORDENES_COMPRA = 'ordenes_compra',
   COMPRAS = 'compras',
   COMPRAS_ANULADAS = 'compras_anuladas',
   COMPRAS_EN_ESPERA = 'compras_en_espera',
@@ -74,4 +75,5 @@ export enum QueryKeys {
   DIRECCIONES_CLIENTE = 'direcciones_cliente',
   DIRECCION_CLIENTE = 'direccion_cliente',
   CONFIGURACION_NOTIFICACIONES = 'configuracion_notificaciones',
+  ORDENES_DE_SERVICIO = 'ordenes_de_servicio',
 }
