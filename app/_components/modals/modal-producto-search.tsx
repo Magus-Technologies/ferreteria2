@@ -17,6 +17,7 @@ import TableUltimasComprasIngresadasSearch from "../tables/table-ultimas-compras
 import CardAgregarProductoVenta from "~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/cards/card-agregar-producto-venta";
 import CardAgregarProductoCotizacion from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_components/cards/card-agregar-producto-cotizacion";
 import CardAgregarProductoPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/_components/cards/card-agregar-producto-prestamo";
+import CardAgregarProductoGuia from "~/app/ui/facturacion-electronica/mis-guias/crear-guia/_components/cards/card-agregar-producto-guia";
 
 type ModalProductoSearchProps = {
   open: boolean;
@@ -30,6 +31,7 @@ type ModalProductoSearchProps = {
   showCardAgregarProductoVenta?: boolean;
   showCardAgregarProductoCotizacion?: boolean;
   showCardAgregarProductoPrestamo?: boolean;
+  showCardAgregarProductoGuia?: boolean;
   showUltimasCompras?: boolean;
   selectionColor?: string; // Color para la fila seleccionada
 };
@@ -51,6 +53,7 @@ export default function ModalProductoSearch({
   showCardAgregarProductoVenta = false,
   showCardAgregarProductoCotizacion = false,
   showCardAgregarProductoPrestamo = false,
+  showCardAgregarProductoGuia = false,
   showUltimasCompras = true,
   selectionColor, // Recibir el color de selección
 }: ModalProductoSearchProps) {
@@ -194,6 +197,11 @@ export default function ModalProductoSearch({
         {showCardAgregarProductoPrestamo && (
           <div className="w-full xl:w-auto">
             <CardAgregarProductoPrestamo setOpen={setOpen} />
+          </div>
+        )}
+        {showCardAgregarProductoGuia && (
+          <div className="w-full xl:w-auto">
+            <CardAgregarProductoGuia setOpen={setOpen} withMasYSalir />
           </div>
         )}
       </div>

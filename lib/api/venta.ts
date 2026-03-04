@@ -80,7 +80,7 @@ export interface CreateVentaRequest {
   recomendado_por_id?: number;
   user_id: string;
   almacen_id: number;
-  productos_por_almacen: ProductoVentaRequest[];
+  productos_por_almacen?: ProductoVentaRequest[];
   servicios_venta?: Array<{
     servicio_id: number;
     cantidad: number;

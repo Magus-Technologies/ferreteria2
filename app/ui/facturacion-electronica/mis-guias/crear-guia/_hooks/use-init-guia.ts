@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 
 export default function useInitGuia({
   guia,
@@ -15,6 +16,7 @@ export default function useInitGuia({
 }) {
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
+  const { data: empresa } = useEmpresaPublica()
 
   // Obtener datos de la venta si viene el parámetro
   const { data: ventaResponse, isLoading } = useQuery({
@@ -71,6 +73,7 @@ export default function useInitGuia({
         // Datos del cliente - Guardar el ID pero el SelectClientes mostrará el documento
         cliente_id: cliente?.id,
         cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),
+        punto_partida: empresa?.direccion || '',
         punto_llegada: cliente?.direccion || '',
         // Guardar direcciones del cliente
         _cliente_direccion_1: cliente?.direccion || '',
@@ -101,10 +104,11 @@ export default function useInitGuia({
         validar_modalidad: true,
         validar_costo: true,
         tipo_guia: 'ELECTRONICA_REMITENTE',
+        punto_partida: empresa?.direccion || '',
         productos: [],
       })
     }
-  }, [guia, venta, isLoading, form])
+  }, [guia, venta, isLoading, form, empresa])
 
   return { venta, isLoading }
 }

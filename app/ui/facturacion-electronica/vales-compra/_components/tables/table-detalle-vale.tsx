@@ -61,6 +61,7 @@ export default function TableDetalleVale() {
       DESCUENTO_MISMA_COMPRA: 'Desc. Misma Compra',
       DESCUENTO_PROXIMA_COMPRA: 'Vale Próxima Compra',
       PRODUCTO_GRATIS: 'Producto Gratis',
+      DOS_POR_UNO: '2x1 (Mismo Prod.)',
     }[valeSeleccionado.tipo_promocion]
 
     const modalidadLabel = {
@@ -77,6 +78,9 @@ export default function TableDetalleVale() {
         : `S/ ${valeSeleccionado.descuento_valor}`
     } else if (valeSeleccionado.tipo_promocion === 'PRODUCTO_GRATIS') {
       beneficioTexto = `${valeSeleccionado.cantidad_producto_gratis} ${valeSeleccionado.producto_gratis?.name || 'prod.'} GRATIS`
+    } else if (valeSeleccionado.tipo_promocion === 'DOS_POR_UNO') {
+      const extra = valeSeleccionado.cantidad_producto_gratis || 1
+      beneficioTexto = `Compra ${valeSeleccionado.cantidad_minima}, lleva ${valeSeleccionado.cantidad_minima + extra}`
     } else if (valeSeleccionado.tipo_promocion === 'SORTEO') {
       beneficioTexto = 'Sorteo'
     }

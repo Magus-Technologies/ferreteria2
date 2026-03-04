@@ -240,7 +240,7 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,
-      productos_por_almacen: productos_por_almacen,
+      ...(productos_por_almacen.length > 0 && { productos_por_almacen }),
       // Agregar servicios si existen
       servicios_venta: soloServicios.length > 0
         ? soloServicios.map(s => ({

@@ -7,9 +7,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectMotivoTraslado from '~/app/_components/form/selects/select-motivo-traslado'
 import { TbTruckDelivery } from 'react-icons/tb'
-import TextAreaBase from '~/app/_components/form/inputs/textarea-base'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
-import { BsGeoAltFill } from 'react-icons/bs'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
 import { useEffect } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
@@ -32,7 +30,7 @@ export default function FormCrearGuia({
   }, [form])
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-2'>
       {/* Campos ocultos para direcciones del cliente */}
       <Form.Item name='direccion_seleccionada' hidden>
         <input type='hidden' />
@@ -50,9 +48,9 @@ export default function FormCrearGuia({
         <input type='hidden' />
       </Form.Item>
 
-      {/* Primera fila: Fechas y Afecta Stock */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
-        <LabelBase label='Fecha Emisión:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
+      {/* Fila 1: Fechas, Serie, Número, Motivo */}
+      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
+        <LabelBase label='Fecha Emisión:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
           <DatePickerBase
             propsForm={{
               name: 'fecha_emision',
@@ -68,7 +66,7 @@ export default function FormCrearGuia({
             prefix={<FaCalendar size={15} className='text-cyan-700 mx-1' />}
           />
         </LabelBase>
-        <LabelBase label='Fecha Traslado:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
+        <LabelBase label='Fecha Traslado:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
           <DatePickerBase
             propsForm={{
               name: 'fecha_traslado',
@@ -84,29 +82,7 @@ export default function FormCrearGuia({
             prefix={<FaCalendar size={15} className='text-cyan-700 mx-1' />}
           />
         </LabelBase>
-        <LabelBase label='Afecta Stock:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
-          <SelectBase
-            propsForm={{
-              name: 'afecta_stock',
-              rules: [
-                {
-                  required: true,
-                  message: 'Selecciona si afecta stock',
-                },
-              ],
-            }}
-            className='w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]'
-            options={[
-              { label: 'Sí', value: 'true' },
-              { label: 'No', value: 'false' },
-            ]}
-          />
-        </LabelBase>
-      </div>
-      
-      {/* Segunda fila: Serie, Número, Destino */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
-        <LabelBase label='Serie:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
+        <LabelBase label='Serie:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
           <InputBase
             propsForm={{
               name: 'serie',
@@ -115,7 +91,7 @@ export default function FormCrearGuia({
             className='w-full sm:!w-[100px] sm:!min-w-[100px] sm:!max-w-[100px]'
           />
         </LabelBase>
-        <LabelBase label='Número:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
+        <LabelBase label='Número:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
           <InputNumberBase
             propsForm={{
               name: 'numero',
@@ -124,30 +100,37 @@ export default function FormCrearGuia({
             className='w-full sm:!w-[120px] sm:!min-w-[120px] sm:!max-w-[120px]'
           />
         </LabelBase>
-        <LabelBase label='Destino:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
-          <SelectBase
-            propsForm={{
-              name: 'destino_id',
-            }}
-            placeholder='Seleccione Destino...'
-            className='w-full sm:!min-w-[200px] sm:!w-[200px] sm:!max-w-[200px]'
-            options={[
-              { label: 'Almacén Principal', value: 1 },
-              { label: 'Almacén Secundario', value: 2 },
-            ]}
-          />
-        </LabelBase>
+        <ConfigurableElement
+          componentId='crear-guia.motivo-traslado'
+          label='Campo Motivo de Traslado'
+        >
+          <LabelBase label='Motivo de Traslado:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+            <SelectMotivoTraslado
+              propsForm={{
+                name: 'motivo_traslado',
+                rules: [
+                  {
+                    required: true,
+                    message: 'Selecciona el motivo de traslado',
+                  },
+                ],
+              }}
+              placeholder='Seleccione motivo...'
+              className='w-full sm:!min-w-[200px] sm:!w-[200px]'
+            />
+          </LabelBase>
+        </ConfigurableElement>
       </div>
-      
-      {/* Tercera fila: DNI/RUC, Cliente, Punto de Llegada y Radio */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6 items-start'>
+
+      {/* Fila 2: DNI/RUC, Cliente, Radio Dirección */}
+      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
         <ConfigurableElement
           componentId='crear-guia.dni-ruc'
           label='Campo DNI/RUC'
         >
           <LabelBase
             label='DNI/RUC:'
-            classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }}
+            classNames={{ labelParent: 'mb-2' }}
             className='w-full sm:w-auto'
           >
             <SelectClientes
@@ -164,25 +147,22 @@ export default function FormCrearGuia({
               placeholder='DNI/RUC'
               onChange={(_, cliente) => {
                 if (cliente) {
-                  // Actualizar nombre del cliente
                   const nombreCompleto = cliente.razon_social
                     ? cliente.razon_social
                     : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
                   form.setFieldValue('cliente_nombre', nombreCompleto)
 
-                  // Guardar las 4 direcciones en campos ocultos (desde el nuevo sistema)
                   const direcciones = cliente.direcciones || [];
                   const d1 = direcciones.find(d => d.tipo === 'D1')?.direccion || '';
                   const d2 = direcciones.find(d => d.tipo === 'D2')?.direccion || '';
                   const d3 = direcciones.find(d => d.tipo === 'D3')?.direccion || '';
                   const d4 = direcciones.find(d => d.tipo === 'D4')?.direccion || '';
-                  
+
                   form.setFieldValue('_cliente_direccion_1', d1);
                   form.setFieldValue('_cliente_direccion_2', d2);
                   form.setFieldValue('_cliente_direccion_3', d3);
                   form.setFieldValue('_cliente_direccion_4', d4);
 
-                  // Actualizar punto de llegada según dirección seleccionada
                   const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1';
                   let direccionActual = d1;
                   if (direccionSeleccionada === 'D2') direccionActual = d2;
@@ -208,7 +188,7 @@ export default function FormCrearGuia({
         >
           <LabelBase
             label='Cliente:'
-            classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }}
+            classNames={{ labelParent: 'mb-2' }}
             className='w-full sm:flex-1'
           >
             <InputBase
@@ -229,57 +209,40 @@ export default function FormCrearGuia({
           componentId='crear-guia.radio-direccion'
           label='Selector de Dirección'
         >
-          <div className='mb-3 sm:mb-4 lg:mb-6'>
+          <div className='mb-2'>
             <RadioDireccionCliente form={form} />
           </div>
         </ConfigurableElement>
       </div>
-      
-      {/* Cuarta fila: Referencia */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
-        <ConfigurableElement
-          componentId='crear-guia.referencia'
-          label='Campo Referencia'
-        >
-          <LabelBase label='Referencia:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:flex-1'>
-            <InputBase
-              propsForm={{
-                name: 'referencia',
-              }}
-              placeholder='Referencia'
-              className='w-full'
-            />
-          </LabelBase>
-        </ConfigurableElement>
-      </div>
-      
-      {/* Quinta fila: Motivo de Traslado y Modalidad */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
-        <ConfigurableElement
-          componentId='crear-guia.motivo-traslado'
-          label='Campo Motivo de Traslado'
-        >
-          <LabelBase label='Motivo de Traslado:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:flex-1'>
-            <SelectMotivoTraslado
-              propsForm={{
-                name: 'motivo_traslado',
-                rules: [
-                  {
-                    required: true,
-                    message: 'Selecciona el motivo de traslado',
-                  },
-                ],
-              }}
-              placeholder='Seleccione motivo...'
-              className='w-full'
-            />
-          </LabelBase>
-        </ConfigurableElement>
+
+      {/* Fila 3: Tipo Guía, Modalidad, Vehículo, Chofer */}
+      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
+        <LabelBase label='Tipo de Guía:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+          <SelectBase
+            propsForm={{
+              name: 'tipo_guia',
+              rules: [
+                {
+                  required: true,
+                  message: 'Selecciona el tipo de guía',
+                },
+              ],
+            }}
+            placeholder='Seleccione...'
+            className='w-full sm:!min-w-[280px] sm:!w-[280px]'
+            prefix={<TbTruckDelivery className='text-cyan-700 mx-1' />}
+            options={[
+              { label: 'GRE - Remitente', value: 'ELECTRONICA_REMITENTE' },
+              { label: 'GRE - Transportista', value: 'ELECTRONICA_TRANSPORTISTA' },
+              { label: 'Guía Física', value: 'FISICA' },
+            ]}
+          />
+        </LabelBase>
         <ConfigurableElement
           componentId='crear-guia.modalidad'
           label='Campo Modalidad'
         >
-          <LabelBase label='Modalidad:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
+          <LabelBase label='Modalidad:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
             <SelectBase
               propsForm={{
                 name: 'modalidad_transporte',
@@ -291,7 +254,7 @@ export default function FormCrearGuia({
                 ],
               }}
               placeholder='Seleccione...'
-              className='w-full sm:!min-w-[200px] sm:!w-[200px] sm:!max-w-[200px]'
+              className='w-full sm:!min-w-[180px] sm:!w-[180px]'
               options={[
                 { label: 'Transporte privado', value: 'PRIVADO' },
                 { label: 'Transporte público', value: 'PUBLICO' },
@@ -299,22 +262,18 @@ export default function FormCrearGuia({
             />
           </LabelBase>
         </ConfigurableElement>
-      </div>
-      
-      {/* Sexta fila: Vehículo y Chofer */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
         <ConfigurableElement
           componentId='crear-guia.vehiculo'
           label='Campo Vehículo'
         >
-          <LabelBase label='Vehículo (Placa):' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:w-auto'>
+          <LabelBase label='Vehículo (Placa):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
             <InputBase
               propsForm={{
                 name: 'vehiculo_placa',
               }}
               placeholder='ABC-123'
               prefix={<FaTruck className='text-cyan-700 mx-1' />}
-              className='w-full sm:!w-[150px] sm:!min-w-[150px] sm:!max-w-[150px]'
+              className='w-full sm:!w-[140px] sm:!min-w-[140px]'
             />
           </LabelBase>
         </ConfigurableElement>
@@ -322,7 +281,7 @@ export default function FormCrearGuia({
           componentId='crear-guia.chofer'
           label='Campo Chofer'
         >
-          <LabelBase label='Chofer:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:flex-1'>
+          <LabelBase label='Chofer:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
             <SelectChoferes
               propsForm={{
                 name: 'chofer_id',
@@ -335,11 +294,11 @@ export default function FormCrearGuia({
           </LabelBase>
         </ConfigurableElement>
       </div>
-      
-      {/* Séptima fila: Punto de Partida y Punto de Llegada */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
-        <LabelBase label='Punto de Partida:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:flex-1'>
-          <TextAreaBase
+
+      {/* Fila 4: Punto de Partida y Punto de Llegada */}
+      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
+        <LabelBase label='Punto de Partida:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+          <InputBase
             propsForm={{
               name: 'punto_partida',
               rules: [
@@ -349,13 +308,12 @@ export default function FormCrearGuia({
                 },
               ],
             }}
-            placeholder='Dirección completa del punto de partida'
-            rows={2}
+            placeholder='Dirección del punto de partida'
             className='w-full'
           />
         </LabelBase>
-        <LabelBase label='Punto de Llegada:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:flex-1'>
-          <TextAreaBase
+        <LabelBase label='Punto de Llegada:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+          <InputBase
             propsForm={{
               name: 'punto_llegada',
               rules: [
@@ -365,34 +323,8 @@ export default function FormCrearGuia({
                 },
               ],
             }}
-            placeholder='Dirección completa del punto de llegada'
-            rows={2}
+            placeholder='Dirección del punto de llegada'
             className='w-full'
-          />
-        </LabelBase>
-      </div>
-      
-      {/* Octava fila: Tipo de Guía */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6'>
-        <LabelBase label='Tipo de Guía:' classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }} className='w-full sm:flex-1'>
-          <SelectBase
-            propsForm={{
-              name: 'tipo_guia',
-              rules: [
-                {
-                  required: true,
-                  message: 'Selecciona el tipo de guía',
-                },
-              ],
-            }}
-            placeholder='Seleccione...'
-            className='w-full'
-            prefix={<TbTruckDelivery className='text-cyan-700 mx-1' />}
-            options={[
-              { label: 'GUIA REMISION ELECTRONICA - Remitente', value: 'ELECTRONICA_REMITENTE' },
-              { label: 'GUIA REMISION ELECTRONICA - Transportista', value: 'ELECTRONICA_TRANSPORTISTA' },
-              { label: 'GUIA REMISION FISICA', value: 'FISICA' },
-            ]}
           />
         </LabelBase>
       </div>

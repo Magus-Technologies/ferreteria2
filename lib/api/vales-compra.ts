@@ -23,7 +23,8 @@ export type TipoPromocion =
   | 'SORTEO'
   | 'DESCUENTO_MISMA_COMPRA'
   | 'DESCUENTO_PROXIMA_COMPRA'
-  | 'PRODUCTO_GRATIS';
+  | 'PRODUCTO_GRATIS'
+  | 'DOS_POR_UNO';
 
 export type Modalidad =
   | 'CANTIDAD_MINIMA'

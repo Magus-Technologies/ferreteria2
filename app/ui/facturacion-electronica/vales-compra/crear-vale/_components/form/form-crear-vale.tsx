@@ -54,6 +54,7 @@ export default function FormCrearVale({
                 { label: '💰 Descuento en la Misma Compra', value: 'DESCUENTO_MISMA_COMPRA' },
                 { label: '🎟️ Vale para Próxima Compra', value: 'DESCUENTO_PROXIMA_COMPRA' },
                 { label: '🎉 Producto Gratis', value: 'PRODUCTO_GRATIS' },
+                { label: '🔄 2x1 (Mismo Producto)', value: 'DOS_POR_UNO' },
               ]}
             />
           </Form.Item>
@@ -234,6 +235,31 @@ export default function FormCrearVale({
                 step={1}
               />
             </Form.Item>
+          </div>
+        )}
+
+        {/* Para DOS_POR_UNO */}
+        {tipoPromocion === 'DOS_POR_UNO' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm text-green-700">
+              <strong>2x1:</strong> El cliente compra 1 unidad del producto y se lleva 2 (paga 1, lleva 2).
+              Selecciona la modalidad y productos/categorías en la sección de condiciones para definir a qué productos aplica.
+            </p>
+            <div className="mt-3">
+              <Form.Item
+                name="cantidad_producto_gratis"
+                label="Cantidad extra gratis"
+                tooltip="Cuántas unidades adicionales se regalan. Ej: 1 = compra 1 lleva 2, 2 = compra 1 lleva 3"
+              >
+                <InputNumber
+                  className="w-full"
+                  placeholder="1"
+                  min={1}
+                  step={1}
+                  defaultValue={1}
+                />
+              </Form.Item>
+            </div>
           </div>
         )}
 

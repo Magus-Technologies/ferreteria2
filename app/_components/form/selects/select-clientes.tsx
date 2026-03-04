@@ -307,7 +307,7 @@ export default function SelectClientes({
         onKeyUp={e => {
           if (e.key === 'Enter') setOpenModalClienteSearch(true)
         }}
-        open={open !== undefined ? open : undefined} // Usar la prop open si se proporciona, sino usar comportamiento por defecto
+        open={open !== undefined ? open : showOnlyDocument ? false : undefined} // Si showOnlyDocument, nunca mostrar dropdown (el autocomplete por número completo sigue funcionando)
         {...props}
       />
       <FaSearch

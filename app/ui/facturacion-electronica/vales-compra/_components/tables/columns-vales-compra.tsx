@@ -33,6 +33,7 @@ function CellTipoPromocion({ value }: { value: string }) {
     DESCUENTO_MISMA_COMPRA: 'Desc. Misma Compra',
     DESCUENTO_PROXIMA_COMPRA: 'Vale Próxima Compra',
     PRODUCTO_GRATIS: 'Producto Gratis',
+    DOS_POR_UNO: '2x1 (Mismo Prod.)',
   };
 
   return (

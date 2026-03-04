@@ -12,6 +12,7 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { MdSell } from "react-icons/md";
 import { FaPause } from "react-icons/fa6";
 import ModalDetallesEntrega from "../modals/modal-detalles-entrega";
+import ButtonRecuperarVentaEnEspera from "../buttons/button-recuperar-venta-en-espera";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
@@ -140,6 +141,13 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
 
       <div className="flex flex-col gap-4 max-w-64">
         <ConfigurableElement
+          componentId="crear-venta.boton-recuperar-espera"
+          label="Botón Recuperar Venta en Espera"
+        >
+          <ButtonRecuperarVentaEnEspera />
+        </ConfigurableElement>
+
+        <ConfigurableElement
           componentId="crear-venta.card-subtotal"
           label="Card SubTotal"
         >
@@ -255,6 +263,7 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
             <FaPause className="min-w-fit" size={30} /> Poner en Espera
           </ButtonBase>
         </ConfigurableElement>
+
       </div>
 
       {/* Modal para configurar detalles de entrega */}

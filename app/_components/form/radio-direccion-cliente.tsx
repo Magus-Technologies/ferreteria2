@@ -30,6 +30,7 @@ export default function RadioDireccionCliente({ form }: RadioDireccionClientePro
 
     form.setFieldValue('direccion', direccionSeleccionada)
     form.setFieldValue('direccion_entrega', direccionSeleccionada)
+    form.setFieldValue('punto_llegada', direccionSeleccionada)
   }
 
   return (

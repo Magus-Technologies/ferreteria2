@@ -9,7 +9,8 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 import { useStoreProductoAgregadoGuia } from '../../_store/store-producto-agregado-guia'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import SelectBase from '~/app/_components/form/selects/select-base'
-import { FaBoxes, FaWeightHanging } from 'react-icons/fa'
+import { FaBoxes, FaPlusCircle, FaWeightHanging } from 'react-icons/fa'
+import ButtonBase from '~/components/buttons/button-base'
 
 type FormCardAgregarProductoGuia = {
   unidad_derivada_id: number
@@ -20,8 +21,10 @@ type FormCardAgregarProductoGuia = {
 
 export default function CardAgregarProductoGuia({
   setOpen,
+  withMasYSalir = false,
 }: {
   setOpen: (value: boolean) => void
+  withMasYSalir?: boolean
 }) {
   const [form] = Form.useForm<FormCardAgregarProductoGuia>()
   const { notification } = App.useApp()
@@ -65,9 +68,10 @@ export default function CardAgregarProductoGuia({
     }
   }, [unidades_derivadas, form])
 
-  function handleSubmit(values: FormCardAgregarProductoGuia) {
+  function handleOk(closeModal?: boolean) {
+    const values = form.getFieldsValue()
     if (!productoSeleccionadoSearchStore) return
-    if (!values.cantidad || !values.unidad_derivada_id || !values.costo) {
+    if (!values.cantidad || !values.unidad_derivada_id) {
       return notification.error({
         message: 'Complete todos los campos obligatorios',
       })
@@ -93,14 +97,14 @@ export default function CardAgregarProductoGuia({
     })
 
     form.resetFields()
-    setOpen(false)
+    if (closeModal) setOpen(false)
   }
 
   return (
     <FormBase<FormCardAgregarProductoGuia>
       form={form}
       name='card-agregar-producto-guia'
-      onFinish={handleSubmit}
+      onFinish={() => handleOk(true)}
       className='flex flex-col gap-4'
       initialValues={{
         cantidad: 1,
@@ -155,12 +159,6 @@ export default function CardAgregarProductoGuia({
         <InputNumberBase
           propsForm={{
             name: 'costo',
-            rules: [
-              {
-                required: true,
-                message: 'Ingresa el costo',
-              },
-            ],
           }}
           prefix='S/. '
           min={0}
@@ -182,12 +180,31 @@ export default function CardAgregarProductoGuia({
         />
       </LabelBase>
 
-      <button
-        type='submit'
-        className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded transition-colors'
-      >
-        Agregar
-      </button>
+      {withMasYSalir ? (
+        <div className='flex items-center justify-between gap-2'>
+          <ButtonBase
+            color='success'
+            className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-balance px-4! hover:!scale-100'
+            onClick={() => handleOk(false)}
+          >
+            <FaPlusCircle className='min-w-fit' size={12} /> Más
+          </ButtonBase>
+          <ButtonBase
+            color='warning'
+            className='flex items-center justify-center gap-3 !rounded-md w-full h-full text-nowrap px-4! hover:!scale-100'
+            onClick={() => handleOk(true)}
+          >
+            <FaPlusCircle className='min-w-fit' size={12} /> Más y Salir
+          </ButtonBase>
+        </div>
+      ) : (
+        <button
+          type='submit'
+          className='w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded transition-colors'
+        >
+          Agregar
+        </button>
+      )}
     </FormBase>
   )
 }

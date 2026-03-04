@@ -51,10 +51,10 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
     {
       headerName: 'Motivo',
       colId: 'motivo_traslado',
-      field: 'motivoTraslado',
+      field: 'motivo_traslado',
       width: 200,
       valueGetter: (params) => {
-        const motivo = params.data?.motivoTraslado
+        const motivo = params.data?.motivo_traslado
         if (!motivo) return '-'
         return `${motivo.codigo} - ${motivo.descripcion}`
       },

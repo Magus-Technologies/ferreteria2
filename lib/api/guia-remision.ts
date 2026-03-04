@@ -50,7 +50,7 @@ export interface CreateGuiaRemisionRequest {
   numero?: number;
   fecha_emision: string; // Format: "YYYY-MM-DD"
   fecha_traslado: string; // Format: "YYYY-MM-DD"
-  afecta_stock: boolean;
+  afecta_stock?: boolean;
   cliente_id?: number;
   motivo_traslado_id: number;
   modalidad_transporte: ModalidadTransporte;
@@ -120,9 +120,8 @@ export interface MotivoTraslado {
 export interface Chofer {
   id: number;
   dni: string;
-  nombres: string;
-  apellidos: string;
-  telefono?: string;
+  name: string;
+  licencia?: string;
 }
 
 export interface Almacen {
@@ -199,7 +198,10 @@ export interface GuiaRemision {
   fecha_anulacion?: string;
   motivo_anulacion?: string;
   sunat_codigo_hash?: string;
+  sunat_xml_path?: string;
   sunat_cdr_xml?: string;
+  sunat_cdr_path?: string;
+  sunat_codigo_qr?: string;
   sunat_fecha_envio?: string;
   sunat_estado?: EstadoSunat;
   sunat_mensaje?: string;
@@ -215,10 +217,10 @@ export interface GuiaRemision {
     cliente?: Cliente;
   };
   cliente?: Cliente;
-  motivoTraslado?: MotivoTraslado;
+  motivo_traslado?: MotivoTraslado;
   chofer?: Chofer;
-  almacenOrigen?: Almacen;
-  almacenDestino?: Almacen;
+  almacen_origen?: Almacen;
+  almacen_destino?: Almacen;
   user?: {
     id: string;
     name: string;
@@ -316,5 +318,21 @@ export const guiaRemisionApi = {
     return apiRequest<{ data: string; message: string }>(`/guias-remision/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  /**
+   * Enviar guía de remisión a SUNAT
+   */
+  async enviarSunat(id: string): Promise<ApiResponse<{ data: { success: boolean; mensaje: string; modo: string; codigo_sunat?: string; mensaje_sunat?: string }; message: string }>> {
+    return apiRequest(`/guias-remision/${id}/enviar-sunat`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Obtener datos de la guía para generar PDF (incluye QR y empresa)
+   */
+  async getPdfData(id: string): Promise<ApiResponse<{ data: { guia: GuiaRemision; empresa: { ruc: string; razon_social: string; nombre_comercial: string; direccion: string; ubigeo: string; departamento: string; provincia: string; distrito: string } } }>> {
+    return apiRequest(`/guias-remision/${id}/pdf-data`);
   },
 };

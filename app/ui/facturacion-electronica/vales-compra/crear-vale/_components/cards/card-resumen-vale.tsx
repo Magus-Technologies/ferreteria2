@@ -17,11 +17,14 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
   const usaLimiteStock = Form.useWatch('usa_limite_stock', form)
   const stockDisponible = Form.useWatch('stock_disponible', form)
 
+  const cantidadProductoGratis = Form.useWatch('cantidad_producto_gratis', form)
+
   const tipoPromocionLabels: Record<string, string> = {
     SORTEO: 'Sorteo',
     DESCUENTO_MISMA_COMPRA: 'Descuento Misma Compra',
     DESCUENTO_PROXIMA_COMPRA: 'Vale Próxima Compra',
     PRODUCTO_GRATIS: 'Producto Gratis',
+    DOS_POR_UNO: '2x1 (Mismo Producto)',
   }
 
   const modalidadLabels: Record<string, string> = {
@@ -86,6 +89,16 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
             </p>
             <p className='text-2xl font-bold text-green-700'>
               {descuentoTipo === 'PORCENTAJE' ? `${descuentoValor}%` : `S/ ${descuentoValor}`}
+            </p>
+          </div>
+        )}
+
+        {/* 2x1 */}
+        {tipoPromocion === 'DOS_POR_UNO' && (
+          <div className='bg-green-100 rounded-lg p-2 border-2 border-green-300'>
+            <p className='text-xs text-green-700 uppercase mb-0.5'>2x1</p>
+            <p className='text-2xl font-bold text-green-700'>
+              Compra {cantidadMinima || 1}, lleva {(cantidadMinima || 1) + (cantidadProductoGratis || 1)}
             </p>
           </div>
         )}

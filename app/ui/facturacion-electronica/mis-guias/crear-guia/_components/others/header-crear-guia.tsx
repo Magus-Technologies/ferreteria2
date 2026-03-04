@@ -51,7 +51,7 @@ export default function HeaderCrearGuia({
             showButtonCreate={can(permissions.PRODUCTO_CREATE)}
             withSearch
             withTipoBusqueda
-            showCardAgregarProductoVenta
+            showCardAgregarProductoGuia
             showUltimasCompras={false}
             handleOnlyOneResult={(producto) => {
               setProductoSeleccionadoSearchStore(producto)

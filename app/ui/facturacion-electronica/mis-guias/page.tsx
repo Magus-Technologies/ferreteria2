@@ -12,6 +12,7 @@ const FiltersMisGuias = lazy(() => import('./_components/filters/filters-mis-gui
 const TableMisGuias = lazy(() => import('./_components/tables/table-mis-guias'))
 const TableDetalleGuia = lazy(() => import('./_components/tables/table-detalle-guia'))
 const CardsInfoGuias = lazy(() => import('./_components/others/cards-info-guias'))
+const ModalPdfGuiaWrapper = lazy(() => import('./_components/modals/modal-pdf-guia-wrapper'))
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -67,6 +68,10 @@ export default function MisGuias() {
           </div>
         </div>
       </div>
+      {/* Modal PDF Guia */}
+      <Suspense fallback={null}>
+        <ModalPdfGuiaWrapper />
+      </Suspense>
     </ContenedorGeneral>
   )
 }

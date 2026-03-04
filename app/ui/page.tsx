@@ -1,6 +1,6 @@
-import Image from 'next/image'
 import BottomNavUI from './_components/nav/bottom-nav'
 import TopNavUI from './_components/nav/top-nav'
+import LogoEmpresa from './_components/logo-empresa'
 
 export default function UIPage() {
   return (
@@ -14,16 +14,7 @@ export default function UIPage() {
                       px-4 sm:px-6 md:px-8'>
 
         {/* Logo - Totalmente responsivo */}
-        <Image
-          src='/logo-horizontal.png'
-          alt='Logo'
-          width={500}
-          height={500}
-          className='w-72 h-auto sm:w-80 md:w-[28rem] lg:w-[32rem] xl:w-[36rem] 2xl:w-[40rem]
-                     object-contain
-                     max-w-[90vw]'
-          priority
-        />
+        <LogoEmpresa />
 
         {/* Contenedor de efectos de gradiente - Responsivo */}
         <div className='w-full max-w-[20rem] sm:max-w-[28rem] md:max-w-[36rem] lg:max-w-[40rem] xl:max-w-[44rem]

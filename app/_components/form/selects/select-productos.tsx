@@ -71,6 +71,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   showCardAgregarProductoVenta?: boolean
   showCardAgregarProductoCotizacion?: boolean
   showCardAgregarProductoPrestamo?: boolean
+  showCardAgregarProductoGuia?: boolean
   showUltimasCompras?: boolean
   limpiarOnChange?: boolean
   autoFocus?: boolean
@@ -95,6 +96,7 @@ export default function SelectProductos({
   showCardAgregarProductoVenta = false,
   showCardAgregarProductoCotizacion = false,
   showCardAgregarProductoPrestamo = false,
+  showCardAgregarProductoGuia = false,
   limpiarOnChange = false,
   showUltimasCompras = true,
   autoFocus = false,
@@ -325,6 +327,7 @@ export default function SelectProductos({
           showCardAgregarProductoVenta={showCardAgregarProductoVenta}
           showCardAgregarProductoCotizacion={showCardAgregarProductoCotizacion}
           showCardAgregarProductoPrestamo={showCardAgregarProductoPrestamo}
+          showCardAgregarProductoGuia={showCardAgregarProductoGuia}
           showUltimasCompras={showUltimasCompras}
           selectionColor={colorSeleccion}
         />

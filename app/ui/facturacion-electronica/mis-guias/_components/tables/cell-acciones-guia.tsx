@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash } from 'react-icons/fa'
+import { FaFilePdf, FaEdit, FaCheckCircle, FaBan, FaTrash, FaCloudUploadAlt } from 'react-icons/fa'
 import { Button, Space, Modal } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { guiaRemisionApi } from '~/lib/api/guia-remision'
@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useRouter } from 'next/navigation'
+import { useStoreModalPdfGuia } from '../../_store/store-modal-pdf-guia'
 
 interface CellAccionesGuiaProps {
   guia?: any
@@ -24,8 +25,41 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
   if (!guia) return null
 
   const handleVerPDF = () => {
-    message.info('Función de PDF en desarrollo')
-    console.log('Ver PDF:', guia)
+    useStoreModalPdfGuia.getState().openModal(guia.id)
+  }
+
+  const handleEnviarSunat = () => {
+    modal.confirm({
+      title: 'Enviar guia a SUNAT',
+      content: `Se enviara la guia ${guia.serie || 'T001'}-${guia.numero || '0'} a SUNAT. ¿Desea continuar?`,
+      okText: 'Si, enviar',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        setLoading(true)
+        try {
+          const response = await guiaRemisionApi.enviarSunat(guia.id)
+
+          if (response.error) {
+            message.error(response.error.message || 'Error al enviar a SUNAT')
+            return
+          }
+
+          const modo = response.data?.data?.modo || ''
+          message.success(`Guia enviada a SUNAT ${modo === 'SIMULACION' ? '(SIMULACION)' : ''}`)
+
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
+
+          if (onRefetch) {
+            onRefetch()
+          }
+        } catch (error) {
+          console.error('Error al enviar a SUNAT:', error)
+          message.error('Error al enviar guia a SUNAT')
+        } finally {
+          setLoading(false)
+        }
+      },
+    })
   }
 
   const handleEditar = () => {
@@ -227,21 +261,40 @@ export default function CellAccionesGuia({ guia, onRefetch }: CellAccionesGuiaPr
       )}
       
       {estado === 'EMITIDA' && (
-        <ConfigurableElement
-          componentId="mis-guias.boton-anular"
-          label="Botón Anular"
-          noFullWidth
-        >
-          <Button
-            type="link"
-            size="small"
-            icon={<FaBan />}
-            onClick={handleAnular}
-            loading={loading}
-            title="Anular"
-            className="text-orange-600"
-          />
-        </ConfigurableElement>
+        <>
+          {guia.tipo_guia !== 'FISICA' && guia.sunat_estado !== 'ACEPTADO' && (
+            <ConfigurableElement
+              componentId="mis-guias.boton-enviar-sunat"
+              label="Boton Enviar SUNAT"
+              noFullWidth
+            >
+              <Button
+                type="link"
+                size="small"
+                icon={<FaCloudUploadAlt />}
+                onClick={handleEnviarSunat}
+                loading={loading}
+                title="Enviar a SUNAT"
+                className="text-purple-600"
+              />
+            </ConfigurableElement>
+          )}
+          <ConfigurableElement
+            componentId="mis-guias.boton-anular"
+            label="Boton Anular"
+            noFullWidth
+          >
+            <Button
+              type="link"
+              size="small"
+              icon={<FaBan />}
+              onClick={handleAnular}
+              loading={loading}
+              title="Anular"
+              className="text-orange-600"
+            />
+          </ConfigurableElement>
+        </>
       )}
     </Space>
   )

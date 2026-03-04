@@ -268,6 +268,7 @@ export default function DocValeTicket({ vale, empresa }: DocValeTicketProps) {
     DESCUENTO_MISMA_COMPRA: 'DESCUENTO',
     DESCUENTO_PROXIMA_COMPRA: 'VALE DESCUENTO',
     PRODUCTO_GRATIS: 'PRODUCTO GRATIS',
+    DOS_POR_UNO: '2x1',
   }
 
   const modalidadLabel: Record<string, string> = {
@@ -289,6 +290,10 @@ export default function DocValeTicket({ vale, empresa }: DocValeTicketProps) {
   } else if (vale.tipo_promocion === 'PRODUCTO_GRATIS') {
     beneficioPrincipal = 'GRATIS'
     beneficioDetalle = `${vale.cantidad_producto_gratis}x ${vale.producto_gratis?.name || 'Producto'}`
+  } else if (vale.tipo_promocion === 'DOS_POR_UNO') {
+    const extra = vale.cantidad_producto_gratis || 1
+    beneficioPrincipal = '2x1'
+    beneficioDetalle = `Compra ${Number(vale.cantidad_minima).toFixed(0)}, lleva ${(Number(vale.cantidad_minima) + extra).toFixed(0)}`
   } else if (vale.tipo_promocion === 'SORTEO') {
     beneficioPrincipal = 'SORTEO'
     beneficioDetalle = 'Participas automaticamente'
