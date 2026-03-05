@@ -3,6 +3,7 @@
  */
 
 import { apiRequest, type ApiResponse } from '../api';
+import type { ValeCompraAplicado } from './vales-compra';
 
 // ============= ENUMS =============
 
@@ -90,6 +91,7 @@ export interface CreateVentaRequest {
   }>;
   despliegue_de_pago_ventas?: DespliegueDePagoVentaRequest[];
   ingreso_dinero_id?: string;
+  codigo_vale?: string;
 }
 
 export interface UpdateVentaRequest extends Partial<CreateVentaRequest> {}
@@ -215,6 +217,23 @@ export const ventaApi = {
   },
 
   /**
+   * Obtener cobros de una venta a crédito
+   */
+  async getCobros(ventaId: string): Promise<ApiResponse<{ data: CobroVenta[] }>> {
+    return apiRequest(`/ventas/${ventaId}/cobros`);
+  },
+
+  /**
+   * Registrar un cobro para una venta a crédito
+   */
+  async storeCobro(ventaId: string, data: StoreCobroRequest): Promise<ApiResponse<{ data: CobroVenta; message: string; saldo_pendiente: number }>> {
+    return apiRequest(`/ventas/${ventaId}/cobros`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
    * Obtener historial de ediciones de una venta
    */
   async getHistorial(id: string): Promise<ApiResponse<{ data: VentaHistorialItem[] }>> {
@@ -336,6 +355,8 @@ export type VentaCompleta = {
       activo: boolean
     }
   }>
+  vales_aplicados?: ValeCompraAplicado[]
+  total_cobrado?: number
   comprobante_electronico?: {
     id: number
     tipo_comprobante: string
@@ -362,3 +383,37 @@ export type VentaCompleta = {
  * @deprecated Usar VentaCompleta en su lugar
  */
 export type getVentaResponseProps = VentaCompleta
+
+// ============= TIPOS DE COBROS =============
+
+export interface CobroVenta {
+  id: string
+  venta_id: string
+  despliegue_de_pago_id: string
+  user_id: string
+  monto: number
+  fecha: string
+  observacion?: string | null
+  numero_letra?: string | null
+  numero_operacion?: string | null
+  estado: boolean
+  despliegue_de_pago?: {
+    id: string
+    name: string
+    metodo_de_pago?: {
+      id: string
+      name: string
+    }
+  }
+  user?: { id: string; name: string }
+}
+
+export interface StoreCobroRequest {
+  despliegue_de_pago_id: string
+  monto: number
+  fecha: string
+  observacion?: string
+  numero_letra?: string
+  numero_operacion?: string
+  user_id: string
+}

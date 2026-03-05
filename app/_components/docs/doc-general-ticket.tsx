@@ -23,6 +23,7 @@ export default function DocGeneralTicket<T>({
   op_gravada,
   subtotal,
   igv,
+  afterContent,
 }: {
   empresa: Empresa | null | undefined;
   show_logo_html?: boolean;
@@ -45,6 +46,7 @@ export default function DocGeneralTicket<T>({
   op_gravada?: number;
   subtotal?: number;
   igv?: number;
+  afterContent?: React.ReactNode;
 }) {
   return (
     <Document title={nro_doc}>
@@ -126,6 +128,7 @@ export default function DocGeneralTicket<T>({
           <Text style={{ fontWeight: "bold" }}>Observaciones:</Text>
           <Text>{observaciones}</Text>
         </View>
+        {afterContent}
       </Page>
     </Document>
   );

@@ -3,7 +3,6 @@
 import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch } from "antd";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import { FaGift, FaCalendar, FaHashtag, FaPercentage, FaDollarSign, FaBoxOpen, FaUsers } from "react-icons/fa";
-import { useState } from "react";
 import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectCategorias from "~/app/_components/form/selects/select-categorias";
@@ -15,11 +14,11 @@ export default function FormCrearVale({
 }: {
   form: FormInstance<FormCreateVale>;
 }) {
-  const [tipoPromocion, setTipoPromocion] = useState<string>('DESCUENTO_MISMA_COMPRA');
-  const [modalidad, setModalidad] = useState<string>('CANTIDAD_MINIMA');
-  const [descuentoTipo, setDescuentoTipo] = useState<string>('PORCENTAJE');
-  const [usaLimiteCliente, setUsaLimiteCliente] = useState(false);
-  const [usaLimiteStock, setUsaLimiteStock] = useState(false);
+  const tipoPromocion = Form.useWatch('tipo_promocion', form) || 'DESCUENTO_MISMA_COMPRA';
+  const modalidad = Form.useWatch('modalidad', form) || 'CANTIDAD_MINIMA';
+  const descuentoTipo = Form.useWatch('descuento_tipo', form) || 'PORCENTAJE';
+  const usaLimiteCliente = Form.useWatch('usa_limite_por_cliente', form) || false;
+  const usaLimiteStock = Form.useWatch('usa_limite_stock', form) || false;
 
   return (
     <div className="space-y-4">
@@ -48,7 +47,6 @@ export default function FormCrearVale({
             rules={[{ required: true, message: 'Seleccione el tipo' }]}
           >
             <Select
-              onChange={(value) => setTipoPromocion(value)}
               options={[
                 { label: '🎁 Sorteo', value: 'SORTEO' },
                 { label: '💰 Descuento en la Misma Compra', value: 'DESCUENTO_MISMA_COMPRA' },
@@ -87,7 +85,6 @@ export default function FormCrearVale({
             rules={[{ required: true, message: 'Seleccione la modalidad' }]}
           >
             <Select
-              onChange={(value) => setModalidad(value)}
               options={[
                 { label: '📊 Solamente por Cantidad Mínima', value: 'CANTIDAD_MINIMA' },
                 { label: '📁 Por Tipo de Familia (Categoría)', value: 'POR_CATEGORIA' },
@@ -164,7 +161,6 @@ export default function FormCrearVale({
               rules={[{ required: true, message: 'Seleccione el tipo' }]}
             >
               <Select
-                onChange={(value) => setDescuentoTipo(value)}
                 options={[
                   { label: '% Porcentaje', value: 'PORCENTAJE' },
                   { label: 'S/ Monto Fijo', value: 'MONTO_FIJO' },
@@ -325,7 +321,7 @@ export default function FormCrearVale({
                 Limitar usos por cliente
               </label>
               <Form.Item name="usa_limite_por_cliente" valuePropName="checked" noStyle>
-                <Switch onChange={(checked) => setUsaLimiteCliente(checked)} />
+                <Switch />
               </Form.Item>
             </div>
             {usaLimiteCliente && (
@@ -350,7 +346,7 @@ export default function FormCrearVale({
                 Limitar stock de promociones
               </label>
               <Form.Item name="usa_limite_stock" valuePropName="checked" noStyle>
-                <Switch onChange={(checked) => setUsaLimiteStock(checked)} />
+                <Switch />
               </Form.Item>
             </div>
             {usaLimiteStock && (
@@ -377,33 +373,33 @@ export default function FormCrearVale({
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Form.Item name="aplica_precio_publico" valuePropName="checked" noStyle>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Form.Item name="aplica_precio_publico" valuePropName="checked" noStyle>
               <Switch />
-              <span className="text-sm">Precio Público</span>
-            </div>
-          </Form.Item>
+            </Form.Item>
+            <span className="text-sm">Precio Público</span>
+          </div>
 
-          <Form.Item name="aplica_precio_especial" valuePropName="checked" noStyle>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Form.Item name="aplica_precio_especial" valuePropName="checked" noStyle>
               <Switch />
-              <span className="text-sm">Precio Especial</span>
-            </div>
-          </Form.Item>
+            </Form.Item>
+            <span className="text-sm">Precio Especial</span>
+          </div>
 
-          <Form.Item name="aplica_precio_minimo" valuePropName="checked" noStyle>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Form.Item name="aplica_precio_minimo" valuePropName="checked" noStyle>
               <Switch />
-              <span className="text-sm">Precio Mínimo</span>
-            </div>
-          </Form.Item>
+            </Form.Item>
+            <span className="text-sm">Precio Mínimo</span>
+          </div>
 
-          <Form.Item name="aplica_precio_ultimo" valuePropName="checked" noStyle>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Form.Item name="aplica_precio_ultimo" valuePropName="checked" noStyle>
               <Switch />
-              <span className="text-sm">Precio Último</span>
-            </div>
-          </Form.Item>
+            </Form.Item>
+            <span className="text-sm">Precio Último</span>
+          </div>
         </div>
       </div>
     </div>

@@ -32,7 +32,6 @@ export default function TableDetalleVenta() {
         precio: Number(unidad.precio || 0),
         subtotal:
           Number(unidad.cantidad || 0) *
-          Number(unidad.factor || 1) *
           Number(unidad.precio || 0),
       }))
     }) || []

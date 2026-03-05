@@ -11,9 +11,11 @@ import FormFormaDePago from "~/app/_components/form/form-forma-de-pago";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import AlertDeudaCliente from "../others/alert-deuda-cliente";
+import InputCodigoVale from "../others/input-codigo-vale";
 
 export default function FormCrearVenta({
   form,
@@ -22,6 +24,15 @@ export default function FormCrearVenta({
   form: FormInstance;
   venta?: VentaConUnidadDerivadaNormal;
 }) {
+  const clienteId = Form.useWatch("cliente_id", form);
+  const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
+  const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
+
+  // Reset deuda state when client changes
+  useEffect(() => {
+    if (!clienteId) setClienteTieneDeuda(false);
+  }, [clienteId]);
+
   // Inicializar D1 al montar el componente
   useEffect(() => {
     if (!form.getFieldValue("direccion_seleccionada")) {
@@ -196,8 +207,18 @@ export default function FormCrearVenta({
       </div>
 
       {/* 2da fila */}
-      <div className="flex gap-3 sm:gap-4 lg:gap-6">
+      <div className="flex gap-3 sm:gap-4 lg:gap-6 items-end flex-wrap">
         <FormFormaDePago form={form} />
+
+        <LabelBase
+          label="Vale de Compra:"
+          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+          className="w-full sm:w-auto"
+        >
+          <Form.Item name="codigo_vale" noStyle>
+            <InputCodigoVale />
+          </Form.Item>
+        </LabelBase>
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}
@@ -209,7 +230,7 @@ export default function FormCrearVenta({
           <LabelBase
             label="DNI/RUC:"
             classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className="w-full sm:w-auto"
+            className={`w-full sm:w-auto ${clienteTieneDeuda ? '[&_.ant-select-selector]:!border-red-500 [&_.ant-select-selector]:!border-2 [&_.ant-select-selector]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
           >
             <SelectClientes
               form={form}
@@ -290,7 +311,7 @@ export default function FormCrearVenta({
           <LabelBase
             label="Cliente:"
             classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className="w-full sm:flex-1"
+            className={`w-full sm:flex-1 ${clienteTieneDeuda ? '[&_input]:!border-red-500 [&_input]:!border-2 [&_input]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
           >
             <InputBase
               propsForm={{
@@ -335,6 +356,9 @@ export default function FormCrearVenta({
           </div>
         </ConfigurableElement>
       </div>
+
+      {/* Alerta de deudas del cliente */}
+      <AlertDeudaCliente clienteId={clienteId} onDeudaChange={handleDeudaChange} />
 
       {/* ultima fila: Teléfono, Email, Recomendado por */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">

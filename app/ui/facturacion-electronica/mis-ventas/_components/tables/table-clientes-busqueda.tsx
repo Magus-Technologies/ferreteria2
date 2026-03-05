@@ -4,12 +4,14 @@ import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
 import { Cliente } from '~/lib/api/cliente'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useColumnsClientes } from './columns-clientes'
 import ModalCreateCliente from '../modals/modal-create-cliente'
 import { useStoreClienteSeleccionado } from '../../store/store-cliente-seleccionado'
 import useSearchClientes from '../../_hooks/use-search-clientes'
 import { orangeColors } from '~/lib/colors'
+import { useClientesConDeuda } from '../../_hooks/use-clientes-con-deuda'
+import type { RowClassParams } from 'ag-grid-community'
 
 interface TableClientesBusquedaProps
   extends Omit<
@@ -38,6 +40,19 @@ export default function TableClientesBusqueda({
     store => store.setCliente
   )
 
+  const clientesConDeuda = useClientesConDeuda()
+
+  const getRowStyle = useCallback((params: RowClassParams<Cliente>) => {
+    if (params.data && clientesConDeuda.has(params.data.id)) {
+      return {
+        background: '#fef2f2',
+        borderLeft: '3px solid #ef4444',
+        color: '#991b1b',
+      }
+    }
+    return undefined
+  }, [clientesConDeuda])
+
   return (
     <>
       <ModalCreateCliente open={open} setOpen={setOpen} dataEdit={dataEdit} />
@@ -49,6 +64,7 @@ export default function TableClientesBusqueda({
         loading={loading}
         columnDefs={useColumnsClientes({ setDataEdit, setOpen })}
         rowData={response || []}
+        getRowStyle={getRowStyle}
         onSelectionChanged={({ selectedNodes }) =>
         {
           console.log('cliente seleccionado en la tabla',selectedNodes?.[0]?.data)

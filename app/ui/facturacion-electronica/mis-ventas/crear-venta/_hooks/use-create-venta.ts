@@ -122,6 +122,7 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
       quien_entrega,
       cantidades_parciales,
       parcial_resto_programado,
+      codigo_vale,
       ...restValues
     } = values
 
@@ -265,6 +266,8 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
             })
             .filter((mp): mp is NonNullable<typeof mp> => mp !== null)
         : undefined,
+      // Vale de compra (código de vale generado para canjear)
+      codigo_vale: codigo_vale || undefined,
     }
 
     console.log('📤 Datos a enviar a Laravel:', JSON.stringify(dataFormated, null, 2))

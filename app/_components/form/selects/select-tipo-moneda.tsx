@@ -33,8 +33,13 @@ export default function SelectTipoMoneda({
   })
 
   useEffect(() => {
-    setTipoDeCambio(response ?? 1)
-    onChangeTipoDeCambio?.(response ?? 1)
+    const value = response ?? 1
+    setTipoDeCambio(value)
+    // Defer to avoid circular reference warning from antd form
+    if (onChangeTipoDeCambio) {
+      const timer = setTimeout(() => onChangeTipoDeCambio(value), 0)
+      return () => clearTimeout(timer)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])
 

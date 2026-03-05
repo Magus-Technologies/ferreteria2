@@ -223,7 +223,7 @@ export default function ModalMetodosPagoVenta({
       width={1000}
       footer={null}
       centered
-      destroyOnClose
+      destroyOnHidden
     >
       <div className='mt-4'>
         {/* Total a Cobrar y Saldo */}

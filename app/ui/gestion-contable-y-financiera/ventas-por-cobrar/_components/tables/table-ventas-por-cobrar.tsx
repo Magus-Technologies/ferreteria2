@@ -87,13 +87,12 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   // Función para calcular el total de una venta
   const calcularTotalVenta = useCallback((venta: VentaCompleta) => {
     return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
-      const precioUnitario = Number(item.precio_unitario ?? 0)
       for (const u of item.unidades_derivadas ?? []) {
+        const precio = Number(u.precio ?? 0)
         const cantidad = Number(u.cantidad ?? 0)
-        const factor = Number(u.factor ?? 0)
         const descuento = Number(u.descuento ?? 0)
         const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = bonificacion ? 0 : (precioUnitario * cantidad * factor) - descuento
+        const montoLinea = bonificacion ? 0 : (precio * cantidad) - descuento
         acc += montoLinea
       }
       return acc
@@ -186,7 +185,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       headerName: 'Paga',
       width: 120,
       valueGetter: (params) => {
-        const pagado = Number(params.data?.total_pagado || 0)
+        const pagado = Number(params.data?.total_cobrado || 0)
         return `S/. ${pagado.toFixed(2)}`
       },
     },
@@ -198,7 +197,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         if (!venta) return 'S/. 0.00'
         
         const total = calcularTotalVenta(venta)
-        const totalPagado = Number(venta.total_pagado || 0)
+        const totalPagado = Number(venta.total_cobrado || 0)
         const saldo = total - totalPagado
         
         return `S/. ${saldo.toFixed(2)}`

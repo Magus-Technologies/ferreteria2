@@ -302,6 +302,21 @@ export async function getValesAplicadosVenta(
   );
 }
 
+/**
+ * Verificar si un código de vale generado es válido
+ */
+export async function verificarCodigoVale(
+  codigo: string
+): Promise<ApiResponse<{ valido: boolean; data?: ValeCompraAplicado; message: string }>> {
+  return apiRequest<{ valido: boolean; data?: ValeCompraAplicado; message: string }>(
+    '/vales-compra/verificar-codigo',
+    {
+      method: 'POST',
+      body: JSON.stringify({ codigo }),
+    }
+  );
+}
+
 // ============= REACT QUERY HOOKS =============
 
 export const valesCompraKeys = {

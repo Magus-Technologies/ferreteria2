@@ -105,6 +105,94 @@ export default function DocVentaTicket({
     )
   }
 
+  // Sección de vale(s) para imprimir al final del ticket (tear-off)
+  const renderValeSection = () => {
+    if (!data.vales_aplicados || data.vales_aplicados.length === 0) return null
+
+    return (
+      <View>
+        {data.vales_aplicados.map((vale, idx) => {
+          const tipoLabel = vale.tipo_promocion === 'SORTEO' ? 'SORTEO'
+            : vale.tipo_promocion === 'DESCUENTO_PROXIMA_COMPRA' ? 'DESCUENTO PRÓXIMA COMPRA'
+            : vale.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' ? 'DESCUENTO'
+            : vale.tipo_promocion === 'PRODUCTO_GRATIS' ? 'PRODUCTO GRATIS'
+            : vale.tipo_promocion === 'DOS_POR_UNO' ? '2x1'
+            : vale.tipo_promocion
+
+          const beneficio = vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor
+            ? `${vale.descuento_valor}% DSCTO`
+            : vale.descuento_tipo === 'MONTO_FIJO' && vale.descuento_valor
+            ? `S/. ${vale.descuento_valor.toFixed(2)} DSCTO`
+            : tipoLabel
+
+          return (
+            <View key={idx}>
+              {/* Línea punteada para cortar */}
+              <View style={{ marginTop: 10, marginBottom: 6, borderTop: '2px dashed #000', paddingTop: 2 }}>
+                <Text style={{ fontSize: 5, textAlign: 'center', color: '#666' }}>
+                  - - - - - - - - CORTAR AQUÍ - - - - - - - -
+                </Text>
+              </View>
+
+              {/* Contenido del vale */}
+              <View style={{ border: '1.5px solid #000', borderRadius: 4, padding: 6 }}>
+                {/* Título */}
+                <View style={{ backgroundColor: '#000', padding: 4, marginBottom: 4, borderRadius: 2 }}>
+                  <Text style={{ color: '#fff', fontSize: 8, fontWeight: 'bold', textAlign: 'center' }}>
+                    VALE DE COMPRA - {tipoLabel}
+                  </Text>
+                </View>
+
+                {/* Nombre de la promoción */}
+                <Text style={{ fontSize: 7, fontWeight: 'bold', textAlign: 'center', marginBottom: 3 }}>
+                  {vale.nombre}
+                </Text>
+
+                {/* Beneficio destacado */}
+                <View style={{ border: '1px solid #000', padding: 3, marginBottom: 4, borderRadius: 2 }}>
+                  <Text style={{ fontSize: 9, fontWeight: 'bold', textAlign: 'center' }}>
+                    {beneficio}
+                  </Text>
+                </View>
+
+                {/* Código del vale */}
+                {vale.codigo_vale_generado ? (
+                  <View style={{ backgroundColor: '#f0f0f0', padding: 4, marginBottom: 3, borderRadius: 2 }}>
+                    <Text style={{ fontSize: 6, textAlign: 'center', marginBottom: 1 }}>CÓDIGO:</Text>
+                    <Text style={{ fontSize: 10, fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>
+                      {vale.codigo_vale_generado}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ backgroundColor: '#f0f0f0', padding: 4, marginBottom: 3, borderRadius: 2 }}>
+                    <Text style={{ fontSize: 6, textAlign: 'center', marginBottom: 1 }}>CÓDIGO PROMO:</Text>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>
+                      {vale.codigo}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Fecha de validez */}
+                {vale.fecha_validez_generado && (
+                  <Text style={{ fontSize: 6, textAlign: 'center', marginBottom: 2 }}>
+                    Válido hasta: {new Date(vale.fecha_validez_generado).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </Text>
+                )}
+
+                {/* Info de la boleta */}
+                <View style={{ borderTop: '1px dashed #999', paddingTop: 3, marginTop: 2 }}>
+                  <Text style={{ fontSize: 5, textAlign: 'center', color: '#666' }}>
+                    Boleta: {nro_doc} | {new Date(data.fecha).toLocaleDateString('es-ES')}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )
+        })}
+      </View>
+    )
+  }
+
   return (
     <DocGeneralTicket
       empresa={empresaConLogo as any}
@@ -122,6 +210,7 @@ export default function DocVentaTicket({
       op_gravada={data.op_gravada}
       subtotal={data.subtotal}
       igv={data.igv}
+      afterContent={renderValeSection()}
     >
       {/* Información de la Venta */}
       <View style={{ marginBottom: 2 }}>

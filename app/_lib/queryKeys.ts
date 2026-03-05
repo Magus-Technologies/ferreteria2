@@ -54,6 +54,7 @@ export enum QueryKeys {
   VENTAS_POR_COBRAR = 'ventas_por_cobrar',
   VENTAS_POR_COBRAR_STATS = 'ventas_por_cobrar_stats',
   VENTAS_POR_COBRAR_TOTAL = 'ventas_por_cobrar_total',
+  COBROS_VENTA = 'cobros_venta',
   GANANCIAS = 'ganancias',
   GANANCIAS_RESUMEN = 'ganancias_resumen',
   MIS_GASTOS = 'mis_gastos',

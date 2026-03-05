@@ -72,6 +72,24 @@ export interface VentaResponse {
     recibe_efectivo?: number | string
   }>
   observaciones?: string
+  // Vales aplicados a la venta
+  vales_aplicados?: Array<{
+    id: number
+    vale_compra_id: number
+    descuento_aplicado?: number | null
+    descuento_tipo?: string | null
+    genera_vale_futuro: boolean
+    codigo_vale_generado?: string | null
+    fecha_validez_generado?: string | null
+    vale_compra?: {
+      id: number
+      codigo: string
+      nombre: string
+      tipo_promocion: string
+      descuento_tipo?: string | null
+      descuento_valor?: number | null
+    }
+  }>
   // NOTA: subtotal, igv y total NO vienen del backend, se calculan en transformVentaData
 }
 
@@ -292,6 +310,17 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     monto: Number(dp.monto),
   }))
 
+  // Transformar vales aplicados
+  const vales_aplicados = venta.vales_aplicados?.map((va) => ({
+    codigo: va.vale_compra?.codigo || '',
+    nombre: va.vale_compra?.nombre || '',
+    tipo_promocion: va.vale_compra?.tipo_promocion || '',
+    descuento_tipo: va.vale_compra?.descuento_tipo,
+    descuento_valor: va.vale_compra?.descuento_valor,
+    codigo_vale_generado: va.codigo_vale_generado,
+    fecha_validez_generado: va.fecha_validez_generado,
+  }))
+
   return {
     id: venta.id,
     numero: venta.numero,
@@ -310,6 +339,7 @@ function transformVentaData(venta: VentaResponse): VentaDataPDF {
     total_descuento: totalDescuentos > 0 ? totalDescuentos : undefined,
     op_gravada,
     observaciones: venta.observaciones,
+    vales_aplicados: vales_aplicados?.length ? vales_aplicados : undefined,
   }
 }
 

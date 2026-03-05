@@ -46,6 +46,15 @@ export interface VentaDataPDF {
   total_descuento?: number
   op_gravada?: number
   observaciones?: string
+  vales_aplicados?: Array<{
+    codigo: string
+    nombre: string
+    tipo_promocion: string
+    descuento_tipo?: string | null
+    descuento_valor?: number | null
+    codigo_vale_generado?: string | null
+    fecha_validez_generado?: string | null
+  }>
 }
 
 // ============= COMPONENT =============
