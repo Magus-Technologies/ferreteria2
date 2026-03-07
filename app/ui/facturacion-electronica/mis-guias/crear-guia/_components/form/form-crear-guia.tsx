@@ -106,6 +106,7 @@ export default function FormCrearGuia({
         >
           <LabelBase label='Motivo de Traslado:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
             <SelectMotivoTraslado
+              form={form}
               propsForm={{
                 name: 'motivo_traslado',
                 rules: [
