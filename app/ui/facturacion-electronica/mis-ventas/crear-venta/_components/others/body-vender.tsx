@@ -18,7 +18,7 @@ import { VentaConUnidadDerivadaNormal } from './header-crear-venta'
 import FormTableVender from '../form/form-table-vender'
 import FormCrearVenta from '../form/form-crear-venta'
 import CardsInfoVenta from '../cards/cards-info-venta'
-import ModalDocVenta, { type VentaResponse } from '../../../_components/modals/modal-doc-venta'
+import ModalDocVenta from '../../../_components/modals/modal-doc-venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 
 export type FormCreateVenta = {
@@ -149,7 +149,7 @@ export default function BodyVender({
   cotizacion?: any
 } = {}) {
   const [openDoc, setOpenDoc] = useState(false)
-  const [ventaData, setVentaData] = useState<VentaResponse>()
+  const [ventaId, setVentaId] = useState<string>()
   const [formKey, setFormKey] = useState(0)
 
   const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
@@ -183,9 +183,9 @@ export default function BodyVender({
     const unsubscribe = ventaEvents.on((data) => {
       console.log('🎯 Evento ventaCreada recibido con data:', data)
       
-      // Guardar datos y abrir modal inmediatamente
-      console.log('🔓 Setting openDoc to true y ventaData')
-      setVentaData(data)
+      // Guardar id y abrir modal inmediatamente
+      console.log('🔓 Setting openDoc to true y ventaId')
+      setVentaId(String(data.id))
       setOpenDoc(true)
     })
 
@@ -195,33 +195,33 @@ export default function BodyVender({
   
   // Limpiar formulario cuando se cierra el modal
   useEffect(() => {
-    if (!openDoc && ventaData) {
+    if (!openDoc && ventaId) {
       console.log('🧹 Modal cerrado, limpiando formulario y store')
-      
+
       // Limpiar el store de productos agregados
       console.log('🗑️ Limpiando store de productos')
       setProductoAgregado(undefined)
       setProductos([])
-      
+
       // Limpiar formulario
       console.log('🔑 Incrementing formKey para limpiar formulario')
       setFormKey(prev => prev + 1)
-      
-      // Limpiar ventaData después de un momento
+
+      // Limpiar ventaId después de un momento
       setTimeout(() => {
-        setVentaData(undefined)
+        setVentaId(undefined)
       }, 100)
     }
-  }, [openDoc, ventaData, setProductoAgregado, setProductos])
+  }, [openDoc, ventaId, setProductoAgregado, setProductos])
 
-  console.log('🎭 BodyVender render - openDoc:', openDoc, 'formKey:', formKey, 'ventaData:', ventaData)
+  console.log('🎭 BodyVender render - openDoc:', openDoc, 'formKey:', formKey, 'ventaId:', ventaId)
 
   return (
     <>
       <ModalDocVenta
         open={openDoc}
         setOpen={setOpenDoc}
-        data={ventaData}
+        ventaId={ventaId}
       />
       {/* Recrear completamente el formulario cuando cambia formKey */}
       <FormVentaInternal
