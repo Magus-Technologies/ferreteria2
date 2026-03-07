@@ -205,7 +205,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
 
   return (
     <>
-      <ModalDocCotizacion open={openDoc} setOpen={setOpenDoc} data={cotizacionData} />
+      <ModalDocCotizacion open={openDoc} setOpen={setOpenDoc} cotizacionId={cotizacionData?.id?.toString()} data={cotizacionData} />
       <FormBase<FormCreateCotizacion>
         form={form}
         name="editar-cotizacion"

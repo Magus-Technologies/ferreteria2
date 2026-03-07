@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Spin, Modal } from 'antd'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import DocCotizacion, { CotizacionDataPDF, ProductoCotizacionPDF } from '../docs/doc-cotizacion'
 import DocCotizacionTicket from '../docs/doc-cotizacion-ticket'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { useConfiguracionImpresion } from '~/hooks/use-configuracion-impresion'
+import { getAuthToken } from '~/lib/api'
 
 // ============= TYPES =============
 
@@ -54,11 +55,15 @@ export interface CotizacionResponse {
 export default function ModalDocCotizacion({
   open,
   setOpen,
+  cotizacionId,
   data,
+  isLoadingData,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  cotizacionId: string | undefined
   data: CotizacionResponse | undefined
+  isLoadingData?: boolean
 }) {
   const { data: empresa, isLoading } = useEmpresaPublica()
   const [esTicket, setEsTicket] = useState(true)
@@ -87,14 +92,58 @@ export default function ModalDocCotizacion({
     return estilos
   }, [getConfiguracionCampo])
 
+  // Backend PDF para modo A4
+  const [backendPdfUrl, setBackendPdfUrl] = useState<string | null>(null)
+  const [backendPdfLoading, setBackendPdfLoading] = useState(false)
+
+  const fetchBackendPdf = useCallback(async (cotizacionId: string | number) => {
+    setBackendPdfLoading(true)
+    try {
+      const token = getAuthToken()
+      const API_URL = process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(`${API_URL}/pdf/cotizacion/${cotizacionId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      })
+      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      setBackendPdfUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return url
+      })
+    } catch (err) {
+      console.error('Error al obtener PDF del backend:', err)
+      setBackendPdfUrl(null)
+    } finally {
+      setBackendPdfLoading(false)
+    }
+  }, [])
+
+  // Fetch backend PDF cuando se abre el modal en modo A4
+  useEffect(() => {
+    if (open && cotizacionId && !esTicket) {
+      fetchBackendPdf(cotizacionId)
+    }
+    // Limpiar URL al cerrar o cambiar a ticket
+    if (!open || esTicket) {
+      setBackendPdfUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+    }
+  }, [open, cotizacionId, esTicket, fetchBackendPdf])
+
   // Generar número de documento
   const nro_doc = data ? data.numero : ''
 
-  // Transformar datos de Laravel a formato PDF
+  // Transformar datos de Laravel a formato PDF (solo para ticket)
   const cotizacionDataPDF: CotizacionDataPDF | undefined = data ? transformCotizacionData(data) : undefined
 
-  // Mostrar loading mientras carga empresa
-  if (isLoading) {
+  // Mostrar loading solo en ticket si falta empresa o datos
+  if (esTicket && (isLoading || isLoadingData)) {
     return (
       <Modal
         open={open}
@@ -104,7 +153,7 @@ export default function ModalDocCotizacion({
       >
         <div className="flex items-center justify-center py-8">
           <Spin size="large" />
-          <span className="ml-3">Cargando datos de empresa...</span>
+          <span className="ml-3">Cargando datos...</span>
         </div>
       </Modal>
     )
@@ -118,6 +167,8 @@ export default function ModalDocCotizacion({
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='cotizacion'
+      backendPdfUrl={!esTicket ? backendPdfUrl : null}
+      backendPdfLoading={!esTicket && backendPdfLoading}
     >
       {esTicket ? (
         <DocCotizacionTicket

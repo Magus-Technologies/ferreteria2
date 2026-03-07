@@ -162,8 +162,9 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
             <ButtonBase
               color="danger"
               size="md"
-              onClick={() => {
-                window.open(`/api/pdf/prestamo/${params.data.id}`, '_blank');
+              onClick={async () => {
+                const { abrirPdf } = await import('~/lib/api/pdf')
+                abrirPdf('prestamo', params.data.id)
               }}
               className="flex items-center !px-3"
               title="Ver PDF"

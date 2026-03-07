@@ -108,7 +108,7 @@ export default function BodyCotizar() {
 
   return (
     <>
-      <ModalDocCotizacion open={openDoc} setOpen={setOpenDoc} data={cotizacionData} />
+      <ModalDocCotizacion open={openDoc} setOpen={setOpenDoc} cotizacionId={cotizacionData?.id?.toString()} data={cotizacionData} />
       <FormBase<FormCreateCotizacion>
         form={form}
         name="cotizacion"

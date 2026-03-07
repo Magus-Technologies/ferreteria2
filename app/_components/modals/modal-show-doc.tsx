@@ -26,6 +26,10 @@ interface ModalEntradaStockProps {
   tipoDocumento?: TipoDocumento
   aperturaId?: string | number
   cierreId?: string | number
+  /** URL de blob de un PDF generado por el backend. Cuando se proporciona, se usa en vez de generar con react-pdf. */
+  backendPdfUrl?: string | null
+  /** Indica si el backend PDF esta cargando */
+  backendPdfLoading?: boolean
 }
 export default function ModalShowDoc({
   open,
@@ -37,6 +41,8 @@ export default function ModalShowDoc({
   tipoDocumento,
   aperturaId,
   cierreId,
+  backendPdfUrl,
+  backendPdfLoading,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
@@ -85,11 +91,11 @@ export default function ModalShowDoc({
 
   // Generar PDF cuando se abre el modal o cambia el formato (ticket/A4)
   useEffect(() => {
-    if (open) {
+    if (open && !backendPdfUrl) {
       generarPdf()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, esTicket])
+  }, [open, esTicket, backendPdfUrl])
 
   // Limpiar URL al cerrar
   useEffect(() => {
@@ -102,6 +108,10 @@ export default function ModalShowDoc({
 
   // Obtener blob del PDF actual
   const getPdfBlob = async () => {
+    if (backendPdfUrl) {
+      const res = await fetch(backendPdfUrl)
+      return await res.blob()
+    }
     return await pdf(<>{childrenRef.current}</>).toBlob()
   }
 
@@ -266,14 +276,14 @@ export default function ModalShowDoc({
           className='border rounded-xl overflow-hidden mx-auto bg-gray-100'
           style={{ height: 650 }}
         >
-          {loading ? (
+          {(loading || backendPdfLoading) ? (
             <div className='flex items-center justify-center h-full'>
               <Spin size='large' />
               <span className='ml-3 text-gray-500'>Generando vista previa...</span>
             </div>
-          ) : pdfUrl ? (
+          ) : (backendPdfUrl || pdfUrl) ? (
             <iframe
-              src={`${pdfUrl}#toolbar=1&navpanes=0`}
+              src={`${backendPdfUrl || pdfUrl}#toolbar=1&navpanes=0`}
               className='w-full h-full'
               style={{ border: 'none' }}
               title={title}

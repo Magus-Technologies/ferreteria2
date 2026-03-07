@@ -110,8 +110,9 @@ export default function TableMisVentas() {
   };
 
   // Manejador para el botón de PDF
-  const handleVerPDF = (ventaId: string) => {
-    window.open(`/api/pdf/venta/${ventaId}`, "_blank");
+  const handleVerPDF = async (ventaId: string) => {
+    const { abrirPdf } = await import('~/lib/api/pdf')
+    abrirPdf('venta', ventaId)
   };
 
   // Agregar event listeners para los botones de PDF

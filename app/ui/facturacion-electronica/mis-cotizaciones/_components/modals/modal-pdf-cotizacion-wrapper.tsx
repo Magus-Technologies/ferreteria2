@@ -3,7 +3,6 @@
 import { useStoreModalPdfCotizacion } from '../../_store/store-modal-pdf-cotizacion'
 import { useQuery } from '@tanstack/react-query'
 import { cotizacionesApi } from '~/lib/api/cotizaciones'
-import { Spin, Modal } from 'antd'
 import ModalDocCotizacion from './modal-doc-cotizacion'
 
 export default function ModalPdfCotizacionWrapper() {
@@ -11,8 +10,8 @@ export default function ModalPdfCotizacionWrapper() {
   const cotizacionId = useStoreModalPdfCotizacion((state) => state.cotizacionId)
   const closeModal = useStoreModalPdfCotizacion((state) => state.closeModal)
 
-  // Cargar datos de la cotización cuando se abre el modal
-  const { data: cotizacionData, isLoading } = useQuery({
+  // Cargar datos de la cotización (necesario para modo ticket)
+  const { data: cotizacionData, isLoading: isLoadingData } = useQuery({
     queryKey: ['cotizacion', cotizacionId],
     queryFn: async () => {
       if (!cotizacionId) return null
@@ -24,27 +23,14 @@ export default function ModalPdfCotizacionWrapper() {
 
   if (!open) return null
 
-  if (isLoading) {
-    return (
-      <Modal
-        open={open}
-        onCancel={closeModal}
-        footer={null}
-        centered
-      >
-        <div className="flex items-center justify-center py-8">
-          <Spin size="large" />
-          <span className="ml-3">Cargando cotización...</span>
-        </div>
-      </Modal>
-    )
-  }
-
+  // Renderizar modal inmediatamente — el PDF del backend se carga en paralelo dentro del modal
   return (
     <ModalDocCotizacion
       open={open}
       setOpen={(open) => !open && closeModal()}
+      cotizacionId={cotizacionId}
       data={cotizacionData || undefined}
+      isLoadingData={isLoadingData}
     />
   )
 }

@@ -15,7 +15,8 @@
     "db:reset": "npx prisma migrate reset --force",
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "generate:qz-certs": "tsx scripts/generate-qz-certificate.ts"
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.0.2",
