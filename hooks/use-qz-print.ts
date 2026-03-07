@@ -5,6 +5,7 @@ import { message } from 'antd'
 import { pdf } from '@react-pdf/renderer'
 import { JSX } from 'react'
 import { useStoreImpresora, TipoFormato } from '~/store/store-impresora'
+import { setupQzSecurity } from '~/lib/qz-security'
 
 // QZ Tray no tiene tipos TypeScript, importamos dinámicamente
 let qz: any = null
@@ -12,6 +13,9 @@ let qz: any = null
 async function getQz() {
   if (!qz) {
     qz = (await import('qz-tray')).default
+    
+    // 🆕 Configurar seguridad antes de usar QZ Tray
+    await setupQzSecurity()
   }
   return qz
 }

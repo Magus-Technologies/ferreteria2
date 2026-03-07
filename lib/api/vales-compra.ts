@@ -302,13 +302,30 @@ export async function getValesAplicadosVenta(
   );
 }
 
+export interface ValeCompraVerificado {
+  vale_compra: {
+    id: number;
+    codigo: string;
+    nombre: string;
+    tipo_promocion: TipoPromocion;
+    descuento_tipo: DescuentoTipo | null;
+    descuento_valor: number | null;
+    modalidad: Modalidad;
+    cantidad_minima: number;
+    fecha_inicio: string;
+    fecha_fin: string | null;
+    productos?: Array<{ id: number; nombre: string }>;
+    categorias?: Array<{ id: number; nombre: string }>;
+  };
+}
+
 /**
- * Verificar si un código de vale generado es válido
+ * Verificar si un código de vale es válido
  */
 export async function verificarCodigoVale(
   codigo: string
-): Promise<ApiResponse<{ valido: boolean; data?: ValeCompraAplicado; message: string }>> {
-  return apiRequest<{ valido: boolean; data?: ValeCompraAplicado; message: string }>(
+): Promise<ApiResponse<{ valido: boolean; data?: ValeCompraVerificado; message: string }>> {
+  return apiRequest<{ valido: boolean; data?: ValeCompraVerificado; message: string }>(
     '/vales-compra/verificar-codigo',
     {
       method: 'POST',

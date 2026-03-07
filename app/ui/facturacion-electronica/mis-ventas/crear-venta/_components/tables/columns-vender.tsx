@@ -525,13 +525,30 @@ export function useColumnsVender({
       minWidth: 40,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
+        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
+
+        const handleEliminar = () => {
+          if (paqueteId) {
+            // Eliminar todos los productos del mismo paquete
+            const indices: number[] = []
+            const allProductos = form.getFieldValue('productos') || []
+            allProductos.forEach((_: any, i: number) => {
+              if (form.getFieldValue(['productos', i, 'paquete_id']) === paqueteId) {
+                indices.push(i)
+              }
+            })
+            // Eliminar en orden inverso para no afectar los índices
+            remove(indices.reverse())
+          } else {
+            remove(value!)
+          }
+        }
+
         return (
-          // (compra?._count?.recepciones_almacen ?? 0) > 0 ||
-          // (compra?._count?.pagos_de_compras ?? 0) > 0 ? null : (
           <div className='flex items-center gap-2 h-full'>
-            <Tooltip title='Eliminar'>
+            <Tooltip title={paqueteId ? 'Eliminar paquete completo' : 'Eliminar'}>
               <MdDelete
-                onClick={() => remove(value!)}
+                onClick={handleEliminar}
                 size={15}
                 className='cursor-pointer text-rose-700 hover:scale-105 transition-all active:scale-95'
               />

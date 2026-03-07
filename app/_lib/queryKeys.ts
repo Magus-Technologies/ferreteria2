@@ -79,4 +79,6 @@ export enum QueryKeys {
   DIRECCION_CLIENTE = 'direccion_cliente',
   CONFIGURACION_NOTIFICACIONES = 'configuracion_notificaciones',
   ORDENES_DE_SERVICIO = 'ordenes_de_servicio',
+  KARDEX = 'kardex',
+  KARDEX_INVENTARIO = 'kardex_inventario',
 }

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useMemo } from 'react'
+import dayjs from 'dayjs'
 
 const calcularTotalVenta = (venta: VentaCompleta) => {
   return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
@@ -18,9 +19,15 @@ const calcularTotalVenta = (venta: VentaCompleta) => {
   }, 0)
 }
 
+export interface DeudaCliente {
+  totalDeuda: number
+  cantidadVentas: number
+  diasMaxMora: number
+}
+
 /**
- * Hook que retorna un Set con los IDs de clientes que tienen deudas pendientes.
- * Se usa para resaltar en rojo las filas de clientes deudores en la tabla de búsqueda.
+ * Hook que retorna un Map con los IDs de clientes que tienen deudas pendientes
+ * y los detalles de su deuda (monto total, cantidad de ventas, dias max de mora).
  */
 export function useClientesConDeuda() {
   const { data } = useQuery({
@@ -34,18 +41,35 @@ export function useClientesConDeuda() {
     gcTime: 5 * 60 * 1000,
   })
 
-  const clientesConDeuda = useMemo(() => {
+  const clientesDeudaMap = useMemo(() => {
     const ventas = data?.data ?? []
-    const ids = new Set<number>()
+    const map = new Map<number, DeudaCliente>()
+
     for (const v of ventas) {
       const total = calcularTotalVenta(v)
       const cobrado = Number(v.total_cobrado || 0)
-      if (total - cobrado > 0.01 && v.cliente_id) {
-        ids.add(v.cliente_id)
+      const resta = total - cobrado
+
+      if (resta > 0.01 && v.cliente_id) {
+        const dias = dayjs().diff(dayjs(v.fecha), 'days')
+        const existing = map.get(v.cliente_id)
+
+        if (existing) {
+          existing.totalDeuda += resta
+          existing.cantidadVentas += 1
+          existing.diasMaxMora = Math.max(existing.diasMaxMora, dias)
+        } else {
+          map.set(v.cliente_id, {
+            totalDeuda: resta,
+            cantidadVentas: 1,
+            diasMaxMora: dias,
+          })
+        }
       }
     }
-    return ids
+
+    return map
   }, [data?.data])
 
-  return clientesConDeuda
+  return clientesDeudaMap
 }

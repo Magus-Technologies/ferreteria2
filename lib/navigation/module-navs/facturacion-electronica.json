@@ -137,8 +137,8 @@
         "type": "button",
         "label": "Kardex",
         "icon": "FaClipboardList",
-        "route": "/ui/gestion-comercial-e-inventario/mi-almacen",
-        "permission": "gestion-comercial-e-inventario.mi-almacen.index"
+        "route": "/ui/facturacion-electronica/mi-almacen",
+        "permission": "facturacion-electronica.mi-almacen.index"
       }
     ]
   },

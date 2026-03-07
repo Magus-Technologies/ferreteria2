@@ -32,17 +32,25 @@ export function usePaqueteForm(
       })
 
       // Cargar productos del paquete
-      const productosFormateados: ProductoPaquete[] = paqueteData.productos.map((p) => ({
-        key: `${p.producto_id}-${p.unidad_derivada_id}`,
-        producto_id: p.producto_id,
-        producto_name: p.producto?.name || '',
-        producto_codigo: p.producto?.cod_producto || '',
-        marca_name: p.producto?.marca?.name,
-        unidad_derivada_id: p.unidad_derivada_id,
-        unidad_derivada_name: p.unidad_derivada?.name || '',
-        cantidad: p.cantidad,
-        precio_sugerido: p.precio_sugerido || undefined,
-      }))
+      const productosFormateados: ProductoPaquete[] = paqueteData.productos.map((p) => {
+        // Obtener el costo del primer productoEnAlmacenes disponible
+        const productoAny = p.producto as any
+        const costo = productoAny?.producto_en_almacenes?.[0]?.costo
+          ? Number(productoAny.producto_en_almacenes[0].costo)
+          : undefined
+        return {
+          key: `${p.producto_id}-${p.unidad_derivada_id}`,
+          producto_id: p.producto_id,
+          producto_name: p.producto?.name || '',
+          producto_codigo: p.producto?.cod_producto || '',
+          marca_name: p.producto?.marca?.name,
+          unidad_derivada_id: p.unidad_derivada_id,
+          unidad_derivada_name: p.unidad_derivada?.name || '',
+          cantidad: p.cantidad,
+          precio_sugerido: p.precio_sugerido || undefined,
+          costo,
+        }
+      })
       setProductos(productosFormateados)
     }
   }, [isEditing, paqueteData, open, form])

@@ -24,6 +24,7 @@ export enum permissions {
   // ============================================
   GESTION_COMERCIAL_E_INVENTARIO_DASHBOARD_INDEX = "gestion-comercial-e-inventario.dashboard.index",
   GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX = "gestion-comercial-e-inventario.mi-almacen.index",
+  GESTION_COMERCIAL_E_INVENTARIO_KARDEX_INDEX = "gestion-comercial-e-inventario.kardex.index",
   GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX = "gestion-comercial-e-inventario.mis-compras.index",
   GESTION_COMERCIAL_E_INVENTARIO_MIS_RECEPCIONES_INDEX = "gestion-comercial-e-inventario.mis-recepciones.index",
   GESTION_COMERCIAL_E_INVENTARIO_CREAR_COMPRA_INDEX = "gestion-comercial-e-inventario.crear-compra.index",
@@ -47,6 +48,7 @@ export enum permissions {
   FACTURACION_ELECTRONICA_CREAR_COTIZACION_INDEX = "facturacion-electronica.crear-cotizacion.index",
   FACTURACION_ELECTRONICA_CREAR_GUIA_INDEX = "facturacion-electronica.crear-guia.index",
   FACTURACION_ELECTRONICA_CREAR_PRESTAMO_INDEX = "facturacion-electronica.crear-prestamo.index",
+  FACTURACION_ELECTRONICA_MI_ALMACEN_INDEX = "facturacion-electronica.mi-almacen.index",
 
   // ============================================
   // SUBMÓDULOS - GESTIÓN CONTABLE Y FINANCIERA
@@ -335,6 +337,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Dashboard Gestión Comercial e Inventario",
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MI_ALMACEN_INDEX]:
     "Ver Página Mi Almacén",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_KARDEX_INDEX]:
+    "Ver Kardex de Inventario",
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_COMPRAS_INDEX]:
     "Ver Página Mis Compras",
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_RECEPCIONES_INDEX]:
@@ -373,6 +377,8 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Página Crear Guía",
   [permissions.FACTURACION_ELECTRONICA_CREAR_PRESTAMO_INDEX]:
     "Ver Página Crear Préstamo",
+  [permissions.FACTURACION_ELECTRONICA_MI_ALMACEN_INDEX]:
+    "Ver Kardex de Productos",
 
   // SUBMÓDULOS - GESTIÓN CONTABLE Y FINANCIERA
   [permissions.GESTION_CONTABLE_Y_FINANCIERA_DASHBOARD_INDEX]:

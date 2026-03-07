@@ -79,7 +79,7 @@ export default function ModalClienteSearch({
           setTextDefault={setText}
         />
       </div>
-      <div className='h-[500px] min-w-[1000px] w-full mt-4'>
+      <div className='h-[500px] min-w-[1200px] w-full mt-4'>
         <TableClientesBusqueda
           value={value}
           onRowDoubleClicked={onRowDoubleClicked}

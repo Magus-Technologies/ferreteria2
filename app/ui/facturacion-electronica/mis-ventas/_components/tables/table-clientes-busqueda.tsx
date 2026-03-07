@@ -62,7 +62,7 @@ export default function TableClientesBusqueda({
         title='Clientes'
         selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
         loading={loading}
-        columnDefs={useColumnsClientes({ setDataEdit, setOpen })}
+        columnDefs={useColumnsClientes({ setDataEdit, setOpen, clientesDeudaMap: clientesConDeuda })}
         rowData={response || []}
         getRowStyle={getRowStyle}
         onSelectionChanged={({ selectedNodes }) =>
@@ -85,10 +85,12 @@ export default function TableClientesBusqueda({
             columns: [
               '#',
               'Documento',
-              'Razón Social / Nombres',
-              'Dirección',
-              'Teléfono',
-              'Email',
+              'Razon Social / Nombres',
+              'Direccion',
+              'Telefono',
+              'Deuda',
+              'Ventas Pend.',
+              'Dias Mora',
               'Acciones',
             ],
           },

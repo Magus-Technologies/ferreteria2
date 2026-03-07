@@ -1,10 +1,9 @@
-import { Modal, Tooltip, Input, message as antdMessage } from 'antd'
-import { cloneElement, Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { Modal, Tooltip, Input, Spin, message as antdMessage } from 'antd'
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { FaDownload, FaShareNodes, FaPrint } from 'react-icons/fa6'
 import { HiClipboardDocument } from 'react-icons/hi2'
 import { MdEmail } from 'react-icons/md'
 import ButtonBase from '~/components/buttons/button-base'
-import { useJSXToPdf } from '~/hooks/use-react-to-pdf'
 import { classOkButtonModal } from '~/lib/clases'
 import { TipoDocumento } from '~/store/store-configuracion-impresion'
 import ButtonConfiguracionImpresion from '~/components/buttons/button-configuracion-impresion'
@@ -14,6 +13,8 @@ import { cierreCajaApi } from '~/lib/api/cierre-caja'
 import { useQzPrint } from '~/hooks/use-qz-print'
 import ModalSeleccionImpresora from './modal-seleccion-impresora'
 import type { TipoFormato } from '~/store/store-impresora'
+import { pdf } from '@react-pdf/renderer'
+import { compartir } from '~/hooks/use-share'
 
 interface ModalEntradaStockProps {
   open: boolean
@@ -23,8 +24,8 @@ interface ModalEntradaStockProps {
   setEsTicket?: Dispatch<SetStateAction<boolean>>
   esTicket?: boolean
   tipoDocumento?: TipoDocumento
-  aperturaId?: string | number  // ID de apertura para enviar email
-  cierreId?: string | number     // ID de cierre para enviar email
+  aperturaId?: string | number
+  cierreId?: string | number
 }
 export default function ModalShowDoc({
   open,
@@ -43,71 +44,119 @@ export default function ModalShowDoc({
   const [emailDestino, setEmailDestino] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
   const [openImpresoraModal, setOpenImpresoraModal] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const formato: TipoFormato = esTicket ? 'ticket' : 'a4'
 
-  // Solo cargar configuraciones cuando se abre el modal de configuración
+  // Ref para mantener el children actual sin causar re-renders
+  const childrenRef = useRef<React.ReactNode>(children)
+  childrenRef.current = children
+
   const handleOpenConfig = () => {
     setOpenConfigModal(true)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const childrenWithProps = cloneElement(children as React.ReactElement<any>, {
-    show_logo_html: true,
-  })
-
-  const { download, print, share, getPdfBlob } = useJSXToPdf({
-    jsx: <>{children}</>,
-    name: nro_doc,
-  })
-
-  // QZ Tray - impresión directa
+  // QZ Tray - impresion directa
   const qz = useQzPrint({
     jsx: <>{children}</>,
     name: nro_doc,
     formato,
   })
 
-  // Imprimir: si hay impresora default → directo, si no → abrir modal de selección
+  // Generar PDF blob y crear URL para el iframe
+  const generarPdf = async () => {
+    const currentChildren = childrenRef.current
+    if (!currentChildren || !open) return
+    setLoading(true)
+    try {
+      const blob = await pdf(<>{currentChildren}</>).toBlob()
+      const url = URL.createObjectURL(blob)
+      setPdfUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return url
+      })
+    } catch (err) {
+      console.error('Error generando PDF:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Generar PDF cuando se abre el modal o cambia el formato (ticket/A4)
+  useEffect(() => {
+    if (open) {
+      generarPdf()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, esTicket])
+
+  // Limpiar URL al cerrar
+  useEffect(() => {
+    if (!open && pdfUrl) {
+      URL.revokeObjectURL(pdfUrl)
+      setPdfUrl(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  // Obtener blob del PDF actual
+  const getPdfBlob = async () => {
+    return await pdf(<>{childrenRef.current}</>).toBlob()
+  }
+
+  // Descargar PDF
+  const handleDownload = async () => {
+    const blob = await getPdfBlob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${nro_doc}.pdf`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Compartir
+  const handleShare = async () => {
+    try {
+      const blob = await getPdfBlob()
+      compartir({ blob, fileName: `${nro_doc}.pdf` })
+    } catch (err) {
+      console.error('Error al compartir:', err)
+    }
+  }
+
+  // Imprimir con QZ Tray
   const handlePrint = async () => {
     const imprimioDirecto = await qz.imprimirDefault()
     if (!imprimioDirecto) {
-      // No hay impresora por defecto, cargar lista y abrir modal
       await qz.listarImpresoras()
       setOpenImpresoraModal(true)
     }
   }
 
-  // Abrir modal de selección de impresora (para elegir/cambiar impresora)
   const handleOpenImpresoraModal = async () => {
     await qz.listarImpresoras()
     setOpenImpresoraModal(true)
   }
 
-  // Función para enviar email
+  // Funcion para enviar email
   const handleSendEmail = async () => {
-    console.log('🔵 handleSendEmail llamado', { aperturaId, cierreId, emailDestino })
-    
     if (!emailDestino || !emailDestino.includes('@')) {
-      antdMessage.error('Por favor ingresa un email válido')
+      antdMessage.error('Por favor ingresa un email valido')
       return
     }
 
     setSendingEmail(true)
     try {
-      console.log('🔵 Generando PDF...')
       const pdfBlob = await getPdfBlob()
-      console.log('🔵 PDF generado:', pdfBlob.size, 'bytes')
 
-      // Enviar según el tipo de documento
       if (aperturaId) {
         const idString = typeof aperturaId === 'number' ? aperturaId.toString() : aperturaId
-        console.log('🔵 Enviando apertura email:', idString, emailDestino)
         await cajaApi.enviarTicketAperturaEmail(idString, emailDestino, pdfBlob)
         antdMessage.success('Ticket de apertura enviado exitosamente')
       } else if (cierreId) {
         const idString = typeof cierreId === 'number' ? cierreId.toString() : cierreId
-        console.log('🔵 Enviando cierre email:', idString, emailDestino)
         await cierreCajaApi.enviarTicketEmail(idString, emailDestino, pdfBlob)
         antdMessage.success('Ticket de cierre enviado exitosamente')
       }
@@ -115,44 +164,18 @@ export default function ModalShowDoc({
       setEmailModalOpen(false)
       setEmailDestino('')
     } catch (error: any) {
-      console.error('❌ Error al enviar email:', error)
+      console.error('Error al enviar email:', error)
       antdMessage.error(error.message || 'Error al enviar el ticket por email')
     } finally {
       setSendingEmail(false)
     }
   }
-  
-  // Suprimir warnings de @react-pdf/renderer
-  // Estos warnings son causados por la librería al renderizar en el navegador para preview
-  // y no afectan la generación del PDF real
-  useEffect(() => {
-    if (!open) return
-    
-    const originalError = console.error
-    console.error = (...args: any[]) => {
-      // Filtrar warnings de @react-pdf/renderer
-      if (
-        typeof args[0] === 'string' && 
-        (args[0].includes('is using incorrect casing') ||
-         args[0].includes('Use PascalCase for React components') ||
-         args[0].includes('is unrecognized in this browser') ||
-         args[0].includes('If you meant to render a React component'))
-      ) {
-        return
-      }
-      originalError.apply(console, args)
-    }
-    
-    return () => {
-      console.error = originalError
-    }
-  }, [open])
-  
+
   return (
     <>
       <Modal
         centered
-        width='fit-content'
+        width={esTicket ? 520 : 750}
         open={open}
         classNames={{ content: 'min-w-fit' }}
         title={
@@ -161,7 +184,7 @@ export default function ModalShowDoc({
             <div className='flex items-center gap-2 justify-end'>
               <Tooltip title='Descargar PDF'>
                 <ButtonBase
-                  onClick={download}
+                  onClick={handleDownload}
                   color='danger'
                   size='md'
                   className='!px-3'
@@ -171,7 +194,7 @@ export default function ModalShowDoc({
               </Tooltip>
               <Tooltip title='Compartir'>
                 <ButtonBase
-                  onClick={share}
+                  onClick={handleShare}
                   color='success'
                   size='md'
                   className='!px-3'
@@ -239,35 +262,27 @@ export default function ModalShowDoc({
         keyboard={false}
         destroyOnHidden
       >
-        <style>
-          {`
-            /* Estilos personalizados para el scrollbar */
-            .custom-scrollbar::-webkit-scrollbar {
-              width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-              background: #f1f1f1;
-              border-radius: 10px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-              background: #888;
-              border-radius: 10px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-              background: #555;
-            }
-          `}
-        </style>
         <div
-          className='border rounded-xl overflow-y-auto custom-scrollbar mx-auto'
-          style={{
-            width: esTicket ? 226.77 : 595.28,
-            maxWidth: esTicket ? 226.77 : 595.28,
-            maxHeight: '500px',
-            zoom: esTicket ? 1.5 : 1.2,
-          }}
+          className='border rounded-xl overflow-hidden mx-auto bg-gray-100'
+          style={{ height: 650 }}
         >
-          {childrenWithProps}
+          {loading ? (
+            <div className='flex items-center justify-center h-full'>
+              <Spin size='large' />
+              <span className='ml-3 text-gray-500'>Generando vista previa...</span>
+            </div>
+          ) : pdfUrl ? (
+            <iframe
+              src={`${pdfUrl}#toolbar=1&navpanes=0`}
+              className='w-full h-full'
+              style={{ border: 'none' }}
+              title={title}
+            />
+          ) : (
+            <div className='flex items-center justify-center h-full text-gray-400'>
+              No se pudo generar la vista previa
+            </div>
+          )}
         </div>
       </Modal>
 

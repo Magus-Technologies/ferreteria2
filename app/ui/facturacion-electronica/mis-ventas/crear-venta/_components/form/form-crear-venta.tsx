@@ -210,15 +210,16 @@ export default function FormCrearVenta({
       <div className="flex gap-3 sm:gap-4 lg:gap-6 items-end flex-wrap">
         <FormFormaDePago form={form} />
 
-        <LabelBase
-          label="Vale de Compra:"
-          classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-          className="w-full sm:w-auto"
-        >
-          <Form.Item name="codigo_vale" noStyle>
-            <InputCodigoVale />
-          </Form.Item>
-        </LabelBase>
+        <div className="mb-6">
+          <LabelBase
+            label="Vale de Compra:"
+            className="w-full sm:w-auto"
+          >
+            <Form.Item name="codigo_vale" noStyle>
+              <InputCodigoVale />
+            </Form.Item>
+          </LabelBase>
+        </div>
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}

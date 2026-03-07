@@ -20,6 +20,10 @@ function condicionEditarProductoVenta({
   producto: ValuesCardAgregarProductoVenta
   item: ValuesCardAgregarProductoVenta
 }) {
+  // No agrupar si el item existente pertenece a un paquete y el nuevo no (o viceversa)
+  // Solo agrupar si ambos tienen el mismo paquete_id (o ambos no tienen)
+  if (item.paquete_id !== producto.paquete_id) return false
+
   return (
     item.producto_id === producto.producto_id &&
     item.unidad_derivada_id === producto.unidad_derivada_id
@@ -91,7 +95,8 @@ export default function TableVender({
         []) as FormCreateVenta['productos']
 
       const producto_existente = productos.find(
-        (item) => item.producto_id === productoAgregadoVenta.producto_id
+        (item) => item.producto_id === productoAgregadoVenta.producto_id &&
+          item.paquete_id === productoAgregadoVenta.paquete_id
       )
       if (!producto_existente) {
         agregarProducto({ producto: productoAgregadoVenta })

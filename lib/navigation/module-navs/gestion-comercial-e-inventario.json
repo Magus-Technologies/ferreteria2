@@ -59,8 +59,8 @@
         "type": "button",
         "label": "Kardex",
         "icon": "FaClipboardList",
-        "route": "/ui/gestion-comercial-e-inventario/mi-almacen",
-        "permission": "gestion-comercial-e-inventario.mi-almacen.index"
+        "route": "/ui/gestion-comercial-e-inventario/kardex",
+        "permission": "gestion-comercial-e-inventario.kardex.index"
       },
       {
         "id": "registros-dropdown",

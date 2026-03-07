@@ -17,6 +17,7 @@ export interface ProductoPaquete {
   unidad_derivada_name: string
   cantidad: number
   precio_sugerido?: number
+  costo?: number
   // Unidades derivadas disponibles para este producto (tipo simplificado)
   unidades_derivadas_disponibles?: any[]
 }

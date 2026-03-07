@@ -15,9 +15,9 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
   // Calcular totales
   const totales = useMemo(() => {
     const costoTotal = productos.reduce((sum, p) => {
-      // Aquí podrías obtener el costo real del producto si lo tienes
-      // Por ahora usamos 0 ya que no tenemos el costo en ProductoPaquete
-      return sum + 0
+      const costo = p.costo || 0
+      const cantidad = p.cantidad || 0
+      return sum + (costo * cantidad)
     }, 0)
 
     const ventaTotal = productos.reduce((sum, p) => {
