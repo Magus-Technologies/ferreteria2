@@ -30,7 +30,6 @@ export default function ModalPdfCotizacionWrapper() {
       setOpen={(open) => !open && closeModal()}
       cotizacionId={cotizacionId}
       data={cotizacionData || undefined}
-      isLoadingData={isLoadingData}
     />
   )
 }

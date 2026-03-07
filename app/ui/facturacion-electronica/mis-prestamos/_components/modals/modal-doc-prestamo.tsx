@@ -1,175 +1,83 @@
-import { useState } from 'react'
-import { Spin, Modal } from 'antd'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
-import DocPrestamo, { PrestamoDataPDF, ProductoPrestamoPDF } from '../docs/doc-prestamo'
-import DocPrestamoTicket from '../docs/doc-prestamo-ticket'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
-
-// ============= TYPES =============
-
-// Tipo para el préstamo completo que viene de Laravel
-export interface PrestamoResponse {
-  id: string | number // Laravel retorna string, pero acepta number también
-  numero: string
-  fecha: string
-  tipo_operacion: string
-  tipo_entidad: string
-  cliente?: {
-    numero_documento: string
-    razon_social?: string | null
-    nombres?: string | null
-    apellidos?: string | null
-    direccion?: string | null
-  } | null
-  proveedor?: {
-    numero_documento: string
-    razon_social?: string | null
-    nombres?: string | null
-    apellidos?: string | null
-    direccion?: string | null
-  } | null
-  productos_por_almacen?: Array<{
-    producto_almacen?: {
-      producto?: {
-        cod_producto: string | null
-        name: string
-      }
-    }
-    unidades_derivadas?: Array<{
-      cantidad: number | string
-      costo?: number | string
-      factor: number | string
-      unidad_derivada_inmutable?: {
-        name: string
-      }
-      unidad_derivada?: {
-        name: string
-      }
-    }>
-  }>
-  monto_total: number | string
-  garantia?: string | null
-  observaciones?: string | null
-  user?: {
-    name: string
-  }
-}
+import { getAuthToken } from '~/lib/api'
 
 // ============= COMPONENT =============
 
 export default function ModalDocPrestamo({
   open,
   setOpen,
-  data,
+  prestamoId,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
-  data: PrestamoResponse | undefined
+  prestamoId: string | undefined
 }) {
-  const { data: empresa, isLoading } = useEmpresaPublica()
   const [esTicket, setEsTicket] = useState(true)
 
-  // Generar número de documento
-  const nro_doc = data ? data.numero : ''
+  // URLs de PDF para cada formato
+  const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+  const [a4PdfUrl, setA4PdfUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const fetchedRef = useRef<string | null>(null)
 
-  // Transformar datos de Laravel a formato PDF
-  const prestamoDataPDF: PrestamoDataPDF | undefined = data ? transformPrestamoData(data) : undefined
+  const fetchPdf = useCallback(async (id: string, formato: 'ticket' | 'a4') => {
+    const token = getAuthToken()
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const res = await fetch(`${API_URL}/pdf/prestamo/${id}?formato=${formato}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/pdf',
+      },
+    })
+    if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+    const blob = await res.blob()
+    return URL.createObjectURL(blob)
+  }, [])
 
-  // Mostrar loading mientras carga empresa
-  if (isLoading) {
-    return (
-      <Modal
-        open={open}
-        onCancel={() => setOpen(false)}
-        footer={null}
-        centered
-      >
-        <div className="flex items-center justify-center py-8">
-          <Spin size="large" />
-          <span className="ml-3">Cargando datos de empresa...</span>
-        </div>
-      </Modal>
-    )
-  }
+  // Pre-cargar ambos PDFs cuando se abre el modal
+  useEffect(() => {
+    if (open && prestamoId && fetchedRef.current !== prestamoId) {
+      fetchedRef.current = prestamoId
+      setLoading(true)
+
+      fetchPdf(prestamoId, 'ticket')
+        .then((url) => {
+          setTicketPdfUrl(url)
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error('Error ticket PDF:', err)
+          setLoading(false)
+        })
+
+      fetchPdf(prestamoId, 'a4')
+        .then((url) => setA4PdfUrl(url))
+        .catch((err) => console.error('Error A4 PDF:', err))
+    }
+
+    if (!open) {
+      setTicketPdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      setA4PdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      fetchedRef.current = null
+    }
+  }, [open, prestamoId, fetchPdf])
+
+  const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
+  const currentLoading = esTicket ? loading : !a4PdfUrl
 
   return (
     <ModalShowDoc
       open={open}
       setOpen={setOpen}
-      nro_doc={nro_doc}
+      nro_doc=""
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='prestamo'
+      backendPdfUrl={currentPdfUrl}
+      backendPdfLoading={currentLoading && !currentPdfUrl}
     >
-      {esTicket ? (
-        <DocPrestamoTicket
-          data={prestamoDataPDF}
-          nro_doc={nro_doc}
-          empresa={empresa}
-        />
-      ) : (
-        <DocPrestamo
-          data={prestamoDataPDF}
-          nro_doc={nro_doc}
-          empresa={empresa}
-        />
-      )}
+      <></>
     </ModalShowDoc>
   )
-}
-
-// ============= HELPERS =============
-
-/**
- * Transforma la respuesta de Laravel al formato esperado por los componentes PDF
- */
-function transformPrestamoData(prestamo: PrestamoResponse): PrestamoDataPDF {
-  // Determinar la entidad (cliente o proveedor)
-  const entidad = prestamo.cliente || prestamo.proveedor
-
-  if (!entidad) {
-    throw new Error('No se encontró información de cliente o proveedor')
-  }
-
-  // Transformar productos_por_almacen a formato plano
-  const productos: ProductoPrestamoPDF[] = prestamo.productos_por_almacen?.flatMap(
-    (productoAlmacen) => {
-      // Validar que producto_almacen y producto existan
-      if (!productoAlmacen?.producto_almacen?.producto) {
-        return []
-      }
-
-      return productoAlmacen.unidades_derivadas?.map((ud) => {
-        const cantidad = Number(ud.cantidad ?? 0)
-        const factor = Number(ud.factor ?? 0)
-        const costo = Number(ud.costo ?? 0)
-
-        // Calcular importe (cantidad * factor * costo)
-        const importe = cantidad * factor * costo
-
-        return {
-          codigo: productoAlmacen.producto_almacen?.producto?.cod_producto || '',
-          descripcion: productoAlmacen.producto_almacen?.producto?.name || 'Sin nombre',
-          cantidad: cantidad,
-          unidad: ud.unidad_derivada_inmutable?.name || ud.unidad_derivada?.name || 'UND',
-          costo: costo,
-          importe: importe,
-        }
-      }) || []
-    }
-  ) || []
-
-  return {
-    id: typeof prestamo.id === 'string' ? parseInt(prestamo.id) : prestamo.id,
-    numero: prestamo.numero,
-    fecha: prestamo.fecha,
-    tipo_operacion: prestamo.tipo_operacion,
-    tipo_entidad: prestamo.tipo_entidad,
-    entidad: entidad,
-    productos,
-    monto_total: Number(prestamo.monto_total ?? 0),
-    observaciones: prestamo.observaciones || null,
-    garantia: prestamo.garantia || null,
-    usuario: prestamo.user?.name || 'Sin usuario',
-  }
 }

@@ -1,55 +1,83 @@
-import { useState } from 'react'
-import { Spin, Modal } from 'antd'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
-import DocGuia from '../docs/doc-guia'
-import DocGuiaTicket from '../docs/doc-guia-ticket'
-import { useEmpresaPublica, getLogoUrl } from '~/hooks/use-empresa-publica'
-import type { GuiaRemision } from '~/lib/api/guia-remision'
+import { getAuthToken } from '~/lib/api'
+
+// ============= COMPONENT =============
 
 export default function ModalDocGuia({
   open,
   setOpen,
-  data,
+  guiaId,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
-  data: GuiaRemision | undefined
+  guiaId: string | undefined
 }) {
-  const { data: empresa, isLoading } = useEmpresaPublica()
   const [esTicket, setEsTicket] = useState(true)
 
-  const serie = data?.serie ?? 'T001'
-  const numero = String(data?.numero ?? '0').padStart(8, '0')
-  const nroDoc = `${serie}-${numero}`
+  // URLs de PDF para cada formato
+  const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+  const [a4PdfUrl, setA4PdfUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const fetchedRef = useRef<string | null>(null)
 
-  const empresaConLogo = empresa
-    ? { ...empresa, logo: getLogoUrl(empresa.logo) }
-    : undefined
+  const fetchPdf = useCallback(async (id: string, formato: 'ticket' | 'a4') => {
+    const token = getAuthToken()
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const res = await fetch(`${API_URL}/pdf/guia/${id}?formato=${formato}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/pdf',
+      },
+    })
+    if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+    const blob = await res.blob()
+    return URL.createObjectURL(blob)
+  }, [])
 
-  if (isLoading) {
-    return (
-      <Modal open={open} onCancel={() => setOpen(false)} footer={null} centered>
-        <div className='flex items-center justify-center py-8'>
-          <Spin size='large' />
-          <span className='ml-3'>Cargando datos de empresa...</span>
-        </div>
-      </Modal>
-    )
-  }
+  // Pre-cargar ambos PDFs cuando se abre el modal
+  useEffect(() => {
+    if (open && guiaId && fetchedRef.current !== guiaId) {
+      fetchedRef.current = guiaId
+      setLoading(true)
+
+      fetchPdf(guiaId, 'ticket')
+        .then((url) => {
+          setTicketPdfUrl(url)
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error('Error ticket PDF:', err)
+          setLoading(false)
+        })
+
+      fetchPdf(guiaId, 'a4')
+        .then((url) => setA4PdfUrl(url))
+        .catch((err) => console.error('Error A4 PDF:', err))
+    }
+
+    if (!open) {
+      setTicketPdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      setA4PdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      fetchedRef.current = null
+    }
+  }, [open, guiaId, fetchPdf])
+
+  const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
+  const currentLoading = esTicket ? loading : !a4PdfUrl
 
   return (
     <ModalShowDoc
       open={open}
       setOpen={setOpen}
-      nro_doc={nroDoc}
+      nro_doc=""
       setEsTicket={setEsTicket}
       esTicket={esTicket}
+      tipoDocumento='guia'
+      backendPdfUrl={currentPdfUrl}
+      backendPdfLoading={currentLoading && !currentPdfUrl}
     >
-      {esTicket ? (
-        <DocGuiaTicket guia={data} empresa={empresaConLogo as any} />
-      ) : (
-        <DocGuia guia={data} empresa={empresaConLogo as any} />
-      )}
+      <></>
     </ModalShowDoc>
   )
 }

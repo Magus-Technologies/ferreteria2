@@ -10,9 +10,7 @@ import CardsInfoPrestamo from "../cards/cards-info-prestamo";
 import { prestamoApi, type CreatePrestamoRequest } from "~/lib/api/prestamo";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
-import ModalDocPrestamo, {
-  PrestamoResponse,
-} from "~/app/ui/facturacion-electronica/mis-prestamos/_components/modals/modal-doc-prestamo";
+import ModalDocPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/_components/modals/modal-doc-prestamo";
 
 export default function BodyCrearPrestamo() {
   const [form] = Form.useForm<FormCreatePrestamo>();
@@ -20,7 +18,7 @@ export default function BodyCrearPrestamo() {
   const { almacen_id } = useStoreAlmacen();
   const router = useRouter();
   const [openDoc, setOpenDoc] = useState(false);
-  const [prestamoData, setPrestamoData] = useState<PrestamoResponse>();
+  const [prestamoId, setPrestamoId] = useState<string>();
 
   const handleSubmit = async (values: FormCreatePrestamo) => {
     if (!almacen_id) {
@@ -101,8 +99,8 @@ export default function BodyCrearPrestamo() {
       message.success(response.data?.message || "Préstamo creado exitosamente");
 
       // Abrir modal con el documento PDF
-      if (response.data?.data) {
-        setPrestamoData(response.data.data);
+      if (response.data?.data?.id) {
+        setPrestamoId(String(response.data.data.id));
         setOpenDoc(true);
       }
 
@@ -121,7 +119,7 @@ export default function BodyCrearPrestamo() {
       <ModalDocPrestamo
         open={openDoc}
         setOpen={setOpenDoc}
-        data={prestamoData}
+        prestamoId={prestamoId}
       />
       <FormBase<FormCreatePrestamo>
         form={form}

@@ -140,14 +140,14 @@ export default function ModalShowDoc({
   const handlePrint = async () => {
     const imprimioDirecto = await qz.imprimirDefault()
     if (!imprimioDirecto) {
-      await qz.listarImpresoras()
       setOpenImpresoraModal(true)
+      qz.listarImpresoras()
     }
   }
 
-  const handleOpenImpresoraModal = async () => {
-    await qz.listarImpresoras()
+  const handleOpenImpresoraModal = () => {
     setOpenImpresoraModal(true)
+    qz.listarImpresoras()
   }
 
   // Funcion para enviar email

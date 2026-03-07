@@ -1,6 +1,7 @@
 'use client'
 
 let securityConfigured = false
+let cachedCertificate: string | null = null
 
 /**
  * Configurar seguridad de QZ Tray con certificado digital
@@ -18,18 +19,18 @@ export async function setupQzSecurity() {
     // Importar QZ Tray dinámicamente
     const qz: any = (await import('qz-tray')).default
     
-    // Configurar certificado
+    // Configurar certificado (con cache para no pedir cada vez)
     qz.security.setCertificatePromise(async () => {
+      if (cachedCertificate) return cachedCertificate
       try {
         const response = await fetch('/api/qz/certificate')
         if (!response.ok) {
           throw new Error(`Error al obtener certificado: ${response.status}`)
         }
-        const certificate = await response.text()
-        console.log('✅ Certificado obtenido')
-        return certificate
+        cachedCertificate = await response.text()
+        return cachedCertificate
       } catch (error) {
-        console.error('❌ Error al obtener certificado:', error)
+        console.error('Error al obtener certificado:', error)
         throw error
       }
     })
