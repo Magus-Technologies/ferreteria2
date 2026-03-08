@@ -1,5 +1,5 @@
 import { Modal, message } from 'antd'
-import { Prisma } from '@prisma/client'
+import type { CompraWhereInput } from '~/types'
 import { type FormInstance } from 'antd'
 import FiltersRecuperarOrdenCompra from '../others/filters-recuperar-orden-compra'
 import TableOrdenesCompra from '../tables/table-ordenes-compra'
@@ -11,7 +11,7 @@ import { useState } from 'react'
 type ModalRecuperarOrdenCompraProps = {
   open: boolean
   setOpen: (open: boolean) => void
-  setFiltros: (data: Prisma.CompraWhereInput) => void
+  setFiltros: (data: CompraWhereInput) => void
   form: FormInstance
 }
 

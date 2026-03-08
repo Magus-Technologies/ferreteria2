@@ -1,15 +1,15 @@
 import { create } from 'zustand'
-import { Prisma } from '@prisma/client'
+import type { CompraWhereInput } from '~/types'
 
 type UseStoreFiltrosComprasAnuladasProps = {
-  filtros?: Prisma.CompraWhereInput
+  filtros?: CompraWhereInput
   setFiltros: (
     value:
-      | Prisma.CompraWhereInput
+      | CompraWhereInput
       | undefined
       | ((
-          prev?: Prisma.CompraWhereInput
-        ) => Prisma.CompraWhereInput | undefined)
+          prev?: CompraWhereInput
+        ) => CompraWhereInput | undefined)
   ) => void
 }
 

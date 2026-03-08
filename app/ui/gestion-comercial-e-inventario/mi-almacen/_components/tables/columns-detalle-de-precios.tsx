@@ -1,13 +1,13 @@
 'use client'
 
-import {
+import type {
   Almacen,
-  Prisma,
+  Decimal,
   Producto,
   ProductoAlmacenUnidadDerivada,
   Ubicacion,
   UnidadDerivada,
-} from '@prisma/client'
+} from '~/types'
 import { ColDef } from 'ag-grid-community'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
@@ -15,8 +15,8 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   producto: Producto
   unidad_derivada: UnidadDerivada
   producto_almacen: {
-    costo: Prisma.Decimal
-    stock_fraccion: Prisma.Decimal
+    costo: Decimal
+    stock_fraccion: Decimal
     ubicacion: Ubicacion
   }
 }

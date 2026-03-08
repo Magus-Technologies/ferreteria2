@@ -8,7 +8,7 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
-import { EstadoDeCompra, Prisma } from '@prisma/client'
+import { EstadoDeCompra, FormaDePago, TipoDocumento, type CompraWhereInput } from '~/types'
 import { useStoreFiltrosMisCompras } from '../../_store/store-filtros-mis-compras'
 import { FaCalendar, FaCartShopping } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
@@ -17,7 +17,6 @@ import SelectProveedores from '~/app/_components/form/selects/select-proveedores
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
-import { FormaDePago, TipoDocumento } from '@prisma/client'
 import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
 import { useEffect, useState, useMemo } from 'react'
@@ -80,7 +79,7 @@ export default function FiltersMisCompras() {
       estado_de_compra: {
         in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
       },
-    } satisfies Prisma.CompraWhereInput
+    } satisfies CompraWhereInput
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -126,7 +125,7 @@ export default function FiltersMisCompras() {
               }
             : {}),
           // Nota: estado_de_cuenta no se envía al backend porque se calcula en el frontend
-        } satisfies Prisma.CompraWhereInput
+        } satisfies CompraWhereInput
         setFiltros(data)
         setDrawerOpen(false)
       }}

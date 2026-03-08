@@ -1,9 +1,9 @@
-import { Prisma } from '@prisma/client'
+import type { CompraWhereInput } from '~/types'
 import { create } from 'zustand'
 
 interface StoreFiltrosComprasPorPagar {
-  filtros: Prisma.CompraWhereInput | undefined
-  setFiltros: (filtros: Prisma.CompraWhereInput) => void
+  filtros: CompraWhereInput | undefined
+  setFiltros: (filtros: CompraWhereInput) => void
 }
 
 export const useStoreFiltrosComprasPorPagar = create<StoreFiltrosComprasPorPagar>((set) => ({

@@ -8,7 +8,7 @@ import SelectProveedores from '~/app/_components/form/selects/select-proveedores
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { Dayjs } from 'dayjs'
-import { TipoDocumento, Prisma, EstadoDeCompra } from '@prisma/client'
+import { TipoDocumento, EstadoDeCompra, type CompraWhereInput } from '~/types'
 import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
 
@@ -20,7 +20,7 @@ interface ValuesFiltersRecuperarOrdenCompra {
 }
 
 interface FiltersRecuperarOrdenCompraProps {
-  setFiltros: (data: Prisma.CompraWhereInput) => void
+  setFiltros: (data: CompraWhereInput) => void
 }
 
 export default function FiltersRecuperarOrdenCompra({
@@ -48,7 +48,7 @@ export default function FiltersRecuperarOrdenCompra({
           estado_de_compra: {
             in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
           },
-        } satisfies Prisma.CompraWhereInput
+        } satisfies CompraWhereInput
         setFiltros(data)
       }}
     >

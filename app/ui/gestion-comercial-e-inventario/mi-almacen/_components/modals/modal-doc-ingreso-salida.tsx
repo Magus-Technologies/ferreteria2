@@ -6,7 +6,7 @@ import { useAuth } from "~/lib/auth-context";
 import DocIngresoSalidaTicket from "../docs/doc-ingreso-salida-ticket";
 import { useState, useMemo } from "react";
 import { useConfiguracionImpresion } from "~/hooks/use-configuracion-impresion";
-import { TipoDocumento } from "@prisma/client";
+import { TipoDocumento } from "~/types";
 
 export default function ModalDocIngresoSalida({
   open,

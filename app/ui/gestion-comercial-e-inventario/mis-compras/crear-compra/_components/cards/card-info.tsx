@@ -1,4 +1,4 @@
-import { TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/types'
 
 export default function CardInfo({
   title,

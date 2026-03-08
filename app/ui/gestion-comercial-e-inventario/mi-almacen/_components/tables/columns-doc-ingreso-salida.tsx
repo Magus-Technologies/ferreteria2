@@ -1,25 +1,32 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { IngresoSalida, Prisma, TipoDocumento } from '@prisma/client'
+import { TipoDocumento, type IngresoSalida, type Decimal } from '~/types'
 import { getStock } from '~/app/_utils/get-stock'
 
-export type UnidadDerivadaConProducto =
-  Prisma.UnidadDerivadaInmutableIngresoSalidaGetPayload<{
-    include: {
-      producto_almacen_ingreso_salida: {
-        include: {
-          producto_almacen: {
-            include: {
-              producto: true
-            }
-          }
-        }
+export interface UnidadDerivadaConProducto {
+  id: number
+  cantidad: number | string
+  factor: number | string
+  producto_almacen_ingreso_salida: {
+    costo: number | string
+    producto_almacen: {
+      producto: {
+        cod_producto: string
+        name: string
+        unidades_contenidas: number | string | null
       }
-      unidad_derivada_inmutable: true
-      historial: true
     }
-  }>
+  }
+  unidad_derivada_inmutable: {
+    id: number
+    name: string
+  }
+  historial: {
+    stock_anterior: Decimal
+    stock_nuevo: Decimal
+  }[]
+}
 
 export function useColumnsDocIngresoSalida({
   estado,
@@ -184,8 +191,8 @@ export function getHistorial({
   salida = false,
 }: {
   historial: {
-    stock_anterior: Prisma.Decimal
-    stock_nuevo: Prisma.Decimal
+    stock_anterior: Decimal
+    stock_nuevo: Decimal
   }[] | undefined | null
   estado: boolean
   salida?: boolean

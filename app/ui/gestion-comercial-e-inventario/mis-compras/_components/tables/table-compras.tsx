@@ -5,9 +5,9 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
 import { greenColors, orangeColors, redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
-import { CompraCreateInputSchema } from '~/prisma/generated/zod'
+import { CompraCreateInputSchema } from '~/types/zod-schemas'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
-import { Prisma } from '@prisma/client'
+import type { CompraWhereInput } from '~/types'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
@@ -17,7 +17,7 @@ interface TableComprasProps {
   columns: ColDef<Compra>[]
   id: string
   setCompraSeleccionada: (compra: Compra | undefined) => void
-  filtros: Prisma.CompraWhereInput | undefined
+  filtros: CompraWhereInput | undefined
   querykeys: QueryKeys[]
   onRowDoubleClicked?: ({
     data,

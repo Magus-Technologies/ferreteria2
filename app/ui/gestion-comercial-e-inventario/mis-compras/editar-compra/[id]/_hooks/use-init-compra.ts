@@ -8,7 +8,7 @@ import {
   FormaDePago,
   TipoDocumento,
   TipoMoneda,
-} from '@prisma/client'
+} from '~/types'
 import { useStoreAlmacen } from '~/store/store-almacen'
 
 // Helper para mapear valores de Laravel (raw DB) a enums de Prisma (para el formulario)

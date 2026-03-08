@@ -3,7 +3,7 @@ import { useState } from 'react'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import ButtonCreateFormWithName from './button-create-form-with-name'
-import { Proveedor } from '@prisma/client'
+import type { Proveedor } from '~/types'
 import ModalCreateProveedor from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/modals/modal-create-proveedor'
 
 interface ButtonCreateProveedorProps {

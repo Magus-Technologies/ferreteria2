@@ -5,7 +5,7 @@ import LabelBase from '~/components/form/label-base'
 import SelectEgresosDinero from '~/app/_components/form/selects/select-egresos-dinero'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { useEffect, useState } from 'react'
-import { FormaDePago } from '@prisma/client'
+import { FormaDePago } from '~/types'
 
 export default function FormMetodoPagoCompra({ form }: { form: FormInstance }) {
   const egreso_dinero_id = Form.useWatch('egreso_dinero_id', form)

@@ -3,7 +3,7 @@ import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useColumnsProductos } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-productos";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { TipoBusquedaProducto } from "../form/selects/select-tipo-busqueda-producto";
-import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
+import { ProductoCreateInputSchema } from "~/types/zod-schemas";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { RefObject, useEffect, useImperativeHandle, useMemo, useRef } from "react";

@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
       'antd',
       'ag-grid-react',
       '@tanstack/react-query',
+      'react-icons',
+      'lucide-react',
+      '@react-pdf/renderer',
+      'date-fns',
     ],
     serverActions: {
       bodySizeLimit: '10mb',

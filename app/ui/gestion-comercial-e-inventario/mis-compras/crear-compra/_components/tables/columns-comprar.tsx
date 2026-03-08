@@ -1,6 +1,6 @@
 'use client'
 
-import { Prisma, TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/types'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
@@ -621,15 +621,15 @@ export function onChangeCostoTablaCompras({
     if (costo && index === value) return
     if (productos[index].producto_id !== producto_id) return
 
-    const nuevo_precio_compra = Prisma.Decimal(factor).mul(costo_unidad)
+    const nuevo_precio_compra = factor * costo_unidad
     form.setFieldValue(
       ['productos', index, 'precio_compra'],
-      costo_disponible ? Number(nuevo_precio_compra) : undefined
+      costo_disponible ? nuevo_precio_compra : undefined
     )
     const cantidad = form.getFieldValue(['productos', index, 'cantidad']) ?? 0
     form.setFieldValue(
       ['productos', index, 'subtotal'],
-      Number(Prisma.Decimal(cantidad).mul(nuevo_precio_compra))
+      cantidad * nuevo_precio_compra
     )
   })
 }

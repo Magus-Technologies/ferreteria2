@@ -1,4 +1,4 @@
-import { TipoDocumento } from '@prisma/client'
+import { TipoDocumento } from '~/types'
 
 export const TiposDocumentos: Record<
   TipoDocumento,

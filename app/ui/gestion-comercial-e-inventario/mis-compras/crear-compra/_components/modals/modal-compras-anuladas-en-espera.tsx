@@ -1,5 +1,5 @@
 import { Modal } from 'antd'
-import { EstadoDeCompra, Prisma } from '@prisma/client'
+import { EstadoDeCompra, type CompraWhereInput } from '~/types'
 import FiltersComprasAnuladasEnEspera from '../others/filters-compras-anuladas-en-espera'
 import TableComprasAnuladas from '../tables/table-compras-anuladas'
 import TableComprasEnEspera from '../tables/table-compras-en-espera'
@@ -10,7 +10,7 @@ type ModalComprasAnuladasEnEsperaProps = {
   open: boolean
   setOpen: (open: boolean) => void
   estado_de_compra: EstadoDeCompra
-  setFiltros: (data: Prisma.CompraWhereInput) => void
+  setFiltros: (data: CompraWhereInput) => void
 }
 
 export default function ModalComprasAnuladasEnEspera({

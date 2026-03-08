@@ -13,7 +13,7 @@ import { useRef, useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
 import usePermissionHook from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
-import { ProductoCreateInputSchema } from "~/prisma/generated/zod";
+import { ProductoCreateInputSchema } from "~/types/zod-schemas";
 import InputUploadMasivo from "../inputs/input-upload-masivo";
 import { useStoreProductoSeleccionado } from "../../_store/store-producto-seleccionado";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";

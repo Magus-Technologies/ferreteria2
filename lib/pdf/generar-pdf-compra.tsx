@@ -1,40 +1,54 @@
 import { pdf } from "@react-pdf/renderer";
-import { Prisma } from "@prisma/client";
 import PDFCompraDocument from "./pdf-compra-document";
 import path from "path";
 import fs from "fs";
 
-export type CompraConRelaciones = Prisma.CompraGetPayload<{
-  include: {
-    productos_por_almacen: {
-      include: {
-        producto_almacen: {
-          include: {
-            producto: {
-              include: {
-                marca: true;
-                unidad_medida: true;
-              };
-            };
-          };
-        };
-        unidades_derivadas: {
-          include: {
-            unidad_derivada_inmutable: true;
-          };
-        };
+export interface CompraConRelaciones {
+  id: string;
+  tipo_documento: string;
+  serie: string | null;
+  numero: number | null;
+  descripcion: string | null;
+  forma_de_pago: string;
+  fecha: string;
+  productos_por_almacen: {
+    costo: number | string;
+    producto_almacen: {
+      producto: {
+        cod_producto: string;
+        name: string;
+        marca: { name: string };
+        unidad_medida: { name: string } | null;
       };
     };
-    user: {
-      include: {
-        empresa: true;
-      };
-    };
-    proveedor: true;
-    almacen: true;
-    pagos_de_compras: true;
+    unidades_derivadas: {
+      cantidad: number | string;
+      factor: number | string;
+      unidad_derivada_inmutable: { name: string };
+    }[];
+  }[];
+  user: {
+    name: string;
+    empresa: {
+      ruc: string;
+      razon_social: string;
+      direccion: string;
+      telefono: string;
+      email: string;
+      logo: string | null;
+    } | null;
   };
-}>;
+  proveedor: {
+    ruc: string;
+    razon_social: string;
+  } | null;
+  almacen: {
+    name: string;
+  } | null;
+  pagos_de_compras: {
+    monto: number | string;
+  }[];
+}
 
 // Función para obtener el logo como Data URI
 function getLogoDataURI(): string {

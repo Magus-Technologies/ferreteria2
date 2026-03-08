@@ -1,9 +1,9 @@
 'use client'
 
 import SelectBase, { SelectBaseProps } from './select-base'
-import { useServerQuery } from '~/hooks/use-server-query'
+import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { getEgresosDinero } from '~/app/_actions/egreso-dinero'
+import { getGastos, type Gasto } from '~/lib/api/gastos'
 import { toLocalString } from '~/utils/fechas'
 import dayjs from 'dayjs'
 import { GiPayMoney } from 'react-icons/gi'
@@ -20,19 +20,16 @@ export default function SelectEgresosDinero({
   sizeIcon = 14,
   ...props
 }: SelectEgresosDineroProps) {
-  const { response } = useServerQuery({
-    action: getEgresosDinero,
-    propsQuery: {
-      queryKey: [QueryKeys.EGRESOS_DINERO],
-      staleTime: 3 * 60 * 1000, // Cache por 3 minutos
-      retry: false, // Don't retry on permission errors
-      throwOnError: false, // Don't throw errors (like permission denied)
+  const { data } = useQuery({
+    queryKey: [QueryKeys.EGRESOS_DINERO],
+    queryFn: async () => {
+      const response = await getGastos({ per_page: 100 })
+      // Filtrar solo los que no tienen vuelto
+      return response.data.filter((item: Gasto) => item.vuelto == null || item.vuelto === 0)
     },
-    params: {
-      where: {
-        vuelto: null,
-      },
-    },
+    staleTime: 3 * 60 * 1000,
+    retry: false,
+    throwOnError: false,
   })
 
   return (
@@ -41,10 +38,10 @@ export default function SelectEgresosDinero({
       prefix={<GiPayMoney className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={response?.map(item => ({
+      options={data?.map(item => ({
         value: item.id,
         label: `${toLocalString({
-          date: dayjs(item.createdAt),
+          date: dayjs(item.fecha),
         })} | S/. ${Number(item.monto).toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,

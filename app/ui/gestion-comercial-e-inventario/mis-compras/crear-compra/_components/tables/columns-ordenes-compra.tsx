@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { type ColDef } from 'ag-grid-community'
 import { type Compra, type ProductoAlmacenCompra } from '~/lib/api/compra'
 import { toLocalString } from '~/utils/fechas'
-import { TipoMoneda } from '@prisma/client'
+import { TipoMoneda } from '~/types'
 import dayjs from 'dayjs'
 
 export const useColumnsOrdenesCompra = (): ColDef<Compra>[] => {

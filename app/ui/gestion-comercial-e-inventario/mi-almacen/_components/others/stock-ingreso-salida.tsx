@@ -1,7 +1,7 @@
 import { Form } from 'antd'
 import { FormInstance } from 'antd/lib'
 import { getStock } from '~/app/_utils/get-stock'
-import { TipoDocumento } from '@prisma/client'
+import { TipoDocumento } from '~/types'
 import type { Producto } from '~/app/_types/producto'
 
 export function calcularNuevoStock({

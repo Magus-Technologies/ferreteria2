@@ -4,7 +4,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
 import ModalCreateIngresoSalida from '../modals/modal-create-ingreso-salida'
 import { useState } from 'react'
-import { TipoDocumento } from '@prisma/client'
+import { TipoDocumento } from '~/types'
 
 interface ButtonCreateIngresoSalidaProps {
   tipo: TipoDocumento

@@ -1,7 +1,7 @@
 "use client";
 
 import { Text, View } from "@react-pdf/renderer";
-import { TipoDocumento } from "@prisma/client";
+import { TipoDocumento } from "~/types";
 import { TiposDocumentos } from "~/lib/docs";
 import { useColumnsDocIngresoSalida } from "../tables/columns-doc-ingreso-salida";
 import DocGeneral from "~/app/_components/docs/doc-general";

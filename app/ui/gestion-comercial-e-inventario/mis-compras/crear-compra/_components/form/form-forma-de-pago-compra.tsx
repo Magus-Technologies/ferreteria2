@@ -1,4 +1,4 @@
-import { FormaDePago } from '@prisma/client'
+import { FormaDePago } from '~/types'
 import { Form } from 'antd'
 import { FormInstance } from 'antd/lib'
 import { FaCalendar } from 'react-icons/fa'

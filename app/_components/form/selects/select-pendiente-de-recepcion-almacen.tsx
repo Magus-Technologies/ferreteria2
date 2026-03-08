@@ -1,6 +1,6 @@
 import { FaTruckLoading } from 'react-icons/fa'
 import SelectBase, { SelectBaseProps } from './select-base'
-import { EstadoDeCompra } from '@prisma/client'
+import { EstadoDeCompra } from '~/types'
 
 interface SelectPendienteDeRecepcionAlmacenProps extends SelectBaseProps {
   classNameIcon?: string

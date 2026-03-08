@@ -8,13 +8,13 @@ import FormSelectUnidadDerivadaProducto from "../form/form-select-unidad-derivad
 import { FaCalendar } from "react-icons/fa";
 import type { Dayjs } from "dayjs";
 import {
-  Almacen,
-  Producto,
-  Proveedor,
   TipoDocumento,
-  TipoIngresoSalida,
-  UnidadDerivada,
-} from "@prisma/client";
+  type Almacen,
+  type Producto,
+  type Proveedor,
+  type TipoIngresoSalida,
+  type UnidadDerivada,
+} from "~/types";
 import useCreateIngresoSalida from "../../_hooks/use-create-ingreso-salida";
 import dayjs from "dayjs";
 import ModalDocIngresoSalida from "./modal-doc-ingreso-salida";

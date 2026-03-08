@@ -1,4 +1,4 @@
-import { Compra, TipoDocumento } from '@prisma/client'
+import { TipoDocumento, type Compra } from '~/types'
 import { TiposDocumentos } from '~/lib/docs'
 
 export function getNroDoc({

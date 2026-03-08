@@ -3,7 +3,7 @@
 
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
-import { Prisma } from '@prisma/client'
+import type { ProductoWhereInput } from '~/types'
 import type { Producto } from '~/app/_types/producto'
 import { FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -26,7 +26,7 @@ export function getFiltrosPorTipoBusqueda({
 }: {
   tipoBusqueda: TipoBusquedaProducto
   value: string
-}): Prisma.ProductoWhereInput {
+}): ProductoWhereInput {
   const filtros = {
     [TipoBusquedaProducto.CODIGO_DESCRIPCION]: {
       OR: [

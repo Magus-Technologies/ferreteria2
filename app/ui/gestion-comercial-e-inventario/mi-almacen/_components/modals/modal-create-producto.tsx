@@ -6,7 +6,7 @@ import type {
   ProductoAlmacenUnidadDerivada,
   UnidadDerivada,
   UnidadDerivadaInmutableCompra,
-} from '@prisma/client'
+} from '~/types'
 import type { Producto } from '~/app/_types/producto'
 import type { Dayjs } from 'dayjs'
 import TabsForm from '../tabs/tabs-form'

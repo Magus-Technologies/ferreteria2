@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
+import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/types/zod-schemas'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 import { useColumnsDetalleDePrecios, DetalleDePreciosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
 import { CostoUnidadDerivadaSearch } from '../modals/modal-producto-search'

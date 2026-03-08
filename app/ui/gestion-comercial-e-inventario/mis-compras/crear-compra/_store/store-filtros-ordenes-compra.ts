@@ -1,11 +1,11 @@
 import { create } from 'zustand'
-import { Prisma, EstadoDeCompra } from '@prisma/client'
+import { EstadoDeCompra, type CompraWhereInput } from '~/types'
 import dayjs from 'dayjs'
 import { toUTCBD } from '~/utils/fechas'
 
 interface StoreFiltrosOrdenesCompra {
-  filtros: Prisma.CompraWhereInput
-  setFiltros: (filtros: Prisma.CompraWhereInput) => void
+  filtros: CompraWhereInput
+  setFiltros: (filtros: CompraWhereInput) => void
 }
 
 export const useStoreFiltrosOrdenesCompra = create<StoreFiltrosOrdenesCompra>(

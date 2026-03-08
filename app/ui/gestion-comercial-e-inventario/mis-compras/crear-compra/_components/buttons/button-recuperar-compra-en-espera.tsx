@@ -2,7 +2,7 @@ import { BsFillCartDashFill } from 'react-icons/bs'
 import ButtonBase from '~/components/buttons/button-base'
 import ModalComprasAnuladasEnEspera from '../modals/modal-compras-anuladas-en-espera'
 import { useState } from 'react'
-import { EstadoDeCompra } from '@prisma/client'
+import { EstadoDeCompra } from '~/types'
 import { useStoreFiltrosComprasEnEspera } from '../../_store/store-filtros-compras-en-espera'
 
 export default function ButtonRecuperarCompraEnEspera() {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
-import { TipoDocumento } from "@prisma/client";
+import { TipoDocumento } from "~/types";
 import { toUTCBD } from "~/utils/fechas";
 import { FormCreateIngresoSalidaProps } from "../_components/modals/modal-create-ingreso-salida";
 import { ingresosSalidasApi } from "~/lib/api/ingreso-salida";

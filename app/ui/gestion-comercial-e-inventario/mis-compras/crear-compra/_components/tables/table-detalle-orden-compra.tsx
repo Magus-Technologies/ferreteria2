@@ -1,7 +1,7 @@
 'use client'
 
 import TableWithTitle from '~/components/tables/table-with-title'
-import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/prisma/generated/zod'
+import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/types/zod-schemas'
 import { useEffect, useCallback } from 'react'
 import { useColumnsDetalleDeCompra } from '../../../_components/tables/columns-detalle-de-compra'
 import { type Compra } from '~/lib/api/compra'

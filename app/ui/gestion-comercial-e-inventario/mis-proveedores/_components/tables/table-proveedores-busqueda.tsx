@@ -3,7 +3,7 @@
 import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
-import { ProveedorCreateInputSchema } from '~/prisma/generated/zod'
+import { ProveedorCreateInputSchema } from '~/types/zod-schemas'
 import type { Proveedor } from '~/lib/api/proveedor'
 import { useEffect, useState } from 'react'
 import { useColumnsProveedores } from './columns-proveedores'

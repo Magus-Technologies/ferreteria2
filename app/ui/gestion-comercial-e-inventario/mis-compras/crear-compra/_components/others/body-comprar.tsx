@@ -11,13 +11,13 @@ import { useEffect } from 'react'
 import {
   EstadoDeCompra,
   FormaDePago,
-  Marca,
-  Producto,
-  Proveedor,
   TipoDocumento,
   TipoMoneda,
-  UnidadDerivada,
-} from '@prisma/client'
+  type Marca,
+  type Producto,
+  type Proveedor,
+  type UnidadDerivada,
+} from '~/types'
 import FormCrearCompra from '../form/form-crear-compra'
 import { Dayjs } from 'dayjs'
 import useCreateCompra from '../../_hooks/use-create-compra'

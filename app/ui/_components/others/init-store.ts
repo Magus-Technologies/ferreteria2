@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { useStoreFiltrosProductos } from "../../gestion-comercial-e-inventario/mi-almacen/_store/store-filtros-productos";
-import { Empresa } from "@prisma/client";
+import type { Empresa } from "~/types";
 
 export function InitStore({
   marca_predeterminada,

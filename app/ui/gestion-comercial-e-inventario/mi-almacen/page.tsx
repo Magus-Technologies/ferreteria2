@@ -3,7 +3,7 @@
 import ContenedorGeneral from "~/app/_components/containers/contenedor-general";
 import NoAutorizado from "~/components/others/no-autorizado";
 import { permissions } from "~/lib/permissions";
-import { TipoDocumento } from "@prisma/client";
+import { TipoDocumento } from "~/types";
 import { usePermission } from "~/hooks/use-permission";
 import { Suspense, lazy } from "react";
 import { Spin } from "antd";

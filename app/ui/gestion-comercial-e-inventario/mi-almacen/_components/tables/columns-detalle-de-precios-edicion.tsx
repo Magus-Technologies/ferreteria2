@@ -6,7 +6,6 @@ import { MdDelete } from 'react-icons/md'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectUnidadDerivada from '~/app/_components/form/selects/select-unidad-derivada'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
-import { Prisma } from '@prisma/client'
 
 export function useColumnsDetalleDePreciosEdicion({
   form,
@@ -748,7 +747,7 @@ function onChangeCosto({
     
     // Si no hay costo disponible, establecer en 0 en lugar de undefined
     const costoCalculado = costo_disponible 
-      ? Number(Prisma.Decimal(factor).mul(costo_unidad))
+      ? factor * costo_unidad
       : 0
     
     form.setFieldValue(

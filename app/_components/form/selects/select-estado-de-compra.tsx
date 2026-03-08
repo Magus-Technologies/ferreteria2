@@ -1,5 +1,5 @@
 import SelectBase, { SelectBaseProps } from './select-base'
-import { EstadoDeCompra } from '@prisma/client'
+import { EstadoDeCompra } from '~/types'
 import { FaInfoCircle } from 'react-icons/fa'
 
 interface SelectEstadoDeCompraProps extends SelectBaseProps {
