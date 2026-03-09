@@ -11,9 +11,11 @@ import FormFormaDePago from "~/app/_components/form/form-forma-de-pago";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import { useUltimaCalificacionCliente } from "../../_hooks/use-ultima-calificacion-cliente";
+import TooltipCalificacionCliente from "../alerts/tooltip-calificacion-cliente";
 
 export default function FormCrearVenta({
   form,
@@ -22,6 +24,12 @@ export default function FormCrearVenta({
   form: FormInstance;
   venta?: VentaConUnidadDerivadaNormal;
 }) {
+  const [clienteIdSeleccionado, setClienteIdSeleccionado] = useState<number | undefined>(
+    venta?.cliente?.id
+  );
+  const { data: calificacionResponse, isLoading: loadingCalificacion } =
+    useUltimaCalificacionCliente(clienteIdSeleccionado);
+
   // Inicializar D1 al montar el componente
   useEffect(() => {
     if (!form.getFieldValue("direccion_seleccionada")) {
@@ -267,6 +275,9 @@ export default function FormCrearVenta({
                   // Actualizar direccion_entrega con la dirección principal
                   const direccionPrincipal = direcciones.find(d => d.es_principal);
                   form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
+
+                  // Cargar calificación del cliente
+                  setClienteIdSeleccionado(cliente.id);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
@@ -277,6 +288,7 @@ export default function FormCrearVenta({
                   form.setFieldValue("_cliente_direccion_3", "");
                   form.setFieldValue("_cliente_direccion_4", "");
                   form.setFieldValue("direccion_entrega", "");
+                  setClienteIdSeleccionado(undefined);
                 }
               }}
             />
@@ -287,23 +299,40 @@ export default function FormCrearVenta({
           componentId="crear-venta.cliente-nombre"
           label="Campo Nombre Cliente"
         >
-          <LabelBase
-            label="Cliente:"
-            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className="w-full sm:flex-1"
+          <TooltipCalificacionCliente
+            calificacion={calificacionResponse?.data?.data}
+            loading={loadingCalificacion}
           >
-            <InputBase
-              propsForm={{
-                name: "cliente_nombre",
-                hasFeedback: false,
-                className: "w-full",
-              }}
-              placeholder="Nombre del cliente"
-              className="w-full"
-              readOnly
-              uppercase={false}
-            />
-          </LabelBase>
+            <LabelBase
+              label={
+                <div className="flex items-center gap-2">
+                  <span>Cliente:</span>
+                  {loadingCalificacion && (
+                    <span className="text-xs text-blue-500">Cargando...</span>
+                  )}
+                  {!loadingCalificacion && calificacionResponse?.data?.data && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                      Calificado
+                    </span>
+                  )}
+                </div>
+              }
+              classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+              className="w-full sm:flex-1"
+            >
+              <InputBase
+                propsForm={{
+                  name: "cliente_nombre",
+                  hasFeedback: false,
+                  className: "w-full",
+                }}
+                placeholder="Nombre del cliente"
+                className="w-full"
+                readOnly
+                uppercase={false}
+              />
+            </LabelBase>
+          </TooltipCalificacionCliente>
         </ConfigurableElement>
 
         <ConfigurableElement

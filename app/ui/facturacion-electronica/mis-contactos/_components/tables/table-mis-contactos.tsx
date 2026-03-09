@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Button, Popconfirm, Tag } from "antd";
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaStar } from "react-icons/fa";
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import TableWithTitle from "~/components/tables/table-with-title";
@@ -13,6 +13,7 @@ import { QueryKeys } from "~/app/_lib/queryKeys";
 import { App } from "antd";
 import ModalCreateCliente from "../../../mis-ventas/_components/modals/modal-create-cliente";
 import ModalVerDetalleCliente from "../modals/modal-ver-detalle-cliente";
+import ModalCalificacionesCliente from "../modals/modal-calificaciones-cliente";
 
 export default function TableMisContactos() {
   const { filtros } = useStoreFiltrosMisContactos();
@@ -24,6 +25,8 @@ export default function TableMisContactos() {
   const [modalEditarOpen, setModalEditarOpen] = useState(false);
   const [clienteParaVer, setClienteParaVer] = useState<Cliente | null>(null);
   const [modalVerOpen, setModalVerOpen] = useState(false);
+  const [clienteParaCalificar, setClienteParaCalificar] = useState<Cliente | null>(null);
+  const [modalCalificacionesOpen, setModalCalificacionesOpen] = useState(false);
 
   // Query para obtener los contactos
   const { data: response, isLoading, refetch } = useQuery({
@@ -67,6 +70,11 @@ export default function TableMisContactos() {
   const handleEditar = (cliente: Cliente) => {
     setClienteParaEditar(cliente);
     setModalEditarOpen(true);
+  };
+
+  const handleCalificaciones = (cliente: Cliente) => {
+    setClienteParaCalificar(cliente);
+    setModalCalificacionesOpen(true);
   };
 
   const handleEliminar = (id: number) => {
@@ -150,7 +158,7 @@ export default function TableMisContactos() {
     },
     {
       headerName: "Acciones",
-      width: 120,
+      width: 150,
       pinned: "right",
       cellRenderer: (params: any) => {
         const cliente = params.data;
@@ -166,6 +174,16 @@ export default function TableMisContactos() {
               onClick={() => handleVerDetalles(cliente)}
             >
               <FaEye className="text-blue-600" size={14} />
+            </Button>
+
+            {/* Botón Calificaciones */}
+            <Button
+              type="text"
+              size="small"
+              className="flex items-center justify-center hover:bg-amber-50"
+              onClick={() => handleCalificaciones(cliente)}
+            >
+              <FaStar className="text-amber-600" size={14} />
             </Button>
 
             {/* Botón Editar */}
@@ -247,6 +265,22 @@ export default function TableMisContactos() {
           refetch();
         }}
       />
+
+      {/* Modal para calificaciones del cliente */}
+      {clienteParaCalificar && (
+        <ModalCalificacionesCliente
+          open={modalCalificacionesOpen}
+          onClose={() => {
+            setModalCalificacionesOpen(false);
+            setClienteParaCalificar(null);
+          }}
+          clienteId={clienteParaCalificar.id}
+          clienteNombre={
+            clienteParaCalificar.razon_social ||
+            `${clienteParaCalificar.nombres} ${clienteParaCalificar.apellidos}`
+          }
+        />
+      )}
     </>
   );
 }
