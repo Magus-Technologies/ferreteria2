@@ -220,7 +220,7 @@ export default function FormCrearVenta({
 
         <div className="mb-6">
           <LabelBase
-            label="Vale de Compra:"
+            label="Vales / Promociones:"
             className="w-full sm:w-auto"
           >
             <Form.Item name="codigo_vale" noStyle>

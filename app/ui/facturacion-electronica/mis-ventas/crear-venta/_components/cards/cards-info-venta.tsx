@@ -14,6 +14,7 @@ import { FaPause } from "react-icons/fa6";
 import ModalDetallesEntrega from "../modals/modal-detalles-entrega";
 import ButtonRecuperarVentaEnEspera from "../buttons/button-recuperar-venta-en-espera";
 import ButtonRecuperarVentaAnulada from "../buttons/button-recuperar-venta-anulada";
+import ButtonCargarCotizacion from "../buttons/button-cargar-cotizacion";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
@@ -153,6 +154,13 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
           label="Botón Recuperar Venta Anulada"
         >
           <ButtonRecuperarVentaAnulada />
+        </ConfigurableElement>
+
+        <ConfigurableElement
+          componentId="crear-venta.boton-cargar-cotizacion"
+          label="Botón Cargar Cotización"
+        >
+          <ButtonCargarCotizacion />
         </ConfigurableElement>
 
         <ConfigurableElement
