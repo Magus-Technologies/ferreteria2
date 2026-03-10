@@ -3,7 +3,7 @@
 import { Modal, message } from "antd";
 import { useState } from "react";
 import { MdOutlineSell, MdSell } from "react-icons/md";
-import type { getVentaResponseProps } from "~/lib/api/venta";
+import { DescuentoTipo, type getVentaResponseProps } from "~/lib/api/venta";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectPaquetes from "~/app/_components/form/selects/select-paquetes";
@@ -107,7 +107,7 @@ export default function HeaderCrearVenta({
           precio_venta: paqueteProducto.precio_sugerido || 0,
           recargo: 0,
           descuento: Number(paqueteProducto.descuento || 0),
-          descuento_tipo: 'm',
+          descuento_tipo: DescuentoTipo.MONTO,
           subtotal: 0,
           // ✅ Agregar información del paquete
           paquete_id: paquete.id,
