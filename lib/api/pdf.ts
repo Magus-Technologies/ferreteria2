@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
  * Usa fetch con el token de autenticacion y crea un blob URL.
  */
 export async function abrirPdf(
-  tipo: 'venta' | 'compra' | 'cotizacion' | 'prestamo',
+  tipo: 'venta' | 'compra' | 'cotizacion' | 'prestamo' | 'vale',
   id: string | number,
 ): Promise<void> {
   const token = getAuthToken()

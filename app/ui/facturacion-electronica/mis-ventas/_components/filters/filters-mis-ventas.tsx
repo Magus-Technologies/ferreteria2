@@ -514,20 +514,6 @@ export default function FiltersMisVentas() {
               </ButtonBase>
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-2">
-            <ConfigurableElement componentId="button-ver-calendario" label="Botón Ver Calendario">
-              <ButtonBase
-                color="success"
-                size="md"
-                type="button"
-                className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
-                onClick={() => router.push('/ui/facturacion-electronica/mis-ventas/calendario')}
-              >
-                <FaCalendar />
-                Ver Calendario
-              </ButtonBase>
-            </ConfigurableElement>
-          </div>
         </div>
       </div>
 

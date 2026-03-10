@@ -11,9 +11,7 @@ import { FaSave, FaPrint, FaList } from 'react-icons/fa'
 import { createValeCompra, type CreateValeCompraRequest, type ValeCompra } from '~/lib/api/vales-compra'
 import { message } from 'antd'
 import dayjs from 'dayjs'
-import DocValeTicket from '../../../_components/docs/doc-vale-ticket'
-import { useJSXToPdf } from '~/hooks/use-react-to-pdf'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { getAuthToken } from '~/lib/api'
 
 export interface FormCreateVale extends CreateValeCompraRequest {}
 
@@ -23,17 +21,6 @@ export default function BodyCrearVale() {
   const [loading, setLoading] = useState(false)
   const [valeCreado, setValeCreado] = useState<ValeCompra | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const { data: empresa } = useEmpresaPublica()
-
-  // Hook para generar PDF del ticket
-  const ticketPDF = valeCreado ? (
-    <DocValeTicket vale={valeCreado} empresa={empresa} />
-  ) : null
-
-  const { print: printTicket } = useJSXToPdf({
-    jsx: ticketPDF!,
-    name: `vale-${valeCreado?.codigo || 'nuevo'}`,
-  })
 
   const handleSubmit = async (values: FormCreateVale) => {
     console.log('📝 Valores del formulario:', values)
@@ -75,9 +62,26 @@ export default function BodyCrearVale() {
     }
   }
 
-  const handlePrintAndContinue = () => {
-    if (valeCreado && ticketPDF) {
-      printTicket()
+  const handlePrintAndContinue = async () => {
+    if (valeCreado) {
+      try {
+        const token = getAuthToken()
+        const API_URL = process.env.NEXT_PUBLIC_API_URL
+        const res = await fetch(`${API_URL}/pdf/vale/${valeCreado.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/pdf',
+          },
+        })
+        if (res.ok) {
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          window.open(url, '_blank')
+          setTimeout(() => URL.revokeObjectURL(url), 60000)
+        }
+      } catch (err) {
+        console.error('Error al imprimir vale:', err)
+      }
     }
     handleContinue()
   }

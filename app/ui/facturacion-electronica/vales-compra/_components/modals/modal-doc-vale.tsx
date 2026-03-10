@@ -1,17 +1,15 @@
 'use client'
 
 import { ValeCompra } from '~/lib/api/vales-compra'
-import DocValeTicket from '../docs/doc-vale-ticket'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
-import { Modal, Tooltip, Spin, message as antdMessage } from 'antd'
-import { useEffect, useState, useCallback } from 'react'
-import { pdf } from '@react-pdf/renderer'
+import { Modal, Tooltip, Spin } from 'antd'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { FaDownload, FaShareNodes, FaPrint } from 'react-icons/fa6'
 import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
 import { useQzPrint } from '~/hooks/use-qz-print'
 import ModalSeleccionImpresora from '~/app/_components/modals/modal-seleccion-impresora'
 import { compartir } from '~/hooks/use-share'
+import { getAuthToken } from '~/lib/api'
 
 interface ModalDocValeProps {
   open: boolean
@@ -20,53 +18,63 @@ interface ModalDocValeProps {
 }
 
 export default function ModalDocVale({ open, setOpen, data }: ModalDocValeProps) {
-  const { data: empresa } = useEmpresaPublica()
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
   const [loading, setLoading] = useState(false)
   const [openImpresoraModal, setOpenImpresoraModal] = useState(false)
+  const fetchedRef = useRef<number | null>(null)
 
-  const jsx = data ? <DocValeTicket vale={data} empresa={empresa} /> : null
   const nombre = `vale-${data?.codigo || 'nuevo'}`
 
-  // QZ Tray
+  // QZ Tray - usa el blob del backend
   const qz = useQzPrint({
-    jsx: jsx || <></>,
+    pdfBlob: pdfBlob || undefined,
     name: nombre,
     formato: 'ticket',
   })
 
-  // Generar PDF blob y crear URL para el iframe
-  const generarPdf = useCallback(async () => {
-    if (!jsx || !open) return
-    setLoading(true)
-    try {
-      const blob = await pdf(jsx).toBlob()
-      const url = URL.createObjectURL(blob)
-      setPdfUrl(url)
-    } catch (err) {
-      console.error('Error generando PDF:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [open, data, empresa])
+  // Fetch PDF del backend
+  const fetchPdf = useCallback(async (valeId: number) => {
+    const token = getAuthToken()
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const res = await fetch(`${API_URL}/pdf/vale/${valeId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/pdf',
+      },
+    })
+    if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+    return await res.blob()
+  }, [])
 
   useEffect(() => {
-    if (open && data) {
-      generarPdf()
+    if (open && data?.id && fetchedRef.current !== data.id) {
+      fetchedRef.current = data.id
+      setLoading(true)
+      fetchPdf(data.id)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob)
+          setPdfBlob(blob)
+          setPdfUrl(url)
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error('Error cargando PDF vale:', err)
+          setLoading(false)
+        })
     }
-    return () => {
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl)
-        setPdfUrl(null)
-      }
+
+    if (!open) {
+      setPdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      setPdfBlob(null)
+      fetchedRef.current = null
     }
-  }, [open, data, empresa])
+  }, [open, data?.id, fetchPdf])
 
   // Descargar PDF
-  const handleDownload = async () => {
-    if (!jsx) return
-    const blob = await pdf(jsx).toBlob()
-    const url = URL.createObjectURL(blob)
+  const handleDownload = () => {
+    if (!pdfBlob) return
+    const url = URL.createObjectURL(pdfBlob)
     const link = document.createElement('a')
     link.href = url
     link.download = `${nombre}.pdf`
@@ -75,14 +83,9 @@ export default function ModalDocVale({ open, setOpen, data }: ModalDocValeProps)
   }
 
   // Compartir
-  const handleShare = async () => {
-    if (!jsx) return
-    try {
-      const blob = await pdf(jsx).toBlob()
-      compartir({ blob, fileName: `${nombre}.pdf` })
-    } catch (err) {
-      console.error('Error al compartir:', err)
-    }
+  const handleShare = () => {
+    if (!pdfBlob) return
+    compartir({ blob: pdfBlob, fileName: `${nombre}.pdf` })
   }
 
   // Imprimir con QZ Tray

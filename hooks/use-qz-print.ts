@@ -21,12 +21,13 @@ async function getQz() {
 }
 
 interface UseQzPrintOptions {
-  jsx: JSX.Element
+  jsx?: JSX.Element
+  pdfBlob?: Blob
   name: string
   formato?: TipoFormato
 }
 
-export function useQzPrint({ jsx, name, formato = 'ticket' }: UseQzPrintOptions) {
+export function useQzPrint({ jsx, pdfBlob, name, formato = 'ticket' }: UseQzPrintOptions) {
   const [impresoras, setImpresoras] = useState<string[]>([])
   const [conectado, setConectado] = useState(false)
   const [cargando, setCargando] = useState(false)
@@ -102,8 +103,8 @@ export function useQzPrint({ jsx, name, formato = 'ticket' }: UseQzPrintOptions)
 
         const qzInstance = await getQz()
 
-        // Generar PDF blob
-        const blob = await pdf(jsx).toBlob()
+        // Obtener PDF blob (del backend o generado con react-pdf)
+        const blob = pdfBlob ?? await pdf(jsx!).toBlob()
         const arrayBuffer = await blob.arrayBuffer()
         const base64 = btoa(
           new Uint8Array(arrayBuffer).reduce(
@@ -139,7 +140,7 @@ export function useQzPrint({ jsx, name, formato = 'ticket' }: UseQzPrintOptions)
         return false
       }
     },
-    [conectar, jsx]
+    [conectar, jsx, pdfBlob]
   )
 
   // Imprimir usando la impresora por defecto del formato

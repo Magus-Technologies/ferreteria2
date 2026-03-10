@@ -168,6 +168,13 @@
         "permission": "facturacion-electronica.mis-entregas.index"
       },
       {
+        "id": "calendario-entregas",
+        "label": "Calendario de Entregas",
+        "icon": "FaCalendarAlt",
+        "route": "/ui/facturacion-electronica/mis-ventas/calendario",
+        "permission": "facturacion-electronica.mis-entregas.index"
+      },
+      {
         "id": "mis-cotizaciones",
         "label": "Mis Cotizaciones",
         "icon": "MdPointOfSale",

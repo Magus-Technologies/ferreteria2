@@ -8,32 +8,24 @@ export default function useGetEntregas() {
   const { filtros } = useStoreFiltrosMisEntregas()
   const { user } = useAuth()
 
+  // Solo filtrar por chofer_id si es despachador, admin ve todas
+  const esDespachador = user?.rol_sistema === 'DESPACHADOR'
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esDespachador],
     queryFn: async () => {
-      console.log('🚚 useGetEntregas - user:', user)
-      console.log('🚚 useGetEntregas - user.id:', user?.id)
-      console.log('🚚 useGetEntregas - filtros:', filtros)
-      
       const response = await entregaProductoApi.list({
         fecha_desde: filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta: filtros.fecha_hasta?.format('YYYY-MM-DD'),
         estado_entrega: filtros.estado_entrega as any,
-        // Filtrar solo entregas del despachador actual
-        chofer_id: user?.id,
+        // Despachador solo ve sus entregas, admin ve todas
+        chofer_id: esDespachador ? user?.id : undefined,
       })
-      
-      console.log('🚚 useGetEntregas - response:', response)
-      console.log('🚚 useGetEntregas - response.data:', response.data)
-      console.log('🚚 useGetEntregas - response.data?.data:', response.data?.data)
-      
+
       return response.data?.data || []
     },
     enabled: !!user?.id,
   })
-
-  console.log('🚚 useGetEntregas - data final:', data)
-  console.log('🚚 useGetEntregas - isLoading:', isLoading)
 
   return {
     entregas: (data || []) as any[],
