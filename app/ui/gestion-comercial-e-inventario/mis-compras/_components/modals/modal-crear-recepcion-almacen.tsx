@@ -3,6 +3,7 @@ import { Form } from 'antd'
 import ModalForm from '~/components/modals/modal-form'
 import TitleForm from '~/components/form/title-form'
 import { type Compra } from '~/lib/api/compra'
+import { type OrdenCompra } from '~/lib/api/orden-compra'
 import FormTableComprar from '../../crear-compra/_components/form/form-table-comprar'
 import { FormCreateCompra } from '../../crear-compra/_components/others/body-comprar'
 import { useEffect } from 'react'
@@ -33,22 +34,28 @@ export default function ModalCrearRecepcionAlmacen({
   setOpen,
   compra,
   setCompra,
+  ordenCompra,
+  setOrdenCompra,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
   compra: Compra | undefined
   setCompra: (compra: Compra | undefined) => void
+  ordenCompra?: OrdenCompra | undefined
+  setOrdenCompra?: (orden: OrdenCompra | undefined) => void
 }) {
   const [form] = Form.useForm<FormCreateRecepcionAlmacen>()
   const route = useRouter()
 
-  const nro_doc = getNroDocCompra({ compra })
+  const nro_doc = compra ? getNroDocCompra({ compra }) : (ordenCompra?.codigo ?? '')
 
   const { handleSubmit, loading } = useCreateRecepcionAlmacen({
     compra_id: compra?.id,
+    orden_compra_id: ordenCompra?.id,
     onSuccess: () => {
       setOpen(false)
       setCompra(undefined)
+      setOrdenCompra?.(undefined)
       route.push('/ui/gestion-comercial-e-inventario/mis-recepciones')
     },
   })
@@ -108,12 +115,42 @@ export default function ModalCrearRecepcionAlmacen({
           })
           .filter(Boolean)
       )
+    } else if (ordenCompra && ordenCompra.productos) {
+      form.setFieldValue(
+        'productos',
+        ordenCompra.productos
+          .filter((p: any) => Number(p.cantidad_pendiente ?? p.cantidad) > 0)
+          .map((p: any) => {
+            const cant_pend = Number(p.cantidad_pendiente ?? p.cantidad)
+            return {
+              producto_codigo: p.codigo,
+              producto_id: p.producto_id,
+              producto_name: p.nombre,
+              bonificacion: false,
+              marca_name: p.marca ?? '',
+              unidad_derivada_name: p.unidad ?? '',
+              unidad_derivada_id: 0,
+              unidad_derivada_factor: 1, // Orden de compra simplificada usa factor 1
+              cantidad: cant_pend,
+              cantidad_recepcionada: Math.max(0, Number(p.cantidad) - cant_pend),
+              cantidad_pendiente: cant_pend,
+              precio_compra: Number(p.precio),
+              subtotal: Number(p.subtotal),
+              flete: Number(p.flete),
+              vencimiento: p.vencimiento ? dayjs(p.vencimiento) : undefined,
+              lote: p.lote,
+            }
+          })
+      )
     }
     form.setFieldValue('fecha', dayjs())
-  }, [compra])
+  }, [compra, ordenCompra])
 
   useEffect(() => {
-    if (!open) setCompra(undefined)
+    if (!open) {
+      setCompra(undefined)
+      setOrdenCompra?.(undefined)
+    }
   }, [open])
 
   return (
@@ -123,7 +160,7 @@ export default function ModalCrearRecepcionAlmacen({
           <TitleForm className='!pb-0'>
             <div className='flex gap-4 items-center'>
               <span className='text-nowrap'>
-                Recepcionar en Almacén la Compra {nro_doc}
+                Recepcionar en Almacén la {compra ? 'Compra' : 'Orden'} {nro_doc}
               </span>
               <DatePickerBase
                 propsForm={{

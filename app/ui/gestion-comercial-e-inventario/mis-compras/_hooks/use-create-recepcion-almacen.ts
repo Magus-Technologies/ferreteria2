@@ -11,9 +11,11 @@ import dayjs from 'dayjs'
 
 export default function useCreateRecepcionAlmacen({
   compra_id,
+  orden_compra_id,
   onSuccess,
 }: {
-  compra_id: string | undefined
+  compra_id?: string | undefined
+  orden_compra_id?: number | undefined
   onSuccess?: () => void
 }) {
   const { user } = useAuth()
@@ -28,7 +30,8 @@ export default function useCreateRecepcionAlmacen({
     mutationFn: async (values: FormCreateRecepcionAlmacen) => {
       if (!user_id) throw new Error('No hay un usuario seleccionado')
       if (!almacen_id) throw new Error('No hay un almacen seleccionado')
-      if (!compra_id) throw new Error('No hay una compra seleccionada')
+      if (!compra_id && !orden_compra_id)
+        throw new Error('No hay una compra u orden seleccionada')
 
       const { productos, fecha, ...rest } = values
 
@@ -62,6 +65,7 @@ export default function useCreateRecepcionAlmacen({
 
       const result = await recepcionAlmacenApi.create({
         compra_id,
+        orden_compra_id,
         user_id,
         fecha: dayjs(fecha).format('YYYY-MM-DD HH:mm:ss'),
         observaciones: rest.observaciones || undefined,
@@ -83,6 +87,7 @@ export default function useCreateRecepcionAlmacen({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_COMPRA] })
       message.success('Recepción de almacén creada exitosamente')
       onSuccess?.()
     },
@@ -99,8 +104,10 @@ export default function useCreateRecepcionAlmacen({
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
-    if (!compra_id)
-      return notification.error({ message: 'No hay una compra seleccionada' })
+    if (!compra_id && !orden_compra_id)
+      return notification.error({
+        message: 'No hay una compra u orden seleccionada',
+      })
 
     setLoading(true)
     mutation.mutate(values, {

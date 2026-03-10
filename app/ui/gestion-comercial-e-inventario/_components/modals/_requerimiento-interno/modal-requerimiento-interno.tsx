@@ -16,10 +16,12 @@ import StepServicio from "./step-servicio"
 import StepResumen from "./step-resumen"
 
 interface ItemBuscado {
-    id: number
+    id: number | null
     codigo: string
     nombre: string
+    nombre_adicional?: string
     cantidad: number
+    metric_id?: number | string
     unidad: string
     stock?: number
 }
@@ -172,17 +174,25 @@ export default function ModalRequerimientoInterno({
             }
 
             if (form.tipoSolicitud === 'OC') {
-                requestData.productos = productosSeleccionados.map(p => ({
-                    producto_id: p.id,
-                    cantidad: p.cantidad,
-                    unidad: p.unidad,
-                }))
+                requestData.productos = productosSeleccionados.map(p => {
+                    const prod: any = {
+                        cantidad: p.cantidad,
+                        unidad: p.unidad,
+                    }
+                    // Solo incluir producto_id si existe, de lo contrario incluir nombre_adicional
+                    if (p.id) {
+                        prod.producto_id = p.id
+                    } else if (p.nombre_adicional) {
+                        prod.nombre_adicional = p.nombre_adicional
+                    }
+                    return prod
+                })
             } else {
                 requestData.servicio = {
-                    tipo_servicio: String(form.tipoServicio),
+                    tipo_servicio: form.tipoServicio ? String(form.tipoServicio) : undefined,
                     descripcion_servicio: form.descripcionServicio,
-                    lugar_ejecucion: form.lugarEjecucion,
-                    fecha_inicio_estimada: form.fechaInicioEstimada,
+                    lugar_ejecucion: form.lugarEjecucion || undefined,
+                    fecha_inicio_estimada: form.fechaInicioEstimada || undefined,
                     presupuesto_referencial: form.presupuestoReferencial ? Number(form.presupuestoReferencial) : undefined,
                     duracion_cantidad: form.duracionCif ? Number(form.duracionCif) : undefined,
                     duracion_unidad: form.duracionUnidad,
@@ -244,7 +254,7 @@ export default function ModalRequerimientoInterno({
         <>
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
                 <div className="w-full max-w-3xl max-h-[92vh] bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in slide-up duration-300">
-                    
+
                     {/* HEADER */}
                     <div className="flex items-stretch border-b border-slate-200 bg-slate-50">
                         <div className="w-1 bg-gradient-to-b from-emerald-600 to-emerald-800 flex-shrink-0 rounded-tl-xl" />
@@ -266,19 +276,17 @@ export default function ModalRequerimientoInterno({
                                 return (
                                     <div key={i} className="flex items-center flex-1">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
-                                                state === "done" ? "bg-emerald-600 text-white" :
+                                            <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${state === "done" ? "bg-emerald-600 text-white" :
                                                 state === "active" ? "bg-slate-900 text-white" :
-                                                "bg-slate-100 text-slate-400 border border-slate-200"
-                                            }`}>
+                                                    "bg-slate-100 text-slate-400 border border-slate-200"
+                                                }`}>
                                                 {state === "done" ? "✓" : i + 1}
                                             </div>
                                             <div className="leading-tight">
-                                                <div className={`text-xs font-semibold ${
-                                                    state === "done" ? "text-emerald-600" :
+                                                <div className={`text-xs font-semibold ${state === "done" ? "text-emerald-600" :
                                                     state === "active" ? "text-slate-900" :
-                                                    "text-slate-400"
-                                                }`}>{s.label}</div>
+                                                        "text-slate-400"
+                                                    }`}>{s.label}</div>
                                                 <div className="text-[10px] text-slate-400">{s.sub}</div>
                                             </div>
                                         </div>
@@ -325,17 +333,32 @@ export default function ModalRequerimientoInterno({
                                             productosDisponibles={productosSource}
                                             productosSeleccionados={productosSeleccionados}
                                             onAgregarProducto={(p) => {
-                                                if (!productosSeleccionados.find(s => s.id === p.id)) {
+                                                const exists = p.id
+                                                    ? productosSeleccionados.find(s => s.id === p.id)
+                                                    : productosSeleccionados.find(s => s.nombre === p.nombre && s.id === null)
+
+                                                if (!exists) {
                                                     setProductosSeleccionados([...productosSeleccionados, { ...p, cantidad: 1 }])
                                                 }
                                             }}
                                             onQuitarProducto={(id) => {
-                                                setProductosSeleccionados(prev => prev.filter(p => p.id !== id))
+                                                setProductosSeleccionados(prev => prev.filter(p => {
+                                                    const uniqueId = p.id || `manual-${productosSeleccionados.indexOf(p)}-${p.nombre}`
+                                                    return uniqueId !== id
+                                                }))
                                             }}
                                             onCambiarCantidad={(id, cantidad) => {
-                                                setProductosSeleccionados(prev => prev.map(p => p.id === id ? { ...p, cantidad } : p))
+                                                setProductosSeleccionados(prev => prev.map(p => {
+                                                    const uniqueId = p.id || `manual-${prev.indexOf(p)}-${p.nombre}`
+                                                    return uniqueId === id ? { ...p, cantidad } : p
+                                                }))
                                             }}
-                                            proveedores={fetchedProveedores}
+                                            onCambiarUnidad={(id, unidad) => {
+                                                setProductosSeleccionados(prev => prev.map(p => {
+                                                    const uniqueId = p.id || `manual-${prev.indexOf(p)}-${p.nombre}`
+                                                    return uniqueId === id ? { ...p, unidad } : p
+                                                }))
+                                            }}
                                         />
                                     </div>
                                 )}

@@ -24,7 +24,8 @@ export interface ProductoRecepcionRequest {
 }
 
 export interface CreateRecepcionAlmacenRequest {
-  compra_id: string
+  compra_id?: string
+  orden_compra_id?: number
   user_id: string
   fecha: string
   observaciones?: string
