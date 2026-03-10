@@ -1,12 +1,13 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaTruck, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory } from "react-icons/fa";
+import { FaFilePdf, FaTruck, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan } from "react-icons/fa";
 import { MoreOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { Dropdown, message } from "antd";
 import type { MenuProps } from "antd";
 import { useState, useMemo } from "react";
+import { App } from "antd";
 import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfVenta } from "../../_store/store-modal-pdf-venta";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
@@ -20,6 +21,7 @@ export default function CellAccionesVentaDropdown(
   const venta = props.data;
   const router = useRouter();
   const openModal = useStoreModalPdfVenta((state) => state.openModal);
+  const { modal } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
 
@@ -54,6 +56,41 @@ export default function CellAccionesVentaDropdown(
   // Verificar si se puede editar (no anulado ni procesado)
   const estadoVenta = venta?.estado_de_venta;
   const canEdit = estadoVenta !== 'an' && estadoVenta !== 'pr';
+
+  // Verificar si se puede anular (no anulado, no procesado)
+  const canAnular = estadoVenta !== 'an' && estadoVenta !== 'pr';
+
+  const handleAnular = () => {
+    modal.confirm({
+      title: '¿Anular esta venta?',
+      content: 'Esta acción anulará la venta y revertirá los pagos asociados. ¿Desea continuar?',
+      okText: 'Sí, anular',
+      cancelText: 'Cancelar',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          message.loading({ content: 'Anulando venta...', key: 'anular-venta', duration: 0 });
+          const ventaApiModule = await import('~/lib/api/venta');
+          const result = await ventaApiModule.ventaApi.anular(ventaId);
+
+          if (result.error) {
+            message.error({ content: result.error.message || 'Error al anular', key: 'anular-venta', duration: 5 });
+          } else {
+            message.success({ content: result.data?.message || 'Venta anulada exitosamente', key: 'anular-venta', duration: 3 });
+
+            // Actualizar la fila en AG Grid
+            const ventaActualizada = await ventaApiModule.ventaApi.getById(ventaId);
+            if (ventaActualizada.data?.data && props.node) {
+              props.node.setData(ventaActualizada.data.data);
+              props.api?.refreshCells({ rowNodes: [props.node], force: true });
+            }
+          }
+        } catch (error: any) {
+          message.error({ content: error?.message || 'Error al anular', key: 'anular-venta', duration: 5 });
+        }
+      },
+    });
+  };
 
   const handleEditar = () => {
     router.push(`/ui/facturacion-electronica/mis-ventas/editar-venta/${ventaId}`);
@@ -182,6 +219,13 @@ export default function CellAccionesVentaDropdown(
       label: <span className="flex items-center gap-2"><FaEdit className="text-amber-600" /> {editLabel}</span>,
       onClick: handleEditar,
       disabled: !canEdit,
+    },
+    {
+      key: 'anular',
+      label: <span className="flex items-center gap-2"><FaBan className="text-red-600" /> Anular Venta</span>,
+      onClick: handleAnular,
+      disabled: !canAnular,
+      danger: true,
     },
     {
       key: 'historial',

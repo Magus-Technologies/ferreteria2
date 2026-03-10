@@ -4,6 +4,7 @@ import { App } from "antd";
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { prestamoVendedorApi } from "~/lib/api/prestamo-vendedor";
+import { cierreCajaApi } from "~/lib/api/cierre-caja";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
 import ModalSolicitarEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo";
 import ButtonBase from "~/components/buttons/button-base";
@@ -103,14 +104,9 @@ export default function HistorialPrestamosVendedores() {
     // Obtener apertura activa
     const fetchAperturaActiva = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/activa`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-        });
-        const data = await response.json();
-        if (data.data?.id) {
-          setAperturaId(data.data.id);
+        const response = await cierreCajaApi.obtenerCajaActiva();
+        if (response?.data?.id) {
+          setAperturaId(response.data.id);
         }
       } catch (error) {
         // Error silencioso
