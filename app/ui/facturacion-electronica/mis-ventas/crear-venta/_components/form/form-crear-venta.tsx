@@ -16,6 +16,8 @@ import RadioDireccionCliente from "~/app/_components/form/radio-direccion-client
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
 import InputCodigoVale from "../others/input-codigo-vale";
+import { useUltimaCalificacionCliente } from "../../_hooks/use-ultima-calificacion-cliente";
+import TooltipCalificacionCliente from "../alerts/tooltip-calificacion-cliente";
 
 export default function FormCrearVenta({
   form,
@@ -27,6 +29,12 @@ export default function FormCrearVenta({
   const clienteId = Form.useWatch("cliente_id", form);
   const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
   const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
+
+  const [clienteIdSeleccionado, setClienteIdSeleccionado] = useState<number | undefined>(
+    venta?.cliente?.id
+  );
+  const { data: calificacionResponse, isLoading: loadingCalificacion } =
+    useUltimaCalificacionCliente(clienteIdSeleccionado);
 
   // Reset deuda state when client changes
   useEffect(() => {
@@ -273,22 +281,25 @@ export default function FormCrearVenta({
 
                   // Actualizar email
                   form.setFieldValue("email", cliente.email || "");
-                  
+
                   // Actualizar las 4 direcciones del cliente en campos ocultos (desde el nuevo sistema)
                   const direcciones = cliente.direcciones || [];
                   const d1 = direcciones.find(d => d.tipo === 'D1')?.direccion || '';
                   const d2 = direcciones.find(d => d.tipo === 'D2')?.direccion || '';
                   const d3 = direcciones.find(d => d.tipo === 'D3')?.direccion || '';
                   const d4 = direcciones.find(d => d.tipo === 'D4')?.direccion || '';
-                  
+
                   form.setFieldValue("_cliente_direccion_1", d1);
                   form.setFieldValue("_cliente_direccion_2", d2);
                   form.setFieldValue("_cliente_direccion_3", d3);
                   form.setFieldValue("_cliente_direccion_4", d4);
-                  
+
                   // Actualizar direccion_entrega con la dirección principal
                   const direccionPrincipal = direcciones.find(d => d.es_principal);
                   form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
+
+                  // Cargar calificación del cliente
+                  setClienteIdSeleccionado(cliente.id);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
@@ -299,6 +310,7 @@ export default function FormCrearVenta({
                   form.setFieldValue("_cliente_direccion_3", "");
                   form.setFieldValue("_cliente_direccion_4", "");
                   form.setFieldValue("direccion_entrega", "");
+                  setClienteIdSeleccionado(undefined);
                 }
               }}
             />
@@ -309,23 +321,40 @@ export default function FormCrearVenta({
           componentId="crear-venta.cliente-nombre"
           label="Campo Nombre Cliente"
         >
-          <LabelBase
-            label="Cliente:"
-            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className={`w-full sm:flex-1 ${clienteTieneDeuda ? '[&_input]:!border-red-500 [&_input]:!border-2 [&_input]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
+          <TooltipCalificacionCliente
+            calificacion={calificacionResponse?.data?.data}
+            loading={loadingCalificacion}
           >
-            <InputBase
-              propsForm={{
-                name: "cliente_nombre",
-                hasFeedback: false,
-                className: "w-full",
-              }}
-              placeholder="Nombre del cliente"
-              className="w-full"
-              readOnly
-              uppercase={false}
-            />
-          </LabelBase>
+            <LabelBase
+              label={
+                <div className="flex items-center gap-2">
+                  <span>Cliente:</span>
+                  {loadingCalificacion && (
+                    <span className="text-xs text-blue-500">Cargando...</span>
+                  )}
+                  {!loadingCalificacion && calificacionResponse?.data?.data && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                      Calificado
+                    </span>
+                  )}
+                </div>
+              }
+              classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+              className={`w-full sm:flex-1 ${clienteTieneDeuda ? '[&_input]:!border-red-500 [&_input]:!border-2 [&_input]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
+            >
+              <InputBase
+                propsForm={{
+                  name: "cliente_nombre",
+                  hasFeedback: false,
+                  className: "w-full",
+                }}
+                placeholder="Nombre del cliente"
+                className="w-full"
+                readOnly
+                uppercase={false}
+              />
+            </LabelBase>
+          </TooltipCalificacionCliente>
         </ConfigurableElement>
 
         <ConfigurableElement
