@@ -71,6 +71,21 @@ export default function TablePaquetesBusqueda({
       },
     },
     {
+      headerName: 'P. Total',
+      width: 120,
+      cellClass: 'text-right font-semibold',
+      valueGetter: (params) => {
+        const productos = params.data?.productos || []
+        return productos.reduce((sum: number, p: any) => {
+          const precio = Number(p.precio_sugerido || 0)
+          const descuento = Number(p.descuento || 0)
+          const cantidad = Number(p.cantidad || 0)
+          return sum + Math.max(precio - descuento, 0) * cantidad
+        }, 0)
+      },
+      valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
+    },
+    {
       headerName: 'Acciones',
       field: 'id',
       width: 80,
@@ -137,6 +152,7 @@ export default function TablePaquetesBusqueda({
             columns: [
               'Nombre',
               'Productos',
+              'P. Total',
               'Acciones',
             ],
           },

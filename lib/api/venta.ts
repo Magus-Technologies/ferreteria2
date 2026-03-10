@@ -41,6 +41,8 @@ export interface ProductoVentaRequest {
   producto_id?: number;
   producto_almacen_id?: number;
   costo: number;
+  paquete_id?: number;
+  paquete_nombre?: string;
   unidades_derivadas: UnidadDerivadaVentaRequest[];
 }
 

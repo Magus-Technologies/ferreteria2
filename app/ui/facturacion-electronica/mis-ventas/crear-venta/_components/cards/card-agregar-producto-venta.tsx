@@ -401,7 +401,7 @@ export default function CardAgregarProductoVenta({
                         cantidad: Number(paqueteProducto.cantidad),
                         precio_venta: Number(paqueteProducto.precio_sugerido || 0),
                         recargo: 0,
-                        descuento: 0,
+                        descuento: Number(paqueteProducto.descuento || 0),
                         descuento_tipo: DescuentoTipo.MONTO,
                         subtotal: 0,
                         comision: 0,

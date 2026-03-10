@@ -12,6 +12,8 @@ import { apiRequest, type ApiResponse } from "../api";
 /**
  * Producto dentro de un paquete
  */
+export type TipoPrecio = 'publico' | 'especial' | 'minimo' | 'ultimo';
+
 export interface PaqueteProducto {
   id: number;
   paquete_id: number;
@@ -19,6 +21,8 @@ export interface PaqueteProducto {
   unidad_derivada_id: number;
   cantidad: number;
   precio_sugerido: number | null;
+  tipo_precio: TipoPrecio;
+  descuento: number;
   created_at: string;
   updated_at: string;
   // Relaciones cargadas desde el backend
@@ -67,6 +71,8 @@ export interface PaqueteProductoRequest {
   unidad_derivada_id: number;
   cantidad: number;
   precio_sugerido?: number | null;
+  tipo_precio?: TipoPrecio;
+  descuento?: number;
 }
 
 /**

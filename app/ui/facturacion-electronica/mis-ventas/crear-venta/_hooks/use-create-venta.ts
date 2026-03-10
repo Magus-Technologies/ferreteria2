@@ -31,6 +31,8 @@ type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
   'producto_id' | 'marca_name' | 'producto_name'
 > & {
+  paquete_id?: number
+  paquete_nombre?: string
   unidades_derivadas: Array<
     Omit<
       FormCreateVenta['productos'][number],
@@ -44,17 +46,22 @@ export function agruparProductos({
 }: {
   productos: FormCreateVenta['productos']
 }) {
-  const mapa = new Map<number, ProductoAgrupado>()
+  // Agrupar por producto_id + paquete_id para que el mismo producto
+  // en un paquete no se mezcle con el mismo producto suelto
+  const mapa = new Map<string, ProductoAgrupado>()
   for (const p of productos) {
-    if (!mapa.has(p.producto_id)) {
-      mapa.set(p.producto_id, {
+    const key = `${p.producto_id}-${p.paquete_id || 0}`
+    if (!mapa.has(key)) {
+      mapa.set(key, {
         producto_id: p.producto_id,
         marca_name: p.marca_name,
         producto_name: p.producto_name,
+        paquete_id: p.paquete_id,
+        paquete_nombre: p.paquete_nombre,
         unidades_derivadas: [],
       })
     }
-    const grupo = mapa.get(p.producto_id)!
+    const grupo = mapa.get(key)!
     grupo.unidades_derivadas.push({
       cantidad: p.cantidad,
       unidad_derivada_id: p.unidad_derivada_id,
@@ -205,6 +212,8 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
     const productos_por_almacen: ProductoVentaRequest[] = productos_agrupados.map((p) => ({
       producto_id: p.producto_id,
       costo: 0, // El costo se calculará en el backend
+      paquete_id: p.paquete_id || undefined,
+      paquete_nombre: p.paquete_nombre || undefined,
       unidades_derivadas: p.unidades_derivadas.map((u) => ({
         unidad_derivada_inmutable_name: u.unidad_derivada_name,
         factor: Number(u.unidad_derivada_factor),

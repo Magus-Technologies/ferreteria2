@@ -106,6 +106,8 @@ export default function HeaderCrearVenta({
           cantidad: paqueteProducto.cantidad,
           precio_venta: paqueteProducto.precio_sugerido || 0,
           recargo: 0,
+          descuento: Number(paqueteProducto.descuento || 0),
+          descuento_tipo: 'm',
           subtotal: 0,
           // ✅ Agregar información del paquete
           paquete_id: paquete.id,

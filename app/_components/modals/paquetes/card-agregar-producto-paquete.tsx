@@ -57,6 +57,8 @@ export default function CardAgregarProductoPaquete({
       unidad_derivada_name: unidad_derivada.unidad_derivada.name,
       cantidad: cantidad,
       precio_sugerido: precio_sugerido || undefined,
+      tipo_precio: 'publico',
+      descuento: 0,
       costo: producto_en_almacen?.costo ? Number(producto_en_almacen.costo) : undefined,
       unidades_derivadas_disponibles: unidades_derivadas,
     }

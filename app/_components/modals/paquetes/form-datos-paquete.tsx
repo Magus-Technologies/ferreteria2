@@ -22,18 +22,26 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
 
     const ventaTotal = productos.reduce((sum, p) => {
       const precio = p.precio_sugerido || 0
+      const descuento = p.descuento || 0
+      const precioFinal = Math.max(precio - descuento, 0)
       const cantidad = p.cantidad || 0
-      return sum + (precio * cantidad)
+      return sum + (precioFinal * cantidad)
     }, 0)
 
-    return { costoTotal, ventaTotal }
+    const descuentoTotal = productos.reduce((sum, p) => {
+      const descuento = p.descuento || 0
+      const cantidad = p.cantidad || 0
+      return sum + (descuento * cantidad)
+    }, 0)
+
+    return { costoTotal, ventaTotal, descuentoTotal }
   }, [productos])
 
   return (
     <Form form={form} layout="vertical">
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="text-lg font-semibold mb-3 text-blue-900">Datos de Paquete</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <LabelBase label="Paquete Nombre:" orientation="column">
             <Form.Item
               name="nombre"
@@ -55,6 +63,14 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
             <div className="flex items-center h-10 px-3 bg-gray-100 rounded-lg border border-gray-300">
               <span className="text-lg font-semibold text-gray-700">
                 S/. {totales.costoTotal.toFixed(2)}
+              </span>
+            </div>
+          </LabelBase>
+
+          <LabelBase label="Descuento Total:" orientation="column">
+            <div className="flex items-center h-10 px-3 bg-red-50 rounded-lg border border-red-300">
+              <span className="text-lg font-semibold text-red-600">
+                - S/. {totales.descuentoTotal.toFixed(2)}
               </span>
             </div>
           </LabelBase>

@@ -1,11 +1,13 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import { Button } from 'antd'
+import { Button, InputNumber } from 'antd'
 import { FaTrash, FaWeightHanging } from 'react-icons/fa'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
 import SelectBase from '~/app/_components/form/selects/select-base'
+
+export type TipoPrecioPaquete = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
 export interface ProductoPaquete {
   key: string
@@ -17,10 +19,18 @@ export interface ProductoPaquete {
   unidad_derivada_name: string
   cantidad: number
   precio_sugerido?: number
+  tipo_precio: TipoPrecioPaquete
+  descuento: number
   costo?: number
-  // Unidades derivadas disponibles para este producto (tipo simplificado)
   unidades_derivadas_disponibles?: any[]
 }
+
+const TIPO_PRECIO_OPTIONS = [
+  { value: 'publico', label: 'P. Público' },
+  { value: 'especial', label: 'P. Especial' },
+  { value: 'minimo', label: 'P. Mínimo' },
+  { value: 'ultimo', label: 'P. Último' },
+]
 
 interface TableProductosPaqueteProps {
   productos: ProductoPaquete[]
@@ -28,6 +38,8 @@ interface TableProductosPaqueteProps {
   onCantidadChange: (key: string, cantidad: number) => void
   onPrecioChange: (key: string, precio: number | undefined) => void
   onUnidadDerivadaChange: (key: string, unidadDerivadaId: number) => void
+  onTipoPrecioChange: (key: string, tipoPrecio: TipoPrecioPaquete) => void
+  onDescuentoChange: (key: string, descuento: number) => void
 }
 
 export default function TableProductosPaquete({
@@ -36,6 +48,8 @@ export default function TableProductosPaquete({
   onCantidadChange,
   onPrecioChange,
   onUnidadDerivadaChange,
+  onTipoPrecioChange,
+  onDescuentoChange,
 }: TableProductosPaqueteProps) {
   const columnDefs: ColDef<ProductoPaquete>[] = [
     {
@@ -96,41 +110,105 @@ export default function TableProductosPaquete({
       headerName: 'Cantidad',
       field: 'cantidad',
       width: 100,
-      editable: true,
-      cellClass: 'text-center',
-      cellEditor: 'agNumberCellEditor',
-      cellEditorParams: {
-        min: 0.001,
-        precision: 3,
-      },
-      valueFormatter: (params) => {
-        return params.value ? Number(params.value).toFixed(2) : '0.00'
-      },
-      onCellValueChanged: (params) => {
-        if (params.newValue !== params.oldValue) {
-          onCantidadChange(params.data.key, params.newValue)
-        }
+      cellRenderer: (params: any) => (
+        <div className="flex items-center h-full">
+          <InputNumber
+            size="small"
+            className="w-full"
+            value={params.value ?? 1}
+            min={0.001}
+            precision={2}
+            controls={false}
+            onChange={(val) => onCantidadChange(params.data.key, Number(val ?? 1))}
+          />
+        </div>
+      ),
+    },
+    {
+      headerName: 'Tipo Precio',
+      field: 'tipo_precio',
+      width: 140,
+      cellRenderer: (params: any) => {
+        return (
+          <SelectBase
+            size="small"
+            variant="borderless"
+            className="w-full"
+            value={params.value || 'publico'}
+            options={TIPO_PRECIO_OPTIONS}
+            onChange={(nuevoTipo) => {
+              onTipoPrecioChange(params.data.key, nuevoTipo as TipoPrecioPaquete)
+
+              // Auto-actualizar precio según tipo seleccionado
+              const unidades = params.data?.unidades_derivadas_disponibles || []
+              const unidadActual = unidades.find(
+                (u: any) => u.unidad_derivada.id === params.data.unidad_derivada_id
+              )
+              if (unidadActual) {
+                const precioMap: Record<string, string> = {
+                  publico: 'precio_publico',
+                  especial: 'precio_especial',
+                  minimo: 'precio_minimo',
+                  ultimo: 'precio_ultimo',
+                }
+                const campo = precioMap[nuevoTipo as string]
+                const nuevoPrecio = campo ? Number(unidadActual[campo]) || 0 : 0
+                onPrecioChange(params.data.key, nuevoPrecio)
+              }
+            }}
+          />
+        )
       },
     },
     {
       headerName: 'Precio',
       field: 'precio_sugerido',
-      width: 120,
-      editable: true,
-      cellClass: 'text-right',
-      cellEditor: 'agNumberCellEditor',
-      cellEditorParams: {
-        min: 0,
-        precision: 2,
+      width: 130,
+      cellRenderer: (params: any) => (
+        <div className="flex items-center h-full">
+          <InputNumber
+            size="small"
+            className="w-full"
+            prefix="S/."
+            value={params.value ?? 0}
+            min={0}
+            precision={2}
+            controls={false}
+            onChange={(val) => onPrecioChange(params.data.key, val ?? 0)}
+          />
+        </div>
+      ),
+    },
+    {
+      headerName: 'Descuento',
+      field: 'descuento',
+      width: 130,
+      cellRenderer: (params: any) => (
+        <div className="flex items-center h-full">
+          <InputNumber
+            size="small"
+            className="w-full"
+            prefix="S/."
+            value={params.value ?? 0}
+            min={0}
+            precision={2}
+            controls={false}
+            onChange={(val) => onDescuentoChange(params.data.key, Number(val ?? 0))}
+          />
+        </div>
+      ),
+    },
+    {
+      headerName: 'P. Final',
+      width: 110,
+      cellClass: 'text-right font-semibold text-green-700',
+      valueGetter: (params) => {
+        const precio = Number(params.data?.precio_sugerido || 0)
+        const descuento = Number(params.data?.descuento || 0)
+        return Math.max(precio - descuento, 0)
       },
       valueFormatter: (params) => {
-        if (params.value == null) return '-'
-        return `S/. ${Number(params.value).toFixed(4)}`
-      },
-      onCellValueChanged: (params) => {
-        if (params.newValue !== params.oldValue) {
-          onPrecioChange(params.data.key, params.newValue)
-        }
+        return `S/. ${Number(params.value || 0).toFixed(2)}`
       },
     },
     {
@@ -163,7 +241,7 @@ export default function TableProductosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Código', 'Producto', 'Marca', 'Unidad Derivada', 'Cantidad', 'Precio', 'Acciones'],
+          columns: ['Código', 'Producto', 'Marca', 'Unidad Derivada', 'Cantidad', 'Tipo Precio', 'Precio', 'Descuento', 'P. Final', 'Acciones'],
         },
       ]}
     />
