@@ -5,9 +5,10 @@ import { ColDef } from "ag-grid-community"
 import TableWithTitle from "~/components/tables/table-with-title"
 
 interface ItemBuscado {
-    id: number
+    id: number | null
     codigo: string
     nombre: string
+    nombre_adicional?: string
     cantidad: number
     unidad: string
     stock?: number

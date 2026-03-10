@@ -5,8 +5,10 @@ import { apiRequest, type ApiResponse } from '../api';
 export interface RequerimientoInternoProducto {
     id: number;
     requerimiento_id: number;
-    producto_id: number;
+    producto_id: number | null;
+    nombre_adicional: string | null;
     cantidad: number;
+    cantidad_pendiente: number;
     unidad: string | null;
     producto?: {
         id: number;
@@ -52,7 +54,9 @@ export interface RequerimientoInterno {
 // ============= REQUEST TYPES =============
 
 export interface CreateRequerimientoProductoRequest {
-    producto_id: number;
+    producto_id?: number;
+    requerimiento_interno_producto_id?: number;
+    nombre_adicional?: string;
     cantidad: number;
     unidad?: string;
 }

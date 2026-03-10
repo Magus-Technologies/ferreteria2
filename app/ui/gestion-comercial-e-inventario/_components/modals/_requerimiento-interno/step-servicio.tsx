@@ -31,9 +31,8 @@ export default function StepServicio({
                             <select
                                 value={form.tipoServicio}
                                 onChange={(e) => setField("tipoServicio", e.target.value)}
-                                className={`flex-1 px-3 py-2 border rounded-md text-sm outline-none transition-all ${
-                                    errors.tipoServicio ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                                }`}
+                                className={`flex-1 px-3 py-2 border rounded-md text-sm outline-none transition-all ${errors.tipoServicio ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                                    }`}
                             >
                                 <option value="">Seleccionar...</option>
                                 {tiposServicio.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -74,9 +73,8 @@ export default function StepServicio({
                         value={form.descripcionServicio}
                         onChange={(e) => setField("descripcionServicio", e.target.value)}
                         rows={4}
-                        className={`w-full px-3 py-2 border rounded-md text-sm outline-none transition-all resize-vertical ${
-                            errors.descripcionServicio ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-md text-sm outline-none transition-all resize-vertical ${errors.descripcionServicio ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                            }`}
                     />
                     {errors.descripcionServicio && <p className="text-xs text-red-600 font-medium mt-1">{errors.descripcionServicio}</p>}
                 </div>
@@ -126,9 +124,8 @@ export default function StepServicio({
                             placeholder="Cantidad"
                             value={form.duracionCif}
                             onChange={(e) => setField("duracionCif", e.target.value)}
-                            className={`flex-1 px-3 py-2 border rounded-md text-sm outline-none transition-all ${
-                                errors.duracionCif ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                            }`}
+                            className={`flex-1 px-3 py-2 border rounded-md text-sm outline-none transition-all ${errors.duracionCif ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                                }`}
                         />
                         <select
                             value={form.duracionUnidad}
@@ -141,20 +138,6 @@ export default function StepServicio({
                         </select>
                     </div>
                     {errors.duracionCif && <p className="text-xs text-red-600 font-medium mt-1">{errors.duracionCif}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                        Proveedor Sugerido (Opcional)
-                    </label>
-                    <select
-                        value={form.proveedorSugerido}
-                        onChange={(e) => setField("proveedorSugerido", e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                    >
-                        <option value="">Seleccionar proveedor...</option>
-                        {proveedores.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                    </select>
                 </div>
             </div>
         </div>

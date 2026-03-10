@@ -28,7 +28,7 @@ export interface CreateClienteCalificacionRequest {
   observacion?: string | null;
 }
 
-export interface UpdateClienteCalificacionRequest extends Partial<CreateClienteCalificacionRequest> {}
+export type UpdateClienteCalificacionRequest = Partial<CreateClienteCalificacionRequest>;
 
 export interface EstadoOption {
   value: EstadoClienteCalificacion;

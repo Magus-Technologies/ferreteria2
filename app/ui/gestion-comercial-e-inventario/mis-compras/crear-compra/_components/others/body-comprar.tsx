@@ -62,6 +62,7 @@ export interface FormCreateCompra {
   egreso_dinero_id?: string
   despliegue_de_pago_id?: number
   metodo_de_pago_id?: string
+  orden_compra_id?: number
 }
 
 export default function BodyComprar({

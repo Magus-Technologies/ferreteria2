@@ -13,7 +13,8 @@ type UseStoreFiltrosOrdenesCompraProps = {
 export const useStoreFiltrosOrdenesCompra = create<UseStoreFiltrosOrdenesCompraProps>(
     set => {
         return {
-            filtros: {},
+            // Inicializar con almacen_id = 1 por defecto
+            filtros: { almacen_id: 1 },
             setFiltros: value =>
                 set(state => ({
                     filtros: typeof value === 'function' ? value(state.filtros) : value,

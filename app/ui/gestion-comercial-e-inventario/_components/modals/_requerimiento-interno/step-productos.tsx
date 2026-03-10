@@ -3,9 +3,10 @@
 import { useState } from "react"
 
 interface ItemBuscado {
-    id: number
+    id: number | null
     codigo: string
     nombre: string
+    nombre_adicional?: string
     cantidad: number
     unidad: string
     stock?: number
@@ -30,9 +31,9 @@ interface StepProductosProps {
     productosDisponibles: ProductoDisponible[]
     productosSeleccionados: ItemBuscado[]
     onAgregarProducto: (p: ItemBuscado) => void
-    onQuitarProducto: (id: number) => void
-    onCambiarCantidad: (id: number, cantidad: number) => void
-    proveedores: { label: string; value: number }[]
+    onQuitarProducto: (id: number | string) => void
+    onCambiarCantidad: (id: number | string, cantidad: number) => void
+    onCambiarUnidad: (id: number | string, unidad: string) => void
 }
 
 export default function StepProductos({
@@ -44,7 +45,7 @@ export default function StepProductos({
     onAgregarProducto,
     onQuitarProducto,
     onCambiarCantidad,
-    proveedores,
+    onCambiarUnidad,
 }: StepProductosProps) {
     const [busqueda, setBusqueda] = useState("")
 
@@ -68,6 +69,21 @@ export default function StepProductos({
         onAgregarProducto(item)
     }
 
+    const agregarProductoManual = () => {
+        if (!busqueda.trim()) return
+        const item: ItemBuscado = {
+            id: null,
+            codigo: "N/A",
+            nombre: busqueda.trim(),
+            nombre_adicional: busqueda.trim(),
+            cantidad: 1,
+            unidad: "UND",
+            stock: 0,
+        }
+        onAgregarProducto(item)
+        setBusqueda("")
+    }
+
     return (
         <div className="space-y-5">
             {/* Search Box */}
@@ -83,6 +99,11 @@ export default function StepProductos({
                             placeholder="Buscar por nombre o código de producto..."
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && busqueda.length > 2 && productosFiltrados.length === 0) {
+                                    agregarProductoManual()
+                                }
+                            }}
                             className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded text-sm outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                         />
                     </div>
@@ -91,46 +112,62 @@ export default function StepProductos({
                 {/* Resultados */}
                 <div className="max-h-64 overflow-y-auto">
                     {busqueda.length > 1 ? (
-                        productosFiltrados.length > 0 ? (
-                            productosFiltrados.map(p => {
-                                const added = !!productosSeleccionados.find(s => s.id === p.id)
-                                return (
-                                    <div
-                                        key={p.id}
-                                        className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors"
-                                    >
-                                        <span className="font-mono text-xs font-semibold text-emerald-600 w-16 flex-shrink-0">
-                                            {p.cod_producto || p.codigo}
-                                        </span>
-                                        <span className="text-sm text-slate-900 flex-1">
-                                            {p.name || p.nombre}
-                                        </span>
-                                        <span className={`text-xs font-semibold px-2 py-1 rounded flex-shrink-0 ${
-                                            (p.stock_fraccion || p.stock || 0) > 0
+                        <>
+                            {productosFiltrados.length > 0 ? (
+                                productosFiltrados.map(p => {
+                                    const added = !!productosSeleccionados.find(s => s.id === p.id)
+                                    return (
+                                        <div
+                                            key={p.id}
+                                            className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <span className="font-mono text-xs font-semibold text-emerald-600 w-16 flex-shrink-0">
+                                                {p.cod_producto || p.codigo}
+                                            </span>
+                                            <span className="text-sm text-slate-900 flex-1">
+                                                {p.name || p.nombre}
+                                            </span>
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded flex-shrink-0 ${(p.stock_fraccion || p.stock || 0) > 0
                                                 ? "bg-emerald-100 text-emerald-700"
                                                 : "bg-red-100 text-red-700"
-                                        }`}>
-                                            Stock: {p.stock_fraccion || p.stock || 0}
-                                        </span>
-                                        <button
-                                            onClick={() => agregarProducto(p)}
-                                            disabled={added}
-                                            className={`w-7 h-7 rounded flex items-center justify-center text-sm font-semibold flex-shrink-0 transition-all ${
-                                                added
+                                                }`}>
+                                                Stock: {p.stock_fraccion || p.stock || 0}
+                                            </span>
+                                            <button
+                                                onClick={() => agregarProducto(p)}
+                                                disabled={added}
+                                                className={`w-7 h-7 rounded flex items-center justify-center text-sm font-semibold flex-shrink-0 transition-all ${added
                                                     ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                                                     : "bg-emerald-600 text-white hover:bg-emerald-700"
-                                            }`}
-                                        >
-                                            {added ? "✓" : "+"}
-                                        </button>
-                                    </div>
-                                )
-                            })
-                        ) : (
-                            <div className="px-4 py-6 text-center text-sm text-slate-500">
-                                Sin resultados para "{busqueda}"
-                            </div>
-                        )
+                                                    }`}
+                                            >
+                                                {added ? "✓" : "+"}
+                                            </button>
+                                        </div>
+                                    )
+                                })
+                            ) : (
+                                <div className="px-4 py-6 text-center">
+                                    <p className="text-sm text-slate-500 mb-2">Sin resultados para "{busqueda}"</p>
+                                    <button
+                                        onClick={agregarProductoManual}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-bold hover:bg-emerald-100 transition-colors"
+                                    >
+                                        + Agregar "{busqueda}" como producto nuevo
+                                    </button>
+                                </div>
+                            )}
+                            {productosFiltrados.length > 0 && (
+                                <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-center">
+                                    <button
+                                        onClick={agregarProductoManual}
+                                        className="text-[10px] font-bold text-slate-500 hover:text-emerald-600 uppercase tracking-tight"
+                                    >
+                                        ¿No encuentras lo que buscas? Agregar "{busqueda}" manualmente
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="px-4 py-4 text-center text-xs text-slate-500 italic">
                             Ingrese al menos 2 caracteres para buscar...
@@ -163,55 +200,51 @@ export default function StepProductos({
                     </div>
                 ) : (
                     <div className="border border-slate-200 rounded-lg overflow-hidden">
-                        {productosSeleccionados.map(p => (
-                            <div
-                                key={p.id}
-                                className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors"
-                            >
-                                <span className="font-mono text-xs font-semibold text-emerald-600 w-16 flex-shrink-0">
-                                    {p.codigo}
-                                </span>
-                                <span className="text-sm text-slate-900 flex-1">
-                                    {p.nombre}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    value={p.cantidad}
-                                    onChange={(e) => onCambiarCantidad(p.id, Number(e.target.value))}
-                                    className="w-16 px-2 py-1 border border-slate-200 rounded text-sm text-right outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                                />
-                                <span className="text-xs font-bold text-emerald-600 w-10 flex-shrink-0">
-                                    {p.unidad}
-                                </span>
-                                <button
-                                    onClick={() => onQuitarProducto(p.id)}
-                                    className="w-6 h-6 rounded border border-red-300 text-red-500 flex items-center justify-center text-xs font-semibold hover:bg-red-50 transition-all flex-shrink-0"
+                        {productosSeleccionados.map((p, idx) => {
+                            const uniqueId = p.id || `manual-${idx}-${p.nombre}`
+                            return (
+                                <div
+                                    key={uniqueId}
+                                    className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors"
                                 >
-                                    ✕
-                                </button>
-                            </div>
-                        ))}
+                                    <span className={`font-mono text-xs font-bold w-16 flex-shrink-0 ${p.id ? 'text-emerald-600' : 'text-amber-600 italic'}`}>
+                                        {p.codigo}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm text-slate-900 truncate">{p.nombre}</div>
+                                        {!p.id && <div className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">Producto no registrado</div>}
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={p.cantidad}
+                                        onChange={(e) => onCambiarCantidad(uniqueId, Number(e.target.value))}
+                                        className="w-16 px-2 py-1 border border-slate-200 rounded text-sm text-right outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                                    />
+                                    {p.id ? (
+                                        <span className="text-xs font-bold text-emerald-600 w-12 flex-shrink-0 overflow-hidden text-ellipsis whitespace-nowrap" title={p.unidad}>
+                                            {p.unidad}
+                                        </span>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            value={p.unidad}
+                                            onChange={(e) => onCambiarUnidad(uniqueId, e.target.value)}
+                                            placeholder="UND"
+                                            className="w-12 px-1 py-1 border border-amber-200 bg-amber-50 rounded text-[10px] font-bold text-center outline-none"
+                                        />
+                                    )}
+                                    <button
+                                        onClick={() => onQuitarProducto(uniqueId)}
+                                        className="w-6 h-6 rounded border border-red-300 text-red-500 flex items-center justify-center text-xs font-semibold hover:bg-red-50 transition-all flex-shrink-0"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            )
+                        })}
                     </div>
                 )}
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-slate-200" />
-
-            {/* Proveedor Sugerido */}
-            <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                    Proveedor Sugerido (Opcional)
-                </label>
-                <select
-                    value={form.proveedorSugerido}
-                    onChange={(e) => setField("proveedorSugerido", e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                >
-                    <option value="">Seleccionar proveedor...</option>
-                    {proveedores.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                </select>
             </div>
         </div>
     )
