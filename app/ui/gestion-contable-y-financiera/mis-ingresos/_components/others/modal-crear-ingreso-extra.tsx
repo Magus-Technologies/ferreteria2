@@ -1,15 +1,16 @@
 'use client'
 
 import { Form, Input, InputNumber, Select, Switch, message } from 'antd'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { crearIngresoExtra, updateIngresoExtra, type CrearIngresoExtraData, type IngresoExtra } from '~/lib/api/ingreso-extra'
-import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
 import { usuariosApi } from '~/lib/api/usuarios'
 import ModalForm from '~/components/modals/modal-form'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import LabelBase from '~/components/form/label-base'
 import TitleForm from '~/components/form/title-form'
+import { useCheckAperturaDiaria } from '~/app/ui/gestion-contable-y-financiera/mis-ingresos/_hooks/use-check-apertura-diaria'
+import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
 
 interface ModalCrearIngresoExtraProps {
     open: boolean
@@ -21,7 +22,9 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
     const [form] = Form.useForm<CrearIngresoExtraData & { requiereAprobacion?: boolean }>()
     const queryClient = useQueryClient()
     const [requiereAprobacion, setRequiereAprobacion] = useState(false)
+    const [openAperturaModal, setOpenAperturaModal] = useState(false)
     const isEditing = !!ingresoEdit
+    const { hasApertura, refetchApertura } = useCheckAperturaDiaria()
 
     // Consultas
 
@@ -78,7 +81,14 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
         onClose()
     }
 
-    const handleFinish = (values: CrearIngresoExtraData & { requiereAprobacion?: boolean }) => {
+    const handleFinish = useCallback((values: CrearIngresoExtraData & { requiereAprobacion?: boolean }) => {
+        // Si requiere aprobación y no hay apertura, abrir modal de apertura
+        if (values.requiereAprobacion && !hasApertura) {
+            console.log('🔴 No hay apertura de hoy - abriendo modal')
+            setOpenAperturaModal(true)
+            return
+        }
+
         // En modo edición no se puede aprobar
         if (!values.requiereAprobacion || isEditing) {
             delete values.supervisor_id
@@ -105,10 +115,11 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
                 despliegue_pago_id: desplieguePagoId
             })
         }
-    }
+    }, [hasApertura, isEditing, ingresoEdit, updateMutation, crearMutation])
 
     return (
-        <ModalForm
+        <>
+            <ModalForm
             open={open}
             setOpen={(val) => { if (!val) handleClose() }}
             modalProps={{
@@ -226,6 +237,17 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
                 )}
             </div>
         </ModalForm>
+
+        {/* Modal de Apertura - se abre si intenta crear ingreso con aprobación sin apertura */}
+        <ModalAperturarCaja
+            open={openAperturaModal}
+            setOpen={setOpenAperturaModal}
+            onSuccess={async () => {
+                setOpenAperturaModal(false)
+                await refetchApertura()
+            }}
+        />
+        </>
     )
 }
 

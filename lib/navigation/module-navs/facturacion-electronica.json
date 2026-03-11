@@ -213,7 +213,7 @@
         "id": "mis-contactos",
         "label": "Mis Contactos",
         "icon": "IoMdContact",
-        "route": null,
+        "route": "/ui/facturacion-electronica/mis-contactos",
         "permission": "facturacion-electronica.mis-contactos.index"
       },
       {

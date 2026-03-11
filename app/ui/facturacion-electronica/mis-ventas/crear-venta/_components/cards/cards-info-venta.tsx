@@ -18,8 +18,9 @@ import ButtonCargarCotizacion from "../buttons/button-cargar-cotizacion";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
+import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
 
-export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; ventaId?: string }) {
+export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
   const tipo_documento = Form.useWatch("tipo_documento", form);
@@ -49,6 +50,17 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
   const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] =
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
+
+  const { hasApertura, refetchApertura } = useCheckAperturaDiaria();
+
+  const handleCobrarClick = () => {
+    setModalOpen(true);
+  };
+
+  const handleCreditoClick = () => {
+    form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
+    setModalDetallesEntregaOpen(true);
+  };
 
   // Calcular SubTotal (suma de productos sin descuento)
   const subTotal = useMemo(
@@ -224,7 +236,7 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
           label="Botón Cobrar"
         >
           <ButtonBase
-            onClick={() => setModalOpen(true)}
+            onClick={handleCobrarClick}
             disabled={forma_de_pago === "cr"}
             color="info"
             className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
@@ -241,10 +253,7 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
             label="Botón Crear Venta a Crédito"
           >
             <ButtonBase
-              onClick={() => {
-                form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
-                setModalDetallesEntregaOpen(true);
-              }}
+              onClick={handleCreditoClick}
               color="success"
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
             >
@@ -310,9 +319,8 @@ export default function CardsInfoVenta({ form, ventaId }: { form: FormInstance; 
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
         onContinuar={() => {
-          // Al dar continuar, abrir el modal de detalles de entrega
-          setModalOpen(false);
-          setModalDetallesEntregaOpen(true);
+          // Al dar continuar, intentar finalizar la venta (esto dispara la validación de apertura)
+          form.submit();
         }}
       />
 
