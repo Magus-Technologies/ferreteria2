@@ -10,6 +10,7 @@ import { Spin } from 'antd'
 // Lazy loading de componentes
 const FiltersMisEntregas = lazy(() => import('./_components/filters/filters-mis-entregas'))
 const TableMisEntregas = lazy(() => import('./_components/tables/table-mis-entregas'))
+const TableDetalleEntrega = lazy(() => import('./_components/tables/table-detalle-entrega'))
 const CardsInfoEntregas = lazy(() => import('./_components/cards/cards-info-entregas'))
 
 // Componente de loading
@@ -34,11 +35,16 @@ export default function MisEntregas() {
         {/* Layout responsivo */}
         <div className='w-full mt-4'>
           <div className='grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8'>
-            {/* Columna principal - Tabla */}
+            {/* Columna principal - Tablas */}
             <div className='flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0'>
-              <div className='h-[600px]'>
+              <div className='h-[300px]'>
                 <Suspense fallback={<ComponentLoading />}>
                   <TableMisEntregas />
+                </Suspense>
+              </div>
+              <div>
+                <Suspense fallback={<ComponentLoading />}>
+                  <TableDetalleEntrega />
                 </Suspense>
               </div>
             </div>

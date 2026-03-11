@@ -1,14 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { FaMapMarkedAlt, FaTruck, FaCheck } from 'react-icons/fa'
-import { Button, Space } from 'antd'
+import { FaMapMarkedAlt, FaTruck, FaBoxOpen } from 'react-icons/fa'
+import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
-import ModalMapaEntrega from '../modals/modal-mapa-entrega'
+import ModalDespachoEntrega from '../modals/modal-despacho-entrega'
+import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
+import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
   entrega?: any
@@ -17,18 +19,15 @@ interface CellAccionesEntregaProps {
 
 export default function CellAccionesEntrega({ entrega, onRefetch }: CellAccionesEntregaProps) {
   const [loading, setLoading] = useState(false)
-  const [modalMapaOpen, setModalMapaOpen] = useState(false)
+  const [modalDespachoOpen, setModalDespachoOpen] = useState(false)
+  const [modalConfirmarOpen, setModalConfirmarOpen] = useState(false)
   const { message } = useApp()
   const queryClient = useQueryClient()
+  const openPostDespacho = useStoreEntregaSeleccionada((s) => s.openPostDespacho)
 
   if (!entrega) return null
 
-  const handleVerMapa = () => {
-    setModalMapaOpen(true)
-  }
-
-  const handleEnCamino = async () => {
-    setLoading(true)
+  const handleDespachar = async () => {
     try {
       const response = await entregaProductoApi.update(entrega.id, {
         estado_entrega: EstadoEntrega.EN_CAMINO,
@@ -39,20 +38,39 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         return
       }
 
-      message.success('Estado actualizado a En Camino')
-      
-      // Invalidar caché para refrescar la tabla
+      message.success('Entrega despachada correctamente')
+      setModalDespachoOpen(false)
+
+      // Abrir modal post-despacho via Zustand (sobrevive re-renders de la tabla)
+      openPostDespacho(entrega)
+
+      // Refrescar tabla
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
-      
-      // Llamar callback si existe
-      if (onRefetch) {
-        onRefetch()
-      }
+      if (onRefetch) onRefetch()
     } catch (error) {
-      console.error('Error al actualizar estado:', error)
-      message.error('Error al actualizar estado')
-    } finally {
-      setLoading(false)
+      console.error('Error al despachar:', error)
+      message.error('Error al despachar la entrega')
+    }
+  }
+
+  const handleDespacharMasTarde = async () => {
+    try {
+      const response = await entregaProductoApi.update(entrega.id, {
+        chofer_id: null as any,
+      })
+
+      if (response.error) {
+        message.error(response.error.message || 'Error al liberar entrega')
+        return
+      }
+
+      message.info('Entrega liberada — ahora todos los despachadores pueden verla')
+      setModalDespachoOpen(false)
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      if (onRefetch) onRefetch()
+    } catch (error) {
+      console.error('Error al liberar entrega:', error)
+      message.error('Error al liberar la entrega')
     }
   }
 
@@ -69,14 +87,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       }
 
       message.success('Entrega completada exitosamente')
-      
-      // Invalidar caché para refrescar la tabla
+      setModalConfirmarOpen(false)
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
-      
-      // Llamar callback si existe
-      if (onRefetch) {
-        onRefetch()
-      }
+      if (onRefetch) onRefetch()
     } catch (error) {
       console.error('Error al completar entrega:', error)
       message.error('Error al completar entrega')
@@ -85,8 +98,8 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     }
   }
 
-  // Mapear estados de la DB a los que espera el componente
-  const estadoEntrega = entrega.estado_entrega === 'pe' ? 'PENDIENTE' 
+  // Mapear estados de la DB
+  const estadoEntrega = entrega.estado_entrega === 'pe' ? 'PENDIENTE'
     : entrega.estado_entrega === 'ec' ? 'EN_CAMINO'
     : entrega.estado_entrega === 'en' ? 'ENTREGADO'
     : entrega.estado_entrega === 'ca' ? 'CANCELADO'
@@ -94,63 +107,76 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   return (
     <>
-      <Space size="small" className="flex items-center justify-center h-full">
+      <Space size={4} className="flex items-center justify-center h-full">
         <ConfigurableElement
           componentId="mis-entregas.boton-ver-mapa"
           label="Botón Ver Mapa"
           noFullWidth
         >
-          <Button
-            type="link"
-            size="small"
-            icon={<FaMapMarkedAlt />}
-            onClick={handleVerMapa}
-            title="Ver Mapa"
-          />
+          <Tooltip title="Ver Mapa">
+            <Button
+              type="text"
+              size="small"
+              icon={<FaMapMarkedAlt size={15} />}
+              onClick={() => openPostDespacho(entrega)}
+              className="!text-blue-600 hover:!bg-blue-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+            />
+          </Tooltip>
         </ConfigurableElement>
-        
+
         {estadoEntrega === 'PENDIENTE' && (
           <ConfigurableElement
             componentId="mis-entregas.boton-en-camino"
             label="Botón En Camino"
             noFullWidth
           >
-            <Button
-              type="link"
-              size="small"
-              icon={<FaTruck />}
-              onClick={handleEnCamino}
-              loading={loading}
-              title="Marcar En Camino"
-              className="text-blue-600"
-            />
+            <Tooltip title="Despachar">
+              <Button
+                type="text"
+                size="small"
+                icon={<FaTruck size={15} />}
+                onClick={() => setModalDespachoOpen(true)}
+                className="!text-orange-600 hover:!bg-orange-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+              />
+            </Tooltip>
           </ConfigurableElement>
         )}
-        
+
         {estadoEntrega === 'EN_CAMINO' && (
           <ConfigurableElement
             componentId="mis-entregas.boton-entregar"
             label="Botón Entregar"
             noFullWidth
           >
-            <Button
-              type="link"
-              size="small"
-              icon={<FaCheck />}
-              onClick={handleEntregar}
-              loading={loading}
-              title="Marcar como Entregado"
-              className="text-green-600"
-            />
+            <Tooltip title="Confirmar Entrega">
+              <Button
+                type="text"
+                size="small"
+                icon={<FaBoxOpen size={15} />}
+                onClick={() => setModalConfirmarOpen(true)}
+                className="!text-green-600 hover:!bg-green-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+              />
+            </Tooltip>
           </ConfigurableElement>
         )}
       </Space>
 
-      {/* Modal del Mapa */}
-      <ModalMapaEntrega
-        open={modalMapaOpen}
-        onClose={() => setModalMapaOpen(false)}
+      {/* Modal de Despacho (ticket + botón despachar) */}
+      <ModalDespachoEntrega
+        open={modalDespachoOpen}
+        onClose={() => setModalDespachoOpen(false)}
+        onDespachar={handleDespachar}
+        onDespacharMasTarde={handleDespacharMasTarde}
         entrega={entrega}
+      />
+
+      {/* Modal de Confirmar Entrega */}
+      <ModalConfirmarEntrega
+        open={modalConfirmarOpen}
+        onClose={() => setModalConfirmarOpen(false)}
+        onConfirmar={handleEntregar}
+        entrega={entrega}
+        loading={loading}
       />
     </>
   )

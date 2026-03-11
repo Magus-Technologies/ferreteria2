@@ -399,21 +399,16 @@ export default function ModalDetallesEntrega({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Designar Despachador: <span className="text-red-500">*</span>
+                  Designar Despachador: <span className="text-gray-400 text-xs">(opcional)</span>
                 </label>
                 <SelectDespachadores
                   form={form}
                   propsForm={{
                     name: 'despachador_id',
-                    rules: [
-                      {
-                        required: true,
-                        message: 'Por favor, selecciona un despachador',
-                      },
-                    ],
                   }}
-                  placeholder="Seleccionar despachador"
+                  placeholder="Sin asignar (todos los despachadores lo verán)"
                   className="w-full"
+                  allowClear
                 />
               </div>
               <div>

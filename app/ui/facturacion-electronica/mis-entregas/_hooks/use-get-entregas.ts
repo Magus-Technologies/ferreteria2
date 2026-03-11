@@ -14,10 +14,14 @@ export default function useGetEntregas() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esDespachador],
     queryFn: async () => {
+      const estadoParam = filtros.estado_entrega?.length
+        ? filtros.estado_entrega.join(',')
+        : undefined
+
       const response = await entregaProductoApi.list({
         fecha_desde: filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta: filtros.fecha_hasta?.format('YYYY-MM-DD'),
-        estado_entrega: filtros.estado_entrega as any,
+        estado_entrega: estadoParam as any,
         // Despachador solo ve sus entregas, admin ve todas
         chofer_id: esDespachador ? user?.id : undefined,
       })

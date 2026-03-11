@@ -338,9 +338,8 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
       console.log('  Condición 1 - ventaCreada:', !!ventaCreada)
       console.log('  Condición 2 - tipo_despacho === "Domicilio":', tipo_despacho === 'Domicilio')
       console.log('  Condición 3 - despachador_id:', !!despachador_id)
-      console.log('  ¿Se cumple la condición completa?:', !!(ventaCreada && tipo_despacho === 'Domicilio' && despachador_id))
 
-      if (ventaCreada && tipo_despacho === 'Domicilio' && despachador_id) {
+      if (ventaCreada && tipo_despacho === 'Domicilio') {
         console.log('🚚 Creando entrega automáticamente...')
 
         try {
@@ -377,8 +376,8 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
             longitud: longitud ? Number(longitud) : undefined,
             observaciones: observaciones,
             almacen_salida_id: almacen_id,
-            chofer_id: String(despachador_id),
-            quien_entrega: QuienEntrega.CHOFER,
+            chofer_id: despachador_id ? String(despachador_id) : undefined,
+            quien_entrega: despachador_id ? QuienEntrega.CHOFER : undefined,
             user_id: user_id,
             productos_entregados: unidadesDerivadas,
           }
@@ -396,25 +395,29 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
             })
           } else {
             console.log('✅ Entrega creada automáticamente:', entregaResponse.data)
-            message.success('Entrega programada exitosamente para el despachador')
+            message.success(despachador_id
+              ? 'Entrega programada exitosamente para el despachador'
+              : 'Entrega programada exitosamente (sin despachador asignado)')
 
-            // 🔔 Enviar notificación push al despachador
-            try {
-              const clienteNombre = ventaCreada.cliente?.nombres
-                ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
-                : ventaCreada.cliente?.razon_social || 'Cliente'
+            // 🔔 Enviar notificación push al despachador (solo si hay uno asignado)
+            if (despachador_id) {
+              try {
+                const clienteNombre = ventaCreada.cliente?.nombres
+                  ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
+                  : ventaCreada.cliente?.razon_social || 'Cliente'
 
-              await fcmApi.notifyEntregaProgramada({
-                despachador_id: String(despachador_id),
-                venta_serie: ventaCreada.serie || '',
-                venta_numero: ventaCreada.numero || '',
-                direccion: direccion_entrega || '',
-                fecha_programada: fecha_programada ? dayjs(fecha_programada).format('DD/MM/YYYY') : 'Hoy',
-                cliente_nombre: clienteNombre,
-              })
-              console.log('🔔 Notificación enviada al despachador')
-            } catch (notifError) {
-              console.warn('⚠️ No se pudo enviar notificación push:', notifError)
+                await fcmApi.notifyEntregaProgramada({
+                  despachador_id: String(despachador_id),
+                  venta_serie: ventaCreada.serie || '',
+                  venta_numero: ventaCreada.numero || '',
+                  direccion: direccion_entrega || '',
+                  fecha_programada: fecha_programada ? dayjs(fecha_programada).format('DD/MM/YYYY') : 'Hoy',
+                  cliente_nombre: clienteNombre,
+                })
+                console.log('🔔 Notificación enviada al despachador')
+              } catch (notifError) {
+                console.warn('⚠️ No se pudo enviar notificación push:', notifError)
+              }
             }
           }
         } catch (error) {

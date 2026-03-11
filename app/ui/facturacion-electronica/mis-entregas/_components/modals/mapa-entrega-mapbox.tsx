@@ -31,8 +31,8 @@ export default function MapaEntregaMapbox({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Coordenadas por defecto (Arequipa, Perú)
-  const DEFAULT_COORDS = { lat: -16.409047, lng: -71.537451 }
+  // Coordenadas por defecto (Trujillo, Perú)
+  const DEFAULT_COORDS = { lat: -8.1116, lng: -79.0287 }
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_ACCESS_TOKEN) {
@@ -107,7 +107,7 @@ export default function MapaEntregaMapbox({
 
   const geocodificarDireccion = async (dir: string) => {
     try {
-      const query = encodeURIComponent(`${dir}, Arequipa, Peru`)
+      const query = encodeURIComponent(`${dir}, Trujillo, Peru`)
       const response = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1&country=PE`
       )

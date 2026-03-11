@@ -23,16 +23,25 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Cliente',
       colId: 'cliente_nombre',
       field: 'venta.cliente',
-      width: 300,
+      width: 250,
       valueGetter: (params) => {
         const cliente = params.data?.venta?.cliente
         if (!cliente) return 'SIN CLIENTE'
-        
-        const nombre = cliente.razon_social || 
+
+        const nombre = cliente.razon_social ||
           `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
         const documento = cliente.numero_documento || ''
-        
+
         return documento ? `${documento} - ${nombre}` : nombre
+      },
+    },
+    {
+      headerName: 'Teléfono',
+      colId: 'cliente_telefono',
+      width: 130,
+      valueGetter: (params) => {
+        const cliente = params.data?.venta?.cliente
+        return cliente?.telefono || '—'
       },
     },
     {

@@ -17,7 +17,7 @@ import { useAuth } from '~/lib/auth-context'
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
   fecha_hasta?: dayjs.Dayjs
-  estado_entrega?: 'PENDIENTE' | 'EN_CAMINO' | 'ENTREGADO' | 'CANCELADO'
+  estado_entrega?: string[]
   tipo_despacho?: 'INMEDIATO' | 'PROGRAMADO'
   search?: string
 }
@@ -29,22 +29,16 @@ export default function FiltersMisEntregas() {
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
 
   const handleFinish = (values: ValuesFiltersMisEntregas) => {
-    const { fecha_desde, fecha_hasta, ...rest } = values
+    const estados = values.estado_entrega
+    const estadoFinal = Array.isArray(estados) && estados.length > 0 ? estados : undefined
 
-    const data: any = {
-      ...rest,
-      ...(fecha_desde ? { fecha_desde } : {}),
-      ...(fecha_hasta ? { fecha_hasta } : {}),
-    }
-
-    // Limpiar valores undefined, null o vacíos
-    Object.keys(data).forEach((key) => {
-      if (data[key] === undefined || data[key] === null || data[key] === '') {
-        delete data[key]
-      }
+    setFiltros({
+      fecha_desde: values.fecha_desde || dayjs().startOf('month'),
+      fecha_hasta: values.fecha_hasta || dayjs().endOf('month'),
+      estado_entrega: estadoFinal,
+      tipo_despacho: values.tipo_despacho || undefined,
+      search: values.search || undefined,
     })
-
-    setFiltros(data)
   }
 
   return (
@@ -54,6 +48,7 @@ export default function FiltersMisEntregas() {
       initialValues={{
         fecha_desde: dayjs().startOf('month'),
         fecha_hasta: dayjs().endOf('month'),
+        estado_entrega: ['pe', 'ec'],
       }}
       className="w-full"
       onFinish={handleFinish}
@@ -138,12 +133,14 @@ export default function FiltersMisEntregas() {
                 className="w-full"
                 formWithMessage={false}
                 allowClear
+                mode="multiple"
                 placeholder="Todos"
+                maxTagCount="responsive"
                 options={[
-                  { value: 'PENDIENTE', label: '⏳ Pendiente' },
-                  { value: 'EN_CAMINO', label: '🚚 En Camino' },
-                  { value: 'ENTREGADO', label: '✅ Entregado' },
-                  { value: 'CANCELADO', label: '❌ Cancelado' },
+                  { value: 'pe', label: '⏳ Pendiente' },
+                  { value: 'ec', label: '🚚 En Camino' },
+                  { value: 'en', label: '✅ Entregado' },
+                  { value: 'ca', label: '❌ Cancelado' },
                 ]}
               />
             </div>
