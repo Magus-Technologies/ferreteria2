@@ -150,6 +150,7 @@ export default function BodyVender({
 } = {}) {
   const [openDoc, setOpenDoc] = useState(false)
   const [ventaId, setVentaId] = useState<string>()
+  const [ventaCreada, setVentaCreada] = useState<any>()
   const [formKey, setFormKey] = useState(0)
 
   const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
@@ -183,9 +184,10 @@ export default function BodyVender({
     const unsubscribe = ventaEvents.on((data) => {
       console.log('🎯 Evento ventaCreada recibido con data:', data)
       
-      // Guardar id y abrir modal inmediatamente
+      // Guardar id, datos de venta y abrir modal inmediatamente
       console.log('🔓 Setting openDoc to true y ventaId')
       setVentaId(String(data.id))
+      setVentaCreada(data)
       setOpenDoc(true)
     })
 
@@ -207,9 +209,10 @@ export default function BodyVender({
       console.log('🔑 Incrementing formKey para limpiar formulario')
       setFormKey(prev => prev + 1)
 
-      // Limpiar ventaId después de un momento
+      // Limpiar ventaId y datos después de un momento
       setTimeout(() => {
         setVentaId(undefined)
+        setVentaCreada(undefined)
       }, 100)
     }
   }, [openDoc, ventaId, setProductoAgregado, setProductos])
@@ -222,6 +225,7 @@ export default function BodyVender({
         open={openDoc}
         setOpen={setOpenDoc}
         ventaId={ventaId}
+        ventaData={ventaCreada}
       />
       {/* Recrear completamente el formulario cuando cambia formKey */}
       <FormVentaInternal

@@ -30,6 +30,8 @@ interface ModalEntradaStockProps {
   backendPdfUrl?: string | null
   /** Indica si el backend PDF esta cargando */
   backendPdfLoading?: boolean
+  /** Override del comportamiento de impresión. Si se proporciona, se usa en vez del print default. */
+  onCustomPrint?: () => Promise<void>
 }
 export default function ModalShowDoc({
   open,
@@ -43,6 +45,7 @@ export default function ModalShowDoc({
   cierreId,
   backendPdfUrl,
   backendPdfLoading,
+  onCustomPrint,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
@@ -138,6 +141,10 @@ export default function ModalShowDoc({
 
   // Imprimir con QZ Tray
   const handlePrint = async () => {
+    if (onCustomPrint) {
+      await onCustomPrint()
+      return
+    }
     const imprimioDirecto = await qz.imprimirDefault()
     if (!imprimioDirecto) {
       setOpenImpresoraModal(true)
