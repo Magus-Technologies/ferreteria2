@@ -4,6 +4,7 @@ import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icon
 import { useQueryClient } from '@tanstack/react-query'
 import { cierreCajaApi, type CerrarCajaRequest } from '../../../../../lib/api/cierre-caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { getAuthToken } from '~/lib/api'
 
 export function useCerrarCaja() {
     const [loading, setLoading] = useState(false)
@@ -41,20 +42,17 @@ export function useCerrarCaja() {
 
                         console.log('✅ Datos actualizados obtenidos:', cajaActualizada.data)
 
-                        // Generar el PDF usando react-pdf con los datos ACTUALIZADOS
-                        const { pdf } = await import('@react-pdf/renderer')
-                        const { default: DocCierreCajaTicket } = await import('../_components/docs/doc-cierre-caja-ticket')
-
-                        // Crear el documento PDF con datos actualizados
-                        const doc = <DocCierreCajaTicket
-                            data={cajaActualizada.data as any}
-                            nro_doc={cajaActualizada.data.id}
-                            empresa={empresaData}
-                            show_logo_html={false}
-                        />
-
-                        // Generar el blob del PDF
-                        const pdfBlob = await pdf(doc).toBlob()
+                        // Generar el PDF desde el backend
+                        const token = getAuthToken()
+                        const API_URL = process.env.NEXT_PUBLIC_API_URL
+                        const pdfRes = await fetch(`${API_URL}/pdf/cierre-caja/${aperturaId}?formato=ticket`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                Accept: 'application/pdf',
+                            },
+                        })
+                        if (!pdfRes.ok) throw new Error(`Error PDF: ${pdfRes.status}`)
+                        const pdfBlob = await pdfRes.blob()
 
                         // Enviar el PDF al backend
                         await cierreCajaApi.enviarTicketEmail(aperturaId, data.email_reporte, pdfBlob)

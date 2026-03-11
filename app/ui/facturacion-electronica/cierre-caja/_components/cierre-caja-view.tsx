@@ -11,7 +11,7 @@ import ModalTicketCierre from './modal-ticket-cierre'
 import ModalDetalleCierre from './modal-detalle-cierre'
 import { useCierreCaja } from '../_hooks/use-cierre-caja'
 import { useCerrarCaja } from '../_hooks/use-cerrar-caja'
-import { apiRequest } from '../../../../../lib/api'
+import { apiRequest, getAuthToken } from '../../../../../lib/api'
 import { cierreCajaApi } from '../../../../../lib/api/cierre-caja'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
@@ -192,20 +192,17 @@ export default function CierreCajaView() {
     try {
       setEnviandoTicket(true)
 
-      // Generar el PDF usando react-pdf
-      const { pdf } = await import('@react-pdf/renderer')
-      const { default: DocCierreCajaTicket } = await import('./docs/doc-cierre-caja-ticket')
-
-      // Crear el documento PDF
-      const doc = <DocCierreCajaTicket
-        data={cajaActiva as any}
-        nro_doc={cajaActiva.id}
-        empresa={empresaData}
-        show_logo_html={false}
-      />
-
-      // Generar el blob del PDF
-      const pdfBlob = await pdf(doc).toBlob()
+      // Generar el PDF desde el backend
+      const token = getAuthToken()
+      const API_URL = process.env.NEXT_PUBLIC_API_URL
+      const pdfRes = await fetch(`${API_URL}/pdf/cierre-caja/${cajaActiva.id}?formato=ticket`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      })
+      if (!pdfRes.ok) throw new Error(`Error PDF: ${pdfRes.status}`)
+      const pdfBlob = await pdfRes.blob()
 
       // Enviar el PDF al backend
       await cierreCajaApi.enviarTicketEmail(cajaActiva.id, emailReporte, pdfBlob)
