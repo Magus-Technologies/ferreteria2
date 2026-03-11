@@ -4,7 +4,7 @@ import { Suspense, lazy, useState } from 'react'
 import { Spin, Badge } from 'antd'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
-import { FaCalendar, FaArrowLeft, FaTruck, FaUser, FaMapMarkerAlt, FaBox } from 'react-icons/fa'
+import { FaCalendar, FaArrowLeft, FaTruck, FaUser, FaMapMarkerAlt, FaBox, FaPhone, FaEnvelope, FaIdCard } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import { useRouter } from 'next/navigation'
 import { EntregaEvent } from '~/app/_components/calendar/event-entrega'
@@ -94,8 +94,24 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Despachador</span>
             <div className="flex items-center gap-2 text-slate-700">
               <FaTruck size={13} className="text-amber-500 flex-shrink-0" />
-              <span className="text-sm font-medium">{evento.resource.chofer_nombre}</span>
+              <span className="text-sm font-medium">
+                {data?.despachador?.name || evento.resource.chofer_nombre || 'Sin asignar'}
+              </span>
             </div>
+            {(data?.despachador?.telefono || data?.despachador?.celular) && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaPhone size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">
+                  {data.despachador.celular || data.despachador.telefono}
+                </span>
+              </div>
+            )}
+            {data?.despachador?.email && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaEnvelope size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">{data.despachador.email}</span>
+              </div>
+            )}
           </div>
 
           {/* Cliente */}
@@ -105,6 +121,24 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
               <FaUser size={13} className="text-blue-500 flex-shrink-0" />
               <span className="text-sm font-medium">{evento.resource.cliente_nombre}</span>
             </div>
+            {data?.venta?.cliente?.numero_documento && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaIdCard size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">{data.venta.cliente.numero_documento}</span>
+              </div>
+            )}
+            {data?.venta?.cliente?.telefono && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaPhone size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">{data.venta.cliente.telefono}</span>
+              </div>
+            )}
+            {data?.venta?.cliente?.email && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaEnvelope size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">{data.venta.cliente.email}</span>
+              </div>
+            )}
             {data?.venta?.serie && (
               <span className="text-xs text-slate-400 ml-5">
                 Venta: {data.venta.serie}-{String(data.venta.numero).padStart(8, '0')}

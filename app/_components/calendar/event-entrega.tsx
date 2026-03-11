@@ -15,6 +15,7 @@ export interface EntregaEvent extends Event {
     direccion: string
     productos_count: number
     color: string
+    venta_nro?: string
   }
 }
 
@@ -69,6 +70,11 @@ export default function EventEntrega({ event }: EventEntregaProps) {
       <div className="truncate text-[11px] leading-tight mb-0.5" style={{ textShadow: '0 0 1px rgba(255,255,255,0.3)' }}>
         {event.resource.cliente_nombre}
       </div>
+      {event.resource.venta_nro && (
+        <div className="text-[10px] leading-tight truncate mb-0.5" style={{ opacity: 0.85, textShadow: '0 0 1px rgba(255,255,255,0.3)' }}>
+          🧾 {event.resource.venta_nro}
+        </div>
+      )}
       <div className="text-[10px] leading-tight truncate" style={{ opacity: 0.9, textShadow: '0 0 1px rgba(255,255,255,0.3)' }}>
         📦 {event.resource.productos_count} producto(s)
       </div>

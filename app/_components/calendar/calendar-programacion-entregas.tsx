@@ -257,6 +257,13 @@ export default function CalendarProgramacionEntregas({
         'Cliente'
       const despachadorNombre = entrega.despachador?.name || 'Sin asignar'
 
+      // Armar número de venta con tipo de documento
+      const tipoDoc = entrega.venta?.tipo_documento
+      const tipoLabel = tipoDoc === '01' ? 'F' : tipoDoc === '03' ? 'B' : tipoDoc === 'nv' ? 'NV' : ''
+      const ventaNro = entrega.venta?.serie && entrega.venta?.numero
+        ? `${tipoLabel ? tipoLabel + ' ' : ''}${entrega.venta.serie}-${entrega.venta.numero}`
+        : ''
+
       return {
         id: entrega.id,
         title: `${despachadorNombre} - ${clienteNombre}`,
@@ -270,6 +277,7 @@ export default function CalendarProgramacionEntregas({
           direccion: entrega.direccion_entrega || '',
           productos_count: entrega.productos_entregados?.length || 0,
           color,
+          venta_nro: ventaNro,
         },
       }
     })
@@ -289,6 +297,7 @@ export default function CalendarProgramacionEntregas({
           direccion: '',
           productos_count: 0,
           color: '#3b82f6',
+          venta_nro: '',
         },
       })
     }
