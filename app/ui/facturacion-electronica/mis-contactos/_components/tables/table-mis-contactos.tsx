@@ -14,6 +14,8 @@ import { App } from "antd";
 import ModalCreateCliente from "../../../mis-ventas/_components/modals/modal-create-cliente";
 import ModalVerDetalleCliente from "../modals/modal-ver-detalle-cliente";
 import ModalCalificacionesCliente from "../modals/modal-calificaciones-cliente";
+import { autorizacionesApi } from "~/lib/api/autorizaciones";
+import ModalSolicitarAutorizacion from "~/components/autorizaciones/modal-solicitar-autorizacion";
 
 export default function TableMisContactos() {
   const { filtros } = useStoreFiltrosMisContactos();
@@ -27,6 +29,10 @@ export default function TableMisContactos() {
   const [modalVerOpen, setModalVerOpen] = useState(false);
   const [clienteParaCalificar, setClienteParaCalificar] = useState<Cliente | null>(null);
   const [modalCalificacionesOpen, setModalCalificacionesOpen] = useState(false);
+  const [modalAutorizacionOpen, setModalAutorizacionOpen] = useState(false);
+  const [autorizacionAccion, setAutorizacionAccion] = useState<'editar' | 'eliminar'>('editar');
+  const [autorizacionDesc, setAutorizacionDesc] = useState('');
+  const [solicitandoAuth, setSolicitandoAuth] = useState(false);
 
   // Query para obtener los contactos
   const { data: response, isLoading, refetch } = useQuery({
@@ -67,9 +73,28 @@ export default function TableMisContactos() {
     setModalVerOpen(true);
   };
 
+  const verificarAutorizacion = async (accion: 'editar' | 'eliminar', desc: string, ejecutar: () => void) => {
+    try {
+      const res = await autorizacionesApi.verificar('clientes', accion);
+      const data = res.data;
+      if (!data?.requiere || data?.tiene_autorizacion) {
+        ejecutar();
+        return;
+      }
+      setAutorizacionAccion(accion);
+      setAutorizacionDesc(desc);
+      setModalAutorizacionOpen(true);
+    } catch {
+      ejecutar();
+    }
+  };
+
   const handleEditar = (cliente: Cliente) => {
-    setClienteParaEditar(cliente);
-    setModalEditarOpen(true);
+    const desc = `Cliente: ${cliente.razon_social || cliente.nombres || ''}`;
+    verificarAutorizacion('editar', desc, () => {
+      setClienteParaEditar(cliente);
+      setModalEditarOpen(true);
+    });
   };
 
   const handleCalificaciones = (cliente: Cliente) => {
@@ -77,8 +102,24 @@ export default function TableMisContactos() {
     setModalCalificacionesOpen(true);
   };
 
-  const handleEliminar = (id: number) => {
-    deleteMutation.mutate(id);
+  const handleEliminar = (id: number, nombre?: string) => {
+    const desc = `Cliente: ${nombre || ''}`;
+    verificarAutorizacion('eliminar', desc, () => {
+      deleteMutation.mutate(id);
+    });
+  };
+
+  const handleSolicitarAuth = async () => {
+    setSolicitandoAuth(true);
+    try {
+      await autorizacionesApi.solicitar({
+        modulo: 'clientes',
+        accion: autorizacionAccion,
+        descripcion: autorizacionDesc,
+      });
+    } finally {
+      setSolicitandoAuth(false);
+    }
   };
 
   const columnDefs: ColDef<Cliente>[] = [
@@ -200,7 +241,7 @@ export default function TableMisContactos() {
             <Popconfirm
               title="¿Eliminar contacto?"
               description="Esta acción no se puede deshacer"
-              onConfirm={() => handleEliminar(cliente.id)}
+              onConfirm={() => handleEliminar(cliente.id, cliente.razon_social || cliente.nombres)}
               okText="Sí, eliminar"
               cancelText="Cancelar"
               okButtonProps={{ danger: true }}
@@ -281,6 +322,16 @@ export default function TableMisContactos() {
           }
         />
       )}
+
+      <ModalSolicitarAutorizacion
+        open={modalAutorizacionOpen}
+        onClose={() => setModalAutorizacionOpen(false)}
+        modulo="clientes"
+        accion={autorizacionAccion}
+        descripcion={autorizacionDesc}
+        onSolicitar={handleSolicitarAuth}
+        solicitando={solicitandoAuth}
+      />
     </>
   );
 }

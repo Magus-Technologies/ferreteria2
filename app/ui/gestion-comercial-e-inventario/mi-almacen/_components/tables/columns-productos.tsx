@@ -360,6 +360,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
             <ColumnAction
               id={params.value}
               permiso={permissions.PRODUCTO_BASE}
+              autorizacion={{ modulo: 'productos', descripcion: `Producto: ${params.data?.name || ''}` }}
               propsDelete={{
                 action: async ({ id }: { id: number }) => {
                   const res = await productosApiV2.delete(id);

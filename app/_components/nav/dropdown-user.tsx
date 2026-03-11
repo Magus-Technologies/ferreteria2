@@ -3,7 +3,7 @@
 import { MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { BiSolidReport } from 'react-icons/bi'
-import { FaCalculator, FaSignOutAlt, FaWarehouse } from 'react-icons/fa'
+import { FaBell, FaCalculator, FaSignOutAlt, FaWarehouse } from 'react-icons/fa'
 import { IoDocumentText, IoSettingsSharp } from 'react-icons/io5'
 import { MdOutlineMenuOpen } from 'react-icons/md'
 import { useAuth } from '~/lib/auth-context'

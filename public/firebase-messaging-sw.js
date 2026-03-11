@@ -20,18 +20,26 @@ const messaging = firebase.messaging()
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Mensaje en background:', payload)
 
-  const notificationTitle = payload.notification?.title || 'Nueva Entrega Programada'
+  const type = payload.data?.type || ''
+  const isAutorizacion = type === 'autorizacion' || type === 'autorizacion_respuesta'
+
+  const notificationTitle = payload.notification?.title || 'Nueva Notificación'
   const notificationOptions = {
-    body: payload.notification?.body || 'Tienes una nueva entrega asignada',
+    body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
     badge: '/icon-72x72.png',
-    tag: 'entrega-' + Date.now(),
+    tag: (isAutorizacion ? 'autorizacion-' : 'entrega-') + Date.now(),
     data: payload.data,
     vibrate: [200, 100, 200],
-    actions: [
-      { action: 'ver', title: '👁️ Ver Entrega' },
-      { action: 'cerrar', title: '❌ Cerrar' }
-    ]
+    actions: isAutorizacion
+      ? [
+          { action: 'ver', title: 'Ver Solicitudes' },
+          { action: 'cerrar', title: 'Cerrar' }
+        ]
+      : [
+          { action: 'ver', title: 'Ver Entrega' },
+          { action: 'cerrar', title: 'Cerrar' }
+        ]
   }
 
   self.registration.showNotification(notificationTitle, notificationOptions)
@@ -44,18 +52,23 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
   if (event.action === 'ver' || !event.action) {
-    // Abrir la página de entregas
-    const urlToOpen = '/ui/facturacion-electronica/mis-entregas'
-    
+    const notifType = event.notification.data?.type || ''
+    const isAutorizacion = notifType === 'autorizacion' || notifType === 'autorizacion_respuesta'
+    const urlToOpen = isAutorizacion
+      ? '/ui/solicitudes-autorizacion'
+      : '/ui/facturacion-electronica/mis-entregas'
+    const cacheMessage = isAutorizacion
+      ? 'INVALIDATE_AUTORIZACIONES_CACHE'
+      : 'INVALIDATE_ENTREGAS_CACHE'
+
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true })
         .then((windowClients) => {
           // Buscar si ya hay una ventana abierta
           for (const client of windowClients) {
             if (client.url.includes('/ui') && 'focus' in client) {
-              // Enviar mensaje al cliente para que invalide el caché
               client.postMessage({
-                type: 'INVALIDATE_ENTREGAS_CACHE',
+                type: cacheMessage,
                 timestamp: Date.now()
               })
               client.navigate(urlToOpen)

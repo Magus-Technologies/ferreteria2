@@ -10,6 +10,7 @@ import {
   Spin,
   Divider,
   Alert,
+  Tabs,
 } from "antd";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -26,7 +27,8 @@ import { usePermission } from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import NoAutorizado from "~/components/others/no-autorizado";
 import { ConfigModeProvider } from "./_components/config-mode-context";
-import { FaUsers } from 'react-icons/fa'
+import { FaUsers, FaShieldAlt } from 'react-icons/fa'
+import ConfigAutorizaciones from "./_components/config-autorizaciones";
 
 
 // Importar JSONs de navegación
@@ -372,7 +374,7 @@ export default function PermisosVisualesPage() {
       {!rolSeleccionado ? (
         <Card>
           <div className="text-center text-gray-500 py-8">
-            👆 Selecciona un rol para empezar a configurar
+            Selecciona un rol para empezar a configurar
           </div>
         </Card>
       ) : vistaActiva ? (
@@ -422,118 +424,146 @@ export default function PermisosVisualesPage() {
         </Card>
       ) : (
         <Card>
-          {/* Top Navigation Modules */}
-          <div className="mb-6">
-            <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-              <span className="text-blue-500">🔼</span> Barra Superior (Top Nav)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-              {modulos.topNav.map((item, idx) => {
-                const visible = estaVisible(item.permission!);
-                const icon = ICON_MAP[item.permission!] || "📌";
-                const hasComponent = !!COMPONENT_MAP[item.permission!];
+          <Tabs
+            defaultActiveKey="acceso"
+            items={[
+              {
+                key: 'acceso',
+                label: 'Acceso a Módulos',
+                children: (
+                  <>
+                    {/* Top Navigation Modules */}
+                    <div className="mb-6">
+                      <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-blue-500">🔼</span> Barra Superior (Top Nav)
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                        {modulos.topNav.map((item, idx) => {
+                          const visible = estaVisible(item.permission!);
+                          const icon = ICON_MAP[item.permission!] || "📌";
+                          const hasComponent = !!COMPONENT_MAP[item.permission!];
 
-                return (
-                  <div
-                    key={idx}
-                    className={`
-                      p-3 rounded-lg border-2 transition-all
-                      ${visible ? "border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md" : "border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md"}
-                    `}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div 
-                        className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
-                        onClick={() =>
-                          hasComponent && handleModuloClick(
-                            item.label || '',
-                            item.permission!,
-                            hasComponent,
-                          )
-                        }
-                      >
-                        <span className="text-lg">{icon}</span>
-                        <span className="text-sm font-medium truncate">
-                          {item.label}
-                        </span>
-                      </div>
-                      <div
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setItemSeleccionado({ label: item.label || '', permission: item.permission! });
-                          setModalVisible(true);
-                        }}
-                      >
-                        {visible ? (
-                          <EyeOutlined className="text-green-600 flex-shrink-0" />
-                        ) : (
-                          <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <Divider />
-
-          {/* Bottom Navigation Modules */}
-          <div>
-            <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-              <span className="text-purple-500">🔽</span> Barra Inferior (Bottom
-              Nav)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-              {modulos.bottomNav.map((item, idx) => {
-                const visible = estaVisible(item.permission!);
-                const icon = ICON_MAP[item.permission!] || "📌";
-                const hasComponent = !!COMPONENT_MAP[item.permission!];
-
-                return (
-                  <div
-                    key={idx}
-                    className={`
-                      p-3 rounded-lg border-2 transition-all
-                      ${visible ? "border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md" : "border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md"}
-                    `}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div 
-                        className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
-                        onClick={() =>
-                          hasComponent && handleModuloClick(
-                            item.label || '',
-                            item.permission!,
-                            hasComponent,
-                          )
-                        }
-                      >
-                        <span className="text-lg">{icon}</span>
-                        <span className="text-sm font-medium truncate">
-                          {item.label}
-                        </span>
-                      </div>
-                      <div
-                        className="cursor-pointer"
-                        onClick={() => {
-                          setItemSeleccionado({ label: item.label || '', permission: item.permission! });
-                          setModalVisible(true);
-                        }}
-                      >
-                        {visible ? (
-                          <EyeOutlined className="text-green-600 flex-shrink-0" />
-                        ) : (
-                          <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
-                        )}
+                          return (
+                            <div
+                              key={idx}
+                              className={`
+                                p-3 rounded-lg border-2 transition-all
+                                ${visible ? "border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md" : "border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md"}
+                              `}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div
+                                  className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                                  onClick={() =>
+                                    hasComponent && handleModuloClick(
+                                      item.label || '',
+                                      item.permission!,
+                                      hasComponent,
+                                    )
+                                  }
+                                >
+                                  <span className="text-lg">{icon}</span>
+                                  <span className="text-sm font-medium truncate">
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <div
+                                  className="cursor-pointer"
+                                  onClick={() => {
+                                    setItemSeleccionado({ label: item.label || '', permission: item.permission! });
+                                    setModalVisible(true);
+                                  }}
+                                >
+                                  {visible ? (
+                                    <EyeOutlined className="text-green-600 flex-shrink-0" />
+                                  ) : (
+                                    <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+
+                    <Divider />
+
+                    {/* Bottom Navigation Modules */}
+                    <div>
+                      <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-purple-500">🔽</span> Barra Inferior (Bottom
+                        Nav)
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                        {modulos.bottomNav.map((item, idx) => {
+                          const visible = estaVisible(item.permission!);
+                          const icon = ICON_MAP[item.permission!] || "📌";
+                          const hasComponent = !!COMPONENT_MAP[item.permission!];
+
+                          return (
+                            <div
+                              key={idx}
+                              className={`
+                                p-3 rounded-lg border-2 transition-all
+                                ${visible ? "border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md" : "border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md"}
+                              `}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div
+                                  className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                                  onClick={() =>
+                                    hasComponent && handleModuloClick(
+                                      item.label || '',
+                                      item.permission!,
+                                      hasComponent,
+                                    )
+                                  }
+                                >
+                                  <span className="text-lg">{icon}</span>
+                                  <span className="text-sm font-medium truncate">
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <div
+                                  className="cursor-pointer"
+                                  onClick={() => {
+                                    setItemSeleccionado({ label: item.label || '', permission: item.permission! });
+                                    setModalVisible(true);
+                                  }}
+                                >
+                                  {visible ? (
+                                    <EyeOutlined className="text-green-600 flex-shrink-0" />
+                                  ) : (
+                                    <EyeInvisibleOutlined className="text-red-600 flex-shrink-0" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                ),
+              },
+              {
+                key: 'autorizaciones',
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    <FaShieldAlt className="text-amber-500" size={14} />
+                    Autorizaciones por Acción
+                  </span>
+                ),
+                children: (
+                  <ConfigAutorizaciones
+                    roleId={rolSeleccionado}
+                    rolNombre={rolNombre}
+                  />
+                ),
+              },
+            ]}
+          />
         </Card>
       )}
 

@@ -7,6 +7,7 @@ import { fcmApi } from '~/lib/api/fcm'
 import { App } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { autorizacionesKeys } from '~/lib/api/autorizaciones'
 
 export function useNotifications() {
   const { user } = useAuth()
@@ -62,7 +63,18 @@ export function useNotifications() {
       if (payload.data?.type === 'entrega') {
         queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       }
-      
+
+      // Invalidar caché de autorizaciones (nueva solicitud para aprobador)
+      if (payload.data?.type === 'autorizacion') {
+        queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientes() })
+        queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientesCount() })
+      }
+
+      // Invalidar caché de autorizaciones (respuesta para solicitante)
+      if (payload.data?.type === 'autorizacion_respuesta') {
+        queryClient.invalidateQueries({ queryKey: autorizacionesKeys.misSolicitudes() })
+      }
+
       // Mostrar notificación usando Ant Design
       notification.info({
         message: payload.notification?.title || 'Nueva Notificación',
@@ -73,6 +85,10 @@ export function useNotifications() {
           // Navegar a entregas si es una notificación de entrega
           if (payload.data?.type === 'entrega') {
             window.location.href = '/ui/facturacion-electronica/mis-entregas'
+          }
+          // Navegar a solicitudes si es de autorización
+          if (payload.data?.type === 'autorizacion' || payload.data?.type === 'autorizacion_respuesta') {
+            window.location.href = '/ui/solicitudes-autorizacion'
           }
         },
       })
@@ -90,6 +106,11 @@ export function useNotifications() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'INVALIDATE_ENTREGAS_CACHE') {
         queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      }
+      if (event.data?.type === 'INVALIDATE_AUTORIZACIONES_CACHE') {
+        queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientes() })
+        queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientesCount() })
+        queryClient.invalidateQueries({ queryKey: autorizacionesKeys.misSolicitudes() })
       }
     }
 

@@ -77,6 +77,7 @@ export function useColumnsProveedores({
             <ColumnAction
               id={params.value}
               permiso={permissions.PROVEEDOR_BASE}
+              autorizacion={{ modulo: 'proveedores', descripcion: `Proveedor: ${params.data?.razon_social || ''}` }}
               propsDelete={{
                 action: async ({ id }: { id: number }) => {
                   const result = await proveedorApi.delete(id)

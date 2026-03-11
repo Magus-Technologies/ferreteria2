@@ -1,6 +1,7 @@
 'use client'
 
 import DropdownUser from './dropdown-user'
+import CampanitaAutorizaciones from '~/components/autorizaciones/campanita-autorizaciones'
 import { useState } from 'react'
 import { Drawer } from 'antd'
 import { HiMenuAlt3 } from 'react-icons/hi'
@@ -50,8 +51,13 @@ export default function BaseNav({
           {children}
         </div>
 
-        {/* Usuario Dropdown */}
-        {withDropdownUser && <DropdownUser />}
+        {/* Campanita + Usuario Dropdown */}
+        {withDropdownUser && (
+          <div className="flex items-center gap-1">
+            <CampanitaAutorizaciones />
+            <DropdownUser />
+          </div>
+        )}
       </div>
 
       {/* Drawer para móvil/tablet */}
