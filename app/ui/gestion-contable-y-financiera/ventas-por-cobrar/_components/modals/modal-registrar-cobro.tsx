@@ -6,13 +6,15 @@ import { ventaApi, type VentaCompleta, type CobroVenta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
 import { greenColors } from '~/lib/colors'
+import { getAuthToken } from '~/lib/api'
+import { FaFileAlt } from 'react-icons/fa'
 
 interface ModalRegistrarCobroProps {
   open: boolean
@@ -58,6 +60,27 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
   const cobros = cobrosData?.data ?? []
 
+  // Ver ticket de un cobro
+  const handleVerTicket = useCallback(async (cobroId: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const token = getAuthToken()
+    try {
+      const res = await fetch(`${API_URL}/pdf/cobro-venta/${cobroId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      })
+      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+    } catch (err) {
+      console.error('Error al obtener ticket de cobro:', err)
+      message.error('Error al generar el ticket del cobro')
+    }
+  }, [message])
+
   // Columnas para tabla de cobros previos
   const columnsCobros: ColDef<CobroVenta>[] = useMemo(() => [
     { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
@@ -73,25 +96,41 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     },
     {
       headerName: 'Fecha',
-      width: 110,
+      width: 100,
       valueGetter: (p) => p.data?.fecha ? dayjs(p.data.fecha).format('DD/MM/YYYY') : '',
     },
     {
       headerName: 'Monto',
-      width: 110,
+      width: 100,
       valueGetter: (p) => `S/. ${Number(p.data?.monto || 0).toFixed(2)}`,
     },
     {
       headerName: 'Registra',
-      width: 130,
+      width: 120,
       valueGetter: (p) => p.data?.user?.name || '',
     },
     {
-      headerName: 'Observación',
+      headerName: 'Obs.',
       flex: 1,
       valueGetter: (p) => p.data?.observacion || '',
     },
-  ], [])
+    {
+      headerName: 'Ticket',
+      width: 70,
+      cellRenderer: (p: any) => {
+        if (!p.data?.id) return null
+        return (
+          <button
+            onClick={() => handleVerTicket(p.data.id)}
+            className='flex items-center justify-center w-full h-full text-blue-600 hover:text-blue-800'
+            title='Ver ticket del cobro'
+          >
+            <FaFileAlt size={14} />
+          </button>
+        )
+      },
+    },
+  ], [handleVerTicket])
 
   // Mutation para registrar cobro
   const mutation = useMutation({

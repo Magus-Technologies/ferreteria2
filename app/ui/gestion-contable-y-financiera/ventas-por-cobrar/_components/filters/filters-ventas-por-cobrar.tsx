@@ -19,7 +19,7 @@ import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
@@ -35,12 +35,39 @@ interface ValuesFiltersVentasPorCobrar {
   busqueda?: string
 }
 
+const QUICK_FILTERS = [
+  { label: '15 días', days: 15 },
+  { label: '30 días', days: 30 },
+  { label: '60 días', days: 60 },
+  { label: '90 días', days: 90 },
+] as const
+
 export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [quickFilterActive, setQuickFilterActive] = useState<number>(30)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
+
+  const applyQuickFilter = useCallback((days: number) => {
+    setQuickFilterActive(days)
+    const desde = dayjs().subtract(days, 'days').startOf('day')
+    const hasta = dayjs().endOf('day')
+    form.setFieldsValue({ desde, hasta })
+    const data = {
+      almacen_id,
+      forma_de_pago: FormaDePago.CREDITO,
+      fecha: {
+        gte: toUTCBD({ date: desde }),
+        lte: toUTCBD({ date: hasta }),
+      },
+      estado_de_venta: {
+        in: ['Creado', 'Procesado'],
+      },
+    } satisfies VentaWhereInput
+    setFiltros(data)
+  }, [almacen_id, form, setFiltros])
 
   // Contar filtros activos
   const activeFiltersCount = useMemo(() => {
@@ -82,6 +109,7 @@ export default function FiltersVentasPorCobrar() {
       }}
       className='w-full'
       onFinish={values => {
+        setQuickFilterActive(0) // reset quick filter highlight
         const {
           desde,
           hasta,
@@ -90,7 +118,7 @@ export default function FiltersVentasPorCobrar() {
           cliente_id,
           ...rest
         } = values
-        
+
         const data = {
           almacen_id: almacen_id || almacen_id,
           // Solo mostrar ventas a crédito
@@ -135,6 +163,25 @@ export default function FiltersVentasPorCobrar() {
           </div>
         }
       />
+
+      {/* Filtros rápidos por días */}
+      <div className='flex items-center gap-2 mt-3'>
+        <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
+        {QUICK_FILTERS.map(({ label, days }) => (
+          <button
+            key={days}
+            type='button'
+            onClick={() => applyQuickFilter(days)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors border ${
+              quickFilterActive === days
+                ? 'bg-red-600 text-white border-red-600'
+                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* Filtros principales - Responsivos */}
       <div className='flex items-center gap-2 w-full mt-4 overflow-x-auto'>
