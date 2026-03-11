@@ -1,7 +1,7 @@
 'use client'
 
-import { Suspense, lazy, useCallback, useState } from 'react'
-import { App } from 'antd'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
+import { App, Modal, Spin, Tooltip } from 'antd'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { ordenCompraApi, type OrdenCompra } from '~/lib/api/orden-compra'
@@ -11,9 +11,10 @@ import { useColumnsOrdenesCompra } from './_components/tables/columns-ordenes-co
 import ProgressiveLoader from '~/app/_components/others/progressive-loader'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import ModalPdfViewer from '~/components/modals/modal-pdf-viewer'
-import DocOrdenCompra from './_components/docs/doc-orden-compra'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { getAuthToken } from '~/lib/api'
+import { FaDownload, FaPrint } from 'react-icons/fa6'
+import ButtonBase from '~/components/buttons/button-base'
+import { classOkButtonModal } from '~/lib/clases'
 
 // Lazy loading
 const FiltersMisOrdenesCompra = lazy(() => import('./_components/filters/filters-mis-ordenes-compra'))
@@ -32,7 +33,8 @@ export default function MisOrdenesDeCompra() {
     // Document modal state
     const [docModalOpen, setDocModalOpen] = useState(false)
     const [docOrdenData, setDocOrdenData] = useState<OrdenCompra>()
-    const { data: empresa } = useEmpresaPublica()
+    const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
+    const [docPdfLoading, setDocPdfLoading] = useState(false)
 
     const handleAnular = useCallback((orden: OrdenCompra) => {
         modal.confirm({
@@ -96,18 +98,30 @@ export default function MisOrdenesDeCompra() {
     }, [])
 
     const handleViewDoc = useCallback(async (orden: OrdenCompra) => {
-        try {
-            // Fetch full detail to get products
-            const res = await ordenCompraApi.getById(orden.id)
-            if (res.data?.data) {
-                setDocOrdenData(res.data.data)
-            } else {
-                setDocOrdenData(orden)
-            }
-        } catch {
-            setDocOrdenData(orden)
-        }
+        setDocOrdenData(orden)
         setDocModalOpen(true)
+        setDocPdfLoading(true)
+        try {
+            const token = getAuthToken()
+            const API_URL = process.env.NEXT_PUBLIC_API_URL
+            const res = await fetch(`${API_URL}/pdf/orden-compra/${orden.id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/pdf',
+                },
+            })
+            if (!res.ok) throw new Error(`Error: ${res.status}`)
+            const blob = await res.blob()
+            const url = URL.createObjectURL(blob)
+            setDocPdfUrl(prev => {
+                if (prev) URL.revokeObjectURL(prev)
+                return url
+            })
+        } catch (err) {
+            console.error('Error al cargar PDF de orden de compra:', err)
+        } finally {
+            setDocPdfLoading(false)
+        }
     }, [])
 
     const columns = useColumnsOrdenesCompra({
@@ -145,18 +159,93 @@ export default function MisOrdenesDeCompra() {
                 ordenData={selectedOrdenData}
             />
 
-            {docOrdenData && (
-                <ModalPdfViewer
-                    open={docModalOpen}
-                    onClose={() => {
-                        setDocModalOpen(false)
-                        setDocOrdenData(undefined)
-                    }}
-                    document={<DocOrdenCompra orden={docOrdenData} empresa={empresa} />}
-                    fileName={`OC-${docOrdenData.codigo}`}
-                    title={`Orden de Compra - ${docOrdenData.codigo}`}
-                />
-            )}
+            <Modal
+                centered
+                width={900}
+                open={docModalOpen}
+                classNames={{ content: 'min-w-fit' }}
+                title={
+                    <div className="flex flex-col gap-2">
+                        <div className="text-base font-semibold">
+                            {docOrdenData ? `Orden de Compra - ${docOrdenData.codigo}` : 'Orden de Compra'}
+                        </div>
+                        <div className="flex items-center gap-2 justify-end">
+                            <Tooltip title="Descargar PDF">
+                                <ButtonBase
+                                    onClick={() => {
+                                        if (!docPdfUrl) return
+                                        const link = document.createElement('a')
+                                        link.href = docPdfUrl
+                                        link.download = `OC-${docOrdenData?.codigo ?? 'doc'}.pdf`
+                                        link.click()
+                                    }}
+                                    color="danger"
+                                    size="md"
+                                    className="!px-3"
+                                >
+                                    <FaDownload />
+                                </ButtonBase>
+                            </Tooltip>
+                            <Tooltip title="Imprimir">
+                                <ButtonBase
+                                    onClick={() => {
+                                        if (!docPdfUrl) return
+                                        const iframe = document.createElement('iframe')
+                                        iframe.style.display = 'none'
+                                        iframe.src = docPdfUrl
+                                        document.body.appendChild(iframe)
+                                        iframe.onload = () => {
+                                            iframe.contentWindow?.focus()
+                                            iframe.contentWindow?.print()
+                                        }
+                                    }}
+                                    color="success"
+                                    size="md"
+                                    className="!px-3"
+                                >
+                                    <FaPrint />
+                                </ButtonBase>
+                            </Tooltip>
+                        </div>
+                    </div>
+                }
+                okText="Cerrar"
+                onOk={() => {
+                    setDocModalOpen(false)
+                    setDocOrdenData(undefined)
+                    if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
+                }}
+                cancelButtonProps={{ style: { display: 'none' } }}
+                okButtonProps={{ className: classOkButtonModal }}
+                onCancel={() => {
+                    setDocModalOpen(false)
+                    setDocOrdenData(undefined)
+                    if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
+                }}
+                maskClosable={false}
+                keyboard={false}
+                destroyOnHidden
+            >
+                <div className='border rounded-xl overflow-hidden mx-auto bg-gray-100' style={{ height: 650 }}>
+                    {docPdfLoading ? (
+                        <div className='flex items-center justify-center h-full'>
+                            <Spin size='large' />
+                            <span className='ml-3 text-gray-500'>Generando PDF...</span>
+                        </div>
+                    ) : docPdfUrl ? (
+                        <iframe
+                            src={`${docPdfUrl}#toolbar=1&navpanes=0`}
+                            className='w-full h-full'
+                            style={{ border: 'none' }}
+                            title='Orden de Compra'
+                        />
+                    ) : (
+                        <div className='flex items-center justify-center h-full text-gray-400'>
+                            No se pudo generar la vista previa
+                        </div>
+                    )}
+                </div>
+            </Modal>
         </ContenedorGeneral>
     )
 }

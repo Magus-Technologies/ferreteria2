@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, Button, Space, Tag, Input, Select, DatePicker, message, Tooltip, Empty, Spin } from 'antd'
+import { Card, Button, Space, Tag, Input, Select, DatePicker, message, Tooltip, Empty, Spin, Modal } from 'antd'
 import { SearchOutlined, PlusOutlined, FilePdfOutlined, EyeOutlined } from '@ant-design/icons'
+import { FaDownload, FaPrint } from 'react-icons/fa6'
 import TableBase from '~/components/tables/table-base'
 import type { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
-import RequerimientoInternoPdf from '~/components/pdf/requerimiento-interno-pdf'
-import ModalPdfViewer from '~/components/modals/modal-pdf-viewer'
 import ModalDetalleRequerimiento from './_components/modal-detalle-requerimiento'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { getAuthToken } from '~/lib/api'
+import ButtonBase from '~/components/buttons/button-base'
+import { classOkButtonModal } from '~/lib/clases'
 import dayjs from 'dayjs'
 
 const PRIORIDAD_COLORS: Record<string, string> = {
@@ -37,7 +38,8 @@ export default function MisRequerimientosInternos() {
   const [modalOpen, setModalOpen] = useState(false)
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
   const [requerimientoSeleccionado, setRequerimientoSeleccionado] = useState<RequerimientoInterno | null>(null)
-  const { data: empresa } = useEmpresaPublica()
+  const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
+  const [docPdfLoading, setDocPdfLoading] = useState(false)
 
   useEffect(() => {
     fetchRequerimientos()
@@ -278,22 +280,74 @@ export default function MisRequerimientosInternos() {
         }}
       />
 
-      <ModalPdfViewer
+      <Modal
         open={pdfModalOpen}
-        onClose={() => {
+        onCancel={() => {
           setPdfModalOpen(false)
           setRequerimientoSeleccionado(null)
+          if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
         }}
-        document={
-          requerimientoSeleccionado ? (
-            <RequerimientoInternoPdf requerimiento={requerimientoSeleccionado} empresa={empresa} />
-          ) : (
-            <></>
-          )
-        }
-        fileName={requerimientoSeleccionado ? `${requerimientoSeleccionado.codigo}-LOG-F-03` : 'documento'}
+        width={900}
+        centered
         title={requerimientoSeleccionado ? `PDF - ${requerimientoSeleccionado.codigo}` : 'PDF'}
-      />
+        footer={
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <Tooltip title="Descargar PDF">
+                <ButtonBase
+                  disabled={!docPdfUrl}
+                  onClick={() => {
+                    if (!docPdfUrl) return
+                    const a = document.createElement('a')
+                    a.href = docPdfUrl
+                    a.download = requerimientoSeleccionado ? `${requerimientoSeleccionado.codigo}-LOG-F-03.pdf` : 'documento.pdf'
+                    a.click()
+                  }}
+                >
+                  <FaDownload />
+                </ButtonBase>
+              </Tooltip>
+              <Tooltip title="Imprimir">
+                <ButtonBase
+                  disabled={!docPdfUrl}
+                  onClick={() => {
+                    if (!docPdfUrl) return
+                    const w = window.open(docPdfUrl)
+                    w?.addEventListener('load', () => w.print())
+                  }}
+                >
+                  <FaPrint />
+                </ButtonBase>
+              </Tooltip>
+            </div>
+            <Button type="primary" onClick={() => { setPdfModalOpen(false); setRequerimientoSeleccionado(null); if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) } }} className={classOkButtonModal}>
+              Cerrar
+            </Button>
+          </div>
+        }
+        afterOpenChange={async (open) => {
+          if (open && requerimientoSeleccionado) {
+            setDocPdfLoading(true)
+            try {
+              const token = getAuthToken()
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/requerimiento-interno/${requerimientoSeleccionado.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              if (!res.ok) throw new Error('Error al generar PDF')
+              const blob = await res.blob()
+              setDocPdfUrl(URL.createObjectURL(blob))
+            } catch { setDocPdfUrl(null) } finally { setDocPdfLoading(false) }
+          }
+        }}
+      >
+        {docPdfLoading ? (
+          <div className="flex justify-center py-12"><Spin /></div>
+        ) : docPdfUrl ? (
+          <iframe src={docPdfUrl} className="w-full" style={{ height: '70vh' }} />
+        ) : (
+          <div className="flex justify-center py-12 text-slate-400">No se pudo cargar el PDF</div>
+        )}
+      </Modal>
     </div>
   )
 }

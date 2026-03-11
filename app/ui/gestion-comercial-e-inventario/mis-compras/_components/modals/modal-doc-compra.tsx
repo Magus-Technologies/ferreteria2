@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
-import PDFCompraDocument from '~/lib/pdf/pdf-compra-document'
+import { getAuthToken } from '~/lib/api'
 import { type Compra } from '~/lib/api/compra'
 
 interface ModalDocCompraProps {
@@ -16,25 +16,29 @@ export default function ModalDocCompra({
   setOpen,
   compra,
 }: ModalDocCompraProps) {
-  const [logoDataURI, setLogoDataURI] = useState<string>('')
+  const [backendPdfUrl, setBackendPdfUrl] = useState<string | null>(null)
+  const [backendPdfLoading, setBackendPdfLoading] = useState(false)
 
   useEffect(() => {
-    // Cargar el logo cuando se abre el modal
-    if (open) {
-      fetch('/logo.png')
-        .then(res => res.blob())
-        .then(blob => {
-          const reader = new FileReader()
-          reader.onloadend = () => {
-            setLogoDataURI(reader.result as string)
-          }
-          reader.readAsDataURL(blob)
+    if (open && compra) {
+      setBackendPdfLoading(true)
+      const token = getAuthToken()
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/compra/${compra.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Error al generar PDF')
+          return res.blob()
         })
-        .catch(err => {
-          console.error('Error loading logo:', err)
-        })
+        .then(blob => setBackendPdfUrl(URL.createObjectURL(blob)))
+        .catch(() => setBackendPdfUrl(null))
+        .finally(() => setBackendPdfLoading(false))
     }
-  }, [open])
+    if (!open && backendPdfUrl) {
+      URL.revokeObjectURL(backendPdfUrl)
+      setBackendPdfUrl(null)
+    }
+  }, [open, compra?.id])
 
   if (!compra) return null
 
@@ -45,8 +49,10 @@ export default function ModalDocCompra({
       open={open}
       setOpen={setOpen}
       nro_doc={numeroComprobante}
+      backendPdfUrl={backendPdfUrl}
+      backendPdfLoading={backendPdfLoading}
     >
-      <PDFCompraDocument compra={compra as any} logoDataURI={logoDataURI} />
+      {null as any}
     </ModalShowDoc>
   )
 }

@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { PDFDownloadLink } from "@react-pdf/renderer"
 import { FaFilePdf } from "react-icons/fa6"
-import RequerimientoInternoPdf from "~/components/pdf/requerimiento-interno-pdf"
-import { useEmpresaPublica } from "~/hooks/use-empresa-publica"
+import { getAuthToken } from "~/lib/api"
 import { requerimientoInternoApi, type CreateRequerimientoRequest, type RequerimientoInterno } from "~/lib/api/requerimiento-interno"
 import { productosApiV2 } from "~/lib/api/producto"
 import { proveedorApi } from "~/lib/api/proveedor"
@@ -64,7 +62,7 @@ export default function ModalRequerimientoInterno({
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [requerimientoCreado, setRequerimientoCreado] = useState<RequerimientoInterno | null>(null)
-    const { data: empresa } = useEmpresaPublica()
+    const [downloadingPdf, setDownloadingPdf] = useState(false)
     const [openModalTipoServicio, setOpenModalTipoServicio] = useState(false)
     const [tiposServicio, setTiposServicio] = useState<{ label: string; value: number }[]>([])
     const [fetchedProductos, setFetchedProductos] = useState<ProductoDisponible[]>([])
@@ -395,17 +393,35 @@ export default function ModalRequerimientoInterno({
                             <>
                                 <div className="flex items-center gap-2">
                                     {requerimientoCreado && (
-                                        <PDFDownloadLink
-                                            document={<RequerimientoInternoPdf requerimiento={requerimientoCreado} empresa={empresa} />}
-                                            fileName={`${requerimientoCreado.codigo}-LOG-F-03.pdf`}
+                                        <button
+                                            className="px-4 py-2 bg-white border border-slate-200 rounded text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors flex items-center gap-2"
+                                            disabled={downloadingPdf}
+                                            onClick={async () => {
+                                                if (!requerimientoCreado) return
+                                                setDownloadingPdf(true)
+                                                try {
+                                                    const token = getAuthToken()
+                                                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/requerimiento-interno/${requerimientoCreado.id}`, {
+                                                        headers: { Authorization: `Bearer ${token}` },
+                                                    })
+                                                    if (!res.ok) throw new Error('Error al generar PDF')
+                                                    const blob = await res.blob()
+                                                    const url = URL.createObjectURL(blob)
+                                                    const a = document.createElement('a')
+                                                    a.href = url
+                                                    a.download = `${requerimientoCreado.codigo}-LOG-F-03.pdf`
+                                                    a.click()
+                                                    URL.revokeObjectURL(url)
+                                                } catch (e) {
+                                                    console.error(e)
+                                                } finally {
+                                                    setDownloadingPdf(false)
+                                                }
+                                            }}
                                         >
-                                            {({ loading }) => (
-                                                <button className="px-4 py-2 bg-white border border-slate-200 rounded text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors flex items-center gap-2" disabled={loading}>
-                                                    <FaFilePdf className='text-red-600 text-lg' />
-                                                    {loading ? 'Generando PDF...' : 'Descargar PDF'}
-                                                </button>
-                                            )}
-                                        </PDFDownloadLink>
+                                            <FaFilePdf className='text-red-600 text-lg' />
+                                            {downloadingPdf ? 'Generando PDF...' : 'Descargar PDF'}
+                                        </button>
                                     )}
                                 </div>
                                 <button onClick={handleClose} className="px-6 py-2 bg-emerald-600 text-white rounded text-sm font-semibold hover:bg-emerald-700 transition-colors">Cerrar</button>

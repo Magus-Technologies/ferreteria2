@@ -1,12 +1,9 @@
 import ModalShowDoc from "~/app/_components/modals/modal-show-doc";
-import DocIngresoSalida from "../docs/doc-ingreso-salida";
 import { IngresoSalidaWithRelations } from "~/lib/api/ingreso-salida";
 import { getNroDoc } from "~/app/_utils/get-nro-doc";
-import { useAuth } from "~/lib/auth-context";
-import DocIngresoSalidaTicket from "../docs/doc-ingreso-salida-ticket";
-import { useState, useMemo } from "react";
-import { useConfiguracionImpresion } from "~/hooks/use-configuracion-impresion";
+import { useState, useEffect } from "react";
 import { TipoDocumento } from "~/types";
+import { getAuthToken } from "~/lib/api";
 
 export default function ModalDocIngresoSalida({
   open,
@@ -17,7 +14,6 @@ export default function ModalDocIngresoSalida({
   setOpen: (open: boolean) => void;
   data: IngresoSalidaWithRelations | undefined;
 }) {
-  // Convertir el tipo_documento del backend (Laravel usa códigos: 'in', 'sa') al enum de Prisma
   const tipoDocumentoPrisma =
     data?.tipo_documento === "Ingreso"
       ? TipoDocumento.Ingreso
@@ -31,52 +27,50 @@ export default function ModalDocIngresoSalida({
     numero: data?.numero ?? 0,
   });
 
-  const { user } = useAuth();
-  const empresa = user?.empresa;
-
   const [esTicket, setEsTicket] = useState(true);
+  const [backendPdfUrl, setBackendPdfUrl] = useState<string | null>(null);
+  const [backendPdfLoading, setBackendPdfLoading] = useState(false);
 
-  // Obtener configuraciones de estilos
-  const { getConfiguracionCampo } = useConfiguracionImpresion({
-    tipoDocumento: "ingreso_salida",
-    enabled: open,
-  });
+  useEffect(() => {
+    if (!open || !data?.id) {
+      if (backendPdfUrl) {
+        URL.revokeObjectURL(backendPdfUrl);
+        setBackendPdfUrl(null);
+      }
+      return;
+    }
 
-  // Preparar estilos para pasar al PDF
-  const estilosCampos = useMemo(() => {
-    const campos = [
-      "fecha",
-      "numero_documento",
-      "empresa_nombre",
-      "empresa_ruc",
-      "empresa_direccion",
-      "almacen",
-      "usuario",
-      "proveedor",
-      "tipo_ingreso",
-      "observaciones",
-      "tabla_codigo",
-      "tabla_cantidad",
-      "tabla_unidad",
-      "tabla_costo",
-    ];
+    const fetchPdf = async () => {
+      setBackendPdfLoading(true);
+      try {
+        const token = getAuthToken();
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const formato = esTicket ? "ticket" : "a4";
+        const res = await fetch(
+          `${API_URL}/pdf/ingreso-salida/${data.id}?formato=${formato}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/pdf",
+            },
+          }
+        );
+        if (!res.ok) throw new Error(`Error: ${res.status}`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        setBackendPdfUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return url;
+        });
+      } catch (err) {
+        console.error("Error al cargar PDF de ingreso/salida:", err);
+      } finally {
+        setBackendPdfLoading(false);
+      }
+    };
 
-    const estilos: Record<
-      string,
-      { fontFamily?: string; fontSize?: number; fontWeight?: string }
-    > = {};
-
-    campos.forEach((campo) => {
-      const config = getConfiguracionCampo(campo);
-      estilos[campo] = {
-        fontFamily: config.font_family,
-        fontSize: config.font_size,
-        fontWeight: config.font_weight,
-      };
-    });
-
-    return estilos;
-  }, [getConfiguracionCampo]);
+    fetchPdf();
+  }, [open, data?.id, esTicket]);
 
   return (
     <ModalShowDoc
@@ -86,21 +80,10 @@ export default function ModalDocIngresoSalida({
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento="ingreso_salida"
+      backendPdfUrl={backendPdfUrl}
+      backendPdfLoading={backendPdfLoading}
     >
-      {esTicket ? (
-        <DocIngresoSalidaTicket
-          data={data}
-          nro_doc={nro_doc}
-          empresa={empresa ?? undefined}
-          estilosCampos={estilosCampos}
-        />
-      ) : (
-        <DocIngresoSalida
-          data={data}
-          nro_doc={nro_doc}
-          empresa={empresa ?? undefined}
-        />
-      )}
+      {null as any}
     </ModalShowDoc>
   );
 }

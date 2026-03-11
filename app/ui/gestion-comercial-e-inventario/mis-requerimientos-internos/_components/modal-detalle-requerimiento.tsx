@@ -1,14 +1,14 @@
 'use client'
 
-import { Tag, Spin, Button } from 'antd'
+import { Tag, Spin, Button, Modal, Tooltip } from 'antd'
 import { FilePdfOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons'
-import { FaShoppingCart, FaWrench, FaMapMarkerAlt, FaMoneyBillWave, FaRegBuilding } from 'react-icons/fa'
-import RequerimientoInternoPdf from '~/components/pdf/requerimiento-interno-pdf'
-import ModalPdfViewer from '~/components/modals/modal-pdf-viewer'
+import { FaShoppingCart, FaWrench, FaMapMarkerAlt, FaMoneyBillWave, FaRegBuilding, FaDownload, FaPrint } from 'react-icons/fa'
 import ModalForm from '~/components/modals/modal-form'
 import TitleForm from '~/components/form/title-form'
+import ButtonBase from '~/components/buttons/button-base'
+import { classOkButtonModal } from '~/lib/clases'
+import { getAuthToken } from '~/lib/api'
 import type { RequerimientoInterno } from '~/lib/api/requerimiento-interno'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import dayjs from 'dayjs'
 import { useState } from 'react'
 
@@ -40,7 +40,8 @@ export default function ModalDetalleRequerimiento({
   onClose,
 }: ModalDetalleRequerimientoProps) {
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
-  const { data: empresa } = useEmpresaPublica()
+  const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
+  const [docPdfLoading, setDocPdfLoading] = useState(false)
 
   if (!requerimiento) return null
 
@@ -275,13 +276,73 @@ export default function ModalDetalleRequerimiento({
         )}
       </ModalForm>
 
-      <ModalPdfViewer
+      <Modal
         open={pdfModalOpen}
-        onClose={() => setPdfModalOpen(false)}
-        document={<RequerimientoInternoPdf requerimiento={requerimiento} empresa={empresa} />}
-        fileName={`${requerimiento.codigo}-LOG-F-03`}
+        onCancel={() => {
+          setPdfModalOpen(false)
+          if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
+        }}
+        width={900}
+        centered
         title={`PDF - ${requerimiento.codigo}`}
-      />
+        footer={
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <Tooltip title="Descargar PDF">
+                <ButtonBase
+                  disabled={!docPdfUrl}
+                  onClick={() => {
+                    if (!docPdfUrl) return
+                    const a = document.createElement('a')
+                    a.href = docPdfUrl
+                    a.download = `${requerimiento.codigo}-LOG-F-03.pdf`
+                    a.click()
+                  }}
+                >
+                  <FaDownload />
+                </ButtonBase>
+              </Tooltip>
+              <Tooltip title="Imprimir">
+                <ButtonBase
+                  disabled={!docPdfUrl}
+                  onClick={() => {
+                    if (!docPdfUrl) return
+                    const w = window.open(docPdfUrl)
+                    w?.addEventListener('load', () => w.print())
+                  }}
+                >
+                  <FaPrint />
+                </ButtonBase>
+              </Tooltip>
+            </div>
+            <Button type="primary" onClick={() => { setPdfModalOpen(false); if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) } }} className={classOkButtonModal}>
+              Cerrar
+            </Button>
+          </div>
+        }
+        afterOpenChange={async (open) => {
+          if (open && requerimiento) {
+            setDocPdfLoading(true)
+            try {
+              const token = getAuthToken()
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/requerimiento-interno/${requerimiento.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+              if (!res.ok) throw new Error('Error al generar PDF')
+              const blob = await res.blob()
+              setDocPdfUrl(URL.createObjectURL(blob))
+            } catch { setDocPdfUrl(null) } finally { setDocPdfLoading(false) }
+          }
+        }}
+      >
+        {docPdfLoading ? (
+          <div className="flex justify-center py-12"><Spin /></div>
+        ) : docPdfUrl ? (
+          <iframe src={docPdfUrl} className="w-full" style={{ height: '70vh' }} />
+        ) : (
+          <div className="flex justify-center py-12 text-slate-400">No se pudo cargar el PDF</div>
+        )}
+      </Modal>
     </>
   )
 }

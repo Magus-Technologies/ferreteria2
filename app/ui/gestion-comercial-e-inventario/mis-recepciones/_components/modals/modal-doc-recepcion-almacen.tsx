@@ -1,10 +1,9 @@
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getNroDoc } from '~/app/_utils/get-nro-doc'
 import { useAuth } from '~/lib/auth-context'
-import DocRecepcionAlmacen from '../docs/doc-recepcion-almacen'
-import { useState } from 'react'
-import DocRecepcionAlmacenTicket from '../docs/doc-recepcion-almacen-ticket'
+import { useState, useEffect } from 'react'
 import type { RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
+import { getAuthToken } from '~/lib/api'
 
 export default function ModalDocRecepcionAlmacen({
   open,
@@ -25,6 +24,49 @@ export default function ModalDocRecepcionAlmacen({
   })
 
   const [esTicket, setEsTicket] = useState(true)
+  const [backendPdfUrl, setBackendPdfUrl] = useState<string | null>(null)
+  const [backendPdfLoading, setBackendPdfLoading] = useState(false)
+
+  useEffect(() => {
+    if (!open || !data?.id) {
+      if (backendPdfUrl) {
+        URL.revokeObjectURL(backendPdfUrl)
+        setBackendPdfUrl(null)
+      }
+      return
+    }
+
+    const fetchPdf = async () => {
+      setBackendPdfLoading(true)
+      try {
+        const token = getAuthToken()
+        const API_URL = process.env.NEXT_PUBLIC_API_URL
+        const formato = esTicket ? 'ticket' : 'a4'
+        const res = await fetch(
+          `${API_URL}/pdf/recepcion-almacen/${data.id}?formato=${formato}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/pdf',
+            },
+          }
+        )
+        if (!res.ok) throw new Error(`Error: ${res.status}`)
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        setBackendPdfUrl(prev => {
+          if (prev) URL.revokeObjectURL(prev)
+          return url
+        })
+      } catch (err) {
+        console.error('Error al cargar PDF de recepción:', err)
+      } finally {
+        setBackendPdfLoading(false)
+      }
+    }
+
+    fetchPdf()
+  }, [open, data?.id, esTicket])
 
   return (
     <ModalShowDoc
@@ -34,16 +76,10 @@ export default function ModalDocRecepcionAlmacen({
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='recepcion_almacen'
+      backendPdfUrl={backendPdfUrl}
+      backendPdfLoading={backendPdfLoading}
     >
-      {esTicket ? (
-        <DocRecepcionAlmacenTicket
-          data={data}
-          nro_doc={nro_doc}
-          empresa={empresa ?? undefined}
-        />
-      ) : (
-        <DocRecepcionAlmacen data={data} nro_doc={nro_doc} empresa={empresa ?? undefined} />
-      )}
+      {null as any}
     </ModalShowDoc>
   )
 }
