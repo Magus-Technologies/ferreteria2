@@ -23,11 +23,35 @@ interface EventEntregaProps {
 }
 
 export default function EventEntrega({ event }: EventEntregaProps) {
+  const isTemporary = event.id === -1
+
   // Determinar si el fondo es claro u oscuro para ajustar el color del texto
-  const isLightBackground = event.resource.color.includes('#86efac') || 
+  const isLightBackground = event.resource.color.includes('#86efac') ||
                             event.resource.color.includes('#fde047') ||
                             event.resource.color.includes('#93c5fd')
-  
+
+  // Evento temporal (selección de horario)
+  if (isTemporary) {
+    return (
+      <div
+        className="h-full w-full p-1.5 overflow-hidden rounded"
+        style={{
+          backgroundColor: '#3b82f6',
+          color: '#ffffff',
+          fontWeight: '600',
+          border: '2px dashed #60a5fa',
+        }}
+      >
+        <div className="font-bold truncate text-[12px] leading-tight mb-0.5">
+          📅 Horario seleccionado
+        </div>
+        <div className="text-[11px] leading-tight opacity-90">
+          Arrastra para ajustar
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="h-full w-full p-1.5 overflow-hidden rounded"

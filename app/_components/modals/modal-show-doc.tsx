@@ -91,11 +91,11 @@ export default function ModalShowDoc({
 
   // Generar PDF cuando se abre el modal o cambia el formato (ticket/A4)
   useEffect(() => {
-    if (open && !backendPdfUrl) {
+    if (open && !backendPdfUrl && !backendPdfLoading) {
       generarPdf()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, esTicket, backendPdfUrl])
+  }, [open, esTicket, backendPdfUrl, backendPdfLoading])
 
   // Limpiar URL al cerrar
   useEffect(() => {

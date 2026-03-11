@@ -1,15 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Spin, Modal } from 'antd'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
-import DocCierreCaja, { CierreCajaDataPDF } from './docs/doc-cierre-caja'
-import DocCierreCajaTicket from './docs/doc-cierre-caja-ticket'
-import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { getAuthToken } from '~/lib/api'
 
 // ============= TYPES =============
 
-// Tipo para la caja activa que viene de Laravel
 export interface CajaActivaResponse {
   id: number
   fecha_apertura: string
@@ -57,94 +53,73 @@ export default function ModalTicketCierre({
   setOpen: (open: boolean) => void
   data: CajaActivaResponse | undefined
 }) {
-  const { data: empresa, isLoading } = useEmpresaPublica()
   const [esTicket, setEsTicket] = useState(true)
 
-  // Generar número de documento
-  const nro_doc = data
-    ? `CIERRE-${data.id.toString().padStart(6, '0')}`
-    : ''
+  // URLs de PDF para cada formato
+  const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+  const [a4PdfUrl, setA4PdfUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const fetchedRef = useRef<number | null>(null)
 
-  // Transformar datos de Laravel a formato PDF
-  const cierreDataPDF: CierreCajaDataPDF | undefined = data ? transformCierreData(data) : undefined
+  const fetchPdf = useCallback(async (id: number, formato: 'ticket' | 'a4') => {
+    const token = getAuthToken()
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const res = await fetch(`${API_URL}/pdf/cierre-caja/${id}?formato=${formato}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/pdf',
+      },
+    })
+    if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+    const blob = await res.blob()
+    return URL.createObjectURL(blob)
+  }, [])
 
-  // Mostrar loading mientras carga empresa
-  if (isLoading) {
-    return (
-      <Modal
-        open={open}
-        onCancel={() => setOpen(false)}
-        footer={null}
-        centered
-      >
-        <div className="flex items-center justify-center py-8">
-          <Spin size="large" />
-          <span className="ml-3">Cargando datos de empresa...</span>
-        </div>
-      </Modal>
-    )
-  }
+  useEffect(() => {
+    if (open && data?.id && fetchedRef.current !== data.id) {
+      fetchedRef.current = data.id
+      setLoading(true)
+
+      // Cargar ticket primero (es el que se muestra por defecto)
+      fetchPdf(data.id, 'ticket')
+        .then((url) => {
+          setTicketPdfUrl(url)
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error('Error ticket PDF:', err)
+          setLoading(false)
+        })
+
+      // Cargar A4 en paralelo
+      fetchPdf(data.id, 'a4')
+        .then((url) => setA4PdfUrl(url))
+        .catch((err) => console.error('Error A4 PDF:', err))
+    }
+
+    if (!open) {
+      setTicketPdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      setA4PdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+      fetchedRef.current = null
+    }
+  }, [open, data?.id, fetchPdf])
+
+  const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
+  const currentLoading = esTicket ? loading : !a4PdfUrl
 
   return (
     <ModalShowDoc
       open={open}
       setOpen={setOpen}
-      nro_doc={nro_doc}
+      nro_doc=""
       setEsTicket={setEsTicket}
       esTicket={esTicket}
       tipoDocumento='cierre_caja'
       cierreId={data?.id}
+      backendPdfUrl={currentPdfUrl}
+      backendPdfLoading={currentLoading && !currentPdfUrl}
     >
-      {esTicket ? (
-        <DocCierreCajaTicket
-          data={cierreDataPDF}
-          nro_doc={nro_doc}
-          empresa={empresa}
-        />
-      ) : (
-        <DocCierreCaja
-          data={cierreDataPDF}
-          nro_doc={nro_doc}
-          empresa={empresa}
-        />
-      )}
+      <></>
     </ModalShowDoc>
   )
-}
-
-// ============= HELPERS =============
-
-/**
- * Transforma la respuesta de Laravel al formato esperado por los componentes PDF
- */
-function transformCierreData(caja: CajaActivaResponse): CierreCajaDataPDF {
-  return {
-    id: caja.id,
-    fecha_apertura: caja.fecha_apertura,
-    fecha_cierre: caja.fecha_cierre,
-    estado: caja.estado,
-    caja_principal: caja.caja_principal,
-    user: caja.user,
-    supervisor: caja.supervisor,
-    resumen: {
-      efectivo_inicial: Number(caja.resumen.efectivo_inicial || 0),
-      detalle_metodos_pago: caja.resumen.detalle_metodos_pago?.map(m => ({
-        label: m.label,
-        cantidad_transacciones: Number(m.cantidad_transacciones || 0),
-        total: Number(m.total || 0),
-      })) || [],
-      total_ventas: Number(caja.resumen.total_ventas || 0),
-      total_ingresos: Number(caja.resumen.total_ingresos || 0),
-      total_egresos: Number(caja.resumen.total_egresos || 0),
-      total_prestamos_recibidos: Number(caja.resumen.total_prestamos_recibidos || 0),
-      total_prestamos_dados: Number(caja.resumen.total_prestamos_dados || 0),
-      monto_esperado: Number(caja.resumen.monto_esperado || 0),
-      prestamos_recibidos: caja.resumen.prestamos_recibidos,
-      prestamos_dados: caja.resumen.prestamos_dados,
-      movimientos_internos: caja.resumen.movimientos_internos,
-    },
-    monto_cierre_efectivo: caja.monto_cierre_efectivo !== undefined ? Number(caja.monto_cierre_efectivo) : undefined,
-    total_cuentas: caja.total_cuentas !== undefined ? Number(caja.total_cuentas) : undefined,
-    comentarios: caja.comentarios,
-  }
 }

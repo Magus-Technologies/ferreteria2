@@ -53,8 +53,8 @@ export default function BottomNav({ className }: { className?: string }) {
 
     const containerWidth = container.getBoundingClientRect().width;
     const children = Array.from(measure.children) as HTMLElement[];
-    const gap = 16;
-    const moreButtonWidth = 110;
+    const gap = 28;
+    const moreButtonWidth = 120;
 
     let totalWidth = 0;
     let count = 0;

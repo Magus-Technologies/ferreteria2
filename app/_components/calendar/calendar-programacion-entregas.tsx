@@ -334,6 +334,12 @@ export default function CalendarProgramacionEntregas({
     (slotInfo: { start: Date; end: Date; action: string; bounds?: any; box?: any }) => {
       if (slotInfo.action !== 'select' && slotInfo.action !== 'click') return
 
+      // En modo vista (no soloSeleccion), solo notificar al padre sin popup
+      if (!soloSeleccion) {
+        onSelectSlot?.({ start: slotInfo.start, end: slotInfo.end })
+        return
+      }
+
       setSelectedSlot({ start: slotInfo.start, end: slotInfo.end })
 
       // Calcular posición del popup
@@ -347,10 +353,8 @@ export default function CalendarProgramacionEntregas({
         left = slotInfo.box.clientX + 12
       }
       setPopupPos({ top, left })
-
-      // NO llamar onSelectSlot aquí — se llama solo al confirmar con "Aplicar"
     },
-    []
+    [soloSeleccion, onSelectSlot]
   )
 
   const handleAplicarSlot = useCallback(() => {
@@ -398,7 +402,7 @@ export default function CalendarProgramacionEntregas({
         messages={messages}
         formats={formats}
         culture="es"
-        selectable
+        selectable={soloSeleccion}
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleSelectEvent}
         step={30}

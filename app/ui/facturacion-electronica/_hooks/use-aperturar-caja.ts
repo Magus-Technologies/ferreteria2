@@ -5,7 +5,30 @@ import { authApi } from '~/lib/api'
 import { AperturarCajaFormValues } from '../_components/modals/modal-aperturar-caja'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { AperturaDataResponse } from '../_components/modals/modal-ticket-apertura'
+import { getAuthToken } from '~/lib/api'
+
+export interface AperturaDataResponse {
+  id: string | number
+  fecha_apertura: string
+  estado: string
+  monto_apertura: number
+  conteo_apertura_billetes_monedas?: any
+  caja_principal: {
+    id: number
+    codigo: string
+    nombre: string
+  }
+  user: {
+    id: string
+    name: string
+  }
+  distribuciones_vendedores?: Array<{
+    vendedor_id: string
+    vendedor_nombre: string
+    monto_asignado: number
+    conteo_billetes_monedas?: any
+  }>
+}
 
 export default function useAperturarCaja({
   onSuccess,
@@ -96,51 +119,31 @@ export default function useAperturarCaja({
           })),
         }
         
-        // Transformar datos para el PDF (compatible con AperturaDataPDF)
-        const aperturaDataPDF = {
-          id: aperturaData.id,
-          fecha_apertura: aperturaData.fecha_apertura,
-          monto_apertura: aperturaData.monto_apertura,
-          conteo_apertura_billetes_monedas: aperturaData.conteo_apertura_billetes_monedas,
-          caja_principal: aperturaData.caja_principal,
-          user: aperturaData.user,
-          distribuciones_vendedores: (aperturaData.distribuciones_vendedores || []).map(d => ({
-            vendedor: d.vendedor_nombre,
-            monto: d.monto_asignado,
-            conteo_billetes_monedas: d.conteo_billetes_monedas,
-          })),
-        }
-
         // Si hay email, enviar el ticket automáticamente
-        if (values.enviarTicket && values.emailDestino && empresaData) {
+        if (values.enviarTicket && values.emailDestino) {
           try {
             console.log('📧 Generando y enviando ticket automáticamente...')
-            
-            // Generar el PDF usando react-pdf
-            const { pdf } = await import('@react-pdf/renderer')
-            const { default: DocAperturaTicket } = await import('../_components/docs/doc-apertura-ticket')
-            const React = await import('react')
-            
-            // Crear el documento PDF
-            const doc = React.createElement(DocAperturaTicket, {
-              data: aperturaDataPDF,
-              nro_doc: String(aperturaData.id),
-              empresa: empresaData,
-              show_logo_html: false
+
+            // Generar el PDF desde el backend
+            const token = getAuthToken()
+            const API_URL = process.env.NEXT_PUBLIC_API_URL
+            const pdfRes = await fetch(`${API_URL}/pdf/apertura-caja/${aperturaData.id}?formato=ticket`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/pdf',
+              },
             })
-            
-            // Generar el blob del PDF
-            const pdfBlob = await pdf(doc as any).toBlob()
-            
+            if (!pdfRes.ok) throw new Error(`Error PDF: ${pdfRes.status}`)
+            const pdfBlob = await pdfRes.blob()
+
             // Enviar el PDF al backend
             await cajaApi.enviarTicketAperturaEmail(String(aperturaData.id), values.emailDestino, pdfBlob)
-            
+
             console.log('✅ Ticket enviado automáticamente a:', values.emailDestino)
             message.success(`Ticket enviado a ${values.emailDestino}`)
           } catch (emailError) {
             console.error('⚠️ Error al enviar ticket automáticamente:', emailError)
             message.warning('Apertura exitosa, pero no se pudo enviar el email')
-            // No fallar la apertura si falla el envío del email
           }
         }
 
