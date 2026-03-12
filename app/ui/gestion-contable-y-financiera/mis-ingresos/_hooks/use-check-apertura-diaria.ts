@@ -58,3 +58,6 @@ export function useCheckAperturaDiaria() {
     distribucionCompletada: tieneAperturaHoy,
   }
 }
+
+export default useCheckAperturaDiaria
+

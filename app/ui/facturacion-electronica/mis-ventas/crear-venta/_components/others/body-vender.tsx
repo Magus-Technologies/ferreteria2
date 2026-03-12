@@ -20,6 +20,8 @@ import FormCrearVenta from '../form/form-crear-venta'
 import CardsInfoVenta from '../cards/cards-info-venta'
 import ModalDocVenta from '../../../_components/modals/modal-doc-venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
+import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
 
 export type FormCreateVenta = {
   productos: Array<{
@@ -112,9 +114,11 @@ export type FormCreateVenta = {
 function FormVentaInternal({
   venta,
   handleSubmit,
+  onMissingApertura,
 }: {
   venta?: VentaConUnidadDerivadaNormal
   handleSubmit: (values: FormCreateVenta) => void
+  onMissingApertura?: () => void
 }) {
   console.log('🏗️ FormVentaInternal rendering with venta:', venta)
   const [form] = Form.useForm<FormCreateVenta>()
@@ -135,7 +139,7 @@ function FormVentaInternal({
         <FormCrearVenta form={form} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} ventaId={venta?.id} />
+        <CardsInfoVenta form={form} ventaId={venta?.id} onMissingApertura={onMissingApertura} />
       </div>
     </FormBase>
   )
@@ -151,8 +155,27 @@ export default function BodyVender({
   const [openDoc, setOpenDoc] = useState(false)
   const [ventaId, setVentaId] = useState<string>()
   const [formKey, setFormKey] = useState(0)
+  const [openAperturaModal, setOpenAperturaModal] = useState(false)
 
-  const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
+  const handleMissingApertura = () => {
+    console.log(' handleMissingApertura llamado - abriendo modal')
+    setOpenAperturaModal(true)
+  }
+
+  // Verificar apertura al montar el componente
+  const { hasApertura, refetchApertura } = useCheckAperturaDiaria()
+
+  // Abrir modal automáticamente si no hay apertura de hoy
+  useEffect(() => {
+    if (!hasApertura) {
+      setOpenAperturaModal(true)
+    }
+  }, [hasApertura])
+
+  const { handleSubmit } = useCreateVenta({ 
+    ventaId: venta?.id,
+    onMissingApertura: handleMissingApertura,
+  })
   
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
@@ -223,11 +246,21 @@ export default function BodyVender({
         setOpen={setOpenDoc}
         ventaId={ventaId}
       />
+      {/* Modal de Apertura - se abre si intenta finalizar sin apertura */}
+      <ModalAperturarCaja
+        open={openAperturaModal}
+        setOpen={setOpenAperturaModal}
+        onSuccess={async () => {
+          setOpenAperturaModal(false)
+          await refetchApertura()
+        }}
+      />
       {/* Recrear completamente el formulario cuando cambia formKey */}
       <FormVentaInternal
         key={formKey}
         venta={ventaData_}
         handleSubmit={handleSubmit}
+        onMissingApertura={handleMissingApertura}
       />
     </>
   )

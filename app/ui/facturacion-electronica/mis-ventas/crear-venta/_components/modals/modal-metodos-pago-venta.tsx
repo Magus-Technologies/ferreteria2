@@ -197,12 +197,12 @@ export default function ModalMetodosPagoVenta({
     ventaForm.setFieldValue('metodos_de_pago', metodos)
     ventaForm.setFieldValue('estado_de_venta', EstadoDeVenta.CREADO)
 
-    // Cerrar el modal y llamar a onContinuar para abrir el modal de detalles de entrega
+    // Cerrar el modal y llamar a onContinuar para intentar finalizar la venta
     onCancel()
     modalForm.resetFields()
     setMetodosPago([])
     
-    // Llamar a onContinuar si existe
+    // Llamar a onContinuar si existe (que intentará finalizar la venta)
     onContinuar?.()
   }
 

@@ -1,15 +1,16 @@
 'use client'
 
 import { Form, Input, InputNumber, Select, Switch, message } from 'antd'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { crearGastoExtra, updateGastoExtra, type CrearGastoExtraData, type GastoExtra } from '~/lib/api/gasto-extra'
-import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
 import { usuariosApi } from '~/lib/api/usuarios'
 import ModalForm from '~/components/modals/modal-form'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import LabelBase from '~/components/form/label-base'
 import TitleForm from '~/components/form/title-form'
+import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
+import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
 
 interface ModalCrearGastoExtraProps {
     open: boolean
@@ -21,7 +22,9 @@ export default function ModalCrearGastoExtra({ open, onClose, gastoEdit }: Modal
     const [form] = Form.useForm<CrearGastoExtraData & { requiereAprobacion?: boolean }>()
     const queryClient = useQueryClient()
     const [requiereAprobacion, setRequiereAprobacion] = useState(false)
+    const [openAperturaModal, setOpenAperturaModal] = useState(false)
     const isEditing = !!gastoEdit
+    const { hasApertura, refetchApertura } = useCheckAperturaDiaria()
 
     // Consultas
 
@@ -41,7 +44,12 @@ export default function ModalCrearGastoExtra({ open, onClose, gastoEdit }: Modal
             handleClose()
         },
         onError: (error: Error) => {
-            message.error(error.message || 'Error al registrar el gasto')
+            const errorMsg = error.message || 'Error al registrar el gasto'
+            if (errorMsg.includes('No hay apertura de caja')) {
+                message.error('No hay apertura de caja para hoy. No se puede aprobar el gasto.')
+            } else {
+                message.error(errorMsg)
+            }
         }
     })
 
@@ -78,7 +86,14 @@ export default function ModalCrearGastoExtra({ open, onClose, gastoEdit }: Modal
         onClose()
     }
 
-    const handleFinish = (values: CrearGastoExtraData & { requiereAprobacion?: boolean }) => {
+    const handleFinish = useCallback((values: CrearGastoExtraData & { requiereAprobacion?: boolean }) => {
+        // Si requiere aprobación y no hay apertura, abrir modal de apertura
+        if (values.requiereAprobacion && !hasApertura) {
+            console.log('🔴 No hay apertura de hoy - abriendo modal')
+            setOpenAperturaModal(true)
+            return
+        }
+
         // En modo edición no se puede aprobar
         if (!values.requiereAprobacion || isEditing) {
             delete values.supervisor_id
@@ -105,126 +120,138 @@ export default function ModalCrearGastoExtra({ open, onClose, gastoEdit }: Modal
                 despliegue_pago_id: desplieguePagoId
             })
         }
-    }
+    }, [hasApertura, isEditing, gastoEdit, updateMutation, crearMutation])
 
     return (
-        <ModalForm
-            open={open}
-            setOpen={(val) => { if (!val) handleClose() }}
-            modalProps={{
-                width: 600,
-                centered: true,
-                title: <TitleForm>{isEditing ? 'Editar Gasto Operativo' : 'Registrar Nuevo Gasto Operativo'}</TitleForm>,
-                okText: isEditing ? 'Guardar Cambios' : (requiereAprobacion ? 'Guardar y Aprobar' : 'Guardar como Pendiente'),
-                cancelText: "Cancelar",
-                destroyOnClose: true,
-                okButtonProps: {
-                    loading: isEditing ? updateMutation.isPending : crearMutation.isPending,
-                    className: 'bg-rose-600 hover:bg-rose-700'
-                }
-            }}
-            formProps={{
-                form,
-                layout: "vertical",
-                onFinish: handleFinish,
-                className: "mt-4",
-                initialValues: {
-                    requiereAprobacion: false
-                },
-                onValuesChange: (changed) => {
-                    if (changed.requiereAprobacion !== undefined) {
-                        setRequiereAprobacion(changed.requiereAprobacion)
+        <>
+            <ModalForm
+                open={open}
+                setOpen={(val) => { if (!val) handleClose() }}
+                modalProps={{
+                    width: 600,
+                    centered: true,
+                    title: <TitleForm>{isEditing ? 'Editar Gasto Operativo' : 'Registrar Nuevo Gasto Operativo'}</TitleForm>,
+                    okText: isEditing ? 'Guardar Cambios' : (requiereAprobacion ? 'Guardar y Aprobar' : 'Guardar como Pendiente'),
+                    cancelText: "Cancelar",
+                    destroyOnClose: true,
+                    okButtonProps: {
+                        loading: isEditing ? updateMutation.isPending : crearMutation.isPending,
+                        className: 'bg-rose-600 hover:bg-rose-700'
                     }
-                }
-            }}
-        >
-            <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                    <LabelBase label="Monto (S/.)" orientation="column">
+                }}
+                formProps={{
+                    form,
+                    layout: "vertical",
+                    onFinish: handleFinish,
+                    className: "mt-4",
+                    initialValues: {
+                        requiereAprobacion: false
+                    },
+                    onValuesChange: (changed) => {
+                        if (changed.requiereAprobacion !== undefined) {
+                            setRequiereAprobacion(changed.requiereAprobacion)
+                        }
+                    }
+                }}
+            >
+                <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <LabelBase label="Monto (S/.)" orientation="column">
+                            <Form.Item
+                                name="monto"
+                                rules={[{ required: true, message: 'Ingrese el monto' }]}
+                                className="mb-0"
+                            >
+                                <InputNumber
+                                    className="w-full"
+                                    min={0.01}
+                                    step={0.1}
+                                    precision={2}
+                                    placeholder="0.00"
+                                    prefix="S/"
+                                />
+                            </Form.Item>
+                        </LabelBase>
+
+                        <LabelBase label="Método de Pago" orientation="column">
+                            <SelectDespliegueDePago
+                                placeholder="Selecciona el método de pago"
+                                propsForm={{
+                                    name: 'despliegue_pago_id',
+                                    rules: [{ required: true, message: 'Selecciona un método de pago' }],
+                                }}
+                            />
+                        </LabelBase>
+                    </div>
+
+                    <LabelBase label="Concepto o Motivo del Gasto" orientation="column">
                         <Form.Item
-                            name="monto"
-                            rules={[{ required: true, message: 'Ingrese el monto' }]}
+                            name="concepto"
+                            rules={[{ required: true, message: 'El concepto es obligatorio' }]}
                             className="mb-0"
                         >
-                            <InputNumber
-                                className="w-full"
-                                min={0.01}
-                                step={0.1}
-                                precision={2}
-                                placeholder="0.00"
-                                prefix="S/"
-                            />
+                            <Input.TextArea rows={3} placeholder="Detalle el motivo del gasto..." />
                         </Form.Item>
                     </LabelBase>
 
-                    <LabelBase label="Método de Pago" orientation="column">
-                        <SelectDespliegueDePago
-                            placeholder="Selecciona el método de pago"
-                            propsForm={{
-                                name: 'despliegue_pago_id',
-                                rules: [{ required: true, message: 'Selecciona un método de pago' }],
-                            }}
-                        />
-                    </LabelBase>
+                    {!isEditing && (
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-3">
+                            <Form.Item
+                                name="requiereAprobacion"
+                                label="¿Aprobar inmediatamente?"
+                                valuePropName="checked"
+                                className="mb-1"
+                            >
+                                <Switch />
+                            </Form.Item>
+
+                            {requiereAprobacion && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mt-2">
+                                    <Form.Item
+                                        name="supervisor_id"
+                                        label="Supervisor"
+                                        rules={[{ required: true, message: 'Seleccione un supervisor' }]}
+                                        className="mb-2 md:mb-0"
+                                    >
+                                        <Select loading={loadingSupervisores} placeholder="Seleccione supervisor...">
+                                            {supervisores.map((sup: any) => (
+                                                <Select.Option key={sup.id} value={sup.id}>
+                                                    {sup.name}
+                                                </Select.Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+
+                                    <Form.Item
+                                        name="supervisor_password"
+                                        label="Contraseña"
+                                        rules={[{ required: true, message: 'Ingrese contraseña' }]}
+                                        className="mb-2 md:mb-0"
+                                    >
+                                        <Input.Password placeholder="Contraseña de supervisor" />
+                                    </Form.Item>
+                                </div>
+                            )}
+
+                            <p className="text-xs text-slate-500 mb-0 mt-1">
+                                {requiereAprobacion
+                                    ? 'El dinero saldrá de caja inmediatamente y formará parte del cálculo del cierre de caja.'
+                                    : 'Se guardará como Pendiente. No afectará a la caja hasta que sea aprobado por un supervisor.'}
+                            </p>
+                        </div>
+                    )}
                 </div>
+            </ModalForm>
 
-                <LabelBase label="Concepto o Motivo del Gasto" orientation="column">
-                    <Form.Item
-                        name="concepto"
-                        rules={[{ required: true, message: 'El concepto es obligatorio' }]}
-                        className="mb-0"
-                    >
-                        <Input.TextArea rows={3} placeholder="Detalle el motivo del gasto..." />
-                    </Form.Item>
-                </LabelBase>
-
-                {!isEditing && (
-                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-3">
-                        <Form.Item
-                            name="requiereAprobacion"
-                            label="¿Aprobar inmediatamente?"
-                            valuePropName="checked"
-                            className="mb-1"
-                        >
-                            <Switch />
-                        </Form.Item>
-
-                        {requiereAprobacion && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mt-2">
-                                <Form.Item
-                                    name="supervisor_id"
-                                    label="Supervisor"
-                                    rules={[{ required: true, message: 'Seleccione un supervisor' }]}
-                                    className="mb-2 md:mb-0"
-                                >
-                                    <Select loading={loadingSupervisores} placeholder="Seleccione supervisor...">
-                                        {supervisores.map((sup: any) => (
-                                            <Select.Option key={sup.id} value={sup.id}>
-                                                {sup.name}
-                                            </Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-
-                                <Form.Item
-                                    name="supervisor_password"
-                                    label="Contraseña"
-                                    rules={[{ required: true, message: 'Ingrese contraseña' }]}
-                                    className="mb-2 md:mb-0"
-                                >
-                                    <Input.Password placeholder="Contraseña de supervisor" />
-                                </Form.Item>
-                            </div>
-                        )}
-
-                        <p className="text-xs text-slate-500 mb-0 mt-1">
-                            {requiereAprobacion
-                                ? 'El dinero saldrá de caja inmediatamente y formará parte del cálculo del cierre de caja.'
-                                : 'Se guardará como Pendiente. No afectará a la caja hasta que sea aprobado por un supervisor.'}
-                        </p>
-                    </div>
-                )}
-            </div>
-        </ModalForm>
+            {/* Modal de Apertura - se abre si intenta crear gasto con aprobación sin apertura */}
+            <ModalAperturarCaja
+                open={openAperturaModal}
+                setOpen={setOpenAperturaModal}
+                onSuccess={async () => {
+                    setOpenAperturaModal(false)
+                    await refetchApertura()
+                }}
+            />
+        </>
     )
 }

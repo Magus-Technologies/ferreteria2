@@ -26,6 +26,7 @@ import {
 } from '~/lib/api/entrega-producto'
 import { fcmApi } from '~/lib/api/fcm'
 import dayjs from 'dayjs'
+import { cajaApi } from '~/lib/api/caja'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -77,7 +78,13 @@ export function agruparProductos({
   return Array.from(mapa.values())
 }
 
-export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
+export default function useCreateVenta({ 
+  ventaId,
+  onMissingApertura,
+}: { 
+  ventaId?: string
+  onMissingApertura?: () => void
+} = {}) {
   const router = useRouter()
   const { user } = useAuth()
   const user_id = user?.id
@@ -96,6 +103,41 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
+
+    // ✅ VALIDAR APERTURA DE HOY ANTES DE FINALIZAR
+    try {
+      const cajaResponse = await cajaApi.cajaActiva()
+      const cajaActiva = cajaResponse.data?.data
+      
+      console.log('🔍 Validando apertura - cajaActiva:', cajaActiva)
+      
+      if (!cajaActiva) {
+        console.warn('⚠️ No hay apertura de caja activa')
+        console.log('📞 Llamando onMissingApertura callback')
+        onMissingApertura?.()
+        return
+      }
+
+      const fechaApertura = dayjs(cajaActiva.fecha_apertura)
+      const hoy = dayjs()
+      
+      console.log('📅 Comparando fechas:')
+      console.log('  fechaApertura:', fechaApertura.format('YYYY-MM-DD'))
+      console.log('  hoy:', hoy.format('YYYY-MM-DD'))
+      console.log('  ¿Es del mismo día?:', fechaApertura.isSame(hoy, 'day'))
+      
+      if (!fechaApertura.isSame(hoy, 'day')) {
+        console.warn('⚠️ La apertura no es de hoy')
+        console.log('📞 Llamando onMissingApertura callback')
+        onMissingApertura?.()
+        return
+      }
+    } catch (error) {
+      console.error('❌ Error al validar apertura:', error)
+      console.log('📞 Llamando onMissingApertura callback por error')
+      onMissingApertura?.()
+      return
+    }
 
     const {
       productos,
@@ -617,7 +659,7 @@ export default function useCreateVenta({ ventaId }: { ventaId?: string } = {}) {
     } finally {
       setLoading(false)
     }
-  }, [router, user_id, notification, message, almacen_id, queryClient, isEditing, ventaId])
+  }, [router, user_id, notification, message, almacen_id, queryClient, isEditing, ventaId, onMissingApertura])
 
   return { handleSubmit, loading }
 }
