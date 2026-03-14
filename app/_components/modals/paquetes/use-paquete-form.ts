@@ -31,14 +31,12 @@ export function usePaqueteForm(
         nombre: paqueteData.nombre,
       })
 
-      // Cargar productos del paquete
       const productosFormateados: ProductoPaquete[] = paqueteData.productos.map((p) => {
         const productoAny = p.producto as any
         const productoEnAlmacen = productoAny?.producto_en_almacenes?.[0]
         const costo = productoEnAlmacen?.costo
           ? Number(productoEnAlmacen.costo)
           : undefined
-        // Cargar unidades derivadas disponibles para el selector de tipo precio
         const unidades_derivadas_disponibles = productoEnAlmacen?.unidades_derivadas?.map((ud: any) => ({
           unidad_derivada: ud.unidad_derivada || { id: ud.unidad_derivada_id, name: '' },
           factor: ud.factor,
@@ -56,9 +54,11 @@ export function usePaqueteForm(
           unidad_derivada_id: p.unidad_derivada_id,
           unidad_derivada_name: p.unidad_derivada?.name || '',
           cantidad: p.cantidad,
-          precio_sugerido: p.precio_sugerido || undefined,
-          tipo_precio: (p as any).tipo_precio || 'publico',
-          descuento: Number((p as any).descuento) || 0,
+          precio_publico: p.precio_publico != null ? Number(p.precio_publico) : undefined,
+          precio_especial: p.precio_especial != null ? Number(p.precio_especial) : undefined,
+          precio_minimo: p.precio_minimo != null ? Number(p.precio_minimo) : undefined,
+          precio_ultimo: p.precio_ultimo != null ? Number(p.precio_ultimo) : undefined,
+          tipo_precio_vista: 'publico' as TipoPrecioPaquete,
           costo,
           unidades_derivadas_disponibles,
         }
@@ -76,7 +76,6 @@ export function usePaqueteForm(
   }, [open, form])
 
   const agregarProducto = (producto: ProductoPaquete) => {
-    // Verificar si ya existe
     const existe = productos.find((p) => p.producto_id === producto.producto_id)
 
     if (existe) {
@@ -84,19 +83,18 @@ export function usePaqueteForm(
       return
     }
 
-    setProductos([...productos, producto])
+    setProductos((prev) => [...prev, producto])
     message.success('Producto agregado al paquete')
   }
 
   const eliminarProducto = (key: string) => {
-    setProductos(productos.filter((p) => p.key !== key))
+    setProductos((prev) => prev.filter((p) => p.key !== key))
   }
 
   const actualizarUnidadDerivada = (key: string, unidadDerivadaId: number) => {
-    setProductos(
-      productos.map((p) => {
+    setProductos((prev) =>
+      prev.map((p) => {
         if (p.key === key) {
-          // Buscar el nombre de la nueva unidad derivada
           const unidad = p.unidades_derivadas_disponibles?.find(
             (u) => u.unidad_derivada.id === unidadDerivadaId
           )
@@ -104,8 +102,6 @@ export function usePaqueteForm(
             ...p,
             unidad_derivada_id: unidadDerivadaId,
             unidad_derivada_name: unidad?.unidad_derivada.name || p.unidad_derivada_name,
-            // Forzar nuevo key para que AG Grid detecte el cambio
-            key: `${p.producto_id}-${unidadDerivadaId}-${Date.now()}`,
           }
         }
         return p
@@ -114,26 +110,21 @@ export function usePaqueteForm(
   }
 
   const actualizarCantidad = (key: string, cantidad: number) => {
-    setProductos(
-      productos.map((p) => (p.key === key ? { ...p, cantidad } : p))
+    setProductos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, cantidad } : p))
     )
   }
 
-  const actualizarPrecio = (key: string, precio: number | undefined) => {
-    setProductos(
-      productos.map((p) => (p.key === key ? { ...p, precio_sugerido: precio } : p))
+  const actualizarPrecio = (key: string, tipo: TipoPrecioPaquete, precio: number | undefined) => {
+    const precioKey = `precio_${tipo}` as keyof ProductoPaquete
+    setProductos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, [precioKey]: precio } : p))
     )
   }
 
-  const actualizarTipoPrecio = (key: string, tipoPrecio: TipoPrecioPaquete) => {
-    setProductos(
-      productos.map((p) => (p.key === key ? { ...p, tipo_precio: tipoPrecio } : p))
-    )
-  }
-
-  const actualizarDescuento = (key: string, descuento: number) => {
-    setProductos(
-      productos.map((p) => (p.key === key ? { ...p, descuento } : p))
+  const actualizarTipoPrecioVista = (key: string, tipo: TipoPrecioPaquete) => {
+    setProductos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, tipo_precio_vista: tipo } : p))
     )
   }
 
@@ -154,9 +145,10 @@ export function usePaqueteForm(
           producto_id: p.producto_id,
           unidad_derivada_id: p.unidad_derivada_id,
           cantidad: p.cantidad,
-          precio_sugerido: p.precio_sugerido || null,
-          tipo_precio: p.tipo_precio || 'publico',
-          descuento: p.descuento || 0,
+          precio_publico: p.precio_publico ?? null,
+          precio_especial: p.precio_especial ?? null,
+          precio_minimo: p.precio_minimo ?? null,
+          precio_ultimo: p.precio_ultimo ?? null,
         })),
       }
 
@@ -194,8 +186,7 @@ export function usePaqueteForm(
     actualizarUnidadDerivada,
     actualizarCantidad,
     actualizarPrecio,
-    actualizarTipoPrecio,
-    actualizarDescuento,
+    actualizarTipoPrecioVista,
     handleSubmit,
   }
 }

@@ -36,8 +36,7 @@ export default function ModalCrearEditarPaquete({
     actualizarUnidadDerivada,
     actualizarCantidad,
     actualizarPrecio,
-    actualizarTipoPrecio,
-    actualizarDescuento,
+    actualizarTipoPrecioVista,
     handleSubmit,
   } = usePaqueteForm(paqueteId, open, onClose, onSuccess)
 
@@ -136,8 +135,7 @@ export default function ModalCrearEditarPaquete({
                 onUnidadDerivadaChange={actualizarUnidadDerivada}
                 onCantidadChange={actualizarCantidad}
                 onPrecioChange={actualizarPrecio}
-                onTipoPrecioChange={actualizarTipoPrecio}
-                onDescuentoChange={actualizarDescuento}
+                onTipoPrecioVistaChange={actualizarTipoPrecioVista}
               />
             </div>
 

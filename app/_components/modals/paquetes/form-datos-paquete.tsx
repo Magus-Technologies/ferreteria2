@@ -12,7 +12,6 @@ interface FormDatosPaqueteProps {
 }
 
 export default function FormDatosPaquete({ form, productos }: FormDatosPaqueteProps) {
-  // Calcular totales
   const totales = useMemo(() => {
     const costoTotal = productos.reduce((sum, p) => {
       const costo = p.costo || 0
@@ -20,28 +19,30 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
       return sum + (costo * cantidad)
     }, 0)
 
-    const ventaTotal = productos.reduce((sum, p) => {
-      const precio = p.precio_sugerido || 0
-      const descuento = p.descuento || 0
-      const precioFinal = Math.max(precio - descuento, 0)
-      const cantidad = p.cantidad || 0
-      return sum + (precioFinal * cantidad)
+    const ventaPublico = productos.reduce((sum, p) => {
+      return sum + (Number(p.precio_publico || 0) * (p.cantidad || 0))
     }, 0)
 
-    const descuentoTotal = productos.reduce((sum, p) => {
-      const descuento = p.descuento || 0
-      const cantidad = p.cantidad || 0
-      return sum + (descuento * cantidad)
+    const ventaEspecial = productos.reduce((sum, p) => {
+      return sum + (Number(p.precio_especial || 0) * (p.cantidad || 0))
     }, 0)
 
-    return { costoTotal, ventaTotal, descuentoTotal }
+    const ventaMinimo = productos.reduce((sum, p) => {
+      return sum + (Number(p.precio_minimo || 0) * (p.cantidad || 0))
+    }, 0)
+
+    const ventaUltimo = productos.reduce((sum, p) => {
+      return sum + (Number(p.precio_ultimo || 0) * (p.cantidad || 0))
+    }, 0)
+
+    return { costoTotal, ventaPublico, ventaEspecial, ventaMinimo, ventaUltimo }
   }, [productos])
 
   return (
     <Form form={form} layout="vertical">
       <div className="bg-blue-50 p-4 rounded-lg">
         <h3 className="text-lg font-semibold mb-3 text-blue-900">Datos de Paquete</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <LabelBase label="Paquete Nombre:" orientation="column">
             <Form.Item
               name="nombre"
@@ -66,19 +67,37 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
               </span>
             </div>
           </LabelBase>
+        </div>
 
-          <LabelBase label="Descuento Total:" orientation="column">
-            <div className="flex items-center h-10 px-3 bg-red-50 rounded-lg border border-red-300">
-              <span className="text-lg font-semibold text-red-600">
-                - S/. {totales.descuentoTotal.toFixed(2)}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <LabelBase label="Total P. Público:" orientation="column">
+            <div className="flex items-center h-10 px-3 bg-green-100 rounded-lg border border-green-300">
+              <span className="text-base font-semibold text-green-700">
+                S/. {totales.ventaPublico.toFixed(2)}
               </span>
             </div>
           </LabelBase>
 
-          <LabelBase label="P.Venta Total:" orientation="column">
-            <div className="flex items-center h-10 px-3 bg-green-100 rounded-lg border border-green-300">
-              <span className="text-lg font-semibold text-green-700">
-                S/. {totales.ventaTotal.toFixed(2)}
+          <LabelBase label="Total P. Especial:" orientation="column">
+            <div className="flex items-center h-10 px-3 bg-blue-100 rounded-lg border border-blue-300">
+              <span className="text-base font-semibold text-blue-700">
+                S/. {totales.ventaEspecial.toFixed(2)}
+              </span>
+            </div>
+          </LabelBase>
+
+          <LabelBase label="Total P. Mínimo:" orientation="column">
+            <div className="flex items-center h-10 px-3 bg-amber-100 rounded-lg border border-amber-300">
+              <span className="text-base font-semibold text-amber-700">
+                S/. {totales.ventaMinimo.toFixed(2)}
+              </span>
+            </div>
+          </LabelBase>
+
+          <LabelBase label="Total P. Último:" orientation="column">
+            <div className="flex items-center h-10 px-3 bg-purple-100 rounded-lg border border-purple-300">
+              <span className="text-base font-semibold text-purple-700">
+                S/. {totales.ventaUltimo.toFixed(2)}
               </span>
             </div>
           </LabelBase>

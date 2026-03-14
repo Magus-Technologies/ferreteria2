@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react'
 import { FaBoxes, FaPlusCircle } from 'react-icons/fa'
-import { FaMoneyBillTrendUp, FaWeightHanging } from 'react-icons/fa6'
+import { FaWeightHanging } from 'react-icons/fa6'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectBase, { RefSelectBaseProps } from '~/app/_components/form/selects/select-base'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
@@ -20,7 +20,6 @@ export default function CardAgregarProductoPaquete({
 }) {
   const [cantidad, setCantidad] = useState<number | null>(1)
   const [unidad_derivada_id, setUnidadDerivadaId] = useState<number | null>(null)
-  const [precio_sugerido, setPrecioSugerido] = useState<number | null>(null)
 
   const { notification } = App.useApp()
 
@@ -56,9 +55,11 @@ export default function CardAgregarProductoPaquete({
       unidad_derivada_id: unidad_derivada_id,
       unidad_derivada_name: unidad_derivada.unidad_derivada.name,
       cantidad: cantidad,
-      precio_sugerido: precio_sugerido || undefined,
-      tipo_precio: 'publico',
-      descuento: 0,
+      precio_publico: Number(unidad_derivada.precio_publico) || 0,
+      precio_especial: Number(unidad_derivada.precio_especial) || 0,
+      precio_minimo: Number(unidad_derivada.precio_minimo) || 0,
+      precio_ultimo: Number(unidad_derivada.precio_ultimo) || 0,
+      tipo_precio_vista: 'publico',
       costo: producto_en_almacen?.costo ? Number(producto_en_almacen.costo) : undefined,
       unidades_derivadas_disponibles: unidades_derivadas,
     }
@@ -67,14 +68,12 @@ export default function CardAgregarProductoPaquete({
 
     // Limpiar formulario
     setCantidad(1)
-    setPrecioSugerido(null)
 
     if (closeModal) setOpen(false)
   }
 
   const cantidadRef = useRef<HTMLInputElement>(null)
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
-  const precio_sugeridoRef = useRef<HTMLInputElement>(null)
   const buttom_masRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -86,12 +85,6 @@ export default function CardAgregarProductoPaquete({
     if (primeraUnidad) {
       unidad_derivadaRef.current?.changeValue(primeraUnidad)
       setUnidadDerivadaId(primeraUnidad)
-
-      // Autoseleccionar precio público por defecto
-      const precioPublico = unidades_derivadas?.[0]?.precio_publico
-      if (precioPublico) {
-        setPrecioSugerido(Number(precioPublico))
-      }
     }
   }, [unidades_derivadas])
 
@@ -112,7 +105,7 @@ export default function CardAgregarProductoPaquete({
           min={0}
           nextInEnter={false}
           onKeyUp={(e) => {
-            if (e.key === 'Enter') precio_sugeridoRef.current?.focus()
+            if (e.key === 'Enter') buttom_masRef.current?.focus()
           }}
         />
         {/* Validación de stock */}
@@ -124,7 +117,7 @@ export default function CardAgregarProductoPaquete({
           if (cantidadEnFraccion > stockDisponible) {
             return (
               <div className="text-red-600 text-sm mt-1 font-medium">
-                ⚠️ Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)}{' '}
+                Stock insuficiente. Disponible: {stockEnUnidad.toFixed(2)}{' '}
                 {unidad_derivada_seleccionada.unidad_derivada.name}
               </div>
             )
@@ -139,16 +132,6 @@ export default function CardAgregarProductoPaquete({
           prefix={<FaWeightHanging size={15} className="text-rose-700 mx-1" />}
           onChange={(value) => {
             setUnidadDerivadaId(value as number)
-
-            // Autoseleccionar precio público de la unidad seleccionada
-            const unidadSeleccionada = unidades_derivadas?.find(
-              (item) => item.unidad_derivada.id === value
-            )
-            if (unidadSeleccionada?.precio_publico) {
-              setPrecioSugerido(Number(unidadSeleccionada.precio_publico))
-            } else {
-              setPrecioSugerido(null)
-            }
           }}
           className="w-full"
           value={unidad_derivada_id}
@@ -160,21 +143,28 @@ export default function CardAgregarProductoPaquete({
           }
         />
       </LabelBase>
-      <LabelBase label="P. Tipo (Opcional):" orientation="column">
-        <InputNumberBase
-          ref={precio_sugeridoRef}
-          placeholder="Precio Sugerido"
-          precision={2}
-          prefix={<FaMoneyBillTrendUp size={15} className="text-cyan-600 mx-1" />}
-          onChange={(value) => setPrecioSugerido(value as number)}
-          value={precio_sugerido}
-          min={0}
-          nextInEnter={false}
-          onKeyUp={(e) => {
-            if (e.key === 'Enter') buttom_masRef.current?.focus()
-          }}
-        />
-      </LabelBase>
+
+      {/* Mostrar precios de la unidad seleccionada */}
+      {unidad_derivada_seleccionada && (
+        <div className="bg-blue-50 p-2 rounded-lg text-sm space-y-1">
+          <div className="flex justify-between">
+            <span className="text-gray-600">P. Público:</span>
+            <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_publico || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">P. Especial:</span>
+            <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_especial || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">P. Mínimo:</span>
+            <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_minimo || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">P. Último:</span>
+            <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_ultimo || 0).toFixed(2)}</span>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2 mt-4">
         <ButtonBase

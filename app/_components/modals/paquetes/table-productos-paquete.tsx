@@ -9,6 +9,13 @@ import SelectBase from '~/app/_components/form/selects/select-base'
 
 export type TipoPrecioPaquete = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
+const TIPO_PRECIO_OPTIONS = [
+  { value: 'publico', label: 'P. Público' },
+  { value: 'especial', label: 'P. Especial' },
+  { value: 'minimo', label: 'P. Mínimo' },
+  { value: 'ultimo', label: 'P. Último' },
+]
+
 export interface ProductoPaquete {
   key: string
   producto_id: number
@@ -18,28 +25,39 @@ export interface ProductoPaquete {
   unidad_derivada_id: number
   unidad_derivada_name: string
   cantidad: number
-  precio_sugerido?: number
-  tipo_precio: TipoPrecioPaquete
-  descuento: number
+  // Precios del paquete (editables, lo que se guarda)
+  precio_publico?: number
+  precio_especial?: number
+  precio_minimo?: number
+  precio_ultimo?: number
+  // Tipo de precio activo para visualización
+  tipo_precio_vista: TipoPrecioPaquete
   costo?: number
   unidades_derivadas_disponibles?: any[]
 }
 
-const TIPO_PRECIO_OPTIONS = [
-  { value: 'publico', label: 'P. Público' },
-  { value: 'especial', label: 'P. Especial' },
-  { value: 'minimo', label: 'P. Mínimo' },
-  { value: 'ultimo', label: 'P. Último' },
-]
+/** Obtener el precio original del producto según tipo y unidad derivada */
+function getPrecioOriginal(producto: ProductoPaquete): number {
+  const unidades = producto.unidades_derivadas_disponibles || []
+  const unidad = unidades.find((u: any) => u.unidad_derivada.id === producto.unidad_derivada_id)
+  if (!unidad) return 0
+  const campo = `precio_${producto.tipo_precio_vista}`
+  return Number(unidad[campo] || 0)
+}
+
+/** Obtener el precio del paquete según el tipo activo */
+function getPrecioPaquete(producto: ProductoPaquete): number {
+  const campo = `precio_${producto.tipo_precio_vista}` as keyof ProductoPaquete
+  return Number(producto[campo] || 0)
+}
 
 interface TableProductosPaqueteProps {
   productos: ProductoPaquete[]
   onEliminar: (key: string) => void
   onCantidadChange: (key: string, cantidad: number) => void
-  onPrecioChange: (key: string, precio: number | undefined) => void
+  onPrecioChange: (key: string, tipo: TipoPrecioPaquete, precio: number | undefined) => void
   onUnidadDerivadaChange: (key: string, unidadDerivadaId: number) => void
-  onTipoPrecioChange: (key: string, tipoPrecio: TipoPrecioPaquete) => void
-  onDescuentoChange: (key: string, descuento: number) => void
+  onTipoPrecioVistaChange: (key: string, tipo: TipoPrecioPaquete) => void
 }
 
 export default function TableProductosPaquete({
@@ -48,14 +66,13 @@ export default function TableProductosPaquete({
   onCantidadChange,
   onPrecioChange,
   onUnidadDerivadaChange,
-  onTipoPrecioChange,
-  onDescuentoChange,
+  onTipoPrecioVistaChange,
 }: TableProductosPaqueteProps) {
   const columnDefs: ColDef<ProductoPaquete>[] = [
     {
       headerName: 'Código',
       field: 'producto_codigo',
-      width: 100,
+      width: 90,
     },
     {
       headerName: 'Producto',
@@ -66,25 +83,25 @@ export default function TableProductosPaquete({
     {
       headerName: 'Marca',
       field: 'marca_name',
-      width: 120,
+      width: 85,
       valueFormatter: (params) => params.value || '-',
     },
     {
-      headerName: 'Unidad Derivada',
+      headerName: 'U. Derivada',
       field: 'unidad_derivada_id',
-      width: 150,
+      width: 130,
       cellRenderer: (params: any) => {
         const unidades = params.data?.unidades_derivadas_disponibles || []
-        
+
         if (unidades.length === 0) {
           return <span className="px-2">{params.data?.unidad_derivada_name || '-'}</span>
         }
-        
+
         const options = unidades.map((u: any) => ({
           value: u.unidad_derivada.id,
           label: u.unidad_derivada.name,
         }))
-        
+
         return (
           <SelectBase
             size="small"
@@ -94,11 +111,14 @@ export default function TableProductosPaquete({
             options={options}
             onChange={(nuevoId) => {
               onUnidadDerivadaChange(params.data.key, nuevoId)
-              
-              // Actualizar precio sugerido automáticamente
+
+              // Auto-cargar los 4 precios de la nueva unidad derivada
               const unidadSeleccionada = unidades.find((u: any) => u.unidad_derivada.id === nuevoId)
-              if (unidadSeleccionada?.precio_publico) {
-                onPrecioChange(params.data.key, Number(unidadSeleccionada.precio_publico))
+              if (unidadSeleccionada) {
+                onPrecioChange(params.data.key, 'publico', Number(unidadSeleccionada.precio_publico) || 0)
+                onPrecioChange(params.data.key, 'especial', Number(unidadSeleccionada.precio_especial) || 0)
+                onPrecioChange(params.data.key, 'minimo', Number(unidadSeleccionada.precio_minimo) || 0)
+                onPrecioChange(params.data.key, 'ultimo', Number(unidadSeleccionada.precio_ultimo) || 0)
               }
             }}
             prefix={<FaWeightHanging size={12} className="text-cyan-600" />}
@@ -109,7 +129,7 @@ export default function TableProductosPaquete({
     {
       headerName: 'Cantidad',
       field: 'cantidad',
-      width: 100,
+      width: 80,
       cellRenderer: (params: any) => (
         <div className="flex items-center h-full">
           <InputNumber
@@ -126,94 +146,87 @@ export default function TableProductosPaquete({
     },
     {
       headerName: 'Tipo Precio',
-      field: 'tipo_precio',
-      width: 140,
+      field: 'tipo_precio_vista',
+      width: 130,
+      cellRenderer: (params: any) => (
+        <SelectBase
+          size="small"
+          variant="borderless"
+          className="w-full"
+          value={params.value || 'publico'}
+          options={TIPO_PRECIO_OPTIONS}
+          onChange={(nuevoTipo) => {
+            onTipoPrecioVistaChange(params.data.key, nuevoTipo as TipoPrecioPaquete)
+          }}
+        />
+      ),
+    },
+    {
+      headerName: 'P. Original',
+      width: 100,
+      cellClass: 'text-right text-gray-500',
+      valueGetter: (params) => {
+        if (!params.data) return 0
+        return getPrecioOriginal(params.data)
+      },
+      valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
+    },
+    {
+      headerName: 'Descuento',
+      width: 110,
       cellRenderer: (params: any) => {
+        if (!params.data) return null
+        const original = getPrecioOriginal(params.data)
+        const paquete = getPrecioPaquete(params.data)
+        const descuento = Math.max(original - paquete, 0)
         return (
-          <SelectBase
-            size="small"
-            variant="borderless"
-            className="w-full"
-            value={params.value || 'publico'}
-            options={TIPO_PRECIO_OPTIONS}
-            onChange={(nuevoTipo) => {
-              onTipoPrecioChange(params.data.key, nuevoTipo as TipoPrecioPaquete)
-
-              // Auto-actualizar precio según tipo seleccionado
-              const unidades = params.data?.unidades_derivadas_disponibles || []
-              const unidadActual = unidades.find(
-                (u: any) => u.unidad_derivada.id === params.data.unidad_derivada_id
-              )
-              if (unidadActual) {
-                const precioMap: Record<string, string> = {
-                  publico: 'precio_publico',
-                  especial: 'precio_especial',
-                  minimo: 'precio_minimo',
-                  ultimo: 'precio_ultimo',
-                }
-                const campo = precioMap[nuevoTipo as string]
-                const nuevoPrecio = campo ? Number(unidadActual[campo]) || 0 : 0
-                onPrecioChange(params.data.key, nuevoPrecio)
-              }
-            }}
-          />
+          <div className="flex items-center h-full">
+            <InputNumber
+              size="small"
+              className="w-full"
+              prefix="S/."
+              value={descuento}
+              min={0}
+              max={original}
+              precision={2}
+              controls={false}
+              onChange={(val) => {
+                const nuevoDescuento = Number(val ?? 0)
+                const nuevoPrecio = Math.max(original - nuevoDescuento, 0)
+                onPrecioChange(params.data.key, params.data.tipo_precio_vista, nuevoPrecio)
+              }}
+            />
+          </div>
         )
       },
     },
     {
-      headerName: 'Precio',
-      field: 'precio_sugerido',
-      width: 130,
-      cellRenderer: (params: any) => (
-        <div className="flex items-center h-full">
-          <InputNumber
-            size="small"
-            className="w-full"
-            prefix="S/."
-            value={params.value ?? 0}
-            min={0}
-            precision={2}
-            controls={false}
-            onChange={(val) => onPrecioChange(params.data.key, val ?? 0)}
-          />
-        </div>
-      ),
-    },
-    {
-      headerName: 'Descuento',
-      field: 'descuento',
-      width: 130,
-      cellRenderer: (params: any) => (
-        <div className="flex items-center h-full">
-          <InputNumber
-            size="small"
-            className="w-full"
-            prefix="S/."
-            value={params.value ?? 0}
-            min={0}
-            precision={2}
-            controls={false}
-            onChange={(val) => onDescuentoChange(params.data.key, Number(val ?? 0))}
-          />
-        </div>
-      ),
-    },
-    {
-      headerName: 'P. Final',
+      headerName: 'P. Paquete',
       width: 110,
-      cellClass: 'text-right font-semibold text-green-700',
-      valueGetter: (params) => {
-        const precio = Number(params.data?.precio_sugerido || 0)
-        const descuento = Number(params.data?.descuento || 0)
-        return Math.max(precio - descuento, 0)
-      },
-      valueFormatter: (params) => {
-        return `S/. ${Number(params.value || 0).toFixed(2)}`
+      cellRenderer: (params: any) => {
+        if (!params.data) return null
+        const precioPaquete = getPrecioPaquete(params.data)
+        return (
+          <div className="flex items-center h-full">
+            <InputNumber
+              size="small"
+              className="w-full"
+              prefix="S/."
+              value={precioPaquete}
+              min={0}
+              precision={2}
+              controls={false}
+              onChange={(val) => {
+                onPrecioChange(params.data.key, params.data.tipo_precio_vista, val ?? undefined)
+              }}
+            />
+          </div>
+        )
       },
     },
     {
       headerName: 'Acciones',
-      width: 100,
+      width: 70,
       cellClass: 'text-center',
       cellRenderer: (params: any) => (
         <Button
@@ -235,13 +248,14 @@ export default function TableProductosPaquete({
       selectionColor={orangeColors[10]}
       columnDefs={columnDefs}
       rowData={productos}
+      getRowId={(params) => params.data.key}
       pagination={false}
       domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">No hay productos agregados</span>'
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Código', 'Producto', 'Marca', 'Unidad Derivada', 'Cantidad', 'Tipo Precio', 'Precio', 'Descuento', 'P. Final', 'Acciones'],
+          columns: ['Código', 'Producto', 'Marca', 'U. Derivada', 'Cantidad', 'Tipo Precio', 'P. Original', 'Descuento', 'P. Paquete', 'Acciones'],
         },
       ]}
     />

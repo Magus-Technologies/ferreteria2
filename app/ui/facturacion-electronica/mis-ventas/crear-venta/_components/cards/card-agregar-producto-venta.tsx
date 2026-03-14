@@ -12,7 +12,8 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { App, Badge, Button, Modal } from 'antd'
+import { App, Badge, Button, Modal, Radio } from 'antd'
+import type { TipoPrecio } from '~/lib/api/paquete'
 import { FormCreateVenta } from '../others/body-vender'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
@@ -51,6 +52,9 @@ export default function CardAgregarProductoVenta({
     useState<ValuesCardAgregarProductoVenta>(valuesDefault)
 
   const [openModalPaquetes, setOpenModalPaquetes] = useState(false)
+  const [openModalTipoPrecioPaquete, setOpenModalTipoPrecioPaquete] = useState(false)
+  const [tipoPrecioPaquete, setTipoPrecioPaquete] = useState<TipoPrecio>('publico')
+  const [paqueteParaAgregar, setPaqueteParaAgregar] = useState<any>(null)
 
   const setProductoAgregadoVenta = useStoreProductoAgregadoVenta(
     (store) => store.setProductoAgregado
@@ -375,57 +379,8 @@ export default function CardAgregarProductoVenta({
               key={paquete.id}
               className="border border-gray-200 rounded-lg p-3 hover:border-cyan-400 hover:shadow-md transition-all cursor-pointer"
               onClick={() => {
-                // Agregar todos los productos del paquete a la venta
-                const agregarPaqueteCompleto = async () => {
-                  if (!paquete.productos || paquete.productos.length === 0) {
-                    notification.warning({
-                      message: 'Paquete vacío',
-                      description: 'Este paquete no tiene productos',
-                    })
-                    return
-                  }
-
-                  let productosAgregados = 0
-
-                  // Agregar cada producto del paquete
-                  for (const paqueteProducto of paquete.productos) {
-                    if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
-                      setProductoAgregadoVenta({
-                        producto_id: paqueteProducto.producto_id,
-                        producto_name: paqueteProducto.producto.name,
-                        producto_codigo: paqueteProducto.producto.cod_producto,
-                        marca_name: paqueteProducto.producto.marca?.name || '',
-                        unidad_derivada_id: paqueteProducto.unidad_derivada_id,
-                        unidad_derivada_name: paqueteProducto.unidad_derivada.name,
-                        unidad_derivada_factor: 1,
-                        cantidad: Number(paqueteProducto.cantidad),
-                        precio_venta: Number(paqueteProducto.precio_sugerido || 0),
-                        recargo: 0,
-                        descuento: Number(paqueteProducto.descuento || 0),
-                        descuento_tipo: DescuentoTipo.MONTO,
-                        subtotal: 0,
-                        comision: 0,
-                        // ✅ Agregar información del paquete
-                        paquete_id: paquete.id,
-                        paquete_nombre: paquete.nombre,
-                      })
-
-                      productosAgregados++
-                      // Pequeño delay para que se procesen los productos
-                      await new Promise(resolve => setTimeout(resolve, 50))
-                    }
-                  }
-
-                  notification.success({
-                    message: 'Paquete agregado',
-                    description: `Se agregaron ${productosAgregados} producto${productosAgregados !== 1 ? 's' : ''} del paquete "${paquete.nombre}"`,
-                  })
-
-                  setOpenModalPaquetes(false)
-                  setOpen(false) // Cerrar también el modal de agregar producto
-                }
-
-                agregarPaqueteCompleto()
+                setPaqueteParaAgregar(paquete)
+                setOpenModalTipoPrecioPaquete(true)
               }}
             >
               <div className="flex items-center justify-between">
@@ -444,6 +399,76 @@ export default function CardAgregarProductoVenta({
               </div>
             </div>
           ))}
+        </div>
+      </Modal>
+
+      <Modal
+        open={openModalTipoPrecioPaquete}
+        onCancel={() => setOpenModalTipoPrecioPaquete(false)}
+        title="Selecciona el tipo de precio"
+        okText="Agregar al carrito"
+        cancelText="Cancelar"
+        onOk={async () => {
+          if (!paqueteParaAgregar?.productos?.length) {
+            notification.warning({ message: 'Paquete vacío' })
+            return
+          }
+
+          let productosAgregados = 0
+          const precioKey = `precio_${tipoPrecioPaquete}`
+
+          for (const paqueteProducto of paqueteParaAgregar.productos) {
+            if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
+              const precio = Number((paqueteProducto as any)[precioKey] || 0)
+              setProductoAgregadoVenta({
+                producto_id: paqueteProducto.producto_id,
+                producto_name: paqueteProducto.producto.name,
+                producto_codigo: paqueteProducto.producto.cod_producto,
+                marca_name: paqueteProducto.producto.marca?.name || '',
+                unidad_derivada_id: paqueteProducto.unidad_derivada_id,
+                unidad_derivada_name: paqueteProducto.unidad_derivada.name,
+                unidad_derivada_factor: 1,
+                cantidad: Number(paqueteProducto.cantidad),
+                precio_venta: precio,
+                recargo: 0,
+                descuento: 0,
+                descuento_tipo: DescuentoTipo.MONTO,
+                subtotal: 0,
+                comision: 0,
+                paquete_id: paqueteParaAgregar.id,
+                paquete_nombre: paqueteParaAgregar.nombre,
+              })
+              productosAgregados++
+              await new Promise(resolve => setTimeout(resolve, 50))
+            }
+          }
+
+          notification.success({
+            message: 'Paquete agregado',
+            description: `Se agregaron ${productosAgregados} producto${productosAgregados !== 1 ? 's' : ''} del paquete "${paqueteParaAgregar.nombre}"`,
+          })
+
+          setOpenModalTipoPrecioPaquete(false)
+          setOpenModalPaquetes(false)
+          setOpen(false)
+        }}
+        width={350}
+        centered
+      >
+        <div className="py-4">
+          <p className="text-gray-600 mb-3">
+            Paquete: <strong>{paqueteParaAgregar?.nombre}</strong>
+          </p>
+          <Radio.Group
+            value={tipoPrecioPaquete}
+            onChange={(e) => setTipoPrecioPaquete(e.target.value)}
+            className="flex flex-col gap-2"
+          >
+            <Radio value="publico">Precio Público</Radio>
+            <Radio value="especial">Precio Especial</Radio>
+            <Radio value="minimo">Precio Mínimo</Radio>
+            <Radio value="ultimo">Precio Último</Radio>
+          </Radio.Group>
         </div>
       </Modal>
     </div>

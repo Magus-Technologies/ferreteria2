@@ -1,7 +1,8 @@
 "use client";
 
-import { Modal, message } from "antd";
+import { Modal, message, Radio } from "antd";
 import { useState } from "react";
+import type { TipoPrecio } from "~/lib/api/paquete";
 import { MdOutlineSell, MdSell } from "react-icons/md";
 import { DescuentoTipo, type getVentaResponseProps } from "~/lib/api/venta";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
@@ -51,6 +52,8 @@ export default function HeaderCrearVenta({
   const [textDefaultPaquete, setTextDefaultPaquete] = useState("");
   const [openModalBuscarServicio, setOpenModalBuscarServicio] = useState(false);
   const [textDefaultServicio, setTextDefaultServicio] = useState("");
+  const [openModalTipoPrecio, setOpenModalTipoPrecio] = useState(false);
+  const [tipoPrecioSeleccionado, setTipoPrecioSeleccionado] = useState<TipoPrecio>('publico');
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
@@ -77,7 +80,7 @@ export default function HeaderCrearVenta({
   /**
    * Agregar todos los productos de un paquete a la venta
    */
-  const handleAgregarPaquete = async () => {
+  const handleAgregarPaquete = async (tipoPrecio: TipoPrecio) => {
     const paquete = paqueteSeleccionadoStore;
 
     if (!paquete) {
@@ -91,10 +94,11 @@ export default function HeaderCrearVenta({
     }
 
     let productosAgregados = 0;
+    const precioKey = `precio_${tipoPrecio}` as keyof typeof paquete.productos[number];
 
-    // Agregar cada producto con delay de 100ms
     for (const paqueteProducto of paquete.productos) {
       if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
+        const precio = Number((paqueteProducto as any)[precioKey] || 0);
         setProductoAgregado({
           producto_id: paqueteProducto.producto_id,
           producto_name: paqueteProducto.producto.name,
@@ -104,12 +108,11 @@ export default function HeaderCrearVenta({
           unidad_derivada_name: paqueteProducto.unidad_derivada.name,
           unidad_derivada_factor: 1,
           cantidad: paqueteProducto.cantidad,
-          precio_venta: paqueteProducto.precio_sugerido || 0,
+          precio_venta: precio,
           recargo: 0,
-          descuento: Number(paqueteProducto.descuento || 0),
+          descuento: 0,
           descuento_tipo: DescuentoTipo.MONTO,
           subtotal: 0,
-          // ✅ Agregar información del paquete
           paquete_id: paquete.id,
           paquete_nombre: paquete.nombre,
         });
@@ -294,18 +297,48 @@ export default function HeaderCrearVenta({
         <ModalBuscarPaquete
           open={openModalBuscarPaquete}
           setOpen={setOpenModalBuscarPaquete}
-          onOk={async () => {
-            await handleAgregarPaquete();
+          onOk={() => {
             setOpenModalBuscarPaquete(false);
+            setOpenModalTipoPrecio(true);
           }}
           textDefault={textDefaultPaquete}
-          onRowDoubleClicked={async ({ data }) => {
+          onRowDoubleClicked={({ data }) => {
             if (data) {
-              await handleAgregarPaquete();
               setOpenModalBuscarPaquete(false);
+              setOpenModalTipoPrecio(true);
             }
           }}
         />
+
+        <Modal
+          open={openModalTipoPrecio}
+          onCancel={() => setOpenModalTipoPrecio(false)}
+          title="Selecciona el tipo de precio"
+          okText="Agregar al carrito"
+          cancelText="Cancelar"
+          onOk={async () => {
+            await handleAgregarPaquete(tipoPrecioSeleccionado);
+            setOpenModalTipoPrecio(false);
+          }}
+          width={350}
+          centered
+        >
+          <div className="py-4">
+            <p className="text-gray-600 mb-3">
+              Paquete: <strong>{paqueteSeleccionadoStore?.nombre}</strong>
+            </p>
+            <Radio.Group
+              value={tipoPrecioSeleccionado}
+              onChange={(e) => setTipoPrecioSeleccionado(e.target.value)}
+              className="flex flex-col gap-2"
+            >
+              <Radio value="publico">Precio Público</Radio>
+              <Radio value="especial">Precio Especial</Radio>
+              <Radio value="minimo">Precio Mínimo</Radio>
+              <Radio value="ultimo">Precio Último</Radio>
+            </Radio.Group>
+          </div>
+        </Modal>
 
         <ModalBuscarServicio
           open={openModalBuscarServicio}

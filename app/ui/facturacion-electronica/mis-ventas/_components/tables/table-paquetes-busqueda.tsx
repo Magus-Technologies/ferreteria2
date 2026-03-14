@@ -71,16 +71,13 @@ export default function TablePaquetesBusqueda({
       },
     },
     {
-      headerName: 'P. Total',
+      headerName: 'P. Público',
       width: 120,
       cellClass: 'text-right font-semibold',
       valueGetter: (params) => {
         const productos = params.data?.productos || []
         return productos.reduce((sum: number, p: any) => {
-          const precio = Number(p.precio_sugerido || 0)
-          const descuento = Number(p.descuento || 0)
-          const cantidad = Number(p.cantidad || 0)
-          return sum + Math.max(precio - descuento, 0) * cantidad
+          return sum + Number(p.precio_publico || 0) * Number(p.cantidad || 0)
         }, 0)
       },
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,

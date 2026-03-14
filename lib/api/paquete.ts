@@ -20,9 +20,10 @@ export interface PaqueteProducto {
   producto_id: number;
   unidad_derivada_id: number;
   cantidad: number;
-  precio_sugerido: number | null;
-  tipo_precio: TipoPrecio;
-  descuento: number;
+  precio_publico: number | null;
+  precio_especial: number | null;
+  precio_minimo: number | null;
+  precio_ultimo: number | null;
   created_at: string;
   updated_at: string;
   // Relaciones cargadas desde el backend
@@ -70,9 +71,10 @@ export interface PaqueteProductoRequest {
   producto_id: number;
   unidad_derivada_id: number;
   cantidad: number;
-  precio_sugerido?: number | null;
-  tipo_precio?: TipoPrecio;
-  descuento?: number;
+  precio_publico?: number | null;
+  precio_especial?: number | null;
+  precio_minimo?: number | null;
+  precio_ultimo?: number | null;
 }
 
 /**
