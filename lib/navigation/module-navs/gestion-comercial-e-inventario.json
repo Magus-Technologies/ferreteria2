@@ -161,6 +161,13 @@
         "icon": "FaWrench",
         "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-servicio",
         "permission": null
+      },
+      {
+        "id": "solicitud-orden-compra",
+        "label": "Solicitud de Orden de Compra",
+        "icon": "FaClipboardList",
+        "route": "/ui/gestion-comercial-e-inventario/solicitud-orden-compra",
+        "permission": null
       }
     ]
   }

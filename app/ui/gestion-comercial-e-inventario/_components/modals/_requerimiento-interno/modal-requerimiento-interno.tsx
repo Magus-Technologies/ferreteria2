@@ -40,7 +40,7 @@ interface ModalRequerimientoInternoProps {
     open: boolean
     onClose: () => void
     productosDisponibles?: ProductoDisponible[]
-    defaultTipoSolicitud?: 'OC' | 'OS'
+    defaultTipoSolicitud?: 'OC' | 'OS' | 'SOC'
 }
 
 const PRIORIDADES = [

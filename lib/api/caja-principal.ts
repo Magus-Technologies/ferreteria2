@@ -68,6 +68,7 @@ export interface CajaPrincipal {
 export interface CreateCajaPrincipalRequest {
   user_id: string
   nombre: string
+  metodo_pago_id?: string | null
 }
 
 export interface CreateSubCajaRequest {

@@ -38,7 +38,7 @@ export interface RequerimientoInterno {
     area: string;
     fecha_requerida: string;
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-    tipo_solicitud: 'OC' | 'OS';
+    tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones: string | null;
     estado: 'pendiente' | 'aprobado' | 'rechazado' | 'anulado';
     proveedor_sugerido_id: number | null;
@@ -76,7 +76,7 @@ export interface CreateRequerimientoRequest {
     area: string;
     fecha_requerida: string; // YYYY-MM-DD
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-    tipo_solicitud: 'OC' | 'OS';
+    tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones?: string;
     proveedor_sugerido_id?: number;
     // Para OC
@@ -114,6 +114,19 @@ export interface RequerimientosListResponse {
     last_page?: number;
     per_page?: number;
     total: number;
+    // Laravel pagination structure
+    links?: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
+    meta?: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
 }
 
 // ============= API METHODS =============

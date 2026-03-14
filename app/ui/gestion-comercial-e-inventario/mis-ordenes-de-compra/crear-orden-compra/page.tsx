@@ -20,7 +20,6 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
-import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import TableBase from '~/components/tables/table-base'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import SidebarSolicitudes, { type ProductoSidebarSelection } from './_components/sidebar-solicitudes'
@@ -70,10 +69,6 @@ export default function CrearOrdenCompraPage() {
         numero_dias: values.numero_dias,
         fecha_vencimiento: values.fecha_vencimiento?.format?.('YYYY-MM-DD'),
         egreso_dinero_id: values.egreso_dinero_id,
-        // Extraer el despliegue_pago_id del valor compuesto "subCajaId-desplieguePagoId"
-        despliegue_de_pago_id: values.despliegue_de_pago_id?.includes('-')
-          ? values.despliegue_de_pago_id.split('-')[1]
-          : values.despliegue_de_pago_id,
         almacen_id: values.almacen_id || 1, // Default almacen
         productos: productos.map(p => ({
           producto_id: p.producto_id || p.id,
@@ -566,15 +561,6 @@ export default function CrearOrdenCompraPage() {
                     }}
                     placeholder='Egreso Dinero'
                     className='w-full'
-                  />
-                </LabelBase>
-                <LabelBase label='Despliegue de Pago:' classNames={{ labelParent: 'mb-6' }}>
-                  <SelectDespliegueDePago
-                    propsForm={{
-                      name: 'despliegue_de_pago_id',
-                      rules: [{ required: false }],
-                    }}
-                    placeholder='Método de Pago'
                   />
                 </LabelBase>
               </div>
