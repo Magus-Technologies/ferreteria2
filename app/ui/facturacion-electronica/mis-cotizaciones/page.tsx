@@ -6,7 +6,9 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 // import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
-import ModalPdfCotizacionWrapper from './_components/modals/modal-pdf-cotizacion-wrapper'
+import dynamic from 'next/dynamic'
+
+const ModalPdfCotizacionWrapper = dynamic(() => import('./_components/modals/modal-pdf-cotizacion-wrapper'), { ssr: false })
 
 // Lazy loading de componentes pesados
 const FiltersMisCotizaciones = lazy(() => import('./_components/filters/filters-mis-cotizaciones'))

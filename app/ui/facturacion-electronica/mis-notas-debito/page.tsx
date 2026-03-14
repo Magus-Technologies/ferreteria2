@@ -1,38 +1,58 @@
 "use client";
 
 import ContenedorGeneral from "~/app/_components/containers/contenedor-general";
-import FiltersMisNotasDebito from "./_components/filters/filters-mis-notas-debito";
-import CardsInfoNotasDebito from "./_components/others/cards-info-notas-debito";
-import TableMisNotasDebito from "./_components/tables/table-mis-notas-debito";
-import ModalPdfNotaDebitoWrapper from "./_components/modals/modal-pdf-nota-debito-wrapper";
+import dynamic from "next/dynamic";
+import { Suspense, lazy } from "react";
+import { Spin } from "antd";
+
+const FiltersMisNotasDebito = lazy(() => import("./_components/filters/filters-mis-notas-debito"));
+const TableMisNotasDebito = lazy(() => import("./_components/tables/table-mis-notas-debito"));
+const CardsInfoNotasDebito = lazy(() => import("./_components/others/cards-info-notas-debito"));
+const ModalPdfNotaDebitoWrapper = dynamic(() => import("./_components/modals/modal-pdf-nota-debito-wrapper"), { ssr: false });
+
+const ComponentLoading = () => (
+  <div className="flex items-center justify-center h-40">
+    <Spin size="large" />
+  </div>
+);
 
 export default function MisNotasDebitoPage() {
   return (
-    <ContenedorGeneral>
-      <div className="w-full">
-        <FiltersMisNotasDebito />
+    <>
+      <ModalPdfNotaDebitoWrapper />
+      <ContenedorGeneral>
+        <div className="w-full">
+          <Suspense fallback={<ComponentLoading />}>
+            <FiltersMisNotasDebito />
+          </Suspense>
 
-        <div className="w-full mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8">
-            <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
-              <div className="h-[500px]">
-                <TableMisNotasDebito />
+          <div className="w-full mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8">
+              <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0">
+                <div className="h-[500px]">
+                  <Suspense fallback={<ComponentLoading />}>
+                    <TableMisNotasDebito />
+                  </Suspense>
+                </div>
+              </div>
+
+              <div className="hidden lg:flex flex-col items-start gap-4 flex-nowrap min-w-[140px]">
+                <Suspense fallback={<Spin />}>
+                  <CardsInfoNotasDebito />
+                </Suspense>
               </div>
             </div>
 
-            <div className="hidden lg:flex flex-col items-start gap-4 flex-nowrap min-w-[140px]">
-              <CardsInfoNotasDebito />
-            </div>
-          </div>
-
-          <div className="lg:hidden mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <CardsInfoNotasDebito />
+            <div className="lg:hidden mt-4">
+              <Suspense fallback={<Spin />}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <CardsInfoNotasDebito />
+                </div>
+              </Suspense>
             </div>
           </div>
         </div>
-      </div>
-      <ModalPdfNotaDebitoWrapper />
-    </ContenedorGeneral>
+      </ContenedorGeneral>
+    </>
   );
 }

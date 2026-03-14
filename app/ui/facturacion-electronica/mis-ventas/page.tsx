@@ -6,7 +6,9 @@ import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
-import ModalPdfVentaWrapper from './_components/modals/modal-pdf-venta-wrapper'
+import dynamic from 'next/dynamic'
+
+const ModalPdfVentaWrapper = dynamic(() => import('./_components/modals/modal-pdf-venta-wrapper'), { ssr: false })
 
 // Lazy loading de componentes pesados
 const FiltersMisVentas = lazy(() => import('./_components/filters/filters-mis-ventas'))

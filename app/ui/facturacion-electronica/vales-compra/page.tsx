@@ -3,7 +3,9 @@
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
-import ModalPdfValeWrapper from './_components/modals/modal-pdf-vale-wrapper'
+import dynamic from 'next/dynamic'
+
+const ModalPdfValeWrapper = dynamic(() => import('./_components/modals/modal-pdf-vale-wrapper'), { ssr: false })
 
 // Lazy loading de componentes pesados
 const FiltersValesCompra = lazy(() => import('./_components/filters/filters-vales-compra'))

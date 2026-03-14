@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
       'lucide-react',
       '@react-pdf/renderer',
       'date-fns',
+      'firebase',
+      'recharts',
+      'xlsx-js-style',
+      'zod',
+      'react-big-calendar',
+      'react-leaflet',
+      'zustand',
     ],
     serverActions: {
       bodySizeLimit: '10mb',
