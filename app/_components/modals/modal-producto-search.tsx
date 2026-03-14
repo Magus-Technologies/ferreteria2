@@ -1,11 +1,13 @@
 import { Modal } from "antd";
 import InputBase from "../form/inputs/input-base";
+import SelectBase from "../form/selects/select-base";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import ButtonCreateProductoPlus from "../form/buttons/button-create-producto-plus";
 import TableProductoSearch, {
   RefTableProductoSearchProps,
+  FiltroStock,
 } from "../tables/table-producto-search";
 import SelectTipoBusquedaProducto, {
   TipoBusquedaProducto,
@@ -70,6 +72,8 @@ export default function ModalProductoSearch({
     (store) => store.setProducto,
   );
 
+  const [filtroStock, setFiltroStock] = useState<FiltroStock>(FiltroStock.TODOS);
+
   useEffect(() => {
     if (open) setProductoSeleccionadoStore(undefined);
     else {
@@ -124,6 +128,18 @@ export default function ModalProductoSearch({
           className="w-full sm:max-w-[500px]"
           onPressEnter={() => tableRef.current?.handleRefetch()}
         />
+        <SelectBase
+          placeholder="Filtro Stock"
+          value={filtroStock}
+          onChange={(value) => setFiltroStock(value as FiltroStock)}
+          className="w-full sm:!min-w-[200px] sm:!w-[200px] sm:!max-w-[200px]"
+          options={[
+            { value: FiltroStock.TODOS, label: 'Todos' },
+            { value: FiltroStock.BAJO_MINIMO, label: 'Bajo Mínimo' },
+            { value: FiltroStock.INTERMEDIO, label: 'Intermedio' },
+            { value: FiltroStock.SOBRE_MAXIMO, label: 'Sobre Máximo' },
+          ]}
+        />
         <ButtonCreateProductoPlus
           className="mb-0! w-full sm:w-auto"
           onSuccess={(res) => setText(res.name)}
@@ -151,6 +167,7 @@ export default function ModalProductoSearch({
                 tipoBusqueda={tipoBusqueda}
                 selectionColor={selectionColor}
                 isVisible={open}
+                filtroStock={filtroStock}
               />
             </div>
             {showUltimasCompras && (

@@ -12,6 +12,13 @@ import { useProductosSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-a
 import { usePathname } from "next/navigation";
 import { orangeColors, greenColors } from "~/lib/colors";
 
+export enum FiltroStock {
+  TODOS = 'todos',
+  BAJO_MINIMO = 'bajo_minimo',
+  INTERMEDIO = 'intermedio',
+  SOBRE_MAXIMO = 'sobre_maximo',
+}
+
 export interface RefTableProductoSearchProps {
   handleRefetch: () => void;
 }
@@ -24,6 +31,7 @@ export default function TableProductoSearch({
   selectionColor: selectionColorProp, // Recibir el color como prop
   isVisible, // Prop para saber si el modal está visible
   quickFilterValue, // Filtro local por coincidencia (sobre resultados ya cargados)
+  filtroStock = FiltroStock.TODOS,
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -36,6 +44,7 @@ export default function TableProductoSearch({
   selectionColor?: string; // Agregar el prop
   isVisible?: boolean; // Prop para saber si el modal está visible
   quickFilterValue?: string; // Filtro local por coincidencia
+  filtroStock?: FiltroStock;
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const tableGridRef = useRef<any>(null);
@@ -67,7 +76,7 @@ export default function TableProductoSearch({
         : {}),
       estado: 1, // Solo productos activos
     },
-    enabled: false,
+    enabled: true,
   });
 
   type ResponseItem = Producto;
@@ -84,13 +93,40 @@ export default function TableProductoSearch({
   );
 
   const productosFiltrados = useMemo(() => {
-    return (response || []).filter(
+    let productos = (response || []).filter(
       (producto) =>
         !productosCompra.find(
           (producto_compra) => producto_compra.producto_id === producto.id
         )
     );
-  }, [response, productosCompra]);
+
+    // Aplicar filtro de stock
+    if (filtroStock !== FiltroStock.TODOS) {
+      productos = productos.filter((producto) => {
+        // Obtener el stock actual del almacén actual
+        const productoEnAlmacen = producto.producto_en_almacenes?.find(
+          (pa) => pa.almacen_id === almacen_id
+        );
+        const stockActual = productoEnAlmacen?.stock_fraccion ?? 0;
+        const stockMin = Number(producto.stock_min ?? 0);
+        const stockMax = Number(producto.stock_max ?? 0);
+        const stockIntermedio = stockMax / 2;
+
+        switch (filtroStock) {
+          case FiltroStock.BAJO_MINIMO:
+            return stockActual < stockMin;
+          case FiltroStock.INTERMEDIO:
+            return stockActual >= stockMin && stockActual <= stockIntermedio;
+          case FiltroStock.SOBRE_MAXIMO:
+            return stockActual > stockMax;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return productos;
+  }, [response, productosCompra, filtroStock, almacen_id]);
 
   function handleRefetch() {
     setProductosCompra([]);
@@ -98,11 +134,11 @@ export default function TableProductoSearch({
   }
 
   useEffect(() => {
-    if (value) {
+    if (isVisible) {
       handleRefetch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, tipoBusqueda]);
+  }, [isVisible, filtroStock]);
 
   // Aplicar quickFilter local cuando cambia el texto
   useEffect(() => {

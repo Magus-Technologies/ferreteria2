@@ -9,6 +9,11 @@ export interface RequerimientoInternoProducto {
     nombre_adicional: string | null;
     cantidad: number;
     cantidad_pendiente: number;
+    cantidad_ordenada: number;
+    cantidad_restante: number;
+    estado_producto: 'pendiente' | 'parcial' | 'completo';
+    orden_compra_codigo: string | null;
+    orden_compra_id: number | null;
     unidad: string | null;
     producto?: {
         id: number;
@@ -38,9 +43,10 @@ export interface RequerimientoInterno {
     area: string;
     fecha_requerida: string;
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-    tipo_solicitud: 'OC' | 'OS';
+    tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones: string | null;
     estado: 'pendiente' | 'aprobado' | 'rechazado' | 'anulado';
+    estado_solicitud: 'pendiente' | 'en_proceso' | 'aprobado';
     proveedor_sugerido_id: number | null;
     user_id: string;
     created_at: string;
@@ -76,7 +82,7 @@ export interface CreateRequerimientoRequest {
     area: string;
     fecha_requerida: string; // YYYY-MM-DD
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-    tipo_solicitud: 'OC' | 'OS';
+    tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones?: string;
     proveedor_sugerido_id?: number;
     // Para OC
@@ -114,6 +120,19 @@ export interface RequerimientosListResponse {
     last_page?: number;
     per_page?: number;
     total: number;
+    // Laravel pagination structure
+    links?: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
+    meta?: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
 }
 
 // ============= API METHODS =============
@@ -167,6 +186,25 @@ export const requerimientoInternoApi = {
         return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/estado`, {
             method: 'PATCH',
             body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Actualizar cantidad ordenada de un producto
+     */
+    actualizarCantidadOrdenada: async (
+        productoId: number,
+        cantidadOrdenada: number,
+        ordenCompraId?: number,
+        ordenCompraCodigo?: string
+    ): Promise<ApiResponse<{ message: string }>> => {
+        return apiRequest<{ message: string }>(`/requerimientos-internos/productos/${productoId}/actualizar-cantidad-ordenada`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                cantidad_ordenada: cantidadOrdenada,
+                orden_compra_id: ordenCompraId,
+                orden_compra_codigo: ordenCompraCodigo,
+            }),
         });
     },
 };

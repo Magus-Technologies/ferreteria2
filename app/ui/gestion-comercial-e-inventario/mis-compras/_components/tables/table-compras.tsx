@@ -327,6 +327,7 @@ const TableCompras = memo(function TableCompras({
           'Resta',
           'Estado de Cuenta',
           'Registrador',
+          'Orden de Compra',
           'Estado',
           'Acciones',
         ],

@@ -291,6 +291,32 @@ export function useColumnsCompras({
       filter: true,
     },
     {
+      headerName: 'Orden de Compra',
+      field: 'orden_compra',
+      width: 130,
+      minWidth: 130,
+      filter: true,
+      valueGetter: (params) => {
+        // Intentar acceder a la relación en diferentes formatos
+        const ordenCompra = params.data?.orden_compra || params.data?.['orden_compra']
+        return ordenCompra?.codigo ?? ''
+      },
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        // Intentar acceder a la relación en diferentes formatos
+        const ordenCompra = params.data?.orden_compra || params.data?.['orden_compra']
+        const codigo = ordenCompra?.codigo
+        
+        if (!codigo) return <div className='flex items-center h-full text-slate-300 text-xs'>—</div>
+        return (
+          <div className='flex items-center h-full'>
+            <span className='px-2 py-0.5 text-xs font-semibold rounded bg-blue-50 text-blue-700 border border-blue-200'>
+              {codigo}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'Estado',
       field: 'estado_de_compra',
       width: 90,

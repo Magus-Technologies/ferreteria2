@@ -2,11 +2,9 @@ import { FaCalendar } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
 import SelectTipoMoneda from '~/app/_components/form/selects/select-tipo-moneda'
-import { FormInstance } from 'antd'
+import { FormInstance, Form } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
-import usePermissionHook from '~/hooks/use-permission'
-import { permissions } from '~/lib/permissions'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import { IoIosDocument } from 'react-icons/io'
@@ -14,8 +12,6 @@ import { IoDocumentAttach } from 'react-icons/io5'
 import FormFormaDePagoCompra from './form-forma-de-pago-compra'
 import { CompraConUnidadDerivadaNormal } from '../others/header'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
-import { SelectOrdenCompra } from '~/app/ui/gestion-comercial-e-inventario/mis-compras/_components/SelectOrdenCompra'
-import { useStoreAlmacen } from '~/store/store-almacen'
 
 export default function FormCrearCompra({
   form,
@@ -24,9 +20,6 @@ export default function FormCrearCompra({
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
 }) {
-  const { can } = usePermissionHook()
-  const almacen_id = useStoreAlmacen(store => store.almacen_id)
-
   return (
     <div className='flex flex-col'>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.campos-fecha-moneda-proveedor' label='Campos Fecha, Moneda y Proveedor'>
@@ -103,14 +96,10 @@ export default function FormCrearCompra({
                 compra?.proveedor ? [compra.proveedor] : []
               }
               onChange={(_, proveedor) => {
-                // Actualizar los campos relacionados
                 if (proveedor) {
-                  // Actualizar RUC (solo el número)
                   if (proveedor.ruc) {
                     form.setFieldValue('proveedor_ruc', proveedor.ruc)
                   }
-
-                  // Actualizar razón social
                   form.setFieldValue('proveedor_razon_social', proveedor.razon_social || '')
                 } else {
                   form.setFieldValue('proveedor_ruc', '')
@@ -132,15 +121,14 @@ export default function FormCrearCompra({
               uppercase={false}
             />
           </LabelBase>
-          <LabelBase label='Orden de Compra:' classNames={{ labelParent: 'mb-6' }}>
-            <SelectOrdenCompra
-              almacen_id={almacen_id}
-              value={form.getFieldValue('orden_compra_id')}
-              onChange={(ordenId: number | null) => form.setFieldValue('orden_compra_id', ordenId)}
-            />
-          </LabelBase>
         </div>
       </ConfigurableElement>
+
+      {/* Hidden field for orden_compra_id */}
+      <Form.Item name='orden_compra_id' hidden>
+        <input type='hidden' />
+      </Form.Item>
+
       <div className='flex gap-6'>
         <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-tipo-documento' label='Campo Tipo Documento'>
           <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-6' }}>
@@ -219,11 +207,16 @@ export default function FormCrearCompra({
           </LabelBase>
         </ConfigurableElement>
       </div>
+
       <ConfigurableElement componentId='gestion-comercial.crear-compra.forma-pago' label='Forma de Pago'>
-        <div className='flex flex-wrap gap-6'>{(compra?.pagos_de_compras_count ?? 0) > 0 ? <div className='text-rose-700 text-xl font-semibold'>
-          Tiene Pagos Asociados, no se puede cambiar los datos del pago.
-        </div> :
-          <FormFormaDePagoCompra form={form} />}
+        <div className='flex flex-wrap gap-6'>
+          {(compra?.pagos_de_compras_count ?? 0) > 0 ? (
+            <div className='text-rose-700 text-xl font-semibold'>
+              Tiene Pagos Asociados, no se puede cambiar los datos del pago.
+            </div>
+          ) : (
+            <FormFormaDePagoCompra form={form} />
+          )}
         </div>
       </ConfigurableElement>
     </div>

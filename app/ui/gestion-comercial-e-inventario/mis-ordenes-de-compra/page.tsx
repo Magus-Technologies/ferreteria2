@@ -1,17 +1,19 @@
 'use client'
 
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState, useMemo } from 'react'
 import { App, Modal, Spin, Tooltip } from 'antd'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
-import { ordenCompraApi, type OrdenCompra } from '~/lib/api/orden-compra'
+import { ordenCompraApi, type OrdenCompra, type OrdenCompraProducto } from '~/lib/api/orden-compra'
 import { useStoreFiltrosOrdenesCompra } from './_store/store-filtros-ordenes-compra'
 import { useStoreOrdenCompraSeleccionada } from './_store/store-orden-compra-seleccionada'
+import TableProductosOrdenCompra from './_components/tables/table-productos-orden-compra'
 import { useColumnsOrdenesCompra } from './_components/tables/columns-ordenes-compra'
 import ProgressiveLoader from '~/app/_components/others/progressive-loader'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getAuthToken } from '~/lib/api'
+import { useRouter } from 'next/navigation'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
@@ -24,11 +26,33 @@ const ModalDetalleOrdenCompra = lazy(() => import('./_components/modals/modal-de
 export default function MisOrdenesDeCompra() {
     const { modal, message } = App.useApp()
     const queryClient = useQueryClient()
+    const router = useRouter()
     const filtros = useStoreFiltrosOrdenesCompra(state => state.filtros)
     const [openDetalle, setOpenDetalle] = useState(false)
     const [selectedOrdenId, setSelectedOrdenId] = useState<number>()
     const [selectedOrdenData, setSelectedOrdenData] = useState<OrdenCompra>()
     const setOrdenSeleccionada = useStoreOrdenCompraSeleccionada(state => state.setOrdenCompra)
+    const ordenSeleccionada = useStoreOrdenCompraSeleccionada(state => state.orden_compra)
+    const [filaSeleccionada, setFilaSeleccionada] = useState<OrdenCompra | null>(null)
+
+    // Cuando cambia la orden seleccionada en la tabla, cargar productos si no están
+    useEffect(() => {
+        if (!ordenSeleccionada) {
+            setFilaSeleccionada(null)
+            return
+        }
+        if (ordenSeleccionada.productos && ordenSeleccionada.productos.length > 0) {
+            setFilaSeleccionada(ordenSeleccionada)
+        } else {
+            ordenCompraApi.getById(ordenSeleccionada.id).then(res => {
+                if (res.data?.data) setFilaSeleccionada(res.data.data as OrdenCompra)
+            })
+        }
+    }, [ordenSeleccionada])
+
+    const productosRowData = useMemo<OrdenCompraProducto[]>(() => {
+        return filaSeleccionada?.productos ?? []
+    }, [filaSeleccionada])
 
     // Document modal state
     const [docModalOpen, setDocModalOpen] = useState(false)
@@ -44,7 +68,7 @@ export default function MisOrdenesDeCompra() {
                 <div>
                     <p>¿Estás seguro de anular la orden <strong>{orden.codigo}</strong>?</p>
                     <p className='text-sm text-slate-500 mt-1'>Proveedor: {orden.proveedor?.razon_social || '—'}</p>
-                    <p className='text-sm text-slate-500'>Total: S/. {(Number((orden as any).total ?? 0)).toFixed(2)}</p>
+                    <p className='text-sm text-slate-500'>Total: S/. {Number(orden.total ?? 0).toFixed(2)}</p>
                 </div>
             ),
             okText: 'Sí, Anular',
@@ -61,7 +85,7 @@ export default function MisOrdenesDeCompra() {
                 }
             },
         })
-    }, [queryClient])
+    }, [modal, message, queryClient])
 
     const handleAprobar = useCallback((orden: OrdenCompra) => {
         modal.confirm({
@@ -71,25 +95,18 @@ export default function MisOrdenesDeCompra() {
                 <div>
                     <p>¿Estás seguro de aprobar la orden <strong>{orden.codigo}</strong>?</p>
                     <p className='text-sm text-slate-500 mt-1'>Proveedor: {orden.proveedor?.razon_social || '—'}</p>
-                    <p className='text-sm text-slate-500'>Total: S/. {(Number((orden as any).total ?? 0)).toFixed(2)}</p>
-                    <p className='text-sm text-blue-600 mt-2'>Aparecerá en Mis Recepciones después de aprobada</p>
+                    <p className='text-sm text-slate-500'>Total: S/. {Number(orden.total ?? 0).toFixed(2)}</p>
+                    <p className='text-sm text-blue-600 mt-2'>Se creará la compra con los datos de esta orden</p>
                 </div>
             ),
             okText: 'Sí, Aprobar',
             okType: 'primary',
             cancelText: 'Cancelar',
-            async onOk() {
-                try {
-                    await ordenCompraApi.aprobar(orden.id)
-                    message.success(`Orden ${orden.codigo} aprobada correctamente`)
-                    queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_COMPRA] })
-                } catch (error) {
-                    message.error('Error al aprobar la orden de compra')
-                    console.error(error)
-                }
+            onOk() {
+                router.push(`/ui/gestion-comercial-e-inventario/mis-compras/crear-compra?orden_compra_id=${orden.id}`)
             },
         })
-    }, [queryClient])
+    }, [modal, router])
 
     const handleView = useCallback((orden: OrdenCompra) => {
         setSelectedOrdenId(orden.id)
@@ -138,7 +155,7 @@ export default function MisOrdenesDeCompra() {
             </Suspense>
 
             <div className="w-full mt-4">
-                <div className="h-[400px]">
+                <div className="h-[350px]">
                     <ProgressiveLoader identifier="mis-ordenes-compra-table" priority="critical">
                         <Suspense fallback={<div className="h-40 flex items-center justify-center font-medium text-slate-500 italic">Cargando tabla...</div>}>
                             <TableOrdenesCompra
@@ -149,6 +166,16 @@ export default function MisOrdenesDeCompra() {
                             />
                         </Suspense>
                     </ProgressiveLoader>
+                </div>
+            </div>
+
+            {/* TABLA DE PRODUCTOS */}
+            <div className="w-full mt-4">
+                <div className="h-[400px]">
+                    <TableProductosOrdenCompra
+                        id="g-c-e-i.mis-ordenes-compra.productos"
+                        productos={productosRowData}
+                    />
                 </div>
             </div>
 

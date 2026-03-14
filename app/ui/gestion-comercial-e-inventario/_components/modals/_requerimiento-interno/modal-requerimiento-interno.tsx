@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dayjs from "dayjs"
 import { FaFilePdf } from "react-icons/fa6"
 import { getAuthToken } from "~/lib/api"
-import { requerimientoInternoApi, type CreateRequerimientoRequest, type RequerimientoInterno } from "~/lib/api/requerimiento-interno"
+import ModalShowDoc from "~/app/_components/modals/modal-show-doc"
+import { requerimientoInternoApi, type CreateRequerimientoRequest, type CreateRequerimientoProductoRequest, type RequerimientoInterno } from "~/lib/api/requerimiento-interno"
 import { productosApiV2 } from "~/lib/api/producto"
 import { proveedorApi } from "~/lib/api/proveedor"
 import { tipoServicioApi, type TipoServicio } from "~/lib/api/tipo-servicio"
@@ -34,13 +36,14 @@ interface ProductoDisponible {
     unidad_medida?: { name: string }
     stock?: number
     unidad?: string
+    marca?: { id: number; name: string }
 }
 
 interface ModalRequerimientoInternoProps {
     open: boolean
     onClose: () => void
     productosDisponibles?: ProductoDisponible[]
-    defaultTipoSolicitud?: 'OC' | 'OS'
+    defaultTipoSolicitud?: 'OC' | 'OS' | 'SOC'
 }
 
 const PRIORIDADES = [
@@ -62,7 +65,9 @@ export default function ModalRequerimientoInterno({
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [requerimientoCreado, setRequerimientoCreado] = useState<RequerimientoInterno | null>(null)
-    const [downloadingPdf, setDownloadingPdf] = useState(false)
+    const [openPdfModal, setOpenPdfModal] = useState(false)
+    const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
+    const [pdfLoading, setPdfLoading] = useState(false)
     const [openModalTipoServicio, setOpenModalTipoServicio] = useState(false)
     const [tiposServicio, setTiposServicio] = useState<{ label: string; value: number }[]>([])
     const [fetchedProductos, setFetchedProductos] = useState<ProductoDisponible[]>([])
@@ -83,9 +88,8 @@ export default function ModalRequerimientoInterno({
         descripcionServicio: "",
         lugarEjecucion: "",
         fechaInicioEstimada: "",
+        fechaFinEstimada: "",
         presupuestoReferencial: "",
-        duracionCif: "",
-        duracionUnidad: "dias",
     })
 
     useEffect(() => {
@@ -96,14 +100,20 @@ export default function ModalRequerimientoInterno({
 
     const loadInitialData = async () => {
         try {
-            const resProd = await productosApiV2.getAllByAlmacen({ almacen_id: 1, per_page: 50 })
+            const resProd = await productosApiV2.getAllByAlmacen({ almacen_id: 1, per_page: 500 })
             if (resProd.data?.data) {
-                const mapped = resProd.data.data.map((p: ProductoDisponible) => ({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const mapped = resProd.data.data.map((p: any) => ({
                     id: p.id,
+                    cod_producto: p.cod_producto,
                     codigo: p.cod_producto,
+                    name: p.name,
                     nombre: p.name,
-                    stock: p.stock_fraccion || 0,
-                    unidad: p.unidad_medida?.name || 'UND'
+                    stock_fraccion: p.producto_en_almacenes?.[0]?.stock_fraccion || 0,
+                    stock: p.producto_en_almacenes?.[0]?.stock_fraccion || 0,
+                    unidad_medida: p.unidad_medida,
+                    unidad: p.unidad_medida?.name || 'UND',
+                    marca: p.marca
                 }))
                 setFetchedProductos(mapped)
             }
@@ -114,19 +124,19 @@ export default function ModalRequerimientoInterno({
             }
 
             const resTipos = await tipoServicioApi.getAll()
-            if (resTipos.data) {
-                const tiposFormateados = resTipos.data.map((t: TipoServicio) => ({
-                    label: t.nombre,
-                    value: t.id
-                }))
-                setTiposServicio(tiposFormateados)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const tiposData: TipoServicio[] = (resTipos as any).data?.data ?? resTipos.data ?? []
+            if (Array.isArray(tiposData)) {
+                setTiposServicio(tiposData.map(t => ({ label: t.nombre, value: t.id })))
             }
+
+
         } catch (error) {
             console.error("Error al cargar datos iniciales del modal:", error)
         }
     }
 
-    const setField = (key: string, value: any) => {
+    const setField = (key: string, value: string | number | boolean) => {
         setForm(prev => ({ ...prev, [key]: value }))
         if (errors[key]) {
             setErrors(prev => ({ ...prev, [key]: "" }))
@@ -146,7 +156,7 @@ export default function ModalRequerimientoInterno({
         if (currentStep === 1 && form.tipoSolicitud === "OS") {
             if (!form.tipoServicio) e.tipoServicio = "Requerido"
             if (!form.descripcionServicio.trim()) e.descripcionServicio = "Requerido"
-            if (!form.duracionCif) e.duracionCif = "Requerido"
+            if (!form.fechaInicioEstimada || !form.fechaFinEstimada) e.duracionRango = "Requerido"
         }
         setErrors(e)
         return Object.keys(e).length === 0
@@ -173,7 +183,7 @@ export default function ModalRequerimientoInterno({
 
             if (form.tipoSolicitud === 'OC') {
                 requestData.productos = productosSeleccionados.map(p => {
-                    const prod: any = {
+                    const prod: CreateRequerimientoProductoRequest = {
                         cantidad: p.cantidad,
                         unidad: p.unidad,
                     }
@@ -192,8 +202,10 @@ export default function ModalRequerimientoInterno({
                     lugar_ejecucion: form.lugarEjecucion || undefined,
                     fecha_inicio_estimada: form.fechaInicioEstimada || undefined,
                     presupuesto_referencial: form.presupuestoReferencial ? Number(form.presupuestoReferencial) : undefined,
-                    duracion_cantidad: form.duracionCif ? Number(form.duracionCif) : undefined,
-                    duracion_unidad: form.duracionUnidad,
+                    duracion_cantidad: (form.fechaInicioEstimada && form.fechaFinEstimada)
+                        ? Math.ceil(dayjs(form.fechaFinEstimada).diff(dayjs(form.fechaInicioEstimada), 'hour', true))
+                        : undefined,
+                    duracion_unidad: 'horas',
                 }
             }
 
@@ -229,9 +241,8 @@ export default function ModalRequerimientoInterno({
                 descripcionServicio: "",
                 lugarEjecucion: "",
                 fechaInicioEstimada: "",
+                fechaFinEstimada: "",
                 presupuestoReferencial: "",
-                duracionCif: "",
-                duracionUnidad: "dias",
             })
             setErrors({})
         }, 300)
@@ -243,7 +254,6 @@ export default function ModalRequerimientoInterno({
         { label: "Confirmación", sub: "Revisión final" },
     ]
 
-    const prio = PRIORIDADES.find(p => p.value === form.prioridad)
     const productosSource = productosDisponibles.length > 0 ? productosDisponibles : fetchedProductos
 
     if (!open) return null
@@ -395,10 +405,10 @@ export default function ModalRequerimientoInterno({
                                     {requerimientoCreado && (
                                         <button
                                             className="px-4 py-2 bg-white border border-slate-200 rounded text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors flex items-center gap-2"
-                                            disabled={downloadingPdf}
+                                            disabled={pdfLoading}
                                             onClick={async () => {
                                                 if (!requerimientoCreado) return
-                                                setDownloadingPdf(true)
+                                                setPdfLoading(true)
                                                 try {
                                                     const token = getAuthToken()
                                                     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/requerimiento-interno/${requerimientoCreado.id}`, {
@@ -406,21 +416,17 @@ export default function ModalRequerimientoInterno({
                                                     })
                                                     if (!res.ok) throw new Error('Error al generar PDF')
                                                     const blob = await res.blob()
-                                                    const url = URL.createObjectURL(blob)
-                                                    const a = document.createElement('a')
-                                                    a.href = url
-                                                    a.download = `${requerimientoCreado.codigo}-LOG-F-03.pdf`
-                                                    a.click()
-                                                    URL.revokeObjectURL(url)
+                                                    setPdfBlobUrl(URL.createObjectURL(blob))
+                                                    setOpenPdfModal(true)
                                                 } catch (e) {
                                                     console.error(e)
                                                 } finally {
-                                                    setDownloadingPdf(false)
+                                                    setPdfLoading(false)
                                                 }
                                             }}
                                         >
                                             <FaFilePdf className='text-red-600 text-lg' />
-                                            {downloadingPdf ? 'Generando PDF...' : 'Descargar PDF'}
+                                            {pdfLoading ? 'Cargando PDF...' : 'Ver PDF'}
                                         </button>
                                     )}
                                 </div>
@@ -443,6 +449,16 @@ export default function ModalRequerimientoInterno({
                     </div>
                 </div>
             </div>
+
+            <ModalShowDoc
+                open={openPdfModal}
+                setOpen={(v) => { if (!v) { setOpenPdfModal(false); if (pdfBlobUrl) { URL.revokeObjectURL(pdfBlobUrl); setPdfBlobUrl(null) } } }}
+                nro_doc={requerimientoCreado?.codigo ?? ''}
+                backendPdfUrl={pdfBlobUrl}
+                backendPdfLoading={pdfLoading}
+            >
+                <></>
+            </ModalShowDoc>
 
             <ModalCrearTipoServicio
                 open={openModalTipoServicio}

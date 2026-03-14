@@ -10,6 +10,7 @@ interface ItemBuscado {
     cantidad: number
     unidad: string
     stock?: number
+    marca?: string
 }
 
 interface ProductoDisponible {
@@ -22,6 +23,7 @@ interface ProductoDisponible {
     unidad_medida?: { name: string }
     stock?: number
     unidad?: string
+    marca?: { id: number; name: string }
 }
 
 interface StepProductosProps {
@@ -65,6 +67,7 @@ export default function StepProductos({
             cantidad: 1,
             unidad: p.unidad_medida?.name || p.unidad || "UND",
             stock: p.stock_fraccion || p.stock || 0,
+            marca: p.marca?.name || "",
         }
         onAgregarProducto(item)
     }
@@ -124,9 +127,12 @@ export default function StepProductos({
                                             <span className="font-mono text-xs font-semibold text-emerald-600 w-16 flex-shrink-0">
                                                 {p.cod_producto || p.codigo}
                                             </span>
-                                            <span className="text-sm text-slate-900 flex-1">
-                                                {p.name || p.nombre}
-                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm text-slate-900 truncate">{p.name || p.nombre}</div>
+                                                {p.marca?.name && (
+                                                    <div className="text-[10px] text-slate-500 font-medium">{p.marca.name}</div>
+                                                )}
+                                            </div>
                                             <span className={`text-xs font-semibold px-2 py-1 rounded flex-shrink-0 ${(p.stock_fraccion || p.stock || 0) > 0
                                                 ? "bg-emerald-100 text-emerald-700"
                                                 : "bg-red-100 text-red-700"
@@ -212,7 +218,10 @@ export default function StepProductos({
                                     </span>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm text-slate-900 truncate">{p.nombre}</div>
-                                        {!p.id && <div className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">Producto no registrado</div>}
+                                        {p.marca
+                                            ? <div className="text-[10px] text-slate-500 font-medium">{p.marca}</div>
+                                            : !p.id && <div className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">Producto no registrado</div>
+                                        }
                                     </div>
                                     <input
                                         type="number"

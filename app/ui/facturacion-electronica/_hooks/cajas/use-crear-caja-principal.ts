@@ -21,6 +21,9 @@ export default function useCrearCajaPrincipal({
         const response = await cajaPrincipalApi.create({
           user_id: values.user_id,
           nombre: values.nombre,
+          nombre_metodo_pago: values.crear_metodo_pago && values.nombre_metodo_pago
+            ? values.nombre_metodo_pago
+            : null,
         })
 
         if (response.error) {
@@ -39,6 +42,12 @@ export default function useCrearCajaPrincipal({
         })
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.VENDEDORES_DISPONIBLES],
+        })
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.METODO_DE_PAGO],
+        })
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
         })
 
         onSuccess?.()

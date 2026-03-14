@@ -76,7 +76,8 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
     }
   };
 
-  const handleSubmit = async (values: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = async (values: Record<string, any>) => {
     updateMutation.mutate(values);
   };
 

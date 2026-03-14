@@ -6,6 +6,7 @@ import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
+import { useSearchParams } from 'next/navigation'
 
 // Lazy loading de componentes pesados
 const HeaderCrearCompra = lazy(() => import('./_components/others/header'))
@@ -20,7 +21,11 @@ const ComponentLoading = () => (
 
 export default function CrearCompra() {
   const canAccess = usePermission(permissions.COMPRAS_CREATE)
-  
+  const searchParams = useSearchParams()
+  const ordenCompraId = searchParams.get('orden_compra_id')
+    ? Number(searchParams.get('orden_compra_id'))
+    : undefined
+
   if (!canAccess) return <NoAutorizado />
 
   return (
@@ -29,7 +34,7 @@ export default function CrearCompra() {
         <HeaderCrearCompra />
       </Suspense>
       <Suspense fallback={<ComponentLoading />}>
-        <BodyComprar />
+        <BodyComprar ordenCompraId={ordenCompraId} />
       </Suspense>
     </ContenedorGeneral>
   )

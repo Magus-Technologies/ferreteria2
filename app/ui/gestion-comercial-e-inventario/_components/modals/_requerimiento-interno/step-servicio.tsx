@@ -1,8 +1,20 @@
 "use client"
 
+import { DatePicker } from "antd"
+import dayjs from "dayjs"
+
+interface FormServicio {
+    tipoServicio: string
+    lugarEjecucion: string
+    descripcionServicio: string
+    fechaInicioEstimada: string
+    fechaFinEstimada: string
+    presupuestoReferencial: string
+}
+
 interface StepServicioProps {
-    form: any
-    setField: (key: string, value: any) => void
+    form: FormServicio
+    setField: (key: string, value: string | number | boolean) => void
     errors: Record<string, string>
     tiposServicio: { label: string; value: number }[]
     onAbrirModalTipoServicio: () => void
@@ -15,7 +27,8 @@ export default function StepServicio({
     errors,
     tiposServicio,
     onAbrirModalTipoServicio,
-    proveedores,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    proveedores: _proveedores,
 }: StepServicioProps) {
     return (
         <div className="space-y-5">
@@ -80,18 +93,28 @@ export default function StepServicio({
                 </div>
             </div>
 
-            {/* Fechas y Presupuesto */}
+            {/* Duración y Presupuesto */}
             <div className="grid grid-cols-2 gap-5">
                 <div>
                     <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                        Fecha Inicio Estimada
+                        Duración Estimada <span className="text-red-500">*</span>
                     </label>
-                    <input
-                        type="date"
-                        value={form.fechaInicioEstimada}
-                        onChange={(e) => setField("fechaInicioEstimada", e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
+                    <DatePicker.RangePicker
+                        showTime={{ format: "HH:mm" }}
+                        format="DD/MM/YYYY HH:mm"
+                        placeholder={["Inicio", "Fin"]}
+                        value={[
+                            form.fechaInicioEstimada ? dayjs(form.fechaInicioEstimada) : null,
+                            form.fechaFinEstimada ? dayjs(form.fechaFinEstimada) : null,
+                        ]}
+                        onChange={(dates) => {
+                            setField("fechaInicioEstimada", dates?.[0]?.toISOString() ?? "")
+                            setField("fechaFinEstimada", dates?.[1]?.toISOString() ?? "")
+                        }}
+                        className={`w-full ${errors.duracionRango ? "border-red-400" : ""}`}
+                        status={errors.duracionRango ? "error" : undefined}
                     />
+                    {errors.duracionRango && <p className="text-xs text-red-600 font-medium mt-1">{errors.duracionRango}</p>}
                 </div>
 
                 <div>
@@ -108,36 +131,6 @@ export default function StepServicio({
                             className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-md text-sm outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
                         />
                     </div>
-                </div>
-            </div>
-
-            {/* Duración y Proveedor */}
-            <div className="grid grid-cols-2 gap-5">
-                <div>
-                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                        Duración Estimada <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                        <input
-                            type="number"
-                            min={1}
-                            placeholder="Cantidad"
-                            value={form.duracionCif}
-                            onChange={(e) => setField("duracionCif", e.target.value)}
-                            className={`flex-1 px-3 py-2 border rounded-md text-sm outline-none transition-all ${errors.duracionCif ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                                }`}
-                        />
-                        <select
-                            value={form.duracionUnidad}
-                            onChange={(e) => setField("duracionUnidad", e.target.value)}
-                            className="w-28 px-3 py-2 border border-slate-200 rounded-md text-sm outline-none transition-all hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20"
-                        >
-                            <option value="horas">Horas</option>
-                            <option value="dias">Días</option>
-                            <option value="semanas">Semanas</option>
-                        </select>
-                    </div>
-                    {errors.duracionCif && <p className="text-xs text-red-600 font-medium mt-1">{errors.duracionCif}</p>}
                 </div>
             </div>
         </div>

@@ -116,9 +116,15 @@ export default function CardsInfoCompra({
       )}
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-crear-compra' label='Botón Crear/Editar Compra'>
         <ButtonBase
-          onClick={() => {
+          onClick={async () => {
             form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
-            form.submit()
+            
+            try {
+              const values = await form.validateFields()
+              form.submit()
+            } catch (error) {
+              // Validation errors are shown by Ant Design automatically
+            }
           }}
           color={compra ? 'info' : 'success'}
           className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
