@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Form, Tag, Modal, App } from 'antd'
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { Form, Tag, App } from 'antd'
+
 import { TbShoppingCartPlus } from 'react-icons/tb'
 import { FaCalendar } from 'react-icons/fa'
 import { IoIosDocument } from 'react-icons/io'
@@ -19,7 +20,7 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
-import type { Producto } from '~/app/_types/producto'
+import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import TableBase from '~/components/tables/table-base'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import SidebarSolicitudes, { type ProductoSidebarSelection } from './_components/sidebar-solicitudes'
@@ -54,13 +55,53 @@ export default function CrearOrdenCompraPage() {
   const [form] = Form.useForm()
   const [reqSeleccionado, setReqSeleccionado] = useState<RequerimientoInterno | null>(null)
   const [productos, setProductos] = useState<ProductoEnOC[]>([])
-  const [openModalAgregar, setOpenModalAgregar] = useState(false)
-  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const handleRemoveProducto = (index: number) => {
+  const handleRemoveProducto = useCallback((index: number) => {
     setProductos(prev => prev.filter((_, i) => i !== index))
-  }
+  }, [])
+
+  const productoAgregadoCompra = useStoreProductoAgregadoCompra(s => s.productoAgregado)
+
+  useEffect(() => {
+    const p = productoAgregadoCompra
+    if (!p?.producto_id) return
+
+    const newProduct: ProductoEnOC = {
+      id: p.producto_id,
+      producto_id: p.producto_id,
+      codigo: p.producto_codigo || '',
+      nombre: p.producto_name || '',
+      marca: p.marca_name || '',
+      unidad: p.unidad_derivada_name || 'UND',
+      cantidad: Number(p.cantidad ?? 1),
+      precio_compra: Number(p.precio_compra ?? 0),
+      flete: Number(p.flete ?? 0),
+      vencimiento: p.vencimiento ? (typeof p.vencimiento === 'string' ? p.vencimiento : p.vencimiento.format('YYYY-MM-DD')) : null,
+      lote: p.lote ?? '',
+      subtotal: Number(p.cantidad ?? 1) * Number(p.precio_compra ?? 0),
+    }
+
+    setProductos(prev => {
+      const existingIndex = prev.findIndex(e => e.producto_id === p.producto_id)
+      if (existingIndex >= 0) {
+        const updated = [...prev]
+        const existing = updated[existingIndex]
+        const nuevaCantidad = existing.cantidad + newProduct.cantidad
+        updated[existingIndex] = {
+          ...existing,
+          cantidad: nuevaCantidad,
+          precio_compra: newProduct.precio_compra || existing.precio_compra,
+          flete: newProduct.flete || existing.flete,
+          lote: newProduct.lote || existing.lote,
+          vencimiento: newProduct.vencimiento || existing.vencimiento,
+          subtotal: nuevaCantidad * (newProduct.precio_compra || existing.precio_compra),
+        }
+        return updated
+      }
+      return [...prev, newProduct]
+    })
+  }, [productoAgregadoCompra])
 
   const subTotal = useMemo(() => productos.reduce((acc, p) => acc + (p.cantidad * p.precio_compra), 0), [productos])
 
@@ -106,8 +147,8 @@ export default function CrearOrdenCompraPage() {
       }
 
       const response = await ordenCompraApi.create(requestData)
-      const ordenCompraId = (response.data as any)?.id
-      const ordenCompraCodigo = (response.data as any)?.codigo
+      const ordenCompraId = response.data?.data?.id
+      const ordenCompraCodigo = response.data?.data?.codigo
 
       // Actualizar cantidad_ordenada para cada producto de la solicitud
       if (reqSeleccionado?.productos && ordenCompraId) {
@@ -142,7 +183,7 @@ export default function CrearOrdenCompraPage() {
   }
 
   // Columnas ag-grid
-  const columns: ColDef[] = [
+  const columns = useMemo<ColDef[]>(() => [
     {
       headerName: 'Código',
       field: 'codigo',
@@ -334,7 +375,7 @@ export default function CrearOrdenCompraPage() {
         </div>
       ),
     },
-  ]
+  ], [handleRemoveProducto])
 
   const handleAddProductFromSidebar = (product: ProductoSidebarSelection) => {
     const newProduct = {
@@ -351,7 +392,23 @@ export default function CrearOrdenCompraPage() {
       lote: product.lote,
       subtotal: product.cantidad * product.precio_compra,
     }
-    setProductos(prev => [...prev, newProduct])
+    
+    setProductos(prev => {
+      const existingIndex = prev.findIndex(p => p.producto_id === product.producto_id)
+      if (existingIndex >= 0) {
+        const updated = [...prev]
+        const existing = updated[existingIndex]
+        const nuevaCantidad = existing.cantidad + product.cantidad
+        updated[existingIndex] = {
+          ...existing,
+          cantidad: nuevaCantidad,
+          subtotal: nuevaCantidad * existing.precio_compra,
+        }
+        return updated
+      } else {
+        return [...prev, newProduct]
+      }
+    })
   }
 
   const handleAddAllFromSidebar = (products: ProductoSidebarSelection[]) => {
@@ -369,7 +426,27 @@ export default function CrearOrdenCompraPage() {
       lote: p.lote,
       subtotal: p.cantidad * p.precio_compra,
     }))
-    setProductos(prev => [...prev, ...newProducts])
+    
+    setProductos(prev => {
+      let updated = [...prev]
+      
+      for (const newProduct of newProducts) {
+        const existingIndex = updated.findIndex(p => p.producto_id === newProduct.producto_id)
+        if (existingIndex >= 0) {
+          const existing = updated[existingIndex]
+          const nuevaCantidad = existing.cantidad + newProduct.cantidad
+          updated[existingIndex] = {
+            ...existing,
+            cantidad: nuevaCantidad,
+            subtotal: nuevaCantidad * existing.precio_compra,
+          }
+        } else {
+          updated = [...updated, newProduct]
+        }
+      }
+      
+      return updated
+    })
   }
 
 
@@ -402,14 +479,6 @@ export default function CrearOrdenCompraPage() {
                 withTipoBusqueda
                 showButtonCreate
                 showCardAgregarProducto
-                handleOnlyOneResult={(producto) => {
-                  setProductoSeleccionado(producto ?? null)
-                  if (producto) setOpenModalAgregar(true)
-                }}
-                onChange={(_, producto) => {
-                  setProductoSeleccionado(producto ?? null)
-                  if (producto) setOpenModalAgregar(true)
-                }}
               />
             </div>
           }
@@ -440,6 +509,7 @@ export default function CrearOrdenCompraPage() {
                 rowData={productos}
                 columnDefs={columns}
                 withNumberColumn={true}
+                getRowId={(params) => String(params.data.producto_id ?? params.data.id)}
               />
             </div>
 
@@ -663,25 +733,6 @@ export default function CrearOrdenCompraPage() {
         </FormBase>
       </div>
 
-      {/* Modal agregar producto */}
-      <Modal
-        open={openModalAgregar}
-        onCancel={() => setOpenModalAgregar(false)}
-        footer={null}
-        title={
-          <div className="text-xl font-bold text-left text-balance mb-3">
-            <span className="text-slate-400 block">AGREGAR:</span>{' '}
-            {productoSeleccionado?.name}
-          </div>
-        }
-        width={300}
-        classNames={{ content: 'min-w-fit' }}
-        destroyOnHidden
-        maskClosable={false}
-        keyboard={false}
-      >
-        <p className="text-sm text-slate-500">Funcionalidad de agregar producto (vista)</p>
-      </Modal>
     </div>
   )
 }
