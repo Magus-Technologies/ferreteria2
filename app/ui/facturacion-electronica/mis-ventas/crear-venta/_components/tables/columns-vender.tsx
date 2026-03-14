@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
@@ -26,6 +27,33 @@ export function useColumnsVender({
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const productos = Form.useWatch('productos', form) || []
 
+  /** Obtener todos los productos de un paquete dado el index del primer producto */
+  function getPaqueteProductos(firstIndex: number) {
+    const paqueteId = productos[firstIndex]?.paquete_id
+    if (!paqueteId) return null
+    const items: { index: number; data: any }[] = []
+    productos.forEach((p: any, i: number) => {
+      if (p.paquete_id === paqueteId) items.push({ index: i, data: p })
+    })
+    return items
+  }
+
+  /** Calcular totales de un paquete */
+  function getPaqueteTotales(firstIndex: number) {
+    const items = getPaqueteProductos(firstIndex)
+    if (!items) return null
+    let totalPrecio = 0, totalDescuento = 0, totalRecargo = 0, totalSubtotal = 0
+    for (const item of items) {
+      totalPrecio += Number(item.data.precio_venta || 0) * Number(item.data.cantidad || 0)
+      totalDescuento += Number(item.data.descuento || 0) * Number(item.data.cantidad || 0)
+      totalRecargo += Number(item.data.recargo || 0) * Number(item.data.cantidad || 0)
+      totalSubtotal += Number(item.data.subtotal || 0)
+    }
+    return { items, totalPrecio, totalDescuento, totalRecargo, totalSubtotal }
+  }
+
+  const [paqueteDetalle, setPaqueteDetalle] = useState<{ nombre: string; productos: any[] } | null>(null)
+
   const columns: ColDef<FormListFieldData>[] = [
     {
       headerName: '#',
@@ -36,72 +64,25 @@ export function useColumnsVender({
       suppressNavigable: true,
       lockPosition: 'left',
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
-        
-        if (!paqueteId) {
-          // Producto sin paquete - contar solo productos individuales y primeros de paquetes
-          let numeroGrupo = 0
-          const paquetesVistos = new Set<number>()
-          
-          for (let i = 0; i <= value; i++) {
-            const itemPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
-            
-            if (itemPaqueteId) {
-              if (!paquetesVistos.has(itemPaqueteId)) {
-                paquetesVistos.add(itemPaqueteId)
-                numeroGrupo++
-              }
-            } else {
+        // Count group number (paquetes count as 1)
+        let numeroGrupo = 0
+        const paquetesVistos = new Set<number>()
+
+        for (let i = 0; i <= value; i++) {
+          const itemPaqueteId = productos[i]?.paquete_id
+          if (itemPaqueteId) {
+            if (!paquetesVistos.has(itemPaqueteId)) {
+              paquetesVistos.add(itemPaqueteId)
               numeroGrupo++
             }
-          }
-          
-          return (
-            <div className='flex items-center h-full justify-center'>
-              <span className='font-semibold text-gray-700'>{numeroGrupo}</span>
-            </div>
-          )
-        }
-
-        // Producto de paquete - verificar si es el primero del grupo
-        let esPrimeroDelGrupo = true
-        for (let i = 0; i < value; i++) {
-          const prevPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
-          if (prevPaqueteId === paqueteId) {
-            esPrimeroDelGrupo = false
-            break
+          } else {
+            numeroGrupo++
           }
         }
 
-        if (esPrimeroDelGrupo) {
-          // Es el primero del paquete - mostrar número
-          let numeroGrupo = 0
-          const paquetesVistos = new Set<number>()
-          
-          for (let i = 0; i <= value; i++) {
-            const itemPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
-            
-            if (itemPaqueteId) {
-              if (!paquetesVistos.has(itemPaqueteId)) {
-                paquetesVistos.add(itemPaqueteId)
-                numeroGrupo++
-              }
-            } else {
-              numeroGrupo++
-            }
-          }
-          
-          return (
-            <div className='flex items-center h-full justify-center'>
-              <span className='font-semibold text-gray-700'>{numeroGrupo}</span>
-            </div>
-          )
-        }
-
-        // No es el primero del paquete - NO mostrar número
         return (
           <div className='flex items-center h-full justify-center'>
-            <span className='text-gray-400 text-xs'>↳</span>
+            <span className='font-semibold text-gray-700'>{numeroGrupo}</span>
           </div>
         )
       },
@@ -112,28 +93,38 @@ export function useColumnsVender({
       field: 'name',
       minWidth: 70,
       width: 70,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <Tooltip
-            classNames={{ body: 'text-center!' }}
-            title={form.getFieldValue(['productos', value, 'producto_codigo'])}
-          >
-            <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-              {form.getFieldValue(['productos', value, 'producto_codigo'])}
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          return (
+            <div className='flex items-center h-full'>
+              <InputBase propsForm={{ name: [value, 'producto_codigo'], hidden: true }} formWithMessage={false} />
             </div>
-          </Tooltip>
-          <InputBase
-            propsForm={{
-              name: [value, 'producto_codigo'],
-              rules: [{ required: true, message: '' }],
-              hidden: true,
-            }}
-            readOnly
-            variant='borderless'
-            formWithMessage={false}
-          />
-        </div>
-      ),
+          )
+        }
+        return (
+          <div className='flex items-center h-full'>
+            <Tooltip
+              classNames={{ body: 'text-center!' }}
+              title={form.getFieldValue(['productos', value, 'producto_codigo'])}
+            >
+              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                {form.getFieldValue(['productos', value, 'producto_codigo'])}
+              </div>
+            </Tooltip>
+            <InputBase
+              propsForm={{
+                name: [value, 'producto_codigo'],
+                rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              readOnly
+              variant='borderless'
+              formWithMessage={false}
+            />
+          </div>
+        )
+      },
     },
     {
       headerName: 'Producto',
@@ -141,24 +132,12 @@ export function useColumnsVender({
       minWidth: 250,
       width: 250,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
-        const paqueteNombre = form.getFieldValue(['productos', value, 'paquete_nombre'])
-        const productoName = form.getFieldValue(['productos', value, 'producto_name'])
-        const tipo = form.getFieldValue(['productos', value, '_tipo'])
-        const servicioNombre = form.getFieldValue(['productos', value, 'servicio_nombre'])
-        const servicioReferencia = form.getFieldValue(['productos', value, 'servicio_referencia'])
-
-        // Verificar si es el primero del paquete
-        let esPrimeroDelGrupo = true
-        if (paqueteId) {
-          for (let i = 0; i < value; i++) {
-            const prevPaqueteId = form.getFieldValue(['productos', i, 'paquete_id'])
-            if (prevPaqueteId === paqueteId) {
-              esPrimeroDelGrupo = false
-              break
-            }
-          }
-        }
+        const paqueteId = productos[value]?.paquete_id
+        const paqueteNombre = productos[value]?.paquete_nombre
+        const productoName = productos[value]?.producto_name
+        const tipo = productos[value]?._tipo
+        const servicioNombre = productos[value]?.servicio_nombre
+        const servicioReferencia = productos[value]?.servicio_referencia
 
         return (
           <div className='flex flex-col h-full justify-center gap-1'>
@@ -229,34 +208,49 @@ export function useColumnsVender({
               formWithMessage={false}
             />
 
-            {/* Badge de servicio */}
-            {tipo === 'servicio' && (
-              <div className='px-2 py-0.5 bg-violet-100 text-violet-800 rounded text-xs font-bold w-fit'>
-                SERVICIO
-              </div>
-            )}
-
-            {/* Mostrar nombre del paquete solo en el primer producto del grupo */}
-            {paqueteId && esPrimeroDelGrupo && (
-              <div className='px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-bold w-fit'>
-                📦 {paqueteNombre}
-              </div>
-            )}
-
-            {/* Nombre del producto/servicio */}
-            <Tooltip
-              classNames={{ body: 'text-center!' }}
-              title={tipo === 'servicio' ? servicioNombre : productoName}
-            >
-              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-                {tipo === 'servicio' ? servicioNombre : productoName}
-              </div>
-            </Tooltip>
-            {/* Referencia del servicio */}
-            {tipo === 'servicio' && servicioReferencia && (
-              <div className='text-xs text-gray-400 italic overflow-hidden text-ellipsis whitespace-nowrap'>
-                {servicioReferencia}
-              </div>
+            {paqueteId ? (
+              <>
+                <div
+                  className='px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded text-xs font-bold w-fit cursor-pointer hover:bg-cyan-200 transition-colors'
+                  onClick={() => {
+                    const items = getPaqueteProductos(value)
+                    if (items) {
+                      setPaqueteDetalle({
+                        nombre: paqueteNombre || '',
+                        productos: items.map(item => item.data),
+                      })
+                    }
+                  }}
+                >
+                  📦 {paqueteNombre}
+                </div>
+                <div className='text-xs text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap'>
+                  {(() => {
+                    const items = getPaqueteProductos(value)
+                    if (!items) return ''
+                    const names = items.map(item => item.data.producto_name).join(', ')
+                    return `${items.length} prod: ${names}`
+                  })()}
+                </div>
+              </>
+            ) : (
+              <>
+                {tipo === 'servicio' && (
+                  <div className='px-2 py-0.5 bg-violet-100 text-violet-800 rounded text-xs font-bold w-fit'>
+                    SERVICIO
+                  </div>
+                )}
+                <Tooltip classNames={{ body: 'text-center!' }} title={tipo === 'servicio' ? servicioNombre : productoName}>
+                  <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
+                    {tipo === 'servicio' ? servicioNombre : productoName}
+                  </div>
+                </Tooltip>
+                {tipo === 'servicio' && servicioReferencia && (
+                  <div className='text-xs text-gray-400 italic overflow-hidden text-ellipsis whitespace-nowrap'>
+                    {servicioReferencia}
+                  </div>
+                )}
+              </>
             )}
             <InputBase
               propsForm={{
@@ -281,6 +275,15 @@ export function useColumnsVender({
       minWidth: 120,
       width: 120,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-gray-400'>-</span>
+              <InputBase propsForm={{ name: [value, 'marca_name'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
         const tipo = form.getFieldValue(['productos', value, '_tipo'])
         return (
           <div className='flex items-center h-full'>
@@ -316,6 +319,17 @@ export function useColumnsVender({
       minWidth: 150,
       width: 150,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-gray-400'>-</span>
+              <InputNumberBase propsForm={{ name: [value, 'unidad_derivada_id'], hidden: true }} formWithMessage={false} />
+              <InputNumberBase propsForm={{ name: [value, 'unidad_derivada_factor'], hidden: true }} formWithMessage={false} />
+              <InputBase propsForm={{ name: [value, 'unidad_derivada_name'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
         const productoId = form.getFieldValue(['productos', value, 'producto_id']);
         const tipo = form.getFieldValue(['productos', value, '_tipo']);
 
@@ -368,6 +382,16 @@ export function useColumnsVender({
       wrapText: true,
       autoHeight: true,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          const items = getPaqueteProductos(value)
+          return (
+            <div className='flex items-center h-full justify-center'>
+              <span className='text-sm font-medium text-cyan-700'>{items?.length || 0} prod.</span>
+              <InputNumberBase propsForm={{ name: [value, 'cantidad'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
         const cantidad = form.getFieldValue(['productos', value, 'cantidad'])
         const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor'])
         const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion'])
@@ -406,44 +430,68 @@ export function useColumnsVender({
       field: 'name',
       minWidth: 110,
       width: 110,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <InputNumberBase
-            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
-            size='small'
-            propsForm={{
-              name: [value, 'precio_venta'],
-              rules: [{ required: true, message: '' }],
-            }}
-            precision={4}
-            min={0}
-            formWithMessage={false}
-            readOnly
-            variant='borderless'
-          />
-        </div>
-      ),
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          const totales = getPaqueteTotales(value)
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-sm'>{tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'} {(totales?.totalPrecio || 0).toFixed(2)}</span>
+              <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
+              size='small'
+              propsForm={{
+                name: [value, 'precio_venta'],
+                rules: [{ required: true, message: '' }],
+              }}
+              precision={4}
+              min={0}
+              formWithMessage={false}
+              readOnly
+              variant='borderless'
+            />
+          </div>
+        )
+      },
     },
     {
       headerName: 'Recargo',
       field: 'name',
       minWidth: 110,
       width: 110,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <InputNumberBase
-            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
-            size='small'
-            propsForm={{
-              name: [value, 'recargo'],
-            }}
-            precision={4}
-            min={0}
-            formWithMessage={false}
-            onChange={() => calcularSubtotalForm({ form, value })}
-          />
-        </div>
-      ),
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          const totales = getPaqueteTotales(value)
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-sm'>{tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'} {(totales?.totalRecargo || 0).toFixed(2)}</span>
+              <InputNumberBase propsForm={{ name: [value, 'recargo'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
+              size='small'
+              propsForm={{
+                name: [value, 'recargo'],
+              }}
+              precision={4}
+              min={0}
+              formWithMessage={false}
+              onChange={() => calcularSubtotalForm({ form, value })}
+            />
+          </div>
+        )
+      },
     },
     {
       headerName: 'Descuento',
@@ -451,6 +499,25 @@ export function useColumnsVender({
       minWidth: 160,
       width: 160,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          const totales = getPaqueteTotales(value)
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-sm'>{tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'} {(totales?.totalDescuento || 0).toFixed(2)}</span>
+              <SelectDescuentoTipo
+                tipoMoneda={tipo_moneda}
+                formWithMessage={false}
+                size='small'
+                propsForm={{
+                  name: [value, 'descuento_tipo'],
+                  hidden: true,
+                }}
+              />
+              <InputNumberBase propsForm={{ name: [value, 'descuento'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
         return (
           <div className='flex items-center h-full gap-1'>
             <SelectDescuentoTipo
@@ -501,22 +568,34 @@ export function useColumnsVender({
       field: 'name',
       minWidth: 110,
       width: 110,
-      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
-        <div className='flex items-center h-full'>
-          <InputNumberBase
-            size='small'
-            propsForm={{
-              name: [value, 'subtotal'],
-              rules: [{ required: true, message: '' }],
-            }}
-            prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
-            precision={2}
-            formWithMessage={false}
-            readOnly
-            variant='borderless'
-          />
-        </div>
-      ),
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const paqueteId = productos[value]?.paquete_id
+        if (paqueteId) {
+          const totales = getPaqueteTotales(value)
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-sm font-semibold'>{tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'} {(totales?.totalSubtotal || 0).toFixed(2)}</span>
+              <InputNumberBase propsForm={{ name: [value, 'subtotal'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              size='small'
+              propsForm={{
+                name: [value, 'subtotal'],
+                rules: [{ required: true, message: '' }],
+              }}
+              prefix={tipo_moneda === TipoMoneda.SOLES ? 'S/. ' : '$. '}
+              precision={2}
+              formWithMessage={false}
+              readOnly
+              variant='borderless'
+            />
+          </div>
+        )
+      },
     },
     {
       headerName: 'Acciones',
@@ -559,7 +638,7 @@ export function useColumnsVender({
     },
   ]
 
-  return columns
+  return { columns, paqueteDetalle, setPaqueteDetalle }
 }
 
 function calcularSubtotalForm({

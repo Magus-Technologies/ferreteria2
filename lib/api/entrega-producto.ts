@@ -30,6 +30,11 @@ export enum QuienEntrega {
   CHOFER = 'chofer',
 }
 
+export enum TipoPedido {
+  INTERNO = 'interno',
+  EXTERNO = 'externo',
+}
+
 // ============= INTERFACES =============
 
 export interface ProductoEntregadoRequest {
@@ -55,6 +60,8 @@ export interface CreateEntregaProductoRequest {
   chofer_id?: string;
   quien_entrega?: QuienEntrega;
   user_id: string;
+  tipo_pedido?: TipoPedido;
+  cargo_destino?: string;
   productos_entregados: ProductoEntregadoRequest[];
 }
 
@@ -157,6 +164,15 @@ export const entregaProductoApi = {
   async anular(id: number): Promise<ApiResponse<{ data: string; message: string }>> {
     return apiRequest<{ data: string; message: string }>(`/entregas-productos/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  /**
+   * Aceptar un pedido externo (first-come-first-served)
+   */
+  async aceptar(id: number): Promise<ApiResponse<EntregaProductoResponse>> {
+    return apiRequest<EntregaProductoResponse>(`/entregas-productos/${id}/aceptar`, {
+      method: 'POST',
     });
   },
 };

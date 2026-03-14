@@ -5,6 +5,7 @@ import { StoreValue } from 'antd/es/form/interface'
 import { useColumnsVender } from './columns-vender'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
+import ModalDetallePaqueteVenta from '../modals/modal-detalle-paquete-venta'
 import {
   useStoreProductoAgregadoVenta,
   ValuesCardAgregarProductoVenta,
@@ -171,8 +172,6 @@ export default function TableVender({
   // Detectar si estamos en modo configuración
   const configMode = useConfigMode()
   
-  console.log('🔍 TableVender - configMode:', configMode?.enabled, 'fields.length:', fields.length)
-  
   // Datos de demostración para modo configuración - agregar al formulario
   const demoProductos = useMemo(() => [
     {
@@ -279,9 +278,28 @@ export default function TableVender({
   ], [])
 
   // Usar datos de demo si estamos en modo configuración y no hay fields
-  const rowData = configMode?.enabled && fields.length === 0 ? demoData : fields
-  
-  console.log('📊 TableVender rowData:', rowData, 'length:', rowData.length)
+  const baseRowData = configMode?.enabled && fields.length === 0 ? demoData : fields
+
+  // Colapsar paquetes: solo mostrar la primera fila de cada paquete
+  const rowData = useMemo(() => {
+    const productos = form.getFieldValue('productos') || []
+    const paquetesVistos = new Set<number>()
+
+    return (baseRowData as FormListFieldData[]).filter((field) => {
+      const paqueteId = productos[field.name]?.paquete_id
+      if (!paqueteId) return true // producto individual, siempre mostrar
+      if (paquetesVistos.has(paqueteId)) return false // ya vimos este paquete
+      paquetesVistos.add(paqueteId)
+      return true // primer producto del paquete
+    })
+  }, [baseRowData, form, productoAgregadoVentaStore])
+
+  const { columns, paqueteDetalle, setPaqueteDetalle } = useColumnsVender({
+    remove,
+    form,
+    cantidad_pendiente,
+    venta,
+  })
 
   return (
     <>
@@ -290,15 +308,16 @@ export default function TableVender({
         className='h-full'
         rowSelection={false}
         rowData={rowData as any}
-        columnDefs={useColumnsVender({
-          remove,
-          form,
-          cantidad_pendiente,
-          venta,
-        })}
+        columnDefs={columns}
         suppressCellFocus={true}
         withNumberColumn={false}
         domLayout={configMode?.enabled ? 'normal' : undefined}
+      />
+      <ModalDetallePaqueteVenta
+        open={!!paqueteDetalle}
+        onClose={() => setPaqueteDetalle(null)}
+        paqueteNombre={paqueteDetalle?.nombre || ''}
+        productos={paqueteDetalle?.productos || []}
       />
     </>
   )

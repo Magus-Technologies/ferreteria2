@@ -33,7 +33,7 @@ function ButtonNavBase({
                   ${className} ${
         isActive
           ? `bg-white px-3 lg:px-3 xl:px-6 rounded-lg lg:rounded-full ${colorActive}`
-          : 'text-slate-700 lg:text-white hover:bg-gray-100 lg:hover:bg-white/10 lg:hover:bg-transparent px-3 lg:px-2 xl:px-3 rounded-lg lg:rounded-none'
+          : 'text-slate-700 lg:text-white hover:bg-gray-100 lg:hover:bg-white/10 md:hover:bg-transparent px-3 lg:px-2 xl:px-3 rounded-lg lg:rounded-none'
       }`}
     >
       {withIcon && (

@@ -62,7 +62,7 @@ export function usePaqueteForm(
           descuento_especial: (p as any).descuento_especial != null ? Number((p as any).descuento_especial) : 0,
           descuento_minimo: (p as any).descuento_minimo != null ? Number((p as any).descuento_minimo) : 0,
           descuento_ultimo: (p as any).descuento_ultimo != null ? Number((p as any).descuento_ultimo) : 0,
-          tipo_precio_vista: 'publico' as TipoPrecioPaquete,
+          tipo_precio_vista: ((p as any).tipo_precio || 'publico') as TipoPrecioPaquete,
           costo,
           unidades_derivadas_disponibles,
         }
@@ -126,6 +126,12 @@ export function usePaqueteForm(
     )
   }
 
+  const actualizarTipoPrecio = (key: string, tipo: TipoPrecioPaquete) => {
+    setProductos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, tipo_precio_vista: tipo } : p))
+    )
+  }
+
   const actualizarDescuento = (key: string, tipo: TipoPrecioPaquete, descuento: number | undefined) => {
     const descuentoKey = `descuento_${tipo}` as keyof ProductoPaquete
     setProductos((prev) =>
@@ -150,6 +156,7 @@ export function usePaqueteForm(
           producto_id: p.producto_id,
           unidad_derivada_id: p.unidad_derivada_id,
           cantidad: p.cantidad,
+          tipo_precio: p.tipo_precio_vista,
           precio_publico: p.precio_publico ?? null,
           precio_especial: p.precio_especial ?? null,
           precio_minimo: p.precio_minimo ?? null,
@@ -195,6 +202,7 @@ export function usePaqueteForm(
     actualizarUnidadDerivada,
     actualizarCantidad,
     actualizarPrecio,
+    actualizarTipoPrecio,
     actualizarDescuento,
     handleSubmit,
   }

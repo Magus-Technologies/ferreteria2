@@ -20,6 +20,7 @@ export interface PaqueteProducto {
   producto_id: number;
   unidad_derivada_id: number;
   cantidad: number;
+  tipo_precio: 'publico' | 'especial' | 'minimo' | 'ultimo';
   precio_publico: number | null;
   precio_especial: number | null;
   precio_minimo: number | null;
@@ -75,6 +76,7 @@ export interface PaqueteProductoRequest {
   producto_id: number;
   unidad_derivada_id: number;
   cantidad: number;
+  tipo_precio?: 'publico' | 'especial' | 'minimo' | 'ultimo';
   precio_publico?: number | null;
   precio_especial?: number | null;
   precio_minimo?: number | null;

@@ -1,8 +1,7 @@
 "use client";
 
-import { Modal, message, Radio } from "antd";
+import { Modal, message } from "antd";
 import { useState } from "react";
-import type { TipoPrecio } from "~/lib/api/paquete";
 import { MdOutlineSell, MdSell } from "react-icons/md";
 import { DescuentoTipo, type getVentaResponseProps } from "~/lib/api/venta";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
@@ -52,8 +51,6 @@ export default function HeaderCrearVenta({
   const [textDefaultPaquete, setTextDefaultPaquete] = useState("");
   const [openModalBuscarServicio, setOpenModalBuscarServicio] = useState(false);
   const [textDefaultServicio, setTextDefaultServicio] = useState("");
-  const [openModalTipoPrecio, setOpenModalTipoPrecio] = useState(false);
-  const [tipoPrecioSeleccionado, setTipoPrecioSeleccionado] = useState<TipoPrecio>('publico');
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
@@ -79,8 +76,9 @@ export default function HeaderCrearVenta({
 
   /**
    * Agregar todos los productos de un paquete a la venta
+   * Usa el tipo_precio individual de cada producto del paquete
    */
-  const handleAgregarPaquete = async (tipoPrecio: TipoPrecio) => {
+  const handleAgregarPaquete = async () => {
     const paquete = paqueteSeleccionadoStore;
 
     if (!paquete) {
@@ -94,11 +92,12 @@ export default function HeaderCrearVenta({
     }
 
     let productosAgregados = 0;
-    const precioKey = `precio_${tipoPrecio}` as keyof typeof paquete.productos[number];
-    const descuentoKey = `descuento_${tipoPrecio}` as keyof typeof paquete.productos[number];
 
     for (const paqueteProducto of paquete.productos) {
       if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
+        const tipoPrecio = paqueteProducto.tipo_precio || 'publico';
+        const precioKey = `precio_${tipoPrecio}` as keyof typeof paqueteProducto;
+        const descuentoKey = `descuento_${tipoPrecio}` as keyof typeof paqueteProducto;
         const precio = Number((paqueteProducto as any)[precioKey] || 0);
         const descuento = Number((paqueteProducto as any)[descuentoKey] || 0);
         setProductoAgregado({
@@ -299,48 +298,18 @@ export default function HeaderCrearVenta({
         <ModalBuscarPaquete
           open={openModalBuscarPaquete}
           setOpen={setOpenModalBuscarPaquete}
-          onOk={() => {
+          onOk={async () => {
             setOpenModalBuscarPaquete(false);
-            setOpenModalTipoPrecio(true);
+            await handleAgregarPaquete();
           }}
           textDefault={textDefaultPaquete}
-          onRowDoubleClicked={({ data }) => {
+          onRowDoubleClicked={async ({ data }) => {
             if (data) {
               setOpenModalBuscarPaquete(false);
-              setOpenModalTipoPrecio(true);
+              await handleAgregarPaquete();
             }
           }}
         />
-
-        <Modal
-          open={openModalTipoPrecio}
-          onCancel={() => setOpenModalTipoPrecio(false)}
-          title="Selecciona el tipo de precio"
-          okText="Agregar al carrito"
-          cancelText="Cancelar"
-          onOk={async () => {
-            await handleAgregarPaquete(tipoPrecioSeleccionado);
-            setOpenModalTipoPrecio(false);
-          }}
-          width={350}
-          centered
-        >
-          <div className="py-4">
-            <p className="text-gray-600 mb-3">
-              Paquete: <strong>{paqueteSeleccionadoStore?.nombre}</strong>
-            </p>
-            <Radio.Group
-              value={tipoPrecioSeleccionado}
-              onChange={(e) => setTipoPrecioSeleccionado(e.target.value)}
-              className="flex flex-col gap-2"
-            >
-              <Radio value="publico">Precio Público</Radio>
-              <Radio value="especial">Precio Especial</Radio>
-              <Radio value="minimo">Precio Mínimo</Radio>
-              <Radio value="ultimo">Precio Último</Radio>
-            </Radio.Group>
-          </div>
-        </Modal>
 
         <ModalBuscarServicio
           open={openModalBuscarServicio}

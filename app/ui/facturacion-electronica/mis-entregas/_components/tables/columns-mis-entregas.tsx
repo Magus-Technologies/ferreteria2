@@ -77,9 +77,21 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       width: 130,
       valueFormatter: (params) => {
         const tipo = params.value
-        if (tipo === 'in') return '⚡ Inmediato'
-        if (tipo === 'pr') return '📅 Programado'
+        if (tipo === 'in') return 'Inmediato'
+        if (tipo === 'pr') return 'Programado'
         return tipo || ''
+      },
+    },
+    {
+      headerName: 'Tipo Pedido',
+      field: 'tipo_pedido',
+      width: 130,
+      valueGetter: (params) => {
+        const tipoPedido = params.data?.tipo_pedido
+        const choferId = params.data?.chofer_id
+        if (tipoPedido === 'externo' && !choferId) return 'Disponible'
+        if (tipoPedido === 'externo' && choferId) return 'Aceptado'
+        return 'Asignado'
       },
     },
     {

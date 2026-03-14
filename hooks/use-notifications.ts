@@ -64,6 +64,16 @@ export function useNotifications() {
         queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       }
 
+      // Pedido de entrega (interno o externo)
+      if (payload.data?.type === 'pedido_entrega') {
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      }
+
+      // Pedido externo ya fue tomado por otro usuario
+      if (payload.data?.type === 'pedido_entrega_tomado') {
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      }
+
       // Invalidar caché de autorizaciones (nueva solicitud para aprobador)
       if (payload.data?.type === 'autorizacion') {
         queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientes() })
@@ -83,7 +93,7 @@ export function useNotifications() {
         duration: 10,
         onClick: () => {
           // Navegar a entregas si es una notificación de entrega
-          if (payload.data?.type === 'entrega') {
+          if (payload.data?.type === 'entrega' || payload.data?.type === 'pedido_entrega' || payload.data?.type === 'pedido_entrega_tomado') {
             window.location.href = '/ui/facturacion-electronica/mis-entregas'
           }
           // Navegar a solicitudes si es de autorización

@@ -66,6 +66,7 @@ interface TableProductosPaqueteProps {
   onCantidadChange: (key: string, cantidad: number) => void
   onPrecioChange: (key: string, tipo: TipoPrecioPaquete, precio: number | undefined) => void
   onUnidadDerivadaChange: (key: string, unidadDerivadaId: number) => void
+  onTipoPrecioChange: (key: string, tipo: TipoPrecioPaquete) => void
 }
 
 export default function TableProductosPaquete({
@@ -74,6 +75,7 @@ export default function TableProductosPaquete({
   onCantidadChange,
   onPrecioChange,
   onUnidadDerivadaChange,
+  onTipoPrecioChange,
 }: TableProductosPaqueteProps) {
   const columnDefs: ColDef<ProductoPaquete>[] = [
     {
@@ -131,6 +133,23 @@ export default function TableProductosPaquete({
           />
         )
       },
+    },
+    {
+      headerName: 'Tipo Precio',
+      field: 'tipo_precio_vista',
+      width: 130,
+      cellRenderer: (params: any) => (
+        <div className="flex items-center h-full">
+          <SelectBase
+            size="small"
+            variant="borderless"
+            className="w-full"
+            value={params.value}
+            options={TIPO_PRECIO_OPTIONS}
+            onChange={(val) => onTipoPrecioChange(params.data.key, val)}
+          />
+        </div>
+      ),
     },
     {
       headerName: 'Cantidad',
@@ -193,7 +212,7 @@ export default function TableProductosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Código', 'Producto', 'Marca', 'U. Derivada', 'Cantidad', 'Acciones'],
+          columns: ['Código', 'Producto', 'Marca', 'U. Derivada', 'Tipo Precio', 'Cantidad', 'Acciones'],
         },
       ]}
     />

@@ -12,7 +12,7 @@ import ModalCreateCliente from "./modal-create-cliente";
 import ModalSeleccionarProductosEntrega from "./modal-seleccionar-productos-entrega";
 import ButtonBase from "~/components/buttons/button-base";
 import type { Cliente } from "~/lib/api/cliente";
-import { TipoEntrega, TipoDespacho, EstadoEntrega } from "~/lib/api/entrega-producto";
+import { TipoEntrega, TipoDespacho, EstadoEntrega, TipoPedido } from "~/lib/api/entrega-producto";
 import FormDespachoEnTienda from "../forms/form-despacho-en-tienda";
 import FormDespachoDomicilio from "../forms/form-despacho-domicilio";
 
@@ -29,7 +29,9 @@ interface ModalEntregarProductosProps {
 interface FormValues {
   tipo_despacho: "EnTienda" | "Domicilio" | "Parcial";
   quien_entrega?: "vendedor" | "almacen";
-  chofer_id?: string | number; // Puede ser string o number
+  chofer_id?: string | number;
+  tipo_pedido?: TipoPedido;
+  cargo_destino?: string;
   fecha_programada?: Date;
   hora_inicio?: string;
   hora_fin?: string;
@@ -45,6 +47,8 @@ interface FormValues {
 
 interface DatosProgramacion {
   chofer_id?: string | number;
+  tipo_pedido?: TipoPedido;
+  cargo_destino?: string;
   fecha_programada?: Date;
   hora_inicio?: string;
   hora_fin?: string;
@@ -155,9 +159,13 @@ export default function ModalEntregarProductos({
       }
 
       if (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") {
-        if (!values.chofer_id) {
-          console.error('❌ chofer_id está vacío o undefined');
-          message.error("Debe seleccionar un chofer");
+        const tipoPedido = values.tipo_pedido || 'interno';
+        if (tipoPedido === 'interno' && !values.chofer_id) {
+          message.error("Debe seleccionar un usuario responsable");
+          return;
+        }
+        if (tipoPedido === 'externo' && !values.cargo_destino) {
+          message.error("Debe seleccionar un cargo destino");
           return;
         }
         if (!values.fecha_programada) {
@@ -183,6 +191,8 @@ export default function ModalEntregarProductos({
       // Guardar datos de programación
       setDatosProgramacion({
         chofer_id: values.chofer_id,
+        tipo_pedido: values.tipo_pedido || TipoPedido.INTERNO,
+        cargo_destino: values.cargo_destino,
         fecha_programada: values.fecha_programada,
         hora_inicio: values.hora_inicio,
         hora_fin: values.hora_fin,
@@ -249,9 +259,11 @@ export default function ModalEntregarProductos({
       direccion_entrega: datosProgramacion.direccion_entrega,
       observaciones: datosProgramacion.observaciones,
       almacen_salida_id: data.almacen_salida_id,
-      chofer_id: (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") && datosProgramacion.chofer_id 
-        ? String(datosProgramacion.chofer_id) 
+      chofer_id: (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") && datosProgramacion.tipo_pedido === 'interno' && datosProgramacion.chofer_id
+        ? String(datosProgramacion.chofer_id)
         : undefined,
+      tipo_pedido: (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") ? datosProgramacion.tipo_pedido : undefined,
+      cargo_destino: (tipoDespacho === "Domicilio" || tipoDespacho === "Parcial") && datosProgramacion.tipo_pedido === 'externo' ? datosProgramacion.cargo_destino : undefined,
       quien_entrega: tipoDespacho === "EnTienda" && datosProgramacion.quien_entrega ? datosProgramacion.quien_entrega as any : undefined,
       user_id: user.id,
       productos_entregados: data.productos,

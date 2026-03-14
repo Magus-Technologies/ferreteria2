@@ -1,12 +1,14 @@
 'use client'
 
-import { Form, Input, Select } from 'antd'
+import { Form, Input, Select, Segmented } from 'antd'
 import { FormInstance } from 'antd/es/form'
 import { useState } from 'react'
-import SelectChoferes from '~/app/_components/form/selects/select-choferes'
+import SelectUsuariosDespachadores from '~/app/_components/form/selects/select-usuarios-despachadores'
 import ButtonBase from '~/components/buttons/button-base'
 import dynamic from 'next/dynamic'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
+import { useQuery } from '@tanstack/react-query'
+import { apiRequest } from '~/lib/api'
 
 // Importar el mapa dinámicamente
 const MapaDireccion = dynamic(
@@ -37,6 +39,25 @@ export default function FormDespachoDomicilio({
   onEditarCliente,
 }: FormDespachoDomicilioProps) {
   const [mostrarMapa, setMostrarMapa] = useState(false)
+  const [tipoPedido, setTipoPedido] = useState<'interno' | 'externo'>('interno')
+
+  const { data: cargos = [] } = useQuery({
+    queryKey: ['catalogos', 'cargos'],
+    queryFn: async () => {
+      const result = await apiRequest<{ data: { codigo: string; descripcion: string }[] }>('/catalogos/cargos')
+      return result.data?.data || []
+    },
+  })
+
+  const handleTipoPedidoChange = (value: 'interno' | 'externo') => {
+    setTipoPedido(value)
+    form.setFieldValue('tipo_pedido', value)
+    if (value === 'interno') {
+      form.setFieldValue('cargo_destino', undefined)
+    } else {
+      form.setFieldValue('chofer_id', undefined)
+    }
+  }
 
   return (
     <div className="space-y-4 border-t pt-4">
@@ -59,19 +80,54 @@ export default function FormDespachoDomicilio({
       <Form.Item name="direccion" hidden>
         <Input />
       </Form.Item>
-      {/* Chofer */}
+      <Form.Item name="tipo_pedido" hidden initialValue="interno">
+        <Input />
+      </Form.Item>
+      <Form.Item name="cargo_destino" hidden>
+        <Input />
+      </Form.Item>
+
+      {/* Tipo de Pedido + Asignación */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Designar Chofer: <span className="text-red-500">*</span>
+          Tipo de Pedido: <span className="text-red-500">*</span>
         </label>
-        <SelectChoferes
-          form={form}
-          propsForm={{
-            name: 'chofer_id',
-          }}
-          placeholder="Seleccionar chofer"
-          className="w-full"
+        <Segmented
+          value={tipoPedido}
+          onChange={handleTipoPedidoChange}
+          options={[
+            { value: 'interno', label: 'Asignar a usuario' },
+            { value: 'externo', label: 'Enviar a cargo' },
+          ]}
+          className="mb-3"
+          block
         />
+
+        {tipoPedido === 'interno' ? (
+          <SelectUsuariosDespachadores
+            form={form}
+            propsForm={{
+              name: 'chofer_id',
+            }}
+            placeholder="Seleccionar usuario responsable"
+            className="w-full"
+          />
+        ) : (
+          <Form.Item
+            name="cargo_destino"
+            className="mb-0"
+            rules={[{ required: tipoPedido === 'externo', message: 'Seleccione un cargo' }]}
+          >
+            <Select
+              placeholder="Seleccionar cargo destino"
+              options={cargos.map((c) => ({
+                value: c.codigo,
+                label: c.descripcion,
+              }))}
+              className="w-full"
+            />
+          </Form.Item>
+        )}
       </div>
 
       {/* Fecha y Horarios */}

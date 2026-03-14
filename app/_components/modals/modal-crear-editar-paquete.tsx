@@ -38,6 +38,7 @@ export default function ModalCrearEditarPaquete({
     actualizarCantidad,
     actualizarPrecio,
     actualizarDescuento,
+    actualizarTipoPrecio,
     handleSubmit,
   } = usePaqueteForm(paqueteId, open, onClose, onSuccess)
 
@@ -135,6 +136,7 @@ export default function ModalCrearEditarPaquete({
               onUnidadDerivadaChange={actualizarUnidadDerivada}
               onCantidadChange={actualizarCantidad}
               onPrecioChange={actualizarPrecio}
+              onTipoPrecioChange={actualizarTipoPrecio}
             />
 
             {/* Tabla 2: Precios del Paquete */}

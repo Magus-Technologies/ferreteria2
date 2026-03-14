@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaMapMarkedAlt, FaTruck, FaBoxOpen } from 'react-icons/fa'
+import { FaMapMarkedAlt, FaTruck, FaBoxOpen, FaCheck } from 'react-icons/fa'
 import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
@@ -98,6 +98,38 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     }
   }
 
+  const handleAceptar = async () => {
+    setLoading(true)
+    try {
+      const response = await entregaProductoApi.aceptar(entrega.id)
+
+      if (response.error) {
+        if (response.error.message?.includes('ya fue aceptada')) {
+          message.warning('Esta entrega ya fue aceptada por otro usuario')
+        } else {
+          message.error(response.error.message || 'Error al aceptar entrega')
+        }
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+        return
+      }
+
+      message.success('Pedido aceptado exitosamente')
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      if (onRefetch) onRefetch()
+    } catch (error) {
+      console.error('Error al aceptar entrega:', error)
+      message.error('Error al aceptar la entrega')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Es un pedido externo sin aceptar?
+  const esPedidoExternoDisponible =
+    entrega.tipo_pedido === 'externo' &&
+    !entrega.chofer_id &&
+    entrega.estado_entrega === 'pe'
+
   // Mapear estados de la DB
   const estadoEntrega = entrega.estado_entrega === 'pe' ? 'PENDIENTE'
     : entrega.estado_entrega === 'ec' ? 'EN_CAMINO'
@@ -123,6 +155,19 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
             />
           </Tooltip>
         </ConfigurableElement>
+
+        {esPedidoExternoDisponible && (
+          <Tooltip title="Aceptar Pedido">
+            <Button
+              type="text"
+              size="small"
+              loading={loading}
+              icon={<FaCheck size={15} />}
+              onClick={handleAceptar}
+              className="!text-green-600 hover:!bg-green-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+            />
+          </Tooltip>
+        )}
 
         {estadoEntrega === 'PENDIENTE' && (
           <ConfigurableElement

@@ -192,7 +192,7 @@ export default function CampanitaAutorizaciones() {
   return (
     <>
       <Dropdown
-        dropdownRender={() => dropdownContent}
+        popupRender={() => dropdownContent}
         trigger={['click']}
         placement="bottomRight"
         open={dropdownOpen}
