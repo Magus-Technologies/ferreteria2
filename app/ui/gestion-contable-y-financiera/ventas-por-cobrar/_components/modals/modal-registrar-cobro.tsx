@@ -15,6 +15,8 @@ import { ColDef } from 'ag-grid-community'
 import { greenColors } from '~/lib/colors'
 import { getAuthToken } from '~/lib/api'
 import { FaFileAlt } from 'react-icons/fa'
+import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
+import { Spin } from 'antd'
 
 interface ModalRegistrarCobroProps {
   open: boolean
@@ -60,10 +62,18 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
   const cobros = cobrosData?.data ?? []
 
-  // Ver ticket de un cobro
+  // Estado para modal de ticket de cobro
+  const [ticketModalOpen, setTicketModalOpen] = useState(false)
+  const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+  const [ticketLoading, setTicketLoading] = useState(false)
+
+  // Ver ticket de un cobro en modal
   const handleVerTicket = useCallback(async (cobroId: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL
     const token = getAuthToken()
+    setTicketModalOpen(true)
+    setTicketLoading(true)
+    setTicketPdfUrl(null)
     try {
       const res = await fetch(`${API_URL}/pdf/cobro-venta/${cobroId}`, {
         headers: {
@@ -74,12 +84,24 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
-      window.open(url, '_blank')
+      setTicketPdfUrl(url)
     } catch (err) {
       console.error('Error al obtener ticket de cobro:', err)
       message.error('Error al generar el ticket del cobro')
+      setTicketModalOpen(false)
+    } finally {
+      setTicketLoading(false)
     }
   }, [message])
+
+  // Limpiar URL al cerrar modal de ticket
+  const handleCloseTicketModal = useCallback((v: boolean) => {
+    setTicketModalOpen(v)
+    if (!v && ticketPdfUrl) {
+      URL.revokeObjectURL(ticketPdfUrl)
+      setTicketPdfUrl(null)
+    }
+  }, [ticketPdfUrl])
 
   // Columnas para tabla de cobros previos
   const columnsCobros: ColDef<CobroVenta>[] = useMemo(() => [
@@ -184,6 +206,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   const tipoDoc = tipoDocMap[venta?.tipo_documento || ''] || venta?.tipo_documento || ''
 
   return (
+    <>
     <Modal
       title='Registrar Cobro de Venta'
       open={open}
@@ -303,5 +326,19 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         <span>Saldo Pendiente: <span className='text-red-600 text-lg'>S/. {saldoPendiente.toFixed(2)}</span></span>
       </div>
     </Modal>
+
+    {/* Modal para ver ticket del cobro */}
+    <ModalShowDoc
+      open={ticketModalOpen}
+      setOpen={handleCloseTicketModal}
+      nro_doc='Comprobante de Cobro'
+      esTicket
+      tipoDocumento='venta'
+      backendPdfUrl={ticketPdfUrl}
+      backendPdfLoading={ticketLoading}
+    >
+      <></>
+    </ModalShowDoc>
+    </>
   )
 }
