@@ -95,10 +95,12 @@ export default function HeaderCrearVenta({
 
     let productosAgregados = 0;
     const precioKey = `precio_${tipoPrecio}` as keyof typeof paquete.productos[number];
+    const descuentoKey = `descuento_${tipoPrecio}` as keyof typeof paquete.productos[number];
 
     for (const paqueteProducto of paquete.productos) {
       if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
         const precio = Number((paqueteProducto as any)[precioKey] || 0);
+        const descuento = Number((paqueteProducto as any)[descuentoKey] || 0);
         setProductoAgregado({
           producto_id: paqueteProducto.producto_id,
           producto_name: paqueteProducto.producto.name,
@@ -110,7 +112,7 @@ export default function HeaderCrearVenta({
           cantidad: paqueteProducto.cantidad,
           precio_venta: precio,
           recargo: 0,
-          descuento: 0,
+          descuento: descuento,
           descuento_tipo: DescuentoTipo.MONTO,
           subtotal: 0,
           paquete_id: paquete.id,

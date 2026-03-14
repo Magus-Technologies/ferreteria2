@@ -58,6 +58,10 @@ export function usePaqueteForm(
           precio_especial: p.precio_especial != null ? Number(p.precio_especial) : undefined,
           precio_minimo: p.precio_minimo != null ? Number(p.precio_minimo) : undefined,
           precio_ultimo: p.precio_ultimo != null ? Number(p.precio_ultimo) : undefined,
+          descuento_publico: (p as any).descuento_publico != null ? Number((p as any).descuento_publico) : 0,
+          descuento_especial: (p as any).descuento_especial != null ? Number((p as any).descuento_especial) : 0,
+          descuento_minimo: (p as any).descuento_minimo != null ? Number((p as any).descuento_minimo) : 0,
+          descuento_ultimo: (p as any).descuento_ultimo != null ? Number((p as any).descuento_ultimo) : 0,
           tipo_precio_vista: 'publico' as TipoPrecioPaquete,
           costo,
           unidades_derivadas_disponibles,
@@ -122,9 +126,10 @@ export function usePaqueteForm(
     )
   }
 
-  const actualizarTipoPrecioVista = (key: string, tipo: TipoPrecioPaquete) => {
+  const actualizarDescuento = (key: string, tipo: TipoPrecioPaquete, descuento: number | undefined) => {
+    const descuentoKey = `descuento_${tipo}` as keyof ProductoPaquete
     setProductos((prev) =>
-      prev.map((p) => (p.key === key ? { ...p, tipo_precio_vista: tipo } : p))
+      prev.map((p) => (p.key === key ? { ...p, [descuentoKey]: descuento } : p))
     )
   }
 
@@ -149,6 +154,10 @@ export function usePaqueteForm(
           precio_especial: p.precio_especial ?? null,
           precio_minimo: p.precio_minimo ?? null,
           precio_ultimo: p.precio_ultimo ?? null,
+          descuento_publico: p.descuento_publico ?? 0,
+          descuento_especial: p.descuento_especial ?? 0,
+          descuento_minimo: p.descuento_minimo ?? 0,
+          descuento_ultimo: p.descuento_ultimo ?? 0,
         })),
       }
 
@@ -186,7 +195,7 @@ export function usePaqueteForm(
     actualizarUnidadDerivada,
     actualizarCantidad,
     actualizarPrecio,
-    actualizarTipoPrecioVista,
+    actualizarDescuento,
     handleSubmit,
   }
 }

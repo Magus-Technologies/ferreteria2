@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { ColDef } from 'ag-grid-community'
 import { Button, InputNumber } from 'antd'
 import { FaTrash, FaWeightHanging } from 'react-icons/fa'
@@ -9,7 +10,7 @@ import SelectBase from '~/app/_components/form/selects/select-base'
 
 export type TipoPrecioPaquete = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
-const TIPO_PRECIO_OPTIONS = [
+export const TIPO_PRECIO_OPTIONS = [
   { value: 'publico', label: 'P. Público' },
   { value: 'especial', label: 'P. Especial' },
   { value: 'minimo', label: 'P. Mínimo' },
@@ -25,29 +26,37 @@ export interface ProductoPaquete {
   unidad_derivada_id: number
   unidad_derivada_name: string
   cantidad: number
-  // Precios del paquete (editables, lo que se guarda)
   precio_publico?: number
   precio_especial?: number
   precio_minimo?: number
   precio_ultimo?: number
-  // Tipo de precio activo para visualización
+  descuento_publico?: number
+  descuento_especial?: number
+  descuento_minimo?: number
+  descuento_ultimo?: number
   tipo_precio_vista: TipoPrecioPaquete
   costo?: number
   unidades_derivadas_disponibles?: any[]
 }
 
 /** Obtener el precio original del producto según tipo y unidad derivada */
-function getPrecioOriginal(producto: ProductoPaquete): number {
+export function getPrecioOriginal(producto: ProductoPaquete, tipo?: TipoPrecioPaquete): number {
   const unidades = producto.unidades_derivadas_disponibles || []
   const unidad = unidades.find((u: any) => u.unidad_derivada.id === producto.unidad_derivada_id)
   if (!unidad) return 0
-  const campo = `precio_${producto.tipo_precio_vista}`
+  const campo = `precio_${tipo || producto.tipo_precio_vista}`
   return Number(unidad[campo] || 0)
 }
 
-/** Obtener el precio del paquete según el tipo activo */
-function getPrecioPaquete(producto: ProductoPaquete): number {
-  const campo = `precio_${producto.tipo_precio_vista}` as keyof ProductoPaquete
+/** Obtener el precio del paquete según el tipo */
+export function getPrecioPaquete(producto: ProductoPaquete, tipo?: TipoPrecioPaquete): number {
+  const campo = `precio_${tipo || producto.tipo_precio_vista}` as keyof ProductoPaquete
+  return Number(producto[campo] || 0)
+}
+
+/** Obtener el descuento del paquete según el tipo */
+export function getDescuentoPaquete(producto: ProductoPaquete, tipo?: TipoPrecioPaquete): number {
+  const campo = `descuento_${tipo || producto.tipo_precio_vista}` as keyof ProductoPaquete
   return Number(producto[campo] || 0)
 }
 
@@ -57,7 +66,6 @@ interface TableProductosPaqueteProps {
   onCantidadChange: (key: string, cantidad: number) => void
   onPrecioChange: (key: string, tipo: TipoPrecioPaquete, precio: number | undefined) => void
   onUnidadDerivadaChange: (key: string, unidadDerivadaId: number) => void
-  onTipoPrecioVistaChange: (key: string, tipo: TipoPrecioPaquete) => void
 }
 
 export default function TableProductosPaquete({
@@ -66,7 +74,6 @@ export default function TableProductosPaquete({
   onCantidadChange,
   onPrecioChange,
   onUnidadDerivadaChange,
-  onTipoPrecioVistaChange,
 }: TableProductosPaqueteProps) {
   const columnDefs: ColDef<ProductoPaquete>[] = [
     {
@@ -112,7 +119,6 @@ export default function TableProductosPaquete({
             onChange={(nuevoId) => {
               onUnidadDerivadaChange(params.data.key, nuevoId)
 
-              // Auto-cargar los 4 precios de la nueva unidad derivada
               const unidadSeleccionada = unidades.find((u: any) => u.unidad_derivada.id === nuevoId)
               if (unidadSeleccionada) {
                 onPrecioChange(params.data.key, 'publico', Number(unidadSeleccionada.precio_publico) || 0)
@@ -130,98 +136,30 @@ export default function TableProductosPaquete({
       headerName: 'Cantidad',
       field: 'cantidad',
       width: 80,
-      cellRenderer: (params: any) => (
-        <div className="flex items-center h-full">
-          <InputNumber
-            size="small"
-            className="w-full"
-            value={params.value ?? 1}
-            min={0.001}
-            precision={2}
-            controls={false}
-            onChange={(val) => onCantidadChange(params.data.key, Number(val ?? 1))}
-          />
-        </div>
-      ),
-    },
-    {
-      headerName: 'Tipo Precio',
-      field: 'tipo_precio_vista',
-      width: 130,
-      cellRenderer: (params: any) => (
-        <SelectBase
-          size="small"
-          variant="borderless"
-          className="w-full"
-          value={params.value || 'publico'}
-          options={TIPO_PRECIO_OPTIONS}
-          onChange={(nuevoTipo) => {
-            onTipoPrecioVistaChange(params.data.key, nuevoTipo as TipoPrecioPaquete)
-          }}
-        />
-      ),
-    },
-    {
-      headerName: 'P. Original',
-      width: 100,
-      cellClass: 'text-right text-gray-500',
-      valueGetter: (params) => {
-        if (!params.data) return 0
-        return getPrecioOriginal(params.data)
-      },
-      valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
-    },
-    {
-      headerName: 'Descuento',
-      width: 110,
       cellRenderer: (params: any) => {
-        if (!params.data) return null
-        const original = getPrecioOriginal(params.data)
-        const paquete = getPrecioPaquete(params.data)
-        const descuento = Math.max(original - paquete, 0)
-        return (
-          <div className="flex items-center h-full">
-            <InputNumber
-              size="small"
-              className="w-full"
-              prefix="S/."
-              value={descuento}
-              min={0}
-              max={original}
-              precision={2}
-              controls={false}
-              onChange={(val) => {
-                const nuevoDescuento = Number(val ?? 0)
-                const nuevoPrecio = Math.max(original - nuevoDescuento, 0)
-                onPrecioChange(params.data.key, params.data.tipo_precio_vista, nuevoPrecio)
-              }}
-            />
-          </div>
-        )
-      },
-    },
-    {
-      headerName: 'P. Paquete',
-      width: 110,
-      cellRenderer: (params: any) => {
-        if (!params.data) return null
-        const precioPaquete = getPrecioPaquete(params.data)
-        return (
-          <div className="flex items-center h-full">
-            <InputNumber
-              size="small"
-              className="w-full"
-              prefix="S/."
-              value={precioPaquete}
-              min={0}
-              precision={2}
-              controls={false}
-              onChange={(val) => {
-                onPrecioChange(params.data.key, params.data.tipo_precio_vista, val ?? undefined)
-              }}
-            />
-          </div>
-        )
+        const CantidadCell = () => {
+          const [val, setVal] = useState(params.value ?? 1)
+          useEffect(() => { setVal(params.value ?? 1) }, [params.value])
+          const commit = () => {
+            if (val !== params.value) onCantidadChange(params.data.key, Number(val ?? 1))
+          }
+          return (
+            <div className="flex items-center h-full">
+              <InputNumber
+                size="small"
+                className="w-full"
+                value={val}
+                min={0.001}
+                precision={2}
+                controls={false}
+                onChange={(v) => setVal(Number(v ?? 1))}
+                onBlur={commit}
+                onPressEnter={commit}
+              />
+            </div>
+          )
+        }
+        return <CantidadCell />
       },
     },
     {
@@ -255,7 +193,7 @@ export default function TableProductosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Código', 'Producto', 'Marca', 'U. Derivada', 'Cantidad', 'Tipo Precio', 'P. Original', 'Descuento', 'P. Paquete', 'Acciones'],
+          columns: ['Código', 'Producto', 'Marca', 'U. Derivada', 'Cantidad', 'Acciones'],
         },
       ]}
     />

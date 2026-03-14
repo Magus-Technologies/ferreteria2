@@ -24,6 +24,10 @@ export interface PaqueteProducto {
   precio_especial: number | null;
   precio_minimo: number | null;
   precio_ultimo: number | null;
+  descuento_publico: number | null;
+  descuento_especial: number | null;
+  descuento_minimo: number | null;
+  descuento_ultimo: number | null;
   created_at: string;
   updated_at: string;
   // Relaciones cargadas desde el backend
@@ -75,6 +79,10 @@ export interface PaqueteProductoRequest {
   precio_especial?: number | null;
   precio_minimo?: number | null;
   precio_ultimo?: number | null;
+  descuento_publico?: number | null;
+  descuento_especial?: number | null;
+  descuento_minimo?: number | null;
+  descuento_ultimo?: number | null;
 }
 
 /**

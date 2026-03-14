@@ -416,10 +416,12 @@ export default function CardAgregarProductoVenta({
 
           let productosAgregados = 0
           const precioKey = `precio_${tipoPrecioPaquete}`
+          const descuentoKey = `descuento_${tipoPrecioPaquete}`
 
           for (const paqueteProducto of paqueteParaAgregar.productos) {
             if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
               const precio = Number((paqueteProducto as any)[precioKey] || 0)
+              const descuento = Number((paqueteProducto as any)[descuentoKey] || 0)
               setProductoAgregadoVenta({
                 producto_id: paqueteProducto.producto_id,
                 producto_name: paqueteProducto.producto.name,
@@ -431,7 +433,7 @@ export default function CardAgregarProductoVenta({
                 cantidad: Number(paqueteProducto.cantidad),
                 precio_venta: precio,
                 recargo: 0,
-                descuento: 0,
+                descuento: descuento,
                 descuento_tipo: DescuentoTipo.MONTO,
                 subtotal: 0,
                 comision: 0,

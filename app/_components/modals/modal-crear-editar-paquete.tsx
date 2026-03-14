@@ -6,6 +6,7 @@ import { classOkButtonModal } from '~/lib/clases'
 import { usePaqueteForm } from './paquetes/use-paquete-form'
 import FormDatosPaquete from './paquetes/form-datos-paquete'
 import TableProductosPaquete from './paquetes/table-productos-paquete'
+import TablePreciosPaquete from './paquetes/table-precios-paquete'
 import SelectProductos from '../form/selects/select-productos'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -36,7 +37,7 @@ export default function ModalCrearEditarPaquete({
     actualizarUnidadDerivada,
     actualizarCantidad,
     actualizarPrecio,
-    actualizarTipoPrecioVista,
+    actualizarDescuento,
     handleSubmit,
   } = usePaqueteForm(paqueteId, open, onClose, onSuccess)
 
@@ -127,17 +128,22 @@ export default function ModalCrearEditarPaquete({
               />
             </div>
 
-            {/* Tabla de productos */}
-            <div className="min-h-[300px]">
-              <TableProductosPaquete
+            {/* Tabla 1: Productos del Paquete */}
+            <TableProductosPaquete
+              productos={productos}
+              onEliminar={eliminarProducto}
+              onUnidadDerivadaChange={actualizarUnidadDerivada}
+              onCantidadChange={actualizarCantidad}
+              onPrecioChange={actualizarPrecio}
+            />
+
+            {/* Tabla 2: Precios del Paquete */}
+            {productos.length > 0 && (
+              <TablePreciosPaquete
                 productos={productos}
-                onEliminar={eliminarProducto}
-                onUnidadDerivadaChange={actualizarUnidadDerivada}
-                onCantidadChange={actualizarCantidad}
-                onPrecioChange={actualizarPrecio}
-                onTipoPrecioVistaChange={actualizarTipoPrecioVista}
+                onDescuentoChange={actualizarDescuento}
               />
-            </div>
+            )}
 
             {/* Datos del paquete */}
             <FormDatosPaquete form={form} productos={productos} />
