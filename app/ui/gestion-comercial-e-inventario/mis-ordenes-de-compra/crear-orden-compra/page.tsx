@@ -7,7 +7,6 @@ import { FaCalendar } from 'react-icons/fa'
 import { IoIosDocument } from 'react-icons/io'
 import { IoDocumentAttach } from 'react-icons/io5'
 import { MdDelete } from 'react-icons/md'
-import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
@@ -20,23 +19,43 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import type { Producto } from '~/app/_types/producto'
 import TableBase from '~/components/tables/table-base'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import SidebarSolicitudes, { type ProductoSidebarSelection } from './_components/sidebar-solicitudes'
+
+interface ProductoEnOC {
+  id: number
+  producto_id: number | null
+  codigo: string
+  nombre: string
+  marca: string
+  unidad: string
+  cantidad: number
+  precio_compra: number
+  flete: number
+  vencimiento: string | null
+  lote: string
+  subtotal: number
+}
+import type { RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tooltip } from 'antd'
 import { ordenCompraApi, type CreateOrdenCompraRequest } from '~/lib/api/orden-compra'
+import { requerimientoInternoApi } from '~/lib/api/requerimiento-interno'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 
 export default function CrearOrdenCompraPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { message } = App.useApp()
   const [form] = Form.useForm()
-  const [reqSeleccionado, setReqSeleccionado] = useState<any | null>(null)
-  const [productos, setProductos] = useState<any[]>([])
+  const [reqSeleccionado, setReqSeleccionado] = useState<RequerimientoInterno | null>(null)
+  const [productos, setProductos] = useState<ProductoEnOC[]>([])
   const [openModalAgregar, setOpenModalAgregar] = useState(false)
-  const [productoSeleccionado, setProductoSeleccionado] = useState<any>(null)
+  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const handleRemoveProducto = (index: number) => {
@@ -45,7 +64,8 @@ export default function CrearOrdenCompraPage() {
 
   const subTotal = useMemo(() => productos.reduce((acc, p) => acc + (p.cantidad * p.precio_compra), 0), [productos])
 
-  const handleSubmit = async (values: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = async (values: Record<string, any>) => {
     if (productos.length === 0) {
       message.warning('Debe agregar al menos un producto')
       return
@@ -73,23 +93,48 @@ export default function CrearOrdenCompraPage() {
         productos: productos.map(p => ({
           producto_id: p.producto_id || p.id,
           codigo: p.codigo,
-          nombre: p.nombre || p.name,
+          nombre: p.nombre,
           marca: p.marca,
           unidad: p.unidad,
           cantidad: p.cantidad,
           precio: p.precio_compra,
           subtotal: p.cantidad * p.precio_compra,
           flete: p.flete || 0,
-          vencimiento: p.vencimiento,
+          vencimiento: p.vencimiento ?? undefined,
           lote: p.lote,
         })),
       }
 
       const response = await ordenCompraApi.create(requestData)
+      const ordenCompraId = (response.data as any)?.id
+      const ordenCompraCodigo = (response.data as any)?.codigo
+
+      // Actualizar cantidad_ordenada para cada producto de la solicitud
+      if (reqSeleccionado?.productos && ordenCompraId) {
+        const updatePromises = reqSeleccionado.productos.map(productoSolicitud => {
+          // Encontrar si este producto está en la OC que se acaba de crear
+          const productoEnOC = productos.find(p => p.id === productoSolicitud.id)
+          if (productoEnOC) {
+            return requerimientoInternoApi.actualizarCantidadOrdenada(
+              productoSolicitud.id,
+              productoEnOC.cantidad,
+              ordenCompraId,
+              ordenCompraCodigo
+            )
+          }
+          return Promise.resolve()
+        })
+
+        await Promise.all(updatePromises)
+      }
+
+      // Refrescar datos del sidebar
+      queryClient.invalidateQueries({ queryKey: ['requerimientos-internos'] })
+
       message.success(response.data?.message || 'Orden de compra creada exitosamente')
       router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra')
-    } catch (error: any) {
-      message.error(error?.message || 'Error al crear la orden de compra')
+    } catch (error: unknown) {
+      message.error((error as { message?: string })?.message || 'Error al crear la orden de compra')
       console.error(error)
     } finally {
       setSubmitting(false)
@@ -327,17 +372,15 @@ export default function CrearOrdenCompraPage() {
     setProductos(prev => [...prev, ...newProducts])
   }
 
-  const isProductAdded = (prodId: number) => {
-    return productos.some(p => p.id === prodId)
-  }
 
   return (
-    <ContenedorGeneral className="h-full flex flex-row gap-0! items-start! pt-0! pb-0!">
+    <div className="self-stretch w-full flex flex-row overflow-hidden animate-fade animate-ease-in-out animate-delay-[250ms]">
       {/* SIDEBAR */}
       <SidebarSolicitudes
         onAddProduct={handleAddProductFromSidebar}
         onAddAll={handleAddAllFromSidebar}
-        isAdded={isProductAdded}
+        productosAgregados={productos}
+        onSeleccionarRequerimiento={setReqSeleccionado}
       />
 
       {/* MAIN CONTENT AREA */}
@@ -360,11 +403,11 @@ export default function CrearOrdenCompraPage() {
                 showButtonCreate
                 showCardAgregarProducto
                 handleOnlyOneResult={(producto) => {
-                  setProductoSeleccionado(producto)
+                  setProductoSeleccionado(producto ?? null)
                   if (producto) setOpenModalAgregar(true)
                 }}
                 onChange={(_, producto) => {
-                  setProductoSeleccionado(producto)
+                  setProductoSeleccionado(producto ?? null)
                   if (producto) setOpenModalAgregar(true)
                 }}
               />
@@ -573,7 +616,7 @@ export default function CrearOrdenCompraPage() {
               <div className="flex flex-col gap-1 px-4 py-3 border rounded-lg shadow-md w-full bg-emerald-50 border-emerald-200">
                 <h3 className="text-xs font-semibold text-emerald-600 uppercase">Requerimiento</h3>
                 <p className="text-lg font-bold text-slate-800">{reqSeleccionado.codigo}</p>
-                <p className="text-xs text-slate-500">{reqSeleccionado.area} — {reqSeleccionado.solicitante}</p>
+                <p className="text-xs text-slate-500">{reqSeleccionado.area} — {reqSeleccionado.user?.name}</p>
                 <Tag className="mt-1 w-fit" color={reqSeleccionado.prioridad === 'URGENTE' ? 'red' : reqSeleccionado.prioridad === 'ALTA' ? 'volcano' : 'blue'}>
                   {reqSeleccionado.prioridad}
                 </Tag>
@@ -639,6 +682,6 @@ export default function CrearOrdenCompraPage() {
       >
         <p className="text-sm text-slate-500">Funcionalidad de agregar producto (vista)</p>
       </Modal>
-    </ContenedorGeneral>
+    </div>
   )
 }

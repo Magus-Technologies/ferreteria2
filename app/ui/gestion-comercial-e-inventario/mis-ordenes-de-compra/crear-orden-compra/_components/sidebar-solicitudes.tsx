@@ -1,17 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tag, Input, Spin, Empty, Tooltip, message, Modal, Form } from 'antd'
-import { FaSearch, FaChevronRight, FaPlus, FaCheck } from 'react-icons/fa'
-import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
+import { Tag, Input, Spin, Empty, Tooltip, message } from 'antd'
+import { FaSearch, FaChevronRight, FaPlus } from 'react-icons/fa'
+import { requerimientoInternoApi, type RequerimientoInterno, type RequerimientoInternoProducto } from '~/lib/api/requerimiento-interno'
 import dayjs, { Dayjs } from 'dayjs'
 import { useDebounce } from 'use-debounce'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
-import FormBase from '~/components/form/form-base'
-import LabelBase from '~/components/form/label-base'
-import InputBase from '~/app/_components/form/inputs/input-base'
-import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
-import SelectUnidadDeMedida from '~/app/_components/form/selects/select-unidad-de-medida'
 
 export interface ProductoSidebarSelection {
     id: number
@@ -29,17 +24,22 @@ export interface ProductoSidebarSelection {
     lote: string
     requerimiento_id: number
     requerimiento_codigo: string
-    proveedor_sugerido: any
+    proveedor_sugerido: RequerimientoInterno['proveedor_sugerido']
+}
+
+interface ProductoAgregado {
+    id: number
+    cantidad: number
 }
 
 interface SidebarSolicitudesProps {
     onAddProduct: (product: ProductoSidebarSelection) => void
     onAddAll: (products: ProductoSidebarSelection[]) => void
-    isAdded: (prodId: number) => boolean
-    onSeleccionarRequerimiento?: (req: any) => void
+    productosAgregados: ProductoAgregado[]
+    onSeleccionarRequerimiento?: (req: RequerimientoInterno) => void
 }
 
-export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, onSeleccionarRequerimiento }: SidebarSolicitudesProps) {
+export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAgregados, onSeleccionarRequerimiento }: SidebarSolicitudesProps) {
     const [searchText, setSearchText] = useState('')
     const [fechaDesde, setFechaDesde] = useState<Dayjs | null>(dayjs().startOf('month'))
     const [fechaHasta, setFechaHasta] = useState<Dayjs | null>(dayjs().endOf('month'))
@@ -49,9 +49,6 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
     const [loading, setLoading] = useState(false)
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [selectedReqId, setSelectedReqId] = useState<number | null>(null)
-    const [openModalProductoManual, setOpenModalProductoManual] = useState(false)
-    const [formProductoManual] = Form.useForm()
-    const [productosManualPorReq, setProductosManualPorReq] = useState<Record<number, any[]>>({})
 
     useEffect(() => {
         fetchRequerimientos()
@@ -68,7 +65,7 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
             })
             if (response.data?.data) {
                 const filtered = response.data.data.filter(req =>
-                    (req.productos || []).some(p => (p.cantidad_pendiente ?? p.cantidad) > 0)
+                    (req.productos || []).some(p => (p.cantidad_restante ?? p.cantidad_pendiente ?? p.cantidad) > 0)
                 )
                 setRequerimientos(filtered)
             }
@@ -93,28 +90,37 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
         }
     }
 
-    const mapToSelection = (p: any, req: RequerimientoInterno): ProductoSidebarSelection => ({
-        id: p.id,
-        producto_id: p.producto_id,
-        codigo: p.producto?.cod_producto || 'MANUAL',
-        nombre: p.producto?.name || p.nombre_adicional || '—',
-        marca: p.producto?.marca?.name || '',
-        unidad: p.unidad || p.producto?.unidad_medida?.name || 'UND',
-        cantidad: Number(p.cantidad_pendiente ?? p.cantidad),
-        cantidad_requerida: Number(p.cantidad),
-        cantidad_pendiente: Number(p.cantidad_pendiente ?? p.cantidad),
-        precio_compra: 0,
-        flete: 0,
-        vencimiento: null,
-        lote: '',
-        requerimiento_id: req.id,
-        requerimiento_codigo: req.codigo,
-        proveedor_sugerido: req.proveedor_sugerido
-    })
+    const getRemaining = (p: RequerimientoInternoProducto): number => {
+        const backend = Number(p.cantidad_restante ?? p.cantidad_pendiente ?? p.cantidad)
+        const added = productosAgregados.find(x => x.id === p.id)?.cantidad ?? 0
+        return Math.max(0, backend - added)
+    }
+
+    const mapToSelection = (p: RequerimientoInternoProducto, req: RequerimientoInterno): ProductoSidebarSelection => {
+        const remaining = getRemaining(p)
+        return {
+            id: p.id,
+            producto_id: p.producto_id,
+            codigo: p.producto?.cod_producto || 'MANUAL',
+            nombre: p.producto?.name || p.nombre_adicional || '—',
+            marca: p.producto?.marca?.name || '',
+            unidad: p.unidad || p.producto?.unidad_medida?.name || 'UND',
+            cantidad: remaining,
+            cantidad_requerida: Number(p.cantidad),
+            cantidad_pendiente: remaining,
+            precio_compra: 0,
+            flete: 0,
+            vencimiento: null,
+            lote: '',
+            requerimiento_id: req.id,
+            requerimiento_codigo: req.codigo,
+            proveedor_sugerido: req.proveedor_sugerido
+        }
+    }
 
     const handleAddAll = (req: RequerimientoInterno) => {
         const productsToAdd = (req.productos || [])
-            .filter(p => (p.cantidad_pendiente ?? p.cantidad) > 0 && !isAdded(p.id))
+            .filter(p => getRemaining(p) > 0)
             .map(p => mapToSelection(p, req))
 
         if (productsToAdd.length > 0) {
@@ -123,57 +129,35 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
         }
     }
 
-    const handleAddProductoManual = async (values: any) => {
-        if (!selectedReqId) {
-            message.warning('Selecciona una solicitud primero')
-            return
-        }
 
-        const nuevoProducto = {
-            id: `manual-${Date.now()}`,
-            producto_id: null,
-            codigo: values.codigo || 'MANUAL',
-            nombre: values.nombre,
-            marca: values.marca || '',
-            unidad: values.unidad || 'UND',
-            cantidad: values.cantidad,
-            cantidad_pendiente: values.cantidad,
-            cantidad_requerida: values.cantidad,
-            precio_compra: values.precio_compra || 0,
-            flete: values.flete || 0,
-            vencimiento: values.vencimiento?.format('YYYY-MM-DD') || null,
-            lote: values.lote || '',
-            es_manual: true,
-        }
-
-        setProductosManualPorReq(prev => ({
-            ...prev,
-            [selectedReqId]: [...(prev[selectedReqId] || []), nuevoProducto]
-        }))
-
-        formProductoManual.resetFields()
-        setOpenModalProductoManual(false)
-        message.success('Producto manual agregado a la solicitud')
+    if (isCollapsed) {
+        return (
+            <button
+                onClick={() => setIsCollapsed(false)}
+                title="Expandir Solicitudes"
+                className="flex items-center justify-center w-6 h-full bg-emerald-600 hover:bg-emerald-700 transition-colors shrink-0 shadow-md"
+            >
+                <FaChevronRight className="text-white" size={12} />
+            </button>
+        )
     }
 
     return (
-        <div className={`flex flex-col h-full bg-white border-r border-slate-200 shadow-sm overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-80'}`}>
+        <div className="flex flex-col h-full bg-white border-r border-slate-200 shadow-sm overflow-hidden w-80">
             {/* Header */}
-            <div className={`p-4 border-b flex items-center gap-2 justify-between transition-colors ${isCollapsed ? 'bg-white' : 'bg-emerald-50/50 border-emerald-100'}`}>
+            <div className="p-4 border-b flex items-center gap-2 justify-between bg-emerald-50/50 border-emerald-100">
                 <div className="flex items-center gap-3 min-w-0">
                     <div className="size-8 bg-emerald-600 rounded-full flex items-center justify-center shadow-md grow-0 shrink-0">
                         <FaChevronRight className="text-white text-xs" />
                     </div>
-                    {!isCollapsed && (
-                        <h2 className="text-sm font-black text-slate-700 uppercase tracking-widest whitespace-nowrap">Solicitudes</h2>
-                    )}
+                    <h2 className="text-sm font-black text-slate-700 uppercase tracking-widest whitespace-nowrap">Solicitudes</h2>
                 </div>
                 <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    onClick={() => setIsCollapsed(true)}
                     className="p-1 hover:bg-emerald-100/50 rounded-lg transition-colors shrink-0"
-                    title={isCollapsed ? 'Expandir' : 'Contraer'}
+                    title="Contraer"
                 >
-                    <FaChevronRight className={`text-slate-400 transition-transform duration-300 ${isCollapsed ? '' : 'rotate-180'}`} size={14} />
+                    <FaChevronRight className="text-slate-400 rotate-180" size={14} />
                 </button>
             </div>
 
@@ -221,12 +205,13 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
                 ) : requerimientos.length === 0 ? (
                     !isCollapsed && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span className="text-[10px]">No hay solicitudes pendientes</span>} />
                 ) : (
-                    requerimientos.map(req => {
+                    requerimientos
+                        .filter(req => (req.productos || []).some(p => getRemaining(p) > 0))
+                        .map(req => {
                         const isExpanded = expandedIds.includes(req.id)
                         const isSelected = selectedReqId === req.id
-                        const allAdded = (req.productos || [])
-                            .filter(p => (p.cantidad_pendiente ?? p.cantidad) > 0)
-                            .every(p => isAdded(p.id))
+                        const pendingProds = (req.productos || []).filter(p => getRemaining(p) > 0)
+                        const allAdded = pendingProds.length === 0
 
                         return (
                             <div key={req.id} className={`border rounded-xl overflow-hidden transition-all duration-200 ${isSelected ? 'border-emerald-300 shadow-md scale-[1.01]' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
@@ -275,12 +260,12 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
                                             </button>
                                         </div>
                                         <div className="flex flex-col divide-y divide-slate-100">
-                                            {(req.productos || []).filter(p => (p.cantidad_pendiente ?? p.cantidad) > 0).map(p => {
-                                                const added = isAdded(p.id)
+                                            {pendingProds.map(p => {
+                                                const remaining = getRemaining(p)
                                                 return (
-                                                    <div key={p.id} className={`p-2.5 flex items-center justify-between gap-2 group transition-colors ${added ? 'bg-emerald-50/20' : 'hover:bg-white'}`}>
+                                                    <div key={p.id} className="p-2.5 flex items-center justify-between gap-2 group transition-colors hover:bg-white">
                                                         <div className="flex flex-col gap-0.5 min-w-0">
-                                                            <span className={`text-[11px] font-semibold line-clamp-2 transition-colors ${added ? 'text-emerald-700' : 'text-slate-700'}`}>
+                                                            <span className="text-[11px] font-semibold line-clamp-2 text-slate-700">
                                                                 {p.producto?.name || p.nombre_adicional}
                                                             </span>
                                                             <div className="flex items-center gap-2">
@@ -295,16 +280,15 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, isAdded, on
                                                                     Cant: {Number(p.cantidad).toFixed(2)}
                                                                 </span>
                                                                 <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200 font-bold shadow-sm">
-                                                                    Pend: {Number(p.cantidad_pendiente ?? p.cantidad).toFixed(2)}
+                                                                    Pend: {remaining.toFixed(2)}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <button
-                                                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${added ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-emerald-600 text-white shadow-md hover:scale-110 active:scale-95'}`}
-                                                            onClick={() => !added && onAddProduct(mapToSelection(p, req))}
-                                                            disabled={added}
+                                                            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all bg-emerald-600 text-white shadow-md hover:scale-110 active:scale-95"
+                                                            onClick={() => onAddProduct(mapToSelection(p, req))}
                                                         >
-                                                            {added ? <FaCheck size={10} /> : <FaPlus size={10} />}
+                                                            <FaPlus size={10} />
                                                         </button>
                                                     </div>
                                                 )

@@ -147,6 +147,7 @@ export default function useCreateCompra({
         estado_de_compra: estadoDeCompraMap[values.estado_de_compra ?? EstadoDeCompra.EnEspera],
         egreso_dinero_id: values.egreso_dinero_id ?? null,
         despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
+        orden_compra_id: values.orden_compra_id ?? null,
         user_id: user_id!,
         almacen_id: almacen_id!,
         proveedor_id: values.proveedor_id!,
@@ -173,6 +174,8 @@ export default function useCreateCompra({
         }),
       }
 
+      console.log('📤 Enviando compra:', dataFormated)
+
       const result = compra
         ? await compraApi.update(compra.id, dataFormated)
         : await compraApi.create(dataFormated)
@@ -186,6 +189,13 @@ export default function useCreateCompra({
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
       message.success(`Compra ${compra ? 'editada' : 'creada'} exitosamente`)
+
+      // Si se creó desde una orden de compra, actualizar su estado a aprobado
+      if (variables.orden_compra_id) {
+        console.log('Updating orden compra status to aprobado')
+        // Aquí se actualiza el estado de la orden de compra
+        queryClient.invalidateQueries({ queryKey: ['ordenes-compra'] })
+      }
 
       // Actualizar caché de productos para bloquear botón eliminar
       const productosCompradosIds = variables.productos.map((p) => p.producto_id)

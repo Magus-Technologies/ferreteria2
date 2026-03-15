@@ -1,10 +1,10 @@
 'use client'
 
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
-import { Spin, App, Tag, Modal, Button, Tooltip } from 'antd'
-import { ExclamationCircleFilled } from '@ant-design/icons'
+import { Spin, Modal, Button, Tooltip } from 'antd'
+// import { ExclamationCircleFilled } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
-import { ColDef, ICellRendererParams, RowSelectedEvent } from 'ag-grid-community'
+import { RowSelectedEvent } from 'ag-grid-community'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { getAuthToken } from '~/lib/api'
 import ButtonBase from '~/components/buttons/button-base'
@@ -28,7 +28,7 @@ const ComponentLoading = () => (
 )
 
 export default function SolicitudOrdenCompra() {
-  const { modal, message } = App.useApp()
+  // const { modal, message } = App.useApp()
   const queryClient = useQueryClient()
   const filtros = useStoreFiltrosSolicitudOC(state => state.filtros)
 
@@ -50,6 +50,7 @@ export default function SolicitudOrdenCompra() {
     setPdfModalOpen(true)
   }, [])
 
+  /* handleAprobar oculto - botón comentado en columns-solicitud-oc.tsx
   const handleAprobar = useCallback((row: RequerimientoInterno) => {
     modal.confirm({
       title: '¿Aprobar Solicitud de Orden de Compra?',
@@ -75,8 +76,9 @@ export default function SolicitudOrdenCompra() {
       },
     })
   }, [modal, message, queryClient])
+  */
 
-  const columns = useColumnsSolicitudOC({ onView: handleView, onViewPdf: handleViewPdf, onAprobar: handleAprobar })
+  const columns = useColumnsSolicitudOC({ onView: handleView, onViewPdf: handleViewPdf })
 
   const productosRowData = useMemo<RequerimientoInternoProducto[]>(() => {
     if (filaSeleccionada?.productos) return filaSeleccionada.productos
@@ -100,22 +102,14 @@ export default function SolicitudOrdenCompra() {
               selectionColor="#dcfce7"
               onRowSelected={(event: RowSelectedEvent<RequerimientoInterno>) => {
                 if (event.node.isSelected() && event.data) {
-                  // Si los productos no están cargados, hacer una consulta
-                  if (!event.data.productos || event.data.productos.length === 0) {
-                    const rowId = event.data.id
-                    requerimientoInternoApi.getById(rowId).then(res => {
-                      if (res.data?.data) {
-                        // Solo actualizar si la fila sigue seleccionada
-                        const stillSelected = event.api.getSelectedRows().some(r => r.id === rowId)
-                        if (stillSelected) setFilaSeleccionada(res.data.data)
-                      }
-                    })
-                  } else {
-                    setFilaSeleccionada(event.data)
-                  }
+                  const rowId = event.data.id
+                  requerimientoInternoApi.getById(rowId).then(res => {
+                    if (res.data?.data) {
+                      const stillSelected = event.api.getSelectedRows().some(r => r.id === rowId)
+                      if (stillSelected) setFilaSeleccionada(res.data.data)
+                    }
+                  })
                 } else if (event.api.getSelectedRows().length === 0) {
-                  // Solo limpiar si realmente no hay ninguna fila seleccionada
-                  // (AG Grid dispara onRowSelected para deselects también, incluso al cambiar de fila)
                   setFilaSeleccionada(null)
                 }
               }}

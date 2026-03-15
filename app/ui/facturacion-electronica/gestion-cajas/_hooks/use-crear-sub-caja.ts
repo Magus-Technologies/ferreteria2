@@ -69,12 +69,9 @@ export default function useCrearSubCaja({
         message.success('Sub-caja creada exitosamente')
 
         // Invalidar queries relacionadas
-        queryClient.invalidateQueries({
-          queryKey: [QueryKeys.CAJAS_PRINCIPALES],
-        })
-        queryClient.invalidateQueries({
-          queryKey: [QueryKeys.SUB_CAJAS],
-        })
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJAS_PRINCIPALES] })
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.SUB_CAJAS] })
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO] })
 
         onSuccess?.()
       } catch (error) {

@@ -11,6 +11,8 @@ import LabelBase from '~/components/form/label-base'
 import SelectDespliegeDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { useServerMutation } from '~/hooks/use-server-mutation'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useCheckAperturaDiaria } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_hooks/use-check-apertura-diaria'
+import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
 import { toLocalString } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -46,8 +48,16 @@ export default function ModalRegistrarPagoCompra({
   const [pagosRealizados, setPagosRealizados] = useState<PagoDeCompra[]>([])
   const tableRefPagos = useRef<AgGridReact>(null)
   const [hasChanges, setHasChanges] = useState(false)
+  const [openAperturaModal, setOpenAperturaModal] = useState(false)
+  const { hasApertura, refetchApertura } = useCheckAperturaDiaria()
 
   const [isEfectivo, setIsEfectivo] = useState(false)
+
+  useEffect(() => {
+    if (open && !hasApertura) {
+      setOpenAperturaModal(true)
+    }
+  }, [open, hasApertura])
 
   // Manejar cambio de método de pago
   const handleMetodoPagoChange = (value: string, option: any) => {
@@ -192,6 +202,12 @@ export default function ModalRegistrarPagoCompra({
   const handleSubmit = (values: PagoCompraValues & { numero_letra?: string }) => {
     if (!compra) return
 
+    // Bloquear pago si no hay apertura diaria
+    if (!hasApertura) {
+      setOpenAperturaModal(true)
+      return
+    }
+
     // Validar que el monto no exceda el saldo
     if (values.monto > totales.saldo) {
       message.error(`El monto no puede exceder el saldo pendiente de S/ ${totales.saldo.toFixed(2)}`)
@@ -300,6 +316,7 @@ export default function ModalRegistrarPagoCompra({
   const isGuardarDisabled = isPending || totales.saldo <= 0 || !montoActual || montoActual <= 0
 
   return (
+    <>
     <ModalForm
       modalProps={{
         width: 1100,
@@ -533,5 +550,12 @@ export default function ModalRegistrarPagoCompra({
         )}
       </div>
     </ModalForm>
+
+    <ModalAperturarCaja
+      open={openAperturaModal}
+      setOpen={setOpenAperturaModal}
+      onSuccess={() => { setOpenAperturaModal(false); refetchApertura() }}
+    />
+    </>
   )
 }

@@ -2,7 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tag, Tooltip } from 'antd'
-import { FaEye, FaCheck } from 'react-icons/fa'
+import { FaEye } from 'react-icons/fa'
 import { FilePdfFilled } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
@@ -24,11 +24,9 @@ const ESTADO_COLORS: Record<string, string> = {
 export function useColumnsSolicitudOC({
   onView,
   onViewPdf,
-  onAprobar,
 }: {
   onView: (row: RequerimientoInterno) => void
   onViewPdf: (row: RequerimientoInterno) => void
-  onAprobar?: (row: RequerimientoInterno) => void
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
@@ -63,26 +61,26 @@ export function useColumnsSolicitudOC({
     },
     {
       headerName: 'Descripción',
-      field: 'descripcion',
+      field: 'observaciones',
       flex: 1,
       minWidth: 180,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
-        <Tooltip title={data?.descripcion}>
+        <Tooltip title={data?.observaciones}>
           <div className="flex items-center h-full text-slate-600 text-xs overflow-hidden text-ellipsis whitespace-nowrap">
-            {data?.descripcion || '—'}
+            {data?.observaciones || '—'}
           </div>
         </Tooltip>
       ),
     },
     {
       headerName: 'Presupuesto',
-      field: 'presupuesto_referencial',
+      field: 'servicio',
       width: 130,
       minWidth: 100,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
         <div className="flex items-center h-full">
-          {data?.presupuesto_referencial
-            ? `S/ ${Number(data.presupuesto_referencial).toFixed(2)}`
+          {data?.servicio?.presupuesto_referencial
+            ? `S/ ${Number(data.servicio.presupuesto_referencial).toFixed(2)}`
             : '—'}
         </div>
       ),
@@ -145,7 +143,8 @@ export function useColumnsSolicitudOC({
               style={{ fontSize: 16, color: '#dc2626' }}
             />
           </Tooltip>
-          {data?.estado === 'pendiente' && (
+          {/* Botón Aprobar oculto */}
+          {/* {data?.estado === 'pendiente' && (
             <Tooltip title="Aprobar">
               <FaCheck
                 onClick={() => data && onAprobar?.(data)}
@@ -153,7 +152,7 @@ export function useColumnsSolicitudOC({
                 size={16}
               />
             </Tooltip>
-          )}
+          )} */}
         </div>
       ),
     },

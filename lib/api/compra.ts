@@ -78,6 +78,8 @@ export interface Compra {
   recepciones_almacen_count?: number;
   pagos_de_compras_count?: number;
   total_pagado?: number;
+  orden_compra_id?: number | null;
+  orden_compra?: { id: number; codigo: string } | null;
 }
 
 // ============= REQUEST TYPES =============
@@ -122,9 +124,10 @@ export interface CreateCompraRequest {
   almacen_id: number;
   proveedor_id: number;
   productos_por_almacen: CreateProductoAlmacenCompraRequest[];
+  orden_compra_id?: number | null;
 }
 
-export interface UpdateCompraRequest extends Partial<Omit<CreateCompraRequest, 'id'>> { }
+export type UpdateCompraRequest = Partial<Omit<CreateCompraRequest, 'id'>>
 
 // ============= PAGO DE COMPRA TYPES =============
 

@@ -1,9 +1,5 @@
 "use client"
 
-import InputBase from "~/app/_components/form/inputs/input-base"
-import TextareaBase from "~/app/_components/form/inputs/textarea-base"
-import SelectBase from "~/app/_components/form/selects/select-base"
-
 interface PRIORIDAD {
     value: string
     label: string

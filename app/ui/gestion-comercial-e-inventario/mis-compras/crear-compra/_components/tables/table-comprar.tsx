@@ -20,7 +20,6 @@ function condicionEditarProductoCompra({
 }) {
   return (
     item.producto_id === producto.producto_id &&
-    item.unidad_derivada_id === producto.unidad_derivada_id &&
     item.bonificacion === producto.bonificacion
   )
 }
@@ -79,101 +78,92 @@ export default function TableComprar({
   useEffect(() => {
     const productoAgregadoCompra = { ...productoAgregadoCompraStore }
     if (
-      productoAgregadoCompra &&
-      Object.keys(productoAgregadoCompra).length &&
-      productoAgregadoCompra.producto_id
+      !productoAgregadoCompra ||
+      !Object.keys(productoAgregadoCompra).length ||
+      !productoAgregadoCompra.producto_id
     ) {
-      if (
-        !productosCompra.find(
-          item => item.producto_id === productoAgregadoCompra.producto_id
-        )
-      )
-        setProductosCompra(prev => [...prev, productoAgregadoCompra])
+      return
+    }
 
-      if (productoAgregadoCompra.bonificacion)
-        productoAgregadoCompra.producto_name = `🎁 ${productoAgregadoCompra.producto_name} (Bonificación)`
+    const productos = (form.getFieldValue('productos') ||
+      []) as FormCreateCompra['productos']
 
-      const productos = (form.getFieldValue('productos') ||
-        []) as FormCreateCompra['productos']
+    // Buscar si existe el producto con la misma unidad derivada
+    const producto_unidad_derivada_existente = productos.find(item =>
+      condicionEditarProductoCompra({
+        producto: productoAgregadoCompra,
+        item,
+      })
+    )
 
-      const producto_existente = productos.find(
-        item => item.producto_id === productoAgregadoCompra.producto_id
-      )
-      if (!producto_existente) {
-        agregarProducto({ producto: productoAgregadoCompra })
-        return
-      }
-
-      const producto_unidad_derivada_existente = productos.find(item =>
+    if (producto_unidad_derivada_existente) {
+      // Si existe, sumar cantidades
+      const index = productos.findIndex(item =>
         condicionEditarProductoCompra({
           producto: productoAgregadoCompra,
           item,
         })
       )
-      if (producto_unidad_derivada_existente) {
-        const index = productos.findIndex(item =>
-          condicionEditarProductoCompra({
+
+      if (index === -1) return
+
+      const nueva_cantidad =
+        Number(productoAgregadoCompra.cantidad) +
+        Number(producto_unidad_derivada_existente.cantidad)
+      
+      setProductosCompra(prev =>
+        prev.map(item => {
+          return condicionEditarProductoCompra({
             producto: productoAgregadoCompra,
             item,
           })
+            ? {
+                ...item,
+                cantidad: nueva_cantidad,
+                subtotal: Number(
+                  (
+                    Number(item.precio_compra) *
+                    Number(nueva_cantidad)
+                  ).toFixed(2)
+                ),
+              }
+            : item
+        })
+      )
+
+      form.setFieldValue(
+        'productos',
+        productos.map((item, i) =>
+          i === index
+            ? {
+                ...item,
+                cantidad: nueva_cantidad,
+                subtotal: Number(
+                  (
+                    Number(item.precio_compra) *
+                    Number(nueva_cantidad)
+                  ).toFixed(2)
+                ),
+              }
+            : item
         )
+      )
 
-        if (index <= -1) return
+      if (!productoAgregadoCompra.bonificacion)
+        onChangeCostoTablaCompras({
+          form,
+          value: index,
+          costo: Number(productoAgregadoCompra.precio_compra ?? 0),
+          producto_id: productoAgregadoCompra.producto_id,
+        })
+    } else {
+      // Si no existe, agregar nueva fila
+      if (productoAgregadoCompra.bonificacion)
+        productoAgregadoCompra.producto_name = `🎁 ${productoAgregadoCompra.producto_name} (Bonificación)`
 
-        const nueva_cantidad =
-          Number(productoAgregadoCompra.cantidad) +
-          Number(producto_unidad_derivada_existente.cantidad)
-        setProductosCompra(prev =>
-          prev.map(item => {
-            return condicionEditarProductoCompra({
-              producto: productoAgregadoCompra,
-              item,
-            })
-              ? {
-                  ...productoAgregadoCompra,
-                  cantidad: nueva_cantidad,
-                  subtotal: Number(
-                    (
-                      Number(productoAgregadoCompra.precio_compra) *
-                      Number(nueva_cantidad)
-                    ).toFixed(2)
-                  ),
-                }
-              : item
-          })
-        )
-
-        form.setFieldValue(
-          'productos',
-          productos.map((item, i) =>
-            i === index
-              ? {
-                  ...productoAgregadoCompra,
-                  cantidad: nueva_cantidad,
-                  subtotal: Number(
-                    (
-                      Number(productoAgregadoCompra.precio_compra) *
-                      Number(nueva_cantidad)
-                    ).toFixed(2)
-                  ),
-                  vencimiento: productoAgregadoCompra.vencimiento
-                    ? dayjs(productoAgregadoCompra.vencimiento).local()
-                    : null,
-                }
-              : item
-          )
-        )
-
-        if (!productoAgregadoCompra.bonificacion)
-          onChangeCostoTablaCompras({
-            form,
-            value: index,
-            costo: Number(productoAgregadoCompra.precio_compra ?? 0),
-            producto_id: productoAgregadoCompra.producto_id,
-          })
-      } else {
-        agregarProducto({ producto: productoAgregadoCompra })
-      }
+      agregarProducto({ producto: productoAgregadoCompra })
+      
+      setProductosCompra(prev => [...prev, productoAgregadoCompra])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productoAgregadoCompraStore])

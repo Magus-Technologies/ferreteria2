@@ -85,6 +85,67 @@ const TableProductosSolicitudOC = memo(function TableProductosSolicitudOC({ id, 
         </div>
       ),
     },
+    {
+      headerName: 'Ordenado',
+      field: 'cantidad_ordenada',
+      width: 100,
+      minWidth: 90,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoProducto>) => (
+        <div className="flex items-center h-full font-semibold text-blue-600">
+          {data?.cantidad_ordenada || 0}
+        </div>
+      ),
+    },
+    {
+      headerName: 'Restante',
+      field: 'cantidad_restante',
+      width: 100,
+      minWidth: 90,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoProducto>) => (
+        <div className="flex items-center h-full font-semibold text-orange-600">
+          {data?.cantidad_restante || 0}
+        </div>
+      ),
+    },
+    {
+      headerName: 'Estado',
+      field: 'estado_producto',
+      width: 100,
+      minWidth: 90,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoProducto>) => {
+        const estado = data?.estado_producto;
+        const ESTADO_COLORS: Record<string, string> = {
+          'pendiente': 'processing',
+          'parcial': 'warning',
+          'completo': 'success',
+        };
+        const colorMap = {
+          'pendiente': 'PENDIENTE',
+          'parcial': 'PARCIAL',
+          'completo': 'APROBADO',
+        };
+        return (
+          <Tag color={ESTADO_COLORS[estado as keyof typeof ESTADO_COLORS] || 'processing'}>
+            {colorMap[estado as keyof typeof colorMap] || 'PENDIENTE'}
+          </Tag>
+        );
+      },
+    },
+    {
+      headerName: 'OC Usado',
+      field: 'orden_compra_codigo',
+      width: 120,
+      minWidth: 100,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoProducto>) => (
+        <div className="flex items-center h-full text-sm font-mono">
+          {data?.orden_compra_codigo ? (
+            <Tag color="blue">{data.orden_compra_codigo}</Tag>
+          ) : (
+            '—'
+          )}
+        </div>
+      ),
+    },
   ], [])
 
   return (

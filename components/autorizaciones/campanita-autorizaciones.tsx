@@ -52,14 +52,15 @@ export default function CampanitaAutorizaciones() {
   const [solicitudSeleccionada, setSolicitudSeleccionada] = useState<SolicitudAutorizacion | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Polling de pendientes cada 30s
+  // Polling de pendientes cada 30s - solo cuando el dropdown está abierto
   const { data: countData } = useQuery({
     queryKey: autorizacionesKeys.pendientesCount(),
     queryFn: async () => {
       const res = await autorizacionesApi.pendientesCount()
       return res.data?.count ?? 0
     },
-    refetchInterval: 30000,
+    refetchInterval: dropdownOpen ? 30000 : false,
+    enabled: true,
   })
 
   const count = countData ?? 0
@@ -68,14 +69,15 @@ export default function CampanitaAutorizaciones() {
     setPendientesCount(count)
   }, [count, setPendientesCount])
 
-  // Cargar lista rápida de pendientes para el dropdown
+  // Cargar lista rápida de pendientes para el dropdown - solo cuando está abierto
   const { data: pendientes, isLoading } = useQuery({
     queryKey: autorizacionesKeys.pendientes(),
     queryFn: async () => {
       const res = await autorizacionesApi.pendientes()
       return (res.data || []) as SolicitudAutorizacion[]
     },
-    refetchInterval: 30000,
+    refetchInterval: dropdownOpen ? 30000 : false,
+    enabled: dropdownOpen,
   })
 
   const items = (pendientes || []).slice(0, 5)

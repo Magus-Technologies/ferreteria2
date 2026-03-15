@@ -9,6 +9,11 @@ export interface RequerimientoInternoProducto {
     nombre_adicional: string | null;
     cantidad: number;
     cantidad_pendiente: number;
+    cantidad_ordenada: number;
+    cantidad_restante: number;
+    estado_producto: 'pendiente' | 'parcial' | 'completo';
+    orden_compra_codigo: string | null;
+    orden_compra_id: number | null;
     unidad: string | null;
     producto?: {
         id: number;
@@ -41,6 +46,7 @@ export interface RequerimientoInterno {
     tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones: string | null;
     estado: 'pendiente' | 'aprobado' | 'rechazado' | 'anulado';
+    estado_solicitud: 'pendiente' | 'en_proceso' | 'aprobado';
     proveedor_sugerido_id: number | null;
     user_id: string;
     created_at: string;
@@ -180,6 +186,25 @@ export const requerimientoInternoApi = {
         return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/estado`, {
             method: 'PATCH',
             body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Actualizar cantidad ordenada de un producto
+     */
+    actualizarCantidadOrdenada: async (
+        productoId: number,
+        cantidadOrdenada: number,
+        ordenCompraId?: number,
+        ordenCompraCodigo?: string
+    ): Promise<ApiResponse<{ message: string }>> => {
+        return apiRequest<{ message: string }>(`/requerimientos-internos/productos/${productoId}/actualizar-cantidad-ordenada`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                cantidad_ordenada: cantidadOrdenada,
+                orden_compra_id: ordenCompraId,
+                orden_compra_codigo: ordenCompraCodigo,
+            }),
         });
     },
 };

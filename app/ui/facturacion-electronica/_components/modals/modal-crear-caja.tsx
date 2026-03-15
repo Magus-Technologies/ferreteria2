@@ -52,7 +52,7 @@ export default function ModalCrearCaja({ open, setOpen, onSuccess }: ModalCrearC
       setOpen={setOpen}
       formProps={{
         form,
-        onFinish: crearCaja,
+        onFinish: (values) => crearCaja({ ...values, crear_metodo_pago: crearMetodoPago }),
         layout: 'vertical',
       }}
     >
