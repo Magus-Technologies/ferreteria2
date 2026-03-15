@@ -91,9 +91,9 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
     }
 
     const getRemaining = (p: RequerimientoInternoProducto): number => {
-        const backend = Number(p.cantidad_restante ?? p.cantidad_pendiente ?? p.cantidad)
-        const added = productosAgregados.find(x => x.id === p.id)?.cantidad ?? 0
-        return Math.max(0, backend - added)
+        // Solo mostrar la cantidad original del requerimiento
+        // No restar lo ya agregado, porque queremos permitir agregar múltiples veces
+        return Number(p.cantidad)
     }
 
     const mapToSelection = (p: RequerimientoInternoProducto, req: RequerimientoInterno): ProductoSidebarSelection => {
