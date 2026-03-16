@@ -184,19 +184,25 @@ export default function FormCrearVenta({
           </LabelBase>
         </ConfigurableElement>
 
+      </div>
+
+      {/* 2da fila */}
+      <div className="flex gap-3 sm:gap-4 lg:gap-6 items-end flex-wrap">
+        <FormFormaDePago form={form} />
+
         <ConfigurableElement
           componentId="crear-venta.tipo-despacho"
           label="Campo Tipo Despacho"
         >
           <LabelBase
             label="Tipo Despacho:"
-            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+            classNames={{ labelParent: "mb-6" }}
             className="w-full sm:w-auto"
           >
             <SelectTipoDespacho
               propsForm={{
                 name: "tipo_despacho",
-                initialValue: "EnTienda", // Valor por defecto: Despacho en Tienda
+                initialValue: "EnTienda",
                 hasFeedback: false,
                 className:
                   "w-full sm:!min-w-[220px] sm:!w-[220px] sm:!max-w-[220px]",
@@ -212,17 +218,8 @@ export default function FormCrearVenta({
             />
           </LabelBase>
         </ConfigurableElement>
-      </div>
 
-      {/* 2da fila */}
-      <div className="flex gap-3 sm:gap-4 lg:gap-6 items-end flex-wrap">
-        <FormFormaDePago form={form} />
-
-        <div className="mb-6 flex items-end">
-          <Form.Item name="codigo_vale" noStyle>
-            <InputCodigoVale />
-          </Form.Item>
-        </div>
+        <InputCodigoVale />
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}

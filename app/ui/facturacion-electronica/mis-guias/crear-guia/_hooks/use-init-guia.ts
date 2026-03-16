@@ -70,6 +70,7 @@ export default function useInitGuia({
         validar_costo: true,
         tipo_guia: 'ELECTRONICA_REMITENTE',
         modalidad_transporte: 'PRIVADO',
+        motivo_traslado: 1, // 01 - Venta
         // Datos del cliente - Guardar el ID pero el SelectClientes mostrará el documento
         cliente_id: cliente?.id,
         cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),

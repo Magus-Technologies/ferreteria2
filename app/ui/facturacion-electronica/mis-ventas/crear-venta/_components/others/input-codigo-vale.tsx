@@ -1,28 +1,17 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { Tag, Tooltip, Input, App, Spin } from 'antd'
-import { FaTicketAlt, FaGift } from 'react-icons/fa'
-import { getValesAplicables, verificarCodigoVale } from '~/lib/api/vales-compra'
+import { useEffect, useMemo, useCallback, useRef } from 'react'
+import { App } from 'antd'
+import { getValesAplicables } from '~/lib/api/vales-compra'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 
-interface InputCodigoValeProps {
-  value?: string
-  onChange?: (value: string | undefined) => void
-}
-
 /**
- * Componente que detecta automáticamente vales aplicables según los productos en el carrito.
- * Muestra notificación flotante cuando se detectan vales.
- * También permite ingresar códigos de vale generado (DESCUENTO_PROXIMA_COMPRA).
+ * Componente invisible que detecta automáticamente vales aplicables
+ * según los productos en el carrito y muestra notificaciones flotantes.
  */
-export default function InputCodigoVale({ value, onChange }: InputCodigoValeProps) {
+export default function InputCodigoVale() {
   const { notification } = App.useApp()
-  const [loading, setLoading] = useState(false)
-  const [codigoValeInput, setCodigoValeInput] = useState('')
-  const [codigoValeValido, setCodigoValeValido] = useState(false)
-  const [verificandoCodigo, setVerificandoCodigo] = useState(false)
 
   // Ref para rastrear los IDs de vales ya notificados (evitar notificaciones repetidas)
   const valesNotificados = useRef<Set<number>>(new Set())
@@ -61,23 +50,18 @@ export default function InputCodigoVale({ value, onChange }: InputCodigoValeProp
 
   // Consultar vales aplicables cuando cambian los productos
   const consultarVales = useCallback(async () => {
-    if (productoIds.length === 0 || cantidadTotal <= 0) {
-      return
-    }
+    if (productoIds.length === 0 || cantidadTotal <= 0) return
 
-    setLoading(true)
     try {
       const res = await getValesAplicables({
         cantidad_total: cantidadTotal,
         producto_ids: productoIds,
       })
       if (res.data?.data) {
-        // Deduplicar por ID
         const valesUnicos = res.data.data.filter(
           (vale, idx, arr) => arr.findIndex(v => v.id === vale.id) === idx
         )
 
-        // Notificar solo vales nuevos que no se hayan notificado antes
         for (const vale of valesUnicos) {
           if (!valesNotificados.current.has(vale.id)) {
             valesNotificados.current.add(vale.id)
@@ -91,9 +75,7 @@ export default function InputCodigoVale({ value, onChange }: InputCodigoValeProp
         }
       }
     } catch {
-      // Silencioso - no interrumpir la venta
-    } finally {
-      setLoading(false)
+      // Silencioso
     }
   }, [productoIds, cantidadTotal, getBeneficio, notification])
 
@@ -110,77 +92,5 @@ export default function InputCodigoVale({ value, onChange }: InputCodigoValeProp
     }
   }, [productosVenta.length])
 
-  // Verificar código de vale generado (DESCUENTO_PROXIMA_COMPRA)
-  const verificarCodigo = async (raw: string) => {
-    const codigo = raw.replace(/\s/g, '').trim()
-    if (!codigo) return
-
-    setVerificandoCodigo(true)
-    try {
-      const res = await verificarCodigoVale(codigo)
-      if (res.data?.valido) {
-        setCodigoValeValido(true)
-        onChange?.(codigo)
-        notification.success({
-          message: 'Vale de próxima compra válido',
-          description: `Código ${codigo} será aplicado al crear la venta.`,
-          duration: 4,
-        })
-      } else {
-        setCodigoValeValido(false)
-        onChange?.(undefined)
-        notification.error({
-          message: 'Código no válido',
-          description: res.data?.message || 'El código no existe, ya fue usado o ha expirado.',
-          duration: 5,
-        })
-      }
-    } catch {
-      setCodigoValeValido(false)
-      onChange?.(undefined)
-    } finally {
-      setVerificandoCodigo(false)
-    }
-  }
-
-  const limpiarCodigo = () => {
-    setCodigoValeInput('')
-    setCodigoValeValido(false)
-    onChange?.(undefined)
-  }
-
-  return (
-    <div className='flex items-center gap-2'>
-      {codigoValeValido && value ? (
-        <div className='flex items-center gap-1.5'>
-          <FaGift className='text-purple-600' size={12} />
-          <Tag color='purple' className='!text-[10px] !m-0'>
-            Vale: {value}
-          </Tag>
-          <span
-            className='text-red-400 cursor-pointer text-[10px] hover:text-red-600'
-            onClick={limpiarCodigo}
-          >
-            Quitar
-          </span>
-        </div>
-      ) : (
-        <Tooltip title='Ingresa código si el cliente tiene un vale de próxima compra'>
-          <Input
-            placeholder='Código vale próxima compra...'
-            prefix={<FaTicketAlt className='text-purple-500' size={10} />}
-            value={codigoValeInput}
-            onChange={(e) => setCodigoValeInput(e.target.value.toUpperCase())}
-            onPressEnter={() => verificarCodigo(codigoValeInput)}
-            disabled={verificandoCodigo}
-            allowClear
-            className='!max-w-[220px]'
-            size='small'
-            style={{ fontSize: '11px' }}
-          />
-        </Tooltip>
-      )}
-      {(verificandoCodigo || loading) && <Spin size='small' />}
-    </div>
-  )
+  return null
 }

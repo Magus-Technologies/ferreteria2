@@ -1,6 +1,7 @@
-import { Modal, Tooltip, Input, Spin, message as antdMessage } from 'antd'
+import { Modal, Tooltip, Input, Spin, message as antdMessage, Select } from 'antd'
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
-import { FaDownload, FaShareNodes, FaPrint } from 'react-icons/fa6'
+import { FaDownload, FaPrint } from 'react-icons/fa6'
+import { FaWhatsapp } from 'react-icons/fa'
 import { HiClipboardDocument } from 'react-icons/hi2'
 import { MdEmail } from 'react-icons/md'
 import ButtonBase from '~/components/buttons/button-base'
@@ -14,7 +15,6 @@ import { useQzPrint } from '~/hooks/use-qz-print'
 import ModalSeleccionImpresora from './modal-seleccion-impresora'
 import type { TipoFormato } from '~/store/store-impresora'
 import { pdf } from '@react-pdf/renderer'
-import { compartir } from '~/hooks/use-share'
 
 interface ModalEntradaStockProps {
   open: boolean
@@ -32,6 +32,8 @@ interface ModalEntradaStockProps {
   backendPdfLoading?: boolean
   /** Override del comportamiento de impresión. Si se proporciona, se usa en vez del print default. */
   onCustomPrint?: () => Promise<void>
+  /** Teléfono(s) del cliente para envío por WhatsApp */
+  clienteTelefonos?: string[]
 }
 export default function ModalShowDoc({
   open,
@@ -46,6 +48,7 @@ export default function ModalShowDoc({
   backendPdfUrl,
   backendPdfLoading,
   onCustomPrint,
+  clienteTelefonos,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
@@ -129,14 +132,42 @@ export default function ModalShowDoc({
     URL.revokeObjectURL(url)
   }
 
-  // Compartir
-  const handleShare = async () => {
+  // WhatsApp
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false)
+  const [whatsappTelefono, setWhatsappTelefono] = useState('')
+  const [whatsappMensaje, setWhatsappMensaje] = useState('')
+
+  const handleOpenWhatsapp = () => {
+    // Pre-llenar con primer teléfono del cliente si existe
+    const tel = clienteTelefonos?.find(t => t && t.trim()) || ''
+    setWhatsappTelefono(tel)
+    setWhatsappMensaje(`Hola, le comparto su documento ${nro_doc}. Gracias por su compra.`)
+    setWhatsappModalOpen(true)
+  }
+
+  const handleSendWhatsapp = async () => {
+    const tel = whatsappTelefono.replace(/\D/g, '')
+    if (!tel) {
+      antdMessage.error('Ingresa un número de teléfono')
+      return
+    }
+    // Descargar el PDF primero
     try {
       const blob = await getPdfBlob()
-      compartir({ blob, fileName: `${nro_doc}.pdf` })
-    } catch (err) {
-      console.error('Error al compartir:', err)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${nro_doc}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // silencioso
     }
+    // Abrir WhatsApp con el mensaje
+    const numero = tel.startsWith('51') ? tel : `51${tel}`
+    const texto = encodeURIComponent(whatsappMensaje)
+    window.open(`https://wa.me/${numero}?text=${texto}`, '_blank')
+    setWhatsappModalOpen(false)
   }
 
   // Imprimir con QZ Tray
@@ -209,14 +240,14 @@ export default function ModalShowDoc({
                   <FaDownload />
                 </ButtonBase>
               </Tooltip>
-              <Tooltip title='Compartir'>
+              <Tooltip title='Enviar por WhatsApp'>
                 <ButtonBase
-                  onClick={handleShare}
+                  onClick={handleOpenWhatsapp}
                   color='success'
                   size='md'
                   className='!px-3'
                 >
-                  <FaShareNodes />
+                  <FaWhatsapp />
                 </ButtonBase>
               </Tooltip>
               {(aperturaId || cierreId) && (
@@ -351,6 +382,58 @@ export default function ModalShowDoc({
         onImprimir={qz.guardarYImprimir}
         onRefrescar={qz.listarImpresoras}
       />
+
+      {/* Modal WhatsApp */}
+      <Modal
+        title={
+          <div className='flex items-center gap-2'>
+            <FaWhatsapp className='text-green-500' size={20} />
+            <span>Enviar por WhatsApp</span>
+          </div>
+        }
+        open={whatsappModalOpen}
+        onOk={handleSendWhatsapp}
+        onCancel={() => setWhatsappModalOpen(false)}
+        okText='Enviar y Descargar PDF'
+        cancelText='Cancelar'
+        okButtonProps={{ className: '!bg-green-600 hover:!bg-green-700 !border-green-600 rounded-xl' }}
+        cancelButtonProps={{ className: 'rounded-xl' }}
+      >
+        <div className='py-3 flex flex-col gap-3'>
+          <div>
+            <label className='block text-sm font-medium mb-1'>Teléfono:</label>
+            {clienteTelefonos && clienteTelefonos.filter(t => t?.trim()).length > 1 ? (
+              <Select
+                className='w-full'
+                value={whatsappTelefono}
+                onChange={setWhatsappTelefono}
+                options={clienteTelefonos.filter(t => t?.trim()).map(t => ({ label: t, value: t }))}
+              />
+            ) : (
+              <Input
+                placeholder='987654321'
+                value={whatsappTelefono}
+                onChange={e => setWhatsappTelefono(e.target.value)}
+                prefix={<span className='text-gray-400'>+51</span>}
+                maxLength={15}
+              />
+            )}
+          </div>
+          <div>
+            <label className='block text-sm font-medium mb-1'>Mensaje:</label>
+            <Input.TextArea
+              rows={3}
+              value={whatsappMensaje}
+              onChange={e => setWhatsappMensaje(e.target.value)}
+              maxLength={500}
+              showCount
+            />
+          </div>
+          <p className='text-[11px] text-gray-400'>
+            Se descargará el PDF y se abrirá WhatsApp con el mensaje. Adjunta el PDF manualmente en el chat.
+          </p>
+        </div>
+      </Modal>
     </>
   )
 }
