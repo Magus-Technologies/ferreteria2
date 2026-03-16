@@ -1,7 +1,7 @@
 'use client'
 
 // Filtros para ventas por cobrar
-import { Form, Drawer, Badge } from 'antd'
+import { Form, Drawer, Badge, Select } from 'antd'
 import { FaSearch, FaFilter } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
@@ -36,6 +36,7 @@ interface ValuesFiltersVentasPorCobrar {
 }
 
 const QUICK_FILTERS = [
+  { label: 'Todas', days: 0 },
   { label: '15 días', days: 15 },
   { label: '30 días', days: 30 },
   { label: '60 días', days: 60 },
@@ -52,6 +53,18 @@ export default function FiltersVentasPorCobrar() {
 
   const applyQuickFilter = useCallback((days: number) => {
     setQuickFilterActive(days)
+    if (days === 0) {
+      form.setFieldsValue({ desde: undefined, hasta: undefined })
+      const data = {
+        almacen_id,
+        forma_de_pago: FormaDePago.CREDITO,
+        estado_de_venta: {
+          in: ['Creado', 'Procesado'],
+        },
+      } satisfies VentaWhereInput
+      setFiltros(data)
+      return
+    }
     const desde = dayjs().subtract(days, 'days').startOf('day')
     const hasta = dayjs().endOf('day')
     form.setFieldsValue({ desde, hasta })
@@ -164,23 +177,15 @@ export default function FiltersVentasPorCobrar() {
         }
       />
 
-      {/* Filtros rápidos por días */}
+      {/* Filtro rápido por días */}
       <div className='flex items-center gap-2 mt-3'>
         <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
-        {QUICK_FILTERS.map(({ label, days }) => (
-          <button
-            key={days}
-            type='button'
-            onClick={() => applyQuickFilter(days)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors border ${
-              quickFilterActive === days
-                ? 'bg-red-600 text-white border-red-600'
-                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        <Select
+          value={quickFilterActive}
+          onChange={(days) => applyQuickFilter(days)}
+          className='w-32'
+          options={QUICK_FILTERS.map(({ label, days }) => ({ label, value: days }))}
+        />
       </div>
 
       {/* Filtros principales - Responsivos */}

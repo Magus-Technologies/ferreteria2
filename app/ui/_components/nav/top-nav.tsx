@@ -2,6 +2,7 @@
 
 import { MenuProps } from 'antd/lib'
 import { FaSignOutAlt, FaBell } from 'react-icons/fa'
+import { FaCheck } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
@@ -9,12 +10,28 @@ import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-prove
 import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
 import ModalProveedoresDesactivados from '~/app/_components/modals/modal-proveedores-desactivados'
 import ModalConfiguraciones from '~/app/_components/modals/modal-configuraciones'
+import { useQuery } from '@tanstack/react-query'
+import { almacenesApi } from '~/lib/api/almacen'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useStoreAlmacen } from '~/store/store-almacen'
 
 export default function TopNavUI({ className }: { className?: string }) {
   const { logout, user } = useAuth()
   const router = useRouter()
   const { openModal } = useModalProveedoresDesactivados()
   const { openModal: openConfiguraciones } = useModalConfiguraciones()
+  const almacen_id = useStoreAlmacen(s => s.almacen_id)
+  const setAlmacenId = useStoreAlmacen(s => s.setAlmacenId)
+
+  const { data: almacenes } = useQuery({
+    queryKey: [QueryKeys.ALMACENES],
+    queryFn: async () => {
+      const response = await almacenesApi.getAll()
+      if (response.error) throw new Error(response.error.message)
+      return response.data?.data || []
+    },
+    staleTime: 1000 * 60 * 5,
+  })
 
   const items: MenuProps['items'] = [
     {
@@ -26,17 +43,13 @@ export default function TopNavUI({ className }: { className?: string }) {
     },
     {
       key: '2',
-      label: 'Locaciones',
-      children: [
-        {
-          key: '2-1',
-          label: 'Locación 1',
-        },
-        {
-          key: '2-2',
-          label: 'Locación 2',
-        },
-      ],
+      label: 'Sucursales',
+      children: (almacenes || []).map(a => ({
+        key: `2-${a.id}`,
+        label: a.name,
+        extra: almacen_id === a.id ? <FaCheck className='text-emerald-600' /> : undefined,
+        onClick: () => setAlmacenId(a.id),
+      })),
     },
     {
       key: '3',
