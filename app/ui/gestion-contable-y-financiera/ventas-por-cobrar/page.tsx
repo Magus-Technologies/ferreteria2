@@ -12,13 +12,15 @@ import ModalRegistrarCobro from './_components/modals/modal-registrar-cobro'
 import ModalConsultarPagos from './_components/modals/modal-consultar-pagos'
 import { useState } from 'react'
 import { App } from 'antd'
-import { FaMoneyCheckAlt, FaListAlt, FaCalendarCheck } from 'react-icons/fa'
+import { FaMoneyCheckAlt, FaListAlt, FaCalendarCheck, FaUsers } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
+import ModalCobroMultiple from './_components/modals/modal-cobro-multiple'
 
 export default function VentasPorCobrarPage() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
   const [openRegistrarCobro, setOpenRegistrarCobro] = useState(false)
   const [openConsultarPagos, setOpenConsultarPagos] = useState(false)
+  const [openCobroMultiple, setOpenCobroMultiple] = useState(false)
   const ventaSeleccionada = useStoreVentaSeleccionada(state => state.venta)
   const { message } = App.useApp()
 
@@ -78,6 +80,14 @@ export default function VentasPorCobrarPage() {
               </ButtonBase>
 
               <ButtonBase
+                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-emerald-500 !text-emerald-700 font-semibold'
+                onClick={() => setOpenCobroMultiple(true)}
+              >
+                <FaUsers size={16} />
+                Cobro Múltiple por Cliente
+              </ButtonBase>
+
+              <ButtonBase
                 className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-orange-500 !text-orange-700 font-semibold'
                 onClick={() => setOpenConsultarPagos(true)}
               >
@@ -98,6 +108,10 @@ export default function VentasPorCobrarPage() {
       <ModalConsultarPagos
         open={openConsultarPagos}
         setOpen={setOpenConsultarPagos}
+      />
+      <ModalCobroMultiple
+        open={openCobroMultiple}
+        setOpen={setOpenCobroMultiple}
       />
     </ContenedorGeneral>
   )

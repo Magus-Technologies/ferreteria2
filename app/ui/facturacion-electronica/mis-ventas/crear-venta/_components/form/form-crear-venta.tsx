@@ -218,15 +218,10 @@ export default function FormCrearVenta({
       <div className="flex gap-3 sm:gap-4 lg:gap-6 items-end flex-wrap">
         <FormFormaDePago form={form} />
 
-        <div className="mb-6">
-          <LabelBase
-            label="Vales / Promociones:"
-            className="w-full sm:w-auto"
-          >
-            <Form.Item name="codigo_vale" noStyle>
-              <InputCodigoVale />
-            </Form.Item>
-          </LabelBase>
+        <div className="mb-6 flex items-end">
+          <Form.Item name="codigo_vale" noStyle>
+            <InputCodigoVale />
+          </Form.Item>
         </div>
       </div>
 

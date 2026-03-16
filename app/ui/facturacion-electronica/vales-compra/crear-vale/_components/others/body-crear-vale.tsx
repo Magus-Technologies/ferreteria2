@@ -136,10 +136,6 @@ export default function BodyCrearVale() {
               color='success'
               size='md'
               type='submit'
-              onClick={() => {
-                console.log('🔵 Botón clickeado')
-                form.submit()
-              }}
               className='flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white'
             >
               <FaSave />

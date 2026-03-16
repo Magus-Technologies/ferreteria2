@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Tag, Tooltip, Input, App, Spin } from 'antd'
-import { FaTicketAlt, FaCheckCircle, FaGift } from 'react-icons/fa'
+import { FaTicketAlt, FaGift } from 'react-icons/fa'
 import { getValesAplicables, verificarCodigoVale } from '~/lib/api/vales-compra'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
@@ -14,15 +14,18 @@ interface InputCodigoValeProps {
 
 /**
  * Componente que detecta automáticamente vales aplicables según los productos en el carrito.
+ * Muestra notificación flotante cuando se detectan vales.
  * También permite ingresar códigos de vale generado (DESCUENTO_PROXIMA_COMPRA).
  */
 export default function InputCodigoVale({ value, onChange }: InputCodigoValeProps) {
   const { notification } = App.useApp()
-  const [valesAplicables, setValesAplicables] = useState<ValeCompra[]>([])
   const [loading, setLoading] = useState(false)
   const [codigoValeInput, setCodigoValeInput] = useState('')
   const [codigoValeValido, setCodigoValeValido] = useState(false)
   const [verificandoCodigo, setVerificandoCodigo] = useState(false)
+
+  // Ref para rastrear los IDs de vales ya notificados (evitar notificaciones repetidas)
+  const valesNotificados = useRef<Set<number>>(new Set())
 
   // Leer productos del store
   const productosVenta = useStoreProductoAgregadoVenta(store => store.productos)
@@ -43,10 +46,22 @@ export default function InputCodigoVale({ value, onChange }: InputCodigoValeProp
     }, 0)
   }, [productosVenta])
 
+  // Descripción del beneficio del vale
+  const getBeneficio = useCallback((vale: ValeCompra) => {
+    if (vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor) {
+      return `${vale.descuento_valor}% DSCTO`
+    }
+    if (vale.descuento_tipo === 'MONTO_FIJO' && vale.descuento_valor) {
+      return `S/ ${Number(vale.descuento_valor).toFixed(2)} DSCTO`
+    }
+    if (vale.tipo_promocion === 'PRODUCTO_GRATIS') return 'PRODUCTO GRATIS'
+    if (vale.tipo_promocion === 'DOS_POR_UNO') return '2x1'
+    return vale.tipo_promocion
+  }, [])
+
   // Consultar vales aplicables cuando cambian los productos
   const consultarVales = useCallback(async () => {
     if (productoIds.length === 0 || cantidadTotal <= 0) {
-      setValesAplicables([])
       return
     }
 
@@ -57,20 +72,43 @@ export default function InputCodigoVale({ value, onChange }: InputCodigoValeProp
         producto_ids: productoIds,
       })
       if (res.data?.data) {
-        setValesAplicables(res.data.data)
+        // Deduplicar por ID
+        const valesUnicos = res.data.data.filter(
+          (vale, idx, arr) => arr.findIndex(v => v.id === vale.id) === idx
+        )
+
+        // Notificar solo vales nuevos que no se hayan notificado antes
+        for (const vale of valesUnicos) {
+          if (!valesNotificados.current.has(vale.id)) {
+            valesNotificados.current.add(vale.id)
+            notification.success({
+              message: 'Promoción disponible',
+              description: `${vale.nombre} (${getBeneficio(vale)}) — Se aplicará automáticamente al crear la venta`,
+              duration: 6,
+              placement: 'bottomRight',
+            })
+          }
+        }
       }
     } catch {
       // Silencioso - no interrumpir la venta
     } finally {
       setLoading(false)
     }
-  }, [productoIds, cantidadTotal])
+  }, [productoIds, cantidadTotal, getBeneficio, notification])
 
   // Debounce: consultar vales 500ms después del último cambio
   useEffect(() => {
     const timer = setTimeout(consultarVales, 500)
     return () => clearTimeout(timer)
   }, [consultarVales])
+
+  // Limpiar notificados cuando se vacía el carrito
+  useEffect(() => {
+    if (productosVenta.length === 0) {
+      valesNotificados.current.clear()
+    }
+  }, [productosVenta.length])
 
   // Verificar código de vale generado (DESCUENTO_PROXIMA_COMPRA)
   const verificarCodigo = async (raw: string) => {
@@ -111,80 +149,38 @@ export default function InputCodigoVale({ value, onChange }: InputCodigoValeProp
     onChange?.(undefined)
   }
 
-  // Descripción del beneficio del vale
-  const getBeneficio = (vale: ValeCompra) => {
-    if (vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor) {
-      return `${vale.descuento_valor}% DSCTO`
-    }
-    if (vale.descuento_tipo === 'MONTO_FIJO' && vale.descuento_valor) {
-      return `S/ ${Number(vale.descuento_valor).toFixed(2)} DSCTO`
-    }
-    if (vale.tipo_promocion === 'PRODUCTO_GRATIS') return 'PRODUCTO GRATIS'
-    if (vale.tipo_promocion === 'DOS_POR_UNO') return '2x1'
-    return vale.tipo_promocion
-  }
-
   return (
-    <div className='flex flex-col gap-1.5'>
-      {/* Vales detectados automáticamente */}
-      {loading ? (
-        <div className='flex items-center gap-2 text-gray-400'>
-          <Spin size='small' />
-          <span className='text-[10px]'>Buscando vales...</span>
-        </div>
-      ) : valesAplicables.length > 0 ? (
-        <div className='flex flex-col gap-1'>
-          {valesAplicables.map((vale) => (
-            <div key={vale.id} className='flex items-center gap-1.5'>
-              <FaCheckCircle className='text-green-600 flex-shrink-0' size={12} />
-              <Tooltip title={`${vale.nombre} - ${vale.modalidad}`}>
-                <Tag color='green' className='!text-[10px] !m-0 !px-1.5 !py-0'>
-                  {vale.nombre} ({getBeneficio(vale)})
-                </Tag>
-              </Tooltip>
-            </div>
-          ))}
-          <span className='text-[9px] text-green-600 pl-4'>
-            Se aplicarán automáticamente al crear la venta
+    <div className='flex items-center gap-2'>
+      {codigoValeValido && value ? (
+        <div className='flex items-center gap-1.5'>
+          <FaGift className='text-purple-600' size={12} />
+          <Tag color='purple' className='!text-[10px] !m-0'>
+            Vale: {value}
+          </Tag>
+          <span
+            className='text-red-400 cursor-pointer text-[10px] hover:text-red-600'
+            onClick={limpiarCodigo}
+          >
+            Quitar
           </span>
         </div>
-      ) : productosVenta.length > 0 ? (
-        <span className='text-[10px] text-gray-400'>Sin vales aplicables</span>
-      ) : null}
-
-      {/* Input para código de vale generado (próxima compra) */}
-      <div className='flex items-center gap-2'>
-        {codigoValeValido && value ? (
-          <div className='flex items-center gap-1.5'>
-            <FaGift className='text-purple-600' size={12} />
-            <Tag color='purple' className='!text-[10px] !m-0'>
-              Vale: {value}
-            </Tag>
-            <span
-              className='text-red-400 cursor-pointer text-[10px] hover:text-red-600'
-              onClick={limpiarCodigo}
-            >
-              Quitar
-            </span>
-          </div>
-        ) : (
-          <Tooltip title='Ingresa código si el cliente tiene un vale de próxima compra'>
-            <Input
-              placeholder='Código vale próxima compra...'
-              prefix={<FaTicketAlt className='text-purple-500' size={10} />}
-              value={codigoValeInput}
-              onChange={(e) => setCodigoValeInput(e.target.value.toUpperCase())}
-              onPressEnter={() => verificarCodigo(codigoValeInput)}
-              disabled={verificandoCodigo}
-              allowClear
-              className='!max-w-[220px]'
-              size='small'
-              style={{ fontSize: '11px' }}
-            />
-          </Tooltip>
-        )}
-        {verificandoCodigo && <Spin size='small' />}
-      </div>
+      ) : (
+        <Tooltip title='Ingresa código si el cliente tiene un vale de próxima compra'>
+          <Input
+            placeholder='Código vale próxima compra...'
+            prefix={<FaTicketAlt className='text-purple-500' size={10} />}
+            value={codigoValeInput}
+            onChange={(e) => setCodigoValeInput(e.target.value.toUpperCase())}
+            onPressEnter={() => verificarCodigo(codigoValeInput)}
+            disabled={verificandoCodigo}
+            allowClear
+            className='!max-w-[220px]'
+            size='small'
+            style={{ fontSize: '11px' }}
+          />
+        </Tooltip>
+      )}
+      {(verificandoCodigo || loading) && <Spin size='small' />}
     </div>
   )
 }

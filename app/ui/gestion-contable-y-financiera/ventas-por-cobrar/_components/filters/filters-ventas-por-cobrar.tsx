@@ -281,6 +281,14 @@ export default function FiltersVentasPorCobrar() {
               />
             </LabelBase>
           </ConfigurableElement>
+          <ButtonBase
+            color='info'
+            size='md'
+            type='submit'
+            className='flex items-center gap-2 flex-shrink-0 mt-4'
+          >
+            <FaSearch />
+          </ButtonBase>
         </div>
 
         {/* Mobile/Tablet: Solo almacén y botones */}

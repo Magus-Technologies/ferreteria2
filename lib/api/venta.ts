@@ -236,6 +236,16 @@ export const ventaApi = {
   },
 
   /**
+   * Cobro múltiple: distribuir un pago en varias ventas de un cliente
+   */
+  async storeCobroMultiple(data: StoreCobroMultipleRequest): Promise<ApiResponse<StoreCobroMultipleResponse>> {
+    return apiRequest('/ventas/cobro-multiple', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
    * Obtener historial de ediciones de una venta
    */
   async getHistorial(id: string): Promise<ApiResponse<{ data: VentaHistorialItem[] }>> {
@@ -418,4 +428,27 @@ export interface StoreCobroRequest {
   numero_letra?: string
   numero_operacion?: string
   user_id: string
+}
+
+export interface StoreCobroMultipleRequest {
+  cliente_id: number
+  despliegue_de_pago_id: string
+  monto_total: number
+  fecha: string
+  observacion?: string
+  numero_operacion?: string
+  user_id: string
+  distribucion: Array<{ venta_id: string; monto: number }>
+}
+
+export interface StoreCobroMultipleResponse {
+  data: Array<{
+    venta_id: string
+    serie: string
+    numero: number
+    monto_cobrado: number
+    saldo_pendiente: number
+  }>
+  message: string
+  total_cobrado: number
 }
