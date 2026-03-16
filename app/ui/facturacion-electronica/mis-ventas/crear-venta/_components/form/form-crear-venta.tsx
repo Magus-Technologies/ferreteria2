@@ -219,7 +219,7 @@ export default function FormCrearVenta({
           </LabelBase>
         </ConfigurableElement>
 
-        <InputCodigoVale />
+        <InputCodigoVale form={form} />
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}
