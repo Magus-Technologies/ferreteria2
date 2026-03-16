@@ -108,6 +108,8 @@ export type FormCreateVenta = {
     observaciones?: string
   }
   codigo_vale?: string
+  tipo_pedido?: string
+  cargo_destino?: string
 }
 
 // Componente interno que se recrea completamente cuando cambia la key

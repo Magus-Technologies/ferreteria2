@@ -424,7 +424,7 @@ export default function useCreateVenta({
             chofer_id: despachador_id ? String(despachador_id) : undefined,
             quien_entrega: despachador_id ? QuienEntrega.CHOFER : undefined,
             user_id: user_id,
-            tipo_pedido: tipo_pedido || undefined,
+            tipo_pedido: (tipo_pedido as TipoPedido) || undefined,
             cargo_destino: cargo_destino || undefined,
             productos_entregados: unidadesDerivadas,
           }
