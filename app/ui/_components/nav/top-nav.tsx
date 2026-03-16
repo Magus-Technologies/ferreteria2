@@ -1,7 +1,7 @@
 'use client'
 
 import { MenuProps } from 'antd/lib'
-import { FaSignOutAlt, FaBell } from 'react-icons/fa'
+import { FaSignOutAlt, FaBell, FaPlus } from 'react-icons/fa'
 import { FaCheck } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
@@ -10,7 +10,9 @@ import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-prove
 import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
 import ModalProveedoresDesactivados from '~/app/_components/modals/modal-proveedores-desactivados'
 import ModalConfiguraciones from '~/app/_components/modals/modal-configuraciones'
+import ModalGestionarAlmacenes from '~/app/ui/_components/modals/modal-gestionar-almacenes'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -22,6 +24,7 @@ export default function TopNavUI({ className }: { className?: string }) {
   const { openModal: openConfiguraciones } = useModalConfiguraciones()
   const almacen_id = useStoreAlmacen(s => s.almacen_id)
   const setAlmacenId = useStoreAlmacen(s => s.setAlmacenId)
+  const [openGestionAlmacenes, setOpenGestionAlmacenes] = useState(false)
 
   const { data: almacenes } = useQuery({
     queryKey: [QueryKeys.ALMACENES],
@@ -44,12 +47,21 @@ export default function TopNavUI({ className }: { className?: string }) {
     {
       key: '2',
       label: 'Sucursales',
-      children: (almacenes || []).map(a => ({
-        key: `2-${a.id}`,
-        label: a.name,
-        extra: almacen_id === a.id ? <FaCheck className='text-emerald-600' /> : undefined,
-        onClick: () => setAlmacenId(a.id),
-      })),
+      children: [
+        ...(almacenes || []).map(a => ({
+          key: `2-${a.id}`,
+          label: a.name,
+          extra: almacen_id === a.id ? <FaCheck className='text-emerald-600' /> : undefined,
+          onClick: () => setAlmacenId(a.id),
+        })),
+        { type: 'divider' as const, key: '2-divider' },
+        {
+          key: '2-gestionar',
+          label: 'Gestionar Sucursales',
+          extra: <FaPlus className='text-emerald-600' size={12} />,
+          onClick: () => setOpenGestionAlmacenes(true),
+        },
+      ],
     },
     {
       key: '3',
@@ -123,6 +135,7 @@ export default function TopNavUI({ className }: { className?: string }) {
       </DropdownBase>
       <ModalProveedoresDesactivados />
       <ModalConfiguraciones />
+      <ModalGestionarAlmacenes open={openGestionAlmacenes} setOpen={setOpenGestionAlmacenes} />
     </>
   )
 }
