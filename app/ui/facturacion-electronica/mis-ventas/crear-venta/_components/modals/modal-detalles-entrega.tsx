@@ -1,12 +1,14 @@
 'use client'
 
-import { Select, Modal, FormInstance, Form, Input, Switch } from 'antd'
+import { Select, Modal, FormInstance, Form, Input, Switch, Segmented } from 'antd'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import SelectDespachadores from '~/app/_components/form/selects/select-despachadores'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
+import { apiRequest } from '~/lib/api'
+import { TipoPedido } from '~/lib/api/entrega-producto'
 import TitleForm from '~/components/form/title-form'
 import dynamic from 'next/dynamic'
 import useCreateVenta from '../../_hooks/use-create-venta'
@@ -61,6 +63,7 @@ export default function ModalDetallesEntrega({
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null)
   const [productosEntrega, setProductosEntrega] = useState<ProductoEntrega[]>([])
   const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
+  const [tipoPedido, setTipoPedido] = useState<TipoPedido>(TipoPedido.INTERNO)
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<TipoDireccion | null>(null)
   // Estado para programar el resto del parcial
   const [programarResto, setProgramarResto] = useState(true)
@@ -80,6 +83,25 @@ export default function ModalDetallesEntrega({
 
   // Hook para crear/actualizar venta
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
+
+  // Cargar cargos para pedido externo
+  const { data: cargos = [] } = useQuery({
+    queryKey: ['catalogos', 'cargos'],
+    queryFn: async () => {
+      const result = await apiRequest<{ data: { codigo: string; descripcion: string }[] }>('/catalogos/cargos')
+      return result.data?.data || []
+    },
+  })
+
+  const handleTipoPedidoChange = (value: TipoPedido) => {
+    setTipoPedido(value)
+    form.setFieldValue('tipo_pedido', value)
+    if (value === TipoPedido.INTERNO) {
+      form.setFieldValue('cargo_destino', undefined)
+    } else {
+      form.setFieldValue('despachador_id', undefined)
+    }
+  }
 
   // Cargar direcciones del cliente
   const { data: direccionesData, isLoading: cargandoDirecciones } = useQuery({
@@ -395,21 +417,64 @@ export default function ModalDetallesEntrega({
         {/* Campos para Despacho a Domicilio (solo Domicilio, ya no Parcial) */}
         {tipoDespacho === 'Domicilio' && (
           <div className="space-y-4">
-            {/* Fila 1: Despachador + botón calendario */}
+            {/* Campos ocultos para tipo_pedido y cargo_destino */}
+            <div style={{ display: 'none' }}>
+              <Form.Item name="tipo_pedido"><Input /></Form.Item>
+              <Form.Item name="cargo_destino"><Input /></Form.Item>
+            </div>
+
+            {/* Tipo de Pedido + Asignación */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Pedido:
+              </label>
+              <Segmented
+                value={tipoPedido}
+                onChange={(value) => handleTipoPedidoChange(value as TipoPedido)}
+                options={[
+                  { value: TipoPedido.INTERNO, label: 'Asignar a usuario' },
+                  { value: TipoPedido.EXTERNO, label: 'Enviar a cargo' },
+                ]}
+                className="mb-3"
+                block
+              />
+            </div>
+
+            {/* Fila 1: Despachador/Cargo + botón calendario */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Designar Despachador: <span className="text-gray-400 text-xs">(opcional)</span>
-                </label>
-                <SelectDespachadores
-                  form={form}
-                  propsForm={{
-                    name: 'despachador_id',
-                  }}
-                  placeholder="Sin asignar (todos los despachadores lo verán)"
-                  className="w-full"
-                  allowClear
-                />
+                {tipoPedido === TipoPedido.INTERNO ? (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Designar Despachador: <span className="text-gray-400 text-xs">(opcional)</span>
+                    </label>
+                    <SelectDespachadores
+                      form={form}
+                      propsForm={{
+                        name: 'despachador_id',
+                      }}
+                      placeholder="Sin asignar (todos los despachadores lo verán)"
+                      className="w-full"
+                      allowClear
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cargo destino: <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      placeholder="Seleccionar cargo destino"
+                      value={form.getFieldValue('cargo_destino')}
+                      onChange={(value) => form.setFieldValue('cargo_destino', value)}
+                      options={cargos.map((c) => ({
+                        value: c.codigo,
+                        label: c.descripcion,
+                      }))}
+                      className="w-full"
+                    />
+                  </>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

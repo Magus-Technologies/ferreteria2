@@ -12,6 +12,7 @@ import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 import { useRouter } from "next/navigation";
 import ModalRequerimientoInterno from "../modals/modal-requerimiento-interno";
+import ModalTransferirStock from "../modals/modal-transferir-stock";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   MdSpaceDashboard,
@@ -25,6 +26,11 @@ export default function TopNav({ className }: { className?: string }) {
   const router = useRouter();
   const { can } = usePermissionHook();
   const [openReqModal, setOpenReqModal] = useState(false);
+  const [openTransferirStock, setOpenTransferirStock] = useState(false);
+
+  const actionHandlers: Record<string, () => void> = {
+    openTransferirStock: () => setOpenTransferirStock(true),
+  };
 
   const moduleId = "gestion-comercial-e-inventario";
   const nav = getModuleNav(moduleId);
@@ -46,7 +52,11 @@ export default function TopNav({ className }: { className?: string }) {
               return {
                 key: sub.key,
                 label: sub.label,
-                onClick: sub.route ? () => router.push(sub.route as string) : undefined,
+                onClick: sub.route
+                  ? () => router.push(sub.route as string)
+                  : sub.action && actionHandlers[sub.action]
+                    ? actionHandlers[sub.action]
+                    : undefined,
               };
             });
 
@@ -87,6 +97,7 @@ export default function TopNav({ className }: { className?: string }) {
       </BaseNav>
 
       <ModalRequerimientoInterno open={openReqModal} onClose={() => setOpenReqModal(false)} />
+      <ModalTransferirStock open={openTransferirStock} setOpen={setOpenTransferirStock} />
     </>
   );
 }

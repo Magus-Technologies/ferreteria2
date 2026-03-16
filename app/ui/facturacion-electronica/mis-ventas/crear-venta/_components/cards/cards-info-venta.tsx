@@ -319,8 +319,14 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
         onContinuar={() => {
-          // Al dar continuar, intentar finalizar la venta (esto dispara la validación de apertura)
-          form.submit();
+          if (tipo_despacho === 'Domicilio' || tipo_despacho === 'Parcial') {
+            // Cerrar modal de pago y abrir modal de detalles de entrega
+            setModalOpen(false);
+            setModalDetallesEntregaOpen(true);
+          } else {
+            // Despacho en Tienda: crear venta directamente
+            form.submit();
+          }
         }}
       />
 

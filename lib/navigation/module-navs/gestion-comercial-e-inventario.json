@@ -29,6 +29,7 @@
             "key": "transferir-stock",
             "label": "Transferir Stock",
             "route": null,
+            "action": "openTransferirStock",
             "permission": null
           }
         ]

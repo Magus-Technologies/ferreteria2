@@ -82,4 +82,5 @@ export enum QueryKeys {
   SOLICITUD_ORDEN_COMPRA = 'solicitud_orden_compra',
   KARDEX = 'kardex',
   KARDEX_INVENTARIO = 'kardex_inventario',
+  TRANSFERENCIAS_STOCK = 'transferencias_stock',
 }

@@ -22,6 +22,7 @@ import {
   TipoDespacho,
   EstadoEntrega,
   QuienEntrega,
+  TipoPedido,
   type CreateEntregaProductoRequest
 } from '~/lib/api/entrega-producto'
 import { fcmApi } from '~/lib/api/fcm'
@@ -172,6 +173,8 @@ export default function useCreateVenta({
       cantidades_parciales,
       parcial_resto_programado,
       codigo_vale,
+      tipo_pedido,
+      cargo_destino,
       ...restValues
     } = values
 
@@ -421,6 +424,8 @@ export default function useCreateVenta({
             chofer_id: despachador_id ? String(despachador_id) : undefined,
             quien_entrega: despachador_id ? QuienEntrega.CHOFER : undefined,
             user_id: user_id,
+            tipo_pedido: tipo_pedido || undefined,
+            cargo_destino: cargo_destino || undefined,
             productos_entregados: unidadesDerivadas,
           }
 

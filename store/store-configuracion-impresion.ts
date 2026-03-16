@@ -11,6 +11,7 @@ export type TipoDocumento =
   | 'compra'
   | 'cierre_caja'
   | 'apertura_caja'
+  | 'transferencia_stock'
 
 export interface ConfiguracionCampo {
   font_family: string
