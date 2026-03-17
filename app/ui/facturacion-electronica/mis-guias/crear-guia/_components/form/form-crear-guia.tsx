@@ -1,7 +1,7 @@
-import { FaCalendar, FaTruck } from 'react-icons/fa6'
+import { FaCalendar, FaTruck, FaUserTag } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
-import { Form, FormInstance } from 'antd'
+import { Form, FormInstance, Tag } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
@@ -9,9 +9,13 @@ import SelectMotivoTraslado from '~/app/_components/form/selects/select-motivo-t
 import { TbTruckDelivery } from 'react-icons/tb'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
+import type { MotivoTraslado } from '~/lib/api/motivo-traslado'
+
+// Motivos SUNAT que requieren Comprador (distinto al destinatario)
+const MOTIVOS_CON_COMPRADOR = ['03', '14']
 
 export default function FormCrearGuia({
   form,
@@ -22,12 +26,28 @@ export default function FormCrearGuia({
   guia?: any
   venta?: any
 }) {
+  const [codigoMotivo, setCodigoMotivo] = useState<string>('')
+
+  const requiereComprador = MOTIVOS_CON_COMPRADOR.includes(codigoMotivo)
+
   // Inicializar D1 al montar el componente
   useEffect(() => {
     if (!form.getFieldValue('direccion_seleccionada')) {
       form.setFieldValue('direccion_seleccionada', 'D1')
     }
   }, [form])
+
+  // Limpiar comprador cuando el motivo cambia y ya no lo requiere
+  useEffect(() => {
+    if (!requiereComprador) {
+      form.setFieldValue('comprador_id', undefined)
+      form.setFieldValue('comprador_nombre', undefined)
+    }
+  }, [requiereComprador, form])
+
+  const handleMotivoChange = useCallback((_value: number, motivoTraslado?: MotivoTraslado) => {
+    setCodigoMotivo(motivoTraslado?.codigo || '')
+  }, [])
 
   return (
     <div className='flex flex-col gap-2'>
@@ -118,19 +138,20 @@ export default function FormCrearGuia({
               }}
               placeholder='Seleccione motivo...'
               className='w-full sm:!min-w-[200px] sm:!w-[200px]'
+              onChange={handleMotivoChange}
             />
           </LabelBase>
         </ConfigurableElement>
       </div>
 
-      {/* Fila 2: DNI/RUC, Cliente, Radio Dirección */}
+      {/* Fila 2: DNI/RUC Destinatario, Cliente, Radio Dirección */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
         <ConfigurableElement
           componentId='crear-guia.dni-ruc'
           label='Campo DNI/RUC'
         >
           <LabelBase
-            label='DNI/RUC:'
+            label={requiereComprador ? 'Destinatario (DNI/RUC):' : 'DNI/RUC:'}
             classNames={{ labelParent: 'mb-2' }}
             className='w-full sm:w-auto'
           >
@@ -154,10 +175,10 @@ export default function FormCrearGuia({
                   form.setFieldValue('cliente_nombre', nombreCompleto)
 
                   const direcciones = cliente.direcciones || [];
-                  const d1 = direcciones.find(d => d.tipo === 'D1')?.direccion || '';
-                  const d2 = direcciones.find(d => d.tipo === 'D2')?.direccion || '';
-                  const d3 = direcciones.find(d => d.tipo === 'D3')?.direccion || '';
-                  const d4 = direcciones.find(d => d.tipo === 'D4')?.direccion || '';
+                  const d1 = direcciones.find((d: any) => d.tipo === 'D1')?.direccion || '';
+                  const d2 = direcciones.find((d: any) => d.tipo === 'D2')?.direccion || '';
+                  const d3 = direcciones.find((d: any) => d.tipo === 'D3')?.direccion || '';
+                  const d4 = direcciones.find((d: any) => d.tipo === 'D4')?.direccion || '';
 
                   form.setFieldValue('_cliente_direccion_1', d1);
                   form.setFieldValue('_cliente_direccion_2', d2);
@@ -188,7 +209,7 @@ export default function FormCrearGuia({
           label='Campo Nombre Cliente'
         >
           <LabelBase
-            label='Cliente:'
+            label={requiereComprador ? 'Destinatario:' : 'Cliente:'}
             classNames={{ labelParent: 'mb-2' }}
             className='w-full sm:flex-1'
           >
@@ -198,7 +219,7 @@ export default function FormCrearGuia({
                 hasFeedback: false,
                 className: 'w-full',
               }}
-              placeholder='Nombre del cliente'
+              placeholder={requiereComprador ? 'Nombre del destinatario (quien recibe)' : 'Nombre del cliente'}
               className='w-full'
               readOnly
               uppercase={false}
@@ -215,6 +236,69 @@ export default function FormCrearGuia({
           </div>
         </ConfigurableElement>
       </div>
+
+      {/* Fila 2.5: Comprador - solo para motivos 03 y 14 */}
+      {requiereComprador && (
+        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <div className='w-full'>
+            <Tag color='blue' className='!text-xs !mb-2'>
+              <FaUserTag className='inline mr-1' />
+              Motivo "{codigoMotivo}" requiere Comprador (quien paga) ademas del Destinatario (quien recibe)
+            </Tag>
+          </div>
+          <LabelBase
+            label='Comprador (DNI/RUC):'
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:w-auto'
+          >
+            <SelectClientes
+              form={form}
+              showOnlyDocument={true}
+              propsForm={{
+                name: 'comprador_id',
+                hasFeedback: false,
+                className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
+                rules: [
+                  {
+                    required: true,
+                    message: 'Selecciona el comprador',
+                  },
+                ],
+              }}
+              className='w-full'
+              classNameIcon='text-blue-600 mx-1'
+              placeholder='DNI/RUC comprador'
+              onChange={(_, cliente) => {
+                if (cliente) {
+                  const nombre = cliente.razon_social
+                    ? cliente.razon_social
+                    : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
+                  form.setFieldValue('comprador_nombre', nombre)
+                } else {
+                  form.setFieldValue('comprador_nombre', '')
+                }
+              }}
+            />
+          </LabelBase>
+          <LabelBase
+            label='Comprador:'
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:flex-1'
+          >
+            <InputBase
+              propsForm={{
+                name: 'comprador_nombre',
+                hasFeedback: false,
+                className: 'w-full',
+              }}
+              placeholder='Nombre del comprador (quien paga)'
+              className='w-full'
+              readOnly
+              uppercase={false}
+            />
+          </LabelBase>
+        </div>
+      )}
 
       {/* Fila 3: Tipo Guía, Modalidad, Vehículo, Chofer */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>

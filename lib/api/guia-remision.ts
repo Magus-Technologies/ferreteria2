@@ -52,6 +52,7 @@ export interface CreateGuiaRemisionRequest {
   fecha_traslado: string; // Format: "YYYY-MM-DD"
   afecta_stock?: boolean;
   cliente_id?: number;
+  comprador_id?: number;
   motivo_traslado_id: number;
   modalidad_transporte: ModalidadTransporte;
   vehiculo_placa?: string;
@@ -74,6 +75,7 @@ export interface UpdateGuiaRemisionRequest {
   fecha_traslado?: string;
   afecta_stock?: boolean;
   cliente_id?: number;
+  comprador_id?: number;
   motivo_traslado_id?: number;
   modalidad_transporte?: ModalidadTransporte;
   vehiculo_placa?: string;
