@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal, Input, App, Popconfirm } from 'antd'
+import { Modal, Input, App, Popconfirm, Switch } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -25,16 +25,18 @@ export default function ModalGestionarAlmacenes({ open, setOpen }: ModalGestiona
   const [editandoNombre, setEditandoNombre] = useState('')
 
   const { data: almacenes } = useQuery({
-    queryKey: [QueryKeys.ALMACENES],
+    queryKey: [QueryKeys.ALMACENES, 'gestion'],
     queryFn: async () => {
-      const response = await almacenesApi.getAll()
+      const response = await almacenesApi.getAll(true) // incluir inactivos
       if (response.error) throw new Error(response.error.message)
       return response.data?.data || []
     },
     enabled: open,
   })
 
-  const invalidar = () => queryClient.invalidateQueries({ queryKey: [QueryKeys.ALMACENES] })
+  const invalidar = () => {
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.ALMACENES] })
+  }
 
   // Crear
   const crearMutation = useMutation({
@@ -74,6 +76,18 @@ export default function ModalGestionarAlmacenes({ open, setOpen }: ModalGestiona
       if (res.error) { message.error(res.error.message); return }
       message.success('Sucursal eliminada')
       if (almacen_id === id) setAlmacenId(1)
+      invalidar()
+    },
+    onError: (e: any) => message.error(e.message),
+  })
+
+  // Toggle activo
+  const toggleActivoMutation = useMutation({
+    mutationFn: async (id: number) => almacenesApi.toggleActivo(id),
+    onSuccess: (res) => {
+      if (res.error) { message.error(res.error.message); return }
+      const activo = res.data?.data?.activo
+      message.success(activo ? 'Sucursal activada' : 'Sucursal desactivada')
       invalidar()
     },
     onError: (e: any) => message.error(e.message),
@@ -124,7 +138,7 @@ export default function ModalGestionarAlmacenes({ open, setOpen }: ModalGestiona
       {/* Lista de almacenes */}
       <div className='divide-y border rounded-lg overflow-hidden'>
         {(almacenes || []).map(a => (
-          <div key={a.id} className={`flex items-center gap-3 px-4 py-3 ${almacen_id === a.id ? 'bg-emerald-50' : 'bg-white'}`}>
+          <div key={a.id} className={`flex items-center gap-3 px-4 py-3 ${!a.activo ? 'bg-gray-50' : almacen_id === a.id ? 'bg-emerald-50' : 'bg-white'}`}>
             {editandoId === a.id ? (
               <>
                 <Input
@@ -152,15 +166,26 @@ export default function ModalGestionarAlmacenes({ open, setOpen }: ModalGestiona
               </>
             ) : (
               <>
-                <FaWarehouse className={almacen_id === a.id ? 'text-emerald-600' : 'text-gray-400'} />
-                <span className='flex-1 font-medium text-sm'>
+                <FaWarehouse className={!a.activo ? 'text-gray-300' : almacen_id === a.id ? 'text-emerald-600' : 'text-gray-400'} />
+                <span className={`flex-1 font-medium text-sm ${!a.activo ? 'text-gray-400 line-through' : ''}`}>
                   {a.name}
-                  {almacen_id === a.id && (
+                  {almacen_id === a.id && a.activo && (
                     <span className='ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold'>
                       ACTIVA
                     </span>
                   )}
+                  {!a.activo && (
+                    <span className='ml-2 text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold'>
+                      INACTIVA
+                    </span>
+                  )}
                 </span>
+                <Switch
+                  size='small'
+                  checked={a.activo}
+                  onChange={() => toggleActivoMutation.mutate(a.id)}
+                  loading={toggleActivoMutation.isPending}
+                />
                 <button
                   onClick={() => { setEditandoId(a.id); setEditandoNombre(a.name) }}
                   className='text-blue-500 hover:text-blue-700 p-1'

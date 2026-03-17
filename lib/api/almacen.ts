@@ -16,8 +16,19 @@ export const almacenesApi = {
    * Obtener todos los almacenes
    * GET /api/almacenes
    */
-  async getAll(): Promise<ApiResponse<AlmacenesResponse>> {
-    return apiRequest<AlmacenesResponse>('/almacenes');
+  async getAll(incluirInactivos = false): Promise<ApiResponse<AlmacenesResponse>> {
+    const params = incluirInactivos ? '?incluir_inactivos=1' : '';
+    return apiRequest<AlmacenesResponse>(`/almacenes${params}`);
+  },
+
+  /**
+   * Toggle estado activo/inactivo
+   * PATCH /api/almacenes/{id}/toggle-activo
+   */
+  async toggleActivo(id: number): Promise<ApiResponse<AlmacenResponse>> {
+    return apiRequest<AlmacenResponse>(`/almacenes/${id}/toggle-activo`, {
+      method: 'PATCH',
+    });
   },
 
   /**

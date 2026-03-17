@@ -6,6 +6,7 @@ export interface Almacen {
   id: number;
   name: string;
   direccion?: string;
+  activo: boolean;
   created_at: string;
   updated_at: string;
 }
