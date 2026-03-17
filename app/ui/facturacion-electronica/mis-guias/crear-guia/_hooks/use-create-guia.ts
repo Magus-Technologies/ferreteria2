@@ -59,7 +59,8 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
       punto_llegada: values.punto_llegada || '',
       cliente_id: values.cliente_id,
       comprador_id: values.comprador_id || undefined,
-      almacen_origen_id: 1, // TODO: Obtener del contexto o formulario
+      almacen_origen_id: values.almacen_origen_id || 1,
+      almacen_destino_id: values.almacen_destino_id || undefined,
       chofer_id: values.chofer_id,
       vehiculo_placa: values.vehiculo_placa,
       referencia: values.referencia,

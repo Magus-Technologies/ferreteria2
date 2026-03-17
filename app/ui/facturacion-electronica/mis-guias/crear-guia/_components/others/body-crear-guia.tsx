@@ -34,6 +34,8 @@ export type FormCreateGuia = {
   cliente_id?: number
   comprador_id?: number
   comprador_nombre?: string
+  almacen_origen_id?: number
+  almacen_destino_id?: number
   referencia?: string
   motivo_traslado: string
   modalidad_transporte: string

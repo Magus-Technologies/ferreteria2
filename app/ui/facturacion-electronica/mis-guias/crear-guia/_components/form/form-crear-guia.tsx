@@ -1,4 +1,4 @@
-import { FaCalendar, FaTruck, FaUserTag } from 'react-icons/fa6'
+import { FaCalendar, FaTruck, FaUserTag, FaWarehouse } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
 import { Form, FormInstance, Tag } from 'antd'
@@ -13,9 +13,15 @@ import { useEffect, useState, useCallback } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 import type { MotivoTraslado } from '~/lib/api/motivo-traslado'
+import { useQuery } from '@tanstack/react-query'
+import { almacenesApi } from '~/lib/api/almacen'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import type { Almacen } from '~/app/_types/almacen'
 
 // Motivos SUNAT que requieren Comprador (distinto al destinatario)
 const MOTIVOS_CON_COMPRADOR = ['03', '14']
+// Motivo SUNAT: Traslado entre establecimientos de la misma empresa
+const MOTIVO_ENTRE_ESTABLECIMIENTOS = '08'
 
 export default function FormCrearGuia({
   form,
@@ -29,6 +35,19 @@ export default function FormCrearGuia({
   const [codigoMotivo, setCodigoMotivo] = useState<string>('')
 
   const requiereComprador = MOTIVOS_CON_COMPRADOR.includes(codigoMotivo)
+  const esEntreEstablecimientos = codigoMotivo === MOTIVO_ENTRE_ESTABLECIMIENTOS
+
+  // Consultar almacenes (para motivo 08)
+  const { data: almacenes } = useQuery({
+    queryKey: [QueryKeys.ALMACENES],
+    queryFn: async () => {
+      const response = await almacenesApi.getAll()
+      if (response.error) throw new Error(response.error.message)
+      return response.data?.data || []
+    },
+    staleTime: 1000 * 60 * 5,
+    enabled: esEntreEstablecimientos,
+  })
 
   // Inicializar D1 al montar el componente
   useEffect(() => {
@@ -45,9 +64,29 @@ export default function FormCrearGuia({
     }
   }, [requiereComprador, form])
 
+  // Limpiar campos de cliente cuando cambia a motivo 08
+  useEffect(() => {
+    if (esEntreEstablecimientos) {
+      form.setFieldValue('cliente_id', undefined)
+      form.setFieldValue('cliente_nombre', undefined)
+      form.setFieldValue('punto_partida', '')
+      form.setFieldValue('punto_llegada', '')
+    }
+  }, [esEntreEstablecimientos, form])
+
   const handleMotivoChange = useCallback((_value: number, motivoTraslado?: MotivoTraslado) => {
     setCodigoMotivo(motivoTraslado?.codigo || '')
   }, [])
+
+  const handleAlmacenOrigenChange = useCallback((value: number) => {
+    const almacen = almacenes?.find((a: Almacen) => a.id === value)
+    form.setFieldValue('punto_partida', almacen?.direccion || '')
+  }, [almacenes, form])
+
+  const handleAlmacenDestinoChange = useCallback((value: number) => {
+    const almacen = almacenes?.find((a: Almacen) => a.id === value)
+    form.setFieldValue('punto_llegada', almacen?.direccion || '')
+  }, [almacenes, form])
 
   return (
     <div className='flex flex-col gap-2'>
@@ -144,98 +183,100 @@ export default function FormCrearGuia({
         </ConfigurableElement>
       </div>
 
-      {/* Fila 2: DNI/RUC Destinatario, Cliente, Radio Dirección */}
-      <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
-        <ConfigurableElement
-          componentId='crear-guia.dni-ruc'
-          label='Campo DNI/RUC'
-        >
-          <LabelBase
-            label={requiereComprador ? 'Destinatario (DNI/RUC):' : 'DNI/RUC:'}
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:w-auto'
+      {/* Fila 2: DNI/RUC Destinatario, Cliente, Radio Dirección — oculto para motivo 08 */}
+      {!esEntreEstablecimientos && (
+        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <ConfigurableElement
+            componentId='crear-guia.dni-ruc'
+            label='Campo DNI/RUC'
           >
-            <SelectClientes
-              form={form}
-              showOnlyDocument={true}
-              clienteOptionsDefault={venta?.cliente ? [venta.cliente] : []}
-              propsForm={{
-                name: 'cliente_id',
-                hasFeedback: false,
-                className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
-              }}
-              className='w-full'
-              classNameIcon='text-rose-700 mx-1'
-              placeholder='DNI/RUC'
-              onChange={(_, cliente) => {
-                if (cliente) {
-                  const nombreCompleto = cliente.razon_social
-                    ? cliente.razon_social
-                    : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
-                  form.setFieldValue('cliente_nombre', nombreCompleto)
+            <LabelBase
+              label={requiereComprador ? 'Destinatario (DNI/RUC):' : 'DNI/RUC:'}
+              classNames={{ labelParent: 'mb-2' }}
+              className='w-full sm:w-auto'
+            >
+              <SelectClientes
+                form={form}
+                showOnlyDocument={true}
+                clienteOptionsDefault={venta?.cliente ? [venta.cliente] : []}
+                propsForm={{
+                  name: 'cliente_id',
+                  hasFeedback: false,
+                  className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
+                }}
+                className='w-full'
+                classNameIcon='text-rose-700 mx-1'
+                placeholder='DNI/RUC'
+                onChange={(_, cliente) => {
+                  if (cliente) {
+                    const nombreCompleto = cliente.razon_social
+                      ? cliente.razon_social
+                      : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
+                    form.setFieldValue('cliente_nombre', nombreCompleto)
 
-                  const direcciones = cliente.direcciones || [];
-                  const d1 = direcciones.find((d: any) => d.tipo === 'D1')?.direccion || '';
-                  const d2 = direcciones.find((d: any) => d.tipo === 'D2')?.direccion || '';
-                  const d3 = direcciones.find((d: any) => d.tipo === 'D3')?.direccion || '';
-                  const d4 = direcciones.find((d: any) => d.tipo === 'D4')?.direccion || '';
+                    const direcciones = cliente.direcciones || [];
+                    const d1 = direcciones.find((d: any) => d.tipo === 'D1')?.direccion || '';
+                    const d2 = direcciones.find((d: any) => d.tipo === 'D2')?.direccion || '';
+                    const d3 = direcciones.find((d: any) => d.tipo === 'D3')?.direccion || '';
+                    const d4 = direcciones.find((d: any) => d.tipo === 'D4')?.direccion || '';
 
-                  form.setFieldValue('_cliente_direccion_1', d1);
-                  form.setFieldValue('_cliente_direccion_2', d2);
-                  form.setFieldValue('_cliente_direccion_3', d3);
-                  form.setFieldValue('_cliente_direccion_4', d4);
+                    form.setFieldValue('_cliente_direccion_1', d1);
+                    form.setFieldValue('_cliente_direccion_2', d2);
+                    form.setFieldValue('_cliente_direccion_3', d3);
+                    form.setFieldValue('_cliente_direccion_4', d4);
 
-                  const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1';
-                  let direccionActual = d1;
-                  if (direccionSeleccionada === 'D2') direccionActual = d2;
-                  if (direccionSeleccionada === 'D3') direccionActual = d3;
-                  if (direccionSeleccionada === 'D4') direccionActual = d4;
-                  form.setFieldValue('punto_llegada', direccionActual);
-                } else {
-                  form.setFieldValue('cliente_nombre', '')
-                  form.setFieldValue('punto_llegada', '')
-                  form.setFieldValue('_cliente_direccion_1', '')
-                  form.setFieldValue('_cliente_direccion_2', '')
-                  form.setFieldValue('_cliente_direccion_3', '')
-                  form.setFieldValue('_cliente_direccion_4', '')
-                }
-              }}
-            />
-          </LabelBase>
-        </ConfigurableElement>
+                    const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1';
+                    let direccionActual = d1;
+                    if (direccionSeleccionada === 'D2') direccionActual = d2;
+                    if (direccionSeleccionada === 'D3') direccionActual = d3;
+                    if (direccionSeleccionada === 'D4') direccionActual = d4;
+                    form.setFieldValue('punto_llegada', direccionActual);
+                  } else {
+                    form.setFieldValue('cliente_nombre', '')
+                    form.setFieldValue('punto_llegada', '')
+                    form.setFieldValue('_cliente_direccion_1', '')
+                    form.setFieldValue('_cliente_direccion_2', '')
+                    form.setFieldValue('_cliente_direccion_3', '')
+                    form.setFieldValue('_cliente_direccion_4', '')
+                  }
+                }}
+              />
+            </LabelBase>
+          </ConfigurableElement>
 
-        <ConfigurableElement
-          componentId='crear-guia.cliente-nombre'
-          label='Campo Nombre Cliente'
-        >
-          <LabelBase
-            label={requiereComprador ? 'Destinatario:' : 'Cliente:'}
-            classNames={{ labelParent: 'mb-2' }}
-            className='w-full sm:flex-1'
+          <ConfigurableElement
+            componentId='crear-guia.cliente-nombre'
+            label='Campo Nombre Cliente'
           >
-            <InputBase
-              propsForm={{
-                name: 'cliente_nombre',
-                hasFeedback: false,
-                className: 'w-full',
-              }}
-              placeholder={requiereComprador ? 'Nombre del destinatario (quien recibe)' : 'Nombre del cliente'}
-              className='w-full'
-              readOnly
-              uppercase={false}
-            />
-          </LabelBase>
-        </ConfigurableElement>
+            <LabelBase
+              label={requiereComprador ? 'Destinatario:' : 'Cliente:'}
+              classNames={{ labelParent: 'mb-2' }}
+              className='w-full sm:flex-1'
+            >
+              <InputBase
+                propsForm={{
+                  name: 'cliente_nombre',
+                  hasFeedback: false,
+                  className: 'w-full',
+                }}
+                placeholder={requiereComprador ? 'Nombre del destinatario (quien recibe)' : 'Nombre del cliente'}
+                className='w-full'
+                readOnly
+                uppercase={false}
+              />
+            </LabelBase>
+          </ConfigurableElement>
 
-        <ConfigurableElement
-          componentId='crear-guia.radio-direccion'
-          label='Selector de Dirección'
-        >
-          <div className='mb-2'>
-            <RadioDireccionCliente form={form} />
-          </div>
-        </ConfigurableElement>
-      </div>
+          <ConfigurableElement
+            componentId='crear-guia.radio-direccion'
+            label='Selector de Dirección'
+          >
+            <div className='mb-2'>
+              <RadioDireccionCliente form={form} />
+            </div>
+          </ConfigurableElement>
+        </div>
+      )}
 
       {/* Fila 2.5: Comprador - solo para motivos 03 y 14 */}
       {requiereComprador && (
@@ -297,6 +338,60 @@ export default function FormCrearGuia({
               uppercase={false}
             />
           </LabelBase>
+        </div>
+      )}
+
+      {/* Fila 2.5b: Almacenes Origen/Destino - solo para motivo 08 */}
+      {esEntreEstablecimientos && (
+        <div className='flex flex-col gap-2'>
+          <Tag color='orange' className='!text-xs !w-fit'>
+            <FaWarehouse className='inline mr-1' />
+            Traslado entre establecimientos — el destinatario es la misma empresa
+          </Tag>
+          <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
+            <LabelBase label='Almacén Origen:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+              <SelectBase
+                propsForm={{
+                  name: 'almacen_origen_id',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Selecciona el almacén de origen',
+                    },
+                  ],
+                }}
+                placeholder='Seleccione almacén origen...'
+                className='w-full'
+                prefix={<FaWarehouse className='text-orange-600 mx-1' />}
+                options={almacenes?.map((a: Almacen) => ({
+                  value: a.id,
+                  label: `${a.name}${a.direccion ? ` — ${a.direccion}` : ''}`,
+                }))}
+                onChange={handleAlmacenOrigenChange}
+              />
+            </LabelBase>
+            <LabelBase label='Almacén Destino:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+              <SelectBase
+                propsForm={{
+                  name: 'almacen_destino_id',
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Selecciona el almacén de destino',
+                    },
+                  ],
+                }}
+                placeholder='Seleccione almacén destino...'
+                className='w-full'
+                prefix={<FaWarehouse className='text-green-600 mx-1' />}
+                options={almacenes?.map((a: Almacen) => ({
+                  value: a.id,
+                  label: `${a.name}${a.direccion ? ` — ${a.direccion}` : ''}`,
+                }))}
+                onChange={handleAlmacenDestinoChange}
+              />
+            </LabelBase>
+          </div>
         </div>
       )}
 
