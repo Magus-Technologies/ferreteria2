@@ -112,7 +112,7 @@ export default function ModalGestionarAlmacenes({ open, setOpen }: ModalGestiona
       onCancel={handleClose}
       footer={null}
       width={500}
-      destroyOnClose
+      destroyOnHidden
     >
       {/* Crear nueva */}
       <div className='flex gap-2 mb-4'>

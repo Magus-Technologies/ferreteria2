@@ -133,7 +133,7 @@ export default function ModalCrearGastoExtra({ open, onClose, gastoEdit }: Modal
                     title: <TitleForm>{isEditing ? 'Editar Gasto Operativo' : 'Registrar Nuevo Gasto Operativo'}</TitleForm>,
                     okText: isEditing ? 'Guardar Cambios' : (requiereAprobacion ? 'Guardar y Aprobar' : 'Guardar como Pendiente'),
                     cancelText: "Cancelar",
-                    destroyOnClose: true,
+                    destroyOnHidden: true,
                     okButtonProps: {
                         loading: isEditing ? updateMutation.isPending : crearMutation.isPending,
                         className: 'bg-rose-600 hover:bg-rose-700'

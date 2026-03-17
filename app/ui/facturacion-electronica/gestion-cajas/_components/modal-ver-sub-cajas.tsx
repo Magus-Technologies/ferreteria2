@@ -243,7 +243,7 @@ export default function ModalVerSubCajas({
                 width={1200}
                 footer={null}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 <div className='mt-4 min-h-[500px]'>
                     <Tabs

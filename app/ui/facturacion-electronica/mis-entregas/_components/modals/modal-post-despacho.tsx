@@ -103,7 +103,7 @@ export default function ModalPostDespacho({ open, onClose, entrega }: ModalPostD
       onCancel={onClose}
       width={950}
       centered
-      destroyOnClose
+      destroyOnHidden
       footer={
         <div className="flex items-center justify-between">
           <Button

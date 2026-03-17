@@ -128,7 +128,7 @@ export default function ModalCrearIngresoExtra({ open, onClose, ingresoEdit }: M
                 title: <TitleForm>{isEditing ? 'Editar Ingreso Operativo' : 'Registrar Nuevo Ingreso Operativo'}</TitleForm>,
                 okText: isEditing ? 'Guardar Cambios' : (requiereAprobacion ? 'Guardar y Aprobar' : 'Guardar como Pendiente'),
                 cancelText: "Cancelar",
-                destroyOnClose: true,
+                destroyOnHidden: true,
                 okButtonProps: {
                     loading: isEditing ? updateMutation.isPending : crearMutation.isPending,
                     className: 'bg-emerald-600 hover:bg-emerald-700'

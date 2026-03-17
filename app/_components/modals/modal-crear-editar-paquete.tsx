@@ -97,7 +97,7 @@ export default function ModalCrearEditarPaquete({
             {isEditing ? 'Actualizar' : 'Crear'}
           </Button>,
         ]}
-        destroyOnClose
+        destroyOnHidden
       >
         {isLoadingPaquete ? (
           <div className="flex justify-center items-center py-20">

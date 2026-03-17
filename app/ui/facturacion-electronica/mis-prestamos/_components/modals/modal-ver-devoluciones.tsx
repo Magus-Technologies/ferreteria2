@@ -134,7 +134,7 @@ export default function ModalVerDevoluciones({
       onCancel={() => setOpen(false)}
       footer={null}
       width={1200}
-      destroyOnClose
+      destroyOnHidden
     >
       {prestamo && (
         <div className='mb-4 p-4 bg-gray-50 rounded-lg'>

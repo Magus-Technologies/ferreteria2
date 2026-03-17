@@ -55,7 +55,7 @@ export default function ModalChoferSearch({
       }}
       maskClosable={false}
       keyboard={false}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className='flex items-center gap-2'>
         <InputBase

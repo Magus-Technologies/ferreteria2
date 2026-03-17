@@ -60,7 +60,7 @@ export default function ModalDespachadorSearch({
       }}
       maskClosable={false}
       keyboard={false}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className='flex items-center gap-2'>
         <InputBase

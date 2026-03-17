@@ -64,7 +64,7 @@ export default function ModalMapaEntrega({ open, onClose, entrega }: ModalMapaEn
       footer={null}
       width={900}
       centered
-      destroyOnClose
+      destroyOnHidden
     >
       {infoEntrega && (
         <div className="space-y-4">

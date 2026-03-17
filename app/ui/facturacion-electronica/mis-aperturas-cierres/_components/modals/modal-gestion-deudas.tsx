@@ -144,7 +144,7 @@ export default function ModalGestionDeudas({
       onCancel={onClose}
       footer={null}
       width={1200}
-      destroyOnClose
+      destroyOnHidden
       className="modal-premium"
       centered
     >

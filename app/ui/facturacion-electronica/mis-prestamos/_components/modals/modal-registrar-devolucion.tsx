@@ -87,7 +87,7 @@ export default function ModalRegistrarDevolucion({
       onCancel={handleCancel}
       footer={null}
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       {prestamo && (
         <div className='mb-4 p-4 bg-gray-50 rounded-lg'>

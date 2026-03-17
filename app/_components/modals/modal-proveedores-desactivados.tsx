@@ -191,7 +191,7 @@ export default function ModalProveedoresDesactivados() {
       onCancel={closeModal}
       footer={null}
       width={1000}
-      destroyOnClose
+      destroyOnHidden
       styles={{ body: { height: '600px', padding: '16px' } }}
     >
       <div className="flex flex-col gap-3 h-full">

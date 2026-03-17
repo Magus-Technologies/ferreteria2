@@ -89,6 +89,14 @@ export default function TopNavUI({ className }: { className?: string }) {
             openModal()
           },
         },
+        { type: 'divider' as const, key: '3-divider' },
+        {
+          key: '3-5',
+          label: 'Gestionar Catálogos',
+          onClick: () => {
+            router.push('/ui/configuracion/registros')
+          },
+        },
       ],
     },
    

@@ -140,7 +140,7 @@ export default function ModalDetalleOrdenCompra({
                     Cerrar
                 </Button>
             ]}
-            destroyOnClose
+            destroyOnHidden
         >
             <div className='py-4'>
                 {loading ? (

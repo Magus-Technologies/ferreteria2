@@ -170,7 +170,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       onCancel={() => setOpen(false)}
       footer={null}
       width={1000}
-      destroyOnClose
+      destroyOnHidden
     >
       {/* Filtros */}
       <div className='flex flex-wrap items-end gap-4 mb-4'>

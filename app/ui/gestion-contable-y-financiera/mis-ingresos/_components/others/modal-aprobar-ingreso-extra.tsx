@@ -75,7 +75,7 @@ export default function ModalAprobarIngresoExtra({ open, onClose, IngresoId }: M
                     title: <TitleForm><span className="text-emerald-700">Aprobar Ingreso Extra</span></TitleForm>,
                     okText: "Validar y Aprobar",
                     cancelText: "Cancelar",
-                    destroyOnClose: true,
+                    destroyOnHidden: true,
                     okButtonProps: {
                         loading: aprobarMutation.isPending,
                         className: 'bg-emerald-600 hover:bg-emerald-700'

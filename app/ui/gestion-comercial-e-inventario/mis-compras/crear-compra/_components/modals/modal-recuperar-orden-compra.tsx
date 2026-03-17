@@ -76,7 +76,7 @@ export default function ModalRecuperarOrdenCompra({
       confirmLoading={loading}
       maskClosable={false}
       keyboard={false}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className='flex items-center gap-2 mb-4'>
         <FiltersRecuperarOrdenCompra setFiltros={setFiltros} />

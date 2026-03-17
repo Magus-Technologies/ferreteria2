@@ -52,7 +52,7 @@ export default function ModalValidarSupervisor({
       okText='Validar'
       cancelText='Cancelar'
       width={500}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className='py-4'>
         <div className='mb-4 p-3 bg-blue-50 border border-blue-200 rounded'>

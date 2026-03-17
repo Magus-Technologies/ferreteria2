@@ -210,7 +210,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       confirmLoading={mutation.isPending}
       okButtonProps={{ disabled: totalDistribuido <= 0 || Math.abs(montoSinDistribuir) > 0.01 }}
       width={1100}
-      destroyOnClose
+      destroyOnHidden
     >
       {/* Selección de cliente y datos del cobro */}
       <div className='grid grid-cols-5 gap-3 mb-4'>

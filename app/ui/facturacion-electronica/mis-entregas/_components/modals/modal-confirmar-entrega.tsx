@@ -61,7 +61,7 @@ export default function ModalConfirmarEntrega({
       onCancel={onClose}
       width={600}
       centered
-      destroyOnClose
+      destroyOnHidden
       footer={
         <div className="flex items-center justify-between pt-2">
           <Button

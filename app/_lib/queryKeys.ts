@@ -12,6 +12,7 @@ export enum QueryKeys {
   PROVEEDORES = 'proveedores',
   PROVEEDORES_SEARCH = 'proveedores_search',
   TIPOS_INGRESO_SALIDA = 'tipos_ingreso_salida',
+  TIPOS_SERVICIO = 'tipos_servicio',
   USUARIOS = 'usuarios',
   ORDENES_COMPRA = 'ordenes_compra',
   COMPRAS = 'compras',

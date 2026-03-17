@@ -216,7 +216,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       cancelText='Cerrar'
       confirmLoading={mutation.isPending}
       width={1000}
-      destroyOnClose
+      destroyOnHidden
     >
       {/* Info de la venta */}
       <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4 border border-blue-200 shadow-sm'>
