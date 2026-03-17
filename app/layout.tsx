@@ -11,8 +11,16 @@ import { AuthProvider } from '~/lib/auth-context'
 const ubuntu = Ubuntu({ weight: ['400', '500', '700'], subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Ferretería',
-  description: 'Ferretería',
+  title: 'Mi Redentor ERP',
+  description: 'Sistema ERP - Construye con calidad al mejor precio',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Mi Redentor',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export default function RootLayout({
