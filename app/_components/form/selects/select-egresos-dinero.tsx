@@ -3,31 +3,45 @@
 import SelectBase, { SelectBaseProps } from './select-base'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { getGastos, type Gasto } from '~/lib/api/gastos'
-import { toLocalString } from '~/utils/fechas'
+import { apiRequest } from '~/lib/api'
 import dayjs from 'dayjs'
 import { GiPayMoney } from 'react-icons/gi'
+
+export interface GastoExtraDisponible {
+  id: string
+  monto: string
+  concepto: string
+  estado: 'pendiente' | 'aprobado'
+  created_at: string
+  user?: { id: string; name: string }
+}
 
 interface SelectEgresosDineroProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
+  excluirCompraId?: string
+  onSelectGasto?: (gasto: GastoExtraDisponible | undefined) => void
 }
 
 export default function SelectEgresosDinero({
-  placeholder = 'Egreso Dinero',
+  placeholder = 'Egreso Asociado',
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 14,
+  excluirCompraId,
+  onSelectGasto,
   ...props
 }: SelectEgresosDineroProps) {
-  const { data } = useQuery({
-    queryKey: [QueryKeys.EGRESOS_DINERO],
+  const { data = [], refetch } = useQuery({
+    queryKey: [QueryKeys.EGRESOS_DINERO, excluirCompraId],
     queryFn: async () => {
-      const response = await getGastos({ per_page: 100 })
-      // Filtrar solo los que no tienen vuelto
-      return response.data.filter((item: Gasto) => item.vuelto == null || item.vuelto === 0)
+      const response = await apiRequest<{ success: boolean; data: GastoExtraDisponible[] }>(
+        '/gastos-extras/disponibles',
+        { params: excluirCompraId ? { excluir_compra_id: excluirCompraId } : undefined }
+      )
+      return response.data?.data || []
     },
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
     retry: false,
     throwOnError: false,
   })
@@ -38,15 +52,19 @@ export default function SelectEgresosDinero({
       prefix={<GiPayMoney className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={data?.map(item => ({
+      optionFilterProp="label"
+      options={data.map(item => ({
         value: item.id,
-        label: `${toLocalString({
-          date: dayjs(item.fecha),
-        })} | S/. ${Number(item.monto).toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        label: `${dayjs(item.created_at).format('DD/MM/YY')} | ${item.concepto} | S/. ${Number(item.monto).toFixed(2)} | ${item.estado === 'aprobado' ? 'Aprobado' : 'Pendiente'}`,
+        estado: item.estado,
       }))}
+      onChange={(value, option) => {
+        if (onSelectGasto) {
+          const gasto = value ? data.find(g => g.id === value) : undefined
+          onSelectGasto(gasto)
+        }
+        props.onChange?.(value, option)
+      }}
       {...props}
     />
   )

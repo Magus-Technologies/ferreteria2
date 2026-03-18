@@ -14,9 +14,10 @@ interface ModalAprobarGastoExtraProps {
     open: boolean
     onClose: () => void
     gastoId: string | null
+    onSuccess?: () => void
 }
 
-export default function ModalAprobarGastoExtra({ open, onClose, gastoId }: ModalAprobarGastoExtraProps) {
+export default function ModalAprobarGastoExtra({ open, onClose, gastoId, onSuccess }: ModalAprobarGastoExtraProps) {
     const [form] = Form.useForm()
     const queryClient = useQueryClient()
     const [openAperturaModal, setOpenAperturaModal] = useState(false)
@@ -38,6 +39,7 @@ export default function ModalAprobarGastoExtra({ open, onClose, gastoId }: Modal
             message.success('Gasto aprobado y debitado de caja con éxito')
             queryClient.invalidateQueries({ queryKey: ['gastos-extras'] })
             queryClient.invalidateQueries({ queryKey: ['gastos-extras-resumen'] })
+            onSuccess?.()
             handleClose()
         },
         onError: (error: Error) => {

@@ -211,7 +211,6 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                         const isExpanded = expandedIds.includes(req.id)
                         const isSelected = selectedReqId === req.id
                         const pendingProds = (req.productos || []).filter(p => getRemaining(p) > 0)
-                        const allAdded = pendingProds.length === 0
 
                         return (
                             <div key={req.id} className={`border rounded-xl overflow-hidden transition-all duration-200 ${isSelected ? 'border-emerald-300 shadow-md scale-[1.01]' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
@@ -250,18 +249,24 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                                 {/* Detail */}
                                 {isExpanded && !isCollapsed && (
                                     <div className="bg-slate-50/30 border-t border-slate-100 animate-in slide-in-from-top-2 duration-300">
-                                        <div className="p-2 flex justify-end">
-                                            <button
-                                                className={`text-[10px] font-bold px-2 py-1 rounded-md border transition-all ${allAdded ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-default' : 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:shadow-sm'}`}
-                                                onClick={(e) => { e.stopPropagation(); handleAddAll(req); }}
-                                                disabled={allAdded}
-                                            >
-                                                {allAdded ? '✓ Agregado' : '+ Agregar Todo'}
-                                            </button>
-                                        </div>
+                                        {(() => {
+                                            const todosAgregados = pendingProds.every(p => productosAgregados.some(pa => pa.id === p.id))
+                                            return (
+                                                <div className="p-2 flex justify-end">
+                                                    <button
+                                                        className={`text-[10px] font-bold px-2 py-1 rounded-md border transition-all ${todosAgregados ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-default' : 'bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:shadow-sm'}`}
+                                                        onClick={(e) => { e.stopPropagation(); if (!todosAgregados) handleAddAll(req); }}
+                                                        disabled={todosAgregados}
+                                                    >
+                                                        {todosAgregados ? '✓ Agregado' : '+ Agregar Todo'}
+                                                    </button>
+                                                </div>
+                                            )
+                                        })()}
                                         <div className="flex flex-col divide-y divide-slate-100">
                                             {pendingProds.map(p => {
                                                 const remaining = getRemaining(p)
+                                                const isAdded = productosAgregados.some(pa => pa.id === p.id)
                                                 return (
                                                     <div key={p.id} className="p-2.5 flex items-center justify-between gap-2 group transition-colors hover:bg-white">
                                                         <div className="flex flex-col gap-0.5 min-w-0">
@@ -285,8 +290,9 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                                                             </div>
                                                         </div>
                                                         <button
-                                                            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all bg-emerald-600 text-white shadow-md hover:scale-110 active:scale-95"
-                                                            onClick={() => onAddProduct(mapToSelection(p, req))}
+                                                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-md ${isAdded ? 'bg-slate-300 text-slate-400 cursor-default' : 'bg-emerald-600 text-white hover:scale-110 active:scale-95'}`}
+                                                            onClick={() => { if (!isAdded) onAddProduct(mapToSelection(p, req)) }}
+                                                            disabled={isAdded}
                                                         >
                                                             <FaPlus size={10} />
                                                         </button>

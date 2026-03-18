@@ -136,8 +136,8 @@ export default function ModalProductoSearch({
           options={[
             { value: FiltroStock.TODOS, label: 'Todos' },
             { value: FiltroStock.BAJO_MINIMO, label: 'Bajo Mínimo' },
-            { value: FiltroStock.INTERMEDIO, label: 'Intermedio' },
-            { value: FiltroStock.SOBRE_MAXIMO, label: 'Sobre Máximo' },
+            { value: FiltroStock.BAJO_MAXIMO, label: 'Bajo Máximo' },
+            { value: FiltroStock.STOCK_CERO, label: 'Stock en 0' },
           ]}
         />
         <ButtonCreateProductoPlus

@@ -15,8 +15,8 @@ import { orangeColors, greenColors } from "~/lib/colors";
 export enum FiltroStock {
   TODOS = 'todos',
   BAJO_MINIMO = 'bajo_minimo',
-  INTERMEDIO = 'intermedio',
-  SOBRE_MAXIMO = 'sobre_maximo',
+  BAJO_MAXIMO = 'bajo_maximo',
+  STOCK_CERO = 'stock_cero',
 }
 
 export interface RefTableProductoSearchProps {
@@ -107,18 +107,17 @@ export default function TableProductoSearch({
         const productoEnAlmacen = producto.producto_en_almacenes?.find(
           (pa) => pa.almacen_id === almacen_id
         );
-        const stockActual = productoEnAlmacen?.stock_fraccion ?? 0;
+        const stockActual = Number(productoEnAlmacen?.stock_fraccion ?? 0);
         const stockMin = Number(producto.stock_min ?? 0);
         const stockMax = Number(producto.stock_max ?? 0);
-        const stockIntermedio = stockMax / 2;
 
         switch (filtroStock) {
           case FiltroStock.BAJO_MINIMO:
             return stockActual < stockMin;
-          case FiltroStock.INTERMEDIO:
-            return stockActual >= stockMin && stockActual <= stockIntermedio;
-          case FiltroStock.SOBRE_MAXIMO:
-            return stockActual > stockMax;
+          case FiltroStock.BAJO_MAXIMO:
+            return stockActual < stockMax;
+          case FiltroStock.STOCK_CERO:
+            return Number(stockActual) === 0;
           default:
             return true;
         }

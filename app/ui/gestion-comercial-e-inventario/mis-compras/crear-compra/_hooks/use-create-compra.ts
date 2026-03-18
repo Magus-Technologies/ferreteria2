@@ -146,6 +146,7 @@ export default function useCreateCompra({
         guia: values.guia ?? null,
         estado_de_compra: estadoDeCompraMap[values.estado_de_compra ?? EstadoDeCompra.EnEspera],
         egreso_dinero_id: values.egreso_dinero_id ?? null,
+        gasto_extra_id: values.gasto_extra_id ?? null,
         despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
         orden_compra_id: values.orden_compra_id ?? null,
         user_id: user_id!,

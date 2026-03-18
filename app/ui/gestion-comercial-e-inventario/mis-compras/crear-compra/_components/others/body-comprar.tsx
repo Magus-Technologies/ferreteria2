@@ -64,6 +64,7 @@ export interface FormCreateCompra {
   percepcion?: number
   estado_de_compra?: EstadoDeCompra
   egreso_dinero_id?: string
+  gasto_extra_id?: string
   despliegue_de_pago_id?: number
   metodo_de_pago_id?: string
   orden_compra_id?: number
