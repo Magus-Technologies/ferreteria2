@@ -42,7 +42,8 @@ export default function GestionContableYFinanciera() {
       >
         <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-6 lg:gap-8 items-stretch sm:items-center w-full sm:w-auto'>
           <RangePickerBase variant='filled' size='large' className='w-full sm:w-auto' />
-          <SelectAlmacen className='w-full sm:w-auto' />
+          {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+          {/* <SelectAlmacen className='w-full sm:w-auto' /> */}
         </div>
       </TituloModulos>
       {/* Grid responsivo para Dashboard */}

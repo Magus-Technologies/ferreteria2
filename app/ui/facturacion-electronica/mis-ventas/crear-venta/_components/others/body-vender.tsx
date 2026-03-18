@@ -26,6 +26,7 @@ import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
 export type FormCreateVenta = {
   productos: Array<{
     _tipo?: 'producto' | 'servicio'
+    _tipo_fila?: 'paquete_cabecera' | 'paquete_producto' | 'vale_promocional'
     producto_id: number
     producto_name: string
     producto_codigo: string
@@ -43,6 +44,8 @@ export type FormCreateVenta = {
     // Campos para identificar si el producto pertenece a un paquete
     paquete_id?: number
     paquete_nombre?: string
+    cantidad_paquete?: number
+    cantidad_base?: number
     // Campos para servicios
     servicio_id?: number
     servicio_nombre?: string
@@ -183,6 +186,7 @@ export default function BodyVender({
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
   const setProductos = useStoreProductoAgregadoVenta(state => state.setProductos)
+  const setValesAplicables = useStoreProductoAgregadoVenta(state => state.setValesAplicables)
 
   // Convertir cotización a formato de venta si existe
   const ventaFromCotizacion = cotizacion ? {
@@ -229,6 +233,7 @@ export default function BodyVender({
       console.log('🗑️ Limpiando store de productos')
       setProductoAgregado(undefined)
       setProductos([])
+      setValesAplicables([])
 
       // Limpiar formulario
       console.log('🔑 Incrementing formKey para limpiar formulario')
@@ -240,7 +245,7 @@ export default function BodyVender({
         setVentaCreada(undefined)
       }, 100)
     }
-  }, [openDoc, ventaId, setProductoAgregado, setProductos])
+  }, [openDoc, ventaId, setProductoAgregado, setProductos, setValesAplicables])
 
   console.log('🎭 BodyVender render - openDoc:', openDoc, 'formKey:', formKey, 'ventaId:', ventaId)
 

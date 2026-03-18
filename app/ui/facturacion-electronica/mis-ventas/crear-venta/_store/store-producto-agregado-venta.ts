@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { FormCreateVenta } from '../_components/others/body-vender'
 import { TipoMoneda } from '~/lib/api/venta'
 import type { Producto } from '~/app/_types/producto'
+import type { ValeCompra } from '~/lib/api/vales-compra'
 
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
@@ -14,6 +15,7 @@ type UseStoreProductoAgregadoVentaProps = {
   productoAgregado?: ValuesCardAgregarProductoVenta
   productos: ValuesCardAgregarProductoVenta[]
   tipo_moneda: TipoMoneda
+  valesAplicables: ValeCompra[]
   setProductoAgregado: (
     value: ValuesCardAgregarProductoVenta | undefined
   ) => void
@@ -26,6 +28,7 @@ type UseStoreProductoAgregadoVentaProps = {
         ) => ValuesCardAgregarProductoVenta[])
   ) => void
   setTipoMoneda: (value: TipoMoneda) => void
+  setValesAplicables: (vales: ValeCompra[]) => void
 }
 
 export const useStoreProductoAgregadoVenta =
@@ -34,6 +37,7 @@ export const useStoreProductoAgregadoVenta =
       productoAgregado: undefined,
       productos: [],
       tipo_moneda: TipoMoneda.SOLES,
+      valesAplicables: [],
       setProductoAgregado: (value) => set({ productoAgregado: value }),
       setProductos: (value) =>
         set((state) => ({
@@ -41,5 +45,6 @@ export const useStoreProductoAgregadoVenta =
             typeof value === 'function' ? value(state.productos) : value ?? [],
         })),
       setTipoMoneda: (value) => set({ tipo_moneda: value }),
+      setValesAplicables: (vales) => set({ valesAplicables: vales }),
     }
   })

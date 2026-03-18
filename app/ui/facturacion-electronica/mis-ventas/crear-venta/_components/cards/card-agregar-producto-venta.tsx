@@ -414,15 +414,51 @@ export default function CardAgregarProductoVenta({
             return
           }
 
-          let productosAgregados = 0
           const precioKey = `precio_${tipoPrecioPaquete}`
           const descuentoKey = `descuento_${tipoPrecioPaquete}`
 
+          // Calcular precio unitario del paquete (suma de precios de sub-productos × cantidad base)
+          let precioPaqueteUnitario = 0
+          for (const pp of paqueteParaAgregar.productos) {
+            if (pp.producto && pp.unidad_derivada) {
+              const precio = Number((pp as any)[precioKey] || 0)
+              const descuento = Number((pp as any)[descuentoKey] || 0)
+              precioPaqueteUnitario += (precio - descuento) * Number(pp.cantidad)
+            }
+          }
+
+          // 1. Agregar fila cabecera del paquete
+          setProductoAgregadoVenta({
+            _tipo_fila: 'paquete_cabecera',
+            producto_id: paqueteParaAgregar.id,
+            producto_name: paqueteParaAgregar.nombre,
+            producto_codigo: '',
+            marca_name: '',
+            unidad_derivada_id: 0,
+            unidad_derivada_name: '',
+            unidad_derivada_factor: 1,
+            cantidad: 1,
+            cantidad_paquete: 1,
+            precio_venta: precioPaqueteUnitario,
+            recargo: 0,
+            descuento: 0,
+            descuento_tipo: DescuentoTipo.MONTO,
+            subtotal: precioPaqueteUnitario,
+            comision: 0,
+            paquete_id: paqueteParaAgregar.id,
+            paquete_nombre: paqueteParaAgregar.nombre,
+          })
+          await new Promise(resolve => setTimeout(resolve, 50))
+
+          // 2. Agregar sub-productos
+          let productosAgregados = 0
           for (const paqueteProducto of paqueteParaAgregar.productos) {
             if (paqueteProducto.producto && paqueteProducto.unidad_derivada) {
               const precio = Number((paqueteProducto as any)[precioKey] || 0)
               const descuento = Number((paqueteProducto as any)[descuentoKey] || 0)
+              const cantidadBase = Number(paqueteProducto.cantidad)
               setProductoAgregadoVenta({
+                _tipo_fila: 'paquete_producto',
                 producto_id: paqueteProducto.producto_id,
                 producto_name: paqueteProducto.producto.name,
                 producto_codigo: paqueteProducto.producto.cod_producto,
@@ -430,12 +466,13 @@ export default function CardAgregarProductoVenta({
                 unidad_derivada_id: paqueteProducto.unidad_derivada_id,
                 unidad_derivada_name: paqueteProducto.unidad_derivada.name,
                 unidad_derivada_factor: 1,
-                cantidad: Number(paqueteProducto.cantidad),
+                cantidad: cantidadBase,
+                cantidad_base: cantidadBase,
                 precio_venta: precio,
                 recargo: 0,
                 descuento: descuento,
                 descuento_tipo: DescuentoTipo.MONTO,
-                subtotal: 0,
+                subtotal: (precio - descuento) * cantidadBase,
                 comision: 0,
                 paquete_id: paqueteParaAgregar.id,
                 paquete_nombre: paqueteParaAgregar.nombre,

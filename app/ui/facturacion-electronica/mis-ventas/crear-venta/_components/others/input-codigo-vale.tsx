@@ -26,6 +26,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   // --- Detección automática ---
   const valesNotificados = useRef<Set<number>>(new Set())
   const productosVenta = useStoreProductoAgregadoVenta(store => store.productos)
+  const setValesAplicables = useStoreProductoAgregadoVenta(store => store.setValesAplicables)
 
   const productoIds = useMemo(() => {
     return productosVenta
@@ -65,6 +66,8 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         const valesUnicos = res.data.data.filter(
           (vale, idx, arr) => arr.findIndex(v => v.id === vale.id) === idx
         )
+        // Guardar vales en el store para mostrarlos en la tabla
+        setValesAplicables(valesUnicos)
         for (const vale of valesUnicos) {
           if (!valesNotificados.current.has(vale.id)) {
             valesNotificados.current.add(vale.id)

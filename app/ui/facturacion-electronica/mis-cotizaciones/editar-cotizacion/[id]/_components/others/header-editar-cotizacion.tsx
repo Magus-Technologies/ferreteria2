@@ -55,7 +55,8 @@ export default function HeaderEditarCotizacion() {
       }
     >
       <div className='flex items-center gap-4'>
-        <SelectAlmacen className='w-full' disabled />
+        {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+        {/* <SelectAlmacen className='w-full' disabled /> */}
 
         <Modal
           open={openModalAgregarProducto}

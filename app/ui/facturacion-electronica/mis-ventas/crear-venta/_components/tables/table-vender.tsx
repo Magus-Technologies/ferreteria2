@@ -5,14 +5,15 @@ import { StoreValue } from 'antd/es/form/interface'
 import { useColumnsVender } from './columns-vender'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
-import ModalDetallePaqueteVenta from '../modals/modal-detalle-paquete-venta'
+// ModalDetallePaqueteVenta ya no se necesita - sub-productos se muestran inline
 import {
   useStoreProductoAgregadoVenta,
   ValuesCardAgregarProductoVenta,
 } from '../../_store/store-producto-agregado-venta'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useCallback, useRef } from 'react'
 import { FormCreateVenta } from '../others/body-vender'
 import { useConfigMode } from '~/app/ui/configuracion/permisos-visuales/_components/config-mode-context'
+import type { ValeCompra } from '~/lib/api/vales-compra'
 
 function condicionEditarProductoVenta({
   producto,
@@ -21,6 +22,10 @@ function condicionEditarProductoVenta({
   producto: ValuesCardAgregarProductoVenta
   item: ValuesCardAgregarProductoVenta
 }) {
+  // Nunca agrupar filas de paquete (cabecera o sub-producto) con nada
+  if (producto._tipo_fila === 'paquete_cabecera' || producto._tipo_fila === 'paquete_producto') return false
+  if (item._tipo_fila === 'paquete_cabecera' || item._tipo_fila === 'paquete_producto') return false
+
   // No agrupar si el item existente pertenece a un paquete y el nuevo no (o viceversa)
   // Solo agrupar si ambos tienen el mismo paquete_id (o ambos no tienen)
   if (item.paquete_id !== producto.paquete_id) return false
@@ -54,6 +59,9 @@ export default function TableVender({
   )
   const setProductosVenta = useStoreProductoAgregadoVenta(
     (store) => store.setProductos
+  )
+  const valesAplicables = useStoreProductoAgregadoVenta(
+    (store) => store.valesAplicables
   )
 
   function agregarProducto({
@@ -169,6 +177,56 @@ export default function TableVender({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productoAgregadoVentaStore])
 
+  // Helper para obtener beneficio del vale
+  const getBeneficioVale = useCallback((vale: ValeCompra) => {
+    if (vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor)
+      return `${vale.descuento_valor}% DSCTO`
+    if (vale.descuento_tipo === 'MONTO_FIJO' && vale.descuento_valor)
+      return `S/ ${Number(vale.descuento_valor).toFixed(2)} DSCTO`
+    if (vale.tipo_promocion === 'PRODUCTO_GRATIS') return 'PRODUCTO GRATIS'
+    if (vale.tipo_promocion === 'DOS_POR_UNO') return '2x1'
+    return vale.tipo_promocion
+  }, [])
+
+  // Sincronizar vales aplicables como filas informativas en la tabla
+  const prevValeIdsRef = useRef<string>('')
+  useEffect(() => {
+    const valeIds = valesAplicables.map(v => v.id).sort().join(',')
+    if (valeIds === prevValeIdsRef.current) return
+    prevValeIdsRef.current = valeIds
+
+    const productos = (form.getFieldValue('productos') || []) as FormCreateVenta['productos']
+
+    // Remover filas de vales existentes
+    const indicesVales: number[] = []
+    productos.forEach((p, i) => {
+      if (p._tipo_fila === 'vale_promocional') indicesVales.push(i)
+    })
+    if (indicesVales.length > 0) {
+      remove(indicesVales.reverse())
+    }
+
+    // Agregar nuevas filas de vales
+    for (const vale of valesAplicables) {
+      add({
+        _tipo_fila: 'vale_promocional',
+        producto_id: -vale.id,
+        producto_name: `${vale.nombre} (${getBeneficioVale(vale)})`,
+        producto_codigo: vale.codigo,
+        marca_name: '',
+        unidad_derivada_id: 0,
+        unidad_derivada_name: '',
+        unidad_derivada_factor: 1,
+        cantidad: 1,
+        precio_venta: 0,
+        recargo: 0,
+        descuento: 0,
+        subtotal: 0,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valesAplicables])
+
   // Detectar si estamos en modo configuración
   const configMode = useConfigMode()
   
@@ -280,21 +338,10 @@ export default function TableVender({
   // Usar datos de demo si estamos en modo configuración y no hay fields
   const baseRowData = configMode?.enabled && fields.length === 0 ? demoData : fields
 
-  // Colapsar paquetes: solo mostrar la primera fila de cada paquete
-  const rowData = useMemo(() => {
-    const productos = form.getFieldValue('productos') || []
-    const paquetesVistos = new Set<number>()
+  // Mostrar todas las filas (paquete cabecera + sub-productos + productos normales)
+  const rowData = baseRowData as FormListFieldData[]
 
-    return (baseRowData as FormListFieldData[]).filter((field) => {
-      const paqueteId = productos[field.name]?.paquete_id
-      if (!paqueteId) return true // producto individual, siempre mostrar
-      if (paquetesVistos.has(paqueteId)) return false // ya vimos este paquete
-      paquetesVistos.add(paqueteId)
-      return true // primer producto del paquete
-    })
-  }, [baseRowData, form, productoAgregadoVentaStore])
-
-  const { columns, paqueteDetalle, setPaqueteDetalle } = useColumnsVender({
+  const { columns } = useColumnsVender({
     remove,
     form,
     cantidad_pendiente,
@@ -312,12 +359,21 @@ export default function TableVender({
         suppressCellFocus={true}
         withNumberColumn={false}
         domLayout={configMode?.enabled ? 'normal' : undefined}
-      />
-      <ModalDetallePaqueteVenta
-        open={!!paqueteDetalle}
-        onClose={() => setPaqueteDetalle(null)}
-        paqueteNombre={paqueteDetalle?.nombre || ''}
-        productos={paqueteDetalle?.productos || []}
+        getRowStyle={(params) => {
+          const idx = params.data?.name
+          if (idx == null) return undefined
+          const tipoFila = form.getFieldValue(['productos', idx, '_tipo_fila'])
+          if (tipoFila === 'paquete_cabecera') {
+            return { background: '#fffbeb', borderLeft: '3px solid #f59e0b' }
+          }
+          if (tipoFila === 'paquete_producto') {
+            return { background: '#f9fafb', borderLeft: '3px solid #e5e7eb' }
+          }
+          if (tipoFila === 'vale_promocional') {
+            return { background: '#f0fdf4', borderLeft: '3px solid #22c55e' }
+          }
+          return undefined
+        }}
       />
     </>
   )

@@ -20,6 +20,7 @@ import CardAgregarProductoVenta from "~/app/ui/facturacion-electronica/mis-venta
 import CardAgregarProductoCotizacion from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_components/cards/card-agregar-producto-cotizacion";
 import CardAgregarProductoPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/_components/cards/card-agregar-producto-prestamo";
 import CardAgregarProductoGuia from "~/app/ui/facturacion-electronica/mis-guias/crear-guia/_components/cards/card-agregar-producto-guia";
+import CardAgregarProductoTransferencia from "~/app/ui/gestion-comercial-e-inventario/mis-transferencias/_components/cards/card-agregar-producto-transferencia";
 
 type ModalProductoSearchProps = {
   open: boolean;
@@ -34,6 +35,8 @@ type ModalProductoSearchProps = {
   showCardAgregarProductoCotizacion?: boolean;
   showCardAgregarProductoPrestamo?: boolean;
   showCardAgregarProductoGuia?: boolean;
+  showCardAgregarProductoTransferencia?: boolean;
+  almacenOrigenIdTransferencia?: number;
   showUltimasCompras?: boolean;
   selectionColor?: string; // Color para la fila seleccionada
 };
@@ -56,6 +59,8 @@ export default function ModalProductoSearch({
   showCardAgregarProductoCotizacion = false,
   showCardAgregarProductoPrestamo = false,
   showCardAgregarProductoGuia = false,
+  showCardAgregarProductoTransferencia = false,
+  almacenOrigenIdTransferencia,
   showUltimasCompras = true,
   selectionColor, // Recibir el color de selección
 }: ModalProductoSearchProps) {
@@ -219,6 +224,14 @@ export default function ModalProductoSearch({
         {showCardAgregarProductoGuia && (
           <div className="w-full xl:w-auto">
             <CardAgregarProductoGuia setOpen={setOpen} withMasYSalir />
+          </div>
+        )}
+        {showCardAgregarProductoTransferencia && (
+          <div className="w-full xl:w-auto">
+            <CardAgregarProductoTransferencia
+              setOpen={setOpen}
+              almacenOrigenId={almacenOrigenIdTransferencia}
+            />
           </div>
         )}
       </div>

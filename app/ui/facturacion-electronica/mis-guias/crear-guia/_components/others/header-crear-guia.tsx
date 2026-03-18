@@ -66,7 +66,8 @@ export default function HeaderCrearGuia({
       }
     >
       <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4'>
-        <SelectAlmacen className='w-full' disabled={!!guia} />
+        {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+        {/* <SelectAlmacen className='w-full' disabled={!!guia} /> */}
 
         <Modal
           open={openModalAgregarProducto}

@@ -180,9 +180,10 @@ export default function useCreateVenta({
 
 
 
-    // Separar productos y servicios
-    const soloProductos = (productos || []).filter(p => p._tipo !== 'servicio')
-    const soloServicios = (productos || []).filter(p => p._tipo === 'servicio')
+    // Filtrar cabeceras de paquete y vales promocionales (son solo UI) y separar productos y servicios
+    const productosReales = (productos || []).filter(p => p._tipo_fila !== 'paquete_cabecera' && p._tipo_fila !== 'vale_promocional')
+    const soloProductos = productosReales.filter(p => p._tipo !== 'servicio')
+    const soloServicios = productosReales.filter(p => p._tipo === 'servicio')
 
     if (soloProductos.length === 0 && soloServicios.length === 0)
       return notification.error({

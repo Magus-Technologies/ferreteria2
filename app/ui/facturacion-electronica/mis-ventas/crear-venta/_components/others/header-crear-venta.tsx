@@ -77,6 +77,7 @@ export default function HeaderCrearVenta({
   /**
    * Agregar todos los productos de un paquete a la venta
    * Usa el tipo_precio individual de cada producto del paquete
+   * Crea una fila cabecera + filas de sub-productos
    */
   const handleAgregarPaquete = async () => {
     const paquete = paqueteSeleccionadoStore;
@@ -91,6 +92,41 @@ export default function HeaderCrearVenta({
       return;
     }
 
+    // Calcular precio unitario del paquete (suma de sub-productos)
+    let precioPaqueteUnitario = 0;
+    for (const pp of paquete.productos) {
+      if (pp.producto && pp.unidad_derivada) {
+        const tipoPrecio = pp.tipo_precio || 'publico';
+        const precio = Number((pp as any)[`precio_${tipoPrecio}`] || 0);
+        const descuento = Number((pp as any)[`descuento_${tipoPrecio}`] || 0);
+        precioPaqueteUnitario += (precio - descuento) * Number(pp.cantidad);
+      }
+    }
+
+    // 1. Agregar fila cabecera del paquete
+    setProductoAgregado({
+      _tipo_fila: 'paquete_cabecera',
+      producto_id: paquete.id,
+      producto_name: paquete.nombre,
+      producto_codigo: '',
+      marca_name: '',
+      unidad_derivada_id: 0,
+      unidad_derivada_name: '',
+      unidad_derivada_factor: 1,
+      cantidad: 1,
+      cantidad_paquete: 1,
+      precio_venta: precioPaqueteUnitario,
+      recargo: 0,
+      descuento: 0,
+      descuento_tipo: DescuentoTipo.MONTO,
+      subtotal: precioPaqueteUnitario,
+      comision: 0,
+      paquete_id: paquete.id,
+      paquete_nombre: paquete.nombre,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // 2. Agregar sub-productos
     let productosAgregados = 0;
 
     for (const paqueteProducto of paquete.productos) {
@@ -100,7 +136,9 @@ export default function HeaderCrearVenta({
         const descuentoKey = `descuento_${tipoPrecio}` as keyof typeof paqueteProducto;
         const precio = Number((paqueteProducto as any)[precioKey] || 0);
         const descuento = Number((paqueteProducto as any)[descuentoKey] || 0);
+        const cantidadBase = Number(paqueteProducto.cantidad);
         setProductoAgregado({
+          _tipo_fila: 'paquete_producto',
           producto_id: paqueteProducto.producto_id,
           producto_name: paqueteProducto.producto.name,
           producto_codigo: paqueteProducto.producto.cod_producto,
@@ -108,12 +146,14 @@ export default function HeaderCrearVenta({
           unidad_derivada_id: paqueteProducto.unidad_derivada_id,
           unidad_derivada_name: paqueteProducto.unidad_derivada.name,
           unidad_derivada_factor: 1,
-          cantidad: paqueteProducto.cantidad,
+          cantidad: cantidadBase,
+          cantidad_base: cantidadBase,
           precio_venta: precio,
           recargo: 0,
           descuento: descuento,
           descuento_tipo: DescuentoTipo.MONTO,
-          subtotal: 0,
+          subtotal: (precio - descuento) * cantidadBase,
+          comision: 0,
           paquete_id: paquete.id,
           paquete_nombre: paquete.nombre,
         });
@@ -265,12 +305,13 @@ export default function HeaderCrearVenta({
       }
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-        <ConfigurableElement
+        {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+        {/* <ConfigurableElement
           componentId="crear-venta.select-almacen"
           label="Selector de Almacén"
         >
           <SelectAlmacen className="w-full" disabled={!!venta} />
-        </ConfigurableElement>
+        </ConfigurableElement> */}
 
         <Modal
           open={openModalAgregarProducto}

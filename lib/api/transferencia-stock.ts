@@ -50,12 +50,16 @@ export interface ProductoTransferenciaStock {
   }
 }
 
-export interface CreateTransferenciaStockParams {
-  almacen_origen_id: number
-  almacen_destino_id: number
+export interface CreateTransferenciaStockProducto {
   producto_id: number
   unidad_derivada_id: number
   cantidad: number
+}
+
+export interface CreateTransferenciaStockParams {
+  almacen_origen_id: number
+  almacen_destino_id: number
+  productos: CreateTransferenciaStockProducto[]
   fecha?: string
   descripcion?: string
 }

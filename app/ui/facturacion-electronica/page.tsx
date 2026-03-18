@@ -13,7 +13,7 @@ import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ContenedorGeneral from "~/app/_components/containers/contenedor-general";
 import { IoDocumentText } from "react-icons/io5";
 import RangePickerBase from "~/app/_components/form/fechas/range-picker-base";
-import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
+// import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import { usePermission } from "~/hooks/use-permission";
 import { Suspense, lazy } from "react";
 import { Spin } from "antd";
@@ -68,12 +68,13 @@ export default function FacturacionElectronica() {
               className="w-full sm:w-auto"
             />
           </ConfigurableElement>
-          <ConfigurableElement
+          {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+          {/* <ConfigurableElement
             componentId="dashboard.filtro-almacen"
             label="Filtro de Almacén"
           >
             <SelectAlmacen className="w-full sm:w-auto" />
-          </ConfigurableElement>
+          </ConfigurableElement> */}
         </div>
       </TituloModulos>
 

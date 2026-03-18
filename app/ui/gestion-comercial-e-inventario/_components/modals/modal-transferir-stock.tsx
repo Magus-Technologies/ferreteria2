@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Form, message } from 'antd'
-import { FaBox, FaCalendar, FaWeightHanging, FaExchangeAlt } from 'react-icons/fa'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Form, App, Button } from 'antd'
+import { FaCalendar, FaExchangeAlt, FaTrash } from 'react-icons/fa'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
+import type { ColDef, ICellRendererParams } from 'ag-grid-community'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import LabelBase from '~/components/form/label-base'
@@ -15,20 +16,36 @@ import SelectProductos from '~/app/_components/form/selects/select-productos'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
+import TableBase from '~/components/tables/table-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { transferenciaStockApi, type TransferenciaStock } from '~/lib/api/transferencia-stock'
 import { getStock } from '~/app/_utils/get-stock'
 import { toUTCBD } from '~/utils/fechas'
-import type { Producto } from '~/app/_types/producto'
 import ModalDocTransferenciaStock from './modal-doc-transferencia-stock'
+import {
+  useStoreProductoAgregadoTransferencia,
+  type ValuesCardAgregarProductoTransferencia,
+} from '../../mis-transferencias/_store/store-producto-agregado-transferencia'
+
+// Tipo para cada fila de producto en la tabla
+type ProductoFila = {
+  key: string
+  producto_id: number
+  producto_name: string
+  cod_producto: string
+  unidad_derivada_id: number
+  unidad_derivada_name: string
+  cantidad: number
+  factor: number
+  stock_fraccion: number
+  unidades_contenidas: number
+  unidades_derivadas: any[]
+}
 
 type FormTransferirStock = {
   fecha: Dayjs
   almacen_origen_id: number
   almacen_destino_id: number
-  producto_id: number
-  unidad_derivada_id: number
-  cantidad: number
   descripcion?: string
 }
 
@@ -45,59 +62,281 @@ export default function ModalTransferirStock({
   const queryClient = useQueryClient()
   const almacenId = useStoreAlmacen((s) => s.almacen_id)
 
-  const [producto, setProducto] = useState<Producto | undefined>()
-  const [factor, setFactor] = useState(0)
+  const { message } = App.useApp()
+  const [productos, setProductos] = useState<ProductoFila[]>([])
   const [openDoc, setOpenDoc] = useState(false)
   const [docData, setDocData] = useState<TransferenciaStock | undefined>()
 
   const almacenOrigenId = Form.useWatch('almacen_origen_id', form)
-  const cantidad = Form.useWatch('cantidad', form)
 
-  // Obtener producto_en_almacen del origen
-  const productoEnAlmacenOrigen = producto?.producto_en_almacenes?.find(
-    (item) => item.almacen_id === almacenOrigenId,
+  // Escuchar la store de producto agregado
+  const productoAgregadoStore = useStoreProductoAgregadoTransferencia(
+    (s) => s.productoAgregado
   )
-  const unidadesDerivadas = productoEnAlmacenOrigen?.unidades_derivadas
+  const setProductoAgregado = useStoreProductoAgregadoTransferencia(
+    (s) => s.setProductoAgregado
+  )
 
-  // Auto-seleccionar primera unidad derivada cuando cambia el producto
+  // Cuando la store cambia, agregar el producto a la lista
   useEffect(() => {
-    if (unidadesDerivadas?.length) {
-      form.setFieldValue('unidad_derivada_id', unidadesDerivadas[0].unidad_derivada.id)
-      setFactor(Number(unidadesDerivadas[0].factor ?? 0))
-    } else {
-      form.setFieldValue('unidad_derivada_id', undefined)
-      setFactor(0)
-    }
-  }, [form, unidadesDerivadas])
+    if (!productoAgregadoStore || !productoAgregadoStore.producto_id) return
 
-  // Reset cuando se cierra
+    const p = { ...productoAgregadoStore }
+
+    // Verificar si ya existe (mismo producto + misma unidad)
+    const existente = productos.find(
+      (item) =>
+        item.producto_id === p.producto_id &&
+        item.unidad_derivada_id === p.unidad_derivada_id
+    )
+
+    if (existente) {
+      // Sumar cantidad
+      setProductos((prev) =>
+        prev.map((item) =>
+          item.producto_id === p.producto_id &&
+          item.unidad_derivada_id === p.unidad_derivada_id
+            ? { ...item, cantidad: item.cantidad + Number(p.cantidad ?? 1) }
+            : item
+        )
+      )
+    } else {
+      // Agregar nuevo
+      setProductos((prev) => [
+        ...prev,
+        {
+          key: `${p.producto_id}-${p.unidad_derivada_id}-${Date.now()}`,
+          producto_id: p.producto_id!,
+          producto_name: p.producto_name || '',
+          cod_producto: p.cod_producto || '',
+          unidad_derivada_id: p.unidad_derivada_id!,
+          unidad_derivada_name: p.unidad_derivada_name || '',
+          cantidad: Number(p.cantidad ?? 1),
+          factor: Number(p.unidad_derivada_factor ?? 0),
+          stock_fraccion: Number(p.stock_fraccion ?? 0),
+          unidades_contenidas: Number(p.unidades_contenidas ?? 0),
+          unidades_derivadas: p.unidades_derivadas_disponibles || [],
+        },
+      ])
+    }
+
+    // Limpiar store
+    setProductoAgregado(undefined)
+  }, [productoAgregadoStore])
+
+  // Reset cuando se cierra el modal
   useEffect(() => {
     if (!open) {
-      setProducto(undefined)
-      setFactor(0)
+      setProductos([])
+      setProductoAgregado(undefined)
     }
   }, [open])
 
-  // Calcular stocks
-  const stockActualOrigen = Number(productoEnAlmacenOrigen?.stock_fraccion ?? 0)
-  const cantidadFraccion = Number(cantidad ?? 0) * factor
-  const stockNuevoOrigen = stockActualOrigen - cantidadFraccion
-  const unidadesContenidas = Number(producto?.unidades_contenidas ?? 0)
+  // Eliminar producto de la lista
+  const eliminarProducto = useCallback((key: string) => {
+    setProductos((prev) => prev.filter((p) => p.key !== key))
+  }, [])
+
+  // Actualizar cantidad de un producto
+  const actualizarCantidad = useCallback((key: string, cantidad: number) => {
+    setProductos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, cantidad } : p))
+    )
+  }, [])
+
+  // Actualizar unidad derivada de un producto
+  const actualizarUnidadDerivada = useCallback((key: string, udId: number) => {
+    setProductos((prev) =>
+      prev.map((p) => {
+        if (p.key !== key) return p
+        const ud = p.unidades_derivadas.find(
+          (u: any) => u.unidad_derivada.id === udId
+        )
+        return {
+          ...p,
+          unidad_derivada_id: udId,
+          unidad_derivada_name: ud?.unidad_derivada.name || '',
+          factor: Number(ud?.factor ?? 0),
+        }
+      })
+    )
+  }, [])
+
+  // Column definitions para AG Grid
+  const columnDefs = useMemo<ColDef<ProductoFila>[]>(
+    () => [
+      {
+        headerName: 'Código',
+        field: 'cod_producto',
+        width: 100,
+        sortable: false,
+        filter: false,
+      },
+      {
+        headerName: 'Producto',
+        field: 'producto_name',
+        flex: 1,
+        minWidth: 180,
+        sortable: false,
+        filter: false,
+      },
+      {
+        headerName: 'Unidad',
+        field: 'unidad_derivada_name',
+        width: 130,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<ProductoFila>) => {
+          const data = params.data
+          if (!data) return null
+          const options = data.unidades_derivadas.map((u: any) => ({
+            value: u.unidad_derivada.id,
+            label: u.unidad_derivada.name,
+          }))
+          return (
+            <div className="flex items-center h-full">
+              <SelectBase
+                size="small"
+                variant="borderless"
+                value={data.unidad_derivada_id}
+                options={options}
+                onChange={(val: number) =>
+                  actualizarUnidadDerivada(data.key, val)
+                }
+                className="w-full"
+              />
+            </div>
+          )
+        },
+      },
+      {
+        headerName: 'Cantidad',
+        field: 'cantidad',
+        width: 110,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<ProductoFila>) => {
+          const data = params.data
+          if (!data) return null
+          return (
+            <div className="flex items-center h-full">
+              <InputNumberBase
+                size="small"
+                value={data.cantidad}
+                precision={3}
+                min={0.001}
+                onChange={(val) =>
+                  actualizarCantidad(data.key, Number(val ?? 0))
+                }
+                className="w-full"
+              />
+            </div>
+          )
+        },
+      },
+      {
+        headerName: 'Stock',
+        width: 90,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<ProductoFila>) => {
+          const data = params.data
+          if (!data) return null
+          const stock = getStock({
+            stock_fraccion: data.stock_fraccion,
+            unidades_contenidas: data.unidades_contenidas,
+          }).stock
+          return (
+            <div className="flex items-center h-full font-bold text-yellow-600">
+              {stock}
+            </div>
+          )
+        },
+      },
+      {
+        headerName: 'Después',
+        width: 90,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<ProductoFila>) => {
+          const data = params.data
+          if (!data) return null
+          const cantFraccion = data.cantidad * data.factor
+          const stockNuevo = data.stock_fraccion - cantFraccion
+          const stock = getStock({
+            stock_fraccion: stockNuevo,
+            unidades_contenidas: data.unidades_contenidas,
+          }).stock
+          return (
+            <div
+              className={`flex items-center h-full font-bold ${stockNuevo < 0 ? 'text-red-600' : 'text-emerald-600'}`}
+            >
+              {stock}
+            </div>
+          )
+        },
+      },
+      {
+        headerName: '',
+        width: 50,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<ProductoFila>) => {
+          const data = params.data
+          if (!data) return null
+          return (
+            <div className="flex items-center justify-center h-full">
+              <Button
+                type="text"
+                danger
+                size="small"
+                icon={<FaTrash size={12} />}
+                onClick={() => eliminarProducto(data.key)}
+              />
+            </div>
+          )
+        },
+      },
+    ],
+    [actualizarCantidad, actualizarUnidadDerivada, eliminarProducto]
+  )
 
   const mutation = useMutation({
     mutationFn: async (values: FormTransferirStock) => {
-      const result = await transferenciaStockApi.create({
+      if (productos.length === 0) {
+        throw new Error('Debe agregar al menos un producto')
+      }
+
+      // Validar stocks
+      for (const p of productos) {
+        const cantFraccion = p.cantidad * p.factor
+        if (cantFraccion > p.stock_fraccion) {
+          throw new Error(`Stock insuficiente para ${p.producto_name}`)
+        }
+      }
+
+      const payload = {
         almacen_origen_id: values.almacen_origen_id,
         almacen_destino_id: values.almacen_destino_id,
-        producto_id: values.producto_id,
-        unidad_derivada_id: values.unidad_derivada_id,
-        cantidad: values.cantidad,
+        productos: productos.map((p) => ({
+          producto_id: p.producto_id,
+          unidad_derivada_id: p.unidad_derivada_id,
+          cantidad: p.cantidad,
+        })),
         fecha: values.fecha ? toUTCBD({ date: values.fecha }) : undefined,
         descripcion: values.descripcion,
-      })
+      }
 
-      if (result.error) throw new Error(result.error.message)
-      // Backend wraps in { data: ... } and apiRequest wraps again
+      console.log('📦 Payload transferencia:', JSON.stringify(payload, null, 2))
+
+      const result = await transferenciaStockApi.create(payload)
+
+      console.log('📦 Response transferencia:', result)
+
+      if (result.error) {
+        console.error('❌ Error transferencia:', result.error)
+        throw new Error(result.error.message || 'Error del servidor')
+      }
       const transferencia = (result.data as any)?.data || result.data
       return transferencia as TransferenciaStock
     },
@@ -107,6 +346,7 @@ export default function ModalTransferirStock({
       queryClient.invalidateQueries({ queryKey: ['transferencias-stock'] })
       setOpen(false)
       form.resetFields()
+      setProductos([])
       setDocData(data)
       setOpenDoc(true)
     },
@@ -117,170 +357,172 @@ export default function ModalTransferirStock({
 
   return (
     <>
-    <ModalDocTransferenciaStock open={openDoc} setOpen={setOpenDoc} data={docData} />
-    <ModalForm
-      modalProps={{
-        title: (
-          <TitleForm>
-            <FaExchangeAlt className="inline mr-2" />
-            Transferir Stock
-          </TitleForm>
-        ),
-        className: 'w-[95vw] xl:w-auto xl:min-w-[650px] max-w-[750px]',
-        wrapClassName: '!flex !items-center',
-        centered: true,
-        okButtonProps: { loading: mutation.isPending, disabled: mutation.isPending },
-        okText: 'Transferir',
-        styles: {
-          body: {
-            maxHeight: 'calc(100vh - 150px)',
-            overflowY: 'auto',
+      <ModalDocTransferenciaStock
+        open={openDoc}
+        setOpen={setOpenDoc}
+        data={docData}
+      />
+      <ModalForm
+        modalProps={{
+          title: (
+            <TitleForm>
+              <FaExchangeAlt className="inline mr-2" />
+              Transferir Stock
+            </TitleForm>
+          ),
+          className: 'w-[95vw] xl:w-auto xl:min-w-[850px] max-w-[950px]',
+          wrapClassName: '!flex !items-center',
+          centered: true,
+          okButtonProps: {
+            loading: mutation.isPending,
+            disabled: mutation.isPending || productos.length === 0,
+            htmlType: 'button' as const,
           },
-        },
-      }}
-      onCancel={() => form.resetFields()}
-      open={open}
-      setOpen={setOpen}
-      formProps={{
-        form,
-        onFinish: (values: FormTransferirStock) => mutation.mutate(values),
-        initialValues: {
-          fecha: dayjs(),
-          almacen_origen_id: almacenId ?? 1,
-        },
-      }}
-    >
-      {/* Fecha */}
-      <LabelBase label="Fecha:" classNames={{ labelParent: 'mb-6' }}>
-        <DatePickerBase
-          prefix={<FaCalendar className="text-cyan-600 mx-1" />}
-          propsForm={{ name: 'fecha' }}
-          placeholder="Fecha"
-          className="w-full"
-        />
-      </LabelBase>
-
-      {/* Almacén Origen y Destino */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start">
-        <LabelBase label="Almacén Origen:" className="w-full" classNames={{ labelParent: 'mb-6' }}>
-          <SelectAlmacen
-            size="middle"
+          onOk: () => {
+            form.validateFields().then((values) => {
+              mutation.mutate(values)
+            }).catch(() => {
+              // Validation failed - Ant Design shows errors automatically
+            })
+          },
+          okText: 'Transferir',
+          styles: {
+            body: {
+              maxHeight: 'calc(100vh - 150px)',
+              overflowY: 'auto',
+            },
+          },
+        }}
+        onCancel={() => {
+          form.resetFields()
+          setProductos([])
+        }}
+        open={open}
+        setOpen={setOpen}
+        formProps={{
+          form,
+          onFinish: (values: FormTransferirStock) => mutation.mutate(values),
+          initialValues: {
+            fecha: dayjs(),
+            almacen_origen_id: almacenId ?? 1,
+          },
+        }}
+      >
+        {/* Fecha */}
+        <LabelBase label="Fecha:" classNames={{ labelParent: 'mb-6' }}>
+          <DatePickerBase
+            prefix={<FaCalendar className="text-cyan-600 mx-1" />}
+            propsForm={{ name: 'fecha' }}
+            placeholder="Fecha"
             className="w-full"
-            classNameIcon="text-emerald-700 mx-1"
-            afecta_store={false}
-            propsForm={{
-              name: 'almacen_origen_id',
-              rules: [{ required: true, message: 'Selecciona almacén origen' }],
-            }}
-            form={form}
-            onChange={() => {
-              // Reset producto cuando cambia el almacén origen
-              setProducto(undefined)
-              form.setFieldsValue({
-                producto_id: undefined,
-                unidad_derivada_id: undefined,
-                cantidad: undefined,
-              })
-            }}
           />
         </LabelBase>
-        <LabelBase label="Almacén Destino:" className="w-full" classNames={{ labelParent: 'mb-6' }}>
-          <SelectAlmacen
-            size="middle"
+
+        {/* Almacen Origen y Destino */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start">
+          <LabelBase
+            label="Almacen Origen:"
             className="w-full"
-            classNameIcon="text-blue-700 mx-1"
-            afecta_store={false}
-            propsForm={{
-              name: 'almacen_destino_id',
-              rules: [
-                { required: true, message: 'Selecciona almacén destino' },
-                ({ getFieldValue }: { getFieldValue: (name: string) => any }) => ({
-                  validator(_: any, value: number) {
-                    if (!value || getFieldValue('almacen_origen_id') !== value) {
-                      return Promise.resolve()
-                    }
-                    return Promise.reject(new Error('Debe ser diferente al origen'))
-                  },
-                }),
-              ],
-            }}
-            form={form}
-          />
-        </LabelBase>
-      </div>
-
-      {/* Producto */}
-      <LabelBase label="Producto:" classNames={{ labelParent: 'mb-6' }}>
-        <SelectProductos
-          className="w-full"
-          classNameIcon="text-rose-700 mx-1"
-          onChange={(_, product) => {
-            setProducto(product)
-            form.setFieldValue('producto_id', product?.id)
-          }}
-          propsForm={{
-            name: 'producto_id',
-            rules: [{ required: true, message: 'Selecciona un producto' }],
-          }}
-          withSearch
-          form={form}
-          limpiarOnChange
-        />
-      </LabelBase>
-
-      {/* Unidad Derivada + Cantidad + Stock */}
-      <div className="flex gap-4 items-start">
-        <LabelBase label="Unidad Derivada:" className="w-full" orientation="column">
-          <SelectBase
-            prefix={<FaWeightHanging className="text-rose-700 mx-1" size={14} />}
-            variant="filled"
-            placeholder="Unidad Derivada"
-            options={unidadesDerivadas?.map((item) => ({
-              value: item.unidad_derivada.id,
-              label: item.unidad_derivada.name,
-            }))}
-            onChange={(val) => {
-              const ud = unidadesDerivadas?.find((item) => item.unidad_derivada.id === val)
-              setFactor(Number(ud?.factor ?? 0))
-            }}
-            propsForm={{
-              name: 'unidad_derivada_id',
-              rules: [{ required: true, message: 'Selecciona unidad' }],
-            }}
-          />
-        </LabelBase>
-        <LabelBase label="Cantidad:" className="w-full" orientation="column">
-          <InputNumberBase
-            propsForm={{ name: 'cantidad' }}
-            placeholder="Cantidad"
-            precision={3}
-            min={0.001}
-            prefix={<FaBox size={15} className="text-rose-600 mx-1" />}
-          />
-        </LabelBase>
-
-        {/* Preview de stock */}
-        <div className="flex flex-col items-center justify-center gap-2 min-w-[120px]">
-          <div className="flex flex-col items-center">
-            <div className="font-bold text-sm">Stock Origen</div>
-            <div className="font-bold text-yellow-600 text-2xl text-nowrap">
-              {getStock({ stock_fraccion: stockActualOrigen, unidades_contenidas: unidadesContenidas }).stock}
-            </div>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="font-bold text-sm">Después</div>
-            <div className={`font-bold text-2xl text-nowrap ${stockNuevoOrigen < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-              {getStock({ stock_fraccion: stockNuevoOrigen, unidades_contenidas: unidadesContenidas }).stock}
-            </div>
-          </div>
+            classNames={{ labelParent: 'mb-6' }}
+          >
+            <SelectAlmacen
+              size="middle"
+              className="w-full"
+              classNameIcon="text-emerald-700 mx-1"
+              afecta_store={false}
+              propsForm={{
+                name: 'almacen_origen_id',
+                rules: [
+                  { required: true, message: 'Selecciona almacen origen' },
+                ],
+              }}
+              form={form}
+              onChange={() => {
+                setProductos([])
+              }}
+            />
+          </LabelBase>
+          <LabelBase
+            label="Almacen Destino:"
+            className="w-full"
+            classNames={{ labelParent: 'mb-6' }}
+          >
+            <SelectAlmacen
+              size="middle"
+              className="w-full"
+              classNameIcon="text-blue-700 mx-1"
+              afecta_store={false}
+              propsForm={{
+                name: 'almacen_destino_id',
+                rules: [
+                  { required: true, message: 'Selecciona almacen destino' },
+                  ({
+                    getFieldValue,
+                  }: {
+                    getFieldValue: (name: string) => any
+                  }) => ({
+                    validator(_: any, value: number) {
+                      if (
+                        !value ||
+                        getFieldValue('almacen_origen_id') !== value
+                      ) {
+                        return Promise.resolve()
+                      }
+                      return Promise.reject(
+                        new Error('Debe ser diferente al origen')
+                      )
+                    },
+                  }),
+                ],
+              }}
+              form={form}
+            />
+          </LabelBase>
         </div>
-      </div>
 
-      {/* Observaciones */}
-      <LabelBase label="Observaciones:" classNames={{ labelParent: 'mt-4' }} orientation="column">
-        <TextareaBase propsForm={{ name: 'descripcion' }} />
-      </LabelBase>
-    </ModalForm>
+        {/* Buscar Producto */}
+        <LabelBase
+          label="Buscar Producto:"
+          classNames={{ labelParent: 'mb-4' }}
+        >
+          <SelectProductos
+            className="w-full"
+            classNameIcon="text-rose-700 mx-1"
+            withSearch
+            form={form}
+            limpiarOnChange
+            showCardAgregarProductoTransferencia
+            almacenOrigenIdTransferencia={almacenOrigenId}
+            showUltimasCompras={false}
+          />
+        </LabelBase>
+
+        {/* Tabla de productos con AG Grid */}
+        <div className="h-[250px] w-full mb-4">
+          <TableBase<ProductoFila>
+            rowData={productos}
+            columnDefs={columnDefs}
+            getRowId={(params) => params.data.key}
+            rowSelection={false}
+            withNumberColumn={true}
+            pagination={false}
+            persistColumnState={false}
+            domLayout="normal"
+            rowHeight={40}
+            headerHeight={36}
+            noRowsOverlayComponent={() => (
+              <div className="text-gray-400 text-sm py-8">
+                Busca y agrega productos para transferir
+              </div>
+            )}
+          />
+        </div>
+
+        {/* Observaciones */}
+        <LabelBase label="Observaciones:" orientation="column">
+          <TextareaBase propsForm={{ name: 'descripcion' }} />
+        </LabelBase>
+      </ModalForm>
     </>
   )
 }

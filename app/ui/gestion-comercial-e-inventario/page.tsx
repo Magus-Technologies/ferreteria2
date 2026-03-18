@@ -39,12 +39,13 @@ export default function GestionComercialEInventario() {
           >
             <RangePickerBase variant='filled' size='large' className='w-full sm:w-auto' />
           </ConfigurableElement>
-          <ConfigurableElement
+          {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+          {/* <ConfigurableElement
             componentId='gestion-comercial.dashboard.filtro-almacen'
             label='Filtro de Almacén'
           >
             <SelectAlmacen className='w-full sm:w-auto' />
-          </ConfigurableElement>
+          </ConfigurableElement> */}
         </div>
       </TituloModulos>
 

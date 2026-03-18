@@ -55,7 +55,8 @@ export default function HeaderCrearCotizacion() {
       }
     >
       <div className='flex items-center gap-4'>
-        <SelectAlmacen className='w-full' />
+        {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+        {/* <SelectAlmacen className='w-full' /> */}
 
         <Modal
           open={openModalAgregarProducto}

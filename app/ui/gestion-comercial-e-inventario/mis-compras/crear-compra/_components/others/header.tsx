@@ -92,12 +92,13 @@ export default function HeaderCrearCompra({
       }
     >
       <div className="flex items-center gap-4">
-        <ConfigurableElement
+        {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
+        {/* <ConfigurableElement
           componentId="gestion-comercial.crear-compra.filtro-almacen"
           label="Filtro Almacén"
         >
           <SelectAlmacen className="w-full" disabled={!!compra} />
-        </ConfigurableElement>
+        </ConfigurableElement> */}
 
         <ConfigurableElement
           componentId="gestion-comercial.crear-compra.modal-agregar-producto"

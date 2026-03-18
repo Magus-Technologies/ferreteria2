@@ -65,34 +65,40 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
     setModalDetallesEntregaOpen(true);
   };
 
+  // Filtrar cabeceras de paquete para cálculos (son resumen, no productos reales)
+  const productosReales = useMemo(
+    () => (productos || []).filter(p => p?._tipo_fila !== 'paquete_cabecera' && p?._tipo_fila !== 'vale_promocional'),
+    [productos],
+  );
+
   // Calcular SubTotal (suma de productos sin descuento)
   const subTotal = useMemo(
     () =>
-      (productos || []).reduce(
+      productosReales.reduce(
         (acc, item) =>
           acc +
           (Number(item?.precio_venta ?? 0) + Number(item?.recargo ?? 0)) *
             Number(item?.cantidad ?? 0),
         0,
       ),
-    [productos],
+    [productosReales],
   );
 
   // Calcular Total Recargo
   const totalRecargo = useMemo(
     () =>
-      (productos || []).reduce(
+      productosReales.reduce(
         (acc, item) =>
           acc + Number(item?.recargo ?? 0) * Number(item?.cantidad ?? 0),
         0,
       ),
-    [productos],
+    [productosReales],
   );
 
   // Calcular Total Descuento
   const totalDescuento = useMemo(
     () =>
-      (productos || []).reduce((acc, item) => {
+      productosReales.reduce((acc, item) => {
         const descuento_tipo = item?.descuento_tipo ?? DescuentoTipo.MONTO;
         const descuento = Number(item?.descuento ?? 0);
         const precio_venta = Number(item?.precio_venta ?? 0);
@@ -105,7 +111,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
           return acc + descuento;
         }
       }, 0),
-    [productos],
+    [productosReales],
   );
 
   // Calcular Total Cobrado
@@ -117,7 +123,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
   // Total Comisión
   const totalComision = useMemo(
     () =>
-      (productos || []).reduce((acc, item) => {
+      productosReales.reduce((acc, item) => {
         const comision = Number(item?.comision ?? 0);
         const cantidad = Number(item?.cantidad ?? 0);
         const descuento = Number(item?.descuento ?? 0);
@@ -142,7 +148,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
 
         return acc + comision_final;
       }, 0),
-    [productos],
+    [productosReales],
   );
 
   return (
