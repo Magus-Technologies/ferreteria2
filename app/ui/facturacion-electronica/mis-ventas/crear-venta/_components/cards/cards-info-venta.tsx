@@ -19,6 +19,8 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
 import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
+import ModalTrasladoBoveda from "~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
+import { BankOutlined } from "@ant-design/icons";
 
 export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
@@ -51,7 +53,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
 
-  const { hasApertura, refetchApertura } = useCheckAperturaDiaria();
+  const { cajaActiva } = useCheckAperturaDiaria();
+  const [modalTrasladoBovedaOpen, setModalTrasladoBovedaOpen] = useState(false);
 
   const handleCobrarClick = () => {
     setModalOpen(true);
@@ -289,6 +292,20 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
           </ButtonBase>
         </ConfigurableElement>
 
+        <ConfigurableElement
+          componentId="crear-venta.boton-traslado-boveda"
+          label="Botón Traslado a Bóveda"
+        >
+          <ButtonBase
+            onClick={() => setModalTrasladoBovedaOpen(true)}
+            color="default"
+            className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+          >
+            <BankOutlined className="min-w-fit text-xl" />
+            Traslado a Bóveda
+          </ButtonBase>
+        </ConfigurableElement>
+
       </div>
 
       {/* Modal para configurar detalles de entrega */}
@@ -353,12 +370,20 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
             estado: true,
           } as Cliente : undefined
         }
-        onSuccess={(cliente) => {
-          // Recargar las direcciones del cliente desde la API
-          // TODO: Implementar recarga de direcciones desde la tabla direcciones_cliente
+        onSuccess={() => {
           setModalEditarClienteOpen(false);
         }}
       />
+
+      {cajaActiva && (
+        <ModalTrasladoBoveda
+          open={modalTrasladoBovedaOpen}
+          onCancel={() => setModalTrasladoBovedaOpen(false)}
+          onSuccess={() => setModalTrasladoBovedaOpen(false)}
+          aperturaCierreId={String(cajaActiva.id)}
+          vendedorId={String(cajaActiva.user_id)}
+        />
+      )}
     </>
   );
 }

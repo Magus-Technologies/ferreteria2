@@ -126,6 +126,12 @@ export default function ModalTrasladoBoveda({
             }}
             options={subCajas.flatMap((caja: any) =>
               (caja.metodos_pago || [])
+                .filter((metodo: any) => {
+                  const nombre = (metodo.metodo_de_pago_nombre || '').toLowerCase();
+                  const cuenta = metodo.cuenta_bancaria;
+                  const sinCuenta = !cuenta || cuenta === 'SIN-CUENTA';
+                  return sinCuenta && nombre.includes('efectivo');
+                })
                 .map((metodo: any) => ({
                   label: `${caja.nombre} / ${metodo.nombre} ${metodo.nombre_titular ? `(${metodo.nombre_titular})` : ''} - S/ ${metodo.saldo_vendedor}`,
                   value: `${caja.id}|||${metodo.despliegue_pago_id}`,

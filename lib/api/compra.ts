@@ -59,6 +59,7 @@ export interface Compra {
   guia: string | null;
   estado_de_compra: string;
   egreso_dinero_id: string | null;
+  gasto_extra_id: string | null;
   despliegue_de_pago_id: number | null;
   user_id: string;
   almacen_id: number;
@@ -119,6 +120,7 @@ export interface CreateCompraRequest {
   guia?: string | null;
   estado_de_compra: string; // EstadoDeCompra enum as string
   egreso_dinero_id?: string | null;
+  gasto_extra_id?: string | null;
   despliegue_de_pago_id?: number | null;
   user_id: string;
   almacen_id: number;
