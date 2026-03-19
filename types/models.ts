@@ -90,6 +90,9 @@ export interface ProductoAlmacenUnidadDerivada {
   precio_ultimo: Decimal | null
   comision_ultimo: Decimal | null
   activador_ultimo: Decimal | null
+  producto_complementario_id: number | null
+  producto_complementario_cantidad: number | null
+  producto_complementario?: { id: number; name: string; cod_producto: string }
 }
 
 // ============================================================

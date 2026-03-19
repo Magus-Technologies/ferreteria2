@@ -5,6 +5,7 @@ import { FormInstance, FormListFieldData, Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectUnidadDerivada from '~/app/_components/form/selects/select-unidad-derivada'
+import SelectProductoComplementario from '~/app/_components/form/selects/select-producto-complementario'
 import { FormCreateProductoProps } from '../modals/modal-create-producto'
 
 export function useColumnsDetalleDePreciosEdicion({
@@ -104,6 +105,86 @@ export function useColumnsDetalleDePreciosEdicion({
                   form.focusField(['unidades_derivadas', value, 'factor'])
                 }, 100)
               }}
+            />
+          </div>
+        )
+      },
+      flex: 1,
+    },
+    {
+      headerName: 'Prod. Complementario',
+      field: 'name',
+      minWidth: 220,
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        const complementario = form.getFieldValue([
+          'unidades_derivadas',
+          value,
+          'producto_complementario',
+        ])
+        const initialOption = complementario
+          ? {
+              value: complementario.id,
+              label: `${complementario.cod_producto} - ${complementario.name}`,
+            }
+          : undefined
+        return (
+          <div className='flex items-center h-full'>
+            <SelectProductoComplementario
+              propsForm={{
+                name: [value, 'producto_complementario_id'],
+                prefix_array_name: ['unidades_derivadas'],
+              }}
+              form={form}
+              formWithMessage={false}
+              placeholder='Buscar producto...'
+              initialOption={initialOption}
+              onChange={(val) => {
+                if (!val) {
+                  form.setFieldValue(
+                    ['unidades_derivadas', value, 'producto_complementario_cantidad'],
+                    undefined
+                  )
+                  form.setFieldValue(
+                    ['unidades_derivadas', value, 'producto_complementario'],
+                    undefined
+                  )
+                } else {
+                  const currentCant = form.getFieldValue([
+                    'unidades_derivadas',
+                    value,
+                    'producto_complementario_cantidad',
+                  ])
+                  if (!currentCant) {
+                    form.setFieldValue(
+                      ['unidades_derivadas', value, 'producto_complementario_cantidad'],
+                      1
+                    )
+                  }
+                }
+              }}
+            />
+          </div>
+        )
+      },
+      flex: 2,
+    },
+    {
+      headerName: 'Cant. Compl.',
+      field: 'name',
+      minWidth: 100,
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'producto_complementario_cantidad'],
+              }}
+              formWithMessage={false}
+              placeholder='Cant.'
+              precision={3}
+              min={0.001}
             />
           </div>
         )

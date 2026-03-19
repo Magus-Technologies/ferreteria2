@@ -44,6 +44,8 @@ export default function FormSectionUnidadesDerivadas({
                         precio_ultimo: 0,
                         comision_ultimo: 0,
                         activador_ultimo: 0,
+                        producto_complementario_id: undefined,
+                        producto_complementario_cantidad: undefined,
                       });
                     }}
                     color='success'
