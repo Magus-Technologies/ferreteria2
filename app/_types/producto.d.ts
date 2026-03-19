@@ -53,6 +53,9 @@ export interface ProductoAlmacenUnidadDerivada {
   precio_ultimo: number | null;
   comision_ultimo: number;
   activador_ultimo: number | null;
+  producto_complementario_id: number | null;
+  producto_complementario_cantidad: number | null;
+  producto_complementario?: { id: number; name: string; cod_producto: string };
   unidad_derivada: UnidadDerivada;
 }
 

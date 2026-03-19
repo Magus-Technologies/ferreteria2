@@ -54,10 +54,7 @@ export default function SelectProductoComplementario({
         try {
           const res = await productosApiV2.getAllByAlmacen({
             almacen_id: almacenId,
-            OR: [
-              { name: { contains: text } },
-              { cod_producto: { contains: text } },
-            ],
+            search: text,
             take: 10,
           })
           const productos = res.data?.data ?? []

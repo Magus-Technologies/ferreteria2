@@ -133,13 +133,17 @@ export function useColumnsDetalleDePreciosEdicion({
             <SelectProductoComplementario
               propsForm={{
                 name: [value, 'producto_complementario_id'],
-                prefix_array_name: ['unidades_derivadas'],
               }}
               form={form}
               formWithMessage={false}
               placeholder='Buscar producto...'
               initialOption={initialOption}
               onChange={(val) => {
+                // Establecer explícitamente el ID en el form (necesario para evitar conflictos con Form.Items duplicados)
+                form.setFieldValue(
+                  ['unidades_derivadas', value, 'producto_complementario_id'],
+                  val ?? undefined
+                )
                 if (!val) {
                   form.setFieldValue(
                     ['unidades_derivadas', value, 'producto_complementario_cantidad'],

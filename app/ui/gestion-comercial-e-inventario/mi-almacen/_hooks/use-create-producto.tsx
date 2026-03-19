@@ -183,7 +183,7 @@ export default function useCreateProducto({
       },
       unidades_derivadas: cleanedValues.unidades_derivadas.map((item) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { unidad_derivada: _unidad_derivada, ...rest } = item
+        const { unidad_derivada: _unidad_derivada, producto_complementario: _producto_complementario, ...rest } = item
         return rest
       }),
       estado: cleanedValues.estado === 1,
