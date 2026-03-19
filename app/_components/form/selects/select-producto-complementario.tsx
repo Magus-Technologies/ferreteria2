@@ -50,6 +50,7 @@ export default function SelectProductoComplementario({
       }
 
       debounceRef.current = setTimeout(async () => {
+        if (!almacenId) return
         setSearching(true)
         try {
           const res = await productosApiV2.getAllByAlmacen({
