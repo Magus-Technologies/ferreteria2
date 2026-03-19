@@ -4,7 +4,6 @@ import { Modal, message } from "antd";
 import { useState } from "react";
 import { MdOutlineSell, MdSell } from "react-icons/md";
 import { DescuentoTipo, type getVentaResponseProps } from "~/lib/api/venta";
-import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectPaquetes from "~/app/_components/form/selects/select-paquetes";
 import SelectServicios from "~/app/_components/form/selects/select-servicios";
@@ -14,9 +13,7 @@ import { permissions } from "~/lib/permissions";
 import CardAgregarProductoVenta from "../cards/card-agregar-producto-venta";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
-import ModalBuscarPaquete from "~/app/_components/modals/modal-buscar-paquete";
 import ModalBuscarServicio from "~/app/_components/modals/modal-buscar-servicio";
-import { useStorePaqueteSeleccionado } from "../../../store/store-paquete-seleccionado";
 import { useStoreServicioSeleccionado } from "../../../store/store-servicio-seleccionado";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
@@ -47,8 +44,6 @@ export default function HeaderCrearVenta({
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] =
     useState(false);
-  const [openModalBuscarPaquete, setOpenModalBuscarPaquete] = useState(false);
-  const [textDefaultPaquete, setTextDefaultPaquete] = useState("");
   const [openModalBuscarServicio, setOpenModalBuscarServicio] = useState(false);
   const [textDefaultServicio, setTextDefaultServicio] = useState("");
 
@@ -64,11 +59,6 @@ export default function HeaderCrearVenta({
     (store) => store.setProductoAgregado,
   );
 
-  // Store para paquete seleccionado
-  const paqueteSeleccionadoStore = useStorePaqueteSeleccionado(
-    (store) => store.paquete,
-  );
-
   // Store para servicio seleccionado
   const servicioSeleccionadoStore = useStoreServicioSeleccionado(
     (store) => store.servicio,
@@ -79,9 +69,7 @@ export default function HeaderCrearVenta({
    * Usa el tipo_precio individual de cada producto del paquete
    * Crea una fila cabecera + filas de sub-productos
    */
-  const handleAgregarPaquete = async () => {
-    const paquete = paqueteSeleccionadoStore;
-
+  const handleAgregarPaquete = async (paquete: import('~/lib/api/paquete').Paquete) => {
     if (!paquete) {
       message.warning("Selecciona un paquete");
       return;
@@ -275,11 +263,8 @@ export default function HeaderCrearVenta({
               className="w-full lg:!min-w-[300px] lg:!w-[300px] lg:!max-w-[300px]"
               classNameIcon="text-cyan-600"
               onSelect={(paquete) => {
-                // Guardar en store y abrir modal
-                setTextDefaultPaquete(paquete.nombre);
-                setOpenModalBuscarPaquete(true);
+                handleAgregarPaquete(paquete);
               }}
-              onOpenModal={() => setOpenModalBuscarPaquete(true)}
             />
           </ConfigurableElement>
 
@@ -335,22 +320,6 @@ export default function HeaderCrearVenta({
         >
           <CardAgregarProductoVenta setOpen={setOpenModalAgregarProducto} />
         </Modal>
-
-        <ModalBuscarPaquete
-          open={openModalBuscarPaquete}
-          setOpen={setOpenModalBuscarPaquete}
-          onOk={async () => {
-            setOpenModalBuscarPaquete(false);
-            await handleAgregarPaquete();
-          }}
-          textDefault={textDefaultPaquete}
-          onRowDoubleClicked={async ({ data }) => {
-            if (data) {
-              setOpenModalBuscarPaquete(false);
-              await handleAgregarPaquete();
-            }
-          }}
-        />
 
         <ModalBuscarServicio
           open={openModalBuscarServicio}

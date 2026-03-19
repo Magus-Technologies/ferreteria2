@@ -3,6 +3,7 @@
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
+import { useRef } from 'react'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
@@ -21,10 +22,9 @@ export function useColumnsVender({
   cantidad_pendiente?: boolean
   venta?: VentaConUnidadDerivadaNormal
 }) {
-  console.log('🚀 ~ useColumnsVender ~ venta:', venta)
-  console.log('🚀 ~ useColumnsVender ~ cantidad_pendiente:', cantidad_pendiente)
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const productos = Form.useWatch('productos', form) || []
+  const recalcDebounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   const monedaPrefix = tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'
 
@@ -150,7 +150,7 @@ export function useColumnsVender({
         return (
           <div className='flex items-center h-full'>
             <Tooltip classNames={{ body: 'text-center!' }} title={codigo}>
-              <div className={`overflow-hidden text-ellipsis whitespace-nowrap ${tipoFila === 'paquete_producto' ? 'text-gray-400 text-xs' : ''}`}>
+              <div className={`overflow-hidden text-ellipsis whitespace-nowrap ${tipoFila === 'paquete_producto' ? 'text-gray-600 text-xs' : ''}`}>
                 {codigo}
               </div>
             </Tooltip>
@@ -217,7 +217,7 @@ export function useColumnsVender({
           return (
             <div className='flex flex-col h-full justify-center gap-0.5'>
               {hiddenFields}
-              <div className='text-gray-400 text-xs overflow-hidden text-ellipsis whitespace-nowrap pl-2'>
+              <div className='text-gray-500 text-[13px] overflow-hidden text-ellipsis whitespace-nowrap pl-2'>
                 ↳ {productoName}
               </div>
             </div>
@@ -285,7 +285,7 @@ export function useColumnsVender({
         if (tipoFila === 'paquete_producto') {
           return (
             <div className='flex items-center h-full'>
-              <span className='text-gray-400 text-xs'>{form.getFieldValue(['productos', value, 'marca_name']) || '-'}</span>
+              <span className='text-gray-600 text-xs'>{form.getFieldValue(['productos', value, 'marca_name']) || '-'}</span>
               <InputBase propsForm={{ name: [value, 'marca_name'], hidden: true }} formWithMessage={false} />
             </div>
           )
@@ -342,7 +342,7 @@ export function useColumnsVender({
         if (tipoFila === 'paquete_producto') {
           return (
             <div className='flex items-center h-full'>
-              <span className='text-gray-400 text-xs'>{form.getFieldValue(['productos', value, 'unidad_derivada_name'])}</span>
+              <span className='text-gray-600 text-xs'>{form.getFieldValue(['productos', value, 'unidad_derivada_name'])}</span>
               <InputNumberBase propsForm={{ name: [value, 'unidad_derivada_id'], hidden: true }} formWithMessage={false} />
               <InputNumberBase propsForm={{ name: [value, 'unidad_derivada_factor'], hidden: true }} formWithMessage={false} />
               <InputBase propsForm={{ name: [value, 'unidad_derivada_name'], hidden: true }} formWithMessage={false} />
@@ -430,7 +430,10 @@ export function useColumnsVender({
                 formWithMessage={false}
                 onChange={(newVal) => {
                   if (paqueteId && newVal) {
-                    recalcularSubProductosPaquete(paqueteId, Number(newVal))
+                    if (recalcDebounceRef.current) clearTimeout(recalcDebounceRef.current)
+                    recalcDebounceRef.current = setTimeout(() => {
+                      recalcularSubProductosPaquete(paqueteId, Number(newVal))
+                    }, 150)
                   }
                 }}
               />
@@ -443,7 +446,7 @@ export function useColumnsVender({
           const cantidad = form.getFieldValue(['productos', value, 'cantidad'])
           return (
             <div className='flex items-center h-full justify-center'>
-              <span className='text-gray-400 text-xs'>{Number(cantidad || 0).toFixed(2)}</span>
+              <span className='text-gray-600 text-xs'>{Number(cantidad || 0).toFixed(2)}</span>
               <InputNumberBase propsForm={{ name: [value, 'cantidad'], hidden: true }} formWithMessage={false} />
             </div>
           )
@@ -514,7 +517,7 @@ export function useColumnsVender({
           const precio = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
           return (
             <div className='flex items-center h-full'>
-              <span className='text-gray-400 text-xs'>{monedaPrefix} {precio.toFixed(2)}</span>
+              <span className='text-gray-600 text-xs'>{monedaPrefix} {precio.toFixed(2)}</span>
               <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
             </div>
           )
@@ -672,7 +675,7 @@ export function useColumnsVender({
           const subtotal = Number(form.getFieldValue(['productos', value, 'subtotal']) || 0)
           return (
             <div className='flex items-center h-full'>
-              <span className='text-gray-400 text-xs'>{monedaPrefix} {subtotal.toFixed(2)}</span>
+              <span className='text-gray-600 text-xs'>{monedaPrefix} {subtotal.toFixed(2)}</span>
               <InputNumberBase propsForm={{ name: [value, 'subtotal'], hidden: true }} formWithMessage={false} />
             </div>
           )

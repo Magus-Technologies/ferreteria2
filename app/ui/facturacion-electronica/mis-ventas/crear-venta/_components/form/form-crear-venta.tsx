@@ -219,6 +219,7 @@ export default function FormCrearVenta({
           </LabelBase>
         </ConfigurableElement>
 
+        {/* InputCodigoVale: ya no muestra UI, solo detecta vales automáticamente */}
         <InputCodigoVale form={form} />
       </div>
 

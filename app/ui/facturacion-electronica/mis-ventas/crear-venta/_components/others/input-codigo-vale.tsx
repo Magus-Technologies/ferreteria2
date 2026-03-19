@@ -1,32 +1,28 @@
 'use client'
 
-import { useEffect, useMemo, useCallback, useRef, useState } from 'react'
-import { App, Input, Tag, Form, FormInstance, Spin } from 'antd'
-import { FaTicketAlt, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
-import { getValesAplicables, verificarCodigoVale } from '~/lib/api/vales-compra'
-import type { ValeCompra, ValeCompraVerificado } from '~/lib/api/vales-compra'
+import { useEffect, useMemo, useCallback, useRef } from 'react'
+import { App, Form, FormInstance } from 'antd'
+import { getValesAplicables, getValesPendientesCliente } from '~/lib/api/vales-compra'
+import type { ValeCompra } from '~/lib/api/vales-compra'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
-import LabelBase from '~/components/form/label-base'
 
 /**
- * Componente que:
+ * Componente invisible que:
  * 1. Detecta automáticamente vales aplicables por productos en carrito (notificaciones)
- * 2. Permite canjear un vale generado escaneando código de barras/QR o escribiendo el código
+ * 2. Detecta automáticamente vales pendientes del cliente (DESCUENTO_PROXIMA_COMPRA)
+ *    y setea codigo_vale en el form para que se canjee al crear la venta
+ *
+ * No renderiza UI visible — toda la lógica es automática.
  */
 export default function InputCodigoVale({ form }: { form: FormInstance }) {
   const { notification } = App.useApp()
 
-  // --- Estado del canje ---
-  const [codigoInput, setCodigoInput] = useState('')
-  const [verificando, setVerificando] = useState(false)
-  const [valeVerificado, setValeVerificado] = useState<ValeCompraVerificado | null>(null)
-  const [errorVerificacion, setErrorVerificacion] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // --- Detección automática ---
+  // --- Detección automática de vales por productos ---
   const valesNotificados = useRef<Set<number>>(new Set())
   const productosVenta = useStoreProductoAgregadoVenta(store => store.productos)
   const setValesAplicables = useStoreProductoAgregadoVenta(store => store.setValesAplicables)
+
+  const clienteId = Form.useWatch('cliente_id', form)
 
   const productoIds = useMemo(() => {
     return productosVenta
@@ -54,13 +50,14 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     return vale.tipo_promocion
   }, [])
 
-  // Consultar vales aplicables automáticos
+  // Consultar vales aplicables automáticos (por productos en carrito)
   const consultarVales = useCallback(async () => {
     if (productoIds.length === 0 || cantidadTotal <= 0) return
     try {
       const res = await getValesAplicables({
         cantidad_total: cantidadTotal,
         producto_ids: productoIds,
+        cliente_id: clienteId || undefined,
       })
       if (res.data?.data) {
         const valesUnicos = res.data.data.filter(
@@ -83,7 +80,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     } catch {
       // Silencioso
     }
-  }, [productoIds, cantidadTotal, getBeneficio, notification])
+  }, [productoIds, cantidadTotal, clienteId, getBeneficio, notification, setValesAplicables])
 
   useEffect(() => {
     const timer = setTimeout(consultarVales, 500)
@@ -93,125 +90,75 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   useEffect(() => {
     if (productosVenta.length === 0) {
       valesNotificados.current.clear()
+      setValesAplicables([])
     }
-  }, [productosVenta.length])
+  }, [productosVenta.length, setValesAplicables])
 
-  // --- Verificar código de vale (con debounce para pistola/scanner) ---
-  const verificarCodigo = useCallback(async (codigo: string) => {
-    const codigoLimpio = codigo.trim()
-    if (!codigoLimpio) {
-      setValeVerificado(null)
-      setErrorVerificacion(null)
+  // --- Detección automática de vales pendientes del cliente (DESCUENTO_PROXIMA_COMPRA) ---
+  const valePendienteNotificado = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!clienteId) {
+      // Limpiar cuando no hay cliente
       form.setFieldValue('codigo_vale', undefined)
+      valePendienteNotificado.current = null
       return
     }
 
-    setVerificando(true)
-    setErrorVerificacion(null)
-    setValeVerificado(null)
+    let cancelled = false
 
-    try {
-      const res = await verificarCodigoVale(codigoLimpio)
-      if (res.data?.valido && res.data.data) {
-        setValeVerificado(res.data.data)
-        setErrorVerificacion(null)
-        form.setFieldValue('codigo_vale', codigoLimpio)
-      } else {
-        setValeVerificado(null)
-        setErrorVerificacion(res.data?.message || 'Codigo no valido')
-        form.setFieldValue('codigo_vale', undefined)
-      }
-    } catch {
-      setErrorVerificacion('Error al verificar codigo')
-      form.setFieldValue('codigo_vale', undefined)
-    } finally {
-      setVerificando(false)
-    }
-  }, [form])
+    const buscarValesPendientes = async () => {
+      try {
+        const res = await getValesPendientesCliente(clienteId)
+        if (cancelled) return
 
-  // Cuando cambia el input, verificar con debounce (300ms para que la pistola termine de escribir)
-  const handleInputChange = useCallback((value: string) => {
-    setCodigoInput(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
+        if (res.data?.data && res.data.data.length > 0) {
+          // Tomar el primer vale pendiente (el más próximo a vencer)
+          const valePendiente = res.data.data[0]
 
-    if (!value.trim()) {
-      setValeVerificado(null)
-      setErrorVerificacion(null)
-      form.setFieldValue('codigo_vale', undefined)
-      return
-    }
+          if (valePendiente.codigo_vale_generado) {
+            // Setear automáticamente en el form
+            form.setFieldValue('codigo_vale', valePendiente.codigo_vale_generado)
 
-    debounceRef.current = setTimeout(() => {
-      verificarCodigo(value)
-    }, 400)
-  }, [verificarCodigo, form])
+            // Notificar solo una vez por vale
+            if (valePendienteNotificado.current !== valePendiente.id) {
+              valePendienteNotificado.current = valePendiente.id
 
-  // Limpiar vale
-  const handleLimpiar = useCallback(() => {
-    setCodigoInput('')
-    setValeVerificado(null)
-    setErrorVerificacion(null)
-    form.setFieldValue('codigo_vale', undefined)
-  }, [form])
+              const descTipo = valePendiente.descuento_tipo || valePendiente.vale_compra?.descuento_tipo
+              const descValor = valePendiente.descuento_aplicado || valePendiente.vale_compra?.descuento_valor
+              let beneficio = ''
+              if (descTipo === 'PORCENTAJE' && descValor) beneficio = `${descValor}% DSCTO`
+              else if (descTipo === 'MONTO_FIJO' && descValor) beneficio = `S/ ${Number(descValor).toFixed(2)} DSCTO`
 
-  // Beneficio del vale verificado
-  const beneficioVerificado = useMemo(() => {
-    if (!valeVerificado) return ''
-    const v = valeVerificado.vale_compra
-    if (v.descuento_tipo === 'PORCENTAJE' && v.descuento_valor) {
-      return `${v.descuento_valor}% DSCTO`
-    }
-    if (v.descuento_tipo === 'MONTO_FIJO' && v.descuento_valor) {
-      return `S/ ${Number(v.descuento_valor).toFixed(2)} DSCTO`
-    }
-    if (v.tipo_promocion === 'PRODUCTO_GRATIS') return 'PRODUCTO GRATIS'
-    if (v.tipo_promocion === 'DOS_POR_UNO') return '2x1'
-    return v.tipo_promocion
-  }, [valeVerificado])
+              const nombreVale = valePendiente.vale_compra?.nombre || 'Vale de descuento'
 
-  return (
-    <LabelBase
-      label="Canjear Vale:"
-      classNames={{ labelParent: 'mb-3 sm:mb-4 lg:mb-6' }}
-      className="w-full sm:w-auto"
-    >
-      {/* Campo oculto para el form */}
-      <Form.Item name="codigo_vale" hidden>
-        <input type="hidden" />
-      </Form.Item>
-
-      <div className="flex flex-col gap-1">
-        <Input
-          placeholder="Escanea o escribe el codigo del vale"
-          prefix={<FaTicketAlt className="text-orange-500" />}
-          suffix={
-            verificando ? (
-              <Spin size="small" />
-            ) : valeVerificado ? (
-              <FaCheckCircle className="text-green-500 cursor-pointer" onClick={handleLimpiar} />
-            ) : errorVerificacion ? (
-              <FaTimesCircle className="text-red-400 cursor-pointer" onClick={handleLimpiar} />
-            ) : null
+              notification.success({
+                message: 'Vale de proxima compra detectado',
+                description: `${nombreVale}${beneficio ? ` (${beneficio})` : ''} — Se aplicara automaticamente al crear la venta`,
+                duration: 8,
+                placement: 'bottomRight',
+              })
+            }
           }
-          value={codigoInput}
-          onChange={e => handleInputChange(e.target.value)}
-          onPressEnter={() => verificarCodigo(codigoInput)}
-          className="!w-full sm:!w-[280px]"
-          status={errorVerificacion ? 'error' : valeVerificado ? '' : undefined}
-          allowClear
-          onClear={handleLimpiar}
-        />
+        } else {
+          // No hay vales pendientes para este cliente
+          form.setFieldValue('codigo_vale', undefined)
+          valePendienteNotificado.current = null
+        }
+      } catch {
+        // Silencioso
+      }
+    }
 
-        {/* Resultado de verificacion */}
-        {valeVerificado && (
-          <Tag color="green" className="w-fit !text-xs !mt-1">
-            {valeVerificado.vale_compra.nombre} — {beneficioVerificado}
-          </Tag>
-        )}
-        {errorVerificacion && (
-          <span className="text-red-500 text-[11px] mt-0.5">{errorVerificacion}</span>
-        )}
-      </div>
-    </LabelBase>
+    buscarValesPendientes()
+
+    return () => { cancelled = true }
+  }, [clienteId, form, notification])
+
+  // No renderiza nada visible — solo el campo oculto del form
+  return (
+    <Form.Item name="codigo_vale" hidden>
+      <input type="hidden" />
+    </Form.Item>
   )
 }

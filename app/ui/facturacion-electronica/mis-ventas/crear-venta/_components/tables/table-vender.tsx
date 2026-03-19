@@ -367,7 +367,7 @@ export default function TableVender({
             return { background: '#fffbeb', borderLeft: '3px solid #f59e0b' }
           }
           if (tipoFila === 'paquete_producto') {
-            return { background: '#f9fafb', borderLeft: '3px solid #e5e7eb' }
+            return { background: '#f3f4f6', borderLeft: '3px solid #d1d5db' }
           }
           if (tipoFila === 'vale_promocional') {
             return { background: '#f0fdf4', borderLeft: '3px solid #22c55e' }

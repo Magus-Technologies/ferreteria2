@@ -302,6 +302,36 @@ export async function getValesAplicadosVenta(
   );
 }
 
+export interface ValePendienteCliente {
+  id: number;
+  codigo_vale_generado: string;
+  fecha_validez: string | null;
+  descuento_tipo: DescuentoTipo | null;
+  descuento_aplicado: number | null;
+  vale_compra: {
+    id: number;
+    codigo: string;
+    nombre: string;
+    tipo_promocion: TipoPromocion;
+    descuento_tipo: DescuentoTipo | null;
+    descuento_valor: number | null;
+  } | null;
+}
+
+/**
+ * Obtener vales generados pendientes de un cliente (DESCUENTO_PROXIMA_COMPRA no canjeados)
+ */
+export async function getValesPendientesCliente(
+  clienteId: number
+): Promise<ApiResponse<{ data: ValePendienteCliente[]; count: number }>> {
+  return apiRequest<{ data: ValePendienteCliente[]; count: number }>(
+    `/vales-compra/cliente/${clienteId}/pendientes`,
+    {
+      method: 'GET',
+    }
+  );
+}
+
 export interface ValeCompraVerificado {
   vale_compra: {
     id: number;
