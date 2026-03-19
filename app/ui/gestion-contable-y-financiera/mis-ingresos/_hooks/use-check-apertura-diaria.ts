@@ -17,9 +17,9 @@ export function useCheckAperturaDiaria() {
       const response = await cajaApi.cajaActiva()
       return response.data?.data || null
     },
-    staleTime: 0,
-    gcTime: 0,
-    refetchInterval: 5000,
+    staleTime: 30000,
+    gcTime: 60000,
+    refetchInterval: 60000,
   })
 
   // Verificar si la apertura es de hoy
