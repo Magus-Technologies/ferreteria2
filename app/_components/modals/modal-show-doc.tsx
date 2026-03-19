@@ -34,6 +34,10 @@ interface ModalEntradaStockProps {
   onCustomPrint?: () => Promise<void>
   /** Teléfono(s) del cliente para envío por WhatsApp */
   clienteTelefonos?: string[]
+  /** Mensaje de WhatsApp pre-armado con datos del documento */
+  whatsappMensajeAuto?: string
+  /** URL pública del PDF para incluir en el mensaje de WhatsApp */
+  pdfPublicUrl?: string
 }
 export default function ModalShowDoc({
   open,
@@ -49,6 +53,8 @@ export default function ModalShowDoc({
   backendPdfLoading,
   onCustomPrint,
   clienteTelefonos,
+  whatsappMensajeAuto,
+  pdfPublicUrl,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
@@ -141,7 +147,12 @@ export default function ModalShowDoc({
     // Pre-llenar con primer teléfono del cliente si existe
     const tel = clienteTelefonos?.find(t => t && t.trim()) || ''
     setWhatsappTelefono(tel)
-    setWhatsappMensaje(`Hola, le comparto su documento ${nro_doc}. Gracias por su compra.`)
+    // Usar mensaje automático si está disponible
+    if (whatsappMensajeAuto) {
+      setWhatsappMensaje(whatsappMensajeAuto)
+    } else {
+      setWhatsappMensaje(`Hola, le comparto su documento ${nro_doc}. Gracias por su compra.`)
+    }
     setWhatsappModalOpen(true)
   }
 

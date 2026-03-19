@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken, apiRequest } from '~/lib/api'
 import { useQzPrintMultiple } from '~/hooks/use-qz-print-multiple'
 import { message } from 'antd'
+import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 
 // ============= COMPONENT =============
 
@@ -31,6 +32,71 @@ export default function ModalDocVenta({
   const ventaInfo = ventaData || fetchedVentaData
 
   const { imprimirMultiple } = useQzPrintMultiple('ticket')
+  const { data: empresa } = useEmpresaPublica()
+
+  // Construir mensaje de WhatsApp con datos de la venta
+  const whatsappMensajeAuto = useMemo(() => {
+    if (!ventaInfo) return undefined
+    const tipoDoc = ventaInfo.tipo_documento === '01' ? 'FACTURA'
+      : ventaInfo.tipo_documento === '03' ? 'BOLETA'
+      : 'NOTA DE VENTA'
+    const serie = ventaInfo.serie || ''
+    const numero = String(ventaInfo.numero || '').padStart(8, '0')
+    const nroDoc = `${serie}-${numero}`
+
+    const cliente = ventaInfo.cliente
+    const clienteNombre = cliente?.razon_social
+      || [cliente?.nombres, cliente?.apellidos].filter(Boolean).join(' ')
+      || 'Cliente'
+    const clienteDoc = cliente?.numero_documento || ''
+
+    // Productos y calcular total
+    const productosLineas: string[] = []
+    let subtotalGeneral = 0
+    const productosAlmacen = ventaInfo.productos_por_almacen ?? []
+    for (const pa of productosAlmacen) {
+      const productoName = pa.producto_almacen?.producto?.name || 'Producto'
+      const unidades = pa.unidades_derivadas ?? []
+      for (const ud of unidades) {
+        const cant = Number(ud.cantidad || 0)
+        const precio = Number(ud.precio || 0)
+        const recargo = Number(ud.recargo || 0)
+        const descuento = Number(ud.descuento || 0)
+        const subtotal = cant * (precio + recargo)
+        subtotalGeneral += subtotal - descuento
+        productosLineas.push(`  - ${cant} ${productoName}  S/ ${subtotal.toFixed(2)}`)
+      }
+    }
+
+    // Total con IGV
+    const igv = subtotalGeneral * 0.18
+    const totalConIgv = subtotalGeneral + igv
+    // Si hay comprobante electrónico, usar ese total (es más preciso)
+    const totalFinal = ventaInfo.comprobante_electronico?.importe_total
+      ? Number(ventaInfo.comprobante_electronico.importe_total)
+      : totalConIgv
+    const empresaNombre = empresa?.razon_social || ''
+
+    let msg = `Hola!\n\nHemos generado tu ${tipoDoc} desde ${empresaNombre}\n\n`
+    msg += `DOCUMENTO:\n\t${nroDoc}\n\n`
+    msg += `CLIENTE:\n\t${clienteNombre}${clienteDoc ? ` (${clienteDoc})` : ''}\n\n`
+    if (productosLineas.length > 0) {
+      msg += `PRODUCTOS:\n${productosLineas.join('\n')}\n\n`
+    }
+    msg += `TOTAL:\n\tS/ ${totalFinal.toFixed(2)}`
+
+    return msg
+  }, [ventaInfo, empresa])
+
+  // Teléfonos del cliente
+  const clienteTelefonos = useMemo(() => {
+    const cliente = ventaInfo?.cliente
+    if (!cliente) return undefined
+    const tels: string[] = []
+    if (cliente.telefono) tels.push(cliente.telefono)
+    if (cliente.celular) tels.push(cliente.celular)
+    return tels.length > 0 ? tels : undefined
+  }, [ventaInfo])
 
   // Contar vales generados (los que se imprimen como tickets separados)
   const valesGenerados = (ventaInfo?.vales_aplicados ?? []).filter(
@@ -147,6 +213,8 @@ export default function ModalDocVenta({
       backendPdfUrl={currentPdfUrl}
       backendPdfLoading={currentLoading && !currentPdfUrl}
       onCustomPrint={esTicket && tieneVales ? handleCustomPrint : undefined}
+      clienteTelefonos={clienteTelefonos}
+      whatsappMensajeAuto={whatsappMensajeAuto}
     >
       {/* Fallback vacío - todo se renderiza desde el backend */}
       <></>
