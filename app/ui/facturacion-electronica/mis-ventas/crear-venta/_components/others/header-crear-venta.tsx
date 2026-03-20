@@ -225,7 +225,7 @@ export default function HeaderCrearVenta({
         )
       }
       extra={
-        <div className="pl-0 lg:pl-8 flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-4 w-full lg:w-auto">
+        <div className="pl-0 lg:pl-8 flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-4 w-full lg:w-auto min-w-0">
           <ConfigurableElement
             componentId="crear-venta.buscar-producto"
             label="Buscar Producto"
@@ -290,14 +290,6 @@ export default function HeaderCrearVenta({
       }
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-        {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
-        {/* <ConfigurableElement
-          componentId="crear-venta.select-almacen"
-          label="Selector de Almacén"
-        >
-          <SelectAlmacen className="w-full" disabled={!!venta} />
-        </ConfigurableElement> */}
-
         <Modal
           open={openModalAgregarProducto}
           onCancel={() => setOpenModalAgregarProducto(false)}

@@ -162,7 +162,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
         hidden
       />
 
-      <div className="flex flex-col gap-4 max-w-64">
+      <div className="flex flex-col gap-3 xl:gap-4 xl:max-w-64">
         <ConfigurableElement
           componentId="crear-venta.boton-recuperar-espera"
           label="Botón Recuperar Venta en Espera"

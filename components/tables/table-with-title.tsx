@@ -80,12 +80,12 @@ export default function TableWithTitle<T, schemaType = unknown>({
 
   return (
     <div className={`flex flex-col gap-1 h-full ${className}`} style={style}>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-2 min-w-0">
         <div
-          className={`font-semibold text-slate-700 text-base flex flex-wrap items-center gap-2 ${titleParent}`}
+          className={`font-semibold text-slate-700 text-base min-w-0 max-w-full ${titleParent}`}
         >
-          <span className="whitespace-nowrap">{title}</span>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
+            <span className="whitespace-nowrap">{title}</span>
             {extraTitle}
           </div>
         </div>

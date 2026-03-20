@@ -100,14 +100,15 @@ export default function TableDetalleDePrecios() {
       headersRequired={['Cod. Producto']}
       extraTitle={
         <>
-          {' '}
-          de
-          <span className='italic -ml-2 text-blue-900'>
-            {primeraData < 1
-              ? '-'
-              : productoSeleccionado
-              ? productoSeleccionado.name
-              : 'TODOS LOS PRODUCTOS FILTRADOS'}
+          <span>
+            de{' '}
+            <span className='italic text-blue-900'>
+              {primeraData < 1
+                ? '-'
+                : productoSeleccionado
+                ? productoSeleccionado.name
+                : 'TODOS LOS PRODUCTOS FILTRADOS'}
+            </span>
           </span>
           <ButtonBase
             onClick={() => {
@@ -222,13 +223,13 @@ export default function TableDetalleDePrecios() {
                 },
                 msgSuccess: 'Importación completada correctamente',
                 onSuccess: async () => {
-                  // OPTIMIZACIÓN: Refrescar inmediatamente los datos después del import
-                  await refetch();
-
-                  // También invalidar queries de productos por almacén
-                  queryClient.invalidateQueries({
-                    queryKey: ['productos-by-almacen']
+                  // Invalidar el caché de React Query para que refetch traiga datos frescos del backend
+                  await queryClient.invalidateQueries({
+                    queryKey: ['productos-infinite']
                   });
+
+                  // Refrescar los datos después de invalidar
+                  await refetch();
 
                   setProductoSeleccionado(undefined);
                 },

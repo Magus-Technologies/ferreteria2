@@ -54,7 +54,7 @@ export default function SelectProductoComplementario({
         setSearching(true)
         try {
           const res = await productosApiV2.getAllByAlmacen({
-            almacen_id: almacenId,
+            almacen_id: almacenId!,
             search: text,
             per_page: 10,
           })

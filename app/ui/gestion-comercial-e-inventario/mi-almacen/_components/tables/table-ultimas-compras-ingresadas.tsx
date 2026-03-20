@@ -38,13 +38,12 @@ export default function TableUltimasComprasIngresadas({
       title='Últimas 6 compras ingresadas'
       selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
       extraTitle={
-        <>
-          {' '}
-          de
-          <span className='italic -ml-2 text-blue-900'>
+        <span>
+          de{' '}
+          <span className='italic text-blue-900'>
             {productoSeleccionado ? productoSeleccionado.name : '-'}
           </span>
-        </>
+        </span>
       }
       columnDefs={useColumnsUltimasComprasIngresadas()}
       optionsSelectColumns={[
