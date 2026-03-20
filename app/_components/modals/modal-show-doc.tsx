@@ -77,7 +77,8 @@ export default function ModalShowDoc({
 
   // QZ Tray - impresion directa
   const qz = useQzPrint({
-    jsx: <>{children}</>,
+    jsx: backendPdfUrl ? undefined : <>{children}</>,
+    backendPdfUrl,
     name: nro_doc,
     formato,
   })

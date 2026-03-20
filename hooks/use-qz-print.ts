@@ -23,11 +23,12 @@ async function getQz() {
 interface UseQzPrintOptions {
   jsx?: JSX.Element
   pdfBlob?: Blob
+  backendPdfUrl?: string | null
   name: string
   formato?: TipoFormato
 }
 
-export function useQzPrint({ jsx, pdfBlob, name, formato = 'ticket' }: UseQzPrintOptions) {
+export function useQzPrint({ jsx, pdfBlob, backendPdfUrl, name, formato = 'ticket' }: UseQzPrintOptions) {
   const [impresoras, setImpresoras] = useState<string[]>([])
   const [conectado, setConectado] = useState(false)
   const [cargando, setCargando] = useState(false)
@@ -103,8 +104,18 @@ export function useQzPrint({ jsx, pdfBlob, name, formato = 'ticket' }: UseQzPrin
 
         const qzInstance = await getQz()
 
-        // Obtener PDF blob (del backend o generado con react-pdf)
-        const blob = pdfBlob ?? await pdf(jsx!).toBlob()
+        // Obtener PDF blob (del backend, pre-generado, o generado con react-pdf)
+        let blob: Blob
+        if (pdfBlob) {
+          blob = pdfBlob
+        } else if (backendPdfUrl) {
+          const res = await fetch(backendPdfUrl)
+          blob = await res.blob()
+        } else if (jsx) {
+          blob = await pdf(jsx).toBlob()
+        } else {
+          throw new Error('No hay PDF disponible para imprimir')
+        }
         const arrayBuffer = await blob.arrayBuffer()
         const base64 = btoa(
           new Uint8Array(arrayBuffer).reduce(
@@ -140,7 +151,7 @@ export function useQzPrint({ jsx, pdfBlob, name, formato = 'ticket' }: UseQzPrin
         return false
       }
     },
-    [conectar, jsx, pdfBlob]
+    [conectar, jsx, pdfBlob, backendPdfUrl]
   )
 
   // Imprimir usando la impresora por defecto del formato
