@@ -39,6 +39,7 @@ export default function CierreCajaView() {
   const [comentarios, setComentarios] = useState('')
   const [ticketCaja, setTicketCaja] = useState(true)
   const [verCamposCiegoCierre, setVerCamposCiegoCierre] = useState(true)
+  const [arqueoFinalizado, setArqueoFinalizado] = useState(false)
 
   // Nuevos campos para reporte y supervisión
   const [emailReporte, setEmailReporte] = useState('')
@@ -297,6 +298,7 @@ export default function CierreCajaView() {
     const success = await cerrarCaja(cajaActiva.id, dataCierre, cajaActiva, empresaData, isReCierre)
 
     if (success) {
+      setArqueoFinalizado(true)
       if (isReCierre) {
         // CORREGIDO: Después de re-cerrar exitosamente, quitar re_cierre=true de la URL
         // para que la vista vuelva a modo solo lectura
@@ -313,11 +315,11 @@ export default function CierreCajaView() {
 
   // CORREGIDO: El resumen se muestra SIEMPRE que la caja esté cerrada, sin importar la fecha
   // Solo en modo re-cierre se permite editar
-  const mostrarResumen = cajaYaFinalizada || isReCierre;
+  const mostrarResumen = arqueoFinalizado || cajaYaFinalizada || isReCierre;
 
   // CORREGIDO: Si está finalizado (y NO es re-cierre), TODO está bloqueado basado ÚNICAMENTE en el backend
   // En modo Re-Cierre se permite editar el conteo
-  const isFormDisabled = cajaYaFinalizada && !isReCierre;
+  const isFormDisabled = (arqueoFinalizado || cajaYaFinalizada) && !isReCierre;
 
   // DEBUG: Logs para verificar el estado
   console.log('🔍 Estado de cierre:', {
@@ -671,7 +673,7 @@ export default function CierreCajaView() {
                       </div>
 
                       {/* Diferencias (Solo se muestra luego de finalizar para no influenciar conteo ciego) */}
-                      {cajaYaFinalizada && (
+                      {(arqueoFinalizado || cajaYaFinalizada) && (
                         <div className='bg-slate-50 rounded p-3 space-y-1.5'>
                           <div className='flex justify-between items-center'>
                             <span className='text-sm font-medium text-slate-700'>Diferencias</span>
@@ -721,7 +723,7 @@ export default function CierreCajaView() {
                           </Button>
 
                           {/* Estado 1: Caja abierta - Botón Finalizar */}
-                          {!cajaYaFinalizada && !isReCierre && (
+                          {!cajaYaFinalizada && !arqueoFinalizado && !isReCierre && (
                             <Button
                               type='primary'
                               icon={<FaCheckCircle />}
@@ -736,7 +738,7 @@ export default function CierreCajaView() {
                           )}
 
                           {/* Estado 2: Caja cerrada (solo lectura) - Botón Volver (SIEMPRE visible cuando está cerrada) */}
-                          {cajaYaFinalizada && !isReCierre && (
+                          {(cajaYaFinalizada || arqueoFinalizado) && !isReCierre && (
                             <Button
                               type='primary'
                               className='flex-1 text-sm bg-amber-600 hover:bg-amber-700'

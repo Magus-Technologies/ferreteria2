@@ -4,17 +4,11 @@ export interface GastoExtra {
     id: string
     monto: number
     concepto: string
-    estado: 'pendiente' | 'aprobado' | 'anulado'
     user_id: string
-    supervisor_id: string | null
     despliegue_pago_id: string | null
     created_at: string
     updated_at: string
     user?: {
-        id: string
-        name: string
-    }
-    supervisor?: {
         id: string
         name: string
     }
@@ -26,19 +20,19 @@ export interface GastoExtra {
             name: string
         }
     }
+    compra?: {
+        id: string
+        serie?: string
+        numero?: string
+        fecha?: string
+        proveedor?: { nombre: string }
+    }
 }
 
 export interface CrearGastoExtraData {
     monto: number
     concepto: string
-    supervisor_id?: string
-    supervisor_password?: string
     despliegue_pago_id?: string
-}
-
-export interface AprobarGastoExtraData {
-    supervisor_id: string
-    supervisor_password: string
 }
 
 export interface ResumenGastosExtras {
@@ -85,18 +79,9 @@ export const updateGastoExtra = async ({ id, data }: { id: string, data: Partial
     return response.data!
 }
 
-// Anular gasto extra
-export const anularGastoExtra = async (id: string): Promise<{ data: GastoExtra; message: string }> => {
-    const response = await apiRequest<{ data: GastoExtra; message: string }>(`/gastos-extras/${id}/anular`, { method: 'POST' })
-    if (response.error) {
-        throw new Error(response.error.message)
-    }
-    return response.data!
-}
-
-// Aprobar gasto extra
-export const aprobarGastoExtra = async (id: string, data: AprobarGastoExtraData): Promise<{ data: GastoExtra; message: string }> => {
-    const response = await apiRequest<{ data: GastoExtra; message: string }>(`/gastos-extras/${id}/aprobar`, { method: 'POST', data })
+// Eliminar gasto extra
+export const eliminarGastoExtra = async (id: string): Promise<{ message: string }> => {
+    const response = await apiRequest<{ message: string }>(`/gastos-extras/${id}`, { method: 'DELETE' })
     if (response.error) {
         throw new Error(response.error.message)
     }

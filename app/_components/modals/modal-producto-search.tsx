@@ -152,11 +152,11 @@ export default function ModalProductoSearch({
           setTextDefault={setText}
         />
       </div>
-      <div className="flex flex-col xl:flex-row items-center justify-center gap-4 xl:gap-8">
+      <div className="flex flex-col xl:flex-row items-start justify-center gap-4 xl:gap-8">
         <div
           className={`${
             showUltimasCompras ? "h-[600px]" : "h-[400px]"
-          } w-full xl:min-w-[1000px] mt-4`}
+          } w-full xl:min-w-[1000px] xl:flex-shrink-0 mt-4`}
         >
           <div
             className={`grid ${
@@ -194,7 +194,7 @@ export default function ModalProductoSearch({
           </div>
         </div>
         {showCardAgregarProducto && (
-          <div className="w-full xl:w-auto">
+          <div className="w-full xl:w-[300px] xl:flex-shrink-0 mt-4">
             <CardAgregarProductoCompra
               setOpen={setOpen}
               onChangeValues={(values) => {

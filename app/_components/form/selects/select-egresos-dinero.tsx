@@ -11,9 +11,11 @@ export interface GastoExtraDisponible {
   id: string
   monto: string
   concepto: string
-  estado: 'pendiente' | 'aprobado'
   created_at: string
   user?: { id: string; name: string }
+  despliegue_pago?: {
+    metodo_de_pago?: { name: string }
+  }
 }
 
 interface SelectEgresosDineroProps extends SelectBaseProps {
@@ -32,7 +34,7 @@ export default function SelectEgresosDinero({
   onSelectGasto,
   ...props
 }: SelectEgresosDineroProps) {
-  const { data = [], refetch } = useQuery({
+  const { data = [] } = useQuery({
     queryKey: [QueryKeys.EGRESOS_DINERO, excluirCompraId],
     queryFn: async () => {
       const response = await apiRequest<{ success: boolean; data: GastoExtraDisponible[] }>(
@@ -55,8 +57,7 @@ export default function SelectEgresosDinero({
       optionFilterProp="label"
       options={data.map(item => ({
         value: item.id,
-        label: `${dayjs(item.created_at).format('DD/MM/YY')} | ${item.concepto} | S/. ${Number(item.monto).toFixed(2)} | ${item.estado === 'aprobado' ? 'Aprobado' : 'Pendiente'}`,
-        estado: item.estado,
+        label: `${dayjs(item.created_at).format('DD/MM/YY')} | ${item.concepto} | S/. ${Number(item.monto).toFixed(2)}`,
       }))}
       onChange={(value, option) => {
         if (onSelectGasto) {

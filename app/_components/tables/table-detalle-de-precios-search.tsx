@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/types/zod-schemas'
@@ -45,37 +45,38 @@ export default function TableDetalleDePreciosSearch({
     }
   }, [])
 
-  const producto_en_almacen = productoSeleccionado?.producto_en_almacenes.find(
-    item => item.almacen_id === almacen_id
-  )
-
-  const rowData = producto_en_almacen
-    ? producto_en_almacen!.unidades_derivadas?.map(item => ({
-        ...item,
-        almacen: producto_en_almacen!.almacen,
-        producto: productoSeleccionado!,
-        producto_almacen: {
-          costo: producto_en_almacen!.costo,
-          stock_fraccion: producto_en_almacen!.stock_fraccion,
-          ubicacion: producto_en_almacen!.ubicacion,
-        },
-      }))
-    : []
-
-  // Restaurar estado de columnas al montar o cuando cambien los datos
-  useEffect(() => {
-    if (gridRef.current && gridRef.current.api) {
+  // Restaurar estado de columnas solo al primer render del grid (no en cada cambio de datos)
+  const handleFirstDataRendered = useCallback(() => {
+    if (gridRef.current?.api) {
       const savedState = localStorage.getItem(STORAGE_KEY)
       if (savedState) {
         try {
           const columnState = JSON.parse(savedState)
           gridRef.current.api.applyColumnState({ state: columnState, applyOrder: true })
-        } catch (error) {
-          console.error('Error al restaurar estado de columnas:', error)
+        } catch {
+          // estado guardado inválido, ignorar
         }
       }
     }
-  }, [rowData])
+  }, [])
+
+  const producto_en_almacen = productoSeleccionado?.producto_en_almacenes.find(
+    item => item.almacen_id === almacen_id
+  )
+
+  const rowData = useMemo(() => {
+    if (!producto_en_almacen) return []
+    return producto_en_almacen.unidades_derivadas?.map(item => ({
+      ...item,
+      almacen: producto_en_almacen.almacen,
+      producto: productoSeleccionado!,
+      producto_almacen: {
+        costo: producto_en_almacen.costo,
+        stock_fraccion: producto_en_almacen.stock_fraccion,
+        ubicacion: producto_en_almacen.ubicacion,
+      },
+    })) ?? []
+  }, [producto_en_almacen, productoSeleccionado])
 
   const unidad_derivada = producto_en_almacen?.unidades_derivadas.find(
     item => item.unidad_derivada.id === costoUnidadDerivada?.unidad_derivada_id
@@ -143,6 +144,7 @@ export default function TableDetalleDePreciosSearch({
         selectionColor={colorSeleccion}
         getRowId={getRowId}
         onColumnResized={handleColumnResized}
+        onFirstDataRendered={handleFirstDataRendered}
       />
       
       <ModalEditarPreciosProducto

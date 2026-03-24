@@ -1,87 +1,44 @@
 'use client'
 
-import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
-import { AgGridReact } from 'ag-grid-react'
-import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent, ICellRendererParams } from 'ag-grid-community'
+import { memo, useCallback, useMemo, useState } from 'react'
+import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { useStoreFiltrosMisGastos } from '../../_store/store-filtros-mis-gastos'
 import { useGetGastos } from '../../_hooks/use-get-gastos'
-import { type GastoExtra, anularGastoExtra } from '~/lib/api/gasto-extra'
+import { type GastoExtra, eliminarGastoExtra } from '~/lib/api/gasto-extra'
 import dayjs from 'dayjs'
 import TableWithTitle from '~/components/tables/table-with-title'
-import { Button, Modal, message, Tooltip, Popconfirm } from 'antd'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
-import { FaCheck, FaTimes } from 'react-icons/fa'
+import { Button, Popconfirm, Tooltip } from 'antd'
+import useApp from 'antd/es/app/useApp'
 import { MdDelete, MdEditSquare } from 'react-icons/md'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import ModalAprobarGastoExtra from '../others/modal-aprobar-gasto-extra'
 import ModalCrearGastoExtra from '../others/modal-crear-gasto-extra'
-
-const { confirm } = Modal
-
-// Componente para renderizar el estado
-const EstadoCellRenderer = (props: ICellRendererParams) => {
-  const estado = props.value as 'pendiente' | 'aprobado' | 'anulado'
-
-  if (estado === 'anulado') {
-    return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-        Anulado
-      </span>
-    )
-  }
-
-  if (estado === 'pendiente') {
-    return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-        Pendiente
-      </span>
-    )
-  }
-
-  return (
-    <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-      Aprobado
-    </span>
-  )
-}
 
 const TableMisGastos = memo(function TableMisGastos() {
   const filtros = useStoreFiltrosMisGastos(state => state.filtros)
   const queryClient = useQueryClient()
-
-  const [modalAprobarOpen, setModalAprobarOpen] = useState(false)
-  const [selectedGastoId, setSelectedGastoId] = useState<string | null>(null)
+  const { message } = useApp()
 
   const [modalEditOpen, setModalEditOpen] = useState(false)
   const [gastoEdit, setGastoEdit] = useState<GastoExtra | undefined>(undefined)
-
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null)
 
-  // Mutación para anular
-  const anularMutation = useMutation({
-    mutationFn: anularGastoExtra,
+  const eliminarMutation = useMutation({
+    mutationFn: eliminarGastoExtra,
     onSuccess: () => {
-      message.success('Gasto anulado correctamente')
+      message.success('Gasto eliminado correctamente')
       queryClient.invalidateQueries({ queryKey: ['gastos-extras'] })
       queryClient.invalidateQueries({ queryKey: ['gastos-extras-resumen'] })
     },
     onError: (error: Error) => {
-      message.error(error.message || 'Error al anular el gasto')
+      message.error(error.message || 'Error al eliminar el gasto')
     },
     onSettled: () => {
       setLoadingActionId(null)
     }
   })
 
-  const handleAprobarClicked = useCallback((id: string) => {
-    setSelectedGastoId(id)
-    setModalAprobarOpen(true)
-  }, [])
-
-  // Convert store filters to API filters
   const apiFilters = useMemo(() => {
     if (!filtros) return null
-
     return {
       fechaDesde: filtros.fechaDesde,
       fechaHasta: filtros.fechaHasta,
@@ -94,7 +51,6 @@ const TableMisGastos = memo(function TableMisGastos() {
     }
   }, [filtros])
 
-  // Fetch gastos data
   const { data: gastosResponse, isLoading, error } = useGetGastos(
     apiFilters || {},
     !!apiFilters
@@ -102,7 +58,6 @@ const TableMisGastos = memo(function TableMisGastos() {
 
   const gastosData = gastosResponse?.data || []
 
-  // Definir columnas según la imagen
   const columns: ColDef<GastoExtra>[] = useMemo(() => [
     {
       headerName: 'FECHA REGISTRO',
@@ -151,45 +106,45 @@ const TableMisGastos = memo(function TableMisGastos() {
       valueGetter: params => params.data?.user?.name || 'Desconocido'
     },
     {
-      headerName: 'SUPERVISOR',
-      field: 'supervisor.name',
-      width: 150,
-      valueGetter: params => params.data?.supervisor?.name || '-'
+      headerName: 'COMPRA ASOCIADA',
+      field: 'compra',
+      width: 200,
+      valueGetter: (params) => {
+        const compra = params.data?.compra
+        if (!compra) return '—'
+        const doc = [compra.serie, compra.numero].filter(Boolean).join('-')
+        const proveedor = compra.proveedor?.nombre ?? ''
+        return [doc, proveedor].filter(Boolean).join(' | ')
+      },
     },
     {
       headerName: 'ESTADO',
-      field: 'estado',
+      field: 'compra',
       width: 120,
-      cellRenderer: EstadoCellRenderer,
+      cellRenderer: (params: ICellRendererParams<GastoExtra>) => {
+        const usado = !!params.data?.compra
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${usado ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
+            {usado ? 'Usado' : 'Disponible'}
+          </span>
+        )
+      },
       cellClass: 'flex items-center',
     },
     {
       headerName: 'ACCIONES',
       field: 'id',
-      width: 180,
+      width: 120,
       pinned: 'right',
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data as GastoExtra
         if (!data) return null
 
         const isRowLoading = loadingActionId === data.id
-        const isAnulado = data.estado === 'anulado'
-        const isAprobado = data.estado === 'aprobado'
+        const isUsado = !!data.compra
 
         return (
           <div className="flex gap-2 items-center h-full">
-            <Tooltip title={isAprobado ? "Gasto ya aprobado" : "Aprobar Gasto"}>
-              <Button
-                type='text'
-                size='small'
-                icon={<FaCheck size={16} />}
-                style={{ color: isAprobado ? '#94a3b8' : '#059669' }}
-                className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
-                loading={isRowLoading}
-                disabled={isRowLoading || isAprobado}
-                onClick={() => handleAprobarClicked(data.id)}
-              />
-            </Tooltip>
             <Tooltip title="Editar Gasto">
               <Button
                 type='text'
@@ -204,27 +159,26 @@ const TableMisGastos = memo(function TableMisGastos() {
                 }}
               />
             </Tooltip>
-            <Tooltip title={isAnulado ? "Gasto ya anulado" : "Anular Gasto"}>
+            <Tooltip title={isUsado ? 'No se puede eliminar: ya está asociado a una compra' : 'Eliminar Gasto'}>
               <Popconfirm
-                title='¿Estás seguro de anular este gasto?'
-                description='Si estaba aprobado, el monto se revertirá regresando el dinero a la caja.'
+                title='¿Estás seguro de eliminar este gasto?'
                 onConfirm={() => {
                   setLoadingActionId(data.id)
-                  anularMutation.mutate(data.id)
+                  eliminarMutation.mutate(data.id)
                 }}
-                okText='Sí, Anular'
+                okText='Sí, Eliminar'
                 cancelText='Cancelar'
                 okButtonProps={{ danger: true }}
-                disabled={isRowLoading || isAnulado}
+                disabled={isRowLoading || isUsado}
               >
                 <Button
                   type='text'
                   size='small'
                   icon={<MdDelete size={18} />}
-                  style={{ color: isAnulado ? '#94a3b8' : '#e11d48' }}
+                  style={{ color: isUsado ? '#94a3b8' : '#e11d48' }}
                   className='p-0 hover:!bg-transparent hover:scale-110 transition-all active:scale-95 cursor-pointer min-w-fit'
-                  loading={isRowLoading && anularMutation.isPending}
-                  disabled={isRowLoading || isAnulado}
+                  loading={isRowLoading && eliminarMutation.isPending}
+                  disabled={isRowLoading || isUsado}
                 />
               </Popconfirm>
             </Tooltip>
@@ -232,14 +186,12 @@ const TableMisGastos = memo(function TableMisGastos() {
         )
       }
     }
-  ], [handleAprobarClicked, anularMutation])
+  ], [loadingActionId, eliminarMutation])
 
   const getRowId = useCallback((params: any) => params.data.id, [])
 
-  // Solo renderizar cuando hay filtros
   if (!filtros) return null
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className='h-full flex items-center justify-center'>
@@ -248,7 +200,6 @@ const TableMisGastos = memo(function TableMisGastos() {
     )
   }
 
-  // Show error state
   if (error) {
     return (
       <div className='h-full flex items-center justify-center'>
@@ -276,15 +227,6 @@ const TableMisGastos = memo(function TableMisGastos() {
           selectColumns={true}
         />
       </div>
-
-      <ModalAprobarGastoExtra
-        open={modalAprobarOpen}
-        onClose={() => {
-          setModalAprobarOpen(false)
-          setSelectedGastoId(null)
-        }}
-        gastoId={selectedGastoId}
-      />
 
       <ModalCrearGastoExtra
         open={modalEditOpen}

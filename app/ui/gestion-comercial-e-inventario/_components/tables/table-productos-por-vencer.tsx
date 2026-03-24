@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsProductosPorVencer } from '~/app/ui/gestion-comercial-e-inventario/_components/tables/columns-productos-por-vencer'
 import { greenColors } from '~/lib/colors'
@@ -8,7 +9,12 @@ import { productosApiV2 } from '~/lib/api/producto'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { Spin } from 'antd'
 
-export default function TableProductosPorVencer({ dias = -1 }: { dias?: number }) {
+interface TableProductosPorVencerProps {
+  dias?: number
+  busqueda?: string
+}
+
+export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: TableProductosPorVencerProps) {
   const { almacen_id } = useStoreAlmacen()
 
   const { data, isLoading } = useQuery({
@@ -19,6 +25,25 @@ export default function TableProductosPorVencer({ dias = -1 }: { dias?: number }
     },
     enabled: !!almacen_id
   })
+
+  // Filter data by search term on the frontend
+  const filteredData = useMemo(() => {
+    if (!data) return []
+    if (!busqueda.trim()) return data
+
+    const term = busqueda.toLowerCase().trim()
+    return data.filter((item: any) =>
+      item.name?.toLowerCase().includes(term) ||
+      item.lote?.toLowerCase().includes(term) ||
+      item.almacen?.toLowerCase().includes(term)
+    )
+  }, [data, busqueda])
+
+  const getTitle = () => {
+    if (dias === 0) return 'Productos Vencidos'
+    if (dias === -1) return 'Todos los Vencimientos'
+    return `Productos por vencer (${dias} días)`
+  }
 
   if (isLoading) {
     return (
@@ -31,10 +56,15 @@ export default function TableProductosPorVencer({ dias = -1 }: { dias?: number }
   return (
     <TableWithTitle
       id='g-c-e-i.dashboard.productos-por-vencer-v2'
-      title={dias === 0 ? 'Productos Vencidos' : `Productos por vencer (${dias} días)`}
-      selectionColor={greenColors[10]} // Color verde para gestión comercial e inventario
+      title={getTitle()}
+      extraTitle={
+        <span className='text-xs text-slate-400 font-normal'>
+          ({filteredData.length} {filteredData.length === 1 ? 'registro' : 'registros'})
+        </span>
+      }
+      selectionColor={greenColors[10]}
       columnDefs={useColumnsProductosPorVencer()}
-      rowData={data || []}
+      rowData={filteredData}
     />
   )
 }

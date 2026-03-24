@@ -6,6 +6,7 @@ import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import { Suspense } from 'react'
 import FiltersMisIngresos from './_components/filters/filters-mis-ingresos'
+import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 import CardsInfoMisIngresos from './_components/cards/cards-info-mis-ingresos'
 import TableMisIngresos from './_components/tables/table-mis-ingresos'
 
@@ -16,6 +17,7 @@ export default function MisIngresosPage() {
 
   return (
     <ContenedorGeneral>
+      <AperturaGuard />
       <div className='flex flex-col gap-4 w-full'>
         <Suspense fallback={<div>Cargando filtros...</div>}>
           <FiltersMisIngresos />

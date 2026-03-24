@@ -7,9 +7,9 @@ import FormTableComprar from '../form/form-table-comprar'
 import FormBase from '~/components/form/form-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
-import { useEffect, useState } from 'react'
-import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
+import { useEffect } from 'react'
 import { useCheckAperturaDiaria } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_hooks/use-check-apertura-diaria'
+import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 import {
   EstadoDeCompra,
   FormaDePago,
@@ -68,6 +68,11 @@ export interface FormCreateCompra {
   despliegue_de_pago_id?: number
   metodo_de_pago_id?: string
   orden_compra_id?: number
+  metodos_de_pago?: Array<{
+    despliegue_de_pago_id: string
+    monto: number
+    numero_operacion?: string
+  }>
 }
 
 export default function BodyComprar({
@@ -75,15 +80,7 @@ export default function BodyComprar({
   ordenCompraId,
 }: { compra?: CompraConUnidadDerivadaNormal; ordenCompraId?: number } = {}) {
   const [form] = Form.useForm<FormCreateCompra>()
-  const [openAperturaModal, setOpenAperturaModal] = useState(false)
-
-  const { hasApertura, refetchApertura } = useCheckAperturaDiaria()
-
-  useEffect(() => {
-    if (!hasApertura) {
-      setOpenAperturaModal(true)
-    }
-  }, [hasApertura])
+  useCheckAperturaDiaria()
 
   useInitCompra({ compra, form })
 
@@ -154,6 +151,7 @@ export default function BodyComprar({
 
   return (
     <>
+      <AperturaGuard />
       <FormBase
         form={form}
         name='compra'
@@ -173,14 +171,6 @@ export default function BodyComprar({
         </div>
       </FormBase>
 
-      <ModalAperturarCaja
-        open={openAperturaModal}
-        setOpen={setOpenAperturaModal}
-        onSuccess={async () => {
-          setOpenAperturaModal(false)
-          await refetchApertura()
-        }}
-      />
     </>
   )
 }

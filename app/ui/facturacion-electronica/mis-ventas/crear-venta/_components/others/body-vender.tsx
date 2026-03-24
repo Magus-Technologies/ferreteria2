@@ -20,8 +20,8 @@ import FormCrearVenta from '../form/form-crear-venta'
 import CardsInfoVenta from '../cards/cards-info-venta'
 import ModalDocVenta from '../../../_components/modals/modal-doc-venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
-import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
 import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
+import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 
 export type FormCreateVenta = {
   productos: Array<{
@@ -161,27 +161,9 @@ export default function BodyVender({
   const [ventaId, setVentaId] = useState<string>()
   const [ventaCreada, setVentaCreada] = useState<any>()
   const [formKey, setFormKey] = useState(0)
-  const [openAperturaModal, setOpenAperturaModal] = useState(false)
+  useCheckAperturaDiaria()
 
-  const handleMissingApertura = () => {
-    console.log(' handleMissingApertura llamado - abriendo modal')
-    setOpenAperturaModal(true)
-  }
-
-  // Verificar apertura al montar el componente
-  const { hasApertura, refetchApertura } = useCheckAperturaDiaria()
-
-  // Abrir modal automáticamente si no hay apertura de hoy
-  useEffect(() => {
-    if (!hasApertura) {
-      setOpenAperturaModal(true)
-    }
-  }, [hasApertura])
-
-  const { handleSubmit } = useCreateVenta({ 
-    ventaId: venta?.id,
-    onMissingApertura: handleMissingApertura,
-  })
+  const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
   
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
@@ -251,27 +233,17 @@ export default function BodyVender({
 
   return (
     <>
+      <AperturaGuard />
       <ModalDocVenta
         open={openDoc}
         setOpen={setOpenDoc}
         ventaId={ventaId}
         ventaData={ventaCreada}
       />
-      {/* Modal de Apertura - se abre si intenta finalizar sin apertura */}
-      <ModalAperturarCaja
-        open={openAperturaModal}
-        setOpen={setOpenAperturaModal}
-        onSuccess={async () => {
-          setOpenAperturaModal(false)
-          await refetchApertura()
-        }}
-      />
-      {/* Recrear completamente el formulario cuando cambia formKey */}
       <FormVentaInternal
         key={formKey}
         venta={ventaData_}
         handleSubmit={handleSubmit}
-        onMissingApertura={handleMissingApertura}
       />
     </>
   )

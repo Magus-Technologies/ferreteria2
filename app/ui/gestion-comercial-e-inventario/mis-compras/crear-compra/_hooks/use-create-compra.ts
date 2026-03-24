@@ -5,7 +5,7 @@ import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import { EstadoDeCompra, FormaDePago, TipoDocumento, TipoMoneda } from '~/types'
+import { EstadoDeCompra, FormaDePago, TipoMoneda } from '~/types'
 import { useAuth } from '~/lib/auth-context'
 import { CompraConUnidadDerivadaNormal } from '../_components/others/header'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -85,7 +85,7 @@ export default function useCreateCompra({
 
   const mutation = useMutation({
     mutationFn: async (values: FormCreateCompra) => {
-      const { productos, tipo_de_cambio, tipo_moneda, ...restValues } = values
+      const { productos, tipo_de_cambio, tipo_moneda } = values
 
       const productos_agrupados = agruparProductos({
         productos: productos,
@@ -109,19 +109,11 @@ export default function useCreateCompra({
         [TipoMoneda.d]: 'd', // Dólares
       }
 
-      const tipoDocumentoMap: Record<TipoDocumento, string> = {
-        [TipoDocumento.Factura]: '01',
-        [TipoDocumento.Boleta]: '03',
-        [TipoDocumento.NotaDeVenta]: 'nv',
-        [TipoDocumento.Ingreso]: 'in',
-        [TipoDocumento.Salida]: 'sa',
-        [TipoDocumento.RecepcionAlmacen]: 'rc',
-      }
-
       // Transform to Laravel API format
       const dataFormated = {
         ...(compra?.id ? { id: compra.id } : {}), // Solo enviar ID si es edición
-        tipo_documento: tipoDocumentoMap[values.tipo_documento],
+        // SelectTipoDocumento ya almacena el valor en formato SUNAT ('01', '03', 'nv')
+        tipo_documento: values.tipo_documento,
         serie: values.serie ?? null,
         numero: values.numero ?? null,
         descripcion: values.descripcion ?? null,
@@ -148,6 +140,7 @@ export default function useCreateCompra({
         egreso_dinero_id: values.egreso_dinero_id ?? null,
         gasto_extra_id: values.gasto_extra_id ?? null,
         despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
+        metodos_de_pago: values.metodos_de_pago ?? [],
         orden_compra_id: values.orden_compra_id ?? null,
         user_id: user_id!,
         almacen_id: almacen_id!,
@@ -208,12 +201,12 @@ export default function useCreateCompra({
             query.queryKey[0] === 'productos-by-almacen' ||
             query.queryKey[0] === 'productos-search',
         },
-        (oldData: any) => {
+        (oldData: { data: { id: number; tiene_ingresos: boolean }[] }) => {
           if (!oldData?.data) return oldData
 
           return {
             ...oldData,
-            data: oldData.data.map((producto: any) => {
+            data: oldData.data.map((producto) => {
               if (uniqueProductoIds.includes(producto.id)) {
                 return {
                   ...producto,

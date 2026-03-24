@@ -224,6 +224,13 @@
         "permission": "facturacion-electronica.mis-aperturas-cierres.index"
       },
       {
+        "id": "arqueos-diarios",
+        "label": "Arqueos Diarios",
+        "icon": "FaBalanceScale",
+        "route": "/ui/facturacion-electronica/arqueos-diarios",
+        "permission": "facturacion-electronica.mis-aperturas-cierres.index"
+      },
+      {
         "id": "movimientos-caja",
         "label": "Movimientos de Caja",
         "icon": "SwapOutlined",

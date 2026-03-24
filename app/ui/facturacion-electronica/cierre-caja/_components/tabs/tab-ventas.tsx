@@ -1,0 +1,110 @@
+'use client'
+
+import { useRef } from 'react'
+import { AgGridReact } from 'ag-grid-react'
+import type { ColDef } from 'ag-grid-community'
+import TableBase from '~/components/tables/table-base'
+import TabResumenCards from './tab-resumen-cards'
+import { Popover } from 'antd'
+import { FaEye } from 'react-icons/fa'
+import dayjs from 'dayjs'
+
+interface TabVentasProps {
+  data: any[]
+  totalVentas: number
+}
+
+const columnasVentas: ColDef[] = [
+  {
+    headerName: 'Serie-Número',
+    valueGetter: (params) => `${params.data.serie}-${params.data.numero}`,
+    width: 150,
+  },
+  {
+    headerName: 'Cliente',
+    field: 'cliente_nombre',
+    valueFormatter: (params) => params.value || 'Sin cliente',
+    flex: 1,
+  },
+  {
+    headerName: 'Total Pagos',
+    field: 'pagos',
+    width: 130,
+    valueFormatter: (params) => {
+      const total = (params.value || []).reduce((acc: number, p: { monto?: number | string }) => acc + Number(p.monto || 0), 0)
+      return `S/. ${total.toFixed(2)}`
+    },
+    cellStyle: { fontWeight: 'bold', textAlign: 'right' },
+  },
+  {
+    headerName: 'Detalle',
+    field: 'pagos',
+    width: 80,
+    cellStyle: { display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 0, paddingBottom: 0 },
+    cellRenderer: (params: any) => (
+      <Popover
+        content={
+          <div className='space-y-1 min-w-[260px]'>
+            {(!params.value || params.value.length === 0)
+              ? <span className='text-gray-400 text-xs'>Sin pagos registrados</span>
+              : params.value.map((pago: { sub_caja?: string; metodo_pago?: string; numero_operacion?: string; monto?: number | string }, i: number) => (
+                <div key={i} className='text-xs flex justify-between gap-4'>
+                  <span>
+                    <span className='font-semibold'>{pago.sub_caja || 'N/A'}</span>
+                    {' · '}
+                    <span className='text-blue-600'>{pago.metodo_pago}</span>
+                    {pago.numero_operacion && <span className='text-gray-500'> (Op: {pago.numero_operacion})</span>}
+                  </span>
+                  <span className='font-bold whitespace-nowrap'>S/. {Number(pago.monto).toFixed(2)}</span>
+                </div>
+              ))
+            }
+          </div>
+        }
+        title='Detalle de Pagos'
+        trigger='click'
+        placement='left'
+      >
+        <button className='text-amber-600 hover:text-amber-800 cursor-pointer'>
+          <FaEye size={16} />
+        </button>
+      </Popover>
+    ),
+  },
+  {
+    headerName: 'Monto',
+    field: 'total',
+    width: 120,
+    valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`,
+    cellStyle: { fontWeight: 'bold', textAlign: 'right' },
+  },
+  {
+    headerName: 'Fecha',
+    field: 'created_at',
+    width: 180,
+    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
+  },
+]
+
+export default function TabVentas({ data, totalVentas }: TabVentasProps) {
+  const gridRef = useRef<AgGridReact<any>>(null)
+
+  return (
+    <div className='flex gap-4 w-full'>
+      <div className='flex-1 h-[420px]'>
+        <TableBase<any>
+          ref={gridRef}
+          rowData={data}
+          columnDefs={columnasVentas}
+          rowSelection={false}
+          withNumberColumn={true}
+          headerColor='var(--color-amber-600)'
+        />
+      </div>
+      <TabResumenCards items={[
+        { label: 'Total Ventas', value: `S/. ${Number(totalVentas || 0).toFixed(2)}`, color: 'green' },
+        { label: 'Cantidad', value: data.length, color: 'blue' },
+      ]} />
+    </div>
+  )
+}
