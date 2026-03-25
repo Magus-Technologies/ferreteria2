@@ -31,6 +31,7 @@ export default function useCreateCliente({
         razon_social: values.razon_social || null,
         telefono: values.telefono || null,
         email: values.email || null,
+        fecha_nacimiento: values.fecha_nacimiento || null,
         estado: true,
       };
 

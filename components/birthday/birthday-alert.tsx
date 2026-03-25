@@ -165,7 +165,7 @@ export default function BirthdayAlert() {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: 64, marginBottom: 8 }}>
-            {esElMismoUsuario ? '🎂' : '🎉'}
+            {esElMismoUsuario ? '🎂' : birthdayUser.entidad_tipo === 'cliente' ? '🛍️' : '🎉'}
           </div>
 
           <h1
@@ -183,6 +183,10 @@ export default function BirthdayAlert() {
             {esElMismoUsuario
               ? `${birthdayUser.nombre}, hoy es tu d\u00eda especial`
               : `Hoy es el cumplea\u00f1os de ${birthdayUser.nombre}`}
+          </p>
+
+          <p style={{ fontSize: 14, margin: '0 0 8px', opacity: 0.8 }}>
+            {birthdayUser.entidad_tipo === 'cliente' ? '(Cliente)' : '(Usuario)'}
           </p>
 
           <p style={{ fontSize: 16, opacity: 0.9, margin: '0 0 16px' }}>

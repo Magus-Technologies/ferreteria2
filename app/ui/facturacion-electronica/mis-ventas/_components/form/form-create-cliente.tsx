@@ -3,10 +3,11 @@ import InputConsultaRuc from "~/app/_components/form/inputs/input-consulta-ruc";
 import { ConsultaDni, ConsultaRuc } from "~/app/_types/consulta-ruc";
 import LabelBase from "~/components/form/label-base";
 import { MdEmail, MdFactory } from "react-icons/md";
-import { FormInstance, Tabs } from "antd/lib";
+import { FormInstance, Tabs, DatePicker } from "antd/lib";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { FaMobileButton } from "react-icons/fa6";
+import { MdCake } from "react-icons/md";
 import type { Cliente } from "~/lib/api/cliente";
 import SelectTipoCliente from "~/app/_components/form/selects/select-tipo-cliente";
 import { Form } from "antd";
@@ -180,6 +181,7 @@ export default function FormCreateCliente({
                   "direccion_4",
                   "telefono",
                   "email",
+                  "fecha_nacimiento",
                 ]);
 
                 if (dniData) {
@@ -263,6 +265,19 @@ export default function FormCreateCliente({
               placeholder="Email"
               uppercase={false}
             />
+          </LabelBase>
+
+          <LabelBase label="Fecha de Nacimiento:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+            <Form.Item
+              name="fecha_nacimiento"
+              noStyle
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                placeholder="Selecciona fecha de nacimiento"
+                format="DD/MM/YYYY"
+              />
+            </Form.Item>
           </LabelBase>
         </div>
 

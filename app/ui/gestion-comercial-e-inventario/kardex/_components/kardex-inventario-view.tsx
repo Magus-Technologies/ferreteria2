@@ -146,6 +146,21 @@ export default function KardexInventarioView() {
       },
     },
     {
+      headerName: 'Stock Anterior',
+      valueGetter: (params) => {
+        const { saldo, entrada, salida } = params.data ?? {}
+        if (saldo == null) return null
+        return Number(saldo) - Number(entrada ?? 0) + Number(salida ?? 0)
+      },
+      width: 110,
+      minWidth: 100,
+      type: 'numericColumn',
+      valueFormatter: (params) => {
+        if (params.value == null) return '-'
+        return Number(params.value).toFixed(2)
+      },
+    },
+    {
       headerName: 'Entrada',
       field: 'entrada',
       width: 90,
@@ -176,7 +191,7 @@ export default function KardexInventarioView() {
       },
     },
     {
-      headerName: 'Saldo',
+      headerName: 'Stock Actual',
       field: 'saldo',
       width: 100,
       minWidth: 90,
