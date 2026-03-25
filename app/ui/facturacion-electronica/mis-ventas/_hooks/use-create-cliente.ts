@@ -97,7 +97,7 @@ export default function useCreateCliente({
         }
       } else {
         // MODO CREACIÓN: Crear direcciones nuevas
-        const direcciones: Array<{ direccion: string; latitud?: number; longitud?: number }> = [];
+        const direcciones: Array<{ direccion: string; referencia?: string | null; latitud?: number; longitud?: number }> = [];
 
         if (values.direccion) {
           direcciones.push({
