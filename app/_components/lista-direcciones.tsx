@@ -104,11 +104,14 @@ export default function ListaDirecciones({
               </div>
             }
             description={
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 flex flex-col">
+                {direccion.referencia && (
+                  <span>Ref: {direccion.referencia}</span>
+                )}
                 {direccion.latitud && direccion.longitud ? (
-                  <span>📍 Con ubicación GPS</span>
+                  <span>Con ubicación GPS</span>
                 ) : (
-                  <span>📍 Sin ubicación GPS</span>
+                  <span>Sin ubicación GPS</span>
                 )}
               </div>
             }

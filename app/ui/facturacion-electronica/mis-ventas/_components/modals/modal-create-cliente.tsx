@@ -26,6 +26,10 @@ export interface FormCreateClienteValues {
   direccion_2?: string | null;
   direccion_3?: string | null;
   direccion_4?: string | null;
+  referencia_d1?: string | null;
+  referencia_d2?: string | null;
+  referencia_d3?: string | null;
+  referencia_d4?: string | null;
   latitud_d1?: number | null;
   longitud_d1?: number | null;
   latitud_d2?: number | null;
@@ -87,21 +91,25 @@ export default function ModalCreateCliente({
               switch (dir.tipo) {
                 case 'D1':
                   form.setFieldValue('direccion', dir.direccion);
+                  form.setFieldValue('referencia_d1', dir.referencia);
                   form.setFieldValue('latitud_d1', dir.latitud);
                   form.setFieldValue('longitud_d1', dir.longitud);
                   break;
                 case 'D2':
                   form.setFieldValue('direccion_2', dir.direccion);
+                  form.setFieldValue('referencia_d2', dir.referencia);
                   form.setFieldValue('latitud_d2', dir.latitud);
                   form.setFieldValue('longitud_d2', dir.longitud);
                   break;
                 case 'D3':
                   form.setFieldValue('direccion_3', dir.direccion);
+                  form.setFieldValue('referencia_d3', dir.referencia);
                   form.setFieldValue('latitud_d3', dir.latitud);
                   form.setFieldValue('longitud_d3', dir.longitud);
                   break;
                 case 'D4':
                   form.setFieldValue('direccion_4', dir.direccion);
+                  form.setFieldValue('referencia_d4', dir.referencia);
                   form.setFieldValue('latitud_d4', dir.latitud);
                   form.setFieldValue('longitud_d4', dir.longitud);
                   break;

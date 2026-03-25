@@ -60,10 +60,10 @@ export default function useCreateCliente({
 
         // Actualizar o crear cada dirección
         const direccionesNuevas = [
-          { tipo: TipoDireccion.D1, direccion: values.direccion, latitud: values.latitud_d1, longitud: values.longitud_d1 },
-          { tipo: TipoDireccion.D2, direccion: values.direccion_2, latitud: values.latitud_d2, longitud: values.longitud_d2 },
-          { tipo: TipoDireccion.D3, direccion: values.direccion_3, latitud: values.latitud_d3, longitud: values.longitud_d3 },
-          { tipo: TipoDireccion.D4, direccion: values.direccion_4, latitud: values.latitud_d4, longitud: values.longitud_d4 },
+          { tipo: TipoDireccion.D1, direccion: values.direccion, referencia: values.referencia_d1, latitud: values.latitud_d1, longitud: values.longitud_d1 },
+          { tipo: TipoDireccion.D2, direccion: values.direccion_2, referencia: values.referencia_d2, latitud: values.latitud_d2, longitud: values.longitud_d2 },
+          { tipo: TipoDireccion.D3, direccion: values.direccion_3, referencia: values.referencia_d3, latitud: values.latitud_d3, longitud: values.longitud_d3 },
+          { tipo: TipoDireccion.D4, direccion: values.direccion_4, referencia: values.referencia_d4, latitud: values.latitud_d4, longitud: values.longitud_d4 },
         ];
 
         for (const dirNueva of direccionesNuevas) {
@@ -74,6 +74,7 @@ export default function useCreateCliente({
               // Actualizar dirección existente
               await clienteApi.actualizarDireccion(dirExistente.id, {
                 direccion: dirNueva.direccion,
+                referencia: dirNueva.referencia || null,
                 latitud: dirNueva.latitud ?? undefined,
                 longitud: dirNueva.longitud ?? undefined,
               });
@@ -81,6 +82,7 @@ export default function useCreateCliente({
               // Crear nueva dirección
               await clienteApi.crearDireccion(cliente.id, {
                 direccion: dirNueva.direccion,
+                referencia: dirNueva.referencia || null,
                 latitud: dirNueva.latitud ?? undefined,
                 longitud: dirNueva.longitud ?? undefined,
               });
@@ -100,6 +102,7 @@ export default function useCreateCliente({
         if (values.direccion) {
           direcciones.push({
             direccion: values.direccion,
+            referencia: values.referencia_d1 || null,
             latitud: values.latitud_d1 ?? undefined,
             longitud: values.longitud_d1 ?? undefined,
           });
@@ -108,6 +111,7 @@ export default function useCreateCliente({
         if (values.direccion_2) {
           direcciones.push({
             direccion: values.direccion_2,
+            referencia: values.referencia_d2 || null,
             latitud: values.latitud_d2 ?? undefined,
             longitud: values.longitud_d2 ?? undefined,
           });
@@ -116,6 +120,7 @@ export default function useCreateCliente({
         if (values.direccion_3) {
           direcciones.push({
             direccion: values.direccion_3,
+            referencia: values.referencia_d3 || null,
             latitud: values.latitud_d3 ?? undefined,
             longitud: values.longitud_d3 ?? undefined,
           });
@@ -124,6 +129,7 @@ export default function useCreateCliente({
         if (values.direccion_4) {
           direcciones.push({
             direccion: values.direccion_4,
+            referencia: values.referencia_d4 || null,
             latitud: values.latitud_d4 ?? undefined,
             longitud: values.longitud_d4 ?? undefined,
           });

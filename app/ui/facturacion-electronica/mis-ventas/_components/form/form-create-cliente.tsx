@@ -286,14 +286,23 @@ export default function FormCreateCliente({
                   </span>
                 ),
                 children: (
-                  <LabelBase label="Dirección 1:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
-                    <InputBase
-                      prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
-                      propsForm={{ name: "direccion" }}
-                      placeholder="Dirección 1"
-                      autoComplete="new-password"
-                    />
-                  </LabelBase>
+                  <div className="space-y-1 [&_.ant-form-item]:!mb-1">
+                    <LabelBase label="Dirección 1:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
+                        propsForm={{ name: "direccion" }}
+                        placeholder="Dirección 1"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        propsForm={{ name: "referencia_d1" }}
+                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                  </div>
                 ),
               },
               {
@@ -304,14 +313,23 @@ export default function FormCreateCliente({
                   </span>
                 ),
                 children: (
-                  <LabelBase label="Dirección 2:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
-                    <InputBase
-                      prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
-                      propsForm={{ name: "direccion_2" }}
-                      placeholder="Dirección 2 (opcional)"
-                      autoComplete="new-password"
-                    />
-                  </LabelBase>
+                  <div className="space-y-1 [&_.ant-form-item]:!mb-1">
+                    <LabelBase label="Dirección 2:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
+                        propsForm={{ name: "direccion_2" }}
+                        placeholder="Dirección 2 (opcional)"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        propsForm={{ name: "referencia_d2" }}
+                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                  </div>
                 ),
               },
               {
@@ -322,14 +340,23 @@ export default function FormCreateCliente({
                   </span>
                 ),
                 children: (
-                  <LabelBase label="Dirección 3:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
-                    <InputBase
-                      prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
-                      propsForm={{ name: "direccion_3" }}
-                      placeholder="Dirección 3 (opcional)"
-                      autoComplete="new-password"
-                    />
-                  </LabelBase>
+                  <div className="space-y-1 [&_.ant-form-item]:!mb-1">
+                    <LabelBase label="Dirección 3:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
+                        propsForm={{ name: "direccion_3" }}
+                        placeholder="Dirección 3 (opcional)"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        propsForm={{ name: "referencia_d3" }}
+                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                  </div>
                 ),
               },
               {
@@ -340,14 +367,23 @@ export default function FormCreateCliente({
                   </span>
                 ),
                 children: (
-                  <LabelBase label="Dirección 4:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
-                    <InputBase
-                      prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
-                      propsForm={{ name: "direccion_4" }}
-                      placeholder="Dirección 4 (opcional)"
-                      autoComplete="new-password"
-                    />
-                  </LabelBase>
+                  <div className="space-y-1 [&_.ant-form-item]:!mb-1">
+                    <LabelBase label="Dirección 4:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
+                        propsForm={{ name: "direccion_4" }}
+                        placeholder="Dirección 4 (opcional)"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                      <InputBase
+                        propsForm={{ name: "referencia_d4" }}
+                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        autoComplete="new-password"
+                      />
+                    </LabelBase>
+                  </div>
                 ),
               },
             ]}

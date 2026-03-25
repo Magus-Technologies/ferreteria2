@@ -34,6 +34,8 @@ export default function useCreateProducto({
 
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
+  const isDuplicate = useStoreEditOrCopyProducto(state => state.isDuplicate)
+  const setIsDuplicate = useStoreEditOrCopyProducto(state => state.setIsDuplicate)
 
   const setFiltros = useStoreFiltrosProductos(state => state.setFiltros)
 
@@ -85,10 +87,10 @@ export default function useCreateProducto({
           }
 
           notification.success({
-            message: producto?.id ? 'Producto editado' : 'Producto creado',
+            message: producto?.id ? 'Producto editado' : isDuplicate ? 'Producto duplicado' : 'Producto creado',
             description: producto?.id
               ? 'Producto editado correctamente'
-              : 'Producto creado correctamente',
+              : isDuplicate ? 'Producto duplicado correctamente' : 'Producto creado correctamente',
           })
         } catch (error) {
           console.error('Error al subir archivos:', error)
@@ -120,6 +122,7 @@ export default function useCreateProducto({
       form.resetFields()
       resetArchivos()
       setProducto(undefined)
+      setIsDuplicate(false)
       setFiltros(prev => ({
         ...prev,
         marca_id: res.data?.marca_id,

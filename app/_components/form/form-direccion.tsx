@@ -40,6 +40,7 @@ export default function FormDireccion({
   const handleFinish = async (values: any) => {
     const data: DireccionFormValues = {
       direccion: values.direccion,
+      referencia: values.referencia || null,
       latitud: coordenadas?.lat || null,
       longitud: coordenadas?.lng || null,
     }
@@ -55,6 +56,7 @@ export default function FormDireccion({
         direccion
           ? {
               direccion: direccion.direccion,
+              referencia: direccion.referencia,
               latitud: direccion.latitud,
               longitud: direccion.longitud,
             }
@@ -72,6 +74,21 @@ export default function FormDireccion({
         <Input.TextArea
           placeholder="Ej: Av. Principal 123, Lima"
           rows={2}
+          maxLength={500}
+          showCount
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Referencia"
+        name="referencia"
+        rules={[
+          { max: 500, message: 'La referencia no puede exceder 500 caracteres' },
+        ]}
+      >
+        <Input.TextArea
+          placeholder="Ej: Frente al parque, al lado de la bodega"
+          rows={1}
           maxLength={500}
           showCount
         />

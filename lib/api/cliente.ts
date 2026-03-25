@@ -21,6 +21,7 @@ export interface DireccionCliente {
   cliente_id: number;
   tipo: TipoDireccion;
   direccion: string;
+  referencia: string | null;
   latitud: number | null;
   longitud: number | null;
   es_principal: boolean;
@@ -30,6 +31,7 @@ export interface DireccionCliente {
 
 export interface DireccionFormValues {
   direccion: string;
+  referencia?: string | null;
   latitud?: number | null;
   longitud?: number | null;
 }

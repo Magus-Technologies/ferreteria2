@@ -70,6 +70,11 @@ export default function ModalCreateProducto({
   const setOpen = useStoreEditOrCopyProducto(state => state.setOpenModal)
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
+  const isDuplicate = useStoreEditOrCopyProducto(state => state.isDuplicate)
+  const setIsDuplicate = useStoreEditOrCopyProducto(state => state.setIsDuplicate)
+
+  const isEditing = !!producto?.id
+  const isCreating = !producto
 
   const { crearProductoForm, loading } = useCreateProducto({
     setOpen,
@@ -156,7 +161,7 @@ export default function ModalCreateProducto({
       modalProps={{
         title: (
           <TitleForm className='!pb-0'>
-            {producto?.id ? 'Editar Producto' : 'Agregar Producto'}
+            {isEditing ? 'Editar Producto' : isDuplicate ? 'Duplicar Producto' : 'Agregar Producto'}
           </TitleForm>
         ),
         className: 'xl:min-w-[1300px]',
@@ -173,11 +178,12 @@ export default function ModalCreateProducto({
         wrapClassName: '!flex !items-center',
         centered: true,
         okButtonProps: { loading, disabled: loading },
-        okText: producto?.id ? 'Editar' : 'Crear',
+        okText: isEditing ? 'Editar' : isDuplicate ? 'Duplicar' : 'Crear',
       }}
       onCancel={() => {
         resetArchivos()
         setProducto(undefined)
+        setIsDuplicate(false)
         setDisabled(true)
         setTextDefault?.('')
       }}

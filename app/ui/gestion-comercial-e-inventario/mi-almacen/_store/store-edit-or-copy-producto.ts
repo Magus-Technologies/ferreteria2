@@ -15,6 +15,8 @@ type UseStoreEditOrCopyProductoProps = {
   setProducto: (value: productoEditOrCopy | undefined) => void
   openModal: boolean
   setOpenModal: (value: boolean) => void
+  isDuplicate: boolean
+  setIsDuplicate: (value: boolean) => void
 }
 
 export const useStoreEditOrCopyProducto =
@@ -24,5 +26,7 @@ export const useStoreEditOrCopyProducto =
       setProducto: value => set({ producto: value }),
       openModal: false,
       setOpenModal: value => set({ openModal: value }),
+      isDuplicate: false,
+      setIsDuplicate: value => set({ isDuplicate: value }),
     }
   })

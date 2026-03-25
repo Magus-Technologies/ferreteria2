@@ -34,6 +34,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
   const { can } = usePermissionHook();
   const setOpen = useStoreEditOrCopyProducto((state) => state.setOpenModal);
   const setProducto = useStoreEditOrCopyProducto((state) => state.setProducto);
+  const setIsDuplicate = useStoreEditOrCopyProducto((state) => state.setIsDuplicate);
 
   const columns: ColDef<Producto>[] = useMemo(
     () => [
@@ -377,6 +378,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                   : undefined,
               }}
               onEdit={() => {
+                setIsDuplicate(false);
                 setProducto(params.data as unknown as productoEditOrCopy);
                 setOpen(true);
               }}
@@ -385,6 +387,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                   <Tooltip title="Duplicar">
                     <IoIosCopy
                       onClick={() => {
+                        setIsDuplicate(true);
                         setProducto({
                           ...params.data!,
                           id: undefined,
