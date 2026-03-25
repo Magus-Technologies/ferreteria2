@@ -167,6 +167,7 @@ export default function useCreateVenta({
       codigo_vale,
       tipo_pedido,
       cargo_destino,
+      vehiculo_id,
       ...restValues
     } = values
 
@@ -424,6 +425,7 @@ export default function useCreateVenta({
             user_id: user_id,
             tipo_pedido: (tipo_pedido as TipoPedido) || undefined,
             cargo_destino: cargo_destino || undefined,
+            vehiculo_id: vehiculo_id ? Number(vehiculo_id) : undefined,
             productos_entregados: unidadesDerivadas,
           }
 
@@ -557,6 +559,7 @@ export default function useCreateVenta({
                       chofer_id: parcial_resto_programado.despachador_id,
                       quien_entrega: QuienEntrega.CHOFER,
                       user_id: user_id,
+                      vehiculo_id: parcial_resto_programado.vehiculo_id ? Number(parcial_resto_programado.vehiculo_id) : undefined,
                       productos_entregados: unidadesDerivadas2,
                     }
 

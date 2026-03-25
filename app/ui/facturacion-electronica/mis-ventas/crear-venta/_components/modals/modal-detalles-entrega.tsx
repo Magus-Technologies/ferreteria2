@@ -3,7 +3,7 @@
 import { Select, Modal, FormInstance, Form, Input, Switch, Segmented } from 'antd'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck } from 'react-icons/fa'
+import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck, FaTruck } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import SelectDespachadores from '~/app/_components/form/selects/select-despachadores'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
@@ -20,6 +20,7 @@ import 'dayjs/locale/es'
 import { clienteApi, type TipoDireccion } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCalendarioSlot from './modal-calendario-slot'
+import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
 
 dayjs.locale('es')
 
@@ -325,6 +326,7 @@ export default function ModalDetallesEntrega({
       if (tieneResto) {
         const restoDespachadorId = form.getFieldValue('_resto_despachador_id')
         const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
+        const restoVehiculoId = form.getFieldValue('_resto_vehiculo_id')
         ventaValues.parcial_resto_programado = {
           despachador_id: restoDespachadorId,
           fecha_programada: restoFechaProgramada
@@ -334,6 +336,7 @@ export default function ModalDetallesEntrega({
           hora_fin: horaFinResto,
           direccion_entrega: direccionResto,
           observaciones: observacionesResto,
+          vehiculo_id: restoVehiculoId || undefined,
         }
       }
     }
@@ -516,6 +519,24 @@ export default function ModalDetallesEntrega({
                   <Form.Item name="hora_inicio"><Input /></Form.Item>
                   <Form.Item name="hora_fin"><Input /></Form.Item>
                 </div>
+              </div>
+            </div>
+
+            {/* Vehículo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FaTruck className="inline mr-1 text-orange-500" size={13} />
+                Vehículo: <span className="text-gray-400 text-xs">(opcional)</span>
+              </label>
+              <SelectVehiculos
+                form={form}
+                propsForm={{ name: 'vehiculo_id' }}
+                placeholder="Sin vehículo asignado"
+                className="w-full"
+                allowClear
+              />
+              <div style={{ display: 'none' }}>
+                <Form.Item name="vehiculo_id"><Input /></Form.Item>
               </div>
             </div>
 
@@ -706,8 +727,8 @@ export default function ModalDetallesEntrega({
                     {productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} producto(s) restante(s)
                   </p>
 
-                  {/* Despachador y botón calendario */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Despachador, Vehículo y botón calendario */}
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Designar Despachador: <span className="text-red-500">*</span>
@@ -718,6 +739,22 @@ export default function ModalDetallesEntrega({
                         placeholder="Seleccionar despachador"
                         className="w-full"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <FaTruck className="inline mr-1 text-orange-500" size={13} />
+                        Vehículo:
+                      </label>
+                      <SelectVehiculos
+                        form={form}
+                        propsForm={{ name: '_resto_vehiculo_id' }}
+                        placeholder="Sin vehículo"
+                        className="w-full"
+                        allowClear
+                      />
+                      <div style={{ display: 'none' }}>
+                        <Form.Item name="_resto_vehiculo_id"><Input /></Form.Item>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">

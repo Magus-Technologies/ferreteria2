@@ -6,11 +6,12 @@ import { Button } from 'antd'
 import { FaTruck, FaClock } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
+import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
 
 interface ModalDespachoEntregaProps {
   open: boolean
   onClose: () => void
-  onDespachar: () => Promise<void>
+  onDespachar: (vehiculoId?: number) => Promise<void>
   onDespacharMasTarde?: () => Promise<void>
   entrega?: any
   loading?: boolean
@@ -28,6 +29,7 @@ export default function ModalDespachoEntrega({
   const [pdfLoading, setPdfLoading] = useState(false)
   const [despachando, setDespachando] = useState(false)
   const [liberando, setLiberando] = useState(false)
+  const [vehiculoId, setVehiculoId] = useState<number | undefined>(undefined)
   const fetchedRef = useRef<number | null>(null)
 
   const nroVenta = entrega?.venta?.serie && entrega?.venta?.numero
@@ -66,13 +68,14 @@ export default function ModalDespachoEntrega({
     if (!open) {
       setPdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
       fetchedRef.current = null
+      setVehiculoId(undefined)
     }
   }, [open, entrega?.id, fetchPdf])
 
   const handleDespachar = async () => {
     setDespachando(true)
     try {
-      await onDespachar()
+      await onDespachar(vehiculoId)
     } finally {
       setDespachando(false)
     }
@@ -114,6 +117,17 @@ export default function ModalDespachoEntrega({
           style={{ zIndex: 2100, position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)' }}
           className="flex items-center gap-3 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-orange-200 px-5 py-3"
         >
+          <div style={{ minWidth: 220 }}>
+            <SelectVehiculos
+              placeholder="Vehículo (opcional)"
+              variant="outlined"
+              size="middle"
+              value={vehiculoId}
+              onChange={(val) => setVehiculoId(val as number)}
+              classNameIcon="text-orange-500 mx-1"
+              sizeIcon={14}
+            />
+          </div>
           <Button
             onClick={handleDespacharMasTarde}
             loading={liberando}

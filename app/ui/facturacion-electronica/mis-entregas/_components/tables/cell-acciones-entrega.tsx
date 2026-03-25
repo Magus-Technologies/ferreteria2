@@ -27,10 +27,11 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   if (!entrega) return null
 
-  const handleDespachar = async () => {
+  const handleDespachar = async (vehiculoId?: number) => {
     try {
       const response = await entregaProductoApi.update(entrega.id, {
         estado_entrega: EstadoEntrega.EN_CAMINO,
+        ...(vehiculoId ? { vehiculo_id: vehiculoId } : {}),
       })
 
       if (response.error) {

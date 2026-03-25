@@ -4,6 +4,7 @@ import { FormInstance } from 'antd'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { VentaConUnidadDerivadaNormal } from '../_components/others/header-crear-venta'
 import { FormCreateVenta } from '../_components/others/body-vender'
+import { clienteApi } from '~/lib/api/cliente'
 
 export default function useInitVenta({
   venta,
@@ -15,9 +16,7 @@ export default function useInitVenta({
   const setAlmacenId = useStoreAlmacen((state) => state.setAlmacenId)
 
   useEffect(() => {
-    console.log('🔄 useInitVenta running with venta:', venta)
     form.resetFields()
-    console.log('✅ Form reset complete')
     if (venta) {
       const dataFormated: FormCreateVenta = {
         fecha: dayjs(venta.fecha),
@@ -28,13 +27,14 @@ export default function useInitVenta({
         forma_de_pago: venta.forma_de_pago as any,
         // Datos del cliente si existen
         ruc_dni: (venta as any).ruc_dni || (venta as any).cliente?.numero_documento || undefined,
-        cliente_nombre: (venta as any).cliente?.razon_social || 
-          ((venta as any).cliente?.nombres && (venta as any).cliente?.apellidos 
-            ? `${(venta as any).cliente.nombres} ${(venta as any).cliente.apellidos}`.trim() 
+        cliente_nombre: (venta as any).cliente?.razon_social ||
+          ((venta as any).cliente?.nombres && (venta as any).cliente?.apellidos
+            ? `${(venta as any).cliente.nombres} ${(venta as any).cliente.apellidos}`.trim()
             : undefined),
         telefono: (venta as any).telefono || (venta as any).cliente?.telefono || undefined,
         direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
         email: (venta as any).cliente?.email || undefined,
+        direccion_seleccionada: (venta as any).direccion_seleccionada || 'D1',
         productos: [
           // Productos normales
           ...venta.productos_por_almacen.flatMap((ppa) =>
@@ -81,8 +81,53 @@ export default function useInitVenta({
 
       form.setFieldsValue(dataFormated)
       setAlmacenId(venta.almacen_id)
+
+      // Cargar las direcciones del cliente desde la API
+      const clienteId = venta.cliente_id || (venta as any).cliente?.id
+      if (clienteId) {
+        clienteApi.listarDirecciones(clienteId).then((response) => {
+          if (response.data?.data) {
+            const direcciones = response.data.data
+
+            direcciones.forEach((dir) => {
+              switch (dir.tipo) {
+                case 'D1':
+                  form.setFieldValue('_cliente_direccion_1', dir.direccion)
+                  break
+                case 'D2':
+                  form.setFieldValue('_cliente_direccion_2', dir.direccion)
+                  break
+                case 'D3':
+                  form.setFieldValue('_cliente_direccion_3', dir.direccion)
+                  break
+                case 'D4':
+                  form.setFieldValue('_cliente_direccion_4', dir.direccion)
+                  break
+              }
+            })
+
+            // Restaurar la dirección según la selección guardada en la venta
+            const direccionSeleccionada = (venta as any).direccion_seleccionada || 'D1'
+            const dirMap: Record<string, string> = { D1: 'D1', D2: 'D2', D3: 'D3', D4: 'D4' }
+            const dirSeleccionada = direcciones.find(d => d.tipo === dirMap[direccionSeleccionada])
+
+            if (dirSeleccionada?.direccion) {
+              form.setFieldValue('direccion', dirSeleccionada.direccion)
+            } else if (!form.getFieldValue('direccion')) {
+              // Fallback: usar la principal o D1
+              const principal = direcciones.find(d => d.es_principal)
+              const d1 = direcciones.find(d => d.tipo === 'D1')
+              const direccionDefault = principal?.direccion || d1?.direccion || ''
+              if (direccionDefault) {
+                form.setFieldValue('direccion', direccionDefault)
+              }
+            }
+          }
+        }).catch(() => {
+          // Silenciar errores de carga de direcciones
+        })
+      }
     } else {
-      console.log('📝 Setting default values (no venta)')
       form.setFieldsValue({
         tipo_moneda: 's' as any, // Soles
         fecha: dayjs(),
@@ -95,7 +140,6 @@ export default function useInitVenta({
         hora_inicio: '09:00',
         hora_fin: '18:00',
       })
-      console.log('✅ Default values set, productos should be empty array')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venta])

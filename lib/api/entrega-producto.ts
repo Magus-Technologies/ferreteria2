@@ -62,6 +62,7 @@ export interface CreateEntregaProductoRequest {
   user_id: string;
   tipo_pedido?: TipoPedido;
   cargo_destino?: string;
+  vehiculo_id?: number;
   productos_entregados: ProductoEntregadoRequest[];
 }
 
@@ -80,6 +81,7 @@ export interface UpdateEntregaProductoRequest {
   almacen_salida_id?: number;
   chofer_id?: string;
   quien_entrega?: QuienEntrega;
+  vehiculo_id?: number;
 }
 
 export interface EntregaProductoFilters {

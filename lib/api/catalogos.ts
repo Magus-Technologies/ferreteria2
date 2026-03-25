@@ -34,6 +34,14 @@ export interface UnidadDerivada {
   estado: boolean;
 }
 
+export interface Vehiculo {
+  id: number;
+  name: string;
+  tipo: string;
+  placa: string | null;
+  estado: boolean;
+}
+
 interface GetCatalogParams {
   search?: string;
   estado?: boolean;
@@ -376,6 +384,62 @@ export const unidadesDerivadas = {
 
   async delete(id: number): Promise<ApiResponse<void>> {
     return apiRequest<void>(`/unidades-derivadas/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+// ============= VEHICULOS API =============
+
+export const vehiculosApi = {
+  async getAll(
+    params?: GetCatalogParams & { tipo?: string },
+  ): Promise<ApiResponse<CatalogResponse<Vehiculo>>> {
+    const queryString = params
+      ? "?" +
+        new URLSearchParams(
+          Object.entries(params).reduce(
+            (acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
+        ).toString()
+      : "";
+    return apiRequest<CatalogResponse<Vehiculo>>(`/vehiculos${queryString}`);
+  },
+
+  async getById(id: number): Promise<ApiResponse<Vehiculo>> {
+    return apiRequest<Vehiculo>(`/vehiculos/${id}`);
+  },
+
+  async create(data: {
+    name: string;
+    tipo: string;
+    placa?: string;
+    estado?: boolean;
+  }): Promise<ApiResponse<Vehiculo>> {
+    return apiRequest<Vehiculo>("/vehiculos", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(
+    id: number,
+    data: { name?: string; tipo?: string; placa?: string; estado?: boolean },
+  ): Promise<ApiResponse<Vehiculo>> {
+    return apiRequest<Vehiculo>(`/vehiculos/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async delete(id: number): Promise<ApiResponse<void>> {
+    return apiRequest<void>(`/vehiculos/${id}`, {
       method: "DELETE",
     });
   },

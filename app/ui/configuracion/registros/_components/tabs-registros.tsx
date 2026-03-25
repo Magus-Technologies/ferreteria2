@@ -10,6 +10,7 @@ import TabUnidadesDerivadas from './tabs/tab-unidades-derivadas'
 import TabTiposIngresoSalida from './tabs/tab-tipos-ingreso-salida'
 import TabTiposServicio from './tabs/tab-tipos-servicio'
 import TabAlmacenes from './tabs/tab-almacenes'
+import TabVehiculos from './tabs/tab-vehiculos'
 
 export default function TabsRegistros() {
   const items = [
@@ -52,6 +53,11 @@ export default function TabsRegistros() {
       key: 'almacenes',
       label: <span className='flex items-center gap-2'><FaWarehouse size={14} /> Almacenes</span>,
       children: <TabAlmacenes />,
+    },
+    {
+      key: 'vehiculos',
+      label: <span className='flex items-center gap-2'><FaTruck size={14} /> Vehículos</span>,
+      children: <TabVehiculos />,
     },
   ]
 

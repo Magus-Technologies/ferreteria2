@@ -26,6 +26,7 @@ export enum QueryKeys {
   CLIENTES = 'clientes',
   CLIENTES_SEARCH = 'clientes_search',
   CHOFERES = 'choferes',
+  VEHICULOS = 'vehiculos',
   VENTAS = 'ventas',
   VENTAS_EN_ESPERA = 'ventas_en_espera',
   ENTREGAS_PRODUCTOS = 'entregas_productos',

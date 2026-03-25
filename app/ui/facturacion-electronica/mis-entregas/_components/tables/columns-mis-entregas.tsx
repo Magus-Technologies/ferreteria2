@@ -95,6 +95,17 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       },
     },
     {
+      headerName: 'Vehículo',
+      colId: 'vehiculo',
+      field: 'vehiculo',
+      width: 160,
+      valueGetter: (params) => {
+        const vehiculo = params.data?.vehiculo
+        if (!vehiculo) return '—'
+        return `${vehiculo.name}${vehiculo.placa ? ` (${vehiculo.placa})` : ''}`
+      },
+    },
+    {
       headerName: 'Estado',
       field: 'estado_entrega',
       width: 130,
