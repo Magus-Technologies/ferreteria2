@@ -64,6 +64,13 @@
         "permission": "configuracion.empresa.index"
       },
       {
+        "id": "registros",
+        "label": "Registros",
+        "icon": "FaClipboardList",
+        "route": "/ui/configuracion/registros",
+        "permission": null
+      },
+      {
         "id": "almacenes",
         "label": "Almacenes",
         "icon": "FaWarehouse",

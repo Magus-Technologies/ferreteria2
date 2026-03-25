@@ -2,7 +2,7 @@
 
 import { getBottomNavItems, getModuleNav } from "~/lib/navigation";
 import usePermissionHook from "~/hooks/use-permission";
-import { FaUsers, FaShieldAlt, FaBuilding, FaKey, FaWarehouse, FaCashRegister, FaFileInvoice, FaPrint } from "react-icons/fa";
+import { FaUsers, FaShieldAlt, FaBuilding, FaKey, FaWarehouse, FaCashRegister, FaFileInvoice, FaPrint, FaClipboardList } from "react-icons/fa";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 
@@ -12,6 +12,7 @@ const iconMap: Record<string, any> = {
   FaShieldAlt,
   FaKey,
   FaBuilding,
+  FaClipboardList,
   FaWarehouse,
   FaCashRegister,
   FaFileInvoice,
