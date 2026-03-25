@@ -109,10 +109,12 @@ export type FormCreateVenta = {
     hora_fin?: string
     direccion_entrega?: string
     observaciones?: string
+    vehiculo_id?: number
   }
   codigo_vale?: string
   tipo_pedido?: string
   cargo_destino?: string
+  vehiculo_id?: number
 }
 
 // Componente interno que se recrea completamente cuando cambia la key
