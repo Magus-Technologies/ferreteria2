@@ -4,28 +4,42 @@
  */
 
 type VentaCreadaListener = (data: any) => void
+type VentaEsperaListener = () => void
 
 class VentaEventEmitter {
   private listeners: VentaCreadaListener[] = []
+  private esperaListeners: VentaEsperaListener[] = []
 
   on(listener: VentaCreadaListener) {
-    console.log('📡 Registrando listener de ventaCreada')
     this.listeners.push(listener)
-
-    // Retornar función de cleanup
     return () => {
-      console.log('🧹 Removiendo listener de ventaCreada')
       this.listeners = this.listeners.filter(l => l !== listener)
     }
   }
 
+  onEspera(listener: VentaEsperaListener) {
+    this.esperaListeners.push(listener)
+    return () => {
+      this.esperaListeners = this.esperaListeners.filter(l => l !== listener)
+    }
+  }
+
   emit(data: any) {
-    console.log('📢 Emitiendo evento ventaCreada, listeners:', this.listeners.length)
     this.listeners.forEach(listener => {
       try {
         listener(data)
       } catch (error) {
         console.error('Error en listener de ventaCreada:', error)
+      }
+    })
+  }
+
+  emitEspera() {
+    this.esperaListeners.forEach(listener => {
+      try {
+        listener()
+      } catch (error) {
+        console.error('Error en listener de ventaEspera:', error)
       }
     })
   }

@@ -116,14 +116,12 @@ export default function MapaDireccionMapbox({
     })
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    map.current.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: false,
-        showUserHeading: false,
-      }),
-      'top-right'
-    )
+    const geolocateControl = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: false,
+      showUserHeading: false,
+    })
+    map.current.addControl(geolocateControl, 'top-right')
 
     if (editable) {
       map.current.on('click', (e) => {
@@ -133,7 +131,7 @@ export default function MapaDireccionMapbox({
 
     map.current.on('load', () => {
       setCargando(false)
-      
+
       if (coordenadasIniciales) {
         actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat })
         return
@@ -141,6 +139,11 @@ export default function MapaDireccionMapbox({
 
       if (direccion) {
         geocodificarDireccion(direccion)
+      }
+
+      // Si no hay coordenadas ni dirección, pedir ubicación automáticamente
+      if (!coordenadasIniciales && !direccion) {
+        geolocateControl.trigger()
       }
     })
 

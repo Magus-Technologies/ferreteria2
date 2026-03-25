@@ -193,10 +193,6 @@ export default function BodyVender({
   // Escuchar evento de venta creada
   useEffect(() => {
     const unsubscribe = ventaEvents.on((data) => {
-      console.log('🎯 Evento ventaCreada recibido con data:', data)
-      
-      // Guardar id, datos de venta y abrir modal inmediatamente
-      console.log('🔓 Setting openDoc to true y ventaId')
       setVentaId(String(data.id))
       setVentaCreada(data)
       setOpenDoc(true)
@@ -205,6 +201,18 @@ export default function BodyVender({
     // Cleanup al desmontar
     return unsubscribe
   }, [])
+
+  // Escuchar evento de venta puesta en espera (limpiar sin abrir modal de documento)
+  useEffect(() => {
+    const unsubscribe = ventaEvents.onEspera(() => {
+      setProductoAgregado(undefined)
+      setProductos([])
+      setValesAplicables([])
+      setFormKey(prev => prev + 1)
+    })
+
+    return unsubscribe
+  }, [setProductoAgregado, setProductos, setValesAplicables])
   
   // Limpiar formulario cuando se cierra el modal
   useEffect(() => {

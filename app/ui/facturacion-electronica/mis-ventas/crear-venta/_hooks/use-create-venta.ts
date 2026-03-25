@@ -105,39 +105,31 @@ export default function useCreateVenta({
     if (!almacen_id)
       return notification.error({ message: 'No hay un almacen seleccionado' })
 
-    // ✅ VALIDAR APERTURA DE HOY ANTES DE FINALIZAR
-    try {
-      const cajaResponse = await cajaApi.cajaActiva()
-      const cajaActiva = cajaResponse.data?.data
-      
-      console.log('🔍 Validando apertura - cajaActiva:', cajaActiva)
-      
-      if (!cajaActiva) {
-        console.warn('⚠️ No hay apertura de caja activa')
-        console.log('📞 Llamando onMissingApertura callback')
-        onMissingApertura?.()
-        return
-      }
+    const esEnEspera = values.estado_de_venta === EstadoDeVenta.EN_ESPERA
 
-      const fechaApertura = dayjs(cajaActiva.fecha_apertura)
-      const hoy = dayjs()
-      
-      console.log('📅 Comparando fechas:')
-      console.log('  fechaApertura:', fechaApertura.format('YYYY-MM-DD'))
-      console.log('  hoy:', hoy.format('YYYY-MM-DD'))
-      console.log('  ¿Es del mismo día?:', fechaApertura.isSame(hoy, 'day'))
-      
-      if (!fechaApertura.isSame(hoy, 'day')) {
-        console.warn('⚠️ La apertura no es de hoy')
-        console.log('📞 Llamando onMissingApertura callback')
+    // Validar apertura de caja solo para ventas finalizadas (no para "en espera")
+    if (!esEnEspera) {
+      try {
+        const cajaResponse = await cajaApi.cajaActiva()
+        const cajaActiva = cajaResponse.data?.data
+
+        if (!cajaActiva) {
+          onMissingApertura?.()
+          return
+        }
+
+        const fechaApertura = dayjs(cajaActiva.fecha_apertura)
+        const hoy = dayjs()
+
+        if (!fechaApertura.isSame(hoy, 'day')) {
+          onMissingApertura?.()
+          return
+        }
+      } catch (error) {
+        console.error('Error al validar apertura:', error)
         onMissingApertura?.()
         return
       }
-    } catch (error) {
-      console.error('❌ Error al validar apertura:', error)
-      console.log('📞 Llamando onMissingApertura callback por error')
-      onMissingApertura?.()
-      return
     }
 
     const {
@@ -350,23 +342,28 @@ export default function useCreateVenta({
         return
       }
 
-      // Éxito
-      message.success(isEditing ? 'Venta actualizada exitosamente' : 'Venta creada exitosamente')
-
-      console.log(isEditing ? '✅ Venta actualizada exitosamente' : '✅ Venta creada exitosamente')
-      console.log('📦 response.data?.data:', response.data?.data)
-
       // En modo edición, invalidar queries y redirigir
       if (isEditing) {
+        message.success('Venta actualizada exitosamente')
         queryClient.invalidateQueries({ queryKey: ['venta', ventaId] })
         queryClient.invalidateQueries({ queryKey: ['ventas'] })
         router.push('/ui/facturacion-electronica/mis-ventas')
         return
       }
 
-      // Emitir evento de venta creada (solo en modo creación)
+      // Si es venta en espera: mensaje específico, limpiar formulario y NO abrir modal de documento
+      if (estadoVenta === EstadoDeVenta.EN_ESPERA) {
+        message.success('Venta puesta en espera correctamente')
+        queryClient.invalidateQueries({ queryKey: ['ventas'] })
+        ventaEvents.emitEspera()
+        return
+      }
+
+      // Éxito para venta normal
+      message.success('Venta creada exitosamente')
+
+      // Emitir evento de venta creada (solo en modo creación normal)
       if (response.data?.data) {
-        console.log('📢 Emitiendo evento ventaCreada')
         ventaEvents.emit(response.data.data)
       }
 

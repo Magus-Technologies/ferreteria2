@@ -138,6 +138,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    text-transform: uppercase !important;
   }
   body {
     @apply bg-background text-foreground;

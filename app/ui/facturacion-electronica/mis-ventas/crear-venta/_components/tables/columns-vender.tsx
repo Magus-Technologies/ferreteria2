@@ -10,6 +10,8 @@ import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
 import { MdDelete } from 'react-icons/md'
 import SelectUnidadDerivadaVenta from '../form/select-unidad-derivada-venta'
+import SelectTipoPrecioVenta from '../form/select-tipo-precio-venta'
+import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 
 export function useColumnsVender({
   form,
@@ -23,8 +25,8 @@ export function useColumnsVender({
   venta?: VentaConUnidadDerivadaNormal
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
-  const productos = Form.useWatch('productos', form) || []
   const recalcDebounceRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const productosVentaStore = useStoreProductoAgregadoVenta((store) => store.productos)
 
   const monedaPrefix = tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'
 
@@ -78,8 +80,9 @@ export function useColumnsVender({
 
   /** Obtener totales de sub-productos de un paquete */
   function getPaqueteSubtotales(paqueteId: number) {
+    const allProductos = form.getFieldValue('productos') || []
     let total = 0
-    for (const p of productos) {
+    for (const p of allProductos) {
       if (p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_producto') {
         total += Number(p.subtotal || 0)
       }
@@ -97,7 +100,7 @@ export function useColumnsVender({
       suppressNavigable: true,
       lockPosition: 'left',
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
         // Sub-productos de paquete no muestran número
         if (tipoFila === 'paquete_producto') {
@@ -112,7 +115,7 @@ export function useColumnsVender({
         // Contar número de grupo (cabeceras de paquete y productos normales, no vales)
         let numeroGrupo = 0
         for (let i = 0; i <= value; i++) {
-          const tipo = productos[i]?._tipo_fila
+          const tipo = form.getFieldValue(['productos', i, '_tipo_fila'])
           if (tipo !== 'paquete_producto' && tipo !== 'vale_promocional') {
             numeroGrupo++
           }
@@ -132,7 +135,7 @@ export function useColumnsVender({
       minWidth: 70,
       width: 70,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
         if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
           return (
@@ -174,12 +177,12 @@ export function useColumnsVender({
       minWidth: 250,
       width: 250,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
-        const paqueteNombre = productos[value]?.paquete_nombre
-        const productoName = productos[value]?.producto_name
-        const tipo = productos[value]?._tipo
-        const servicioNombre = productos[value]?.servicio_nombre
-        const servicioReferencia = productos[value]?.servicio_referencia
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+        const paqueteNombre = form.getFieldValue(['productos', value, 'paquete_nombre'])
+        const productoName = form.getFieldValue(['productos', value, 'producto_name'])
+        const tipo = form.getFieldValue(['productos', value, '_tipo'])
+        const servicioNombre = form.getFieldValue(['productos', value, 'servicio_nombre'])
+        const servicioReferencia = form.getFieldValue(['productos', value, 'servicio_referencia'])
 
         // Hidden fields comunes
         const hiddenFields = (
@@ -271,7 +274,7 @@ export function useColumnsVender({
       minWidth: 120,
       width: 120,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
         if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
           return (
@@ -326,7 +329,7 @@ export function useColumnsVender({
       minWidth: 150,
       width: 150,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
         if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
           return (
@@ -402,8 +405,8 @@ export function useColumnsVender({
       wrapText: true,
       autoHeight: true,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
-        const paqueteId = productos[value]?.paquete_id
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
 
         // Vale promocional - sin cantidad
         if (tipoFila === 'vale_promocional') {
@@ -474,7 +477,10 @@ export function useColumnsVender({
               precision={2}
               min={0}
               formWithMessage={false}
-              onChange={() => calcularSubtotalForm({ form, value })}
+              onChange={() => {
+                calcularSubtotalForm({ form, value })
+                autoSeleccionarMejorPrecio({ form, fieldIndex: value, productosVentaStore })
+              }}
             />
             {stockInsuficiente && cantidad && (
               <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight'>
@@ -486,13 +492,45 @@ export function useColumnsVender({
       },
     },
     {
+      headerName: 'T. Precio',
+      field: 'name',
+      minWidth: 130,
+      width: 130,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+        const tipo = form.getFieldValue(['productos', value, '_tipo'])
+
+        if (tipoFila === 'paquete_cabecera' || tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional' || tipo === 'servicio') {
+          return (
+            <div className='flex items-center h-full'>
+              <span className='text-gray-300'>-</span>
+              <InputBase propsForm={{ name: [value, 'tipo_precio'], hidden: true }} formWithMessage={false} />
+            </div>
+          )
+        }
+
+        const productoId = form.getFieldValue(['productos', value, 'producto_id'])
+
+        return (
+          <div className='flex items-center h-full'>
+            <SelectTipoPrecioVenta
+              form={form}
+              fieldIndex={value}
+              productoId={productoId}
+            />
+            <InputBase propsForm={{ name: [value, 'tipo_precio'], hidden: true }} formWithMessage={false} />
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'Precio',
       field: 'name',
       minWidth: 110,
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
-        const paqueteId = productos[value]?.paquete_id
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
 
         if (tipoFila === 'vale_promocional') {
           return (
@@ -504,7 +542,7 @@ export function useColumnsVender({
         }
 
         if (tipoFila === 'paquete_cabecera') {
-          const precioUnitario = Number(productos[value]?.precio_venta || 0)
+          const precioUnitario = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
           return (
             <div className='flex items-center h-full'>
               <span className='text-sm font-medium text-amber-700'>{monedaPrefix} {precioUnitario.toFixed(2)}</span>
@@ -548,7 +586,7 @@ export function useColumnsVender({
       minWidth: 110,
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
         if (tipoFila === 'paquete_cabecera' || tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional') {
           return (
@@ -582,7 +620,7 @@ export function useColumnsVender({
       minWidth: 160,
       width: 160,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
         if (tipoFila === 'paquete_cabecera' || tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional') {
           return (
@@ -649,8 +687,8 @@ export function useColumnsVender({
       minWidth: 110,
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
-        const tipoFila = productos[value]?._tipo_fila
-        const paqueteId = productos[value]?.paquete_id
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
 
         if (tipoFila === 'vale_promocional') {
           return (
@@ -798,5 +836,98 @@ export function calcularSubtotalVenta({
           Number(cantidad)) /
         100
       : Number(descuento))
+  )
+}
+
+type TipoPrecio = 'publico' | 'especial' | 'minimo' | 'ultimo'
+
+const activadorMap: Record<TipoPrecio, string | null> = {
+  publico: null,
+  especial: 'activador_especial',
+  minimo: 'activador_minimo',
+  ultimo: 'activador_ultimo',
+}
+
+/**
+ * Auto-selecciona el mejor precio disponible según la cantidad.
+ * Prioridad: ultimo > minimo > especial > publico (de menor a mayor precio).
+ * Solo cambia si la cantidad activa un precio mejor que el actual.
+ * Si la cantidad baja y el precio actual ya no es válido, revierte a público.
+ */
+function autoSeleccionarMejorPrecio({
+  form,
+  fieldIndex,
+  productosVentaStore,
+}: {
+  form: FormInstance
+  fieldIndex: number
+  productosVentaStore: ReturnType<typeof useStoreProductoAgregadoVenta.getState>['productos']
+}) {
+  const productoId = form.getFieldValue(['productos', fieldIndex, 'producto_id'])
+  const unidadDerivadaId = form.getFieldValue(['productos', fieldIndex, 'unidad_derivada_id'])
+  const cantidad = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0)
+  const tipoPrecioActual = (form.getFieldValue(['productos', fieldIndex, 'tipo_precio']) || 'publico') as TipoPrecio
+
+  const productoEnStore = productosVentaStore.find((p) => p.producto_id === productoId)
+  const unidadesDerivadas = productoEnStore?.unidades_derivadas_disponibles || []
+  const ud = unidadesDerivadas.find((u) => u.unidad_derivada.id === unidadDerivadaId)
+  if (!ud) return
+
+  // Determinar qué precios están habilitados con la cantidad actual
+  const tiposOrdenados: TipoPrecio[] = ['ultimo', 'minimo', 'especial', 'publico']
+
+  function estaHabilitado(tipo: TipoPrecio): boolean {
+    const activadorKey = activadorMap[tipo]
+    if (!activadorKey) return true // público siempre habilitado
+    const activador = Number((ud as any)[activadorKey] ?? 0)
+    return activador <= 0 || cantidad >= activador
+  }
+
+  // Si el precio actual ya no es válido, revertir a público
+  if (!estaHabilitado(tipoPrecioActual)) {
+    aplicarPrecio(form, fieldIndex, 'publico', ud, cantidad)
+    return
+  }
+
+  // Buscar el mejor precio habilitado (prioridad: ultimo > minimo > especial > publico)
+  const mejorPrecio = tiposOrdenados.find((tipo) => estaHabilitado(tipo)) || 'publico'
+
+  // Solo cambiar si el mejor precio es "mejor" que el actual
+  const prioridad: Record<TipoPrecio, number> = { ultimo: 3, minimo: 2, especial: 1, publico: 0 }
+  if (prioridad[mejorPrecio] > prioridad[tipoPrecioActual]) {
+    aplicarPrecio(form, fieldIndex, mejorPrecio, ud, cantidad)
+  }
+}
+
+function aplicarPrecio(
+  form: FormInstance,
+  fieldIndex: number,
+  tipo: TipoPrecio,
+  ud: any,
+  cantidad: number,
+) {
+  const preciosMap: Record<TipoPrecio, { precio: string; comision: string }> = {
+    publico: { precio: 'precio_publico', comision: 'comision_publico' },
+    especial: { precio: 'precio_especial', comision: 'comision_especial' },
+    minimo: { precio: 'precio_minimo', comision: 'comision_minimo' },
+    ultimo: { precio: 'precio_ultimo', comision: 'comision_ultimo' },
+  }
+
+  const { precio: precioKey, comision: comisionKey } = preciosMap[tipo]
+  const precio = Number(ud[precioKey] ?? 0)
+  const comision = Number(ud[comisionKey] ?? 0)
+
+  form.setFieldValue(['productos', fieldIndex, 'tipo_precio'], tipo)
+  form.setFieldValue(['productos', fieldIndex, 'precio_venta'], precio)
+  form.setFieldValue(['productos', fieldIndex, 'comision'], comision)
+
+  // Recalcular subtotal con el nuevo precio
+  const recargo = Number(form.getFieldValue(['productos', fieldIndex, 'recargo']) ?? 0)
+  const descuento_tipo = form.getFieldValue(['productos', fieldIndex, 'descuento_tipo']) as DescuentoTipo
+  const descuento = Number(form.getFieldValue(['productos', fieldIndex, 'descuento']) ?? 0)
+
+  form.setFieldValue(
+    ['productos', fieldIndex, 'subtotal'],
+    calcularSubtotalVenta({ precio_venta: precio, recargo, descuento_tipo, descuento, cantidad })
   )
 }

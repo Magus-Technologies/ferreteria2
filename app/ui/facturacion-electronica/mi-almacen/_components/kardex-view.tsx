@@ -49,7 +49,7 @@ export default function KardexView() {
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
   const [tipo, setTipo] = useState<TipoMovimientoKardex | ''>('')
-  const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null)
+  const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
 
   const productoId = productoSeleccionado?.id
 
@@ -205,6 +205,9 @@ export default function KardexView() {
             <div className='flex items-center gap-1'>
               <SelectProductos
                 withSearch
+                withTipoBusqueda
+                showUltimasCompras={false}
+                selectionColor={orangeColors[10]}
                 onChange={(_id, producto) => {
                   if (producto) setProductoSeleccionado(producto)
                 }}
@@ -225,6 +228,7 @@ export default function KardexView() {
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Rango de Fechas</label>
             <RangePicker
               className='w-full'
+              value={fechas}
               onChange={(dates) => setFechas(dates)}
               format='DD/MM/YYYY'
               size='middle'

@@ -84,6 +84,8 @@ export default function SelectUnidadDerivadaEditable({
       ['productos', fieldIndex, 'precio_venta'],
       nuevoPrecioVenta
     )
+    // Resetear tipo de precio a público al cambiar unidad derivada
+    form.setFieldValue(['productos', fieldIndex, 'tipo_precio'], 'publico')
 
     // Recalcular subtotal
     const cantidad = Number(

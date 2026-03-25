@@ -109,23 +109,28 @@ export default function CardAgregarProductoVenta({
     )
 
     let comision = 0
+    let tipo_precio = 'publico'
     if (unidad_derivada) {
       if (
         Number(unidad_derivada.precio_publico) === Number(values.precio_venta)
       ) {
         comision = Number(unidad_derivada.comision_publico ?? 0)
+        tipo_precio = 'publico'
       } else if (
         Number(unidad_derivada.precio_especial) === Number(values.precio_venta)
       ) {
         comision = Number(unidad_derivada.comision_especial ?? 0)
+        tipo_precio = 'especial'
       } else if (
         Number(unidad_derivada.precio_minimo) === Number(values.precio_venta)
       ) {
         comision = Number(unidad_derivada.comision_minimo ?? 0)
+        tipo_precio = 'minimo'
       } else if (
         Number(unidad_derivada.precio_ultimo) === Number(values.precio_venta)
       ) {
         comision = Number(unidad_derivada.comision_ultimo ?? 0)
+        tipo_precio = 'ultimo'
       }
     }
 
@@ -139,6 +144,7 @@ export default function CardAgregarProductoVenta({
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_venta: values.precio_venta,
       comision,
+      tipo_precio,
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
       // Guardar las unidades derivadas disponibles del producto
       unidades_derivadas_disponibles: unidades_derivadas,
@@ -261,6 +267,7 @@ export default function CardAgregarProductoVenta({
       <LabelBase label='P. Venta:' orientation='column'>
         <SelectPrecios
           unidadDerivada={unidad_derivada_seleccionada}
+          cantidad={Number(values.cantidad || 0)}
           ref={precio_ventaRef}
           placeholder='P. Venta'
           onChange={(value) => handleChange(value, 'precio_venta')}

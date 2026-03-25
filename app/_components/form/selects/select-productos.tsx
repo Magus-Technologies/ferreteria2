@@ -164,7 +164,7 @@ export default function SelectProductos({
         almacen_id,
         search: text,
         estado: 1,
-        per_page: 100,
+        per_page: 30,
       })
       
       if (response.error) {

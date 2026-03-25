@@ -61,6 +61,8 @@ export default function TableProductoSearch({
     }
   };
 
+  const hasSearch = !!value;
+
   const { data: response, refetch, loading } = useProductosSearch({
     filtros: {
       almacen_id,
@@ -76,7 +78,8 @@ export default function TableProductoSearch({
         : {}),
       estado: 1, // Solo productos activos
     },
-    enabled: true,
+    // Solo buscar cuando hay texto (evita peticiones sin search al abrir el modal)
+    enabled: hasSearch,
   });
 
   type ResponseItem = Producto;
@@ -132,12 +135,17 @@ export default function TableProductoSearch({
     refetch();
   }
 
+  // Solo refetch manual cuando cambia filtroStock (React Query maneja el fetch inicial automáticamente)
+  const filtroStockRef = useRef(filtroStock);
   useEffect(() => {
-    if (isVisible) {
-      handleRefetch();
+    if (filtroStockRef.current !== filtroStock) {
+      filtroStockRef.current = filtroStock;
+      if (isVisible && hasSearch) {
+        handleRefetch();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVisible, filtroStock]);
+  }, [filtroStock]);
 
   // Aplicar quickFilter local cuando cambia el texto
   useEffect(() => {
