@@ -36,6 +36,7 @@ export interface FormCreateClienteValues {
   longitud_d4?: number | null;
   telefono?: string | null;
   email?: string | null;
+  fecha_nacimiento?: string | null;
 }
 
 export default function ModalCreateCliente({

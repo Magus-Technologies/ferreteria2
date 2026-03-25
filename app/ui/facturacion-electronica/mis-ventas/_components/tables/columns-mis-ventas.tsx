@@ -201,6 +201,7 @@ export function useColumnsMisVentas() {
       colId: "entrega_estado",
       width: 130,
       valueGetter: (params) => {
+        if (params.data?.estado_de_venta === 'an') return 'Anulado';
         const productos = params.data?.productos_por_almacen || [];
         let totalPendiente = 0;
         let totalCantidad = 0;
@@ -220,6 +221,7 @@ export function useColumnsMisVentas() {
         if (value === 'Completa') return { color: '#16a34a', fontWeight: 'bold' };
         if (value === 'Parcial') return { color: '#d97706', fontWeight: 'bold' };
         if (value === 'Pendiente') return { color: '#dc2626', fontWeight: 'bold' };
+        if (value === 'Anulado') return { color: '#6b7280', fontWeight: 'bold' };
         return null;
       },
     },

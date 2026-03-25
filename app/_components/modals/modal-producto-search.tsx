@@ -98,7 +98,7 @@ export default function ModalProductoSearch({
       centered
       width={
         typeof window !== "undefined" && window.innerWidth >= 1280
-          ? "fit-content"
+          ? "70vw"
           : "98vw"
       }
       open={open}
@@ -113,12 +113,6 @@ export default function ModalProductoSearch({
       }}
       maskClosable={false}
       keyboard={false}
-      styles={{
-        body: {
-          maxHeight: "calc(100vh - 120px)",
-          overflowY: "scroll",
-        },
-      }}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
         <SelectTipoBusquedaProducto
@@ -156,7 +150,7 @@ export default function ModalProductoSearch({
         <div
           className={`${
             showUltimasCompras ? "h-[600px]" : "h-[400px]"
-          } w-full xl:min-w-[1000px] xl:flex-shrink-0 mt-4`}
+          } w-full xl:flex-1 xl:min-w-0 mt-4`}
         >
           <div
             className={`grid ${

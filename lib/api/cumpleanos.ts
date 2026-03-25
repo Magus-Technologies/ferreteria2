@@ -8,6 +8,7 @@ export interface CumpleanosUsuario {
   dias_restantes: number
   edad: number
   tipo: 'hoy' | '3dias' | 'proximo'
+  entidad_tipo: 'usuario' | 'cliente'
 }
 
 export const cumpleanosApi = {
