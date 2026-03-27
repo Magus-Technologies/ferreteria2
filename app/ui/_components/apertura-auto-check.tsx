@@ -24,12 +24,13 @@ export default function AperturaGuard() {
             const response = await cajaApi.cajaActiva()
             return response.data?.data || null
         },
+        // Siempre llamar al backend, no usar caché
         staleTime: 0,
         gcTime: 0,
+        // Forzar refetch aunque haya datos cacheados de otros componentes
+        refetchOnMount: 'always',
     })
 
-    // El backend ya filtra por fecha de hoy en GET /cajas/activa,
-    // así que si cajaActiva existe, es de hoy. No hay que revalidar la fecha en el frontend.
     const shouldOpen = !isLoading && !cajaActiva
 
     const handleSetOpen = (val: boolean) => {
