@@ -315,7 +315,8 @@ export default function CierreCajaView() {
 
   // CORREGIDO: El resumen se muestra SIEMPRE que la caja esté cerrada, sin importar la fecha
   // Solo en modo re-cierre se permite editar
-  const mostrarResumen = arqueoFinalizado || cajaYaFinalizada || isReCierre;
+  // CORREGIDO: El resumen se muestra SIEMPRE
+  const mostrarResumen = true;
 
   // CORREGIDO: Si está finalizado (y NO es re-cierre), TODO está bloqueado basado ÚNICAMENTE en el backend
   // En modo Re-Cierre se permite editar el conteo
@@ -672,8 +673,8 @@ export default function CierreCajaView() {
                         />
                       </div>
 
-                      {/* Diferencias (Solo se muestra luego de finalizar para no influenciar conteo ciego) */}
-                      {(arqueoFinalizado || cajaYaFinalizada) && (
+                      {/* Diferencias (Se muestra siempre para transparencia total) */}
+                      {true && (
                         <div className='bg-slate-50 rounded p-3 space-y-1.5'>
                           <div className='flex justify-between items-center'>
                             <span className='text-sm font-medium text-slate-700'>Diferencias</span>

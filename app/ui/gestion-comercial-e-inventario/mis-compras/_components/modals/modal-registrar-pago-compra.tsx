@@ -304,7 +304,6 @@ export default function ModalRegistrarPagoCompra({
 
   return (
     <>
-    <AperturaGuard />
     <ModalForm
       modalProps={{
         width: 1100,
@@ -539,6 +538,7 @@ export default function ModalRegistrarPagoCompra({
       </div>
     </ModalForm>
 
+    {open && <AperturaGuard />}
     </>
   )
 }
