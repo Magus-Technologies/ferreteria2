@@ -11,6 +11,10 @@ import ModalRegistrarPagoCompra from '../modals/modal-registrar-pago-compra'
 import ModalVerDetallesPagos from '../modals/modal-ver-detalles-pagos'
 import ModalModificarLotesVencimientos from '../modals/modal-modificar-lotes-vencimientos'
 import ModalDocCompra from '../modals/modal-doc-compra'
+import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
+import { useCheckAperturaDiaria } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_hooks/use-check-apertura-diaria'
+import { useQueryClient } from '@tanstack/react-query'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 export default function BotonesAccionesCompra() {
   const compraSeleccionada = useStoreCompraSeleccionada(state => state.compra)
@@ -19,6 +23,10 @@ export default function BotonesAccionesCompra() {
   const [openModalDetallesPagos, setOpenModalDetallesPagos] = useState(false)
   const [openModalLotesVencimientos, setOpenModalLotesVencimientos] = useState(false)
   const [openModalDocCompra, setOpenModalDocCompra] = useState(false)
+  const [openApertura, setOpenApertura] = useState(false)
+
+  const { hasApertura } = useCheckAperturaDiaria()
+  const queryClient = useQueryClient()
 
   const handleModificarLotes = () => {
     if (!compraSeleccionada) {
@@ -45,6 +53,10 @@ export default function BotonesAccionesCompra() {
       message.warning('Seleccione una compra primero')
       return
     }
+    if (!hasApertura) {
+      setOpenApertura(true)
+      return
+    }
     setOpenModalPago(true)
   }
 
@@ -58,12 +70,22 @@ export default function BotonesAccionesCompra() {
 
   return (
     <>
+      <ModalAperturarCaja
+        open={openApertura}
+        setOpen={setOpenApertura}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJA_ACTIVA] })
+          setOpenApertura(false)
+          setOpenModalPago(true)
+        }}
+      />
+
       <ModalRegistrarPagoCompra
         open={openModalPago}
         setOpen={setOpenModalPago}
         compra={compraSeleccionada}
       />
-      
+
       <ModalVerDetallesPagos
         open={openModalDetallesPagos}
         setOpen={setOpenModalDetallesPagos}
@@ -81,7 +103,7 @@ export default function BotonesAccionesCompra() {
         setOpen={setOpenModalDocCompra}
         compra={compraSeleccionada}
       />
-      
+
       <div className='flex flex-wrap items-center gap-2'>
         <ConfigurableElement
           componentId='gestion-comercial.mis-compras.boton-modificar-lotes'

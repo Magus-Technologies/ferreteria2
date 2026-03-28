@@ -12,7 +12,6 @@ import SelectDespliegeDePago from '~/app/_components/form/selects/select-desplie
 import { useServerMutation } from '~/hooks/use-server-mutation'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useCheckAperturaDiaria } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_hooks/use-check-apertura-diaria'
-import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 import { toLocalString } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -538,7 +537,6 @@ export default function ModalRegistrarPagoCompra({
       </div>
     </ModalForm>
 
-    {open && <AperturaGuard />}
     </>
   )
 }

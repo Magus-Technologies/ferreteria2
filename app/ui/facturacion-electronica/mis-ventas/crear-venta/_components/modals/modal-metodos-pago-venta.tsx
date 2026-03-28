@@ -42,6 +42,7 @@ export default function ModalMetodosPagoVenta({
   const [modalForm] = Form.useForm()
   const [metodosPago, setMetodosPago] = useState<MetodoPago[]>([])
   const [despliegueName, setDespliegueName] = useState<string>('')
+  const [sobrecargo, setSobrecargo] = useState<{ tipo: string; valor: number; monto: number }>({ tipo: 'ninguno', valor: 0, monto: 0 })
 
   // Cargar despliegues de pago para obtener el ID de CCH/Efectivo
   const { data: desplieguesPago } = useQuery({
@@ -95,6 +96,7 @@ export default function ModalMetodosPagoVenta({
       modalForm.resetFields()
       setDespliegueName('')
       setMetodosPago([])
+      setSobrecargo({ tipo: 'ninguno', valor: 0, monto: 0 })
       // Setear el monto inicial al saldo pendiente
       modalForm.setFieldValue('monto', totalCobrado)
     }
@@ -160,6 +162,7 @@ export default function ModalMetodosPagoVenta({
       setMetodosPago([...metodosPago, nuevoMetodo])
       modalForm.resetFields()
       setDespliegueName('')
+      setSobrecargo({ tipo: 'ninguno', valor: 0, monto: 0 })
       message.success('Método de pago agregado')
     } catch (error: any) {
       console.error('Error al validar formulario:', error)
@@ -210,6 +213,7 @@ export default function ModalMetodosPagoVenta({
     modalForm.resetFields()
     setDespliegueName('')
     setMetodosPago([])
+    setSobrecargo({ tipo: 'ninguno', valor: 0, monto: 0 })
     onCancel()
   }
 
@@ -321,12 +325,22 @@ export default function ModalMetodosPagoVenta({
                   onChange={(value, option: any) => {
                     const name = option?.label || ''
                     setDespliegueName(name)
+
+                    // Calcular sobrecargo del método seleccionado
+                    const despliegueData = desplieguesPago?.find((d: any) => d.value === value)
+                    let nuevoSobrecargo = { tipo: 'ninguno', valor: 0, monto: 0 }
+                    if (despliegueData?.tipo_sobrecargo === 'porcentaje' && Number(despliegueData.sobrecargo_porcentaje) > 0) {
+                      const monto = saldoPendiente * Number(despliegueData.sobrecargo_porcentaje) / 100
+                      nuevoSobrecargo = { tipo: 'porcentaje', valor: Number(despliegueData.sobrecargo_porcentaje), monto }
+                    } else if (despliegueData?.tipo_sobrecargo === 'monto_fijo' && Number(despliegueData.adicional) > 0) {
+                      nuevoSobrecargo = { tipo: 'monto_fijo', valor: Number(despliegueData.adicional), monto: Number(despliegueData.adicional) }
+                    }
+                    setSobrecargo(nuevoSobrecargo)
+
                     if (!name.toUpperCase().includes('EFECTIVO')) {
-                      // Para métodos NO efectivo, limpiar recibe_efectivo y setear monto recibe al saldo
-                      modalForm.setFieldValue('recibe_efectivo', saldoPendiente)
+                      modalForm.setFieldValue('recibe_efectivo', parseFloat((saldoPendiente + nuevoSobrecargo.monto).toFixed(2)))
                     } else {
                       modalForm.setFieldValue('referencia', undefined)
-                      // Para efectivo, limpiar monto recibe
                       modalForm.setFieldValue('recibe_efectivo', undefined)
                     }
                   }}
@@ -350,13 +364,22 @@ export default function ModalMetodosPagoVenta({
               )}
 
               {/* Monto Recibe (para TODOS los métodos) */}
-              <div className='w-[140px]'>
-                <label className='block text-xs font-medium text-slate-600 mb-1'>Monto Recibe</label>
+              <div className='w-[180px]'>
+                <div className='flex items-center gap-2 mb-1'>
+                  <label className='block text-xs font-medium text-slate-600'>Monto Recibe</label>
+                  {sobrecargo.monto > 0 && (
+                    <span className='px-1.5 py-0.5 bg-orange-50 border border-orange-300 rounded text-xs text-orange-700 font-semibold whitespace-nowrap'>
+                      {sobrecargo.tipo === 'porcentaje'
+                        ? `+${sobrecargo.valor}% = ${monedaSymbol} ${sobrecargo.monto.toFixed(2)}`
+                        : `+${monedaSymbol} ${sobrecargo.monto.toFixed(2)}`}
+                    </span>
+                  )}
+                </div>
                 <InputNumberBase
                   prefix={<span className='text-rose-700 font-bold text-xs'>{monedaSymbol}</span>}
                   placeholder='0.00'
                   min={0}
-                  max={!isEfectivo ? saldoPendiente : undefined}
+                  max={!isEfectivo ? parseFloat((saldoPendiente + sobrecargo.monto).toFixed(2)) : undefined}
                   precision={2}
                   propsForm={{
                     name: 'recibe_efectivo',
@@ -368,9 +391,9 @@ export default function ModalMetodosPagoVenta({
                           if (!value || value <= 0) {
                             return Promise.reject('Debe ser > 0')
                           }
-                          // Para métodos NO efectivo, no puede exceder el saldo pendiente
-                          if (!isEfectivo && value > saldoPendiente) {
-                            return Promise.reject(`Máx: ${saldoPendiente.toFixed(2)}`)
+                          const maxPermitido = saldoPendiente + sobrecargo.monto
+                          if (!isEfectivo && value > maxPermitido) {
+                            return Promise.reject(`Máx: ${maxPermitido.toFixed(2)}`)
                           }
                           return Promise.resolve()
                         },

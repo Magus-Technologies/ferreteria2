@@ -38,12 +38,16 @@ export default function AperturaGuard() {
             // Cerró sin completar la apertura → redirigir a /ui
             router.push('/ui')
         }
-        successRef.current = false
+        // No resetear successRef aquí, dejarlo para el próximo ciclo
     }
 
     const handleSuccess = () => {
         successRef.current = true
         queryClient.invalidateQueries({ queryKey: [QueryKeys.CAJA_ACTIVA] })
+        // Resetear después de un pequeño delay para asegurar que el modal se cierre correctamente
+        setTimeout(() => {
+            successRef.current = false
+        }, 100)
     }
 
     return (

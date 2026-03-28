@@ -95,12 +95,13 @@ export default function ArqueosDiariosView() {
   const { data: arqueosData, isLoading: loadingArqueos } = useQuery({
     queryKey: ['arqueos-diarios', filtros.fecha_inicio, filtros.fecha_fin, filtros.user_id],
     queryFn: async () => {
-      const res = await cajaApi.listarArqueos({
+      const res = await cajaApi.historialTodas({
         fecha_inicio: filtros.fecha_inicio,
         fecha_fin: filtros.fecha_fin,
         user_id: filtros.user_id,
+        per_page: 200,
       })
-      return res.data?.data?.data || []
+      return res.data?.data || []
     },
     refetchOnWindowFocus: false,
   })
@@ -109,7 +110,7 @@ export default function ArqueosDiariosView() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleVerDetalle = async (arqueo: any) => {
-    const cierreId = arqueo.apertura_id || arqueo.id
+    const cierreId = arqueo.id
     setArqueoSeleccionado(arqueo)
     setResumenDetalle(null)
     setFechaDetalle(undefined)
@@ -124,7 +125,15 @@ export default function ArqueosDiariosView() {
     }
   }
 
-  const fechaParaTabs = fechaDetalle || filtros.fecha_inicio || dayjs().format('YYYY-MM-DD')
+  // Cuando hay fila seleccionada: usa su fecha y su usuario específico
+  // Sin selección: usa los filtros globales (fecha rango + usuario)
+  const fechaInicioTabs = arqueoSeleccionado
+    ? dayjs(arqueoSeleccionado.fecha_apertura).format('YYYY-MM-DD')
+    : (filtros.fecha_inicio || dayjs().format('YYYY-MM-DD'))
+  const fechaFinTabs = arqueoSeleccionado
+    ? dayjs(arqueoSeleccionado.fecha_apertura).format('YYYY-MM-DD')
+    : (filtros.fecha_fin || filtros.fecha_inicio || dayjs().format('YYYY-MM-DD'))
+  const userIdParaTabs = arqueoSeleccionado?.vendedor_id || arqueoSeleccionado?.user_id || filtros.user_id || undefined
 
   const ventasData = resumenDetalle?.detalle_ventas || []
   const metodosPagoData = resumenDetalle?.detalle_metodos_pago || []
@@ -185,12 +194,12 @@ export default function ArqueosDiariosView() {
     {
       key: '9',
       label: 'Ingresos Operativos',
-      children: <TabIngresosOperativos fecha={fechaParaTabs} />,
+      children: <TabIngresosOperativos fecha={fechaInicioTabs} fecha_fin={fechaFinTabs} user_id={userIdParaTabs} />,
     },
     {
       key: '10',
       label: 'Gastos Operativos',
-      children: <TabGastosOperativos fecha={fechaParaTabs} />,
+      children: <TabGastosOperativos fecha={fechaInicioTabs} fecha_fin={fechaFinTabs} user_id={userIdParaTabs} />,
     },
     {
       key: '11',
@@ -200,7 +209,7 @@ export default function ArqueosDiariosView() {
     {
       key: '12',
       label: 'Cobros de Créditos',
-      children: <TabCobrosCreditos fecha={fechaParaTabs} />,
+      children: <TabCobrosCreditos fecha={fechaInicioTabs} fecha_fin={fechaFinTabs} user_id={userIdParaTabs} />,
     },
     {
       key: '13',
@@ -248,7 +257,7 @@ export default function ArqueosDiariosView() {
         </div>
       )}
 
-      <Tabs defaultActiveKey='9' items={detalleTabItems} />
+      <Tabs defaultActiveKey='1' items={detalleTabItems} />
     </div>
   )
 }

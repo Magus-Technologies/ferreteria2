@@ -73,7 +73,7 @@ export default function TabCuentasPorPagar() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['tab-cuentas-por-pagar'],
-    queryFn: () => compraApi.getComprasPorPagar({ per_page: 500 }),
+    queryFn: () => compraApi.getComprasPorPagar({ per_page: 100 }),
   })
 
   const compras = (data?.data as any)?.data || data?.data || []

@@ -100,6 +100,9 @@ export default function ModalAperturarCaja({
   const { crearAperturarCaja, loading } = useAperturarCaja({
     onSuccess: (data) => {
       console.log('✅ Apertura exitosa, abriendo modal de ticket')
+      // Primero llamar a onSuccess para marcar el éxito
+      onSuccess?.()
+      // Luego cerrar el modal
       setOpen(false)
       handleReset()
       // Mostrar modal de ticket con datos
@@ -107,7 +110,6 @@ export default function ModalAperturarCaja({
         open: true,
         data: data
       })
-      onSuccess?.()
     },
   })
 

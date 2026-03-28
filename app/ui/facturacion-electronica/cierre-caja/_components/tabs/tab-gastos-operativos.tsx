@@ -11,6 +11,8 @@ import dayjs from 'dayjs'
 
 interface TabGastosOperativosProps {
   fecha: string
+  fecha_fin?: string
+  user_id?: string
 }
 
 const columnas: ColDef[] = [
@@ -33,18 +35,23 @@ const columnas: ColDef[] = [
   },
 ]
 
-export default function TabGastosOperativos({ fecha }: TabGastosOperativosProps) {
+export default function TabGastosOperativos({ fecha, fecha_fin, user_id }: TabGastosOperativosProps) {
   const gridRef = useRef<AgGridReact<any>>(null)
-  const fechaFormateada = dayjs(fecha).format('YYYY-MM-DD')
+  const fechaInicio = dayjs(fecha).format('YYYY-MM-DD')
+  const fechaHasta = dayjs(fecha_fin || fecha).format('YYYY-MM-DD')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['tab-gastos-operativos', fechaFormateada],
-    queryFn: () => getGastos({ fechaDesde: fechaFormateada, fechaHasta: fechaFormateada, per_page: 500 } as any),
-    enabled: !!fecha,
+    queryKey: ['tab-gastos-operativos', fechaInicio, fechaHasta, user_id],
+    queryFn: () => getGastos({ fechaDesde: fechaInicio, fechaHasta: fechaHasta, per_page: 100, user_id } as any),
+    enabled: !!fecha && !!user_id,
   })
 
   const gastos = data?.data || []
   const total = gastos.filter(g => !g.anulado).reduce((acc, g) => acc + Number(g.monto), 0)
+
+  if (!user_id) {
+    return <div className='flex justify-center items-center py-20 text-slate-400'>Selecciona un usuario de la tabla para ver sus gastos operativos.</div>
+  }
 
   if (isLoading) {
     return <div className='flex justify-center items-center py-20'><Spin tip='Cargando gastos...' /></div>

@@ -4,7 +4,6 @@ import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
-import TabResumenCards from './tab-resumen-cards'
 import dayjs from 'dayjs'
 
 interface TabOtrosIngresosProps {
@@ -34,21 +33,15 @@ export default function TabOtrosIngresos({ data, total }: TabOtrosIngresosProps)
   const gridRef = useRef<AgGridReact<any>>(null)
 
   return (
-    <div className='flex gap-4 w-full'>
-      <div className='flex-1 h-[420px]'>
-        <TableBase<any>
-          ref={gridRef}
-          rowData={data}
-          columnDefs={columnasOtrosIngresos}
-          rowSelection={false}
-          withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
-        />
-      </div>
-      <TabResumenCards items={[
-        { label: 'Cantidad', value: data.length, color: 'blue' },
-        { label: 'Total Ingresos', value: `S/. ${Number(total || 0).toFixed(2)}`, color: 'green' },
-      ]} />
+    <div className='h-[420px] w-full'>
+      <TableBase<any>
+        ref={gridRef}
+        rowData={data}
+        columnDefs={columnasOtrosIngresos}
+        rowSelection={false}
+        withNumberColumn={true}
+        headerColor='var(--color-amber-600)'
+      />
     </div>
   )
 }

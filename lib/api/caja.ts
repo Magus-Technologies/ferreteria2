@@ -395,7 +395,7 @@ export const cajaApi = {
    * Obtener historial de TODAS las aperturas/cierres (Admin)
    */
   historialTodas(
-    filters?: CajaHistorialFilters & { caja_principal_id?: number }
+    filters?: CajaHistorialFilters & { caja_principal_id?: number; fecha_inicio?: string; fecha_fin?: string; user_id?: string }
   ): Promise<ApiResponse<{
     success: boolean
     data: AperturaYCierreCaja[]

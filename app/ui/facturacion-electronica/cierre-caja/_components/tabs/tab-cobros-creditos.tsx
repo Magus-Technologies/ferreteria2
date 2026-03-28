@@ -11,6 +11,8 @@ import dayjs from 'dayjs'
 
 interface TabCobrosCreditsProps {
   fecha: string
+  fecha_fin?: string
+  user_id?: string
 }
 
 const columnas: ColDef[] = [
@@ -72,18 +74,23 @@ const columnas: ColDef[] = [
   },
 ]
 
-export default function TabCobrosCreditos({ fecha }: TabCobrosCreditsProps) {
+export default function TabCobrosCreditos({ fecha, fecha_fin, user_id }: TabCobrosCreditsProps) {
   const gridRef = useRef<AgGridReact<any>>(null)
-  const fechaFormateada = dayjs(fecha).format('YYYY-MM-DD')
+  const fechaInicio = dayjs(fecha).format('YYYY-MM-DD')
+  const fechaHasta = dayjs(fecha_fin || fecha).format('YYYY-MM-DD')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['tab-cobros-creditos', fechaFormateada],
-    queryFn: () => ventaApi.getVentasPorCobrar({ desde: fechaFormateada, hasta: fechaFormateada, per_page: 500 }),
-    enabled: !!fecha,
+    queryKey: ['tab-cobros-creditos', fechaInicio, fechaHasta, user_id],
+    queryFn: () => ventaApi.getVentasPorCobrar({ desde: fechaInicio, hasta: fechaHasta, user_id, per_page: 200 }),
+    enabled: !!fecha && !!user_id,
   })
 
   const ventas = (data?.data as any)?.data || []
   const totalSaldo = ventas.reduce((acc: number, v: any) => acc + Number(v.saldo_pendiente || 0), 0)
+
+  if (!user_id) {
+    return <div className='flex justify-center items-center py-20 text-slate-400'>Selecciona un usuario de la tabla para ver sus cobros de créditos.</div>
+  }
 
   if (isLoading) {
     return <div className='flex justify-center items-center py-20'><Spin tip='Cargando cobros de créditos...' /></div>

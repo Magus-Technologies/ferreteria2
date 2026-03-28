@@ -4,7 +4,6 @@ import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
-import TabResumenCards from './tab-resumen-cards'
 import { Popover } from 'antd'
 import { FaEye } from 'react-icons/fa'
 import dayjs from 'dayjs'
@@ -90,21 +89,15 @@ export default function TabVentas({ data, totalVentas }: TabVentasProps) {
   const gridRef = useRef<AgGridReact<any>>(null)
 
   return (
-    <div className='flex gap-4 w-full'>
-      <div className='flex-1 h-[420px]'>
-        <TableBase<any>
-          ref={gridRef}
-          rowData={data}
-          columnDefs={columnasVentas}
-          rowSelection={false}
-          withNumberColumn={true}
-          headerColor='var(--color-amber-600)'
-        />
-      </div>
-      <TabResumenCards items={[
-        { label: 'Total Ventas', value: `S/. ${Number(totalVentas || 0).toFixed(2)}`, color: 'green' },
-        { label: 'Cantidad', value: data.length, color: 'blue' },
-      ]} />
+    <div className='h-[420px] w-full'>
+      <TableBase<any>
+        ref={gridRef}
+        rowData={data}
+        columnDefs={columnasVentas}
+        rowSelection={false}
+        withNumberColumn={true}
+        headerColor='var(--color-amber-600)'
+      />
     </div>
   )
 }
