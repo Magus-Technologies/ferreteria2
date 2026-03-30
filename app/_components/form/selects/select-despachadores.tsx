@@ -1,9 +1,9 @@
 'use client'
 
-import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Input, Form, FormInstance } from 'antd'
 import { FaSearch, FaTruck } from 'react-icons/fa'
-import iterarChangeValue from '~/app/_utils/iterar-change-value'
+import { IoClose } from 'react-icons/io5'
 import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -17,168 +17,146 @@ interface Usuario {
   rol_sistema: string
 }
 
-interface SelectDespachadoresProps extends Omit<SelectBaseProps, 'onChange'> {
+interface SelectDespachadoresProps {
+  placeholder?: string
   classNameIcon?: string
   sizeIcon?: number
   onChange?: (value: string, despachador?: Usuario) => void
   classIconSearch?: string
+  form?: FormInstance
+  propsForm?: { name: string; [key: string]: any }
+  className?: string
+  allowClear?: boolean
+  [key: string]: any
 }
 
 export default function SelectDespachadores({
-  placeholder = 'Buscar Despachador',
-  variant = 'filled',
-  classNameIcon = 'text-cyan-600 mx-1',
-  sizeIcon = 18,
+  placeholder = 'Buscar Despachador por DNI...',
+  classNameIcon = 'text-cyan-600',
+  sizeIcon = 16,
   onChange,
   classIconSearch = '',
   form,
   propsForm,
-  ...props
+  className = '',
+  allowClear = false,
 }: SelectDespachadoresProps) {
-  const selectDespachadoresRef = useRef<RefSelectBaseProps>(null)
-  const [text, setText] = useState('')
-  const [openModalDespachadorSearch, setOpenModalDespachadorSearch] = useState(false)
+  const [openModal, setOpenModal] = useState(false)
   const [despachadorSeleccionado, setDespachadorSeleccionado] = useState<Usuario>()
+  const [text, setText] = useState('')
+  const [debouncedText] = useDebounce(text, 800)
 
-  const [textDefault, setTextDefault] = useState('')
-  useEffect(() => {
-    if (text) setTextDefault(text)
-  }, [text])
-
-  // Sincronizar valor inicial del formulario
-  useEffect(() => {
-    if (form && propsForm?.name) {
-      const valorInicial = form.getFieldValue(propsForm.name as string);
-      if (valorInicial && !despachadorSeleccionado) {
-        console.log('⚠️ Hay valor inicial pero no hay despachador seleccionado');
-      }
-    }
-  }, [form, propsForm, despachadorSeleccionado]);
-
-  const [value] = useDebounce(text, 1000)
-
-  // Buscar despachadores (usuarios con rol DESPACHADOR)
-  const { data: response, isLoading: loading } = useQuery({
-    queryKey: [QueryKeys.USUARIOS, value, 'DESPACHADOR'],
+  // Buscar despachador por DNI exacto
+  const { data: despachadores = [] } = useQuery({
+    queryKey: [QueryKeys.USUARIOS, debouncedText, 'DESPACHADOR'],
     queryFn: async () => {
       const result = await usuariosApi.getAll({
-        search: value,
+        search: debouncedText,
         rol_sistema: 'DESPACHADOR',
         estado: true,
       })
-      return result.data || []
+      return (result.data?.data || []) as Usuario[]
     },
-    enabled: !!value && value.length >= 2,
+    enabled: !!debouncedText && debouncedText.length >= 3 && !despachadorSeleccionado,
   })
+
+  // Autoseleccionar si el DNI coincide exactamente
+  useEffect(() => {
+    if (despachadores.length === 1 && despachadores[0].numero_documento === text) {
+      handleSelect(despachadores[0])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [despachadores])
 
   function handleSelect(despachador?: Usuario) {
     if (despachador) {
       setDespachadorSeleccionado(despachador)
+      setText('')
 
-      const despachadorLabel = `${despachador.numero_documento} : ${despachador.name}`
-      setText(despachadorLabel)
-
-      // Si hay form y propsForm.name, actualizar directamente
       if (form && propsForm?.name) {
-        console.log('✅ Actualizando despachador_id directamente en el form:', despachador.id);
-        form.setFieldValue(propsForm.name as string, despachador.id);
-      } else {
-        // Fallback al método anterior
-        console.log('⚠️ Usando iterarChangeValue (fallback)');
-        iterarChangeValue({
-          refObject: selectDespachadoresRef,
-          value: despachador.id,
-        })
+        form.setFieldValue(propsForm.name, despachador.id)
       }
 
-      setOpenModalDespachadorSearch(false)
+      setOpenModal(false)
       onChange?.(despachador.id, despachador)
     }
   }
 
-  // Autoseleccionar si hay exactamente un resultado y coincide exactamente con el DNI
-  useEffect(() => {
-    if (Array.isArray(response) && response.length === 1) {
-      const despachador = response[0] as Usuario
-      if (despachador.numero_documento === text) {
-        handleSelect(despachador)
-      }
+  function handleClear() {
+    setDespachadorSeleccionado(undefined)
+    setText('')
+    if (form && propsForm?.name) {
+      form.setFieldValue(propsForm.name, undefined)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response])
-
-  const getLabel = (despachador: Pick<Usuario, 'numero_documento' | 'name'>) => {
-    return `${despachador.numero_documento} : ${despachador.name}`
+    onChange?.('', undefined)
   }
 
+  const displayValue = despachadorSeleccionado
+    ? `${despachadorSeleccionado.numero_documento} : ${despachadorSeleccionado.name}`
+    : ''
+
   return (
-    <div className='flex items-center gap-4 w-full'>
-      <SelectBase
-        ref={selectDespachadoresRef}
-        form={form}
-        propsForm={propsForm}
-        showSearch
-        uppercase={true}
-        filterOption={false}
-        onSearch={setText}
-        searchValue={text}
-        prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
-        variant={variant}
-        placeholder={placeholder}
-        loading={loading}
-        options={[
-          ...(despachadorSeleccionado
-            ? [
-                {
-                  value: despachadorSeleccionado.id,
-                  label: getLabel(despachadorSeleccionado),
-                },
-              ]
-            : []),
-          ...(Array.isArray(response) ? response : []).map((d: Usuario) => ({
-            value: d.id,
-            label: getLabel(d),
-          })),
-        ].filter(
-          (item, index, self) =>
-            self.findIndex(i => i.value === item.value) === index
+    <>
+      {propsForm && (
+        <div style={{ display: 'none' }}>
+          <Form.Item name={propsForm.name}>
+            <Input />
+          </Form.Item>
+        </div>
+      )}
+
+      <div className={`flex items-center gap-2 ${className}`}>
+        {despachadorSeleccionado ? (
+          <Input
+            readOnly
+            value={displayValue}
+            prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
+            suffix={
+              allowClear ? (
+                <IoClose
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                  size={16}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleClear()
+                  }}
+                />
+              ) : undefined
+            }
+            className="cursor-pointer"
+            onClick={() => setOpenModal(true)}
+          />
+        ) : (
+          <Input
+            value={text}
+            placeholder={placeholder}
+            prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                setOpenModal(true)
+              }
+            }}
+          />
         )}
-        onChange={(value) => {
-          const despachador = Array.isArray(response) ? response.find((d: Usuario) => d.id === value) : undefined
-          if (despachador) {
-            handleSelect(despachador)
-          }
-        }}
-        onKeyUp={e => {
-          if (e.key === 'Enter') setOpenModalDespachadorSearch(true)
-        }}
-        {...props}
-      />
-      <FaSearch
-        className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
-        size={15}
-        onClick={() => setOpenModalDespachadorSearch(true)}
-      />
+        <FaSearch
+          className={`text-yellow-600 cursor-pointer flex-shrink-0 ${classIconSearch}`}
+          size={16}
+          onClick={() => setOpenModal(true)}
+        />
+      </div>
+
       <ModalDespachadorSearch
-        open={openModalDespachadorSearch}
-        setOpen={setOpenModalDespachadorSearch}
-        onOk={() => handleSelect()}
-        textDefault={textDefault}
+        open={openModal}
+        setOpen={setOpenModal}
+        onOk={() => {}}
+        textDefault={text}
         onRowDoubleClicked={handleSelect}
-        onSuccess={despachador => {
-          // Si hay form y propsForm.name, actualizar directamente
-          if (form && propsForm?.name) {
-            console.log('✅ Actualizando despachador creado directamente en el form:', despachador.id);
-            form.setFieldValue(propsForm.name as string, despachador.id);
-          } else {
-            // Fallback al método anterior
-            iterarChangeValue({
-              refObject: selectDespachadoresRef,
-              value: despachador.id,
-            })
-          }
+        onSuccess={(despachador) => {
+          handleSelect(despachador)
         }}
       />
-    </div>
+    </>
   )
 }

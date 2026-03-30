@@ -113,13 +113,15 @@ export default function TooltipCalificacionCliente({
   )
 
   return (
-    <Tooltip 
-      title={tooltipContent} 
+    <Tooltip
+      title={tooltipContent}
       color="white"
-      overlayClassName="tooltip-calificacion-cliente"
-      overlayStyle={{
-        maxWidth: '320px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      classNames={{ root: "tooltip-calificacion-cliente" }}
+      styles={{
+        root: {
+          maxWidth: '320px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        },
       }}
     >
       <div style={{ width: '30%' }}>

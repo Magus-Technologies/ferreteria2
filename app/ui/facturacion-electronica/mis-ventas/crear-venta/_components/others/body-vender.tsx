@@ -41,6 +41,8 @@ export type FormCreateVenta = {
     descuento_tipo?: DescuentoTipo
     descuento?: number
     comision?: number
+    stock_fraccion?: number
+    tipo_precio?: string
     // Campos para identificar si el producto pertenece a un paquete
     paquete_id?: number
     paquete_nombre?: string
@@ -122,10 +124,12 @@ function FormVentaInternal({
   venta,
   handleSubmit,
   onMissingApertura,
+  submitting,
 }: {
   venta?: VentaConUnidadDerivadaNormal
   handleSubmit: (values: FormCreateVenta) => void
   onMissingApertura?: () => void
+  submitting?: boolean
 }) {
   console.log('🏗️ FormVentaInternal rendering with venta:', venta)
   const [form] = Form.useForm<FormCreateVenta>()
@@ -146,7 +150,7 @@ function FormVentaInternal({
         <FormCrearVenta form={form} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} ventaId={venta?.id} onMissingApertura={onMissingApertura} />
+        <CardsInfoVenta form={form} ventaId={venta?.id} onMissingApertura={onMissingApertura} submitting={submitting} />
       </div>
     </FormBase>
   )
@@ -165,7 +169,7 @@ export default function BodyVender({
   const [formKey, setFormKey] = useState(0)
   useCheckAperturaDiaria()
 
-  const { handleSubmit } = useCreateVenta({ ventaId: venta?.id })
+  const { handleSubmit, loading: creandoVenta } = useCreateVenta({ ventaId: venta?.id })
   
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
@@ -254,6 +258,7 @@ export default function BodyVender({
         key={formKey}
         venta={ventaData_}
         handleSubmit={handleSubmit}
+        submitting={creandoVenta}
       />
     </>
   )

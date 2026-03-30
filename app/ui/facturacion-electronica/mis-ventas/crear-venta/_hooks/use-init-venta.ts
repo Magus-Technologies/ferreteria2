@@ -5,6 +5,8 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { VentaConUnidadDerivadaNormal } from '../_components/others/header-crear-venta'
 import { FormCreateVenta } from '../_components/others/body-vender'
 import { clienteApi } from '~/lib/api/cliente'
+import { productosApiV2 } from '~/lib/api/producto'
+import { useStoreProductoAgregadoVenta } from '../_store/store-producto-agregado-venta'
 
 export default function useInitVenta({
   venta,
@@ -14,6 +16,7 @@ export default function useInitVenta({
   form: FormInstance<FormCreateVenta>
 }) {
   const setAlmacenId = useStoreAlmacen((state) => state.setAlmacenId)
+  const setProductos = useStoreProductoAgregadoVenta((state) => state.setProductos)
 
   useEffect(() => {
     form.resetFields()
@@ -55,6 +58,7 @@ export default function useInitVenta({
               unidad_derivada_name: ud.unidad_derivada_normal.name,
               unidad_derivada_factor: Number(ud.factor),
               producto_id: ppa.producto_almacen.producto_id,
+              stock_fraccion: Number((ppa.producto_almacen as any).stock_fraccion ?? 0),
             }))
           ),
           // Servicios de la venta
@@ -81,6 +85,95 @@ export default function useInitVenta({
 
       form.setFieldsValue(dataFormated)
       setAlmacenId(venta.almacen_id)
+
+      // Cargar stock actual y unidades derivadas de cada producto desde la API
+      const productoIds = [
+        ...new Set(
+          venta.productos_por_almacen.map((ppa) => ppa.producto_almacen.producto_id)
+        ),
+      ]
+
+      if (productoIds.length > 0) {
+        Promise.all(
+          productoIds.map((id) => productosApiV2.getById(id))
+        )
+          .then((responses) => {
+            const productosBackend = responses
+              .map((r) => r.data)
+              .filter(Boolean) as any[]
+
+            const storeProductos: any[] = []
+
+            // Actualizar cada producto en el form con stock_fraccion real
+            const productosForm = form.getFieldValue('productos') as FormCreateVenta['productos']
+            if (!productosForm) return
+
+            let updated = false
+            const productosActualizados = productosForm.map((prod) => {
+              if (prod._tipo === 'servicio') return prod
+
+              const productoBackend = productosBackend.find(
+                (p: any) => p.id === prod.producto_id
+              )
+              if (!productoBackend) return prod
+
+              const productoEnAlmacen = productoBackend.producto_en_almacenes?.find(
+                (pa: any) => pa.almacen_id === venta.almacen_id
+              )
+              if (!productoEnAlmacen) return prod
+
+              updated = true
+
+              // Agregar al store para que SelectUnidadDerivada y SelectTipoPrecio funcionen
+              const yaExisteEnStore = storeProductos.some(
+                (p) => p.producto_id === prod.producto_id
+              )
+              if (!yaExisteEnStore) {
+                storeProductos.push({
+                  producto_id: prod.producto_id,
+                  producto_name: prod.producto_name,
+                  unidades_derivadas_disponibles: productoEnAlmacen.unidades_derivadas,
+                })
+              }
+
+              // Determinar tipo_precio basándose en el precio actual
+              const udBackend = productoEnAlmacen.unidades_derivadas?.find(
+                (ud: any) => ud.unidad_derivada?.id === prod.unidad_derivada_id
+              )
+              let tipo_precio = 'publico'
+              if (udBackend) {
+                const precioVenta = Number(prod.precio_venta)
+                if (precioVenta === Number(udBackend.precio_publico) * Number(udBackend.factor)) {
+                  tipo_precio = 'publico'
+                } else if (precioVenta === Number(udBackend.precio_especial) * Number(udBackend.factor)) {
+                  tipo_precio = 'especial'
+                } else if (precioVenta === Number(udBackend.precio_minimo) * Number(udBackend.factor)) {
+                  tipo_precio = 'minimo'
+                } else if (precioVenta === Number(udBackend.precio_ultimo) * Number(udBackend.factor)) {
+                  tipo_precio = 'ultimo'
+                }
+              }
+
+              return {
+                ...prod,
+                stock_fraccion: Number(productoEnAlmacen.stock_fraccion ?? 0),
+                tipo_precio,
+              }
+            })
+
+            if (updated) {
+              form.setFieldValue('productos', productosActualizados)
+            }
+
+            // Popular el store con los productos para que los selects funcionen
+            if (storeProductos.length > 0) {
+              setProductos(storeProductos)
+            }
+          })
+          .catch((err) => {
+            console.error('Error al cargar stock de productos:', err)
+          })
+      }
 
       // Cargar las direcciones del cliente desde la API
       const clienteId = venta.cliente_id || (venta as any).cliente?.id

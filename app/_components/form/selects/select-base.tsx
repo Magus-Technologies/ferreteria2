@@ -151,11 +151,11 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
       nextWithPrevent={nextWithPrevent}
       onKeyUp={onKeyUp}
       onOpenChange={onOpenChange}
-      onChange={(value) => {
-        setValue(value);
-        onChange?.(value);
+      onChange={(val) => {
+        setValue(val);
+        onChange?.(val);
       }}
-      value={value}
+      value={props.value !== undefined ? props.value : value}
       optionFilterProp={optionFilterProp}
       variant={variant}
       uppercase={uppercase}

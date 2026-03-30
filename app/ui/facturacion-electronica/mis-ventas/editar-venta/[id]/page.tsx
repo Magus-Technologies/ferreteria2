@@ -50,7 +50,9 @@ export default function EditarVenta() {
   if (isLoadingVenta || isLoadingUnidades) {
     return (
       <ContenedorGeneral className='h-full flex items-center justify-center'>
-        <Spin size='large' tip='Cargando venta...' />
+        <Spin size='large' tip='Cargando venta...' fullscreen={false}>
+          <div className='p-12' />
+        </Spin>
       </ContenedorGeneral>
     )
   }

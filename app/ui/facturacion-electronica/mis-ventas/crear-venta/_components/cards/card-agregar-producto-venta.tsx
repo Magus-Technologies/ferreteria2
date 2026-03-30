@@ -168,11 +168,9 @@ export default function CardAgregarProductoVenta({
   const lastProductoIdRef = useRef<number | undefined>(undefined)
   
   useEffect(() => {
-    // Solo enfocar si el producto cambió Y no es la primera vez (para evitar autofocus al abrir modal)
-    if (productoSeleccionadoSearchStore?.id && 
-        productoSeleccionadoSearchStore.id !== lastProductoIdRef.current &&
-        lastProductoIdRef.current !== undefined) {
-      // Pequeño delay para permitir que la tabla procese la selección primero
+    // Enfocar cantidad cada vez que se selecciona un producto
+    if (productoSeleccionadoSearchStore?.id &&
+        productoSeleccionadoSearchStore.id !== lastProductoIdRef.current) {
       setTimeout(() => {
         cantidadRef.current?.focus()
       }, 50)

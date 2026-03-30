@@ -35,10 +35,10 @@ export default function SelectTipoMoneda({
   useEffect(() => {
     const value = response ?? 1
     setTipoDeCambio(value)
-    // Defer to avoid circular reference warning from antd form
     if (onChangeTipoDeCambio) {
-      const timer = setTimeout(() => onChangeTipoDeCambio(value), 0)
-      return () => clearTimeout(timer)
+      // Use rAF to defer form update outside React's commit phase
+      const id = requestAnimationFrame(() => onChangeTipoDeCambio(value))
+      return () => cancelAnimationFrame(id)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])

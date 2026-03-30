@@ -3,6 +3,7 @@
 import { DescuentoTipo, EstadoDeVenta } from "~/lib/api/venta";
 import { Form, FormInstance } from "antd";
 import { useMemo, useState } from "react";
+import useApp from "antd/es/app/useApp";
 import ButtonBase from "~/components/buttons/button-base";
 import { FormCreateVenta } from "../others/body-vender";
 import CardInfoVenta from "./card-info-venta";
@@ -22,7 +23,7 @@ import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
 import ModalTrasladoBoveda from "~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
 import { BankOutlined } from "@ant-design/icons";
 
-export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void }) {
+export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submitting }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void; submitting?: boolean }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
   const tipo_documento = Form.useWatch("tipo_documento", form);
@@ -55,12 +56,23 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
 
   const { cajaActiva } = useCheckAperturaDiaria();
   const [modalTrasladoBovedaOpen, setModalTrasladoBovedaOpen] = useState(false);
+  const { message } = useApp();
+
+  const requiereCliente = tipo_despacho === "Domicilio" || tipo_despacho === "Parcial";
 
   const handleCobrarClick = () => {
+    if (requiereCliente && !clienteId) {
+      message.warning("Por favor seleccione un cliente para despacho a domicilio");
+      return;
+    }
     setModalOpen(true);
   };
 
   const handleCreditoClick = () => {
+    if (requiereCliente && !clienteId) {
+      message.warning("Por favor seleccione un cliente para despacho a domicilio");
+      return;
+    }
     form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
     setModalDetallesEntregaOpen(true);
   };
@@ -246,7 +258,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
         >
           <ButtonBase
             onClick={handleCobrarClick}
-            disabled={forma_de_pago === "cr"}
+            disabled={forma_de_pago === "cr" || submitting}
+            loading={submitting}
             color="info"
             className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
           >
@@ -263,6 +276,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
           >
             <ButtonBase
               onClick={handleCreditoClick}
+              disabled={submitting}
+              loading={submitting}
               color="success"
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
             >
@@ -284,6 +299,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
               form.setFieldValue("estado_de_venta", EstadoDeVenta.EN_ESPERA);
               form.submit();
             }}
+            disabled={submitting}
+            loading={submitting}
             color="warning"
             className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
           >
@@ -342,14 +359,9 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura }: { f
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
         onContinuar={() => {
-          if (tipo_despacho === 'Domicilio' || tipo_despacho === 'Parcial') {
-            // Cerrar modal de pago y abrir modal de detalles de entrega
-            setModalOpen(false);
-            setModalDetallesEntregaOpen(true);
-          } else {
-            // Despacho en Tienda: crear venta directamente
-            form.submit();
-          }
+          // Cerrar modal de pago y abrir modal de detalles de entrega para todos los tipos
+          setModalOpen(false);
+          setModalDetallesEntregaOpen(true);
         }}
       />
 
