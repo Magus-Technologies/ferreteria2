@@ -38,6 +38,7 @@ export interface Vehiculo {
   id: number;
   name: string;
   tipo: string;
+  marca_modelo: string | null;
   placa: string | null;
   estado: boolean;
 }

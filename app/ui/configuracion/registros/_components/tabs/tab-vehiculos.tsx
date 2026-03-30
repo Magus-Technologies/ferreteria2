@@ -20,10 +20,12 @@ export default function TabVehiculos() {
       entityName='Vehículo'
       createFields={[
         { key: 'tipo', label: 'Tipo (MOTO, CAMION, etc.)', required: true },
+        { key: 'marca_modelo', label: 'Marca / Modelo' },
         { key: 'placa', label: 'Placa' },
       ]}
       extraColumns={[
         { key: 'tipo', label: 'Tipo' },
+        { key: 'marca_modelo', label: 'Marca/Modelo' },
         { key: 'placa', label: 'Placa' },
       ]}
     />

@@ -53,8 +53,12 @@ export interface Usuario {
   createdAt: string;
   updatedAt: string;
   
+  vehiculo_id: number | null;
+  licencia_conducir: string | null;
+
   // Relaciones
   empresa?: Empresa;
+  vehiculo?: { id: number; name: string; tipo: string; placa: string | null } | null;
 }
 
 export interface CreateUsuarioRequest {
@@ -90,10 +94,12 @@ export interface CreateUsuarioRequest {
   vacaciones_dias?: number;
   sueldo_boleta?: number;
   rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
-  
+
   // Otros
   efectivo?: number;
   estado?: boolean;
+  vehiculo_id?: number | null;
+  licencia_conducir?: string;
 }
 
 export interface UpdateUsuarioRequest {
@@ -133,6 +139,8 @@ export interface UpdateUsuarioRequest {
   // Otros
   efectivo?: number;
   estado?: boolean;
+  vehiculo_id?: number | null;
+  licencia_conducir?: string;
 }
 
 interface GetUsuariosParams {

@@ -1,13 +1,14 @@
 'use client'
 
 import { Suspense, lazy, useState } from 'react'
-import { Spin } from 'antd'
-import { FaUserPlus, FaUsers } from 'react-icons/fa'
+import { Spin, Tabs } from 'antd'
+import { FaUserPlus, FaUsers, FaTruck } from 'react-icons/fa'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import ModalUsuarioForm from './_components/modals/modal-usuario-form'
 import { Usuario } from '~/lib/api/usuarios'
+import TabVehiculos from '../registros/_components/tabs/tab-vehiculos'
 
 // Lazy loading de componentes pesados
 const TableUsuarios = lazy(() => import('./_components/tables/table-usuarios'))
@@ -46,19 +47,35 @@ export default function UsuariosPage() {
           </ButtonBase>
         </TituloModulos>
 
-        {/* Tabla principal de usuarios */}
-        <div className='mt-4 w-full'>
-          <Suspense fallback={<ComponentLoading />}>
-            <TableUsuarios onUsuarioSelect={handleUsuarioSelect} />
-          </Suspense>
-        </div>
-
-        {/* Tabla de información del usuario seleccionado */}
-        <div className='mt-6 w-full'>
-          <Suspense fallback={<ComponentLoading />}>
-            <TableInfoUsuario usuario={usuarioSeleccionado} />
-          </Suspense>
-        </div>
+        <Tabs
+          defaultActiveKey='usuarios'
+          className='mt-2'
+          items={[
+            {
+              key: 'usuarios',
+              label: <span className='flex items-center gap-2'><FaUsers /> Usuarios</span>,
+              children: (
+                <>
+                  <div className='mt-4 w-full'>
+                    <Suspense fallback={<ComponentLoading />}>
+                      <TableUsuarios onUsuarioSelect={handleUsuarioSelect} />
+                    </Suspense>
+                  </div>
+                  <div className='mt-6 w-full'>
+                    <Suspense fallback={<ComponentLoading />}>
+                      <TableInfoUsuario usuario={usuarioSeleccionado} />
+                    </Suspense>
+                  </div>
+                </>
+              ),
+            },
+            {
+              key: 'vehiculos',
+              label: <span className='flex items-center gap-2'><FaTruck /> Vehículos</span>,
+              children: <TabVehiculos />,
+            },
+          ]}
+        />
       </div>
 
       <ModalUsuarioForm

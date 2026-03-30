@@ -10,6 +10,7 @@ import {
   FaIdCard,
   FaMapMarkerAlt,
   FaCalendar,
+  FaTruck,
 } from "react-icons/fa";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ModalForm from "~/components/modals/modal-form";
@@ -22,6 +23,7 @@ import SelectRolSistema from "~/app/_components/form/selects/select-rol-sistema"
 import SelectCargo from "~/app/_components/form/selects/select-cargo";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import { usuariosApi, CreateUsuarioRequest, Usuario } from "~/lib/api/usuarios";
+import SelectVehiculos from "~/app/_components/form/selects/select-vehiculos";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useAuth } from "~/lib/auth-context";
 import dayjs, { Dayjs } from "dayjs";
@@ -120,6 +122,8 @@ export default function ModalUsuarioForm({
         fecha_baja: usuarioEdit.fecha_baja ? dayjs(usuarioEdit.fecha_baja) : undefined,
         vacaciones_dias: usuarioEdit.vacaciones_dias || 15,
         sueldo_boleta: usuarioEdit.sueldo_boleta || undefined,
+        vehiculo_id: usuarioEdit.vehiculo_id || undefined,
+        licencia_conducir: usuarioEdit.licencia_conducir || undefined,
         estado: usuarioEdit.estado,
       });
     } else if (open && !usuarioEdit) {
@@ -647,8 +651,8 @@ export default function ModalUsuarioForm({
             </div>
           </div>
 
-          {/* Fila 3: Vacaciones y Sueldo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Fila 3: Vacaciones, Sueldo y Vehículo */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <LabelBase label="Vacaciones (días):" orientation="column">
                 <InputBase
@@ -667,6 +671,31 @@ export default function ModalUsuarioForm({
                   type="number"
                   min={0}
                   step="0.01"
+                />
+              </LabelBase>
+            </div>
+            <div>
+              <LabelBase label="Vehículo por defecto:" orientation="column">
+                <SelectVehiculos
+                  propsForm={{ name: "vehiculo_id" }}
+                  placeholder="Sin vehículo asignado"
+                  allowClear
+                  classNameIcon="text-orange-500 mx-1"
+                  sizeIcon={14}
+                />
+              </LabelBase>
+            </div>
+          </div>
+
+          {/* Fila 4: Licencia de Conducir */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <LabelBase label="Licencia de Conducir:" orientation="column">
+                <InputBase
+                  propsForm={{ name: "licencia_conducir" }}
+                  placeholder="N° de licencia"
+                  prefix={<FaIdCard size={14} className="text-orange-500 mx-1" />}
+                  maxLength={20}
                 />
               </LabelBase>
             </div>
