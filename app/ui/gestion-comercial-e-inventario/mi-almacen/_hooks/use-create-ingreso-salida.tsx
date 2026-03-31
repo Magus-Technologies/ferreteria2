@@ -57,39 +57,16 @@ export default function useCreateIngresoSalida({
         throw new Error("No se recibieron datos del servidor");
       }
 
-      // Actualizar SOLO el producto afectado en el cache de la tabla (sin refetch)
-      const paiData = ingresoSalidaData.productos_por_almacen?.[0];
-      const productoId = paiData?.producto_almacen?.producto?.id;
-      const nuevoStock = paiData?.producto_almacen?.stock_fraccion;
+      // Invalidar cache de productos para forzar actualización
+      // Esto asegura que el stock se actualice correctamente en la tabla
+      queryClient.invalidateQueries({
+        queryKey: ["productos-infinite"],
+      });
 
-      if (productoId) {
-        queryClient.setQueriesData<InfiniteData<any>>(
-          { predicate: (query) => query.queryKey[0] === "productos-infinite" },
-          (oldData) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              pages: oldData.pages.map((page: any) => ({
-                ...page,
-                data: page.data.map((producto: any) => {
-                  if (producto.id !== productoId) return producto;
-                  // Actualizar stock y tiene_ingresos directamente con dato del backend
-                  return {
-                    ...producto,
-                    tiene_ingresos: true,
-                    producto_en_almacenes: producto.producto_en_almacenes?.map(
-                      (pa: any) => ({
-                        ...pa,
-                        stock_fraccion: nuevoStock ?? pa.stock_fraccion,
-                      })
-                    ),
-                  };
-                }),
-              })),
-            };
-          }
-        );
-      }
+      // También invalidar el cache de productos por almacén (si existe)
+      queryClient.invalidateQueries({
+        queryKey: ["productos-by-almacen"],
+      });
 
       // Llamar onSuccess con los datos correctos (cierra modal, abre doc)
       onSuccess?.(ingresoSalidaData);

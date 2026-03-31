@@ -81,9 +81,9 @@ export function useColumnsCompras({
     {
       headerName: 'Fecha Emisión',
       field: 'fecha',
-      width: 110,
-      minWidth: 110,
-      type: 'date',
+      width: 150,
+      minWidth: 150,
+      type: 'dateTime',
       filter: 'agDateColumnFilter',
     },
     {

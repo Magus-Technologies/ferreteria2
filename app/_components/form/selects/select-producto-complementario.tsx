@@ -16,7 +16,7 @@ export default function SelectProductoComplementario({
   propsForm,
   form,
   formWithMessage = false,
-  placeholder = 'Buscar producto...',
+  placeholder = 'Buscar producto complementario...',
   onChange,
   initialOption,
 }: {
@@ -44,7 +44,7 @@ export default function SelectProductoComplementario({
   const handleSearch = useCallback(
     (text: string) => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
-      if (!text || text.length < 2) {
+      if (!text || text.length < 1) {
         setOptions(initialOption ? [initialOption] : [])
         return
       }
@@ -56,7 +56,7 @@ export default function SelectProductoComplementario({
           const res = await productosApiV2.getAllByAlmacen({
             almacen_id: almacenId!,
             search: text,
-            per_page: 10,
+            per_page: 50,
           })
           const productos = res.data?.data ?? []
           const newOpts: Option[] = productos.map((p: any) => ({

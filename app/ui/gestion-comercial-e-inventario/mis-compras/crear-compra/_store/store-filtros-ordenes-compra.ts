@@ -18,6 +18,10 @@ export const useStoreFiltrosOrdenesCompra = create<StoreFiltrosOrdenesCompra>(
         gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
+      // FILTRO CRÍTICO: Solo mostrar compras que vengan de una orden de compra
+      orden_compra_id: {
+        not: null,
+      },
     },
     setFiltros: filtros => set({ filtros }),
   })

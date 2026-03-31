@@ -139,6 +139,15 @@ export default function useColumnTypes() {
             })!
           : '-',
     },
+    dateTime: {
+      valueFormatter: ({ value }) =>
+        value
+          ? toLocalString({
+              date: dayjs(value),
+              format: 'DD/MM/YYYY HH:mm',
+            })!
+          : '-',
+    },
     numberColumn: {
       // Tipo para la columna de números (#)
       cellStyle: { textAlign: 'center' },

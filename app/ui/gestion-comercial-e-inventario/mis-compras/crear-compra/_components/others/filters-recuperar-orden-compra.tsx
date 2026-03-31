@@ -48,6 +48,10 @@ export default function FiltersRecuperarOrdenCompra({
           estado_de_compra: {
             in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
           },
+          // FILTRO CRÍTICO: Solo mostrar compras que vengan de una orden de compra
+          orden_compra_id: {
+            not: null,
+          },
         } satisfies CompraWhereInput
         setFiltros(data)
       }}

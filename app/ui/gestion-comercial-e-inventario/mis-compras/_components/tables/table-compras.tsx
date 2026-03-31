@@ -67,15 +67,16 @@ const TableCompras = memo(function TableCompras({
     };
 
     // Extraer estado_de_compra
-    let estadoDeCompra: string | undefined;
+    let estadoDeCompra: string | { in: string[] } | undefined;
     if (filtros.estado_de_compra) {
       const estadoFilter = filtros.estado_de_compra as any;
       if (estadoFilter.equals) {
         estadoDeCompra = estadoMap[estadoFilter.equals] || estadoFilter.equals;
       } else if (estadoFilter.in && Array.isArray(estadoFilter.in) && estadoFilter.in.length > 0) {
-        // Si hay múltiples estados, el backend no soporta múltiples valores
-        // No enviamos el filtro para que muestre todos los estados del array
-        estadoDeCompra = undefined;
+        // Enviar array de estados al backend
+        estadoDeCompra = {
+          in: estadoFilter.in.map((e: string) => estadoMap[e] || e)
+        };
       } else if (typeof estadoFilter === 'string') {
         estadoDeCompra = estadoMap[estadoFilter] || estadoFilter;
       }
@@ -95,6 +96,16 @@ const TableCompras = memo(function TableCompras({
       tipoDocumento = tipoDocumentoMap[tipoDoc] || tipoDoc;
     }
 
+    // Extraer orden_compra_id filter
+    let ordenCompraId: { not: null } | undefined;
+    if (filtros.orden_compra_id) {
+      const ordenFilter = filtros.orden_compra_id as any;
+      // Si tiene {not: null}, significa que solo queremos compras con orden_compra_id
+      if (ordenFilter.not === null) {
+        ordenCompraId = { not: null };
+      }
+    }
+
     // Extraer fechas
     const fechaFilter = filtros.fecha as any;
     const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
@@ -103,6 +114,7 @@ const TableCompras = memo(function TableCompras({
     return {
       almacen_id: filtros.almacen_id as number | undefined,
       estado_de_compra: estadoDeCompra,
+      orden_compra_id: ordenCompraId,
       proveedor_id: filtros.proveedor_id as number | undefined,
       forma_de_pago: formaDePago,
       tipo_documento: tipoDocumento,

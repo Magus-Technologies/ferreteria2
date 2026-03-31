@@ -275,7 +275,12 @@ export const compraApi = {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
+          // Si el valor es un objeto, serializarlo como JSON
+          if (typeof value === 'object') {
+            params.append(key, JSON.stringify(value));
+          } else {
+            params.append(key, String(value));
+          }
         }
       });
     }

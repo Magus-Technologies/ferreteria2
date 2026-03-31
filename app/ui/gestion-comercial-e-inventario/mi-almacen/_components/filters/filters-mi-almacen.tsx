@@ -23,7 +23,7 @@ import FormBase from "~/components/form/form-base";
 import LabelBase from "~/components/form/label-base";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { useStoreQuickFilter } from "../../_store/store-quick-filter";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import type { GetProductosParams } from "~/app/_types/producto";
 import { useQuery } from "@tanstack/react-query";
 import { marcasApi } from "~/lib/api/catalogos";
@@ -49,6 +49,8 @@ interface ValuesFiltersMiAlmacen {
 export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const [form] = Form.useForm<ValuesFiltersMiAlmacen>();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState<string>("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const setFiltros = useStoreFiltrosProductos((state) => state.setFiltros);
   const filtros = useStoreFiltrosProductos((state) => state.filtros);
@@ -89,6 +91,38 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
     if (values.cs_comision && values.cs_comision !== CSComision.ALL) count++;
     return count;
   }, [form]);
+
+  // Función para aplicar filtros con debounce
+  const applyFiltersWithDebounce = useCallback((searchTerm: string) => {
+    // Limpiar el timer anterior
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Crear nuevo timer
+    debounceTimerRef.current = setTimeout(() => {
+      // Actualizar el valor en el formulario
+      form.setFieldValue('cod_producto', searchTerm);
+      // Hacer submit del formulario
+      form.submit();
+    }, 500); // 500ms de debounce
+  }, [form]);
+
+  // Limpiar timer al desmontar
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Manejar cambios en el input de búsqueda
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    applyFiltersWithDebounce(value);
+  }, [applyFiltersWithDebounce]);
 
   const handleFinish = (values: ValuesFiltersMiAlmacen) => {
     const {
@@ -172,8 +206,12 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
             prefix={<FaBoxOpen size={15} className="text-cyan-600 mx-1" />}
             formWithMessage={false}
             allowClear
+            onChange={handleSearchChange}
             onPressEnter={() => {
-              // Enviar al backend cuando presiona Enter
+              // Cancelar debounce y enviar inmediatamente cuando presiona Enter
+              if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+              }
               form.submit();
             }}
           />
