@@ -139,6 +139,7 @@ export default function TableDetalleDePreciosSearch({
             ],
           },
         ]}
+        selectColumns={true}
         rowData={(rowData as unknown) as DetalleDePreciosProps[] ?? []}
         onRowDoubleClicked={handleRowDoubleClicked}
         selectionColor={colorSeleccion}

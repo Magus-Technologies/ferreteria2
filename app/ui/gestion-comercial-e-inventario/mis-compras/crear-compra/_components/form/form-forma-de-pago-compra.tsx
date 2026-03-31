@@ -9,6 +9,7 @@ import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pa
 import LabelBase from '~/components/form/label-base'
 import dayjs from 'dayjs'
 import FormMetodoPagoCompra from './form-metodo-pago-compra'
+import { useEffect } from 'react'
 
 export default function FormFormaDePagoCompra({
   form,
@@ -16,6 +17,14 @@ export default function FormFormaDePagoCompra({
   form: FormInstance
 }) {
   const formaDePago = Form.useWatch('forma_de_pago', form)
+
+  // Limpiar campos de crédito cuando se selecciona Contado
+  useEffect(() => {
+    if (formaDePago === FormaDePago.Contado) {
+      form.setFieldValue('numero_dias', undefined)
+      form.setFieldValue('fecha_vencimiento', undefined)
+    }
+  }, [formaDePago, form])
 
   return (
     <>
