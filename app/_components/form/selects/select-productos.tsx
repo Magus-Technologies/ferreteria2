@@ -314,6 +314,7 @@ export default function SelectProductos({
           size={15}
           onClick={() => {
             setTextDefault(text)
+            handleSearch() // Ejecutar búsqueda antes de abrir el modal
             setOpenModalProductoSearch(true)
           }}
         />

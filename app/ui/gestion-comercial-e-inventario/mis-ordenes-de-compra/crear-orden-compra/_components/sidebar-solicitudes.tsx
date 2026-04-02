@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tag, Input, Spin, Empty, Tooltip, message } from 'antd'
+import { Tag, Input, Spin, Empty, Tooltip, App } from 'antd'
 import { FaSearch, FaChevronRight, FaPlus } from 'react-icons/fa'
 import { requerimientoInternoApi, type RequerimientoInterno, type RequerimientoInternoProducto } from '~/lib/api/requerimiento-interno'
 import dayjs, { Dayjs } from 'dayjs'
@@ -40,6 +40,7 @@ interface SidebarSolicitudesProps {
 }
 
 export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAgregados, onSeleccionarRequerimiento }: SidebarSolicitudesProps) {
+    const { message } = App.useApp()
     const [searchText, setSearchText] = useState('')
     const [fechaDesde, setFechaDesde] = useState<Dayjs | null>(dayjs().startOf('month'))
     const [fechaHasta, setFechaHasta] = useState<Dayjs | null>(dayjs().endOf('month'))

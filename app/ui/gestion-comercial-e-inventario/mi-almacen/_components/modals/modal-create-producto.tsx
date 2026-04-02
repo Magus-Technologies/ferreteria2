@@ -94,7 +94,7 @@ export default function ModalCreateProducto({
     // Limpiar la validación del código cuando se abre el modal
     setDisabled(true)
     
-    if (producto) {
+    if (producto && producto.producto_en_almacenes) {
       if (producto.cod_producto) setDisabled(false)
 
       // Guardar URLs existentes para preview (no descargar como File)
@@ -123,8 +123,17 @@ export default function ModalCreateProducto({
       
       // Usar setTimeout para asegurar que el reseteo se complete antes de setear los valores
       setTimeout(() => {
+        // Si es duplicado, agregar sufijo al nombre
+        let productName = restProducto.name
+        if (isDuplicate) {
+          // Buscar el último número usado en productos con nombres similares
+          // Por ahora, simplemente agregamos " (COPIA)" al nombre
+          productName = `${restProducto.name} (COPIA)`
+        }
+        
         form.setFieldsValue({
           ...restProducto,
+          name: productName,
           estado: Number(estado),
           producto_almacen,
           unidades_derivadas: producto_almacen.unidades_derivadas.map(item => {
@@ -139,22 +148,28 @@ export default function ModalCreateProducto({
               ganancia,
             }
           }),
-          ...(producto?.id ? { cod_producto } : {}),
+          ...(producto?.id && !isDuplicate ? { cod_producto } : {}),
         })
       }, 0)
     } else {
+      // Caso: crear nuevo producto o producto manual
       form.resetFields()
-      form.setFieldsValue({
-        unidades_contenidas: 1,
-        unidades_derivadas: [],
-        estado: 1,
-        name: textDefault,
-        almacen_id,
-      })
+      
+      // Usar setTimeout para asegurar que el form se resetee antes de setear valores
+      setTimeout(() => {
+        form.setFieldsValue({
+          unidades_contenidas: 1,
+          unidades_derivadas: [],
+          estado: 1,
+          name: textDefault || '',
+          almacen_id,
+        })
+      }, 0)
+      
       setDisabled(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [producto, open])
+  }, [producto, open, textDefault, isDuplicate])
 
   return (
     <ModalForm

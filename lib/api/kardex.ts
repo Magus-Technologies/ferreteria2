@@ -18,6 +18,8 @@ export interface MovimientoKardex {
   salida: number
   saldo: number
   referencia_id: string | number
+  producto_nombre?: string
+  producto_codigo?: string
 }
 
 export interface KardexResponse {
@@ -41,7 +43,7 @@ export interface KardexFilters {
 }
 
 export interface KardexInventarioFilters {
-  producto_id: number
+  producto_id?: number
   almacen_id?: number
   desde?: string
   hasta?: string

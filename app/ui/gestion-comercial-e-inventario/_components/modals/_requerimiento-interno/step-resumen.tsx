@@ -32,12 +32,6 @@ export default function StepResumen({ form, productosSeleccionados, prioridades 
 
     const columnDefs: ColDef<ItemBuscado>[] = [
         {
-            headerName: "#",
-            valueGetter: "node.rowIndex + 1",
-            width: 50,
-            cellStyle: { textAlign: "center", fontWeight: "500" },
-        },
-        {
             headerName: "Código",
             field: "codigo",
             width: 100,
@@ -128,8 +122,7 @@ export default function StepResumen({ form, productosSeleccionados, prioridades 
                     loading={false}
                     rowSelection={false}
                     pagination={false}
-                    domLayout="normal"
-                    getRowHeight={() => 45}
+                    domLayout="autoHeight"
                     exportExcel={false}
                     exportPdf={false}
                     selectColumns={false}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Form, Tag, App } from 'antd'
+import { Form, Tag, App, Modal } from 'antd'
 import { useSearchParams } from 'next/navigation'
 
 import { TbShoppingCartPlus } from 'react-icons/tb'
@@ -25,6 +25,8 @@ import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agr
 import TableBase from '~/components/tables/table-base'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import SidebarSolicitudes, { type ProductoSidebarSelection } from './_components/sidebar-solicitudes'
+import ModalCreateProducto from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
+import { useStoreEditOrCopyProducto } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-edit-or-copy-producto'
 
 interface ProductoEnOC {
   id: number
@@ -59,6 +61,13 @@ export default function CrearOrdenCompraPage() {
   const [productos, setProductos] = useState<ProductoEnOC[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [productosPendientesCrear, setProductosPendientesCrear] = useState<ProductoSidebarSelection[]>([])
+  const [currentProductoIndex, setCurrentProductoIndex] = useState(0)
+  const [productoManualActual, setProductoManualActual] = useState<ProductoSidebarSelection | null>(null)
+  
+  // Store para manejar el modal de crear producto
+  const setOpenModalProducto = useStoreEditOrCopyProducto(state => state.setOpenModal)
+  const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
 
   // Detectar modo: crear o editar
   const ordenId = searchParams.get('id') ? Number(searchParams.get('id')) : null
@@ -460,6 +469,19 @@ export default function CrearOrdenCompraPage() {
   ], [handleRemoveProducto])
 
   const handleAddProductFromSidebar = (product: ProductoSidebarSelection) => {
+    // Si el producto no existe en el sistema (producto_id es null), abrir modal de creación
+    if (product.producto_id === null) {
+      setProductosPendientesCrear([product])
+      setCurrentProductoIndex(0)
+      setProductoManualActual(product)
+      
+      // No pre-llenar nada en el store, solo guardar el producto manual
+      setProducto(undefined)
+      
+      setOpenModalProducto(true)
+      return
+    }
+
     const newProduct = {
       id: product.id,
       producto_id: product.producto_id,
@@ -494,9 +516,36 @@ export default function CrearOrdenCompraPage() {
   }
 
   const handleAddAllFromSidebar = (products: ProductoSidebarSelection[]) => {
+    // Separar productos existentes de productos manuales
+    const productosExistentes = products.filter(p => p.producto_id !== null)
+    const productosManual = products.filter(p => p.producto_id === null)
+    
+    // Si hay productos manuales, iniciar el flujo de creación
+    if (productosManual.length > 0) {
+      setProductosPendientesCrear(productosManual)
+      setCurrentProductoIndex(0)
+      setProductoManualActual(productosManual[0])
+      
+      // No pre-llenar, dejar que el modal use textDefault
+      setProducto(undefined)
+      
+      setOpenModalProducto(true)
+      
+      // Agregar los productos existentes inmediatamente
+      if (productosExistentes.length > 0) {
+        agregarProductosExistentes(productosExistentes)
+      }
+      return
+    }
+
+    // Si no hay productos manuales, agregar todos normalmente
+    agregarProductosExistentes(products)
+  }
+
+  const agregarProductosExistentes = (products: ProductoSidebarSelection[]) => {
     const newProducts = products.map(p => ({
       id: p.id,
-      producto_id: p.producto_id,
+      producto_id: p.producto_id!,
       codigo: p.codigo,
       nombre: p.nombre,
       marca: p.marca,
@@ -534,6 +583,54 @@ export default function CrearOrdenCompraPage() {
 
   return (
     <div className="self-stretch w-full flex flex-row overflow-hidden animate-fade animate-ease-in-out animate-delay-[250ms]">
+      {/* Modal de crear producto */}
+      {productoManualActual && (
+        <ModalCreateProducto
+          key={`manual-producto-${productoManualActual.id}-${currentProductoIndex}`}
+          textDefault={productoManualActual.nombre}
+          setTextDefault={() => {}}
+          onSuccess={(productoCreado) => {
+            const productoOriginal = productosPendientesCrear[currentProductoIndex]
+            
+            // Agregar el producto recién creado a la lista
+            const newProduct: ProductoEnOC = {
+              id: productoOriginal.id,
+              producto_id: productoCreado.id,
+              codigo: productoCreado.cod_producto || '',
+              nombre: productoCreado.name || '',
+              marca: productoCreado.marca?.name || '',
+              unidad: productoCreado.unidad_medida?.name || 'UND',
+              cantidad: productoOriginal.cantidad,
+              precio_compra: 0,
+              flete: 0,
+              vencimiento: null,
+              lote: '',
+              subtotal: 0,
+            }
+            
+            setProductos(prev => [...prev, newProduct])
+            
+            // Si hay más productos pendientes, abrir el modal para el siguiente
+            if (currentProductoIndex < productosPendientesCrear.length - 1) {
+              const siguienteIndex = currentProductoIndex + 1
+              setCurrentProductoIndex(siguienteIndex)
+              setProductoManualActual(productosPendientesCrear[siguienteIndex])
+              
+              // Limpiar el producto para el siguiente
+              setProducto(undefined)
+              
+              setTimeout(() => setOpenModalProducto(true), 300)
+            } else {
+              // Ya no hay más productos pendientes
+              setProductosPendientesCrear([])
+              setCurrentProductoIndex(0)
+              setProductoManualActual(null)
+              message.success('Todos los productos han sido creados')
+            }
+          }}
+        />
+      )}
+
       {/* SIDEBAR */}
       <SidebarSolicitudes
         onAddProduct={handleAddProductFromSidebar}
