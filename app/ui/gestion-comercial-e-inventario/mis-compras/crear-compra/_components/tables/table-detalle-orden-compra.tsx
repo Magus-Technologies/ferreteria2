@@ -30,7 +30,7 @@ export default function TableDetalleOrdenCompra({
         headerName: '#',
         valueGetter: 'node.rowIndex + 1',
         width: 60,
-        cellStyle: { textAlign: 'center' },
+        cellStyle: () => ({ textAlign: 'center' }),
         pinned: 'left',
       },
       {
@@ -52,51 +52,52 @@ export default function TableDetalleOrdenCompra({
         headerName: 'Unidad',
         field: 'unidad',
         width: 100,
-        cellStyle: { textAlign: 'center' },
+        cellStyle: () => ({ textAlign: 'center' }),
       },
       {
         headerName: 'Cantidad',
         field: 'cantidad',
         width: 100,
         valueFormatter: params => (params.value || 0).toFixed(2),
-        cellStyle: { textAlign: 'right' },
+        cellStyle: () => ({ textAlign: 'right' }),
       },
       {
         headerName: 'Precio',
         field: 'precio',
         width: 120,
         valueFormatter: params => `S/ ${(params.value || 0).toFixed(2)}`,
-        cellStyle: { textAlign: 'right' },
+        cellStyle: () => ({ textAlign: 'right' }),
       },
       {
         headerName: 'Flete',
         field: 'flete',
         width: 100,
         valueFormatter: params => `S/ ${(params.value || 0).toFixed(2)}`,
-        cellStyle: { textAlign: 'right' },
+        cellStyle: () => ({ textAlign: 'right' }),
       },
       {
         headerName: 'Subtotal',
         field: 'subtotal',
         width: 120,
         valueFormatter: params => `S/ ${(params.value || 0).toFixed(2)}`,
-        cellStyle: { textAlign: 'right', fontWeight: 'bold' },
+        cellStyle: () => ({ textAlign: 'right', fontWeight: 'bold' }),
       },
       {
         headerName: 'Lote',
         field: 'lote',
         width: 120,
-        valueFormatter: params => params.value || '-',
+        valueFormatter: params => (params.value ? String(params.value) : '-'),
       },
       {
         headerName: 'Vencimiento',
         field: 'vencimiento',
         width: 120,
-        valueFormatter: params =>
-          params.value
-            ? toLocalString({ date: dayjs(params.value), format: 'DD/MM/YYYY' })
-            : '-',
-        cellStyle: { textAlign: 'center' },
+        valueFormatter: params => {
+          if (!params.value) return '-'
+          const formatted = toLocalString({ date: dayjs(params.value), format: 'DD/MM/YYYY' })
+          return formatted ?? '-'
+        },
+        cellStyle: () => ({ textAlign: 'center' }),
       },
     ],
     []

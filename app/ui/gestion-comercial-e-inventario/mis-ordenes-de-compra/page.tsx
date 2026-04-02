@@ -140,25 +140,25 @@ export default function MisOrdenesDeCompra() {
 
                     // Crear la nueva orden con los mismos datos
                     const requestData = {
-                        requerimiento_id: ordenCompleta.requerimiento_id,
-                        proveedor_id: ordenCompleta.proveedor_id,
+                        requerimiento_id: ordenCompleta.requerimiento_id ?? undefined,
+                        proveedor_id: ordenCompleta.proveedor_id ?? undefined,
                         fecha: ordenCompleta.fecha,
                         tipo_moneda: ordenCompleta.tipo_moneda,
                         tipo_de_cambio: ordenCompleta.tipo_de_cambio,
-                        ruc: ordenCompleta.proveedor?.ruc || ordenCompleta.ruc,
+                        ruc: ordenCompleta.proveedor?.ruc || ordenCompleta.ruc || undefined,
                         almacen_id: ordenCompleta.almacen_id,
                         productos: ordenCompleta.productos?.map(p => ({
                             producto_id: p.producto_id,
-                            codigo: p.codigo,
-                            nombre: p.nombre,
-                            marca: p.marca,
-                            unidad: p.unidad,
+                            codigo: p.codigo ?? undefined,
+                            nombre: p.nombre ?? undefined,
+                            marca: p.marca ?? undefined,
+                            unidad: p.unidad ?? undefined,
                             cantidad: p.cantidad,
                             precio: p.precio,
                             subtotal: p.cantidad * p.precio,
                             flete: p.flete || 0,
                             vencimiento: p.vencimiento ?? undefined,
-                            lote: p.lote,
+                            lote: p.lote ?? undefined,
                         })) || [],
                     }
 
