@@ -15,6 +15,7 @@ type UseStoreProductoAgregadoCompraProps = {
           prev: ValuesCardAgregarProductoCompra[]
         ) => ValuesCardAgregarProductoCompra[])
   ) => void
+  clearProductoAgregado: () => void
 }
 
 export const useStoreProductoAgregadoCompra =
@@ -28,5 +29,6 @@ export const useStoreProductoAgregadoCompra =
           productos:
             typeof value === 'function' ? value(state.productos) : value ?? [],
         })),
+      clearProductoAgregado: () => set({ productoAgregado: undefined }),
     }
   })

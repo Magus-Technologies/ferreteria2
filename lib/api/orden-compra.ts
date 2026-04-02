@@ -101,6 +101,8 @@ export interface OrdenCompraFilters {
     desde?: string;
     hasta?: string;
     search?: string;
+    tipo_documento?: string;
+    forma_de_pago?: string;
     per_page?: number;
     page?: number;
 }
@@ -153,6 +155,16 @@ export const ordenCompraApi = {
     create: async (data: CreateOrdenCompraRequest): Promise<ApiResponse<OrdenCompraResponse>> => {
         return apiRequest<OrdenCompraResponse>('/ordenes-compra', {
             method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Actualizar orden de compra
+     */
+    update: async (id: number, data: CreateOrdenCompraRequest): Promise<ApiResponse<OrdenCompraResponse>> => {
+        return apiRequest<OrdenCompraResponse>(`/ordenes-compra/${id}`, {
+            method: 'PUT',
             body: JSON.stringify(data),
         });
     },

@@ -6,6 +6,8 @@ import { toUTCBD } from "~/utils/fechas";
 import { FormCreateIngresoSalidaProps } from "../_components/modals/modal-create-ingreso-salida";
 import { ingresosSalidasApi } from "~/lib/api/ingreso-salida";
 import { IngresoSalidaWithRelations } from "~/lib/api/ingreso-salida";
+import { useStoreProductoSeleccionado } from "../_store/store-producto-seleccionado";
+import { calcularNuevoStock } from "../_components/others/stock-ingreso-salida";
 
 export default function useCreateIngresoSalida({
   tipo_documento,
@@ -17,6 +19,7 @@ export default function useCreateIngresoSalida({
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const { notification } = App.useApp();
+  const { producto, setProducto } = useStoreProductoSeleccionado();
 
   async function crearIngresoSalidaForm(values: FormCreateIngresoSalidaProps) {
     setLoading(true);
@@ -67,6 +70,37 @@ export default function useCreateIngresoSalida({
       queryClient.invalidateQueries({
         queryKey: ["productos-by-almacen"],
       });
+
+      // Actualizar el producto en el store local para reflejar el nuevo stock
+      if (producto && producto.id === values.producto_id) {
+        const productoActualizado = { ...producto };
+        const indexAlmacen = productoActualizado.producto_en_almacenes.findIndex(
+          (pea) => pea.almacen_id === values.almacen_id
+        );
+
+        if (indexAlmacen !== -1) {
+          const productoEnAlmacen = productoActualizado.producto_en_almacenes[indexAlmacen];
+          const unidadDerivada = productoEnAlmacen.unidades_derivadas.find(
+            (ud) => ud.unidad_derivada.id === values.unidad_derivada_id
+          );
+
+          if (unidadDerivada) {
+            const nuevoStockFraccion = calcularNuevoStock({
+              stock_fraccion: Number(productoEnAlmacen.stock_fraccion ?? 0),
+              cantidad: values.cantidad,
+              factor: Number(unidadDerivada.factor),
+              tipo: tipo_documento,
+            });
+
+            productoActualizado.producto_en_almacenes[indexAlmacen] = {
+              ...productoEnAlmacen,
+              stock_fraccion: nuevoStockFraccion,
+            };
+
+            setProducto(productoActualizado);
+          }
+        }
+      }
 
       // Llamar onSuccess con los datos correctos (cierra modal, abre doc)
       onSuccess?.(ingresoSalidaData);

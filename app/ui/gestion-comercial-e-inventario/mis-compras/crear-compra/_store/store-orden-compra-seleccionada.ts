@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import { type Compra } from '~/lib/api/compra'
+import { type OrdenCompra } from '~/lib/api/orden-compra'
 
 interface StoreOrdenCompraSeleccionada {
-  compra: Compra | undefined
-  setCompra: (compra: Compra | undefined) => void
+  compra: OrdenCompra | undefined
+  setCompra: (compra: OrdenCompra | undefined) => void
 }
 
 export const useStoreOrdenCompraSeleccionada =

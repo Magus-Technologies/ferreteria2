@@ -180,7 +180,6 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                             className="!w-full !text-[10px] !rounded-md"
                             size="small"
                             formWithMessage={false}
-                            propsForm={{ name: 'desde' }}
                         />
                         <DatePickerBase
                             placeholder="Hasta"
@@ -189,7 +188,6 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                             className="!w-full !text-[10px] !rounded-md"
                             size="small"
                             formWithMessage={false}
-                            propsForm={{ name: 'hasta' }}
                         />
                     </div>
                 </div>

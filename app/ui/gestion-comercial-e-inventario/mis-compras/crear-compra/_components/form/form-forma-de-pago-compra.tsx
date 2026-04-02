@@ -24,7 +24,8 @@ export default function FormFormaDePagoCompra({
       form.setFieldValue('numero_dias', undefined)
       form.setFieldValue('fecha_vencimiento', undefined)
     }
-  }, [formaDePago, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formaDePago])
 
   return (
     <>

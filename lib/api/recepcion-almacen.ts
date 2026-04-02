@@ -171,6 +171,8 @@ export interface RecepcionAlmacenFilters {
   fecha_hasta?: string
   user_id?: string
   estado?: boolean
+  proveedor_id?: number
+  tipo_documento?: string
 }
 
 // ============= API METHODS =============

@@ -5,22 +5,19 @@ import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
-import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { Dayjs } from 'dayjs'
-import { TipoDocumento, EstadoDeCompra, type CompraWhereInput } from '~/types'
-import { toUTCBD } from '~/utils/fechas'
+import { type OrdenCompraFilters } from '~/lib/api/orden-compra'
 import dayjs from 'dayjs'
 
 interface ValuesFiltersRecuperarOrdenCompra {
   proveedor_id?: number
   desde?: Dayjs
   hasta?: Dayjs
-  tipo_documento?: TipoDocumento
 }
 
 interface FiltersRecuperarOrdenCompraProps {
-  setFiltros: (data: CompraWhereInput) => void
+  setFiltros: (data: OrdenCompraFilters) => void
 }
 
 export default function FiltersRecuperarOrdenCompra({
@@ -41,18 +38,10 @@ export default function FiltersRecuperarOrdenCompra({
         const { desde, hasta, ...rest } = values
         const data = {
           ...rest,
-          fecha: {
-            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
-          },
-          estado_de_compra: {
-            in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
-          },
-          // FILTRO CRÍTICO: Solo mostrar compras que vengan de una orden de compra
-          orden_compra_id: {
-            not: null,
-          },
-        } satisfies CompraWhereInput
+          desde: desde ? desde.format('YYYY-MM-DD') : undefined,
+          hasta: hasta ? hasta.format('YYYY-MM-DD') : undefined,
+          estado: 'pendiente', // Solo órdenes pendientes
+        } satisfies OrdenCompraFilters
         setFiltros(data)
       }}
     >
@@ -97,19 +86,6 @@ export default function FiltersRecuperarOrdenCompra({
             placeholder='Hasta'
             formWithMessage={false}
             prefix={<FaCalendar size={15} className='text-orange-600 mx-1' />}
-            allowClear
-          />
-        </LabelBase>
-
-        <LabelBase label='Tipo Documento:'>
-          <SelectTipoDocumento
-            propsForm={{
-              name: 'tipo_documento',
-              hasFeedback: false,
-              className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-            }}
-            className='w-full'
-            formWithMessage={false}
             allowClear
           />
         </LabelBase>

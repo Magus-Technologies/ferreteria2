@@ -1,29 +1,30 @@
 import { useMemo } from 'react'
 import { type ColDef } from 'ag-grid-community'
-import { type Compra, type ProductoAlmacenCompra } from '~/lib/api/compra'
+import { type OrdenCompra } from '~/lib/api/orden-compra'
 import { toLocalString } from '~/utils/fechas'
-import { TipoMoneda } from '~/types'
 import dayjs from 'dayjs'
 
-export const useColumnsOrdenesCompra = (): ColDef<Compra>[] => {
+const estadoLabels: Record<string, string> = {
+  pendiente: 'Pendiente',
+  en_proceso: 'En Proceso',
+  completada: 'Completada',
+  anulada: 'Anulada',
+}
+
+export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
   return useMemo(
     () => [
       {
-        headerName: 'Tipo Doc',
-        field: 'tipo_documento',
-        width: 100,
+        headerName: '#',
+        valueGetter: 'node.rowIndex + 1',
+        width: 60,
         cellStyle: { textAlign: 'center' },
+        pinned: 'left',
       },
       {
-        headerName: 'Serie',
-        field: 'serie',
-        width: 100,
-        cellStyle: { textAlign: 'center' },
-      },
-      {
-        headerName: 'Número',
-        field: 'numero',
-        width: 100,
+        headerName: 'Código',
+        field: 'codigo',
+        width: 120,
         cellStyle: { textAlign: 'center' },
       },
       {
@@ -40,124 +41,48 @@ export const useColumnsOrdenesCompra = (): ColDef<Compra>[] => {
         headerName: 'Proveedor',
         field: 'proveedor.razon_social',
         width: 250,
-        valueGetter: params => params.data?.proveedor?.razon_social || '',
+        valueGetter: params => params.data?.proveedor?.razon_social || '-',
       },
       {
         headerName: 'RUC',
         field: 'proveedor.ruc',
         width: 120,
-        valueGetter: params => params.data?.proveedor?.ruc || '',
+        valueGetter: params => params.data?.proveedor?.ruc || '-',
         cellStyle: { textAlign: 'center' },
       },
       {
         headerName: 'Moneda',
         field: 'tipo_moneda',
         width: 100,
+        valueFormatter: params => (params.value === 's' ? 'Soles' : 'Dólares'),
         cellStyle: { textAlign: 'center' },
       },
       {
-        headerName: 'Subtotal',
-        width: 120,
-        valueGetter: params => {
-          if (!params.data) return 0
-          const compra = params.data
-          let total = 0
-
-          compra.productos_por_almacen?.forEach((pac: ProductoAlmacenCompra) => {
-            const costo = Number(pac.costo) || 0
-            pac.unidades_derivadas?.forEach(ud => {
-              const cantidad = Number(ud.cantidad) || 0
-              const factor = Number(ud.factor) || 0
-              const flete = Number(ud.flete) || 0
-              const bonificacion = ud.bonificacion || false
-              const montoLinea =
-                (bonificacion ? 0 : costo * cantidad * factor) + flete
-              total += montoLinea
-            })
-          })
-
-          return total
-        },
-        valueFormatter: params => {
-          const value = params.value || 0
-          return `S/ ${value.toFixed(2)}`
-        },
-        cellStyle: { textAlign: 'right' },
-      },
-      {
-        headerName: 'IGV',
-        width: 120,
-        valueGetter: params => {
-          if (!params.data) return 0
-          const compra = params.data
-          let subtotal = 0
-
-          compra.productos_por_almacen?.forEach((pac: ProductoAlmacenCompra) => {
-            const costo = Number(pac.costo) || 0
-            pac.unidades_derivadas?.forEach(ud => {
-              const cantidad = Number(ud.cantidad) || 0
-              const factor = Number(ud.factor) || 0
-              const flete = Number(ud.flete) || 0
-              const bonificacion = ud.bonificacion || false
-              const montoLinea =
-                (bonificacion ? 0 : costo * cantidad * factor) + flete
-              subtotal += montoLinea
-            })
-          })
-
-          const igv = subtotal * 0.18
-          return igv
-        },
-        valueFormatter: params => {
-          const value = params.value || 0
-          return `S/ ${value.toFixed(2)}`
-        },
-        cellStyle: { textAlign: 'right' },
-      },
-      {
         headerName: 'Total',
+        field: 'total',
         width: 120,
-        valueGetter: params => {
-          if (!params.data) return 0
-          const compra = params.data
-          let subtotal = 0
-
-          compra.productos_por_almacen?.forEach((pac: ProductoAlmacenCompra) => {
-            const costo = Number(pac.costo) || 0
-            pac.unidades_derivadas?.forEach(ud => {
-              const cantidad = Number(ud.cantidad) || 0
-              const factor = Number(ud.factor) || 0
-              const flete = Number(ud.flete) || 0
-              const bonificacion = ud.bonificacion || false
-              const montoLinea =
-                (bonificacion ? 0 : costo * cantidad * factor) + flete
-              subtotal += montoLinea
-            })
-          })
-
-          const percepcion = Number(compra.percepcion) || 0
-          const totalConPercepcion = subtotal + percepcion
-          const tipoCambio = Number(compra.tipo_de_cambio) || 1
-          const totalSoles =
-            compra.tipo_moneda === TipoMoneda.Soles
-              ? totalConPercepcion
-              : totalConPercepcion * tipoCambio
-
-          return totalSoles
-        },
         valueFormatter: params => {
-          const value = params.value || 0
-          return `S/ ${value.toFixed(2)}`
+          const total = params.value || 0
+          const symbol = params.data?.tipo_moneda === 's' ? 'S/' : '$'
+          return `${symbol} ${total.toFixed(2)}`
         },
         cellStyle: { textAlign: 'right', fontWeight: 'bold' },
       },
       {
         headerName: 'Estado',
-        field: 'estado_de_compra',
+        field: 'estado',
         width: 120,
+        valueFormatter: params => estadoLabels[params.value] || params.value,
         cellStyle: { textAlign: 'center' },
       },
-    ] as ColDef<Compra>[],
+      {
+        headerName: 'Productos',
+        field: 'productos_count',
+        width: 100,
+        valueFormatter: params => String(params.value || 0),
+        cellStyle: { textAlign: 'center' },
+      },
+    ] as ColDef<OrdenCompra>[],
     []
   )
 }

@@ -2,11 +2,11 @@
 
 import { AgGridReact } from "ag-grid-react";
 import TableBase, { TableBaseProps } from "./table-base";
-import { useImperativeHandle, useRef } from "react";
+import { useImperativeHandle, useRef, useState } from "react";
 import ButtonBase, { ButtonBaseProps } from "../buttons/button-base";
 import { exportAGGridDataToJSON, exportAGGridDataToPDF } from "~/utils/ag-grid";
 import { RiFileExcel2Fill } from "react-icons/ri";
-import { Divider, Popover, Tooltip } from "antd";
+import { Tooltip, Popover } from "antd";
 import { FaFilePdf } from "react-icons/fa6";
 import { PiFilePdfFill } from "react-icons/pi";
 import { HiMiniViewColumns } from "react-icons/hi2";
@@ -71,6 +71,8 @@ export default function TableWithTitle<T, schemaType = unknown>({
     `table-columns-${id}`,
     []
   );
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [availableColumns, setAvailableColumns] = useState<string[]>([]);
 
   useImperativeHandle(tableRef, () => tableRefInterno.current!);
 
@@ -93,34 +95,19 @@ export default function TableWithTitle<T, schemaType = unknown>({
           {selectColumns && (
             <Tooltip title="Ver Columnas">
               <Popover
+                open={popoverOpen}
+                onOpenChange={setPopoverOpen}
                 content={
                   <SelectColumns
                     defaultColumns={defaultColumns}
                     setDefaultColumns={setDefaultColumns}
                     gridRef={tableRefInterno}
                     ref={selectColumnsRef}
-                  >
-                    <div className="grid gap-2">
-                      {optionsSelectColumns.map((option, index) => (
-                        <ButtonBase
-                          onClick={() => {
-                            selectColumnsRef.current?.setCheckedList(
-                              option.columns
-                            );
-                          }}
-                          color={option.color ?? "info"}
-                          size="sm"
-                          className="!px-3 w-full"
-                          key={index}
-                        >
-                          {option.label}
-                        </ButtonBase>
-                      ))}
-                    </div>
-                    {optionsSelectColumns.length > 0 && (
-                      <Divider className="!my-2" />
-                    )}
-                  </SelectColumns>
+                    hideIndividualColumns={false}
+                    optionsSelectColumns={optionsSelectColumns}
+                    isOpen={popoverOpen}
+                    availableColumns={availableColumns}
+                  />
                 }
                 trigger="click"
               >
@@ -203,6 +190,18 @@ export default function TableWithTitle<T, schemaType = unknown>({
         headerColor={headerColor} // Pasar el color del header
         isVisible={isVisible} // Pasar visibilidad
         onGridReady={(params) => {
+          // Capturar nombres de columnas disponibles
+          const cols = params.api
+            .getAllGridColumns()
+            ?.map((col) => col.getColDef().headerName)
+            .filter(
+              (name): name is string =>
+                name !== undefined && name !== null && name !== "",
+            ) ?? [];
+          if (cols.length > 0) {
+            setAvailableColumns(cols);
+          }
+
           if (defaultColumns.length) {
             setVisibilityColumns({
               gridApi: params.api,

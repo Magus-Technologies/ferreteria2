@@ -3,7 +3,8 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tag, Tooltip } from 'antd'
 import { FaEye, FaCheck } from 'react-icons/fa'
-import { MdDelete } from 'react-icons/md'
+import { MdDelete, MdEditSquare } from 'react-icons/md'
+import { IoIosCopy } from 'react-icons/io'
 import { HiDocumentText } from 'react-icons/hi2'
 import { type OrdenCompra } from '~/lib/api/orden-compra'
 
@@ -28,11 +29,15 @@ export function useColumnsOrdenesCompra({
     onView,
     onViewDoc,
     onAprobar,
+    onEditar,
+    onDuplicar,
 }: {
     onAnular: (orden: OrdenCompra) => void
     onView: (orden: OrdenCompra) => void
     onViewDoc: (orden: OrdenCompra) => void
     onAprobar?: (orden: OrdenCompra) => void
+    onEditar?: (orden: OrdenCompra) => void
+    onDuplicar?: (orden: OrdenCompra) => void
 }) {
     const columns: ColDef<OrdenCompra>[] = [
         {
@@ -143,8 +148,8 @@ export function useColumnsOrdenesCompra({
         {
             headerName: 'Acciones',
             field: 'id',
-            width: 150,
-            minWidth: 150,
+            width: 200,
+            minWidth: 200,
             cellRenderer: ({ data }: ICellRendererParams<OrdenCompra>) => (
                 <div className='flex items-center gap-3 h-full'>
                     <Tooltip title='Ver Documento'>
@@ -161,6 +166,24 @@ export function useColumnsOrdenesCompra({
                             size={16}
                         />
                     </Tooltip>
+                    {(data?.estado === 'pendiente' || data?.estado === 'en_proceso') && (
+                        <>
+                            <Tooltip title='Editar'>
+                                <MdEditSquare
+                                    onClick={() => data && onEditar?.(data)}
+                                    className='cursor-pointer hover:scale-110 transition-all text-cyan-600'
+                                    size={17}
+                                />
+                            </Tooltip>
+                            <Tooltip title='Duplicar'>
+                                <IoIosCopy
+                                    onClick={() => data && onDuplicar?.(data)}
+                                    className='cursor-pointer hover:scale-110 transition-all text-cyan-600'
+                                    size={17}
+                                />
+                            </Tooltip>
+                        </>
+                    )}
                     {data?.estado === 'pendiente' && (
                         <Tooltip title='Aprobar'>
                             <FaCheck

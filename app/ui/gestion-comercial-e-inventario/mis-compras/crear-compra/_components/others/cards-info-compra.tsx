@@ -25,9 +25,11 @@ import useApp from 'antd/es/app/useApp'
 export default function CardsInfoCompra({
   form,
   compra,
+  onPonerEnEspera,
 }: {
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
+  onPonerEnEspera?: () => void
 }) {
   const { message } = useApp()
   const [modalPagoOpen, setModalPagoOpen] = useState(false)
@@ -136,8 +138,12 @@ export default function CardsInfoCompra({
         <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-poner-espera' label='Botón Poner en Espera'>
           <ButtonBase
             onClick={() => {
-              form.setFieldValue('estado_de_compra', EstadoDeCompra.EnEspera)
-              form.submit()
+              const productos = form.getFieldValue('productos')
+              if (!productos || productos.length === 0) {
+                message.warning('Agrega al menos un producto')
+                return
+              }
+              onPonerEnEspera?.()
             }}
             color='warning'
             className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'

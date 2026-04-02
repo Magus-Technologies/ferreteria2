@@ -295,7 +295,7 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
-      headerName: 'P. Público',
+      headerName: 'PRECIO PUBLICO',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -390,7 +390,7 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
-      headerName: 'Precio Ferretería',
+      headerName: 'PRECIO FERRETERÍA',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -425,7 +425,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Precio Especial',
+      headerName: 'PRECIO ESPECIAL',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -460,7 +460,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Precio Final',
+      headerName: 'PRECIO FINAL',
       field: 'name',
       minWidth: 140,
       flex: 1,

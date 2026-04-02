@@ -142,7 +142,17 @@ export default function SelectProveedores({
         showSearch
         uppercase={true}
         filterOption={false}
-        onSearch={setText}
+        onSearch={(val) => {
+          // Ant Design llama onSearch("") después de seleccionar una opción.
+          // Si estamos en proceso de selección, ignorar el borrado.
+          if (!val && isSelecting) return
+          setText(val)
+        }}
+        onSelect={() => {
+          // Marcar como seleccionando para prevenir que onSearch("") borre el texto
+          setIsSelecting(true)
+          setTimeout(() => setIsSelecting(false), 150)
+        }}
         searchValue={text}
         prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
         variant={variant}

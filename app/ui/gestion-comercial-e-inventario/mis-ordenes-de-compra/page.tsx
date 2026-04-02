@@ -108,6 +108,71 @@ export default function MisOrdenesDeCompra() {
         })
     }, [modal, router])
 
+    const handleEditar = useCallback((orden: OrdenCompra) => {
+        router.push(`/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra/crear-orden-compra?id=${orden.id}`)
+    }, [router])
+
+    const handleDuplicar = useCallback(async (orden: OrdenCompra) => {
+        modal.confirm({
+            title: '¿Duplicar Orden de Compra?',
+            icon: <ExclamationCircleFilled />,
+            content: (
+                <div>
+                    <p>¿Estás seguro de duplicar la orden <strong>{orden.codigo}</strong>?</p>
+                    <p className='text-sm text-slate-500 mt-1'>Proveedor: {orden.proveedor?.razon_social || '—'}</p>
+                    <p className='text-sm text-slate-500'>Total: S/. {Number(orden.total ?? 0).toFixed(2)}</p>
+                    <p className='text-sm text-blue-600 mt-2'>Se creará una nueva orden con los mismos datos</p>
+                </div>
+            ),
+            okText: 'Sí, Duplicar',
+            okType: 'primary',
+            cancelText: 'Cancelar',
+            async onOk() {
+                try {
+                    // Obtener los datos completos de la orden
+                    const response = await ordenCompraApi.getById(orden.id)
+                    const ordenCompleta = response.data?.data
+
+                    if (!ordenCompleta) {
+                        message.error('No se pudo obtener los datos de la orden')
+                        return
+                    }
+
+                    // Crear la nueva orden con los mismos datos
+                    const requestData = {
+                        requerimiento_id: ordenCompleta.requerimiento_id,
+                        proveedor_id: ordenCompleta.proveedor_id,
+                        fecha: ordenCompleta.fecha,
+                        tipo_moneda: ordenCompleta.tipo_moneda,
+                        tipo_de_cambio: ordenCompleta.tipo_de_cambio,
+                        ruc: ordenCompleta.proveedor?.ruc || ordenCompleta.ruc,
+                        almacen_id: ordenCompleta.almacen_id,
+                        productos: ordenCompleta.productos?.map(p => ({
+                            producto_id: p.producto_id,
+                            codigo: p.codigo,
+                            nombre: p.nombre,
+                            marca: p.marca,
+                            unidad: p.unidad,
+                            cantidad: p.cantidad,
+                            precio: p.precio,
+                            subtotal: p.cantidad * p.precio,
+                            flete: p.flete || 0,
+                            vencimiento: p.vencimiento ?? undefined,
+                            lote: p.lote,
+                        })) || [],
+                    }
+
+                    const createResponse = await ordenCompraApi.create(requestData)
+                    message.success(createResponse.data?.message || 'Orden duplicada exitosamente')
+                    queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_COMPRA] })
+                } catch (error) {
+                    message.error('Error al duplicar la orden de compra')
+                    console.error(error)
+                }
+            },
+        })
+    }, [modal, message, queryClient])
+
     const handleView = useCallback((orden: OrdenCompra) => {
         setSelectedOrdenId(orden.id)
         setSelectedOrdenData(orden)
@@ -146,6 +211,8 @@ export default function MisOrdenesDeCompra() {
         onView: handleView,
         onViewDoc: handleViewDoc,
         onAprobar: handleAprobar,
+        onEditar: handleEditar,
+        onDuplicar: handleDuplicar,
     })
 
     return (

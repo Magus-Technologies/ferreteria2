@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Form, Tag, App } from 'antd'
+import { useSearchParams } from 'next/navigation'
 
 import { TbShoppingCartPlus } from 'react-icons/tb'
 import { FaCalendar } from 'react-icons/fa'
@@ -52,10 +53,81 @@ export default function CrearOrdenCompraPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { message } = App.useApp()
+  const searchParams = useSearchParams()
   const [form] = Form.useForm()
   const [reqSeleccionado, setReqSeleccionado] = useState<RequerimientoInterno | null>(null)
   const [productos, setProductos] = useState<ProductoEnOC[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  // Detectar modo: crear o editar
+  const ordenId = searchParams.get('id') ? Number(searchParams.get('id')) : null
+  const isEditMode = !!ordenId
+
+  // Cargar datos de la orden si estamos en modo editar
+  useEffect(() => {
+    if (!ordenId) return
+
+    const loadOrdenData = async () => {
+      setLoading(true)
+      try {
+        const response = await ordenCompraApi.getById(ordenId)
+        const orden = response.data?.data
+
+        if (!orden) {
+          message.error('No se pudo cargar la orden de compra')
+          return
+        }
+
+        // Cargar datos del formulario
+        form.setFieldsValue({
+          fecha: orden.fecha ? dayjs(orden.fecha) : undefined,
+          tipo_moneda: orden.tipo_moneda,
+          tipo_de_cambio: orden.tipo_de_cambio,
+          proveedor_id: orden.proveedor_id,
+          proveedor_ruc: orden.proveedor?.ruc || orden.ruc,
+          proveedor_razon_social: orden.proveedor?.razon_social,
+          almacen_id: orden.almacen_id,
+        })
+
+        // Cargar productos
+        if (orden.productos && orden.productos.length > 0) {
+          const productosData: ProductoEnOC[] = orden.productos.map(p => ({
+            id: p.producto_id,
+            producto_id: p.producto_id,
+            codigo: p.codigo || '',
+            nombre: p.nombre || '',
+            marca: p.marca || '',
+            unidad: p.unidad || 'UND',
+            cantidad: p.cantidad,
+            precio_compra: p.precio,
+            flete: p.flete || 0,
+            vencimiento: p.vencimiento,
+            lote: p.lote || '',
+            subtotal: p.cantidad * p.precio,
+          }))
+          setProductos(productosData)
+        }
+
+        message.info(`Editando orden ${orden.codigo}`)
+      } catch (error) {
+        message.error('Error al cargar la orden de compra')
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadOrdenData()
+  }, [ordenId, form, message])
+
+  // Limpiar el store de producto agregado cuando se monta el componente en modo edición
+  const clearProductoAgregado = useStoreProductoAgregadoCompra(s => s.clearProductoAgregado)
+  useEffect(() => {
+    if (isEditMode) {
+      clearProductoAgregado()
+    }
+  }, [isEditMode, clearProductoAgregado])
 
   const handleRemoveProducto = useCallback((index: number) => {
     setProductos(prev => prev.filter((_, i) => i !== index))
@@ -121,15 +193,6 @@ export default function CrearOrdenCompraPage() {
         tipo_moneda: values.tipo_moneda,
         tipo_de_cambio: values.tipo_de_cambio,
         ruc: values.proveedor_ruc,
-        tipo_documento: values.tipo_documento,
-        serie: values.serie,
-        numero: values.numero?.toString(),
-        guia: values.guia,
-        percepcion: values.percepcion,
-        forma_de_pago: values.forma_de_pago,
-        numero_dias: values.numero_dias,
-        fecha_vencimiento: values.fecha_vencimiento?.format?.('YYYY-MM-DD'),
-        egreso_dinero_id: values.egreso_dinero_id,
         almacen_id: values.almacen_id || 1, // Default almacen
         productos: productos.map(p => ({
           producto_id: p.producto_id || p.id,
@@ -146,12 +209,24 @@ export default function CrearOrdenCompraPage() {
         })),
       }
 
-      const response = await ordenCompraApi.create(requestData)
-      const ordenCompraId = response.data?.data?.id
-      const ordenCompraCodigo = response.data?.data?.codigo
+      let response
+      let ordenCompraId
+      let ordenCompraCodigo
 
-      // Actualizar cantidad_ordenada para cada producto de la solicitud
-      if (reqSeleccionado?.productos && ordenCompraId) {
+      if (isEditMode && ordenId) {
+        // Modo edición: actualizar orden existente
+        response = await ordenCompraApi.update(ordenId, requestData)
+        ordenCompraId = response.data?.data?.id
+        ordenCompraCodigo = response.data?.data?.codigo
+      } else {
+        // Modo creación o duplicación: crear nueva orden
+        response = await ordenCompraApi.create(requestData)
+        ordenCompraId = response.data?.data?.id
+        ordenCompraCodigo = response.data?.data?.codigo
+      }
+
+      // Actualizar cantidad_ordenada para cada producto de la solicitud (solo en creación)
+      if (!isEditMode && reqSeleccionado?.productos && ordenCompraId) {
         const updatePromises = reqSeleccionado.productos.map(productoSolicitud => {
           // Encontrar si este producto está en la OC que se acaba de crear
           const productoEnOC = productos.find(p => p.id === productoSolicitud.id)
@@ -172,10 +247,17 @@ export default function CrearOrdenCompraPage() {
       // Refrescar datos del sidebar
       queryClient.invalidateQueries({ queryKey: ['requerimientos-internos'] })
 
-      message.success(response.data?.message || 'Orden de compra creada exitosamente')
+      const successMessage = isEditMode 
+        ? response.data?.message || 'Orden de compra actualizada exitosamente'
+        : response.data?.message || 'Orden de compra creada exitosamente'
+      
+      message.success(successMessage)
       router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra')
     } catch (error: unknown) {
-      message.error((error as { message?: string })?.message || 'Error al crear la orden de compra')
+      const errorMessage = isEditMode
+        ? (error as { message?: string })?.message || 'Error al actualizar la orden de compra'
+        : (error as { message?: string })?.message || 'Error al crear la orden de compra'
+      message.error(errorMessage)
       console.error(error)
     } finally {
       setSubmitting(false)
@@ -464,7 +546,7 @@ export default function CrearOrdenCompraPage() {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden p-4 gap-4">
         {/* HEADER */}
         <TituloModulos
-          title="Crear Orden de Compra"
+          title={isEditMode ? "Editar Orden de Compra" : "Crear Orden de Compra"}
           icon={<TbShoppingCartPlus className="text-cyan-600" />}
           extra={
             <div className="pl-8 flex items-center gap-4">
@@ -491,13 +573,17 @@ export default function CrearOrdenCompraPage() {
           )}
         </TituloModulos>
 
-        {/* MAIN CONTENT */}
-        <FormBase
-          form={form}
-          name="orden-compra"
-          className="flex-1 flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full overflow-hidden"
-          onFinish={handleSubmit}
-        >
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-slate-500">Cargando datos...</div>
+          </div>
+        ) : (
+          <FormBase
+            form={form}
+            name="orden-compra"
+            className="flex-1 flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full overflow-hidden"
+            onFinish={handleSubmit}
+          >
           {/* LEFT COLUMN: Tabla + Form fields */}
           <div className="flex-1 flex flex-col gap-2 xl:gap-3 min-w-0 min-h-0 overflow-hidden">
             {/* TABLA DE PRODUCTOS (ag-grid) */}
@@ -587,96 +673,6 @@ export default function CrearOrdenCompraPage() {
                   />
                 </LabelBase>
               </div>
-              <div className='flex gap-6'>
-                <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-6' }}>
-                  <SelectTipoDocumento
-                    propsForm={{
-                      name: 'tipo_documento',
-                      hasFeedback: false,
-                      className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-                      rules: [{ required: true, message: 'Selecciona el tipo de documento' }],
-                    }}
-                    className='w-full'
-                    classNameIcon='text-rose-700 mx-1'
-                  />
-                </LabelBase>
-                <LabelBase label='Serie:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputBase
-                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Serie'
-                    propsForm={{ name: 'serie' }}
-                  />
-                </LabelBase>
-                <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputNumberBase
-                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Número'
-                    propsForm={{ name: 'numero' }}
-                    precision={0}
-                    min={0}
-                  />
-                </LabelBase>
-                <LabelBase label='Guía:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputBase
-                    prefix={<IoDocumentAttach className='text-cyan-600 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Guía'
-                    propsForm={{ name: 'guia' }}
-                  />
-                </LabelBase>
-                <LabelBase label='Percepción:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputNumberBase
-                    prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Percepción'
-                    propsForm={{ name: 'percepcion' }}
-                    precision={2}
-                    min={0}
-                  />
-                </LabelBase>
-              </div>
-              <div className='flex flex-wrap gap-6'>
-                <LabelBase label='Forma de Pago:' classNames={{ labelParent: 'mb-6' }}>
-                  <SelectFormaDePago
-                    classNameIcon='text-rose-700 mx-1'
-                    className='!w-[135px] !min-w-[135px] !max-w-[135px]'
-                    propsForm={{
-                      name: 'forma_de_pago',
-                      rules: [{ required: true, message: 'Selecciona la forma de pago' }],
-                    }}
-                  />
-                </LabelBase>
-                <LabelBase label='N° Días:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputNumberBase
-                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-                    className='!w-[90px] !min-w-[90px] !max-w-[90px]'
-                    placeholder='N° Días'
-                    propsForm={{ name: 'numero_dias' }}
-                    precision={0}
-                    min={0}
-                  />
-                </LabelBase>
-                <LabelBase label='Fecha Vencimiento:' classNames={{ labelParent: 'mb-6' }}>
-                  <DatePickerBase
-                    propsForm={{ name: 'fecha_vencimiento' }}
-                    placeholder='Fecha de Vencimiento'
-                    prefix={<FaCalendar size={15} className='text-rose-700 mx-1' />}
-                    className='!w-[160px] !min-w-[160px] !max-w-[160px]'
-                  />
-                </LabelBase>
-                <LabelBase label='Egreso Asociado:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputBase
-                    propsForm={{
-                      name: 'egreso_dinero_id',
-                      className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
-                    }}
-                    placeholder='Egreso Dinero'
-                    className='w-full'
-                  />
-                </LabelBase>
-              </div>
             </div>
           </div>
 
@@ -727,10 +723,15 @@ export default function CrearOrdenCompraPage() {
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
               disabled={productos.length === 0 || submitting}
             >
-              <TbShoppingCartPlus className="min-w-fit" size={30} /> {submitting ? 'Creando...' : 'Crear Orden de Compra'}
+              <TbShoppingCartPlus className="min-w-fit" size={30} /> 
+              {submitting 
+                ? (isEditMode ? 'Actualizando...' : 'Creando...') 
+                : (isEditMode ? 'Actualizar Orden de Compra' : 'Crear Orden de Compra')
+              }
             </ButtonBase>
           </div>
         </FormBase>
+        )}
       </div>
 
     </div>

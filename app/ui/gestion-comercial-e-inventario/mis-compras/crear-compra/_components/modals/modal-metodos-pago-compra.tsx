@@ -15,7 +15,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { apiRequest } from '~/lib/api'
 import { TipoMoneda } from '~/types'
 import type { GastoExtraDisponible } from '~/app/_components/form/selects/select-egresos-dinero'
-import dayjs from 'dayjs'
+import ModalSeleccionarEgreso from './modal-seleccionar-egreso'
 
 
 interface MetodoPago {
@@ -35,6 +35,7 @@ export default function ModalMetodosPagoCompra({
   montoEgresoAsociado,
   gastoExtraInfo,
   tipo_moneda,
+  excluirCompraId,
   onContinuar,
 }: {
   open: boolean
@@ -44,19 +45,27 @@ export default function ModalMetodosPagoCompra({
   montoEgresoAsociado: number
   gastoExtraInfo?: GastoExtraDisponible
   tipo_moneda: TipoMoneda
+  excluirCompraId?: string
   onContinuar?: () => void
 }) {
   const { message } = useApp()
   const [modalForm] = Form.useForm()
   const [metodosPago, setMetodosPago] = useState<MetodoPago[]>([])
   const [despliegueName, setDespliegueName] = useState<string>('')
+  const [egresosSeleccionados, setEgresosSeleccionados] = useState<GastoExtraDisponible[]>([])
+  const [modalEgresoOpen, setModalEgresoOpen] = useState(false)
 
   const monedaSymbol = tipo_moneda === TipoMoneda.d ? '$.' : 'S/.'
 
-  // Saldo a cubrir con métodos de pago (descontando el egreso)
+  const montoTotalEgresos = useMemo(
+    () => egresosSeleccionados.reduce((sum, g) => sum + Number(g.monto), 0) + montoEgresoAsociado,
+    [egresosSeleccionados, montoEgresoAsociado]
+  )
+
+  // Saldo a cubrir con métodos de pago (descontando los egresos)
   const saldoConEgreso = useMemo(
-    () => Math.max(0, totalAPagar - montoEgresoAsociado),
-    [totalAPagar, montoEgresoAsociado]
+    () => Math.max(0, totalAPagar - montoTotalEgresos),
+    [totalAPagar, montoTotalEgresos]
   )
 
   const { data: desplieguesPago } = useQuery({
@@ -98,9 +107,9 @@ export default function ModalMetodosPagoCompra({
       modalForm.resetFields()
       setDespliegueName('')
       setMetodosPago([])
-      modalForm.setFieldValue('monto', saldoConEgreso)
+      setEgresosSeleccionados([])
     }
-  }, [open, modalForm, saldoConEgreso])
+  }, [open, modalForm])
 
   useEffect(() => {
     if (open && desplieguesPago && desplieguesPago.length > 0) {
@@ -167,6 +176,10 @@ export default function ModalMetodosPagoCompra({
       return
     }
 
+    // Guardar egresos seleccionados en el form (solo el primero si hay uno del form principal)
+    if (egresosSeleccionados.length > 0) {
+      compraForm.setFieldValue('gasto_extra_id', egresosSeleccionados[0].id)
+    }
     compraForm.setFieldValue('metodos_de_pago', metodosPago.map(m => ({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
@@ -176,6 +189,7 @@ export default function ModalMetodosPagoCompra({
     onCancel()
     modalForm.resetFields()
     setMetodosPago([])
+    setEgresosSeleccionados([])
     onContinuar?.()
   }
 
@@ -183,10 +197,30 @@ export default function ModalMetodosPagoCompra({
     modalForm.resetFields()
     setDespliegueName('')
     setMetodosPago([])
+    setEgresosSeleccionados([])
     onCancel()
   }
 
-  const gridCols = gastoExtraInfo ? 'grid-cols-4' : 'grid-cols-3'
+  const handleAgregarEgreso = (gasto: GastoExtraDisponible) => {
+    // Evitar duplicados
+    if (egresosSeleccionados.some(e => e.id === gasto.id)) {
+      message.warning('Este egreso ya fue agregado')
+      return
+    }
+    setEgresosSeleccionados(prev => [...prev, gasto])
+    setModalEgresoOpen(false)
+  }
+
+  const handleEliminarEgreso = (id: string) => {
+    setEgresosSeleccionados(prev => prev.filter(e => e.id !== id))
+  }
+
+  const todosLosEgresos = [
+    ...(gastoExtraInfo ? [gastoExtraInfo] : []),
+    ...egresosSeleccionados,
+  ]
+
+  const gridCols = montoTotalEgresos > 0 ? 'grid-cols-4' : 'grid-cols-3'
 
   return (
     <Modal
@@ -200,39 +234,20 @@ export default function ModalMetodosPagoCompra({
     >
       <div className='mt-4'>
 
-        {/* Card Egreso Asociado */}
-        {gastoExtraInfo && (
-          <div className='mb-4 p-3 bg-amber-50 border-2 border-amber-400 rounded-lg flex items-center gap-3'>
-            <GiPayMoney className='text-amber-600 flex-shrink-0' size={24} />
-            <div className='flex-1 min-w-0'>
-              <div className='text-xs font-semibold text-amber-700 mb-0.5'>Egreso Asociado</div>
-              <div className='text-sm font-medium text-slate-700 truncate'>{gastoExtraInfo.concepto}</div>
-              <div className='flex items-center gap-2 mt-0.5'>
-                <span className='text-xs text-slate-500'>{dayjs(gastoExtraInfo.created_at).format('DD/MM/YY')}</span>
-              </div>
-            </div>
-            <div className='text-right flex-shrink-0'>
-              <div className='text-xl font-bold text-amber-700'>
-                {monedaSymbol} {montoEgresoAsociado.toFixed(2)}
-              </div>
-              <div className='text-xs text-slate-500'>cubre el pago</div>
-            </div>
-          </div>
-        )}
 
         {/* Cards de totales */}
-        <div className={`grid ${gridCols} gap-4 mb-6`}>
+        <div className={`grid ${gridCols} gap-4 mb-4`}>
           <div className='p-4 bg-blue-50 rounded-lg border-2 border-blue-300'>
             <div className='text-sm font-medium text-slate-600'>Total a Pagar</div>
             <div className='text-2xl font-bold text-blue-600'>
               {monedaSymbol} {totalAPagar.toFixed(2)}
             </div>
           </div>
-          {gastoExtraInfo && (
+          {montoTotalEgresos > 0 && (
             <div className='p-4 bg-amber-50 rounded-lg border-2 border-amber-300'>
-              <div className='text-sm font-medium text-slate-600'>Cubre Egreso</div>
+              <div className='text-sm font-medium text-slate-600'>Cubre Egresos</div>
               <div className='text-2xl font-bold text-amber-600'>
-                {monedaSymbol} {montoEgresoAsociado.toFixed(2)}
+                {monedaSymbol} {montoTotalEgresos.toFixed(2)}
               </div>
             </div>
           )}
@@ -251,9 +266,18 @@ export default function ModalMetodosPagoCompra({
         </div>
 
         {/* Tabla de métodos agregados */}
-        {metodosPago.length > 0 && (
-          <div className='mb-6'>
-            <div className='text-sm font-semibold text-slate-700 mb-2'>Métodos de Pago Agregados</div>
+        {(todosLosEgresos.length > 0 || metodosPago.length > 0) && (
+          <div className='mb-4'>
+            <div className='flex items-center justify-between mb-2'>
+              <div className='text-sm font-semibold text-slate-700'>Métodos de Pago Agregados</div>
+              <button
+                onClick={() => setModalEgresoOpen(true)}
+                className='flex items-center gap-1 text-xs text-amber-700 border border-amber-400 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition-colors'
+              >
+                <GiPayMoney size={14} />
+                Agregar Egreso
+              </button>
+            </div>
             <div className='border rounded-lg overflow-hidden'>
               <table className='w-full'>
                 <thead className='bg-slate-100'>
@@ -268,6 +292,37 @@ export default function ModalMetodosPagoCompra({
                   </tr>
                 </thead>
                 <tbody>
+                  {/* Filas de egresos (gastoExtraInfo del form + los seleccionados en el modal) */}
+                  {todosLosEgresos.map((egreso, idx) => (
+                    <tr key={egreso.id} className='border-t bg-amber-50'>
+                      <td className='px-4 py-3 text-sm text-amber-700 font-semibold'>E{idx + 1}</td>
+                      <td className='px-4 py-3 text-sm font-medium text-amber-700'>
+                        <div className='flex items-center gap-2'>
+                          <GiPayMoney size={16} />
+                          {egreso.concepto}
+                        </div>
+                      </td>
+                      <td className='px-4 py-3 text-sm font-semibold text-right text-amber-700'>
+                        {monedaSymbol} {Number(egreso.monto).toFixed(2)}
+                      </td>
+                      <td className='px-4 py-3 text-sm text-slate-400'>-</td>
+                      <td className='px-4 py-3 text-sm text-right text-slate-400'>-</td>
+                      <td className='px-4 py-3 text-sm text-right text-slate-400'>-</td>
+                      <td className='px-4 py-3 text-center'>
+                        {/* El egreso del form principal no se puede quitar aquí */}
+                        {egresosSeleccionados.some(e => e.id === egreso.id) ? (
+                          <button
+                            onClick={() => handleEliminarEgreso(egreso.id)}
+                            className='text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition-colors'
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        ) : (
+                          <span className='text-slate-400'>-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                   {metodosPago.map((metodo, index) => {
                     const vueltoMetodo = metodo.recibe_efectivo
                       ? Math.max(0, metodo.recibe_efectivo - metodo.monto)
@@ -303,9 +358,21 @@ export default function ModalMetodosPagoCompra({
           </div>
         )}
 
+        {/* Botón agregar egreso cuando la tabla aún no está visible */}
+        {todosLosEgresos.length === 0 && metodosPago.length === 0 && (
+          <div className='mb-4'>
+            <button
+              onClick={() => setModalEgresoOpen(true)}
+              className='flex items-center gap-2 text-sm text-amber-700 border border-amber-400 bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded transition-colors'
+            >
+              <GiPayMoney size={16} />
+              Agregar Egreso Asociado (opcional)
+            </button>
+          </div>
+        )}
+
         {/* Formulario agregar método */}
-        {saldoPendiente > 0 && (
-          <Form form={modalForm} className='border-t pt-4'>
+        <Form form={modalForm} className='border-t pt-4'>
             <div className='text-sm font-semibold text-slate-700 mb-3'>Agregar Método de Pago</div>
             <div className='flex items-end gap-3'>
               <div className='flex-1 min-w-[200px]'>
@@ -384,7 +451,6 @@ export default function ModalMetodosPagoCompra({
               </div>
             </div>
           </Form>
-        )}
 
         {/* Footer */}
         <div className='flex gap-3 justify-between items-center mt-6 pt-4 border-t'>
@@ -409,6 +475,13 @@ export default function ModalMetodosPagoCompra({
           </ButtonBase>
         </div>
       </div>
+
+      <ModalSeleccionarEgreso
+        open={modalEgresoOpen}
+        onClose={() => setModalEgresoOpen(false)}
+        excluirCompraId={excluirCompraId}
+        onSelect={handleAgregarEgreso}
+      />
     </Modal>
   )
 }
