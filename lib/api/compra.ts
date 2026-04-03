@@ -167,7 +167,9 @@ export interface CreatePagoCompraRequest {
 
 export interface CompraFilters {
   almacen_id?: number;
-  estado_de_compra?: string; // EstadoDeCompra enum value
+  estado_de_compra?: string | { in: string[] }; // EstadoDeCompra enum value or array
+  estado_de_cuenta?: string; // 'Pagado' | 'Deuda'
+  orden_compra_id?: { not: null } | number | null;
   proveedor_id?: number;
   forma_de_pago?: string; // FormaDePago enum value
   tipo_documento?: string; // TipoDocumento enum value
@@ -275,7 +277,12 @@ export const compraApi = {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
+          // Si el valor es un objeto, serializarlo como JSON
+          if (typeof value === 'object') {
+            params.append(key, JSON.stringify(value));
+          } else {
+            params.append(key, String(value));
+          }
         }
       });
     }

@@ -48,7 +48,7 @@ export default function KardexInventarioView() {
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
   const [tipo, setTipo] = useState<TipoMovimientoInventario | ''>('')
-  const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null)
+  const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
 
   const productoId = productoSeleccionado?.id
 
@@ -56,7 +56,7 @@ export default function KardexInventarioView() {
     queryKey: [QueryKeys.KARDEX_INVENTARIO, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
     queryFn: async () => {
       const result = await kardexApi.getMovimientosInventario({
-        producto_id: productoId!,
+        producto_id: productoId,
         almacen_id: almacenId || undefined,
         tipo: tipo || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
@@ -66,7 +66,6 @@ export default function KardexInventarioView() {
       if (result.error) throw new Error(result.error.message)
       return result.data!
     },
-    enabled: !!productoId,
     staleTime: 30 * 1000,
   })
 
@@ -82,6 +81,22 @@ export default function KardexInventarioView() {
       },
       sort: 'asc',
     },
+    // Mostrar columnas de producto solo cuando no hay producto seleccionado
+    ...(!productoId ? [
+      {
+        headerName: 'Código',
+        field: 'producto_codigo' as keyof MovimientoKardex,
+        width: 120,
+        minWidth: 100,
+        cellStyle: { color: '#16a34a', fontWeight: 'bold' },
+      },
+      {
+        headerName: 'Producto',
+        field: 'producto_nombre' as keyof MovimientoKardex,
+        flex: 1,
+        minWidth: 200,
+      },
+    ] : []),
     {
       headerName: 'Tipo',
       field: 'tipo',
@@ -117,7 +132,8 @@ export default function KardexInventarioView() {
     {
       headerName: 'Documento',
       field: 'documento',
-      flex: 1,
+      flex: productoId ? 1 : undefined,
+      width: productoId ? undefined : 200,
       minWidth: 200,
     },
     {
@@ -145,21 +161,22 @@ export default function KardexInventarioView() {
         return `S/. ${Number(params.value).toFixed(4)}`
       },
     },
-    {
+    // Solo mostrar Stock Anterior cuando hay producto seleccionado
+    ...(productoId ? [{
       headerName: 'Stock Anterior',
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const { saldo, entrada, salida } = params.data ?? {}
         if (saldo == null) return null
         return Number(saldo) - Number(entrada ?? 0) + Number(salida ?? 0)
       },
       width: 110,
       minWidth: 100,
-      type: 'numericColumn',
-      valueFormatter: (params) => {
+      type: 'numericColumn' as const,
+      valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    }] : []),
     {
       headerName: 'Entrada',
       field: 'entrada',
@@ -190,18 +207,19 @@ export default function KardexInventarioView() {
         return Number(params.value).toFixed(2)
       },
     },
-    {
+    // Solo mostrar Stock Actual cuando hay producto seleccionado
+    ...(productoId ? [{
       headerName: 'Stock Actual',
-      field: 'saldo',
+      field: 'saldo' as keyof MovimientoKardex,
       width: 100,
       minWidth: 90,
-      type: 'numericColumn',
+      type: 'numericColumn' as const,
       cellStyle: { fontWeight: 'bold' },
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    }] : []),
   ]
 
   return (
@@ -239,6 +257,7 @@ export default function KardexInventarioView() {
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Rango de Fechas</label>
             <RangePicker
               className='w-full'
+              value={fechas}
               onChange={(dates) => setFechas(dates)}
               format='DD/MM/YYYY'
               size='middle'
@@ -271,19 +290,7 @@ export default function KardexInventarioView() {
       </div>
 
       {/* Tabla */}
-      {!productoId ? (
-        <div className='bg-white rounded-xl border p-12 flex flex-col items-center justify-center'>
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div className='text-gray-400'>
-                <p className='text-base font-medium'>Selecciona un producto para ver su Kardex</p>
-                <p className='text-sm'>Busca y selecciona un producto en el campo de arriba</p>
-              </div>
-            }
-          />
-        </div>
-      ) : isLoading ? (
+      {isLoading ? (
         <div className='bg-white rounded-xl border p-12 flex items-center justify-center'>
           <Spin size='large' />
           <span className='ml-3 text-gray-500'>Cargando movimientos...</span>
@@ -292,17 +299,26 @@ export default function KardexInventarioView() {
         <div className='h-[500px]'>
           <TableWithTitle<MovimientoKardex>
             id='kardex.inventario.movimientos'
-            title='Movimientos de Inventario'
+            title={productoId ? 'Movimientos de Inventario' : 'Todos los Movimientos de Hoy'}
             selectionColor={greenColors[10]}
             columnDefs={columns}
             rowData={data?.data || []}
             pagination={false}
-            optionsSelectColumns={[
-              {
-                label: 'Default',
-                columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Entrada', 'Salida', 'Saldo'],
-              },
-            ]}
+            optionsSelectColumns={
+              productoId
+                ? [
+                    {
+                      label: 'Default',
+                      columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Entrada', 'Salida', 'Saldo'],
+                    },
+                  ]
+                : [
+                    {
+                      label: 'Default',
+                      columns: ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Entrada', 'Salida'],
+                    },
+                  ]
+            }
           />
         </div>
       )}

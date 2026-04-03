@@ -18,9 +18,9 @@ export default function ProductoOtrosAlmacenes({
 }: ProductoOtrosAlmacenesProps) {
   const precios = [
     { key: 'precio_publico', name: 'Precio Público' },
-    { key: 'precio_especial', name: 'Precio Especial' },
-    { key: 'precio_minimo', name: 'Precio Mínimo' },
-    { key: 'precio_ultimo', name: 'Precio Último' },
+    { key: 'precio_especial', name: 'Precio Ferretería' },
+    { key: 'precio_minimo', name: 'Precio Especial' },
+    { key: 'precio_ultimo', name: 'Precio Final' },
   ]
   return (
     <div>

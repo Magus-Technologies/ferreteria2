@@ -167,7 +167,14 @@ export default function BodyComprar({
           <FormCrearCompra form={form} compra={compra} />
         </div>
         <div className='w-full xl:w-auto'>
-          <CardsInfoCompra form={form} compra={compra} />
+          <CardsInfoCompra
+            form={form}
+            compra={compra}
+            onPonerEnEspera={() => {
+              form.setFieldValue('estado_de_compra', EstadoDeCompra.EnEspera)
+              handleSubmit(form.getFieldsValue(true))
+            }}
+          />
         </div>
       </FormBase>
 

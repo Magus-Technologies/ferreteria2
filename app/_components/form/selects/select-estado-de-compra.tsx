@@ -27,15 +27,15 @@ export default function SelectEstadoDeCompra({
       options={[
         {
           value: EstadoDeCompraSelect.Activos,
-          label: EstadoDeCompraSelect.Activos,
+          label: 'Activos',
         },
         {
           value: EstadoDeCompra.EnEspera,
-          label: EstadoDeCompra.EnEspera,
+          label: 'En Espera',
         },
         {
           value: EstadoDeCompra.Anulado,
-          label: EstadoDeCompra.Anulado,
+          label: 'Anulado',
         },
       ]}
     />

@@ -314,6 +314,28 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         filter: true,
       },
       {
+        headerName: "Tiene Movimientos",
+        colId: "tiene_ingresos",
+        field: "tiene_ingresos",
+        width: 120,
+        cellRenderer: ({ value }: ICellRendererParams<Producto, boolean>) => {
+          return (
+            <div className="flex items-center justify-center h-full">
+              {value ? (
+                <Tooltip title="Este producto tiene movimientos (ingresos/salidas, ventas o compras) y no puede ser eliminado">
+                  <div className="flex items-center gap-1 text-amber-600">
+                    <GoAlertFill size={16} />
+                    <span className="text-xs font-medium">Sí</span>
+                  </div>
+                </Tooltip>
+              ) : (
+                <span className="text-xs text-gray-500">No</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         headerName: "Activo",
         colId: "estado",
         field: "estado",

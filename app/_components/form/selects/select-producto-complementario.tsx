@@ -6,6 +6,8 @@ import type { FormItemProps } from 'antd/lib'
 import type { FormInstance } from 'antd'
 import { productosApiV2 } from '~/lib/api/producto'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import ModalProductoComplementarioSearch from '~/app/_components/modals/modal-producto-complementario-search'
+import type { Producto } from '~/app/_types/producto'
 
 interface Option {
   value: number
@@ -16,7 +18,7 @@ export default function SelectProductoComplementario({
   propsForm,
   form,
   formWithMessage = false,
-  placeholder = 'Buscar producto...',
+  placeholder = 'Buscar producto complementario...',
   onChange,
   initialOption,
 }: {
@@ -24,13 +26,16 @@ export default function SelectProductoComplementario({
   form?: FormInstance
   formWithMessage?: boolean
   placeholder?: string
-  onChange?: (value: number | undefined) => void
+  onChange?: (value: number | undefined, producto?: Producto) => void
   initialOption?: Option
 }) {
   const [options, setOptions] = useState<Option[]>(initialOption ? [initialOption] : [])
   const [searching, setSearching] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [searchText, setSearchText] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
   const almacenId = useStoreAlmacen((s) => s.almacen_id)
+  const justClosedRef = useRef(false)
 
   useEffect(() => {
     if (initialOption) {
@@ -43,8 +48,9 @@ export default function SelectProductoComplementario({
 
   const handleSearch = useCallback(
     (text: string) => {
+      setSearchText(text)
       if (debounceRef.current) clearTimeout(debounceRef.current)
-      if (!text || text.length < 2) {
+      if (!text || text.length < 1) {
         setOptions(initialOption ? [initialOption] : [])
         return
       }
@@ -56,7 +62,7 @@ export default function SelectProductoComplementario({
           const res = await productosApiV2.getAllByAlmacen({
             almacen_id: almacenId!,
             search: text,
-            per_page: 10,
+            per_page: 50,
           })
           const productos = res.data?.data ?? []
           const newOpts: Option[] = productos.map((p: any) => ({
@@ -74,20 +80,64 @@ export default function SelectProductoComplementario({
     [almacenId, initialOption]
   )
 
+  const handleSelectFromModal = useCallback(
+    (producto: Producto) => {
+      const newOption: Option = {
+        value: producto.id,
+        label: `${producto.cod_producto} - ${producto.name}`,
+      }
+      setOptions((prev) => {
+        const exists = prev.some((o) => o.value === newOption.value)
+        return exists ? prev : [newOption, ...prev]
+      })
+      onChange?.(producto.id, producto)
+      setModalOpen(false)
+      justClosedRef.current = true
+      setTimeout(() => {
+        justClosedRef.current = false
+      }, 300)
+    },
+    [onChange]
+  )
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      setModalOpen(true)
+    }
+  }, [])
+
   const selectEl = (
-    <Select
-      showSearch
-      allowClear
-      filterOption={false}
-      onSearch={handleSearch}
-      loading={searching}
-      placeholder={placeholder}
-      options={options}
-      size="small"
-      style={{ width: '100%' }}
-      onChange={(val) => onChange?.(val ?? undefined)}
-      notFoundContent={searching ? 'Buscando...' : 'Escribe para buscar'}
-    />
+    <>
+      <Select
+        showSearch
+        allowClear
+        filterOption={false}
+        onSearch={handleSearch}
+        loading={searching}
+        placeholder={placeholder}
+        options={options}
+        size="small"
+        style={{ width: '100%' }}
+        onChange={(val) => onChange?.(val ?? undefined)}
+        notFoundContent={searching ? 'Buscando...' : 'Presiona Enter para búsqueda avanzada'}
+        onInputKeyDown={handleKeyDown}
+      />
+      <ModalProductoComplementarioSearch
+        open={modalOpen}
+        setOpen={(open) => {
+          setModalOpen(open)
+          if (!open) {
+            justClosedRef.current = true
+            setTimeout(() => {
+              justClosedRef.current = false
+            }, 300)
+          }
+        }}
+        onSelect={handleSelectFromModal}
+        initialSearchText={searchText}
+      />
+    </>
   )
 
   if (propsForm) {
@@ -111,3 +161,4 @@ export default function SelectProductoComplementario({
 
   return selectEl
 }
+

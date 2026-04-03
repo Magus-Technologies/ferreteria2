@@ -49,7 +49,7 @@ export default function FiltersComprasAnuladasEnEspera({
     const data = {
       almacen_id,
       fecha: {
-        gte: toUTCBD({ date: dayjs().startOf('day') }),
+        gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
       estado_de_compra,
@@ -63,7 +63,7 @@ export default function FiltersComprasAnuladasEnEspera({
       form={form}
       name='filtros-mi-almacen'
       initialValues={{
-        desde: dayjs().startOf('day'),
+        desde: dayjs().subtract(30, 'days').startOf('day'),
         hasta: dayjs().endOf('day'),
         estado_de_compra,
       }}

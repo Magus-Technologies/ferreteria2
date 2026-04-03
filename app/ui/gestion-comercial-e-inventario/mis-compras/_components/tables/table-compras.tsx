@@ -9,7 +9,7 @@ import { CompraCreateInputSchema } from '~/types/zod-schemas'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
 import type { CompraWhereInput } from '~/types'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
-import { compraApi, type Compra } from '~/lib/api/compra'
+import { compraApi, type Compra, type CompraFilters } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
 import { exportComprasToExcel } from '~/utils/export-compras-excel'
 
@@ -67,15 +67,16 @@ const TableCompras = memo(function TableCompras({
     };
 
     // Extraer estado_de_compra
-    let estadoDeCompra: string | undefined;
+    let estadoDeCompra: string | { in: string[] } | undefined;
     if (filtros.estado_de_compra) {
       const estadoFilter = filtros.estado_de_compra as any;
       if (estadoFilter.equals) {
         estadoDeCompra = estadoMap[estadoFilter.equals] || estadoFilter.equals;
       } else if (estadoFilter.in && Array.isArray(estadoFilter.in) && estadoFilter.in.length > 0) {
-        // Si hay múltiples estados, el backend no soporta múltiples valores
-        // No enviamos el filtro para que muestre todos los estados del array
-        estadoDeCompra = undefined;
+        // Enviar array de estados al backend
+        estadoDeCompra = {
+          in: estadoFilter.in.map((e: string) => estadoMap[e] || e)
+        };
       } else if (typeof estadoFilter === 'string') {
         estadoDeCompra = estadoMap[estadoFilter] || estadoFilter;
       }
@@ -95,6 +96,16 @@ const TableCompras = memo(function TableCompras({
       tipoDocumento = tipoDocumentoMap[tipoDoc] || tipoDoc;
     }
 
+    // Extraer orden_compra_id filter
+    let ordenCompraId: { not: null } | undefined;
+    if (filtros.orden_compra_id) {
+      const ordenFilter = filtros.orden_compra_id as any;
+      // Si tiene {not: null}, significa que solo queremos compras con orden_compra_id
+      if (ordenFilter.not === null) {
+        ordenCompraId = { not: null };
+      }
+    }
+
     // Extraer fechas
     const fechaFilter = filtros.fecha as any;
     const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
@@ -103,6 +114,8 @@ const TableCompras = memo(function TableCompras({
     return {
       almacen_id: filtros.almacen_id as number | undefined,
       estado_de_compra: estadoDeCompra,
+      estado_de_cuenta: (filtros as any)?.estado_de_cuenta as string | undefined,
+      orden_compra_id: ordenCompraId,
       proveedor_id: filtros.proveedor_id as number | undefined,
       forma_de_pago: formaDePago,
       tipo_documento: tipoDocumento,
@@ -117,7 +130,7 @@ const TableCompras = memo(function TableCompras({
   const { data, isLoading } = useQuery({
     queryKey: [...querykeys, apiFilters],
     queryFn: async () => {
-      const result = await compraApi.getAll(apiFilters)
+      const result = await compraApi.getAll(apiFilters as CompraFilters)
       if (result.error) {
         throw new Error(result.error.message)
       }
@@ -131,46 +144,7 @@ const TableCompras = memo(function TableCompras({
   const totalPages = data?.last_page ?? 0
   const total = data?.total ?? 0
   
-  // Filtrar por estado_de_cuenta en el frontend si está presente
-  const rowData = useMemo(() => {
-    let compras = data?.data ?? []
-    
-    // Aplicar filtro de estado_de_cuenta si existe
-    const estadoDeCuenta = (filtros as any)?.estado_de_cuenta
-    if (estadoDeCuenta) {
-      compras = compras.filter(compra => {
-        // Calcular el total y lo pagado
-        const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
-          const costo = Number(item.costo ?? 0)
-          for (const u of item.unidades_derivadas ?? []) {
-            const cantidad = Number(u.cantidad ?? 0)
-            const factor = Number(u.factor ?? 0)
-            const flete = Number(u.flete ?? 0)
-            const bonificacion = Boolean(u.bonificacion)
-            const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
-            acc += montoLinea
-          }
-          return acc
-        }, 0)
-
-        const totalPagado = Number(compra.total_pagado || 0)
-        const resta = total - totalPagado
-
-        // Determinar el estado de cuenta
-        const isPagado = resta <= 0.01
-        const isDeuda = resta > 0.01
-
-        if (estadoDeCuenta === 'Pagado') {
-          return isPagado
-        } else if (estadoDeCuenta === 'Deuda') {
-          return isDeuda
-        }
-        return true
-      })
-    }
-    
-    return compras
-  }, [data?.data, filtros])
+  const rowData = useMemo(() => data?.data ?? [], [data?.data])
 
   // Calcular el color de una compra basado en su estado
   const calcularColorCompra = useCallback((compra: Compra | undefined) => {
@@ -218,22 +192,15 @@ const TableCompras = memo(function TableCompras({
     return 'transparent'
   }, [])
 
-  const [selectionColor, setSelectionColor] = useState('transparent')
-
   // Memoizar callbacks para evitar re-renders innecesarios
   const handleSelectionChanged = useCallback(
     (event: SelectionChangedEvent<Compra>) => {
       const selectedNodes = event.api?.getSelectedNodes() || []
       const selectedCompra = selectedNodes?.[0]?.data as Compra
       setCompraSeleccionada(selectedCompra)
-      
-      // Actualizar el color de selección para que coincida con el color de la fila
-      setSelectionColor(calcularColorCompra(selectedCompra))
-      
-      // Forzar redibujado de TODAS las filas para actualizar los bordes
       event.api?.redrawRows()
     },
-    [setCompraSeleccionada, calcularColorCompra]
+    [setCompraSeleccionada]
   )
 
   const handleRowDoubleClicked = useCallback(
@@ -362,7 +329,7 @@ const TableCompras = memo(function TableCompras({
           ...apiFilters,
           per_page: perPage,
           page: currentPage,
-        })
+        } as CompraFilters)
         
         if (result.error) {
           throw new Error(result.error.message)
@@ -408,7 +375,6 @@ const TableCompras = memo(function TableCompras({
         if (firstNode) {
           firstNode.setSelected(true);
           setCompraSeleccionada(firstNode.data);
-          setSelectionColor(calcularColorCompra(firstNode.data));
         }
       }, 100);
     }
@@ -420,7 +386,7 @@ const TableCompras = memo(function TableCompras({
   return (
     <TableWithTitle<Compra>
       id={id}
-      selectionColor={greenColors[10]} // Color dinámico que coincide con el color de la fila
+      selectionColor="transparent"
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
       onRowDoubleClicked={handleRowDoubleClicked}

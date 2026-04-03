@@ -509,9 +509,9 @@ export default function CardAgregarProductoVenta({
             className="flex flex-col gap-2"
           >
             <Radio value="publico">Precio Público</Radio>
-            <Radio value="especial">Precio Especial</Radio>
-            <Radio value="minimo">Precio Mínimo</Radio>
-            <Radio value="ultimo">Precio Último</Radio>
+            <Radio value="especial">Precio Ferretería</Radio>
+            <Radio value="minimo">Precio Especial</Radio>
+            <Radio value="ultimo">Precio Final</Radio>
           </Radio.Group>
         </div>
       </Modal>

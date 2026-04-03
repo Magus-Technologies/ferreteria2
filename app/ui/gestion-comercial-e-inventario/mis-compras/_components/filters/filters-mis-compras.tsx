@@ -124,7 +124,7 @@ export default function FiltersMisCompras() {
                     : estado_de_compra,
               }
             : {}),
-          // Nota: estado_de_cuenta no se envía al backend porque se calcula en el frontend
+          ...(estado_de_cuenta ? { estado_de_cuenta } : {}),
         } satisfies CompraWhereInput
         setFiltros(data)
         setDrawerOpen(false)

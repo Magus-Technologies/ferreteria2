@@ -136,7 +136,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               form={form}
               formWithMessage={false}
-              placeholder='Buscar producto...'
+              placeholder='Buscar producto complementario...'
               initialOption={initialOption}
               onChange={(val) => {
                 // Establecer explícitamente el ID en el form (necesario para evitar conflictos con Form.Items duplicados)
@@ -295,7 +295,7 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
-      headerName: 'P. Público',
+      headerName: 'PRECIO PUBLICO',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -390,7 +390,7 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
-      headerName: 'Precio Especial',
+      headerName: 'PRECIO FERRETERÍA',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -410,7 +410,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               prefix='S/. '
               formWithMessage={false}
-              placeholder='Precio Especial'
+              placeholder='Precio Ferretería'
               precision={2}
               onChange={() =>
                 onChangeComisiones({
@@ -425,7 +425,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Precio Mínimo',
+      headerName: 'PRECIO ESPECIAL',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -445,7 +445,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               prefix='S/. '
               formWithMessage={false}
-              placeholder='Precio Mínimo'
+              placeholder='Precio Especial'
               precision={2}
               onChange={() =>
                 onChangeComisiones({
@@ -460,7 +460,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Precio Último',
+      headerName: 'PRECIO FINAL',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -480,7 +480,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               prefix='S/. '
               formWithMessage={false}
-              placeholder='Precio Último'
+              placeholder='Precio Final'
               precision={2}
               onChange={() =>
                 onChangeComisiones({

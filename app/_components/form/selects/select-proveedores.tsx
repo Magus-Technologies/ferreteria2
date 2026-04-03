@@ -41,6 +41,7 @@ export default function SelectProveedores({
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
   const [text, setText] = useState('')
   const [lastSelectedDocument, setLastSelectedDocument] = useState('')
+  const [isSelecting, setIsSelecting] = useState(false) // Flag para evitar limpieza durante selección
 
   const [openModalProveedorSearch, setOpenModalProveedorSearch] =
     useState(false)
@@ -57,12 +58,17 @@ export default function SelectProveedores({
   )
 
   const [textDefault, setTextDefault] = useState('')
+  
+  // Actualizar textDefault cuando text cambia (para mantenerlo sincronizado)
   useEffect(() => {
-    if (text) setTextDefault(text)
+    setTextDefault(text)
   }, [text])
 
   // Detectar cuando el usuario modifica el texto y limpiar campos relacionados
   useEffect(() => {
+    // NO limpiar si estamos en proceso de selección
+    if (isSelecting) return
+    
     if (showOnlyDocument && lastSelectedDocument && text !== lastSelectedDocument) {
       // El usuario modificó el RUC de un proveedor ya seleccionado
       if (props.form) {
@@ -75,11 +81,12 @@ export default function SelectProveedores({
         value: undefined,
       })
     }
-  }, [text, lastSelectedDocument, showOnlyDocument, props.form])
+  }, [text, lastSelectedDocument, showOnlyDocument, props.form, isSelecting])
 
   function handleSelect({ data }: { data?: Proveedor } = {}) {
     const proveedor = data || proveedorSeleccionadoStore
     if (proveedor) {
+      setIsSelecting(true) // Activar flag antes de actualizar estados
       setProveedorSeleccionado(proveedor)
       
       // Guardar el RUC seleccionado para detectar cambios
@@ -97,6 +104,9 @@ export default function SelectProveedores({
       setProveedorSeleccionadoStore(undefined)
       setOpenModalProveedorSearch(false)
       onChange?.(proveedor.id, proveedor)
+      
+      // Desactivar flag después de un breve delay para permitir que los estados se actualicen
+      setTimeout(() => setIsSelecting(false), 100)
     }
   }
 
@@ -132,7 +142,17 @@ export default function SelectProveedores({
         showSearch
         uppercase={true}
         filterOption={false}
-        onSearch={setText}
+        onSearch={(val) => {
+          // Ant Design llama onSearch("") después de seleccionar una opción.
+          // Si estamos en proceso de selección, ignorar el borrado.
+          if (!val && isSelecting) return
+          setText(val)
+        }}
+        onSelect={() => {
+          // Marcar como seleccionando para prevenir que onSearch("") borre el texto
+          setIsSelecting(true)
+          setTimeout(() => setIsSelecting(false), 150)
+        }}
         searchValue={text}
         prefix={<FaTruck className={classNameIcon} size={sizeIcon} />}
         variant={variant}
@@ -163,10 +183,14 @@ export default function SelectProveedores({
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
         )}
-        onKeyUp={e => {
+        onKeyDown={e => {
           if (e.key === 'Enter') {
-            setTextDefault(text || '')
-            setOpenModalProveedorSearch(true)
+            e.preventDefault()
+            // Forzar actualización inmediata del textDefault con el texto actual
+            setTimeout(() => {
+              setTextDefault(text)
+              setOpenModalProveedorSearch(true)
+            }, 0)
           }
         }}
         {...props}

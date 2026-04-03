@@ -18,6 +18,14 @@ function mapTipoMoneda(tipoMoneda: string): TipoMoneda {
   return TipoMoneda.Soles
 }
 
+function mapEstadoDeCompra(estado: string): EstadoDeCompra {
+  if (estado === 'cr' || estado === EstadoDeCompra.Creado) return EstadoDeCompra.Creado
+  if (estado === 'ee' || estado === EstadoDeCompra.EnEspera) return EstadoDeCompra.EnEspera
+  if (estado === 'an' || estado === EstadoDeCompra.Anulado) return EstadoDeCompra.Anulado
+  if (estado === 'pr' || estado === EstadoDeCompra.Procesado) return EstadoDeCompra.Procesado
+  return EstadoDeCompra.Creado
+}
+
 export default function useInitCompra({
   compra,
   form,
@@ -29,7 +37,6 @@ export default function useInitCompra({
 
   useEffect(() => {
     form.resetFields()
-    form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
     if (compra) {
       const dataFormated: FormCreateCompra = {
         fecha: dayjs(compra.fecha),
@@ -48,6 +55,7 @@ export default function useInitCompra({
           ? dayjs(compra.fecha_vencimiento)
           : undefined,
         percepcion: compra.percepcion != null ? Number(compra.percepcion) : undefined,
+        estado_de_compra: mapEstadoDeCompra(compra.estado_de_compra as string),
         productos: compra.productos_por_almacen.flatMap(ppa =>
           ppa.unidades_derivadas.map(ud => ({
             cantidad: Number(ud.cantidad),
@@ -78,6 +86,7 @@ export default function useInitCompra({
         forma_de_pago: FormaDePago.Contado,
         tipo_documento: TipoDocumento.Factura,
         tipo_de_cambio: 1,
+        estado_de_compra: EstadoDeCompra.Creado,
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compra])

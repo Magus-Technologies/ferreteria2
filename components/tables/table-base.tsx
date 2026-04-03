@@ -629,7 +629,9 @@ export default function TableBase<T>({
             headerBackgroundColor: autoHeaderColor,
             ...(selectionColor === "overlay"
               ? { selectedRowBackgroundColor: "rgba(0, 0, 0, 0.28)" }
-              : selectionColor && selectionColor !== "transparent" && selectionColor !== "border"
+              : selectionColor === "transparent"
+              ? { selectedRowBackgroundColor: "transparent" }
+              : selectionColor && selectionColor !== "border"
               ? { selectedRowBackgroundColor: selectionColor }
               : {}),
           })}

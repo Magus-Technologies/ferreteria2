@@ -18,6 +18,8 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosMisRecepciones } from '../../_store/store-filtros-mis-recepciones'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import type { RecepcionAlmacenFilters } from '~/lib/api/recepcion-almacen'
+import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
+import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 
 interface ValuesFiltersMisRecepciones {
   almacen_id: number
@@ -25,6 +27,8 @@ interface ValuesFiltersMisRecepciones {
   hasta?: Dayjs
   user_id?: string
   estado?: number
+  proveedor_id?: number
+  tipo_documento?: string
 }
 
 export default function FiltersMisRecepciones() {
@@ -54,13 +58,15 @@ export default function FiltersMisRecepciones() {
       }}
       className='w-full'
       onFinish={values => {
-        const { desde, hasta, almacen_id, estado, user_id } = values
+        const { desde, hasta, almacen_id, estado, user_id, proveedor_id, tipo_documento } = values
         const data: RecepcionAlmacenFilters = {
           almacen_id,
           fecha_desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
           fecha_hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           user_id,
           estado: estado !== undefined ? estado === 1 : undefined,
+          proveedor_id,
+          tipo_documento,
         }
         setFiltros(data)
       }}
@@ -131,6 +137,33 @@ export default function FiltersMisRecepciones() {
             }}
             className='w-full'
             formWithMessage={false}
+          />
+        </LabelBase>
+        <LabelBase label='Proveedor:'>
+          <SelectProveedores
+            propsForm={{
+              name: 'proveedor_id',
+              hasFeedback: false,
+              className: '!min-w-[200px] !w-[200px] !max-w-[200px]',
+            }}
+            className='w-full'
+            classIconSearch=''
+            formWithMessage={false}
+            allowClear
+            form={form}
+            showButtonCreate={false}
+          />
+        </LabelBase>
+        <LabelBase label='Tipo Doc.:'>
+          <SelectTipoDocumento
+            propsForm={{
+              name: 'tipo_documento',
+              hasFeedback: false,
+              className: '!min-w-[120px] !w-[120px] !max-w-[120px]',
+            }}
+            className='w-full'
+            formWithMessage={false}
+            allowClear
           />
         </LabelBase>
         <ButtonBase

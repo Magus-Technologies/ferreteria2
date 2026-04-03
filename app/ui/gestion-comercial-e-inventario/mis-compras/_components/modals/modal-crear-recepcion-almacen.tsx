@@ -200,7 +200,7 @@ export default function ModalCrearRecepcionAlmacen({
           cantidad_pendiente={true}
         />
       </div>
-      <FormCrearRecepcionAlmacen form={form} />
+      <FormCrearRecepcionAlmacen form={form} compra={compra} />
     </ModalForm>
   )
 }

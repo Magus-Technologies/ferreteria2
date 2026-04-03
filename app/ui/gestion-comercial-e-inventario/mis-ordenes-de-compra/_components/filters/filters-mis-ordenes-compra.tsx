@@ -7,17 +7,20 @@ import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
+import SelectBase from '~/app/_components/form/selects/select-base'
 import { useStoreFiltrosOrdenesCompra } from '../../_store/store-filtros-ordenes-compra'
+import { type OrdenCompraFilters } from '~/lib/api/orden-compra'
 import { FaCalendar } from 'react-icons/fa6'
 import { TbShoppingCartPlus } from 'react-icons/tb'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
+import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
+import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import Link from 'next/link'
-import SelectEstadoDeCompra from '~/app/_components/form/selects/select-estado-de-compra'
 
 interface ValuesFiltersMisOrdenesCompra {
     almacen_id: number
@@ -25,30 +28,29 @@ interface ValuesFiltersMisOrdenesCompra {
     desde?: Dayjs
     hasta?: Dayjs
     estado?: string
+    tipo_documento?: string
+    forma_de_pago?: string
 }
 
 export default function FiltersMisOrdenesCompra() {
     const [form] = Form.useForm<ValuesFiltersMisOrdenesCompra>()
     const [drawerOpen, setDrawerOpen] = useState(false)
+    const [activeFiltersCount, setActiveFiltersCount] = useState(0)
 
     const almacen_id = useStoreAlmacen(state => state.almacen_id)
     const setFiltros = useStoreFiltrosOrdenesCompra(state => state.setFiltros)
 
-    // Contar filtros activos
-    const activeFiltersCount = useMemo(() => {
-        const values = form.getFieldsValue()
-        let count = 0
-        if (values.proveedor_id) count++
-        if (values.desde) count++
-        if (values.hasta) count++
-        if (values.estado) count++
-        return count
-    }, [form])
-
     useEffect(() => {
+        const initialValues = {
+            almacen_id,
+            desde: dayjs().startOf('day'),
+            hasta: dayjs().endOf('day'),
+        }
+        form.setFieldsValue(initialValues)
+        
         const data = {
             almacen_id,
-            desde: dayjs().startOf('month').format('YYYY-MM-DD'),
+            desde: dayjs().startOf('day').format('YYYY-MM-DD'),
             hasta: dayjs().endOf('day').format('YYYY-MM-DD'),
         }
         setFiltros(data)
@@ -61,18 +63,39 @@ export default function FiltersMisOrdenesCompra() {
             name='filtros-mis-ordenes-compra'
             initialValues={{
                 almacen_id,
-                desde: dayjs().startOf('month'),
+                desde: dayjs().startOf('day'),
                 hasta: dayjs().endOf('day'),
             }}
             className='w-full'
             onFinish={values => {
                 const { desde, hasta, ...rest } = values
-                setFiltros({
-                    ...rest,
-                    desde: desde ? desde.format('YYYY-MM-DD') : undefined,
-                    hasta: hasta ? hasta.format('YYYY-MM-DD') : undefined,
-                })
+                
+                // Filter out empty/undefined values
+                const cleanedFilters: OrdenCompraFilters = {
+                    almacen_id: values.almacen_id,
+                }
+                
+                if (desde) cleanedFilters.desde = desde.format('YYYY-MM-DD')
+                if (hasta) cleanedFilters.hasta = hasta.format('YYYY-MM-DD')
+                if (rest.estado) cleanedFilters.estado = rest.estado
+                if (rest.proveedor_id) cleanedFilters.proveedor_id = rest.proveedor_id
+                if (rest.tipo_documento) cleanedFilters.tipo_documento = rest.tipo_documento
+                if (rest.forma_de_pago) cleanedFilters.forma_de_pago = rest.forma_de_pago
+                
+                setFiltros(cleanedFilters)
                 setDrawerOpen(false)
+            }}
+            onValuesChange={() => {
+                // Actualizar contador cuando cambian los valores
+                const values = form.getFieldsValue()
+                let count = 0
+                if (values.proveedor_id) count++
+                if (values.desde) count++
+                if (values.hasta) count++
+                if (values.estado) count++
+                if (values.tipo_documento) count++
+                if (values.forma_de_pago) count++
+                setActiveFiltersCount(count)
             }}
         >
             {/* Fila 1: Título */}
@@ -112,13 +135,20 @@ export default function FiltersMisOrdenesCompra() {
 
                     <div className='flex items-center gap-1 shrink-0'>
                         <span className='text-[10px] font-medium text-slate-500'>Estado:</span>
-                        <SelectEstadoDeCompra
+                        <SelectBase
                             propsForm={{
                                 name: 'estado',
                                 className: '!mb-0 !min-w-[120px] !w-[120px]',
                             }}
                             formWithMessage={false}
                             allowClear
+                            placeholder="Estado"
+                            options={[
+                                { value: 'pendiente', label: 'Pendiente' },
+                                { value: 'en_proceso', label: 'En Proceso' },
+                                { value: 'completada', label: 'Completada' },
+                                { value: 'anulada', label: 'Anulada' },
+                            ]}
                         />
                     </div>
 
@@ -131,13 +161,40 @@ export default function FiltersMisOrdenesCompra() {
                                     className: '!mb-0 w-full',
                                 }}
                                 className='w-full'
-                                classIconSearch='hidden'
+                                classIconSearch=''
                                 formWithMessage={false}
                                 allowClear
                                 form={form}
+                                showButtonCreate={false}
                             />
                         </div>
                     </ConfigurableElement>
+
+                    <div className='flex items-center gap-1 shrink-0'>
+                        <span className='text-[10px] font-medium text-slate-500'>Tipo Doc.:</span>
+                        <SelectTipoDocumento
+                            propsForm={{
+                                name: 'tipo_documento',
+                                className: '!mb-0 !min-w-[100px] !w-[100px]',
+                            }}
+                            formWithMessage={false}
+                            allowClear
+                            placeholder="Tipo"
+                        />
+                    </div>
+
+                    <div className='flex items-center gap-1 shrink-0'>
+                        <span className='text-[10px] font-medium text-slate-500'>F. Pago:</span>
+                        <SelectFormaDePago
+                            propsForm={{
+                                name: 'forma_de_pago',
+                                className: '!mb-0 !min-w-[100px] !w-[100px]',
+                            }}
+                            formWithMessage={false}
+                            allowClear
+                            placeholder="Forma"
+                        />
+                    </div>
 
                     <ButtonBase color='info' size='md' type='submit' className='flex items-center gap-2 shrink-0 py-1.5'>
                         <FaSearch size={14} />
@@ -199,7 +256,32 @@ export default function FiltersMisOrdenesCompra() {
                         <DatePickerBase propsForm={{ name: 'hasta' }} className='w-full' allowClear />
                     </LabelBase>
                     <LabelBase label='Estado:'>
-                        <SelectEstadoDeCompra propsForm={{ name: 'estado' }} className='w-full' allowClear />
+                        <SelectBase
+                            propsForm={{ name: 'estado' }}
+                            className='w-full'
+                            allowClear
+                            placeholder="Estado"
+                            options={[
+                                { value: 'pendiente', label: 'Pendiente' },
+                                { value: 'en_proceso', label: 'En Proceso' },
+                                { value: 'completada', label: 'Completada' },
+                                { value: 'anulada', label: 'Anulada' },
+                            ]}
+                        />
+                    </LabelBase>
+                    <LabelBase label='Tipo Documento:'>
+                        <SelectTipoDocumento
+                            propsForm={{ name: 'tipo_documento' }}
+                            className='w-full'
+                            allowClear
+                        />
+                    </LabelBase>
+                    <LabelBase label='Forma de Pago:'>
+                        <SelectFormaDePago
+                            propsForm={{ name: 'forma_de_pago' }}
+                            className='w-full'
+                            allowClear
+                        />
                     </LabelBase>
                     <div className='flex gap-2 mt-4'>
                         <ButtonBase color='default' className='flex-1' onClick={() => form.resetFields()}>Limpiar</ButtonBase>

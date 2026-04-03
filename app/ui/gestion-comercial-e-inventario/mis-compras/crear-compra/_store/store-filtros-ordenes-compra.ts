@@ -1,23 +1,18 @@
 import { create } from 'zustand'
-import { EstadoDeCompra, type CompraWhereInput } from '~/types'
+import { type OrdenCompraFilters } from '~/lib/api/orden-compra'
 import dayjs from 'dayjs'
-import { toUTCBD } from '~/utils/fechas'
 
 interface StoreFiltrosOrdenesCompra {
-  filtros: CompraWhereInput
-  setFiltros: (filtros: CompraWhereInput) => void
+  filtros: OrdenCompraFilters
+  setFiltros: (filtros: OrdenCompraFilters) => void
 }
 
 export const useStoreFiltrosOrdenesCompra = create<StoreFiltrosOrdenesCompra>(
   set => ({
     filtros: {
-      estado_de_compra: {
-        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
-      },
-      fecha: {
-        gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
-        lte: toUTCBD({ date: dayjs().endOf('day') }),
-      },
+      estado: 'pendiente', // Solo pendientes por defecto
+      desde: dayjs().subtract(30, 'days').format('YYYY-MM-DD'),
+      hasta: dayjs().format('YYYY-MM-DD'),
     },
     setFiltros: filtros => set({ filtros }),
   })

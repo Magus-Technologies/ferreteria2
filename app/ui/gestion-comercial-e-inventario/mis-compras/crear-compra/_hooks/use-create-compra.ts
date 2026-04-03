@@ -219,7 +219,14 @@ export default function useCreateCompra({
         }
       )
 
-      router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
+      // Solo redirigir si NO es "En Espera"
+      // Si es "En Espera", quedarse en la página para crear otra compra
+      if (variables.estado_de_compra !== EstadoDeCompra.EnEspera) {
+        router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
+      } else {
+        // Recargar la página para limpiar el formulario
+        router.refresh()
+      }
     },
     onError: (error: Error) => {
       notification.error({

@@ -1,66 +1,68 @@
 import { type FormInstance } from 'antd'
-import { type Compra } from '~/lib/api/compra'
+import { type OrdenCompra } from '~/lib/api/orden-compra'
 import { message } from 'antd'
+import dayjs from 'dayjs'
 
 export const loadCompraIntoForm = (
-  compra: Compra,
+  ordenCompra: OrdenCompra,
   form: FormInstance
 ): { success: boolean; message?: string } => {
   try {
-    // Validar que la compra tenga datos
-    if (!compra) {
-      return { success: false, message: 'No hay datos de compra para cargar' }
+    // Validar que la orden de compra tenga datos
+    if (!ordenCompra) {
+      return { success: false, message: 'No hay datos de orden de compra para cargar' }
     }
 
     // Validar que el proveedor exista
-    if (!compra.proveedor) {
-      message.warning('El proveedor de esta compra ya no existe')
+    if (!ordenCompra.proveedor) {
+      message.warning('El proveedor de esta orden de compra ya no existe')
     }
 
     // Validar que tenga productos
-    if (!compra.productos_por_almacen || compra.productos_por_almacen.length === 0) {
+    if (!ordenCompra.productos || ordenCompra.productos.length === 0) {
       return {
         success: false,
-        message: 'Esta compra no tiene productos para cargar',
+        message: 'Esta orden de compra no tiene productos para cargar',
       }
     }
 
     // Cargar datos del proveedor
-    if (compra.proveedor_id) {
-      form.setFieldValue('proveedor_id', compra.proveedor_id)
+    if (ordenCompra.proveedor_id) {
+      form.setFieldValue('proveedor_id', ordenCompra.proveedor_id)
     }
 
     // Cargar tipo de documento y forma de pago
-    form.setFieldValue('tipo_documento', compra.tipo_documento)
-    form.setFieldValue('forma_de_pago', compra.forma_de_pago)
-    form.setFieldValue('tipo_moneda', compra.tipo_moneda)
-    form.setFieldValue('tipo_de_cambio', compra.tipo_de_cambio)
-    form.setFieldValue('percepcion', compra.percepcion)
+    form.setFieldValue('tipo_documento', ordenCompra.tipo_documento)
+    form.setFieldValue('forma_de_pago', ordenCompra.forma_de_pago)
+    form.setFieldValue('tipo_moneda', ordenCompra.tipo_moneda)
+    form.setFieldValue('tipo_de_cambio', ordenCompra.tipo_de_cambio)
+    form.setFieldValue('percepcion', ordenCompra.percepcion)
+    form.setFieldValue('fecha', dayjs(ordenCompra.fecha))
+    
+    // Guardar el ID de la orden de compra para vincularla
+    form.setFieldValue('orden_compra_id', ordenCompra.id)
 
-    // Transformar productos
-    const productos = compra.productos_por_almacen
-      .map(pac => {
-        // Validar que el producto almacén exista
-        if (!pac.producto_almacen) {
-          message.warning(
-            `Producto con ID ${pac.producto_almacen_id} ya no existe`
-          )
+    // Transformar productos de OrdenCompra a formato de Compra
+    const productos = ordenCompra.productos
+      .map(producto => {
+        if (!producto.producto_id) {
+          message.warning(`Producto ${producto.nombre} no tiene ID válido`)
           return null
         }
 
         return {
-          producto_almacen_id: pac.producto_almacen_id,
-          costo: pac.costo,
-          unidades_derivadas: pac.unidades_derivadas?.map(ud => ({
-            unidad_derivada_inmutable_id: ud.unidad_derivada_inmutable_id,
-            factor: ud.factor,
-            cantidad: ud.cantidad,
-            cantidad_pendiente: ud.cantidad, // Reset pending quantity
-            lote: '', // Clear lot number
-            vencimiento: null, // Clear expiration date
-            flete: ud.flete || 0,
-            bonificacion: ud.bonificacion || false,
-          })) || [],
+          producto_id: producto.producto_id,
+          producto_name: producto.nombre,
+          marca_name: producto.marca,
+          unidad_derivada_name: producto.unidad,
+          unidad_derivada_factor: 1, // Ajustar según tu lógica
+          cantidad: producto.cantidad,
+          precio_compra: producto.precio,
+          flete: producto.flete || 0,
+          bonificacion: false,
+          lote: producto.lote || '',
+          vencimiento: producto.vencimiento ? dayjs(producto.vencimiento) : null,
+          subtotal: producto.subtotal,
         }
       })
       .filter(Boolean) // Remove null entries
@@ -68,24 +70,24 @@ export const loadCompraIntoForm = (
     if (productos.length === 0) {
       return {
         success: false,
-        message: 'Ninguno de los productos de esta compra está disponible',
+        message: 'Ninguno de los productos de esta orden está disponible',
       }
     }
 
     // Cargar productos en el formulario
-    form.setFieldValue('productos_por_almacen', productos)
+    form.setFieldValue('productos', productos)
 
     // Limpiar campos que no deben copiarse
-    form.setFieldValue('serie', undefined)
-    form.setFieldValue('numero', undefined)
+    form.setFieldValue('serie', ordenCompra.serie || undefined)
+    form.setFieldValue('numero', ordenCompra.numero || undefined)
+    form.setFieldValue('guia', ordenCompra.guia || undefined)
     form.setFieldValue('descripcion', undefined)
-    form.setFieldValue('guia', undefined)
-    form.setFieldValue('egreso_dinero_id', undefined)
-    form.setFieldValue('despliegue_de_pago_id', undefined)
+    form.setFieldValue('egreso_dinero_id', ordenCompra.egreso_dinero_id || undefined)
+    form.setFieldValue('despliegue_de_pago_id', ordenCompra.despliegue_de_pago_id || undefined)
 
     return { success: true }
   } catch (error) {
-    console.error('Error loading compra into form:', error)
+    console.error('Error loading orden compra into form:', error)
     return {
       success: false,
       message: 'Error al cargar datos en el formulario',
