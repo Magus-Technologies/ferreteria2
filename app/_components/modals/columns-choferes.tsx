@@ -34,6 +34,7 @@ export function useColumnsChoferes({
 
   const columns: ColDef<Chofer>[] = [
     {
+      colId: 'dni',
       headerName: 'DNI',
       field: 'dni',
       width: 120,
@@ -41,6 +42,7 @@ export function useColumnsChoferes({
       filter: true,
     },
     {
+      colId: 'nombres',
       headerName: 'Nombres',
       field: 'nombres',
       width: 200,
@@ -49,6 +51,7 @@ export function useColumnsChoferes({
       flex: 1,
     },
     {
+      colId: 'apellidos',
       headerName: 'Apellidos',
       field: 'apellidos',
       width: 200,
@@ -57,6 +60,7 @@ export function useColumnsChoferes({
       flex: 1,
     },
     {
+      colId: 'licencia',
       headerName: 'Licencia',
       field: 'licencia',
       width: 150,
@@ -64,6 +68,7 @@ export function useColumnsChoferes({
       filter: true,
     },
     {
+      colId: 'telefono',
       headerName: 'Teléfono',
       field: 'telefono',
       width: 120,
@@ -72,6 +77,7 @@ export function useColumnsChoferes({
       filter: true,
     },
     {
+      colId: 'email',
       headerName: 'Email',
       field: 'email',
       width: 200,
@@ -80,6 +86,7 @@ export function useColumnsChoferes({
       filter: true,
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 80,

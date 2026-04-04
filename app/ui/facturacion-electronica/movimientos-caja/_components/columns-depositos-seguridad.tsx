@@ -22,6 +22,7 @@ const formatCurrency = (amount: number | string) => {
 export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
   return [
     {
+      colId: 'id',
       headerName: 'ID',
       field: 'id',
       width: 120,
@@ -32,6 +33,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       ),
     },
     {
+      colId: 'vendedor',
       headerName: 'Vendedor',
       field: 'vendedor',
       flex: 1,
@@ -41,6 +43,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       ),
     },
     {
+      colId: 'origen',
       headerName: 'Origen',
       field: 'sub_caja_origen',
       flex: 1,
@@ -53,6 +56,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       ),
     },
     {
+      colId: 'destino',
       headerName: 'Destino',
       field: 'sub_caja_destino',
       flex: 1,
@@ -73,6 +77,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       },
     },
     {
+      colId: 'monto',
       headerName: 'Monto',
       field: 'monto',
       width: 150,
@@ -83,6 +88,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       ),
     },
     {
+      colId: 'motivo',
       headerName: 'Motivo',
       field: 'motivo',
       flex: 1,
@@ -92,6 +98,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       ),
     },
     {
+      colId: 'tipo',
       headerName: 'Tipo',
       width: 180,
       cellRenderer: () => (
@@ -101,6 +108,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       ),
     },
     {
+      colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
       width: 180,

@@ -43,6 +43,7 @@ export function useColumnsDetalleDeRecepcion({
 }) {
   const columns: ColDef<TableDetalleDeRecepcionProps>[] = [
     {
+      colId: 'cod_producto',
       headerName: 'Cod. Producto',
       field: 'producto_almacen',
       width: 70,
@@ -57,6 +58,7 @@ export function useColumnsDetalleDeRecepcion({
       },
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'producto_almacen',
       width: 200,
@@ -76,6 +78,7 @@ export function useColumnsDetalleDeRecepcion({
       flex: 1,
     },
     {
+      colId: 'marca',
       headerName: 'Marca',
       field: 'producto_almacen',
       width: 130,
@@ -90,6 +93,7 @@ export function useColumnsDetalleDeRecepcion({
       },
     },
     {
+      colId: 'unidad_derivada',
       headerName: 'Unidad Derivada',
       field: 'unidad_derivada_inmutable',
       width: 80,
@@ -104,6 +108,7 @@ export function useColumnsDetalleDeRecepcion({
       },
     },
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       field: 'cantidad',
       width: 50,
@@ -111,6 +116,7 @@ export function useColumnsDetalleDeRecepcion({
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'stock_anterior',
       headerName: 'Stock Anterior',
       field: 'historial',
       width: 60,
@@ -138,6 +144,7 @@ export function useColumnsDetalleDeRecepcion({
       filter: true,
     },
     {
+      colId: 'stock_nuevo',
       headerName: 'Stock Nuevo',
       field: 'historial',
       width: 60,
@@ -165,6 +172,7 @@ export function useColumnsDetalleDeRecepcion({
       filter: true,
     },
     {
+      colId: 'vencimiento',
       headerName: 'F. Vencimiento',
       field: 'vencimiento',
       width: 90,
@@ -173,6 +181,7 @@ export function useColumnsDetalleDeRecepcion({
       type: 'date',
     },
     {
+      colId: 'lote',
       headerName: 'Lote',
       field: 'lote',
       width: 80,

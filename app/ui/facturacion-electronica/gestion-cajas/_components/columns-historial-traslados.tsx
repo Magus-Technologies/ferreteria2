@@ -12,6 +12,7 @@ export const useColumnsHistorialTraslados = ({
 }): ColDef<TrasladoBoveda>[] => {
   return [
     {
+      colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha_traslado',
       width: 180,
@@ -23,6 +24,7 @@ export const useColumnsHistorialTraslados = ({
       },
     },
     {
+      colId: 'caja',
       headerName: 'Caja',
       field: 'sub_caja',
       flex: 1,
@@ -41,6 +43,7 @@ export const useColumnsHistorialTraslados = ({
       },
     },
     {
+      colId: 'vendedor',
       headerName: 'Vendedor',
       field: 'vendedor',
       flex: 1,
@@ -54,6 +57,7 @@ export const useColumnsHistorialTraslados = ({
       },
     },
     {
+      colId: 'monto',
       headerName: 'Monto',
       field: 'monto',
       width: 130,
@@ -66,6 +70,7 @@ export const useColumnsHistorialTraslados = ({
       ),
     },
     {
+      colId: 'supervisor',
       headerName: 'Supervisor',
       field: 'supervisor',
       flex: 1,
@@ -85,6 +90,7 @@ export const useColumnsHistorialTraslados = ({
       },
     },
     {
+      colId: 'justificacion',
       headerName: 'Justificación',
       field: 'justificacion',
       flex: 2,
@@ -101,6 +107,7 @@ export const useColumnsHistorialTraslados = ({
       },
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 100,

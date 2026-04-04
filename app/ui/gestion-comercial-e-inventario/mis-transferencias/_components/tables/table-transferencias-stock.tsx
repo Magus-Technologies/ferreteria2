@@ -54,6 +54,7 @@ export default function TableTransferenciasStock({
 
   const columns: ColDef<TransferenciaStock>[] = [
     {
+      colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
       width: 150,
@@ -63,6 +64,7 @@ export default function TableTransferenciasStock({
       sort: 'desc',
     },
     {
+      colId: 'numero',
       headerName: 'N°',
       valueGetter: (params) =>
         params.data ? `TS${String(params.data.serie).padStart(4, '0')}-${String(params.data.numero).padStart(8, '0')}` : '-',
@@ -70,6 +72,7 @@ export default function TableTransferenciasStock({
       minWidth: 140,
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       valueGetter: (params) => {
         const prod = params.data?.productos?.[0]
@@ -80,6 +83,7 @@ export default function TableTransferenciasStock({
       minWidth: 250,
     },
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       valueGetter: (params) => {
         const prod = params.data?.productos?.[0]
@@ -90,6 +94,7 @@ export default function TableTransferenciasStock({
       minWidth: 120,
     },
     {
+      colId: 'origen',
       headerName: 'Origen',
       valueGetter: (params) => params.data?.almacen_origen?.name || '-',
       width: 160,
@@ -101,6 +106,7 @@ export default function TableTransferenciasStock({
       ),
     },
     {
+      colId: 'destino',
       headerName: 'Destino',
       valueGetter: (params) => params.data?.almacen_destino?.name || '-',
       width: 160,
@@ -112,12 +118,14 @@ export default function TableTransferenciasStock({
       ),
     },
     {
+      colId: 'usuario',
       headerName: 'Usuario',
       valueGetter: (params) => params.data?.user?.name || '-',
       width: 150,
       minWidth: 120,
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 100,
@@ -131,6 +139,7 @@ export default function TableTransferenciasStock({
       ),
     },
     {
+      colId: 'observaciones',
       headerName: 'Observaciones',
       field: 'descripcion',
       width: 180,
@@ -138,6 +147,7 @@ export default function TableTransferenciasStock({
       valueFormatter: (params) => params.value || '-',
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       width: 130,
       minWidth: 110,

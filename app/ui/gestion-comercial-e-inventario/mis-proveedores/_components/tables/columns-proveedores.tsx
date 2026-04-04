@@ -20,6 +20,7 @@ export function useColumnsProveedores({
 }) {
   const columns: ColDef<Proveedor>[] = [
     {
+      colId: 'ruc',
       headerName: 'RUC',
       field: 'ruc',
       width: 120,
@@ -27,6 +28,7 @@ export function useColumnsProveedores({
       filter: true,
     },
     {
+      colId: 'razon_social',
       headerName: 'Razón Social',
       field: 'razon_social',
       width: 300,
@@ -35,6 +37,7 @@ export function useColumnsProveedores({
       flex: 1,
     },
     {
+      colId: 'direccion',
       headerName: 'Dirección',
       field: 'direccion',
       width: 120,
@@ -43,6 +46,7 @@ export function useColumnsProveedores({
       filter: true,
     },
     {
+      colId: 'telefono',
       headerName: 'Teléfono',
       field: 'telefono',
       width: 120,
@@ -51,6 +55,7 @@ export function useColumnsProveedores({
       filter: true,
     },
     {
+      colId: 'email',
       headerName: 'Email',
       field: 'email',
       width: 120,
@@ -59,6 +64,7 @@ export function useColumnsProveedores({
       filter: true,
     },
     {
+      colId: 'estado',
       headerName: 'Activo',
       field: 'estado',
       width: 90,
@@ -66,6 +72,7 @@ export function useColumnsProveedores({
       type: 'boolean',
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 120, // increased width because we have more actions

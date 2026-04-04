@@ -12,6 +12,7 @@ export const useColumnsCajasPrincipales = ({
 }): ColDef<CajaPrincipal>[] => {
   return [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'codigo',
       width: 120,
@@ -24,6 +25,7 @@ export const useColumnsCajasPrincipales = ({
       ),
     },
     {
+      colId: 'nombre',
       headerName: 'Nombre',
       field: 'nombre',
       flex: 1,
@@ -35,6 +37,7 @@ export const useColumnsCajasPrincipales = ({
       ),
     },
     {
+      colId: 'responsable',
       headerName: 'Responsable',
       field: 'user',
       flex: 1,
@@ -52,6 +55,7 @@ export const useColumnsCajasPrincipales = ({
       },
     },
     {
+      colId: 'sub_cajas',
       headerName: 'Sub-Cajas',
       field: 'total_sub_cajas',
       width: 120,
@@ -66,6 +70,7 @@ export const useColumnsCajasPrincipales = ({
       ),
     },
     {
+      colId: 'saldo_total',
       headerName: 'Saldo Total',
       field: 'saldo_total',
       width: 150,
@@ -78,6 +83,7 @@ export const useColumnsCajasPrincipales = ({
       ),
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 120,
@@ -92,6 +98,7 @@ export const useColumnsCajasPrincipales = ({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 150,

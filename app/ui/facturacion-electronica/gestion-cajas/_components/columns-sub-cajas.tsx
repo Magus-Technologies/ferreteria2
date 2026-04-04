@@ -14,6 +14,7 @@ export const useColumnsSubCajas = ({
 }): ColDef<SubCaja>[] => {
   return [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'codigo',
       width: 130,
@@ -26,6 +27,7 @@ export const useColumnsSubCajas = ({
       ),
     },
     {
+      colId: 'nombre',
       headerName: 'Nombre',
       field: 'nombre',
       flex: 1,
@@ -47,6 +49,7 @@ export const useColumnsSubCajas = ({
       },
     },
     {
+      colId: 'metodos_pago',
       headerName: 'Métodos de Pago',
       field: 'despliegues_pago',
       flex: 1,
@@ -79,6 +82,7 @@ export const useColumnsSubCajas = ({
       },
     },
     {
+      colId: 'comprobantes',
       headerName: 'Comprobantes',
       field: 'tipos_comprobante_labels',
       flex: 1,
@@ -102,6 +106,7 @@ export const useColumnsSubCajas = ({
       },
     },
     {
+      colId: 'saldo',
       headerName: 'Saldo',
       field: 'saldo_actual',
       width: 130,
@@ -114,6 +119,7 @@ export const useColumnsSubCajas = ({
       ),
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 100,
@@ -128,6 +134,7 @@ export const useColumnsSubCajas = ({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 160,

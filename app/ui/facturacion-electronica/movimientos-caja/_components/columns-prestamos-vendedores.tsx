@@ -32,6 +32,7 @@ export const useColumnsPrestamosVendedores = ({
 }): ColDef<SolicitudEfectivo>[] => {
     return [
         {
+            colId: 'solicitante',
             headerName: 'Solicitante',
             field: 'vendedor_solicitante',
             flex: 1,
@@ -41,6 +42,7 @@ export const useColumnsPrestamosVendedores = ({
             ),
         },
         {
+            colId: 'prestamista',
             headerName: 'Prestamista',
             field: 'vendedor_prestamista',
             flex: 1,
@@ -50,6 +52,7 @@ export const useColumnsPrestamosVendedores = ({
             ),
         },
         {
+            colId: 'monto',
             headerName: 'Monto',
             field: 'monto_solicitado',
             width: 150,
@@ -60,6 +63,7 @@ export const useColumnsPrestamosVendedores = ({
             ),
         },
         {
+            colId: 'estado',
             headerName: 'Estado',
             field: 'estado',
             width: 130,
@@ -79,6 +83,7 @@ export const useColumnsPrestamosVendedores = ({
             },
         },
         {
+            colId: 'motivo',
             headerName: 'Motivo',
             field: 'motivo',
             flex: 1,
@@ -88,6 +93,7 @@ export const useColumnsPrestamosVendedores = ({
             ),
         },
         {
+            colId: 'fecha',
             headerName: 'Fecha',
             field: 'created_at',
             width: 180,
@@ -104,6 +110,7 @@ export const useColumnsPrestamosVendedores = ({
             ),
         },
         {
+            colId: 'acciones',
             headerName: 'Acciones',
             field: 'id',
             width: 180,

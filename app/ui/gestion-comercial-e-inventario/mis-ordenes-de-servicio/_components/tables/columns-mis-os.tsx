@@ -32,6 +32,7 @@ export function useColumnsMisOS({
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'codigo',
       width: 130,
@@ -43,6 +44,7 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'titulo',
       headerName: 'Título',
       field: 'titulo',
       flex: 1,
@@ -56,12 +58,14 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'area',
       headerName: 'Área',
       field: 'area',
       width: 130,
       minWidth: 100,
     },
     {
+      colId: 'tipo_servicio',
       headerName: 'Tipo Servicio',
       field: 'servicio.tipo_servicio',
       width: 150,
@@ -70,6 +74,7 @@ export function useColumnsMisOS({
         params.data?.servicio?.tipo_servicio || '—',
     },
     {
+      colId: 'descripcion',
       headerName: 'Descripción',
       field: 'servicio.descripcion_servicio',
       flex: 1,
@@ -83,6 +88,7 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'presupuesto',
       headerName: 'Presupuesto',
       field: 'servicio.presupuesto_referencial',
       width: 130,
@@ -96,6 +102,7 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'prioridad',
       headerName: 'Prioridad',
       field: 'prioridad',
       width: 110,
@@ -109,6 +116,7 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 110,
@@ -122,6 +130,7 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'fecha_requerida',
       headerName: 'Fecha Requerida',
       field: 'fecha_requerida',
       width: 140,
@@ -133,6 +142,7 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 120,

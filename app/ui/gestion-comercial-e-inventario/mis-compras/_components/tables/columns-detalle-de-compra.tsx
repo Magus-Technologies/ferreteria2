@@ -15,6 +15,7 @@ export type TableDetalleDeCompraProps = Pick<
 export function useColumnsDetalleDeCompra() {
   const columns: ColDef<TableDetalleDeCompraProps>[] = [
     {
+      colId: 'cod_producto',
       headerName: 'Cod. Producto',
       field: 'producto_almacen',
       width: 70,
@@ -29,6 +30,7 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'producto_almacen',
       width: 200,
@@ -49,6 +51,7 @@ export function useColumnsDetalleDeCompra() {
       flex: 1,
     },
     {
+      colId: 'marca',
       headerName: 'Marca',
       field: 'producto_almacen',
       width: 130,
@@ -63,6 +66,7 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
+      colId: 'unidad_derivada',
       headerName: 'Unidad Derivada',
       field: 'unidad_derivada_inmutable',
       width: 80,
@@ -77,6 +81,7 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       field: 'cantidad',
       width: 50,
@@ -84,6 +89,7 @@ export function useColumnsDetalleDeCompra() {
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'costo',
       headerName: 'P. Compra',
       field: 'costo',
       width: 90,
@@ -100,6 +106,7 @@ export function useColumnsDetalleDeCompra() {
           : String(Number(data?.costo ?? 0) * Number(data?.factor ?? 1)),
     },
     {
+      colId: 'descuento',
       headerName: '%',
       field: 'descuento' as any,
       width: 60,
@@ -116,6 +123,7 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
+      colId: 'percepcion',
       headerName: 'Perc',
       field: 'percepcion' as any,
       width: 80,
@@ -133,6 +141,7 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
+      colId: 'importe',
       headerName: 'Importe',
       field: 'producto_almacen',
       width: 90,
@@ -153,6 +162,7 @@ export function useColumnsDetalleDeCompra() {
             ),
     },
     {
+      colId: 'vencimiento',
       headerName: 'F. Vencimiento',
       field: 'vencimiento',
       width: 90,
@@ -161,6 +171,7 @@ export function useColumnsDetalleDeCompra() {
       type: 'date',
     },
     {
+      colId: 'lote',
       headerName: 'Lote',
       field: 'lote',
       width: 80,
@@ -168,6 +179,7 @@ export function useColumnsDetalleDeCompra() {
       filter: true,
     },
     {
+      colId: 'total_und',
       headerName: 'TotalUnd',
       field: 'cantidad',
       width: 90,
@@ -186,6 +198,7 @@ export function useColumnsDetalleDeCompra() {
       },
     },
     {
+      colId: 'id_prod',
       headerName: 'IdProd',
       field: 'producto_almacen',
       width: 80,
