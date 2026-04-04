@@ -17,11 +17,13 @@ import { useRouter } from 'next/navigation'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
+import { MdEmail } from 'react-icons/md'
 
 // Lazy loading
 const FiltersMisOrdenesCompra = lazy(() => import('./_components/filters/filters-mis-ordenes-compra'))
 const TableOrdenesCompra = lazy(() => import('./_components/tables/table-ordenes-compra'))
 const ModalDetalleOrdenCompra = lazy(() => import('./_components/modals/modal-detalle-orden-compra'))
+const ModalEnviarCorreoOC = lazy(() => import('./_components/modals/modal-enviar-correo-oc'))
 
 export default function MisOrdenesDeCompra() {
     const { modal, message } = App.useApp()
@@ -34,6 +36,7 @@ export default function MisOrdenesDeCompra() {
     const setOrdenSeleccionada = useStoreOrdenCompraSeleccionada(state => state.setOrdenCompra)
     const ordenSeleccionada = useStoreOrdenCompraSeleccionada(state => state.orden_compra)
     const [filaSeleccionada, setFilaSeleccionada] = useState<OrdenCompra | null>(null)
+    const [openModalCorreo, setOpenModalCorreo] = useState(false)
 
     // Cuando cambia la orden seleccionada en la tabla, cargar productos si no están
     useEffect(() => {
@@ -264,6 +267,16 @@ export default function MisOrdenesDeCompra() {
                             {docOrdenData ? `Orden de Compra - ${docOrdenData.codigo}` : 'Orden de Compra'}
                         </div>
                         <div className="flex items-center gap-2 justify-end">
+                            <Tooltip title="Enviar por Correo">
+                                <ButtonBase
+                                    onClick={() => setOpenModalCorreo(true)}
+                                    color="info"
+                                    size="md"
+                                    className="!px-3 bg-blue-500 hover:bg-blue-600 text-white"
+                                >
+                                    <MdEmail />
+                                </ButtonBase>
+                            </Tooltip>
                             <Tooltip title="Descargar PDF">
                                 <ButtonBase
                                     onClick={() => {
@@ -340,6 +353,12 @@ export default function MisOrdenesDeCompra() {
                     )}
                 </div>
             </Modal>
+
+            <ModalEnviarCorreoOC
+                open={openModalCorreo}
+                onClose={() => setOpenModalCorreo(false)}
+                ordenData={docOrdenData}
+            />
         </ContenedorGeneral>
     )
 }

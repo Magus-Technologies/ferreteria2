@@ -58,16 +58,24 @@ export default function ModalCreateProducto({
   onSuccess,
   textDefault,
   setTextDefault,
+  open: openProp,
+  setOpen: setOpenProp,
 }: {
   onSuccess?: (res: Producto) => void
   textDefault?: string
   setTextDefault?: (text: string) => void
+  open?: boolean
+  setOpen?: (open: boolean) => void
 }) {
   const [form] = Form.useForm<FormCreateProductoProps>()
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const open = useStoreEditOrCopyProducto(state => state.openModal)
-  const setOpen = useStoreEditOrCopyProducto(state => state.setOpenModal)
+  const storeOpen = useStoreEditOrCopyProducto(state => state.openModal)
+  const storeSetOpen = useStoreEditOrCopyProducto(state => state.setOpenModal)
+  
+  const open = openProp !== undefined ? openProp : storeOpen
+  const setOpen = setOpenProp !== undefined ? setOpenProp : storeSetOpen
+
   const producto = useStoreEditOrCopyProducto(state => state.producto)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
   const isDuplicate = useStoreEditOrCopyProducto(state => state.isDuplicate)

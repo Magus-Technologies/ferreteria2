@@ -45,7 +45,7 @@ export interface OrdenCompra {
     total?: number;
     productos_count?: number;
     productos?: OrdenCompraProducto[];
-    proveedor?: { id: number; razon_social: string; ruc: string };
+    proveedor?: { id: number; razon_social: string; ruc: string; correo?: string };
     user?: { id: string; name: string };
     requerimiento?: {
         id: number;
@@ -184,6 +184,16 @@ export const ordenCompraApi = {
     aprobar: async (id: number): Promise<ApiResponse<OrdenCompraResponse>> => {
         return apiRequest<OrdenCompraResponse>(`/ordenes-compra/${id}/aprobar`, {
             method: 'PATCH',
+        });
+    },
+
+    /**
+     * Enviar orden de compra por correo
+     */
+    enviarCorreo: async (id: number, data: { email: string; columnas: string[] }): Promise<ApiResponse<{success: boolean, message: string}>> => {
+        return apiRequest<{success: boolean, message: string}>(`/ordenes-compra/${id}/enviar-correo`, {
+            method: 'POST',
+            body: JSON.stringify(data),
         });
     },
 };

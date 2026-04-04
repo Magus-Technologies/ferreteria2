@@ -47,6 +47,7 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tooltip } from 'antd'
 import { ordenCompraApi, type CreateOrdenCompraRequest } from '~/lib/api/orden-compra'
 import { requerimientoInternoApi } from '~/lib/api/requerimiento-interno'
+import { productosApiV2 } from '~/lib/api/producto'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -61,6 +62,7 @@ export default function CrearOrdenCompraPage() {
   const [productos, setProductos] = useState<ProductoEnOC[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [openModalCreation, setOpenModalCreation] = useState(false)
   const [productosPendientesCrear, setProductosPendientesCrear] = useState<ProductoSidebarSelection[]>([])
   const [currentProductoIndex, setCurrentProductoIndex] = useState(0)
   const [productoManualActual, setProductoManualActual] = useState<ProductoSidebarSelection | null>(null)
@@ -468,9 +470,73 @@ export default function CrearOrdenCompraPage() {
     },
   ], [handleRemoveProducto])
 
-  const handleAddProductFromSidebar = (product: ProductoSidebarSelection) => {
-    // Si el producto no existe en el sistema (producto_id es null), abrir modal de creación
-    if (product.producto_id === null) {
+  const handleAddProductFromSidebar = async (product: ProductoSidebarSelection) => {
+    // Si el producto no existe en el sistema (producto_id es null o undefined), intentar buscarlo
+    if (!product.producto_id) {
+      try {
+        message.loading({ content: 'Verificando producto en catálogo...', key: 'verificandoProducto' })
+        const almacenId = form.getFieldValue('almacen_id') || 1
+        
+        // Buscar producto por nombre
+        const res = await productosApiV2.getAllByAlmacen({
+          almacen_id: almacenId,
+          search: product.nombre,
+          estado: 1,
+          per_page: 5
+        })
+        
+        let productoMatch = null
+        if (res.data?.data && res.data.data.length > 0) {
+          // Tratar de buscar coincidencia exacta (case-insensitive)
+          productoMatch = res.data.data.find((p: any) => p.name.toLowerCase().trim() === product.nombre.toLowerCase().trim())
+        }
+        
+        if (productoMatch) {
+          message.success({ content: 'Producto auto-enlazado desde catálogo', key: 'verificandoProducto' })
+          
+          const precio_compra = productoMatch.producto_en_almacenes?.[0]?.costo || 0
+          
+          const newProduct: ProductoEnOC = {
+            id: product.id,
+            producto_id: productoMatch.id,
+            codigo: productoMatch.cod_producto,
+            nombre: productoMatch.name,
+            marca: productoMatch.marca?.name || product.marca,
+            unidad: productoMatch.unidad_medida?.name || product.unidad,
+            cantidad: product.cantidad,
+            precio_compra: Number(precio_compra),
+            flete: product.flete,
+            vencimiento: product.vencimiento,
+            lote: product.lote,
+            subtotal: product.cantidad * Number(precio_compra),
+          }
+          
+          setProductos(prev => {
+            const existingIndex = prev.findIndex(p => p.producto_id === newProduct.producto_id)
+            if (existingIndex >= 0) {
+              const updated = [...prev]
+              const existing = updated[existingIndex]
+              const nuevaCantidad = existing.cantidad + newProduct.cantidad
+              updated[existingIndex] = {
+                ...existing,
+                cantidad: nuevaCantidad,
+                subtotal: nuevaCantidad * existing.precio_compra,
+              }
+              return updated
+            } else {
+              return [...prev, newProduct]
+            }
+          })
+          
+          return // Salimos y NO abrimos el modal
+        } else {
+           message.destroy('verificandoProducto')
+        }
+      } catch (e) {
+        message.destroy('verificandoProducto')
+        console.error("Error buscando producto auto-enlazado", e)
+      }
+
       setProductosPendientesCrear([product])
       setCurrentProductoIndex(0)
       setProductoManualActual(product)
@@ -478,8 +544,29 @@ export default function CrearOrdenCompraPage() {
       // No pre-llenar nada en el store, solo guardar el producto manual
       setProducto(undefined)
       
-      setOpenModalProducto(true)
+      setOpenModalCreation(true)
       return
+    }
+
+    // Si el producto SÍ existe (ya tiene ID)
+    let precio_compra_actual = product.precio_compra
+    
+    try {
+      message.loading({ content: 'Cargando datos adicionales del producto...', key: 'cargandoExtra' })
+      const res = await productosApiV2.getById(product.producto_id)
+      if (res.data) {
+        const prodData = res.data
+        const almacenId = form.getFieldValue('almacen_id') || 1
+        const stockAlmacen = prodData.producto_en_almacenes?.find((pa: any) => pa.almacen_id === almacenId) || prodData.producto_en_almacenes?.[0]
+        
+        if (stockAlmacen && stockAlmacen.costo) {
+          precio_compra_actual = Number(stockAlmacen.costo)
+        }
+      }
+      message.destroy('cargandoExtra')
+    } catch (e) {
+      message.destroy('cargandoExtra')
+      console.error(e)
     }
 
     const newProduct = {
@@ -490,11 +577,11 @@ export default function CrearOrdenCompraPage() {
       marca: product.marca,
       unidad: product.unidad,
       cantidad: product.cantidad,
-      precio_compra: product.precio_compra,
+      precio_compra: precio_compra_actual,
       flete: product.flete,
       vencimiento: product.vencimiento,
       lote: product.lote,
-      subtotal: product.cantidad * product.precio_compra,
+      subtotal: product.cantidad * precio_compra_actual,
     }
     
     setProductos(prev => {
@@ -515,48 +602,112 @@ export default function CrearOrdenCompraPage() {
     })
   }
 
-  const handleAddAllFromSidebar = (products: ProductoSidebarSelection[]) => {
+  const handleAddAllFromSidebar = async (products: ProductoSidebarSelection[]) => {
     // Separar productos existentes de productos manuales
-    const productosExistentes = products.filter(p => p.producto_id !== null)
-    const productosManual = products.filter(p => p.producto_id === null)
+    const productosExistentes = products.filter(p => !!p.producto_id)
+    const manuales = products.filter(p => !p.producto_id)
     
-    // Si hay productos manuales, iniciar el flujo de creación
-    if (productosManual.length > 0) {
-      setProductosPendientesCrear(productosManual)
+    let productosParaAgregar = [...productosExistentes]
+    const productosManualesNoEncontrados: ProductoSidebarSelection[] = []
+    
+    if (manuales.length > 0) {
+       message.loading({ content: 'Verificando catálogo...', key: 'verificandoVarios' })
+       const almacenId = form.getFieldValue('almacen_id') || 1
+       
+       for (const manualProd of manuales) {
+         try {
+           const res = await productosApiV2.getAllByAlmacen({
+             almacen_id: almacenId,
+             search: manualProd.nombre,
+             estado: 1,
+             per_page: 5
+           })
+           
+           const productoMatch = res.data?.data?.find((p: any) => p.name.toLowerCase().trim() === manualProd.nombre.toLowerCase().trim())
+           
+           if (productoMatch) {
+             // Agregamos con los datos del catálogo
+             productosParaAgregar.push({
+               ...manualProd, // conservamos id de solicitud, cantidad, etc.
+               producto_id: productoMatch.id,
+               codigo: productoMatch.cod_producto,
+               nombre: productoMatch.name,
+               marca: productoMatch.marca?.name || manualProd.marca,
+               unidad: productoMatch.unidad_medida?.name || manualProd.unidad,
+             })
+           } else {
+             productosManualesNoEncontrados.push(manualProd)
+           }
+         } catch (e) {
+           productosManualesNoEncontrados.push(manualProd)
+         }
+       }
+       message.destroy('verificandoVarios')
+    }
+    
+    // Si hay productos manuales no encontrados, iniciar flujo
+    if (productosManualesNoEncontrados.length > 0) {
+      setProductosPendientesCrear(productosManualesNoEncontrados)
       setCurrentProductoIndex(0)
-      setProductoManualActual(productosManual[0])
+      setProductoManualActual(productosManualesNoEncontrados[0])
       
       // No pre-llenar, dejar que el modal use textDefault
       setProducto(undefined)
       
-      setOpenModalProducto(true)
+      setOpenModalCreation(true)
       
       // Agregar los productos existentes inmediatamente
-      if (productosExistentes.length > 0) {
-        agregarProductosExistentes(productosExistentes)
+      if (productosParaAgregar.length > 0) {
+        await agregarProductosExistentes(productosParaAgregar)
       }
       return
     }
 
-    // Si no hay productos manuales, agregar todos normalmente
-    agregarProductosExistentes(products)
+    // Si no hay productos manuales sin enlazar, agregar todos normalmente
+    if (productosParaAgregar.length > 0) {
+      await agregarProductosExistentes(productosParaAgregar)
+    }
   }
 
-  const agregarProductosExistentes = (products: ProductoSidebarSelection[]) => {
-    const newProducts = products.map(p => ({
-      id: p.id,
-      producto_id: p.producto_id!,
-      codigo: p.codigo,
-      nombre: p.nombre,
-      marca: p.marca,
-      unidad: p.unidad,
-      cantidad: p.cantidad,
-      precio_compra: p.precio_compra,
-      flete: p.flete,
-      vencimiento: p.vencimiento,
-      lote: p.lote,
-      subtotal: p.cantidad * p.precio_compra,
-    }))
+  const agregarProductosExistentes = async (products: ProductoSidebarSelection[]) => {
+    message.loading({ content: 'Obteniendo costos de productos...', key: 'cargandoCostos' })
+    const almacenId = form.getFieldValue('almacen_id') || 1
+    
+    const newProductsPromises = products.map(async (p) => {
+      let precio_compra_actual = p.precio_compra
+
+      if (p.producto_id) {
+        try {
+          const res = await productosApiV2.getById(p.producto_id)
+          if (res.data) {
+            const stockAlmacen = res.data.producto_en_almacenes?.find((pa: any) => pa.almacen_id === almacenId) || res.data.producto_en_almacenes?.[0]
+            if (stockAlmacen && stockAlmacen.costo) {
+              precio_compra_actual = Number(stockAlmacen.costo)
+            }
+          }
+        } catch (e) {
+          console.error("Error al obtener precio", e)
+        }
+      }
+
+      return {
+        id: p.id,
+        producto_id: p.producto_id!,
+        codigo: p.codigo,
+        nombre: p.nombre,
+        marca: p.marca,
+        unidad: p.unidad,
+        cantidad: p.cantidad,
+        precio_compra: precio_compra_actual,
+        flete: p.flete,
+        vencimiento: p.vencimiento,
+        lote: p.lote,
+        subtotal: p.cantidad * precio_compra_actual,
+      }
+    })
+
+    const newProducts = await Promise.all(newProductsPromises)
+    message.destroy('cargandoCostos')
     
     setProductos(prev => {
       let updated = [...prev]
@@ -587,6 +738,8 @@ export default function CrearOrdenCompraPage() {
       {productoManualActual && (
         <ModalCreateProducto
           key={`manual-producto-${productoManualActual.id}-${currentProductoIndex}`}
+          open={openModalCreation}
+          setOpen={setOpenModalCreation}
           textDefault={productoManualActual.nombre}
           setTextDefault={() => {}}
           onSuccess={(productoCreado) => {
@@ -619,7 +772,7 @@ export default function CrearOrdenCompraPage() {
               // Limpiar el producto para el siguiente
               setProducto(undefined)
               
-              setTimeout(() => setOpenModalProducto(true), 300)
+              setTimeout(() => setOpenModalCreation(true), 300)
             } else {
               // Ya no hay más productos pendientes
               setProductosPendientesCrear([])
