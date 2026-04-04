@@ -33,12 +33,8 @@ export default function SelectTipoMoneda({
   })
 
   useEffect(() => {
-    const value = response ?? 1
-    setTipoDeCambio(value)
-    if (onChangeTipoDeCambio) {
-      // Use rAF to defer form update outside React's commit phase
-      const id = requestAnimationFrame(() => onChangeTipoDeCambio(value))
-      return () => cancelAnimationFrame(id)
+    if (response) {
+      setTipoDeCambio(response)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])
@@ -62,8 +58,15 @@ export default function SelectTipoMoneda({
         label: tipoMonedaLabels[value as TipoMoneda],
       }))}
       onChange={value => {
-        if (value === TipoMoneda.SOLES) setTipoDeCambio(1)
-        else refetch()
+        if (value === TipoMoneda.SOLES) {
+          setTipoDeCambio(1)
+          onChangeTipoDeCambio?.(1)
+        } else {
+          const tc = response ?? 1
+          setTipoDeCambio(tc)
+          onChangeTipoDeCambio?.(tc)
+          refetch()
+        }
         onChange?.(value)
       }}
       {...props}

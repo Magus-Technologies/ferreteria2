@@ -12,6 +12,7 @@ import TableBase from '~/components/tables/table-base'
 import { AgGridReact } from 'ag-grid-react'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { cajaApi } from '~/lib/api/caja'
 import { useColumnsHistorialTraslados } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-historial-traslados'
 
 interface ModalHistorialTrasladosBovedaProps {
@@ -39,14 +40,8 @@ export default function ModalHistorialTrasladosBoveda({
     const { data: cajaActiva } = useQuery({
         queryKey: [QueryKeys.CAJA_ACTIVA],
         queryFn: async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/cierre/activa`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                    'Accept': 'application/json',
-                },
-            })
-            const json = await response.json()
-            return json.data || null
+            const response = await cajaApi.cajaActiva()
+            return response.data?.data || null
         },
         enabled: open,
     })

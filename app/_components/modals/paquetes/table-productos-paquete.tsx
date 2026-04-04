@@ -11,10 +11,10 @@ import SelectBase from '~/app/_components/form/selects/select-base'
 export type TipoPrecioPaquete = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
 export const TIPO_PRECIO_OPTIONS = [
-  { value: 'publico', label: 'P. Público' },
-  { value: 'especial', label: 'P. Especial' },
-  { value: 'minimo', label: 'P. Mínimo' },
-  { value: 'ultimo', label: 'P. Último' },
+  { value: 'publico', label: 'Precio Público' },
+  { value: 'especial', label: 'Precio Especial' },
+  { value: 'minimo', label: 'Precio Mínimo' },
+  { value: 'ultimo', label: 'Precio Último' },
 ]
 
 export interface ProductoPaquete {

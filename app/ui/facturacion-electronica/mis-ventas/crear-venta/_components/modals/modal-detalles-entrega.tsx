@@ -138,6 +138,10 @@ export default function ModalDetallesEntrega({
     })
     
     if (open && tipoDespacho === 'Domicilio' && direcciones.length > 0) {
+      // Setear almacenero por defecto como quien entrega en domicilio
+      if (!form.getFieldValue('quien_entrega')) {
+        form.setFieldValue('quien_entrega', 'almacen')
+      }
       // Buscar la dirección seleccionada en el formulario principal
       const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
       console.log('🔎 Buscando dirección:', direccionSeleccionadaForm)
@@ -182,14 +186,22 @@ export default function ModalDetallesEntrega({
     }
   }, [open, tipoDespacho, direcciones, form])
 
-  // Obtener despachadores seleccionados del formulario (reactivo)
+  // Obtener valores del formulario (reactivo)
   const despachadorId = Form.useWatch('despachador_id', form) as string | undefined
   const restoDespachadorId = Form.useWatch('_resto_despachador_id', form) as string | undefined
+  const quienEntrega = Form.useWatch('quien_entrega', form) as string | undefined
 
   // Obtener productos del formulario
   const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
 
   // Inicializar cantidades de entrega cuando se abre el modal en modo Parcial
+  // Setear almacenero por defecto en EnTienda
+  useEffect(() => {
+    if (open && tipoDespacho === 'EnTienda' && !form.getFieldValue('quien_entrega')) {
+      form.setFieldValue('quien_entrega', 'almacen')
+    }
+  }, [open, tipoDespacho, form])
+
   useEffect(() => {
     if (open && tipoDespacho === 'Parcial' && productos && productos.length > 0) {
       const items: ProductoEntrega[] = productos.map((p, index) => ({
@@ -380,6 +392,21 @@ export default function ModalDetallesEntrega({
           >
             Cancelar
           </ButtonBase>
+          {tipoDespacho === 'Parcial' && (
+            <ButtonBase
+              color="warning"
+              size="md"
+              onClick={async () => {
+                const ventaValues = form.getFieldsValue()
+                await crearVenta(ventaValues)
+                setOpen(false)
+                onConfirmar()
+              }}
+              disabled={creandoVenta}
+            >
+              {creandoVenta ? 'Procesando...' : 'Omitir'}
+            </ButtonBase>
+          )}
           <ButtonBase
             color="success"
             size="md"
@@ -406,7 +433,7 @@ export default function ModalDetallesEntrega({
             </label>
             <Select
               placeholder="Seleccionar"
-              value={form.getFieldValue('quien_entrega')}
+              value={quienEntrega || 'almacen'}
               onChange={(value) => form.setFieldValue('quien_entrega', value)}
               options={[
                 { value: 'vendedor', label: 'Vendedor' },

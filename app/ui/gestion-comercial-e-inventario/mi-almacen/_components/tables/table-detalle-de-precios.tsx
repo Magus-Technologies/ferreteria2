@@ -188,21 +188,21 @@ export default function TableDetalleDePrecios() {
                       unidad_derivada: { connect: { id: unitId } },
                       // Aseguramos que los números no sean NaN
                       factor: Number(item['Factor']) || 1,
-                      precio_publico: Number(item['P. Público']) || 0,
+                      precio_publico: Number(item['Precio Público']) || 0,
                     };
 
                     // Mapeo dinámico para campos opcionales
                     const optionalFields = {
-                      comision_publico: 'Comisión P. Público',
-                      precio_especial: 'P. Especial',
-                      comision_especial: 'Comisión P. Especial',
-                      activador_especial: 'Activador P. Especial',
-                      precio_minimo: 'P. Mínimo',
-                      comision_minimo: 'Comisión P. Mínimo',
-                      activador_minimo: 'Activador P. Mínimo',
-                      precio_ultimo: 'P. Último',
-                      comision_ultimo: 'Comisión P. Último',
-                      activador_ultimo: 'Activador P. Último',
+                      comision_publico: 'Comisión Precio Público',
+                      precio_especial: 'Precio Especial',
+                      comision_especial: 'Comisión Precio Especial',
+                      activador_especial: 'Activador Precio Especial',
+                      precio_minimo: 'Precio Mínimo',
+                      comision_minimo: 'Comisión Precio Mínimo',
+                      activador_minimo: 'Activador Precio Mínimo',
+                      precio_ultimo: 'Precio Último',
+                      comision_ultimo: 'Comisión Precio Último',
+                      activador_ultimo: 'Activador Precio Último',
                     };
 
                     Object.entries(optionalFields).forEach(([apiKey, excelKey]) => {
@@ -244,17 +244,17 @@ export default function TableDetalleDePrecios() {
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['#', 'Formato', 'Factor', 'P. Compra', '% Venta', 'P. Público', 'Ganancia', 'P. Especial', 'P. Mínimo', 'P. Último'],
+          columns: ['#', 'Formato', 'Factor', 'P. Compra', '% Venta', 'Precio Público', 'Ganancia', 'Precio Especial', 'Precio Mínimo', 'Precio Último'],
         },
         ...(can(permissions.PRODUCTO_IMPORT)
           ? [{
                 color: 'warning' as const,
                 label: 'Importación',
                 columns: [
-                  'Cod. Producto', 'Producto', 'Formato', 'Factor', 'P. Público', 
-                  'Comisión P. Público', 'P. Especial', 'Comisión P. Especial', 
-                  'Activador P. Especial', 'P. Mínimo', 'Comisión P. Mínimo', 
-                  'Activador P. Mínimo', 'P. Último', 'Comisión P. Último', 'Activador P. Último'
+                  'Cod. Producto', 'Producto', 'Formato', 'Factor', 'Precio Público', 
+                  'Comisión Precio Público', 'Precio Especial', 'Comisión Precio Especial', 
+                  'Activador Precio Especial', 'Precio Mínimo', 'Comisión Precio Mínimo', 
+                  'Activador Precio Mínimo', 'Precio Último', 'Comisión Precio Último', 'Activador Precio Último'
                 ],
             }]
           : []),

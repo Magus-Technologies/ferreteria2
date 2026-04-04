@@ -20,6 +20,7 @@ import ModalTrasladoBoveda from "../../mis-aperturas-cierres/_components/modals/
 import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
+import { cajaApi } from "~/lib/api/caja";
 
 // Mapa de iconos
 const iconMap: Record<string, any> = {
@@ -41,18 +42,12 @@ export default function TopNav({ className }: { className?: string }) {
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
   const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false);
 
-  // Obtener caja activa (incluye apertura) - usa el endpoint nuevo
+  // Obtener caja activa
   const { data: cajaActiva } = useQuery({
     queryKey: [QueryKeys.CAJA_ACTIVA],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/cierre/activa`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Accept': 'application/json',
-        },
-      })
-      const json = await response.json()
-      return json.data || null
+      const response = await cajaApi.cajaActiva()
+      return response.data?.data || null
     },
   })
 

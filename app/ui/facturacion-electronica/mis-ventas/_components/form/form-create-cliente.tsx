@@ -50,13 +50,15 @@ export default function FormCreateCliente({
 
   const handleCoordenadaChange = (coords: Coordenadas, direccionObtenida: string | undefined) => {
     // Actualizar coordenadas según la tab activa
+    // La dirección del mapa va a "referencia" (solo para ubicación GPS/Maps)
+    // El campo "direccion" queda libre para que el usuario escriba su dirección real
     switch (tabActiva) {
       case '1':
         setCoordenadasD1(coords);
         form.setFieldValue('latitud_d1', coords.lat);
         form.setFieldValue('longitud_d1', coords.lng);
         if (direccionObtenida) {
-          form.setFieldValue('direccion', direccionObtenida);
+          form.setFieldValue('referencia_d1', direccionObtenida);
         }
         break;
       case '2':
@@ -64,7 +66,7 @@ export default function FormCreateCliente({
         form.setFieldValue('latitud_d2', coords.lat);
         form.setFieldValue('longitud_d2', coords.lng);
         if (direccionObtenida) {
-          form.setFieldValue('direccion_2', direccionObtenida);
+          form.setFieldValue('referencia_d2', direccionObtenida);
         }
         break;
       case '3':
@@ -72,7 +74,7 @@ export default function FormCreateCliente({
         form.setFieldValue('latitud_d3', coords.lat);
         form.setFieldValue('longitud_d3', coords.lng);
         if (direccionObtenida) {
-          form.setFieldValue('direccion_3', direccionObtenida);
+          form.setFieldValue('referencia_d3', direccionObtenida);
         }
         break;
       case '4':
@@ -80,7 +82,7 @@ export default function FormCreateCliente({
         form.setFieldValue('latitud_d4', coords.lat);
         form.setFieldValue('longitud_d4', coords.lng);
         if (direccionObtenida) {
-          form.setFieldValue('direccion_4', direccionObtenida);
+          form.setFieldValue('referencia_d4', direccionObtenida);
         }
         break;
     }
@@ -310,10 +312,10 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d1" }}
-                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        placeholder="Haz clic en el mapa o escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>
@@ -337,10 +339,10 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d2" }}
-                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        placeholder="Haz clic en el mapa o escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>
@@ -364,10 +366,10 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d3" }}
-                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        placeholder="Haz clic en el mapa o escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>
@@ -391,10 +393,10 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d4" }}
-                        placeholder="Ej: Frente al parque, al lado de la bodega"
+                        placeholder="Haz clic en el mapa o escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>

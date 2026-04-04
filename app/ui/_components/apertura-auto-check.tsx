@@ -24,11 +24,6 @@ export default function AperturaGuard() {
             const response = await cajaApi.cajaActiva()
             return response.data?.data || null
         },
-        // Siempre llamar al backend, no usar caché
-        staleTime: 0,
-        gcTime: 0,
-        // Forzar refetch aunque haya datos cacheados de otros componentes
-        refetchOnMount: 'always',
     })
 
     const shouldOpen = !isLoading && !cajaActiva

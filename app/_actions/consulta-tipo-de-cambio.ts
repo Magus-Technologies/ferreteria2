@@ -1,13 +1,20 @@
 "use server";
 
 async function consultaTipoDeCambio() {
-  // TODO: Implementar consulta real a API externa de tipo de cambio
-  // const url = `https://dniruc.apisperu.com/api/v1/exchange-rate`
-  // const response = await fetch(url)
-  // const data = await response.json()
-  // return { data: data.rate }
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const response = await fetch(`${baseUrl}/tipo-cambio`, {
+      next: { revalidate: 3600 },
+    });
 
-  // Por ahora devolvemos 1 (equivale a transacciones en soles)
+    if (response.ok) {
+      const data = await response.json();
+      return { data: data.venta ?? data.compra ?? 1 };
+    }
+  } catch {
+    // Si falla la consulta, retornar valor por defecto
+  }
+
   return { data: 1 };
 }
 

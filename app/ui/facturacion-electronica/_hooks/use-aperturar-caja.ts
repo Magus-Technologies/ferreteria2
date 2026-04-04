@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { message } from 'antd'
 import { cajaApi } from '~/lib/api/caja'
-import { authApi } from '~/lib/api'
 import { AperturarCajaFormValues } from '../_components/modals/modal-aperturar-caja'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getAuthToken } from '~/lib/api'
+import { useAuth } from '~/lib/auth-context'
 
 export interface AperturaDataResponse {
   id: string | number
@@ -36,23 +36,9 @@ export default function useAperturarCaja({
   onSuccess?: (data: AperturaDataResponse) => void
 }) {
   const [loading, setLoading] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
+  const { user } = useAuth()
+  const userId = user?.id ?? null
   const queryClient = useQueryClient()
-
-  useEffect(() => {
-    // Obtener el usuario actual al montar el componente
-    const fetchUser = async () => {
-      try {
-        const response = await authApi.getUser()
-        if (response.data?.id) {
-          setUserId(response.data.id)
-        }
-      } catch (error) {
-        console.error('Error al obtener usuario:', error)
-      }
-    }
-    fetchUser()
-  }, [])
 
   async function crearAperturarCaja(
     values: AperturarCajaFormValues & { 

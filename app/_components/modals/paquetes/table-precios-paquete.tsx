@@ -110,10 +110,10 @@ export default function TablePreciosPaquete({
       cellClass: 'font-medium',
       minWidth: 150,
     },
-    ...colsPrecio('publico', 'P. Público'),
-    ...colsPrecio('especial', 'P. Especial'),
-    ...colsPrecio('minimo', 'P. Mínimo'),
-    ...colsPrecio('ultimo', 'P. Último'),
+    ...colsPrecio('publico', 'Precio Público'),
+    ...colsPrecio('especial', 'Precio Especial'),
+    ...colsPrecio('minimo', 'Precio Mínimo'),
+    ...colsPrecio('ultimo', 'Precio Último'),
   ]
 
   return (
@@ -130,7 +130,7 @@ export default function TablePreciosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Producto', 'P. Público', 'Desc.', 'P. Especial', 'Desc.', 'P. Mínimo', 'Desc.', 'P. Último', 'Desc.'],
+          columns: ['Producto', 'Precio Público', 'Desc.', 'Precio Especial', 'Desc.', 'Precio Mínimo', 'Desc.', 'Precio Último', 'Desc.'],
         },
       ]}
     />

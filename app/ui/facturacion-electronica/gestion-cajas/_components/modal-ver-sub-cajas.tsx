@@ -8,6 +8,7 @@ import { FaPlus, FaExchangeAlt, FaWarehouse, FaBoxes } from 'react-icons/fa'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import type { CajaPrincipal, SubCaja } from '~/lib/api/caja-principal'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
+import { cajaApi } from '~/lib/api/caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCrearSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-crear-sub-caja'
 import ModalEditarSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-editar-sub-caja'
@@ -111,14 +112,8 @@ export default function ModalVerSubCajas({
     const { data: cajaActiva } = useQuery({
         queryKey: [QueryKeys.CAJA_ACTIVA],
         queryFn: async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cajas/cierre/activa`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                    'Accept': 'application/json',
-                },
-            })
-            const json = await response.json()
-            return json.data || null
+            const response = await cajaApi.cajaActiva()
+            return response.data?.data || null
         },
         enabled: open,
     })

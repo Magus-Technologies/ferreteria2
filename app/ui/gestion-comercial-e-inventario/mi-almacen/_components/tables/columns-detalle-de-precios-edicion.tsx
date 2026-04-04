@@ -313,7 +313,7 @@ export function useColumnsDetalleDePreciosEdicion({
                 ],
               }}
               formWithMessage={false}
-              placeholder='P. Público'
+              placeholder='Precio Público'
               precision={2}
               prefix='S/. '
               onChange={val => {
@@ -495,7 +495,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Comisión P. Público',
+      headerName: 'Comisión Precio Público',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -507,7 +507,7 @@ export function useColumnsDetalleDePreciosEdicion({
                 name: [value, 'comision_publico'],
               }}
               formWithMessage={false}
-              placeholder='Comisión P. Público'
+              placeholder='Comisión Precio Público'
               precision={2}
               prefix='S/. '
               onChange={val => {

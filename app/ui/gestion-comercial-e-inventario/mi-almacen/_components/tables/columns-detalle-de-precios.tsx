@@ -86,7 +86,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'percent',
     },
     {
-      headerName: 'P. Público',
+      headerName: 'Precio Público',
       field: 'precio_publico',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -117,7 +117,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'P. Especial',
+      headerName: 'Precio Especial',
       field: 'precio_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -129,7 +129,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'P. Mínimo',
+      headerName: 'Precio Mínimo',
       field: 'precio_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -141,7 +141,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'P. Último',
+      headerName: 'Precio Último',
       field: 'precio_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -153,7 +153,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Comisión P. Público',
+      headerName: 'Comisión Precio Público',
       field: 'comision_publico',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -165,7 +165,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Comisión P. Especial',
+      headerName: 'Comisión Precio Especial',
       field: 'comision_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -177,7 +177,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Comisión P. Mínimo',
+      headerName: 'Comisión Precio Mínimo',
       field: 'comision_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -189,7 +189,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Comisión P. Último',
+      headerName: 'Comisión Precio Último',
       field: 'comision_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -201,7 +201,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Activador P. Especial',
+      headerName: 'Activador Precio Especial',
       field: 'activador_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -213,7 +213,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Activador P. Mínimo',
+      headerName: 'Activador Precio Mínimo',
       field: 'activador_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -225,7 +225,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Activador P. Último',
+      headerName: 'Activador Precio Último',
       field: 'activador_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',

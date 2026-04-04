@@ -70,7 +70,7 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <LabelBase label="Total P. Público:" orientation="column">
+          <LabelBase label="Total Precio Público:" orientation="column">
             <div className="flex items-center h-10 px-3 bg-green-100 rounded-lg border border-green-300">
               <span className="text-base font-semibold text-green-700">
                 S/. {totales.ventaPublico.toFixed(2)}
@@ -78,7 +78,7 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
             </div>
           </LabelBase>
 
-          <LabelBase label="Total P. Especial:" orientation="column">
+          <LabelBase label="Total Precio Especial:" orientation="column">
             <div className="flex items-center h-10 px-3 bg-blue-100 rounded-lg border border-blue-300">
               <span className="text-base font-semibold text-blue-700">
                 S/. {totales.ventaEspecial.toFixed(2)}
@@ -86,7 +86,7 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
             </div>
           </LabelBase>
 
-          <LabelBase label="Total P. Mínimo:" orientation="column">
+          <LabelBase label="Total Precio Mínimo:" orientation="column">
             <div className="flex items-center h-10 px-3 bg-amber-100 rounded-lg border border-amber-300">
               <span className="text-base font-semibold text-amber-700">
                 S/. {totales.ventaMinimo.toFixed(2)}
@@ -94,7 +94,7 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
             </div>
           </LabelBase>
 
-          <LabelBase label="Total P. Último:" orientation="column">
+          <LabelBase label="Total Precio Último:" orientation="column">
             <div className="flex items-center h-10 px-3 bg-purple-100 rounded-lg border border-purple-300">
               <span className="text-base font-semibold text-purple-700">
                 S/. {totales.ventaUltimo.toFixed(2)}

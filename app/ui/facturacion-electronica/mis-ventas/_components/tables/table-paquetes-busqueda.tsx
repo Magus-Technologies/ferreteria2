@@ -71,7 +71,7 @@ export default function TablePaquetesBusqueda({
       },
     },
     {
-      headerName: 'P. Público',
+      headerName: 'Precio Público',
       width: 120,
       cellClass: 'text-right font-semibold',
       valueGetter: (params) => {

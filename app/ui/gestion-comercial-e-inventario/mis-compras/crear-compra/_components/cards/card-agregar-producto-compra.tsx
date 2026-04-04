@@ -185,7 +185,7 @@ export default function CardAgregarProductoCompra({
           </div>
         </div>
         <div className='flex flex-col items-center'>
-          <div className='text-slate-500'>P. Público:</div>
+          <div className='text-slate-500'>Precio Público:</div>
           <div className='text-orange-700'>
             S/.{' '}
             {Number(

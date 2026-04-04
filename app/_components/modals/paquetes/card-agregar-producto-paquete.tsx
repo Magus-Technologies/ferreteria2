@@ -148,19 +148,19 @@ export default function CardAgregarProductoPaquete({
       {unidad_derivada_seleccionada && (
         <div className="bg-blue-50 p-2 rounded-lg text-sm space-y-1">
           <div className="flex justify-between">
-            <span className="text-gray-600">P. Público:</span>
+            <span className="text-gray-600">Precio Público:</span>
             <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_publico || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">P. Especial:</span>
+            <span className="text-gray-600">Precio Especial:</span>
             <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_especial || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">P. Mínimo:</span>
+            <span className="text-gray-600">Precio Mínimo:</span>
             <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_minimo || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">P. Último:</span>
+            <span className="text-gray-600">Precio Último:</span>
             <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_ultimo || 0).toFixed(2)}</span>
           </div>
         </div>

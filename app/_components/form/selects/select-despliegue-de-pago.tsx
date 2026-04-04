@@ -28,7 +28,6 @@ export default function SelectDespliegueDePago({
     queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
       const result = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/metodos-para-ventas')
-      console.log('🔍 Métodos de pago recibidos del backend:', result.data?.data)
       return result.data?.data || []
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -66,8 +65,6 @@ export default function SelectDespliegueDePago({
     value: metodo.value,
     label: metodo.label,
   })) || []
-
-  console.log('🔍 Opciones finales para el select:', options)
 
   return (
     <SelectBase

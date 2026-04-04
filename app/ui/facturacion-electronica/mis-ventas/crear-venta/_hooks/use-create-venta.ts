@@ -343,13 +343,11 @@ export default function useCreateVenta({
         return
       }
 
-      // En modo edición, invalidar queries y redirigir
+      // En modo edición, invalidar queries y seguir el flujo normal (mostrar PDF → limpiar)
       if (isEditing) {
         message.success('Venta actualizada exitosamente')
         queryClient.invalidateQueries({ queryKey: ['venta', ventaId] })
         queryClient.invalidateQueries({ queryKey: ['ventas'] })
-        router.push('/ui/facturacion-electronica/mis-ventas')
-        return
       }
 
       // Si es venta en espera: mensaje específico, limpiar formulario y NO abrir modal de documento
@@ -361,7 +359,9 @@ export default function useCreateVenta({
       }
 
       // Éxito para venta normal
-      message.success('Venta creada exitosamente')
+      if (!isEditing) {
+        message.success('Venta creada exitosamente')
+      }
 
       // Emitir evento de venta creada (solo en modo creación normal)
       if (response.data?.data) {
@@ -421,7 +421,7 @@ export default function useCreateVenta({
             observaciones: observaciones,
             almacen_salida_id: almacen_id,
             chofer_id: despachador_id ? String(despachador_id) : undefined,
-            quien_entrega: despachador_id ? QuienEntrega.CHOFER : undefined,
+            quien_entrega: despachador_id ? QuienEntrega.CHOFER : QuienEntrega.ALMACEN,
             user_id: user_id,
             tipo_pedido: (tipo_pedido as TipoPedido) || undefined,
             cargo_destino: cargo_destino || undefined,
