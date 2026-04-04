@@ -27,6 +27,7 @@ export function useColumnsRecepcionesAlmacen({
 }) {
   const columns: ColDef<RecepcionAlmacenResponse>[] = [
     {
+      colId: 'numero',
       headerName: 'N° Documento',
       field: 'numero',
       width: 90,
@@ -56,6 +57,7 @@ export function useColumnsRecepcionesAlmacen({
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
       width: 90,
@@ -64,6 +66,7 @@ export function useColumnsRecepcionesAlmacen({
       filter: 'agDateColumnFilter',
     },
     {
+      colId: 'registrador',
       headerName: 'Registrador',
       field: 'user.name',
       width: 80,
@@ -71,6 +74,7 @@ export function useColumnsRecepcionesAlmacen({
       filter: true,
     },
     {
+      colId: 'proveedor',
       headerName: 'Proveedor',
       width: 200,
       minWidth: 200,
@@ -82,6 +86,7 @@ export function useColumnsRecepcionesAlmacen({
       flex: 1,
     },
     {
+      colId: 'compra_orden',
       headerName: 'Compra / Orden',
       width: 90,
       minWidth: 90,
@@ -92,12 +97,14 @@ export function useColumnsRecepcionesAlmacen({
           : (data?.orden_compra?.codigo ?? ''),
     },
     {
+      colId: 'estado',
       headerName: 'Activo',
       field: 'estado',
       width: 90,
       type: 'boolean',
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 80,

@@ -79,6 +79,7 @@ export function useColumnsCotizar({
     //   pinned: 'left',
     // },
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'name',
       width: 120,
@@ -114,6 +115,7 @@ export function useColumnsCotizar({
       ),
     },
     {
+      colId: 'descripcion',
       headerName: 'Descripción',
       field: 'name',
       flex: 1,
@@ -142,6 +144,7 @@ export function useColumnsCotizar({
       ),
     },
     {
+      colId: 'marca',
       headerName: 'Marca',
       field: 'name',
       width: 120,
@@ -169,6 +172,7 @@ export function useColumnsCotizar({
       ),
     },
     {
+      colId: 'unidad_medida',
       headerName: 'U.Medida',
       field: 'name',
       width: 150,
@@ -213,6 +217,7 @@ export function useColumnsCotizar({
       },
     },
     {
+      colId: 'cantidad',
       headerName: 'Cant.',
       field: 'name',
       width: 85,
@@ -233,6 +238,7 @@ export function useColumnsCotizar({
       ),
     },
     {
+      colId: 'precio',
       headerName: 'Precio',
       field: 'name',
       width: 110,
@@ -255,6 +261,7 @@ export function useColumnsCotizar({
       ),
     },
     {
+      colId: 'subtotal',
       headerName: 'Subtotal',
       field: 'name',
       width: 120,
@@ -276,6 +283,7 @@ export function useColumnsCotizar({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'name',
       width: 100,

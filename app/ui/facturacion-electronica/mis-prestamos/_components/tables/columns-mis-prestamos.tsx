@@ -15,6 +15,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
     //   pinned: 'left',
     // },
     {
+      colId: "fecha",
       headerName: "Fecha",
       field: "fecha",
       width: 180,
@@ -22,11 +23,13 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
         params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
     },
     {
+      colId: "numero",
       headerName: "N° Préstamo",
       field: "numero",
       width: 150,
     },
     {
+      colId: "fecha_vencimiento",
       headerName: "F. Vencimiento",
       field: "fecha_vencimiento",
       width: 120,
@@ -34,6 +37,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
         params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
     },
     {
+      colId: "tipo_operacion",
       headerName: "Operación",
       field: "tipo_operacion",
       width: 140,
@@ -48,6 +52,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       }
     },
     {
+      colId: "cliente_proveedor",
       headerName: "Cliente/Proveedor",
       flex: 1,
       minWidth: 200,
@@ -68,6 +73,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       },
     },
     {
+      colId: "direccion",
       headerName: "Dirección",
       width: 150,
       valueGetter: (params) => {
@@ -76,6 +82,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       },
     },
     {
+      colId: "telefono",
       headerName: "Teléfono",
       width: 120,
       valueGetter: (params) => {
@@ -84,16 +91,19 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       },
     },
     {
+      colId: "vendedor",
       headerName: "Vendedor",
       valueGetter: (params) => params.data?.user?.name || "",
       width: 150,
     },
     {
+      colId: "registra",
       headerName: "Registra",
       valueGetter: (params) => params.data?.almacen?.name || "",
       width: 120,
     },
     {
+      colId: "monto_total",
       headerName: "Cant. Total",
       field: "monto_total",
       width: 110,
@@ -104,6 +114,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       cellStyle: { fontWeight: "bold", color: "#1e40af" },
     },
     {
+      colId: "monto_pagado",
       headerName: "Devuelto",
       field: "monto_pagado",
       width: 100,
@@ -114,6 +125,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       cellStyle: { fontWeight: "bold", color: "#059669" },
     },
     {
+      colId: "monto_pendiente",
       headerName: "Pendiente",
       field: "monto_pendiente",
       width: 100,
@@ -124,6 +136,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       cellStyle: { fontWeight: "bold", color: "#dc2626" },
     },
     {
+      colId: "estado",
       headerName: "Estado",
       field: "estado_prestamo",
       width: 130,
@@ -145,6 +158,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       }
     },
     {
+      colId: "acciones",
       headerName: "Acciones",
       width: 100,
       pinned: "right",

@@ -15,6 +15,7 @@ export function useColumnsMotivosTraslado({
 }) {
   const columns: ColDef<MotivoTraslado>[] = [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'codigo',
       width: 100,
@@ -22,6 +23,7 @@ export function useColumnsMotivosTraslado({
       filter: true,
     },
     {
+      colId: 'descripcion',
       headerName: 'Descripción',
       field: 'descripcion',
       width: 400,
@@ -30,6 +32,7 @@ export function useColumnsMotivosTraslado({
       flex: 1,
     },
     {
+      colId: 'activo',
       headerName: 'Activo',
       field: 'activo',
       width: 90,
@@ -37,6 +40,7 @@ export function useColumnsMotivosTraslado({
       type: 'boolean',
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 80,

@@ -55,6 +55,7 @@ export function useColumnsCompras({
 
   const columns: ColDef<Compra>[] = [
     {
+      colId: 'tipo_documento',
       headerName: 'Documento',
       field: 'tipo_documento',
       width: 80,
@@ -65,6 +66,7 @@ export function useColumnsCompras({
       filter: true,
     },
     {
+      colId: 'serie',
       headerName: 'Serie',
       field: 'serie',
       width: 60,
@@ -72,6 +74,7 @@ export function useColumnsCompras({
       filter: true,
     },
     {
+      colId: 'numero',
       headerName: 'Número',
       field: 'numero',
       width: 60,
@@ -79,6 +82,7 @@ export function useColumnsCompras({
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'fecha',
       headerName: 'Fecha Emisión',
       field: 'fecha',
       width: 150,
@@ -87,6 +91,7 @@ export function useColumnsCompras({
       filter: 'agDateColumnFilter',
     },
     {
+      colId: 'fecha_vencimiento',
       headerName: 'Fecha Vencimiento',
       field: 'fecha_vencimiento',
       width: 130,
@@ -99,6 +104,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'ruc',
       headerName: 'RUC',
       field: 'proveedor.ruc',
       width: 100,
@@ -107,6 +113,7 @@ export function useColumnsCompras({
       valueGetter: (params) => params.data?.proveedor?.ruc || '',
     },
     {
+      colId: 'proveedor',
       headerName: 'Proveedor',
       field: 'proveedor.razon_social',
       width: 200,
@@ -116,6 +123,7 @@ export function useColumnsCompras({
       valueGetter: (params) => params.data?.proveedor?.razon_social || '',
     },
     {
+      colId: 'subtotal',
       headerName: 'Subtotal',
       field: 'productos_por_almacen',
       width: 90,
@@ -132,6 +140,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'igv',
       headerName: 'IGV',
       field: 'productos_por_almacen',
       width: 90,
@@ -151,6 +160,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'percepcion',
       headerName: 'Percepción',
       field: 'percepcion',
       width: 90,
@@ -163,6 +173,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'total',
       headerName: 'Total',
       field: 'productos_por_almacen',
       width: 90,
@@ -179,6 +190,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'forma_pago',
       headerName: 'Forma de Pago',
       field: 'forma_de_pago',
       width: 80,
@@ -191,6 +203,7 @@ export function useColumnsCompras({
       filter: true,
     },
     {
+      colId: 'total_pagado',
       headerName: 'Total Pagado',
       field: 'productos_por_almacen',
       width: 90,
@@ -206,6 +219,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'resta',
       headerName: 'Resta',
       field: 'productos_por_almacen',
       width: 90,
@@ -225,6 +239,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'estado_cuenta',
       headerName: 'Estado de Cuenta',
       field: 'productos_por_almacen',
       width: 120,
@@ -284,6 +299,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'registrador',
       headerName: 'Registrador',
       field: 'user.name',
       width: 80,
@@ -291,6 +307,7 @@ export function useColumnsCompras({
       filter: true,
     },
     {
+      colId: 'orden_compra',
       headerName: 'Orden de Compra',
       field: 'orden_compra',
       width: 130,
@@ -317,6 +334,7 @@ export function useColumnsCompras({
       },
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado_de_compra',
       width: 90,
@@ -345,6 +363,7 @@ export function useColumnsCompras({
     ...((setCompraRecepcion && setOpenModal
       ? [
           {
+            colId: 'acciones',
             headerName: 'Acciones',
             field: 'id',
             width: 95,

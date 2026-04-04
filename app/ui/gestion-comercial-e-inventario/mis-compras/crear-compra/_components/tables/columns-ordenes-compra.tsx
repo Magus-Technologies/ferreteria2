@@ -15,6 +15,7 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
   return useMemo(
     () => [
       {
+        colId: 'numero_fila',
         headerName: '#',
         valueGetter: 'node.rowIndex + 1',
         width: 60,
@@ -22,12 +23,14 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         pinned: 'left',
       },
       {
+        colId: 'codigo',
         headerName: 'Código',
         field: 'codigo',
         width: 120,
         cellStyle: { textAlign: 'center' },
       },
       {
+        colId: 'fecha',
         headerName: 'Fecha',
         field: 'fecha',
         width: 120,
@@ -38,12 +41,14 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         cellStyle: { textAlign: 'center' },
       },
       {
+        colId: 'proveedor',
         headerName: 'Proveedor',
         field: 'proveedor.razon_social',
         width: 250,
         valueGetter: params => params.data?.proveedor?.razon_social || '-',
       },
       {
+        colId: 'ruc',
         headerName: 'RUC',
         field: 'proveedor.ruc',
         width: 120,
@@ -51,6 +56,7 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         cellStyle: { textAlign: 'center' },
       },
       {
+        colId: 'moneda',
         headerName: 'Moneda',
         field: 'tipo_moneda',
         width: 100,
@@ -58,6 +64,7 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         cellStyle: { textAlign: 'center' },
       },
       {
+        colId: 'total',
         headerName: 'Total',
         field: 'total',
         width: 120,
@@ -69,6 +76,7 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         cellStyle: { textAlign: 'right', fontWeight: 'bold' },
       },
       {
+        colId: 'estado',
         headerName: 'Estado',
         field: 'estado',
         width: 120,
@@ -76,6 +84,7 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         cellStyle: { textAlign: 'center' },
       },
       {
+        colId: 'productos_count',
         headerName: 'Productos',
         field: 'productos_count',
         width: 100,

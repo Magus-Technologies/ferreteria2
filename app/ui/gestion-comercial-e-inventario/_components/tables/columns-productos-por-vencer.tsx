@@ -16,6 +16,7 @@ interface ProductosPorVencerProps {
 export function useColumnsProductosPorVencer() {
   const columns: ColDef<ProductosPorVencerProps>[] = [
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       minWidth: 100,
@@ -32,6 +33,7 @@ export function useColumnsProductosPorVencer() {
       filter: true,
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'name',
       minWidth: 200,
@@ -39,6 +41,7 @@ export function useColumnsProductosPorVencer() {
       flex: 2,
     },
     {
+      colId: 'lote',
       headerName: 'Lote',
       field: 'lote',
       minWidth: 100,
@@ -46,6 +49,7 @@ export function useColumnsProductosPorVencer() {
       valueFormatter: (params) => params.value || '-',
     },
     {
+      colId: 'situacion',
       headerName: 'Situación',
       field: 'dias_restantes',
       minWidth: 120,
@@ -58,6 +62,7 @@ export function useColumnsProductosPorVencer() {
       sortable: true,
     },
     {
+      colId: 'vencimiento',
       headerName: 'Vencimiento',
       field: 'vencimiento',
       minWidth: 110,
@@ -65,6 +70,7 @@ export function useColumnsProductosPorVencer() {
       filter: 'agDateColumnFilter',
     },
     {
+      colId: 'cantidad',
       headerName: 'Cant. Stock',
       field: 'cantidad',
       minWidth: 90,
@@ -72,6 +78,7 @@ export function useColumnsProductosPorVencer() {
       flex: 0.8,
     },
     {
+      colId: 'stock_min',
       headerName: 'Stock Mín.',
       field: 'stock_min',
       minWidth: 90,
@@ -79,6 +86,7 @@ export function useColumnsProductosPorVencer() {
       flex: 0.8,
     },
     {
+      colId: 'almacen',
       headerName: 'Almacén',
       field: 'almacen',
       minWidth: 100,

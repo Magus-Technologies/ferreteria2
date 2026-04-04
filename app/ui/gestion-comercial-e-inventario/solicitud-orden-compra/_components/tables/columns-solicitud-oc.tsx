@@ -30,6 +30,7 @@ export function useColumnsSolicitudOC({
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'codigo',
       width: 130,
@@ -41,6 +42,7 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'titulo',
       headerName: 'Título',
       field: 'titulo',
       flex: 1,
@@ -54,12 +56,14 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'area',
       headerName: 'Área',
       field: 'area',
       width: 130,
       minWidth: 100,
     },
     {
+      colId: 'descripcion',
       headerName: 'Descripción',
       field: 'observaciones',
       flex: 1,
@@ -73,6 +77,7 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'presupuesto',
       headerName: 'Presupuesto',
       field: 'servicio',
       width: 130,
@@ -86,6 +91,7 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'prioridad',
       headerName: 'Prioridad',
       field: 'prioridad',
       width: 110,
@@ -99,6 +105,7 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 110,
@@ -112,6 +119,7 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'fecha_requerida',
       headerName: 'Fecha Requerida',
       field: 'fecha_requerida',
       width: 140,
@@ -123,6 +131,7 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 120,

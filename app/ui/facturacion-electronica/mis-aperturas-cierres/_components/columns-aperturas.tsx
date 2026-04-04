@@ -20,6 +20,7 @@ export const useColumnsAperturas = ({
 }): ColDef<AperturaYCierreCaja>[] => {
   return [
     {
+      colId: 'fecha_apertura',
       headerName: 'Fecha Apertura',
       field: 'fecha_apertura',
       flex: 1,
@@ -28,6 +29,7 @@ export const useColumnsAperturas = ({
       cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
     },
     {
+      colId: 'vendedor',
       // Sin centrado — texto izquierda por defecto
       headerName: 'Vendedor',
       field: 'vendedor',
@@ -44,6 +46,7 @@ export const useColumnsAperturas = ({
       },
     },
     {
+      colId: 'caja',
       // Sin centrado — texto izquierda por defecto
       headerName: 'Caja',
       field: 'caja_principal',
@@ -52,6 +55,7 @@ export const useColumnsAperturas = ({
       cellRenderer: (params: any) => params.value?.nombre,
     },
     {
+      colId: 'monto_apertura',
       headerName: 'Monto Apertura',
       field: 'monto_apertura',
       flex: 1,
@@ -64,6 +68,7 @@ export const useColumnsAperturas = ({
       ),
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       flex: 1,
@@ -76,6 +81,7 @@ export const useColumnsAperturas = ({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 90,

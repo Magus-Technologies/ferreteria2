@@ -12,6 +12,7 @@ export const useColumnsMetodosPago = ({
 }): ColDef<DespliegueDePago>[] => {
   return [
     {
+      colId: 'nombre',
       headerName: 'Nombre',
       field: 'name',
       flex: 2,
@@ -21,6 +22,7 @@ export const useColumnsMetodosPago = ({
       ),
     },
     {
+      colId: 'requiere_numero',
       headerName: 'Requiere N° Operación',
       field: 'requiere_numero_serie',
       width: 180,
@@ -35,6 +37,7 @@ export const useColumnsMetodosPago = ({
       ),
     },
     {
+      colId: 'tipo_sobrecargo',
       headerName: 'Tipo Sobrecargo',
       field: 'tipo_sobrecargo',
       width: 150,
@@ -46,6 +49,7 @@ export const useColumnsMetodosPago = ({
       },
     },
     {
+      colId: 'sobrecargo',
       headerName: 'Sobrecargo',
       field: 'sobrecargo_porcentaje',
       width: 120,
@@ -63,6 +67,7 @@ export const useColumnsMetodosPago = ({
       },
     },
     {
+      colId: 'visible',
       headerName: 'Visible',
       field: 'mostrar',
       width: 100,
@@ -77,6 +82,7 @@ export const useColumnsMetodosPago = ({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 150,

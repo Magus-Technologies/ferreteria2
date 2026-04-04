@@ -24,6 +24,7 @@ export type UltimasComprasType = Pick<
 export function useColumnsUltimasComprasIngresadas() {
   const columns: ColDef<UltimasComprasType>[] = [
     {
+      colId: 'tipo_documento',
       headerName: 'Documento',
       field: 'compra.tipo_documento',
       width: 80,
@@ -31,6 +32,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: true,
     },
     {
+      colId: 'serie',
       headerName: 'Serie',
       field: 'compra.serie',
       width: 60,
@@ -38,6 +40,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: true,
     },
     {
+      colId: 'numero',
       headerName: 'Número',
       field: 'compra.numero',
       width: 60,
@@ -45,6 +48,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: true,
     },
     {
+      colId: 'fecha',
       headerName: 'Fecha',
       field: 'compra.fecha',
       width: 90,
@@ -53,6 +57,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: 'agDateColumnFilter',
     },
     {
+      colId: 'razon_social',
       headerName: 'Razón Social',
       field: 'compra.proveedor.razon_social',
       width: 200,
@@ -61,6 +66,7 @@ export function useColumnsUltimasComprasIngresadas() {
       flex: 1,
     },
     {
+      colId: 'registrado_por',
       headerName: 'Registrado por',
       field: 'compra.user.name',
       width: 80,
@@ -68,6 +74,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: true,
     },
     {
+      colId: 'unidad_derivada',
       headerName: 'U. Derivada',
       field: 'unidad_derivada_inmutable.name',
       width: 80,
@@ -75,6 +82,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: true,
     },
     {
+      colId: 'cantidad',
       headerName: 'Cant.',
       field: 'cantidad',
       width: 50,
@@ -82,6 +90,7 @@ export function useColumnsUltimasComprasIngresadas() {
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'precio',
       headerName: 'Precio',
       field: 'costo',
       width: 90,
@@ -94,6 +103,7 @@ export function useColumnsUltimasComprasIngresadas() {
           : String(Number(data?.costo ?? 0) * Number(data?.factor ?? 1)),
     },
     {
+      colId: 'subtotal',
       headerName: 'Subtotal',
       field: 'costo',
       width: 90,

@@ -37,6 +37,7 @@ export function useColumnsDocIngresoSalida({
 }) {
   const columns: ColDef<UnidadDerivadaConProducto>[] = [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'producto_almacen_ingreso_salida',
       valueFormatter: ({
@@ -51,6 +52,7 @@ export function useColumnsDocIngresoSalida({
       filter: true,
     },
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       field: 'cantidad',
       width: 60,
@@ -58,6 +60,7 @@ export function useColumnsDocIngresoSalida({
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'unidad_derivada',
       headerName: 'Unidad Derivada',
       field: 'unidad_derivada_inmutable',
       width: 60,
@@ -72,6 +75,7 @@ export function useColumnsDocIngresoSalida({
       },
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'producto_almacen_ingreso_salida',
       valueFormatter: ({
@@ -87,6 +91,7 @@ export function useColumnsDocIngresoSalida({
       flex: 1,
     },
     {
+      colId: 'stock_anterior',
       headerName: 'Stock Anterior',
       field: 'historial',
       width: 55,
@@ -125,6 +130,7 @@ export function useColumnsDocIngresoSalida({
       },
     },
     {
+      colId: 'stock_nuevo',
       headerName: 'Stock Nuevo',
       field: 'historial',
       width: 55,
@@ -163,6 +169,7 @@ export function useColumnsDocIngresoSalida({
       },
     },
     {
+      colId: 'costo',
       headerName: 'Costo',
       field: 'producto_almacen_ingreso_salida',
       width: 50,

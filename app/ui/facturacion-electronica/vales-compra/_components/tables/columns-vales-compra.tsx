@@ -194,30 +194,35 @@ function CellAcciones({ data }: { data: ValeCompra }) {
 export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
   return [
     {
+      colId: 'codigo',
       headerName: "Código",
       field: "codigo",
       width: 110,
       pinned: 'left',
     },
     {
+      colId: 'nombre',
       headerName: "Nombre",
       field: "nombre",
       flex: 1,
       minWidth: 250,
     },
     {
+      colId: 'tipo',
       headerName: "Tipo",
       field: "tipo_promocion",
       width: 180,
       cellRenderer: CellTipoPromocion,
     },
     {
+      colId: 'modalidad',
       headerName: "Modalidad",
       field: "modalidad",
       width: 140,
       cellRenderer: CellModalidad,
     },
     {
+      colId: 'cantidad_minima',
       headerName: "Cant. Mín.",
       field: "cantidad_minima",
       width: 110,
@@ -225,18 +230,21 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
       cellStyle: { textAlign: 'center' },
     },
     {
+      colId: 'descuento',
       headerName: "Descuento",
       width: 120,
       cellRenderer: CellDescuento,
       cellRendererParams: (params: any) => ({ data: params.data }),
     },
     {
+      colId: 'stock',
       headerName: "Stock",
       width: 100,
       cellRenderer: CellStock,
       cellRendererParams: (params: any) => ({ data: params.data }),
     },
     {
+      colId: 'fecha_inicio',
       headerName: "Fecha Inicio",
       field: "fecha_inicio",
       width: 120,
@@ -244,6 +252,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
         params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
     },
     {
+      colId: 'fecha_fin',
       headerName: "Fecha Fin",
       field: "fecha_fin",
       width: 120,
@@ -251,12 +260,14 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
         params.value ? dayjs(params.value).format("DD/MM/YYYY") : "Sin límite",
     },
     {
+      colId: 'estado',
       headerName: "Estado",
       field: "estado",
       width: 120,
       cellRenderer: CellEstado,
     },
     {
+      colId: 'created_at',
       headerName: "Creado",
       field: "created_at",
       width: 160,
@@ -264,6 +275,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
         params.value ? dayjs(params.value).format("DD/MM/YYYY HH:mm") : "",
     },
     {
+      colId: 'acciones',
       headerName: "Acciones",
       width: 150,
       pinned: 'right',

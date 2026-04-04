@@ -11,6 +11,7 @@ export function useColumnsPrestamo(
 ): ColDef<FormListFieldData>[] {
   return [
     {
+      colId: "codigo",
       headerName: "Código",
       field: "name",
       width: 120,
@@ -29,6 +30,7 @@ export function useColumnsPrestamo(
       },
     },
     {
+      colId: "descripcion",
       headerName: "Descripción",
       field: "name",
       flex: 1,
@@ -48,6 +50,7 @@ export function useColumnsPrestamo(
       },
     },
     {
+      colId: "marca",
       headerName: "Marca",
       field: "name",
       width: 120,
@@ -62,6 +65,7 @@ export function useColumnsPrestamo(
       },
     },
     {
+      colId: "unidad",
       headerName: "Unidad",
       field: "name",
       width: 100,
@@ -76,6 +80,7 @@ export function useColumnsPrestamo(
       },
     },
     {
+      colId: "cantidad",
       headerName: "Cantidad",
       field: "name",
       width: 100,
@@ -104,6 +109,7 @@ export function useColumnsPrestamo(
     //   cellStyle: { fontWeight: "bold", color: "#1e40af" },
     // },
     {
+      colId: "acciones",
       headerName: "Acciones",
       width: 100,
       pinned: "right",

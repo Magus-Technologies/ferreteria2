@@ -28,6 +28,7 @@ export function useColumnsComprar({
 
   const columns: ColDef<FormListFieldData>[] = [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'name',
       minWidth: 70,
@@ -67,6 +68,7 @@ export function useColumnsComprar({
       },
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'name',
       minWidth: 250,
@@ -129,6 +131,7 @@ export function useColumnsComprar({
       flex: 1,
     },
     {
+      colId: 'marca',
       headerName: 'Marca',
       field: 'name',
       minWidth: 120,
@@ -164,6 +167,7 @@ export function useColumnsComprar({
       },
     },
     {
+      colId: 'unidad_derivada',
       headerName: 'Unidad Derivada',
       field: 'name',
       minWidth: 90,
@@ -235,6 +239,7 @@ export function useColumnsComprar({
     ...((cantidad_pendiente
       ? [
           {
+            colId: 'total',
             headerName: 'Total',
             field: 'name',
             minWidth: 85,
@@ -268,6 +273,7 @@ export function useColumnsComprar({
             },
           },
           {
+            colId: 'entregado',
             headerName: 'Entregado',
             field: 'name',
             minWidth: 85,
@@ -292,6 +298,7 @@ export function useColumnsComprar({
             },
           },
           {
+            colId: 'pendiente',
             headerName: 'Pendiente',
             field: 'name',
             minWidth: 85,
@@ -318,6 +325,7 @@ export function useColumnsComprar({
         ]
       : []) as ColDef<FormListFieldData>[]),
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       field: 'name',
       minWidth: 85,
@@ -379,6 +387,7 @@ export function useColumnsComprar({
       },
     },
     {
+      colId: 'precio',
       headerName: 'Precio',
       field: 'name',
       minWidth: 110,
@@ -440,6 +449,7 @@ export function useColumnsComprar({
       hide: !incluye_precios,
     },
     {
+      colId: 'subtotal',
       headerName: 'SubTotal',
       field: 'name',
       minWidth: 110,
@@ -475,6 +485,7 @@ export function useColumnsComprar({
       hide: !incluye_precios,
     },
     {
+      colId: 'flete',
       headerName: 'Flete',
       field: 'name',
       minWidth: 110,
@@ -508,6 +519,7 @@ export function useColumnsComprar({
       hide: !incluye_precios,
     },
     {
+      colId: 'vencimiento',
       headerName: 'F. Vencimiento',
       field: 'name',
       minWidth: 150,
@@ -538,6 +550,7 @@ export function useColumnsComprar({
       },
     },
     {
+      colId: 'lote',
       headerName: 'Lote',
       field: 'name',
       minWidth: 120,
@@ -567,6 +580,7 @@ export function useColumnsComprar({
       },
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'name',
       width: 40,

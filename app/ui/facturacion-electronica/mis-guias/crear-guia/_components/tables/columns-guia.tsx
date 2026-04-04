@@ -15,6 +15,7 @@ export function useColumnsGuia({
 }) {
   const columns: ColDef<FormListFieldData>[] = [
     {
+      colId: 'codigo',
       headerName: 'Código',
       field: 'name',
       minWidth: 100,
@@ -43,6 +44,7 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'name',
       minWidth: 250,
@@ -80,6 +82,7 @@ export function useColumnsGuia({
       flex: 1,
     },
     {
+      colId: 'marca',
       headerName: 'Marca',
       field: 'name',
       minWidth: 120,
@@ -108,6 +111,7 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'unidad_medida',
       headerName: 'U. Medida',
       field: 'name',
       minWidth: 100,
@@ -156,6 +160,7 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       field: 'name',
       minWidth: 100,
@@ -176,6 +181,7 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'costo',
       headerName: 'Costo',
       field: 'name',
       minWidth: 110,
@@ -197,6 +203,7 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'precio_venta',
       headerName: 'P. Venta',
       field: 'name',
       minWidth: 110,
@@ -220,6 +227,7 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'name',
       width: 80,

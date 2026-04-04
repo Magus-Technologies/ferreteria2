@@ -30,6 +30,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
     //   pinned: 'left',
     // },
     {
+      colId: "fecha",
       headerName: "Fecha",
       field: "fecha",
       width: 180,
@@ -37,22 +38,26 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
         params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
     },
     {
+      colId: "numero",
       headerName: "N°Prof",
       field: "numero",
       width: 150,
     },
     {
+      colId: "modalidad",
       headerName: "Modalidad",
       valueGetter: () => "CONTADO",
       width: 120,
     },
     {
+      colId: "stock",
       headerName: "Stock",
       field: "reservar_stock",
       width: 120,
       cellRenderer: CellStockReservado,
     },
     {
+      colId: "cliente",
       headerName: "Cliente",
       flex: 1,
       minWidth: 200,
@@ -66,26 +71,31 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       },
     },
     {
+      colId: "direccion",
       headerName: "Dirección",
       valueGetter: (params) => params.data?.cliente?.direccion || "",
       width: 150,
     },
     {
+      colId: "telefono",
       headerName: "Teléfono",
       valueGetter: (params) => params.data?.cliente?.telefono || "",
       width: 120,
     },
     {
+      colId: "vendedor",
       headerName: "Vendedor",
       valueGetter: (params) => params.data?.user?.name || "",
       width: 150,
     },
     {
+      colId: "registra",
       headerName: "Registra",
       valueGetter: (params) => params.data?.almacen?.name || "",
       width: 120,
     },
     {
+      colId: "total",
       headerName: "Total",
       width: 120,
       valueGetter: (params) => {
@@ -122,6 +132,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       cellStyle: { fontWeight: "bold", color: "#059669" },
     },
     {
+      colId: "acciones",
       headerName: "Acciones",
       width: 150,
       pinned: "right",

@@ -11,6 +11,7 @@ interface ProductosUrgenteStockProps {
 export function useColumnsProductosUrgenteStock() {
   const columns: ColDef<ProductosUrgenteStockProps>[] = [
     {
+      colId: 'producto',
       headerName: 'Producto',
       field: 'name',
       minWidth: 150,
@@ -18,6 +19,7 @@ export function useColumnsProductosUrgenteStock() {
       flex: 2,
     },
     {
+      colId: 'cantidad',
       headerName: 'Cantidad',
       field: 'cantidad',
       minWidth: 80,
@@ -25,6 +27,7 @@ export function useColumnsProductosUrgenteStock() {
       flex: 1,
     },
     {
+      colId: 'stock_min',
       headerName: 'Stock Mínimo',
       field: 'stock_min',
       minWidth: 80,
@@ -32,6 +35,7 @@ export function useColumnsProductosUrgenteStock() {
       flex: 1,
     },
     {
+      colId: 'almacen',
       headerName: 'Almacén',
       field: 'almacen',
       minWidth: 80,
@@ -39,6 +43,7 @@ export function useColumnsProductosUrgenteStock() {
       flex: 1,
     },
     {
+      colId: 'vencimiento',
       headerName: 'Vencimiento',
       field: 'vencimiento',
       minWidth: 80,

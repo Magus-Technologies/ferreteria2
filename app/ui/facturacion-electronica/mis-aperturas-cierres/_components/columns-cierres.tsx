@@ -42,6 +42,7 @@ export const useColumnsCierres = ({
 }): ColDef<AperturaYCierreCaja>[] => {
   return [
     {
+      colId: 'fecha_cierre',
       headerName: 'Fecha Cierre',
       field: 'fecha_cierre',
       flex: 1,
@@ -51,6 +52,7 @@ export const useColumnsCierres = ({
         params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
     },
     {
+      colId: 'vendedor',
       // Sin centrado — texto izquierda por defecto
       headerName: 'Vendedor',
       field: 'vendedor' as any,
@@ -66,6 +68,7 @@ export const useColumnsCierres = ({
       },
     },
     {
+      colId: 'caja',
       // Sin centrado — texto izquierda por defecto
       headerName: 'Caja',
       field: 'caja_principal',
@@ -79,6 +82,7 @@ export const useColumnsCierres = ({
       },
     },
     {
+      colId: 'monto_apertura',
       headerName: 'M. Apertura',
       field: 'monto_apertura',
       flex: 1,
@@ -89,6 +93,7 @@ export const useColumnsCierres = ({
       ),
     },
     {
+      colId: 'monto_cierre',
       headerName: 'M. Cierre',
       field: 'monto_cierre',
       flex: 1,
@@ -101,6 +106,7 @@ export const useColumnsCierres = ({
       ),
     },
     {
+      colId: 'diferencia',
       headerName: 'Diferencia',
       field: 'diferencia_efectivo' as any,
       flex: 1,
@@ -133,6 +139,7 @@ export const useColumnsCierres = ({
       },
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado_cierre',
       flex: 1,
@@ -148,6 +155,7 @@ export const useColumnsCierres = ({
       },
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 120,
