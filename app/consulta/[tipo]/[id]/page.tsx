@@ -175,29 +175,29 @@ export default function ConsultaDocumentoPage() {
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
               {data.tipo === 'venta' ? 'Productos' : 'Detalle'}
             </h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border border-gray-200 rounded-xl">
               {data.tipo === 'venta' && data.productos && (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-xs text-gray-500 uppercase">
-                      <th className="text-left py-2 px-3 rounded-l-lg">Descripción</th>
-                      <th className="text-center py-2 px-2">Cant.</th>
-                      <th className="text-left py-2 px-2">Und.</th>
-                      <th className="text-right py-2 px-2">P.U.</th>
-                      <th className="text-right py-2 px-3 rounded-r-lg">Importe</th>
+                    <tr className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs uppercase">
+                      <th className="text-left py-2.5 px-3 font-semibold">Descripción</th>
+                      <th className="text-center py-2.5 px-2 font-semibold">Cant.</th>
+                      <th className="text-left py-2.5 px-2 font-semibold">Und.</th>
+                      <th className="text-right py-2.5 px-2 font-semibold">P.U.</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">Importe</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.productos.map((p, i) => (
-                      <tr key={i} className="border-b border-gray-50">
-                        <td className="py-2 px-3">
-                          <div className="font-medium text-gray-800">{p.nombre}</div>
+                      <tr key={i} className={`border-b border-gray-100 ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-gray-800">{p.nombre}</div>
                           <div className="text-[11px] text-gray-400">{p.codigo}{p.marca ? ` · ${p.marca}` : ''}</div>
                         </td>
-                        <td className="text-center py-2 px-2 text-gray-600">{p.cantidad}</td>
-                        <td className="py-2 px-2 text-gray-600">{p.unidad}</td>
-                        <td className="text-right py-2 px-2 text-gray-600">S/ {p.precio.toFixed(2)}</td>
-                        <td className="text-right py-2 px-3 font-medium text-gray-800">S/ {p.subtotal.toFixed(2)}</td>
+                        <td className="text-center py-3 px-2 text-gray-700 font-medium">{p.cantidad}</td>
+                        <td className="py-3 px-2 text-gray-600">{p.unidad}</td>
+                        <td className="text-right py-3 px-2 text-gray-600">S/ {p.precio.toFixed(2)}</td>
+                        <td className="text-right py-3 px-3 font-bold text-gray-800">S/ {p.subtotal.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -206,23 +206,23 @@ export default function ConsultaDocumentoPage() {
               {data.tipo === 'guia' && data.detalles && (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-xs text-gray-500 uppercase">
-                      <th className="text-left py-2 px-3 rounded-l-lg">Descripción</th>
-                      <th className="text-center py-2 px-2">Cant.</th>
-                      <th className="text-left py-2 px-2">Und.</th>
-                      <th className="text-right py-2 px-3 rounded-r-lg">Peso (kg)</th>
+                    <tr className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs uppercase">
+                      <th className="text-left py-2.5 px-3 font-semibold">Descripción</th>
+                      <th className="text-center py-2.5 px-2 font-semibold">Cant.</th>
+                      <th className="text-left py-2.5 px-2 font-semibold">Und.</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">Peso (kg)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.detalles.map((d, i) => (
-                      <tr key={i} className="border-b border-gray-50">
-                        <td className="py-2 px-3">
-                          <div className="font-medium text-gray-800">{d.nombre}</div>
+                      <tr key={i} className={`border-b border-gray-100 ${i % 2 === 1 ? 'bg-gray-50/60' : ''}`}>
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-gray-800">{d.nombre}</div>
                           <div className="text-[11px] text-gray-400">{d.codigo}</div>
                         </td>
-                        <td className="text-center py-2 px-2 text-gray-600">{d.cantidad}</td>
-                        <td className="py-2 px-2 text-gray-600">{d.unidad}</td>
-                        <td className="text-right py-2 px-3 font-medium">{d.peso.toFixed(2)}</td>
+                        <td className="text-center py-3 px-2 text-gray-700 font-medium">{d.cantidad}</td>
+                        <td className="py-3 px-2 text-gray-600">{d.unidad}</td>
+                        <td className="text-right py-3 px-3 font-bold">{d.peso.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
