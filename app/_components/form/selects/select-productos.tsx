@@ -3,6 +3,7 @@
 
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
+import { useDebounce } from 'use-debounce'
 import type { ProductoWhereInput } from '~/types'
 import type { Producto } from '~/app/_types/producto'
 import { FaBoxOpen, FaSearch } from 'react-icons/fa'
@@ -155,14 +156,17 @@ export default function SelectProductos({
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<Producto>()
 
+  const [debouncedText] = useDebounce(text, 500)
+  const [manualSearch, setManualSearch] = useState(false)
+
   const { data: responseData, refetch, isLoading: loading, isFetching } = useQuery({
-    queryKey: [QueryKeys.PRODUCTOS_SEARCH, text, tipoBusqueda, almacen_id],
+    queryKey: [QueryKeys.PRODUCTOS_SEARCH, debouncedText, tipoBusqueda, almacen_id],
     queryFn: async () => {
-      if (!text || !almacen_id) return []
+      if (!debouncedText || !almacen_id) return []
       
       const response = await productosApiV2.getAllByAlmacen({
         almacen_id,
-        search: text,
+        search: debouncedText,
         estado: 1,
         per_page: 30,
       })
@@ -174,7 +178,7 @@ export default function SelectProductos({
       // response.data tiene la estructura { data: Producto[], ... }
       return response.data?.data || []
     },
-    enabled: false, // Solo se ejecuta manualmente con refetch
+    enabled: !!debouncedText && !!almacen_id,
   })
 
   // Renombrar para mayor claridad
@@ -182,8 +186,10 @@ export default function SelectProductos({
 
   function handleSearch() {
     if (text) {
+      setTextDefault(text)
       setProductoCreado(undefined)
       setProductoSeleccionado(undefined)
+      setManualSearch(true)
       refetch()
     }
   }
@@ -199,9 +205,13 @@ export default function SelectProductos({
     // Solo abrir modal si hay resultados (significa que el usuario buscó algo)
     if (!productos || productos.length === 0) return
 
-    if (productos.length === 1) handleOnlyOneResult?.(productos[0])
-    else if (text) setOpenModalProductoSearch(true) // Solo abrir si hay texto de búsqueda
-  }, [productos, isFetching])
+    // Solo disparar lógica de modal/autoselección si fue una búsqueda manual (Enter o Icono)
+    if (manualSearch) {
+      setManualSearch(false)
+      if (productos.length === 1) handleOnlyOneResult?.(productos[0])
+      else if (text) setOpenModalProductoSearch(true)
+    }
+  }, [productos, isFetching, manualSearch])
 
   function handleSelect({ data }: { data?: Producto } = {}) {
     const producto = data || productoSeleccionadoSearchStore
@@ -290,9 +300,6 @@ export default function SelectProductos({
         onKeyUp={(e) => {
           if (e.key === 'Enter') {
             if (withSearch) {
-              // Si withSearch está activo, abrir el modal de búsqueda
-              setTextDefault(text)
-              setOpenModalProductoSearch(true)
               handleSearch()
             } else {
               // Si withSearch está desactivado, seleccionar el primer resultado
@@ -313,9 +320,7 @@ export default function SelectProductos({
           className={`text-yellow-600 mb-7 cursor-pointer min-w-fit ${classIconSearch}`}
           size={15}
           onClick={() => {
-            setTextDefault(text)
-            handleSearch() // Ejecutar búsqueda antes de abrir el modal
-            setOpenModalProductoSearch(true)
+            handleSearch()
           }}
         />
       )}

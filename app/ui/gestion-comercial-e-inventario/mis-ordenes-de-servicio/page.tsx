@@ -4,7 +4,7 @@ import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import { Spin, App, Tag, Modal, Button, Tooltip } from 'antd'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
-import { ColDef, ICellRendererParams, RowSelectedEvent } from 'ag-grid-community'
+import { ColDef, ICellRendererParams, SelectionChangedEvent } from 'ag-grid-community'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { getAuthToken } from '~/lib/api'
 import ButtonBase from '~/components/buttons/button-base'
@@ -165,13 +165,11 @@ export default function MisOrdenesDeServicio() {
               columns={columns}
               filtros={filtros}
               selectionColor="#dcfce7"
-              onRowSelected={(event: RowSelectedEvent<RequerimientoInterno>) => {
-                if (event.node.isSelected() && event.data) {
-                  setFilaSeleccionada(event.data)
-                } else {
-                  setFilaSeleccionada(null)
-                }
-              }}
+              onSelectionChanged={useCallback((event: SelectionChangedEvent<RequerimientoInterno>) => {
+                const selectedNodes = event.api.getSelectedNodes()
+                const data = selectedNodes?.[0]?.data
+                setFilaSeleccionada(data || null)
+              }, [])}
             />
           </Suspense>
         </div>

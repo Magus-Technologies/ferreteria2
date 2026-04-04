@@ -13,6 +13,8 @@ import FormBase from '~/components/form/form-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import NotificationPermissionButton from '~/components/notifications/notification-permission-button'
 import { useAuth } from '~/lib/auth-context'
+import { useDebounce } from 'use-debounce'
+import { useState, useEffect } from 'react'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -27,6 +29,13 @@ export default function FiltersMisEntregas() {
   const setFiltros = useStoreFiltrosMisEntregas((state) => state.setFiltros)
   const { user } = useAuth()
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
+ 
+  const [searchValue, setSearchValue] = useState('')
+  const [debouncedSearch] = useDebounce(searchValue, 500)
+ 
+  useEffect(() => {
+    form.submit()
+  }, [debouncedSearch, form])
 
   const handleFinish = (values: ValuesFiltersMisEntregas) => {
     const estados = values.estado_entrega
@@ -51,6 +60,7 @@ export default function FiltersMisEntregas() {
         estado_entrega: ['pe', 'ec'],
       }}
       className="w-full"
+      onValuesChange={() => form.submit()}
       onFinish={handleFinish}
     >
       <div className="flex items-center justify-between">
@@ -189,6 +199,7 @@ export default function FiltersMisEntregas() {
                 placeholder="Cliente, N° Venta..."
                 formWithMessage={false}
                 prefix={<FaSearch size={14} className="text-amber-600 mx-1" />}
+                onChange={(e) => setSearchValue(e.target.value)}
               />
             </div>
           </ConfigurableElement>

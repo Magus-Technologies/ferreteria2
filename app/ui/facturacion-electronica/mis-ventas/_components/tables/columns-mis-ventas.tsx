@@ -202,6 +202,7 @@ export function useColumnsMisVentas() {
       width: 130,
       valueGetter: (params) => {
         if (params.data?.estado_de_venta === 'an') return 'Anulado';
+        
         const productos = params.data?.productos_por_almacen || [];
         let totalPendiente = 0;
         let totalCantidad = 0;
@@ -211,7 +212,25 @@ export function useColumnsMisVentas() {
             totalPendiente += Number(unidad.cantidad_pendiente || 0);
           });
         });
+        
         if (totalCantidad === 0) return 'Sin productos';
+        
+        // Verificar el estado real de las entregas físicas
+        const entregas = params.data?.entregas_productos || params.data?.entregasProductos || [];
+        
+        if (entregas.length > 0) {
+          // Verificar estados de entregas: pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
+          const hayEntregasPendientes = entregas.some((e: any) => e.estado_entrega === 'pe');
+          const hayEntregasEnCamino = entregas.some((e: any) => e.estado_entrega === 'ec');
+          const todasEntregadas = entregas.every((e: any) => e.estado_entrega === 'en');
+          
+          // Solo mostrar "Completa" si todas las entregas están físicamente entregadas
+          if (todasEntregadas && totalPendiente === 0) return 'Completa';
+          if (hayEntregasEnCamino) return 'En Camino';
+          if (hayEntregasPendientes) return 'Pendiente';
+        }
+        
+        // Si no hay entregas creadas, usar la lógica anterior basada en cantidad_pendiente
         if (totalPendiente === 0) return 'Completa';
         if (totalPendiente < totalCantidad) return 'Parcial';
         return 'Pendiente';
@@ -219,6 +238,7 @@ export function useColumnsMisVentas() {
       cellStyle: (params) => {
         const value = params.value;
         if (value === 'Completa') return { color: '#16a34a', fontWeight: 'bold' };
+        if (value === 'En Camino') return { color: '#3b82f6', fontWeight: 'bold' };
         if (value === 'Parcial') return { color: '#d97706', fontWeight: 'bold' };
         if (value === 'Pendiente') return { color: '#dc2626', fontWeight: 'bold' };
         if (value === 'Anulado') return { color: '#6b7280', fontWeight: 'bold' };

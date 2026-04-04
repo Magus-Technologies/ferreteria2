@@ -12,10 +12,12 @@ import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import { FaCalendar } from "react-icons/fa6";
 import dayjs, { Dayjs } from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import { useDebounce } from "use-debounce";
+import { useStoreFiltrosMisCotizaciones } from "../../_store/store-filtros-mis-cotizaciones";
 
 interface ValuesFiltersMisCotizaciones {
   almacen_id: number;
@@ -29,11 +31,30 @@ export default function FiltersMisCotizaciones() {
   const router = useRouter();
   const [form] = Form.useForm<ValuesFiltersMisCotizaciones>();
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
+  const setFiltros = useStoreFiltrosMisCotizaciones((state) => state.setFiltros);
+
+  const [proformaSearchText, setProformaSearchText] = useState("");
+  const [debouncedProformaSearch] = useDebounce(proformaSearchText, 500);
+
+  useEffect(() => {
+    form.submit();
+  }, [debouncedProformaSearch, form]);
 
   useEffect(() => {
     form.setFieldValue("almacen_id", almacen_id);
+    form.submit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [almacen_id]);
+
+  const handleFinish = (values: ValuesFiltersMisCotizaciones) => {
+    setFiltros({
+      almacen_id: values.almacen_id,
+      cliente_id: values.cliente_id,
+      fecha_desde: values.desde ? values.desde.format("YYYY-MM-DD") : undefined,
+      fecha_hasta: values.hasta ? values.hasta.format("YYYY-MM-DD") : undefined,
+      numero: values.numero,
+    });
+  };
 
   return (
     <FormBase
@@ -44,10 +65,8 @@ export default function FiltersMisCotizaciones() {
         hasta: dayjs().endOf("day"),
       }}
       className="w-full"
-      onFinish={(values) => {
-        console.log("Filtros:", values);
-        // Aquí irá la lógica de filtrado
-      }}
+      onValuesChange={() => form.submit()}
+      onFinish={handleFinish}
     >
       <TituloModulos
         title="Mis Cotizaciones"
@@ -141,10 +160,11 @@ export default function FiltersMisCotizaciones() {
               propsForm={{
                 name: "numero",
                 hasFeedback: false,
-                className: "!w-[150px]",
+                 className: "!w-[150px]",
               }}
               placeholder="000-0000000"
               formWithMessage={false}
+              onChange={(e) => setProformaSearchText(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">

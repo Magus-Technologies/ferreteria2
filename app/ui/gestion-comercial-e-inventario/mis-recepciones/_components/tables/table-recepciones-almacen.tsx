@@ -27,7 +27,7 @@ export default function TableRecepcionesAlmacen() {
   const filtros = useStoreFiltrosMisRecepciones(state => state.filtros)
 
   const { data, refetch, isPending, isFetching } = useQuery({
-    queryKey: [QueryKeys.RECEPCIONES_ALMACEN],
+    queryKey: [QueryKeys.RECEPCIONES_ALMACEN, filtros],
     queryFn: async () => {
       const res = await recepcionAlmacenApi.list(filtros)
       if (res.error) {

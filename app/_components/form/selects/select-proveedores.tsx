@@ -17,6 +17,7 @@ interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
   onChange?: (value: number, proveedor?: Proveedor) => void
+  onSearchChange?: (text: string) => void
   showButtonCreate?: boolean
   classIconSearch?: string
   classIconCreate?: string
@@ -35,6 +36,7 @@ export default function SelectProveedores({
   classIconCreate = '',
   proveedorOptionsDefault = [],
   onChange,
+  onSearchChange,
   showOnlyDocument = false,
   ...props
 }: SelectProveedoresProps) {
@@ -62,7 +64,8 @@ export default function SelectProveedores({
   // Actualizar textDefault cuando text cambia (para mantenerlo sincronizado)
   useEffect(() => {
     setTextDefault(text)
-  }, [text])
+    onSearchChange?.(text)
+  }, [text, onSearchChange])
 
   // Detectar cuando el usuario modifica el texto y limpiar campos relacionados
   useEffect(() => {

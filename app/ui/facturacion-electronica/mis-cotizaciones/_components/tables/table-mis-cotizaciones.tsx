@@ -11,6 +11,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { AgGridReact } from 'ag-grid-react'
 import { orangeColors, greenColors } from '~/lib/colors'
 import { RowStyle } from 'ag-grid-community'
+import { useStoreFiltrosMisCotizaciones } from '../../_store/store-filtros-mis-cotizaciones'
 
 type UseStoreCotizacionSeleccionada = {
   cotizacion?: Cotizacion
@@ -43,12 +44,14 @@ function calcularColorCotizacion(cotizacion: Cotizacion): string {
 export default function TableMisCotizaciones() {
   const tableRef = useRef<AgGridReact>(null);
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
+  const filtros = useStoreFiltrosMisCotizaciones((state) => state.filtros)
 
   const { data: response, isLoading: loading } = useQuery({
-    queryKey: [QueryKeys.COTIZACIONES, almacen_id ?? 0],
+    queryKey: [QueryKeys.COTIZACIONES, almacen_id ?? 0, filtros],
     queryFn: async () => {
       const result = await cotizacionesApi.getAll({ 
-        almacen_id: almacen_id ?? undefined 
+        almacen_id: almacen_id ?? undefined,
+        ...filtros
       })
       return result.data?.data || [] // Laravel devuelve { data: { data: [...] } }
     },

@@ -13,13 +13,14 @@ import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosMisRecepciones } from '../../_store/store-filtros-mis-recepciones'
 import SelectEstado from '~/app/_components/form/selects/select-estado'
 import type { RecepcionAlmacenFilters } from '~/lib/api/recepcion-almacen'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
+import { useDebounce } from 'use-debounce'
 
 interface ValuesFiltersMisRecepciones {
   almacen_id: number
@@ -33,10 +34,19 @@ interface ValuesFiltersMisRecepciones {
 
 export default function FiltersMisRecepciones() {
   const [form] = Form.useForm<ValuesFiltersMisRecepciones>()
+  const [searchValue, setSearchValue] = useState('')
+  const [debouncedSearchValue] = useDebounce(searchValue, 500)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
 
   const setFiltros = useStoreFiltrosMisRecepciones(state => state.setFiltros)
+
+  // Trigger search when debounced value changes
+  useEffect(() => {
+    if (form) {
+      form.submit()
+    }
+  }, [debouncedSearchValue, form])
 
   useEffect(() => {
     const data: RecepcionAlmacenFilters = {
@@ -57,6 +67,9 @@ export default function FiltersMisRecepciones() {
         hasta: dayjs().endOf('day'),
       }}
       className='w-full'
+      onValuesChange={() => {
+        form.submit()
+      }}
       onFinish={values => {
         const { desde, hasta, almacen_id, estado, user_id, proveedor_id, tipo_documento } = values
         const data: RecepcionAlmacenFilters = {
@@ -67,6 +80,8 @@ export default function FiltersMisRecepciones() {
           estado: estado !== undefined ? estado === 1 : undefined,
           proveedor_id,
           tipo_documento,
+          // Si no hay proveedor_id seleccionado pero hay texto de búsqueda, enviarlo
+          ...(!proveedor_id && searchValue ? { search: searchValue } : {}),
         }
         setFiltros(data)
       }}
@@ -152,6 +167,14 @@ export default function FiltersMisRecepciones() {
             allowClear
             form={form}
             showButtonCreate={false}
+            onSearchChange={(text) => {
+              setSearchValue(text)
+            }}
+            onChange={(value) => {
+              if (value) {
+                setSearchValue('')
+              }
+            }}
           />
         </LabelBase>
         <LabelBase label='Tipo Doc.:'>

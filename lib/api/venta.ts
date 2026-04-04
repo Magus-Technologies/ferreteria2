@@ -350,7 +350,16 @@ export type VentaCompleta = {
   despliegueDePagoVentas?: any[]
   user?: { id: string; name: string }
   almacen?: { id: number; name: string }
-  entregasProductos?: any[]
+  entregas_productos?: Array<{
+    id: number
+    venta_id: string
+    estado_entrega: 'pe' | 'ec' | 'en' | 'ca' // pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
+  }>
+  entregasProductos?: Array<{
+    id: number
+    venta_id: string
+    estado_entrega: 'pe' | 'ec' | 'en' | 'ca' // pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
+  }>
   servicios_venta?: Array<{
     id: number
     venta_id: string

@@ -23,6 +23,7 @@ import { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
+import { useDebounce } from "use-debounce";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import ModalEntregaDirecta from "../modals/modal-entrega-directa";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
@@ -59,6 +60,9 @@ export default function FiltersMisVentas() {
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const ventaSeleccionada = useStoreVentaSeleccionada((state) => state.venta);
 
+  const [debouncedClienteSearch] = useDebounce(clienteSearchText, 500);
+  const [debouncedSerieNumero] = useDebounce(serieNumeroInput, 500);
+
   const filtros = useStoreFiltrosMisVentas((state) => state.filtros);
   const setFiltros = useStoreFiltrosMisVentas((state) => state.setFiltros);
 
@@ -72,6 +76,11 @@ export default function FiltersMisVentas() {
     setFiltros(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Trigger real-time search when debounced values change
+  useEffect(() => {
+    form.submit();
+  }, [debouncedClienteSearch, debouncedSerieNumero, form]);
 
   // Contar filtros activos
   const activeFiltersCount = useMemo(() => {
@@ -143,11 +152,17 @@ export default function FiltersMisVentas() {
 
     let serie: string | undefined;
     let numero: number | undefined;
+    let globalSearch = clienteSearchText;
+
     if (serie_numero) {
       const parts = serie_numero.split("-");
-      if (parts.length === 2) {
+      if (parts.length === 2 && parts[0].trim() && parts[1].trim()) {
+        // Only split if it looks like a complete SSS-NNNN
         serie = parts[0].trim();
         numero = parseInt(parts[1].trim());
+      } else {
+        // Use as general search if it's partial
+        globalSearch = serie_numero;
       }
     }
 
@@ -157,8 +172,8 @@ export default function FiltersMisVentas() {
       // Si hay cliente_id, usarlo (cliente seleccionado)
       ...(cliente_id ? { cliente_id } : {}),
       // Si NO hay cliente_id pero SÍ hay texto de búsqueda, usar search
-      ...(!cliente_id && clienteSearchText
-        ? { search: clienteSearchText }
+      ...(!cliente_id && globalSearch
+        ? { search: globalSearch }
         : {}),
       // Incluir fechas si existen
       ...(desde ? { desde: desde.format("YYYY-MM-DD") } : {}),
@@ -192,6 +207,7 @@ export default function FiltersMisVentas() {
       }}
       className="w-full"
       onFinish={handleFinish}
+      onValuesChange={() => form.submit()}
     >
       <TituloModulos
         title="Mis Ventas"

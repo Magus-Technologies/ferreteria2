@@ -235,6 +235,27 @@ export default function SelectClientes({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response])
 
+  function handleSearch() {
+    if (text) {
+      setTextDefault(text)
+      
+      // Si ya hay resultados y hay una coincidencia clara, el useEffect de response ya lo manejará
+      // Pero si no hay resultados o hay varios, abrimos el modal
+      if (!response || response.length !== 1) {
+        setOpenModalClienteSearch(true)
+      } else {
+        // Forzar una validación rápida
+        const cliente = response[0]
+        const textoLimpio = text.trim()
+        if (cliente.numero_documento === textoLimpio || (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio))) {
+           handleSelect({ data: cliente })
+        } else {
+           setOpenModalClienteSearch(true)
+        }
+      }
+    }
+  }
+
   const getLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
       if (showOnlyDocument) return cliente.numero_documento || ''
       if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
@@ -305,7 +326,7 @@ export default function SelectClientes({
             self.findIndex(i => i.value === item.value) === index
         )}
         onKeyUp={e => {
-          if (e.key === 'Enter') setOpenModalClienteSearch(true)
+          if (e.key === 'Enter') handleSearch()
         }}
         open={open !== undefined ? open : showOnlyDocument ? false : undefined} // Si showOnlyDocument, nunca mostrar dropdown (el autocomplete por número completo sigue funcionando)
         {...props}
@@ -313,7 +334,7 @@ export default function SelectClientes({
       <FaSearch
         className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
-        onClick={() => setOpenModalClienteSearch(true)}
+        onClick={() => handleSearch()}
       />
       <ModalClienteSearch
         open={openModalClienteSearch}

@@ -14,13 +14,14 @@ import { useColumnsProveedores } from './_components/tables/columns-proveedores'
 import ModalCreateProveedor from './_components/modals/modal-create-proveedor'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { greenColors } from '~/lib/colors'
+import { useDebounce } from 'use-debounce'
 
 export default function MisProveedoresPage() {
     const gridRef = useRef<AgGridReact<Proveedor>>(null)
 
     // Estado de filtros
-    const [search, setSearch] = useState('')
     const [searchInput, setSearchInput] = useState('')
+    const [debouncedSearch] = useDebounce(searchInput, 500)
     const [estadoFiltro, setEstadoFiltro] = useState<string | undefined>(undefined)
 
     // Estado del modal
@@ -29,10 +30,10 @@ export default function MisProveedoresPage() {
 
     // Query para obtener proveedores
     const { data: proveedores = [], isLoading, refetch } = useQuery({
-        queryKey: [QueryKeys.PROVEEDORES, search, estadoFiltro],
+        queryKey: [QueryKeys.PROVEEDORES, debouncedSearch, estadoFiltro],
         queryFn: async () => {
             const result = await proveedorApi.getAll({
-                search: search || undefined,
+                search: debouncedSearch || undefined,
                 estado: estadoFiltro,
                 per_page: 100,
             })
@@ -57,12 +58,11 @@ export default function MisProveedoresPage() {
 
     // Handlers
     const handleBuscar = useCallback(() => {
-        setSearch(searchInput)
-    }, [searchInput])
+        refetch()
+    }, [refetch])
 
     const handleLimpiar = useCallback(() => {
         setSearchInput('')
-        setSearch('')
         setEstadoFiltro(undefined)
     }, [])
 

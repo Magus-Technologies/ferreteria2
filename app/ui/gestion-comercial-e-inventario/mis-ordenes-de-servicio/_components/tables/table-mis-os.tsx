@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { ColDef, RowSelectedEvent } from 'ag-grid-community'
+import { ColDef, SelectionChangedEvent } from 'ag-grid-community'
 import { useQuery } from '@tanstack/react-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
@@ -14,10 +14,10 @@ interface TableMisOSProps {
   columns: ColDef<RequerimientoInterno>[]
   filtros: RequerimientoFilters
   selectionColor?: string
-  onRowSelected?: (event: RowSelectedEvent<RequerimientoInterno>) => void
+  onSelectionChanged?: (event: SelectionChangedEvent<RequerimientoInterno>) => void
 }
 
-const TableMisOS = memo(function TableMisOS({ id, columns, filtros, selectionColor, onRowSelected }: TableMisOSProps) {
+const TableMisOS = memo(function TableMisOS({ id, columns, filtros, selectionColor, onSelectionChanged }: TableMisOSProps) {
   const tableRef = useRef<AgGridReact>(null)
   const [page, setPage] = useState(1)
   const pageSize = 50
@@ -62,7 +62,7 @@ const TableMisOS = memo(function TableMisOS({ id, columns, filtros, selectionCol
       exportPdf
       selectColumns
       selectionColor={selectionColor}
-      onRowSelected={onRowSelected}
+      onSelectionChanged={onSelectionChanged}
       optionsSelectColumns={[
         {
           label: 'Default',

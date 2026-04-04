@@ -173,6 +173,7 @@ export interface RecepcionAlmacenFilters {
   estado?: boolean
   proveedor_id?: number
   tipo_documento?: string
+  search?: string
 }
 
 // ============= API METHODS =============

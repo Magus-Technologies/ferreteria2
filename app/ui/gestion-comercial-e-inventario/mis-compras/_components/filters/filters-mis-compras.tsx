@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, Drawer, Badge } from 'antd'
+import { Form, Drawer, Badge, Input } from 'antd'
 import { FaPlusCircle, FaSearch, FaFilter } from 'react-icons/fa'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -31,6 +31,7 @@ import SelectEstadoDeCompra, {
 } from '~/app/_components/form/selects/select-estado-de-compra'
 import SelectPendienteDeRecepcionAlmacen from '~/app/_components/form/selects/select-pendiente-de-recepcion-almacen'
 import { redColors, orangeColors, greenColors } from '~/lib/colors'
+import { useDebounce } from 'use-debounce'
 
 interface ValuesFiltersMisCompras {
   almacen_id: number
@@ -43,11 +44,14 @@ interface ValuesFiltersMisCompras {
   estado_de_cuenta?: EstadoDeCuenta
   estado_de_compra?: EstadoDeCompra
   pendiente_de_recepcion?: EstadoDeCompra
+  search?: string
 }
 
 export default function FiltersMisCompras() {
   const [form] = Form.useForm<ValuesFiltersMisCompras>()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+  const [debouncedSearchValue] = useDebounce(searchValue, 500)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
 
@@ -66,6 +70,7 @@ export default function FiltersMisCompras() {
     if (values.estado_de_cuenta) count++
     if (values.estado_de_compra) count++
     if (values.pendiente_de_recepcion) count++
+    if (values.search) count++
     return count
   }, [form])
 
@@ -84,6 +89,11 @@ export default function FiltersMisCompras() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Trigger submit when debounced search value changes
+  useEffect(() => {
+    form.submit()
+  }, [debouncedSearchValue, form])
+
   return (
     <FormBase
       form={form}
@@ -94,6 +104,9 @@ export default function FiltersMisCompras() {
         estado_de_compra: EstadoDeCompraSelect.Activos,
       }}
       className='w-full'
+      onValuesChange={() => {
+        form.submit()
+      }}
       onFinish={values => {
         const {
           desde,
@@ -102,12 +115,16 @@ export default function FiltersMisCompras() {
           estado_de_cuenta,
           pendiente_de_recepcion,
           almacen_id,
+          proveedor_id,
           ...rest
         } = values
         
         const data = {
           almacen_id: almacen_id || almacen_id,
           ...rest,
+          proveedor_id,
+          // Si no hay proveedor_id pero hay texto de búsqueda, usarlo
+          ...(!proveedor_id && searchValue ? { search: searchValue } : {}),
           fecha: {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
@@ -172,6 +189,14 @@ export default function FiltersMisCompras() {
                 formWithMessage={false}
                 allowClear
                 form={form}
+                onSearchChange={(text) => {
+                  setSearchValue(text)
+                }}
+                onChange={(value) => {
+                  if (value) {
+                    setSearchValue('')
+                  }
+                }}
               />
             </ConfigurableElement>
           </div>
@@ -363,7 +388,7 @@ export default function FiltersMisCompras() {
             color='info'
             size='md'
             type='submit'
-            className='flex items-center gap-2 w-fit'
+            className='flex items-center gap-2 w-fit mb-1'
           >
             <FaSearch />
             Buscar
@@ -414,6 +439,14 @@ export default function FiltersMisCompras() {
               formWithMessage={false}
               allowClear
               form={form}
+              onSearchChange={(text) => {
+                setSearchValue(text)
+              }}
+              onChange={(value) => {
+                if (value) {
+                  setSearchValue('')
+                }
+              }}
             />
           </LabelBase>
 

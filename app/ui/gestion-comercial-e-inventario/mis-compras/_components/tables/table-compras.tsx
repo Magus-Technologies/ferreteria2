@@ -122,6 +122,7 @@ const TableCompras = memo(function TableCompras({
       user_id: filtros.user_id as string | undefined,
       desde,
       hasta,
+      search: (filtros as any).search as string | undefined,
       per_page: pageSize,
       page,
     }

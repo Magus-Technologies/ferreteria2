@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, Select, Drawer, Badge } from 'antd'
+import { Form, Select, Drawer, Badge, Input } from 'antd'
 import { FaSearch, FaFilter, FaPlusCircle } from 'react-icons/fa'
 import { FaWrench } from 'react-icons/fa'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
@@ -8,8 +8,9 @@ import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreFiltrosMisOS } from '../../_store/store-filtros-mis-os'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { RequerimientoFilters } from '~/lib/api/requerimiento-interno'
+import { useDebounce } from 'use-debounce'
 
 interface ValuesFiltersMisOS {
   estado?: string
@@ -38,7 +39,17 @@ export default function FiltersMisOS({
 }) {
   const [form] = Form.useForm<ValuesFiltersMisOS>()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+  const [debouncedSearchValue] = useDebounce(searchValue, 500)
+  
   const setFiltros = useStoreFiltrosMisOS(state => state.setFiltros)
+
+  // Trigger search when debounced value changes
+  useEffect(() => {
+    if (form) {
+      form.submit()
+    }
+  }, [debouncedSearchValue, form])
 
   const handleFinish = (values: ValuesFiltersMisOS) => {
     const filtros: RequerimientoFilters = {
@@ -56,6 +67,9 @@ export default function FiltersMisOS({
       form={form}
       name="filtros-mis-os"
       className="w-full"
+      onValuesChange={() => {
+        form.submit()
+      }}
       onFinish={handleFinish}
     >
       <TituloModulos
@@ -67,7 +81,19 @@ export default function FiltersMisOS({
       <div className="flex items-center justify-between w-full mt-2 gap-2 flex-wrap">
         <div className="hidden lg:flex items-center gap-1.5 flex-nowrap shrink-0">
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] font-medium text-slate-500">Estado:</span>
+            <Form.Item name="search" className="!mb-0">
+              <Input
+                placeholder="Buscar (Título, Código, Área)"
+                prefix={<FaSearch className="text-slate-400" />}
+                className="!w-[280px]"
+                allowClear
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
+            </Form.Item>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Estado:</span>
             <Form.Item name="estado" className="!mb-0">
               <Select
                 placeholder="Todos"
@@ -79,7 +105,7 @@ export default function FiltersMisOS({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] font-medium text-slate-500">Prioridad:</span>
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Prioridad:</span>
             <Form.Item name="prioridad" className="!mb-0">
               <Select
                 placeholder="Todas"
@@ -89,11 +115,6 @@ export default function FiltersMisOS({
               />
             </Form.Item>
           </div>
-
-          <ButtonBase color="info" size="md" type="submit" className="flex items-center gap-2 shrink-0 py-1.5">
-            <FaSearch size={14} />
-            Buscar
-          </ButtonBase>
         </div>
 
         {/* Desktop: button nueva */}
@@ -130,6 +151,17 @@ export default function FiltersMisOS({
         open={drawerOpen}
       >
         <div className="flex flex-col gap-4">
+          <LabelBase label="Buscar:">
+            <Form.Item name="search" className="!mb-0 w-full">
+              <Input
+                placeholder="Título, Código, Área"
+                prefix={<FaSearch className="text-slate-400" />}
+                className="w-full"
+                allowClear
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
+            </Form.Item>
+          </LabelBase>
           <LabelBase label="Estado:">
             <Form.Item name="estado" className="!mb-0 w-full">
               <Select placeholder="Todos" allowClear options={ESTADO_OPTIONS} className="w-full" />
