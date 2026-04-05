@@ -801,6 +801,7 @@ export default function CrearOrdenCompraPage() {
           extra={
             <div className="pl-8 flex items-center gap-4">
               <SelectProductos
+                autoFocus
                 allowClear
                 size="large"
                 className="!min-w-[400px] !w-[400px] !max-w-[400px] font-normal!"
@@ -811,6 +812,7 @@ export default function CrearOrdenCompraPage() {
                 withTipoBusqueda
                 showButtonCreate
                 showCardAgregarProducto
+                autoFillPrecioCompraWithCosto
               />
             </div>
           }

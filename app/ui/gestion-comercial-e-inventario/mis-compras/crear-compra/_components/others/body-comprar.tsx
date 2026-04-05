@@ -93,7 +93,7 @@ export default function BodyComprar({
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { handleSubmit } = useCreateCompra({ compra })
+  const { handleSubmit, loading } = useCreateCompra({ compra })
 
   useEffect(() => {
     setProductosCompra([])
@@ -170,6 +170,7 @@ export default function BodyComprar({
           <CardsInfoCompra
             form={form}
             compra={compra}
+            loading={loading}
             onPonerEnEspera={() => {
               form.setFieldValue('estado_de_compra', EstadoDeCompra.EnEspera)
               handleSubmit(form.getFieldsValue(true))

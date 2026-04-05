@@ -26,10 +26,12 @@ export default function CardsInfoCompra({
   form,
   compra,
   onPonerEnEspera,
+  loading = false,
 }: {
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
   onPonerEnEspera?: () => void
+  loading?: boolean
 }) {
   const { message } = useApp()
   const [modalPagoOpen, setModalPagoOpen] = useState(false)
@@ -145,6 +147,7 @@ export default function CardsInfoCompra({
               }
               onPonerEnEspera?.()
             }}
+            disabled={loading}
             color='warning'
             className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
           >
@@ -156,6 +159,7 @@ export default function CardsInfoCompra({
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-crear-compra' label='Botón Crear/Editar Compra'>
         <ButtonBase
           onClick={handleCrearCompra}
+          disabled={loading}
           color={compra ? 'info' : 'success'}
           className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
         >

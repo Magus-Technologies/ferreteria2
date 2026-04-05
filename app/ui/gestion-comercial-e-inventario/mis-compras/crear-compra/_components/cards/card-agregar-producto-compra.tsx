@@ -49,10 +49,12 @@ export default function CardAgregarProductoCompra({
   onOk,
   setOpen,
   onChangeValues,
+  autoFillPrecioCompraWithCosto = false,
 }: {
   onOk?: (values: ValuesCardAgregarProductoCompra) => void
   setOpen: (open: boolean) => void
   onChangeValues?: (values: ValuesCardAgregarProductoCompra) => void
+  autoFillPrecioCompraWithCosto?: boolean
 }) {
   const [values, setValues] =
     useState<ValuesCardAgregarProductoCompra>(valuesDefault)
@@ -129,13 +131,22 @@ export default function CardAgregarProductoCompra({
     )
   }, [unidades_derivadas])
 
-  useEffect(() => {
-    onChangeValues?.(values)
-  }, [values])
-
   const unidad_derivada_seleccionada = unidades_derivadas?.find(
     item => item.unidad_derivada.id === values?.unidad_derivada_id
   )
+
+  useEffect(() => {
+    if (autoFillPrecioCompraWithCosto && unidad_derivada_seleccionada && producto_en_almacen) {
+      const costo = Number(unidad_derivada_seleccionada.factor ?? 0) * Number(producto_en_almacen.costo ?? 0)
+      if (costo > 0) {
+        handleChange(costo, 'precio_compra')
+      }
+    }
+  }, [autoFillPrecioCompraWithCosto, unidad_derivada_seleccionada, producto_en_almacen])
+
+  useEffect(() => {
+    onChangeValues?.(values)
+  }, [values])
 
   return (
     <div className='flex flex-col gap-2'>
@@ -197,10 +208,10 @@ export default function CardAgregarProductoCompra({
           </div>
         </div>
       </div>
-      <LabelBase label='P. Compra:' orientation='column'>
+      <LabelBase label='Precio Compra:' orientation='column'>
         <InputNumberBase
           ref={precio_compraRef}
-          placeholder='P. Compra'
+          placeholder='Precio Compra'
           precision={4}
           prefix={
             <FaMoneyBill

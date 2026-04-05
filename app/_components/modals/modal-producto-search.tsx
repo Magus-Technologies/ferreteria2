@@ -31,6 +31,7 @@ type ModalProductoSearchProps = {
   onRowDoubleClicked?: ({ data }: { data: Producto | undefined }) => void;
   setTipoBusqueda: (tipoBusqueda: TipoBusquedaProducto) => void;
   showCardAgregarProducto?: boolean;
+  autoFillPrecioCompraWithCosto?: boolean;
   showCardAgregarProductoVenta?: boolean;
   showCardAgregarProductoCotizacion?: boolean;
   showCardAgregarProductoPrestamo?: boolean;
@@ -55,6 +56,7 @@ export default function ModalProductoSearch({
   onRowDoubleClicked,
   setTipoBusqueda,
   showCardAgregarProducto = false,
+  autoFillPrecioCompraWithCosto = false,
   showCardAgregarProductoVenta = false,
   showCardAgregarProductoCotizacion = false,
   showCardAgregarProductoPrestamo = false,
@@ -191,6 +193,7 @@ export default function ModalProductoSearch({
           <div className="w-full xl:w-[300px] xl:flex-shrink-0 mt-4">
             <CardAgregarProductoCompra
               setOpen={setOpen}
+              autoFillPrecioCompraWithCosto={autoFillPrecioCompraWithCosto}
               onChangeValues={(values) => {
                 setCostoUnidadDerivada({
                   costo: values.precio_compra,

@@ -182,7 +182,12 @@ export default function useCreateCompra({
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
-      message.success(`Compra ${compra ? 'editada' : 'creada'} exitosamente`)
+      const esEnEspera = variables.estado_de_compra === EstadoDeCompra.EnEspera
+      message.success(
+        esEnEspera
+          ? 'Compra puesta en espera exitosamente'
+          : `Compra ${compra ? 'editada' : 'creada'} exitosamente`
+      )
 
       // Si se creó desde una orden de compra, actualizar su estado a aprobado
       if (variables.orden_compra_id) {
