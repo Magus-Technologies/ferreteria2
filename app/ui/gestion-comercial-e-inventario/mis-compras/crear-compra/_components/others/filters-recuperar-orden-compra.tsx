@@ -30,7 +30,7 @@ export default function FiltersRecuperarOrdenCompra({
       form={form}
       name='filters-recuperar-orden-compra'
       initialValues={{
-        desde: dayjs().subtract(30, 'days').startOf('day'),
+        desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
       }}
       className='w-full'

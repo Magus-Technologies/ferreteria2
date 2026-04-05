@@ -197,6 +197,7 @@ export default function SelectProveedores({
           }
         }}
         {...props}
+        {...(showOnlyDocument ? { notFoundContent: null } : {})}
       />
       <FaSearch
         className={`text-yellow-600 mb-1 cursor-pointer z-10 ${classIconSearch}`}

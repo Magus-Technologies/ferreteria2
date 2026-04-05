@@ -124,7 +124,7 @@ export default function DropdownUser() {
   return (
     <>
       <DropdownBase menu={{ items }}>
-        <span className='font-bold max-w-[120px] sm:max-w-[150px] md:max-w-[180px] truncate inline-block align-middle'>Hola, {user?.name || 'Usuario'}</span>
+        <span className='font-bold whitespace-nowrap'>Hola, {user?.name?.split(' ')[0] || 'Usuario'}</span>
       </DropdownBase>
       <ModalConfiguraciones />
       <ModalGestionarAlmacenes open={openGestionAlmacenes} setOpen={setOpenGestionAlmacenes} />
