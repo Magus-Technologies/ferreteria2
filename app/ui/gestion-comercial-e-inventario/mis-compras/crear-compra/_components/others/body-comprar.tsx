@@ -93,7 +93,7 @@ export default function BodyComprar({
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { handleSubmit, loading } = useCreateCompra({ compra })
+  const { handleSubmit, loading } = useCreateCompra({ compra, form })
 
   useEffect(() => {
     setProductosCompra([])

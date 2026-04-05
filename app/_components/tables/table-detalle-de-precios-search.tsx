@@ -8,7 +8,7 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 import { useColumnsDetalleDePrecios, DetalleDePreciosProps } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/tables/columns-detalle-de-precios'
 import { CostoUnidadDerivadaSearch } from '../modals/modal-producto-search'
 import ModalEditarPreciosProducto from '../modals/modal-editar-precios-producto'
-import { GetRowIdParams, RowDoubleClickedEvent, ColumnResizedEvent } from 'ag-grid-community'
+import { GetRowIdParams, RowDoubleClickedEvent } from 'ag-grid-community'
 import { usePathname } from 'next/navigation'
 import { orangeColors, greenColors } from '~/lib/colors'
 import type { AgGridReact } from 'ag-grid-react'
@@ -27,38 +27,14 @@ export default function TableDetalleDePreciosSearch({
   const [detallePrecioSeleccionado, setDetallePrecioSeleccionado] = useState<DetalleDePreciosProps | null>(null)
   
   const gridRef = useRef<AgGridReact<DetalleDePreciosProps>>(null)
-  const STORAGE_KEY = 'detalle-precios-column-state'
 
   const pathname = usePathname()
   // Detectar color según la ruta
-  const colorSeleccion = pathname?.includes('facturacion-electronica') 
-    ? orangeColors[10] 
+  const colorSeleccion = pathname?.includes('facturacion-electronica')
+    ? orangeColors[10]
     : pathname?.includes('gestion-comercial-e-inventario')
     ? greenColors[10]
     : undefined
-
-  // Guardar estado de columnas cuando se redimensionan
-  const handleColumnResized = useCallback((event: ColumnResizedEvent) => {
-    if (event.finished && gridRef.current) {
-      const columnState = gridRef.current.api.getColumnState()
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(columnState))
-    }
-  }, [])
-
-  // Restaurar estado de columnas solo al primer render del grid (no en cada cambio de datos)
-  const handleFirstDataRendered = useCallback(() => {
-    if (gridRef.current?.api) {
-      const savedState = localStorage.getItem(STORAGE_KEY)
-      if (savedState) {
-        try {
-          const columnState = JSON.parse(savedState)
-          gridRef.current.api.applyColumnState({ state: columnState, applyOrder: true })
-        } catch {
-          // estado guardado inválido, ignorar
-        }
-      }
-    }
-  }, [])
 
   const producto_en_almacen = productoSeleccionado?.producto_en_almacenes.find(
     item => item.almacen_id === almacen_id
@@ -144,8 +120,6 @@ export default function TableDetalleDePreciosSearch({
         onRowDoubleClicked={handleRowDoubleClicked}
         selectionColor={colorSeleccion}
         getRowId={getRowId}
-        onColumnResized={handleColumnResized}
-        onFirstDataRendered={handleFirstDataRendered}
       />
       
       <ModalEditarPreciosProducto

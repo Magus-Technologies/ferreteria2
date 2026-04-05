@@ -5,12 +5,14 @@ import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
-import { EstadoDeCompra, FormaDePago, TipoMoneda } from '~/types'
+import { EstadoDeCompra, FormaDePago, TipoDocumento, TipoMoneda } from '~/types'
 import { useAuth } from '~/lib/auth-context'
 import { CompraConUnidadDerivadaNormal } from '../_components/others/header'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { compraApi } from '~/lib/api/compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import type { FormInstance } from 'antd'
+import dayjs from 'dayjs'
 
 type ProductoAgrupado = Pick<
   FormCreateCompra['productos'][number],
@@ -70,8 +72,10 @@ export function agruparProductos({
 
 export default function useCreateCompra({
   compra,
+  form,
 }: {
   compra?: CompraConUnidadDerivadaNormal
+  form?: FormInstance<FormCreateCompra>
 } = {}) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -225,12 +229,20 @@ export default function useCreateCompra({
       )
 
       // Solo redirigir si NO es "En Espera"
-      // Si es "En Espera", quedarse en la página para crear otra compra
+      // Si es "En Espera", quedarse en la página y limpiar el formulario
       if (variables.estado_de_compra !== EstadoDeCompra.EnEspera) {
         router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
-      } else {
-        // Recargar la página para limpiar el formulario
-        router.refresh()
+      } else if (form) {
+        form.resetFields()
+        form.setFieldsValue({
+          tipo_moneda: TipoMoneda.Soles,
+          fecha: dayjs(),
+          forma_de_pago: FormaDePago.Contado,
+          tipo_documento: TipoDocumento.Factura,
+          tipo_de_cambio: 1,
+          estado_de_compra: EstadoDeCompra.Creado,
+          productos: [],
+        })
       }
     },
     onError: (error: Error) => {

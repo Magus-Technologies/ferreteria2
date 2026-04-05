@@ -337,19 +337,20 @@ export default function TableBase<T>({
       // Actualizar el conteo
       previousRowCountRef.current = currentRowCount;
 
+      // NO reaplicar en la primera carga de datos (previousRowCount === 0)
+      // onFirstDataRendered ya se encarga de eso, evita "salto" visual de columnas
+      if (previousRowCount === 0) {
+        return;
+      }
+
       // NO reaplicar estado si solo se agregaron más filas (infinite scroll)
-      // Solo reaplicar si los datos se reemplazaron completamente (ej: cambio de filtros)
-      if (previousRowCount > 0 && currentRowCount > previousRowCount) {
-        // Es una carga incremental (infinite scroll), no reaplicar estado
-        // console.log(
-        //   "🔵 [TableBase] Carga incremental detectada, manteniendo estado de filtros",
-        // );
+      if (currentRowCount > previousRowCount) {
         return;
       }
 
       const timeoutId = setTimeout(() => {
         applyColumnState();
-      }, 200); // Aumentado a 200ms
+      }, 200);
 
       return () => clearTimeout(timeoutId);
     }
