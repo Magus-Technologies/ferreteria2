@@ -262,12 +262,12 @@ export default function CardAgregarProductoVenta({
           }
         />
       </LabelBase>
-      <LabelBase label='P. Venta:' orientation='column'>
+      <LabelBase label='Precio Venta:' orientation='column'>
         <SelectPrecios
           unidadDerivada={unidad_derivada_seleccionada}
           cantidad={Number(values.cantidad || 0)}
           ref={precio_ventaRef}
-          placeholder='P. Venta'
+          placeholder='Precio Venta'
           onChange={(value) => handleChange(value, 'precio_venta')}
           className='w-full'
           classNameIcon='text-rose-700'

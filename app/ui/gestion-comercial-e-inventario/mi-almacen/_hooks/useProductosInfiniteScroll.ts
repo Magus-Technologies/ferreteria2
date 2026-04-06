@@ -30,8 +30,9 @@ export function useProductosInfiniteScroll({
     queryFn: async ({ pageParam }: { pageParam: number }) => {
       console.log(`🔄 Cargando página ${pageParam} de productos...`);
       
+      const { _searchId, ...filtrosSinSearchId } = filtros as any;
       const response = await productosApiV2.getAllByAlmacen({
-        ...filtros,
+        ...filtrosSinSearchId,
         page: pageParam,
         per_page: perPage,
       });

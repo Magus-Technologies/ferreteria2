@@ -188,26 +188,30 @@ export default function TableDetalleDePrecios() {
                       unidad_derivada: { connect: { id: unitId } },
                       // Aseguramos que los números no sean NaN
                       factor: Number(item['Factor']) || 1,
-                      precio_publico: Number(item['Precio Público']) || 0,
+                      precio_publico: Number(item['P. Público'] ?? item['Precio Público']) || 0,
                     };
 
                     // Mapeo dinámico para campos opcionales
+                    // Soporta ambos formatos: "P. Especial" (Excel) y "Precio Especial" (legacy)
                     const optionalFields = {
-                      comision_publico: 'Comisión Precio Público',
-                      precio_especial: 'Precio Especial',
-                      comision_especial: 'Comisión Precio Especial',
-                      activador_especial: 'Activador Precio Especial',
-                      precio_minimo: 'Precio Mínimo',
-                      comision_minimo: 'Comisión Precio Mínimo',
-                      activador_minimo: 'Activador Precio Mínimo',
-                      precio_ultimo: 'Precio Último',
-                      comision_ultimo: 'Comisión Precio Último',
-                      activador_ultimo: 'Activador Precio Último',
+                      comision_publico: ['Comisión P. Público', 'Comisión Precio Público'],
+                      precio_especial: ['P. Especial', 'Precio Especial'],
+                      comision_especial: ['Comisión P. Especial', 'Comisión Precio Especial'],
+                      activador_especial: ['Activador P. Especial', 'Activador Precio Especial'],
+                      precio_minimo: ['P. Mínimo', 'Precio Mínimo'],
+                      comision_minimo: ['Comisión P. Mínimo', 'Comisión Precio Mínimo'],
+                      activador_minimo: ['Activador P. Mínimo', 'Activador Precio Mínimo'],
+                      precio_ultimo: ['P. Último', 'Precio Último'],
+                      comision_ultimo: ['Comisión P. Último', 'Comisión Precio Último'],
+                      activador_ultimo: ['Activador P. Último', 'Activador Precio Último'],
                     };
 
-                    Object.entries(optionalFields).forEach(([apiKey, excelKey]) => {
-                      if (item[excelKey] !== undefined && item[excelKey] !== null && item[excelKey] !== '') {
-                        row[apiKey] = Number(item[excelKey]);
+                    Object.entries(optionalFields).forEach(([apiKey, excelKeys]) => {
+                      for (const excelKey of excelKeys) {
+                        if (item[excelKey] !== undefined && item[excelKey] !== null && item[excelKey] !== '') {
+                          row[apiKey] = Number(item[excelKey]);
+                          break;
+                        }
                       }
                     });
 

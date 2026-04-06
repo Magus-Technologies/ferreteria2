@@ -204,7 +204,7 @@ export function useColumnsGuia({
     },
     {
       colId: 'precio_venta',
-      headerName: 'P. Venta',
+      headerName: 'Precio Venta',
       field: 'name',
       minWidth: 110,
       width: 110,

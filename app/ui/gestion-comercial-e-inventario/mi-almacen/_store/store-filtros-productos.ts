@@ -20,11 +20,7 @@ export const useStoreFiltrosProductos = create<UseStoreFiltrosProductosProps>(
       setFiltros: value =>
         set(state => {
           const newValue = typeof value === 'function' ? value(state.filtros) : value
-          // Evitar actualizaciones innecesarias si el valor es el mismo
-          if (JSON.stringify(newValue) === JSON.stringify(state.filtros)) {
-            return state
-          }
-          return { filtros: newValue }
+          return { filtros: { ...newValue, _searchId: Date.now() } }
         }),
     }
   }

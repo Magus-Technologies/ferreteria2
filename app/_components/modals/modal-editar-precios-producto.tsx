@@ -527,7 +527,7 @@ export default function ModalEditarPreciosProducto({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <LabelBase label="Comisión P. Ferretería:" classNames={{ labelParent: 'mb-4' }}>
+          <LabelBase label="Comisión Precio Ferretería:" classNames={{ labelParent: 'mb-4' }}>
             <InputNumberBase
               propsForm={{
                 name: 'comision_especial',
