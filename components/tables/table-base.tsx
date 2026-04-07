@@ -541,8 +541,12 @@ export default function TableBase<T>({
         background-color: transparent !important;
       }
       `
-          : selectionColor !== "border" && selectionColor !== "overlay"
+          : selectionColor === "none"
             ? `
+      /* Cuando selectionColor es 'none', no inyectar estilos de fondo para permitir getRowStyle */
+      `
+            : selectionColor !== "border" && selectionColor !== "overlay"
+              ? `
       #${tableId} .ag-row-selected,
       #${tableId} .ag-row.ag-row-selected,
       #${tableId}.ag-theme-quartz .ag-row-selected,
@@ -576,8 +580,8 @@ export default function TableBase<T>({
         background-color: ${selectionColor} !important;
       }
       `
-            : selectionColor === "overlay"
-            ? `
+              : selectionColor === "overlay"
+                ? `
       /* overlay: tema maneja el fondo oscuro, texto blanco con sombra para legibilidad */
       #${tableId} .ag-row-selected .ag-cell,
       #${tableId} .ag-row.ag-row-selected .ag-cell,
@@ -591,7 +595,7 @@ export default function TableBase<T>({
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
       }
       `
-            : `
+                : `
       /* Cuando selectionColor es 'border', no aplicar color de fondo a filas seleccionadas */
       #${tableId} .ag-row-selected,
       #${tableId} .ag-row.ag-row-selected,
@@ -618,6 +622,7 @@ export default function TableBase<T>({
       }
       `
       }
+
     `}
       </style>
 

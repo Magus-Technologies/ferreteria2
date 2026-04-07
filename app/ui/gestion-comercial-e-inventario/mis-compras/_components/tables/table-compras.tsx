@@ -223,6 +223,8 @@ const TableCompras = memo(function TableCompras({
     const compra = params.data as Compra
     if (!compra) return undefined
 
+    const isSelected = params.node.isSelected();
+
     // Calcular el total y lo pagado
     const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
       const costo = Number(item.costo ?? 0)
@@ -252,19 +254,19 @@ const TableCompras = memo(function TableCompras({
     // Verde: Contado (siempre pagado) o Crédito completamente pagado
     if (formaDePagoContado || (formaDePagoCredito && resta <= 0.01)) {
       return {
-        background: greenColors[2]
+        background: isSelected ? greenColors[0] : greenColors[2]
       }
     }
     // Naranja: En Espera o Anulado
     if (estadoEnEspera || estadoAnulado) {
       return {
-        background: orangeColors[2]
+        background: isSelected ? orangeColors[0] : orangeColors[2]
       }
     }
     // Rojo: Crédito y Pendiente
     if (formaDePagoCredito && resta > 0.01) {
       return {
-        background: redColors[2]
+        background: isSelected ? redColors[0] : redColors[2]
       }
     }
 
@@ -379,7 +381,7 @@ const TableCompras = memo(function TableCompras({
         }
       }, 100);
     }
-  }, [rowData, setCompraSeleccionada, calcularColorCompra]);
+  }, [rowData, setCompraSeleccionada]);
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
@@ -387,7 +389,8 @@ const TableCompras = memo(function TableCompras({
   return (
     <TableWithTitle<Compra>
       id={id}
-      selectionColor="transparent"
+      selectionColor="none"
+
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
       onRowDoubleClicked={handleRowDoubleClicked}
