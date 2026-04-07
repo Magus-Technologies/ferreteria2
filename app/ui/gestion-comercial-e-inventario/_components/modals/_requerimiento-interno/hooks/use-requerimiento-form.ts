@@ -2,18 +2,14 @@ import { useState } from "react"
 
 export interface RequerimientoFormData {
     titulo: string
-    area: string
+    cargo: string
     fechaRequerida: string
     prioridad: string
     tipoSolicitud: 'OC' | 'OS' | 'SOC'
     observaciones: string
     proveedorSugerido: string
-    tipoServicio: string
-    descripcionServicio: string
-    lugarEjecucion: string
-    fechaInicioEstimada: string
-    fechaFinEstimada: string
-    presupuestoReferencial: string
+    duracionCantidad: string
+    duracionUnidad: string
 }
 
 export interface ItemBuscado {
@@ -27,24 +23,31 @@ export interface ItemBuscado {
     stock?: number
 }
 
+export interface ServicioItem {
+    id?: string // Client-side unique ID
+    tipoServicio: string
+    descripcionServicio: string
+    lugarEjecucion: string
+    fechaInicioEstimada: string
+    presupuestoReferencial: string
+    detalles: string
+}
+
 export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' = 'OC') {
     const [form, setForm] = useState<RequerimientoFormData>({
         titulo: "",
-        area: "",
+        cargo: "",
         fechaRequerida: "",
         prioridad: "MEDIA",
         tipoSolicitud: defaultTipoSolicitud,
         observaciones: "",
         proveedorSugerido: "",
-        tipoServicio: "",
-        descripcionServicio: "",
-        lugarEjecucion: "",
-        fechaInicioEstimada: "",
-        fechaFinEstimada: "",
-        presupuestoReferencial: "",
+        duracionCantidad: "",
+        duracionUnidad: "dias",
     })
 
     const [productosSeleccionados, setProductosSeleccionados] = useState<ItemBuscado[]>([])
+    const [serviciosSeleccionados, setServiciosSeleccionados] = useState<ServicioItem[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const setField = (key: string, value: string | number | boolean) => {
@@ -59,8 +62,11 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
         
         if (currentStep === 0) {
             if (!form.titulo.trim()) e.titulo = "Requerido"
-            if (!form.area) e.area = "Requerido"
+            if (!form.cargo) e.cargo = "Requerido"
             if (!form.fechaRequerida) e.fechaRequerida = "Requerido"
+            if (form.tipoSolicitud === 'OS') {
+                if (!form.duracionCantidad) e.duracionCantidad = "Requerido"
+            }
         }
         
         if (currentStep === 1 && form.tipoSolicitud === "OC") {
@@ -68,9 +74,7 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
         }
         
         if (currentStep === 1 && form.tipoSolicitud === "OS") {
-            if (!form.tipoServicio) e.tipoServicio = "Requerido"
-            if (!form.descripcionServicio.trim()) e.descripcionServicio = "Requerido"
-            if (!form.fechaInicioEstimada || !form.fechaFinEstimada) e.duracionRango = "Requerido"
+            if (serviciosSeleccionados.length === 0) e.servicios = "Agregue al menos un servicio"
         }
         
         setErrors(e)
@@ -80,20 +84,17 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
     const resetForm = () => {
         setForm({
             titulo: "",
-            area: "",
+            cargo: "",
             fechaRequerida: "",
             prioridad: "MEDIA",
             tipoSolicitud: defaultTipoSolicitud,
             observaciones: "",
             proveedorSugerido: "",
-            tipoServicio: "",
-            descripcionServicio: "",
-            lugarEjecucion: "",
-            fechaInicioEstimada: "",
-            fechaFinEstimada: "",
-            presupuestoReferencial: "",
+            duracionCantidad: "",
+            duracionUnidad: "dias",
         })
         setProductosSeleccionados([])
+        setServiciosSeleccionados([])
         setErrors({})
     }
 
@@ -102,6 +103,8 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
         setField,
         productosSeleccionados,
         setProductosSeleccionados,
+        serviciosSeleccionados,
+        setServiciosSeleccionados,
         errors,
         validate,
         resetForm,

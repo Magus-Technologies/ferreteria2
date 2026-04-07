@@ -59,47 +59,10 @@ export function useColumnsMisOS({
     },
     {
       colId: 'area',
-      headerName: 'Área',
-      field: 'area',
-      width: 130,
-      minWidth: 100,
-    },
-    {
-      colId: 'tipo_servicio',
-      headerName: 'Tipo Servicio',
-      field: 'servicio.tipo_servicio',
-      width: 150,
-      minWidth: 120,
-      valueGetter: (params: { data?: RequerimientoInterno }) =>
-        params.data?.servicio?.tipo_servicio || '—',
-    },
-    {
-      colId: 'descripcion',
-      headerName: 'Descripción',
-      field: 'servicio.descripcion_servicio',
+      headerName: "Cargo / Ocupación",
+      field: "cargo",
       flex: 1,
-      minWidth: 180,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
-        <Tooltip title={data?.servicio?.descripcion_servicio}>
-          <div className="flex items-center h-full text-slate-600 text-xs overflow-hidden text-ellipsis whitespace-nowrap">
-            {data?.servicio?.descripcion_servicio || '—'}
-          </div>
-        </Tooltip>
-      ),
-    },
-    {
-      colId: 'presupuesto',
-      headerName: 'Presupuesto',
-      field: 'servicio.presupuesto_referencial',
-      width: 130,
-      minWidth: 100,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
-        <div className="flex items-center h-full">
-          {data?.servicio?.presupuesto_referencial
-            ? `S/ ${Number(data.servicio.presupuesto_referencial).toFixed(2)}`
-            : '—'}
-        </div>
-      ),
+      minWidth: 150,
     },
     {
       colId: 'prioridad',
@@ -126,6 +89,18 @@ export function useColumnsMisOS({
           <Tag color={ESTADO_COLORS[data?.estado || 'pendiente']}>
             {data?.estado?.toUpperCase()}
           </Tag>
+        </div>
+      ),
+    },
+    {
+      colId: 'created_at',
+      headerName: 'Fecha Creación',
+      field: 'created_at',
+      width: 140,
+      minWidth: 110,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
+        <div className="flex items-center h-full text-xs">
+          {data?.created_at ? dayjs(data.created_at).format('DD/MM/YYYY HH:mm') : '—'}
         </div>
       ),
     },

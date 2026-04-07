@@ -3,16 +3,8 @@
 import { useRef } from "react"
 import { ColDef } from "ag-grid-community"
 import TableWithTitle from "~/components/tables/table-with-title"
-
-interface ItemBuscado {
-    id: number | null
-    codigo: string
-    nombre: string
-    nombre_adicional?: string
-    cantidad: number
-    unidad: string
-    stock?: number
-}
+import type { ItemBuscado, ServicioItem } from "./hooks/use-requerimiento-form"
+import { Tag } from "antd"
 
 interface PRIORIDAD {
     value: string
@@ -23,10 +15,16 @@ interface PRIORIDAD {
 interface StepResumenProps {
     form: any
     productosSeleccionados: ItemBuscado[]
+    serviciosSeleccionados: ServicioItem[]
     prioridades: PRIORIDAD[]
 }
 
-export default function StepResumen({ form, productosSeleccionados, prioridades }: StepResumenProps) {
+export default function StepResumen({ 
+    form, 
+    productosSeleccionados, 
+    serviciosSeleccionados,
+    prioridades 
+}: StepResumenProps) {
     const tableGridRef = useRef<any>(null)
     const prio = prioridades.find(p => p.value === form.prioridad)
 
@@ -70,7 +68,7 @@ export default function StepResumen({ form, productosSeleccionados, prioridades 
             {/* Tipo y General Info */}
             <div className="grid grid-cols-2 gap-5">
                 {/* Tipo de Solicitud */}
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="border border-slate-200 rounded-lg overflow-hidden h-fit">
                     <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
                         <span className="text-base">{form.tipoSolicitud === "OC" ? "🛒" : "🔧"}</span>
                         <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tipo de solicitud</span>
@@ -94,9 +92,12 @@ export default function StepResumen({ form, productosSeleccionados, prioridades 
                     <div className="grid grid-cols-2 divide-x divide-y divide-slate-100">
                         {[
                             ["Título", form.titulo || "—"],
-                            ["Área", form.area || "—"],
+                            ["Cargo / Ocupación", form.cargo || "—"],
                             ["Fecha requerida", form.fechaRequerida || "—"],
                             ["Observaciones", form.observaciones || "—"],
+                            ...(form.tipoSolicitud === 'OS' ? [
+                                ["Duración Estimada", `${form.duracionCantidad} ${form.duracionUnidad}`]
+                            ] : [])
                         ].map(([k, v]) => (
                             <div key={k} className="px-3 py-2">
                                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -129,34 +130,36 @@ export default function StepResumen({ form, productosSeleccionados, prioridades 
                 />
             ) : (
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
-                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Detalle del servicio</span>
+                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Servicios a Solicitar</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 bg-slate-200 rounded-full">{serviciosSeleccionados.length} servicios</span>
                     </div>
-                    <div className="px-4 py-4 space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            {[
-                                ["Categoría", form.tipoServicio || "—"],
-                                ["Duración", form.duracionCif ? `${form.duracionCif} ${form.duracionUnidad}` : "—"],
-                                ["Presupuesto Ref.", form.presupuestoReferencial ? `S/ ${form.presupuestoReferencial}` : "—"],
-                            ].map(([k, v]) => (
-                                <div key={k}>
-                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                                        {k}
-                                    </div>
-                                    <div className="text-sm font-semibold text-slate-900">
-                                        {v}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="pt-3 border-t border-slate-100">
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                Descripción
+                    <div className="divide-y divide-slate-100">
+                        {serviciosSeleccionados.length === 0 ? (
+                            <div className="p-8 text-center text-slate-400 text-xs italic">
+                                No hay servicios agregados
                             </div>
-                            <p className="text-xs text-slate-700 leading-relaxed italic">
-                                "{form.descripcionServicio}"
-                            </p>
-                        </div>
+                        ) : (
+                            serviciosSeleccionados.map((s, idx) => (
+                                <div key={s.id || idx} className="p-4 hover:bg-slate-50 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div className="text-sm font-bold text-slate-900">{s.descripcionServicio}</div>
+                                            <div className="text-xs text-slate-500 italic mt-0.5">Lugar: {s.lugarEjecucion || "—"}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs font-bold text-emerald-600">{s.presupuestoReferencial ? `S/ ${Number(s.presupuestoReferencial).toFixed(2)}` : "Sin presupuesto"}</div>
+                                        </div>
+                                    </div>
+                                    {s.detalles && (
+                                        <div className="mt-2 bg-slate-100 p-2 rounded text-xs text-slate-600 border-l-2 border-slate-300">
+                                            <div className="font-bold mb-1 text-[10px] uppercase text-slate-500">Detalles y Tareas:</div>
+                                            {s.detalles}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}

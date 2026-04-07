@@ -2,6 +2,7 @@
 
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import { Spin, App, Tag, Modal, Button, Tooltip } from 'antd'
+import dayjs from 'dayjs'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import { ColDef, ICellRendererParams, SelectionChangedEvent } from 'ag-grid-community'
@@ -58,8 +59,16 @@ export default function MisOrdenesDeServicio() {
         <div>
           <p>¿Estás seguro de aprobar <strong>{row.codigo}</strong>?</p>
           <p className='text-sm text-slate-500 mt-1'>{row.titulo}</p>
-          {row.servicio?.tipo_servicio && (
-            <p className='text-sm text-slate-500'>Servicio: {row.servicio.tipo_servicio}</p>
+          {row.servicios && row.servicios.length > 0 && (
+            <div className='mt-2'>
+              <p className='text-xs font-bold text-slate-600 uppercase tracking-tight'>Servicios:</p>
+              <ul className='text-xs text-slate-500 list-disc ml-4'>
+                {row.servicios.slice(0, 3).map((s, i) => (
+                  <li key={i}>{s.tipo_servicio}: {s.descripcion_servicio}</li>
+                ))}
+                {row.servicios.length > 3 && <li>y {row.servicios.length - 3} más...</li>}
+              </ul>
+            </div>
           )}
         </div>
       ),
@@ -81,18 +90,33 @@ export default function MisOrdenesDeServicio() {
 
   const columns = useColumnsMisOS({ onView: handleView, onViewPdf: handleViewPdf, onAprobar: handleAprobar })
 
-  const servicioRowData = useMemo<RequerimientoInternoServicio[]>(() => {
-    if (filaSeleccionada?.servicio) return [filaSeleccionada.servicio]
-    return []
+  const servicioRowData = useMemo(() => {
+    if (!filaSeleccionada?.servicios) return []
+    // Inyectamos la fecha de creación del padre para que esté disponible en la tabla de abajo
+    return filaSeleccionada.servicios.map(s => ({
+      ...s,
+      fecha_solicitud_padre: filaSeleccionada.created_at
+    }))
   }, [filaSeleccionada])
 
-  const columnsDetalle = useMemo<ColDef<RequerimientoInternoServicio>[]>(() => [
+  const columnsDetalle = useMemo<ColDef[]>(() => [
+    {
+      headerName: 'Fecha Solicitado',
+      field: 'fecha_solicitud_padre',
+      width: 150,
+      minWidth: 130,
+      cellRenderer: ({ data }: any) => (
+        <div className="flex items-center h-full text-xs font-semibold text-slate-500">
+          {data?.fecha_solicitud_padre ? dayjs(data.fecha_solicitud_padre).format('DD/MM/YYYY HH:mm') : '—'}
+        </div>
+      ),
+    },
     {
       headerName: 'Tipo Servicio',
       field: 'tipo_servicio',
-      width: 150,
+      width: 140,
       minWidth: 120,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoServicio>) => (
+      cellRenderer: ({ data }: ICellRendererParams) => (
         <div className="flex items-center h-full">
           <Tag color="green" className="!rounded-md !font-semibold">{data?.tipo_servicio || '—'}</Tag>
         </div>
@@ -102,29 +126,42 @@ export default function MisOrdenesDeServicio() {
       headerName: 'Descripción',
       field: 'descripcion_servicio',
       flex: 1,
-      minWidth: 250,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoServicio>) => (
-        <div className="flex items-center h-full text-slate-600 text-xs overflow-hidden text-ellipsis whitespace-nowrap">
+      minWidth: 200,
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <div className="flex items-center h-full text-slate-700 font-medium text-xs overflow-hidden text-ellipsis whitespace-nowrap">
           {data?.descripcion_servicio || '—'}
         </div>
       ),
     },
     {
-      headerName: 'Lugar de Ejecución',
+      headerName: 'Detalles / Tareas',
+      field: 'detalles',
+      flex: 1,
+      minWidth: 250,
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <Tooltip title={data?.detalles}>
+          <div className="flex items-center h-full text-slate-500 text-[11px] italic overflow-hidden text-ellipsis whitespace-nowrap">
+            {data?.detalles || '—'}
+          </div>
+        </Tooltip>
+      ),
+    },
+    {
+      headerName: 'Lugar',
       field: 'lugar_ejecucion',
-      width: 170,
-      minWidth: 130,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoServicio>) => (
-        <div className="flex items-center h-full">{data?.lugar_ejecucion || '—'}</div>
+      width: 150,
+      minWidth: 120,
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <div className="flex items-center h-full text-xs">{data?.lugar_ejecucion || '—'}</div>
       ),
     },
     {
       headerName: 'Duración',
       field: 'duracion_cantidad',
-      width: 130,
-      minWidth: 100,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoServicio>) => (
-        <div className="flex items-center h-full font-semibold text-emerald-600">
+      width: 110,
+      minWidth: 90,
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <div className="flex items-center h-full font-semibold text-emerald-600 text-xs">
           {data?.duracion_cantidad ? `${data.duracion_cantidad} ${data.duracion_unidad || ''}` : '—'}
         </div>
       ),
@@ -132,21 +169,23 @@ export default function MisOrdenesDeServicio() {
     {
       headerName: 'Presupuesto',
       field: 'presupuesto_referencial',
-      width: 140,
+      width: 130,
       minWidth: 110,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoServicio>) => (
-        <div className="flex items-center h-full font-bold text-emerald-700">
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <div className="flex items-center h-full font-bold text-emerald-700 text-xs">
           {data?.presupuesto_referencial ? `S/ ${Number(data.presupuesto_referencial).toFixed(2)}` : '—'}
         </div>
       ),
     },
     {
-      headerName: 'Fecha Inicio',
+      headerName: 'Inicio Estimado',
       field: 'fecha_inicio_estimada',
-      width: 130,
-      minWidth: 100,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInternoServicio>) => (
-        <div className="flex items-center h-full text-xs">{data?.fecha_inicio_estimada || '—'}</div>
+      width: 140,
+      minWidth: 120,
+      cellRenderer: ({ data }: ICellRendererParams) => (
+        <div className="flex items-center h-full text-xs text-slate-600">
+          {data?.fecha_inicio_estimada ? dayjs(data.fecha_inicio_estimada).format('DD/MM/YYYY HH:mm') : '—'}
+        </div>
       ),
     },
   ], [])
