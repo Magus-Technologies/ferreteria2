@@ -223,55 +223,11 @@ const TableCompras = memo(function TableCompras({
     const compra = params.data as Compra
     if (!compra) return undefined
 
-    const isSelected = params.node.isSelected();
+    const color = calcularColorCompra(compra)
+    if (color === 'transparent') return undefined
 
-    // Calcular el total y lo pagado
-    const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
-      const costo = Number(item.costo ?? 0)
-      for (const u of item.unidades_derivadas ?? []) {
-        const cantidad = Number(u.cantidad ?? 0)
-        const factor = Number(u.factor ?? 0)
-        const flete = Number(u.flete ?? 0)
-        const bonificacion = Boolean(u.bonificacion)
-        const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
-        acc += montoLinea
-      }
-      return acc
-    }, 0)
-
-    const totalPagado = Number(compra.total_pagado || 0)
-    const resta = total - totalPagado
-
-    // Comparar con strings de Laravel (la API devuelve 'co', 'cr', 'ee', 'an')
-    const formaDePago = compra.forma_de_pago as string
-    const estadoDeCompra = compra.estado_de_compra as string
-    
-    const formaDePagoContado = formaDePago === 'co'
-    const formaDePagoCredito = formaDePago === 'cr'
-    const estadoEnEspera = estadoDeCompra === 'ee'
-    const estadoAnulado = estadoDeCompra === 'an'
-
-    // Verde: Contado (siempre pagado) o Crédito completamente pagado
-    if (formaDePagoContado || (formaDePagoCredito && resta <= 0.01)) {
-      return {
-        background: isSelected ? greenColors[0] : greenColors[2]
-      }
-    }
-    // Naranja: En Espera o Anulado
-    if (estadoEnEspera || estadoAnulado) {
-      return {
-        background: isSelected ? orangeColors[0] : orangeColors[2]
-      }
-    }
-    // Rojo: Crédito y Pendiente
-    if (formaDePagoCredito && resta > 0.01) {
-      return {
-        background: isSelected ? redColors[0] : redColors[2]
-      }
-    }
-
-    return undefined
-  }, [])
+    return { background: color }
+  }, [calcularColorCompra])
 
 
   // Memoizar opciones de columnas para evitar recreaciones
@@ -389,7 +345,7 @@ const TableCompras = memo(function TableCompras({
   return (
     <TableWithTitle<Compra>
       id={id}
-      selectionColor="none"
+      selectionColor="overlay"
 
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
