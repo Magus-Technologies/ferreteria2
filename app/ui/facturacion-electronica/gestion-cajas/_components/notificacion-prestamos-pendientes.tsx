@@ -1,9 +1,10 @@
-import { Badge, Popover, Spin, Tabs } from 'antd'
-import { BellOutlined, DollarOutlined, WarningOutlined } from '@ant-design/icons'
+import { Badge, Popover, Spin, Tabs, Empty, Button, Tag } from 'antd'
+import { BellOutlined, DollarOutlined, WarningOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
 import { prestamoVendedorApi, type SolicitudEfectivo } from '~/lib/api/prestamo-vendedor'
 import { facturacionElectronicaApi, type ComprobanteElectronico } from '~/lib/api/facturacion-electronica'
+import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import ModalAprobarSolicitudEfectivo from './modal-aprobar-solicitud-efectivo'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
@@ -13,35 +14,40 @@ export function NotificacionPrestamosPendientes() {
   const [openAprobar, setOpenAprobar] = useState(false)
   const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudEfectivo | null>(null)
 
-  // 1. Consultar préstamos (solicitudes de efectivo)
-  const { data: prestamosData, refetch: refetchPrestamos, isError: isErrorPrestamos } = useQuery({
+  // 1. Consultar préstamos
+  const { data: prestamosData, refetch: refetchPrestamos } = useQuery({
     queryKey: ['solicitudes-efectivo-pendientes'],
-    queryFn: async () => {
-      const resp = await prestamoVendedorApi.solicitudesPendientes()
-      return resp
-    },
+    queryFn: async () => await prestamoVendedorApi.solicitudesPendientes(),
     refetchInterval: 30000,
   })
 
-  // 2. Consultar alertas de SUNAT (comprobantes por vencer)
-  const { data: sunatData, refetch: refetchSunat, isLoading: isLoadingSunat } = useQuery({
+  // 2. Consultar alertas de SUNAT
+  const { data: sunatData } = useQuery({
     queryKey: ['sunat-alertas-pendientes'],
-    queryFn: async () => {
-      const resp = await facturacionElectronicaApi.getPendientesAlerta()
-      return resp
-    },
+    queryFn: async () => await facturacionElectronicaApi.getPendientesAlerta(),
     refetchInterval: 60000,
   })
 
-  const solicitudes = Array.isArray((prestamosData?.data as any)?.data)
-    ? (prestamosData?.data as any).data
-    : []
+  // 3. Consultar Requerimientos Internos Pendientes
+  const { data: reqData, refetch: refetchReq } = useQuery({
+    queryKey: ['requerimientos-internos-pendientes'],
+    queryFn: async () => await requerimientoInternoApi.getAll({ estado: 'pendiente', per_page: 20 }),
+    refetchInterval: 45000,
+  })
 
-  const alertasSunat = Array.isArray((sunatData?.data as any)?.data)
-    ? (sunatData?.data as any).data
-    : []
+  const solicitudes = useMemo(() => 
+    Array.isArray((prestamosData?.data as any)?.data) ? (prestamosData?.data as any).data : []
+  , [prestamosData])
 
-  const totalNotifications = solicitudes.length + alertasSunat.length
+  const alertasSunat = useMemo(() => 
+    Array.isArray((sunatData?.data as any)?.data) ? (sunatData?.data as any).data : []
+  , [sunatData])
+
+  const requerimientos = useMemo(() => 
+    Array.isArray(reqData?.data?.data) ? reqData.data.data : []
+  , [reqData])
+
+  const totalNotifications = solicitudes.length + alertasSunat.length + requerimientos.length
 
   const handleAprobar = (solicitud: SolicitudEfectivo) => {
     setSelectedSolicitud(solicitud)
@@ -87,6 +93,42 @@ export function NotificacionPrestamosPendientes() {
                 </div>
               ))}
               {solicitudes.length === 0 && <div className="py-8 text-center text-slate-400 text-sm">No hay solicitudes hoy</div>}
+            </div>
+          )
+        },
+        {
+          key: '3',
+          label: (
+            <div className="flex items-center gap-2">
+              <FileTextOutlined />
+              <span>Requerimientos</span>
+              {requerimientos.length > 0 && <Badge count={requerimientos.length} size="small" offset={[5, 0]} color="blue" />}
+            </div>
+          ),
+          children: (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {requerimientos.map((req: RequerimientoInterno) => (
+                <div 
+                  key={req.id} 
+                  className="border border-blue-50 rounded-lg p-3 hover:bg-blue-50 transition-colors cursor-pointer"
+                  onClick={() => router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-servicio')}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">{req.codigo}</p>
+                      <p className="text-sm font-semibold text-slate-800 line-clamp-1">{req.titulo}</p>
+                    </div>
+                    <Tag color={req.prioridad === 'URGENTE' || req.prioridad === 'ALTA' ? 'red' : 'blue'} className="text-[9px] uppercase m-0 leading-3">
+                      {req.prioridad}
+                    </Tag>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[10px] text-slate-500 font-medium">Cargo: {req.cargo}</p>
+                    <p className="text-[10px] text-slate-400 italic">{dayjs(req.created_at).fromNow()}</p>
+                  </div>
+                </div>
+              ))}
+              {requerimientos.length === 0 && <div className="py-8 text-center text-slate-400 text-sm">Sin requerimientos pendientes</div>}
             </div>
           )
         },

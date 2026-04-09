@@ -56,9 +56,9 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
-      colId: 'area',
+      colId: 'cargo',
       headerName: 'Área',
-      field: 'area',
+      field: 'cargo',
       width: 130,
       minWidth: 100,
     },
@@ -79,13 +79,13 @@ export function useColumnsSolicitudOC({
     {
       colId: 'presupuesto',
       headerName: 'Presupuesto',
-      field: 'servicio',
+      field: 'servicios',
       width: 130,
       minWidth: 100,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
         <div className="flex items-center h-full">
-          {data?.servicio?.presupuesto_referencial
-            ? `S/ ${Number(data.servicio.presupuesto_referencial).toFixed(2)}`
+          {data?.servicios?.[0]?.presupuesto_referencial
+            ? `S/ ${Number(data.servicios[0].presupuesto_referencial).toFixed(2)}`
             : '—'}
         </div>
       ),

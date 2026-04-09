@@ -83,7 +83,7 @@ export default function FiltersMisOS({
           <div className="flex items-center gap-1 shrink-0">
             <Form.Item name="search" className="!mb-0">
               <Input
-                placeholder="Buscar (Título, Código, Área)"
+                placeholder="Buscar (Título, Código, Cargo)"
                 prefix={<FaSearch className="text-slate-400" />}
                 className="!w-[280px]"
                 allowClear
@@ -154,7 +154,7 @@ export default function FiltersMisOS({
           <LabelBase label="Buscar:">
             <Form.Item name="search" className="!mb-0 w-full">
               <Input
-                placeholder="Título, Código, Área"
+                placeholder="Título, Código, Cargo"
                 prefix={<FaSearch className="text-slate-400" />}
                 className="w-full"
                 allowClear

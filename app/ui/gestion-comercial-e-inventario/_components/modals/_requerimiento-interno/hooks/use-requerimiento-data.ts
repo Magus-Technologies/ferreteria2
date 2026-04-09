@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { productosApiV2 } from "~/lib/api/producto"
 import { proveedorApi } from "~/lib/api/proveedor"
 import { tipoServicioApi, type TipoServicio } from "~/lib/api/tipo-servicio"
+import { catalogosGeneralesApi } from "~/lib/api/catalogos-generales"
 
 export interface ProductoDisponible {
     id: number
@@ -20,6 +21,7 @@ export function useRequerimientoData(open: boolean) {
     const [fetchedProductos, setFetchedProductos] = useState<ProductoDisponible[]>([])
     const [fetchedProveedores, setFetchedProveedores] = useState<{ label: string; value: number }[]>([])
     const [tiposServicio, setTiposServicio] = useState<{ label: string; value: number }[]>([])
+    const [cargos, setCargos] = useState<{ label: string; value: string }[]>([])
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -63,6 +65,12 @@ export function useRequerimientoData(open: boolean) {
             if (Array.isArray(tiposData)) {
                 setTiposServicio(tiposData.map(t => ({ label: t.nombre, value: t.id })))
             }
+
+            // Cargar cargos
+            const resCargos = await catalogosGeneralesApi.getCargos()
+            if (resCargos.data?.data) {
+                setCargos(resCargos.data.data.map(c => ({ label: c.descripcion, value: c.descripcion })))
+            }
         } catch (error) {
             console.error("Error al cargar datos iniciales del modal:", error)
         } finally {
@@ -78,6 +86,7 @@ export function useRequerimientoData(open: boolean) {
         fetchedProductos,
         fetchedProveedores,
         tiposServicio,
+        cargos,
         loading,
         addTipoServicio,
     }

@@ -8,7 +8,7 @@ interface SelectEstadoDeCompraProps extends SelectBaseProps {
 }
 
 export const EstadoDeCompraSelect = {
-  Activos: 'Activos',
+  Creados: 'Creados',
 }
 
 export default function SelectEstadoDeCompra({
@@ -26,8 +26,8 @@ export default function SelectEstadoDeCompra({
       placeholder={placeholder}
       options={[
         {
-          value: EstadoDeCompraSelect.Activos,
-          label: 'Activos',
+          value: EstadoDeCompraSelect.Creados,
+          label: 'Creados',
         },
         {
           value: EstadoDeCompra.EnEspera,

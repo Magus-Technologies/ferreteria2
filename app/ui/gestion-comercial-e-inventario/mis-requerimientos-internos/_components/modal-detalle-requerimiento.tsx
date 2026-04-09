@@ -49,6 +49,16 @@ export default function ModalDetalleRequerimiento({
   const prioridadConfig = PRIORIDAD_CONFIG[requerimiento.prioridad] || PRIORIDAD_CONFIG.MEDIA
   const estadoConfig = ESTADO_CONFIG[requerimiento.estado] || ESTADO_CONFIG.pendiente
 
+  const esHoras = requerimiento.duracion_unidad === 'horas'
+  const esSemanas = requerimiento.duracion_unidad === 'semanas'
+  
+  const fechaFin = requerimiento.duracion_cantidad && requerimiento.fecha_requerida
+    ? dayjs(requerimiento.fecha_requerida).add(
+        Number(requerimiento.duracion_cantidad), 
+        esHoras ? 'hour' : esSemanas ? 'week' : 'day'
+      ).format('DD/MM/YYYY')
+    : null
+
   return (
     <>
       <ModalForm
@@ -127,27 +137,37 @@ export default function ModalDetalleRequerimiento({
             </div>
 
             {/* ═══════ INFO GRID ═══════ */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className={`grid ${esOS ? 'grid-cols-3' : 'grid-cols-3'} gap-3`}>
               <InfoCard
                 icon={<FaRegBuilding className="text-emerald-600" size={14} />}
-                label="Área Solicitante"
-                value={requerimiento.area}
+                label="Cargo"
+                value={requerimiento.cargo}
               />
               <InfoCard
                 icon={<CalendarOutlined className="text-emerald-600" />}
-                label="Fecha Requerida"
+                label={esOS ? "Fecha Inicio" : "Fecha Requerida"}
                 value={dayjs(requerimiento.fecha_requerida).format('DD/MM/YYYY')}
               />
-              <InfoCard
-                icon={<UserOutlined className="text-emerald-600" />}
-                label="Solicitante"
-                value={requerimiento.user?.name || '—'}
-              />
-              <InfoCard
-                icon={<ClockCircleOutlined className="text-emerald-600" />}
-                label="Fecha de Creación"
-                value={dayjs(requerimiento.created_at).format('DD/MM/YYYY')}
-              />
+              {esOS && fechaFin ? (
+                <InfoCard
+                  icon={<CalendarOutlined className="text-emerald-600" />}
+                  label="Fecha Término"
+                  value={fechaFin}
+                />
+              ) : (
+                <InfoCard
+                  icon={<UserOutlined className="text-emerald-600" />}
+                  label="Solicitante"
+                  value={requerimiento.user?.name || '—'}
+                />
+              )}
+              {!esOS && (
+                <InfoCard
+                  icon={<UserOutlined className="text-emerald-600" />}
+                  label="Solicitante"
+                  value={requerimiento.user?.name || '—'}
+                />
+              )}
             </div>
 
             {/* ═══════ OBSERVACIONES ═══════ */}
@@ -161,59 +181,59 @@ export default function ModalDetalleRequerimiento({
             )}
 
             {/* ═══════ DETALLE OS (SERVICIO) ═══════ */}
-            {esOS && requerimiento.servicio && (
+            {esOS && requerimiento.servicios && requerimiento.servicios.length > 0 && (
               <div>
-                <SectionTitle>Detalle del Servicio</SectionTitle>
-                <div className="bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100 space-y-4">
-                  {/* Row 1: Tipo + Lugar + Duración */}
-                  <div className="flex gap-8 flex-wrap">
-                    {requerimiento.servicio.tipo_servicio && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Categoría de Servicio</span>
-                        <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">{requerimiento.servicio.tipo_servicio}</Tag>
+                <div className="flex items-center justify-between mb-3">
+                  <SectionTitle className="!mb-0">Servicios Solicitados</SectionTitle>
+                  {requerimiento.duracion_cantidad && (
+                    <Tag color="emerald" className="!rounded-full !px-3 !font-bold !border-none">
+                      Duración: {requerimiento.duracion_cantidad} {requerimiento.duracion_unidad}
+                    </Tag>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {requerimiento.servicios.map((srv, idx) => (
+                    <div key={idx} className="bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100 space-y-4">
+                      {/* Row 1: Tipo + Lugar + Inicio */}
+                      <div className="flex gap-8 flex-wrap">
+                        {srv.tipo_servicio && (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Categoría</span>
+                            <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">{srv.tipo_servicio}</Tag>
+                          </div>
+                        )}
+                        {srv.lugar_ejecucion && (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
+                              <FaMapMarkerAlt size={10} /> Lugar
+                            </span>
+                            <span className="font-semibold text-slate-700 text-sm">{srv.lugar_ejecucion}</span>
+                          </div>
+                        )}
+                        {srv.presupuesto_referencial && (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
+                              <FaMoneyBillWave size={10} /> Presupuesto
+                            </span>
+                            <span className="font-bold text-emerald-600 text-sm">S/ {Number(srv.presupuesto_referencial).toFixed(2)}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {requerimiento.servicio.lugar_ejecucion && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
-                          <FaMapMarkerAlt size={10} /> Lugar de Ejecución
-                        </span>
-                        <span className="font-semibold text-slate-700 text-sm">{requerimiento.servicio.lugar_ejecucion}</span>
-                      </div>
-                    )}
-                    {requerimiento.servicio.duracion_cantidad && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Duración Estimada</span>
-                        <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">
-                          {requerimiento.servicio.duracion_cantidad} {requerimiento.servicio.duracion_unidad}
-                        </Tag>
-                      </div>
-                    )}
-                    {requerimiento.servicio.fecha_inicio_estimada && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Fecha Inicio Estimada</span>
-                        <span className="font-semibold text-slate-700 text-sm">
-                          {dayjs(requerimiento.servicio.fecha_inicio_estimada).format('DD/MM/YYYY')}
-                        </span>
-                      </div>
-                    )}
-                    {requerimiento.servicio.presupuesto_referencial && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
-                          <FaMoneyBillWave size={10} /> Presupuesto Referencial
-                        </span>
-                        <span className="font-bold text-emerald-600 text-sm">S/ {requerimiento.servicio.presupuesto_referencial.toFixed(2)}</span>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Descripción */}
-                  <div className="pt-3 border-t border-emerald-100/50">
-                    <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Descripción del Servicio</span>
-                    <p className="text-sm text-slate-600 leading-relaxed mt-2 whitespace-pre-wrap bg-white/60 p-3 rounded-lg border border-emerald-100/50">
-                      {requerimiento.servicio.descripcion_servicio}
-                    </p>
-                  </div>
+                      {/* Descripción */}
+                      <div className="pt-3 border-t border-emerald-100/50">
+                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Descripción / Tareas</span>
+                        <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">
+                          {srv.descripcion_servicio}
+                        </p>
+                        {srv.detalles && (
+                           <div className="mt-2 p-3 bg-white/60 rounded-lg border border-emerald-100/50 text-[11px] text-slate-500 italic">
+                             {srv.detalles}
+                           </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

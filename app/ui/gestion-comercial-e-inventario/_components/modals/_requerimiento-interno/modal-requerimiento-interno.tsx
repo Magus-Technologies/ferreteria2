@@ -53,7 +53,11 @@ export default function ModalRequerimientoInterno({
     }
 
     const handleSubmit = async () => {
-        const result = await submitHook.submit(formHook.form, formHook.productosSeleccionados)
+        const result = await submitHook.submit(
+            formHook.form, 
+            formHook.productosSeleccionados,
+            formHook.serviciosSeleccionados
+        )
         if (!result.success) {
             message.error(result.error || 'Error al crear el requerimiento')
         }
@@ -168,6 +172,7 @@ export default function ModalRequerimientoInterno({
                                     errors={formHook.errors}
                                     areas={AREAS}
                                     prioridades={PRIORIDADES}
+                                    cargos={dataHook.cargos}
                                 />
                             )}
 
@@ -210,12 +215,12 @@ export default function ModalRequerimientoInterno({
 
                             {currentStep === 1 && formHook.form.tipoSolicitud === "OS" && (
                                 <StepServicio
-                                    form={formHook.form}
-                                    setField={formHook.setField}
+                                    serviciosSeleccionados={formHook.serviciosSeleccionados}
+                                    setServiciosSeleccionados={formHook.setServiciosSeleccionados}
+                                    fechaRequerida={formHook.form.fechaRequerida}
                                     errors={formHook.errors}
                                     tiposServicio={dataHook.tiposServicio}
                                     onAbrirModalTipoServicio={() => setOpenModalTipoServicio(true)}
-                                    proveedores={dataHook.fetchedProveedores}
                                 />
                             )}
 
@@ -223,6 +228,7 @@ export default function ModalRequerimientoInterno({
                                 <StepResumen
                                     form={formHook.form}
                                     productosSeleccionados={formHook.productosSeleccionados}
+                                    serviciosSeleccionados={formHook.serviciosSeleccionados}
                                     prioridades={PRIORIDADES}
                                 />
                             )}

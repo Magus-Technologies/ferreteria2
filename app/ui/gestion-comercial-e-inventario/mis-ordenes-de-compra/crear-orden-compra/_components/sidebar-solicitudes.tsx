@@ -237,7 +237,7 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                                                         {req.prioridad}
                                                     </Tag>
                                                 </div>
-                                                <span className="text-[10px] text-slate-500 font-medium line-clamp-1">{req.area}</span>
+                                                <span className="text-[10px] text-slate-500 font-medium line-clamp-1">{req.cargo}</span>
                                                 <span className="text-[9px] text-slate-400 font-medium">{dayjs(req.fecha_requerida).format('DD/MM/YYYY')} · {req.productos?.length || 0} ítems</span>
                                             </div>
                                             <FaChevronRight className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90 text-emerald-500' : ''}`} size={10} />

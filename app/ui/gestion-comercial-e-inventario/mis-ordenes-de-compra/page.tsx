@@ -24,6 +24,7 @@ const FiltersMisOrdenesCompra = lazy(() => import('./_components/filters/filters
 const TableOrdenesCompra = lazy(() => import('./_components/tables/table-ordenes-compra'))
 const ModalDetalleOrdenCompra = lazy(() => import('./_components/modals/modal-detalle-orden-compra'))
 const ModalEnviarCorreoOC = lazy(() => import('./_components/modals/modal-enviar-correo-oc'))
+const ModalDocOrdenCompra = lazy(() => import('./_components/modals/modal-doc-orden-compra'))
 
 export default function MisOrdenesDeCompra() {
     const { modal, message } = App.useApp()
@@ -60,8 +61,6 @@ export default function MisOrdenesDeCompra() {
     // Document modal state
     const [docModalOpen, setDocModalOpen] = useState(false)
     const [docOrdenData, setDocOrdenData] = useState<OrdenCompra>()
-    const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
-    const [docPdfLoading, setDocPdfLoading] = useState(false)
 
     const handleAnular = useCallback((orden: OrdenCompra) => {
         modal.confirm({
@@ -115,66 +114,9 @@ export default function MisOrdenesDeCompra() {
         router.push(`/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra/crear-orden-compra?id=${orden.id}`)
     }, [router])
 
-    const handleDuplicar = useCallback(async (orden: OrdenCompra) => {
-        modal.confirm({
-            title: '¿Duplicar Orden de Compra?',
-            icon: <ExclamationCircleFilled />,
-            content: (
-                <div>
-                    <p>¿Estás seguro de duplicar la orden <strong>{orden.codigo}</strong>?</p>
-                    <p className='text-sm text-slate-500 mt-1'>Proveedor: {orden.proveedor?.razon_social || '—'}</p>
-                    <p className='text-sm text-slate-500'>Total: S/. {Number(orden.total ?? 0).toFixed(2)}</p>
-                    <p className='text-sm text-blue-600 mt-2'>Se creará una nueva orden con los mismos datos</p>
-                </div>
-            ),
-            okText: 'Sí, Duplicar',
-            okType: 'primary',
-            cancelText: 'Cancelar',
-            async onOk() {
-                try {
-                    // Obtener los datos completos de la orden
-                    const response = await ordenCompraApi.getById(orden.id)
-                    const ordenCompleta = response.data?.data
-
-                    if (!ordenCompleta) {
-                        message.error('No se pudo obtener los datos de la orden')
-                        return
-                    }
-
-                    // Crear la nueva orden con los mismos datos
-                    const requestData = {
-                        requerimiento_id: ordenCompleta.requerimiento_id ?? undefined,
-                        proveedor_id: ordenCompleta.proveedor_id ?? undefined,
-                        fecha: ordenCompleta.fecha,
-                        tipo_moneda: ordenCompleta.tipo_moneda,
-                        tipo_de_cambio: ordenCompleta.tipo_de_cambio,
-                        ruc: ordenCompleta.proveedor?.ruc || ordenCompleta.ruc || undefined,
-                        almacen_id: ordenCompleta.almacen_id,
-                        productos: ordenCompleta.productos?.map(p => ({
-                            producto_id: p.producto_id,
-                            codigo: p.codigo ?? undefined,
-                            nombre: p.nombre ?? undefined,
-                            marca: p.marca ?? undefined,
-                            unidad: p.unidad ?? undefined,
-                            cantidad: p.cantidad,
-                            precio: p.precio,
-                            subtotal: p.cantidad * p.precio,
-                            flete: p.flete || 0,
-                            vencimiento: p.vencimiento ?? undefined,
-                            lote: p.lote ?? undefined,
-                        })) || [],
-                    }
-
-                    const createResponse = await ordenCompraApi.create(requestData)
-                    message.success(createResponse.data?.message || 'Orden duplicada exitosamente')
-                    queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_COMPRA] })
-                } catch (error) {
-                    message.error('Error al duplicar la orden de compra')
-                    console.error(error)
-                }
-            },
-        })
-    }, [modal, message, queryClient])
+    const handleDuplicar = useCallback((orden: OrdenCompra) => {
+        router.push(`/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra/crear-orden-compra?duplicate_from=${orden.id}`)
+    }, [router])
 
     const handleView = useCallback((orden: OrdenCompra) => {
         setSelectedOrdenId(orden.id)
@@ -185,28 +127,6 @@ export default function MisOrdenesDeCompra() {
     const handleViewDoc = useCallback(async (orden: OrdenCompra) => {
         setDocOrdenData(orden)
         setDocModalOpen(true)
-        setDocPdfLoading(true)
-        try {
-            const token = getAuthToken()
-            const API_URL = process.env.NEXT_PUBLIC_API_URL
-            const res = await fetch(`${API_URL}/pdf/orden-compra/${orden.id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    Accept: 'application/pdf',
-                },
-            })
-            if (!res.ok) throw new Error(`Error: ${res.status}`)
-            const blob = await res.blob()
-            const url = URL.createObjectURL(blob)
-            setDocPdfUrl(prev => {
-                if (prev) URL.revokeObjectURL(prev)
-                return url
-            })
-        } catch (err) {
-            console.error('Error al cargar PDF de orden de compra:', err)
-        } finally {
-            setDocPdfLoading(false)
-        }
     }, [])
 
     const columns = useColumnsOrdenesCompra({
@@ -256,103 +176,13 @@ export default function MisOrdenesDeCompra() {
                 ordenData={selectedOrdenData}
             />
 
-            <Modal
-                centered
-                width={900}
-                open={docModalOpen}
-                classNames={{ content: 'min-w-fit' }}
-                title={
-                    <div className="flex flex-col gap-2">
-                        <div className="text-base font-semibold">
-                            {docOrdenData ? `Orden de Compra - ${docOrdenData.codigo}` : 'Orden de Compra'}
-                        </div>
-                        <div className="flex items-center gap-2 justify-end">
-                            <Tooltip title="Enviar por Correo">
-                                <ButtonBase
-                                    onClick={() => setOpenModalCorreo(true)}
-                                    color="info"
-                                    size="md"
-                                    className="!px-3 bg-blue-500 hover:bg-blue-600 text-white"
-                                >
-                                    <MdEmail />
-                                </ButtonBase>
-                            </Tooltip>
-                            <Tooltip title="Descargar PDF">
-                                <ButtonBase
-                                    onClick={() => {
-                                        if (!docPdfUrl) return
-                                        const link = document.createElement('a')
-                                        link.href = docPdfUrl
-                                        link.download = `OC-${docOrdenData?.codigo ?? 'doc'}.pdf`
-                                        link.click()
-                                    }}
-                                    color="danger"
-                                    size="md"
-                                    className="!px-3"
-                                >
-                                    <FaDownload />
-                                </ButtonBase>
-                            </Tooltip>
-                            <Tooltip title="Imprimir">
-                                <ButtonBase
-                                    onClick={() => {
-                                        if (!docPdfUrl) return
-                                        const iframe = document.createElement('iframe')
-                                        iframe.style.display = 'none'
-                                        iframe.src = docPdfUrl
-                                        document.body.appendChild(iframe)
-                                        iframe.onload = () => {
-                                            iframe.contentWindow?.focus()
-                                            iframe.contentWindow?.print()
-                                        }
-                                    }}
-                                    color="success"
-                                    size="md"
-                                    className="!px-3"
-                                >
-                                    <FaPrint />
-                                </ButtonBase>
-                            </Tooltip>
-                        </div>
-                    </div>
-                }
-                okText="Cerrar"
-                onOk={() => {
-                    setDocModalOpen(false)
-                    setDocOrdenData(undefined)
-                    if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
-                }}
-                cancelButtonProps={{ style: { display: 'none' } }}
-                okButtonProps={{ className: classOkButtonModal }}
-                onCancel={() => {
-                    setDocModalOpen(false)
-                    setDocOrdenData(undefined)
-                    if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
-                }}
-                maskClosable={false}
-                keyboard={false}
-                destroyOnHidden
-            >
-                <div className='border rounded-xl overflow-hidden mx-auto bg-gray-100' style={{ height: 650 }}>
-                    {docPdfLoading ? (
-                        <div className='flex items-center justify-center h-full'>
-                            <Spin size='large' />
-                            <span className='ml-3 text-gray-500'>Generando PDF...</span>
-                        </div>
-                    ) : docPdfUrl ? (
-                        <iframe
-                            src={`${docPdfUrl}#toolbar=1&navpanes=0`}
-                            className='w-full h-full'
-                            style={{ border: 'none' }}
-                            title='Orden de Compra'
-                        />
-                    ) : (
-                        <div className='flex items-center justify-center h-full text-gray-400'>
-                            No se pudo generar la vista previa
-                        </div>
-                    )}
-                </div>
-            </Modal>
+            <Suspense fallback={null}>
+                <ModalDocOrdenCompra
+                    open={docModalOpen}
+                    onClose={() => setDocModalOpen(false)}
+                    orden={docOrdenData}
+                />
+            </Suspense>
 
             <ModalEnviarCorreoOC
                 open={openModalCorreo}

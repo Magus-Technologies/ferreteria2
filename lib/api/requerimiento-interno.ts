@@ -32,27 +32,28 @@ export interface RequerimientoInternoServicio {
     lugar_ejecucion: string | null;
     fecha_inicio_estimada: string | null;
     presupuesto_referencial: number | null;
-    duracion_cantidad: number | null;
-    duracion_unidad: string | null;
+    detalles: string | null;
 }
 
 export interface RequerimientoInterno {
     id: number;
     codigo: string;
     titulo: string;
-    area: string;
+    cargo: string;
     fecha_requerida: string;
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
     tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones: string | null;
     estado: 'pendiente' | 'aprobado' | 'rechazado' | 'anulado';
     estado_solicitud: 'pendiente' | 'en_proceso' | 'aprobado';
+    duracion_cantidad: number | null;
+    duracion_unidad: string | null;
     proveedor_sugerido_id: number | null;
     user_id: string;
     created_at: string;
     updated_at: string;
     productos?: RequerimientoInternoProducto[];
-    servicio?: RequerimientoInternoServicio;
+    servicios?: RequerimientoInternoServicio[];
     user?: { id: string; name: string };
     proveedor_sugerido?: { id: number; razon_social: string; ruc: string };
 }
@@ -73,22 +74,23 @@ export interface CreateRequerimientoServicioRequest {
     lugar_ejecucion?: string;
     fecha_inicio_estimada?: string;
     presupuesto_referencial?: number;
-    duracion_cantidad?: number;
-    duracion_unidad?: string;
+    detalles?: string;
 }
 
 export interface CreateRequerimientoRequest {
     titulo: string;
-    area: string;
+    cargo: string;
     fecha_requerida: string; // YYYY-MM-DD
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
     tipo_solicitud: 'OC' | 'OS' | 'SOC';
     observaciones?: string;
+    duracion_cantidad?: number;
+    duracion_unidad?: string;
     proveedor_sugerido_id?: number;
     // Para OC
     productos?: CreateRequerimientoProductoRequest[];
     // Para OS
-    servicio?: CreateRequerimientoServicioRequest;
+    servicios?: CreateRequerimientoServicioRequest[];
 }
 
 export interface UpdateEstadoRequest {
@@ -98,7 +100,7 @@ export interface UpdateEstadoRequest {
 export interface RequerimientoFilters {
     estado?: string;
     tipo_solicitud?: string;
-    area?: string;
+    cargo?: string;
     prioridad?: string;
     desde?: string;
     hasta?: string;

@@ -1,52 +1,54 @@
 import { useState } from "react"
 import dayjs from "dayjs"
 import { requerimientoInternoApi, type CreateRequerimientoRequest, type CreateRequerimientoProductoRequest, type RequerimientoInterno } from "~/lib/api/requerimiento-interno"
-import type { RequerimientoFormData, ItemBuscado } from "./use-requerimiento-form"
+import type { RequerimientoFormData, ItemBuscado, ServicioItem } from "./use-requerimiento-form"
 
 export function useRequerimientoSubmit() {
     const [submitting, setSubmitting] = useState(false)
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [requerimientoCreado, setRequerimientoCreado] = useState<RequerimientoInterno | null>(null)
 
-    const submit = async (form: RequerimientoFormData, productosSeleccionados: ItemBuscado[]) => {
+    const submit = async (
+        form: RequerimientoFormData,
+        productosSeleccionados: ItemBuscado[],
+        serviciosSeleccionados: ServicioItem[]
+    ) => {
         setSubmitting(true)
         try {
             const requestData: CreateRequerimientoRequest = {
                 titulo: form.titulo,
-                area: form.area,
+                cargo: form.cargo,
                 fecha_requerida: form.fechaRequerida,
                 prioridad: form.prioridad as "BAJA" | "MEDIA" | "ALTA" | "URGENTE",
                 tipo_solicitud: form.tipoSolicitud,
                 observaciones: form.observaciones || undefined,
+                duracion_cantidad: form.duracionCantidad ? Number(form.duracionCantidad) : undefined,
+                duracion_unidad: form.duracionUnidad || undefined,
                 proveedor_sugerido_id: form.proveedorSugerido ? Number(form.proveedorSugerido) : undefined,
             }
 
             if (form.tipoSolicitud === 'OC') {
                 requestData.productos = productosSeleccionados.map(p => {
-                    const prod: CreateRequerimientoProductoRequest = {
+                    const prod: any = {
                         cantidad: p.cantidad,
                         unidad: p.unidad,
                     }
                     if (p.id) {
                         prod.producto_id = p.id
                     } else {
-                        // Producto manual (no existe en el sistema)
                         prod.nombre_adicional = p.nombre
                     }
                     return prod
                 })
             } else {
-                requestData.servicio = {
-                    tipo_servicio: form.tipoServicio ? String(form.tipoServicio) : undefined,
-                    descripcion_servicio: form.descripcionServicio,
-                    lugar_ejecucion: form.lugarEjecucion || undefined,
-                    fecha_inicio_estimada: form.fechaInicioEstimada || undefined,
-                    presupuesto_referencial: form.presupuestoReferencial ? Number(form.presupuestoReferencial) : undefined,
-                    duracion_cantidad: (form.fechaInicioEstimada && form.fechaFinEstimada)
-                        ? Math.ceil(dayjs(form.fechaFinEstimada).diff(dayjs(form.fechaInicioEstimada), 'hour', true))
-                        : undefined,
-                    duracion_unidad: 'horas',
-                }
+                requestData.servicios = serviciosSeleccionados.map(s => ({
+                    tipo_servicio: s.tipoServicio ? String(s.tipoServicio) : undefined,
+                    descripcion_servicio: s.descripcionServicio,
+                    lugar_ejecucion: s.lugarEjecucion || undefined,
+                    fecha_inicio_estimada: s.fechaInicioEstimada || undefined,
+                    presupuesto_referencial: s.presupuestoReferencial ? Number(s.presupuestoReferencial) : undefined,
+                    detalles: s.detalles || undefined,
+                }))
             }
 
             const response = await requerimientoInternoApi.create(requestData)

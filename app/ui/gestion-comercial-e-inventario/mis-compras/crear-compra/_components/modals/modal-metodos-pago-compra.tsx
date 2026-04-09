@@ -270,13 +270,15 @@ export default function ModalMetodosPagoCompra({
           <div className='mb-4'>
             <div className='flex items-center justify-between mb-2'>
               <div className='text-sm font-semibold text-slate-700'>Métodos de Pago Agregados</div>
-              <button
-                onClick={() => setModalEgresoOpen(true)}
-                className='flex items-center gap-1 text-xs text-amber-700 border border-amber-400 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition-colors'
-              >
-                <GiPayMoney size={14} />
-                Agregar Egreso
-              </button>
+              {saldoPendiente > 0 && (
+                <button
+                  onClick={() => setModalEgresoOpen(true)}
+                  className='flex items-center gap-1 text-xs text-amber-700 border border-amber-400 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition-colors'
+                >
+                  <GiPayMoney size={14} />
+                  Agregar Egreso
+                </button>
+              )}
             </div>
             <div className='border rounded-lg overflow-hidden'>
               <table className='w-full'>
@@ -361,22 +363,34 @@ export default function ModalMetodosPagoCompra({
         {/* Botón agregar egreso cuando la tabla aún no está visible */}
         {todosLosEgresos.length === 0 && metodosPago.length === 0 && (
           <div className='mb-4'>
-            <button
-              onClick={() => setModalEgresoOpen(true)}
-              className='flex items-center gap-2 text-sm text-amber-700 border border-amber-400 bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded transition-colors'
-            >
-              <GiPayMoney size={16} />
-              Agregar Egreso Asociado (opcional)
-            </button>
+            {saldoPendiente > 0 ? (
+              <button
+                onClick={() => setModalEgresoOpen(true)}
+                className='flex items-center gap-2 text-sm text-amber-700 border border-amber-400 bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded transition-colors'
+              >
+                <GiPayMoney size={16} />
+                Agregar Egreso Asociado (opcional)
+              </button>
+            ) : (
+              <div className='text-sm font-medium text-green-600 bg-green-50 p-3 rounded-lg border border-green-200 flex items-center gap-2'>
+                <span className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
+                El pago está cubierto en su totalidad.
+              </div>
+            )}
           </div>
         )}
 
         {/* Formulario agregar método */}
-        <Form form={modalForm} className='border-t pt-4'>
-            <div className='text-sm font-semibold text-slate-700 mb-3'>Agregar Método de Pago</div>
+        {saldoPendiente > 0 && (
+          <Form form={modalForm} className='border-t pt-4'>
+            <div className='text-sm font-semibold text-slate-700 mb-3'>
+              Agregar Método de Pago
+            </div>
             <div className='flex items-end gap-3'>
               <div className='flex-1 min-w-[200px]'>
-                <label className='block text-xs font-medium text-slate-600 mb-1'>Tipo de Pago</label>
+                <label className='block text-xs font-medium text-slate-600 mb-1'>
+                  Tipo de Pago
+                </label>
                 <SelectDespliegueDePago
                   classNameIcon='text-emerald-700 mx-1'
                   className='w-full'
@@ -400,9 +414,13 @@ export default function ModalMetodosPagoCompra({
 
               {!isEfectivo && (
                 <div className='flex-1 min-w-[180px]'>
-                  <label className='block text-xs font-medium text-slate-600 mb-1'>Referencia</label>
+                  <label className='block text-xs font-medium text-slate-600 mb-1'>
+                    Referencia
+                  </label>
                   <InputBase
-                    prefix={<FaHashtag className='text-cyan-600 mx-1' size={12} />}
+                    prefix={
+                      <FaHashtag className='text-cyan-600 mx-1' size={12} />
+                    }
                     placeholder='N° Transacción'
                     uppercase={false}
                     propsForm={{
@@ -414,9 +432,15 @@ export default function ModalMetodosPagoCompra({
               )}
 
               <div className='w-[140px]'>
-                <label className='block text-xs font-medium text-slate-600 mb-1'>Monto Recibe</label>
+                <label className='block text-xs font-medium text-slate-600 mb-1'>
+                  Monto Recibe
+                </label>
                 <InputNumberBase
-                  prefix={<span className='text-emerald-700 font-bold text-xs'>{monedaSymbol}</span>}
+                  prefix={
+                    <span className='text-emerald-700 font-bold text-xs'>
+                      {monedaSymbol}
+                    </span>
+                  }
                   placeholder='0.00'
                   min={0}
                   max={!isEfectivo ? saldoPendiente : undefined}
@@ -428,9 +452,12 @@ export default function ModalMetodosPagoCompra({
                       { required: true, message: 'Requerido' },
                       {
                         validator: (_, value) => {
-                          if (!value || value <= 0) return Promise.reject('Debe ser > 0')
+                          if (!value || value <= 0)
+                            return Promise.reject('Debe ser > 0')
                           if (!isEfectivo && value > saldoPendiente)
-                            return Promise.reject(`Máx: ${saldoPendiente.toFixed(2)}`)
+                            return Promise.reject(
+                              `Máx: ${saldoPendiente.toFixed(2)}`
+                            )
                           return Promise.resolve()
                         },
                       },
@@ -451,6 +478,8 @@ export default function ModalMetodosPagoCompra({
               </div>
             </div>
           </Form>
+        )}
+
 
         {/* Footer */}
         <div className='flex gap-3 justify-between items-center mt-6 pt-4 border-t'>

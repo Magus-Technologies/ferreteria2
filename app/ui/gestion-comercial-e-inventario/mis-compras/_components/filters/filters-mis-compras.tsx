@@ -82,7 +82,7 @@ export default function FiltersMisCompras() {
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
       estado_de_compra: {
-        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
+        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado, EstadoDeCompra.EnEspera],
       },
     } satisfies CompraWhereInput
     setFiltros(data)
@@ -101,7 +101,7 @@ export default function FiltersMisCompras() {
       initialValues={{
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
-        estado_de_compra: EstadoDeCompraSelect.Activos,
+        estado_de_compra: EstadoDeCompraSelect.Creados,
       }}
       className='w-full'
       onValuesChange={() => {
@@ -134,9 +134,9 @@ export default function FiltersMisCompras() {
             : estado_de_compra
             ? {
                 estado_de_compra:
-                  estado_de_compra === EstadoDeCompraSelect.Activos
+                  estado_de_compra === EstadoDeCompraSelect.Creados
                     ? {
-                        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado],
+                        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado, EstadoDeCompra.EnEspera],
                       }
                     : estado_de_compra,
               }

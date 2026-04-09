@@ -19,9 +19,10 @@ interface StepGeneralProps {
     errors: Record<string, string>
     areas: string[]
     prioridades: PRIORIDAD[]
+    cargos: { label: string; value: string }[]
 }
 
-export default function StepGeneral({ form, setField, errors, areas, prioridades }: StepGeneralProps) {
+export default function StepGeneral({ form, setField, errors, areas, prioridades, cargos }: StepGeneralProps) {
     return (
         <div className="space-y-4">
             {/* Título */}
@@ -38,20 +39,21 @@ export default function StepGeneral({ form, setField, errors, areas, prioridades
                 {errors.titulo && <p className="text-xs text-red-600 mt-1">{errors.titulo}</p>}
             </div>
 
-            {/* Área y Fecha */}
+            {/* Cargo y Fecha */}
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium mb-1">
-                        Área Solicitante <span className="text-red-500">*</span>
+                        Cargo u Ocupación <span className="text-red-500">*</span>
                     </label>
                     <SelectBase
-                        placeholder="Seleccionar área..."
-                        value={form.area || undefined}
-                        onChange={(value) => setField("area", value)}
-                        options={areas.map(a => ({ label: a, value: a }))}
-                        status={errors.area ? "error" : undefined}
+                        placeholder="Seleccionar cargo..."
+                        value={form.cargo}
+                        onChange={(val) => setField("cargo", val)}
+                        options={cargos}
+                        className="w-full"
+                        status={errors.cargo ? "error" : undefined}
                     />
-                    {errors.area && <p className="text-xs text-red-600 mt-1">{errors.area}</p>}
+                    {errors.cargo && <p className="text-xs text-red-600 mt-1">{errors.cargo}</p>}
                 </div>
 
                 <div>
@@ -68,6 +70,43 @@ export default function StepGeneral({ form, setField, errors, areas, prioridades
                     {errors.fechaRequerida && <p className="text-xs text-red-600 mt-1">{errors.fechaRequerida}</p>}
                 </div>
             </div>
+
+            {/* Duración (Solo para OS) */}
+            {form.tipoSolicitud === 'OS' && (
+                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                    <label className="block text-sm font-semibold text-blue-800 mb-2">
+                        Duración Estimada del Servicio
+                    </label>
+                    <div className="flex gap-4">
+                        <div className="flex-1">
+                            <label className="block text-xs text-blue-600 mb-1 font-medium">Cantidad <span className="text-red-500">*</span></label>
+                            <InputBase
+                                type="number"
+                                placeholder="Ej: 3"
+                                value={form.duracionCantidad}
+                                onChange={(e) => setField("duracionCantidad", e.target.value)}
+                                status={errors.duracionCantidad ? "error" : undefined}
+                            />
+                        </div>
+                        <div className="w-1/3">
+                            <label className="block text-xs text-blue-600 mb-1 font-medium">Unidad</label>
+                            <SelectBase
+                                value={form.duracionUnidad}
+                                onChange={(val) => setField("duracionUnidad", val)}
+                                options={[
+                                    { label: 'Horas', value: 'horas' },
+                                    { label: 'Días', value: 'dias' },
+                                    { label: 'Semanas', value: 'semanas' },
+                                ]}
+                            />
+                        </div>
+                    </div>
+                    {errors.duracionCantidad && <p className="text-xs text-red-600 mt-1">{errors.duracionCantidad}</p>}
+                    <p className="text-[11px] text-blue-500 mt-2 italic">
+                        * El tiempo se contabilizará a partir de la Fecha Requerida.
+                    </p>
+                </div>
+            )}
 
             {/* Prioridad */}
             <div>

@@ -258,7 +258,7 @@ export function useColumnsCompras({
         if (resta <= 0.01) { // Tolerancia de 1 centavo
           return 'Pagado'
         } else {
-          return 'Pendiente'
+          return 'Crédito'
         }
       },
       filter: true,
@@ -290,8 +290,8 @@ export function useColumnsCompras({
         } else {
           return (
             <div className='flex items-center h-full'>
-              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800'>
-                Pendiente
+              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'>
+                Crédito
               </span>
             </div>
           )
