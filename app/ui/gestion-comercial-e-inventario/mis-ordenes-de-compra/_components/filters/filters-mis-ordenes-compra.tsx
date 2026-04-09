@@ -76,7 +76,7 @@ export default function FiltersMisOrdenesCompra() {
                 
                 // Filter out empty/undefined values
                 const cleanedFilters: OrdenCompraFilters = {
-                    almacen_id: values.almacen_id,
+                    almacen_id,
                 }
                 
                 if (desde) cleanedFilters.desde = desde.format('YYYY-MM-DD')
@@ -85,6 +85,9 @@ export default function FiltersMisOrdenesCompra() {
                 if (rest.proveedor_id) cleanedFilters.proveedor_id = rest.proveedor_id
                 if (rest.tipo_documento) cleanedFilters.tipo_documento = rest.tipo_documento
                 if (rest.forma_de_pago) cleanedFilters.forma_de_pago = rest.forma_de_pago
+                
+                // Keep almacen_id as it is crucial
+                cleanedFilters.almacen_id = almacen_id
                 
                 setFiltros(cleanedFilters)
                 setDrawerOpen(false)
@@ -100,6 +103,9 @@ export default function FiltersMisOrdenesCompra() {
                 if (values.tipo_documento) count++
                 if (values.forma_de_pago) count++
                 setActiveFiltersCount(count)
+                
+                // Submit form to update table automatically
+                form.submit()
             }}
         >
             {/* Fila 1: Título */}

@@ -19,6 +19,7 @@ export type FormCreateRecepcionAlmacen = Pick<
   FormCreateCompra,
   'productos' | 'fecha'
 > & {
+  proveedor_id: number
   transportista_ruc: string
   transportista_razon_social: string
   transportista_placa: string
@@ -143,6 +144,13 @@ export default function ModalCrearRecepcionAlmacen({
           })
       )
     }
+    
+    // Establecer el proveedor por defecto
+    const proveedor_id = compra?.proveedor_id ?? ordenCompra?.proveedor_id
+    if (proveedor_id) {
+      form.setFieldValue('proveedor_id', proveedor_id)
+    }
+
     form.setFieldValue('fecha', dayjs())
   }, [compra, ordenCompra])
 
@@ -200,7 +208,7 @@ export default function ModalCrearRecepcionAlmacen({
           cantidad_pendiente={true}
         />
       </div>
-      <FormCrearRecepcionAlmacen form={form} compra={compra} />
+      <FormCrearRecepcionAlmacen form={form} compra={compra} ordenCompra={ordenCompra} />
     </ModalForm>
   )
 }
