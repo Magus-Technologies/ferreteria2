@@ -1,8 +1,10 @@
 'use client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode, useState } from 'react'
-import NotificationInitializer from '~/components/notifications/notification-initializer'
-import BirthdayAlert from '~/components/birthday/birthday-alert'
+import dynamic from 'next/dynamic'
+
+const NotificationInitializer = dynamic(() => import('~/components/notifications/notification-initializer'), { ssr: false })
+const BirthdayAlert = dynamic(() => import('~/components/birthday/birthday-alert'), { ssr: false })
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({

@@ -84,7 +84,7 @@ export default function ConsultaDocumentoPage() {
 
   if (loading) {
     return (
-      <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
+      <div className="bg-[url('/fondo-login.webp')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]" />
         <Spin size="large" className="relative z-10" />
       </div>
@@ -93,7 +93,7 @@ export default function ConsultaDocumentoPage() {
 
   if (error || !data) {
     return (
-      <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
+      <div className="bg-[url('/fondo-login.webp')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]" />
         <div className="relative z-10 text-center p-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md mx-4">
           <div className="text-5xl mb-3">📄</div>
@@ -108,7 +108,7 @@ export default function ConsultaDocumentoPage() {
   }
 
   return (
-    <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat min-h-dvh w-dvw relative overflow-auto">
+    <div className="bg-[url('/fondo-login.webp')] bg-cover bg-center bg-no-repeat min-h-dvh w-dvw relative overflow-auto">
       <div className="fixed inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]" />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-6">
