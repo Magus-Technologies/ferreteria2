@@ -21,9 +21,9 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
     {
       headerName: 'Fecha Emisión',
       field: 'fecha_emision',
-      width: 130,
+      width: 160,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY') : '-',
+        params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
     },
     {
       headerName: 'Fecha Traslado',

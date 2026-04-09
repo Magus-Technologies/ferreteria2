@@ -31,7 +31,7 @@ export default function InputConsultaRuc({
 
   const [text, setText] = useState('')
 
-  const [value] = useDebounce(text, 1000)
+  const [value] = useDebounce(text, 300)
 
   const ruc = Form.useWatch(nameWatch, form)
   useEffect(() => {

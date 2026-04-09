@@ -122,6 +122,7 @@ export function useColumnsClientes({
     },
     {
       headerName: 'Acciones',
+      colId: 'acciones',
       field: 'id',
       width: 80,
       cellRenderer: (params: ICellRendererParams<Cliente>) => {

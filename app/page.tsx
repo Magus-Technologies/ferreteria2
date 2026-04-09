@@ -8,8 +8,10 @@ import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import { useAuth } from '~/lib/auth-context'
 import { useState, useEffect } from 'react'
-import ModalRecuperarPassword from './_components/modals/modal-recuperar-password'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
+
+const ModalRecuperarPassword = dynamic(() => import('./_components/modals/modal-recuperar-password'), { ssr: false })
 
 export interface LoginValues {
   email: string
@@ -70,7 +72,7 @@ export default function Home() {
   if (authLoading || user) return null
 
   return (
-    <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative overflow-hidden">
+    <div className="bg-[url('/fondo-login.webp')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center animate-fade animate-ease-in-out relative overflow-hidden">
       <div className='absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]'></div>
 
       {/* Contenedor del formulario - Responsivo */}

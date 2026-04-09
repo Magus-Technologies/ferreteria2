@@ -47,7 +47,7 @@ export default function ConsultaPage() {
   }
 
   return (
-    <div className="bg-[url('/fondo-login.jpg')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
+    <div className="bg-[url('/fondo-login.webp')] bg-cover bg-center bg-no-repeat h-dvh w-dvw flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/30 backdrop-blur-[2px]" />
 
       <div

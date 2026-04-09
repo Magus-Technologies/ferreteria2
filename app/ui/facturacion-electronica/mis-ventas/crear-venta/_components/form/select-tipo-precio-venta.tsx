@@ -1,6 +1,6 @@
 'use client'
 
-import { FormInstance } from 'antd'
+import { Form, FormInstance } from 'antd'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { DescuentoTipo } from '~/lib/api/venta'
@@ -33,8 +33,8 @@ export default function SelectTipoPrecioVenta({
   const unidadesDerivadas = productoEnStore?.unidades_derivadas_disponibles || []
 
   const unidadDerivadaId = form.getFieldValue(['productos', fieldIndex, 'unidad_derivada_id'])
-  const tipoPrecioActual = form.getFieldValue(['productos', fieldIndex, 'tipo_precio']) || 'publico'
-  const cantidad = Number(form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0)
+  const tipoPrecioActual = Form.useWatch(['productos', fieldIndex, 'tipo_precio'], form) || 'publico'
+  const cantidad = Number(Form.useWatch(['productos', fieldIndex, 'cantidad'], form) ?? 0)
 
   // Buscar la unidad derivada actual
   const unidadDerivadaActual = unidadesDerivadas.find(

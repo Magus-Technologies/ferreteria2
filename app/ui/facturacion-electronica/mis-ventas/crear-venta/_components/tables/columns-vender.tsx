@@ -930,4 +930,7 @@ function aplicarPrecio(
     ['productos', fieldIndex, 'subtotal'],
     calcularSubtotalVenta({ precio_venta: precio, recargo, descuento_tipo, descuento, cantidad })
   )
+
+  // Forzar re-render de la celda del tipo de precio en AG Grid
+  form.setFieldValue(['productos', fieldIndex, '_refresh'], Date.now())
 }

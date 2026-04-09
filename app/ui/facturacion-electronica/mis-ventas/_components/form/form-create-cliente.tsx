@@ -39,6 +39,20 @@ export default function FormCreateCliente({
   const [coordenadasD2, setCoordenadasD2] = useState<Coordenadas | null>(null);
   const [coordenadasD3, setCoordenadasD3] = useState<Coordenadas | null>(null);
   const [coordenadasD4, setCoordenadasD4] = useState<Coordenadas | null>(null);
+  const [direccionMapaD1, setDireccionMapaD1] = useState<string>('');
+  const [direccionMapaD2, setDireccionMapaD2] = useState<string>('');
+  const [direccionMapaD3, setDireccionMapaD3] = useState<string>('');
+  const [direccionMapaD4, setDireccionMapaD4] = useState<string>('');
+
+  const getDireccionMapa = () => {
+    switch (tabActiva) {
+      case '1': return direccionMapaD1;
+      case '2': return direccionMapaD2;
+      case '3': return direccionMapaD3;
+      case '4': return direccionMapaD4;
+      default: return '';
+    }
+  };
 
   useEffect(() => {
     if (numero_documento?.length === 8) {
@@ -57,33 +71,25 @@ export default function FormCreateCliente({
         setCoordenadasD1(coords);
         form.setFieldValue('latitud_d1', coords.lat);
         form.setFieldValue('longitud_d1', coords.lng);
-        if (direccionObtenida) {
-          form.setFieldValue('referencia_d1', direccionObtenida);
-        }
+        if (direccionObtenida) setDireccionMapaD1(direccionObtenida);
         break;
       case '2':
         setCoordenadasD2(coords);
         form.setFieldValue('latitud_d2', coords.lat);
         form.setFieldValue('longitud_d2', coords.lng);
-        if (direccionObtenida) {
-          form.setFieldValue('referencia_d2', direccionObtenida);
-        }
+        if (direccionObtenida) setDireccionMapaD2(direccionObtenida);
         break;
       case '3':
         setCoordenadasD3(coords);
         form.setFieldValue('latitud_d3', coords.lat);
         form.setFieldValue('longitud_d3', coords.lng);
-        if (direccionObtenida) {
-          form.setFieldValue('referencia_d3', direccionObtenida);
-        }
+        if (direccionObtenida) setDireccionMapaD3(direccionObtenida);
         break;
       case '4':
         setCoordenadasD4(coords);
         form.setFieldValue('latitud_d4', coords.lat);
         form.setFieldValue('longitud_d4', coords.lng);
-        if (direccionObtenida) {
-          form.setFieldValue('referencia_d4', direccionObtenida);
-        }
+        if (direccionObtenida) setDireccionMapaD4(direccionObtenida);
         break;
     }
   };
@@ -312,10 +318,15 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    {direccionMapaD1 && (
+                      <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded truncate" title={direccionMapaD1}>
+                        Ubicación GPS: {direccionMapaD1}
+                      </p>
+                    )}
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d1" }}
-                        placeholder="Haz clic en el mapa o escribe una referencia"
+                        placeholder="Escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>
@@ -339,10 +350,15 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    {direccionMapaD2 && (
+                      <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded truncate" title={direccionMapaD2}>
+                        Ubicación GPS: {direccionMapaD2}
+                      </p>
+                    )}
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d2" }}
-                        placeholder="Haz clic en el mapa o escribe una referencia"
+                        placeholder="Escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>
@@ -366,10 +382,15 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    {direccionMapaD3 && (
+                      <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded truncate" title={direccionMapaD3}>
+                        Ubicación GPS: {direccionMapaD3}
+                      </p>
+                    )}
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d3" }}
-                        placeholder="Haz clic en el mapa o escribe una referencia"
+                        placeholder="Escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>
@@ -393,10 +414,15 @@ export default function FormCreateCliente({
                         autoComplete="new-password"
                       />
                     </LabelBase>
-                    <LabelBase label="Referencia (se autocompleta del mapa):" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+                    {direccionMapaD4 && (
+                      <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded truncate" title={direccionMapaD4}>
+                        Ubicación GPS: {direccionMapaD4}
+                      </p>
+                    )}
+                    <LabelBase label="Referencia:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
                       <InputBase
                         propsForm={{ name: "referencia_d4" }}
-                        placeholder="Haz clic en el mapa o escribe una referencia"
+                        placeholder="Escribe una referencia"
                         autoComplete="new-password"
                       />
                     </LabelBase>

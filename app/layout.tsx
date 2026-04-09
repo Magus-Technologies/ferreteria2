@@ -8,7 +8,11 @@ import Script from 'next/script'
 import { Providers } from './providers'
 import { AuthProvider } from '~/lib/auth-context'
 
-const ubuntu = Ubuntu({ weight: ['400', '500', '700'], subsets: ['latin'] })
+const ubuntu = Ubuntu({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Mi Redentor ERP',
@@ -30,15 +34,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='es' className='overflow-y-hidden'>
-      {process.env.NODE_ENV !== 'production' && (
-        <head>
+      <head>
+        <link rel='preload' href='/fondo-login.webp' as='image' type='image/webp' />
+        {process.env.NODE_ENV !== 'production' && (
           <Script
             src='//unpkg.com/react-scan/dist/auto.global.js'
             strategy='afterInteractive'
             crossOrigin='anonymous'
           />
-        </head>
-      )}
+        )}
+      </head>
       <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
         <AuthProvider>
           <AntdRegistry>
