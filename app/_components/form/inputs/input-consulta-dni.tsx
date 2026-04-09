@@ -5,7 +5,7 @@ import { ConsultaDni } from '~/app/_types/consulta-ruc'
 import { useEffect, useState } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { useServerMutation } from '~/hooks/use-server-mutation'
-import { consultaReniec } from '~/app/_actions/consulta-reniec'
+import { consultaDni } from '~/app/_actions/consulta-reniec'
 import { useDebounce } from 'use-debounce'
 
 interface InputConsultaDniProps extends Omit<InputBaseProps, 'form'> {
@@ -23,7 +23,7 @@ export default function InputConsultaDni({
   ...props
 }: InputConsultaDniProps) {
   const { execute, loading } = useServerMutation({
-    action: consultaReniec,
+    action: consultaDni,
     onSuccess: res => {
       onSuccess?.(res.data as ConsultaDni)
     },

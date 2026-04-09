@@ -2,19 +2,11 @@
 
 import { ConsultaDni, ConsultaRuc } from "../_types/consulta-ruc";
 
-async function consultaReniec({ search }: { search: string }) {
-  if (search.length !== 8 && search.length !== 11)
-    throw new Error("El número del documento debe tener 8 u 11 caracteres");
-
+async function fetchDecolecta(endpoint: string) {
   const token = process.env.DECOLECTA_TOKEN;
   if (!token) throw new Error("Falta DECOLECTA_TOKEN en .env");
 
-  const isDni = search.length === 8;
-  const url = isDni
-    ? `https://api.decolecta.com/v1/reniec/dni?numero=${search}`
-    : `https://api.decolecta.com/v1/sunat/ruc?numero=${search}`;
-
-  const response = await fetch(url, {
+  const response = await fetch(endpoint, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -22,23 +14,35 @@ async function consultaReniec({ search }: { search: string }) {
   });
 
   if (!response.ok) {
-    throw new Error(`Error consultando ${isDni ? "DNI" : "RUC"}: ${response.status}`);
+    throw new Error(`Error en consulta: ${response.status}`);
   }
 
-  const raw = await response.json();
+  return response.json();
+}
 
-  if (isDni) {
-    const data: ConsultaDni = {
-      success: true,
-      dni: raw.document_number ?? search,
-      nombres: raw.first_name ?? "",
-      apellidoPaterno: raw.first_last_name ?? "",
-      apellidoMaterno: raw.second_last_name ?? "",
-      codVerifica: 0,
-      codVerificaLetra: "",
-    };
-    return { data };
-  }
+async function consultaDni({ search }: { search: string }): Promise<{ data: ConsultaDni }> {
+  if (search.length !== 8)
+    throw new Error("El DNI debe tener 8 caracteres");
+
+  const raw = await fetchDecolecta(`https://api.decolecta.com/v1/reniec/dni?numero=${search}`);
+
+  const data: ConsultaDni = {
+    success: true,
+    dni: raw.document_number ?? search,
+    nombres: raw.first_name ?? "",
+    apellidoPaterno: raw.first_last_name ?? "",
+    apellidoMaterno: raw.second_last_name ?? "",
+    codVerifica: 0,
+    codVerificaLetra: "",
+  };
+  return { data };
+}
+
+async function consultaRuc({ search }: { search: string }): Promise<{ data: ConsultaRuc }> {
+  if (search.length !== 11)
+    throw new Error("El RUC debe tener 11 caracteres");
+
+  const raw = await fetchDecolecta(`https://api.decolecta.com/v1/sunat/ruc?numero=${search}`);
 
   const data: ConsultaRuc = {
     ruc: raw.ruc ?? search,
@@ -71,4 +75,10 @@ async function consultaReniec({ search }: { search: string }) {
   return { data };
 }
 
-export { consultaReniec };
+async function consultaReniec({ search }: { search: string }): Promise<{ data: ConsultaDni | ConsultaRuc }> {
+  if (search.length === 8) return consultaDni({ search });
+  if (search.length === 11) return consultaRuc({ search });
+  throw new Error("El número del documento debe tener 8 u 11 caracteres");
+}
+
+export { consultaDni, consultaRuc, consultaReniec };
