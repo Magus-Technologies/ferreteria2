@@ -45,6 +45,8 @@ export default function FiltersMisOrdenesCompra() {
             almacen_id,
             desde: dayjs().startOf('day'),
             hasta: dayjs().endOf('day'),
+            tipo_documento: '01',
+            forma_de_pago: 'co',
         }
         form.setFieldsValue(initialValues)
         
@@ -52,6 +54,8 @@ export default function FiltersMisOrdenesCompra() {
             almacen_id,
             desde: dayjs().startOf('day').format('YYYY-MM-DD'),
             hasta: dayjs().endOf('day').format('YYYY-MM-DD'),
+            tipo_documento: '01',
+            forma_de_pago: 'co',
         }
         setFiltros(data)
         // eslint-disable-next-line react-hooks/exhaustive-deps

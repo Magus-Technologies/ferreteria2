@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { DatePicker, Select, Spin, Tag, Empty, Input } from 'antd'
-import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
+import { DatePicker, Select, Spin, Tag } from 'antd'
+import { FaClipboardList, FaBoxOpen } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -51,7 +51,7 @@ export default function KardexInventarioView() {
   const [tipo, setTipo] = useState<TipoMovimientoInventario | ''>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
-  const [debouncedSearchText] = useDebounce(searchText, 300)
+  const [debouncedSearchText] = useDebounce(searchText, 200)
 
   const productoId = productoSeleccionado?.id
 
@@ -164,8 +164,7 @@ export default function KardexInventarioView() {
         return `S/. ${Number(params.value).toFixed(4)}`
       },
     },
-    // Solo mostrar Stock Anterior cuando hay producto seleccionado
-    ...(productoId ? [{
+    {
       headerName: 'Stock Anterior',
       valueGetter: (params: any) => {
         const { saldo, entrada, salida } = params.data ?? {}
@@ -179,7 +178,7 @@ export default function KardexInventarioView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    }] : []),
+    },
     {
       headerName: 'Entrada',
       field: 'entrada',
@@ -210,8 +209,7 @@ export default function KardexInventarioView() {
         return Number(params.value).toFixed(2)
       },
     },
-    // Solo mostrar Stock Actual cuando hay producto seleccionado
-    ...(productoId ? [{
+    {
       headerName: 'Stock Actual',
       field: 'saldo' as keyof MovimientoKardex,
       width: 100,
@@ -222,7 +220,7 @@ export default function KardexInventarioView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    }] : []),
+    },
   ]
 
   return (
@@ -240,9 +238,12 @@ export default function KardexInventarioView() {
             <div className='flex items-center gap-1'>
               <SelectProductos
                 withSearch
+                allowClear
                 onChange={(_id, producto) => {
-                  if (producto) setProductoSeleccionado(producto)
+                  setProductoSeleccionado(producto ?? undefined)
+                  if (!producto) setSearchText('')
                 }}
+                onSearch={(val) => setSearchText(val)}
               />
             </div>
           </div>
@@ -279,8 +280,20 @@ export default function KardexInventarioView() {
             {data && (
               <div className='flex items-center gap-4 text-sm flex-shrink-0'>
                 <div className='text-center'>
+                  <div className='text-xs text-gray-500'>Total Ingresó</div>
+                  <div className='font-bold text-lg text-emerald-600'>
+                    {data.data.reduce((sum, m) => sum + Number(m.entrada ?? 0), 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className='text-center'>
+                  <div className='text-xs text-gray-500'>Total Salió</div>
+                  <div className='font-bold text-lg text-red-500'>
+                    {data.data.reduce((sum, m) => sum + Number(m.salida ?? 0), 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className='text-center'>
                   <div className='text-xs text-gray-500'>Stock Actual</div>
-                  <div className='font-bold text-lg text-emerald-600'>{data.stock_actual.toFixed(2)}</div>
+                  <div className='font-bold text-lg text-blue-600'>{data.stock_actual.toFixed(2)}</div>
                 </div>
                 <div className='text-center'>
                   <div className='text-xs text-gray-500'>Movimientos</div>
@@ -299,42 +312,22 @@ export default function KardexInventarioView() {
           <span className='ml-3 text-gray-500'>Cargando movimientos...</span>
         </div>
       ) : (
-        <div className='flex flex-col gap-2'>
-          <div className='flex justify-end'>
-            <Input
-              placeholder='Buscar en movimientos...'
-              prefix={<FaSearch className='text-gray-400 mr-1' />}
-              className='max-w-[300px]'
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </div>
-          <div className='h-[500px]'>
-            <TableWithTitle<MovimientoKardex>
-              id='kardex.inventario.movimientos'
-              title={productoId ? 'Movimientos de Inventario' : 'Todos los Movimientos de Hoy'}
-              selectionColor={greenColors[10]}
-              columnDefs={columns}
-              rowData={data?.data || []}
-              pagination={false}
-              quickFilterText={debouncedSearchText}
-              optionsSelectColumns={
-                productoId
-                  ? [
-                      {
-                        label: 'Default',
-                        columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Entrada', 'Salida', 'Saldo'],
-                      },
-                    ]
-                  : [
-                      {
-                        label: 'Default',
-                        columns: ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Entrada', 'Salida'],
-                      },
-                    ]
-              }
-            />
-          </div>
+        <div className='h-[550px]'>
+          <TableWithTitle<MovimientoKardex>
+            id='kardex.inventario.movimientos'
+            title={productoId ? 'Movimientos de Inventario' : 'Todos los Movimientos de Hoy'}
+            selectionColor={greenColors[10]}
+            columnDefs={columns}
+            rowData={data?.data || []}
+            pagination={false}
+            quickFilterText={debouncedSearchText}
+            optionsSelectColumns={[
+              {
+                label: 'Default',
+                columns: ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Entrada', 'Salida', 'Stock Actual'],
+              },
+            ]}
+          />
         </div>
       )}
     </div>

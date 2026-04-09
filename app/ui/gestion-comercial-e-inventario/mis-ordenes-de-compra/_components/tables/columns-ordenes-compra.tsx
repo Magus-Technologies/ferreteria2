@@ -167,23 +167,21 @@ export function useColumnsOrdenesCompra({
                         />
                     </Tooltip>
                     {(data?.estado === 'pendiente' || data?.estado === 'en_proceso') && (
-                        <>
-                            <Tooltip title='Editar'>
-                                <MdEditSquare
-                                    onClick={() => data && onEditar?.(data)}
-                                    className='cursor-pointer hover:scale-110 transition-all text-cyan-600'
-                                    size={17}
-                                />
-                            </Tooltip>
-                            <Tooltip title='Duplicar'>
-                                <IoIosCopy
-                                    onClick={() => data && onDuplicar?.(data)}
-                                    className='cursor-pointer hover:scale-110 transition-all text-cyan-600'
-                                    size={17}
-                                />
-                            </Tooltip>
-                        </>
+                        <Tooltip title='Editar'>
+                            <MdEditSquare
+                                onClick={() => data && onEditar?.(data)}
+                                className='cursor-pointer hover:scale-110 transition-all text-cyan-600'
+                                size={17}
+                            />
+                        </Tooltip>
                     )}
+                    <Tooltip title='Duplicar'>
+                        <IoIosCopy
+                            onClick={() => data && onDuplicar?.(data)}
+                            className='cursor-pointer hover:scale-110 transition-all text-violet-600'
+                            size={17}
+                        />
+                    </Tooltip>
                     {data?.estado === 'pendiente' && (
                         <Tooltip title='Aprobar'>
                             <FaCheck

@@ -71,74 +71,96 @@ export default function CrearOrdenCompraPage() {
   const setOpenModalProducto = useStoreEditOrCopyProducto(state => state.setOpenModal)
   const setProducto = useStoreEditOrCopyProducto(state => state.setProducto)
 
-  // Detectar modo: crear o editar
+  // Detectar modo: crear, editar o duplicar
   const ordenId = searchParams.get('id') ? Number(searchParams.get('id')) : null
+  const duplicateFromId = searchParams.get('duplicate_from') ? Number(searchParams.get('duplicate_from')) : null
   const isEditMode = !!ordenId
+  const isDuplicateMode = !!duplicateFromId
 
-  // Cargar datos de la orden si estamos en modo editar
+  // Función compartida para cargar datos de una orden en el formulario
+  const loadOrdenIntoForm = useCallback(async (id: number, isDuplicate: boolean) => {
+    setLoading(true)
+    try {
+      const response = await ordenCompraApi.getById(id)
+      const orden = response.data?.data
+
+      if (!orden) {
+        message.error('No se pudo cargar la orden de compra')
+        return
+      }
+
+      form.setFieldsValue({
+        fecha: orden.fecha ? dayjs(orden.fecha) : undefined,
+        tipo_moneda: orden.tipo_moneda,
+        tipo_de_cambio: orden.tipo_de_cambio,
+        proveedor_id: orden.proveedor_id,
+        proveedor_ruc: orden.proveedor?.ruc || orden.ruc,
+        proveedor_razon_social: orden.proveedor?.razon_social,
+        almacen_id: orden.almacen_id,
+        tipo_documento: orden.tipo_documento || '01',
+        forma_de_pago: orden.forma_de_pago || 'co',
+      })
+
+      if (orden.productos && orden.productos.length > 0) {
+        const productosData: ProductoEnOC[] = orden.productos.map(p => ({
+          id: p.producto_id,
+          producto_id: p.producto_id,
+          codigo: p.codigo || '',
+          nombre: p.nombre || '',
+          marca: p.marca || '',
+          unidad: p.unidad || 'UND',
+          cantidad: p.cantidad,
+          precio_compra: p.precio,
+          flete: p.flete || 0,
+          vencimiento: p.vencimiento,
+          lote: p.lote || '',
+          subtotal: p.cantidad * p.precio,
+        }))
+        setProductos(productosData)
+      }
+
+      if (isDuplicate) {
+        message.info(`Duplicando orden ${orden.codigo} — revisa y guarda como nueva orden`)
+      } else {
+        message.info(`Editando orden ${orden.codigo}`)
+      }
+    } catch (error) {
+      message.error('Error al cargar la orden de compra')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }, [form, message])
+
+  // Cargar datos si estamos en modo editar
   useEffect(() => {
     if (!ordenId) return
+    loadOrdenIntoForm(ordenId, false)
+  }, [ordenId, loadOrdenIntoForm])
 
-    const loadOrdenData = async () => {
-      setLoading(true)
-      try {
-        const response = await ordenCompraApi.getById(ordenId)
-        const orden = response.data?.data
-
-        if (!orden) {
-          message.error('No se pudo cargar la orden de compra')
-          return
-        }
-
-        // Cargar datos del formulario
-        form.setFieldsValue({
-          fecha: orden.fecha ? dayjs(orden.fecha) : undefined,
-          tipo_moneda: orden.tipo_moneda,
-          tipo_de_cambio: orden.tipo_de_cambio,
-          proveedor_id: orden.proveedor_id,
-          proveedor_ruc: orden.proveedor?.ruc || orden.ruc,
-          proveedor_razon_social: orden.proveedor?.razon_social,
-          almacen_id: orden.almacen_id,
-        })
-
-        // Cargar productos
-        if (orden.productos && orden.productos.length > 0) {
-          const productosData: ProductoEnOC[] = orden.productos.map(p => ({
-            id: p.producto_id,
-            producto_id: p.producto_id,
-            codigo: p.codigo || '',
-            nombre: p.nombre || '',
-            marca: p.marca || '',
-            unidad: p.unidad || 'UND',
-            cantidad: p.cantidad,
-            precio_compra: p.precio,
-            flete: p.flete || 0,
-            vencimiento: p.vencimiento,
-            lote: p.lote || '',
-            subtotal: p.cantidad * p.precio,
-          }))
-          setProductos(productosData)
-        }
-
-        message.info(`Editando orden ${orden.codigo}`)
-      } catch (error) {
-        message.error('Error al cargar la orden de compra')
-        console.error(error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadOrdenData()
-  }, [ordenId, form, message])
+  // Cargar datos si estamos en modo duplicar
+  useEffect(() => {
+    if (!duplicateFromId) return
+    loadOrdenIntoForm(duplicateFromId, true)
+  }, [duplicateFromId, loadOrdenIntoForm])
 
   // Limpiar el store de producto agregado cuando se monta el componente en modo edición
   const clearProductoAgregado = useStoreProductoAgregadoCompra(s => s.clearProductoAgregado)
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode || isDuplicateMode) {
       clearProductoAgregado()
+    } else {
+      // Valores por defecto para nueva orden
+      form.setFieldsValue({
+        fecha: dayjs(),
+        tipo_moneda: 's',
+        tipo_de_cambio: 1,
+        tipo_documento: '01',
+        forma_de_pago: 'co',
+        almacen_id: 1,
+      })
     }
-  }, [isEditMode, clearProductoAgregado])
+  }, [isEditMode, isDuplicateMode, clearProductoAgregado, form])
 
   const handleRemoveProducto = useCallback((index: number) => {
     setProductos(prev => prev.filter((_, i) => i !== index))
@@ -204,6 +226,8 @@ export default function CrearOrdenCompraPage() {
         tipo_moneda: values.tipo_moneda,
         tipo_de_cambio: values.tipo_de_cambio,
         ruc: values.proveedor_ruc,
+        tipo_documento: values.tipo_documento,
+        forma_de_pago: values.forma_de_pago,
         almacen_id: values.almacen_id || 1, // Default almacen
         productos: productos.map(p => ({
           producto_id: p.producto_id || p.id,
@@ -258,9 +282,11 @@ export default function CrearOrdenCompraPage() {
       // Refrescar datos del sidebar
       queryClient.invalidateQueries({ queryKey: ['requerimientos-internos'] })
 
-      const successMessage = isEditMode 
+      const successMessage = isEditMode
         ? response.data?.message || 'Orden de compra actualizada exitosamente'
-        : response.data?.message || 'Orden de compra creada exitosamente'
+        : isDuplicateMode
+          ? response.data?.message || 'Orden de compra duplicada exitosamente'
+          : response.data?.message || 'Orden de compra creada exitosamente'
       
       message.success(successMessage)
       router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra')
@@ -796,7 +822,7 @@ export default function CrearOrdenCompraPage() {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden p-4 gap-4">
         {/* HEADER */}
         <TituloModulos
-          title={isEditMode ? "Editar Orden de Compra" : "Crear Orden de Compra"}
+          title={isEditMode ? "Editar Orden de Compra" : isDuplicateMode ? "Duplicar Orden de Compra" : "Crear Orden de Compra"}
           icon={<TbShoppingCartPlus className="text-cyan-600" />}
           extra={
             <div className="pl-8 flex items-center gap-4">
@@ -820,7 +846,7 @@ export default function CrearOrdenCompraPage() {
           {reqSeleccionado && (
             <div className="flex items-center gap-2 text-sm">
               <Tag color="green">{reqSeleccionado.codigo}</Tag>
-              <span className="text-slate-600">{reqSeleccionado.area}</span>
+              <span className="text-slate-600">{reqSeleccionado.cargo}</span>
             </div>
           )}
         </TituloModulos>
@@ -924,6 +950,24 @@ export default function CrearOrdenCompraPage() {
                     uppercase={false}
                   />
                 </LabelBase>
+                <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-6' }}>
+                  <SelectTipoDocumento
+                    propsForm={{
+                      name: 'tipo_documento',
+                      rules: [{ required: true, message: 'Selecciona el tipo de documento' }],
+                    }}
+                    className='!w-[150px] !min-w-[150px] !max-w-[150px]'
+                  />
+                </LabelBase>
+                <LabelBase label='Forma de Pago:' classNames={{ labelParent: 'mb-6' }}>
+                  <SelectFormaDePago
+                    propsForm={{
+                      name: 'forma_de_pago',
+                      rules: [{ required: true, message: 'Selecciona la forma de pago' }],
+                    }}
+                    className='!w-[150px] !min-w-[150px] !max-w-[150px]'
+                  />
+                </LabelBase>
               </div>
             </div>
           </div>
@@ -934,7 +978,7 @@ export default function CrearOrdenCompraPage() {
               <div className="flex flex-col gap-1 px-4 py-3 border rounded-lg shadow-md w-full bg-emerald-50 border-emerald-200">
                 <h3 className="text-xs font-semibold text-emerald-600 uppercase">Requerimiento</h3>
                 <p className="text-lg font-bold text-slate-800">{reqSeleccionado.codigo}</p>
-                <p className="text-xs text-slate-500">{reqSeleccionado.area} — {reqSeleccionado.user?.name}</p>
+                <p className="text-xs text-slate-500">{reqSeleccionado.cargo} — {reqSeleccionado.user?.name}</p>
                 <Tag className="mt-1 w-fit" color={reqSeleccionado.prioridad === 'URGENTE' ? 'red' : reqSeleccionado.prioridad === 'ALTA' ? 'volcano' : 'blue'}>
                   {reqSeleccionado.prioridad}
                 </Tag>
@@ -976,9 +1020,9 @@ export default function CrearOrdenCompraPage() {
               disabled={productos.length === 0 || submitting}
             >
               <TbShoppingCartPlus className="min-w-fit" size={30} /> 
-              {submitting 
-                ? (isEditMode ? 'Actualizando...' : 'Creando...') 
-                : (isEditMode ? 'Actualizar Orden de Compra' : 'Crear Orden de Compra')
+              {submitting
+                ? (isEditMode ? 'Actualizando...' : 'Guardando...')
+                : (isEditMode ? 'Actualizar Orden de Compra' : isDuplicateMode ? 'Guardar Orden Duplicada' : 'Crear Orden de Compra')
               }
             </ButtonBase>
           </div>
