@@ -22,9 +22,9 @@ export function useColumnsMisVentas() {
     {
       headerName: "F.Venta",
       field: "fecha",
-      width: 120,
+      width: 160,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+        params.value ? dayjs(params.value).format("DD/MM/YYYY HH:mm") : "",
     },
     {
       headerName: "S.Numero",

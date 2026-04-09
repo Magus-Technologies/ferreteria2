@@ -30,7 +30,7 @@ export default function InputConsultaDni({
   })
 
   const [text, setText] = useState('')
-  const [value] = useDebounce(text, 1000)
+  const [value] = useDebounce(text, 300)
 
   const dni = Form.useWatch(nameWatch, form)
   

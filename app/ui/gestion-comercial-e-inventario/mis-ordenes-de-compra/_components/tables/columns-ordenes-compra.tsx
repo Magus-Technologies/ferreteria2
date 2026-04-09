@@ -7,6 +7,7 @@ import { MdDelete, MdEditSquare } from 'react-icons/md'
 import { IoIosCopy } from 'react-icons/io'
 import { HiDocumentText } from 'react-icons/hi2'
 import { type OrdenCompra } from '~/lib/api/orden-compra'
+import dayjs from 'dayjs'
 
 type EstadoOC = 'pendiente' | 'en_proceso' | 'completada' | 'anulada'
 
@@ -54,8 +55,10 @@ export function useColumnsOrdenesCompra({
         {
             headerName: 'Fecha',
             field: 'fecha',
-            minWidth: 90,
-            width: 100,
+            minWidth: 140,
+            width: 160,
+            valueFormatter: (params) =>
+                params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
         },
         {
             headerName: 'Requerimiento',

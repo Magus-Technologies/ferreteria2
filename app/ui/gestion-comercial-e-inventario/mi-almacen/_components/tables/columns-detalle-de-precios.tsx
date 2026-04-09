@@ -117,7 +117,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Precio Especial',
+      headerName: 'Precio Ferretería',
       field: 'precio_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -165,7 +165,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Comisión Precio Especial',
+      headerName: 'Comisión Precio Ferretería',
       field: 'comision_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -201,7 +201,7 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen',
     },
     {
-      headerName: 'Activador Precio Especial',
+      headerName: 'Activador Precio Ferretería',
       field: 'activador_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
