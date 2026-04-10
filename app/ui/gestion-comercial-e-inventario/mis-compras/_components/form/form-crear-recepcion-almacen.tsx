@@ -1,10 +1,11 @@
 import { FormInstance } from 'antd'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BsFillPostcardFill } from 'react-icons/bs'
 import { FaAddressCard, FaIdCardAlt } from 'react-icons/fa'
 import { MdFactory } from 'react-icons/md'
 import type { Proveedor } from '~/lib/api/proveedor'
 import type { Compra } from '~/lib/api/compra'
+import type { OrdenCompra } from '~/lib/api/orden-compra'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
@@ -19,14 +20,31 @@ import { permissions } from '~/lib/permissions'
 export default function FormCrearRecepcionAlmacen({
   form,
   compra,
+  ordenCompra,
 }: {
   form: FormInstance
   compra?: Compra
+  ordenCompra?: OrdenCompra
 }) {
   const { can } = usePermissionHook()
-  const [proveedor, setProveedor] = useState<Proveedor | undefined>(
-    compra?.proveedor ? compra.proveedor as Proveedor : undefined
-  )
+  const sourceProveedor = (compra?.proveedor || ordenCompra?.proveedor) as Proveedor | undefined
+  const [proveedor, setProveedor] = useState<Proveedor | undefined>(sourceProveedor)
+
+  // Efecto para auto-completar datos del transportista con los del proveedor por defecto
+  useEffect(() => {
+    const prov = compra?.proveedor || ordenCompra?.proveedor
+    if (prov) {
+      setProveedor(prov as Proveedor)
+      
+      // Solo auto-completar si los campos están vacíos
+      if (!form.getFieldValue('transportista_ruc')) {
+        form.setFieldValue('transportista_ruc', prov.ruc)
+      }
+      if (!form.getFieldValue('transportista_razon_social')) {
+        form.setFieldValue('transportista_razon_social', prov.razon_social)
+      }
+    }
+  }, [compra, ordenCompra, form])
 
   return (
     <>

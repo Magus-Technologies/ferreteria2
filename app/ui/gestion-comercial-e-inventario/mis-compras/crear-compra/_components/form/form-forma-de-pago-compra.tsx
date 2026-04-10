@@ -109,11 +109,11 @@ export default function FormFormaDePagoCompra({
           }
           disabled={formaDePago === FormaDePago.Contado}
           onChange={val => {
-            if (!val) form.setFieldValue('numero_dias', undefined)
+            if (!val) form.setFieldValue('fecha_vencimiento', undefined)
             else
               form.setFieldValue(
-                'numero_dias',
-                val.diff(dayjs().startOf('day'), 'days')
+                'fecha_vencimiento',
+                dayjs().add(Number(val), 'days')
               )
           }}
           className='!w-[160px] !min-w-[160px] !max-w-[160px]'

@@ -21,6 +21,7 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import FormFormaDePagoCompra from '~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/_components/form/form-forma-de-pago-compra'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import TableBase from '~/components/tables/table-base'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
@@ -99,6 +100,12 @@ export default function CrearOrdenCompraPage() {
         almacen_id: orden.almacen_id,
         tipo_documento: orden.tipo_documento || '01',
         forma_de_pago: orden.forma_de_pago || 'co',
+        serie: orden.serie,
+        numero: orden.numero,
+        guia: orden.guia,
+        percepcion: orden.percepcion,
+        numero_dias: orden.numero_dias,
+        fecha_vencimiento: orden.fecha_vencimiento ? dayjs(orden.fecha_vencimiento) : undefined,
       })
 
       if (orden.productos && orden.productos.length > 0) {
@@ -228,6 +235,12 @@ export default function CrearOrdenCompraPage() {
         ruc: values.proveedor_ruc,
         tipo_documento: values.tipo_documento,
         forma_de_pago: values.forma_de_pago,
+        serie: values.serie,
+        numero: values.numero,
+        guia: values.guia,
+        percepcion: values.percepcion,
+        numero_dias: values.numero_dias,
+        fecha_vencimiento: values.fecha_vencimiento?.format?.('YYYY-MM-DD'),
         almacen_id: values.almacen_id || 1, // Default almacen
         productos: productos.map(p => ({
           producto_id: p.producto_id || p.id,
@@ -878,8 +891,8 @@ export default function CrearOrdenCompraPage() {
             </div>
 
             {/* CAMPOS DEL FORMULARIO */}
-            <div className='flex flex-col'>
-              <div className='flex gap-6'>
+            <div className='flex flex-col gap-2'>
+              <div className='flex flex-wrap gap-x-6 gap-y-2'>
                 <LabelBase label='Fecha:' classNames={{ labelParent: 'mb-6' }}>
                   <DatePickerBase
                     propsForm={{
@@ -950,6 +963,9 @@ export default function CrearOrdenCompraPage() {
                     uppercase={false}
                   />
                 </LabelBase>
+              </div>
+
+              <div className='flex flex-wrap gap-x-6 gap-y-2'>
                 <LabelBase label='Tipo Documento:' classNames={{ labelParent: 'mb-6' }}>
                   <SelectTipoDocumento
                     propsForm={{
@@ -959,15 +975,54 @@ export default function CrearOrdenCompraPage() {
                     className='!w-[150px] !min-w-[150px] !max-w-[150px]'
                   />
                 </LabelBase>
-                <LabelBase label='Forma de Pago:' classNames={{ labelParent: 'mb-6' }}>
-                  <SelectFormaDePago
+                <LabelBase label='Serie:' classNames={{ labelParent: 'mb-6' }}>
+                  <InputBase
+                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
+                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
+                    placeholder='Serie'
                     propsForm={{
-                      name: 'forma_de_pago',
-                      rules: [{ required: true, message: 'Selecciona la forma de pago' }],
+                      name: 'serie',
                     }}
-                    className='!w-[150px] !min-w-[150px] !max-w-[150px]'
                   />
                 </LabelBase>
+                <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
+                  <InputNumberBase
+                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
+                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
+                    placeholder='Número'
+                    propsForm={{
+                      name: 'numero',
+                    }}
+                    precision={0}
+                    min={0}
+                  />
+                </LabelBase>
+                <LabelBase label='Guía:' classNames={{ labelParent: 'mb-6' }}>
+                  <InputBase
+                    prefix={<IoDocumentAttach className='text-cyan-600 mr-1' size={20} />}
+                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
+                    placeholder='Guía'
+                    propsForm={{
+                      name: 'guia',
+                    }}
+                  />
+                </LabelBase>
+                <LabelBase label='Percepción:' classNames={{ labelParent: 'mb-6' }}>
+                  <InputNumberBase
+                    prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
+                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
+                    placeholder='Percepción'
+                    propsForm={{
+                      name: 'percepcion',
+                    }}
+                    precision={2}
+                    min={0}
+                  />
+                </LabelBase>
+              </div>
+
+              <div className='flex flex-wrap gap-x-6 gap-y-2'>
+                <FormFormaDePagoCompra form={form} />
               </div>
             </div>
           </div>

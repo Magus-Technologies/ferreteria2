@@ -108,6 +108,7 @@ export default function SelectProductos({
   showUltimasCompras = true,
   autoFocus = false,
   selectionColor, // Recibir el color de selección
+  onSearch,
   ...props
 }: SelectProductosProps) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -158,7 +159,7 @@ export default function SelectProductos({
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<Producto>()
 
-  const [debouncedText] = useDebounce(text, 500)
+  const [debouncedText, { flush }] = useDebounce(text, 500)
   const [manualSearch, setManualSearch] = useState(false)
 
   const { data: responseData, refetch, isLoading: loading, isFetching } = useQuery({
@@ -187,12 +188,17 @@ export default function SelectProductos({
   const productos = responseData
 
   function handleSearch() {
+    setTextDefault(text)
+    setProductoCreado(undefined)
+    setProductoSeleccionado(undefined)
+    
     if (text) {
-      setTextDefault(text)
-      setProductoCreado(undefined)
-      setProductoSeleccionado(undefined)
+      flush() // Sincronizar el texto debounced inmediatamente
       setManualSearch(true)
       refetch()
+    } else {
+      // Si no hay texto, abrir el modal directamente
+      setOpenModalProductoSearch(true)
     }
   }
 
@@ -203,15 +209,13 @@ export default function SelectProductos({
       primeraVez.current = false
       return
     }
-    if (isFetching) return
-    // Solo abrir modal si hay resultados (significa que el usuario buscó algo)
-    if (!productos || productos.length === 0) return
-
-    // Solo disparar lógica de modal/autoselección si fue una búsqueda manual (Enter o Icono)
     if (manualSearch) {
       setManualSearch(false)
-      if (productos.length === 1) handleOnlyOneResult?.(productos[0])
-      else if (text) setOpenModalProductoSearch(true)
+      if (productos && productos.length === 1) {
+        handleOnlyOneResult?.(productos[0])
+      } else {
+        setOpenModalProductoSearch(true)
+      }
     }
   }, [productos, isFetching, manualSearch])
 
@@ -245,6 +249,7 @@ export default function SelectProductos({
         showSearch
         uppercase={true}
         onClear={() => {
+          setText('')
           setTextDefault('')
         }}
         onChange={(value) => {
@@ -258,7 +263,10 @@ export default function SelectProductos({
           onChange?.(value, producto)
         }}
         filterOption={false}
-        onSearch={setText}
+        onSearch={(val) => {
+          setText(val)
+          onSearch?.(val)
+        }}
         searchValue={text}
         prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
         loading={loading}
@@ -314,7 +322,6 @@ export default function SelectProductos({
             }
           }
         }}
-        open={false}
         {...props}
       />
       {withSearch && (
