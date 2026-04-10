@@ -8,9 +8,11 @@ import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
 import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-proveedores-desactivados'
 import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
-import ModalProveedoresDesactivados from '~/app/_components/modals/modal-proveedores-desactivados'
-import ModalConfiguraciones from '~/app/_components/modals/modal-configuraciones'
-import ModalGestionarAlmacenes from '~/app/ui/_components/modals/modal-gestionar-almacenes'
+import dynamic from 'next/dynamic'
+
+const ModalProveedoresDesactivados = dynamic(() => import('~/app/_components/modals/modal-proveedores-desactivados'), { ssr: false })
+const ModalConfiguraciones = dynamic(() => import('~/app/_components/modals/modal-configuraciones'), { ssr: false })
+const ModalGestionarAlmacenes = dynamic(() => import('~/app/ui/_components/modals/modal-gestionar-almacenes'), { ssr: false })
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { almacenesApi } from '~/lib/api/almacen'

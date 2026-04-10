@@ -14,7 +14,7 @@ import { cierreCajaApi } from '~/lib/api/cierre-caja'
 import { useQzPrint } from '~/hooks/use-qz-print'
 import ModalSeleccionImpresora from './modal-seleccion-impresora'
 import type { TipoFormato } from '~/store/store-impresora'
-import { pdf } from '@react-pdf/renderer'
+const loadPdf = () => import('@react-pdf/renderer').then(m => m.pdf)
 
 interface ModalEntradaStockProps {
   open: boolean
@@ -89,6 +89,7 @@ export default function ModalShowDoc({
     if (!currentChildren || !open) return
     setLoading(true)
     try {
+      const pdf = await loadPdf()
       const blob = await pdf(<>{currentChildren}</>).toBlob()
       const url = URL.createObjectURL(blob)
       setPdfUrl((prev) => {
@@ -125,6 +126,7 @@ export default function ModalShowDoc({
       const res = await fetch(backendPdfUrl)
       return await res.blob()
     }
+    const pdf = await loadPdf()
     return await pdf(<>{childrenRef.current}</>).toBlob()
   }
 

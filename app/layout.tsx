@@ -34,16 +34,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='es' className='overflow-y-hidden'>
-      <head>
-        <link rel='preload' href='/fondo-login.webp' as='image' type='image/webp' />
-        {process.env.NODE_ENV !== 'production' && (
+      {process.env.NODE_ENV !== 'production' && (
+        <head>
           <Script
             src='//unpkg.com/react-scan/dist/auto.global.js'
             strategy='afterInteractive'
             crossOrigin='anonymous'
           />
-        )}
-      </head>
+        </head>
+      )}
       <body className={`antialiased overflow-y-hidden ${ubuntu.className}`}>
         <AuthProvider>
           <AntdRegistry>

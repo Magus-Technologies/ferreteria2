@@ -1,6 +1,9 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useRequireAuth } from '~/lib/auth-context'
+import { getAuthToken } from '~/lib/api'
 import { InitStore } from './_components/others/init-store'
 
 export default function ProtectedLayout({
@@ -8,7 +11,18 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const { user, loading } = useRequireAuth()
+
+  // Redirigir inmediatamente si no hay token (sin esperar API)
+  useEffect(() => {
+    if (!getAuthToken()) {
+      router.replace('/')
+    }
+  }, [router])
+
+  // Si no hay token, no renderizar nada (la redirección se ejecuta arriba)
+  if (typeof window !== 'undefined' && !getAuthToken()) return null
 
   // Mostrar loading mientras verifica autenticación
   if (loading) {
@@ -16,7 +30,6 @@ export default function ProtectedLayout({
       <div className='relative h-dvh w-dvw overflow-hidden flex items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Cargando...</p>
         </div>
       </div>
     )
