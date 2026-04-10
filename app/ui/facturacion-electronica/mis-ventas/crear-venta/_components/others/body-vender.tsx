@@ -15,10 +15,12 @@ import useCreateVenta from '../../_hooks/use-create-venta'
 import useInitVenta from '../../_hooks/use-init-venta'
 import { ventaEvents } from '../../_hooks/venta-events'
 import { VentaConUnidadDerivadaNormal } from './header-crear-venta'
+import dynamic from 'next/dynamic'
 import FormTableVender from '../form/form-table-vender'
 import FormCrearVenta from '../form/form-crear-venta'
 import CardsInfoVenta from '../cards/cards-info-venta'
-import ModalDocVenta from '../../../_components/modals/modal-doc-venta'
+
+const ModalDocVenta = dynamic(() => import('../../../_components/modals/modal-doc-venta'), { ssr: false })
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
 import AperturaGuard from '~/app/ui/_components/apertura-auto-check'

@@ -8,20 +8,23 @@ import ButtonBase from "~/components/buttons/button-base";
 import { FormCreateVenta } from "../others/body-vender";
 import CardInfoVenta from "./card-info-venta";
 import { FaMoneyBillWave } from "react-icons/fa";
-import ModalMetodosPagoVenta from "../modals/modal-metodos-pago-venta";
+import dynamic from "next/dynamic";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { MdSell } from "react-icons/md";
 import { FaPause } from "react-icons/fa6";
-import ModalDetallesEntrega from "../modals/modal-detalles-entrega";
 import ButtonRecuperarVentaEnEspera from "../buttons/button-recuperar-venta-en-espera";
 import ButtonRecuperarVentaAnulada from "../buttons/button-recuperar-venta-anulada";
 import ButtonCargarCotizacion from "../buttons/button-cargar-cotizacion";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
-import ModalCreateCliente from "~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente";
 import type { Cliente } from "~/lib/api/cliente";
 import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
-import ModalTrasladoBoveda from "~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
 import { BankOutlined } from "@ant-design/icons";
+
+// Modales pesados cargados bajo demanda
+const ModalMetodosPagoVenta = dynamic(() => import("../modals/modal-metodos-pago-venta"), { ssr: false });
+const ModalDetallesEntrega = dynamic(() => import("../modals/modal-detalles-entrega"), { ssr: false });
+const ModalCreateCliente = dynamic(() => import("~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-create-cliente"), { ssr: false });
+const ModalTrasladoBoveda = dynamic(() => import("~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda"), { ssr: false });
 
 export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submitting }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void; submitting?: boolean }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);

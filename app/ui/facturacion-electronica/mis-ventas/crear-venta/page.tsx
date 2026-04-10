@@ -4,15 +4,11 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
-import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
+import dynamic from 'next/dynamic'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { cotizacionesApi } from '~/lib/api/cotizaciones'
-
-// Lazy loading de componentes pesados
-const BodyVender = lazy(() => import('./_components/others/body-vender'))
-const HeaderCrearVenta = lazy(() => import('./_components/others/header-crear-venta'))
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -20,6 +16,10 @@ const ComponentLoading = () => (
     <Spin size="large" />
   </div>
 )
+
+// Dynamic imports con SSR deshabilitado
+const BodyVender = dynamic(() => import('./_components/others/body-vender'), { ssr: false, loading: ComponentLoading })
+const HeaderCrearVenta = dynamic(() => import('./_components/others/header-crear-venta'), { ssr: false, loading: ComponentLoading })
 
 export default function CrearVenta() {
   const canAccess = usePermission(permissions.VENTA_CREATE)
@@ -50,12 +50,8 @@ export default function CrearVenta() {
 
   return (
     <ContenedorGeneral className='h-full'>
-      <Suspense fallback={<ComponentLoading />}>
         <HeaderCrearVenta />
-      </Suspense>
-      <Suspense fallback={<ComponentLoading />}>
         <BodyVender cotizacion={cotizacionData} />
-      </Suspense>
     </ContenedorGeneral>
   )
 }

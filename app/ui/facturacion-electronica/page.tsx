@@ -15,35 +15,41 @@ import { IoDocumentText } from "react-icons/io5";
 import RangePickerBase from "~/app/_components/form/fechas/range-picker-base";
 // import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import { usePermission } from "~/hooks/use-permission";
-import { Suspense, lazy } from "react";
 import { Spin } from "antd";
+import dynamic from "next/dynamic";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
-
-// Lazy loading de componentes pesados
-const VentasPorCategoriaDeProductos = lazy(
-  () => import("./_components/charts/ventas-por-categoria-de-productos"),
-);
-const VentasPorMetodosDePago = lazy(
-  () => import("./_components/charts/ventas-por-metodos-de-pago"),
-);
-const ProductosMasVendidos = lazy(
-  () => import("./_components/charts/productos-mas-vendidos"),
-);
-const IngresosPedidosPorTipoDeCanal = lazy(
-  () => import("./_components/charts/ingresos-pedidos-por-tipo-de-canal"),
-);
-const VentasPorTiposDeDocumento = lazy(
-  () => import("./_components/charts/ventas-por-tipos-de-documento"),
-);
-const VentasPorMarca = lazy(
-  () => import("./_components/charts/ventas-por-marca"),
-);
 
 // Componente de loading optimizado
 const ChartLoading = () => (
   <div className="flex items-center justify-center h-40">
     <Spin size="large" />
   </div>
+);
+
+// Dynamic imports con SSR deshabilitado (charts son client-only)
+const VentasPorCategoriaDeProductos = dynamic(
+  () => import("./_components/charts/ventas-por-categoria-de-productos"),
+  { ssr: false, loading: ChartLoading },
+);
+const VentasPorMetodosDePago = dynamic(
+  () => import("./_components/charts/ventas-por-metodos-de-pago"),
+  { ssr: false, loading: ChartLoading },
+);
+const ProductosMasVendidos = dynamic(
+  () => import("./_components/charts/productos-mas-vendidos"),
+  { ssr: false, loading: ChartLoading },
+);
+const IngresosPedidosPorTipoDeCanal = dynamic(
+  () => import("./_components/charts/ingresos-pedidos-por-tipo-de-canal"),
+  { ssr: false, loading: ChartLoading },
+);
+const VentasPorTiposDeDocumento = dynamic(
+  () => import("./_components/charts/ventas-por-tipos-de-documento"),
+  { ssr: false, loading: ChartLoading },
+);
+const VentasPorMarca = dynamic(
+  () => import("./_components/charts/ventas-por-marca"),
+  { ssr: false, loading: ChartLoading },
 );
 
 export default function FacturacionElectronica() {
@@ -137,17 +143,13 @@ export default function FacturacionElectronica() {
               <div className="text-center font-semibold mt-2 mb-2 text-xs sm:text-sm md:text-base text-slate-700">
                 Ventas por Categoría de Productos
               </div>
-              <Suspense fallback={<ChartLoading />}>
                 <VentasPorCategoriaDeProductos />
-              </Suspense>
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
                 Ventas por Métodos de Pago
               </div>
-              <Suspense fallback={<ChartLoading />}>
                 <VentasPorMetodosDePago />
-              </Suspense>
             </div>
           </div>
 
@@ -157,33 +159,25 @@ export default function FacturacionElectronica() {
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
                 Productos Mas Vendidos
               </div>
-              <Suspense fallback={<ChartLoading />}>
                 <ProductosMasVendidos />
-              </Suspense>
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
                 Ingresos / Pedidos por Tipo de Canal
               </div>
-              <Suspense fallback={<ChartLoading />}>
                 <IngresosPedidosPorTipoDeCanal />
-              </Suspense>
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
                 Ventas por Tipos de Documento
               </div>
-              <Suspense fallback={<ChartLoading />}>
                 <VentasPorTiposDeDocumento />
-              </Suspense>
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
                 Ventas por Marca
               </div>
-              <Suspense fallback={<ChartLoading />}>
                 <VentasPorMarca />
-              </Suspense>
             </div>
           </div>
         </div>
