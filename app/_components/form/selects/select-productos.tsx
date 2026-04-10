@@ -159,7 +159,7 @@ export default function SelectProductos({
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<Producto>()
 
-  const [debouncedText, { flush }] = useDebounce(text, 500)
+  const [debouncedText, { flush }] = useDebounce(text, 300)
   const [manualSearch, setManualSearch] = useState(false)
 
   const { data: responseData, refetch, isLoading: loading, isFetching } = useQuery({
@@ -322,6 +322,7 @@ export default function SelectProductos({
             }
           }
         }}
+        open={false}
         {...props}
       />
       {withSearch && (

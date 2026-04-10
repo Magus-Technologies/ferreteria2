@@ -186,16 +186,13 @@ export default function SelectProveedores({
           (item, index, self) =>
             self.findIndex(i => i.value === item.value) === index
         )}
-        onKeyDown={e => {
+        onKeyUp={e => {
           if (e.key === 'Enter') {
-            e.preventDefault()
-            // Forzar actualización inmediata del textDefault con el texto actual
-            setTimeout(() => {
-              setTextDefault(text)
-              setOpenModalProveedorSearch(true)
-            }, 0)
+            setTextDefault(text)
+            setOpenModalProveedorSearch(true)
           }
         }}
+        open={false}
         {...props}
         {...(showOnlyDocument ? { notFoundContent: null } : {})}
       />

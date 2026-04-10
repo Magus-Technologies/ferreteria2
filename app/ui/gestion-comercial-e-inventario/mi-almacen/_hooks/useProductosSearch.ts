@@ -34,12 +34,13 @@ export function useProductosSearch({
       return response.data?.data ?? [];
     },
     enabled: enabled && !!filtros.almacen_id,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 30, // 30 segundos
+    placeholderData: (prev) => prev, // Mantener datos previos mientras carga nuevos
   });
 
   return {
     data: query.data ?? [],
-    loading: query.isLoading,
+    loading: query.isLoading || (query.isFetching && !query.data?.length),
     error: query.error,
     refetch: query.refetch,
     isFetched: query.isFetched,

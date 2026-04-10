@@ -71,9 +71,9 @@ export default function ModalProductoSearch({
     setText(textDefault);
   }, [textDefault]);
 
-  // value: con debounce 300ms → dispara petición al servidor
+  // value: con debounce 150ms → dispara petición al servidor
   // text: sin debounce → filtra local e instantáneamente sobre los resultados cargados
-  const [value] = useDebounce(text, 300);
+  const [value] = useDebounce(text, 150);
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi, getAuthToken, removeAuthToken, LoginResponse } from './api';
 import { useRouter } from 'next/navigation';
+import { clearLogoCache } from '~/hooks/use-empresa-publica';
 
 export type User = LoginResponse['user'] | null;
 
@@ -91,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       Object.keys(sessionStorage)
         .filter(key => key.startsWith('birthday_alert_shown_'))
         .forEach(key => sessionStorage.removeItem(key));
+      clearLogoCache();
       setUser(null);
       removeAuthToken();
     }

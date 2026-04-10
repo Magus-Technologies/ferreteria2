@@ -157,14 +157,14 @@ export default function TableProductoSearch({
   // Seleccionar automáticamente el primer producto cuando cambian los datos
   useEffect(() => {
     if (productosFiltrados && productosFiltrados.length > 0 && tableGridRef.current) {
-      // Esperar a que AG Grid renderice los datos
-      setTimeout(() => {
-        const firstNode = tableGridRef.current.api?.getDisplayedRowAtIndex(0);
+      // Usar requestAnimationFrame para esperar al siguiente render de AG Grid
+      requestAnimationFrame(() => {
+        const firstNode = tableGridRef.current?.api?.getDisplayedRowAtIndex(0);
         if (firstNode) {
           firstNode.setSelected(true);
           setProductoSeleccionadoSearchStore(firstNode.data as any);
         }
-      }, 100);
+      });
     } else {
       setProductoSeleccionadoSearchStore(undefined);
     }

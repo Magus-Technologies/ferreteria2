@@ -62,18 +62,51 @@ export function getLogoUrl(logoPath: string | null | undefined): string | null {
   return `${API_URL}/storage/${logoPath}`
 }
 
+const LOGO_CACHE_KEY = 'empresa_logo_url'
+
+/**
+ * Guarda la URL del logo en localStorage para evitar flash en recargas
+ */
+function cacheLogoUrl(url: string | null) {
+  if (typeof window === 'undefined') return
+  if (url) localStorage.setItem(LOGO_CACHE_KEY, url)
+  else localStorage.removeItem(LOGO_CACHE_KEY)
+}
+
+/**
+ * Obtiene la URL del logo cacheada en localStorage
+ */
+export function getCachedLogoUrl(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem(LOGO_CACHE_KEY)
+}
+
+/**
+ * Limpia el cache del logo (llamar al cerrar sesión)
+ */
+export function clearLogoCache() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(LOGO_CACHE_KEY)
+}
+
 /**
  * Hook con logo URL ya parseada
- * Útil para componentes que necesitan directamente la URL completa
+ * Cachea el logo en localStorage para carga instantánea entre recargas
  */
 export function useEmpresaPublicaConLogo() {
   const { data, ...rest } = useEmpresaPublica()
+
+  const logoUrl = data ? getLogoUrl(data.logo) : null
+
+  // Cachear cuando llega del servidor
+  if (logoUrl) cacheLogoUrl(logoUrl)
 
   return {
     ...rest,
     data: data ? {
       ...data,
-      logoUrl: getLogoUrl(data.logo),
+      logoUrl,
     } : undefined,
+    cachedLogoUrl: getCachedLogoUrl(),
   }
 }
