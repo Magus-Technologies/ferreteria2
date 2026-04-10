@@ -224,7 +224,7 @@ export default function KardexInventarioView() {
   ]
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-4 w-full'>
       {/* Filtros */}
       <div className='bg-white rounded-xl border p-4 flex flex-col gap-3'>
         <div className='flex items-center gap-2 mb-1'>
@@ -232,13 +232,18 @@ export default function KardexInventarioView() {
           <span className='font-bold text-gray-800'>Kardex de Inventario</span>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-3 items-end'>
-          <div className='md:col-span-2'>
+        <div className='flex flex-wrap gap-3 items-end'>
+          <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Producto</label>
-            <div className='flex items-center gap-1'>
+            <div className='flex items-center gap-2'>
               <SelectProductos
                 withSearch
+                withTipoBusqueda
+                classNameTipoBusqueda='!min-w-[150px] !w-[150px] !max-w-[150px]'
+                className='!min-w-[250px] !w-[250px] !max-w-[250px]'
                 allowClear
+                showUltimasCompras={false}
+                selectionColor={greenColors[10]}
                 onChange={(_id, producto) => {
                   setProductoSeleccionado(producto ?? undefined)
                   if (!producto) setSearchText('')
@@ -250,7 +255,7 @@ export default function KardexInventarioView() {
           <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Tipo</label>
             <Select
-              className='w-full'
+              className='!min-w-[140px] !w-[140px]'
               value={tipo}
               onChange={(v) => setTipo(v as TipoMovimientoInventario | '')}
               options={tipoOptions}
@@ -260,7 +265,6 @@ export default function KardexInventarioView() {
           <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Rango de Fechas</label>
             <RangePicker
-              className='w-full'
               value={fechas}
               onChange={(dates) => setFechas(dates)}
               format='DD/MM/YYYY'
@@ -312,7 +316,7 @@ export default function KardexInventarioView() {
           <span className='ml-3 text-gray-500'>Cargando movimientos...</span>
         </div>
       ) : (
-        <div className='h-[550px]'>
+        <div className='h-[calc(100vh-380px)] min-h-[300px]'>
           <TableWithTitle<MovimientoKardex>
             id='kardex.inventario.movimientos'
             title={productoId ? 'Movimientos de Inventario' : 'Todos los Movimientos de Hoy'}

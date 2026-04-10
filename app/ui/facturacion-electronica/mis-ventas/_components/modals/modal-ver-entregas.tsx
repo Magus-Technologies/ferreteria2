@@ -139,6 +139,12 @@ export default function ModalVerEntregas({
                           {entrega.direccion_entrega}
                         </div>
                       )}
+                      {entrega.referencia_entrega && (
+                        <div className="col-span-2">
+                          <span className="font-medium">Referencia:</span>{" "}
+                          {entrega.referencia_entrega}
+                        </div>
+                      )}
                     </div>
                   )}
 

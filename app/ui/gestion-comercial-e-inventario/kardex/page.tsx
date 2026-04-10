@@ -18,21 +18,19 @@ export default function KardexInventarioPage() {
   if (!canAccess) return <NoAutorizado />
 
   return (
-    <ContenedorGeneral>
-      <div className='flex flex-col gap-4'>
-        <div className='flex justify-end'>
-          <Select
-            value={tipo}
-            onChange={setTipo}
-            options={[
-              { value: 'inventario', label: 'Kardex Inventario' },
-              { value: 'facturacion', label: 'Kardex Facturación' },
-            ]}
-            className='w-56'
-          />
-        </div>
-        {tipo === 'inventario' ? <KardexInventarioView /> : <KardexView />}
+    <ContenedorGeneral className='w-full !items-stretch'>
+      <div className='flex justify-end'>
+        <Select
+          value={tipo}
+          onChange={setTipo}
+          options={[
+            { value: 'inventario', label: 'Kardex Inventario' },
+            { value: 'facturacion', label: 'Kardex Facturación' },
+          ]}
+          className='w-56'
+        />
       </div>
+      {tipo === 'inventario' ? <KardexInventarioView /> : <KardexView />}
     </ContenedorGeneral>
   )
 }

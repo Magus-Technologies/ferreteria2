@@ -84,6 +84,12 @@ export default function ModalMapaEntrega({ open, onClose, entrega }: ModalMapaEn
               <span className="font-semibold text-gray-700">Dirección:</span>
               <p className="text-gray-900">{infoEntrega.direccion || 'No especificada'}</p>
             </div>
+            {entrega.referencia_entrega && (
+              <div>
+                <span className="font-semibold text-gray-700">Referencia:</span>
+                <p className="text-gray-900">{entrega.referencia_entrega}</p>
+              </div>
+            )}
             {infoEntrega.observaciones && (
               <div>
                 <span className="font-semibold text-gray-700">Observaciones:</span>

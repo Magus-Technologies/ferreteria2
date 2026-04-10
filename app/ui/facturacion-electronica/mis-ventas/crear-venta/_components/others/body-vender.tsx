@@ -90,6 +90,7 @@ export type FormCreateVenta = {
   hora_inicio?: string
   hora_fin?: string
   direccion_entrega?: string
+  referencia_entrega?: string
   latitud?: number
   longitud?: number
   observaciones?: string

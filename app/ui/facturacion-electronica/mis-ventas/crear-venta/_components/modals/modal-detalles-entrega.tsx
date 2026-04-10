@@ -150,40 +150,49 @@ export default function ModalDetallesEntrega({
       console.log('✅ Dirección encontrada:', direccionObj)
       
       if (direccionObj) {
-        // Cargar la dirección seleccionada
+        // Cargar la dirección seleccionada y referencia
         form.setFieldValue('direccion_entrega', direccionObj.direccion)
+        form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
         setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
         console.log('📝 Dirección cargada en formulario:', direccionObj.direccion)
         
         // Si tiene coordenadas, cargarlas
         if (direccionObj.latitud && direccionObj.longitud) {
-          const coords = { 
-            lat: Number(direccionObj.latitud), 
-            lng: Number(direccionObj.longitud) 
+          const coords = {
+            lat: Number(direccionObj.latitud),
+            lng: Number(direccionObj.longitud)
           }
           setCoordenadas(coords)
           form.setFieldValue('latitud', coords.lat)
           form.setFieldValue('longitud', coords.lng)
+          obtenerUbicacionGps(coords.lat, coords.lng)
           console.log('🗺️ Coordenadas cargadas:', coords)
+        } else {
+          setUbicacionGps('')
         }
       } else if (direcciones.length > 0) {
         // Si no encuentra la seleccionada, usar la primera (D1)
         const primeraDir = direcciones[0]
         console.log('⚠️ Usando primera dirección:', primeraDir)
         form.setFieldValue('direccion_entrega', primeraDir.direccion)
+        form.setFieldValue('referencia_entrega', primeraDir.referencia || '')
         setDireccionSeleccionada(primeraDir.tipo as TipoDireccion)
-        
+
         if (primeraDir.latitud && primeraDir.longitud) {
-          const coords = { 
-            lat: Number(primeraDir.latitud), 
-            lng: Number(primeraDir.longitud) 
+          const coords = {
+            lat: Number(primeraDir.latitud),
+            lng: Number(primeraDir.longitud)
           }
           setCoordenadas(coords)
           form.setFieldValue('latitud', coords.lat)
           form.setFieldValue('longitud', coords.lng)
+          obtenerUbicacionGps(coords.lat, coords.lng)
+        } else {
+          setUbicacionGps('')
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tipoDespacho, direcciones, form])
 
   // Obtener valores del formulario (reactivo)
@@ -239,11 +248,32 @@ export default function ModalDetallesEntrega({
     setHoraFinResto(dayjs(slot.end).format('HH:mm'))
   }
 
+  // Estado para la dirección GPS obtenida por reverse geocoding del mapa
+  const [ubicacionGps, setUbicacionGps] = useState<string>('')
+
+  // Reverse geocoding helper
+  const obtenerUbicacionGps = useCallback(async (lat: number, lng: number) => {
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+      if (!token) return
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1&language=es`
+      )
+      const data = await res.json()
+      if (data.features?.[0]?.place_name) {
+        setUbicacionGps(data.features[0].place_name)
+      }
+    } catch (err) {
+      console.error('Error en geocodificación inversa:', err)
+    }
+  }, [])
+
   // Callback para cuando el usuario marca una ubicación en el mapa
-  const handleCoordenadaChange = useCallback((nuevasCoordenadas: Coordenadas) => {
+  const handleCoordenadaChange = useCallback((nuevasCoordenadas: Coordenadas, direccionObtenida?: string) => {
     setCoordenadas(nuevasCoordenadas)
     form.setFieldValue('latitud', nuevasCoordenadas.lat)
     form.setFieldValue('longitud', nuevasCoordenadas.lng)
+    if (direccionObtenida) setUbicacionGps(direccionObtenida)
   }, [form])
 
   // Manejar cambio de dirección seleccionada
@@ -252,27 +282,30 @@ export default function ModalDetallesEntrega({
     const direccionObj = direcciones.find(d => d.tipo === tipo)
     
     if (direccionObj) {
-      // Actualizar dirección en el formulario
+      // Actualizar dirección y referencia en el formulario
       form.setFieldValue('direccion_entrega', direccionObj.direccion)
       form.setFieldValue('direccion_seleccionada', tipo)
-      
+      form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
+
       // Si tiene coordenadas, cargarlas automáticamente
       if (direccionObj.latitud && direccionObj.longitud) {
-        const coords = { 
-          lat: Number(direccionObj.latitud), 
-          lng: Number(direccionObj.longitud) 
+        const coords = {
+          lat: Number(direccionObj.latitud),
+          lng: Number(direccionObj.longitud)
         }
         setCoordenadas(coords)
         form.setFieldValue('latitud', coords.lat)
         form.setFieldValue('longitud', coords.lng)
         setMostrarMapa(true) // Mostrar el mapa automáticamente
+        obtenerUbicacionGps(coords.lat, coords.lng)
       } else {
         setCoordenadas(null)
+        setUbicacionGps('')
         form.setFieldValue('latitud', undefined)
         form.setFieldValue('longitud', undefined)
       }
     }
-  }, [direcciones, form])
+  }, [direcciones, form, obtenerUbicacionGps])
 
   // Callback para cambio de dirección en sección "resto" del parcial
   const handleDireccionChangeResto = useCallback((tipo: TipoDireccion) => {
@@ -623,6 +656,17 @@ export default function ModalDetallesEntrega({
                       placeholder="Dirección de entrega"
                       rows={3}
                     />
+                    {ubicacionGps && (
+                      <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGps}>
+                        Ubicación GPS: {ubicacionGps}
+                      </p>
+                    )}
+                    {direccionSeleccionada && direcciones.find(d => d.tipo === direccionSeleccionada)?.referencia && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        <span className="font-semibold">Referencia:</span>{' '}
+                        {direcciones.find(d => d.tipo === direccionSeleccionada)!.referencia}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex gap-2">

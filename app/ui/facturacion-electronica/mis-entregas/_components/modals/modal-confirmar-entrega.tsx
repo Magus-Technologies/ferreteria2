@@ -112,6 +112,13 @@ export default function ModalConfirmarEntrega({
             <span className="font-semibold text-slate-600">Dirección:</span>
             <span className="text-slate-800">{direccion}</span>
           </div>
+          {entrega.referencia_entrega && (
+            <div className="flex items-start gap-2 text-sm">
+              <FaMapMarkerAlt className="text-slate-400 text-xs mt-0.5" />
+              <span className="font-semibold text-slate-600">Referencia:</span>
+              <span className="text-slate-800">{entrega.referencia_entrega}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-sm">
             <FaFileInvoice className="text-slate-400 text-xs" />
             <span className="font-semibold text-slate-600">Venta:</span>

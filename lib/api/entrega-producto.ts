@@ -53,6 +53,7 @@ export interface CreateEntregaProductoRequest {
   hora_inicio?: string; // Format: "HH:mm"
   hora_fin?: string; // Format: "HH:mm"
   direccion_entrega?: string;
+  referencia_entrega?: string;
   latitud?: number;
   longitud?: number;
   observaciones?: string;
@@ -75,6 +76,7 @@ export interface UpdateEntregaProductoRequest {
   hora_inicio?: string;
   hora_fin?: string;
   direccion_entrega?: string;
+  referencia_entrega?: string;
   latitud?: number;
   longitud?: number;
   observaciones?: string;

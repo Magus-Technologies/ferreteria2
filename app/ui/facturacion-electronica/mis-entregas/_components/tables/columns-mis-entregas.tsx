@@ -51,6 +51,12 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       valueFormatter: (params) => params.value || '-',
     },
     {
+      headerName: 'Referencia',
+      field: 'referencia_entrega',
+      width: 200,
+      valueFormatter: (params) => params.value || '-',
+    },
+    {
       headerName: 'Fecha Programada',
       field: 'fecha_programada',
       width: 150,
