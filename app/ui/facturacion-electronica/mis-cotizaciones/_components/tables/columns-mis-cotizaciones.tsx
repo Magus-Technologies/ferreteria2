@@ -35,7 +35,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       field: "fecha",
       width: 180,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY HH:mm") : "",
+        params.value ? dayjs(params.value).format("DD/MM/YYYY hh:mm:ss a") : "",
     },
     {
       colId: "numero",

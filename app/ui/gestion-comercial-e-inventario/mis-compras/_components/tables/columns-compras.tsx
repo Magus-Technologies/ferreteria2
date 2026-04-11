@@ -1,6 +1,7 @@
 'use client'
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
+import dayjs from 'dayjs'
 
 import { IGV } from '~/lib/constantes'
 import ColumnAction from '~/components/tables/column-action'
@@ -85,10 +86,11 @@ export function useColumnsCompras({
       colId: 'fecha',
       headerName: 'Fecha Emisión',
       field: 'fecha',
-      width: 150,
-      minWidth: 150,
-      type: 'dateTime',
+      width: 180,
+      minWidth: 180,
       filter: 'agDateColumnFilter',
+      valueFormatter: (params) =>
+        params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a') : '-',
     },
     {
       colId: 'fecha_vencimiento',

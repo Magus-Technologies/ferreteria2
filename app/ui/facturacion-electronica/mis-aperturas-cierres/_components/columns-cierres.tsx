@@ -49,7 +49,7 @@ export const useColumnsCierres = ({
       minWidth: 130,
       cellStyle: centerCell,
       cellRenderer: (params: any) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
+        params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a') : '-',
     },
     {
       colId: 'vendedor',

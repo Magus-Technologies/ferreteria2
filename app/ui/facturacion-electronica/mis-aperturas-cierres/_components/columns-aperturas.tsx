@@ -26,7 +26,7 @@ export const useColumnsAperturas = ({
       flex: 1,
       minWidth: 130,
       cellStyle: centerCell,
-      cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
+      cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a'),
     },
     {
       colId: 'vendedor',
