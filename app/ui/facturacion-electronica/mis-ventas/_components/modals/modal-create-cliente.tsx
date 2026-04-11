@@ -1,5 +1,6 @@
 import { TipoCliente, clienteApi } from "~/lib/api/cliente";
 import { Form } from "antd";
+import dayjs from "dayjs";
 import TitleForm from "~/components/form/title-form";
 import ModalForm from "~/components/modals/modal-form";
 import useCreateCliente from "../../_hooks/use-create-cliente";
@@ -79,6 +80,11 @@ export default function ModalCreateCliente({
           ]),
         );
         form.setFieldsValue(formValues);
+
+        // Convertir fecha_nacimiento string a Dayjs para el DatePicker
+        if (dataEdit.fecha_nacimiento) {
+          form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
+        }
 
         // Cargar direcciones desde la tabla direcciones_cliente
         setCargandoDirecciones(true);

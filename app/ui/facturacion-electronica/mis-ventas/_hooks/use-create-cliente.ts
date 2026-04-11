@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
+import dayjs from "dayjs";
 import {
   clienteApi,
   type Cliente,
@@ -31,7 +32,9 @@ export default function useCreateCliente({
         razon_social: values.razon_social || null,
         telefono: values.telefono || null,
         email: values.email || null,
-        fecha_nacimiento: values.fecha_nacimiento || null,
+        fecha_nacimiento: values.fecha_nacimiento
+          ? dayjs(values.fecha_nacimiento).format('YYYY-MM-DD')
+          : null,
         estado: true,
       };
 
