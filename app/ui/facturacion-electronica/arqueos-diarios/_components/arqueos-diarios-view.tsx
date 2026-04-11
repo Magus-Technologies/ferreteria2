@@ -138,17 +138,20 @@ export default function ArqueosDiariosView() {
   const ventasData = resumenDetalle?.detalle_ventas || []
   const metodosPagoData = resumenDetalle?.detalle_metodos_pago || []
   const otrosIngresosData = resumenDetalle?.detalle_ingresos ? Object.values(resumenDetalle.detalle_ingresos) : []
+  const ingresosExtrasData = resumenDetalle?.detalle_ingresos_extras ? Object.values(resumenDetalle.detalle_ingresos_extras) : []
   const prestamosRecibidosData = resumenDetalle?.prestamos_recibidos || []
   const gastosData = resumenDetalle?.detalle_egresos ? Object.values(resumenDetalle.detalle_egresos) : []
+  const gastosExtrasData = resumenDetalle?.detalle_gastos_extras ? Object.values(resumenDetalle.detalle_gastos_extras) : []
   const prestamosDadosData = resumenDetalle?.prestamos_dados || []
   const movimientosData = resumenDetalle?.movimientos_internos || []
   const bancosData = resumenDetalle?.resumen_bancos || []
 
-  const totalOtrosIngresos = (resumenDetalle?.total_ingresos || 0) - (resumenDetalle?.total_ventas || 0) - (resumenDetalle?.total_prestamos_recibidos || 0)
-  const totalGastos = (resumenDetalle?.total_egresos || 0) - (resumenDetalle?.total_prestamos_dados || 0)
-  const montoEsperado = resumenDetalle
-    ? Number(resumenDetalle.efectivo_inicial || 0) + Number(resumenDetalle.total_ingresos || 0) - Number(resumenDetalle.total_egresos || 0)
-    : 0
+  const totalOtrosIngresos = resumenDetalle?.total_otros_ingresos || 0
+  const totalIngresosExtras = resumenDetalle?.total_ingresos_extras || 0
+  const totalGastos = resumenDetalle?.total_gastos || 0
+  const totalGastosExtras = resumenDetalle?.total_gastos_extras || 0
+
+  const montoEsperado = resumenDetalle?.monto_esperado || 0
 
   const detalleTabItems = [
     {
@@ -162,9 +165,9 @@ export default function ArqueosDiariosView() {
       children: <TabMetodosPago data={metodosPagoData} totalVentas={resumenDetalle?.total_ventas || 0} />,
     },
     {
-      key: '3',
-      label: `Otros Ingresos (${otrosIngresosData.length})`,
-      children: <TabOtrosIngresos data={otrosIngresosData} total={totalOtrosIngresos} />,
+      key: 'extras_in',
+      label: `Ingresos Extras (${ingresosExtrasData.length})`,
+      children: <TabOtrosIngresos data={ingresosExtrasData} total={totalIngresosExtras} />,
     },
     {
       key: '4',
@@ -172,9 +175,9 @@ export default function ArqueosDiariosView() {
       children: <TabPrestamosRecibidos data={prestamosRecibidosData} total={resumenDetalle?.total_prestamos_recibidos || 0} />,
     },
     {
-      key: '5',
-      label: `Gastos (${gastosData.length})`,
-      children: <TabGastos data={gastosData} total={totalGastos} />,
+      key: 'extras_out',
+      label: `Gastos Extras (${gastosExtrasData.length})`,
+      children: <TabGastos data={gastosExtrasData} total={totalGastosExtras} />,
     },
     {
       key: '6',

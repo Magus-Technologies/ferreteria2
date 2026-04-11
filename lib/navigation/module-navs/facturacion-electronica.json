@@ -85,18 +85,6 @@
             "permission": "caja.update"
           },
           {
-            "key": "crear-ingreso",
-            "label": "Crear Ingreso",
-            "action": "openCrearIngreso",
-            "permission": null
-          },
-          {
-            "key": "crear-gasto",
-            "label": "Crear Gasto",
-            "action": "openCrearGasto",
-            "permission": "egreso-dinero.create"
-          },
-          {
             "key": "mover-dinero",
             "label": "Mover Dinero entre Sub-Cajas",
             "action": "openMoverDinero",

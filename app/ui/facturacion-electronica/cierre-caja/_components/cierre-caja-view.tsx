@@ -460,21 +460,40 @@ export default function CierreCajaView() {
 
                         <div className='border-t border-slate-300 my-1'></div>
 
-                        {/* Otros Ingresos */}
-                        {((resumen?.total_ingresos || 0) - (resumen?.total_ventas || 0) - (resumen?.total_prestamos_recibidos || 0)) > 0 && (
+                        {/* Otros Ingresos (Genéricos) */}
+                        {(resumen?.total_otros_ingresos || 0) > 0 && (
                           <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-amber-50'>
-                            <span className='text-base text-amber-700'>Otros Ingresos</span>
+                            <span className='text-base text-slate-700'>Otros Ingresos</span>
                             <div className='flex items-center gap-2.5'>
-                              <span className='text-base font-semibold text-amber-700 min-w-[100px] text-right'>
-                                {((resumen?.total_ingresos || 0) - (resumen?.total_ventas || 0) - (resumen?.total_prestamos_recibidos || 0)).toFixed(2)}
+                              <span className='text-base font-semibold text-slate-700 min-w-[100px] text-right'>
+                                {(resumen.total_otros_ingresos || 0).toFixed(2)}
                               </span>
-                              <Button
-                                size='small'
-                                type='text'
-                                icon={<FaSearch className='text-sm text-amber-600' />}
-                                className='h-7 w-7 p-0'
+                              <button
+                                type='button'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-slate-200 rounded'
                                 onClick={() => handleOpenDetalle('otros_ingresos')}
-                              />
+                              >
+                                <FaSearch className='text-sm text-amber-600' />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* INGRESOS EXTRAS (NUEVO) */}
+                        {(resumen?.total_ingresos_extras || 0) > 0 && (
+                          <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-green-50'>
+                            <span className='text-base font-semibold text-green-700'>Ingresos Extras</span>
+                            <div className='flex items-center gap-2.5'>
+                              <span className='text-base font-semibold text-green-700 min-w-[100px] text-right'>
+                                {(resumen.total_ingresos_extras || 0).toFixed(2)}
+                              </span>
+                              <button
+                                type='button'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-green-100 rounded'
+                                onClick={() => handleOpenDetalle('ingreso_extra')}
+                              >
+                                <FaSearch className='text-sm text-green-600' />
+                              </button>
                             </div>
                           </div>
                         )}
@@ -490,32 +509,51 @@ export default function CierreCajaView() {
                               <span className='text-base font-semibold text-amber-700 min-w-[100px] text-right'>
                                 {(resumen?.total_prestamos_recibidos || 0).toFixed(2)}
                               </span>
-                              <Button
-                                size='small'
-                                type='text'
-                                icon={<FaSearch className='text-sm text-amber-600' />}
-                                className='h-7 w-7 p-0'
+                              <button
+                                type='button'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-slate-200 rounded'
                                 onClick={() => handleOpenDetalle('prestamos_recibidos')}
-                              />
+                              >
+                                <FaSearch className='text-sm text-amber-600' />
+                              </button>
                             </div>
                           </div>
                         )}
 
-                        {/* Gastos */}
-                        {((resumen?.total_egresos || 0) - (resumen?.total_prestamos_dados || 0)) > 0 && (
+                        {/* Gastos (Genéricos) */}
+                        {(resumen?.total_gastos || 0) > 0 && (
                           <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-red-50'>
-                            <span className='text-base text-red-700'>Gastos</span>
+                            <span className='text-base text-slate-700'>Gastos</span>
                             <div className='flex items-center gap-2.5'>
-                              <span className='text-base font-semibold text-red-700 min-w-[100px] text-right'>
-                                {((resumen?.total_egresos || 0) - (resumen?.total_prestamos_dados || 0)).toFixed(2)}
+                              <span className='text-base font-semibold text-slate-700 min-w-[100px] text-right'>
+                                {(resumen.total_gastos || 0).toFixed(2)}
                               </span>
-                              <Button
-                                size='small'
-                                type='text'
-                                icon={<FaSearch className='text-sm text-red-600' />}
-                                className='h-7 w-7 p-0'
+                              <button
+                                type='button'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-slate-200 rounded'
                                 onClick={() => handleOpenDetalle('gastos')}
-                              />
+                              >
+                                <FaSearch className='text-sm text-red-600' />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* GASTOS EXTRAS (NUEVO) */}
+                        {(resumen?.total_gastos_extras || 0) > 0 && (
+                          <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 hover:bg-orange-50'>
+                            <span className='text-base font-semibold text-orange-700'>Gastos Extras</span>
+                            <div className='flex items-center gap-2.5'>
+                              <span className='text-base font-semibold text-orange-700 min-w-[100px] text-right'>
+                                {(resumen.total_gastos_extras || 0).toFixed(2)}
+                              </span>
+                              <button
+                                type='button'
+                                className='h-7 w-7 p-0 flex items-center justify-center hover:bg-orange-100 rounded'
+                                onClick={() => handleOpenDetalle('gasto_extra')}
+                              >
+                                <FaSearch className='text-sm text-orange-600' />
+                              </button>
                             </div>
                           </div>
                         )}
