@@ -159,13 +159,25 @@ export default function ModalShowDoc({
   }, [open])
 
   // Obtener blob del PDF actual
-  const getPdfBlob = async () => {
-    if (backendPdfUrl) {
-      const res = await fetch(backendPdfUrl)
+  const getPdfBlob = async (customUrl?: string) => {
+    const fetchUrl = customUrl || backendPdfUrl
+    if (fetchUrl) {
+      const res = await fetch(fetchUrl)
       return await res.blob()
     }
     const pdf = await loadPdf()
     return await pdf(<>{childrenRef.current}</>).toBlob()
+  }
+
+  // Helper para construir URL con parámetros de columnas
+  const buildPdfUrlWithParams = (baseUrl: string, cols: string[], extras: string[]) => {
+    if (!baseUrl) return ''
+    const params = new URLSearchParams()
+    cols.forEach(c => params.append('columnas[]', c))
+    extras.forEach(e => params.append('columnas[]', e))
+    const queryString = params.toString()
+    if (!queryString) return baseUrl
+    return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryString}`
   }
 
   // Descargar PDF
@@ -196,13 +208,17 @@ export default function ModalShowDoc({
       const detalle = whatsappConfig.buildDetalle(whatsappColumnasSelec, whatsappExtrasSelec)
       if (detalle) msg += `\n\n${detalle}`
     }
-    const urlPublica = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
-    if (incluirUrlPdf && urlPublica) {
-      msg += `\n\n📎 Ver/descargar PDF:\n${urlPublica}`
+    
+    // Construir URL pública con parámetros dinámicos
+    const urlBase = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
+    const urlPublicaConParams = buildPdfUrlWithParams(urlBase || '', whatsappColumnasSelec, whatsappExtrasSelec)
+
+    if (incluirUrlPdf && urlPublicaConParams) {
+      msg += `\n\n📎 Ver/descargar PDF:\n${urlPublicaConParams}`
     }
     setWhatsappMensaje(msg)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [whatsappColumnasSelec, whatsappExtrasSelec, incluirUrlPdf, whatsappModalOpen, whatsappMensajeBase])
+  }, [whatsappColumnasSelec, whatsappExtrasSelec, incluirUrlPdf, whatsappModalOpen, whatsappMensajeBase, whatsappConfig, pdfPublicUrl])
 
   const handleOpenWhatsapp = () => {
     // Pre-llenar teléfono
@@ -225,19 +241,36 @@ export default function ModalShowDoc({
       antdMessage.error('Ingresa un número de teléfono')
       return
     }
-    // Descargar el PDF
+
+    // Descargar el PDF (Intentar usar la URL con parámetros para que el PDF descargado también esté filtrado)
     try {
-      const blob = await getPdfBlob()
+      const urlBase = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
+      const urlConParams = buildPdfUrlWithParams(urlBase || '', whatsappColumnasSelec, whatsappExtrasSelec)
+      
+      // Si tenemos una URL pública (template), la usamos para descargar el PDF filtrado
+      // Si no, caemos al blob estático (backendPdfUrl)
+      const blob = await getPdfBlob(urlConParams || undefined)
+      
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = `${nro_doc}.pdf`
       link.click()
       URL.revokeObjectURL(url)
-    } catch {
-      // silencioso
+    } catch (err) {
+      console.error('Error al descargar PDF filtrado:', err)
+      // Si falla lo filtrado, intentamos al menos descargar el original
+      getPdfBlob().then(blob => {
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${nro_doc}.pdf`
+        link.click()
+        URL.revokeObjectURL(url)
+      }).catch(() => {})
     }
-    // El mensaje ya está construido con los checkboxes seleccionados
+
+    // El mensaje ya está construido con los checkboxes seleccionados y la URL con parámetros
     const numero = tel.startsWith('51') ? tel : `51${tel}`
     const texto = encodeURIComponent(whatsappMensaje)
     window.open(`https://wa.me/${numero}?text=${texto}`, '_blank')
