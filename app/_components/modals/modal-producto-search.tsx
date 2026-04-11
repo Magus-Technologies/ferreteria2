@@ -83,10 +83,6 @@ export default function ModalProductoSearch({
 
   useEffect(() => {
     if (open) setProductoSeleccionadoStore(undefined);
-    else {
-      setTextDefault("");
-      setText("");
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

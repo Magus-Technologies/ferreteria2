@@ -55,8 +55,8 @@ export default function FiltersMisEntregas() {
       form={form}
       name="filtros-mis-entregas"
       initialValues={{
-        fecha_desde: dayjs().startOf('month'),
-        fecha_hasta: dayjs().endOf('month'),
+        fecha_desde: dayjs().startOf('day'),
+        fecha_hasta: dayjs().endOf('day'),
         estado_entrega: ['pe', 'ec'],
       }}
       className="w-full"

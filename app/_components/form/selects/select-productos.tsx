@@ -190,8 +190,7 @@ export default function SelectProductos({
   function handleSearch() {
     setTextDefault(text)
     setProductoCreado(undefined)
-    setProductoSeleccionado(undefined)
-    
+
     if (text) {
       flush() // Sincronizar el texto debounced inmediatamente
       setManualSearch(true)

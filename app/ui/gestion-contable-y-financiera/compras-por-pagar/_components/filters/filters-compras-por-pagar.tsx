@@ -105,7 +105,7 @@ export default function FiltersComprasPorPagar() {
       form={form}
       name='filtros-compras-por-pagar'
       initialValues={{
-        desde: dayjs().subtract(30, 'days').startOf('day'),
+        desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
       }}
       className='w-full'

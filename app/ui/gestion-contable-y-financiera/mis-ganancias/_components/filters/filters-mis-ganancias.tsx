@@ -133,7 +133,7 @@ export default function FiltersMisGanancias() {
       name="filtros-mis-ganancias"
       initialValues={{
         almacen_id: almacen_id,
-        desde: dayjs().startOf("month"),
+        desde: dayjs().startOf("day"),
         hasta: dayjs().endOf("day"),
       }}
       className="w-full"

@@ -63,7 +63,7 @@ export default function FiltersComprasAnuladasEnEspera({
       form={form}
       name='filtros-mi-almacen'
       initialValues={{
-        desde: dayjs().subtract(30, 'days').startOf('day'),
+        desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
         estado_de_compra,
       }}

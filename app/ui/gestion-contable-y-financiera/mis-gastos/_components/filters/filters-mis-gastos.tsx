@@ -56,7 +56,7 @@ export default function FiltersMisGastos() {
       form={form}
       name='filtros-mis-gastos'
       initialValues={{
-        fechaDesde: dayjs().subtract(30, 'days').startOf('day'),
+        fechaDesde: dayjs().startOf('day'),
         fechaHasta: dayjs().endOf('day'),
       }}
       className='w-full'
