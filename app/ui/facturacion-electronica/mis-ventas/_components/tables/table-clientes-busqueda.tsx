@@ -67,7 +67,6 @@ export default function TableClientesBusqueda({
         getRowStyle={getRowStyle}
         onSelectionChanged={({ selectedNodes }) =>
         {
-          console.log('cliente seleccionado en la tabla',selectedNodes?.[0]?.data)
           setClienteSeleccionado(
             selectedNodes?.[0]?.data as Cliente
           )
@@ -75,7 +74,6 @@ export default function TableClientesBusqueda({
 
         }
         onRowDoubleClicked={({ data }) => {
-          console.log('doble click en el clienbte' , data)
           setClienteSeleccionado(data)
           onRowDoubleClicked?.({ data })
         }}

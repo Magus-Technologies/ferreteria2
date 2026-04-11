@@ -17,27 +17,19 @@ export function useProductosEntrega(venta?: getVentaResponseProps, open?: boolea
 
   useEffect(() => {
     if (open && venta) {
-      console.log('Venta recibida:', venta)
-      console.log('Productos por almacen:', venta.productos_por_almacen)
       const productos: ProductoEntrega[] = []
 
       if (venta.productos_por_almacen && Array.isArray(venta.productos_por_almacen)) {
         venta.productos_por_almacen.forEach((productoAlmacen: any) => {
-          console.log('Producto almacen:', productoAlmacen)
           if (
             productoAlmacen.unidades_derivadas &&
             Array.isArray(productoAlmacen.unidades_derivadas)
           ) {
             productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-              console.log('Unidad derivada:', unidad)
               const total = Number(unidad.cantidad)
               const cantidadPendienteRaw = Number(unidad.cantidad_pendiente)
               const pendiente = cantidadPendienteRaw > 0 ? cantidadPendienteRaw : total
               const entregado = total - pendiente
-
-              console.log(
-                `Producto: ${productoAlmacen.producto_almacen?.producto?.name}, Total: ${total}, Pendiente: ${pendiente}`
-              )
 
               if (pendiente > 0) {
                 productos.push({
@@ -57,7 +49,6 @@ export function useProductosEntrega(venta?: getVentaResponseProps, open?: boolea
         })
       }
 
-      console.log('Productos finales:', productos)
       setProductosEntrega(productos)
     } else if (!open) {
       setProductosEntrega([])

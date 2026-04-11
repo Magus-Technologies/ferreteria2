@@ -36,14 +36,11 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle', entregaId],
     queryFn: async () => {
       const res = await entregaProductoApi.getById(entregaId)
-      console.log('🔎 Panel detalle - res completo:', res)
-      console.log('🔎 Panel detalle - res.data:', res.data)
+  
       if (res.error) throw new Error(res.error.message)
       // backend devuelve { data: entrega }, apiRequest wrappea a { data: { data: entrega } }
       // res.data = { data: entrega }  →  res.data?.data = entrega
       const entrega = res.data?.data ?? res.data
-      console.log('🔎 Panel detalle - entrega extraída:', entrega)
-      console.log('🔎 Panel detalle - productos_entregados:', entrega?.productos_entregados)
       return entrega
     },
     enabled: !!entregaId,

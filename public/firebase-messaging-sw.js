@@ -18,7 +18,7 @@ const messaging = firebase.messaging()
 
 // Manejar notificaciones en background
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Mensaje en background:', payload)
+  // console.log('[firebase-messaging-sw.js] Mensaje en background:', payload)
 
   const type = payload.data?.type || ''
   const isAutorizacion = type === 'autorizacion' || type === 'autorizacion_respuesta'
@@ -47,7 +47,7 @@ messaging.onBackgroundMessage((payload) => {
 
 // Manejar clic en la notificación
 self.addEventListener('notificationclick', (event) => {
-  console.log('[firebase-messaging-sw.js] Click en notificación:', event)
+  // console.log('[firebase-messaging-sw.js] Click en notificación:', event)
   
   event.notification.close()
 

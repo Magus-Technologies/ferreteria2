@@ -186,11 +186,6 @@ export default function TableBase<T>({
       !gridApiRef.current ||
       isApplyingStateRef.current
     ) {
-      console.log("🟡 [TableBase] applyColumnState SALTADO:", {
-        hasState: !!columnStateRef.current,
-        hasApi: !!gridApiRef.current,
-        isApplying: isApplyingStateRef.current,
-      });
       return;
     }
 
@@ -370,7 +365,6 @@ export default function TableBase<T>({
       // Usar requestAnimationFrame para asegurar que el DOM esté listo
       requestAnimationFrame(() => {
         if (!gridApiRef.current) {
-          console.log("🔴 [TableBase] gridApiRef no disponible al reabrir");
           return;
         }
 
@@ -390,11 +384,6 @@ export default function TableBase<T>({
               applyOrder: true,
             });
             gridApiRef.current.refreshHeader();
-
-            console.log(
-              "🟣 [TableBase] Estado aplicado al reabrir modal:",
-              parsedState?.map((c: any) => c.colId),
-            );
 
             setTimeout(() => {
               isApplyingStateRef.current = false;

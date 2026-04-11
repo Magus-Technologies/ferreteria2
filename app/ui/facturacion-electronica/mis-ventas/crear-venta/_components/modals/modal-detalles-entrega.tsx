@@ -109,9 +109,7 @@ export default function ModalDetallesEntrega({
     queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteId],
     queryFn: async () => {
       if (!clienteId) return { data: { data: [] } }
-      console.log('🔍 Cargando direcciones para cliente:', clienteId)
       const response = await clienteApi.listarDirecciones(clienteId)
-      console.log('📍 Direcciones cargadas:', response.data)
       return response
     },
     enabled: open && !!clienteId && (tipoDespacho === 'Domicilio' || tipoDespacho === 'Parcial'),
@@ -119,24 +117,8 @@ export default function ModalDetallesEntrega({
 
   const direcciones = direccionesData?.data?.data || []
 
-  console.log('📋 Estado del modal:', { 
-    open, 
-    clienteId, 
-    tipoDespacho, 
-    direcciones: direcciones.length,
-    cargandoDirecciones,
-    direccionesData
-  })
-
   // Cargar dirección inicial cuando se abra el modal
   useEffect(() => {
-    console.log('🎯 useEffect direcciones:', { 
-      open, 
-      tipoDespacho, 
-      direccionesLength: direcciones.length,
-      direcciones 
-    })
-    
     if (open && tipoDespacho === 'Domicilio' && direcciones.length > 0) {
       // Setear almacenero por defecto como quien entrega en domicilio
       if (!form.getFieldValue('quien_entrega')) {
@@ -144,17 +126,13 @@ export default function ModalDetallesEntrega({
       }
       // Buscar la dirección seleccionada en el formulario principal
       const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
-      console.log('🔎 Buscando dirección:', direccionSeleccionadaForm)
-      
       const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm)
-      console.log('✅ Dirección encontrada:', direccionObj)
       
       if (direccionObj) {
         // Cargar la dirección seleccionada y referencia
         form.setFieldValue('direccion_entrega', direccionObj.direccion)
         form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
         setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
-        console.log('📝 Dirección cargada en formulario:', direccionObj.direccion)
         
         // Si tiene coordenadas, cargarlas
         if (direccionObj.latitud && direccionObj.longitud) {
@@ -166,14 +144,12 @@ export default function ModalDetallesEntrega({
           form.setFieldValue('latitud', coords.lat)
           form.setFieldValue('longitud', coords.lng)
           obtenerUbicacionGps(coords.lat, coords.lng)
-          console.log('🗺️ Coordenadas cargadas:', coords)
         } else {
           setUbicacionGps('')
         }
       } else if (direcciones.length > 0) {
         // Si no encuentra la seleccionada, usar la primera (D1)
         const primeraDir = direcciones[0]
-        console.log('⚠️ Usando primera dirección:', primeraDir)
         form.setFieldValue('direccion_entrega', primeraDir.direccion)
         form.setFieldValue('referencia_entrega', primeraDir.referencia || '')
         setDireccionSeleccionada(primeraDir.tipo as TipoDireccion)

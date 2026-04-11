@@ -67,8 +67,6 @@ export default function FiltersMisPrestamos() {
   }, [form])
 
   const handleFinish = (values: ValuesFiltersMisPrestamos) => {
-    console.log('📝 Valores del formulario:', values)
-    console.log('📝 Texto de búsqueda del cliente:', clienteSearchText)
     
     const { desde, hasta, cliente_id, numero, ...rest } = values
 
@@ -93,7 +91,6 @@ export default function FiltersMisPrestamos() {
       }
     })
     
-    console.log('🔍 Filtros aplicados (limpiados):', data)
     setFiltros(data)
     setDrawerOpen(false)
   }
@@ -206,11 +203,9 @@ export default function FiltersMisPrestamos() {
               form={form}
               placeholder='Digite nombre del cliente'
               onSearchChange={(text) => {
-                console.log('🔵 Texto de búsqueda:', text)
                 setClienteSearchText(text)
               }}
               onChange={(value) => {
-                console.log('🔵 Cliente seleccionado - ID:', value)
                 if (value) {
                   setClienteSearchText('')
                 }
@@ -401,11 +396,9 @@ export default function FiltersMisPrestamos() {
               form={form}
               placeholder='Digite nombre del cliente'
               onSearchChange={(text) => {
-                console.log('🔵 Texto de búsqueda:', text)
                 setClienteSearchText(text)
               }}
               onChange={(value) => {
-                console.log('🔵 Cliente seleccionado - ID:', value)
                 if (value) {
                   setClienteSearchText('')
                 }

@@ -18,7 +18,6 @@ export default function useGetGuias() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [QueryKeys.GUIAS_REMISION, filters],
     queryFn: async () => {
-      console.log('🔍 Buscando guías con filtros:', filters)
       
       const response = await guiaRemisionApi.list(filters)
 
@@ -26,7 +25,6 @@ export default function useGetGuias() {
         throw new Error(response.error.message)
       }
 
-      console.log('✅ Guías encontradas:', response.data?.data?.length || 0)
       
       return response.data?.data || []
     },

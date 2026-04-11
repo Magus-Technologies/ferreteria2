@@ -44,11 +44,9 @@ export default function TableChoferesBusqueda({
         columnDefs={useColumnsChoferes({ setDataEdit, setOpen })}
         rowData={response || []}
         onSelectionChanged={({ selectedNodes }) => {
-          console.log('chofer seleccionado en la tabla', selectedNodes?.[0]?.data)
           setChoferSeleccionado(selectedNodes?.[0]?.data as Chofer)
         }}
         onRowDoubleClicked={({ data }) => {
-          console.log('doble click en el chofer', data)
           setChoferSeleccionado(data)
           onRowDoubleClicked?.({ data })
         }}

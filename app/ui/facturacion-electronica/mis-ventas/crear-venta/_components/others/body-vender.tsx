@@ -134,9 +134,7 @@ function FormVentaInternal({
   onMissingApertura?: () => void
   submitting?: boolean
 }) {
-  console.log('🏗️ FormVentaInternal rendering with venta:', venta)
   const [form] = Form.useForm<FormCreateVenta>()
-  console.log('📋 Form instance created')
   useInitVenta({ venta, form })
 
   return (
@@ -226,16 +224,12 @@ export default function BodyVender({
   // Limpiar formulario cuando se cierra el modal
   useEffect(() => {
     if (!openDoc && ventaId) {
-      console.log('🧹 Modal cerrado, limpiando formulario y store')
-
       // Limpiar el store de productos agregados
-      console.log('🗑️ Limpiando store de productos')
       setProductoAgregado(undefined)
       setProductos([])
       setValesAplicables([])
 
       // Limpiar formulario
-      console.log('🔑 Incrementing formKey para limpiar formulario')
       setFormKey(prev => prev + 1)
 
       // Limpiar ventaId y datos después de un momento
@@ -245,8 +239,6 @@ export default function BodyVender({
       }, 100)
     }
   }, [openDoc, ventaId, setProductoAgregado, setProductos, setValesAplicables])
-
-  console.log('🎭 BodyVender render - openDoc:', openDoc, 'formKey:', formKey, 'ventaId:', ventaId)
 
   return (
     <>

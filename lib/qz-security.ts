@@ -9,12 +9,10 @@ let cachedCertificate: string | null = null
  */
 export async function setupQzSecurity() {
   if (securityConfigured) {
-    console.log('🔐 Seguridad de QZ Tray ya configurada')
     return
   }
   
   try {
-    console.log('🔐 Configurando seguridad de QZ Tray...')
     
     // Importar QZ Tray dinámicamente
     const qz: any = (await import('qz-tray')).default
@@ -62,7 +60,6 @@ export async function setupQzSecurity() {
     })
     
     securityConfigured = true
-    console.log('✅ Seguridad de QZ Tray configurada correctamente')
     
   } catch (error) {
     console.error('❌ Error al configurar seguridad de QZ Tray:', error)
@@ -76,5 +73,4 @@ export async function setupQzSecurity() {
  */
 export function resetQzSecurity() {
   securityConfigured = false
-  console.log('🔄 Configuración de seguridad reseteada')
 }

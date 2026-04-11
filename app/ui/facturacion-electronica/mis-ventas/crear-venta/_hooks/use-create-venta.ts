@@ -96,10 +96,6 @@ export default function useCreateVenta({
   const isEditing = !!ventaId
 
   const handleSubmit = useCallback(async (values: FormCreateVenta) => {
-    console.log('🚀 ~ handleSubmit ~ values:', values)
-    console.log('🔍 DEBUG - direccion_seleccionada:', values.direccion_seleccionada)
-    console.log('🔍 DEBUG - direccion:', values.direccion)
-
     if (!user_id)
       return notification.error({ message: 'No hay un usuario seleccionado' })
     if (!almacen_id)
@@ -210,14 +206,6 @@ export default function useCreateVenta({
     const estadoVenta = estado_de_venta || EstadoDeVenta.CREADO
 
     // Validar métodos de pago para ventas al contado
-    console.log('🔍 DEBUG - Validación métodos de pago:')
-    console.log('  forma_de_pago:', restValues.forma_de_pago)
-    console.log('  estadoVenta:', estadoVenta)
-    console.log('  metodos_de_pago:', metodos_de_pago)
-    console.log('  metodos_de_pago es array?:', Array.isArray(metodos_de_pago))
-    console.log('  metodos_de_pago.length:', metodos_de_pago?.length)
-
-    // Comparar con el valor mapeado 'co' (Contado) y 'cr' (Creado)
     const formaDePagoValue = restValues.forma_de_pago as unknown as string
     const estadoVentaValue = estadoVenta as unknown as string
 
@@ -229,12 +217,6 @@ export default function useCreateVenta({
         })
       }
     }
-
-    console.log('🔍 DEBUG - Valores del formulario:')
-    console.log('  tipo_documento:', restValues.tipo_documento, typeof restValues.tipo_documento)
-    console.log('  forma_de_pago:', restValues.forma_de_pago, typeof restValues.forma_de_pago)
-    console.log('  tipo_moneda:', tipo_moneda, typeof tipo_moneda)
-    console.log('  estado_de_venta:', estadoVenta, typeof estadoVenta)
 
     // Agrupar productos por producto_id (solo productos, no servicios)
     const productos_agrupados = agruparProductos({ productos: soloProductos })
@@ -319,20 +301,12 @@ export default function useCreateVenta({
       codigo_vale: codigo_vale || undefined,
     }
 
-    console.log('📤 Datos a enviar a Laravel:', JSON.stringify(dataFormated, null, 2))
-    console.log('🔍 dataFormated.direccion_seleccionada:', dataFormated.direccion_seleccionada)
-    console.log('🔍 forma_de_pago:', restValues.forma_de_pago, 'tipo:', typeof restValues.forma_de_pago)
-
     setLoading(true)
     try {
       // Usar create o update según el modo
       const response = isEditing
         ? await ventaApi.update(ventaId!, dataFormated)
         : await ventaApi.create(dataFormated)
-
-      console.log('📥 Response completa:', response)
-      console.log('📦 response.data:', response.data)
-      console.log('📦 response.data?.data:', response.data?.data)
 
       if (response.error) {
         notification.error({
@@ -372,21 +346,7 @@ export default function useCreateVenta({
       // ✅ CREAR ENTREGA AUTOMÁTICAMENTE SI ES DESPACHO A DOMICILIO
       const ventaCreada = response.data?.data
 
-      console.log('🔍 DEBUG - Datos de entrega:')
-      console.log('  ventaCreada:', ventaCreada ? 'SÍ' : 'NO')
-      console.log('  tipo_despacho:', tipo_despacho, '(tipo:', typeof tipo_despacho, ')')
-      console.log('  despachador_id:', despachador_id, '(tipo:', typeof despachador_id, ')')
-      console.log('  fecha_programada:', fecha_programada)
-      console.log('  hora_inicio:', hora_inicio)
-      console.log('  hora_fin:', hora_fin)
-      console.log('  direccion_entrega:', direccion_entrega)
-      console.log('  Condición 1 - ventaCreada:', !!ventaCreada)
-      console.log('  Condición 2 - tipo_despacho === "Domicilio":', tipo_despacho === 'Domicilio')
-      console.log('  Condición 3 - despachador_id:', !!despachador_id)
-
       if (ventaCreada && tipo_despacho === 'Domicilio') {
-        console.log('🚚 Creando entrega automáticamente...')
-
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
           const productosVenta = ventaCreada.productos_por_almacen || []
@@ -404,7 +364,6 @@ export default function useCreateVenta({
             }
           })
 
-          console.log('📦 Unidades derivadas para entrega:', unidadesDerivadas)
 
           // Preparar datos de la entrega
           const entregaData: CreateEntregaProductoRequest = {
@@ -431,7 +390,6 @@ export default function useCreateVenta({
             productos_entregados: unidadesDerivadas,
           }
 
-          console.log('📤 Datos de entrega a enviar:', entregaData)
 
           // Crear la entrega
           const entregaResponse = await entregaProductoApi.create(entregaData)
@@ -443,7 +401,6 @@ export default function useCreateVenta({
               description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
             })
           } else {
-            console.log('✅ Entrega creada automáticamente:', entregaResponse.data)
             message.success(despachador_id
               ? 'Entrega programada exitosamente para el despachador'
               : 'Entrega programada exitosamente (sin despachador asignado)')
@@ -463,9 +420,7 @@ export default function useCreateVenta({
                   fecha_programada: fecha_programada ? dayjs(fecha_programada).format('DD/MM/YYYY') : 'Hoy',
                   cliente_nombre: clienteNombre,
                 })
-                console.log('🔔 Notificación enviada al despachador')
               } catch (notifError) {
-                console.warn('⚠️ No se pudo enviar notificación push:', notifError)
               }
             }
           }
@@ -592,7 +547,6 @@ export default function useCreateVenta({
                           cliente_nombre: clienteNombre,
                         })
                       } catch (notifError) {
-                        console.warn('⚠️ No se pudo enviar notificación push al despachador del resto:', notifError)
                       }
                     }
                   }
@@ -607,7 +561,6 @@ export default function useCreateVenta({
           }
         }
       } else if (tipo_despacho === 'EnTienda' && quien_entrega) {
-        console.log('🏪 Creando entrega en tienda automáticamente...')
 
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
@@ -639,7 +592,6 @@ export default function useCreateVenta({
             productos_entregados: unidadesDerivadas,
           }
 
-          console.log('📤 Datos de entrega en tienda a enviar:', entregaData)
 
           // Crear la entrega
           const entregaResponse = await entregaProductoApi.create(entregaData)
@@ -647,7 +599,6 @@ export default function useCreateVenta({
           if (entregaResponse.error) {
             console.error('❌ Error al crear entrega en tienda:', entregaResponse.error)
           } else {
-            console.log('✅ Entrega en tienda creada automáticamente:', entregaResponse.data)
           }
         } catch (error) {
           console.error('❌ Error al crear entrega en tienda automática:', error)

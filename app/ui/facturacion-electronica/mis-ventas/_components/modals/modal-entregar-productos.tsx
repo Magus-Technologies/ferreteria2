@@ -129,8 +129,6 @@ export default function ModalEntregarProductos({
         _cliente_direccion_4: venta.cliente?.direccion_4 || '',
       });
       
-      console.log('🔧 Formulario inicializado');
-      console.log('🔧 Valores iniciales:', form.getFieldsValue());
     } else if (!open) {
       form.resetFields();
       // NO resetear datosProgramacion aquí porque puede estar en transición al modal de productos
@@ -142,13 +140,6 @@ export default function ModalEntregarProductos({
     try {
       // Obtener valores primero
       const values = form.getFieldsValue();
-      
-      console.log('📝 TODOS los valores del formulario:', values);
-      console.log('🚚 Chofer ID específico:', values.chofer_id);
-      console.log('📅 Fecha:', values.fecha_programada);
-      console.log('⏰ Hora Inicio:', values.hora_inicio);
-      console.log('⏰ Hora Fin:', values.hora_fin);
-      console.log('📍 Dirección:', values.direccion_entrega);
 
       // Validaciones según tipo de despacho
       if (tipoDespacho === "EnTienda") {
@@ -186,8 +177,6 @@ export default function ModalEntregarProductos({
         }
       }
 
-      console.log('✅ Todas las validaciones pasaron');
-
       // Guardar datos de programación
       setDatosProgramacion({
         chofer_id: values.chofer_id,
@@ -202,10 +191,8 @@ export default function ModalEntregarProductos({
       });
 
       // Cerrar este modal y abrir el de productos
-      console.log('🔄 Cerrando modal actual y abriendo modal de productos...');
       setOpen(false);
       setModalProductosOpen(true);
-      console.log('✅ modalProductosOpen ahora debería ser true');
     } catch (error) {
       console.error('❌ Error en handleContinuar:', error);
       message.error("Ocurrió un error. Revise la consola.");
@@ -220,8 +207,6 @@ export default function ModalEntregarProductos({
       ubicacion?: string;
     }>;
   }) => {
-    console.log('🎯 handleConfirmarProductos llamado con data:', data);
-    console.log('🔍 venta:', !!venta, 'user?.id:', user?.id, 'datosProgramacion:', datosProgramacion);
     if (!venta || !user?.id || !datosProgramacion) {
       console.error('❌ Faltan datos requeridos - venta:', !!venta, 'user?.id:', user?.id, 'datosProgramacion:', !!datosProgramacion);
       return;

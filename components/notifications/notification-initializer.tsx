@@ -17,23 +17,13 @@ export default function NotificationInitializer() {
 
     // Solo para usuarios DESPACHADOR
     if (user?.rol_sistema === 'DESPACHADOR') {
-      console.log('✅ Usuario es DESPACHADOR')
-      
-      // Si los permisos están en "default", solicitar automáticamente
       if (permissionStatus === 'default') {
-        console.log('🔔 Permisos en "default", solicitando en 3 segundos...')
         const timer = setTimeout(() => {
-          console.log('🔔 Ejecutando enableNotifications...')
           enableNotifications()
         }, 3000)
-        
         return () => clearTimeout(timer)
       } else if (permissionStatus === 'granted') {
-        console.log('✅ Permisos ya concedidos, registrando token...')
-        // Si ya tiene permisos, solo registrar el token
         enableNotifications()
-      } else if (permissionStatus === 'denied') {
-        console.log('❌ Permisos denegados por el usuario')
       }
     }
   }, [user?.rol_sistema, permissionStatus, enableNotifications])

@@ -21,10 +21,6 @@ export default function TableMisNotasDebito() {
 
   const handleEnviarSunat = async (id: string) => {
     try {
-      console.log('=== DEBUG: Enviando a SUNAT ===');
-      console.log('ID recibido:', id);
-      console.log('Tipo de ID:', typeof id);
-      console.log('ID es válido:', id && id !== 'undefined' && id !== 'null');
       
       setEnviandoId(id);
       const result = await facturacionElectronicaApi.enviarNotaDebitoSunat(id);

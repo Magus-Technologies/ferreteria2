@@ -20,14 +20,14 @@ export const fcmApi = {
    * Actualiza el token FCM del usuario actual
    */
   async updateToken(data: UpdateFcmTokenRequest): Promise<ApiResponse<{ message: string }>> {
-    console.log('📤 fcmApi.updateToken - Enviando token al backend:', data.fcm_token.substring(0, 20) + '...')
+    // console.log('📤 fcmApi.updateToken - Enviando token al backend:', data.fcm_token.substring(0, 20) + '...')
     
     const response = await apiRequest<{ message: string }>('/usuarios/fcm-token', {
       method: 'POST',
       body: JSON.stringify(data),
     })
     
-    console.log('📥 fcmApi.updateToken - Respuesta del backend:', response)
+    // console.log('📥 fcmApi.updateToken - Respuesta del backend:', response)
     
     return response
   },

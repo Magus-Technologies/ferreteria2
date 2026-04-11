@@ -17,15 +17,9 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
 
   const handleSubmit = useCallback(
     async (values: FormCreateNotaDebito) => {
-      console.log('🚀 ~ handleSubmit ~ values:', values)
-      console.log('🔍 [DEBUG handleSubmit] Todos los valores del formulario:', values)
-      console.log('🔍 [DEBUG handleSubmit] values.venta_id:', values.venta_id, 'tipo:', typeof values.venta_id)
-      console.log('🔍 [DEBUG handleSubmit] Verificación booleana:', !!values.venta_id)
       
       // También verificar directamente desde el form
       const ventaIdFromForm = form?.getFieldValue('venta_id')
-      console.log('🔍 [DEBUG handleSubmit] venta_id desde form.getFieldValue:', ventaIdFromForm, 'tipo:', typeof ventaIdFromForm)
-      console.log('🔍 [DEBUG handleSubmit] Todos los valores desde form.getFieldsValue:', form?.getFieldsValue())
 
       if (!user_id) {
         return notification.error({ message: 'No hay un usuario seleccionado' })
@@ -36,7 +30,6 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
       
       // Usar el valor del form si values.venta_id está undefined
       const ventaId = values.venta_id || ventaIdFromForm
-      console.log('🔍 [DEBUG handleSubmit] ventaId final a usar:', ventaId)
       
       if (!ventaId) {
         return notification.error({ 
@@ -108,7 +101,6 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
         items: items,
       }
 
-      console.log('📤 Datos a enviar a Laravel:', JSON.stringify(dataFormated, null, 2))
 
       setLoading(true)
       try {
@@ -128,7 +120,6 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
 
         // Éxito
         message.success('Nota de débito creada exitosamente')
-        console.log('✅ Nota de débito creada:', response.data?.data)
 
         // Redirigir a la lista de notas de débito
         router.push('/ui/facturacion-electronica/mis-notas-debito')

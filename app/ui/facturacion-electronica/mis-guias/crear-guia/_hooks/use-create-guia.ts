@@ -12,7 +12,6 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
 
   const mutation = useMutation({
     mutationFn: async (data: CreateGuiaRemisionRequest) => {
-      console.log('📦 Creando guía de remisión:', data)
       
       const response = await guiaRemisionApi.create(data)
 
@@ -23,7 +22,6 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
       return response.data
     },
     onSuccess: (data) => {
-      console.log('✅ Guía creada exitosamente:', data)
       
       message.success('Guía de remisión creada exitosamente')
       
@@ -40,7 +38,6 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
   })
 
   const handleSubmit = async (values: FormCreateGuia) => {
-    console.log('📝 Valores del formulario:', values)
     
     // Obtener user_id del localStorage o contexto
     const userId = localStorage.getItem('user_id') || 'cmj8o0pf70001uk0o4d3tbyyx'

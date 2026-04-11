@@ -28,24 +28,12 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
   const provinciaValue = Form.useWatch('provincia', form);
   const distritoValue = Form.useWatch('distrito', form);
 
-  // Debug: Log cuando cambian los valores observados
-  useEffect(() => {
-    console.log('📍 Form.useWatch - Valores actualizados:');
-    console.log('  departamentoValue:', departamentoValue);
-    console.log('  provinciaValue:', provinciaValue);
-    console.log('  distritoValue:', distritoValue);
-  }, [departamentoValue, provinciaValue, distritoValue]);
-
   // Memoizar el objeto value para SelectUbigeo
-  const ubigeoValue = useMemo(() => {
-    const value = {
-      departamento: departamentoValue,
-      provincia: provinciaValue,
-      distrito: distritoValue,
-    };
-    console.log('🔄 useMemo - Nuevo objeto ubigeoValue creado:', value);
-    return value;
-  }, [departamentoValue, provinciaValue, distritoValue]);
+  const ubigeoValue = useMemo(() => ({
+    departamento: departamentoValue,
+    provincia: provinciaValue,
+    distrito: distritoValue,
+  }), [departamentoValue, provinciaValue, distritoValue]);
 
   // Query para obtener datos de la empresa
   const { data: empresaData, isLoading } = useQuery({
@@ -58,21 +46,12 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
   const updateMutation = useMutation({
     mutationFn: (data: UpdateEmpresaRequest) => empresaApi.update(empresaId, data),
     onSuccess: (response) => {
-      console.log('✅ Response completa:', response);
-      console.log('✅ response.data:', response.data);
-      console.log('✅ response.data?.data:', response.data?.data);
-      console.log('✅ response.data?.message:', response.data?.message);
-      
       if (response.data?.data) {
         const mensaje = response.data?.message || "Empresa actualizada exitosamente";
-        console.log('📢 Mostrando mensaje:', mensaje);
         message.success(mensaje);
         queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPRESAS] });
       } else if (response.error) {
-        console.log('❌ Error en response:', response.error);
         message.error(response.error.message);
-      } else {
-        console.log('⚠️ Respuesta inesperada:', response);
       }
     },
     onError: (error) => {
@@ -116,8 +95,6 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
         if (response.data) {
           const data = response.data as ConsultaRuc;
 
-          console.log('Datos de SUNAT:', data);
-
           // Completar los campos automáticamente
           form.setFieldsValue({
             razon_social: data.razonSocial || '',
@@ -129,10 +106,6 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
             distrito: data.distrito || undefined,
           });
 
-          console.log('Valores establecidos en el form');
-          console.log('departamento:', form.getFieldValue('departamento'));
-          console.log('provincia:', form.getFieldValue('provincia'));
-          console.log('distrito:', form.getFieldValue('distrito'));
         }
       } catch (error) {
         console.error('Error consultando RUC:', error);

@@ -12,11 +12,9 @@ export default function useCreateEntrega({
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: CreateEntregaProductoRequest) => {
-      console.log('📤 Enviando entrega a API:', data);
       return entregaProductoApi.create(data);
     },
     onSuccess: (response) => {
-      console.log('✅ Entrega creada exitosamente:', response);
       message.success(response.data?.message || 'Entrega registrada exitosamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })

@@ -327,11 +327,7 @@ export default function ModalTransferirStock({
         descripcion: values.descripcion,
       }
 
-      console.log('📦 Payload transferencia:', JSON.stringify(payload, null, 2))
-
       const result = await transferenciaStockApi.create(payload)
-
-      console.log('📦 Response transferencia:', result)
 
       if (result.error) {
         console.error('❌ Error transferencia:', result.error)

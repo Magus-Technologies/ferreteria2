@@ -70,10 +70,7 @@ export default function ModalSeleccionarProductosEntrega({
   }, [open, venta, almacen_id, form, setProductosEntrega])
 
   const handleConfirmar = () => {
-    console.log('🚀 handleConfirmar llamado - intentando crear entrega')
     const values = form.getFieldsValue()
-    console.log('📋 Valores del formulario:', values)
-    console.log('📦 Productos a entregar:', productosEntrega)
 
     if (productosEntrega.length === 0) {
       message.error('Debe haber al menos un producto para entregar')

@@ -99,11 +99,7 @@ export default function CardsInfoCotizacion({
         label="Botón Guardar Cotización"
       >
         <ButtonBase
-          onClick={() => {
-            console.log('🔘 CLICK en botón Guardar Cotización');
-            console.log('📋 Valores actuales del formulario:', form.getFieldsValue());
-            form.submit();
-          }}
+          onClick={() => form.submit()}
           color="success"
           className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
         >
@@ -120,9 +116,7 @@ export default function CardsInfoCotizacion({
           type="button"
           color="info"
           className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
-          onClick={() => {
-            console.log("Imprimir cotización");
-          }}
+          onClick={() => {}}
         >
           <FaPrint className="min-w-fit" size={30} />
           Imprimir

@@ -32,21 +32,13 @@ export default function FormLogo({ empresaId }: FormLogoProps) {
   const updateMutation = useMutation({
     mutationFn: (formData: FormData) => empresaApi.uploadLogo(empresaId, formData),
     onSuccess: (response) => {
-      console.log('✅ Logo Response completa:', response);
-      console.log('✅ response.data:', response.data);
-      console.log('✅ response.data?.message:', response.data?.message);
-      
       if (response.data?.data) {
         const mensaje = response.data?.message || "Logo actualizado exitosamente";
-        console.log('📢 Mostrando mensaje:', mensaje);
         message.success(mensaje);
         queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPRESAS] });
         setFileList([]);
       } else if (response.error) {
-        console.log('❌ Error en response:', response.error);
         message.error(response.error.message);
-      } else {
-        console.log('⚠️ Respuesta inesperada:', response);
       }
     },
     onError: (error) => {
@@ -57,12 +49,8 @@ export default function FormLogo({ empresaId }: FormLogoProps) {
 
   // Cargar datos al montar
   useEffect(() => {
-    console.log('🔄 useEffect - empresaData:', empresaData);
     if (empresaData?.data?.data) {
       const empresa = empresaData.data.data;
-      console.log('📊 Datos de empresa:', empresa);
-      console.log('🖼️ Logo actual:', empresa.logo);
-      console.log('🌐 Logo URL:', empresa.logo_url);
       if (empresa.logo_url) {
         setLogoUrl(empresa.logo_url);
         // Agregar el logo existente al fileList para que no muestre el botón de subir
@@ -80,7 +68,6 @@ export default function FormLogo({ empresaId }: FormLogoProps) {
 
   // Manejar cambio de archivo
   const handleChange = (info: any) => {
-    console.log('📸 handleChange ejecutado:', info);
     let newFileList = [...info.fileList];
 
     // Limitar a solo 1 archivo
@@ -99,7 +86,6 @@ export default function FormLogo({ empresaId }: FormLogoProps) {
   };
 
   const handleSubmit = async () => {
-    console.log('📤 Enviando logo...', { fileList });
     if (fileList.length === 0) {
       message.warning('Por favor, selecciona un logo');
       return;
@@ -108,14 +94,11 @@ export default function FormLogo({ empresaId }: FormLogoProps) {
     const formData = new FormData();
     formData.append('logo', fileList[0].originFileObj as File);
 
-    console.log('🚀 Ejecutando mutación con FormData');
     updateMutation.mutate(formData);
   };
 
   // Validar el tipo y tamaño del archivo
   const beforeUpload = (file: File) => {
-    console.log('🔍 beforeUpload - Validando archivo:', file.name, file.type, file.size);
-    
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
       message.error('Solo puedes subir archivos de imagen');
@@ -128,7 +111,6 @@ export default function FormLogo({ empresaId }: FormLogoProps) {
       return Upload.LIST_IGNORE;
     }
 
-    console.log('✅ Archivo válido, procesando...');
     return false; // No subir automáticamente, solo procesamos local
   };
 

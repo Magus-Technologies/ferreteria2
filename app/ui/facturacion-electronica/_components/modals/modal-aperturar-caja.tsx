@@ -99,7 +99,6 @@ export default function ModalAperturarCaja({
 
   const { crearAperturarCaja, loading } = useAperturarCaja({
     onSuccess: (data) => {
-      console.log('✅ Apertura exitosa, abriendo modal de ticket')
       // Primero llamar a onSuccess para marcar el éxito
       onSuccess?.()
       // Luego cerrar el modal
@@ -133,20 +132,6 @@ export default function ModalAperturarCaja({
     const tieneOrigen = !!cajaOrigenId
     const tieneMonto = totalAsignado > 0
     const vendedoresValidos = vendedores.every(v => v.user_id && v.monto > 0)
-
-    console.log('🔍 Validación completa:', {
-      tieneOrigen,
-      tieneMonto,
-      vendedoresValidos,
-      vendedores: vendedores.map(v => ({
-        id: v.id,
-        user_id: v.user_id,
-        monto: v.monto,
-        conteo: v.conteo_billetes_monedas ? 'SÍ' : 'NO'
-      })),
-      totalAsignado,
-      cajaOrigenId
-    })
 
     return tieneOrigen && tieneMonto && vendedoresValidos
   }, [cajaOrigenId, totalAsignado, vendedores])
@@ -198,7 +183,6 @@ export default function ModalAperturarCaja({
   }
 
   const actualizarVendedor = (id: string, campo: keyof VendedorAsignacion, valor: number | string | undefined) => {
-    console.log('🔄 actualizarVendedor llamado:', { id, campo, valor })
     setVendedores(prevVendedores => {
       const updated = prevVendedores.map(v => {
         if (v.id === id) {
@@ -212,19 +196,16 @@ export default function ModalAperturarCaja({
             }
           }
 
-          console.log('✅ Vendedor actualizado:', updatedVendedor)
           return updatedVendedor
         }
         return v
       })
 
-      console.log('📊 Estado vendedores después de actualizar:', updated.map(v => ({ id: v.id, monto: v.monto })))
       return updated
     })
   }
 
   const actualizarConteoDenominaciones = (id: string, conteo: any) => {
-    console.log('💰 actualizarConteoDenominaciones llamado:', { id, conteo })
     setVendedores(prevVendedores => prevVendedores.map(v =>
       v.id === id ? { ...v, conteo_billetes_monedas: conteo } : v
     ))
@@ -435,7 +416,6 @@ export default function ModalAperturarCaja({
                 <ConteoDinero
                   key={vendedorSeleccionado.id}
                   onChange={(totalFinal: number, conteoData: any) => {
-                    console.log('📥 ConteoDinero onChange recibido:', { totalFinal, conteoData, vendedorId: vendedorSeleccionado.id })
                     actualizarVendedor(vendedorSeleccionado.id, 'monto', totalFinal)
                     actualizarConteoDenominaciones(vendedorSeleccionado.id, conteoData)
                   }}

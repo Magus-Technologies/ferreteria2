@@ -144,8 +144,6 @@ export default function FiltersMisVentas() {
   };
 
   const handleFinish = (values: ValuesFiltersMisVentas) => {
-    console.log("📝 Valores del formulario:", values);
-    console.log("📝 Texto de búsqueda del cliente:", clienteSearchText);
 
     const { desde, hasta, estado_de_venta, serie_numero, cliente_id, entrega, ...rest } =
       values;
@@ -192,7 +190,6 @@ export default function FiltersMisVentas() {
       }
     });
 
-    console.log("🔍 Filtros aplicados (limpiados):", data);
     setFiltros(data);
     setDrawerOpen(false);
   };
@@ -325,11 +322,9 @@ export default function FiltersMisVentas() {
                 form={form}
                 placeholder="Nombre del cliente"
                 onSearchChange={(text) => {
-                  console.log("🔵 Texto de búsqueda:", text);
                   setClienteSearchText(text);
                 }}
                 onChange={(value) => {
-                  console.log("🔵 Cliente seleccionado - ID:", value);
                   if (value) {
                     setClienteSearchText("");
                   }
@@ -590,11 +585,9 @@ export default function FiltersMisVentas() {
               form={form}
               placeholder="Digite nombre del cliente"
               onSearchChange={(text) => {
-                console.log("🔵 Texto de búsqueda:", text);
                 setClienteSearchText(text);
               }}
               onChange={(value) => {
-                console.log("🔵 Cliente seleccionado - ID:", value);
                 // Cuando se selecciona un cliente, limpiar el texto de búsqueda
                 if (value) {
                   setClienteSearchText("");

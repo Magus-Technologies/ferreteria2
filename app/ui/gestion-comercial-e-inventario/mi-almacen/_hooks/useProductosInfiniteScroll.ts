@@ -28,7 +28,7 @@ export function useProductosInfiniteScroll({
   const query = useInfiniteQuery({
     queryKey: ['productos-infinite', filtros, perPage],
     queryFn: async ({ pageParam }: { pageParam: number }) => {
-      console.log(`🔄 Cargando página ${pageParam} de productos...`);
+      // console.log(`🔄 Cargando página ${pageParam} de productos...`);
       
       const { _searchId, ...filtrosSinSearchId } = filtros as any;
       const response = await productosApiV2.getAllByAlmacen({
@@ -41,7 +41,7 @@ export function useProductosInfiniteScroll({
         throw new Error(response.error.message);
       }
 
-      console.log(`✅ Página ${pageParam} cargada: ${response.data!.data.length} productos`);
+      // console.log(`✅ Página ${pageParam} cargada: ${response.data!.data.length} productos`);
       
       return response.data!;
     },

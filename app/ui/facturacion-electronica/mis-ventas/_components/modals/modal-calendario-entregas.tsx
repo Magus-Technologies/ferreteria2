@@ -36,14 +36,6 @@ export default function ModalCalendarioEntregas({
     fecha_hasta: dayjs().add(30, 'days').format('YYYY-MM-DD'),
   })
 
-  // 🔍 DEBUG: Ver qué entregas llegan al modal
-  console.log('🔍 MODAL - Entregas recibidas:', entregas)
-  console.log('🔍 MODAL - isLoading:', isLoading)
-  console.log('🔍 MODAL - error:', error)
-  console.log('🔍 MODAL - Rango de fechas:', {
-    desde: dayjs().subtract(7, 'days').format('YYYY-MM-DD'),
-    hasta: dayjs().add(30, 'days').format('YYYY-MM-DD'),
-  })
 
   // Generar lista única de despachadores con sus colores
   const despachadores = useMemo(() => {

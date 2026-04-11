@@ -31,12 +31,6 @@ export default function SelectUbigeo({ value, onChange }: SelectUbigeoProps) {
     queryFn: () => ubigeoApi.getDepartamentos(),
   });
 
-  // Debug: Log cuando cambia el value prop
-  useEffect(() => {
-    console.log('SelectUbigeo - value cambió:', value);
-    console.log('SelectUbigeo - departamentos cargados:', departamentos?.length);
-  }, [value, departamentos]);
-
   // Query provincias
   const { data: provincias, isLoading: loadingProv } = useQuery({
     queryKey: [QueryKeys.UBIGEO, 'provincias', selectedDepCodigo],
@@ -53,29 +47,13 @@ export default function SelectUbigeo({ value, onChange }: SelectUbigeoProps) {
 
   // Actualizar cuando cambia el value externo o cuando se cargan los departamentos
   useEffect(() => {
-    console.log('=== useEffect DEPARTAMENTO ejecutándose ===');
-    console.log('value?.departamento:', value?.departamento);
-    console.log('departamentos existe:', !!departamentos);
-    console.log('departamentos.length:', departamentos?.length);
-    console.log('selectedDepCodigo actual:', selectedDepCodigo);
-
     if (value?.departamento && departamentos && departamentos.length > 0) {
-      console.log('Buscando departamento:', value.departamento);
-      console.log('Departamentos disponibles:', departamentos.map(d => d.nombre));
-
       const dep = departamentos.find(d =>
         d.nombre.toUpperCase().trim() === value.departamento?.toUpperCase().trim()
       );
 
-      console.log('Departamento encontrado:', dep);
-
       if (dep && dep.departamento !== selectedDepCodigo) {
-        console.log('✅ Actualizando selectedDepCodigo a:', dep.departamento);
         setSelectedDepCodigo(dep.departamento);
-      } else if (!dep) {
-        console.log('❌ No se encontró departamento que coincida');
-      } else if (dep.departamento === selectedDepCodigo) {
-        console.log('⏭️ Departamento ya está seleccionado, saltando');
       }
     }
   }, [value?.departamento, departamentos, selectedDepCodigo]);
@@ -83,17 +61,11 @@ export default function SelectUbigeo({ value, onChange }: SelectUbigeoProps) {
   // Actualizar selectedProvCodigo cuando se cargan las provincias
   useEffect(() => {
     if (value?.provincia && provincias && provincias.length > 0) {
-      console.log('Buscando provincia:', value.provincia);
-      console.log('Provincias disponibles:', provincias.map(p => p.nombre));
-
       const prov = provincias.find(p =>
         p.nombre.toUpperCase().trim() === value.provincia?.toUpperCase().trim()
       );
 
-      console.log('Provincia encontrada:', prov);
-
       if (prov && prov.provincia !== selectedProvCodigo) {
-        console.log('Actualizando selectedProvCodigo a:', prov.provincia);
         setSelectedProvCodigo(prov.provincia);
       }
     }
@@ -102,17 +74,11 @@ export default function SelectUbigeo({ value, onChange }: SelectUbigeoProps) {
   // Actualizar selectedDist cuando se cargan los distritos
   useEffect(() => {
     if (value?.distrito && distritos && distritos.length > 0) {
-      console.log('Buscando distrito:', value.distrito);
-      console.log('Distritos disponibles:', distritos.map(d => d.nombre));
-
       const distrito = distritos.find(d =>
         d.nombre.toUpperCase().trim() === value.distrito?.toUpperCase().trim()
       );
 
-      console.log('Distrito encontrado:', distrito);
-
       if (distrito && distrito.id_ubigeo !== selectedDist) {
-        console.log('Actualizando selectedDist a:', distrito.id_ubigeo);
         setSelectedDist(distrito.id_ubigeo);
       }
     }

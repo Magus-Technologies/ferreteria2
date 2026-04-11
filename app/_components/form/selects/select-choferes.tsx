@@ -43,10 +43,10 @@ export default function SelectChoferes({
   useEffect(() => {
     if (form && propsForm?.name) {
       const valorInicial = form.getFieldValue(propsForm.name as string);
-      console.log('🔄 Sincronizando valor inicial del formulario:', valorInicial);
+
       if (valorInicial && !choferSeleccionado) {
         // Si hay un valor pero no hay chofer seleccionado, necesitamos buscarlo
-        console.log('⚠️ Hay valor inicial pero no hay chofer seleccionado');
+
       }
     }
   }, [form, propsForm, choferSeleccionado]);
@@ -74,19 +74,10 @@ export default function SelectChoferes({
       const choferLabel = `${chofer.dni} : ${chofer.nombres} ${chofer.apellidos}`
       setText(choferLabel)
 
-      console.log('🔍 handleSelect llamado con chofer:', chofer);
-      console.log('🔍 form disponible?:', !!form);
-      console.log('🔍 propsForm disponible?:', !!propsForm);
-      console.log('🔍 propsForm.name:', propsForm?.name);
-
       // Si hay form y propsForm.name, actualizar directamente
       if (form && propsForm?.name) {
-        console.log('✅ Actualizando chofer_id directamente en el form:', chofer.id);
         form.setFieldValue(propsForm.name as string, chofer.id);
       } else {
-        // Fallback al método anterior
-        console.log('⚠️ Usando iterarChangeValue (fallback)');
-        console.log('⚠️ Razón: form=', !!form, 'propsForm=', !!propsForm, 'name=', propsForm?.name);
         iterarChangeValue({
           refObject: selectChoferesRef,
           value: chofer.id,
@@ -170,7 +161,6 @@ export default function SelectChoferes({
           
           // Si hay form y propsForm.name, actualizar directamente
           if (form && propsForm?.name) {
-            console.log('✅ Actualizando chofer creado directamente en el form:', chofer.id);
             form.setFieldValue(propsForm.name as string, chofer.id);
           } else {
             // Fallback al método anterior

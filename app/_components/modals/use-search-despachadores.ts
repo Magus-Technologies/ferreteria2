@@ -21,14 +21,11 @@ export default function useSearchDespachadores({
   const { data: response, isLoading: loading } = useQuery({
     queryKey: [QueryKeys.USUARIOS, value, 'DESPACHADOR'],
     queryFn: async () => {
-      console.log('🔍 useSearchDespachadores - Buscando con value:', value)
       const result = await usuariosApi.getAll({
         search: value || '',
         rol_sistema: 'DESPACHADOR',
         estado: true,
       })
-      console.log('🔍 useSearchDespachadores - result:', result)
-      console.log('🔍 useSearchDespachadores - result.data:', result.data)
       
       // La API devuelve { data: { data: [...] } }
       // Necesitamos acceder a result.data.data
@@ -45,15 +42,11 @@ export default function useSearchDespachadores({
         }
       }
       
-      console.log('🔍 useSearchDespachadores - finalData:', finalData)
       return finalData
     },
     // Siempre habilitado para mostrar todos los despachadores al abrir el modal
     enabled: true,
   })
-
-  console.log('🔍 useSearchDespachadores - response final:', response)
-  console.log('🔍 useSearchDespachadores - loading:', loading)
 
   return {
     response: response as Usuario[] | undefined,

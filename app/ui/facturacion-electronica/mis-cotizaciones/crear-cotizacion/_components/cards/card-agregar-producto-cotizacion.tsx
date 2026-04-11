@@ -20,11 +20,8 @@ export default function CardAgregarProductoCotizacion({
       <CardAgregarProductoVentaBase
         setOpen={setOpen}
         onOk={(values) => {
-          console.log('🎯 CardAgregarProductoCotizacion - onOk ejecutado');
-          console.log('📦 Valores recibidos:', values);
           // Usar el store de cotizaciones en lugar del de ventas
           setProductoAgregadoCotizacion(values as any)
-          console.log('✅ Producto agregado al store de cotizaciones');
         }}
       />
     </ConfigurableElement>

@@ -236,22 +236,26 @@ export default function SelectClientes({
   }, [response])
 
   function handleSearch() {
-    if (text) {
-      setTextDefault(text)
-      
-      // Si ya hay resultados y hay una coincidencia clara, el useEffect de response ya lo manejará
-      // Pero si no hay resultados o hay varios, abrimos el modal
-      if (!response || response.length !== 1) {
-        setOpenModalClienteSearch(true)
+    setTextDefault(text)
+
+    // Si no hay texto, abrir el modal sin filtro
+    if (!text) {
+      setOpenModalClienteSearch(true)
+      return
+    }
+
+    // Si ya hay resultados y hay una coincidencia clara, el useEffect de response ya lo manejará
+    // Pero si no hay resultados o hay varios, abrimos el modal
+    if (!response || response.length !== 1) {
+      setOpenModalClienteSearch(true)
+    } else {
+      // Forzar una validación rápida
+      const cliente = response[0]
+      const textoLimpio = text.trim()
+      if (cliente.numero_documento === textoLimpio || (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio))) {
+         handleSelect({ data: cliente })
       } else {
-        // Forzar una validación rápida
-        const cliente = response[0]
-        const textoLimpio = text.trim()
-        if (cliente.numero_documento === textoLimpio || (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio))) {
-           handleSelect({ data: cliente })
-        } else {
-           setOpenModalClienteSearch(true)
-        }
+         setOpenModalClienteSearch(true)
       }
     }
   }

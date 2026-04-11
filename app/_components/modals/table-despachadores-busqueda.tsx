@@ -33,10 +33,6 @@ export default function TableDespachadoresBusqueda({
 }: TableDespachadoresBusquedaProps) {
   const { response, loading } = useSearchDespachadores({ value })
 
-  console.log('🔍 TableDespachadoresBusqueda - response:', response)
-  console.log('🔍 TableDespachadoresBusqueda - loading:', loading)
-  console.log('🔍 TableDespachadoresBusqueda - value:', value)
-
   const setDespachadorSeleccionado = useStoreDespachadorSeleccionado(
     store => store.setDespachador
   )
@@ -51,11 +47,9 @@ export default function TableDespachadoresBusqueda({
         columnDefs={useColumnsDespachadores()}
         rowData={response || []}
         onSelectionChanged={({ selectedNodes }) => {
-          console.log('despachador seleccionado en la tabla', selectedNodes?.[0]?.data)
           setDespachadorSeleccionado(selectedNodes?.[0]?.data as Usuario)
         }}
         onRowDoubleClicked={({ data }) => {
-          console.log('doble click en el despachador', data)
           setDespachadorSeleccionado(data)
           onRowDoubleClicked?.(data)
         }}

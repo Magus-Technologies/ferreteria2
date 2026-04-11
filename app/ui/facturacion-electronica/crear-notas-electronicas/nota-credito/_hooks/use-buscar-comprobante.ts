@@ -30,8 +30,6 @@ export default function useBuscarComprobante(form: FormInstance<FormCreateNotaCr
           return
         }
 
-        console.log('🔍 [DEBUG cargarComprobante] comprobante completo:', comprobante)
-        console.log('🔍 [DEBUG cargarComprobante] comprobante.venta_id:', comprobante.venta_id, 'tipo:', typeof comprobante.venta_id)
 
         // ⚠️ VALIDAR que el comprobante tenga venta_id
         if (!comprobante.venta_id) {
@@ -45,7 +43,6 @@ export default function useBuscarComprobante(form: FormInstance<FormCreateNotaCr
 
         // Cargar datos del cliente y venta
         const ventaIdString = String(comprobante.venta_id)
-        console.log('🔍 [DEBUG cargarComprobante] ventaIdString después de conversión:', ventaIdString, 'tipo:', typeof ventaIdString)
         
         form.setFieldsValue({
           venta_id: ventaIdString, // Convertir a string
@@ -61,11 +58,6 @@ export default function useBuscarComprobante(form: FormInstance<FormCreateNotaCr
           cliente_email: comprobante.cliente?.email,
           tipo_moneda: comprobante.tipo_moneda as 'PEN' | 'USD',
         })
-
-        console.log('🔍 [DEBUG cargarComprobante] Valores del formulario después de setFieldsValue:')
-        console.log('  - venta_id:', form.getFieldValue('venta_id'))
-        console.log('  - tipo_documento_modifica:', form.getFieldValue('tipo_documento_modifica'))
-        console.log('  - serie_documento_modifica:', form.getFieldValue('serie_documento_modifica'))
 
         // Cargar productos del comprobante
         if (comprobante.detalles && comprobante.detalles.length > 0) {

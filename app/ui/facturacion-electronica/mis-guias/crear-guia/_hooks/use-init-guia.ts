@@ -59,8 +59,6 @@ export default function useInitGuia({
         }))
       ) || []
 
-      console.log('🔍 Productos mapeados:', productos)
-      console.log('👤 Cliente:', cliente)
 
       form.setFieldsValue({
         fecha_emision: dayjs(),
