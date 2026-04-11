@@ -53,6 +53,11 @@ interface ModalEntradaStockProps {
     extras?: { label: string; value: string }[]
     /** Extras seleccionados por defecto. */
     defaultExtras?: string[]
+    /**
+     * Callback que construye el bloque de detalle del mensaje según las columnas y extras seleccionados.
+     * Recibe los values de los checkboxes marcados y devuelve el texto a agregar al mensaje.
+     */
+    buildDetalle?: (columnas: string[], extras: string[]) => string
   }
   /**
    * Configuración para envío de correo electrónico.
@@ -177,13 +182,30 @@ export default function ModalShowDoc({
   // WhatsApp
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false)
   const [whatsappTelefono, setWhatsappTelefono] = useState('')
-  const [whatsappMensaje, setWhatsappMensaje] = useState('')
+  const [whatsappMensajeBase, setWhatsappMensajeBase] = useState('') // cabecera fija
+  const [whatsappMensaje, setWhatsappMensaje] = useState('')         // mensaje completo (calculado)
   const [whatsappColumnasSelec, setWhatsappColumnasSelec] = useState<string[]>([])
   const [whatsappExtrasSelec, setWhatsappExtrasSelec] = useState<string[]>([])
   const [incluirUrlPdf, setIncluirUrlPdf] = useState(true)
 
+  // Reconstruir el mensaje completo cada vez que cambian los checkboxes o la URL
+  useEffect(() => {
+    if (!whatsappModalOpen) return
+    let msg = whatsappMensajeBase
+    if (whatsappConfig?.buildDetalle) {
+      const detalle = whatsappConfig.buildDetalle(whatsappColumnasSelec, whatsappExtrasSelec)
+      if (detalle) msg += `\n\n${detalle}`
+    }
+    const urlPublica = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
+    if (incluirUrlPdf && urlPublica) {
+      msg += `\n\n📎 Ver/descargar PDF:\n${urlPublica}`
+    }
+    setWhatsappMensaje(msg)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [whatsappColumnasSelec, whatsappExtrasSelec, incluirUrlPdf, whatsappModalOpen, whatsappMensajeBase])
+
   const handleOpenWhatsapp = () => {
-    // Pre-llenar con primer teléfono del cliente si existe
+    // Pre-llenar teléfono
     const tel = clienteTelefonos?.find(t => t && t.trim()) || ''
     setWhatsappTelefono(tel)
     // Pre-seleccionar columnas y extras
@@ -191,12 +213,9 @@ export default function ModalShowDoc({
     setWhatsappColumnasSelec(whatsappConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? [])
     const extras = whatsappConfig?.extras
     setWhatsappExtrasSelec(whatsappConfig?.defaultExtras ?? extras?.map(e => e.value) ?? [])
-    // Usar mensaje automático si está disponible
-    if (whatsappMensajeAuto) {
-      setWhatsappMensaje(whatsappMensajeAuto)
-    } else {
-      setWhatsappMensaje(`Hola, le comparto su documento ${nro_doc}. Gracias por su compra.`)
-    }
+    // Guardar mensaje base (cabecera sin detalle)
+    const base = whatsappMensajeAuto || `Hola, le comparto su documento ${nro_doc}.`
+    setWhatsappMensajeBase(base)
     setWhatsappModalOpen(true)
   }
 
@@ -206,7 +225,7 @@ export default function ModalShowDoc({
       antdMessage.error('Ingresa un número de teléfono')
       return
     }
-    // Descargar el PDF primero
+    // Descargar el PDF
     try {
       const blob = await getPdfBlob()
       const url = URL.createObjectURL(blob)
@@ -218,15 +237,9 @@ export default function ModalShowDoc({
     } catch {
       // silencioso
     }
-    // Construir mensaje final con URL pública si corresponde
-    let mensajeFinal = whatsappMensaje
-    const urlPublica = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
-    if (incluirUrlPdf && urlPublica) {
-      mensajeFinal += `\n\n📎 Ver/descargar PDF:\n${urlPublica}`
-    }
-    // Abrir WhatsApp con el mensaje
+    // El mensaje ya está construido con los checkboxes seleccionados
     const numero = tel.startsWith('51') ? tel : `51${tel}`
-    const texto = encodeURIComponent(mensajeFinal)
+    const texto = encodeURIComponent(whatsappMensaje)
     window.open(`https://wa.me/${numero}?text=${texto}`, '_blank')
     setWhatsappModalOpen(false)
   }
