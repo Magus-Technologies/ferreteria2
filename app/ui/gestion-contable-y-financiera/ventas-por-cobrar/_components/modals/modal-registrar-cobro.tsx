@@ -179,6 +179,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, venta?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
 
       // Si saldo_pendiente es 0, cerrar el modal
       if (result.data?.saldo_pendiente === 0) {

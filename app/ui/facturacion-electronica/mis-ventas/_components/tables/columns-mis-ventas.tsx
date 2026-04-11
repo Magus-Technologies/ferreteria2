@@ -191,7 +191,6 @@ export function useColumnsMisVentas() {
         const estado = params.value;
         if (estado === 'cr') return 'Creado';
         if (estado === 'ee') return 'En Espera';
-        if (estado === 'pr') return 'Procesado';
         if (estado === 'an') return 'Anulado';
         return estado || '';
       },

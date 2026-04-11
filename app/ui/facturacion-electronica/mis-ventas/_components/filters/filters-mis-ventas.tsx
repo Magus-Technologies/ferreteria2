@@ -262,7 +262,7 @@ export default function FiltersMisVentas() {
       {/* Filtros Desktop - Ocupan todo el espacio */}
       <div className="hidden lg:block mt-4">
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
-          {/* Fila 1 - Optimizada con menos espacio */}
+          {/* Fila 1: Fechas + Cliente + Serie */}
           <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Desde:
@@ -303,7 +303,7 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-3 flex items-center gap-1">
+          <div className="col-span-4 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Cliente:
             </label>
@@ -337,6 +337,48 @@ export default function FiltersMisVentas() {
           </div>
           <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              Serie-N°:
+            </label>
+            <ConfigurableElement componentId="field-serie-numero" label="Campo Serie y Número">
+              <Input
+                value={serieNumeroInput}
+                onChange={(e) => {
+                  setSerieNumeroInput(e.target.value);
+                  form.setFieldValue("serie_numero", e.target.value);
+                }}
+                onPressEnter={(e) => {
+                  const value = (e.target as HTMLInputElement).value;
+                  if (value && value.includes("-")) {
+                    handleBuscarVentaPorSerieNumero(value);
+                  }
+                }}
+                placeholder="B01-15"
+                className="w-full"
+              />
+            </ConfigurableElement>
+          </div>
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              Vendedor:
+            </label>
+            <ConfigurableElement componentId="field-vendedor" label="Campo Vendedor">
+              <SelectUsuarios
+                propsForm={{
+                  name: "user_id",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                className="w-full"
+                formWithMessage={false}
+                allowClear
+                placeholder="Todos"
+              />
+            </ConfigurableElement>
+          </div>
+
+          {/* Fila 2: T.Documento + F.Pago + Estado + Entrega + Botones */}
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               T.Doc:
             </label>
             <ConfigurableElement componentId="field-tipo-documento" label="Campo Tipo Documento">
@@ -353,31 +395,6 @@ export default function FiltersMisVentas() {
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-3 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Serie:
-            </label>
-            <ConfigurableElement componentId="field-serie-numero" label="Campo Serie y Número">
-              <Input
-                value={serieNumeroInput}
-                onChange={(e) => {
-                  setSerieNumeroInput(e.target.value);
-                  form.setFieldValue("serie_numero", e.target.value);
-                }}
-                onPressEnter={(e) => {
-                  const value = (e.target as HTMLInputElement).value;
-                  if (value && value.includes("-")) {
-                    // Si tiene formato serie-número, buscar automáticamente
-                    handleBuscarVentaPorSerieNumero(value);
-                  }
-                }}
-                placeholder="B01-15"
-                className="w-full"
-              />
-            </ConfigurableElement>
-          </div>
-
-          {/* Fila 2 - Optimizada */}
           <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               F.Pago:
@@ -432,52 +449,7 @@ export default function FiltersMisVentas() {
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Vend:
-            </label>
-            <ConfigurableElement componentId="field-vendedor" label="Campo Vendedor">
-              <SelectUsuarios
-                propsForm={{
-                  name: "user_id",
-                  hasFeedback: false,
-                  className: "!w-full",
-                }}
-                className="w-full"
-                formWithMessage={false}
-                allowClear
-                placeholder="Todos"
-              />
-            </ConfigurableElement>
-          </div>
-
-          {/* Fila 3 - Leyenda y botones de acción */}
-          <div className="col-span-5 flex items-center gap-4 text-xs">
-            <span className="font-semibold text-gray-700">Leyenda:</span>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-4 h-4 rounded border border-gray-300"
-                style={{ backgroundColor: redColors[2] }}
-              ></div>
-              <span className="text-gray-600">Crédito Pendiente</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-4 h-4 rounded border border-gray-300"
-                style={{ backgroundColor: orangeColors[2] }}
-              ></div>
-              <span className="text-gray-600">Contado / En Espera</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-4 h-4 rounded border border-gray-300"
-                style={{ backgroundColor: greenColors[2] }}
-              ></div>
-              <span className="text-gray-600">Pagado Completo</span>
-            </div>
-          </div>
-
-          <div className="col-span-1 flex items-center gap-2">
+          <div className="col-span-1 flex items-center">
             <ConfigurableElement componentId="button-buscar" label="Botón Buscar">
               <ButtonBase
                 color="info"
@@ -490,8 +462,7 @@ export default function FiltersMisVentas() {
               </ButtonBase>
             </ConfigurableElement>
           </div>
-
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-3 flex items-center gap-2">
             <ConfigurableElement componentId="button-entregar" label="Botón Entregar">
               <ButtonBase
                 color="warning"
@@ -507,8 +478,6 @@ export default function FiltersMisVentas() {
                 Entregar
               </ButtonBase>
             </ConfigurableElement>
-          </div>
-          <div className="col-span-2 flex items-center gap-2">
             <ConfigurableElement componentId="button-ver-entregas" label="Botón Ver Entregas">
               <ButtonBase
                 color="info"
@@ -524,6 +493,32 @@ export default function FiltersMisVentas() {
                 Ver Entregas
               </ButtonBase>
             </ConfigurableElement>
+          </div>
+
+          {/* Fila 3 - Leyenda de colores */}
+          <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">
+            <span className="font-semibold text-gray-700">Leyenda:</span>
+            <div className="flex items-center gap-1.5">
+              <div
+                className="w-4 h-4 rounded border border-gray-300"
+                style={{ backgroundColor: redColors[2] }}
+              ></div>
+              <span className="text-gray-600">Crédito Pendiente</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div
+                className="w-4 h-4 rounded border border-gray-300"
+                style={{ backgroundColor: orangeColors[2] }}
+              ></div>
+              <span className="text-gray-600">En Espera / Anulado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div
+                className="w-4 h-4 rounded border border-gray-300"
+                style={{ backgroundColor: greenColors[2] }}
+              ></div>
+              <span className="text-gray-600">Pagado Completo</span>
+            </div>
           </div>
         </div>
       </div>

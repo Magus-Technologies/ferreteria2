@@ -177,6 +177,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       message.success(result.data?.message || 'Cobro múltiple registrado')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
       handleClose()
     },
     onError: (error: any) => {
