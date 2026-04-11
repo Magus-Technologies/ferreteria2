@@ -23,19 +23,20 @@ export function setVisibilityColumns({
   gridApi?: GridApi;
   checkedList: string[];
 }) {
-  const gridColumns = gridApi?.getAllGridColumns() ?? [];
-  gridApi?.setColumnsVisible(
-    gridColumns.filter((col) => {
-      return !checkedList.includes(col.getColDef().headerName!);
-    }),
-    false,
-  );
-  gridApi?.setColumnsVisible(
-    gridColumns.filter((col) =>
-      checkedList.includes(col.getColDef().headerName!),
-    ),
-    true,
-  );
+  if (!gridApi) return;
+  const gridColumns = gridApi.getAllGridColumns() ?? [];
+  
+  const toHide = gridColumns
+    .filter((col) => !checkedList.includes(col.getColDef().headerName!))
+    .map((col) => col.getColId());
+    
+  const toShow = gridColumns
+    .filter((col) => checkedList.includes(col.getColDef().headerName!))
+    .map((col) => col.getColId());
+
+  if (toHide.length > 0) gridApi.setColumnsVisible(toHide, false);
+  if (toShow.length > 0) gridApi.setColumnsVisible(toShow, true);
+  setTimeout(() => gridApi.sizeColumnsToFit(), 10);
 }
 
 export interface SelectColumnsRef {
@@ -73,129 +74,137 @@ const SelectColumns = forwardRef<SelectColumnsRef, SelectColumnsProps>(
     },
     ref
   ) {
-  const gridApi = gridRef?.current?.api;
+    const gridApi = gridRef?.current?.api;
 
-  const plainOptions = availableColumns;
+    const plainOptions = availableColumns;
 
-  const [checkedList, setCheckedList] = useState<string[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+    const [checkedList, setCheckedList] = useState<string[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
 
-  const checkAll =
-    plainOptions.length > 0 && plainOptions.length === checkedList.length;
-  const indeterminate =
-    checkedList.length > 0 && checkedList.length < plainOptions.length;
+    const checkAll =
+      plainOptions.length > 0 && plainOptions.length === checkedList.length;
+    const indeterminate =
+      checkedList.length > 0 && checkedList.length < plainOptions.length;
 
-  const onChange = (list: string[]) => {
-    setCheckedList(list);
-  };
+    const onChange = (list: string[]) => {
+      setCheckedList(list);
+      setVisibilityColumns({ gridApi, checkedList: list });
+      setDefaultColumns(list);
+    };
 
-  const onCheckAllChange: CheckboxProps["onChange"] = (e) => {
-    setCheckedList(e.target.checked ? plainOptions : []);
-  };
+    const onCheckAllChange: CheckboxProps["onChange"] = (e) => {
+      const list = e.target.checked ? plainOptions : [];
+      setCheckedList(list);
+      setVisibilityColumns({ gridApi, checkedList: list });
+      setDefaultColumns(list);
+    };
 
-  useImperativeHandle(ref, () => ({
-    setCheckedList,
-  }));
+    useImperativeHandle(ref, () => ({
+      setCheckedList,
+    }));
 
-  // Inicializar checkedList cuando plainOptions esté disponible
-  useEffect(() => {
-    if (plainOptions.length > 0 && !isInitialized) {
-      const visibleColumns =
-        gridApi
-          ?.getAllGridColumns()
-          ?.filter((col) => col.isVisible())
-          ?.map((col) => col.getColDef().headerName)
-          ?.filter(
-            (name): name is string =>
-              name !== undefined && name !== null && name !== "",
-          ) ?? [];
+    // Inicializar checkedList cuando plainOptions esté disponible
+    useEffect(() => {
+      if (plainOptions.length > 0 && !isInitialized) {
+        const visibleColumns =
+          gridApi
+            ?.getAllGridColumns()
+            ?.filter((col) => col.isVisible())
+            ?.map((col) => col.getColDef().headerName)
+            ?.filter(
+              (name): name is string =>
+                name !== undefined && name !== null && name !== "",
+            ) ?? [];
 
-      const initialColumns =
-        visibleColumns.length > 0
-          ? visibleColumns
-          : defaultColumns.length > 0
-            ? defaultColumns.filter((col) => plainOptions.includes(col))
-            : plainOptions;
+        const initialColumns =
+          visibleColumns.length > 0
+            ? visibleColumns
+            : defaultColumns.length > 0
+              ? defaultColumns.filter((col) => plainOptions.includes(col))
+              : plainOptions;
 
-      setCheckedList(initialColumns.length > 0 ? initialColumns : plainOptions);
-      setIsInitialized(true);
-    }
-  }, [plainOptions.length, isInitialized, defaultColumns, gridApi]);
-
-  // Re-inicializar cuando el popover se abre (para reflejar visibilidad actual)
-  useEffect(() => {
-    if (isOpen && plainOptions.length > 0) {
-      const visibleColumns =
-        gridApi
-          ?.getAllGridColumns()
-          ?.filter((col) => col.isVisible())
-          ?.map((col) => col.getColDef().headerName)
-          ?.filter(
-            (name): name is string =>
-              name !== undefined && name !== null && name !== "",
-          ) ?? [];
-      if (visibleColumns.length > 0) {
-        setCheckedList(visibleColumns);
+        setCheckedList(initialColumns.length > 0 ? initialColumns : plainOptions);
+        setIsInitialized(true);
       }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+    }, [plainOptions.length, isInitialized, defaultColumns, gridApi]);
 
-  // Aplicar visibilidad de columnas cuando cambia checkedList
-  useEffect(() => {
-    if (!gridRef.current) return;
-    if (checkedList.length === 0) return;
+    // Re-inicializar cuando el popover se abre (para reflejar visibilidad actual)
+    useEffect(() => {
+      if (isOpen && plainOptions.length > 0) {
+        const visibleColumns =
+          gridApi
+            ?.getAllGridColumns()
+            ?.filter((col) => col.isVisible())
+            ?.map((col) => col.getColDef().headerName)
+            ?.filter(
+              (name): name is string =>
+                name !== undefined && name !== null && name !== "",
+            ) ?? [];
+        if (visibleColumns.length > 0) {
+          setCheckedList(visibleColumns);
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
 
-    setVisibilityColumns({ gridApi, checkedList });
-    setDefaultColumns(checkedList);
-  }, [checkedList, gridApi, gridRef, setDefaultColumns]);
+    // Sincronización final si checkedList se desfasa, aunque ya manejamos en onChange
+    useEffect(() => {
+      if (!gridRef.current) return;
+      // Ya no forzamos setVisibilityColumns aquí para interacciones (es manejado por onChange)
+      // pero sí lo dejamos para la carga inicial o sincronización externa.
+      setVisibilityColumns({ gridApi, checkedList });
+      setDefaultColumns(checkedList);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gridApi, gridRef, setDefaultColumns]);
 
-  return (
-    <>
-      {children}
-      {optionsSelectColumns.length > 0 && (
-        <>
-          <div className="grid gap-2">
-            {optionsSelectColumns.map((option, index) => (
-              <ButtonBase
-                onClick={() => {
-                  setCheckedList(option.columns);
-                }}
-                color={option.color ?? "info"}
-                size="sm"
-                className="!px-3 w-full"
-                key={index}
-              >
-                {option.label}
-              </ButtonBase>
-            ))}
-          </div>
-          <Divider className="!my-2" />
-        </>
-      )}
-      {!hideIndividualColumns && (
-        <>
-          <Checkbox
-            indeterminate={indeterminate}
-            onChange={onCheckAllChange}
-            checked={checkAll}
-            className="font-bold"
-          >
-            Ver Todo
-          </Checkbox>
-          <Divider className="!my-2" />
-          {plainOptions.length > 0 && (
-            <CheckboxGroup
-              options={plainOptions}
-              value={checkedList.filter((col) => plainOptions.includes(col))}
-              onChange={onChange}
-              style={{ display: "flex", flexDirection: "column" }}
-            />
-          )}
-        </>
-      )}
-    </>
-  );
-});
+    return (
+      <>
+        {children}
+        {optionsSelectColumns.length > 0 && (
+          <>
+            <div className="grid gap-2">
+              {optionsSelectColumns.map((option, index) => (
+                <ButtonBase
+                  onClick={() => {
+                    setCheckedList(option.columns);
+                    setVisibilityColumns({ gridApi, checkedList: option.columns });
+                    setDefaultColumns(option.columns);
+                  }}
+                  color={option.color ?? "info"}
+                  size="sm"
+                  className="!px-3 w-full"
+                  key={index}
+                >
+                  {option.label}
+                </ButtonBase>
+              ))}
+            </div>
+            <Divider className="!my-2" />
+          </>
+        )}
+        {!hideIndividualColumns && (
+          <>
+            <Checkbox
+              indeterminate={indeterminate}
+              onChange={onCheckAllChange}
+              checked={checkAll}
+              className="font-bold"
+            >
+              Ver Todo
+            </Checkbox>
+            <Divider className="!my-2" />
+            {plainOptions.length > 0 && (
+              <CheckboxGroup
+                options={plainOptions}
+                value={checkedList.filter((col) => plainOptions.includes(col))}
+                onChange={onChange}
+                style={{ display: "flex", flexDirection: "column" }}
+              />
+            )}
+          </>
+        )}
+      </>
+    );
+  });
 
 export default SelectColumns;

@@ -8,7 +8,7 @@ import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
 import LabelBase from '~/components/form/label-base'
 import dayjs from 'dayjs'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 
 export default function FormFormaDePagoCompra({
   form,
@@ -17,8 +17,8 @@ export default function FormFormaDePagoCompra({
 }) {
   const formaDePago = Form.useWatch('forma_de_pago', form)
 
-  // Limpiar campos según la forma de pago
-  useEffect(() => {
+  // Usar useCallback para estabilizar la función
+  const limpiarCampos = useCallback(() => {
     if (formaDePago === FormaDePago.Contado) {
       form.setFieldValue('numero_dias', undefined)
       form.setFieldValue('fecha_vencimiento', undefined)
@@ -26,8 +26,12 @@ export default function FormFormaDePagoCompra({
       form.setFieldValue('gasto_extra_id', undefined)
       form.setFieldValue('metodos_de_pago', undefined)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formaDePago])
+  }, [formaDePago, form])
+
+  // Limpiar campos según la forma de pago
+  useEffect(() => {
+    limpiarCampos()
+  }, [limpiarCampos])
 
   return (
     <>

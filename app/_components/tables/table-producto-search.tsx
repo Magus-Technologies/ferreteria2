@@ -188,7 +188,7 @@ export default function TableProductoSearch({
   return (
     <TableWithTitle<Producto>
       tableRef={tableGridRef}
-      id="g-c-e-i.table-producto-search"
+      id="g-c-e-i.table-producto-search-v2"
       cacheQuickFilter={true}
       quickFilterText={quickFilterValue}
       onSelectionChanged={({ selectedNodes }) => {

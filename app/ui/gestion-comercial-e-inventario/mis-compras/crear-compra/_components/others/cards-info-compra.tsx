@@ -89,7 +89,23 @@ export default function CardsInfoCompra({
         message.warning('Agrega productos a la compra primero')
         return
       }
-      setModalPagoOpen(true)
+      
+      // Verificar si ya tiene métodos de pago o egresos configurados
+      const metodosPago = form.getFieldValue('metodos_de_pago') || []
+      const gastoExtraId = form.getFieldValue('gasto_extra_id')
+      const egresoId = form.getFieldValue('egreso_dinero_id')
+      const despliegueId = form.getFieldValue('despliegue_de_pago_id')
+      
+      const tieneMetodosPago = metodosPago.length > 0
+      const tieneEgresos = gastoExtraId || egresoId || despliegueId
+      
+      // Si no tiene métodos de pago ni egresos, abrir el modal
+      if (!tieneMetodosPago && !tieneEgresos) {
+        setModalPagoOpen(true)
+      } else {
+        // Ya tiene métodos de pago configurados, enviar directamente
+        form.submit()
+      }
     } else {
       form.submit()
     }

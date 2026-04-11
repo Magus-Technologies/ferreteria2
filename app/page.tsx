@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, Input, message } from 'antd'
+import { Form, Input, App } from 'antd'
 import FormBase from '../components/form/form-base'
 import Image from 'next/image'
 import { FaAngleRight, FaSpinner, FaUserTie } from 'react-icons/fa'
@@ -21,6 +21,7 @@ export interface LoginValues {
 export default function Home() {
   const router = useRouter()
   const [form] = Form.useForm()
+  const { message } = App.useApp()
   const { login, user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [modalRecuperarOpen, setModalRecuperarOpen] = useState(false)

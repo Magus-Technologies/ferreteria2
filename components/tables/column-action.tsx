@@ -25,6 +25,7 @@ interface ColumnActionProps<T> {
   onEdit?: () => void
   showEdit?: boolean
   titleDelete?: string
+  iconDelete?: React.ReactNode
   autorizacion?: AutorizacionConfig
   propsDelete?: UseMutationActionProps<{ id: T }, unknown> & {
     disabled?: boolean
@@ -41,6 +42,7 @@ export default function ColumnAction<T>({
   onEdit,
   showEdit = true,
   titleDelete = 'Eliminar',
+  iconDelete,
   autorizacion,
   propsDelete,
 }: ColumnActionProps<T>) {
@@ -133,20 +135,20 @@ export default function ColumnAction<T>({
         {permiso && can(`${permiso}.delete`) && showDelete && (
           <Tooltip title={disabled ? disabledTooltip : titleDelete}>
             {disabled ? (
-              <MdDelete
-                size={15}
-                className="text-gray-400 opacity-50 cursor-not-allowed min-w-fit"
-              />
+              <span className="text-gray-400 opacity-50 cursor-not-allowed min-w-fit flex items-center justify-center">
+                {iconDelete || <MdDelete size={15} />}
+              </span>
             ) : autorizacion ? (
-              <MdDelete
+              <span 
                 onClick={handleDelete}
-                size={15}
-                className={`text-rose-700 hover:scale-105 transition-all active:scale-95 ${
+                className={`text-rose-700 hover:scale-105 transition-all active:scale-95 flex items-center justify-center ${
                   loading
                     ? 'opacity-50 cursor-not-allowed pointer-events-none'
                     : 'cursor-pointer'
                 } min-w-fit`}
-              />
+              >
+                {iconDelete || <MdDelete size={15} />}
+              </span>
             ) : (
               <Popconfirm
                 title={titleDelete}
@@ -155,14 +157,13 @@ export default function ColumnAction<T>({
                 okText={titleDelete}
                 cancelText='Cancelar'
               >
-                <MdDelete
-                  size={15}
-                  className={`text-rose-700 hover:scale-105 transition-all active:scale-95 ${
-                    loading
-                      ? 'opacity-50 cursor-not-allowed pointer-events-none'
-                      : 'cursor-pointer'
-                  } min-w-fit`}
-                />
+                <span className={`text-rose-700 hover:scale-105 transition-all active:scale-95 flex items-center justify-center ${
+                  loading
+                    ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                    : 'cursor-pointer'
+                } min-w-fit`}>
+                  {iconDelete || <MdDelete size={15} />}
+                </span>
               </Popconfirm>
             )}
           </Tooltip>

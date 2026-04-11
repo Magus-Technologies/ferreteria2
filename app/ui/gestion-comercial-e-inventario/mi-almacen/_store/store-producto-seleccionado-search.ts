@@ -4,6 +4,8 @@ import type { Producto } from '~/app/_types/producto'
 type UseStoreProductoSeleccionadoSearchProps = {
   producto?: Producto
   setProducto: (value: Producto | undefined) => void
+  searchText: string
+  setSearchText: (value: string) => void
 }
 
 export const useStoreProductoSeleccionadoSearch =
@@ -11,5 +13,7 @@ export const useStoreProductoSeleccionadoSearch =
     return {
       producto: undefined,
       setProducto: value => set({ producto: value }),
+      searchText: '',
+      setSearchText: value => set({ searchText: value }),
     }
   })

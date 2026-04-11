@@ -57,7 +57,8 @@ export default function CardsInfoComprasPorPagar() {
 
     compras.forEach(compra => {
       // Calcular saldo
-      const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
+      const productos = Array.isArray(compra.productos_por_almacen) ? compra.productos_por_almacen : [];
+      const total = productos.reduce((acc, item) => {
         const costo = Number(item.costo ?? 0)
         for (const u of item.unidades_derivadas ?? []) {
           const cantidad = Number(u.cantidad ?? 0)

@@ -57,6 +57,13 @@ export default function FormCrearRecepcionAlmacen({
             classNameIcon='text-cyan-600 mx-1'
             classIconSearch='mb-0!'
             classIconCreate='mb-0!'
+            proveedorOptionsDefault={
+              compra?.proveedor 
+                ? [compra.proveedor as Proveedor] 
+                : ordenCompra?.proveedor 
+                  ? [ordenCompra.proveedor as Proveedor] 
+                  : undefined
+            }
             propsForm={{
               name: 'proveedor_id',
               initialValue: compra?.proveedor_id,

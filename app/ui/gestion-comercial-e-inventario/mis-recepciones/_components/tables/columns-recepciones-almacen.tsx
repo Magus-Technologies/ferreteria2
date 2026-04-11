@@ -6,7 +6,10 @@ import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
 import ColumnAction from '~/components/tables/column-action'
 import { TiposDocumentos } from '~/lib/docs'
 import { permissions } from '~/lib/permissions'
+import { Tooltip } from 'antd'
 import { recepcionAlmacenApi, type RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
+import { HiDocumentText } from 'react-icons/hi2'
+import { FaUndo } from 'react-icons/fa'
 
 const eliminarRecepcionAction = async ({ id }: { id: number }) => {
   const res = await recepcionAlmacenApi.delete(id)
@@ -115,13 +118,26 @@ export function useColumnsRecepcionesAlmacen({
           <ColumnAction
             id={params.value}
             permiso={permissions.RECEPCION_ALMACEN_BASE}
+            titleDelete='Deshacer'
+            iconDelete={<FaUndo size={15} />}
             propsDelete={{
               action: eliminarRecepcionAction,
-              msgSuccess: 'Recepción eliminada correctamente',
+              msgSuccess: 'Recepción deshecha correctamente',
               queryKey: [QueryKeys.RECEPCIONES_ALMACEN],
             }}
             showEdit={false}
-          />
+          >
+            <Tooltip title='Ver Documento'>
+              <HiDocumentText
+                onClick={() => {
+                  setDataModalDocRecepcionAlmacen(params.data)
+                  setOpenModalDocRecepcionAlmacen(true)
+                }}
+                className='cursor-pointer hover:scale-110 transition-all text-amber-600'
+                size={17}
+              />
+            </Tooltip>
+          </ColumnAction>
         ) : null
       },
       type: 'actions',
