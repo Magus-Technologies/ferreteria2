@@ -338,7 +338,10 @@ export default function SelectClientes({
       <FaSearch
         className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
-        onClick={() => handleSearch()}
+        onClick={() => {
+          setTextDefault(text)
+          setOpenModalClienteSearch(true)
+        }}
       />
       <ModalClienteSearch
         open={openModalClienteSearch}
