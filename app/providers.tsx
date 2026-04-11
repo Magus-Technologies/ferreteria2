@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 
 const NotificationInitializer = dynamic(() => import('~/components/notifications/notification-initializer'), { ssr: false })
 const BirthdayAlert = dynamic(() => import('~/components/birthday/birthday-alert'), { ssr: false })
+const RealtimeProvider = dynamic(() => import('~/components/realtime/realtime-provider'), { ssr: false })
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -35,6 +36,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <NotificationInitializer />
       <BirthdayAlert />
+      <RealtimeProvider />
       {children}
     </QueryClientProvider>
   )

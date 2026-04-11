@@ -18,6 +18,9 @@ module.exports = {
         AUTH_URL: process.env.AUTH_URL,
         RENIEC_TOKEN: process.env.RENIEC_TOKEN,
         NEXTAUTH_URL: process.env.AUTH_URL, // Ajustar NEXTAUTH_URL a AUTH_URL si es el mismo valor
+        NEXT_PUBLIC_REVERB_APP_KEY: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
+        NEXT_PUBLIC_REVERB_HOST: process.env.NEXT_PUBLIC_REVERB_HOST,
+        NEXT_PUBLIC_REVERB_PORT: process.env.NEXT_PUBLIC_REVERB_PORT,
         PORT: 3001,
       },
     },

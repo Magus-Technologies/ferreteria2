@@ -701,6 +701,86 @@ export default function ModalUsuarioForm({
             </div>
           </div>
 
+          {/* Cambiar Contraseña (al editar) */}
+          {isEdit && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm font-semibold text-blue-800 mb-2">
+                🔑 Cambiar Contraseña (Opcional)
+              </p>
+              <p className="text-xs text-blue-700 mb-3">
+                Si deseas cambiar la contraseña del usuario, ingrésala aquí.
+                Déjalo en blanco si no deseas modificarla.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <LabelBase label="Nueva Contraseña:" orientation="column">
+                    <Form.Item
+                      name="password"
+                      rules={[
+                        { min: 6, message: "Mínimo 6 caracteres" },
+                      ]}
+                      hasFeedback
+                      className="w-full"
+                    >
+                      <Input.Password
+                        placeholder="Nueva contraseña (opcional)"
+                        prefix={
+                          <FaLock size={14} className="text-blue-600 mx-1" />
+                        }
+                        variant="filled"
+                        autoComplete="new-password"
+                      />
+                    </Form.Item>
+                  </LabelBase>
+                </div>
+                <div>
+                  <LabelBase
+                    label="Confirmar Nueva Contraseña:"
+                    orientation="column"
+                  >
+                    <Form.Item
+                      name="password_confirmation"
+                      dependencies={["password"]}
+                      rules={[
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            const password = getFieldValue("password");
+                            if (!password) {
+                              return Promise.resolve();
+                            }
+                            if (!value) {
+                              return Promise.reject(
+                                new Error("Confirma la nueva contraseña")
+                              );
+                            }
+                            if (password === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(
+                              new Error("Las contraseñas no coinciden")
+                            );
+                          },
+                        }),
+                      ]}
+                      hasFeedback
+                      className="w-full"
+                    >
+                      <Input.Password
+                        placeholder="Confirmar nueva contraseña"
+                        prefix={
+                          <FaLock size={14} className="text-blue-600 mx-1" />
+                        }
+                        variant="filled"
+                        autoComplete="new-password"
+                      />
+                    </Form.Item>
+                  </LabelBase>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Contraseña de Supervisor (al editar) */}
           {isEdit && (
             <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">

@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   // Desactivar Strict Mode para evitar dobles peticiones en desarrollo
   reactStrictMode: false,
 
+  // Desactivar el indicador de errores en desarrollo
+  devIndicators: false,
+
   experimental: {
     optimizePackageImports: [
       '@ant-design/nextjs-registry',
