@@ -67,6 +67,8 @@ export default function CrearOrdenCompraPage() {
   const [productosPendientesCrear, setProductosPendientesCrear] = useState<ProductoSidebarSelection[]>([])
   const [currentProductoIndex, setCurrentProductoIndex] = useState(0)
   const [productoManualActual, setProductoManualActual] = useState<ProductoSidebarSelection | null>(null)
+  const [proveedorDefault, setProveedorDefault] = useState<{ id: number; ruc: string; razon_social: string }[]>([])
+  const [proveedorRucInicial, setProveedorRucInicial] = useState('')
   
   // Store para manejar el modal de crear producto
   const setOpenModalProducto = useStoreEditOrCopyProducto(state => state.setOpenModal)
@@ -88,6 +90,17 @@ export default function CrearOrdenCompraPage() {
       if (!orden) {
         message.error('No se pudo cargar la orden de compra')
         return
+      }
+
+      // Pre-cargar proveedor como opción del select para que muestre el RUC
+      if (orden.proveedor) {
+        const ruc = orden.proveedor.ruc || orden.ruc || ''
+        setProveedorDefault([{
+          id: orden.proveedor.id ?? orden.proveedor_id,
+          ruc,
+          razon_social: orden.proveedor.razon_social || '',
+        }])
+        setProveedorRucInicial(ruc)
       }
 
       form.setFieldsValue({
@@ -931,6 +944,8 @@ export default function CrearOrdenCompraPage() {
                   <SelectProveedores
                     form={form}
                     showOnlyDocument={true}
+                    proveedorOptionsDefault={proveedorDefault}
+                    initialSearchText={proveedorRucInicial}
                     propsForm={{
                       name: 'proveedor_id',
                       hasFeedback: false,

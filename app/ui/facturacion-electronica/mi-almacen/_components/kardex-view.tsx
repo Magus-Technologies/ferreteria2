@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { DatePicker, Select, Spin, Tag, Empty } from 'antd'
-import { FaClipboardList, FaBoxOpen } from 'react-icons/fa'
+import { DatePicker, Input, Select, Spin, Tag, Empty } from 'antd'
+import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -52,7 +52,8 @@ export default function KardexView() {
   const [tipo, setTipo] = useState<TipoMovimientoKardex | ''>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
-  const [debouncedSearchText] = useDebounce(searchText, 200)
+  const [quickFilter, setQuickFilter] = useState('')
+  const [debouncedQuickFilter] = useDebounce(quickFilter, 200)
 
   const productoId = productoSeleccionado?.id
 
@@ -150,7 +151,7 @@ export default function KardexView() {
       },
     },
     {
-      headerName: 'Stock Anterior',
+      headerName: 'Stock Antes',
       valueGetter: (params) => {
         const { saldo, entrada, salida } = params.data ?? {}
         if (saldo == null) return null
@@ -165,7 +166,7 @@ export default function KardexView() {
       },
     },
     {
-      headerName: 'Entrada',
+      headerName: 'Cant. Ingreso',
       field: 'entrada',
       width: 90,
       minWidth: 80,
@@ -180,7 +181,7 @@ export default function KardexView() {
       },
     },
     {
-      headerName: 'Salida',
+      headerName: 'Cant. Salida',
       field: 'salida',
       width: 90,
       minWidth: 80,
@@ -256,6 +257,18 @@ export default function KardexView() {
               size='middle'
             />
           </div>
+          <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Buscar en tabla</label>
+            <Input
+              prefix={<FaSearch className='text-gray-400' size={12} />}
+              placeholder='Filtrar resultados...'
+              value={quickFilter}
+              onChange={(e) => setQuickFilter(e.target.value)}
+              allowClear
+              className='!w-[200px]'
+              size='middle'
+            />
+          </div>
         </div>
 
         {/* Info del producto seleccionado */}
@@ -321,11 +334,11 @@ export default function KardexView() {
             columnDefs={columns}
             rowData={data?.data || []}
             pagination={false}
-            quickFilterText={debouncedSearchText}
+            quickFilterText={debouncedQuickFilter}
             optionsSelectColumns={[
               {
                 label: 'Default',
-                columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Entrada', 'Salida', 'Stock Actual'],
+                columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
               },
             ]}
           />

@@ -47,8 +47,18 @@ export default function ModalMapaEntrega({ open, onClose, entrega }: ModalMapaEn
       telefono: cliente?.telefono || '',
       observaciones: entrega.observaciones || '',
       estado: entrega.estado_entrega,
-      latitud: entrega.latitud ? Number(entrega.latitud) : null,
-      longitud: entrega.longitud ? Number(entrega.longitud) : null,
+      latitud: entrega.latitud ? Number(entrega.latitud)
+        : ((() => {
+            const dir = cliente?.direcciones?.find((d: any) => d.direccion === entrega.direccion_entrega && d.latitud)
+              || cliente?.direcciones?.find((d: any) => d.latitud)
+            return dir?.latitud ? Number(dir.latitud) : null
+          })()),
+      longitud: entrega.longitud ? Number(entrega.longitud)
+        : ((() => {
+            const dir = cliente?.direcciones?.find((d: any) => d.direccion === entrega.direccion_entrega && d.longitud)
+              || cliente?.direcciones?.find((d: any) => d.longitud)
+            return dir?.longitud ? Number(dir.longitud) : null
+          })()),
     }
   }, [entrega])
 

@@ -24,6 +24,7 @@ interface SelectProveedoresProps extends Omit<SelectBaseProps, 'onChange'> {
   proveedorOptionsDefault?: Pick<Proveedor, 'id' | 'ruc' | 'razon_social'>[]
   showOnlyDocument?: boolean
   form?: FormInstance
+  initialSearchText?: string
 }
 
 export default function SelectProveedores({
@@ -38,6 +39,7 @@ export default function SelectProveedores({
   onChange,
   onSearchChange,
   showOnlyDocument = false,
+  initialSearchText,
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
@@ -60,7 +62,15 @@ export default function SelectProveedores({
   )
 
   const [textDefault, setTextDefault] = useState('')
-  
+
+  // Setear texto inicial cuando se pasa desde fuera (ej: al duplicar una orden)
+  useEffect(() => {
+    if (initialSearchText) {
+      setText(initialSearchText)
+      setLastSelectedDocument(initialSearchText)
+    }
+  }, [initialSearchText])
+
   // Actualizar textDefault cuando text cambia (para mantenerlo sincronizado)
   useEffect(() => {
     setTextDefault(text)
