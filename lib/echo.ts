@@ -19,6 +19,7 @@ export function getEcho(): Echo<'reverb'> | null {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
     const wsHost = process.env.NEXT_PUBLIC_REVERB_HOST || 'localhost'
     const wsPort = Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080)
+    const isSecure = wsPort === 443 || process.env.NEXT_PUBLIC_REVERB_SCHEME === 'https'
 
     echoInstance = new Echo({
       broadcaster: 'reverb',
@@ -26,8 +27,8 @@ export function getEcho(): Echo<'reverb'> | null {
       wsHost,
       wsPort,
       wssPort: wsPort,
-      forceTLS: false,
-      enabledTransports: ['ws'],
+      forceTLS: isSecure,
+      enabledTransports: isSecure ? ['ws', 'wss'] : ['ws'],
       authEndpoint: `${apiBase}/api/broadcasting/auth`,
       auth: {
         headers: {
