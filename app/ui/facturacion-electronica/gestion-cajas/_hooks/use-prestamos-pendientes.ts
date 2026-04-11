@@ -11,6 +11,5 @@ export function usePrestamosPendientes() {
       // Devolver directamente el array de préstamos
       return response.data?.data || []
     },
-    refetchInterval: 30000, // Refrescar cada 30 segundos
   })
 }

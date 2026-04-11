@@ -17,7 +17,6 @@ export function useCheckAperturaDiaria() {
     },
     staleTime: 30000,
     gcTime: 60000,
-    refetchInterval: 60000,
   })
 
   const esAperturaDeHoy = useCallback(() => {

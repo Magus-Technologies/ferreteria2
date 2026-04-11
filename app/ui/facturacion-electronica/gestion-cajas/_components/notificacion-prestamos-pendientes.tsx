@@ -18,21 +18,18 @@ export function NotificacionPrestamosPendientes() {
   const { data: prestamosData, refetch: refetchPrestamos } = useQuery({
     queryKey: ['solicitudes-efectivo-pendientes'],
     queryFn: async () => await prestamoVendedorApi.solicitudesPendientes(),
-    refetchInterval: 30000,
   })
 
   // 2. Consultar alertas de SUNAT
   const { data: sunatData } = useQuery({
     queryKey: ['sunat-alertas-pendientes'],
     queryFn: async () => await facturacionElectronicaApi.getPendientesAlerta(),
-    refetchInterval: 60000,
   })
 
   // 3. Consultar Requerimientos Internos Pendientes
   const { data: reqData, refetch: refetchReq } = useQuery({
     queryKey: ['requerimientos-internos-pendientes'],
     queryFn: async () => await requerimientoInternoApi.getAll({ estado: 'pendiente', per_page: 20 }),
-    refetchInterval: 45000,
   })
 
   const solicitudes = useMemo(() => 

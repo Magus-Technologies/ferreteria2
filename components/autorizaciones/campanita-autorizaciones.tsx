@@ -94,7 +94,6 @@ export default function CampanitaAutorizaciones() {
       const res = await autorizacionesApi.pendientesCount()
       return res.data?.count ?? 0
     },
-    refetchInterval: dropdownOpen ? 30000 : false,
     enabled: true,
   })
 
@@ -110,7 +109,6 @@ export default function CampanitaAutorizaciones() {
       const res = await autorizacionesApi.pendientes()
       return (res.data || []) as SolicitudAutorizacion[]
     },
-    refetchInterval: dropdownOpen ? 30000 : false,
     enabled: dropdownOpen,
   })
 
@@ -134,7 +132,6 @@ export default function CampanitaAutorizaciones() {
       const res = await cumpleanosApi.getProximos(diasAnticipacion)
       return (res.data?.data || []) as CumpleanosUsuario[]
     },
-    refetchInterval: 60000 * 5, // cada 5 min
     enabled: true,
   })
 

@@ -105,7 +105,10 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   'despliegues-de-pago': [QueryKeys.DESPLIEGUE_DE_PAGO, QueryKeys.METODO_DE_PAGO],
   'series-documentos': [],
   choferes: [QueryKeys.CHOFERES],
-  'facturacion-electronica': [QueryKeys.VENTAS, QueryKeys.CONFIGURACION],
+  'facturacion-electronica': [QueryKeys.VENTAS, QueryKeys.CONFIGURACION, 'sunat-alertas-pendientes'],
+  autorizaciones: ['autorizaciones'],
+  'prestamos-vendedores': ['solicitudes-efectivo-pendientes'],
+  'requerimientos-internos': ['requerimientos-internos-pendientes'],
 }
 
 interface ModelChangedEvent {
