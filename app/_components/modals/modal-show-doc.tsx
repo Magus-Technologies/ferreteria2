@@ -64,14 +64,16 @@ interface ModalEntradaStockProps {
    * Cuando se proporciona, aparece el botón de email en la barra de acciones.
    */
   emailConfig?: {
-    /** Callback que ejecuta el envío real. Recibe email destino y columnas seleccionadas. */
-    onSend: (email: string, columnas: string[]) => Promise<void>
+    /** Callback que ejecuta el envío real. Recibe email destino, columnas seleccionadas y mensaje personalizado. */
+    onSend: (email: string, columnas: string[], mensaje: string) => Promise<void>
     /** Lista de columnas/campos que el usuario puede elegir incluir en el email. */
     columnas?: { label: string; value: string }[]
     /** Columnas marcadas por defecto. Si no se pasa, se marcan todas. */
     defaultColumnas?: string[]
     /** Email del destinatario pre-llenado (ej: correo del proveedor). */
     emailDefault?: string
+    /** Mensaje por defecto pre-llenado en el textarea. */
+    mensajeDefault?: string
   }
 }
 export default function ModalShowDoc({
@@ -97,6 +99,7 @@ export default function ModalShowDoc({
   const [openConfigModal, setOpenConfigModal] = useState(false)
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [emailDestino, setEmailDestino] = useState('')
+  const [emailMensaje, setEmailMensaje] = useState('')
   const [emailColumnasSelec, setEmailColumnasSelec] = useState<string[]>([])
   const [sendingEmail, setSendingEmail] = useState(false)
   const [openImpresoraModal, setOpenImpresoraModal] = useState(false)
@@ -269,6 +272,7 @@ export default function ModalShowDoc({
   // Abrir modal de email: pre-llenar defaults
   const handleOpenEmail = () => {
     setEmailDestino(emailConfig?.emailDefault ?? '')
+    setEmailMensaje(emailConfig?.mensajeDefault ?? `Estimado cliente,\n\nAdjunto encontrará su documento ${nro_doc}.\n\nSaludos cordiales.`)
     const cols = emailConfig?.columnas
     const defaults = emailConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? []
     setEmailColumnasSelec(defaults)
@@ -286,10 +290,11 @@ export default function ModalShowDoc({
       // Modo genérico: delegar al callback del padre
       setSendingEmail(true)
       try {
-        await emailConfig.onSend(emailDestino, emailColumnasSelec)
+        await emailConfig.onSend(emailDestino, emailColumnasSelec, emailMensaje)
         antdMessage.success('Documento enviado exitosamente por correo')
         setEmailModalOpen(false)
         setEmailDestino('')
+        setEmailMensaje('')
       } catch (error: any) {
         antdMessage.error(error.message || 'Error al enviar el documento por correo')
       } finally {
@@ -477,6 +482,21 @@ export default function ModalShowDoc({
             />
           </div>
 
+          {/* Mensaje personalizado */}
+          <div>
+            <label className='block text-sm font-medium mb-2'>
+              Mensaje:
+            </label>
+            <Input.TextArea
+              rows={4}
+              value={emailMensaje}
+              onChange={(e) => setEmailMensaje(e.target.value)}
+              maxLength={1000}
+              showCount
+              placeholder='Escriba el mensaje que acompañará al documento...'
+            />
+          </div>
+
           {/* Columnas seleccionables si el emailConfig las define */}
           {emailConfig?.columnas && emailConfig.columnas.length > 0 && (
             <div>
@@ -497,6 +517,10 @@ export default function ModalShowDoc({
               </Checkbox.Group>
             </div>
           )}
+
+          <p className='text-[11px] text-gray-400'>
+            Se enviará el documento PDF adjunto al correo electrónico indicado.
+          </p>
         </div>
       </Modal>
 

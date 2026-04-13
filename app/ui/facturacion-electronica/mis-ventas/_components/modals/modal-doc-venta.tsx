@@ -229,9 +229,9 @@ export default function ModalDocVenta({
       pdfPublicUrl={pdfPublicUrl}
       emailConfig={{
         emailDefault: clienteEmail,
-        onSend: async (email) => {
+        onSend: async (email, _columnas, mensaje) => {
           if (!ventaId) throw new Error('No hay venta seleccionada')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'venta', id: ventaId, email })
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'venta', id: ventaId, email, mensaje })
           if (res.error) throw new Error(res.error.message)
         },
       }}

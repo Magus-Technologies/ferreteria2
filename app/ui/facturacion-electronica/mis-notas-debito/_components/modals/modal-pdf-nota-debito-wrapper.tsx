@@ -66,9 +66,9 @@ export default function ModalPdfNotaDebitoWrapper() {
       backendPdfLoading={loading && !pdfUrl}
       pdfPublicUrl={pdfPublicUrl}
       emailConfig={{
-        onSend: async (email) => {
+        onSend: async (email, _columnas, mensaje) => {
           if (!notaDebitoId) throw new Error('No hay nota de débito seleccionada')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'nota-debito', id: notaDebitoId, email })
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'nota-debito', id: notaDebitoId, email, mensaje })
           if (res.error) throw new Error(res.error.message)
         },
       }}

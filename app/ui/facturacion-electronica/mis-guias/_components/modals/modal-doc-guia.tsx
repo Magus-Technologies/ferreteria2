@@ -85,9 +85,9 @@ export default function ModalDocGuia({
       backendPdfLoading={currentLoading && !currentPdfUrl}
       pdfPublicUrl={pdfPublicUrl}
       emailConfig={{
-        onSend: async (email) => {
+        onSend: async (email, _columnas, mensaje) => {
           if (!guiaId) throw new Error('No hay guía seleccionada')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'guia', id: guiaId, email })
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'guia', id: guiaId, email, mensaje })
           if (res.error) throw new Error(res.error.message)
         },
       }}

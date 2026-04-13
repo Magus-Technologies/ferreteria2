@@ -85,9 +85,9 @@ export default function ModalDocPrestamo({
       backendPdfLoading={currentLoading && !currentPdfUrl}
       pdfPublicUrl={pdfPublicUrl}
       emailConfig={{
-        onSend: async (email) => {
+        onSend: async (email, _columnas, mensaje) => {
           if (!prestamoId) throw new Error('No hay préstamo seleccionado')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'prestamo', id: prestamoId, email })
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'prestamo', id: prestamoId, email, mensaje })
           if (res.error) throw new Error(res.error.message)
         },
       }}

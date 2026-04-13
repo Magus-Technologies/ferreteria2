@@ -189,6 +189,8 @@ export async function getValesCompra(params?: {
   vigentes?: boolean;
   activos?: boolean;
   search?: string;
+  desde?: string;
+  hasta?: string;
 }): Promise<ApiResponse<ValeCompraListResponse>> {
   return apiRequest<ValeCompraListResponse>('/vales-compra', {
     method: 'GET',

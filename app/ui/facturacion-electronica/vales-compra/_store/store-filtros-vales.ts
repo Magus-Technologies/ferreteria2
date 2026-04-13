@@ -6,6 +6,8 @@ export interface FiltrosVales {
   estado?: EstadoVale
   tipo_promocion?: TipoPromocion
   modalidad?: Modalidad
+  desde?: string
+  hasta?: string
 }
 
 interface StoreFiltrosVales {

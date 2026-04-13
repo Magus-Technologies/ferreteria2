@@ -34,6 +34,8 @@ export default function MisRequerimientosInternos() {
   const [filtroEstado, setFiltroEstado] = useState<string | undefined>()
   const [filtroTipo, setFiltroTipo] = useState<string | undefined>()
   const [filtroPrioridad, setFiltroPrioridad] = useState<string | undefined>()
+  const [filtroDesde, setFiltroDesde] = useState<string>(dayjs().format('YYYY-MM-DD'))
+  const [filtroHasta, setFiltroHasta] = useState<string>(dayjs().format('YYYY-MM-DD'))
   const [pagination, setPagination] = useState({ page: 1, perPage: 20, total: 0 })
   const [modalOpen, setModalOpen] = useState(false)
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
@@ -43,7 +45,7 @@ export default function MisRequerimientosInternos() {
 
   useEffect(() => {
     fetchRequerimientos()
-  }, [searchText, filtroEstado, filtroTipo, filtroPrioridad, pagination.page])
+  }, [searchText, filtroEstado, filtroTipo, filtroPrioridad, filtroDesde, filtroHasta, pagination.page])
 
   const fetchRequerimientos = async () => {
     setLoading(true)
@@ -53,6 +55,8 @@ export default function MisRequerimientosInternos() {
         estado: filtroEstado,
         tipo_solicitud: filtroTipo,
         prioridad: filtroPrioridad,
+        desde: filtroDesde || undefined,
+        hasta: filtroHasta || undefined,
         page: pagination.page,
         per_page: pagination.perPage,
       })
@@ -191,7 +195,25 @@ export default function MisRequerimientosInternos() {
       </div>
 
       <Card className="!rounded-2xl !border-slate-100 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mb-6">
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Desde:</span>
+            <DatePicker
+              value={filtroDesde ? dayjs(filtroDesde) : null}
+              onChange={(date) => setFiltroDesde(date ? date.format('YYYY-MM-DD') : '')}
+              format="DD/MM/YYYY"
+              className="!rounded-lg !w-full"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Hasta:</span>
+            <DatePicker
+              value={filtroHasta ? dayjs(filtroHasta) : null}
+              onChange={(date) => setFiltroHasta(date ? date.format('YYYY-MM-DD') : '')}
+              format="DD/MM/YYYY"
+              className="!rounded-lg !w-full"
+            />
+          </div>
           <Input
             placeholder="Buscar por código o título..."
             prefix={<SearchOutlined className="text-slate-400" />}
@@ -242,10 +264,12 @@ export default function MisRequerimientosInternos() {
               setFiltroEstado(undefined)
               setFiltroTipo(undefined)
               setFiltroPrioridad(undefined)
+              setFiltroDesde(dayjs().format('YYYY-MM-DD'))
+              setFiltroHasta(dayjs().format('YYYY-MM-DD'))
             }}
             className="!rounded-lg"
           >
-            Limpiar Filtros
+            Limpiar
           </Button>
         </div>
 

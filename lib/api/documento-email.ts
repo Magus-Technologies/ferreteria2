@@ -8,6 +8,7 @@ export const documentoEmailApi = {
     id: string
     email: string
     formato?: 'ticket' | 'a4'
+    mensaje?: string
   }) =>
     apiRequest<{ message: string }>('/documentos/enviar-email', {
       method: 'POST',

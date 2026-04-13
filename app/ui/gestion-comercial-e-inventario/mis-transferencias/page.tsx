@@ -44,7 +44,7 @@ export default function MisTransferenciasPage() {
   const [openTransferir, setOpenTransferir] = useState(false)
   const [filters, setFilters] = useState<TransferenciasFilters>({
     almacen_id: almacenId || undefined,
-    desde: toUTCBD({ date: dayjs().startOf('month') }),
+    desde: toUTCBD({ date: dayjs().startOf('day') }),
     hasta: toUTCBD({ date: dayjs().endOf('day') }),
   })
 
@@ -57,7 +57,7 @@ export default function MisTransferenciasPage() {
         name="filtros-mis-transferencias"
         initialValues={{
           almacen_id: almacenId,
-          desde: dayjs().startOf('month'),
+          desde: dayjs().startOf('day'),
           hasta: dayjs(),
         }}
         className="w-full"

@@ -66,9 +66,9 @@ export default function ModalPdfNotaCreditoWrapper() {
       backendPdfLoading={loading && !pdfUrl}
       pdfPublicUrl={pdfPublicUrl}
       emailConfig={{
-        onSend: async (email) => {
+        onSend: async (email, _columnas, mensaje) => {
           if (!notaCreditoId) throw new Error('No hay nota de crédito seleccionada')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'nota-credito', id: notaCreditoId, email })
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'nota-credito', id: notaCreditoId, email, mensaje })
           if (res.error) throw new Error(res.error.message)
         },
       }}

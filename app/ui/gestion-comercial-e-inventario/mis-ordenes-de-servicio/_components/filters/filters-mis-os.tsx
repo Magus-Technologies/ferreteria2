@@ -2,17 +2,21 @@
 
 import { Form, Select, Drawer, Badge, Input } from 'antd'
 import { FaSearch, FaFilter, FaPlusCircle } from 'react-icons/fa'
-import { FaWrench } from 'react-icons/fa'
+import { FaWrench, FaCalendar } from 'react-icons/fa6'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
+import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { useStoreFiltrosMisOS } from '../../_store/store-filtros-mis-os'
 import { useEffect, useState } from 'react'
 import type { RequerimientoFilters } from '~/lib/api/requerimiento-interno'
 import { useDebounce } from 'use-debounce'
+import dayjs, { type Dayjs } from 'dayjs'
 
 interface ValuesFiltersMisOS {
+  desde?: Dayjs
+  hasta?: Dayjs
   estado?: string
   prioridad?: string
   search?: string
@@ -57,6 +61,8 @@ export default function FiltersMisOS({
       estado: values.estado,
       prioridad: values.prioridad,
       search: values.search,
+      desde: values.desde ? values.desde.format('YYYY-MM-DD') : undefined,
+      hasta: values.hasta ? values.hasta.format('YYYY-MM-DD') : undefined,
     }
     setFiltros(filtros)
     setDrawerOpen(false)
@@ -66,6 +72,10 @@ export default function FiltersMisOS({
     <FormBase
       form={form}
       name="filtros-mis-os"
+      initialValues={{
+        desde: dayjs().startOf('day'),
+        hasta: dayjs().endOf('day'),
+      }}
       className="w-full"
       onValuesChange={() => {
         form.submit()
@@ -81,18 +91,36 @@ export default function FiltersMisOS({
       <div className="flex items-center justify-between w-full mt-2 gap-2 flex-wrap">
         <div className="hidden lg:flex items-center gap-1.5 flex-nowrap shrink-0">
           <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Desde:</span>
+            <DatePickerBase
+              propsForm={{ name: "desde", hasFeedback: false, className: "!mb-0" }}
+              className="!w-[140px]"
+              prefix={<FaCalendar size={12} className="text-emerald-600" />}
+            />
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Hasta:</span>
+            <DatePickerBase
+              propsForm={{ name: "hasta", hasFeedback: false, className: "!mb-0" }}
+              className="!w-[140px]"
+              prefix={<FaCalendar size={12} className="text-emerald-600" />}
+            />
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
             <Form.Item name="search" className="!mb-0">
               <Input
                 placeholder="Buscar (Título, Código, Cargo)"
                 prefix={<FaSearch className="text-slate-400" />}
-                className="!w-[280px]"
+                className="!w-[250px]"
                 allowClear
                 onChange={(e) => setSearchValue(e.target.value)}
               />
             </Form.Item>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0 ml-2">
+          <div className="flex items-center gap-1 shrink-0">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Estado:</span>
             <Form.Item name="estado" className="!mb-0">
               <Select
@@ -151,6 +179,20 @@ export default function FiltersMisOS({
         open={drawerOpen}
       >
         <div className="flex flex-col gap-4">
+          <LabelBase label="Desde:">
+            <DatePickerBase
+              propsForm={{ name: "desde", hasFeedback: false, className: "!mb-0 w-full" }}
+              className="w-full"
+              prefix={<FaCalendar size={12} className="text-emerald-600" />}
+            />
+          </LabelBase>
+          <LabelBase label="Hasta:">
+            <DatePickerBase
+              propsForm={{ name: "hasta", hasFeedback: false, className: "!mb-0 w-full" }}
+              className="w-full"
+              prefix={<FaCalendar size={12} className="text-emerald-600" />}
+            />
+          </LabelBase>
           <LabelBase label="Buscar:">
             <Form.Item name="search" className="!mb-0 w-full">
               <Input

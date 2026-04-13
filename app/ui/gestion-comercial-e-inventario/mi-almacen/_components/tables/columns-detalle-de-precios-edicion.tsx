@@ -539,7 +539,7 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
-      headerName: 'Comisión Especial',
+      headerName: 'Comisión Ferretería',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -605,7 +605,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Activador Especial',
+      headerName: 'Activador Ferretería',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -618,7 +618,7 @@ export function useColumnsDetalleDePreciosEdicion({
                 name: [value, 'activador_especial'],
               }}
               formWithMessage={false}
-              placeholder='Activador Especial'
+              placeholder='Activador Ferretería'
               precision={2}
             />
           </div>

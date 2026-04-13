@@ -149,9 +149,9 @@ export default function ModalDocCotizacion({
       whatsappMensajeAuto={whatsappMensajeAuto}
       emailConfig={{
         emailDefault: data?.cliente?.email || undefined,
-        onSend: async (email) => {
+        onSend: async (email, _columnas, mensaje) => {
           if (!cotizacionId) throw new Error('No hay cotización seleccionada')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'cotizacion', id: String(cotizacionId), email })
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'cotizacion', id: String(cotizacionId), email, mensaje })
           if (res.error) throw new Error(res.error.message)
         },
       }}

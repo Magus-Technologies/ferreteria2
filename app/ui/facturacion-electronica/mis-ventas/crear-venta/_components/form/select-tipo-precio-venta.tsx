@@ -53,7 +53,7 @@ export default function SelectTipoPrecioVenta({
   const opciones = (['publico', 'especial', 'minimo', 'ultimo'] as TipoPrecio[]).map((tipo) => {
     const activadorKey = activadorMap[tipo]
     let disabled = false
-    let label = tipo === 'publico' ? 'Público' : tipo === 'especial' ? 'Especial' : tipo === 'minimo' ? 'Mínimo' : 'Último'
+    let label = tipo === 'publico' ? 'Público' : tipo === 'especial' ? 'Ferretería' : tipo === 'minimo' ? 'Mínimo' : 'Último'
 
     if (activadorKey) {
       const activador = Number((unidadDerivadaActual as any)[activadorKey] ?? 0)
