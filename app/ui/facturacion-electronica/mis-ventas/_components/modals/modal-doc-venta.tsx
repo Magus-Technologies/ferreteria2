@@ -4,6 +4,7 @@ import { getAuthToken, apiRequest } from '~/lib/api'
 import { useQzPrintMultiple } from '~/hooks/use-qz-print-multiple'
 import { message } from 'antd'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { documentoEmailApi } from '~/lib/api/documento-email'
 
 // ============= COMPONENT =============
 
@@ -87,6 +88,16 @@ export default function ModalDocVenta({
 
     return msg
   }, [ventaInfo, empresa])
+
+  // URL pública del PDF para WhatsApp
+  const pdfPublicUrl = useMemo(() => {
+    if (!ventaId) return undefined
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    return `${API_URL}/pdf/venta/${ventaId}?formato=a4`
+  }, [ventaId])
+
+  // Email del cliente
+  const clienteEmail = ventaInfo?.cliente?.email || undefined
 
   // Teléfonos del cliente
   const clienteTelefonos = useMemo(() => {
@@ -215,6 +226,15 @@ export default function ModalDocVenta({
       onCustomPrint={esTicket && tieneVales ? handleCustomPrint : undefined}
       clienteTelefonos={clienteTelefonos}
       whatsappMensajeAuto={whatsappMensajeAuto}
+      pdfPublicUrl={pdfPublicUrl}
+      emailConfig={{
+        emailDefault: clienteEmail,
+        onSend: async (email) => {
+          if (!ventaId) throw new Error('No hay venta seleccionada')
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'venta', id: ventaId, email })
+          if (res.error) throw new Error(res.error.message)
+        },
+      }}
     >
       {/* Fallback vacío - todo se renderiza desde el backend */}
       <></>

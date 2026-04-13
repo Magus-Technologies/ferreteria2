@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
+import { documentoEmailApi } from '~/lib/api/documento-email'
 
 // ============= COMPONENT =============
 
@@ -66,6 +67,12 @@ export default function ModalDocGuia({
   const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
   const currentLoading = esTicket ? loading : !a4PdfUrl
 
+  const pdfPublicUrl = useMemo(() => {
+    if (!guiaId) return undefined
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    return `${API_URL}/pdf/guia/${guiaId}?formato=a4`
+  }, [guiaId])
+
   return (
     <ModalShowDoc
       open={open}
@@ -76,6 +83,14 @@ export default function ModalDocGuia({
       tipoDocumento='guia'
       backendPdfUrl={currentPdfUrl}
       backendPdfLoading={currentLoading && !currentPdfUrl}
+      pdfPublicUrl={pdfPublicUrl}
+      emailConfig={{
+        onSend: async (email) => {
+          if (!guiaId) throw new Error('No hay guía seleccionada')
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'guia', id: guiaId, email })
+          if (res.error) throw new Error(res.error.message)
+        },
+      }}
     >
       <></>
     </ModalShowDoc>

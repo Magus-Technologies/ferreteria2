@@ -242,35 +242,6 @@ export default function ModalShowDoc({
       return
     }
 
-    // Descargar el PDF (Intentar usar la URL con parámetros para que el PDF descargado también esté filtrado)
-    try {
-      const urlBase = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
-      const urlConParams = buildPdfUrlWithParams(urlBase || '', whatsappColumnasSelec, whatsappExtrasSelec)
-      
-      // Si tenemos una URL pública (template), la usamos para descargar el PDF filtrado
-      // Si no, caemos al blob estático (backendPdfUrl)
-      const blob = await getPdfBlob(urlConParams || undefined)
-      
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${nro_doc}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error('Error al descargar PDF filtrado:', err)
-      // Si falla lo filtrado, intentamos al menos descargar el original
-      getPdfBlob().then(blob => {
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${nro_doc}.pdf`
-        link.click()
-        URL.revokeObjectURL(url)
-      }).catch(() => {})
-    }
-
-    // El mensaje ya está construido con los checkboxes seleccionados y la URL con parámetros
     const numero = tel.startsWith('51') ? tel : `51${tel}`
     const texto = encodeURIComponent(whatsappMensaje)
     window.open(`https://wa.me/${numero}?text=${texto}`, '_blank')
@@ -328,6 +299,11 @@ export default function ModalShowDoc({
     }
 
     // Modo legacy: tickets de apertura/cierre de caja
+    if (!aperturaId && !cierreId) {
+      antdMessage.warning('Envío de correo no configurado para este documento')
+      return
+    }
+
     setSendingEmail(true)
     try {
       const pdfBlob = await getPdfBlob()
@@ -383,19 +359,16 @@ export default function ModalShowDoc({
                   <FaWhatsapp />
                 </ButtonBase>
               </Tooltip>
-              {/* Botón Email: aparece si hay emailConfig O si es ticket de apertura/cierre */}
-              {(emailConfig || aperturaId || cierreId) && (
-                <Tooltip title='Enviar por Correo'>
-                  <ButtonBase
-                    onClick={handleOpenEmail}
-                    color='info'
-                    size='md'
-                    className='!px-3'
-                  >
-                    <MdEmail />
-                  </ButtonBase>
-                </Tooltip>
-              )}
+              <Tooltip title='Enviar por Correo'>
+                <ButtonBase
+                  onClick={handleOpenEmail}
+                  color='info'
+                  size='md'
+                  className='!px-3'
+                >
+                  <MdEmail />
+                </ButtonBase>
+              </Tooltip>
               {setEsTicket && (
                 <Tooltip title='Cambiar modelo'>
                   <ButtonBase
@@ -472,10 +445,11 @@ export default function ModalShowDoc({
       <Modal
         title={
           <div className='flex items-center gap-2'>
-            <MdEmail className='text-blue-500' size={18} />
-            <span>Enviar Documento por Correo</span>
+            <MdEmail className='text-blue-500' size={22} />
+            <span className='text-lg font-semibold'>Enviar Documento por Correo</span>
           </div>
         }
+        width={500}
         open={emailModalOpen}
         onOk={handleSendEmail}
         onCancel={() => {
@@ -549,19 +523,20 @@ export default function ModalShowDoc({
       <Modal
         title={
           <div className='flex items-center gap-2'>
-            <FaWhatsapp className='text-green-500' size={20} />
-            <span>Enviar por WhatsApp</span>
+            <FaWhatsapp className='text-green-500' size={22} />
+            <span className='text-lg font-semibold'>Enviar por WhatsApp</span>
           </div>
         }
         open={whatsappModalOpen}
         onOk={handleSendWhatsapp}
         onCancel={() => setWhatsappModalOpen(false)}
-        okText='Enviar y Descargar PDF'
+        okText='Enviar'
         cancelText='Cancelar'
         okButtonProps={{ className: '!bg-green-600 hover:!bg-green-700 !border-green-600 rounded-xl' }}
         cancelButtonProps={{ className: 'rounded-xl' }}
+        width={550}
       >
-        <div className='py-3 flex flex-col gap-3'>
+        <div className='py-4 flex flex-col gap-4'>
           {/* Teléfono */}
           <div>
             <label className='block text-sm font-medium mb-1'>Teléfono:</label>
@@ -646,7 +621,7 @@ export default function ModalShowDoc({
             />
           </div>
           <p className='text-[11px] text-gray-400'>
-            Se descargará el PDF y se abrirá WhatsApp con el mensaje. Adjunta el PDF manualmente en el chat.
+            Se abrirá WhatsApp con el mensaje y el enlace al documento PDF.
           </p>
         </div>
       </Modal>

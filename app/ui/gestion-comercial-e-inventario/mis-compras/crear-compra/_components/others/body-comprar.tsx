@@ -7,7 +7,7 @@ import FormTableComprar from '../form/form-table-comprar'
 import FormBase from '~/components/form/form-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useCheckAperturaDiaria } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_hooks/use-check-apertura-diaria'
 import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 import {
@@ -95,6 +95,9 @@ export default function BodyComprar({
 
   const { handleSubmit, loading } = useCreateCompra({ compra, form })
 
+  const [proveedorDefault, setProveedorDefault] = useState<{ id: number; ruc: string; razon_social: string }[]>([])
+  const [proveedorRucInicial, setProveedorRucInicial] = useState('')
+
   useEffect(() => {
     setProductosCompra([])
     setProductoAgregadoCompra(undefined)
@@ -122,6 +125,16 @@ export default function BodyComprar({
         bonificacion: false,
         subtotal: p.subtotal,
       }))
+      // Pre-cargar proveedor en el SelectProveedores para mostrar RUC correctamente
+      if (orden.proveedor) {
+        setProveedorDefault([{
+          id: orden.proveedor.id,
+          ruc: orden.proveedor.ruc,
+          razon_social: orden.proveedor.razon_social,
+        }])
+        setProveedorRucInicial(orden.proveedor.ruc)
+      }
+
       form.setFieldsValue({
         fecha: dayjs(orden.fecha) as unknown as Dayjs,
         orden_compra_id: orden.id,
@@ -137,7 +150,7 @@ export default function BodyComprar({
         productos,
         estado_de_compra: EstadoDeCompra.Creado,
       })
-      
+
       // Auto-submit después de cargar los datos - aumentar timeout para asegurar que los valores se propaguen
       setTimeout(() => {
         form.submit()
@@ -164,7 +177,7 @@ export default function BodyComprar({
               <FormTableComprar form={form} compra={compra} />
             </div>
           </ConfigurableElement>
-          <FormCrearCompra form={form} compra={compra} />
+          <FormCrearCompra form={form} compra={compra} proveedorOptionsDefault={proveedorDefault} initialSearchTextProveedor={proveedorRucInicial} />
         </div>
         <div className='w-full xl:w-auto'>
           <CardsInfoCompra
