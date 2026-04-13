@@ -25,18 +25,18 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha }: 
   const ventasData = resumen.detalle_ventas || []
   const metodosPagoData = resumen.detalle_metodos_pago || []
   const otrosIngresosData = resumen.detalle_ingresos ? Object.values(resumen.detalle_ingresos) : []
+  const ingresosExtrasData = resumen.detalle_ingresos_extras ? Object.values(resumen.detalle_ingresos_extras) : []
   const prestamosRecibidosData = resumen.prestamos_recibidos || []
   const gastosData = resumen.detalle_egresos ? Object.values(resumen.detalle_egresos) : []
+  const gastosExtrasData = resumen.detalle_gastos_extras ? Object.values(resumen.detalle_gastos_extras) : []
   const prestamosDadosData = resumen.prestamos_dados || []
   const movimientosData = resumen.movimientos_internos || []
   const bancosData = resumen.resumen_bancos || []
 
-  const totalOtrosIngresos =
-    (resumen.total_ingresos || 0) -
-    (resumen.total_ventas || 0) -
-    (resumen.total_prestamos_recibidos || 0)
-
-  const totalGastos = (resumen.total_egresos || 0) - (resumen.total_prestamos_dados || 0)
+  const totalOtrosIngresos = resumen.total_otros_ingresos || 0
+  const totalIngresosExtras = resumen.total_ingresos_extras || 0
+  const totalGastos = resumen.total_gastos || 0
+  const totalGastosExtras = resumen.total_gastos_extras || 0
 
   const items = [
     {
@@ -50,9 +50,9 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha }: 
       children: <TabMetodosPago data={metodosPagoData} totalVentas={resumen.total_ventas} />,
     },
     {
-      key: '3',
-      label: `Otros Ingresos (${otrosIngresosData.length})`,
-      children: <TabOtrosIngresos data={otrosIngresosData} total={totalOtrosIngresos} />,
+      key: 'extras_in',
+      label: `Ingresos Extras (${ingresosExtrasData.length})`,
+      children: <TabOtrosIngresos data={ingresosExtrasData} total={totalIngresosExtras} />,
     },
     {
       key: '4',
@@ -60,9 +60,9 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha }: 
       children: <TabPrestamosRecibidos data={prestamosRecibidosData} total={resumen.total_prestamos_recibidos} />,
     },
     {
-      key: '5',
-      label: `Gastos (${gastosData.length})`,
-      children: <TabGastos data={gastosData} total={totalGastos} />,
+      key: 'extras_out',
+      label: `Gastos Extras (${gastosExtrasData.length})`,
+      children: <TabGastos data={gastosExtrasData} total={totalGastosExtras} />,
     },
     {
       key: '6',

@@ -95,6 +95,18 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen }: Mod
             columns = columnasMovimientosTransacciones
             rowData = resumen.detalle_egresos ? Object.values(resumen.detalle_egresos) : []
             break
+        case 'ingreso_extra':
+            title = 'Detalle de Ingresos Extras'
+            icon = <FaArrowCircleUp className='text-green-600' />
+            columns = columnasMovimientosTransacciones
+            rowData = resumen.detalle_ingresos_extras ? Object.values(resumen.detalle_ingresos_extras) : []
+            break
+        case 'gasto_extra':
+            title = 'Detalle de Gastos Extras'
+            icon = <FaArrowCircleDown className='text-orange-600' />
+            columns = columnasMovimientosTransacciones
+            rowData = resumen.detalle_gastos_extras ? Object.values(resumen.detalle_gastos_extras) : []
+            break
         case 'prestamos_dados':
             title = 'Detalle de Préstamos Dados'
             icon = <FaArrowCircleDown className='text-orange-500' />

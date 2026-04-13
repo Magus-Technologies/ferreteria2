@@ -1,4 +1,4 @@
-import { Modal, Tooltip, Input, Spin, message as antdMessage, Select } from 'antd'
+import { Modal, Tooltip, Input, Spin, message as antdMessage, Select, Checkbox } from 'antd'
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import { FaWhatsapp } from 'react-icons/fa'
@@ -38,6 +38,41 @@ interface ModalEntradaStockProps {
   whatsappMensajeAuto?: string
   /** URL pública del PDF para incluir en el mensaje de WhatsApp */
   pdfPublicUrl?: string
+  /**
+   * Configuración para personalización del mensaje de WhatsApp.
+   * Permite elegir columnas/campos a incluir y adjuntar URL pública del PDF.
+   */
+  whatsappConfig?: {
+    /** URL pública del PDF (sin autenticación) para incluir en el mensaje. */
+    pdfPublicUrl?: string
+    /** Columnas/campos de la tabla del documento. */
+    columnas?: { label: string; value: string }[]
+    /** Columnas seleccionadas por defecto. Si no se pasa, se marcan todas. */
+    defaultColumnas?: string[]
+    /** Extras adicionales: subtotal, total, etc. */
+    extras?: { label: string; value: string }[]
+    /** Extras seleccionados por defecto. */
+    defaultExtras?: string[]
+    /**
+     * Callback que construye el bloque de detalle del mensaje según las columnas y extras seleccionados.
+     * Recibe los values de los checkboxes marcados y devuelve el texto a agregar al mensaje.
+     */
+    buildDetalle?: (columnas: string[], extras: string[]) => string
+  }
+  /**
+   * Configuración para envío de correo electrónico.
+   * Cuando se proporciona, aparece el botón de email en la barra de acciones.
+   */
+  emailConfig?: {
+    /** Callback que ejecuta el envío real. Recibe email destino y columnas seleccionadas. */
+    onSend: (email: string, columnas: string[]) => Promise<void>
+    /** Lista de columnas/campos que el usuario puede elegir incluir en el email. */
+    columnas?: { label: string; value: string }[]
+    /** Columnas marcadas por defecto. Si no se pasa, se marcan todas. */
+    defaultColumnas?: string[]
+    /** Email del destinatario pre-llenado (ej: correo del proveedor). */
+    emailDefault?: string
+  }
 }
 export default function ModalShowDoc({
   open,
@@ -55,11 +90,14 @@ export default function ModalShowDoc({
   clienteTelefonos,
   whatsappMensajeAuto,
   pdfPublicUrl,
+  whatsappConfig,
+  emailConfig,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [emailDestino, setEmailDestino] = useState('')
+  const [emailColumnasSelec, setEmailColumnasSelec] = useState<string[]>([])
   const [sendingEmail, setSendingEmail] = useState(false)
   const [openImpresoraModal, setOpenImpresoraModal] = useState(false)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
@@ -121,13 +159,25 @@ export default function ModalShowDoc({
   }, [open])
 
   // Obtener blob del PDF actual
-  const getPdfBlob = async () => {
-    if (backendPdfUrl) {
-      const res = await fetch(backendPdfUrl)
+  const getPdfBlob = async (customUrl?: string) => {
+    const fetchUrl = customUrl || backendPdfUrl
+    if (fetchUrl) {
+      const res = await fetch(fetchUrl)
       return await res.blob()
     }
     const pdf = await loadPdf()
     return await pdf(<>{childrenRef.current}</>).toBlob()
+  }
+
+  // Helper para construir URL con parámetros de columnas
+  const buildPdfUrlWithParams = (baseUrl: string, cols: string[], extras: string[]) => {
+    if (!baseUrl) return ''
+    const params = new URLSearchParams()
+    cols.forEach(c => params.append('columnas[]', c))
+    extras.forEach(e => params.append('columnas[]', e))
+    const queryString = params.toString()
+    if (!queryString) return baseUrl
+    return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryString}`
   }
 
   // Descargar PDF
@@ -144,18 +194,44 @@ export default function ModalShowDoc({
   // WhatsApp
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false)
   const [whatsappTelefono, setWhatsappTelefono] = useState('')
-  const [whatsappMensaje, setWhatsappMensaje] = useState('')
+  const [whatsappMensajeBase, setWhatsappMensajeBase] = useState('') // cabecera fija
+  const [whatsappMensaje, setWhatsappMensaje] = useState('')         // mensaje completo (calculado)
+  const [whatsappColumnasSelec, setWhatsappColumnasSelec] = useState<string[]>([])
+  const [whatsappExtrasSelec, setWhatsappExtrasSelec] = useState<string[]>([])
+  const [incluirUrlPdf, setIncluirUrlPdf] = useState(true)
+
+  // Reconstruir el mensaje completo cada vez que cambian los checkboxes o la URL
+  useEffect(() => {
+    if (!whatsappModalOpen) return
+    let msg = whatsappMensajeBase
+    if (whatsappConfig?.buildDetalle) {
+      const detalle = whatsappConfig.buildDetalle(whatsappColumnasSelec, whatsappExtrasSelec)
+      if (detalle) msg += `\n\n${detalle}`
+    }
+    
+    // Construir URL pública con parámetros dinámicos
+    const urlBase = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
+    const urlPublicaConParams = buildPdfUrlWithParams(urlBase || '', whatsappColumnasSelec, whatsappExtrasSelec)
+
+    if (incluirUrlPdf && urlPublicaConParams) {
+      msg += `\n\n📎 Ver/descargar PDF:\n${urlPublicaConParams}`
+    }
+    setWhatsappMensaje(msg)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [whatsappColumnasSelec, whatsappExtrasSelec, incluirUrlPdf, whatsappModalOpen, whatsappMensajeBase, whatsappConfig, pdfPublicUrl])
 
   const handleOpenWhatsapp = () => {
-    // Pre-llenar con primer teléfono del cliente si existe
+    // Pre-llenar teléfono
     const tel = clienteTelefonos?.find(t => t && t.trim()) || ''
     setWhatsappTelefono(tel)
-    // Usar mensaje automático si está disponible
-    if (whatsappMensajeAuto) {
-      setWhatsappMensaje(whatsappMensajeAuto)
-    } else {
-      setWhatsappMensaje(`Hola, le comparto su documento ${nro_doc}. Gracias por su compra.`)
-    }
+    // Pre-seleccionar columnas y extras
+    const cols = whatsappConfig?.columnas
+    setWhatsappColumnasSelec(whatsappConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? [])
+    const extras = whatsappConfig?.extras
+    setWhatsappExtrasSelec(whatsappConfig?.defaultExtras ?? extras?.map(e => e.value) ?? [])
+    // Guardar mensaje base (cabecera sin detalle)
+    const base = whatsappMensajeAuto || `Hola, le comparto su documento ${nro_doc}.`
+    setWhatsappMensajeBase(base)
     setWhatsappModalOpen(true)
   }
 
@@ -165,19 +241,36 @@ export default function ModalShowDoc({
       antdMessage.error('Ingresa un número de teléfono')
       return
     }
-    // Descargar el PDF primero
+
+    // Descargar el PDF (Intentar usar la URL con parámetros para que el PDF descargado también esté filtrado)
     try {
-      const blob = await getPdfBlob()
+      const urlBase = whatsappConfig?.pdfPublicUrl || pdfPublicUrl
+      const urlConParams = buildPdfUrlWithParams(urlBase || '', whatsappColumnasSelec, whatsappExtrasSelec)
+      
+      // Si tenemos una URL pública (template), la usamos para descargar el PDF filtrado
+      // Si no, caemos al blob estático (backendPdfUrl)
+      const blob = await getPdfBlob(urlConParams || undefined)
+      
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = `${nro_doc}.pdf`
       link.click()
       URL.revokeObjectURL(url)
-    } catch {
-      // silencioso
+    } catch (err) {
+      console.error('Error al descargar PDF filtrado:', err)
+      // Si falla lo filtrado, intentamos al menos descargar el original
+      getPdfBlob().then(blob => {
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${nro_doc}.pdf`
+        link.click()
+        URL.revokeObjectURL(url)
+      }).catch(() => {})
     }
-    // Abrir WhatsApp con el mensaje
+
+    // El mensaje ya está construido con los checkboxes seleccionados y la URL con parámetros
     const numero = tel.startsWith('51') ? tel : `51${tel}`
     const texto = encodeURIComponent(whatsappMensaje)
     window.open(`https://wa.me/${numero}?text=${texto}`, '_blank')
@@ -202,13 +295,39 @@ export default function ModalShowDoc({
     qz.listarImpresoras()
   }
 
-  // Funcion para enviar email
+  // Abrir modal de email: pre-llenar defaults
+  const handleOpenEmail = () => {
+    setEmailDestino(emailConfig?.emailDefault ?? '')
+    const cols = emailConfig?.columnas
+    const defaults = emailConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? []
+    setEmailColumnasSelec(defaults)
+    setEmailModalOpen(true)
+  }
+
+  // Enviar email usando el callback del config
   const handleSendEmail = async () => {
     if (!emailDestino || !emailDestino.includes('@')) {
-      antdMessage.error('Por favor ingresa un email valido')
+      antdMessage.error('Por favor ingresa un email válido')
       return
     }
 
+    if (emailConfig) {
+      // Modo genérico: delegar al callback del padre
+      setSendingEmail(true)
+      try {
+        await emailConfig.onSend(emailDestino, emailColumnasSelec)
+        antdMessage.success('Documento enviado exitosamente por correo')
+        setEmailModalOpen(false)
+        setEmailDestino('')
+      } catch (error: any) {
+        antdMessage.error(error.message || 'Error al enviar el documento por correo')
+      } finally {
+        setSendingEmail(false)
+      }
+      return
+    }
+
+    // Modo legacy: tickets de apertura/cierre de caja
     setSendingEmail(true)
     try {
       const pdfBlob = await getPdfBlob()
@@ -264,10 +383,11 @@ export default function ModalShowDoc({
                   <FaWhatsapp />
                 </ButtonBase>
               </Tooltip>
-              {(aperturaId || cierreId) && (
-                <Tooltip title='Enviar por Email'>
+              {/* Botón Email: aparece si hay emailConfig O si es ticket de apertura/cierre */}
+              {(emailConfig || aperturaId || cierreId) && (
+                <Tooltip title='Enviar por Correo'>
                   <ButtonBase
-                    onClick={() => setEmailModalOpen(true)}
+                    onClick={handleOpenEmail}
                     color='info'
                     size='md'
                     className='!px-3'
@@ -348,33 +468,61 @@ export default function ModalShowDoc({
         </div>
       </Modal>
 
-      {/* Modal para ingresar email */}
+      {/* Modal de email */}
       <Modal
-        title="Enviar Ticket por Email"
+        title={
+          <div className='flex items-center gap-2'>
+            <MdEmail className='text-blue-500' size={18} />
+            <span>Enviar Documento por Correo</span>
+          </div>
+        }
         open={emailModalOpen}
         onOk={handleSendEmail}
         onCancel={() => {
           setEmailModalOpen(false)
           setEmailDestino('')
         }}
-        okText="Enviar"
-        cancelText="Cancelar"
+        okText='Enviar'
+        cancelText='Cancelar'
         confirmLoading={sendingEmail}
         okButtonProps={{ className: classOkButtonModal }}
         cancelButtonProps={{ className: 'rounded-xl' }}
       >
-        <div className="py-4">
-          <label className="block text-sm font-medium mb-2">
-            Email de destino:
-          </label>
-          <Input
-            type="email"
-            placeholder="ejemplo@correo.com"
-            value={emailDestino}
-            onChange={(e) => setEmailDestino(e.target.value)}
-            onPressEnter={handleSendEmail}
-            autoFocus
-          />
+        <div className='py-4 flex flex-col gap-4'>
+          <div>
+            <label className='block text-sm font-medium mb-2'>
+              Correo electrónico del destinatario:
+            </label>
+            <Input
+              type='email'
+              placeholder='ejemplo@correo.com'
+              value={emailDestino}
+              onChange={(e) => setEmailDestino(e.target.value)}
+              onPressEnter={handleSendEmail}
+              autoFocus
+            />
+          </div>
+
+          {/* Columnas seleccionables si el emailConfig las define */}
+          {emailConfig?.columnas && emailConfig.columnas.length > 0 && (
+            <div>
+              <label className='block text-sm font-medium mb-2'>
+                Información a incluir en el correo:
+              </label>
+              <Checkbox.Group
+                value={emailColumnasSelec}
+                onChange={(vals) => setEmailColumnasSelec(vals as string[])}
+              >
+                <div className='grid grid-cols-2 gap-y-2 gap-x-4'>
+                  {emailConfig.columnas.map(col => (
+                    <Checkbox key={col.value} value={col.value}>
+                      {col.label}
+                    </Checkbox>
+                  ))}
+                </div>
+              </Checkbox.Group>
+            </div>
+          )}
         </div>
       </Modal>
 
@@ -414,6 +562,7 @@ export default function ModalShowDoc({
         cancelButtonProps={{ className: 'rounded-xl' }}
       >
         <div className='py-3 flex flex-col gap-3'>
+          {/* Teléfono */}
           <div>
             <label className='block text-sm font-medium mb-1'>Teléfono:</label>
             {clienteTelefonos && clienteTelefonos.filter(t => t?.trim()).length > 1 ? (
@@ -433,6 +582,59 @@ export default function ModalShowDoc({
               />
             )}
           </div>
+
+          {/* Columnas a incluir */}
+          {whatsappConfig?.columnas && whatsappConfig.columnas.length > 0 && (
+            <div>
+              <label className='block text-sm font-medium mb-1'>Columnas a incluir en el mensaje:</label>
+              <Checkbox.Group
+                value={whatsappColumnasSelec}
+                onChange={(vals) => setWhatsappColumnasSelec(vals as string[])}
+              >
+                <div className='grid grid-cols-2 gap-y-1 gap-x-4'>
+                  {whatsappConfig.columnas.map(col => (
+                    <Checkbox key={col.value} value={col.value}>{col.label}</Checkbox>
+                  ))}
+                </div>
+              </Checkbox.Group>
+            </div>
+          )}
+
+          {/* Extras: subtotal, total, etc. */}
+          {whatsappConfig?.extras && whatsappConfig.extras.length > 0 && (
+            <div>
+              <label className='block text-sm font-medium mb-1'>Totales a incluir:</label>
+              <Checkbox.Group
+                value={whatsappExtrasSelec}
+                onChange={(vals) => setWhatsappExtrasSelec(vals as string[])}
+              >
+                <div className='flex gap-4'>
+                  {whatsappConfig.extras.map(ex => (
+                    <Checkbox key={ex.value} value={ex.value}>{ex.label}</Checkbox>
+                  ))}
+                </div>
+              </Checkbox.Group>
+            </div>
+          )}
+
+          {/* URL pública del PDF */}
+          {(whatsappConfig?.pdfPublicUrl || pdfPublicUrl) && (
+            <div className='flex items-center gap-2'>
+              <Checkbox
+                checked={incluirUrlPdf}
+                onChange={e => setIncluirUrlPdf(e.target.checked)}
+              >
+                Incluir enlace al PDF en el mensaje
+              </Checkbox>
+              {incluirUrlPdf && (
+                <span className='text-[11px] text-blue-500 truncate max-w-[200px]'>
+                  {whatsappConfig?.pdfPublicUrl || pdfPublicUrl}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Mensaje */}
           <div>
             <label className='block text-sm font-medium mb-1'>Mensaje:</label>
             <Input.TextArea

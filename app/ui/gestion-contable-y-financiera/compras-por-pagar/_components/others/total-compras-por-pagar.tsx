@@ -48,8 +48,10 @@ export default function TotalComprasPorPagar() {
     const compras = data?.data ?? []
     
     // El backend ya filtra compras a crédito con saldo pendiente
-    return compras.reduce((acc, compra) => {
-      const total = (compra.productos_por_almacen || []).reduce((itemAcc, item) => {
+    const arrCompras = Array.isArray(compras) ? compras : [];
+    return arrCompras.reduce((acc, compra) => {
+      const productos = Array.isArray(compra.productos_por_almacen) ? compra.productos_por_almacen : [];
+      const total = productos.reduce((itemAcc, item) => {
         const costo = Number(item.costo ?? 0)
         for (const u of item.unidades_derivadas ?? []) {
           const cantidad = Number(u.cantidad ?? 0)

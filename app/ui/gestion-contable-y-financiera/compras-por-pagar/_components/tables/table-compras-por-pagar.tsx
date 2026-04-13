@@ -145,10 +145,11 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
       headerName: 'Total',
       width: 120,
       cellRenderer: (params: any) => {
-        const compra = params.data as Compra
-        if (!compra) return 'S/. 0.00'
+        const compras = params.data as Compra
+        if (!compras) return 'S/. 0.00'
         
-        const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
+        const productos = Array.isArray(compras.productos_por_almacen) ? compras.productos_por_almacen : [];
+        const total = productos.reduce((acc, item) => {
           const costo = Number(item.costo ?? 0)
           for (const u of item.unidades_derivadas ?? []) {
             const cantidad = Number(u.cantidad ?? 0)
@@ -179,7 +180,8 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
         const compra = params.data as Compra
         if (!compra) return 'S/. 0.00'
         
-        const total = (compra.productos_por_almacen || []).reduce((acc, item) => {
+        const productos = Array.isArray(compra.productos_por_almacen) ? compra.productos_por_almacen : [];
+        const total = productos.reduce((acc, item) => {
           const costo = Number(item.costo ?? 0)
           for (const u of item.unidades_derivadas ?? []) {
             const cantidad = Number(u.cantidad ?? 0)

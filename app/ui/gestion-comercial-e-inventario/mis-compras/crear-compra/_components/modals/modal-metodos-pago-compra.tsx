@@ -167,24 +167,48 @@ export default function ModalMetodosPagoCompra({
   }
 
   const handleGuardar = () => {
-    if (saldoConEgreso > 0 && metodosPago.length === 0) {
-      message.error('Debes agregar al menos un método de pago')
+    // Validar que haya al menos un método de pago o egreso
+    const tieneEgresos = montoTotalEgresos > 0
+    const tieneMetodosPago = metodosPago.length > 0
+    
+    console.log('🔍 Validando pago:', {
+      tieneEgresos,
+      tieneMetodosPago,
+      montoTotalEgresos,
+      metodosPagoCount: metodosPago.length,
+      saldoPendiente,
+      egresosSeleccionados: egresosSeleccionados.length,
+      gastoExtraInfo: gastoExtraInfo?.id
+    })
+    
+    if (!tieneEgresos && !tieneMetodosPago) {
+      message.error('Debes agregar al menos un método de pago o un egreso asociado')
       return
     }
+    
     if (saldoPendiente > 0) {
       message.error('El total pagado debe cubrir el saldo pendiente')
       return
     }
 
-    // Guardar egresos seleccionados en el form (solo el primero si hay uno del form principal)
+    // Guardar egresos: primero los del modal, si no hay, mantener el del form principal
     if (egresosSeleccionados.length > 0) {
+      console.log('💰 Guardando gasto_extra_id del modal:', egresosSeleccionados[0].id)
       compraForm.setFieldValue('gasto_extra_id', egresosSeleccionados[0].id)
+    } else if (gastoExtraInfo) {
+      // Mantener el gasto_extra_id que ya estaba en el formulario principal
+      console.log('💰 Manteniendo gasto_extra_id del form principal:', gastoExtraInfo.id)
+      // No es necesario setFieldValue porque ya está en el form
     }
-    compraForm.setFieldValue('metodos_de_pago', metodosPago.map(m => ({
+    
+    const metodosPagoFormateados = metodosPago.map(m => ({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
       numero_operacion: m.referencia || undefined,
-    })))
+    }))
+    
+    console.log('💳 Guardando metodos_de_pago:', metodosPagoFormateados)
+    compraForm.setFieldValue('metodos_de_pago', metodosPagoFormateados)
 
     onCancel()
     modalForm.resetFields()

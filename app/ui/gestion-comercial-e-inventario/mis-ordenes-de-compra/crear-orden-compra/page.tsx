@@ -6,8 +6,6 @@ import { useSearchParams } from 'next/navigation'
 
 import { TbShoppingCartPlus } from 'react-icons/tb'
 import { FaCalendar } from 'react-icons/fa'
-import { IoIosDocument } from 'react-icons/io'
-import { IoDocumentAttach } from 'react-icons/io5'
 import { MdDelete } from 'react-icons/md'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
@@ -17,9 +15,8 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectTipoMoneda from '~/app/_components/form/selects/select-tipo-moneda'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
-import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import InputBase from '~/app/_components/form/inputs/input-base'
-import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pago'
+import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import FormFormaDePagoCompra from '~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/_components/form/form-forma-de-pago-compra'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
@@ -113,10 +110,6 @@ export default function CrearOrdenCompraPage() {
         almacen_id: orden.almacen_id,
         tipo_documento: orden.tipo_documento || '01',
         forma_de_pago: orden.forma_de_pago || 'co',
-        serie: orden.serie,
-        numero: orden.numero,
-        guia: orden.guia,
-        percepcion: orden.percepcion,
         numero_dias: orden.numero_dias,
         fecha_vencimiento: orden.fecha_vencimiento ? dayjs(orden.fecha_vencimiento) : undefined,
       })
@@ -248,10 +241,6 @@ export default function CrearOrdenCompraPage() {
         ruc: values.proveedor_ruc,
         tipo_documento: values.tipo_documento,
         forma_de_pago: values.forma_de_pago,
-        serie: values.serie,
-        numero: values.numero,
-        guia: values.guia,
-        percepcion: values.percepcion,
         numero_dias: values.numero_dias,
         fecha_vencimiento: values.fecha_vencimiento?.format?.('YYYY-MM-DD'),
         almacen_id: values.almacen_id || 1, // Default almacen
@@ -988,50 +977,6 @@ export default function CrearOrdenCompraPage() {
                       rules: [{ required: true, message: 'Selecciona el tipo de documento' }],
                     }}
                     className='!w-[150px] !min-w-[150px] !max-w-[150px]'
-                  />
-                </LabelBase>
-                <LabelBase label='Serie:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputBase
-                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Serie'
-                    propsForm={{
-                      name: 'serie',
-                    }}
-                  />
-                </LabelBase>
-                <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputNumberBase
-                    prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Número'
-                    propsForm={{
-                      name: 'numero',
-                    }}
-                    precision={0}
-                    min={0}
-                  />
-                </LabelBase>
-                <LabelBase label='Guía:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputBase
-                    prefix={<IoDocumentAttach className='text-cyan-600 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Guía'
-                    propsForm={{
-                      name: 'guia',
-                    }}
-                  />
-                </LabelBase>
-                <LabelBase label='Percepción:' classNames={{ labelParent: 'mb-6' }}>
-                  <InputNumberBase
-                    prefix={<IoIosDocument className='text-cyan-600 mr-1' size={20} />}
-                    className='!w-[120px] !min-w-[120px] !max-w-[120px]'
-                    placeholder='Percepción'
-                    propsForm={{
-                      name: 'percepcion',
-                    }}
-                    precision={2}
-                    min={0}
                   />
                 </LabelBase>
               </div>

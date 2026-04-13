@@ -95,23 +95,7 @@ export default function useCreateCompra({
         productos: productos,
       })
 
-      // Map Prisma enum values to Laravel enum values
-      const estadoDeCompraMap: Record<EstadoDeCompra, string> = {
-        [EstadoDeCompra.Creado]: 'cr',
-        [EstadoDeCompra.EnEspera]: 'ee',
-        [EstadoDeCompra.Anulado]: 'an',
-        [EstadoDeCompra.Procesado]: 'pr',
-      }
-
-      const formaDePagoMap: Record<FormaDePago, string> = {
-        [FormaDePago.Contado]: 'co',
-        [FormaDePago.cr]: 'cr', // Crédito
-      }
-
-      const tipoMonedaMap: Record<TipoMoneda, string> = {
-        [TipoMoneda.Soles]: 's',
-        [TipoMoneda.d]: 'd', // Dólares
-      }
+      // Enums now match backend codes (cr, co, s, d, etc.)
 
       // Transform to Laravel API format
       const dataFormated = {
@@ -121,9 +105,9 @@ export default function useCreateCompra({
         serie: values.serie ?? null,
         numero: values.numero ?? null,
         descripcion: values.descripcion ?? null,
-        forma_de_pago: formaDePagoMap[values.forma_de_pago],
-        tipo_moneda: tipoMonedaMap[tipo_moneda],
-        tipo_de_cambio: tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
+        forma_de_pago: values.forma_de_pago,
+        tipo_moneda: values.tipo_moneda,
+        tipo_de_cambio: values.tipo_moneda === TipoMoneda.Soles ? 1 : tipo_de_cambio,
         percepcion: values.percepcion ?? 0,
         numero_dias:
           values.forma_de_pago === FormaDePago.Contado
@@ -140,7 +124,7 @@ export default function useCreateCompra({
           date: values.fecha,
         })!,
         guia: values.guia ?? null,
-        estado_de_compra: estadoDeCompraMap[values.estado_de_compra ?? EstadoDeCompra.EnEspera],
+        estado_de_compra: values.estado_de_compra ?? EstadoDeCompra.EnEspera,
         egreso_dinero_id: values.egreso_dinero_id ?? null,
         gasto_extra_id: values.gasto_extra_id ?? null,
         despliegue_de_pago_id: values.despliegue_de_pago_id ?? null,
@@ -173,6 +157,10 @@ export default function useCreateCompra({
       }
 
       console.log('📤 Enviando compra:', dataFormated)
+      console.log('📋 Métodos de pago:', dataFormated.metodos_de_pago)
+      console.log('💰 Egreso dinero ID:', dataFormated.egreso_dinero_id)
+      console.log('💸 Gasto extra ID:', dataFormated.gasto_extra_id)
+      console.log('🏦 Despliegue de pago ID:', dataFormated.despliegue_de_pago_id)
 
       const result = compra
         ? await compraApi.update(compra.id, dataFormated)
@@ -283,7 +271,18 @@ export default function useCreateCompra({
         message: 'Por favor, ingresa al menos un producto',
       })
 
-    mutation.mutate(values)
+    // Merge campos que Ant Design no serializa en onFinish porque no están
+    // registrados con Form.Item (ej: metodos_de_pago puesto via setFieldValue)
+    const allFormValues = form ? form.getFieldsValue(true) : {}
+    const valuesConPagos: FormCreateCompra = {
+      ...values,
+      metodos_de_pago: allFormValues.metodos_de_pago ?? values.metodos_de_pago,
+      gasto_extra_id: allFormValues.gasto_extra_id ?? values.gasto_extra_id,
+      egreso_dinero_id: allFormValues.egreso_dinero_id ?? values.egreso_dinero_id,
+      despliegue_de_pago_id: allFormValues.despliegue_de_pago_id ?? values.despliegue_de_pago_id,
+    }
+
+    mutation.mutate(valuesConPagos)
   }
 
   return {

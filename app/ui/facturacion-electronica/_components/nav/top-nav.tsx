@@ -12,8 +12,6 @@ import ButtonNav from "~/app/_components/nav/button-nav";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ModalAperturarCaja from "../modals/modal-aperturar-caja";
-import ModalCrearIngreso from "../modals/modal-crear-ingreso";
-import ModalCrearGasto from "../modals/modal-crear-gasto";
 import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
 import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
 import ModalTrasladoBoveda from "../../mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
@@ -36,8 +34,6 @@ export default function TopNav({ className }: { className?: string }) {
   const router = useRouter();
   const { can } = usePermissionHook();
   const [openAperturaCaja, setOpenAperturaCaja] = useState(false);
-  const [openCrearIngreso, setOpenCrearIngreso] = useState(false);
-  const [openCrearGasto, setOpenCrearGasto] = useState(false);
   const [openMoverDinero, setOpenMoverDinero] = useState(false);
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false);
   const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false);
@@ -60,8 +56,6 @@ export default function TopNav({ className }: { className?: string }) {
   // Mapa de acciones
   const actionHandlers: Record<string, () => void> = {
     openAperturaCaja: () => setOpenAperturaCaja(true),
-    openCrearIngreso: () => setOpenCrearIngreso(true),
-    openCrearGasto: () => setOpenCrearGasto(true),
     openMoverDinero: () => setOpenMoverDinero(true),
     openPedirPrestamo: () => setOpenPedirPrestamo(true),
     openTrasladoBoveda: () => setOpenTrasladoBoveda(true),
@@ -130,14 +124,6 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalAperturarCaja
         open={openAperturaCaja}
         setOpen={setOpenAperturaCaja}
-      />
-      <ModalCrearIngreso
-        open={openCrearIngreso}
-        setOpen={setOpenCrearIngreso}
-      />
-      <ModalCrearGasto
-        open={openCrearGasto}
-        setOpen={setOpenCrearGasto}
       />
       <ModalMoverDineroSubCajas
         open={openMoverDinero}

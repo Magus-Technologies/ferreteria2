@@ -12,21 +12,21 @@ export const TipoDocumento = {
 export type TipoDocumento = (typeof TipoDocumento)[keyof typeof TipoDocumento]
 
 export const EstadoDeCompra = {
-  Creado: 'Creado',
-  EnEspera: 'EnEspera',
-  Anulado: 'Anulado',
-  Procesado: 'Procesado',
+  Creado: 'cr',
+  EnEspera: 'ee',
+  Anulado: 'an',
+  Procesado: 'pr',
 } as const
 export type EstadoDeCompra = (typeof EstadoDeCompra)[keyof typeof EstadoDeCompra]
 
 export const FormaDePago = {
-  Contado: 'Contado',
+  Contado: 'co',
   cr: 'cr',
 } as const
 export type FormaDePago = (typeof FormaDePago)[keyof typeof FormaDePago]
 
 export const TipoMoneda = {
-  Soles: 'Soles',
+  Soles: 's',
   d: 'd',
 } as const
 export type TipoMoneda = (typeof TipoMoneda)[keyof typeof TipoMoneda]

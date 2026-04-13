@@ -9,6 +9,7 @@ import type {
   UnidadDerivada,
 } from '~/types'
 import { ColDef } from 'ag-grid-community'
+import { useMemo } from 'react'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   almacen: Pick<Almacen, 'id' | 'name'>
@@ -22,7 +23,7 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
 }
 
 export function useColumnsDetalleDePrecios() {
-  const columns: ColDef<DetalleDePreciosProps>[] = [
+  const columns: ColDef<DetalleDePreciosProps>[] = useMemo(() => [
     {
       colId: 'cod_producto',
       headerName: 'Cod. Producto',
@@ -254,7 +255,7 @@ export function useColumnsDetalleDePrecios() {
       flex: 1,
       type: 'pen',
     },
-  ]
+  ], [])
 
   return columns
 }

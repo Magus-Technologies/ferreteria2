@@ -76,8 +76,8 @@ export default function TableDetalleDePreciosSearch({
   return (
     <>
       <TableWithTitle
-        ref={gridRef}
-        id='g-c-e-i.detalle-de-precios-search'
+        tableRef={gridRef}
+        id='g-c-e-i.detalle-de-precios-search-v3'
         title='Detalle de precios'
         schema={ProductoAlmacenUnidadDerivadaCreateInputSchema}
         headersRequired={['Cod. Producto']}
@@ -103,6 +103,8 @@ export default function TableDetalleDePreciosSearch({
             label: 'Default',
             columns: [
               '#',
+              'Cod. Producto',
+              'Producto',
               'Formato',
               'Factor',
               'P. Compra',

@@ -284,6 +284,7 @@ export default function FormCreateCliente({
                 style={{ width: '100%' }}
                 placeholder="Selecciona fecha de nacimiento"
                 format="DD/MM/YYYY"
+                getPopupContainer={(trigger) => trigger.parentElement as HTMLElement}
               />
             </Form.Item>
           </LabelBase>

@@ -336,27 +336,70 @@ export function useColumnsCompras({
       },
     },
     {
-      colId: 'estado',
-      headerName: 'Estado',
+      colId: 'estado_documento',
+      headerName: 'Estado de Compra',
       field: 'estado_de_compra',
-      width: 90,
-      minWidth: 90,
+      width: 130,
+      minWidth: 130,
       cellRenderer: (params: ICellRendererParams<Compra>) => {
-        // Mapear código a nombre usando strings directos
-        const estadoNombre: Record<string, string> = {
-          'cr': 'Creado',
-          'ee': 'En Espera',
-          'pr': 'Procesado',
-          'an': 'Anulado',
-        };
+        let nombre = '';
+        let colorObj = { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
 
-        const nombre = estadoNombre[params.value as string] || params.value;
+        switch (params.value) {
+          case 'an':
+            nombre = 'Anulado';
+            colorObj = { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' };
+            break;
+          case 'ee':
+            nombre = 'En Espera';
+            colorObj = { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' };
+            break;
+          case 'cr':
+          case 'pr':
+            nombre = 'Registrado';
+            colorObj = { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' };
+            break;
+          default:
+            nombre = params.value;
+            break;
+        }
 
         return (
           <div className='flex items-center h-full'>
-            <TagEstadoDeCompra estado_de_compra={params.value}>
+            <span className={`px-2 py-0.5 text-xs font-semibold rounded border ${colorObj.bg} ${colorObj.text} ${colorObj.border}`}>
               {nombre}
-            </TagEstadoDeCompra>
+            </span>
+          </div>
+        );
+      },
+      filter: true,
+    },
+    {
+      colId: 'estado_recepcion',
+      headerName: 'Ingreso a Almacén',
+      field: 'estado_de_compra',
+      width: 140,
+      minWidth: 140,
+      cellRenderer: (params: ICellRendererParams<Compra>) => {
+        let nombre = '';
+        let colorObj = { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
+
+        if (params.value === 'cr') {
+          nombre = 'Pendiente';
+          colorObj = { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' };
+        } else if (params.value === 'pr') {
+          nombre = 'Recepcionado';
+          colorObj = { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' };
+        } else {
+          return <div className='flex items-center h-full text-slate-400 text-xs text-center w-full justify-center'>—</div>;
+        }
+
+        return (
+          <div className='flex items-center h-full'>
+            <span className={`px-2 py-0.5 text-xs font-semibold rounded border flex items-center gap-1 ${colorObj.bg} ${colorObj.text} ${colorObj.border}`}>
+              <FaTruckLoading size={12} />
+              {nombre}
+            </span>
           </div>
         );
       },

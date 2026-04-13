@@ -147,7 +147,8 @@ export default function SelectProductos({
 
   const [openModalProductoSearch, setOpenModalProductoSearch] = useState(false)
 
-  const [text, setText] = useState('')
+  const text = useStoreProductoSeleccionadoSearch(store => store.searchText)
+  const setText = useStoreProductoSeleccionadoSearch(store => store.setSearchText)
 
   const [textDefault, setTextDefault] = useState('')
   const [tipoBusqueda, setTipoBusqueda] = useState<TipoBusquedaProducto>(

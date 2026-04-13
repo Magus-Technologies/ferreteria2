@@ -93,7 +93,7 @@ export default function FiltersComprasPorPagar() {
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
       estado_de_compra: {
-        in: ['Creado', 'Procesado'],
+        in: ['cr', 'pr'],
       },
     } satisfies CompraWhereInput
     setFiltros(data)
@@ -129,7 +129,7 @@ export default function FiltersComprasPorPagar() {
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
           estado_de_compra: {
-            in: ['Creado', 'Procesado'],
+            in: ['cr', 'pr'],
           },
           // Agregar búsqueda si existe
           ...(busqueda && {

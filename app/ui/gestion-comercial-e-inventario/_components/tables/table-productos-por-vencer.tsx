@@ -47,8 +47,9 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
 
   if (isLoading) {
     return (
-      <div className='flex items-center justify-center p-10'>
-        <Spin size="large" tip="Cargando productos por vencer..." />
+      <div className='flex flex-col items-center justify-center p-10 gap-3'>
+        <Spin size="large" />
+        <span className='text-gray-500 text-sm'>Cargando productos por vencer...</span>
       </div>
     )
   }
