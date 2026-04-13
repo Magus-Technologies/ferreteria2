@@ -22,7 +22,7 @@ export default function SelectPendienteDeRecepcionAlmacen({
       placeholder={placeholder}
       options={[
         { value: EstadoDeCompra.Creado, label: 'Pendiente' },
-        { value: EstadoDeCompra.Procesado, label: 'Procesado' },
+        { value: EstadoDeCompra.Procesado, label: 'Recepcionado' },
       ]}
     />
   )

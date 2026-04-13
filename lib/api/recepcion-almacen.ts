@@ -224,4 +224,14 @@ export const recepcionAlmacenApi = {
       method: 'DELETE',
     })
   },
+
+  /**
+   * Finalizar recepción de una compra
+   * Crea automáticamente una recepción con los productos pendientes
+   */
+  async finalizarCompra(compra_id: string): Promise<ApiResponse<{ data: RecepcionAlmacenResponse; message: string }>> {
+    return apiRequest<{ data: RecepcionAlmacenResponse; message: string }>(`/recepciones-almacen/finalizar-compra/${compra_id}`, {
+      method: 'POST',
+    })
+  },
 }

@@ -14,6 +14,7 @@ import TagEstadoDeCompra from '../others/tag-estado-de-compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { FaFlag } from 'react-icons/fa6'
 import { compraApi, type Compra } from '~/lib/api/compra'
+import { recepcionAlmacenApi } from '~/lib/api/recepcion-almacen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import useApp from 'antd/es/app/useApp'
 
@@ -51,6 +52,25 @@ export function useColumnsCompras({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
       message.success('Recepción Finalizada correctamente')
+    },
+  })
+
+  const finalizarRecepcionMutation = useMutation({
+    mutationFn: async (compra_id: string) => {
+      const result = await recepcionAlmacenApi.finalizarCompra(compra_id)
+      if (result.error) {
+        throw new Error(result.error.message)
+      }
+      return result.data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.RECEPCIONES_ALMACEN] })
+      message.success(data?.message || 'Recepción finalizada correctamente')
+      router.push('/ui/gestion-comercial-e-inventario/mis-recepciones')
+    },
+    onError: (error: Error) => {
+      message.error(error.message || 'Error al finalizar la recepción')
     },
   })
 
@@ -469,22 +489,31 @@ export function useColumnsCompras({
                   )}
                   {can(permissions.RECEPCION_ALMACEN_FINALIZAR) &&
                     params.data?.estado_de_compra === 'cr' && (
-                      <Tooltip title='Finalizar Recepción'>
+                      <Tooltip 
+                        title={
+                          (params.data?.recepciones_almacen_count ?? 0) > 0
+                            ? 'Finalizar Recepción (crea recepción automática con productos faltantes)'
+                            : 'Debe recepcionar al menos una vez antes de finalizar'
+                        }
+                      >
                         <Popconfirm
                           title='Finalizar Recepción'
-                          description={`¿Estas seguro de marcar la recepción de almacén de esta compra como Finalizado?`}
-                          onConfirm={() =>
-                            updateMutation.mutate({
-                              id: params.value,
-                              data: { estado_de_compra: 'pr' },
-                            })
-                          }
+                          description={`¿Estás seguro de finalizar la recepción? Se creará automáticamente una recepción con los productos faltantes.`}
+                          onConfirm={() => finalizarRecepcionMutation.mutate(params.value)}
                           okText='Si'
                           cancelText='No'
+                          disabled={(params.data?.recepciones_almacen_count ?? 0) === 0}
                         >
                           <FaFlag
-                            className={`cursor-pointer text-green-600 hover:scale-105 transition-all active:scale-95 min-w-fit`}
+                            className={`cursor-pointer ${
+                              (params.data?.recepciones_almacen_count ?? 0) > 0
+                                ? 'text-green-600'
+                                : 'text-gray-400 cursor-not-allowed'
+                            } hover:scale-105 transition-all active:scale-95 min-w-fit`}
                             size={15}
+                            style={{
+                              pointerEvents: (params.data?.recepciones_almacen_count ?? 0) === 0 ? 'none' : 'auto'
+                            }}
                           />
                         </Popconfirm>
                       </Tooltip>
