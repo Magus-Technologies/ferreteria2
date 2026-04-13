@@ -281,9 +281,18 @@ export default function SelectClientes({
         uppercase={true}
         filterOption={false}
         onSearch={(val) => {
-          // Evitar que el blur del Select resetee el texto a vacío cuando ya hay un cliente seleccionado
-          if (val === '' && clienteSeleccionadoRef.current) return
           setText(val)
+          // Si el usuario borra todo el texto, limpiar el cliente seleccionado
+          if (val === '' && clienteSeleccionadoRef.current) {
+            clienteSeleccionadoRef.current = false
+            setClienteSeleccionado(undefined)
+            setLastSelectedDocument('')
+            iterarChangeValue({
+              refObject: selectClientesRef,
+              value: undefined,
+            })
+            onChange?.(undefined as any, undefined)
+          }
         }}
         searchValue={text}
         prefix={<FaUser className={classNameIcon} size={sizeIcon} />}
