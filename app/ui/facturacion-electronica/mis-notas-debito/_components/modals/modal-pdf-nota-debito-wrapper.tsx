@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { useStoreModalPdfNotaDebito } from '../../_store/store-modal-pdf-nota-debito'
 import { getAuthToken } from '~/lib/api'
+import { documentoEmailApi } from '~/lib/api/documento-email'
 
 // ============= COMPONENT =============
 
@@ -50,6 +51,12 @@ export default function ModalPdfNotaDebitoWrapper() {
     }
   }, [open, notaDebitoId, fetchPdf])
 
+  const pdfPublicUrl = useMemo(() => {
+    if (!notaDebitoId) return undefined
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    return `${API_URL}/pdf/nota-debito/${notaDebitoId}`
+  }, [notaDebitoId])
+
   return (
     <ModalShowDoc
       open={open}
@@ -57,6 +64,14 @@ export default function ModalPdfNotaDebitoWrapper() {
       nro_doc=""
       backendPdfUrl={pdfUrl}
       backendPdfLoading={loading && !pdfUrl}
+      pdfPublicUrl={pdfPublicUrl}
+      emailConfig={{
+        onSend: async (email) => {
+          if (!notaDebitoId) throw new Error('No hay nota de débito seleccionada')
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'nota-debito', id: notaDebitoId, email })
+          if (res.error) throw new Error(res.error.message)
+        },
+      }}
     >
       <></>
     </ModalShowDoc>

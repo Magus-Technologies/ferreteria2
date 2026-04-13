@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { useStoreModalPdfNotaCredito } from '../../_store/store-modal-pdf-nota-credito'
 import { getAuthToken } from '~/lib/api'
+import { documentoEmailApi } from '~/lib/api/documento-email'
 
 // ============= COMPONENT =============
 
@@ -50,6 +51,12 @@ export default function ModalPdfNotaCreditoWrapper() {
     }
   }, [open, notaCreditoId, fetchPdf])
 
+  const pdfPublicUrl = useMemo(() => {
+    if (!notaCreditoId) return undefined
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    return `${API_URL}/pdf/nota-credito/${notaCreditoId}`
+  }, [notaCreditoId])
+
   return (
     <ModalShowDoc
       open={open}
@@ -57,6 +64,14 @@ export default function ModalPdfNotaCreditoWrapper() {
       nro_doc=""
       backendPdfUrl={pdfUrl}
       backendPdfLoading={loading && !pdfUrl}
+      pdfPublicUrl={pdfPublicUrl}
+      emailConfig={{
+        onSend: async (email) => {
+          if (!notaCreditoId) throw new Error('No hay nota de crédito seleccionada')
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'nota-credito', id: notaCreditoId, email })
+          if (res.error) throw new Error(res.error.message)
+        },
+      }}
     >
       <></>
     </ModalShowDoc>

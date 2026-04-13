@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
+import { documentoEmailApi } from '~/lib/api/documento-email'
 
 // ============= TYPES =============
 
@@ -114,6 +115,25 @@ export default function ModalDocCotizacion({
   const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
   const currentLoading = esTicket ? loading : !a4PdfUrl
 
+  const pdfPublicUrl = useMemo(() => {
+    if (!cotizacionId) return undefined
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    return `${API_URL}/pdf/cotizacion/${cotizacionId}?formato=a4`
+  }, [cotizacionId])
+
+  const clienteTelefonos = useMemo(() => {
+    const tel = data?.cliente?.telefono
+    return tel ? [tel] : undefined
+  }, [data])
+
+  const whatsappMensajeAuto = useMemo(() => {
+    if (!data) return undefined
+    const clienteNombre = data.cliente?.razon_social
+      || [data.cliente?.nombres, data.cliente?.apellidos].filter(Boolean).join(' ')
+      || 'Cliente'
+    return `Hola!\n\nLe compartimos su Cotización ${data.numero}.\n\nCliente: ${clienteNombre}`
+  }, [data])
+
   return (
     <ModalShowDoc
       open={open}
@@ -124,6 +144,17 @@ export default function ModalDocCotizacion({
       tipoDocumento='cotizacion'
       backendPdfUrl={currentPdfUrl}
       backendPdfLoading={currentLoading && !currentPdfUrl}
+      pdfPublicUrl={pdfPublicUrl}
+      clienteTelefonos={clienteTelefonos}
+      whatsappMensajeAuto={whatsappMensajeAuto}
+      emailConfig={{
+        emailDefault: data?.cliente?.email || undefined,
+        onSend: async (email) => {
+          if (!cotizacionId) throw new Error('No hay cotización seleccionada')
+          const res = await documentoEmailApi.enviarEmail({ tipo: 'cotizacion', id: String(cotizacionId), email })
+          if (res.error) throw new Error(res.error.message)
+        },
+      }}
     >
       {/* Fallback vacío - todo se renderiza desde el backend */}
       <></>
