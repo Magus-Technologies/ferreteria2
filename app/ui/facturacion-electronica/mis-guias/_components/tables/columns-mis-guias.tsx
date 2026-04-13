@@ -2,6 +2,7 @@
 
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import CellAccionesGuia from './cell-acciones-guia'
 
 export function useColumnsMisGuias(onRefetch?: () => void) {
@@ -23,7 +24,7 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
       field: 'fecha_emision',
       width: 160,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a') : '-',
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm:ss') : '-',
     },
     {
       headerName: 'Fecha Traslado',

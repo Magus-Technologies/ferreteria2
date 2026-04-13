@@ -2,7 +2,7 @@
 
 import { ColDef } from "ag-grid-community";
 import type { getVentaResponseProps } from "~/lib/api/venta";
-import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import CellAccionesVentaDropdown from "./cell-acciones-venta-dropdown";
 
 export function useColumnsMisVentas() {
@@ -24,7 +24,7 @@ export function useColumnsMisVentas() {
       field: "fecha",
       width: 160,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY hh:mm:ss a") : "",
+        formatFechaPeru(params.value, "DD/MM/YYYY HH:mm:ss"),
     },
     {
       headerName: "S.Numero",
@@ -181,7 +181,7 @@ export function useColumnsMisVentas() {
       field: "fecha_vencimiento",
       width: 130,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+        formatFechaPeru(params.value, "DD/MM/YYYY"),
     },
     {
       headerName: "Estado",

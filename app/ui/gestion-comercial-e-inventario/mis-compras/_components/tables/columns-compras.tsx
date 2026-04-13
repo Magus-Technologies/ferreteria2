@@ -2,6 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 import { IGV } from '~/lib/constantes'
 import ColumnAction from '~/components/tables/column-action'
@@ -110,7 +111,7 @@ export function useColumnsCompras({
       minWidth: 180,
       filter: 'agDateColumnFilter',
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a') : '-',
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm:ss') : '-',
     },
     {
       colId: 'fecha_vencimiento',

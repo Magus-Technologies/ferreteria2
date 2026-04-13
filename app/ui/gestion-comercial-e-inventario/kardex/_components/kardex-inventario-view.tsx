@@ -7,6 +7,7 @@ import { DatePicker, Select, Tag } from 'antd'
 import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { greenColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -80,10 +81,7 @@ export default function KardexInventarioView() {
       field: 'fecha',
       width: 140,
       minWidth: 120,
-      valueFormatter: (params) => {
-        if (!params.value) return '-'
-        return dayjs(params.value).format('DD/MM/YYYY HH:mm')
-      },
+      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
       sort: 'asc',
     },
     // Mostrar columnas de producto solo cuando no hay producto seleccionado

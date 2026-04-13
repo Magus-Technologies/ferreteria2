@@ -1,6 +1,7 @@
 'use client'
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
+import { formatFechaPeru } from '~/utils/fechas'
 import { Tag, Tooltip } from 'antd'
 import { FaEye, FaCheck } from 'react-icons/fa'
 import { MdDelete, MdEditSquare } from 'react-icons/md'
@@ -58,7 +59,7 @@ export function useColumnsOrdenesCompra({
             minWidth: 140,
             width: 160,
             valueFormatter: (params) =>
-                params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a') : '-',
+                params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm:ss') : '-',
         },
         {
             headerName: 'Requerimiento',

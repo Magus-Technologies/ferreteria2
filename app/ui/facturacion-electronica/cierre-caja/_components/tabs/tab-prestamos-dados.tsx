@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface TabPrestamosDadosProps {
   data: any[]
@@ -36,7 +36,7 @@ const columnasPrestamosDados: ColDef[] = [
     headerName: 'Fecha',
     field: 'fecha_transferencia',
     width: 180,
-    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
   },
 ]
 

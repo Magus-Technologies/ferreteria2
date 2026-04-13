@@ -6,6 +6,7 @@ import TableBase from "~/components/tables/table-base";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
+import { formatFechaPeru } from '~/utils/fechas';
 import { deudaPersonalApi, type DeudaPersonal } from "~/lib/api/deuda-personal";
 import { useRef, useState } from "react";
 
@@ -96,7 +97,7 @@ export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) 
         <div className="flex items-center gap-2">
           <FaCalendarCheck className="text-slate-400" />
           <span className="font-medium">
-            {params.value ? dayjs(params.value).format("DD/MM/YYYY HH:mm") : "-"}
+            {formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || "-"}
           </span>
         </div>
       ),
@@ -280,7 +281,7 @@ export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) 
               #{selectedAbono.id}
             </Descriptions.Item>
             <Descriptions.Item label="Fecha de Abono" span={2}>
-              {dayjs(selectedAbono.fecha_abono).format("DD/MM/YYYY HH:mm:ss")}
+              {formatFechaPeru(selectedAbono.fecha_abono)}
             </Descriptions.Item>
             <Descriptions.Item label="Monto Abonado">
               <span className="font-bold text-emerald-600">
@@ -308,7 +309,7 @@ export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) 
               {selectedAbono.observaciones || "Sin observaciones"}
             </Descriptions.Item>
             <Descriptions.Item label="Fecha de Registro" span={2}>
-              {dayjs(selectedAbono.created_at).format("DD/MM/YYYY HH:mm:ss")}
+              {formatFechaPeru(selectedAbono.created_at)}
             </Descriptions.Item>
           </Descriptions>
         )}

@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getGastos } from '~/lib/api/gastos'
 import { Spin } from 'antd'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface TabGastosOperativosProps {
   fecha: string
@@ -31,7 +32,7 @@ const columnas: ColDef[] = [
     headerName: 'Fecha',
     field: 'fecha',
     width: 180,
-    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
   },
 ]
 

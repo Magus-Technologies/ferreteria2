@@ -5,6 +5,7 @@ import { Tag, Tooltip } from 'antd'
 import { FaEye, FaCheck } from 'react-icons/fa'
 import { FilePdfFilled } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 
 const PRIORIDAD_COLORS: Record<string, string> = {
@@ -100,7 +101,7 @@ export function useColumnsMisOS({
       minWidth: 110,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
         <div className="flex items-center h-full text-xs">
-          {data?.created_at ? dayjs(data.created_at).format('DD/MM/YYYY HH:mm') : '—'}
+          {formatFechaPeru(data?.created_at, 'DD/MM/YYYY HH:mm') || '—'}
         </div>
       ),
     },

@@ -8,6 +8,7 @@ import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { useRef, useState } from "react";
 import dayjs from "dayjs";
+import { formatFechaPeru } from '~/utils/fechas';
 import { clienteCalificacionApi, type ClienteCalificacion, type EstadoOption } from "~/lib/api/cliente-calificacion";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
@@ -173,7 +174,7 @@ export default function ModalCalificacionesCliente({
       width: 160,
       cellRenderer: (params: any) => (
         <span className="text-slate-500 text-xs">
-          {dayjs(params.value).format("DD/MM/YYYY HH:mm")}
+          {formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm')}
         </span>
       ),
     },

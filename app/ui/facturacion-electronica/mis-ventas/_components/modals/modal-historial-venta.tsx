@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, type VentaHistorialItem } from '~/lib/api/venta'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 // Mapa de labels para campos
 const FIELD_LABELS: Record<string, string> = {
@@ -229,7 +230,7 @@ export default function ModalHistorialVenta({
                   </span>
                 </div>
                 <span className='text-xs text-slate-400'>
-                  {dayjs(item.fecha).format('DD/MM/YYYY HH:mm:ss')}
+                  {formatFechaPeru(item.fecha)}
                 </span>
               </div>
               {item.descripcion && (

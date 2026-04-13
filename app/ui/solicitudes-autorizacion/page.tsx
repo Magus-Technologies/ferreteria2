@@ -9,6 +9,7 @@ import {
 } from '~/lib/api/autorizaciones'
 import { useState } from 'react'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/es'
 import { FaBell, FaCheck, FaClock, FaTimes } from 'react-icons/fa'
@@ -84,7 +85,7 @@ function SolicitudCard({
           <p className="text-sm text-gray-600 mb-2">{solicitud.descripcion}</p>
 
           <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span>{dayjs(solicitud.created_at).format('DD/MM/YYYY HH:mm')}</span>
+            <span>{formatFechaPeru(solicitud.created_at, 'DD/MM/YYYY HH:mm')}</span>
             <span>{dayjs(solicitud.created_at).fromNow()}</span>
             {solicitud.role && (
               <span>Rol: {solicitud.role.name}</span>
@@ -97,7 +98,7 @@ function SolicitudCard({
                 {solicitud.estado === 'aprobada' ? 'Aprobada' : 'Rechazada'} por{' '}
                 <strong>{solicitud.respondido_por_user?.name || solicitud.respondidoPor?.name || '—'}</strong>
                 {solicitud.respondido_at && (
-                  <span> el {dayjs(solicitud.respondido_at).format('DD/MM/YYYY HH:mm')}</span>
+                  <span> el {formatFechaPeru(solicitud.respondido_at, 'DD/MM/YYYY HH:mm')}</span>
                 )}
                 {solicitud.tipo_aprobacion === 'temporal' && solicitud.duracion_horas && (
                   <Tag color="blue" className="!ml-2 !text-[10px]">

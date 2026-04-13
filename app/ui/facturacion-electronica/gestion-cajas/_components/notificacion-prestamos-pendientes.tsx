@@ -7,6 +7,7 @@ import { facturacionElectronicaApi, type ComprobanteElectronico } from '~/lib/ap
 import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import ModalAprobarSolicitudEfectivo from './modal-aprobar-solicitud-efectivo'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { useRouter } from 'next/navigation'
 
 export function NotificacionPrestamosPendientes() {
@@ -81,7 +82,7 @@ export function NotificacionPrestamosPendientes() {
                   </div>
                   {solicitud.motivo && <p className="text-xs text-gray-600 italic">"{solicitud.motivo}"</p>}
                   <div className="text-xs text-gray-400">
-                    {dayjs(solicitud.created_at).format('DD MMM, HH:mm')}
+                    {formatFechaPeru(solicitud.created_at, 'DD MMM, HH:mm')}
                   </div>
                   <div className="flex gap-2 pt-1">
                     <button onClick={() => handleAprobar(solicitud)} className="flex-1 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">Aprobar</button>

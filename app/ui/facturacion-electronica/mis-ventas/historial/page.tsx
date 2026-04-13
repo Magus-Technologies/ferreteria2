@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Spin, Tag, Empty, Input, Select, DatePicker, Pagination, Card } from 'antd'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, type VentaHistorialItem } from '~/lib/api/venta'
@@ -176,7 +177,7 @@ export default function HistorialVentasPage() {
                             por <strong>{item.usuario?.name || 'Usuario desconocido'}</strong>
                           </span>
                           <span className='text-xs text-slate-400'>
-                            {dayjs(item.fecha).format('DD/MM/YYYY HH:mm:ss')}
+                            {formatFechaPeru(item.fecha)}
                           </span>
                         </div>
 

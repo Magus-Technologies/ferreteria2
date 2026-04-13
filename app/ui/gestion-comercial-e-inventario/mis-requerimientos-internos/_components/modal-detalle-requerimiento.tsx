@@ -10,6 +10,7 @@ import { classOkButtonModal } from '~/lib/clases'
 import { getAuthToken } from '~/lib/api'
 import type { RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { useState } from 'react'
 
 const PRIORIDAD_CONFIG: Record<string, { color: string; bg: string; text: string }> = {
@@ -83,9 +84,9 @@ export default function ModalDetalleRequerimiento({
           footer: (
             <div className="flex items-center justify-between w-full">
               <div className="text-[10px] text-slate-400 space-x-4">
-                <span>Creado: {dayjs(requerimiento.created_at).format('DD/MM/YYYY HH:mm')}</span>
+                <span>Creado: {formatFechaPeru(requerimiento.created_at, 'DD/MM/YYYY HH:mm')}</span>
                 <span>•</span>
-                <span>Actualizado: {dayjs(requerimiento.updated_at).format('DD/MM/YYYY HH:mm')}</span>
+                <span>Actualizado: {formatFechaPeru(requerimiento.updated_at, 'DD/MM/YYYY HH:mm')}</span>
               </div>
               <div className="flex gap-2">
                 <Button

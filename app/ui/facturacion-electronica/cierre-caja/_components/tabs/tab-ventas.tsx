@@ -6,7 +6,7 @@ import type { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
 import { Popover } from 'antd'
 import { FaEye } from 'react-icons/fa'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface TabVentasProps {
   data: any[]
@@ -81,7 +81,7 @@ const columnasVentas: ColDef[] = [
     headerName: 'Fecha',
     field: 'created_at',
     width: 180,
-    valueFormatter: (params) => dayjs(params.value).format('DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
   },
 ]
 

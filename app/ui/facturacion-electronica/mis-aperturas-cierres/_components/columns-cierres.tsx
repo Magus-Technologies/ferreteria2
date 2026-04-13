@@ -2,7 +2,7 @@ import { ColDef } from 'ag-grid-community'
 import { AperturaYCierreCaja } from '~/lib/api/caja'
 import { Button, Tag, Tooltip } from 'antd'
 import { FaFilePdf, FaCheckCircle, FaRedo, FaMoneyBillWave } from 'react-icons/fa'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-PE', {
@@ -49,7 +49,7 @@ export const useColumnsCierres = ({
       minWidth: 130,
       cellStyle: centerCell,
       cellRenderer: (params: any) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a') : '-',
+        formatFechaPeru(params.value) || '-',
     },
     {
       colId: 'vendedor',

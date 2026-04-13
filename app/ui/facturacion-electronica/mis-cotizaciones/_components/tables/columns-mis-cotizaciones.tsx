@@ -1,7 +1,7 @@
 "use client";
 
 import { ColDef } from "ag-grid-community";
-import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import { Cotizacion } from "~/lib/api/cotizaciones";
 import CellAccionesCotizacion from "./cell-acciones-cotizacion";
 
@@ -35,7 +35,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       field: "fecha",
       width: 180,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY hh:mm:ss a") : "",
+        formatFechaPeru(params.value, "DD/MM/YYYY HH:mm:ss"),
     },
     {
       colId: "numero",

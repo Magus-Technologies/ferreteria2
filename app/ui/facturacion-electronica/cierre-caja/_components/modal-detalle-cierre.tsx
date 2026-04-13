@@ -3,7 +3,7 @@
 import { Modal, Button } from 'antd'
 import TableBase from '~/components/tables/table-base'
 import type { ColDef } from 'ag-grid-community'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { FaFileInvoiceDollar, FaMoneyBillWave, FaExchangeAlt, FaArrowCircleDown, FaArrowCircleUp, FaSearch } from 'react-icons/fa'
 
 interface ModalDetalleCierreProps {
@@ -41,14 +41,14 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen }: Mod
             )
         },
         { headerName: 'Total', field: 'total', width: 100, valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`, cellStyle: { fontWeight: 'bold' } },
-        { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => dayjs(params.value).format('DD/MM HH:mm') },
+        { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM HH:mm') },
     ]
 
     const columnasMovimientosTransacciones: ColDef[] = [
         { headerName: 'Concepto / Motivo', field: 'concepto', flex: 1, valueGetter: (params) => params.data.concepto || params.data.motivo || 'N/A' },
         { headerName: 'Sub-Caja', field: 'sub_caja', width: 150, valueGetter: (params) => params.data.sub_caja || params.data.sub_caja_origen || params.data.sub_caja_destino || 'N/A' },
         { headerName: 'Monto', field: 'monto', width: 110, valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`, cellStyle: { fontWeight: 'bold' } },
-        { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => dayjs(params.data.created_at || params.data.fecha_transferencia || params.data.fecha).format('DD/MM HH:mm') },
+        { headerName: 'Fecha', field: 'created_at', width: 140, valueFormatter: (params) => formatFechaPeru(params.data.created_at || params.data.fecha_transferencia || params.data.fecha, 'DD/MM HH:mm') },
     ]
 
     const columnasMovimientosInternos: ColDef[] = [
@@ -56,7 +56,7 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen }: Mod
         { headerName: 'Destino', field: 'sub_caja_destino', width: 140 },
         { headerName: 'Justificación', field: 'justificacion', flex: 1 },
         { headerName: 'Monto', field: 'monto', width: 110, valueFormatter: (params) => `S/. ${Number(params.value).toFixed(2)}`, cellStyle: { fontWeight: 'bold' } },
-        { headerName: 'Fecha', field: 'fecha', width: 140, valueFormatter: (params) => dayjs(params.value).format('DD/MM HH:mm') },
+        { headerName: 'Fecha', field: 'fecha', width: 140, valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM HH:mm') },
     ]
 
     switch (tipo) {

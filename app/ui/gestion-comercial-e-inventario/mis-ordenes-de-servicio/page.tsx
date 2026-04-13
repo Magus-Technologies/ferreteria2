@@ -3,6 +3,7 @@
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import { Spin, App, Tag, Modal, Button, Tooltip } from 'antd'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import { ColDef, ICellRendererParams, SelectionChangedEvent } from 'ag-grid-community'
@@ -107,7 +108,7 @@ export default function MisOrdenesDeServicio() {
       minWidth: 130,
       cellRenderer: ({ data }: any) => (
         <div className="flex items-center h-full text-xs font-semibold text-slate-500">
-          {data?.fecha_solicitud_padre ? dayjs(data.fecha_solicitud_padre).format('DD/MM/YYYY HH:mm') : '—'}
+          {formatFechaPeru(data?.fecha_solicitud_padre, 'DD/MM/YYYY HH:mm') || '—'}
         </div>
       ),
     },
@@ -184,7 +185,7 @@ export default function MisOrdenesDeServicio() {
       minWidth: 120,
       cellRenderer: ({ data }: ICellRendererParams) => (
         <div className="flex items-center h-full text-xs text-slate-600">
-          {data?.fecha_inicio_estimada ? dayjs(data.fecha_inicio_estimada).format('DD/MM/YYYY HH:mm') : '—'}
+          {formatFechaPeru(data?.fecha_inicio_estimada, 'DD/MM/YYYY HH:mm') || '—'}
         </div>
       ),
     },

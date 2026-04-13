@@ -2,7 +2,7 @@ import { ColDef } from 'ag-grid-community'
 import { AperturaYCierreCaja } from '~/lib/api/caja'
 import { Button, Tag, Tooltip } from 'antd'
 import { FaFilePdf } from 'react-icons/fa6'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-PE', {
@@ -26,7 +26,7 @@ export const useColumnsAperturas = ({
       flex: 1,
       minWidth: 130,
       cellStyle: centerCell,
-      cellRenderer: (params: any) => dayjs(params.value).format('DD/MM/YYYY hh:mm:ss a'),
+      cellRenderer: (params: any) => formatFechaPeru(params.value),
     },
     {
       colId: 'vendedor',

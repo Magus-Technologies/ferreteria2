@@ -4,6 +4,7 @@ import { Card, Badge } from 'antd'
 import { FaUser, FaClock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa'
 import { MdStorefront } from 'react-icons/md'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import 'dayjs/locale/es'
 
 dayjs.locale('es')
@@ -94,9 +95,7 @@ export default function CardArqueo({ arqueo, onVerDetalle }: CardArqueoProps) {
         <div className='flex items-center gap-1 text-xs text-slate-500'>
           <FaClock className='text-amber-400' size={11} />
           <span>
-            {arqueo.fecha_cierre 
-              ? dayjs(arqueo.fecha_cierre).format('DD MMM YYYY, hh:mm A')
-              : 'Fecha no disponible'}
+            {formatFechaPeru(arqueo.fecha_cierre, 'DD MMM YYYY, HH:mm') || 'Fecha no disponible'}
           </span>
         </div>
       </div>

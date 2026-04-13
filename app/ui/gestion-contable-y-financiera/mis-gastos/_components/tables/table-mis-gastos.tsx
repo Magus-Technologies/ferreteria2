@@ -6,6 +6,7 @@ import { useStoreFiltrosMisGastos } from '../../_store/store-filtros-mis-gastos'
 import { useGetGastos } from '../../_hooks/use-get-gastos'
 import { type GastoExtra, eliminarGastoExtra } from '~/lib/api/gasto-extra'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { Button, Popconfirm, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
@@ -63,10 +64,7 @@ const TableMisGastos = memo(function TableMisGastos() {
       headerName: 'FECHA REGISTRO',
       field: 'created_at',
       width: 140,
-      valueFormatter: (params) => {
-        if (!params.value) return ''
-        return dayjs(params.value).format('DD/MM/YYYY HH:mm')
-      },
+      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
       sort: 'desc',
     },
     {

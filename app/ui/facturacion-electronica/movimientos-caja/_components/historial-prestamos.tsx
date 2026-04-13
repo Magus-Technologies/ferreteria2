@@ -8,6 +8,7 @@ import TableBase from '~/components/tables/table-base'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 export default function HistorialPrestamos() {
   const { modal } = App.useApp()
@@ -84,7 +85,7 @@ export default function HistorialPrestamos() {
       field: 'fecha_prestamo',
       width: 180,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
+        formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
     },
     {
       headerName: 'Monto',

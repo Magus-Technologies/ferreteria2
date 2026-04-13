@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Tag, Popconfirm, message } from 'antd'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { greenColors } from '~/lib/colors'
@@ -60,7 +61,7 @@ export default function TableTransferenciasStock({
       width: 150,
       minWidth: 130,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-',
+        formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
       sort: 'desc',
     },
     {

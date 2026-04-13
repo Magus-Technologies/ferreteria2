@@ -7,6 +7,7 @@ import { useStoreFiltrosMisIngresos } from '../../_store/store-filtros-mis-ingre
 import { useGetIngresos } from '../../_hooks/use-get-ingresos'
 import { type IngresoExtra, anularIngresoExtra } from '~/lib/api/ingreso-extra'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { Button, Modal, message, Tooltip, Popconfirm } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
@@ -123,10 +124,7 @@ const TableMisIngresos = memo(function TableMisIngresos() {
       headerName: 'FECHA REGISTRO',
       field: 'created_at',
       width: 140,
-      valueFormatter: (params) => {
-        if (!params.value) return ''
-        return dayjs(params.value).format('DD/MM/YYYY HH:mm')
-      },
+      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
       sort: 'desc',
     },
     {

@@ -2,6 +2,7 @@
 
 import { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import { ValeCompra, cambiarEstadoVale, valesCompraKeys } from "~/lib/api/vales-compra";
 import { Tag, Tooltip, Popconfirm, message } from "antd";
 import { FaFilePdf, FaPause, FaPlay, FaStop } from "react-icons/fa6";
@@ -272,7 +273,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
       field: "created_at",
       width: 160,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY hh:mm:ss a") : "",
+        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY HH:mm:ss") : "",
     },
     {
       colId: 'acciones',
