@@ -55,7 +55,7 @@ export default function FiltersMisNotasDebito() {
       form={form}
       name="filtros-mis-notas-debito"
       initialValues={{
-        desde: dayjs().startOf("month"),
+        desde: dayjs().startOf("day"),
         hasta: dayjs().endOf("day"),
       }}
       className="w-full"

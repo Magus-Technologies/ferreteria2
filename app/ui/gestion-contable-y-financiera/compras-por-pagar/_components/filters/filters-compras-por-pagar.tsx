@@ -89,7 +89,7 @@ export default function FiltersComprasPorPagar() {
       // Solo mostrar compras a crédito con saldo pendiente
       forma_de_pago: FormaDePago.CREDITO,
       fecha: {
-        gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
+        gte: toUTCBD({ date: dayjs().startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
       estado_de_compra: {

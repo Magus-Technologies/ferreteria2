@@ -63,7 +63,7 @@ export default function FiltersMisGanancias() {
     if (almacen_id) {
       const filtrosIniciales = {
         almacen_id,
-        desde: dayjs().startOf("month").format("YYYY-MM-DD"),
+        desde: dayjs().startOf("day").format("YYYY-MM-DD"),
         hasta: dayjs().endOf("day").format("YYYY-MM-DD"),
         mostrar_hora: "false", // Inicializar como string
       };
@@ -467,7 +467,7 @@ export default function FiltersMisGanancias() {
                   // Aplicar filtros con valores por defecto
                   const filtrosLimpios = {
                     almacen_id,
-                    desde: dayjs().startOf("month").format("YYYY-MM-DD"),
+                    desde: dayjs().startOf("day").format("YYYY-MM-DD"),
                     hasta: dayjs().endOf("day").format("YYYY-MM-DD"),
                     mostrar_hora: "false", // Reset como string
                   };

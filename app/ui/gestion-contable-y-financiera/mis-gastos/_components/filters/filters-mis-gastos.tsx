@@ -44,7 +44,7 @@ export default function FiltersMisGastos() {
 
   useEffect(() => {
     const data = {
-      fechaDesde: dayjs().subtract(30, 'days').startOf('day').format('YYYY-MM-DD'),
+      fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD'),
       fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD'),
     }
     setFiltros(data)

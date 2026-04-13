@@ -16,8 +16,8 @@ interface StoreFiltrosMisEntregas {
 }
 
 const filtrosIniciales: FiltrosMisEntregas = {
-  fecha_desde: dayjs().startOf('month'),
-  fecha_hasta: dayjs().endOf('month'),
+  fecha_desde: dayjs().startOf('day'),
+  fecha_hasta: dayjs().endOf('day'),
   estado_entrega: ['pe', 'ec'],
 }
 

@@ -42,8 +42,8 @@ export default function FiltersMisEntregas() {
     const estadoFinal = Array.isArray(estados) && estados.length > 0 ? estados : undefined
 
     setFiltros({
-      fecha_desde: values.fecha_desde || dayjs().startOf('month'),
-      fecha_hasta: values.fecha_hasta || dayjs().endOf('month'),
+      fecha_desde: values.fecha_desde || dayjs().startOf('day'),
+      fecha_hasta: values.fecha_hasta || dayjs().endOf('day'),
       estado_entrega: estadoFinal,
       tipo_despacho: values.tipo_despacho || undefined,
       search: values.search || undefined,

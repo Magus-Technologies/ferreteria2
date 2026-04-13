@@ -22,7 +22,7 @@ export default function FiltersCuadres() {
                 form={form}
                 name="filters-cuadres"
                 initialValues={{
-                    desde: dayjs().startOf('month'),
+                    desde: dayjs().startOf('day'),
                     hasta: dayjs(),
                     listar_no_anuladas: false,
                     tipo: 'TODOS'

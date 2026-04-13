@@ -26,7 +26,7 @@ export interface MovimientoCuadre {
 
 export function useCuadres() {
     const [filters, setFilters] = useState<GetIngresosSalidasParams>({
-        desde: dayjs().startOf('month').format('YYYY-MM-DD'),
+        desde: dayjs().startOf('day').format('YYYY-MM-DD'),
         hasta: dayjs().format('YYYY-MM-DD'),
         listar_no_anuladas: false,
         tipo: 'TODOS',
