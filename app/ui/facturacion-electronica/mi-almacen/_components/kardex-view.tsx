@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { DatePicker, Input, Select, Spin, Tag, Empty } from 'antd'
+import { DatePicker, Select, Tag, Empty } from 'antd'
 import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
@@ -12,6 +12,7 @@ import { orangeColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex, type TipoMovimientoKardex } from '~/lib/api/kardex'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import type { Producto } from '~/app/_types/producto'
 
@@ -52,12 +53,12 @@ export default function KardexView() {
   const [tipo, setTipo] = useState<TipoMovimientoKardex | ''>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
-  const [quickFilter, setQuickFilter] = useState('')
-  const [debouncedQuickFilter] = useDebounce(quickFilter, 200)
+  const [debouncedSearchText] = useDebounce(searchText, 300)
+  const isSearching = searchText !== debouncedSearchText
 
   const productoId = productoSeleccionado?.id
 
-  const { data, isLoading } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: [QueryKeys.KARDEX, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
     queryFn: async () => {
       const result = await kardexApi.getMovimientos({
@@ -257,18 +258,15 @@ export default function KardexView() {
               size='middle'
             />
           </div>
-          <div>
-            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Buscar en tabla</label>
-            <Input
-              prefix={<FaSearch className='text-gray-400' size={12} />}
-              placeholder='Filtrar resultados...'
-              value={quickFilter}
-              onChange={(e) => setQuickFilter(e.target.value)}
-              allowClear
-              className='!w-[200px]'
-              size='middle'
-            />
-          </div>
+          <ButtonBase
+            color='info'
+            size='md'
+            className='flex items-center gap-2 w-fit self-end'
+            onClick={() => {}}
+          >
+            <FaSearch />
+            Buscar
+          </ButtonBase>
         </div>
 
         {/* Info del producto seleccionado */}
@@ -320,29 +318,35 @@ export default function KardexView() {
             }
           />
         </div>
-      ) : isLoading ? (
-        <div className='bg-white rounded-xl border p-12 flex items-center justify-center'>
-          <Spin size='large' />
-          <span className='ml-3 text-gray-500'>Cargando movimientos...</span>
-        </div>
       ) : (
-        <div className='h-[calc(100vh-380px)] min-h-[300px]'>
-          <TableWithTitle<MovimientoKardex>
-            id='kardex.movimientos'
-            title='Movimientos'
-            selectionColor={orangeColors[10]}
-            columnDefs={columns}
-            rowData={data?.data || []}
-            pagination={false}
-            quickFilterText={debouncedQuickFilter}
-            optionsSelectColumns={[
-              {
-                label: 'Default',
-                columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
-              },
-            ]}
-          />
-        </div>
+        <>
+          <div className='h-[calc(100vh-380px)] min-h-[300px]'>
+            <TableWithTitle<MovimientoKardex>
+              id='kardex.movimientos'
+              title='Movimientos'
+              selectionColor={orangeColors[10]}
+              loading={isFetching || isSearching}
+              columnDefs={columns}
+              rowData={data?.data || []}
+              pagination={false}
+              quickFilterText={debouncedSearchText}
+              optionsSelectColumns={[
+                {
+                  label: 'Default',
+                  columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                },
+              ]}
+            />
+          </div>
+          {/* Barra de estado */}
+          <div className='flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-1.5 min-h-[32px]'>
+            {(isFetching || isSearching) && (
+              <div className='text-xs text-gray-500 text-center'>
+                Cargando movimientos...
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   )
