@@ -16,9 +16,13 @@ import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_compo
 export default function FormCrearCompra({
   form,
   compra,
+  proveedorOptionsDefault,
+  initialSearchTextProveedor,
 }: {
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
+  proveedorOptionsDefault?: { id: number; ruc: string; razon_social: string }[]
+  initialSearchTextProveedor?: string
 }) {
   return (
     <div className='flex flex-col'>
@@ -93,8 +97,9 @@ export default function FormCrearCompra({
               classNameIcon='text-cyan-600 mx-1'
               placeholder='RUC'
               proveedorOptionsDefault={
-                compra?.proveedor ? [compra.proveedor] : []
+                proveedorOptionsDefault?.length ? proveedorOptionsDefault : compra?.proveedor ? [compra.proveedor] : []
               }
+              initialSearchText={initialSearchTextProveedor}
               onChange={(_, proveedor) => {
                 if (proveedor) {
                   if (proveedor.ruc) {
