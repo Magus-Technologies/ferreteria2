@@ -13,6 +13,7 @@ import { compraApi } from '~/lib/api/compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import type { FormInstance } from 'antd'
 import dayjs from 'dayjs'
+import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 
 type ProductoAgrupado = Pick<
   FormCreateCompra['productos'][number],
@@ -86,6 +87,10 @@ export default function useCreateCompra({
   const { can } = usePermissionHook()
   const { notification, message } = useApp()
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
+  
+  // Store para limpiar productos agregados
+  const setProductosCompra = useStoreProductoAgregadoCompra(store => store.setProductos)
+  const setProductoAgregadoCompra = useStoreProductoAgregadoCompra(store => store.setProductoAgregado)
 
   const mutation = useMutation({
     mutationFn: async (values: FormCreateCompra) => {
@@ -216,21 +221,34 @@ export default function useCreateCompra({
         }
       )
 
-      // Solo redirigir si NO es "En Espera"
-      // Si es "En Espera", quedarse en la página y limpiar el formulario
-      if (variables.estado_de_compra !== EstadoDeCompra.EnEspera) {
+      // Si NO es edición, limpiar el formulario y redirigir o quedarse según el estado
+      if (!compra) {
+        // Si es "En Espera", quedarse en la página y limpiar el formulario
+        if (variables.estado_de_compra === EstadoDeCompra.EnEspera) {
+          if (form) {
+            // Limpiar el store de productos
+            setProductosCompra([])
+            setProductoAgregadoCompra(undefined)
+            
+            // Limpiar el formulario
+            form.resetFields()
+            form.setFieldsValue({
+              tipo_moneda: TipoMoneda.Soles,
+              fecha: dayjs(),
+              forma_de_pago: FormaDePago.Contado,
+              tipo_documento: TipoDocumento.Factura,
+              tipo_de_cambio: 1,
+              estado_de_compra: EstadoDeCompra.Creado,
+              productos: [],
+            })
+          }
+        } else {
+          // Si es compra normal (Creado), redirigir a la lista
+          router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
+        }
+      } else {
+        // Si es edición, siempre redirigir
         router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
-      } else if (form) {
-        form.resetFields()
-        form.setFieldsValue({
-          tipo_moneda: TipoMoneda.Soles,
-          fecha: dayjs(),
-          forma_de_pago: FormaDePago.Contado,
-          tipo_documento: TipoDocumento.Factura,
-          tipo_de_cambio: 1,
-          estado_de_compra: EstadoDeCompra.Creado,
-          productos: [],
-        })
       }
     },
     onError: (error: Error) => {
