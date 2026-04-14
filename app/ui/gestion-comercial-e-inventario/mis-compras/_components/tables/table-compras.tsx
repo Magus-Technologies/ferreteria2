@@ -170,22 +170,19 @@ const TableCompras = memo(function TableCompras({
 
     // Comparar con strings de Laravel (la API devuelve 'co', 'cr', 'ee', 'an')
     const formaDePago = compra.forma_de_pago as string
-    const estadoDeCompra = compra.estado_de_compra as string
     
     const formaDePagoContado = formaDePago === 'co'
     const formaDePagoCredito = formaDePago === 'cr'
-    const estadoEnEspera = estadoDeCompra === 'ee'
-    const estadoAnulado = estadoDeCompra === 'an'
 
-    // Verde: Contado (siempre pagado) o Crédito completamente pagado
-    if (formaDePagoContado || (formaDePagoCredito && resta <= 0.01)) {
-      return greenColors[2]
-    }
-    // Naranja: En Espera o Anulado
-    else if (estadoEnEspera || estadoAnulado) {
+    // Naranja: Contado (pagado desde el inicio)
+    if (formaDePagoContado) {
       return orangeColors[2]
     }
-    // Rojo: Crédito y Pendiente
+    // Verde: Crédito completamente pagado
+    else if (formaDePagoCredito && resta <= 0.01) {
+      return greenColors[2]
+    }
+    // Rojo: Crédito pendiente de pago
     else if (formaDePagoCredito && resta > 0.01) {
       return redColors[2]
     }

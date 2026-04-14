@@ -27,7 +27,7 @@ export default function SelectEstadoDeCompra({
       options={[
         {
           value: EstadoDeCompraSelect.Creados,
-          label: 'Creados',
+          label: 'Registrados',
         },
         {
           value: EstadoDeCompra.EnEspera,

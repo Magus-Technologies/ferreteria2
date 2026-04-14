@@ -26,7 +26,6 @@ export const useStoreVentaSeleccionada = create<UseStoreVentaSeleccionada>(
 // Función para calcular el color de una venta
 function calcularColorVenta(venta: getVentaResponseProps): string {
   const formaDePago = venta.forma_de_pago;
-  const estadoDeVenta = venta.estado_de_venta;
   const totalPagado = Number(venta.total_pagado || 0);
 
   // Calcular el total de la venta
@@ -58,18 +57,16 @@ function calcularColorVenta(venta: getVentaResponseProps): string {
 
   const resta = total - totalPagado;
 
-  // Naranja: En Espera o Anulado
-  if (estadoDeVenta === 'ee' || estadoDeVenta === 'an') {
+  // Naranja: Contado (pagado desde el inicio)
+  if (formaDePago === 'co') {
     return orangeColors[2];
   }
-
-  // Verde: Contado (siempre pagado) o Crédito completamente pagado
-  if (formaDePago === 'co' || (formaDePago === 'cr' && resta <= 0.01)) {
+  // Verde: Crédito completamente pagado
+  else if (formaDePago === 'cr' && resta <= 0.01) {
     return greenColors[2];
   }
-
-  // Rojo: Crédito con saldo pendiente
-  if (formaDePago === 'cr' && resta > 0.01) {
+  // Rojo: Crédito pendiente de pago
+  else if (formaDePago === 'cr' && resta > 0.01) {
     return redColors[2];
   }
 
