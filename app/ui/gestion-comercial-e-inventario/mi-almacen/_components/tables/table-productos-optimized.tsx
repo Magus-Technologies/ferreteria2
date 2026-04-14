@@ -279,10 +279,30 @@ function TableProductosOptimized() {
                     };
                   },
                   msgSuccess: "Productos importados exitosamente",
-                  onSuccess: (res) => {
-                    queryClient.invalidateQueries({
+                  onSuccess: async (res) => {
+                    // Esperar a que la query traiga los productos recién importados ANTES
+                    // de tocar selección o store, para no dejar a la UI sin producto
+                    // (evita que tablas dependientes muestren "todos los productos" mientras recarga).
+                    await queryClient.refetchQueries({
                       queryKey: ["productos-infinite"],
                     });
+
+                    hasSelectedFirstProduct.current = false;
+
+                    let attempts = 0;
+                    const trySelectFirst = () => {
+                      const api = tableRef.current?.api;
+                      const firstNode = api?.getDisplayedRowAtIndex(0);
+                      if (firstNode?.data) {
+                        api.deselectAll();
+                        firstNode.setSelected(true);
+                        setProductoSeleccionado(firstNode.data);
+                        hasSelectedFirstProduct.current = true;
+                        return;
+                      }
+                      if (attempts++ < 20) setTimeout(trySelectFirst, 100);
+                    };
+                    setTimeout(trySelectFirst, 150);
 
                     const result = res.data as any;
                     if (result?.duplicates > 0) {

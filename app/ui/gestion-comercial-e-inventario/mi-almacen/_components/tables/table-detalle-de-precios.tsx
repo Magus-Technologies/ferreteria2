@@ -227,15 +227,21 @@ export default function TableDetalleDePrecios() {
                 },
                 msgSuccess: 'Importación completada correctamente',
                 onSuccess: async () => {
-                  // Invalidar el caché de React Query para que refetch traiga datos frescos del backend
+                  // Invalidar y recargar productos para traer precios frescos
                   await queryClient.invalidateQueries({
                     queryKey: ['productos-infinite']
                   });
+                  const result = await refetch();
 
-                  // Refrescar los datos después de invalidar
-                  await refetch();
-
-                  setProductoSeleccionado(undefined);
+                  // Mantener el producto seleccionado, pero reemplazarlo con su versión
+                  // actualizada (precios nuevos) en vez de vaciar el store — evita que la
+                  // tabla caiga al branch "todos los productos filtrados".
+                  if (productoSeleccionado) {
+                    const pages = (result.data as any)?.pages ?? []
+                    const freshData = pages.flatMap((p: any) => p.data) as typeof productosData
+                    const actualizado = freshData?.find(p => p.id === productoSeleccionado.id)
+                    setProductoSeleccionado(actualizado ?? productoSeleccionado)
+                  }
                 },
                 queryKey: [QueryKeys.PRODUCTOS],
               }}
