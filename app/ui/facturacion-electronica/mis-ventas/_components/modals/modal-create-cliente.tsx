@@ -69,70 +69,79 @@ export default function ModalCreateCliente({
 
   useEffect(() => {
     const cargarDatos = async () => {
-      form.resetFields();
-      
-      if (dataEdit) {
-        // Transformar null a undefined para compatibilidad con Ant Design Form
-        const formValues = Object.fromEntries(
-          Object.entries(dataEdit).map(([key, value]) => [
-            key,
-            value ?? undefined,
-          ]),
-        );
-        form.setFieldsValue(formValues);
-
-        // Convertir fecha_nacimiento string a Dayjs para el DatePicker
-        if (dataEdit.fecha_nacimiento) {
-          form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
-        }
-
-        // Cargar direcciones desde la tabla direcciones_cliente
-        setCargandoDirecciones(true);
+      // Usar setTimeout para asegurar que el formulario de Ant Design se haya montado y conectado
+      // a la instancia creada por useForm antes de intentar resetear campos.
+      setTimeout(async () => {
         try {
-          const response = await clienteApi.listarDirecciones(dataEdit.id);
-          if (response.data?.data) {
-            const direcciones = response.data.data;
-            
-            // Mapear las direcciones a los campos del formulario
-            direcciones.forEach((dir) => {
-              switch (dir.tipo) {
-                case 'D1':
-                  form.setFieldValue('direccion', dir.direccion);
-                  form.setFieldValue('referencia_d1', dir.referencia);
-                  form.setFieldValue('latitud_d1', dir.latitud);
-                  form.setFieldValue('longitud_d1', dir.longitud);
-                  break;
-                case 'D2':
-                  form.setFieldValue('direccion_2', dir.direccion);
-                  form.setFieldValue('referencia_d2', dir.referencia);
-                  form.setFieldValue('latitud_d2', dir.latitud);
-                  form.setFieldValue('longitud_d2', dir.longitud);
-                  break;
-                case 'D3':
-                  form.setFieldValue('direccion_3', dir.direccion);
-                  form.setFieldValue('referencia_d3', dir.referencia);
-                  form.setFieldValue('latitud_d3', dir.latitud);
-                  form.setFieldValue('longitud_d3', dir.longitud);
-                  break;
-                case 'D4':
-                  form.setFieldValue('direccion_4', dir.direccion);
-                  form.setFieldValue('referencia_d4', dir.referencia);
-                  form.setFieldValue('latitud_d4', dir.latitud);
-                  form.setFieldValue('longitud_d4', dir.longitud);
-                  break;
+          form.resetFields();
+          
+          if (dataEdit) {
+            // Transformar null a undefined para compatibilidad con Ant Design Form
+            const formValues = Object.fromEntries(
+              Object.entries(dataEdit).map(([key, value]) => [
+                key,
+                value ?? undefined,
+              ]),
+            );
+            form.setFieldsValue(formValues);
+
+            // Convertir fecha_nacimiento string a Dayjs para el DatePicker
+            if (dataEdit.fecha_nacimiento) {
+              form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
+            }
+
+            // Cargar direcciones desde la tabla direcciones_cliente
+            setCargandoDirecciones(true);
+            try {
+              const response = await clienteApi.listarDirecciones(dataEdit.id);
+              if (response.data?.data) {
+                const direcciones = response.data.data;
+                
+                // Mapear las direcciones a los campos del formulario
+                direcciones.forEach((dir) => {
+                  switch (dir.tipo) {
+                    case 'D1':
+                      form.setFieldValue('direccion', dir.direccion);
+                      form.setFieldValue('referencia_d1', dir.referencia);
+                      form.setFieldValue('latitud_d1', dir.latitud);
+                      form.setFieldValue('longitud_d1', dir.longitud);
+                      break;
+                    case 'D2':
+                      form.setFieldValue('direccion_2', dir.direccion);
+                      form.setFieldValue('referencia_d2', dir.referencia);
+                      form.setFieldValue('latitud_d2', dir.latitud);
+                      form.setFieldValue('longitud_d2', dir.longitud);
+                      break;
+                    case 'D3':
+                      form.setFieldValue('direccion_3', dir.direccion);
+                      form.setFieldValue('referencia_d3', dir.referencia);
+                      form.setFieldValue('latitud_d3', dir.latitud);
+                      form.setFieldValue('longitud_d3', dir.longitud);
+                      break;
+                    case 'D4':
+                      form.setFieldValue('direccion_4', dir.direccion);
+                      form.setFieldValue('referencia_d4', dir.referencia);
+                      form.setFieldValue('latitud_d4', dir.latitud);
+                      form.setFieldValue('longitud_d4', dir.longitud);
+                      break;
+                  }
+                });
               }
+            } catch (error) {
+              console.error('Error cargando direcciones:', error);
+            } finally {
+              setCargandoDirecciones(false);
+            }
+          } else {
+            form.setFieldsValue({
+              numero_documento: textDefault,
             });
           }
-        } catch (error) {
-          console.error('Error cargando direcciones:', error);
-        } finally {
-          setCargandoDirecciones(false);
+        } catch (e) {
+          // Si el formulario aún no está conectado, reintentar o ignorar
+          console.warn('Formulario no conectado aún:', e);
         }
-      } else {
-        form.setFieldsValue({
-          numero_documento: textDefault,
-        });
-      }
+      }, 0);
     };
 
     if (open) {

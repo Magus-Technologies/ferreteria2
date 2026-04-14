@@ -66,6 +66,9 @@ export default function FormCrearVenta({
       <Form.Item name="_cliente_direccion_4" hidden>
         <input type="hidden" />
       </Form.Item>
+      <Form.Item name="fecha_nacimiento" hidden>
+        <input type="hidden" />
+      </Form.Item>
 
       {/* Primera fila: Fecha, Tipo Moneda, Tipo de Cambio */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
@@ -274,6 +277,9 @@ export default function FormCrearVenta({
 
                   // Actualizar email
                   form.setFieldValue("email", cliente.email || "");
+
+                  // Actualizar fecha de nacimiento (campo oculto para edición)
+                  form.setFieldValue("fecha_nacimiento", cliente.fecha_nacimiento || null);
 
                   // Actualizar las 4 direcciones del cliente en campos ocultos (desde el nuevo sistema)
                   const direcciones = cliente.direcciones || [];

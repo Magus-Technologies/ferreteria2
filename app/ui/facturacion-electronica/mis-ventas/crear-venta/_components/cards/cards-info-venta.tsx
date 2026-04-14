@@ -383,7 +383,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
             telefono: form.getFieldValue("telefono") || null,
             celular: null,
             horario_atencion: null,
-            fecha_nacimiento: null,
+            fecha_nacimiento: form.getFieldValue("fecha_nacimiento") || null,
             puntos: 0,
             centimos: 0,
             contacto_referencia: null,
@@ -391,7 +391,25 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
             estado: true,
           } as Cliente : undefined
         }
-        onSuccess={() => {
+        onSuccess={(cliente) => {
+          // Actualizar los datos del cliente en el formulario de venta
+          const nombreCompleto = cliente.razon_social
+            ? cliente.razon_social
+            : `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim();
+          
+          form.setFieldValue("cliente_nombre", nombreCompleto);
+          form.setFieldValue("ruc_dni", cliente.numero_documento);
+          form.setFieldValue("telefono", cliente.telefono || "");
+          form.setFieldValue("email", cliente.email || "");
+          form.setFieldValue("fecha_nacimiento", cliente.fecha_nacimiento || null);
+
+          // Actualizar direcciones en campos ocultos
+          const direcciones = cliente.direcciones || [];
+          form.setFieldValue("_cliente_direccion_1", direcciones.find(d => d.tipo === 'D1')?.direccion || '');
+          form.setFieldValue("_cliente_direccion_2", direcciones.find(d => d.tipo === 'D2')?.direccion || '');
+          form.setFieldValue("_cliente_direccion_3", direcciones.find(d => d.tipo === 'D3')?.direccion || '');
+          form.setFieldValue("_cliente_direccion_4", direcciones.find(d => d.tipo === 'D4')?.direccion || '');
+
           setModalEditarClienteOpen(false);
         }}
       />
