@@ -96,7 +96,7 @@ export default function ModalFinalizarRecepcion({
           </div>
         )}
 
-        <LabelBase label='Motivo de Finalización:' required>
+        <LabelBase label='Motivo de Finalización:'>
           <Form.Item
             name='motivo_finalizacion'
             rules={[

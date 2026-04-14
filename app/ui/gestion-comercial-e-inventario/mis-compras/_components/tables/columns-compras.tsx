@@ -508,28 +508,11 @@ export function useColumnsCompras({
                   )}
                   {can(permissions.RECEPCION_ALMACEN_FINALIZAR) &&
                     params.data?.estado_de_compra === 'cr' && (
-                      <Tooltip 
-                        title={
-                          (params.data?.recepciones_almacen_count ?? 0) > 0
-                            ? 'Finalizar Recepción (crea recepción automática con productos faltantes)'
-                            : 'Debe recepcionar al menos una vez antes de finalizar'
-                        }
-                      >
+                      <Tooltip title='Finalizar Recepción (marca como finalizados los productos no recibidos)'>
                         <FaFlag
-                          onClick={() => {
-                            if ((params.data?.recepciones_almacen_count ?? 0) > 0) {
-                              handleFinalizarClick(params.value)
-                            }
-                          }}
-                          className={`cursor-pointer ${
-                            (params.data?.recepciones_almacen_count ?? 0) > 0
-                              ? 'text-green-600'
-                              : 'text-gray-400 cursor-not-allowed'
-                          } hover:scale-105 transition-all active:scale-95 min-w-fit`}
+                          onClick={() => handleFinalizarClick(params.value)}
+                          className='cursor-pointer text-green-600 hover:scale-105 transition-all active:scale-95 min-w-fit'
                           size={15}
-                          style={{
-                            pointerEvents: (params.data?.recepciones_almacen_count ?? 0) === 0 ? 'none' : 'auto'
-                          }}
                         />
                       </Tooltip>
                     )}
