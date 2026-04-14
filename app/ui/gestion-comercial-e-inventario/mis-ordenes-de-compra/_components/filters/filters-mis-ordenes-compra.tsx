@@ -155,8 +155,7 @@ export default function FiltersMisOrdenesCompra() {
                             placeholder="Estado"
                             options={[
                                 { value: 'pendiente', label: 'Pendiente' },
-                                { value: 'en_proceso', label: 'En Proceso' },
-                                { value: 'completada', label: 'Completada' },
+                                { value: 'completada', label: 'Aprobado' },
                                 { value: 'anulada', label: 'Anulada' },
                             ]}
                         />
@@ -273,8 +272,7 @@ export default function FiltersMisOrdenesCompra() {
                             placeholder="Estado"
                             options={[
                                 { value: 'pendiente', label: 'Pendiente' },
-                                { value: 'en_proceso', label: 'En Proceso' },
-                                { value: 'completada', label: 'Completada' },
+                                { value: 'completada', label: 'Aprobado' },
                                 { value: 'anulada', label: 'Anulada' },
                             ]}
                         />

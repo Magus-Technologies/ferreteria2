@@ -12,16 +12,14 @@ import dayjs from 'dayjs'
 
 type EstadoOC = 'pendiente' | 'en_proceso' | 'completada' | 'anulada'
 
-const ESTADO_LABELS: Record<EstadoOC, string> = {
+const ESTADO_LABELS: Record<string, string> = {
     pendiente: 'Pendiente',
-    en_proceso: 'En Proceso',
-    completada: 'Completada',
-    anulada: 'Anulada',
+    completada: 'Aprobado',
+    anulada: 'Anulado',
 }
 
-const ESTADO_COLORS: Record<EstadoOC, string> = {
+const ESTADO_COLORS: Record<string, string> = {
     pendiente: 'gold',
-    en_proceso: 'processing',
     completada: 'success',
     anulada: 'error',
 }
@@ -143,8 +141,8 @@ export function useColumnsOrdenesCompra({
             width: 120,
             cellRenderer: ({ data }: ICellRendererParams<OrdenCompra>) => (
                 <div className='flex items-center h-full'>
-                    <Tag color={ESTADO_COLORS[data?.estado as EstadoOC] || 'default'}>
-                        {ESTADO_LABELS[data?.estado as EstadoOC] || data?.estado}
+                    <Tag color={ESTADO_COLORS[data?.estado as string] || 'default'}>
+                        {ESTADO_LABELS[data?.estado as string] || data?.estado}
                     </Tag>
                 </div>
             ),
@@ -170,7 +168,7 @@ export function useColumnsOrdenesCompra({
                             size={16}
                         />
                     </Tooltip>
-                    {(data?.estado === 'pendiente' || data?.estado === 'en_proceso') && (
+                    {data?.estado === 'pendiente' && (
                         <Tooltip title='Editar'>
                             <MdEditSquare
                                 onClick={() => data && onEditar?.(data)}
@@ -195,7 +193,7 @@ export function useColumnsOrdenesCompra({
                             />
                         </Tooltip>
                     )}
-                    {(data?.estado === 'pendiente' || data?.estado === 'en_proceso') && (
+                    {data?.estado === 'pendiente' && (
                         <Tooltip title='Anular'>
                             <MdDelete
                                 onClick={() => data && onAnular(data)}
