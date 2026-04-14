@@ -10,6 +10,7 @@ import { Tooltip } from 'antd'
 import { recepcionAlmacenApi, type RecepcionAlmacenResponse } from '~/lib/api/recepcion-almacen'
 import { HiDocumentText } from 'react-icons/hi2'
 import { FaUndo } from 'react-icons/fa'
+import { formatFechaPeru } from '~/utils/fechas'
 
 const eliminarRecepcionAction = async ({ id }: { id: number }) => {
   const res = await recepcionAlmacenApi.delete(id)
@@ -107,10 +108,67 @@ export function useColumnsRecepcionesAlmacen({
       type: 'boolean',
     },
     {
+      colId: 'es_finalizacion',
+      headerName: 'Finalización',
+      field: 'es_finalizacion',
+      width: 100,
+      minWidth: 100,
+      cellRenderer: (params: ICellRendererParams<RecepcionAlmacenResponse>) => {
+        if (!params.value) return null
+        return (
+          <div className='flex items-center h-full'>
+            <span className='px-2 py-0.5 text-xs font-semibold rounded bg-orange-50 text-orange-700 border border-orange-200'>
+              Finalizada
+            </span>
+          </div>
+        )
+      },
+      filter: true,
+    },
+    {
+      colId: 'motivo_finalizacion',
+      headerName: 'Motivo de Finalización',
+      field: 'motivo_finalizacion',
+      width: 250,
+      minWidth: 200,
+      filter: true,
+      cellRenderer: (params: ICellRendererParams<RecepcionAlmacenResponse>) => {
+        if (!params.value) return <span className='text-gray-400'>—</span>
+        return (
+          <Tooltip title={params.value}>
+            <div className='truncate text-sm'>
+              {params.value}
+            </div>
+          </Tooltip>
+        )
+      },
+    },
+    {
+      colId: 'fecha_finalizacion',
+      headerName: 'Fecha Finalización',
+      field: 'fecha_finalizacion',
+      width: 150,
+      minWidth: 150,
+      filter: 'agDateColumnFilter',
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        return formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm A')
+      },
+      cellRenderer: (params: ICellRendererParams<RecepcionAlmacenResponse>) => {
+        if (!params.value) return <span className='text-gray-400'>—</span>
+        return (
+          <div className='text-sm'>
+            {formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm A')}
+          </div>
+        )
+      },
+    },
+    {
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
       width: 80,
+      pinned: 'right',
       cellRenderer: (
         params: ICellRendererParams<RecepcionAlmacenResponse>
       ) => {

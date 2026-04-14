@@ -16,9 +16,11 @@ export default function TableComprasEnEspera() {
 
   const filtros = useStoreFiltrosComprasEnEspera(state => state.filtros)
 
+  const { columns } = useColumnsCompras()
+
   return (
     <TableCompras
-      columns={useColumnsCompras()}
+      columns={columns}
       id='g-c-e-i.mis-compras.compras-en-espera'
       setCompraSeleccionada={setCompraSeleccionada}
       filtros={filtros}

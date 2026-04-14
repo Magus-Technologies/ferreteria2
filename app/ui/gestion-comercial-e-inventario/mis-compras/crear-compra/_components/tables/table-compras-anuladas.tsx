@@ -16,9 +16,11 @@ export default function TableComprasAnuladas() {
 
   const router = useRouter()
 
+  const { columns } = useColumnsCompras()
+
   return (
     <TableCompras
-      columns={useColumnsCompras()}
+      columns={columns}
       id='g-c-e-i.mis-compras.compras-anuladas'
       setCompraSeleccionada={setCompraSeleccionada}
       filtros={filtros}

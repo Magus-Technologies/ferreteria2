@@ -19,6 +19,11 @@ export default function TableMisCompras() {
   const [openModal, setOpenModal] = useState(false)
   const [compraRecepcion, setCompraRecepcion] = useState<Compra>()
 
+  const { columns, modalElement } = useColumnsCompras({
+    setCompraRecepcion,
+    setOpenModal,
+  })
+
   return (
     <>
       <ModalCrearRecepcionAlmacen
@@ -27,11 +32,9 @@ export default function TableMisCompras() {
         compra={compraRecepcion}
         setCompra={setCompraRecepcion}
       />
+      {modalElement}
       <TableCompras
-        columns={useColumnsCompras({
-          setCompraRecepcion,
-          setOpenModal,
-        })}
+        columns={columns}
         id='g-c-e-i.mis-compras.compras'
         setCompraSeleccionada={setCompraSeleccionada}
         filtros={filtros}

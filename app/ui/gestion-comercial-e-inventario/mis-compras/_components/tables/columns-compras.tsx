@@ -18,6 +18,8 @@ import { compraApi, type Compra } from '~/lib/api/compra'
 import { recepcionAlmacenApi } from '~/lib/api/recepcion-almacen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import useApp from 'antd/es/app/useApp'
+import { useState } from 'react'
+import ModalFinalizarRecepcion from '../modals/modal-finalizar-recepcion'
 
 // Helper para formatear moneda según el tipo
 const formatCurrency = (value: number, tipoMoneda: string | undefined) => {
@@ -41,6 +43,9 @@ export function useColumnsCompras({
   const { can } = usePermissionHook()
   const queryClient = useQueryClient()
   const { message } = useApp()
+  
+  const [modalFinalizarOpen, setModalFinalizarOpen] = useState(false)
+  const [compraAFinalizar, setCompraAFinalizar] = useState<string | null>(null)
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { estado_de_compra: string } }) => {
@@ -57,8 +62,8 @@ export function useColumnsCompras({
   })
 
   const finalizarRecepcionMutation = useMutation({
-    mutationFn: async (compra_id: string) => {
-      const result = await recepcionAlmacenApi.finalizarCompra(compra_id)
+    mutationFn: async ({ compra_id, motivo }: { compra_id: string; motivo: string }) => {
+      const result = await recepcionAlmacenApi.finalizarCompra(compra_id, motivo)
       if (result.error) {
         throw new Error(result.error.message)
       }
@@ -68,12 +73,25 @@ export function useColumnsCompras({
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.RECEPCIONES_ALMACEN] })
       message.success(data?.message || 'Recepción finalizada correctamente')
+      setModalFinalizarOpen(false)
+      setCompraAFinalizar(null)
       router.push('/ui/gestion-comercial-e-inventario/mis-recepciones')
     },
     onError: (error: Error) => {
       message.error(error.message || 'Error al finalizar la recepción')
     },
   })
+
+  const handleFinalizarClick = (compraId: string) => {
+    setCompraAFinalizar(compraId)
+    setModalFinalizarOpen(true)
+  }
+
+  const handleFinalizarConfirm = (motivo: string) => {
+    if (compraAFinalizar) {
+      finalizarRecepcionMutation.mutate({ compra_id: compraAFinalizar, motivo })
+    }
+  }
 
   const columns: ColDef<Compra>[] = [
     {
@@ -497,26 +515,22 @@ export function useColumnsCompras({
                             : 'Debe recepcionar al menos una vez antes de finalizar'
                         }
                       >
-                        <Popconfirm
-                          title='Finalizar Recepción'
-                          description={`¿Estás seguro de finalizar la recepción? Se creará automáticamente una recepción con los productos faltantes.`}
-                          onConfirm={() => finalizarRecepcionMutation.mutate(params.value)}
-                          okText='Si'
-                          cancelText='No'
-                          disabled={(params.data?.recepciones_almacen_count ?? 0) === 0}
-                        >
-                          <FaFlag
-                            className={`cursor-pointer ${
-                              (params.data?.recepciones_almacen_count ?? 0) > 0
-                                ? 'text-green-600'
-                                : 'text-gray-400 cursor-not-allowed'
-                            } hover:scale-105 transition-all active:scale-95 min-w-fit`}
-                            size={15}
-                            style={{
-                              pointerEvents: (params.data?.recepciones_almacen_count ?? 0) === 0 ? 'none' : 'auto'
-                            }}
-                          />
-                        </Popconfirm>
+                        <FaFlag
+                          onClick={() => {
+                            if ((params.data?.recepciones_almacen_count ?? 0) > 0) {
+                              handleFinalizarClick(params.value)
+                            }
+                          }}
+                          className={`cursor-pointer ${
+                            (params.data?.recepciones_almacen_count ?? 0) > 0
+                              ? 'text-green-600'
+                              : 'text-gray-400 cursor-not-allowed'
+                          } hover:scale-105 transition-all active:scale-95 min-w-fit`}
+                          size={15}
+                          style={{
+                            pointerEvents: (params.data?.recepciones_almacen_count ?? 0) === 0 ? 'none' : 'auto'
+                          }}
+                        />
                       </Tooltip>
                     )}
                 </ColumnAction>
@@ -526,7 +540,21 @@ export function useColumnsCompras({
         ]
       : []) as ColDef<Compra>[]),
   ]
-  return columns
+  
+  return {
+    columns,
+    modalElement: (
+      <ModalFinalizarRecepcion
+        open={modalFinalizarOpen}
+        onCancel={() => {
+          setModalFinalizarOpen(false)
+          setCompraAFinalizar(null)
+        }}
+        onConfirm={handleFinalizarConfirm}
+        loading={finalizarRecepcionMutation.isPending}
+      />
+    )
+  }
 }
 
 function getSubTotal(productos: Compra['productos_por_almacen']) {

@@ -71,10 +71,22 @@ export default function TableRecepcionesAlmacen() {
       <TableWithTitle<RecepcionAlmacenResponse>
         id='g-c-e-i.mis-recepciones.recepciones-almacen'
         selectionColor={greenColors[10]}
-        onSelectionChanged={({ selectedNodes }) =>
-          setRecepcionAlmacenSeleccionada(
-            selectedNodes?.[0]?.data as RecepcionAlmacenResponse
-          )
+        onSelectionChanged={async ({ selectedNodes }) => {
+          const selectedData = selectedNodes?.[0]?.data as RecepcionAlmacenResponse
+          if (!selectedData) {
+            setRecepcionAlmacenSeleccionada(undefined)
+            return
+          }
+
+          // Fetch full data to get enriched counts (cantidad_pedida, etc.)
+          const res = await recepcionAlmacenApi.getById(selectedData.id)
+          if (res.data) {
+            setRecepcionAlmacenSeleccionada(res.data.data)
+          } else {
+            // Fallback to list data if fetch fails
+            setRecepcionAlmacenSeleccionada(selectedData)
+          }
+        }
         }
         tableRef={tableRef}
         title='Recepciones de Almacén'

@@ -66,6 +66,9 @@ export interface UnidadDerivadaRecepcionResponse {
   bonificacion: boolean
   unidad_derivada_inmutable: UnidadDerivadaInmutableResponse
   historial: RecepcionAlmacenHistorial[]
+  cantidad_pedida?: number
+  cantidad_recepcionada?: number
+  cantidad_finalizada?: number
 }
 
 export interface MarcaResponse {
@@ -162,6 +165,9 @@ export interface RecepcionAlmacenResponse {
   orden_compra: OrdenCompraRecepcionResponse | null
   productos_por_almacen: ProductoAlmacenRecepcionResponse[]
   user: UserResponse
+  motivo_finalizacion: string | null
+  fecha_finalizacion: string | null
+  es_finalizacion: boolean
 }
 
 export interface RecepcionAlmacenFilters {
@@ -229,9 +235,10 @@ export const recepcionAlmacenApi = {
    * Finalizar recepción de una compra
    * Crea automáticamente una recepción con los productos pendientes
    */
-  async finalizarCompra(compra_id: string): Promise<ApiResponse<{ data: RecepcionAlmacenResponse; message: string }>> {
-    return apiRequest<{ data: RecepcionAlmacenResponse; message: string }>(`/recepciones-almacen/finalizar-compra/${compra_id}`, {
+  async finalizarCompra(compra_id: string, motivo_finalizacion: string): Promise<ApiResponse<{ data: RecepcionAlmacenResponse; message: string; productos_finalizados?: any[] }>> {
+    return apiRequest<{ data: RecepcionAlmacenResponse; message: string; productos_finalizados?: any[] }>(`/recepciones-almacen/finalizar-compra/${compra_id}`, {
       method: 'POST',
+      body: JSON.stringify({ motivo_finalizacion }),
     })
   },
 }

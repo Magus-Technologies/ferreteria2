@@ -116,6 +116,51 @@ export function useColumnsDetalleDeRecepcion({
       filter: 'agNumberColumnFilter',
     },
     {
+      colId: 'cantidad_pedida',
+      headerName: 'Cant. Pedida',
+      field: 'cantidad_pedida',
+      width: 60,
+      minWidth: 60,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: ({
+        value,
+      }: {
+        value: number | undefined
+      }) => {
+        return value !== undefined ? value.toString() : '-'
+      },
+    },
+    {
+      colId: 'cantidad_recepcionada',
+      headerName: 'Cant. Total Recepcionada',
+      field: 'cantidad_recepcionada',
+      width: 80,
+      minWidth: 80,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: ({
+        value,
+      }: {
+        value: number | undefined
+      }) => {
+        return value !== undefined ? value.toString() : '-'
+      },
+    },
+    {
+      colId: 'cantidad_finalizada',
+      headerName: 'Cant. Finalizada',
+      field: 'cantidad_finalizada',
+      width: 70,
+      minWidth: 70,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: ({
+        value,
+      }: {
+        value: number | undefined
+      }) => {
+        return value !== undefined ? value.toString() : '-'
+      },
+    },
+    {
       colId: 'stock_anterior',
       headerName: 'Stock Anterior',
       field: 'historial',
