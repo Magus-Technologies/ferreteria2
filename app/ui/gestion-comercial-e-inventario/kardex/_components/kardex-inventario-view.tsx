@@ -44,6 +44,7 @@ const tipoLabels: Record<string, string> = {
 const movimientoColors: Record<string, string> = {
   ENTRADA: 'green',
   SALIDA: 'red',
+  REFERENCIA: 'blue',
 }
 
 export default function KardexInventarioView() {
