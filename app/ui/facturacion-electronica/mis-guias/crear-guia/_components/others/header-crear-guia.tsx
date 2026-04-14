@@ -1,11 +1,11 @@
 'use client'
 
 import { Modal } from 'antd'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { TbTruckDelivery } from 'react-icons/tb'
 import { MdOutlineLocalShipping } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
-import SelectProductos from '~/app/_components/form/selects/select-productos'
+import SelectProductos, { type RefSelectProductosProps } from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
@@ -19,15 +19,29 @@ export default function HeaderCrearGuia({
 }) {
   const { can } = usePermissionHook()
 
-  const [openModalAgregarProducto, setOpenModalAgregarProducto] =
+  const selectProductosRef = useRef<RefSelectProductosProps>(null)
+
+  const [openModalAgregarProducto, _setOpenModalAgregarProducto] =
     useState(false)
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto
   )
+  const setSearchText = useStoreProductoSeleccionadoSearch(
+    (store) => store.setSearchText
+  )
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.producto
   )
+
+  const setOpenModalAgregarProducto = (open: boolean) => {
+    _setOpenModalAgregarProducto(open)
+    if (!open) setSearchText('')
+  }
+
+  const handleAfterCloseModal = () => {
+    selectProductosRef.current?.focus()
+  }
 
   return (
     <TituloModulos
@@ -41,7 +55,9 @@ export default function HeaderCrearGuia({
       }
       extra={
         <div className='pl-0 lg:pl-8 flex items-center gap-2 lg:gap-4 w-full lg:w-auto'>
+          <div data-select-productos="crear-guia" className="contents">
           <SelectProductos
+            ref={selectProductosRef}
             allowClear
             size='large'
             className='w-full lg:!min-w-[400px] lg:!w-[400px] lg:!max-w-[400px] font-normal!'
@@ -62,6 +78,7 @@ export default function HeaderCrearGuia({
               if (producto) setOpenModalAgregarProducto(true)
             }}
           />
+          </div>
         </div>
       }
     >
@@ -84,6 +101,8 @@ export default function HeaderCrearGuia({
           destroyOnHidden
           maskClosable={false}
           keyboard={false}
+          focusTriggerAfterClose={false}
+          afterClose={handleAfterCloseModal}
         >
           <CardAgregarProductoGuia setOpen={setOpenModalAgregarProducto} />
         </Modal>

@@ -1,10 +1,10 @@
 "use client";
 
 import { Modal, message } from "antd";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MdOutlineSell, MdSell } from "react-icons/md";
 import { DescuentoTipo, type getVentaResponseProps } from "~/lib/api/venta";
-import SelectProductos from "~/app/_components/form/selects/select-productos";
+import SelectProductos, { type RefSelectProductosProps } from "~/app/_components/form/selects/select-productos";
 import SelectPaquetes from "~/app/_components/form/selects/select-paquetes";
 import SelectServicios from "~/app/_components/form/selects/select-servicios";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
@@ -42,7 +42,9 @@ export default function HeaderCrearVenta({
 }) {
   const { can } = usePermissionHook();
 
-  const [openModalAgregarProducto, setOpenModalAgregarProducto] =
+  const selectProductosRef = useRef<RefSelectProductosProps>(null);
+
+  const [openModalAgregarProducto, _setOpenModalAgregarProducto] =
     useState(false);
   const [openModalBuscarServicio, setOpenModalBuscarServicio] = useState(false);
   const [textDefaultServicio, setTextDefaultServicio] = useState("");
@@ -50,6 +52,22 @@ export default function HeaderCrearVenta({
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
   );
+  const setSearchText = useStoreProductoSeleccionadoSearch(
+    (store) => store.setSearchText,
+  );
+
+  // Al cerrar el modal de agregar producto, limpiar buscador
+  const setOpenModalAgregarProducto = (open: boolean) => {
+    _setOpenModalAgregarProducto(open)
+    if (!open) {
+      setSearchText('')
+    }
+  }
+
+  // Devolver focus al buscador de productos DESPUÉS de que Ant termine su close animation
+  const handleAfterCloseModal = () => {
+    selectProductosRef.current?.focus()
+  }
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.producto,
   );
@@ -230,7 +248,9 @@ export default function HeaderCrearVenta({
             componentId="crear-venta.buscar-producto"
             label="Buscar Producto"
           >
+            <div data-select-productos="crear-venta" className="contents">
             <SelectProductos
+              ref={selectProductosRef}
               autoFocus
               allowClear
               size="large"
@@ -252,6 +272,7 @@ export default function HeaderCrearVenta({
                 if (producto) setOpenModalAgregarProducto(true);
               }}
             />
+            </div>
           </ConfigurableElement>
 
           <ConfigurableElement
@@ -309,6 +330,8 @@ export default function HeaderCrearVenta({
           destroyOnHidden
           maskClosable={false}
           keyboard={false}
+          focusTriggerAfterClose={false}
+          afterClose={handleAfterCloseModal}
         >
           <CardAgregarProductoVenta setOpen={setOpenModalAgregarProducto} />
         </Modal>

@@ -1,10 +1,10 @@
 'use client'
 
 import { Modal } from 'antd'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { MdPointOfSale } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
-import SelectProductos from '~/app/_components/form/selects/select-productos'
+import SelectProductos, { type RefSelectProductosProps } from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
@@ -14,14 +14,28 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 export default function HeaderCrearCotizacion() {
   const { can } = usePermissionHook()
 
-  const [openModalAgregarProducto, setOpenModalAgregarProducto] = useState(false)
+  const selectProductosRef = useRef<RefSelectProductosProps>(null)
+
+  const [openModalAgregarProducto, _setOpenModalAgregarProducto] = useState(false)
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto
   )
+  const setSearchText = useStoreProductoSeleccionadoSearch(
+    (store) => store.setSearchText
+  )
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.producto
   )
+
+  const setOpenModalAgregarProducto = (open: boolean) => {
+    _setOpenModalAgregarProducto(open)
+    if (!open) setSearchText('')
+  }
+
+  const handleAfterCloseModal = () => {
+    selectProductosRef.current?.focus()
+  }
 
   return (
     <TituloModulos
@@ -29,7 +43,9 @@ export default function HeaderCrearCotizacion() {
       icon={<MdPointOfSale className='text-cyan-600' />}
       extra={
         <div className='pl-8 flex items-center gap-4'>
+          <div data-select-productos="crear-cotizacion" className="contents">
           <SelectProductos
+            ref={selectProductosRef}
             autoFocus
             allowClear
             size='large'
@@ -51,6 +67,7 @@ export default function HeaderCrearCotizacion() {
               if (producto) setOpenModalAgregarProducto(true)
             }}
           />
+          </div>
         </div>
       }
     >
@@ -73,6 +90,8 @@ export default function HeaderCrearCotizacion() {
           destroyOnHidden
           maskClosable={false}
           keyboard={false}
+          focusTriggerAfterClose={false}
+          afterClose={handleAfterCloseModal}
         >
           <CardAgregarProductoCotizacion setOpen={setOpenModalAgregarProducto} />
         </Modal>

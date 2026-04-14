@@ -2,7 +2,7 @@
 'use client'
 
 import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import type { ProductoWhereInput } from '~/types'
 import type { Producto } from '~/app/_types/producto'
@@ -82,7 +82,11 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   selectionColor?: string // Color para la fila seleccionada en el modal
 }
 
-export default function SelectProductos({
+export interface RefSelectProductosProps {
+  focus: () => void
+}
+
+const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps>(function SelectProductos({
   placeholder,
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
@@ -107,11 +111,17 @@ export default function SelectProductos({
   limpiarOnChange = false,
   showUltimasCompras = true,
   autoFocus = false,
-  selectionColor, // Recibir el color de selección
+  selectionColor,
   onSearch,
   ...props
-}: SelectProductosProps) {
+}, ref) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      selectProductoRef.current?.focus()
+    },
+  }))
 
   const pathname = usePathname()
   // Detectar el color automáticamente si no se pasa como prop
@@ -145,7 +155,19 @@ export default function SelectProductos({
     }
   }, [autoFocus])
 
-  const [openModalProductoSearch, setOpenModalProductoSearch] = useState(false)
+  const [openModalProductoSearch, _setOpenModalProductoSearch] = useState(false)
+
+  // Wrapper: al cerrar el modal, limpiar buscador y devolver focus
+  const setOpenModalProductoSearch = (open: boolean) => {
+    _setOpenModalProductoSearch(open)
+    if (!open) {
+      setText('')
+      setTextDefault('')
+      setTimeout(() => {
+        selectProductoRef.current?.focus()
+      }, 300)
+    }
+  }
 
   const text = useStoreProductoSeleccionadoSearch(store => store.searchText)
   const setText = useStoreProductoSeleccionadoSearch(store => store.setSearchText)
@@ -353,6 +375,14 @@ export default function SelectProductos({
           almacenOrigenIdTransferencia={almacenOrigenIdTransferencia}
           showUltimasCompras={showUltimasCompras}
           selectionColor={colorSeleccion}
+          onAfterClose={() => {
+            // Devolver focus al buscador después de cerrar el modal
+            ;[0, 50, 150, 300, 500].forEach((delay) => {
+              setTimeout(() => {
+                selectProductoRef.current?.focus()
+              }, delay)
+            })
+          }}
         />
       )}
       {showButtonCreate && (
@@ -371,4 +401,6 @@ export default function SelectProductos({
       )}
     </>
   )
-}
+})
+
+export default SelectProductos

@@ -40,6 +40,7 @@ type ModalProductoSearchProps = {
   almacenOrigenIdTransferencia?: number;
   showUltimasCompras?: boolean;
   selectionColor?: string; // Color para la fila seleccionada
+  onAfterClose?: () => void;
 };
 
 export type CostoUnidadDerivadaSearch = {
@@ -65,6 +66,7 @@ export default function ModalProductoSearch({
   almacenOrigenIdTransferencia,
   showUltimasCompras = true,
   selectionColor, // Recibir el color de selección
+  onAfterClose,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
   useEffect(() => {
@@ -111,6 +113,8 @@ export default function ModalProductoSearch({
       }}
       maskClosable={false}
       keyboard={false}
+      focusTriggerAfterClose={false}
+      afterClose={onAfterClose}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
         <SelectTipoBusquedaProducto
