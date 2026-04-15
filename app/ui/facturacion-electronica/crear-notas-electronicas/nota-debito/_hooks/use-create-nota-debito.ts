@@ -6,6 +6,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { facturacionElectronicaApi, type CrearNotaDebitoData } from '~/lib/api/facturacion-electronica'
 import { FormCreateNotaDebito } from '../_components/body-crear-nota-debito'
 import { FormInstance } from 'antd'
+import { fechaSubmit } from '~/utils/fechas'
 
 export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDebito>) {
   const router = useRouter()
@@ -96,7 +97,7 @@ export default function useCreateNotaDebito(form?: FormInstance<FormCreateNotaDe
         monto_total: total,
         monto_igv: igv,
         monto_subtotal: subtotal,
-        fecha: fecha_emision.format('YYYY-MM-DD HH:mm:ss'),
+        fecha: fechaSubmit(fecha_emision),
         observaciones: restValues.observaciones,
         items: items,
       }

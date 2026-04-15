@@ -46,7 +46,9 @@ export default function AlertDeudaCliente({ clienteId, onDeudaChange }: AlertDeu
       const total = calcularTotalVenta(v)
       const cobrado = Number(v.total_cobrado || 0)
       const resta = total - cobrado
-      const dias = dayjs().diff(dayjs(v.fecha), 'days')
+      const dias = v.fecha_vencimiento
+        ? dayjs(v.fecha_vencimiento).startOf('day').diff(dayjs().startOf('day'), 'days')
+        : null
       return { venta: v, total, cobrado, resta, dias }
     }).filter(d => d.resta > 0.01)
   }, [data?.data])
@@ -82,19 +84,37 @@ export default function AlertDeudaCliente({ clienteId, onDeudaChange }: AlertDeu
                   <tr className='bg-red-100 text-red-800'>
                     <th className='px-1.5 py-0.5 text-left'>Doc</th>
                     <th className='px-1.5 py-0.5 text-right'>Resta</th>
-                    <th className='px-1.5 py-0.5 text-center'>Días</th>
+                    <th className='px-1.5 py-0.5 text-center'>Vencimiento</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {deudas.map((d) => (
-                    <tr key={d.venta.id} className='border-b border-red-100'>
-                      <td className='px-1.5 py-0.5'>{d.venta.serie}-{d.venta.numero}</td>
-                      <td className='px-1.5 py-0.5 text-right font-bold text-red-600'>S/. {d.resta.toFixed(2)}</td>
-                      <td className={`px-1.5 py-0.5 text-center font-bold ${d.dias > 30 ? 'text-red-600' : d.dias > 15 ? 'text-orange-600' : 'text-yellow-600'}`}>
-                        {d.dias}
-                      </td>
-                    </tr>
-                  ))}
+                  {deudas.map((d) => {
+                    const label = d.dias === null
+                      ? 'Sin fecha'
+                      : d.dias > 0
+                        ? `Faltan ${d.dias}d`
+                        : d.dias === 0
+                          ? 'Vence hoy'
+                          : `Vencido ${Math.abs(d.dias)}d`
+                    const color = d.dias === null
+                      ? 'text-slate-500'
+                      : d.dias < 0
+                        ? 'text-red-600'
+                        : d.dias === 0
+                          ? 'text-orange-600'
+                          : d.dias <= 3
+                            ? 'text-yellow-600'
+                            : 'text-green-700'
+                    return (
+                      <tr key={d.venta.id} className='border-b border-red-100'>
+                        <td className='px-1.5 py-0.5'>{d.venta.serie}-{d.venta.numero}</td>
+                        <td className='px-1.5 py-0.5 text-right font-bold text-red-600'>S/. {d.resta.toFixed(2)}</td>
+                        <td className={`px-1.5 py-0.5 text-center font-bold ${color}`}>
+                          {label}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

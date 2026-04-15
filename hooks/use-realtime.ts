@@ -24,6 +24,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.KARDEX,
     QueryKeys.ENTREGAS_PRODUCTOS,
     'productos-infinite',
+    'vencimientos-proximos',
   ],
   compras: [
     QueryKeys.COMPRAS,
@@ -37,6 +38,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.COMPRAS_RESUMEN,
     QueryKeys.KARDEX,
     'productos-infinite',
+    'vencimientos-proximos',
   ],
   productos: [
     QueryKeys.PRODUCTOS,
@@ -58,6 +60,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.CLIENTES_FRECUENTES,
     QueryKeys.CLIENTES_RECIENTES,
     QueryKeys.DIRECCIONES_CLIENTE,
+    'cumpleanos-proximos',
   ],
   proveedores: [QueryKeys.PROVEEDORES, QueryKeys.PROVEEDORES_SEARCH],
   'ingresos-salidas': [
@@ -100,7 +103,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   'tipos-ingreso-salida': [QueryKeys.TIPOS_INGRESO_SALIDA],
   'tipos-servicio': [QueryKeys.TIPOS_SERVICIO],
   vehiculos: [QueryKeys.VEHICULOS],
-  usuarios: [QueryKeys.USUARIOS, QueryKeys.VENDEDORES_DISPONIBLES],
+  usuarios: [QueryKeys.USUARIOS, QueryKeys.VENDEDORES_DISPONIBLES, 'cumpleanos-proximos'],
   empresas: [QueryKeys.EMPRESAS],
   'guias-remision': [QueryKeys.GUIAS_REMISION, QueryKeys.MOTIVOS_TRASLADO],
   'despliegues-de-pago': [QueryKeys.DESPLIEGUE_DE_PAGO, QueryKeys.METODO_DE_PAGO],

@@ -24,7 +24,7 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
       field: 'fecha_emision',
       width: 160,
       valueFormatter: (params) =>
-        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm:ss') : '-',
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
     {
       headerName: 'Fecha Traslado',

@@ -22,9 +22,9 @@ export function useColumnsMisVentas() {
     {
       headerName: "F.Venta",
       field: "fecha",
-      width: 160,
+      width: 180,
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, "DD/MM/YYYY HH:mm:ss"),
+        formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A"),
     },
     {
       headerName: "S.Numero",

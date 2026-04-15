@@ -13,6 +13,7 @@ import {
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
 import ModalDocCotizacion, { CotizacionResponse } from "~/app/ui/facturacion-electronica/mis-cotizaciones/_components/modals/modal-doc-cotizacion";
+import { fechaSubmit } from "~/utils/fechas";
 
 export default function BodyCotizar() {
   const [form] = Form.useForm<FormCreateCotizacion>();
@@ -47,8 +48,8 @@ export default function BodyCotizar() {
           descuento_tipo: p.descuento_tipo === "Porcentaje" ? "%" : "m",
           descuento: p.descuento,
         })),
-        fecha: values.fecha.format("YYYY-MM-DD HH:mm:ss"),
-        fecha_proforma: values.fecha.format("YYYY-MM-DD HH:mm:ss"), // Usa la misma fecha
+        fecha: fechaSubmit(values.fecha),
+        fecha_proforma: fechaSubmit(values.fecha), // Usa la misma fecha
         tipo_moneda: "s", // TODO: Obtener del formulario cuando se agregue el campo
         // tipo_de_cambio: values.tipo_de_cambio, // TODO: Agregar campo en el formulario
         vigencia_dias: values.vigencia_dias,
