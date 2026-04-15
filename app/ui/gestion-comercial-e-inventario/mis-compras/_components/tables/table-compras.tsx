@@ -365,16 +365,6 @@ const TableCompras = memo(function TableCompras({
       rowBuffer={10}
       cacheBlockSize={100}
     >
-      {/* Paginación */}
-      <PaginationControls
-        currentPage={page}
-        totalPages={totalPages}
-        total={total}
-        pageSize={pageSize}
-        loading={isLoading}
-        onNextPage={nextPage}
-        onPrevPage={prevPage}
-      />
     </TableWithTitle>
   )
 })

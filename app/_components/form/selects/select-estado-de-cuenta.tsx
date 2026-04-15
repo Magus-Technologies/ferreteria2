@@ -3,7 +3,7 @@ import { FaMoneyCheck } from 'react-icons/fa6'
 
 export enum EstadoDeCuenta {
   Pagado = 'Pagado',
-  Deuda = 'Deuda',
+  Credito = 'Credito',
 }
 
 interface SelectEstadoDeCuentaProps extends SelectBaseProps {

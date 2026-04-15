@@ -81,9 +81,7 @@ export default function FiltersMisCompras() {
         gte: toUTCBD({ date: dayjs().startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
-      estado_de_compra: {
-        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado, EstadoDeCompra.EnEspera],
-      },
+      estado_de_compra: EstadoDeCompra.Creado,
     } satisfies CompraWhereInput
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,13 +129,13 @@ export default function FiltersMisCompras() {
           },
           ...(pendiente_de_recepcion
             ? { estado_de_compra: pendiente_de_recepcion }
+            : estado_de_cuenta
+            ? {} // cuando se filtra por estado_de_cuenta no aplicar estado_de_compra
             : estado_de_compra
             ? {
                 estado_de_compra:
                   estado_de_compra === EstadoDeCompraSelect.Creados
-                    ? {
-                        in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado, EstadoDeCompra.EnEspera],
-                      }
+                    ? EstadoDeCompra.Creado
                     : estado_de_compra,
               }
             : {}),
