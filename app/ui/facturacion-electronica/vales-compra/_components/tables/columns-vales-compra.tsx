@@ -273,7 +273,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
       field: "created_at",
       width: 160,
       valueFormatter: (params) =>
-        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY HH:mm:ss") : "",
+        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
     },
     {
       colId: 'acciones',

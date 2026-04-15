@@ -16,6 +16,7 @@ import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreateCotizacion, DescuentoTipo } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_types/cotizacion.types";
 import ModalDocCotizacion, { CotizacionResponse } from "~/app/ui/facturacion-electronica/mis-cotizaciones/_components/modals/modal-doc-cotizacion";
 import dayjs from "dayjs";
+import { fechaSubmit } from "~/utils/fechas";
 
 interface BodyEditarCotizacionProps {
   cotizacionId: string;
@@ -136,8 +137,8 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
           descuento_tipo: p.descuento_tipo === "Porcentaje" ? "%" : "m",
           descuento: p.descuento,
         })),
-        fecha: values.fecha.format("YYYY-MM-DD HH:mm:ss"),
-        fecha_proforma: values.fecha.format("YYYY-MM-DD HH:mm:ss"),
+        fecha: fechaSubmit(values.fecha),
+        fecha_proforma: fechaSubmit(values.fecha),
         tipo_moneda: "s",
         vigencia_dias: values.vigencia_dias,
         fecha_vencimiento: values.fecha_vencimiento?.format("YYYY-MM-DD HH:mm:ss"),

@@ -129,7 +129,7 @@ export function useColumnsCompras({
       minWidth: 180,
       filter: 'agDateColumnFilter',
       valueFormatter: (params) =>
-        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm:ss') : '-',
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
     {
       colId: 'fecha_vencimiento',

@@ -39,8 +39,22 @@ export function toUTCBD({ date }: { date: Dayjs }) {
  */
 export function formatFechaPeru(
   fecha: string | Date | null | undefined,
-  formato: string = 'DD/MM/YYYY HH:mm:ss',
+  formato: string = 'DD/MM/YYYY hh:mm:ss A',
 ): string {
   if (!fecha) return ''
   return dayjs.utc(fecha).tz(TZ_PERU).format(formato)
+}
+
+/**
+ * Combina el día elegido por el usuario con la hora/minuto/segundo
+ * del momento actual (submit). Resuelve el bug de que la hora
+ * guardada era la de apertura del formulario, no la de finalización.
+ */
+export function fechaSubmit(fechaElegida: Dayjs): string {
+  const ahora = dayjs()
+  return fechaElegida
+    .hour(ahora.hour())
+    .minute(ahora.minute())
+    .second(ahora.second())
+    .format('YYYY-MM-DD HH:mm:ss')
 }

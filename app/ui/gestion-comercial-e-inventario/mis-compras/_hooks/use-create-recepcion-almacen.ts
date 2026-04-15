@@ -8,6 +8,7 @@ import { recepcionAlmacenApi } from '~/lib/api/recepcion-almacen'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import dayjs from 'dayjs'
+import { fechaSubmit } from '~/utils/fechas'
 
 export default function useCreateRecepcionAlmacen({
   compra_id,
@@ -67,7 +68,7 @@ export default function useCreateRecepcionAlmacen({
         compra_id,
         orden_compra_id,
         user_id,
-        fecha: dayjs(fecha).format('YYYY-MM-DD HH:mm:ss'),
+        fecha: fechaSubmit(dayjs(fecha)),
         observaciones: rest.observaciones || undefined,
         transportista_razon_social: rest.transportista_razon_social || undefined,
         transportista_ruc: rest.transportista_ruc || undefined,

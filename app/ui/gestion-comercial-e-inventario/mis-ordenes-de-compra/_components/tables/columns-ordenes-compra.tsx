@@ -57,7 +57,7 @@ export function useColumnsOrdenesCompra({
             minWidth: 140,
             width: 160,
             valueFormatter: (params) =>
-                params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm:ss') : '-',
+                params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
         },
         {
             headerName: 'Requerimiento',

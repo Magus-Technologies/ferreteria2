@@ -28,6 +28,7 @@ import {
 import { fcmApi } from '~/lib/api/fcm'
 import dayjs from 'dayjs'
 import { cajaApi } from '~/lib/api/caja'
+import { fechaSubmit } from '~/utils/fechas'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -263,7 +264,7 @@ export default function useCreateVenta({
       }),
       tipo_moneda: tipo_moneda as TipoMoneda,
       tipo_de_cambio: tipoMonedaValue === 's' ? 1 : (tipo_de_cambio || 1),
-      fecha: restValues.fecha.format('YYYY-MM-DD HH:mm:ss'),
+      fecha: fechaSubmit(restValues.fecha),
       estado_de_venta: estadoVenta as EstadoDeVenta,
       // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
       cliente_id: clienteIdFinal,
