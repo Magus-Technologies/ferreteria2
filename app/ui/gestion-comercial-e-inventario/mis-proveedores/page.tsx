@@ -12,6 +12,7 @@ import TableBase from '~/components/tables/table-base'
 import { proveedorApi, type Proveedor } from '~/lib/api/proveedor'
 import { useColumnsProveedores } from './_components/tables/columns-proveedores'
 import ModalCreateProveedor from './_components/modals/modal-create-proveedor'
+import TableDeudasProveedor from './_components/tables/table-deudas-proveedor'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { greenColors } from '~/lib/colors'
 import { useDebounce } from 'use-debounce'
@@ -27,6 +28,7 @@ export default function MisProveedoresPage() {
     // Estado del modal
     const [modalOpen, setModalOpen] = useState(false)
     const [dataEdit, setDataEdit] = useState<Proveedor | undefined>(undefined)
+    const [proveedorSeleccionado, setProveedorSeleccionado] = useState<Proveedor | null>(null)
 
     // Query para obtener proveedores
     const { data: proveedores = [], isLoading, refetch } = useQuery({
@@ -87,13 +89,10 @@ export default function MisProveedoresPage() {
             <div className='mt-4 w-full space-y-4'>
                 {/* Filtros */}
                 <div>
-                    <div className='flex items-center gap-3 mb-3'>
-                        <FaSearch className='text-green-600' />
-                        <span className='font-semibold text-slate-700'>Filtros</span>
-                    </div>
                     <div className='grid grid-cols-12 gap-x-3 gap-y-2.5'>
-                        {/* Búsqueda por texto */}
+                        {/* Ícono + Búsqueda por texto */}
                         <div className='col-span-4 flex items-center gap-2'>
+                            <FaSearch className='text-green-600 flex-shrink-0' />
                             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
                                 Buscar:
                             </label>
@@ -174,23 +173,30 @@ export default function MisProveedoresPage() {
 
                 {/* Tabla */}
                 {isLoading ? (
-                    <div className='flex justify-center items-center h-[500px]'>
+                    <div className='flex justify-center items-center h-[400px]'>
                         <Spin size='large'>
                             <div className='p-12'>Cargando proveedores...</div>
                         </Spin>
                     </div>
                 ) : (
-                    <div className='h-[500px] w-full'>
+                    <div className='h-[calc(50vh-120px)] min-h-[200px] w-full'>
                         <TableBase<Proveedor>
                             ref={gridRef}
                             rowData={proveedores}
                             columnDefs={columns}
-                            rowSelection={false}
+                            rowSelection={true}
                             withNumberColumn={true}
-
+                            selectionColor={greenColors[10]}
+                            onRowClicked={(e) => setProveedorSeleccionado(e.data ?? null)}
+                            defaultColDef={{ flex: 1, minWidth: 80 }}
                         />
                     </div>
                 )}
+
+                {/* Tabla de deudas */}
+                <div className='mt-6'>
+                    <TableDeudasProveedor proveedorSeleccionado={proveedorSeleccionado} />
+                </div>
             </div>
 
             {/* Modal Crear/Editar Proveedor */}
