@@ -195,6 +195,7 @@ export const ventaApi = {
     search?: string;
     per_page?: number;
     page?: number;
+    dias?: number;
   }): Promise<ApiResponse<{
     data: VentaCompleta[];
     total: number;

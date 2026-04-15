@@ -1,12 +1,14 @@
 'use client'
 
 import { Badge, Dropdown, Empty, Spin, Tag, Tabs, message } from 'antd'
-import { FaBell, FaBirthdayCake } from 'react-icons/fa'
+import { FaBell, FaBirthdayCake, FaCalendarAlt } from 'react-icons/fa'
 import { MdSecurity } from 'react-icons/md'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { autorizacionesApi, autorizacionesKeys, type SolicitudAutorizacion } from '~/lib/api/autorizaciones'
 import { cumpleanosApi, type CumpleanosUsuario } from '~/lib/api/cumpleanos'
 import { configuracionNotificacionesApi } from '~/lib/api/configuracion-notificaciones'
+import { ventaApi } from '~/lib/api/venta'
+import { compraApi } from '~/lib/api/compra'
 import { useStoreAutorizaciones } from '~/store/store-autorizaciones'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -138,8 +140,99 @@ export default function CampanitaAutorizaciones() {
   const cumpleItems = cumpleanosData || []
   const cumpleCount = cumpleItems.length
 
+  // === VENCIMIENTOS ===
+  const { data: vencimientosConfig } = useQuery({
+    queryKey: ['configuracion-vencimientos'],
+    queryFn: async () => {
+      const res = await configuracionNotificacionesApi.getVencimientos()
+      return res.data?.data ?? { habilitado: true, dias_anticipacion: 7 }
+    },
+    staleTime: 60000 * 5,
+  })
+
+  const diasVencimiento = vencimientosConfig?.dias_anticipacion ?? 7
+
+  type VencimientoItem = {
+    key: string
+    id: string
+    tipo: 'cobrar' | 'pagar'
+    serie: string
+    numero: string
+    contraparte: string
+    fechaVencimiento: string
+    saldo: number
+  }
+
+  const { data: vencimientosData, isLoading: isLoadingVenc } = useQuery<VencimientoItem[]>({
+    queryKey: ['vencimientos-proximos', diasVencimiento],
+    queryFn: async () => {
+      const [ventasRes, comprasRes] = await Promise.all([
+        ventaApi.getVentasPorCobrar({ dias: diasVencimiento, per_page: -1 }),
+        compraApi.getComprasPorPagar({ dias: diasVencimiento, per_page: -1 }),
+      ])
+
+      const ventas = ((ventasRes.data?.data || []) as any[])
+        .filter((v) => v.fecha_vencimiento)
+        .map<VencimientoItem>((v) => {
+          const totalProductos = (v.productos_por_almacen || []).reduce((s: number, p: any) => {
+            const sub = (p.unidades_derivadas || []).reduce((ss: number, u: any) => {
+              const base = Number(u.precio) * Number(u.cantidad) + Number(u.recargo || 0)
+              const desc = Number(u.descuento || 0)
+              return ss + (u.descuento_tipo === '%' ? base - (base * desc) / 100 : base - desc)
+            }, 0)
+            return s + sub
+          }, 0)
+          const saldo = totalProductos - Number(v.total_cobrado || 0)
+          return {
+            key: `v-${v.id}`,
+            id: v.id,
+            tipo: 'cobrar',
+            serie: v.serie || '-',
+            numero: v.numero || '-',
+            contraparte:
+              v.cliente?.razon_social ||
+              [v.cliente?.nombres, v.cliente?.apellidos].filter(Boolean).join(' ') ||
+              'Cliente',
+            fechaVencimiento: v.fecha_vencimiento,
+            saldo,
+          }
+        })
+
+      const compras = ((comprasRes.data?.data || []) as any[])
+        .filter((c) => c.fecha_vencimiento)
+        .map<VencimientoItem>((c) => {
+          const totalCompra = (c.productos_por_almacen || []).reduce((s: number, p: any) => {
+            const sub = (p.unidades_derivadas || []).reduce((ss: number, u: any) => {
+              return ss + Number(u.precio || 0) * Number(u.cantidad || 0)
+            }, 0)
+            return s + sub
+          }, 0)
+          const saldo = totalCompra - Number(c.total_pagado || 0)
+          return {
+            key: `c-${c.id}`,
+            id: c.id,
+            tipo: 'pagar',
+            serie: c.serie || '-',
+            numero: c.numero || '-',
+            contraparte: c.proveedor?.razon_social || 'Proveedor',
+            fechaVencimiento: c.fecha_vencimiento,
+            saldo,
+          }
+        })
+
+      return [...ventas, ...compras].sort((a, b) =>
+        dayjs(a.fechaVencimiento).diff(dayjs(b.fechaVencimiento))
+      )
+    },
+    enabled: true,
+    staleTime: 60000 * 2,
+  })
+
+  const vencimientosItems = vencimientosData || []
+  const vencimientosCount = vencimientosItems.length
+
   // === TOTAL ===
-  const totalCount = autorizacionesCount + cumpleCount
+  const totalCount = autorizacionesCount + cumpleCount + vencimientosCount
 
   // === HANDLERS ===
   const handleClickSolicitud = (s: SolicitudAutorizacion) => {
@@ -260,6 +353,69 @@ export default function CampanitaAutorizaciones() {
     </div>
   )
 
+  const tabVencimientos = (
+    <div className="max-h-[280px] overflow-y-auto">
+      {isLoadingVenc ? (
+        <div className="flex justify-center py-6">
+          <Spin size="small" />
+        </div>
+      ) : vencimientosItems.length === 0 ? (
+        <div className="py-6">
+          <Empty description="Sin vencimientos próximos" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-50">
+          {vencimientosItems.slice(0, 10).map((v) => {
+            const diasRest = dayjs(v.fechaVencimiento).startOf('day').diff(dayjs().startOf('day'), 'day')
+            const vencido = diasRest < 0
+            return (
+              <div
+                key={v.key}
+                className="px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => {
+                  setDropdownOpen(false)
+                  router.push(
+                    v.tipo === 'cobrar'
+                      ? '/ui/gestion-contable-y-financiera/ventas-por-cobrar'
+                      : '/ui/gestion-contable-y-financiera/compras-por-pagar'
+                  )
+                }}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <Tag color={v.tipo === 'cobrar' ? 'green' : 'red'} className="!m-0 !text-[10px]">
+                      {v.tipo === 'cobrar' ? 'Por Cobrar' : 'Por Pagar'}
+                    </Tag>
+                    <span className="font-semibold text-sm text-gray-800 truncate max-w-[160px]">
+                      {v.contraparte}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {v.serie}-{v.numero} · S/. {v.saldo.toFixed(2)}
+                  </div>
+                  <div className={`text-[10px] ${vencido ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>
+                    {vencido
+                      ? `Vencido hace ${Math.abs(diasRest)} día${Math.abs(diasRest) === 1 ? '' : 's'}`
+                      : diasRest === 0
+                        ? 'Vence hoy'
+                        : `Vence en ${diasRest} día${diasRest === 1 ? '' : 's'}`}
+                    {' · '}
+                    {dayjs(v.fechaVencimiento).format('DD/MM/YYYY')}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+          {vencimientosItems.length > 10 && (
+            <div className="px-4 py-2 border-t border-gray-100 text-center text-xs text-gray-500">
+              y {vencimientosItems.length - 10} más...
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   const dropdownContent = (
     <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-[360px] max-h-[420px] overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -300,6 +456,19 @@ export default function CampanitaAutorizaciones() {
               </span>
             ),
             children: tabCumpleanos,
+          },
+          {
+            key: 'vencimientos',
+            label: (
+              <span className="flex items-center gap-1.5 text-xs">
+                <FaCalendarAlt className="text-sm" />
+                Vencimientos
+                {vencimientosCount > 0 && (
+                  <Badge count={vencimientosCount} size="small" className="ml-1" style={{ backgroundColor: '#fa8c16' }} />
+                )}
+              </span>
+            ),
+            children: tabVencimientos,
           },
         ]}
       />

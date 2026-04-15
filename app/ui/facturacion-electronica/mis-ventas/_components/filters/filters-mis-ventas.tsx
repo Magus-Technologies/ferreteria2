@@ -510,14 +510,14 @@ export default function FiltersMisVentas() {
                 className="w-4 h-4 rounded border border-gray-300"
                 style={{ backgroundColor: orangeColors[2] }}
               ></div>
-              <span className="text-gray-600">En Espera / Anulado</span>
+              <span className="text-gray-600">Contado / En Espera / Anulado</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div
                 className="w-4 h-4 rounded border border-gray-300"
                 style={{ backgroundColor: greenColors[2] }}
               ></div>
-              <span className="text-gray-600">Pagado Completo</span>
+              <span className="text-gray-600">Crédito Pagado</span>
             </div>
           </div>
         </div>

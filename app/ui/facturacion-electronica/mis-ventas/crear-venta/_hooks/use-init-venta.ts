@@ -21,6 +21,18 @@ export default function useInitVenta({
   useEffect(() => {
     form.resetFields()
     if (venta) {
+      // Mapear datos de la primera entrega si existe
+      const entrega = (venta as any).entregas_productos?.[0]
+      const tipoEntregaMap: Record<string, 'EnTienda' | 'Domicilio' | 'Parcial'> = {
+        rt: 'EnTienda',
+        de: 'Domicilio',
+        pa: 'Parcial',
+      }
+      const tipoPedidoMap: Record<string, string> = {
+        interno: 'INTERNO',
+        externo: 'EXTERNO',
+      }
+
       const dataFormated: FormCreateVenta = {
         fecha: dayjs(venta.fecha),
         tipo_moneda: venta.tipo_moneda as any,
@@ -38,6 +50,21 @@ export default function useInitVenta({
         direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
         email: (venta as any).cliente?.email || undefined,
         direccion_seleccionada: (venta as any).direccion_seleccionada || 'D1',
+        // Campos de entrega mapeados desde la primera entrega_producto
+        tipo_despacho: entrega ? tipoEntregaMap[entrega.tipo_entrega] : 'EnTienda',
+        despachador_id: entrega?.chofer_id || undefined,
+        fecha_programada: entrega?.fecha_programada ? dayjs(entrega.fecha_programada) : undefined,
+        hora_inicio: entrega?.hora_inicio || undefined,
+        hora_fin: entrega?.hora_fin || undefined,
+        direccion_entrega: entrega?.direccion_entrega || undefined,
+        referencia_entrega: entrega?.referencia_entrega || undefined,
+        latitud: entrega?.latitud ? Number(entrega.latitud) : undefined,
+        longitud: entrega?.longitud ? Number(entrega.longitud) : undefined,
+        observaciones: entrega?.observaciones || undefined,
+        quien_entrega: entrega?.quien_entrega || undefined,
+        tipo_pedido: entrega?.tipo_pedido ? tipoPedidoMap[entrega.tipo_pedido] : undefined,
+        cargo_destino: entrega?.cargo_destino || undefined,
+        vehiculo_id: entrega?.vehiculo_id ? Number(entrega.vehiculo_id) : undefined,
         productos: [
           // Productos normales
           ...venta.productos_por_almacen.flatMap((ppa) =>
@@ -46,11 +73,9 @@ export default function useInitVenta({
               cantidad: Number(ud.cantidad),
               unidad_derivada_id: ud.unidad_derivada_normal.id,
               recargo: Number(ud.recargo),
-              precio_venta:
-                (Number(ud.precio) + Number(ud.recargo)) * Number(ud.factor),
+              precio_venta: Number(ud.precio) + Number(ud.recargo),
               subtotal:
                 (Number(ud.precio) + Number(ud.recargo)) *
-                Number(ud.factor) *
                 Number(ud.cantidad),
               marca_name: ppa.producto_almacen.producto.marca.name,
               producto_name: ppa.producto_almacen.producto.name,

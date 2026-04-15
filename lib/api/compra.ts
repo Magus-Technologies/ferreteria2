@@ -179,6 +179,7 @@ export interface CompraFilters {
   search?: string;
   per_page?: number;
   page?: number;
+  dias?: number;
 }
 
 // ============= UPDATE LOTES Y VENCIMIENTOS =============

@@ -22,6 +22,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.GANANCIAS,
     QueryKeys.GANANCIAS_RESUMEN,
     QueryKeys.KARDEX,
+    QueryKeys.ENTREGAS_PRODUCTOS,
     'productos-infinite',
   ],
   compras: [

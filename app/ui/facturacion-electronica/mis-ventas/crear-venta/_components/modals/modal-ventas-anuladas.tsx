@@ -13,7 +13,7 @@ import { ColDef } from 'ag-grid-community'
 import dayjs, { Dayjs } from 'dayjs'
 import { FaSearch } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
-import { redColors } from '~/lib/colors'
+import { orangeColors } from '~/lib/colors'
 
 export default function ModalVentasAnuladas({
   open,
@@ -88,7 +88,7 @@ export default function ModalVentasAnuladas({
     { headerName: 'Subtotal', field: 'subtotal', width: 120, valueFormatter: p => `S/. ${Number(p.value).toFixed(2)}` },
   ]
 
-  const handleDoubleClick = (data: getVentaResponseProps | undefined) => {
+  const handleNavigate = (data: getVentaResponseProps | undefined) => {
     if (!data?.id) return
     setOpen(false)
     router.push(`/ui/facturacion-electronica/mis-ventas/editar-venta/${data.id}`)
@@ -157,15 +157,16 @@ export default function ModalVentasAnuladas({
             loading={isLoading}
             columnDefs={columns}
             rowData={data || []}
-            selectionColor={redColors[10]}
+            selectionColor={orangeColors[10]}
             onRowClicked={event => {
               event.node.setSelected(true)
+              setVentaSeleccionada(event.data as getVentaResponseProps)
             }}
             onSelectionChanged={({ selectedNodes }) => {
               const selected = selectedNodes?.[0]?.data as getVentaResponseProps
               setVentaSeleccionada(selected)
             }}
-            onRowDoubleClicked={({ data }) => handleDoubleClick(data)}
+            onRowDoubleClicked={({ data }) => handleNavigate(data)}
           />
         </div>
 
@@ -175,7 +176,7 @@ export default function ModalVentasAnuladas({
             title='DETALLE DE VENTA'
             columnDefs={columnsDet}
             rowData={detalleProductos}
-            selectionColor={redColors[10]}
+            selectionColor={orangeColors[10]}
           />
         </div>
       </div>

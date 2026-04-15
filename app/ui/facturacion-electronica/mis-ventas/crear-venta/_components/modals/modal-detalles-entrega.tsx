@@ -175,6 +175,18 @@ export default function ModalDetallesEntrega({
   const despachadorId = Form.useWatch('despachador_id', form) as string | undefined
   const restoDespachadorId = Form.useWatch('_resto_despachador_id', form) as string | undefined
   const quienEntrega = Form.useWatch('quien_entrega', form) as string | undefined
+  const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
+  const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
+
+  // Validación de campos obligatorios para Domicilio
+  const domicilioInvalido =
+    tipoDespacho === 'Domicilio' &&
+    (
+      !slotDomicilio ||
+      !direccionEntrega?.trim() ||
+      (tipoPedido === TipoPedido.INTERNO && !despachadorId) ||
+      (tipoPedido === TipoPedido.EXTERNO && !cargoDestino)
+    )
 
   // Obtener productos del formulario
   const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
@@ -420,7 +432,7 @@ export default function ModalDetallesEntrega({
             color="success"
             size="md"
             onClick={handleConfirmar}
-            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0)}
+            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || domicilioInvalido}
           >
             {creandoVenta
               ? 'Procesando...'
@@ -485,7 +497,7 @@ export default function ModalDetallesEntrega({
                 {tipoPedido === TipoPedido.INTERNO ? (
                   <>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Designar Despachador: <span className="text-gray-400 text-xs">(opcional)</span>
+                      Designar Despachador: <span className="text-red-500">*</span>
                     </label>
                     <SelectDespachadores
                       form={form}

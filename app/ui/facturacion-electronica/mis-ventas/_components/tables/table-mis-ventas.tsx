@@ -56,17 +56,18 @@ function calcularColorVenta(venta: getVentaResponseProps): string {
   }, 0);
 
   const resta = total - totalPagado;
+  const estado = venta.estado_de_venta;
 
-  // Naranja: Contado (pagado desde el inicio)
-  if (formaDePago === 'co') {
+  // Naranja: En Espera, Anulado o Contado
+  if (estado === 'ee' || estado === 'an' || formaDePago === 'co') {
     return orangeColors[2];
   }
   // Verde: Crédito completamente pagado
-  else if (formaDePago === 'cr' && resta <= 0.01) {
+  if (formaDePago === 'cr' && resta <= 0.01) {
     return greenColors[2];
   }
   // Rojo: Crédito pendiente de pago
-  else if (formaDePago === 'cr' && resta > 0.01) {
+  if (formaDePago === 'cr' && resta > 0.01) {
     return redColors[2];
   }
 

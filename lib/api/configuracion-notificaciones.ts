@@ -1,6 +1,6 @@
 import { apiRequest } from '~/lib/api'
 
-export type TipoNotificacion = 'cumpleanos' | 'entrega' | 'pago' | 'vale' | 'caja'
+export type TipoNotificacion = 'cumpleanos' | 'entrega' | 'pago' | 'vale' | 'caja' | 'vencimiento'
 
 export interface ConfiguracionNotificacion {
   id: string | null
@@ -36,6 +36,12 @@ export const configuracionNotificacionesApi = {
   async getCumpleanos() {
     return apiRequest<{ data: { habilitado: boolean; dias_anticipacion: number } }>(
       '/configuracion-notificaciones/cumpleanos'
+    )
+  },
+
+  async getVencimientos() {
+    return apiRequest<{ data: { habilitado: boolean; dias_anticipacion: number } }>(
+      '/configuracion-notificaciones/vencimientos'
     )
   },
 }
