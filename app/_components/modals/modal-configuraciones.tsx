@@ -10,7 +10,7 @@ import {
   TipoNotificacion,
 } from '~/lib/api/configuracion-notificaciones'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { FaBell, FaBirthdayCake } from 'react-icons/fa'
+import { FaBell, FaBirthdayCake, FaCalendarAlt } from 'react-icons/fa'
 import { MdPayment, MdLocalShipping } from 'react-icons/md'
 import { BsTicketDetailedFill } from 'react-icons/bs'
 import { AiFillBank } from 'react-icons/ai'
@@ -67,6 +67,14 @@ const TIPOS_INFO: Record<
     color: 'text-rose-600',
     bg: 'bg-rose-50',
     badge: 'bg-rose-100 text-rose-700',
+  },
+  vencimiento: {
+    label: 'Vencimientos',
+    descripcion: 'Ventas por cobrar y compras por pagar próximas a vencer',
+    icon: <FaCalendarAlt size={15} />,
+    color: 'text-amber-600',
+    bg: 'bg-amber-50',
+    badge: 'bg-amber-100 text-amber-700',
   },
 }
 
