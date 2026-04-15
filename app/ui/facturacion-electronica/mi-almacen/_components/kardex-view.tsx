@@ -56,11 +56,12 @@ export default function KardexView() {
   const [searchText, setSearchText] = useState('')
   const [debouncedSearchText] = useDebounce(searchText, 300)
   const isSearching = searchText !== debouncedSearchText
+  const [searchKey, setSearchKey] = useState(0)
 
   const productoId = productoSeleccionado?.id
 
-  const { data, isFetching } = useQuery({
-    queryKey: [QueryKeys.KARDEX, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: [QueryKeys.KARDEX, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientos({
         producto_id: productoId || undefined as any,
@@ -74,7 +75,7 @@ export default function KardexView() {
       return result.data!
     },
     enabled: true,
-    staleTime: 30 * 1000,
+    staleTime: 0,
   })
 
   const columns: ColDef<MovimientoKardex>[] = [
@@ -277,7 +278,7 @@ export default function KardexView() {
             color='info'
             size='md'
             className='flex items-center gap-2 w-fit self-end'
-            onClick={() => {}}
+            onClick={() => setSearchKey(k => k + 1)}
           >
             <FaSearch />
             Buscar
