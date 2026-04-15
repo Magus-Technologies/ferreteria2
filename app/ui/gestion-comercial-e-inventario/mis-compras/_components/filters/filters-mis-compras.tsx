@@ -116,31 +116,48 @@ export default function FiltersMisCompras() {
           proveedor_id,
           ...rest
         } = values
-        
-        const data = {
+
+        const data: CompraWhereInput = {
           almacen_id: almacen_id || almacen_id,
           ...rest,
           proveedor_id,
-          // Si no hay proveedor_id pero hay texto de búsqueda, usarlo
           ...(!proveedor_id && searchValue ? { search: searchValue } : {}),
           fecha: {
             gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
             lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
           },
-          ...(pendiente_de_recepcion
-            ? { estado_de_compra: pendiente_de_recepcion }
-            : estado_de_cuenta
-            ? {} // cuando se filtra por estado_de_cuenta no aplicar estado_de_compra
-            : estado_de_compra
-            ? {
-                estado_de_compra:
-                  estado_de_compra === EstadoDeCompraSelect.Creados
-                    ? EstadoDeCompra.Creado
-                    : estado_de_compra,
-              }
-            : {}),
-          ...(estado_de_cuenta ? { estado_de_cuenta } : {}),
-        } satisfies CompraWhereInput
+        }
+
+        // Lógica de Estado de Compra / Pendiente de Recepción
+        // Ambos filtran el mismo campo 'estado_de_compra'
+        const statusValues: string[] = []
+
+        if (pendiente_de_recepcion) {
+          statusValues.push(pendiente_de_recepcion)
+        }
+
+        if (estado_de_compra) {
+          const val =
+            estado_de_compra === EstadoDeCompraSelect.Creados
+              ? EstadoDeCompra.Creado
+              : estado_de_compra
+
+          if (!statusValues.includes(val)) {
+            statusValues.push(val)
+          }
+        }
+
+        if (statusValues.length === 1) {
+          data.estado_de_compra = statusValues[0] as EstadoDeCompra
+        } else if (statusValues.length > 1) {
+          data.estado_de_compra = { in: statusValues } as any
+        }
+
+        // Estado de Cuenta (Pagado / Crédito)
+        if (estado_de_cuenta) {
+          data.estado_de_cuenta = estado_de_cuenta
+        }
+
         setFiltros(data)
         setDrawerOpen(false)
       }}

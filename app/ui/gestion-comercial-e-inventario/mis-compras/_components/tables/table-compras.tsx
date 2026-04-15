@@ -45,9 +45,14 @@ const TableCompras = memo(function TableCompras({
     // Mapeo de estados de Prisma a valores del backend
     const estadoMap: Record<string, string> = {
       'Creado': 'cr',
+      'Creados': 'cr', // Soporte para el valor usado en el filtro
       'EnEspera': 'ee',
       'Anulado': 'an',
       'Procesado': 'pr',
+      'cr': 'cr',
+      'pr': 'pr',
+      'ee': 'ee',
+      'an': 'an',
     };
 
     // Mapeo de forma de pago
@@ -165,8 +170,9 @@ const TableCompras = memo(function TableCompras({
       return acc
     }, 0)
 
+    const totalConPercepcion = total + Number(compra.percepcion ?? 0)
     const totalPagado = Number(compra.total_pagado || 0)
-    const resta = total - totalPagado
+    const resta = totalConPercepcion - totalPagado
 
     // Comparar con strings de Laravel (la API devuelve 'co', 'cr', 'ee', 'an')
     const formaDePago = compra.forma_de_pago as string

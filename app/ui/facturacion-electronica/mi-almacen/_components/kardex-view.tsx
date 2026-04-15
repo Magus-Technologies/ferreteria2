@@ -63,7 +63,7 @@ export default function KardexView() {
     queryKey: [QueryKeys.KARDEX, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
     queryFn: async () => {
       const result = await kardexApi.getMovimientos({
-        producto_id: productoId!,
+        producto_id: productoId || undefined as any,
         almacen_id: almacenId || undefined,
         tipo: tipo || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
@@ -73,7 +73,7 @@ export default function KardexView() {
       if (result.error) throw new Error(result.error.message)
       return result.data!
     },
-    enabled: !!productoId,
+    enabled: true,
     staleTime: 30 * 1000,
   })
 
@@ -86,6 +86,22 @@ export default function KardexView() {
       valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
       sort: 'asc',
     },
+    // Mostrar columnas de producto solo cuando no hay producto seleccionado
+    ...(!productoId ? [
+      {
+        headerName: 'Código',
+        field: 'producto_codigo' as keyof MovimientoKardex,
+        width: 120,
+        minWidth: 100,
+        cellStyle: { color: '#f97316', fontWeight: 'bold' },
+      },
+      {
+        headerName: 'Producto',
+        field: 'producto_nombre' as keyof MovimientoKardex,
+        flex: 1,
+        minWidth: 200,
+      },
+    ] : []),
     {
       headerName: 'Tipo',
       field: 'tipo',
@@ -121,7 +137,8 @@ export default function KardexView() {
     {
       headerName: 'Documento',
       field: 'documento',
-      flex: 1,
+      flex: productoId ? 1 : undefined,
+      width: productoId ? undefined : 200,
       minWidth: 200,
     },
     {
@@ -304,48 +321,32 @@ export default function KardexView() {
       </div>
 
       {/* Tabla */}
-      {!productoId ? (
-        <div className='bg-white rounded-xl border p-12 flex flex-col items-center justify-center'>
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div className='text-gray-400'>
-                <p className='text-base font-medium'>Selecciona un producto para ver su Kardex</p>
-                <p className='text-sm'>Busca y selecciona un producto en el campo de arriba</p>
-              </div>
-            }
-          />
-        </div>
-      ) : (
-        <>
-          <div className='h-[calc(100vh-380px)] min-h-[300px]'>
-            <TableWithTitle<MovimientoKardex>
-              id='kardex.movimientos'
-              title='Movimientos'
-              selectionColor={orangeColors[10]}
-              loading={isFetching || isSearching}
-              columnDefs={columns}
-              rowData={data?.data || []}
-              pagination={false}
-              quickFilterText={debouncedSearchText}
-              optionsSelectColumns={[
-                {
-                  label: 'Default',
-                  columns: ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
-                },
-              ]}
-            />
+      <div className='h-[calc(100vh-380px)] min-h-[300px]'>
+        <TableWithTitle<MovimientoKardex>
+          id='kardex.movimientos'
+          title={productoId ? 'Movimientos' : 'Todos los Movimientos de Hoy'}
+          selectionColor={orangeColors[10]}
+          loading={isFetching || isSearching}
+          columnDefs={columns}
+          rowData={data?.data || []}
+          pagination={false}
+          quickFilterText={debouncedSearchText}
+          optionsSelectColumns={[
+            {
+              label: 'Default',
+              columns: ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+            },
+          ]}
+        />
+      </div>
+      {/* Barra de estado */}
+      <div className='flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-1.5 min-h-[32px]'>
+        {(isFetching || isSearching) && (
+          <div className='text-xs text-gray-500 text-center'>
+            Cargando movimientos...
           </div>
-          {/* Barra de estado */}
-          <div className='flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-1.5 min-h-[32px]'>
-            {(isFetching || isSearching) && (
-              <div className='text-xs text-gray-500 text-center'>
-                Cargando movimientos...
-              </div>
-            )}
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }
