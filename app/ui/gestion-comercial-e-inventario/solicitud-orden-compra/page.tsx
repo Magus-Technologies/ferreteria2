@@ -13,6 +13,7 @@ import { type RequerimientoInterno, type RequerimientoInternoProducto, requerimi
 import { useStoreFiltrosSolicitudOC } from './_store/store-filtros-solicitud-oc'
 import { useColumnsSolicitudOC } from './_components/tables/columns-solicitud-oc'
 import ModalRequerimientoInterno from '../_components/modals/modal-requerimiento-interno'
+import ModalDocSolicitudOC from './_components/modals/modal-doc-solicitud-oc'
 import TableProductosSolicitudOC from './_components/tables/table-productos-solicitud-oc'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -37,8 +38,6 @@ export default function SolicitudOrdenCompra() {
   const [modalDetalleOpen, setModalDetalleOpen] = useState(false)
   const [modalNuevoOpen, setModalNuevoOpen] = useState(false)
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
-  const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
-  const [docPdfLoading, setDocPdfLoading] = useState(false)
 
   const handleView = useCallback((row: RequerimientoInterno) => {
     setSeleccionado(row)
@@ -148,74 +147,14 @@ export default function SolicitudOrdenCompra() {
         defaultTipoSolicitud="SOC"
       />
 
-      <Modal
+      <ModalDocSolicitudOC
         open={pdfModalOpen}
-        onCancel={() => {
+        requerimiento={seleccionado}
+        onClose={() => {
           setPdfModalOpen(false)
           setSeleccionado(null)
-          if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) }
         }}
-        width={900}
-        centered
-        title={seleccionado ? `PDF - ${seleccionado.codigo}` : 'PDF'}
-        footer={
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <Tooltip title="Descargar PDF">
-                <ButtonBase
-                  disabled={!docPdfUrl}
-                  onClick={() => {
-                    if (!docPdfUrl) return
-                    const a = document.createElement('a')
-                    a.href = docPdfUrl
-                    a.download = seleccionado ? `${seleccionado.codigo}-SOC.pdf` : 'documento.pdf'
-                    a.click()
-                  }}
-                >
-                  <FaDownload />
-                </ButtonBase>
-              </Tooltip>
-              <Tooltip title="Imprimir">
-                <ButtonBase
-                  disabled={!docPdfUrl}
-                  onClick={() => {
-                    if (!docPdfUrl) return
-                    const w = window.open(docPdfUrl)
-                    w?.addEventListener('load', () => w.print())
-                  }}
-                >
-                  <FaPrint />
-                </ButtonBase>
-              </Tooltip>
-            </div>
-            <Button type="primary" onClick={() => { setPdfModalOpen(false); setSeleccionado(null); if (docPdfUrl) { URL.revokeObjectURL(docPdfUrl); setDocPdfUrl(null) } }} className={classOkButtonModal}>
-              Cerrar
-            </Button>
-          </div>
-        }
-        afterOpenChange={async (open) => {
-          if (open && seleccionado) {
-            setDocPdfLoading(true)
-            try {
-              const token = getAuthToken()
-              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/requerimiento-interno/${seleccionado.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-              if (!res.ok) throw new Error('Error al generar PDF')
-              const blob = await res.blob()
-              setDocPdfUrl(URL.createObjectURL(blob))
-            } catch { setDocPdfUrl(null) } finally { setDocPdfLoading(false) }
-          }
-        }}
-      >
-        {docPdfLoading ? (
-          <div className="flex justify-center py-12"><Spin /></div>
-        ) : docPdfUrl ? (
-          <iframe src={docPdfUrl} className="w-full" style={{ height: '70vh' }} />
-        ) : (
-          <div className="flex justify-center py-12 text-slate-400">No se pudo cargar el PDF</div>
-        )}
-      </Modal>
+      />
     </ContenedorGeneral>
   )
 }

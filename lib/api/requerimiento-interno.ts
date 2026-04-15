@@ -209,4 +209,14 @@ export const requerimientoInternoApi = {
             }),
         });
     },
+
+    /**
+     * Enviar requerimiento por correo
+     */
+    enviarCorreo: async (id: number, data: { email: string; columnas?: string[] }): Promise<ApiResponse<{ success: boolean; message: string }>> => {
+        return apiRequest<{ success: boolean; message: string }>(`/requerimientos-internos/${id}/enviar-correo`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
 };
