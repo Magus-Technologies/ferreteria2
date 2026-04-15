@@ -293,7 +293,7 @@ function TableProductosOptimized() {
                     const trySelectFirst = () => {
                       const api = tableRef.current?.api;
                       const firstNode = api?.getDisplayedRowAtIndex(0);
-                      if (firstNode?.data) {
+                      if (api && firstNode?.data) {
                         api.deselectAll();
                         firstNode.setSelected(true);
                         setProductoSeleccionado(firstNode.data);
