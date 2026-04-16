@@ -12,7 +12,7 @@ export type TipoPrecioPaquete = 'publico' | 'especial' | 'minimo' | 'ultimo'
 
 export const TIPO_PRECIO_OPTIONS = [
   { value: 'publico', label: 'Precio Público' },
-  { value: 'especial', label: 'Precio Especial' },
+  { value: 'especial', label: 'Precio Ferreteria' },
   { value: 'minimo', label: 'Precio Mínimo' },
   { value: 'ultimo', label: 'Precio Último' },
 ]

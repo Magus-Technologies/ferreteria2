@@ -2,6 +2,7 @@ import { Modal, ModalProps } from 'antd'
 import { classOkButtonModal } from '~/lib/clases'
 import InputBase from '../form/inputs/input-base'
 import TableClientesBusqueda from '~/app/ui/facturacion-electronica/mis-ventas/_components/tables/table-clientes-busqueda'
+import TableDetalleDeudaCliente from '~/app/ui/facturacion-electronica/mis-ventas/_components/tables/table-detalle-deuda-cliente'
 import { useEffect, useState } from 'react'
 import ButtonCreateCliente from '../form/buttons/button-create-cliente'
 import { useDebounce } from 'use-debounce'
@@ -79,11 +80,14 @@ export default function ModalClienteSearch({
           setTextDefault={setText}
         />
       </div>
-      <div className='h-[500px] min-w-[1200px] w-full mt-4'>
+      <div className='h-[420px] min-w-[1200px] w-full mt-4'>
         <TableClientesBusqueda
           value={value}
           onRowDoubleClicked={onRowDoubleClicked}
         />
+      </div>
+      <div className='mt-4'>
+        <TableDetalleDeudaCliente />
       </div>
     </Modal>
   )

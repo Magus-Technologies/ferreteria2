@@ -12,7 +12,7 @@ interface SelectPreciosProps extends SelectBaseProps {
 
 const precios = [
   { key: 'precio_publico', label: 'PRECIO Público' },
-  { key: 'precio_especial', label: 'PRECIO Especial' },
+  { key: 'precio_especial', label: 'PRECIO Ferreteria' },
   { key: 'precio_minimo', label: 'PRECIO Mínimo' },
   { key: 'precio_ultimo', label: 'PRECIO Último' },
 ]

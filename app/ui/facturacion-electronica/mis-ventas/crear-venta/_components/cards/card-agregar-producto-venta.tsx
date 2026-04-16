@@ -510,7 +510,7 @@ export default function CardAgregarProductoVenta({
           >
             <Radio value="publico">Precio Público</Radio>
             <Radio value="especial">Precio Ferretería</Radio>
-            <Radio value="minimo">Precio Especial</Radio>
+            <Radio value="minimo">Precio Minimo</Radio>
             <Radio value="ultimo">Precio Final</Radio>
           </Radio.Group>
         </div>

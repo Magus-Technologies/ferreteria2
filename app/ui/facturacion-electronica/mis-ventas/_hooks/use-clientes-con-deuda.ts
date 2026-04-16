@@ -19,10 +19,27 @@ const calcularTotalVenta = (venta: VentaCompleta) => {
   }, 0)
 }
 
+export interface VentaDeuda {
+  id: string
+  serie: string
+  numero: string | number
+  fecha: string
+  fecha_vencimiento: string | null
+  total: number
+  cobrado: number
+  resta: number
+  diasMora: number
+  diasFaltantes: number | null
+  vencida: boolean
+}
+
 export interface DeudaCliente {
   totalDeuda: number
   cantidadVentas: number
   diasMaxMora: number
+  diasMinFaltantes: number | null
+  tieneVencidas: boolean
+  ventas: VentaDeuda[]
 }
 
 /**
@@ -44,6 +61,7 @@ export function useClientesConDeuda() {
   const clientesDeudaMap = useMemo(() => {
     const ventas = data?.data ?? []
     const map = new Map<number, DeudaCliente>()
+    const hoy = dayjs().startOf('day')
 
     for (const v of ventas) {
       const total = calcularTotalVenta(v)
@@ -51,18 +69,46 @@ export function useClientesConDeuda() {
       const resta = total - cobrado
 
       if (resta > 0.01 && v.cliente_id) {
-        const dias = dayjs().diff(dayjs(v.fecha), 'days')
-        const existing = map.get(v.cliente_id)
+        const fechaVenc = v.fecha_vencimiento ? dayjs(v.fecha_vencimiento).startOf('day') : null
+        const diffDias = fechaVenc ? fechaVenc.diff(hoy, 'days') : null
+        const diasMora = diffDias !== null && diffDias < 0 ? Math.abs(diffDias) : 0
+        const diasFaltantes = diffDias !== null && diffDias >= 0 ? diffDias : null
+        const vencida = diffDias !== null && diffDias < 0
 
+        const ventaDeuda: VentaDeuda = {
+          id: String(v.id),
+          serie: v.serie || '-',
+          numero: v.numero ?? '-',
+          fecha: v.fecha,
+          fecha_vencimiento: v.fecha_vencimiento || null,
+          total,
+          cobrado,
+          resta,
+          diasMora,
+          diasFaltantes,
+          vencida,
+        }
+
+        const existing = map.get(v.cliente_id)
         if (existing) {
           existing.totalDeuda += resta
           existing.cantidadVentas += 1
-          existing.diasMaxMora = Math.max(existing.diasMaxMora, dias)
+          existing.diasMaxMora = Math.max(existing.diasMaxMora, diasMora)
+          existing.tieneVencidas = existing.tieneVencidas || vencida
+          if (diasFaltantes !== null) {
+            existing.diasMinFaltantes = existing.diasMinFaltantes === null
+              ? diasFaltantes
+              : Math.min(existing.diasMinFaltantes, diasFaltantes)
+          }
+          existing.ventas.push(ventaDeuda)
         } else {
           map.set(v.cliente_id, {
             totalDeuda: resta,
             cantidadVentas: 1,
-            diasMaxMora: dias,
+            diasMaxMora: diasMora,
+            diasMinFaltantes: diasFaltantes,
+            tieneVencidas: vencida,
+            ventas: [ventaDeuda],
           })
         }
       }
