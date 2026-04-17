@@ -270,6 +270,8 @@ export default function useCreateVenta({
       cliente_id: clienteIdFinal,
       // ✅ Enviar dirección seleccionada (D1, D2, D3 o D4)
       direccion_seleccionada: direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined,
+      // ✅ Enviar tipo de despacho (et=En Tienda, do=Domicilio, pa=Parcial)
+      tipo_despacho: tipo_despacho === 'EnTienda' ? 'et' : tipo_despacho === 'Domicilio' ? 'do' : tipo_despacho === 'Parcial' ? 'pa' : undefined,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,

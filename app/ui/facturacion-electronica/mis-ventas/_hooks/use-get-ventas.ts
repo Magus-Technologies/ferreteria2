@@ -7,7 +7,7 @@ export default function useGetVentas({
 }: {
   where?: VentaFilters
 }) {
-  const { data, isLoading } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: [QueryKeys.VENTAS, where],
     queryFn: async () => {
       // Usar la API de Laravel en lugar del action de Prisma
@@ -22,6 +22,8 @@ export default function useGetVentas({
 
   return {
     response: data?.data,
-    loading: isLoading,
+    // isFetching (no isLoading): muestra el overlay "Cargando..." en cada búsqueda,
+    // no solo la primera — el cliente lo pidió para que siempre se vea feedback al Buscar.
+    loading: isFetching,
   }
 }

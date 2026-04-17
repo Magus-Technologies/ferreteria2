@@ -92,6 +92,7 @@ export interface CreateVentaRequest {
     referencia?: string | null;
   }>;
   despliegue_de_pago_ventas?: DespliegueDePagoVentaRequest[];
+  tipo_despacho?: 'et' | 'do' | 'pa'; // et=En Tienda, do=Domicilio, pa=Parcial
   ingreso_dinero_id?: string;
   codigo_vale?: string;
 }
@@ -336,6 +337,7 @@ export type VentaCompleta = {
   tipo_de_cambio: number
   fecha: string
   estado_de_venta: 'cr' | 'ee' | 'pr' | 'an'
+  tipo_despacho?: 'et' | 'do' | 'pa' | null // et=En Tienda, do=Domicilio, pa=Parcial
   cliente_id?: number
   direccion_seleccionada?: string
   recomendado_por_id?: number
@@ -354,12 +356,16 @@ export type VentaCompleta = {
   entregas_productos?: Array<{
     id: number
     venta_id: string
+    tipo_entrega: 'rt' | 'de' | 'pa' // rt=Recojo en Tienda, de=Despacho, pa=Parcial
+    tipo_despacho: 'in' | 'pr' // in=Inmediato, pr=Programado
     estado_entrega: 'pe' | 'ec' | 'en' | 'ca' // pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
   }>
   entregasProductos?: Array<{
     id: number
     venta_id: string
-    estado_entrega: 'pe' | 'ec' | 'en' | 'ca' // pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
+    tipo_entrega: 'rt' | 'de' | 'pa'
+    tipo_despacho: 'in' | 'pr'
+    estado_entrega: 'pe' | 'ec' | 'en' | 'ca'
   }>
   servicios_venta?: Array<{
     id: number

@@ -29,16 +29,35 @@ interface Coordenadas {
 export default function FormCreateCliente({
   form,
   dataEdit,
+  direccionesListas = true,
 }: {
   form: FormInstance;
   dataEdit?: Cliente;
+  direccionesListas?: boolean;
 }) {
   const numero_documento = Form.useWatch("numero_documento", form);
   const [tabActiva, setTabActiva] = useState<string>('1');
-  const [coordenadasD1, setCoordenadasD1] = useState<Coordenadas | null>(null);
-  const [coordenadasD2, setCoordenadasD2] = useState<Coordenadas | null>(null);
-  const [coordenadasD3, setCoordenadasD3] = useState<Coordenadas | null>(null);
-  const [coordenadasD4, setCoordenadasD4] = useState<Coordenadas | null>(null);
+
+  // Coordenadas derivadas de los valores del formulario — así el mapa recibe
+  // las coordenadas guardadas al primer render sin flicker Lima → dirección → GPS.
+  const lat1 = Form.useWatch('latitud_d1', form);
+  const lng1 = Form.useWatch('longitud_d1', form);
+  const lat2 = Form.useWatch('latitud_d2', form);
+  const lng2 = Form.useWatch('longitud_d2', form);
+  const lat3 = Form.useWatch('latitud_d3', form);
+  const lng3 = Form.useWatch('longitud_d3', form);
+  const lat4 = Form.useWatch('latitud_d4', form);
+  const lng4 = Form.useWatch('longitud_d4', form);
+
+  const coordenadasD1: Coordenadas | null =
+    lat1 != null && lng1 != null ? { lat: Number(lat1), lng: Number(lng1) } : null;
+  const coordenadasD2: Coordenadas | null =
+    lat2 != null && lng2 != null ? { lat: Number(lat2), lng: Number(lng2) } : null;
+  const coordenadasD3: Coordenadas | null =
+    lat3 != null && lng3 != null ? { lat: Number(lat3), lng: Number(lng3) } : null;
+  const coordenadasD4: Coordenadas | null =
+    lat4 != null && lng4 != null ? { lat: Number(lat4), lng: Number(lng4) } : null;
+
   const [direccionMapaD1, setDireccionMapaD1] = useState<string>('');
   const [direccionMapaD2, setDireccionMapaD2] = useState<string>('');
   const [direccionMapaD3, setDireccionMapaD3] = useState<string>('');
@@ -63,30 +82,25 @@ export default function FormCreateCliente({
   }, [numero_documento, form]);
 
   const handleCoordenadaChange = (coords: Coordenadas, direccionObtenida: string | undefined) => {
-    // Actualizar coordenadas según la tab activa
-    // La dirección del mapa va a "referencia" (solo para ubicación GPS/Maps)
-    // El campo "direccion" queda libre para que el usuario escriba su dirección real
+    // Actualizar coordenadas según la tab activa — las coordenadas se derivan del form
+    // vía Form.useWatch, por lo que solo escribimos al form (no hay setState local).
     switch (tabActiva) {
       case '1':
-        setCoordenadasD1(coords);
         form.setFieldValue('latitud_d1', coords.lat);
         form.setFieldValue('longitud_d1', coords.lng);
         if (direccionObtenida) setDireccionMapaD1(direccionObtenida);
         break;
       case '2':
-        setCoordenadasD2(coords);
         form.setFieldValue('latitud_d2', coords.lat);
         form.setFieldValue('longitud_d2', coords.lng);
         if (direccionObtenida) setDireccionMapaD2(direccionObtenida);
         break;
       case '3':
-        setCoordenadasD3(coords);
         form.setFieldValue('latitud_d3', coords.lat);
         form.setFieldValue('longitud_d3', coords.lng);
         if (direccionObtenida) setDireccionMapaD3(direccionObtenida);
         break;
       case '4':
-        setCoordenadasD4(coords);
         form.setFieldValue('latitud_d4', coords.lat);
         form.setFieldValue('longitud_d4', coords.lng);
         if (direccionObtenida) setDireccionMapaD4(direccionObtenida);
@@ -433,15 +447,25 @@ export default function FormCreateCliente({
             ]}
           />
 
-          {/* Mapa debajo de los tabs */}
+          {/* Mapa debajo de los tabs — se monta solo cuando las direcciones están listas
+              para que el mapa reciba las coordenadas guardadas al primer render (sin flicker). */}
           <div className="h-[280px] border-2 border-gray-300 rounded-lg overflow-hidden">
-            <MapaDireccionMapbox
-              key={tabActiva} // Forzar re-render cuando cambia la tab
-              direccion={getDireccionActual()}
-              onCoordenadaChange={(coords, dir) => handleCoordenadaChange(coords, dir)}
-              coordenadasIniciales={getCoordenadasActuales()}
-              editable={true}
-            />
+            {direccionesListas ? (
+              <MapaDireccionMapbox
+                key={tabActiva} // Forzar re-render cuando cambia la tab
+                direccion={getDireccionActual()}
+                onCoordenadaChange={(coords, dir) => handleCoordenadaChange(coords, dir)}
+                coordenadasIniciales={getCoordenadasActuales()}
+                editable={true}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-gray-500 text-xs">Cargando ubicación guardada...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

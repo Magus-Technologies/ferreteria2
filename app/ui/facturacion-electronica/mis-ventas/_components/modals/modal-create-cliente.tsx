@@ -54,6 +54,7 @@ export default function ModalCreateCliente({
 }: ModalCreateClienteProps) {
   const [form] = Form.useForm<FormCreateClienteValues>();
   const [cargandoDirecciones, setCargandoDirecciones] = useState(false);
+  const [direccionesListas, setDireccionesListas] = useState(false);
 
   const { crearClienteForm, loading } = useCreateCliente({
     onSuccess: (cliente) => {
@@ -68,13 +69,18 @@ export default function ModalCreateCliente({
   });
 
   useEffect(() => {
+    if (!open) {
+      setDireccionesListas(false);
+      return;
+    }
+
     const cargarDatos = async () => {
       // Usar setTimeout para asegurar que el formulario de Ant Design se haya montado y conectado
       // a la instancia creada por useForm antes de intentar resetear campos.
       setTimeout(async () => {
         try {
           form.resetFields();
-          
+
           if (dataEdit) {
             // Transformar null a undefined para compatibilidad con Ant Design Form
             const formValues = Object.fromEntries(
@@ -96,7 +102,7 @@ export default function ModalCreateCliente({
               const response = await clienteApi.listarDirecciones(dataEdit.id);
               if (response.data?.data) {
                 const direcciones = response.data.data;
-                
+
                 // Mapear las direcciones a los campos del formulario
                 direcciones.forEach((dir) => {
                   switch (dir.tipo) {
@@ -131,22 +137,23 @@ export default function ModalCreateCliente({
               console.error('Error cargando direcciones:', error);
             } finally {
               setCargandoDirecciones(false);
+              setDireccionesListas(true);
             }
           } else {
             form.setFieldsValue({
               numero_documento: textDefault,
             });
+            setDireccionesListas(true);
           }
         } catch (e) {
           // Si el formulario aún no está conectado, reintentar o ignorar
           console.warn('Formulario no conectado aún:', e);
+          setDireccionesListas(true);
         }
       }, 0);
     };
 
-    if (open) {
-      cargarDatos();
-    }
+    cargarDatos();
   }, [form, dataEdit, open, textDefault]);
 
   return (
@@ -174,7 +181,7 @@ export default function ModalCreateCliente({
         onFinish: crearClienteForm,
       }}
     >
-      <FormCreateCliente form={form} dataEdit={dataEdit} />
+      <FormCreateCliente form={form} dataEdit={dataEdit} direccionesListas={direccionesListas} />
     </ModalForm>
   );
 }

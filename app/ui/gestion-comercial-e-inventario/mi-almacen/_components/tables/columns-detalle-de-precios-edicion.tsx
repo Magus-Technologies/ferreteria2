@@ -295,6 +295,46 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
+      headerName: 'Ganancia',
+      field: 'name',
+      minWidth: 140,
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'ganancia'],
+                hasFeedback: false,
+              }}
+              formWithMessage={false}
+              placeholder='Ganancia'
+              prefix='S/. '
+              precision={2}
+              onChange={val => {
+                const costo = form.getFieldValue([
+                  'unidades_derivadas',
+                  value,
+                  'costo',
+                ])
+                const costoNum = Number(costo)
+                if (!costo || isNaN(costoNum) || costoNum === 0) return
+
+                const ganancia = val ? Number(val) : 0
+                const precio_publico = costoNum + ganancia
+                const p_venta = (ganancia * 100) / costoNum
+                form.setFields([
+                  { name: ['unidades_derivadas', value, 'precio_publico'], value: precio_publico },
+                  { name: ['unidades_derivadas', value, 'p_venta'], value: p_venta },
+                ])
+              }}
+            />
+          </div>
+        )
+      },
+      flex: 1,
+    },
+    {
       headerName: 'PRECIO PUBLICO',
       field: 'name',
       minWidth: 140,
@@ -350,46 +390,6 @@ export function useColumnsDetalleDePreciosEdicion({
       flex: 1,
     },
     {
-      headerName: 'Ganancia',
-      field: 'name',
-      minWidth: 140,
-      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
-        const value = data?.name
-        return (
-          <div className='flex items-center h-full'>
-            <InputNumberBase
-              propsForm={{
-                name: [value, 'ganancia'],
-                hasFeedback: false,
-              }}
-              formWithMessage={false}
-              placeholder='Ganancia'
-              prefix='S/. '
-              precision={2}
-              onChange={val => {
-                const costo = form.getFieldValue([
-                  'unidades_derivadas',
-                  value,
-                  'costo',
-                ])
-                const costoNum = Number(costo)
-                if (!costo || isNaN(costoNum) || costoNum === 0) return
-
-                const ganancia = val ? Number(val) : 0
-                const precio_publico = costoNum + ganancia
-                const p_venta = (ganancia * 100) / costoNum
-                form.setFields([
-                  { name: ['unidades_derivadas', value, 'precio_publico'], value: precio_publico },
-                  { name: ['unidades_derivadas', value, 'p_venta'], value: p_venta },
-                ])
-              }}
-            />
-          </div>
-        )
-      },
-      flex: 1,
-    },
-    {
       headerName: 'PRECIO FERRETERÍA',
       field: 'name',
       minWidth: 140,
@@ -425,7 +425,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'PRECIO ESPECIAL',
+      headerName: 'PRECIO MÍNIMO',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -445,7 +445,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               prefix='S/. '
               formWithMessage={false}
-              placeholder='Precio Especial'
+              placeholder='Precio Mínimo'
               precision={2}
               onChange={() =>
                 onChangeComisiones({

@@ -18,6 +18,8 @@ interface ModalEntregaDirectaProps {
   open: boolean
   setOpen: (open: boolean) => void
   venta?: getVentaResponseProps
+  tipoDespacho?: 'EnTienda' | 'Parcial'
+  onCambiarTipo?: () => void
 }
 
 interface FormValues {
@@ -28,6 +30,8 @@ export default function ModalEntregaDirecta({
   open,
   setOpen,
   venta,
+  tipoDespacho = 'EnTienda',
+  onCambiarTipo,
 }: ModalEntregaDirectaProps) {
   const [form] = Form.useForm<FormValues>()
   const almacen_id = useStoreAlmacen((state) => state.almacen_id)
@@ -78,7 +82,7 @@ export default function ModalEntregaDirecta({
 
     crearEntrega({
       venta_id: venta.id,
-      tipo_entrega: TipoEntrega.RECOJO_EN_TIENDA,
+      tipo_entrega: tipoDespacho === 'Parcial' ? TipoEntrega.PARCIAL : TipoEntrega.RECOJO_EN_TIENDA,
       tipo_despacho: TipoDespacho.INMEDIATO,
       estado_entrega: EstadoEntrega.ENTREGADO,
       fecha_entrega: dayjs().format('YYYY-MM-DD'),
@@ -96,13 +100,23 @@ export default function ModalEntregaDirecta({
     <Modal
       title={
         <TitleForm className="!pb-0">
-          ENTREGAR PRODUCTOS
+          {tipoDespacho === 'Parcial' ? 'ENTREGA PARCIAL' : 'ENTREGAR PRODUCTOS'}
           {venta && (
             <div className="text-sm font-normal text-gray-600 mt-1">
+              {tipoDespacho === 'Parcial' ? '📦 Despacho Parcial — ' : '🏪 Despacho en Tienda — '}
               Venta N° {venta.serie}-{venta.numero} | Cliente:{' '}
               {venta.cliente?.razon_social ||
                 `${venta.cliente?.nombres || ''} ${venta.cliente?.apellidos || ''}`.trim() ||
                 'CLIENTES VARIOS'}
+              {onCambiarTipo && (
+                <button
+                  type="button"
+                  onClick={onCambiarTipo}
+                  className="ml-2 text-blue-500 hover:text-blue-700 underline text-xs cursor-pointer"
+                >
+                  (Cambiar tipo)
+                </button>
+              )}
             </div>
           )}
         </TitleForm>
