@@ -42,7 +42,7 @@ export default function TableClientesBusqueda({
 
   const clientesConDeuda = useClientesConDeuda()
 
-  const getRowStyle = useCallback((params: RowClassParams<Cliente>) => {
+  const getRowStyle = useCallback((params: RowClassParams<Cliente>): Record<string, string> | undefined => {
     if (!params.data) return undefined
     const deuda = clientesConDeuda.get(params.data.id)
     if (deuda?.tieneVencidas) {

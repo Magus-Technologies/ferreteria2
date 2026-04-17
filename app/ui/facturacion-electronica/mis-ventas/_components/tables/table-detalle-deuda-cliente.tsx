@@ -51,7 +51,7 @@ export default function TableDetalleDeudaCliente() {
       field: 'cobrado',
       minWidth: 110,
       flex: 1,
-      cellStyle: { color: '#059669' },
+      cellStyle: { color: '#059669' } as Record<string, string>,
       valueFormatter: p => `S/. ${Number(p.value ?? 0).toFixed(2)}`,
     },
     {
@@ -59,7 +59,7 @@ export default function TableDetalleDeudaCliente() {
       field: 'resta',
       minWidth: 120,
       flex: 1,
-      cellStyle: { color: '#dc2626', fontWeight: 'bold' },
+      cellStyle: { color: '#dc2626', fontWeight: 'bold' } as Record<string, string>,
       valueFormatter: p => `S/. ${Number(p.value ?? 0).toFixed(2)}`,
     },
     {
