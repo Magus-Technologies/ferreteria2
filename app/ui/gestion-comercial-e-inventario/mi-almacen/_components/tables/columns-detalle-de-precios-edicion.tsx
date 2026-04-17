@@ -495,7 +495,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Comisión Precio Público',
+      headerName: 'Comisión Público',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -507,7 +507,7 @@ export function useColumnsDetalleDePreciosEdicion({
                 name: [value, 'comision_publico'],
               }}
               formWithMessage={false}
-              placeholder='Comisión Precio Público'
+              placeholder='Comisión Público'
               precision={2}
               prefix='S/. '
               onChange={val => {
@@ -583,7 +583,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Comisión Último',
+      headerName: 'Comisión Final',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -597,7 +597,7 @@ export function useColumnsDetalleDePreciosEdicion({
               }}
               prefix='S/. '
               formWithMessage={false}
-              placeholder='Comisión Último'
+              placeholder='Comisión Final'
               precision={2}
             />
           </div>
@@ -647,7 +647,7 @@ export function useColumnsDetalleDePreciosEdicion({
       },
     },
     {
-      headerName: 'Activador Último',
+      headerName: 'Activador Final',
       field: 'name',
       minWidth: 140,
       flex: 1,
@@ -660,7 +660,7 @@ export function useColumnsDetalleDePreciosEdicion({
                 name: [value, 'activador_ultimo'],
               }}
               formWithMessage={false}
-              placeholder='Activador Último'
+              placeholder='Activador Final'
               precision={2}
             />
           </div>

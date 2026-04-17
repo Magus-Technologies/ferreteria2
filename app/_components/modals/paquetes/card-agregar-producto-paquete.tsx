@@ -160,7 +160,7 @@ export default function CardAgregarProductoPaquete({
             <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_minimo || 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Precio Último:</span>
+            <span className="text-gray-600">Precio Final:</span>
             <span className="font-semibold">S/. {Number(unidad_derivada_seleccionada.precio_ultimo || 0).toFixed(2)}</span>
           </div>
         </div>

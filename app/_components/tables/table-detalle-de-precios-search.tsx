@@ -113,7 +113,7 @@ export default function TableDetalleDePreciosSearch({
               'Ganancia',
               'Precio Ferretería',
               'Precio Mínimo',
-              'Precio Último',
+              'Precio Final',
             ],
           },
         ]}

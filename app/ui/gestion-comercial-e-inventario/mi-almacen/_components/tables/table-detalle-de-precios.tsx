@@ -194,16 +194,16 @@ export default function TableDetalleDePrecios() {
                     // Mapeo dinámico para campos opcionales
                     // Soporta ambos formatos: "P. Especial" (Excel) y "Precio Especial" (legacy)
                     const optionalFields = {
-                      comision_publico: ['Comisión P. Público', 'Comisión Precio Público'],
-                      precio_especial: ['P. Especial', 'Precio Especial'],
-                      comision_especial: ['Comisión P. Especial', 'Comisión Precio Especial'],
-                      activador_especial: ['Activador P. Especial', 'Activador Precio Especial'],
+                      comision_publico: ['Comisión Público', 'Comisión P. Público', 'Comisión Precio Público'],
+                      precio_especial: ['P. Especial', 'Precio Especial', 'Precio Ferretería'],
+                      comision_especial: ['Comisión Especial', 'Comisión P. Especial', 'Comisión Precio Especial', 'Comisión Ferretería'],
+                      activador_especial: ['Activador Especial', 'Activador Ferretería', 'Activador P. Especial', 'Activador Precio Especial'],
                       precio_minimo: ['P. Mínimo', 'Precio Mínimo'],
-                      comision_minimo: ['Comisión P. Mínimo', 'Comisión Precio Mínimo'],
-                      activador_minimo: ['Activador P. Mínimo', 'Activador Precio Mínimo'],
-                      precio_ultimo: ['P. Último', 'Precio Último'],
-                      comision_ultimo: ['Comisión P. Último', 'Comisión Precio Último'],
-                      activador_ultimo: ['Activador P. Último', 'Activador Precio Último'],
+                      comision_minimo: ['Comisión Mínimo', 'Comisión P. Mínimo', 'Comisión Precio Mínimo'],
+                      activador_minimo: ['Activador Mínimo', 'Activador P. Mínimo', 'Activador Precio Mínimo'],
+                      precio_ultimo: ['P. Final', 'Precio Final'],
+                      comision_ultimo: ['Comisión Final', 'Comisión P. Final', 'Comisión Precio Final'],
+                      activador_ultimo: ['Activador Final', 'Activador P. Final', 'Activador Precio Final'],
                     };
 
                     Object.entries(optionalFields).forEach(([apiKey, excelKeys]) => {
@@ -254,17 +254,17 @@ export default function TableDetalleDePrecios() {
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['#', 'Formato', 'Factor', 'P. Compra', '% Venta', 'Precio Público', 'Ganancia', 'Precio Especial', 'Precio Mínimo', 'Precio Último'],
+          columns: ['#', 'Formato', 'Factor', 'P. Compra', '% Venta', 'Precio Público', 'Ganancia', 'Precio Especial', 'Precio Mínimo', 'Precio Final'],
         },
         ...(can(permissions.PRODUCTO_IMPORT)
           ? [{
                 color: 'warning' as const,
                 label: 'Importación',
                 columns: [
-                  'Cod. Producto', 'Producto', 'Formato', 'Factor', 'Precio Público', 
-                  'Comisión Precio Público', 'Precio Especial', 'Comisión Precio Especial', 
-                  'Activador Precio Especial', 'Precio Mínimo', 'Comisión Precio Mínimo', 
-                  'Activador Precio Mínimo', 'Precio Último', 'Comisión Precio Último', 'Activador Precio Último'
+                  'Cod. Producto', 'Producto', 'Formato', 'Factor', 'Precio Público',
+                  'Comisión Público', 'Precio Especial', 'Comisión Ferretería',
+                  'Activador Ferretería', 'Precio Mínimo', 'Comisión Mínimo',
+                  'Activador Mínimo', 'Precio Final', 'Comisión Final', 'Activador Final'
                 ],
             }]
           : []),

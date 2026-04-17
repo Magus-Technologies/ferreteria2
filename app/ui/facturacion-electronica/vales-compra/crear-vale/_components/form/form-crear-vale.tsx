@@ -398,7 +398,7 @@ export default function FormCrearVale({
             <Form.Item name="aplica_precio_ultimo" valuePropName="checked" noStyle>
               <Switch />
             </Form.Item>
-            <span className="text-sm">Precio Último</span>
+            <span className="text-sm">Precio Final</span>
           </div>
         </div>
       </div>

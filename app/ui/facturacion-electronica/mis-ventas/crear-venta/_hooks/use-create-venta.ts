@@ -441,13 +441,14 @@ export default function useCreateVenta({
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
+            // Iterar por índice: cantidades_parciales y las unidades de la respuesta
+            // están en el mismo orden (se generan desde los mismos productos del formulario)
+            let parcialIdx = 0
             productosVenta.forEach((productoAlmacen: any) => {
               if (productoAlmacen.unidades_derivadas) {
                 productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                  // Buscar la cantidad parcial correspondiente
-                  const parcial = cantidades_parciales.find(
-                    (c) => c.unidad_derivada_id === unidad.unidad_derivada_normal_id
-                  )
+                  const parcial = cantidades_parciales[parcialIdx]
+                  parcialIdx++
                   if (parcial && parcial.entregar > 0) {
                     unidadesDerivadas.push({
                       unidad_derivada_venta_id: unidad.id,
@@ -486,12 +487,12 @@ export default function useCreateVenta({
                 if (parcial_resto_programado?.despachador_id) {
                   const unidadesDerivadas2: any[] = []
 
+                  let parcialIdx2 = 0
                   productosVenta.forEach((productoAlmacen: any) => {
                     if (productoAlmacen.unidades_derivadas) {
                       productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                        const parcial = cantidades_parciales.find(
-                          (c) => c.unidad_derivada_id === unidad.unidad_derivada_normal_id
-                        )
+                        const parcial = cantidades_parciales[parcialIdx2]
+                        parcialIdx2++
                         if (parcial && (parcial.total - parcial.entregar) > 0) {
                           unidadesDerivadas2.push({
                             unidad_derivada_venta_id: unidad.id,

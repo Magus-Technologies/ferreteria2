@@ -113,7 +113,7 @@ export default function TablePreciosPaquete({
     ...colsPrecio('publico', 'Precio Público'),
     ...colsPrecio('especial', 'Precio Especial'),
     ...colsPrecio('minimo', 'Precio Mínimo'),
-    ...colsPrecio('ultimo', 'Precio Último'),
+    ...colsPrecio('ultimo', 'Precio Final'),
   ]
 
   return (
@@ -130,7 +130,7 @@ export default function TablePreciosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Producto', 'Precio Público', 'Desc.', 'Precio Especial', 'Desc.', 'Precio Mínimo', 'Desc.', 'Precio Último', 'Desc.'],
+          columns: ['Producto', 'Precio Público', 'Desc.', 'Precio Especial', 'Desc.', 'Precio Mínimo', 'Desc.', 'Precio ', 'Desc.'],
         },
       ]}
     />
