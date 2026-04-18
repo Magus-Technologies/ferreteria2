@@ -459,11 +459,11 @@ export function useColumnsCompras({
                   titleDelete='Anular'
                   id={params.value}
                   permiso={permissions.COMPRAS_BASE}
-                  showDelete={
-                    params.data?.estado_de_compra !== 'an' &&
-                    params.data?.estado_de_compra !== 'pr'
-                  }
+                  showDelete={params.data?.estado_de_compra !== 'an'}
                   propsDelete={{
+                    disabled: params.data?.estado_de_compra === 'pr',
+                    disabledTooltip:
+                      'No se puede anular: la compra ya tiene productos recepcionados en almacén',
                     action: async ({ id }: { id: string }) => {
                       const result = await compraApi.delete(id)
                       if (result.error) {
