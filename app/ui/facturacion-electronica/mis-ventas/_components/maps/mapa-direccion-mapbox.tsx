@@ -104,48 +104,65 @@ export default function MapaDireccionMapbox({
 
     mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
 
-    const coordenadasDefault: [number, number] = [-77.0428, -12.0464] // Lima, Perú [lng, lat]
+    const coordenadasDefault: [number, number] = [-79.063692, -8.033405] // Trujillo - El Milagro [lng, lat] (fallback)
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: coordenadasIniciales 
-        ? [coordenadasIniciales.lng, coordenadasIniciales.lat] 
-        : coordenadasDefault,
-      zoom: 15,
-    })
+    // Función para inicializar el mapa con un centro dado
+    const inicializarMapa = (centro: [number, number]) => {
+      if (!mapContainer.current) return
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    const geolocateControl = new mapboxgl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: false,
-      showUserHeading: false,
-    })
-    map.current.addControl(geolocateControl, 'top-right')
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: centro,
+        zoom: 15,
+      })
 
-    if (editable) {
-      map.current.on('click', (e) => {
-        actualizarMarcador({ lng: e.lngLat.lng, lat: e.lngLat.lat })
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
+      const geolocateControl = new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: false,
+        showUserHeading: false,
+      })
+      map.current.addControl(geolocateControl, 'top-right')
+
+      if (editable) {
+        map.current.on('click', (e) => {
+          actualizarMarcador({ lng: e.lngLat.lng, lat: e.lngLat.lat })
+        })
+      }
+
+      map.current.on('load', () => {
+        setCargando(false)
+
+        if (coordenadasIniciales) {
+          actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat })
+          return
+        }
+
+        if (direccion) {
+          geocodificarDireccion(direccion)
+        }
       })
     }
 
-    map.current.on('load', () => {
-      setCargando(false)
-
-      if (coordenadasIniciales) {
-        actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat })
-        return
-      }
-
-      if (direccion) {
-        geocodificarDireccion(direccion)
-      }
-
-      // Si no hay coordenadas ni dirección, pedir ubicación automáticamente
-      if (!coordenadasIniciales && !direccion) {
-        geolocateControl.trigger()
-      }
-    })
+    // Si ya hay coordenadas iniciales o dirección, arrancar directo
+    if (coordenadasIniciales) {
+      inicializarMapa([coordenadasIniciales.lng, coordenadasIniciales.lat])
+    } else if (direccion) {
+      inicializarMapa(coordenadasDefault)
+    } else {
+      // Sin coordenadas ni dirección: intentar obtener GPS antes de crear el mapa
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          inicializarMapa([pos.coords.longitude, pos.coords.latitude])
+        },
+        () => {
+          // GPS no disponible o denegado: usar fallback
+          inicializarMapa(coordenadasDefault)
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      )
+    }
 
     return () => {
       marker.current?.remove()
@@ -156,7 +173,7 @@ export default function MapaDireccionMapbox({
 
   const geocodificarDireccion = async (dir: string) => {
     try {
-      const query = encodeURIComponent(`${dir}, Lima, Peru`)
+      const query = encodeURIComponent(`${dir}, Peru`)
       const response = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1&country=PE`
       )

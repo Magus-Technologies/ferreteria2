@@ -23,7 +23,7 @@ export default function MapaDireccion({
   direccion,
   clienteNombre,
 }: MapaDireccionProps) {
-  const [coordenadas, setCoordenadas] = useState<[number, number]>([-12.0464, -77.0428]) // Lima, Perú por defecto
+  const [coordenadas, setCoordenadas] = useState<[number, number]>([-8.033405, -79.063692]) // Trujillo - El Milagro por defecto
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,7 +41,7 @@ export default function MapaDireccion({
         
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            direccion + ', Lima, Perú'
+            direccion + ', Perú'
           )}&limit=1`
         )
         
@@ -80,7 +80,7 @@ export default function MapaDireccion({
       <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
         <div className="text-center text-gray-600 px-2">
           <p className="mb-1 text-xs">⚠️ {error}</p>
-          <p className="text-xs">Mostrando ubicación aproximada de Lima</p>
+          <p className="text-xs">Mostrando ubicación aproximada</p>
         </div>
       </div>
     )
