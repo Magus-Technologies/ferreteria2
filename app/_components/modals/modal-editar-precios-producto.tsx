@@ -58,7 +58,7 @@ function recalcularComisiones(form: any, precioPublicoNuevo: any) {
     form.setFieldValue('comision_minimo', comisionMinimo > 0 ? comisionMinimo : 0)
   }
   
-  // Recalcular comisión último
+  // Recalcular comisión ultimo
   if (precioUltimo !== undefined && precioUltimo !== null) {
     const comisionUltimo = comisionPublicoNum - (precioPublicoNum - Number(precioUltimo))
     form.setFieldValue('comision_ultimo', comisionUltimo > 0 ? comisionUltimo : 0)
@@ -500,7 +500,7 @@ export default function ModalEditarPreciosProducto({
                   form.setFieldValue('comision_minimo', comisionMinimo > 0 ? comisionMinimo : 0)
                 }
                 
-                // Recalcular comisión último
+                // Recalcular comisión ultimo
                 if (precioUltimo !== undefined && precioUltimo !== null) {
                   const comisionUltimo = comisionPublicoNum - (precioPublicoNum - Number(precioUltimo))
                   form.setFieldValue('comision_ultimo', comisionUltimo > 0 ? comisionUltimo : 0)
