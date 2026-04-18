@@ -116,7 +116,7 @@ export default function TablaProductosEntrega({
   ]
 
   return (
-    <div style={{ height: '350px' }}>
+    <div style={{ height: '200px' }}>
       <TableWithTitle<ProductoEntrega>
         id="productos-entrega"
         title="Lista de productos"

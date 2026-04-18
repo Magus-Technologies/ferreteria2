@@ -3,7 +3,7 @@ import { clienteApi } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
 /**
- * Hook para obtener el último cliente registrado
+ * Hook para obtener el ultimo cliente registrado
  * Usado por defecto en Boletas y Notas de Venta
  */
 export function useUltimoCliente() {

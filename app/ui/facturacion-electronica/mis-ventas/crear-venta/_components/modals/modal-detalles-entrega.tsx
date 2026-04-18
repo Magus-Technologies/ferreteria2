@@ -15,6 +15,9 @@ import useCreateVenta from '../../_hooks/use-create-venta'
 import type { FormCreateVenta } from '../others/body-vender'
 import TablaProductosEntrega from '../../../_components/tables/tabla-productos-entrega'
 import type { ProductoEntrega } from '../../../_hooks/use-productos-entrega'
+import TableWithTitle from '~/components/tables/table-with-title'
+import { orangeColors } from '~/lib/colors'
+import type { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import { clienteApi, type TipoDireccion } from '~/lib/api/cliente'
@@ -327,6 +330,38 @@ export default function ModalDetallesEntrega({
       form.setFieldValue('tipo_despacho', tipoDespacho)
     }
   }, [open, tipoDespacho, form])
+
+  // Columnas para la tabla de productos restantes (read-only)
+  const columnDefsResto = useMemo<ColDef<ProductoEntrega>[]>(() => [
+    {
+      headerName: 'Producto',
+      field: 'producto',
+      flex: 1,
+    },
+    {
+      headerName: 'Total',
+      field: 'total',
+      width: 100,
+      valueFormatter: (params) => Number(params.value).toFixed(2),
+    },
+    {
+      headerName: 'Entrega ahora',
+      field: 'entregar',
+      width: 130,
+      valueFormatter: (params) => Number(params.value).toFixed(2),
+      cellStyle: { color: '#16a34a', fontWeight: 'bold' } as Record<string, string>,
+    },
+    {
+      headerName: 'Queda para después',
+      width: 160,
+      valueGetter: (params) => {
+        if (!params.data) return 0
+        return params.data.total - params.data.entregar
+      },
+      valueFormatter: (params) => Number(params.value).toFixed(2),
+      cellStyle: { color: '#ea580c', fontWeight: 'bold' } as Record<string, string>,
+    },
+  ], [])
 
   // Verificar si hay algo que entregar
   const totalAEntregar = useMemo(
@@ -780,11 +815,17 @@ export default function ModalDetallesEntrega({
               </div>
 
               {programarResto && productosEntrega.some(p => p.total - p.entregar > 0) && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
-                  <p className="text-sm text-blue-700 font-medium">
-                    📦 Configurar entrega programada para los{' '}
-                    {productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} producto(s) restante(s)
-                  </p>
+                <div className="mt-4 space-y-4">
+                  {/* Tabla AG Grid de productos restantes - mismo componente que la tabla de arriba */}
+                  <div style={{ height: '150px' }}>
+                    <TableWithTitle<ProductoEntrega>
+                      id="productos-entrega-resto"
+                      title="Productos pendientes para entrega programada"
+                      selectionColor={orangeColors[10]}
+                      columnDefs={columnDefsResto}
+                      rowData={productosEntrega.filter(p => p.total - p.entregar > 0)}
+                    />
+                  </div>
 
                   {/* Despachador, Vehículo y botón calendario */}
                   <div className="grid grid-cols-3 gap-4">
