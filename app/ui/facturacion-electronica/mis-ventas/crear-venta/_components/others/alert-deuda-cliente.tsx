@@ -50,7 +50,7 @@ export default function AlertDeudaCliente({ clienteId, onDeudaChange }: AlertDeu
         ? dayjs(v.fecha_vencimiento).startOf('day').diff(dayjs().startOf('day'), 'days')
         : null
       return { venta: v, total, cobrado, resta, dias }
-    }).filter(d => d.resta > 0.01)
+    }).filter(d => d.resta > 0.01 && d.dias !== null && d.dias < 0)
   }, [data?.data])
 
   const totalDeuda = useMemo(() => deudas.reduce((acc, d) => acc + d.resta, 0), [deudas])
@@ -72,11 +72,11 @@ export default function AlertDeudaCliente({ clienteId, onDeudaChange }: AlertDeu
     if (clienteId && tieneDeuda && deudas.length > 0 && notifiedClienteRef.current !== clienteId) {
       notifiedClienteRef.current = clienteId
       notification.warning({
-        message: 'Cliente con deudas pendientes',
+        message: 'Cliente con deudas VENCIDAS',
         description: (
           <div>
             <p className='text-red-700 font-semibold mb-2'>
-              {deudas.length} venta{deudas.length > 1 ? 's' : ''} pendiente{deudas.length > 1 ? 's' : ''} — Total: S/. {totalDeuda.toFixed(2)}
+              {deudas.length} venta{deudas.length > 1 ? 's' : ''} vencida{deudas.length > 1 ? 's' : ''} — Total: S/. {totalDeuda.toFixed(2)}
             </p>
             <div className='max-h-[120px] overflow-y-auto'>
               <table className='w-full text-xs border-collapse'>

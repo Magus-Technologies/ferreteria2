@@ -42,12 +42,20 @@ export default function TableClientesBusqueda({
 
   const clientesConDeuda = useClientesConDeuda()
 
-  const getRowStyle = useCallback((params: RowClassParams<Cliente>) => {
-    if (params.data && clientesConDeuda.has(params.data.id)) {
+  const getRowStyle = useCallback((params: RowClassParams<Cliente>): Record<string, string> | undefined => {
+    if (!params.data) return undefined
+    const deuda = clientesConDeuda.get(params.data.id)
+    if (deuda?.tieneVencidas) {
       return {
         background: '#fef2f2',
         borderLeft: '3px solid #ef4444',
         color: '#991b1b',
+      }
+    }
+    if (deuda) {
+      return {
+        background: '#fffbeb',
+        borderLeft: '3px solid #f59e0b',
       }
     }
     return undefined
@@ -88,7 +96,7 @@ export default function TableClientesBusqueda({
               'Telefono',
               'Deuda',
               'Ventas Pend.',
-              'Dias Mora',
+              'Estado Vencimiento',
               'Acciones',
             ],
           },

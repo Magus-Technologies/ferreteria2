@@ -153,7 +153,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'precio_ultimo',
-      headerName: 'Precio Último',
+      headerName: 'Precio Final',
       field: 'precio_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -166,7 +166,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'comision_publico',
-      headerName: 'Comisión Precio Público',
+      headerName: 'Comisión Público',
       field: 'comision_publico',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -179,7 +179,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'comision_especial',
-      headerName: 'Comisión Precio Ferretería',
+      headerName: 'Comisión Ferretería',
       field: 'comision_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -192,7 +192,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'comision_minimo',
-      headerName: 'Comisión Precio Mínimo',
+      headerName: 'Comisión Mínimo',
       field: 'comision_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -205,7 +205,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'comision_ultimo',
-      headerName: 'Comisión Precio Último',
+      headerName: 'Comisión Final',
       field: 'comision_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -218,7 +218,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'activador_especial',
-      headerName: 'Activador Precio Ferretería',
+      headerName: 'Activador Ferretería',
       field: 'activador_especial',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -231,7 +231,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'activador_minimo',
-      headerName: 'Activador Precio Mínimo',
+      headerName: 'Activador Mínimo',
       field: 'activador_minimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
@@ -244,7 +244,7 @@ export function useColumnsDetalleDePrecios() {
     },
     {
       colId: 'activador_ultimo',
-      headerName: 'Activador Precio Último',
+      headerName: 'Activador Final',
       field: 'activador_ultimo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',

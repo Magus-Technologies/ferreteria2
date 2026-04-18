@@ -25,7 +25,7 @@ import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { useDebounce } from "use-debounce";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import ModalEntregaDirecta from "../modals/modal-entrega-directa";
+import ModalEntregarVenta from "../modals/modal-entregar-venta";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
 import { redColors, orangeColors, greenColors } from "~/lib/colors";
@@ -51,7 +51,7 @@ export default function FiltersMisVentas() {
   const router = useRouter();
   const { message } = App.useApp();
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
-  const [modalEntregaDirectaOpen, setModalEntregaDirectaOpen] = useState(false);
+  const [modalEntregarVentaOpen, setModalEntregarVentaOpen] = useState(false);
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
@@ -470,7 +470,7 @@ export default function FiltersMisVentas() {
                 type="button"
                 className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
                 onClick={() =>
-                  ventaSeleccionada && setModalEntregaDirectaOpen(true)
+                  ventaSeleccionada && setModalEntregarVentaOpen(true)
                 }
                 disabled={!ventaSeleccionada}
               >
@@ -694,9 +694,9 @@ export default function FiltersMisVentas() {
         </div>
       </Drawer>
 
-      <ModalEntregaDirecta
-        open={modalEntregaDirectaOpen}
-        setOpen={setModalEntregaDirectaOpen}
+      <ModalEntregarVenta
+        open={modalEntregarVentaOpen}
+        setOpen={setModalEntregarVentaOpen}
         venta={ventaSeleccionada}
       />
 

@@ -96,28 +96,46 @@ export function useColumnsClientes({
       },
     },
     {
-      headerName: 'Dias Mora',
+      headerName: 'Estado Vencimiento',
       field: 'id',
       colId: 'dias_mora',
-      width: 95,
-      minWidth: 95,
+      width: 140,
+      minWidth: 140,
       cellRenderer: (params: ICellRendererParams<Cliente>) => {
         if (!clientesDeudaMap || !params.data) return <span className='text-gray-400'>-</span>
         const deuda = clientesDeudaMap.get(params.data.id)
         if (!deuda) return <span className='text-gray-400'>-</span>
 
-        const dias = deuda.diasMaxMora
-        let colorClass = 'text-yellow-600 bg-yellow-100'
-        if (dias > 30) colorClass = 'text-red-600 bg-red-100'
-        else if (dias > 15) colorClass = 'text-orange-600 bg-orange-100'
+        if (deuda.tieneVencidas) {
+          const dias = deuda.diasMaxMora
+          const colorClass = dias > 30 ? 'text-red-700 bg-red-200' : dias > 15 ? 'text-red-600 bg-red-100' : 'text-orange-600 bg-orange-100'
+          return (
+            <div className='flex items-center justify-center h-full'>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClass}`}>
+                Mora {dias}d
+              </span>
+            </div>
+          )
+        }
 
-        return (
-          <div className='flex items-center justify-center h-full'>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClass}`}>
-              {dias}d
-            </span>
-          </div>
-        )
+        if (deuda.diasMinFaltantes !== null) {
+          const dias = deuda.diasMinFaltantes
+          const colorClass = dias === 0
+            ? 'text-orange-600 bg-orange-100'
+            : dias <= 3
+              ? 'text-yellow-700 bg-yellow-100'
+              : 'text-green-700 bg-green-100'
+          const label = dias === 0 ? 'Vence hoy' : `Faltan ${dias}d`
+          return (
+            <div className='flex items-center justify-center h-full'>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClass}`}>
+                {label}
+              </span>
+            </div>
+          )
+        }
+
+        return <span className='text-gray-400 text-xs'>Sin fecha</span>
       },
     },
     {

@@ -94,7 +94,7 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
             </div>
           </LabelBase>
 
-          <LabelBase label="Total Precio Último:" orientation="column">
+          <LabelBase label="Total Precio Final:" orientation="column">
             <div className="flex items-center h-10 px-3 bg-purple-100 rounded-lg border border-purple-300">
               <span className="text-base font-semibold text-purple-700">
                 S/. {totales.ventaUltimo.toFixed(2)}

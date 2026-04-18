@@ -468,7 +468,7 @@ export default function ModalEditarPreciosProducto({
         </div>
 
         <div>
-          <LabelBase label="Comisión Precio Público:" classNames={{ labelParent: 'mb-4' }}>
+          <LabelBase label="Comisión Público:" classNames={{ labelParent: 'mb-4' }}>
             <InputNumberBase
               propsForm={{
                 name: 'comision_publico',
@@ -527,7 +527,7 @@ export default function ModalEditarPreciosProducto({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <LabelBase label="Comisión Precio Ferretería:" classNames={{ labelParent: 'mb-4' }}>
+          <LabelBase label="Comisión Ferretería:" classNames={{ labelParent: 'mb-4' }}>
             <InputNumberBase
               propsForm={{
                 name: 'comision_especial',
@@ -589,7 +589,7 @@ export default function ModalEditarPreciosProducto({
         </div>
 
         <div>
-          <LabelBase label="PRECIO Especial:" classNames={{ labelParent: 'mb-4' }}>
+          <LabelBase label="Precio Mínimo:" classNames={{ labelParent: 'mb-4' }}>
             <InputNumberBase
               propsForm={{
                 name: 'precio_minimo',
@@ -605,7 +605,7 @@ export default function ModalEditarPreciosProducto({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <LabelBase label="Comisión PRECIO Especial:" classNames={{ labelParent: 'mb-4' }}>
+          <LabelBase label="Comisión Mínimo:" classNames={{ labelParent: 'mb-4' }}>
             <InputNumberBase
               propsForm={{
                 name: 'comision_minimo',
@@ -615,7 +615,7 @@ export default function ModalEditarPreciosProducto({
               min={0}
             />
           </LabelBase>
-          <LabelBase label="Activador PRECIO Especial:" classNames={{ labelParent: 'mb-4' }}>
+          <LabelBase label="Activador Mínimo:" classNames={{ labelParent: 'mb-4' }}>
             <InputNumberBase
               propsForm={{
                 name: 'activador_minimo',

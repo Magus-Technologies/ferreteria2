@@ -3,18 +3,20 @@ import SelectBase, { SelectBaseProps, RefSelectBaseProps } from './select-base'
 import type { ProductoAlmacenUnidadDerivada } from '~/app/_types/producto'
 import { FaMoneyBill } from 'react-icons/fa'
 
-interface SelectPreciosProps extends SelectBaseProps {
+interface SelectPreciosProps extends Omit<SelectBaseProps, 'onChange' | 'value'> {
   classNameIcon?: string
   sizeIcon?: number
   unidadDerivada: ProductoAlmacenUnidadDerivada | undefined | null
   cantidad?: number
+  onChange?: (precio: number, key: string) => void
+  value?: string | null // key del precio seleccionado (precio_publico, precio_especial, etc.)
 }
 
 const precios = [
   { key: 'precio_publico', label: 'PRECIO Público' },
-  { key: 'precio_especial', label: 'PRECIO Especial' },
+  { key: 'precio_especial', label: 'PRECIO Ferreteria' },
   { key: 'precio_minimo', label: 'PRECIO Mínimo' },
-  { key: 'precio_ultimo', label: 'PRECIO Último' },
+  { key: 'precio_ultimo', label: 'PRECIO Final' },
 ]
 
 const activadorMap: Record<string, string> = {
@@ -30,6 +32,8 @@ const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(functio
   sizeIcon = 16,
   unidadDerivada,
   cantidad,
+  onChange,
+  value,
   ...props
 }, ref) {
   return (
@@ -40,6 +44,12 @@ const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(functio
       prefix={<FaMoneyBill className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
+      value={value}
+      onChange={(key: string) => {
+        if (!unidadDerivada || !onChange) return
+        const precio = Number(unidadDerivada[key as keyof ProductoAlmacenUnidadDerivada] ?? 0)
+        onChange(precio, key)
+      }}
       options={
         unidadDerivada
           ? precios.map(({ key, label }) => {
@@ -64,7 +74,7 @@ const SelectPrecios = forwardRef<RefSelectBaseProps, SelectPreciosProps>(functio
               }
 
               return {
-                value: precio,
+                value: key,
                 label: labelFinal,
                 disabled,
               }

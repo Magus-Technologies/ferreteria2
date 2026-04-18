@@ -25,7 +25,7 @@ export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
 >
 
-export const valuesDefault: ValuesCardAgregarProductoVenta = {
+export const valuesDefault: ValuesCardAgregarProductoVenta & { precio_venta_key?: string } = {
   cantidad: undefined,
   unidad_derivada_id: undefined,
   precio_venta: undefined,
@@ -37,6 +37,7 @@ export const valuesDefault: ValuesCardAgregarProductoVenta = {
   producto_name: undefined,
   marca_name: undefined,
   unidad_derivada_name: undefined,
+  precio_venta_key: undefined,
 }
 
 export default function CardAgregarProductoVenta({
@@ -188,6 +189,7 @@ export default function CardAgregarProductoVenta({
       const precioPublico = unidades_derivadas?.[0]?.precio_publico
       if (precioPublico) {
         handleChange(Number(precioPublico), 'precio_venta')
+        handleChange('precio_publico', 'precio_venta_key')
       }
     }
   }, [unidades_derivadas])
@@ -248,8 +250,10 @@ export default function CardAgregarProductoVenta({
             )
             if (unidadSeleccionada?.precio_publico) {
               handleChange(Number(unidadSeleccionada.precio_publico), 'precio_venta')
+              handleChange('precio_publico', 'precio_venta_key')
             } else {
               handleChange(null, 'precio_venta')
+              handleChange(null, 'precio_venta_key')
             }
           }}
           className='w-full'
@@ -268,10 +272,13 @@ export default function CardAgregarProductoVenta({
           cantidad={Number(values.cantidad || 0)}
           ref={precio_ventaRef}
           placeholder='Precio Venta'
-          onChange={(value) => handleChange(value, 'precio_venta')}
+          onChange={(precio, key) => {
+            handleChange(precio, 'precio_venta')
+            handleChange(key, 'precio_venta_key')
+          }}
           className='w-full'
           classNameIcon='text-rose-700'
-          value={values.precio_venta}
+          value={(values as any).precio_venta_key ?? null}
           nextInEnter={false}
           onKeyUp={(e) => {
             if (e.key === 'Enter') buttom_masRef.current?.focus()
@@ -510,7 +517,7 @@ export default function CardAgregarProductoVenta({
           >
             <Radio value="publico">Precio Público</Radio>
             <Radio value="especial">Precio Ferretería</Radio>
-            <Radio value="minimo">Precio Especial</Radio>
+            <Radio value="minimo">Precio Minimo</Radio>
             <Radio value="ultimo">Precio Final</Radio>
           </Radio.Group>
         </div>
