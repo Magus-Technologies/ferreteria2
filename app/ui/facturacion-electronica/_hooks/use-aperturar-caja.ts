@@ -71,6 +71,11 @@ export default function useAperturarCaja({
 
       const response = await cajaApi.aperturar(payload)
 
+      if (response.error) {
+        message.error(response.error.message || 'Error al distribuir efectivo')
+        return
+      }
+
       if (response.data?.data) {
         // Transformar datos para el ticket PRIMERO
         const backendData = response.data.data as any
@@ -144,8 +149,6 @@ export default function useAperturarCaja({
 
         // Llamar onSuccess con los datos completos
         onSuccess?.(aperturaData)
-      } else {
-        message.error('Error al distribuir efectivo')
       }
     } catch (error) {
       console.error('❌ HOOK: Error capturado en catch:', error)
