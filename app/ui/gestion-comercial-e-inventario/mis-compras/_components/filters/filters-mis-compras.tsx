@@ -129,28 +129,15 @@ export default function FiltersMisCompras() {
         }
 
         // Lógica de Estado de Compra / Pendiente de Recepción
-        // Ambos filtran el mismo campo 'estado_de_compra'
-        const statusValues: string[] = []
-
+        // Si hay pendiente_de_recepcion, tiene prioridad y se ignora estado_de_compra
         if (pendiente_de_recepcion) {
-          statusValues.push(pendiente_de_recepcion)
-        }
-
-        if (estado_de_compra) {
+          data.estado_de_compra = pendiente_de_recepcion as EstadoDeCompra
+        } else if (estado_de_compra && !estado_de_cuenta) {
           const val =
             estado_de_compra === EstadoDeCompraSelect.Creados
               ? EstadoDeCompra.Creado
               : estado_de_compra
-
-          if (!statusValues.includes(val)) {
-            statusValues.push(val)
-          }
-        }
-
-        if (statusValues.length === 1) {
-          data.estado_de_compra = statusValues[0] as EstadoDeCompra
-        } else if (statusValues.length > 1) {
-          data.estado_de_compra = { in: statusValues } as any
+          data.estado_de_compra = val as EstadoDeCompra
         }
 
         // Estado de Cuenta (Pagado / Crédito)
