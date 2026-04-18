@@ -44,6 +44,7 @@ const tipoLabels: Record<string, string> = {
 const movimientoColors: Record<string, string> = {
   ENTRADA: 'green',
   SALIDA: 'red',
+  COMPRA: 'orange',
   REFERENCIA: 'blue',
 }
 
@@ -56,11 +57,12 @@ export default function KardexInventarioView() {
   const [searchText, setSearchText] = useState('')
   const [debouncedSearchText] = useDebounce(searchText, 300)
   const isSearching = searchText !== debouncedSearchText
+  const [searchKey, setSearchKey] = useState(0)
 
   const productoId = productoSeleccionado?.id
 
   const { data, isFetching } = useQuery({
-    queryKey: [QueryKeys.KARDEX_INVENTARIO, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD')],
+    queryKey: [QueryKeys.KARDEX_INVENTARIO, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientosInventario({
         producto_id: productoId,
@@ -73,7 +75,7 @@ export default function KardexInventarioView() {
       if (result.error) throw new Error(result.error.message)
       return result.data!
     },
-    staleTime: 30 * 1000,
+    staleTime: 0,
   })
 
   const columns: ColDef<MovimientoKardex>[] = [
@@ -83,7 +85,6 @@ export default function KardexInventarioView() {
       width: 140,
       minWidth: 120,
       valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
-      sort: 'asc',
     },
     // Mostrar columnas de producto solo cuando no hay producto seleccionado
     ...(!productoId ? [
@@ -107,11 +108,11 @@ export default function KardexInventarioView() {
       width: 110,
       minWidth: 100,
       cellRenderer: (params: any) => {
-        const tipo = params.value as string
+        const t = params.value as string
         return (
           <div className='flex items-center h-full'>
-            <Tag color={tipoColors[tipo] || 'default'} className='!m-0'>
-              {tipoLabels[tipo] || tipo}
+            <Tag color={tipoColors[t] || 'default'} className='!m-0'>
+              {tipoLabels[t] || t}
             </Tag>
           </div>
         )
@@ -276,7 +277,7 @@ export default function KardexInventarioView() {
             color='info'
             size='md'
             className='flex items-center gap-2 w-fit self-end'
-            onClick={() => {}}
+            onClick={() => setSearchKey(k => k + 1)}
           >
             <FaSearch />
             Buscar
