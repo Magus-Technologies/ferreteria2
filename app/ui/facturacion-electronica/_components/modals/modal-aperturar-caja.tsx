@@ -212,7 +212,20 @@ export default function ModalAperturarCaja({
   }
 
   const handleSubmit = (values: AperturarCajaFormValues) => {
-    if (!esValido) {
+    if (!cajaOrigenId) {
+      message.error('Debes seleccionar la caja de origen')
+      return
+    }
+
+    const vendedorSinMonto = vendedores.find(v => !v.monto || v.monto <= 0)
+    if (vendedorSinMonto || totalAsignado <= 0) {
+      message.error('El monto de cada vendedor debe ser mayor a S/. 0.00')
+      return
+    }
+
+    const vendedorSinUsuario = vendedores.find(v => !v.user_id)
+    if (vendedorSinUsuario) {
+      message.error('Todos los vendedores deben tener un usuario asignado')
       return
     }
 
@@ -376,9 +389,12 @@ export default function ModalAperturarCaja({
                     />
                   </div>
                   <div className='w-24 text-right'>
-                    <span className='font-bold text-orange-600'>
+                    <span className={`font-bold ${vendedor.monto <= 0 ? 'text-red-500' : 'text-orange-600'}`}>
                       S/. {vendedor.monto.toFixed(2)}
                     </span>
+                    {vendedor.monto <= 0 && (
+                      <div className='text-red-500 text-xs'>Requerido &gt; 0</div>
+                    )}
                   </div>
                   {vendedores.length > 1 && (user as any)?.roles?.some((role: any) =>
                     role.name?.toLowerCase() === 'admin' ||
@@ -397,6 +413,16 @@ export default function ModalAperturarCaja({
                 </div>
               ))}
             </div>
+            {/* Total con validación visual */}
+            <div className={`p-2 border-t text-sm font-semibold flex justify-between items-center ${totalAsignado <= 0 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-orange-50 border-orange-200 text-orange-700'}`}>
+              <span>Total a distribuir:</span>
+              <span>S/. {totalAsignado.toFixed(2)}</span>
+            </div>
+            {totalAsignado <= 0 && (
+              <div className='p-1.5 bg-red-50 text-red-600 text-xs text-center'>
+                El total debe ser mayor a S/. 0.00 para guardar
+              </div>
+            )}
           </div>
 
           {/* COLUMNA DERECHA: Desglose de Denominaciones */}
