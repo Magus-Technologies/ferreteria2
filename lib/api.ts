@@ -2,7 +2,8 @@
  * Cliente API para comunicarse con el backend de Laravel
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// Normalizar la URL base: quitar slash final
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
 export interface ApiResponse<T = unknown> {
   data?: T;
@@ -100,7 +101,8 @@ export async function apiRequest<T = unknown>(
   }
 
   // Agregar parámetros de query string si existen
-  let url = `${API_URL}${endpoint}`;
+  // Evitar doble /api si la URL base ya lo incluye y el endpoint también
+  let url = `${API_URL}${endpoint}`.replace(/([^:])\/\/+/g, '$1/');
   if (params) {
     const queryString = new URLSearchParams(
       Object.entries(params).reduce(
