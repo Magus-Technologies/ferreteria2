@@ -1,6 +1,6 @@
 import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
-import { GiMoneyStack, GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
+import { GiMoneyStack, GiPayMoney, GiReceiveMoney, GiTakeMyMoney } from 'react-icons/gi'
 import { FaFileInvoiceDollar } from 'react-icons/fa6'
 
 export default function BottomNav({ className }: { className?: string }) {
@@ -31,12 +31,19 @@ export default function BottomNav({ className }: { className?: string }) {
         <GiMoneyStack />
         Mis Ganancias
       </ButtonNav>
-      <ButtonNav 
+      <ButtonNav
         path='/ui/gestion-contable-y-financiera/compras-por-pagar'
         colorActive='text-rose-700'
       >
         <FaFileInvoiceDollar />
         Mis compras por pagar
+      </ButtonNav>
+      <ButtonNav
+        path='/ui/gestion-contable-y-financiera/comisiones'
+        colorActive='text-rose-700'
+      >
+        <GiTakeMyMoney />
+        Comisiones
       </ButtonNav>
     </BaseNav>
   )

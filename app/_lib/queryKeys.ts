@@ -85,4 +85,7 @@ export enum QueryKeys {
   KARDEX = 'kardex',
   KARDEX_INVENTARIO = 'kardex_inventario',
   TRANSFERENCIAS_STOCK = 'transferencias_stock',
+  COMISIONES_POR_VENDEDOR = 'comisiones_por_vendedor',
+  COMISIONES_DETALLE_VENDEDOR = 'comisiones_detalle_vendedor',
+  COMISIONES_HISTORIAL_PAGOS = 'comisiones_historial_pagos',
 }
