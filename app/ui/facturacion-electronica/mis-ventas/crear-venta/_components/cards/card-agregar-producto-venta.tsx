@@ -158,8 +158,21 @@ export default function CardAgregarProductoVenta({
     } else {
       setProductoAgregadoVenta(valuesFormated)
     }
-    setValues(valuesDefault)
-    if (closeModal) setOpen(false)
+    if (closeModal) {
+      setValues(valuesDefault)
+      setOpen(false)
+    } else {
+      // Al dar "+ MÁS", conservar unidad_derivada_id y precio_venta (permite re-agregar
+      // rápido del mismo producto). Si limpiáramos todo, el SelectPrecios queda sin
+      // opciones hasta que cambie el producto seleccionado (bug #12).
+      setValues((prev) => ({
+        ...valuesDefault,
+        unidad_derivada_id: prev.unidad_derivada_id,
+        precio_venta: prev.precio_venta,
+        precio_venta_key: (prev as any).precio_venta_key,
+      }))
+      setTimeout(() => cantidadRef.current?.focus(), 50)
+    }
   }
 
   const cantidadRef = useRef<HTMLInputElement>(null)
