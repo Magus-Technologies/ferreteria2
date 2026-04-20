@@ -74,7 +74,13 @@ export default function CellAccionesVentaDropdown(
           const result = await ventaApiModule.ventaApi.anular(ventaId);
 
           if (result.error) {
-            message.error({ content: result.error.message || 'Error al anular', key: 'anular-venta', duration: 5 });
+            message.destroy('anular-venta');
+            modal.error({
+              title: 'No se pudo anular la venta',
+              content: result.error.message || 'Error al anular la venta.',
+              okText: 'Entendido',
+              width: 460,
+            });
           } else {
             message.success({ content: result.data?.message || 'Venta anulada exitosamente', key: 'anular-venta', duration: 3 });
 
@@ -86,7 +92,13 @@ export default function CellAccionesVentaDropdown(
             }
           }
         } catch (error: any) {
-          message.error({ content: error?.message || 'Error al anular', key: 'anular-venta', duration: 5 });
+          message.destroy('anular-venta');
+          modal.error({
+            title: 'Error al anular la venta',
+            content: error?.message || 'Ocurrió un error inesperado.',
+            okText: 'Entendido',
+            width: 460,
+          });
         }
       },
     });
