@@ -166,7 +166,7 @@ export default function KardexInventarioView() {
         return `S/. ${Number(params.value).toFixed(4)}`
       },
     },
-    {
+    ...(productoId ? [{
       headerName: 'Stock Antes',
       valueGetter: (params: any) => {
         const { saldo, entrada, salida } = params.data ?? {}
@@ -180,7 +180,7 @@ export default function KardexInventarioView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    } as ColDef<MovimientoKardex>] : []),
     {
       headerName: 'Cant. Ingreso',
       field: 'entrada',
@@ -211,7 +211,7 @@ export default function KardexInventarioView() {
         return Number(params.value).toFixed(2)
       },
     },
-    {
+    ...(productoId ? [{
       headerName: 'Stock Actual',
       field: 'saldo' as keyof MovimientoKardex,
       width: 100,
@@ -222,7 +222,7 @@ export default function KardexInventarioView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    } as ColDef<MovimientoKardex>] : []),
   ]
 
   return (
@@ -284,6 +284,14 @@ export default function KardexInventarioView() {
           </ButtonBase>
         </div>
 
+        {/* Aviso cuando no hay producto seleccionado */}
+        {!productoSeleccionado && (
+          <div className='flex items-center gap-2 bg-blue-50 rounded-lg px-4 py-2 border border-blue-200 text-sm text-blue-700'>
+            <FaBoxOpen className='text-blue-400 flex-shrink-0' />
+            <span>Selecciona un <strong>producto</strong> para ver el seguimiento de stock (Stock Antes / Stock Actual) y el saldo acumulado.</span>
+          </div>
+        )}
+
         {/* Info del producto seleccionado */}
         {productoSeleccionado && (
           <div className='flex items-center gap-4 bg-emerald-50 rounded-lg px-4 py-2 border border-emerald-200'>
@@ -330,11 +338,14 @@ export default function KardexInventarioView() {
           columnDefs={columns}
           rowData={data?.data || []}
           pagination={false}
+          persistColumnState={false}
           quickFilterText={debouncedSearchText}
           optionsSelectColumns={[
             {
               label: 'Default',
-              columns: ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+              columns: productoId
+                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Cant. Ingreso', 'Cant. Salida'],
             },
           ]}
         />

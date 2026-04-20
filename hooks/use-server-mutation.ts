@@ -68,6 +68,18 @@ export function useServerMutation<TParams, TResult>({
         })
       onSuccess?.(res)
     },
+    onError: (error: unknown) => {
+      if (showNotificationError) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Ocurrió un error inesperado'
+        notification.error({
+          message: 'Error',
+          description: message,
+        })
+      }
+    },
     ...propsMutation,
   })
 

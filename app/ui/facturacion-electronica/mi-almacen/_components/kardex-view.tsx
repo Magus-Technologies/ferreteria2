@@ -45,6 +45,8 @@ const movimientoColors: Record<string, string> = {
   ENTRADA: 'green',
   SALIDA: 'red',
   REFERENCIA: 'blue',
+  ANULADO: 'volcano',
+  DEVOLUCION: 'cyan',
 }
 
 export default function KardexView() {
@@ -166,9 +168,9 @@ export default function KardexView() {
         return `S/. ${Number(params.value).toFixed(4)}`
       },
     },
-    {
+    ...(productoId ? [{
       headerName: 'Stock Antes',
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const { saldo, entrada, salida } = params.data ?? {}
         if (saldo == null) return null
         return Number(saldo) - Number(entrada ?? 0) + Number(salida ?? 0)
@@ -176,11 +178,11 @@ export default function KardexView() {
       width: 110,
       minWidth: 100,
       type: 'numericColumn',
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    } as ColDef<MovimientoKardex>] : []),
     {
       headerName: 'Cant. Ingreso',
       field: 'entrada',
@@ -211,18 +213,18 @@ export default function KardexView() {
         return Number(params.value).toFixed(2)
       },
     },
-    {
+    ...(productoId ? [{
       headerName: 'Stock Actual',
-      field: 'saldo',
+      field: 'saldo' as keyof MovimientoKardex,
       width: 100,
       minWidth: 90,
       type: 'numericColumn',
       cellStyle: { fontWeight: 'bold' },
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    } as ColDef<MovimientoKardex>] : []),
   ]
 
   return (
@@ -284,6 +286,14 @@ export default function KardexView() {
           </ButtonBase>
         </div>
 
+        {/* Aviso cuando no hay producto seleccionado */}
+        {!productoSeleccionado && (
+          <div className='flex items-center gap-2 bg-blue-50 rounded-lg px-4 py-2 border border-blue-200 text-sm text-blue-700'>
+            <FaBoxOpen className='text-blue-400 flex-shrink-0' />
+            <span>Selecciona un <strong>producto</strong> para ver el seguimiento de stock (Stock Antes / Stock Actual) y el saldo acumulado.</span>
+          </div>
+        )}
+
         {/* Info del producto seleccionado */}
         {productoSeleccionado && (
           <div className='flex items-center gap-4 bg-orange-50 rounded-lg px-4 py-2 border border-orange-200'>
@@ -330,11 +340,20 @@ export default function KardexView() {
           columnDefs={columns}
           rowData={data?.data || []}
           pagination={false}
+          persistColumnState={false}
           quickFilterText={debouncedSearchText}
+          getRowStyle={(params) => {
+            const mov = (params.data as MovimientoKardex)?.movimiento
+            if (mov === 'ANULADO') return { background: '#fef2f2' } as any
+            if (mov === 'DEVOLUCION') return { background: '#ecfdf5' }
+            return undefined
+          }}
           optionsSelectColumns={[
             {
               label: 'Default',
-              columns: ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+              columns: productoId
+                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Cant. Ingreso', 'Cant. Salida'],
             },
           ]}
         />
