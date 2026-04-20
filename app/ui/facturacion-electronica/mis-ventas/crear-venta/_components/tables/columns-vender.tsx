@@ -850,9 +850,13 @@ const activadorMap: Record<TipoPrecio, string | null> = {
 
 /**
  * Auto-selecciona el mejor precio disponible según la cantidad.
- * Prioridad: ultimo > minimo > especial > publico (de menor a mayor precio).
- * Solo cambia si la cantidad activa un precio mejor que el actual.
- * Si la cantidad baja y el precio actual ya no es válido, revierte a público.
+ * "Mejor" = el tipo con el activador habilitado MÁS ALTO (tier más profundo desbloqueado).
+ * Ejemplo: activador_minimo=4, activador_especial=5, activador_ultimo=10
+ *   cantidad=4  → minimo (único habilitado)
+ *   cantidad=5  → especial (activador 5 > 4)
+ *   cantidad=10 → ultimo (activador 10 > 5 > 4)
+ * Si la cantidad baja y el precio actual ya no es válido, elige el mejor disponible.
+ * Solo auto-actualiza si el mejor disponible tiene un activador mayor que el actual.
  */
 function autoSeleccionarMejorPrecio({
   form,
@@ -873,29 +877,41 @@ function autoSeleccionarMejorPrecio({
   const ud = unidadesDerivadas.find((u) => u.unidad_derivada.id === unidadDerivadaId)
   if (!ud) return
 
-  // Determinar qué precios están habilitados con la cantidad actual
-  const tiposOrdenados: TipoPrecio[] = ['ultimo', 'minimo', 'especial', 'publico']
-
-  function estaHabilitado(tipo: TipoPrecio): boolean {
-    const activadorKey = activadorMap[tipo]
-    if (!activadorKey) return true // público siempre habilitado
-    const activador = Number((ud as any)[activadorKey] ?? 0)
-    return activador <= 0 || cantidad >= activador
+  const activadores: Record<TipoPrecio, number> = {
+    publico: 0,
+    especial: Number((ud as any).activador_especial ?? 0),
+    minimo: Number((ud as any).activador_minimo ?? 0),
+    ultimo: Number((ud as any).activador_ultimo ?? 0),
   }
 
-  // Si el precio actual ya no es válido, revertir a público
+  function estaHabilitado(tipo: TipoPrecio): boolean {
+    const act = activadores[tipo]
+    return act <= 0 || cantidad >= act
+  }
+
+  // Buscar el mejor tipo: el que tiene el activador MÁS ALTO entre los habilitados
+  let mejor: TipoPrecio = 'publico'
+  let mejorAct = 0
+  for (const tipo of ['especial', 'minimo', 'ultimo'] as TipoPrecio[]) {
+    if (estaHabilitado(tipo) && activadores[tipo] > mejorAct) {
+      mejor = tipo
+      mejorAct = activadores[tipo]
+    }
+  }
+
+  // Si el actual ya no está habilitado (cantidad bajó), aplicar el mejor disponible
   if (!estaHabilitado(tipoPrecioActual)) {
-    aplicarPrecio(form, fieldIndex, 'publico', ud, cantidad)
+    if (mejor !== tipoPrecioActual) {
+      aplicarPrecio(form, fieldIndex, mejor, ud, cantidad)
+    }
     return
   }
 
-  // Buscar el mejor precio habilitado (prioridad: ultimo > minimo > especial > publico)
-  const mejorPrecio = tiposOrdenados.find((tipo) => estaHabilitado(tipo)) || 'publico'
-
-  // Solo cambiar si el mejor precio es "mejor" que el actual
-  const prioridad: Record<TipoPrecio, number> = { ultimo: 3, minimo: 2, especial: 1, publico: 0 }
-  if (prioridad[mejorPrecio] > prioridad[tipoPrecioActual]) {
-    aplicarPrecio(form, fieldIndex, mejorPrecio, ud, cantidad)
+  // Solo auto-actualizar si el mejor tiene un activador mayor que el actual
+  // (respeta selección manual a tier inferior mientras la cantidad no cambie hacia arriba)
+  const activadorActual = activadores[tipoPrecioActual] ?? 0
+  if (mejorAct > activadorActual) {
+    aplicarPrecio(form, fieldIndex, mejor, ud, cantidad)
   }
 }
 
