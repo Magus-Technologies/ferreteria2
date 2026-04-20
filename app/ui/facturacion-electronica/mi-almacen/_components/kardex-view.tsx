@@ -168,63 +168,60 @@ export default function KardexView() {
         return `S/. ${Number(params.value).toFixed(4)}`
       },
     },
-    ...(productoId ? [{
-      headerName: 'Stock Antes',
-      valueGetter: (params: any) => {
-        const { saldo, entrada, salida } = params.data ?? {}
-        if (saldo == null) return null
-        return Number(saldo) - Number(entrada ?? 0) + Number(salida ?? 0)
-      },
-      width: 110,
+    {
+      headerName: 'Stock Anterior',
+      field: 'saldo_anterior' as keyof MovimientoKardex,
+      width: 115,
       minWidth: 100,
-      type: 'numericColumn',
+      type: 'numericColumn' as const,
+      cellStyle: { color: '#6b7280', fontWeight: 'bold' },
       valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    } as ColDef<MovimientoKardex>] : []),
+    } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Ingreso',
-      field: 'entrada',
-      width: 90,
-      minWidth: 80,
-      type: 'numericColumn',
-      cellStyle: (params) => {
+      field: 'entrada' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 90,
+      type: 'numericColumn' as const,
+      cellStyle: (params: any) => {
         if (params.value > 0) return { color: '#16a34a', fontWeight: 'bold' }
         return null
       },
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Salida',
-      field: 'salida',
-      width: 90,
-      minWidth: 80,
-      type: 'numericColumn',
-      cellStyle: (params) => {
+      field: 'salida' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 90,
+      type: 'numericColumn' as const,
+      cellStyle: (params: any) => {
         if (params.value > 0) return { color: '#dc2626', fontWeight: 'bold' }
         return null
       },
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
-    ...(productoId ? [{
+    } as ColDef<MovimientoKardex>,
+    {
       headerName: 'Stock Actual',
       field: 'saldo' as keyof MovimientoKardex,
-      width: 100,
+      width: 110,
       minWidth: 90,
-      type: 'numericColumn',
-      cellStyle: { fontWeight: 'bold' },
+      type: 'numericColumn' as const,
+      cellStyle: { color: '#ea580c', fontWeight: 'bold' },
       valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    } as ColDef<MovimientoKardex>] : []),
+    } as ColDef<MovimientoKardex>,
   ]
 
   return (
@@ -290,7 +287,7 @@ export default function KardexView() {
         {!productoSeleccionado && (
           <div className='flex items-center gap-2 bg-blue-50 rounded-lg px-4 py-2 border border-blue-200 text-sm text-blue-700'>
             <FaBoxOpen className='text-blue-400 flex-shrink-0' />
-            <span>Selecciona un <strong>producto</strong> para ver el seguimiento de stock (Stock Antes / Stock Actual) y el saldo acumulado.</span>
+            <span>Selecciona un <strong>producto</strong> para ver el seguimiento de stock (Stock Anterior / Stock Actual) y el saldo acumulado.</span>
           </div>
         )}
 
@@ -352,8 +349,8 @@ export default function KardexView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Cant. Ingreso', 'Cant. Salida'],
+                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />

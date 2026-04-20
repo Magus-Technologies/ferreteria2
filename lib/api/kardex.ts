@@ -16,7 +16,8 @@ export interface MovimientoKardex {
   costo: number
   entrada: number
   salida: number
-  saldo: number
+  saldo: number | null
+  saldo_anterior: number | null
   referencia_id: string | number
   producto_nombre?: string
   producto_codigo?: string

@@ -166,63 +166,60 @@ export default function KardexInventarioView() {
         return `S/. ${Number(params.value).toFixed(4)}`
       },
     },
-    ...(productoId ? [{
-      headerName: 'Stock Antes',
-      valueGetter: (params: any) => {
-        const { saldo, entrada, salida } = params.data ?? {}
-        if (saldo == null) return null
-        return Number(saldo) - Number(entrada ?? 0) + Number(salida ?? 0)
-      },
-      width: 110,
+    {
+      headerName: 'Stock Anterior',
+      field: 'saldo_anterior' as keyof MovimientoKardex,
+      width: 115,
       minWidth: 100,
       type: 'numericColumn' as const,
+      cellStyle: { color: '#6b7280', fontWeight: 'bold' },
       valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    } as ColDef<MovimientoKardex>] : []),
+    } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Ingreso',
-      field: 'entrada',
-      width: 90,
-      minWidth: 80,
-      type: 'numericColumn',
-      cellStyle: (params) => {
+      field: 'entrada' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 90,
+      type: 'numericColumn' as const,
+      cellStyle: (params: any) => {
         if (params.value > 0) return { color: '#16a34a', fontWeight: 'bold' }
         return null
       },
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
+    } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Salida',
-      field: 'salida',
-      width: 90,
-      minWidth: 80,
-      type: 'numericColumn',
-      cellStyle: (params) => {
+      field: 'salida' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 90,
+      type: 'numericColumn' as const,
+      cellStyle: (params: any) => {
         if (params.value > 0) return { color: '#dc2626', fontWeight: 'bold' }
         return null
       },
-      valueFormatter: (params) => {
+      valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
-    },
-    ...(productoId ? [{
+    } as ColDef<MovimientoKardex>,
+    {
       headerName: 'Stock Actual',
       field: 'saldo' as keyof MovimientoKardex,
-      width: 100,
+      width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
-      cellStyle: { fontWeight: 'bold' },
+      cellStyle: { color: '#2563eb', fontWeight: 'bold' },
       valueFormatter: (params: any) => {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
-    } as ColDef<MovimientoKardex>] : []),
+    } as ColDef<MovimientoKardex>,
   ]
 
   return (
@@ -344,8 +341,8 @@ export default function KardexInventarioView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Antes', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Cant. Ingreso', 'Cant. Salida'],
+                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
