@@ -344,7 +344,7 @@ export default function KardexView() {
           quickFilterText={debouncedSearchText}
           getRowStyle={(params) => {
             const mov = (params.data as MovimientoKardex)?.movimiento
-            if (mov === 'ANULADO') return { opacity: 0.5, textDecoration: 'line-through', background: '#fef2f2' } as any
+            if (mov === 'ANULADO') return { background: '#fef2f2' } as any
             if (mov === 'DEVOLUCION') return { background: '#ecfdf5' }
             return undefined
           }}
