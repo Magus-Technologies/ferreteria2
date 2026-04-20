@@ -138,7 +138,7 @@ export function useColumnsDetalleDePreciosEdicion({
               formWithMessage={false}
               placeholder='Buscar producto complementario...'
               initialOption={initialOption}
-              onChange={(val) => {
+              onChange={(val, producto) => {
                 // Establecer explícitamente el ID en el form (necesario para evitar conflictos con Form.Items duplicados)
                 form.setFieldValue(
                   ['unidades_derivadas', value, 'producto_complementario_id'],
@@ -154,6 +154,18 @@ export function useColumnsDetalleDePreciosEdicion({
                     undefined
                   )
                 } else {
+                  // Guardar el objeto completo para que initialOption se restaure si el cellRenderer se remonta
+                  // (por ejemplo, al editar una comisión que dispara re-render del form)
+                  if (producto) {
+                    form.setFieldValue(
+                      ['unidades_derivadas', value, 'producto_complementario'],
+                      {
+                        id: producto.id,
+                        cod_producto: producto.cod_producto,
+                        name: producto.name,
+                      }
+                    )
+                  }
                   const currentCant = form.getFieldValue([
                     'unidades_derivadas',
                     value,

@@ -70,6 +70,7 @@ export default function ModalProveedorSearch({
           value={text}
           onChange={e => setText(e.target.value)}
           className='max-w-[500px]'
+          autoFocus
         />
         <ButtonCreateProveedor
           className='mb-0!'

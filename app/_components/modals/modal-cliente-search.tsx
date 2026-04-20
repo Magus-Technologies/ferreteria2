@@ -72,6 +72,7 @@ export default function ModalClienteSearch({
           value={text}
           onChange={e => setText(e.target.value)}
           className='max-w-[500px]'
+          autoFocus
         />
         <ButtonCreateCliente
           className='mb-0!'

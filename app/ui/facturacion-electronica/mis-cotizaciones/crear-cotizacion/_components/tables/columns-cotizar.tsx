@@ -7,6 +7,7 @@ import { FaTrash } from 'react-icons/fa'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectUnidadDerivadaCotizacion from '../form/select-unidad-derivada-cotizacion'
+import SelectTipoPrecioCotizacion from '../form/select-tipo-precio-cotizacion'
 
 export function calcularSubtotalCotizacion({
   precio_venta,
@@ -206,6 +207,34 @@ export function useColumnsCotizar({
               propsForm={{
                 name: [value, 'unidad_derivada_name'],
                 rules: [{ required: true, message: '' }],
+                hidden: true,
+              }}
+              readOnly
+              variant='borderless'
+              formWithMessage={false}
+            />
+          </div>
+        )
+      },
+    },
+    {
+      colId: 'tipo_precio',
+      headerName: 'Tipo Precio',
+      field: 'name',
+      width: 130,
+      cellRenderer: ({ value }: ICellRendererParams) => {
+        const productoId = form.getFieldValue(['productos', value, 'producto_id'])
+
+        return (
+          <div className='flex items-center h-full'>
+            <SelectTipoPrecioCotizacion
+              form={form}
+              fieldIndex={value}
+              productoId={productoId}
+            />
+            <InputBase
+              propsForm={{
+                name: [value, 'tipo_precio'],
                 hidden: true,
               }}
               readOnly

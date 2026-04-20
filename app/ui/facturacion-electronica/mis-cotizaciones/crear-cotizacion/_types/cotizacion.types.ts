@@ -9,6 +9,7 @@ export type TipoMoneda = "s" | "d";
 export type DescuentoTipo = "Porcentaje" | "Monto";
 export type FormaDePago = string;
 export type TipoDocumento = string;
+export type TipoPrecio = "publico" | "especial" | "minimo" | "ultimo";
 
 export interface ProductoCotizacion {
   producto_id: number;
@@ -24,6 +25,8 @@ export interface ProductoCotizacion {
   subtotal: number;
   descuento_tipo?: DescuentoTipo;
   descuento?: number;
+  tipo_precio?: TipoPrecio;
+  comision?: number;
 }
 
 export interface FormCreateCotizacion {

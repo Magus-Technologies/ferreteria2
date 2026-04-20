@@ -10,6 +10,7 @@ import {
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import FormBase from '~/components/form/form-base'
 import useCreateVenta from '../../_hooks/use-create-venta'
 import useInitVenta from '../../_hooks/use-init-venta'
@@ -164,6 +165,7 @@ export default function BodyVender({
   venta?: VentaConUnidadDerivadaNormal
   cotizacion?: any
 } = {}) {
+  const router = useRouter()
   const [openDoc, setOpenDoc] = useState(false)
   const [ventaId, setVentaId] = useState<string>()
   const [ventaCreada, setVentaCreada] = useState<any>()
@@ -232,13 +234,20 @@ export default function BodyVender({
       // Limpiar formulario
       setFormKey(prev => prev + 1)
 
+      // Si venimos de editar una venta (ej: recuperada de "en espera"),
+      // redirigir a crear-venta para que la página quede limpia
+      if (venta?.id) {
+        router.push('/ui/facturacion-electronica/mis-ventas/crear-venta')
+        return
+      }
+
       // Limpiar ventaId y datos después de un momento
       setTimeout(() => {
         setVentaId(undefined)
         setVentaCreada(undefined)
       }, 100)
     }
-  }, [openDoc, ventaId, setProductoAgregado, setProductos, setValesAplicables])
+  }, [openDoc, ventaId, setProductoAgregado, setProductos, setValesAplicables, venta?.id, router])
 
   return (
     <>

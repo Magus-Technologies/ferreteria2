@@ -43,12 +43,18 @@ export default function ModalVentasAnuladas({
       let ventas = response.data?.data || []
 
       if (desde) {
-        const desdeStr = desde.startOf('day').toISOString()
-        ventas = ventas.filter((v: any) => v.fecha >= desdeStr)
+        const desdeStart = desde.startOf('day')
+        ventas = ventas.filter((v: any) => {
+          const f = dayjs(v.fecha)
+          return f.isValid() && (f.isAfter(desdeStart) || f.isSame(desdeStart))
+        })
       }
       if (hasta) {
-        const hastaStr = hasta.endOf('day').toISOString()
-        ventas = ventas.filter((v: any) => v.fecha <= hastaStr)
+        const hastaEnd = hasta.endOf('day')
+        ventas = ventas.filter((v: any) => {
+          const f = dayjs(v.fecha)
+          return f.isValid() && (f.isBefore(hastaEnd) || f.isSame(hastaEnd))
+        })
       }
 
       return ventas
