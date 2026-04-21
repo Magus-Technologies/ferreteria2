@@ -97,6 +97,16 @@ export default function ModalAperturarCaja({
     }
   }, [open, user])
 
+  // Auto-seleccionar la primera caja principal cuando se cargan
+  useEffect(() => {
+    if (open && cajasPrincipales && cajasPrincipales.length > 0) {
+      const cajaOrigenActual = form.getFieldValue('caja_origen_id')
+      if (!cajaOrigenActual) {
+        form.setFieldValue('caja_origen_id', cajasPrincipales[0].id)
+      }
+    }
+  }, [open, cajasPrincipales, form])
+
   const { crearAperturarCaja, loading } = useAperturarCaja({
     onSuccess: (data) => {
       // Primero llamar a onSuccess para marcar el éxito
