@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Modal, Input, Form, FormInstance, message } from 'antd'
 import { FaTruck, FaPlus, FaSearch } from 'react-icons/fa'
@@ -21,6 +21,7 @@ interface SelectVehiculosProps {
   allowClear?: boolean
   value?: number
   onChange?: (value: number | undefined) => void
+  vehiculoPreseleccionado?: (Pick<Vehiculo, 'id' | 'name' | 'tipo' | 'placa'> & Partial<Vehiculo>) | null
   [key: string]: any
 }
 
@@ -34,6 +35,7 @@ export default function SelectVehiculos({
   className = '',
   allowClear = false,
   onChange,
+  vehiculoPreseleccionado,
 }: SelectVehiculosProps) {
   const queryClient = useQueryClient()
   const [openBuscar, setOpenBuscar] = useState(false)
@@ -41,6 +43,21 @@ export default function SelectVehiculos({
   const [creando, setCreando] = useState(false)
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<Vehiculo>()
   const [nuevoVehiculo, setNuevoVehiculo] = useState({ name: '', tipo: '', marca_modelo: '', placa: '' })
+
+  useEffect(() => {
+    if (vehiculoPreseleccionado && vehiculoPreseleccionado.id !== vehiculoSeleccionado?.id) {
+      // Relleno campos ausentes para cumplir con el tipo Vehiculo interno
+      setVehiculoSeleccionado({
+        marca_modelo: null,
+        estado: true,
+        ...vehiculoPreseleccionado,
+      } as Vehiculo)
+    }
+    if (!vehiculoPreseleccionado && vehiculoSeleccionado) {
+      setVehiculoSeleccionado(undefined)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehiculoPreseleccionado?.id])
 
   function handleSelect(vehiculo?: Vehiculo) {
     if (vehiculo) {

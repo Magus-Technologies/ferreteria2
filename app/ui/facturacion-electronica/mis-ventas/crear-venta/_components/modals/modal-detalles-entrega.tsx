@@ -69,6 +69,8 @@ export default function ModalDetallesEntrega({
   const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
   const [tipoPedido, setTipoPedido] = useState<TipoPedido>(TipoPedido.INTERNO)
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<TipoDireccion | null>(null)
+  // Vehículo pre-seleccionado cuando el despachador tiene uno asignado por default
+  const [vehiculoPreseleccionadoDomicilio, setVehiculoPreseleccionadoDomicilio] = useState<{ id: number; name: string; tipo: string; placa: string | null } | null>(null)
   // Estado para programar el resto del parcial
   const [programarResto, setProgramarResto] = useState(true)
   const [horaInicioResto, setHoraInicioResto] = useState<string | undefined>(undefined)
@@ -448,7 +450,7 @@ export default function ModalDetallesEntrega({
           >
             Cancelar
           </ButtonBase>
-          {tipoDespacho === 'Parcial' && (
+          {(tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && (
             <ButtonBase
               color="warning"
               size="md"
@@ -542,6 +544,17 @@ export default function ModalDetallesEntrega({
                       placeholder="Sin asignar (todos los despachadores lo verán)"
                       className="w-full"
                       allowClear
+                      onChange={(_id, despachador) => {
+                        // Auto-cargar el vehículo por defecto del despachador si tiene uno asignado
+                        if (despachador?.vehiculo && despachador.vehiculo.id) {
+                          form.setFieldValue('vehiculo_id', despachador.vehiculo.id)
+                          setVehiculoPreseleccionadoDomicilio(despachador.vehiculo)
+                        } else if (!despachador) {
+                          // Se limpió el despachador → también limpiar el vehículo auto-seleccionado
+                          form.setFieldValue('vehiculo_id', undefined)
+                          setVehiculoPreseleccionadoDomicilio(null)
+                        }
+                      }}
                     />
                   </>
                 ) : (
@@ -617,54 +630,15 @@ export default function ModalDetallesEntrega({
                 placeholder="Sin vehículo asignado"
                 className="w-full"
                 allowClear
+                vehiculoPreseleccionado={vehiculoPreseleccionadoDomicilio}
               />
               <div style={{ display: 'none' }}>
                 <Form.Item name="vehiculo_id"><Input /></Form.Item>
               </div>
             </div>
 
-            {/* Fila 3: Selector de dirección, Dirección y Mapa */}
+            {/* Fila 3: Dirección, Referencia y Mapa (sin selector D1-D4) */}
             <div className="space-y-3">
-              {/* Selector de dirección del cliente */}
-              {direcciones.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Seleccionar dirección del cliente:
-                  </label>
-                  <Select
-                    placeholder="Seleccionar dirección"
-                    value={direccionSeleccionada}
-                    onChange={handleDireccionChange}
-                    className="w-full"
-                    options={direcciones.map(d => ({
-                      value: d.tipo,
-                      label: (
-                        <div className="flex items-center justify-between">
-                          <span>{d.direccion}</span>
-                          <div className="flex items-center gap-2">
-                            {d.es_principal && (
-                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                                Principal
-                              </span>
-                            )}
-                            {d.latitud && d.longitud && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                                📍 GPS
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ),
-                    }))}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {direccionSeleccionada && direcciones.find(d => d.tipo === direccionSeleccionada)?.latitud
-                      ? '✓ Coordenadas GPS cargadas automáticamente'
-                      : 'Selecciona una dirección o ingresa una nueva abajo'}
-                  </p>
-                </div>
-              )}
-
               <div className="grid grid-cols-2 gap-4">
                 {/* Columna izquierda: Dirección y botones */}
                 <div className="space-y-3">
@@ -676,20 +650,27 @@ export default function ModalDetallesEntrega({
                       propsForm={{
                         name: 'direccion_entrega',
                       }}
-                      placeholder="Dirección de entrega"
-                      rows={3}
+                      placeholder="Dirección de entrega (usa el mapa para marcar la ubicación)"
+                      rows={2}
                     />
                     {ubicacionGps && (
                       <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGps}>
-                        Ubicación GPS: {ubicacionGps}
+                        📍 Ubicación GPS: {ubicacionGps}
                       </p>
                     )}
-                    {direccionSeleccionada && direcciones.find(d => d.tipo === direccionSeleccionada)?.referencia && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-semibold">Referencia:</span>{' '}
-                        {direcciones.find(d => d.tipo === direccionSeleccionada)!.referencia}
-                      </p>
-                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Referencia:
+                    </label>
+                    <TextareaBase
+                      propsForm={{
+                        name: 'referencia_entrega',
+                      }}
+                      placeholder="Ej: frente al parque, portón verde, etc."
+                      rows={2}
+                    />
                   </div>
 
                   <div className="flex gap-2">
