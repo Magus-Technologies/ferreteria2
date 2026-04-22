@@ -107,6 +107,7 @@ export type FormCreateVenta = {
     entregado: number
     pendiente: number
     entregar: number
+    entregar_programado?: number
   }>
   // Datos para programar la entrega del resto en despacho parcial mixto
   parcial_resto_programado?: {

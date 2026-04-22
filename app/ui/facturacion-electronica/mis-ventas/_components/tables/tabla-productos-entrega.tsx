@@ -31,9 +31,15 @@ export default function TablaProductosEntrega({
     if (newValue > producto.pendiente) newValue = producto.pendiente
     if (newValue < 0) newValue = 0
 
-    const updated = productosRef.current.map((p) =>
-      p.id === id ? { ...p, entregar: newValue } : p
-    )
+    const updated = productosRef.current.map((p) => {
+      if (p.id !== id) return p
+      // Al cambiar "entregar", auto-ajustamos "entregar_programado = total - entregar"
+      // para mantener el comportamiento histórico (todo el resto se programa).
+      // El usuario puede luego reducir "entregar_programado" manualmente en la tabla de abajo
+      // para dejar unidades como "pendientes sin programar".
+      const restoAuto = Math.max(0, p.total - newValue)
+      return { ...p, entregar: newValue, entregar_programado: restoAuto }
+    })
     onProductoChangeRef.current(updated)
   }, [])
 

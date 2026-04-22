@@ -9,6 +9,7 @@ export type ProductoEntrega = {
   entregado: number
   pendiente: number
   entregar: number
+  entregar_programado: number
   unidad_derivada_venta_id: number
 }
 
@@ -41,6 +42,7 @@ export function useProductosEntrega(venta?: getVentaResponseProps, open?: boolea
                   entregado,
                   pendiente,
                   entregar: pendiente,
+                  entregar_programado: 0,
                   unidad_derivada_venta_id: unidad.id,
                 })
               }
