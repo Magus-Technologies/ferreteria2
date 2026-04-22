@@ -78,14 +78,39 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       },
     },
     {
+      headerName: 'Tipo Entrega',
+      field: 'tipo_entrega',
+      width: 140,
+      valueFormatter: (params) => {
+        const tipo = params.value
+        if (tipo === 'rt') return '🏪 Recojo Tienda'
+        if (tipo === 'de') return '🏠 Despacho'
+        if (tipo === 'pa') return '🔀 Parcial'
+        return tipo || '—'
+      },
+      cellStyle: (params) => {
+        const tipo = params.value
+        if (tipo === 'rt') return { color: '#0284c7', fontWeight: 'bold' }
+        if (tipo === 'de') return { color: '#7c3aed', fontWeight: 'bold' }
+        if (tipo === 'pa') return { color: '#d97706', fontWeight: 'bold' }
+        return null
+      },
+    },
+    {
       headerName: 'Tipo Despacho',
       field: 'tipo_despacho',
       width: 130,
       valueFormatter: (params) => {
         const tipo = params.value
-        if (tipo === 'in') return 'Inmediato'
-        if (tipo === 'pr') return 'Programado'
-        return tipo || ''
+        if (tipo === 'in') return '⚡ Inmediato'
+        if (tipo === 'pr') return '📅 Programado'
+        return tipo || '—'
+      },
+      cellStyle: (params) => {
+        const tipo = params.value
+        if (tipo === 'in') return { color: '#16a34a', fontWeight: 'bold' }
+        if (tipo === 'pr') return { color: '#2563eb', fontWeight: 'bold' }
+        return null
       },
     },
     {
