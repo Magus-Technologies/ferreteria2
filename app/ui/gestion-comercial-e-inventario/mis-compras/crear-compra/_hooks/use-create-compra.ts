@@ -221,33 +221,27 @@ export default function useCreateCompra({
         }
       )
 
-      // Si NO es edición, limpiar el formulario y redirigir o quedarse según el estado
+      // Si NO es edición, limpiar el formulario y quedarse en la página
       if (!compra) {
-        // Si es "En Espera", quedarse en la página y limpiar el formulario
-        if (variables.estado_de_compra === EstadoDeCompra.EnEspera) {
-          if (form) {
-            // Limpiar el store de productos
-            setProductosCompra([])
-            setProductoAgregadoCompra(undefined)
-            
-            // Limpiar el formulario
-            form.resetFields()
-            form.setFieldsValue({
-              tipo_moneda: TipoMoneda.Soles,
-              fecha: dayjs(),
-              forma_de_pago: FormaDePago.Contado,
-              tipo_documento: TipoDocumento.Factura,
-              tipo_de_cambio: 1,
-              estado_de_compra: EstadoDeCompra.Creado,
-              productos: [],
-            })
-          }
-        } else {
-          // Si es compra normal (Creado), redirigir a la lista
-          router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
+        if (form) {
+          // Limpiar el store de productos
+          setProductosCompra([])
+          setProductoAgregadoCompra(undefined)
+          
+          // Limpiar el formulario
+          form.resetFields()
+          form.setFieldsValue({
+            tipo_moneda: TipoMoneda.Soles,
+            fecha: dayjs(),
+            forma_de_pago: FormaDePago.Contado,
+            tipo_documento: TipoDocumento.Factura,
+            tipo_de_cambio: 1,
+            estado_de_compra: EstadoDeCompra.Creado,
+            productos: [],
+          })
         }
       } else {
-        // Si es edición, siempre redirigir
+        // Si es edición, redirigir a la lista
         router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
       }
     },

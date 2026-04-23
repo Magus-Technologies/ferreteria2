@@ -81,7 +81,7 @@ export default function FiltersMisCompras() {
         gte: toUTCBD({ date: dayjs().startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
-      estado_de_compra: EstadoDeCompra.Creado,
+      estado_de_compra: { in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado] } as any,
     } satisfies CompraWhereInput
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,7 +118,7 @@ export default function FiltersMisCompras() {
         } = values
 
         const data: CompraWhereInput = {
-          almacen_id: almacen_id || almacen_id,
+          almacen_id: values.almacen_id || almacen_id,
           ...rest,
           proveedor_id,
           ...(!proveedor_id && searchValue ? { search: searchValue } : {}),
@@ -135,9 +135,9 @@ export default function FiltersMisCompras() {
         } else if (estado_de_compra && !estado_de_cuenta) {
           const val =
             estado_de_compra === EstadoDeCompraSelect.Creados
-              ? EstadoDeCompra.Creado
+              ? { in: [EstadoDeCompra.Creado, EstadoDeCompra.Procesado] }
               : estado_de_compra
-          data.estado_de_compra = val as EstadoDeCompra
+          data.estado_de_compra = val as any
         }
 
         // Estado de Cuenta (Pagado / Crédito)
