@@ -65,8 +65,8 @@ const itemsCompras: MenuProps['items'] = [
         </ButtonNav>
       </DropdownBase>
       <ButtonNav
-        path='/ui/gestion-comercial-e-inventario/mi-almacen'
-        colorActive='text-emerald-600'
+        path='/ui/gestion-contable-y-financiera/kardex-finanzas'
+        colorActive='text-rose-700'
       >
         <FaClipboardList />
         Kardex

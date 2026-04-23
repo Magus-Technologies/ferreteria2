@@ -5,8 +5,8 @@ export type TipoMovimientoInventario = 'compra' | 'recepcion' | 'ingreso' | 'sal
 export type TipoEfectoKardex = 'ENTRADA' | 'SALIDA' | 'REFERENCIA' | 'ANULADO' | 'DEVOLUCION' | 'COMPRA'
 
 export interface MovimientoKardex {
-  tipo: TipoMovimientoKardex
-  movimiento: TipoEfectoKardex
+  tipo: string
+  movimiento: string
   fecha: string
   documento: string
   unidad: string
@@ -53,6 +53,16 @@ export interface KardexInventarioFilters {
   page?: number
 }
 
+export interface KardexFinanzasFilters {
+  metodo_pago_id?: string
+  sub_caja_id?: string
+  vendedor_id?: string
+  desde?: string
+  hasta?: string
+  per_page?: number
+  page?: number
+}
+
 export const kardexApi = {
   async getMovimientos(filters: KardexFilters): Promise<ApiResponse<KardexResponse>> {
     const params = new URLSearchParams()
@@ -76,5 +86,17 @@ export const kardexApi = {
     })
 
     return apiRequest<KardexResponse>(`/kardex/inventario?${params.toString()}`)
+  },
+
+  async getMovimientosFinanzas(filters: KardexFinanzasFilters): Promise<ApiResponse<KardexResponse>> {
+    const params = new URLSearchParams()
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    return apiRequest<KardexResponse>(`/kardex/finanzas?${params.toString()}`)
   },
 }
