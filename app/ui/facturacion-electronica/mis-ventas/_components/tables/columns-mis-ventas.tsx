@@ -196,6 +196,25 @@ export function useColumnsMisVentas() {
       },
     },
     {
+      headerName: "Tipo Despacho",
+      field: "tipo_despacho",
+      width: 130,
+      valueFormatter: (params) => {
+        const tipo = params.value;
+        if (tipo === 'et') return '🏪 En Tienda';
+        if (tipo === 'do') return '🏠 Domicilio';
+        if (tipo === 'pa') return '🔀 Parcial';
+        return tipo || '—';
+      },
+      cellStyle: (params) => {
+        const tipo = params.value;
+        if (tipo === 'et') return { color: '#0284c7', fontWeight: 'bold' };
+        if (tipo === 'do') return { color: '#7c3aed', fontWeight: 'bold' };
+        if (tipo === 'pa') return { color: '#d97706', fontWeight: 'bold' };
+        return null;
+      },
+    },
+    {
       headerName: "Entrega",
       colId: "entrega_estado",
       width: 130,

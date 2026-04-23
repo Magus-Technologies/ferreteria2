@@ -1,9 +1,9 @@
-import { Modal, ModalProps } from 'antd'
+import { Input, Modal, ModalProps } from 'antd'
+import type { InputRef } from 'antd'
 import { classOkButtonModal } from '~/lib/clases'
-import InputBase from '../form/inputs/input-base'
 import TableClientesBusqueda from '~/app/ui/facturacion-electronica/mis-ventas/_components/tables/table-clientes-busqueda'
 import TableDetalleDeudaCliente from '~/app/ui/facturacion-electronica/mis-ventas/_components/tables/table-detalle-deuda-cliente'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ButtonCreateCliente from '../form/buttons/button-create-cliente'
 import { useDebounce } from 'use-debounce'
 import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
@@ -35,6 +35,7 @@ export default function ModalClienteSearch({
   }, [textDefault])
 
   const [value] = useDebounce(text, 500)
+  const inputRef = useRef<InputRef>(null)
 
   const setClienteSeleccionadoStore = useStoreClienteSeleccionado(
     store => store.setCliente
@@ -65,14 +66,19 @@ export default function ModalClienteSearch({
       maskClosable={false}
       keyboard={false}
       destroyOnHidden
+      afterOpenChange={(opened) => {
+        if (opened) inputRef.current?.focus({ cursor: 'end' })
+      }}
     >
       <div className='flex items-center gap-2'>
-        <InputBase
+        <Input
+          ref={inputRef}
+          variant='filled'
           placeholder='Buscar Cliente'
           value={text}
           onChange={e => setText(e.target.value)}
           className='max-w-[500px]'
-          autoFocus
+          autoComplete='off'
         />
         <ButtonCreateCliente
           className='mb-0!'

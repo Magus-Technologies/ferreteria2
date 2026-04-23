@@ -1,8 +1,8 @@
-import { Modal, ModalProps } from 'antd'
+import { Input, Modal, ModalProps } from 'antd'
+import type { InputRef } from 'antd'
 import { classOkButtonModal } from '~/lib/clases'
-import InputBase from '../form/inputs/input-base'
 import TableProveedoresBusqueda from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/_components/tables/table-proveedores-busqueda'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ButtonCreateProveedor from '../form/buttons/button-create-proveedor'
 import { useDebounce } from 'use-debounce'
 import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
@@ -34,6 +34,7 @@ export default function ModalProveedorSearch({
   }, [textDefault])
 
   const [value] = useDebounce(text, 150)
+  const inputRef = useRef<InputRef>(null)
 
   const setProveedorSeleccionadoStore = useStoreProveedorSeleccionado(
     store => store.setProveedor
@@ -63,14 +64,19 @@ export default function ModalProveedorSearch({
       maskClosable={false}
       keyboard={false}
       destroyOnHidden
+      afterOpenChange={(opened) => {
+        if (opened) inputRef.current?.focus({ cursor: 'end' })
+      }}
     >
       <div className='flex items-center gap-2'>
-        <InputBase
+        <Input
+          ref={inputRef}
+          variant='filled'
           placeholder='Buscar Proveedor'
           value={text}
           onChange={e => setText(e.target.value)}
           className='max-w-[500px]'
-          autoFocus
+          autoComplete='off'
         />
         <ButtonCreateProveedor
           className='mb-0!'

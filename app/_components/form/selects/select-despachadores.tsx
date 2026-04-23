@@ -10,11 +10,20 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { usuariosApi } from '~/lib/api/usuarios'
 import ModalDespachadorSearch from '../../modals/modal-despachador-search'
 
+interface Vehiculo {
+  id: number
+  name: string
+  tipo: string
+  placa: string | null
+}
+
 interface Usuario {
   id: string
   name: string
   numero_documento: string
   rol_sistema: string
+  vehiculo_id?: number | null
+  vehiculo?: Vehiculo | null
 }
 
 interface SelectDespachadoresProps {

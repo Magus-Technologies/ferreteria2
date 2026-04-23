@@ -5,7 +5,8 @@ export interface FiltrosMisEntregas {
   fecha_desde: Dayjs
   fecha_hasta: Dayjs
   estado_entrega?: string[]
-  tipo_despacho?: 'INMEDIATO' | 'PROGRAMADO'
+  tipo_despacho?: 'in' | 'pr'
+  tipo_entrega?: 'rt' | 'de' | 'pa'
   search?: string
 }
 

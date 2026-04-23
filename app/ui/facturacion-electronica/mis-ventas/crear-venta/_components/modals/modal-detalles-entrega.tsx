@@ -1,6 +1,6 @@
 'use client'
 
-import { Select, Modal, FormInstance, Form, Input, Switch, Segmented } from 'antd'
+import { Select, Modal, FormInstance, Form, Input, Switch, Segmented, InputNumber } from 'antd'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck, FaTruck } from 'react-icons/fa'
@@ -69,6 +69,8 @@ export default function ModalDetallesEntrega({
   const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
   const [tipoPedido, setTipoPedido] = useState<TipoPedido>(TipoPedido.INTERNO)
   const [direccionSeleccionada, setDireccionSeleccionada] = useState<TipoDireccion | null>(null)
+  // Vehículo pre-seleccionado cuando el despachador tiene uno asignado por default
+  const [vehiculoPreseleccionadoDomicilio, setVehiculoPreseleccionadoDomicilio] = useState<{ id: number; name: string; tipo: string; placa: string | null } | null>(null)
   // Estado para programar el resto del parcial
   const [programarResto, setProgramarResto] = useState(true)
   const [horaInicioResto, setHoraInicioResto] = useState<string | undefined>(undefined)
@@ -212,6 +214,9 @@ export default function ModalDetallesEntrega({
         entregado: 0,
         pendiente: Number(p.cantidad),
         entregar: 0,
+        // Por defecto, todo el resto se programa (comportamiento histórico).
+        // El usuario puede reducirlo en la tabla del resto para dejar pendientes "sin programar".
+        entregar_programado: Number(p.cantidad),
         unidad_derivada_venta_id: p.unidad_derivada_id,
       }))
       setProductosEntrega(items)
@@ -331,7 +336,23 @@ export default function ModalDetallesEntrega({
     }
   }, [open, tipoDespacho, form])
 
-  // Columnas para la tabla de productos restantes (read-only)
+  // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
+  // Valida que entregar + entregar_programado no exceda total; lo que sobra queda como pendiente sin programar.
+  const handleProgramarChange = useCallback((id: number, value: number | null) => {
+    let newValue = Number(value) || 0
+    if (newValue < 0) newValue = 0
+    setProductosEntrega((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p
+        const maxProgramable = Math.max(0, p.total - p.entregar)
+        if (newValue > maxProgramable) newValue = maxProgramable
+        return { ...p, entregar_programado: newValue }
+      })
+    )
+  }, [])
+
+  // Columnas para la tabla de productos restantes.
+  // "Programar ahora" es EDITABLE — el resto no programado queda como pendiente sin tocar.
   const columnDefsResto = useMemo<ColDef<ProductoEntrega>[]>(() => [
     {
       headerName: 'Producto',
@@ -352,20 +373,60 @@ export default function ModalDetallesEntrega({
       cellStyle: { color: '#16a34a', fontWeight: 'bold' } as Record<string, string>,
     },
     {
-      headerName: 'Queda para después',
-      width: 160,
+      headerName: 'Programar ahora',
+      field: 'entregar_programado',
+      width: 150,
+      cellRenderer: (params: { data?: ProductoEntrega }) => {
+        if (!params.data) return null
+        const maxProgramable = Math.max(0, params.data.total - params.data.entregar)
+        return (
+          <div className="flex items-center h-full">
+            <InputNumber
+              size="small"
+              value={params.data.entregar_programado}
+              min={0}
+              max={maxProgramable}
+              precision={2}
+              onChange={(val) => handleProgramarChange(params.data!.id, val)}
+              style={{ width: '100%' }}
+            />
+          </div>
+        )
+      },
+      cellStyle: { backgroundColor: '#fff7ed' } as Record<string, string>,
+    },
+    {
+      headerName: 'Pendiente sin programar',
+      width: 180,
       valueGetter: (params) => {
         if (!params.data) return 0
-        return params.data.total - params.data.entregar
+        return Math.max(0, params.data.total - params.data.entregar - params.data.entregar_programado)
       },
       valueFormatter: (params) => Number(params.value).toFixed(2),
-      cellStyle: { color: '#ea580c', fontWeight: 'bold' } as Record<string, string>,
+      cellStyle: (params) => {
+        const pendiente = params.value ?? 0
+        return {
+          color: pendiente > 0 ? '#dc2626' : '#9ca3af',
+          fontWeight: 'bold',
+        } as Record<string, string>
+      },
     },
-  ], [])
+  ], [handleProgramarChange])
 
   // Verificar si hay algo que entregar
   const totalAEntregar = useMemo(
     () => productosEntrega.reduce((acc, item) => acc + item.entregar, 0),
+    [productosEntrega],
+  )
+  const totalAProgramar = useMemo(
+    () => productosEntrega.reduce((acc, item) => acc + item.entregar_programado, 0),
+    [productosEntrega],
+  )
+  const totalSinProgramar = useMemo(
+    () => productosEntrega.reduce(
+      (acc, item) => acc + Math.max(0, item.total - item.entregar - item.entregar_programado),
+      0,
+    ),
     [productosEntrega],
   )
 
@@ -373,7 +434,10 @@ export default function ModalDetallesEntrega({
     const ventaValues = form.getFieldsValue()
 
     if (tipoDespacho === 'Parcial') {
-      // Entrega inmediata: las cantidades "entregar" ahora
+      // Entrega inmediata: las cantidades "entregar" ahora.
+      // "entregar_programado" se envía para crear la 2ª entrega (programada).
+      // Lo que queda = total - entregar - entregar_programado → pendiente sin programar
+      //                (no se crea entrega, queda en cantidad_pendiente para programar luego).
       ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
         producto_id: 0,
         producto_name: p.producto,
@@ -384,13 +448,14 @@ export default function ModalDetallesEntrega({
         entregado: p.entregado,
         pendiente: p.pendiente,
         entregar: p.entregar,
+        entregar_programado: p.entregar_programado,
       }))
       ventaValues.quien_entrega = quienEntregaParcial
 
       // Entrega programada del resto: pasar los datos directamente en ventaValues
       // use-create-venta los leerá y creará la segunda entrega tras crear la venta
-      const totalResto = productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)
-      const tieneResto = programarResto && totalResto > 0
+      const totalProgramado = productosEntrega.reduce((acc, p) => acc + p.entregar_programado, 0)
+      const tieneResto = programarResto && totalProgramado > 0
       if (tieneResto) {
         const restoDespachadorId = form.getFieldValue('_resto_despachador_id')
         const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
@@ -448,7 +513,7 @@ export default function ModalDetallesEntrega({
           >
             Cancelar
           </ButtonBase>
-          {tipoDespacho === 'Parcial' && (
+          {(tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && (
             <ButtonBase
               color="warning"
               size="md"
@@ -542,6 +607,17 @@ export default function ModalDetallesEntrega({
                       placeholder="Sin asignar (todos los despachadores lo verán)"
                       className="w-full"
                       allowClear
+                      onChange={(_id, despachador) => {
+                        // Auto-cargar el vehículo por defecto del despachador si tiene uno asignado
+                        if (despachador?.vehiculo && despachador.vehiculo.id) {
+                          form.setFieldValue('vehiculo_id', despachador.vehiculo.id)
+                          setVehiculoPreseleccionadoDomicilio(despachador.vehiculo)
+                        } else if (!despachador) {
+                          // Se limpió el despachador → también limpiar el vehículo auto-seleccionado
+                          form.setFieldValue('vehiculo_id', undefined)
+                          setVehiculoPreseleccionadoDomicilio(null)
+                        }
+                      }}
                     />
                   </>
                 ) : (
@@ -617,54 +693,15 @@ export default function ModalDetallesEntrega({
                 placeholder="Sin vehículo asignado"
                 className="w-full"
                 allowClear
+                vehiculoPreseleccionado={vehiculoPreseleccionadoDomicilio}
               />
               <div style={{ display: 'none' }}>
                 <Form.Item name="vehiculo_id"><Input /></Form.Item>
               </div>
             </div>
 
-            {/* Fila 3: Selector de dirección, Dirección y Mapa */}
+            {/* Fila 3: Dirección, Referencia y Mapa (sin selector D1-D4) */}
             <div className="space-y-3">
-              {/* Selector de dirección del cliente */}
-              {direcciones.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Seleccionar dirección del cliente:
-                  </label>
-                  <Select
-                    placeholder="Seleccionar dirección"
-                    value={direccionSeleccionada}
-                    onChange={handleDireccionChange}
-                    className="w-full"
-                    options={direcciones.map(d => ({
-                      value: d.tipo,
-                      label: (
-                        <div className="flex items-center justify-between">
-                          <span>{d.direccion}</span>
-                          <div className="flex items-center gap-2">
-                            {d.es_principal && (
-                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                                Principal
-                              </span>
-                            )}
-                            {d.latitud && d.longitud && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                                📍 GPS
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ),
-                    }))}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {direccionSeleccionada && direcciones.find(d => d.tipo === direccionSeleccionada)?.latitud
-                      ? '✓ Coordenadas GPS cargadas automáticamente'
-                      : 'Selecciona una dirección o ingresa una nueva abajo'}
-                  </p>
-                </div>
-              )}
-
               <div className="grid grid-cols-2 gap-4">
                 {/* Columna izquierda: Dirección y botones */}
                 <div className="space-y-3">
@@ -676,20 +713,27 @@ export default function ModalDetallesEntrega({
                       propsForm={{
                         name: 'direccion_entrega',
                       }}
-                      placeholder="Dirección de entrega"
-                      rows={3}
+                      placeholder="Dirección de entrega (usa el mapa para marcar la ubicación)"
+                      rows={2}
                     />
                     {ubicacionGps && (
                       <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGps}>
-                        Ubicación GPS: {ubicacionGps}
+                        📍 Ubicación GPS: {ubicacionGps}
                       </p>
                     )}
-                    {direccionSeleccionada && direcciones.find(d => d.tipo === direccionSeleccionada)?.referencia && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-semibold">Referencia:</span>{' '}
-                        {direcciones.find(d => d.tipo === direccionSeleccionada)!.referencia}
-                      </p>
-                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Referencia:
+                    </label>
+                    <TextareaBase
+                      propsForm={{
+                        name: 'referencia_entrega',
+                      }}
+                      placeholder="Ej: frente al parque, portón verde, etc."
+                      rows={2}
+                    />
                   </div>
 
                   <div className="flex gap-2">
@@ -794,6 +838,34 @@ export default function ModalDetallesEntrega({
                   </span>
                 </div>
               </div>
+            )}
+
+            {/* Resumen completo del parcial: entregar / programar / pendientes sin programar */}
+            {productosEntrega.length > 0 && (totalAEntregar > 0 || totalAProgramar > 0 || totalSinProgramar > 0) && (
+              <div className="flex flex-wrap gap-2 justify-end text-xs">
+                <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+                  <span className="text-green-700">A entregar: </span>
+                  <span className="font-bold text-green-800">{totalAEntregar.toFixed(2)}</span>
+                </div>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
+                  <span className="text-orange-700">A programar: </span>
+                  <span className="font-bold text-orange-800">{totalAProgramar.toFixed(2)}</span>
+                </div>
+                <div className={`border rounded-lg px-3 py-1.5 ${totalSinProgramar > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <span className={totalSinProgramar > 0 ? 'text-red-700' : 'text-gray-600'}>
+                    Pendientes sin programar:{' '}
+                  </span>
+                  <span className={`font-bold ${totalSinProgramar > 0 ? 'text-red-800' : 'text-gray-700'}`}>
+                    {totalSinProgramar.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+            {totalSinProgramar > 0 && (
+              <p className="text-xs text-gray-500 text-right italic">
+                Las unidades sin programar quedarán como pendientes en la venta.
+                Podrás programarlas luego desde <span className="font-semibold">Mis Ventas</span>.
+              </p>
             )}
 
             {/* Sección: Programar entrega del resto */}

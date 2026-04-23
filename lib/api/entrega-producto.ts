@@ -90,7 +90,10 @@ export interface EntregaProductoFilters {
   venta_id?: string;
   almacen_salida_id?: number;
   chofer_id?: string;
-  estado_entrega?: EstadoEntrega;
+  estado_entrega?: EstadoEntrega | string;
+  tipo_despacho?: TipoDespacho | 'in' | 'pr';
+  tipo_entrega?: TipoEntrega | 'rt' | 'de' | 'pa';
+  search?: string;
   fecha_desde?: string;
   fecha_hasta?: string;
   per_page?: number;

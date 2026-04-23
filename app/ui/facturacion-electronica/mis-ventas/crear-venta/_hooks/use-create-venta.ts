@@ -484,6 +484,8 @@ export default function useCreateVenta({
                 message.success('Entrega parcial registrada exitosamente')
 
                 // ✅ CREAR SEGUNDA ENTREGA PROGRAMADA para el resto (si se configuró)
+                // Usa `entregar_programado` (editable por el usuario) en lugar de `total - entregar`.
+                // Lo que NO se programa queda en cantidad_pendiente para programarlo luego desde Mis Ventas.
                 if (parcial_resto_programado?.despachador_id) {
                   const unidadesDerivadas2: any[] = []
 
@@ -493,10 +495,11 @@ export default function useCreateVenta({
                       productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
                         const parcial = cantidades_parciales[parcialIdx2]
                         parcialIdx2++
-                        if (parcial && (parcial.total - parcial.entregar) > 0) {
+                        const programar = parcial?.entregar_programado ?? 0
+                        if (parcial && programar > 0) {
                           unidadesDerivadas2.push({
                             unidad_derivada_venta_id: unidad.id,
-                            cantidad_entregada: parcial.total - parcial.entregar,
+                            cantidad_entregada: programar,
                             ubicacion: undefined,
                           })
                         }

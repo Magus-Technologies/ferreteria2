@@ -20,6 +20,7 @@ import dynamic from 'next/dynamic'
 import FormTableVender from '../form/form-table-vender'
 import FormCrearVenta from '../form/form-crear-venta'
 import CardsInfoVenta from '../cards/cards-info-venta'
+import AlertaPreciosActualizados from '../alerts/alerta-precios-actualizados'
 
 const ModalDocVenta = dynamic(() => import('../../../_components/modals/modal-doc-venta'), { ssr: false })
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
@@ -106,6 +107,7 @@ export type FormCreateVenta = {
     entregado: number
     pendiente: number
     entregar: number
+    entregar_programado?: number
   }>
   // Datos para programar la entrega del resto en despacho parcial mixto
   parcial_resto_programado?: {
@@ -146,6 +148,7 @@ function FormVentaInternal({
       onFinish={handleSubmit}
     >
       <div className='xl:flex-1 flex flex-col gap-4 xl:gap-6 min-w-0 xl:min-h-0'>
+        <AlertaPreciosActualizados form={form} />
         <div className='xl:flex-1 xl:min-h-0'>
           <FormTableVender form={form} venta={venta} />
         </div>

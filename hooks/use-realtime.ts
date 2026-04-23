@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { getEcho, destroyEcho } from '~/lib/echo'
 import { getAuthToken } from '~/lib/api'
+import { emitModelChanged } from '~/lib/realtime-bus'
 
 /**
  * Mapeo de módulo del backend → query keys del frontend a invalidar.
@@ -146,6 +147,9 @@ export function useRealtime() {
       echo
         .channel('model-changes')
         .listen('.model.changed', (event: ModelChangedEvent) => {
+          // Re-emitir al bus interno para que otros componentes reaccionen
+          // sin abrir un segundo listener del canal
+          emitModelChanged(event)
 
           const queryKeys = MODULE_TO_QUERY_KEYS[event.module]
           if (!queryKeys || queryKeys.length === 0) return

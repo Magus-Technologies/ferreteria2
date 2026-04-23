@@ -20,7 +20,8 @@ interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
   fecha_hasta?: dayjs.Dayjs
   estado_entrega?: string[]
-  tipo_despacho?: 'INMEDIATO' | 'PROGRAMADO'
+  tipo_despacho?: 'in' | 'pr'
+  tipo_entrega?: 'rt' | 'de' | 'pa'
   search?: string
 }
 
@@ -46,6 +47,7 @@ export default function FiltersMisEntregas() {
       fecha_hasta: values.fecha_hasta || dayjs().endOf('day'),
       estado_entrega: estadoFinal,
       tipo_despacho: values.tipo_despacho || undefined,
+      tipo_entrega: values.tipo_entrega || undefined,
       search: values.search || undefined,
     })
   }
@@ -157,12 +159,39 @@ export default function FiltersMisEntregas() {
           </ConfigurableElement>
 
           <ConfigurableElement
+            componentId="mis-entregas.filtro-tipo-entrega"
+            label="Filtro Tipo Entrega"
+          >
+            <div className="col-span-2 flex items-center gap-2">
+              <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+                Entrega:
+              </label>
+              <SelectBase
+                propsForm={{
+                  name: 'tipo_entrega',
+                  hasFeedback: false,
+                  className: '!w-full',
+                }}
+                className="w-full"
+                formWithMessage={false}
+                allowClear
+                placeholder="Todos"
+                options={[
+                  { value: 'rt', label: '🏪 Recojo Tienda' },
+                  { value: 'de', label: '🏠 Despacho' },
+                  { value: 'pa', label: '🔀 Parcial' },
+                ]}
+              />
+            </div>
+          </ConfigurableElement>
+
+          <ConfigurableElement
             componentId="mis-entregas.filtro-tipo-despacho"
             label="Filtro Tipo Despacho"
           >
             <div className="col-span-2 flex items-center gap-2">
               <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-                Tipo:
+                Despacho:
               </label>
               <SelectBase
                 propsForm={{
@@ -175,8 +204,8 @@ export default function FiltersMisEntregas() {
                 allowClear
                 placeholder="Todos"
                 options={[
-                  { value: 'INMEDIATO', label: '⚡ Inmediato' },
-                  { value: 'PROGRAMADO', label: '📅 Programado' },
+                  { value: 'in', label: '⚡ Inmediato' },
+                  { value: 'pr', label: '📅 Programado' },
                 ]}
               />
             </div>

@@ -22,6 +22,9 @@ export default function useGetEntregas() {
         fecha_desde: filtros.fecha_desde?.format('YYYY-MM-DD'),
         fecha_hasta: filtros.fecha_hasta?.format('YYYY-MM-DD'),
         estado_entrega: estadoParam as any,
+        tipo_despacho: filtros.tipo_despacho,
+        tipo_entrega: filtros.tipo_entrega,
+        search: filtros.search,
         // Despachador solo ve sus entregas, admin ve todas
         chofer_id: esDespachador ? user?.id : undefined,
       })

@@ -1,9 +1,9 @@
 'use client'
 
-import { Modal, ModalProps } from 'antd'
+import { Input, Modal, ModalProps } from 'antd'
+import type { InputRef } from 'antd'
 import { classOkButtonModal } from '~/lib/clases'
-import InputBase from '../form/inputs/input-base'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import type { Producto } from '~/app/_types/producto'
 import TableProductosBusqueda from '~/app/_components/modals/table-productos-busqueda'
@@ -25,6 +25,7 @@ export default function ModalProductoComplementarioSearch({
 }: ModalProductoComplementarioSearchProps) {
   const [text, setText] = useState('')
   const [value] = useDebounce(text, 500)
+  const inputRef = useRef<InputRef>(null)
 
   useEffect(() => {
     if (open && initialSearchText) {
@@ -61,14 +62,19 @@ export default function ModalProductoComplementarioSearch({
       maskClosable={false}
       keyboard={false}
       destroyOnHidden
+      afterOpenChange={(opened) => {
+        if (opened) inputRef.current?.focus({ cursor: 'end' })
+      }}
     >
       <div className='flex items-center gap-2'>
-        <InputBase
+        <Input
+          ref={inputRef}
+          variant='filled'
           placeholder='Buscar por código o nombre...'
           value={text}
           onChange={e => setText(e.target.value)}
           className='max-w-[500px]'
-          autoFocus
+          autoComplete='off'
         />
       </div>
       <div className='h-[500px] min-w-[1200px] w-full mt-4'>
