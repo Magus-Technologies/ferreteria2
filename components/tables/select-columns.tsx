@@ -36,7 +36,6 @@ export function setVisibilityColumns({
 
   if (toHide.length > 0) gridApi.setColumnsVisible(toHide, false);
   if (toShow.length > 0) gridApi.setColumnsVisible(toShow, true);
-  setTimeout(() => gridApi.sizeColumnsToFit(), 10);
 }
 
 export interface SelectColumnsRef {

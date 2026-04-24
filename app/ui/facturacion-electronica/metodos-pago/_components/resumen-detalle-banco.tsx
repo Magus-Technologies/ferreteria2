@@ -5,6 +5,7 @@ import { Spin } from 'antd'
 import type { MetodoDePago } from '~/lib/api/metodo-de-pago'
 import { useResumenBanco } from '../_hooks/use-resumen-banco'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface Props {
  banco: MetodoDePago
@@ -485,7 +486,7 @@ function TabIngresos({
        subtabs[activeSubTab].data.map((item: any, idx: number) => (
         <tr key={idx} className="hover:bg-slate-100 transition-colors cursor-pointer">
          <td className="px-3 py-2.5 border-b border-slate-300 text-slate-800 font-mono text-xs">
-          {item.hora || dayjs(item.fecha).format('HH:mm')}
+          {item.hora || formatFechaPeru(item.fecha, 'HH:mm')}
          </td>
          <td className="px-3 py-2.5 border-b border-slate-300 text-blue-500 font-mono text-xs">
           {item.numero_comprobante || item.de || item.concepto}
@@ -614,7 +615,7 @@ function TabEgresos({
        subtabs[activeSubTab].data.map((item: any, idx: number) => (
         <tr key={idx} className="hover:bg-slate-100 transition-colors cursor-pointer">
          <td className="px-3 py-2.5 border-b border-slate-300 text-slate-800 font-mono text-xs">
-          {item.hora || dayjs(item.fecha).format('HH:mm')}
+          {item.hora || formatFechaPeru(item.fecha, 'HH:mm')}
          </td>
          <td className="px-3 py-2.5 border-b border-slate-300 text-slate-800">
           {item.a_quien || item.concepto}
@@ -701,7 +702,7 @@ function TabMovimientos({ data }: { data: any[] }) {
        data.map((item: any, idx: number) => (
         <tr key={idx} className="hover:bg-slate-100 transition-colors">
          <td className="px-3 py-2.5 border-b border-slate-300 text-slate-800 font-mono text-xs">
-          {dayjs(item.fecha).format('HH:mm')}
+          {formatFechaPeru(item.fecha, 'HH:mm')}
          </td>
          <td className="px-3 py-2.5 border-b border-slate-300 text-center">
           <span className="text-base">

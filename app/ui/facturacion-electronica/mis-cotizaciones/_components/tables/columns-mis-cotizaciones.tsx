@@ -34,6 +34,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
       headerName: "Fecha",
       field: "fecha",
       width: 180,
+      sort: "desc",
       valueFormatter: (params) =>
         formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A"),
     },

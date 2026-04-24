@@ -1,7 +1,7 @@
 'use client'
 
 import { Select, Modal, FormInstance, Form, Input, Switch, Segmented, InputNumber } from 'antd'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck, FaTruck } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -26,6 +26,42 @@ import ModalCalendarioSlot from './modal-calendario-slot'
 import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
 
 dayjs.locale('es')
+
+type ProgramarCellProps = {
+  id: number
+  initialValue: number
+  max: number
+  onCommit: (id: number, value: number | null) => void
+}
+
+const ProgramarCell = memo(function ProgramarCell({
+  id,
+  initialValue,
+  max,
+  onCommit,
+}: ProgramarCellProps) {
+  const [value, setValue] = useState<number | null>(initialValue)
+
+  useEffect(() => {
+    setValue(initialValue)
+  }, [initialValue])
+
+  return (
+    <div className="flex items-center h-full">
+      <InputNumber
+        size="small"
+        value={value}
+        min={0}
+        max={max}
+        precision={2}
+        onChange={setValue}
+        onBlur={() => onCommit(id, value)}
+        onPressEnter={() => onCommit(id, value)}
+        style={{ width: '100%' }}
+      />
+    </div>
+  )
+})
 
 // Importar el mapa de Mapbox dinámicamente para evitar problemas de SSR
 const MapaDireccionMapbox = dynamic(
@@ -380,17 +416,12 @@ export default function ModalDetallesEntrega({
         if (!params.data) return null
         const maxProgramable = Math.max(0, params.data.total - params.data.entregar)
         return (
-          <div className="flex items-center h-full">
-            <InputNumber
-              size="small"
-              value={params.data.entregar_programado}
-              min={0}
-              max={maxProgramable}
-              precision={2}
-              onChange={(val) => handleProgramarChange(params.data!.id, val)}
-              style={{ width: '100%' }}
-            />
-          </div>
+          <ProgramarCell
+            id={params.data.id}
+            initialValue={params.data.entregar_programado}
+            max={maxProgramable}
+            onCommit={handleProgramarChange}
+          />
         )
       },
       cellStyle: { backgroundColor: '#fff7ed' } as Record<string, string>,
@@ -519,7 +550,7 @@ export default function ModalDetallesEntrega({
               size="md"
               onClick={async () => {
                 const ventaValues = form.getFieldsValue()
-                await crearVenta(ventaValues)
+                await crearVenta({ ...ventaValues, _omitir_entrega: true })
                 setOpen(false)
                 onConfirmar()
               }}

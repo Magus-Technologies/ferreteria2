@@ -4,7 +4,7 @@ import SelectBase, { SelectBaseProps } from './select-base'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { apiRequest } from '~/lib/api'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import { GiPayMoney } from 'react-icons/gi'
 
 export interface GastoExtraDisponible {
@@ -57,7 +57,7 @@ export default function SelectEgresosDinero({
       optionFilterProp="label"
       options={data.map(item => ({
         value: item.id,
-        label: `${dayjs(item.created_at).format('DD/MM/YY')} | ${item.concepto} | S/. ${Number(item.monto).toFixed(2)}`,
+        label: `${formatFechaPeru(item.created_at, 'DD/MM/YY')} | ${item.concepto} | S/. ${Number(item.monto).toFixed(2)}`,
       }))}
       onChange={(value, option) => {
         if (onSelectGasto) {

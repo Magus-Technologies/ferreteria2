@@ -167,12 +167,8 @@ export default function TableBase<T>({
       try {
         const state = gridApiRef.current!.getColumnState();
         columnStateRef.current = state;
+        setColumnStateForRender(state);
         localStorage.setItem(storageKey, JSON.stringify(state));
-        // console.log(
-        //   "🟢 [TableBase] Estado GUARDADO en localStorage:",
-        //   storageKey,
-        //   state?.map((c: any) => c.colId),
-        // );
       } catch (error) {
         console.error("Error guardando estado:", error);
       }
@@ -267,12 +263,8 @@ export default function TableBase<T>({
           try {
             const state = gridApiRef.current!.getColumnState();
             columnStateRef.current = state;
+            setColumnStateForRender(state);
             localStorage.setItem(storageKey, JSON.stringify(state));
-            // console.log(
-            //   "🟢 [TableBase] Estado GUARDADO INMEDIATAMENTE en localStorage:",
-            //   storageKey,
-            //   state?.map((c: any) => c.colId),
-            // );
           } catch (error) {
             console.error("Error guardando estado:", error);
           }
