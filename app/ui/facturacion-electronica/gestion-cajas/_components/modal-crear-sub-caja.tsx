@@ -51,7 +51,7 @@ export default function ModalCrearSubCaja({
   const [creandoEfectivo, setCreandoEfectivo] = useState(false)
   const [desplieguesLocales, setDesplieguesLocales] = useState<{ id: string; name: string; label: string }[]>([])
 
-  const { data: metodosPago } = useQuery({
+  const { data: metodosPago, refetch: refetchMetodos } = useQuery({
     queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO, cajaPrincipalId],
     queryFn: async () => {
       const result = await despliegueDePagoApi.getAll({
@@ -62,6 +62,7 @@ export default function ModalCrearSubCaja({
     },
     enabled: !!cajaPrincipalId && open,
     staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const metodosPagoIds = new Set((metodosPago || []).map((m: { id: string }) => m.id))
@@ -96,22 +97,52 @@ export default function ModalCrearSubCaja({
     try {
       const res = await apiRequest('/despliegues-de-pago', {
         method: 'POST',
-        body: JSON.stringify({ name: nombreNuevoEfectivo.trim(), mostrar: true }),
+        body: JSON.stringify({ 
+          name: nombreNuevoEfectivo.trim(), 
+          mostrar: true,
+          requiere_numero_serie: false,
+          sobrecargo_porcentaje: 0,
+          tipo_sobrecargo: 'ninguno',
+          adicional: 0
+        }),
       })
-      const nuevo = (res.data as { data?: { id: string; name: string } })?.data
-      if (!nuevo?.id) throw new Error('Sin ID')
-      const item = { id: nuevo.id, name: nuevo.name, label: nuevo.name }
-      setDesplieguesLocales(prev => [...prev, item])
+      
+      console.log('Respuesta del servidor:', res)
+      
+      const nuevo = (res.data as { data?: { id: string; name: string; label?: string } })?.data
+      if (!nuevo?.id) {
+        console.error('Respuesta sin ID:', res)
+        throw new Error('Sin ID en la respuesta')
+      }
+      
+      console.log('Método creado:', nuevo)
+      
+      // Agregar a la lista local inmediatamente
+      const item = { id: nuevo.id, name: nuevo.name, label: nuevo.label || nuevo.name }
+      setDesplieguesLocales(prev => {
+        const nuevaLista = [...prev, item]
+        console.log('Lista local actualizada:', nuevaLista)
+        return nuevaLista
+      })
+      
       // Seleccionar el recién creado
       const actuales = form.getFieldValue('despliegues_pago_ids') as string[] || []
       const nuevosIds = [...actuales, nuevo.id]
+      console.log('Seleccionando métodos:', nuevosIds)
       form.setFieldsValue({ despliegues_pago_ids: nuevosIds })
       setMetodosSeleccionados(nuevosIds)
+      
+      // Limpiar y cerrar
       setNombreNuevoEfectivo('')
       setMostrarCrearEfectivo(false)
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO] })
-    } catch {
-      // silencio — el error ya aparece en el response si hay problema
+      
+      // Invalidar y refetch para actualizar la lista completa
+      console.log('Invalidando queries...')
+      await queryClient.invalidateQueries({ queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO] })
+      const refetchResult = await refetchMetodos()
+      console.log('Refetch completado:', refetchResult.data?.length, 'métodos')
+    } catch (error) {
+      console.error('Error al crear método de pago:', error)
     } finally {
       setCreandoEfectivo(false)
     }
@@ -125,6 +156,8 @@ export default function ModalCrearSubCaja({
     setMostrarCrearEfectivo(false)
     setNombreNuevoEfectivo('')
     setDesplieguesLocales([])
+    // Refetch para obtener métodos actualizados al abrir de nuevo
+    refetchMetodos()
   }
 
   const { crearSubCaja, loading } = useCrearSubCaja({
