@@ -259,7 +259,7 @@ export default function KardexFinanzasView() {
           <TableWithTitle<MovimientoKardex>
             id='kardex.finanzas.movimientos'
             title=''
-            selectionColor={blueColors[10]}
+            selectionColor='#ffe4e6'
             loading={isFetching || isSearching}
             columnDefs={columns}
             rowData={kardexData?.data || []}
