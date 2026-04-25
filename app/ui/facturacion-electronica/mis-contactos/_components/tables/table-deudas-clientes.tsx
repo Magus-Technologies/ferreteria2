@@ -11,6 +11,7 @@ import { ventaApi, type VentaCompleta } from "~/lib/api/venta";
 import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { formatFechaPeru } from "~/utils/fechas";
+import { useStoreClienteSeleccionado } from "../../_store/store-cliente-seleccionado";
 
 const ModalDocVenta = dynamic(
   () => import("~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-doc-venta"),
@@ -33,6 +34,7 @@ interface DeudaCliente {
 }
 
 export default function TableDeudasClientes() {
+  const { clienteId } = useStoreClienteSeleccionado();
   const [page, setPage] = useState(1);
   const [allData, setAllData] = useState<DeudaCliente[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -45,15 +47,23 @@ export default function TableDeudasClientes() {
 
   // Query para obtener deudas con scroll infinito
   const { data: response, isLoading, isFetching } = useQuery({
-    queryKey: [QueryKeys.VENTAS, "deudas", page],
+    queryKey: [QueryKeys.VENTAS, "deudas", page, clienteId],
     queryFn: async () => {
       const result = await ventaApi.getVentasPorCobrar({
         per_page: pageSize,
         page,
+        cliente_id: clienteId || undefined,
       });
       return result.data;
     },
   });
+
+  // Resetear página cuando cambia el cliente seleccionado
+  useEffect(() => {
+    setPage(1);
+    setAllData([]);
+    setHasMore(true);
+  }, [clienteId]);
 
   // Actualizar datos cuando llega nueva página
   useEffect(() => {
@@ -87,12 +97,6 @@ export default function TableDeudasClientes() {
       setHasMore(page < (response.last_page || 1));
     }
   }, [response, page]);
-
-  const handleLoadMore = useCallback(() => {
-    if (hasMore && !isFetching) {
-      setPage((p) => p + 1);
-    }
-  }, [hasMore, isFetching]);
 
   const handleViewDoc = useCallback((deuda: DeudaCliente) => {
     setVentaIdSeleccionada(deuda.id);
@@ -194,8 +198,8 @@ export default function TableDeudasClientes() {
   ];
 
   return (
-    <div className="flex flex-col gap-2 h-full">
-      <div className="flex-1 min-h-0 relative">
+    <div className="flex flex-col gap-2 h-full w-full">
+      <div className="flex-1 min-h-0 relative w-full">
         <TableWithTitle<DeudaCliente>
           id="deudas-clientes"
           title="DOCUMENTOS CON DEUDA"
@@ -233,30 +237,7 @@ export default function TableDeudasClientes() {
         )}
       </div>
 
-      {/* Botón para cargar más */}
-      {hasMore && !isLoading && (
-        <div className="flex justify-center py-2">
-          <button
-            onClick={handleLoadMore}
-            disabled={isFetching}
-            className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50"
-          >
-            {isFetching ? "Cargando..." : "Cargar más"}
-          </button>
-        </div>
-      )}
 
-      {!hasMore && allData.length > 0 && (
-        <div className="text-center text-sm text-gray-500 py-2">
-          No hay más registros
-        </div>
-      )}
-
-      {allData.length === 0 && !isLoading && (
-        <div className="flex items-center justify-center h-full text-gray-500">
-          No hay documentos con deuda
-        </div>
-      )}
 
       {/* Modal para ver documento - renderizado dinámicamente en cliente */}
       {typeof window !== "undefined" && (

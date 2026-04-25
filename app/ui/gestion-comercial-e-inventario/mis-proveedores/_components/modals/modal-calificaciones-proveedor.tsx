@@ -8,31 +8,31 @@ import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { useRef, useState } from "react";
 import { formatFechaPeru } from '~/utils/fechas';
-import { clienteCalificacionApi, type ClienteCalificacion, type EstadoOption } from "~/lib/api/cliente-calificacion";
+import { proveedorCalificacionApi, type ProveedorCalificacion, type EstadoOption } from "~/lib/api/proveedor-calificacion";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
-interface ModalCalificacionesClienteProps {
+interface ModalCalificacionesProveedorProps {
   open: boolean;
   onClose: () => void;
-  clienteId: number;
-  clienteNombre: string;
+  proveedorId: number;
+  proveedorNombre: string;
 }
 
-export default function ModalCalificacionesCliente({
+export default function ModalCalificacionesProveedor({
   open,
   onClose,
-  clienteId,
-  clienteNombre,
-}: ModalCalificacionesClienteProps) {
-  const gridRef = useRef<AgGridReact<ClienteCalificacion>>(null);
+  proveedorId,
+  proveedorNombre,
+}: ModalCalificacionesProveedorProps) {
+  const gridRef = useRef<AgGridReact<ProveedorCalificacion>>(null);
   const [form] = Form.useForm();
   const [modalFormVisible, setModalFormVisible] = useState(false);
-  const [editingCalificacion, setEditingCalificacion] = useState<ClienteCalificacion | null>(null);
+  const [editingCalificacion, setEditingCalificacion] = useState<ProveedorCalificacion | null>(null);
 
   // Queries
   const { data: calificacionesResponse, isLoading: loadingCalificaciones, refetch } = useQuery({
-    queryKey: [QueryKeys.CLIENTES, clienteId, "calificaciones"],
-    queryFn: () => clienteCalificacionApi.getByCliente(clienteId),
+    queryKey: [QueryKeys.PROVEEDORES, proveedorId, "calificaciones"],
+    queryFn: () => proveedorCalificacionApi.getByProveedor(proveedorId),
     enabled: open,
   });
 
@@ -40,7 +40,7 @@ export default function ModalCalificacionesCliente({
 
   const { data: estadosResponse, isLoading: loadingEstados } = useQuery({
     queryKey: ["calificaciones-estados"],
-    queryFn: () => clienteCalificacionApi.getEstados(),
+    queryFn: () => proveedorCalificacionApi.getEstados(),
     enabled: open,
   });
 
@@ -48,7 +48,7 @@ export default function ModalCalificacionesCliente({
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (data: any) => clienteCalificacionApi.create(clienteId, data),
+    mutationFn: (data: any) => proveedorCalificacionApi.create(proveedorId, data),
     onSuccess: () => {
       message.success("Calificación creada exitosamente");
       form.resetFields();
@@ -61,7 +61,7 @@ export default function ModalCalificacionesCliente({
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => clienteCalificacionApi.update(editingCalificacion!.id, data),
+    mutationFn: (data: any) => proveedorCalificacionApi.update(editingCalificacion!.id, data),
     onSuccess: () => {
       message.success("Calificación actualizada exitosamente");
       form.resetFields();
@@ -75,7 +75,7 @@ export default function ModalCalificacionesCliente({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => clienteCalificacionApi.delete(id),
+    mutationFn: (id: number) => proveedorCalificacionApi.delete(id),
     onSuccess: () => {
       message.success("Calificación eliminada exitosamente");
       refetch();
@@ -91,7 +91,7 @@ export default function ModalCalificacionesCliente({
     setModalFormVisible(true);
   };
 
-  const handleEditar = (calificacion: ClienteCalificacion) => {
+  const handleEditar = (calificacion: ProveedorCalificacion) => {
     setEditingCalificacion(calificacion);
     form.setFieldsValue({
       estado: calificacion.estado,
@@ -109,7 +109,7 @@ export default function ModalCalificacionesCliente({
     }
   };
 
-  const columns: ColDef<ClienteCalificacion>[] = [
+  const columns: ColDef<ProveedorCalificacion>[] = [
     {
       headerName: "Estado",
       field: "estado",
@@ -214,7 +214,7 @@ export default function ModalCalificacionesCliente({
         title={
           <div className="flex items-center gap-2">
             <FaStar className="text-amber-500" />
-            <span>Calificaciones de {clienteNombre}</span>
+            <span>Calificaciones de {proveedorNombre}</span>
           </div>
         }
         open={open}
@@ -249,7 +249,7 @@ export default function ModalCalificacionesCliente({
                   </div>
                 </div>
               ) : (
-                <TableBase<ClienteCalificacion>
+                <TableBase<ProveedorCalificacion>
                   ref={gridRef}
                   rowData={calificaciones}
                   columnDefs={columns}
@@ -312,7 +312,7 @@ export default function ModalCalificacionesCliente({
             rules={[{ required: true, message: "Selecciona un estado" }]}
           >
             <Select
-              placeholder="Selecciona el estado del cliente"
+              placeholder="Selecciona el estado del proveedor"
               loading={loadingEstados}
               options={estadosData.map((e: EstadoOption) => ({
                 label: e.label,
@@ -327,7 +327,7 @@ export default function ModalCalificacionesCliente({
             rules={[{ max: 255, message: "Máximo 255 caracteres" }]}
           >
             <Input
-              placeholder="Ej: Pago lento, Devoluciones frecuentes"
+              placeholder="Ej: Entrega rápida, Calidad inconsistente"
               maxLength={255}
             />
           </Form.Item>
@@ -338,7 +338,7 @@ export default function ModalCalificacionesCliente({
             rules={[{ max: 1000, message: "Máximo 1000 caracteres" }]}
           >
             <Input.TextArea
-              placeholder="Ej: Cliente pide que le lleve su pedido al segundo piso"
+              placeholder="Ej: Proveedor confiable, siempre cumple plazos"
               rows={4}
               maxLength={1000}
               showCount

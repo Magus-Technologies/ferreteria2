@@ -23,6 +23,7 @@ const tipoOptions = [
   { value: '', label: 'Todos' },
   { value: 'compra', label: 'Compras' },
   { value: 'recepcion', label: 'Recepciones' },
+  { value: 'recepcion_anulada', label: 'Recepciones Anuladas' },
   { value: 'ingreso', label: 'Ingresos' },
   { value: 'salida', label: 'Salidas' },
 ]
@@ -30,6 +31,7 @@ const tipoOptions = [
 const tipoColors: Record<string, string> = {
   compra: 'green',
   recepcion: 'cyan',
+  recepcion_anulada: 'volcano',
   ingreso: 'blue',
   salida: 'red',
 }
@@ -37,6 +39,7 @@ const tipoColors: Record<string, string> = {
 const tipoLabels: Record<string, string> = {
   compra: 'Compra',
   recepcion: 'Recepcion',
+  recepcion_anulada: 'Recepcion Anulada',
   ingreso: 'Ingreso',
   salida: 'Salida',
 }
@@ -46,6 +49,7 @@ const movimientoColors: Record<string, string> = {
   SALIDA: 'red',
   COMPRA: 'orange',
   REFERENCIA: 'blue',
+  ANULACION: 'volcano',
 }
 
 export default function KardexInventarioView() {
