@@ -2,11 +2,13 @@ import { type FormInstance } from 'antd'
 import { type OrdenCompra } from '~/lib/api/orden-compra'
 import { message } from 'antd'
 import dayjs from 'dayjs'
+import { productosApiV2 } from '~/lib/api/producto'
+import { useStoreAlmacen } from '~/store/store-almacen'
 
-export const loadCompraIntoForm = (
+export const loadCompraIntoForm = async (
   ordenCompra: OrdenCompra,
   form: FormInstance
-): { success: boolean; message?: string } => {
+): Promise<{ success: boolean; message?: string }> => {
   try {
     // Validar que la orden de compra tenga datos
     if (!ordenCompra) {
@@ -42,15 +44,45 @@ export const loadCompraIntoForm = (
     form.setFieldValue('tipo_de_cambio', ordenCompra.tipo_de_cambio)
     form.setFieldValue('percepcion', ordenCompra.percepcion)
     form.setFieldValue('fecha', dayjs(ordenCompra.fecha))
-    
+
     // Guardar el ID de la orden de compra para vincularla
     form.setFieldValue('orden_compra_id', ordenCompra.id)
 
+    const almacen_id = useStoreAlmacen.getState().almacen_id
+    if (!almacen_id) {
+      return { success: false, message: 'No hay un almacén seleccionado' }
+    }
+
+    // Resolver unidad_derivada_id y factor por producto consultando el almacén
+    const productosOrden = ordenCompra.productos
+    const detallesPorProducto = await Promise.all(
+      productosOrden.map(p =>
+        p.producto_id
+          ? productosApiV2.getDetallePrecios(p.producto_id, { almacen_id })
+          : Promise.resolve(null)
+      )
+    )
+
     // Transformar productos de OrdenCompra a formato de Compra
-    const productos = ordenCompra.productos
-      .map(producto => {
+    const productos = productosOrden
+      .map((producto, index) => {
         if (!producto.producto_id) {
           message.warning(`Producto ${producto.nombre} no tiene ID válido`)
+          return null
+        }
+
+        const detalle = detallesPorProducto[index]?.data
+        const unidadesDerivadas = detalle?.unidades_derivadas ?? []
+        const unidadNombre = (producto.unidad ?? '').trim().toLowerCase()
+        const matchUnidad =
+          unidadesDerivadas.find(
+            ud => ud.unidad_derivada?.name?.trim().toLowerCase() === unidadNombre
+          ) ?? unidadesDerivadas.find(ud => Number(ud.factor) === 1)
+
+        if (!matchUnidad) {
+          message.warning(
+            `No se encontró la unidad "${producto.unidad}" para ${producto.nombre}`
+          )
           return null
         }
 
@@ -59,8 +91,9 @@ export const loadCompraIntoForm = (
           producto_name: producto.nombre,
           producto_codigo: producto.codigo ?? '',
           marca_name: producto.marca,
-          unidad_derivada_name: producto.unidad,
-          unidad_derivada_factor: 1, // Ajustar según tu lógica
+          unidad_derivada_id: matchUnidad.unidad_derivada_id,
+          unidad_derivada_name: matchUnidad.unidad_derivada?.name ?? producto.unidad,
+          unidad_derivada_factor: Number(matchUnidad.factor) || 1,
           cantidad: producto.cantidad,
           precio_compra: producto.precio,
           flete: producto.flete || 0,
