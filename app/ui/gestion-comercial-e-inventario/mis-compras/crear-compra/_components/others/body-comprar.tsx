@@ -93,7 +93,7 @@ export default function BodyComprar({
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { handleSubmit, loading } = useCreateCompra({ compra, form })
+  const { handleSubmit, loading } = useCreateCompra({ compra, form, isRecuperacion: !!ordenCompraId })
 
   const [proveedorDefault, setProveedorDefault] = useState<{ id: number; ruc: string; razon_social: string }[]>([])
   const [proveedorRucInicial, setProveedorRucInicial] = useState('')
