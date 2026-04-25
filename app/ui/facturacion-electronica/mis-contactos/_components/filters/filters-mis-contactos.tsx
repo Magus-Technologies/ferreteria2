@@ -47,7 +47,7 @@ export default function FiltersMisContactos() {
       onFinish={handleFinish}
     >
       <TituloModulos
-        title="Mis Contactos"
+        title="Mis Clientes"
         icon={<IoMdContact className="text-cyan-600" />}
       />
 

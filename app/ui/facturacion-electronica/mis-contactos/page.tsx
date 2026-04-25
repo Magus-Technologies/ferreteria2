@@ -6,6 +6,7 @@ import { usePermission } from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import FiltersMisContactos from "./_components/filters/filters-mis-contactos";
 import TableMisContactos from "./_components/tables/table-mis-contactos";
+import TableDeudasClientes from "./_components/tables/table-deudas-clientes";
 import CardsInfoContactos from "./_components/cards/cards-info-contactos";
 
 export default function MisContactosPage() {
@@ -18,8 +19,15 @@ export default function MisContactosPage() {
       <div className="flex flex-col gap-4 w-full h-[calc(100vh-120px)]">
         <FiltersMisContactos />
         <div className="flex gap-4 flex-1 min-h-0">
-          <div className="flex-1 min-w-0">
-            <TableMisContactos />
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+            {/* Tabla de Clientes */}
+            <div className="flex-1 min-h-0">
+              <TableMisContactos />
+            </div>
+            {/* Tabla de Deudas con scroll infinito */}
+            <div className="flex-1 min-h-0">
+              <TableDeudasClientes />
+            </div>
           </div>
           <div className="w-64 flex-shrink-0">
             <CardsInfoContactos />

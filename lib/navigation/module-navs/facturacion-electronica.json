@@ -199,7 +199,7 @@
       },
       {
         "id": "mis-contactos",
-        "label": "Mis Contactos",
+        "label": "Mis Clientes",
         "icon": "IoMdContact",
         "route": "/ui/facturacion-electronica/mis-contactos",
         "permission": "facturacion-electronica.mis-contactos.index"
