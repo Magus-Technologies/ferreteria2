@@ -1,5 +1,5 @@
 import { FormCreateCompra } from '../_components/others/body-comprar'
-import { toUTCBD } from '~/utils/fechas'
+import { toUTCBD, fechaSubmit } from '~/utils/fechas'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
@@ -121,13 +121,9 @@ export default function useCreateCompra({
         fecha_vencimiento:
           values.forma_de_pago === FormaDePago.cr &&
           values.fecha_vencimiento
-            ? toUTCBD({
-                date: values.fecha_vencimiento,
-              })
+            ? values.fecha_vencimiento.format('YYYY-MM-DD HH:mm:ss')
             : null,
-        fecha: toUTCBD({
-          date: values.fecha,
-        })!,
+        fecha: fechaSubmit(values.fecha),
         guia: values.guia ?? null,
         estado_de_compra: values.estado_de_compra ?? EstadoDeCompra.EnEspera,
         egreso_dinero_id: values.egreso_dinero_id ?? null,
