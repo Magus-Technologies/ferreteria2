@@ -50,6 +50,16 @@ export default function ModalCrearSubCaja({
   const [nombreNuevoEfectivo, setNombreNuevoEfectivo] = useState('')
   const [creandoEfectivo, setCreandoEfectivo] = useState(false)
   const [desplieguesLocales, setDesplieguesLocales] = useState<{ id: string; name: string; label: string }[]>([])
+  
+  // Inicializar nombreBase desde el formulario si existe
+  useEffect(() => {
+    const nombreActual = form.getFieldValue('nombre')
+    if (nombreActual && !nombreBase) {
+      // Extraer solo el nombre base (antes del " - ")
+      const base = nombreActual.split(' - ')[0] || nombreActual
+      setNombreBase(base)
+    }
+  }, [open, form, nombreBase])
 
   const { data: metodosPago, refetch: refetchMetodos } = useQuery({
     queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO, cajaPrincipalId],
@@ -152,7 +162,7 @@ export default function ModalCrearSubCaja({
     form.resetFields()
     setAceptaTodos(false)
     setMetodosSeleccionados([])
-    setNombreBase('')
+    setNombreBase('') // Limpiar nombreBase
     setMostrarCrearEfectivo(false)
     setNombreNuevoEfectivo('')
     setDesplieguesLocales([])

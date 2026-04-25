@@ -74,9 +74,11 @@ export function agruparProductos({
 export default function useCreateCompra({
   compra,
   form,
+  isRecuperacion = false,
 }: {
   compra?: CompraConUnidadDerivadaNormal
   form?: FormInstance<FormCreateCompra>
+  isRecuperacion?: boolean
 } = {}) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -217,8 +219,8 @@ export default function useCreateCompra({
         }
       )
 
-      // Si NO es edición, limpiar el formulario y quedarse en la página
-      if (!compra) {
+      // Si NO es edición real (solo es recuperación o creación nueva), limpiar y quedarse
+      if (!compra || isRecuperacion) {
         if (form) {
           // Limpiar el store de productos
           setProductosCompra([])
@@ -237,7 +239,7 @@ export default function useCreateCompra({
           })
         }
       } else {
-        // Si es edición, redirigir a la lista
+        // Si es edición real, redirigir a la lista
         router.push(`/ui/gestion-comercial-e-inventario/mis-compras`)
       }
     },

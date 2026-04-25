@@ -10,7 +10,7 @@ import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/mod
 /**
  * Componente que muestra el modal de Distribución de Efectivo a Vendedores
  * cuando no hay apertura de caja para hoy.
- * - Si el usuario cierra el modal sin completar → redirige a /ui
+ * - Si el usuario cierra el modal sin completar → NO permite cerrar (modal no se cierra)
  * - Si el usuario completa la apertura → invalida la query y el modal se cierra solo
  */
 export default function AperturaGuard() {
@@ -30,10 +30,11 @@ export default function AperturaGuard() {
 
     const handleSetOpen = (val: boolean) => {
         if (!val && !successRef.current) {
-            // Cerró sin completar la apertura → redirigir a /ui
-            router.push('/ui')
+            // Intentó cerrar sin completar → NO permitir cerrar
+            // El modal permanece abierto
+            return
         }
-        // No resetear successRef aquí, dejarlo para el próximo ciclo
+        // Si successRef.current es true, permitir cerrar
     }
 
     const handleSuccess = () => {

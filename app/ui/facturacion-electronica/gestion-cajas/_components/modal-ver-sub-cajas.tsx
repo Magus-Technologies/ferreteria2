@@ -263,6 +263,7 @@ export default function ModalVerSubCajas({
                     open={openEditarSubCaja}
                     setOpen={setOpenEditarSubCaja}
                     subCaja={subCajaSeleccionada}
+                    cajaPrincipalId={cajaPrincipal.id}
                     onSuccess={() => {
                         onSuccess?.()
                         setSubCajaSeleccionada(null)
