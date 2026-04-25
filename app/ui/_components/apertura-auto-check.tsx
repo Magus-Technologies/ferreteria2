@@ -30,11 +30,10 @@ export default function AperturaGuard() {
 
     const handleSetOpen = (val: boolean) => {
         if (!val && !successRef.current) {
-            // Intentó cerrar sin completar → NO permitir cerrar
-            // El modal permanece abierto
+            // Intentó cerrar sin completar → redirigir a /ui
+            router.push('/ui')
             return
         }
-        // Si successRef.current es true, permitir cerrar
     }
 
     const handleSuccess = () => {
