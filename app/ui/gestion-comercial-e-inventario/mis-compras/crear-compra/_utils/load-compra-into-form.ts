@@ -57,6 +57,7 @@ export const loadCompraIntoForm = (
         return {
           producto_id: producto.producto_id,
           producto_name: producto.nombre,
+          producto_codigo: producto.codigo ?? '',
           marca_name: producto.marca,
           unidad_derivada_name: producto.unidad,
           unidad_derivada_factor: 1, // Ajustar según tu lógica
