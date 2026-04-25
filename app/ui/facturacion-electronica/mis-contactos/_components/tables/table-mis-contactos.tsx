@@ -274,7 +274,7 @@ export default function TableMisContactos() {
         rowData={contactos}
         tableRef={tableRef}
         domLayout="normal"
-        selectionColor="text-cyan-600"
+        selectionColor="#fed7aa"
         onSelectionChanged={() => {}}
         onRowClicked={(event) => {
           if (event.data) {
