@@ -62,7 +62,7 @@ export function useColumnsMisOS({
       colId: 'area',
       headerName: "Cargo / Ocupación",
       field: "cargo",
-      flex: 1,
+      width: 200,
       minWidth: 150,
     },
     {

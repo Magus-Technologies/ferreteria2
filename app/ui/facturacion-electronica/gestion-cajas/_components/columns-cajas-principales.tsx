@@ -40,7 +40,7 @@ export const useColumnsCajasPrincipales = ({
       colId: 'responsable',
       headerName: 'Responsable',
       field: 'user',
-      flex: 1,
+      width: 280,
       minWidth: 250,
       lockPosition: true,
       suppressMovable: true,

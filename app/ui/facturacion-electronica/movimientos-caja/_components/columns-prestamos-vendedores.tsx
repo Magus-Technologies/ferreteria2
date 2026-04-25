@@ -45,7 +45,7 @@ export const useColumnsPrestamosVendedores = ({
             colId: 'prestamista',
             headerName: 'Prestamista',
             field: 'vendedor_prestamista',
-            flex: 1,
+            width: 220,
             minWidth: 200,
             cellRenderer: (params: any) => (
                 <span className='font-medium text-slate-700'>{params.value?.name}</span>
@@ -86,7 +86,7 @@ export const useColumnsPrestamosVendedores = ({
             colId: 'motivo',
             headerName: 'Motivo',
             field: 'motivo',
-            flex: 1,
+            width: 220,
             minWidth: 200,
             cellRenderer: (params: any) => (
                 <span className='text-sm text-slate-600'>{params.value || '-'}</span>

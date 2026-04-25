@@ -64,10 +64,11 @@ export function useColumnsRecepcionesAlmacen({
       colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
-      width: 90,
-      minWidth: 90,
-      type: 'date',
+      width: 180,
+      minWidth: 180,
       filter: 'agDateColumnFilter',
+      valueFormatter: (params) =>
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
     {
       colId: 'registrador',

@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { FaFilePdf } from "react-icons/fa6";
 import { Prestamo, TipoOperacion, EstadoPrestamo } from "~/lib/api/prestamo";
 import ButtonBase from "~/components/buttons/button-base";
+import { formatFechaPeru } from "~/utils/fechas";
 
 export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
   return [
@@ -20,7 +21,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       field: "fecha",
       width: 180,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
     },
     {
       colId: "numero",
@@ -32,9 +33,9 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
       colId: "fecha_vencimiento",
       headerName: "F. Vencimiento",
       field: "fecha_vencimiento",
-      width: 120,
+      width: 180,
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
     },
     {
       colId: "tipo_operacion",

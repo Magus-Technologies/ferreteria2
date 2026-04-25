@@ -66,7 +66,7 @@ export function useColumnsSolicitudOC({
       colId: 'descripcion',
       headerName: 'Descripción',
       field: 'observaciones',
-      flex: 1,
+      width: 220,
       minWidth: 180,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
         <Tooltip title={data?.observaciones}>

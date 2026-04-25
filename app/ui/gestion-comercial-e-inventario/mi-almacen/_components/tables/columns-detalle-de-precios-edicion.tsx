@@ -109,11 +109,12 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: 'Prod. Complementario',
       field: 'name',
+      width: 280,
       minWidth: 220,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
@@ -183,7 +184,6 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 2,
     },
     {
       headerName: 'Cant. Compl.',
@@ -205,7 +205,7 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: 'P. Compra',
@@ -264,7 +264,7 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: '% Venta',
@@ -304,7 +304,7 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: 'Ganancia',
@@ -344,7 +344,7 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: 'PRECIO PUBLICO',
@@ -399,13 +399,13 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: 'PRECIO FERRETERÍA',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -440,7 +440,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'PRECIO MÍNIMO',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -475,7 +475,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'PRECIO FINAL',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -548,13 +548,13 @@ export function useColumnsDetalleDePreciosEdicion({
           </div>
         )
       },
-      flex: 1,
+      width: 160,
     },
     {
       headerName: 'Comisión Ferretería',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -576,7 +576,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'Comisión Mínimo',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -598,7 +598,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'Comisión Final',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -620,7 +620,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'Activador Ferretería',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -641,7 +641,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'Activador Mínimo',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (
@@ -662,7 +662,7 @@ export function useColumnsDetalleDePreciosEdicion({
       headerName: 'Activador Final',
       field: 'name',
       minWidth: 140,
-      flex: 1,
+      width: 160,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
         return (

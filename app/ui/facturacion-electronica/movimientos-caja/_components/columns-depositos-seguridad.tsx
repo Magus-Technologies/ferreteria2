@@ -46,7 +46,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       colId: 'origen',
       headerName: 'Origen',
       field: 'sub_caja_origen',
-      flex: 1,
+      width: 200,
       minWidth: 180,
       cellRenderer: (params: any) => (
         <div>
@@ -59,7 +59,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       colId: 'destino',
       headerName: 'Destino',
       field: 'sub_caja_destino',
-      flex: 1,
+      width: 280,
       minWidth: 250,
       cellRenderer: (params: any) => {
         const { sub_caja_destino, metodo_destino, banco_destino, titular } = params.data
@@ -91,7 +91,7 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       colId: 'motivo',
       headerName: 'Motivo',
       field: 'motivo',
-      flex: 1,
+      width: 220,
       minWidth: 200,
       cellRenderer: (params: any) => (
         <span className='text-sm text-slate-600'>{params.value || '-'}</span>

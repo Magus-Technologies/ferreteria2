@@ -50,7 +50,7 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         colId: "name",
         field: "name",
         width: 350,
-        minWidth: 350,
+        minWidth: 200,
         filter: true,
         cellRenderer: ({ value, data }: ICellRendererParams<Producto>) => {
           return (
@@ -98,9 +98,8 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
         colId: "name_ticket",
         field: "name_ticket",
         width: 350,
-        minWidth: 350,
+        minWidth: 150,
         filter: true,
-        flex: 1,
       },
       {
         headerName: "Ubicación en Almacén",

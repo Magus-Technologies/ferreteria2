@@ -45,7 +45,7 @@ export const useColumnsCierres = ({
       colId: 'fecha_cierre',
       headerName: 'Fecha Cierre',
       field: 'fecha_cierre',
-      flex: 1,
+      width: 180,
       minWidth: 130,
       cellStyle: centerCell,
       cellRenderer: (params: any) =>
@@ -72,7 +72,7 @@ export const useColumnsCierres = ({
       // Sin centrado — texto izquierda por defecto
       headerName: 'Caja',
       field: 'caja_principal',
-      flex: 1,
+      width: 130,
       minWidth: 80,
       cellRenderer: (params: any) => {
         const caja = params.value
@@ -85,7 +85,7 @@ export const useColumnsCierres = ({
       colId: 'monto_apertura',
       headerName: 'M. Apertura',
       field: 'monto_apertura',
-      flex: 1,
+      width: 130,
       minWidth: 100,
       cellStyle: centerCell,
       cellRenderer: (params: any) => (
@@ -96,7 +96,7 @@ export const useColumnsCierres = ({
       colId: 'monto_cierre',
       headerName: 'M. Cierre',
       field: 'monto_cierre',
-      flex: 1,
+      width: 130,
       minWidth: 100,
       cellStyle: centerCell,
       cellRenderer: (params: any) => (
@@ -109,7 +109,7 @@ export const useColumnsCierres = ({
       colId: 'diferencia',
       headerName: 'Diferencia',
       field: 'diferencia_efectivo' as any,
-      flex: 1,
+      width: 140,
       minWidth: 100,
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
       cellRenderer: (params: any) => {
@@ -142,7 +142,7 @@ export const useColumnsCierres = ({
       colId: 'estado',
       headerName: 'Estado',
       field: 'estado_cierre',
-      flex: 1,
+      width: 130,
       minWidth: 100,
       cellStyle: centerCell,
       cellRenderer: (params: any) => {

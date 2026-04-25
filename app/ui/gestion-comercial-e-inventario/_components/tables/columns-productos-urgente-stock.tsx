@@ -24,7 +24,7 @@ export function useColumnsProductosUrgenteStock() {
       field: 'cantidad',
       minWidth: 80,
       filter: true,
-      flex: 1,
+      width: 130,
     },
     {
       colId: 'stock_min',
@@ -32,7 +32,7 @@ export function useColumnsProductosUrgenteStock() {
       field: 'stock_min',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
-      flex: 1,
+      width: 130,
     },
     {
       colId: 'almacen',
@@ -40,7 +40,7 @@ export function useColumnsProductosUrgenteStock() {
       field: 'almacen',
       minWidth: 80,
       filter: true,
-      flex: 1,
+      width: 130,
     },
     {
       colId: 'vencimiento',
@@ -48,7 +48,7 @@ export function useColumnsProductosUrgenteStock() {
       field: 'vencimiento',
       minWidth: 80,
       filter: 'agDateColumnFilter',
-      flex: 1,
+      width: 130,
     },
   ]
 

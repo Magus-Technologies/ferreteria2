@@ -28,9 +28,9 @@ export function useColumnsDetalleDePrecios() {
       colId: 'cod_producto',
       headerName: 'Cod. Producto',
       field: 'producto.cod_producto',
+      width: 150,
       minWidth: 130,
       filter: true,
-      flex: 1,
     },
     {
       colId: 'producto',
@@ -44,17 +44,17 @@ export function useColumnsDetalleDePrecios() {
       colId: 'formato',
       headerName: 'Formato',
       field: 'unidad_derivada.name',
+      width: 110,
       minWidth: 80,
       filter: true,
-      flex: 1,
     },
     {
       colId: 'factor',
       headerName: 'Factor',
       field: 'factor',
+      width: 100,
       minWidth: 80,
       filter: true,
-      flex: 1,
     },
     {
       colId: 'p_compra',
@@ -68,7 +68,7 @@ export function useColumnsDetalleDePrecios() {
         if (isNaN(costo) || isNaN(factor)) return '0.0000'
         return `${(costo * factor).toFixed(4)}`
       },
-      flex: 1,
+      width: 130,
       type: 'pen4',
     },
     {
@@ -89,7 +89,7 @@ export function useColumnsDetalleDePrecios() {
         const p_venta = costoTotal != 0 ? (ganancia * 100) / costoTotal : 0
         return `${p_venta.toFixed(2)}`
       },
-      flex: 1,
+      width: 130,
       type: 'percent',
     },
     {
@@ -102,7 +102,7 @@ export function useColumnsDetalleDePrecios() {
         const precio = Number(value)
         return isNaN(precio) ? '0.00' : precio.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -122,7 +122,7 @@ export function useColumnsDetalleDePrecios() {
         const ganancia = precioPublico - costoTotal
         return `${ganancia.toFixed(2)}`
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -135,7 +135,7 @@ export function useColumnsDetalleDePrecios() {
         const precio = Number(value)
         return isNaN(precio) ? '0.00' : precio.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -148,7 +148,7 @@ export function useColumnsDetalleDePrecios() {
         const precio = Number(value)
         return isNaN(precio) ? '0.00' : precio.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -161,7 +161,7 @@ export function useColumnsDetalleDePrecios() {
         const precio = Number(value)
         return isNaN(precio) ? '0.00' : precio.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -174,7 +174,7 @@ export function useColumnsDetalleDePrecios() {
         const comision = Number(value)
         return isNaN(comision) ? '0.00' : comision.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -187,7 +187,7 @@ export function useColumnsDetalleDePrecios() {
         const comision = Number(value)
         return isNaN(comision) ? '0.00' : comision.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -200,7 +200,7 @@ export function useColumnsDetalleDePrecios() {
         const comision = Number(value)
         return isNaN(comision) ? '0.00' : comision.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -213,7 +213,7 @@ export function useColumnsDetalleDePrecios() {
         const comision = Number(value)
         return isNaN(comision) ? '0.00' : comision.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -226,7 +226,7 @@ export function useColumnsDetalleDePrecios() {
         const activador = Number(value)
         return isNaN(activador) ? '0.00' : activador.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -239,7 +239,7 @@ export function useColumnsDetalleDePrecios() {
         const activador = Number(value)
         return isNaN(activador) ? '0.00' : activador.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
     {
@@ -252,7 +252,7 @@ export function useColumnsDetalleDePrecios() {
         const activador = Number(value)
         return isNaN(activador) ? '0.00' : activador.toFixed(2)
       },
-      flex: 1,
+      width: 130,
       type: 'pen',
     },
   ], [])

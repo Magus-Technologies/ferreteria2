@@ -185,9 +185,9 @@ export function useColumnsMisVentas() {
     {
       headerName: "F.Vencimiento",
       field: "fecha_vencimiento",
-      width: 130,
+      width: 180,
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, "DD/MM/YYYY"),
+        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "-",
     },
     {
       headerName: "Estado",

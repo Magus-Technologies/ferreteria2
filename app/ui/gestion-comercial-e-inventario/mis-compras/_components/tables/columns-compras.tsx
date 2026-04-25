@@ -139,14 +139,11 @@ export function useColumnsCompras({
       colId: 'fecha_vencimiento',
       headerName: 'Fecha Vencimiento',
       field: 'fecha_vencimiento',
-      width: 130,
-      minWidth: 130,
-      type: 'date',
+      width: 180,
+      minWidth: 180,
       filter: 'agDateColumnFilter',
-      valueFormatter: ({ value }) => {
-        if (!value) return '-'
-        return value
-      },
+      valueFormatter: ({ value }) =>
+        value ? formatFechaPeru(value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
     {
       colId: 'ruc',

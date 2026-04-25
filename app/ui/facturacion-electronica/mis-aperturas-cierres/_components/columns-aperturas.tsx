@@ -23,7 +23,7 @@ export const useColumnsAperturas = ({
       colId: 'fecha_apertura',
       headerName: 'Fecha Apertura',
       field: 'fecha_apertura',
-      flex: 1,
+      width: 180,
       minWidth: 130,
       cellStyle: centerCell,
       cellRenderer: (params: any) => formatFechaPeru(params.value),
@@ -50,7 +50,7 @@ export const useColumnsAperturas = ({
       // Sin centrado — texto izquierda por defecto
       headerName: 'Caja',
       field: 'caja_principal',
-      flex: 1,
+      width: 150,
       minWidth: 80,
       cellRenderer: (params: any) => params.value?.nombre,
     },
@@ -58,7 +58,7 @@ export const useColumnsAperturas = ({
       colId: 'monto_apertura',
       headerName: 'Monto Apertura',
       field: 'monto_apertura',
-      flex: 1,
+      width: 150,
       minWidth: 100,
       cellStyle: centerCell,
       cellRenderer: (params: any) => (
@@ -71,7 +71,7 @@ export const useColumnsAperturas = ({
       colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
-      flex: 1,
+      width: 120,
       minWidth: 90,
       cellStyle: centerCell,
       cellRenderer: (params: any) => (
