@@ -17,6 +17,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import ButtonRecuperarCompraEnEspera from '../buttons/button-recuperar-compra-en-espera'
 import ButtonRecuperarCompraAnulada from '../buttons/button-recuperar-compra-anulada'
 import ButtonRecuperarOrdenCompra from '../buttons/button-recuperar-orden-compra'
+import type { OrdenCompra } from '~/lib/api/orden-compra'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalMetodosPagoCompra from '../modals/modal-metodos-pago-compra'
@@ -26,11 +27,13 @@ export default function CardsInfoCompra({
   form,
   compra,
   onPonerEnEspera,
+  onOrdenLoaded,
   loading = false,
 }: {
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
   onPonerEnEspera?: () => void
+  onOrdenLoaded?: (orden: OrdenCompra) => void
   loading?: boolean
 }) {
   const { message } = useApp()
@@ -81,6 +84,19 @@ export default function CardsInfoCompra({
     try {
       await form.validateFields()
     } catch {
+      message.error('Revisa los campos obligatorios marcados en rojo')
+      return
+    }
+
+    const serie = form.getFieldValue('serie')
+    const numero = form.getFieldValue('numero')
+    const proveedorId = form.getFieldValue('proveedor_id')
+    const camposFaltantes: string[] = []
+    if (!serie) camposFaltantes.push('Serie')
+    if (!numero) camposFaltantes.push('Número')
+    if (!proveedorId) camposFaltantes.push('Proveedor')
+    if (camposFaltantes.length > 0) {
+      message.error(`Falta completar: ${camposFaltantes.join(', ')}`)
       return
     }
 
@@ -114,7 +130,7 @@ export default function CardsInfoCompra({
   return (
     <div className='flex flex-col gap-4 w-full xl:w-64'>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-recuperar-orden' label='Botón Recuperar Orden de Compra'>
-        <ButtonRecuperarOrdenCompra form={form} />
+        <ButtonRecuperarOrdenCompra form={form} onOrdenLoaded={onOrdenLoaded} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.boton-recuperar-anulada' label='Botón Recuperar Compra Anulada'>
         <ButtonRecuperarCompraAnulada />

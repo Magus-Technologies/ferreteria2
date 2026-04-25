@@ -78,7 +78,8 @@ export interface FormCreateCompra {
 export default function BodyComprar({
   compra,
   ordenCompraId,
-}: { compra?: CompraConUnidadDerivadaNormal; ordenCompraId?: number } = {}) {
+  isRecuperacion = false,
+}: { compra?: CompraConUnidadDerivadaNormal; ordenCompraId?: number; isRecuperacion?: boolean } = {}) {
   const [form] = Form.useForm<FormCreateCompra>()
   useCheckAperturaDiaria()
 
@@ -93,7 +94,7 @@ export default function BodyComprar({
 
   const almacen_id = useStoreAlmacen(store => store.almacen_id)
 
-  const { handleSubmit, loading } = useCreateCompra({ compra, form, isRecuperacion: !!ordenCompraId })
+  const { handleSubmit, loading } = useCreateCompra({ compra, form, isRecuperacion: isRecuperacion || !!ordenCompraId })
 
   const [proveedorDefault, setProveedorDefault] = useState<{ id: number; ruc: string; razon_social: string }[]>([])
   const [proveedorRucInicial, setProveedorRucInicial] = useState('')
@@ -184,6 +185,16 @@ export default function BodyComprar({
             form={form}
             compra={compra}
             loading={loading}
+            onOrdenLoaded={orden => {
+              if (orden.proveedor) {
+                setProveedorDefault([{
+                  id: orden.proveedor.id,
+                  ruc: orden.proveedor.ruc,
+                  razon_social: orden.proveedor.razon_social,
+                }])
+                setProveedorRucInicial(orden.proveedor.ruc)
+              }
+            }}
             onPonerEnEspera={() => {
               form.setFieldValue('estado_de_compra', EstadoDeCompra.EnEspera)
               handleSubmit(form.getFieldsValue(true))

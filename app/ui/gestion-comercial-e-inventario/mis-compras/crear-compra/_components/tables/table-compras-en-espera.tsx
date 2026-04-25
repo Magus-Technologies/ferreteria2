@@ -27,7 +27,7 @@ export default function TableComprasEnEspera() {
       querykeys={[QueryKeys.COMPRAS_EN_ESPERA]}
       onRowDoubleClicked={({ data }) => {
         router.push(
-          `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${data?.id}`
+          `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${data?.id}?recuperar=1`
         )
       }}
     />

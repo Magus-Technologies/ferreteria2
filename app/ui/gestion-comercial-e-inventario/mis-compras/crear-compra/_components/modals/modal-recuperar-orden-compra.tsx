@@ -13,6 +13,7 @@ type ModalRecuperarOrdenCompraProps = {
   setOpen: (open: boolean) => void
   setFiltros: (data: OrdenCompraFilters) => void
   form: FormInstance
+  onOrdenLoaded?: (orden: OrdenCompra) => void
 }
 
 export default function ModalRecuperarOrdenCompra({
@@ -20,6 +21,7 @@ export default function ModalRecuperarOrdenCompra({
   setOpen,
   setFiltros,
   form,
+  onOrdenLoaded,
 }: ModalRecuperarOrdenCompraProps) {
   const compraSeleccionada = useStoreOrdenCompraSeleccionada(
     state => state.compra
@@ -33,6 +35,7 @@ export default function ModalRecuperarOrdenCompra({
     setLoading(true)
 
     try {
+      onOrdenLoaded?.(orden)
       const result = loadCompraIntoForm(orden, form)
 
       if (result.success) {

@@ -9,14 +9,16 @@ import BodyComprar from '../../crear-compra/_components/others/body-comprar'
 import { compraApi } from '~/lib/api/compra'
 import { CompraConUnidadDerivadaNormal } from '../../crear-compra/_components/others/header'
 import { unidadesDerivadas } from '~/lib/api/catalogos'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Spin } from 'antd'
 
 export default function EditarCompra() {
   const canAccess = usePermission(permissions.COMPRAS_UPDATE)
   const params = useParams()
+  const searchParams = useSearchParams()
   const id = params?.id as string
+  const isRecuperacion = searchParams.get('recuperar') === '1'
 
   // Cargar la compra desde la API
   const { data: compraData, isLoading: isLoadingCompra, error: errorCompra } = useQuery({
@@ -97,7 +99,7 @@ export default function EditarCompra() {
   return (
     <ContenedorGeneral className='h-full'>
       <HeaderCrearCompra compra={compraFormated} />
-      <BodyComprar compra={compraFormated} />
+      <BodyComprar compra={compraFormated} isRecuperacion={isRecuperacion} />
     </ContenedorGeneral>
   )
 }
