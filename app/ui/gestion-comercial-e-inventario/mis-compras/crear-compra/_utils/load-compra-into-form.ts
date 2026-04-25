@@ -30,6 +30,10 @@ export const loadCompraIntoForm = (
     if (ordenCompra.proveedor_id) {
       form.setFieldValue('proveedor_id', ordenCompra.proveedor_id)
     }
+    if (ordenCompra.proveedor) {
+      form.setFieldValue('proveedor_ruc', ordenCompra.proveedor.ruc ?? '')
+      form.setFieldValue('proveedor_razon_social', ordenCompra.proveedor.razon_social ?? '')
+    }
 
     // Cargar tipo de documento y forma de pago
     form.setFieldValue('tipo_documento', ordenCompra.tipo_documento)

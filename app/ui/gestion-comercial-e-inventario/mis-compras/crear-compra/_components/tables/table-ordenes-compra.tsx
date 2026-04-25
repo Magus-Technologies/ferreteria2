@@ -3,18 +3,25 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useRef, memo, useCallback, useMemo, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { type ColDef, type SelectionChangedEvent, type RowClickedEvent } from 'ag-grid-community'
+import { type ColDef, type SelectionChangedEvent, type RowClickedEvent, type RowDoubleClickedEvent } from 'ag-grid-community'
 import { useStoreFiltrosOrdenesCompra } from '../../_store/store-filtros-ordenes-compra'
 import { useStoreOrdenCompraSeleccionada } from '../../_store/store-orden-compra-seleccionada'
 import { useColumnsOrdenesCompra } from './columns-ordenes-compra'
 import { useQuery } from '@tanstack/react-query'
 import { ordenCompraApi, type OrdenCompra } from '~/lib/api/orden-compra'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { greenColors } from '~/lib/colors'
 import { z } from 'zod'
 
 const OrdenCompraSchema = z.object({})
 
-const TableOrdenesCompra = memo(function TableOrdenesCompra() {
+type TableOrdenesCompraProps = {
+  onRowDoubleClicked?: (orden: OrdenCompra) => void
+}
+
+const TableOrdenesCompra = memo(function TableOrdenesCompra({
+  onRowDoubleClicked,
+}: TableOrdenesCompraProps) {
   const tableRef = useRef<AgGridReact>(null)
   const filtros = useStoreFiltrosOrdenesCompra(state => state.filtros)
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
@@ -55,6 +62,17 @@ const TableOrdenesCompra = memo(function TableOrdenesCompra() {
     []
   )
 
+  const handleRowDoubleClicked = useCallback(
+    (event: RowDoubleClickedEvent<OrdenCompra>) => {
+      const orden = event.data
+      if (!orden) return
+      event.node.setSelected(true)
+      setCompraSeleccionada(orden)
+      onRowDoubleClicked?.(orden)
+    },
+    [setCompraSeleccionada, onRowDoubleClicked]
+  )
+
   // Seleccionar automáticamente la primera fila cuando se cargan los datos
   useEffect(() => {
     if (rowData && rowData.length > 0 && tableRef.current) {
@@ -71,11 +89,12 @@ const TableOrdenesCompra = memo(function TableOrdenesCompra() {
   return (
     <TableWithTitle<OrdenCompra>
       id='g-c-e-i.mis-compras.ordenes-compra'
-      selectionColor="transparent"
+      selectionColor={greenColors[10]}
       onSelectionChanged={handleSelectionChanged}
       onRowClicked={handleRowClicked}
+      onRowDoubleClicked={handleRowDoubleClicked}
       tableRef={tableRef}
-      title='Órdenes de Compra'
+      title='Órdenes de Compra (doble click para recuperar)'
       schema={OrdenCompraSchema}
       loading={isLoading}
       columnDefs={columns}

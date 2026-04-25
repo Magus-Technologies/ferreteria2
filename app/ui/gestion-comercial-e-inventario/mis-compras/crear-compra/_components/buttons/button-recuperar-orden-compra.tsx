@@ -4,13 +4,16 @@ import ModalRecuperarOrdenCompra from '../modals/modal-recuperar-orden-compra'
 import { useState } from 'react'
 import { useStoreFiltrosOrdenesCompra } from '../../_store/store-filtros-ordenes-compra'
 import { type FormInstance } from 'antd'
+import type { OrdenCompra } from '~/lib/api/orden-compra'
 
 interface ButtonRecuperarOrdenCompraProps {
   form: FormInstance
+  onOrdenLoaded?: (orden: OrdenCompra) => void
 }
 
 export default function ButtonRecuperarOrdenCompra({
   form,
+  onOrdenLoaded,
 }: ButtonRecuperarOrdenCompraProps) {
   const [open, setOpen] = useState(false)
 
@@ -23,6 +26,7 @@ export default function ButtonRecuperarOrdenCompra({
         setOpen={setOpen}
         setFiltros={setFiltros}
         form={form}
+        onOrdenLoaded={onOrdenLoaded}
       />
       <ButtonBase
         className='flex items-center justify-center gap-4 !rounded-md w-full h-full text-balance border-orange-500'

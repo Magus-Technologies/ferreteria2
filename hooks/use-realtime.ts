@@ -64,6 +64,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     'cumpleanos-proximos',
   ],
   proveedores: [QueryKeys.PROVEEDORES, QueryKeys.PROVEEDORES_SEARCH],
+  'cliente-calificaciones': ['ultima-calificacion', 'cliente-calificaciones'],
   'ingresos-salidas': [
     QueryKeys.INGRESOS_SALIDAS,
     QueryKeys.KARDEX,

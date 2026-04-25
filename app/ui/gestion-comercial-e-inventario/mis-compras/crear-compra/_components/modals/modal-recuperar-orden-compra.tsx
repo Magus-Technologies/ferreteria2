@@ -1,5 +1,5 @@
 import { Modal, message } from 'antd'
-import type { OrdenCompraFilters } from '~/lib/api/orden-compra'
+import type { OrdenCompra, OrdenCompraFilters } from '~/lib/api/orden-compra'
 import { type FormInstance } from 'antd'
 import FiltersRecuperarOrdenCompra from '../others/filters-recuperar-orden-compra'
 import TableOrdenesCompra from '../tables/table-ordenes-compra'
@@ -13,6 +13,7 @@ type ModalRecuperarOrdenCompraProps = {
   setOpen: (open: boolean) => void
   setFiltros: (data: OrdenCompraFilters) => void
   form: FormInstance
+  onOrdenLoaded?: (orden: OrdenCompra) => void
 }
 
 export default function ModalRecuperarOrdenCompra({
@@ -20,6 +21,7 @@ export default function ModalRecuperarOrdenCompra({
   setOpen,
   setFiltros,
   form,
+  onOrdenLoaded,
 }: ModalRecuperarOrdenCompraProps) {
   const compraSeleccionada = useStoreOrdenCompraSeleccionada(
     state => state.compra
@@ -29,16 +31,12 @@ export default function ModalRecuperarOrdenCompra({
   )
   const [loading, setLoading] = useState(false)
 
-  const handleSeleccionar = () => {
-    if (!compraSeleccionada) {
-      message.error('Debe seleccionar una orden de compra')
-      return
-    }
-
+  const cargarOrden = (orden: OrdenCompra) => {
     setLoading(true)
 
     try {
-      const result = loadCompraIntoForm(compraSeleccionada, form)
+      onOrdenLoaded?.(orden)
+      const result = loadCompraIntoForm(orden, form)
 
       if (result.success) {
         message.success('Orden de compra cargada correctamente')
@@ -55,6 +53,14 @@ export default function ModalRecuperarOrdenCompra({
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSeleccionar = () => {
+    if (!compraSeleccionada) {
+      message.error('Debe seleccionar una orden de compra')
+      return
+    }
+    cargarOrden(compraSeleccionada)
   }
 
   const handleClose = () => {
@@ -83,7 +89,7 @@ export default function ModalRecuperarOrdenCompra({
       </div>
       <div className='flex flex-col gap-4' style={{ height: '600px' }}>
         <div style={{ height: '300px' }}>
-          <TableOrdenesCompra />
+          <TableOrdenesCompra onRowDoubleClicked={cargarOrden} />
         </div>
         <div style={{ height: '300px' }}>
           <TableDetalleOrdenCompra

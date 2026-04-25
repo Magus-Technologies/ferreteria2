@@ -27,7 +27,7 @@ export default function TableComprasAnuladas() {
       querykeys={[QueryKeys.COMPRAS_ANULADAS]}
       onRowDoubleClicked={({ data }) => {
         router.push(
-          `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${data?.id}`
+          `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${data?.id}?recuperar=1`
         )
       }}
     />

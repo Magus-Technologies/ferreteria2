@@ -225,7 +225,7 @@ export default function useCreateCompra({
           // Limpiar el store de productos
           setProductosCompra([])
           setProductoAgregadoCompra(undefined)
-          
+
           // Limpiar el formulario
           form.resetFields()
           form.setFieldsValue({
@@ -237,6 +237,11 @@ export default function useCreateCompra({
             estado_de_compra: EstadoDeCompra.Creado,
             productos: [],
           })
+        }
+
+        // Si veníamos de /editar-compra (recuperar en-espera/anulada), volver a /crear-compra vacío
+        if (isRecuperacion && compra) {
+          router.push('/ui/gestion-comercial-e-inventario/mis-compras/crear-compra')
         }
       } else {
         // Si es edición real, redirigir a la lista

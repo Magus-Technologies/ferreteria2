@@ -30,11 +30,12 @@ export default function FormCrearVenta({
   const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
   const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
 
-  const [clienteIdSeleccionado, setClienteIdSeleccionado] = useState<number | undefined>(
-    venta?.cliente?.id
-  );
+  // SelectClientes limpia cliente_id automáticamente al modificar el texto
+  // (líneas 84-109 y 286-295 de select-clientes.tsx), así que basta con observar cliente_id.
+  const clienteIdParaCalificacion = clienteId as number | undefined;
+
   const { data: calificacionResponse, isLoading: loadingCalificacion } =
-    useUltimaCalificacionCliente(clienteIdSeleccionado);
+    useUltimaCalificacionCliente(clienteIdParaCalificacion);
 
   // Reset deuda state when client changes
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function FormCrearVenta({
       <FloatingCalificacionCliente
         calificacion={calificacionResponse?.data?.data}
         loading={loadingCalificacion}
-        clienteId={clienteIdSeleccionado}
+        clienteId={clienteIdParaCalificacion}
       />
       {/* Campos ocultos para que Form.useWatch funcione */}
       <Form.Item name="direccion_seleccionada" hidden>
@@ -301,9 +302,6 @@ export default function FormCrearVenta({
                   // Actualizar direccion_entrega con la dirección principal
                   const direccionPrincipal = direcciones.find(d => d.es_principal);
                   form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
-
-                  // Cargar calificación del cliente
-                  setClienteIdSeleccionado(cliente.id);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
@@ -314,7 +312,6 @@ export default function FormCrearVenta({
                   form.setFieldValue("_cliente_direccion_3", "");
                   form.setFieldValue("_cliente_direccion_4", "");
                   form.setFieldValue("direccion_entrega", "");
-                  setClienteIdSeleccionado(undefined);
                 }
               }}
             />
