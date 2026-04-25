@@ -8,6 +8,7 @@ import { AgGridReact } from "ag-grid-react";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { Cliente, clienteApi, TipoCliente } from "~/lib/api/cliente";
 import { useStoreFiltrosMisContactos } from "../../_store/store-filtros-mis-contactos";
+import { useStoreClienteSeleccionado } from "../../_store/store-cliente-seleccionado";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { App } from "antd";
@@ -19,6 +20,7 @@ import ModalSolicitarAutorizacion from "~/components/autorizaciones/modal-solici
 
 export default function TableMisContactos() {
   const { filtros } = useStoreFiltrosMisContactos();
+  const { setClienteId } = useStoreClienteSeleccionado();
   const { notification } = App.useApp();
   const queryClient = useQueryClient();
   const tableRef = useRef<AgGridReact<Cliente>>(null);
@@ -274,7 +276,11 @@ export default function TableMisContactos() {
         domLayout="normal"
         selectionColor="text-cyan-600"
         onSelectionChanged={() => {}}
-        onRowClicked={() => {}}
+        onRowClicked={(event) => {
+          if (event.data) {
+            setClienteId(event.data.id);
+          }
+        }}
         defaultColDef={{
           sortable: true,
           filter: true,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import ContenedorGeneral from "~/app/_components/containers/contenedor-general";
 import NoAutorizado from "~/components/others/no-autorizado";
 import { usePermission } from "~/hooks/use-permission";
@@ -8,9 +9,18 @@ import FiltersMisContactos from "./_components/filters/filters-mis-contactos";
 import TableMisContactos from "./_components/tables/table-mis-contactos";
 import TableDeudasClientes from "./_components/tables/table-deudas-clientes";
 import CardsInfoContactos from "./_components/cards/cards-info-contactos";
+import { useStoreClienteSeleccionado } from "./_store/store-cliente-seleccionado";
 
 export default function MisContactosPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_MIS_CONTACTOS_INDEX);
+  const { setClienteId } = useStoreClienteSeleccionado();
+
+  // Limpiar cliente seleccionado al desmontar
+  useEffect(() => {
+    return () => {
+      setClienteId(null);
+    };
+  }, [setClienteId]);
 
   if (!canAccess) return <NoAutorizado />;
 

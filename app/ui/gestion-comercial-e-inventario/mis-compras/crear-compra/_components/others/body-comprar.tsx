@@ -181,7 +181,7 @@ export default function BodyComprar({
   }, [almacen_id])
 
   return (
-    <>
+    <div className='relative w-full h-full'>
       <AperturaGuard />
       <FloatingCalificacionProveedor
         calificacion={calificacionResponse?.data?.data}
@@ -236,7 +236,6 @@ export default function BodyComprar({
           />
         </div>
       </FormBase>
-
-    </>
+    </div>
   )
 }
