@@ -32,10 +32,15 @@ export function toUTCBD({ date }: { date: Dayjs }) {
 }
 
 /**
- * Formatea una fecha del backend (UTC/ISO) a hora de Perú.
+ * Formatea una fecha del backend a hora de Perú.
  * Usar en lugar de dayjs(fecha).format() para garantizar
  * que la hora mostrada siempre sea la de Perú, independientemente
  * de la zona horaria del navegador.
+ *
+ * El backend (Laravel) tiene timezone='America/Lima', así que los
+ * strings sin marcador de TZ ya vienen en hora de Perú y NO deben
+ * reinterpretarse como UTC. Solo strings con `Z` o offset explícito
+ * son convertidos desde UTC.
  */
 export function formatFechaPeru(
   fecha: string | Date | null | undefined,
@@ -43,11 +48,19 @@ export function formatFechaPeru(
 ): string {
   if (!fecha) return ''
   // Date-only strings (YYYY-MM-DD) representan un día calendario, no un instante.
-  // Formatearlos sin convertir TZ evita que UTC midnight se desplace a Lima -5h.
   if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return dayjs(fecha).format(formato)
   }
-  return dayjs.utc(fecha).tz(TZ_PERU).format(formato)
+  // Si el string tiene marcador de timezone (Z, +HH:MM, -HH:MM al final),
+  // viene como UTC/offset explícito → convertir a Perú.
+  if (typeof fecha === 'string' && /(Z|[+-]\d{2}:?\d{2})$/.test(fecha)) {
+    return dayjs.utc(fecha).tz(TZ_PERU).format(formato)
+  }
+  // Date objects o strings sin TZ: el backend ya los emite en hora de Perú.
+  if (fecha instanceof Date) {
+    return dayjs(fecha).tz(TZ_PERU).format(formato)
+  }
+  return dayjs.tz(fecha, TZ_PERU).format(formato)
 }
 
 /**
