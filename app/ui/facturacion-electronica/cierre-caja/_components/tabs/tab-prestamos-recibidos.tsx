@@ -36,7 +36,7 @@ const columnasPrestamosRecibidos: ColDef[] = [
     headerName: 'Fecha',
     field: 'fecha_transferencia',
     width: 180,
-    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A'),
   },
 ]
 

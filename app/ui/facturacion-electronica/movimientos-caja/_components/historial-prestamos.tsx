@@ -85,7 +85,7 @@ export default function HistorialPrestamos() {
       field: 'fecha_prestamo',
       width: 180,
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
+        formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
     {
       headerName: 'Monto',

@@ -20,7 +20,6 @@ import TableBase from '~/components/tables/table-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { transferenciaStockApi, type TransferenciaStock } from '~/lib/api/transferencia-stock'
 import { getStock } from '~/app/_utils/get-stock'
-import { toUTCBD } from '~/utils/fechas'
 import ModalDocTransferenciaStock from './modal-doc-transferencia-stock'
 import {
   useStoreProductoAgregadoTransferencia,
@@ -323,7 +322,7 @@ export default function ModalTransferirStock({
           unidad_derivada_id: p.unidad_derivada_id,
           cantidad: p.cantidad,
         })),
-        fecha: values.fecha ? toUTCBD({ date: values.fecha }) : undefined,
+        fecha: values.fecha ? values.fecha.format('YYYY-MM-DD HH:mm:ss') : undefined,
         descripcion: values.descripcion,
       }
 

@@ -24,6 +24,7 @@ import TabCuentasPorPagar from '~/app/ui/facturacion-electronica/cierre-caja/_co
 import TabCobrosCreditos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-cobros-creditos'
 import { useStoreFiltrosArqueos } from '../_store/store-filtros-arqueos'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 const columnasArqueos: ColDef[] = [
   {
@@ -43,8 +44,8 @@ const columnasArqueos: ColDef[] = [
     colId: 'fecha',
     headerName: 'Fecha',
     field: 'fecha_apertura',
-    width: 120,
-    valueFormatter: p => p.value ? dayjs(p.value).format('DD/MM/YYYY') : 'N/A',
+    width: 200,
+    valueFormatter: p => p.value ? formatFechaPeru(p.value, 'DD/MM/YYYY hh:mm:ss A') : 'N/A',
   },
   {
     colId: 'estado',

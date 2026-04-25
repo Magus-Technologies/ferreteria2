@@ -49,7 +49,7 @@ export default function HistorialMovimientosInternos() {
       field: 'fecha',
       width: 180,
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
+        formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
     {
       headerName: 'Monto',
