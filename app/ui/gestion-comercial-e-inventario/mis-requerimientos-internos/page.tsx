@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, Button, Space, Tag, Input, Select, DatePicker, message, Tooltip, Empty, Spin, Modal } from 'antd'
 import { SearchOutlined, PlusOutlined, FilePdfOutlined, EyeOutlined } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import type { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import ModalDetalleRequerimiento from './_components/modal-detalle-requerimiento'
@@ -284,7 +284,9 @@ export default function MisRequerimientosInternos() {
           />
         ) : (
           <div className="h-96">
-            <TableBase
+            <TableWithTitle
+              id="mis-requerimientos-internos"
+              title="Requerimientos Internos"
               rowData={requerimientos}
               columnDefs={colDefs}
               rowSelection={false}

@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { formatFechaPeru } from '~/utils/fechas'
 
 interface TabOtrosIngresosProps {
@@ -34,8 +34,10 @@ export default function TabOtrosIngresos({ data, total }: TabOtrosIngresosProps)
 
   return (
     <div className='h-[420px] w-full'>
-      <TableBase<any>
-        ref={gridRef}
+      <TableWithTitle<any>
+        id='cierre-caja-tab-otros-ingresos'
+        title='Ingresos Extras'
+        tableRef={gridRef}
         rowData={data}
         columnDefs={columnasOtrosIngresos}
         rowSelection={false}

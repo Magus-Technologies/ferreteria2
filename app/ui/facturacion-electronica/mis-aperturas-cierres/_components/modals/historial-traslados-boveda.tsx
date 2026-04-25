@@ -9,7 +9,7 @@ import {
   trasladoBovedaApi,
   type TrasladoBoveda,
 } from "../../../../../../lib/api/traslado-boveda";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsHistorialTraslados } from "~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-historial-traslados";
 
@@ -127,9 +127,11 @@ export default function HistorialTrasladosBoveda({
         </div>
       </div>
 
-      <div className="h-[400px] w-full">
-        <TableBase<TrasladoBoveda>
-          ref={gridRef}
+      <div className="h-[440px] w-full">
+        <TableWithTitle<TrasladoBoveda>
+          id="historial-traslados-boveda-modal"
+          title="Historial de Traslados a Bóveda"
+          tableRef={gridRef}
           rowData={filteredTraslados}
           columnDefs={columns}
           rowSelection={false}

@@ -8,7 +8,7 @@ import { FaWarehouse } from 'react-icons/fa'
 import { DollarOutlined } from '@ant-design/icons'
 import type { SubCaja } from '~/lib/api/caja-principal'
 import { trasladoBovedaApi, type TrasladoBoveda } from '~/lib/api/traslado-boveda'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -158,8 +158,10 @@ export default function ModalHistorialTrasladosBoveda({
                 </div>
 
                 <div className='h-[400px] w-full'>
-                    <TableBase<TrasladoBoveda>
-                        ref={gridRef}
+                    <TableWithTitle<TrasladoBoveda>
+                        id='gestion-cajas-historial-traslados-boveda'
+                        title='Historial de Traslados'
+                        tableRef={gridRef}
                         rowData={filteredTraslados}
                         columnDefs={columns}
                         rowSelection={false}

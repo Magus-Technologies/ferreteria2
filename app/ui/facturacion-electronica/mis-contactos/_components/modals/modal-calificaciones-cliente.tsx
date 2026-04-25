@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Modal, Button, Tooltip, Popconfirm, message, Spin, Form, Select, Input } from "antd";
 import { FaPlus, FaEdit, FaTrash, FaStar, FaHistory } from "react-icons/fa";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { useRef, useState } from "react";
@@ -239,25 +239,25 @@ export default function ModalCalificacionesCliente({
             <Spin size="large" tip="Cargando calificaciones..." />
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div className="h-[400px] w-full">
-              {calificaciones.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-slate-500">
-                  <div className="text-center">
-                    <FaHistory className="text-4xl mx-auto mb-3 opacity-30" />
-                    <p>No hay calificaciones registradas</p>
-                  </div>
+          <div className="h-[440px] w-full">
+            {calificaciones.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-slate-500 bg-white rounded-lg border border-slate-200">
+                <div className="text-center">
+                  <FaHistory className="text-4xl mx-auto mb-3 opacity-30" />
+                  <p>No hay calificaciones registradas</p>
                 </div>
-              ) : (
-                <TableBase<ClienteCalificacion>
-                  ref={gridRef}
-                  rowData={calificaciones}
-                  columnDefs={columns}
-                  rowSelection={false}
-                  withNumberColumn={true}
-                />
-              )}
-            </div>
+              </div>
+            ) : (
+              <TableWithTitle<ClienteCalificacion>
+                id="modal-calificaciones-cliente"
+                title="Historial de Calificaciones"
+                tableRef={gridRef}
+                rowData={calificaciones}
+                columnDefs={columns}
+                rowSelection={false}
+                withNumberColumn={true}
+              />
+            )}
           </div>
         )}
       </Modal>

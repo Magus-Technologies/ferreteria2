@@ -12,7 +12,7 @@ import ButtonBase from "~/components/buttons/button-base";
 import { FaFilePdf, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { useStoreModalPdfNotaDebito } from "../../_store/store-modal-pdf-nota-debito";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 
 export default function TableMisNotasDebito() {
   const gridRef = useRef<AgGridReact>(null);
@@ -238,14 +238,15 @@ export default function TableMisNotasDebito() {
 
   return (
     <div style={{ height: 500, width: "100%" }}>
-      <TableBase
-        ref={gridRef}
+      <TableWithTitle
+        id="mis-notas-debito"
+        title="Mis Notas de Débito"
+        tableRef={gridRef}
         rowData={response}
         columnDefs={columnDefs}
         loading={isLoading}
         pagination={true}
         paginationPageSize={20}
-        tableKey="mis-notas-debito"
         persistColumnState={true}
       />
     </div>

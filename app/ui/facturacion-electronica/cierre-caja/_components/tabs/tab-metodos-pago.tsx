@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 
 interface TabMetodosPagoProps {
   data: any[]
@@ -32,8 +32,10 @@ export default function TabMetodosPago({ data, totalVentas }: TabMetodosPagoProp
 
   return (
     <div className='h-[420px] w-full'>
-      <TableBase<any>
-        ref={gridRef}
+      <TableWithTitle<any>
+        id='cierre-caja-tab-metodos-pago'
+        title='Cobros por Método de Pago'
+        tableRef={gridRef}
         rowData={data}
         columnDefs={columnasMetodosPago}
         rowSelection={false}

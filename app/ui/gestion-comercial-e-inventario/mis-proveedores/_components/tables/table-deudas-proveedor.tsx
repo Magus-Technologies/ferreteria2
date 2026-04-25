@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Tag, Tooltip, Button } from 'antd'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { FaEye, FaExclamationTriangle } from 'react-icons/fa'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -163,21 +163,18 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
 
   return (
     <div className='w-full'>
-      <div className='flex items-center justify-between mb-2'>
-        <div className='flex items-center gap-2'>
-          <FaExclamationTriangle className='text-red-500' />
-          <span className='font-semibold text-gray-700'>
-            Deudas Pendientes {proveedorSeleccionado ? `— ${proveedorSeleccionado.razon_social}` : '(Todos los proveedores)'}
-          </span>
-          <Tag color='blue'>{compras.length} compras</Tag>
-        </div>
-        <span className='text-sm font-bold text-red-600'>
-          Total deuda: S/. {totalDeuda.toFixed(2)}
-        </span>
-      </div>
-
-      <div className='h-[calc(50vh-120px)] min-h-[180px] w-full'>
-        <TableBase<Compra>
+      <div className='h-[calc(50vh-120px)] min-h-[220px] w-full'>
+        <TableWithTitle<Compra>
+          id='deudas-proveedor'
+          title={`Deudas Pendientes ${proveedorSeleccionado ? `— ${proveedorSeleccionado.razon_social}` : '(Todos los proveedores)'}`}
+          extraTitle={
+            <div className='flex items-center gap-3'>
+              <Tag color='blue'>{compras.length} compras</Tag>
+              <span className='text-sm font-bold text-red-600'>
+                Total deuda: S/. {totalDeuda.toFixed(2)}
+              </span>
+            </div>
+          }
           rowData={compras}
           columnDefs={columns}
           loading={isLoading}

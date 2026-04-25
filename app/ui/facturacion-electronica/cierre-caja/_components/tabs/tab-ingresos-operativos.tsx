@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 import { Spin } from 'antd'
@@ -79,8 +79,10 @@ export default function TabIngresosOperativos({ fecha, fecha_fin, user_id }: Tab
   return (
     <div className='w-full'>
       <div className='h-[400px] w-full'>
-        <TableBase<any>
-          ref={gridRef}
+        <TableWithTitle<any>
+          id='cierre-caja-tab-ingresos-operativos'
+          title='Ingresos Operativos'
+          tableRef={gridRef}
           rowData={gastos}
           columnDefs={columnas}
           rowSelection={false}

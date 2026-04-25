@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { Usuario } from '~/lib/api/usuarios'
 
 interface TableInfoUsuarioProps {
@@ -136,10 +136,9 @@ export default function TableInfoUsuario({ usuario }: TableInfoUsuarioProps) {
 
   return (
     <div>
-      <h3 className='text-lg font-semibold mb-3 text-blue-600'>
-        Información Completa del Usuario
-      </h3>
-      <TableBase
+      <TableWithTitle
+        id='configuracion-info-usuario'
+        title='Información Completa del Usuario'
         rowData={usuario ? [usuario] : []}
         columnDefs={columnDefs}
         domLayout='autoHeight'

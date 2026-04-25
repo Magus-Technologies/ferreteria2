@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Spin, Tag, Button, message, App } from 'antd'
 import { CheckCircleOutlined } from '@ant-design/icons'
 import { transaccionesCajaApi, type Prestamo } from '~/lib/api/transacciones-caja'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
@@ -189,13 +189,14 @@ export default function HistorialPrestamos() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-lg font-semibold">Historial de Préstamos</span>
-        <span className="text-sm text-slate-500">Total: {prestamos.length} préstamos</span>
-      </div>
       <div className="h-[500px] w-full">
-        <TableBase<Prestamo>
-          ref={gridRef}
+        <TableWithTitle<Prestamo>
+          id="historial-prestamos"
+          title="Historial de Préstamos"
+          extraTitle={
+            <span className="text-sm text-slate-500">Total: {prestamos.length} préstamos</span>
+          }
+          tableRef={gridRef}
           rowData={prestamos}
           columnDefs={columns}
           rowSelection={false}

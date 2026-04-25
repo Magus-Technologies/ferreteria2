@@ -8,7 +8,7 @@ import { FaEye } from 'react-icons/fa'
 import { useQuery } from '@tanstack/react-query'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import TabVentas from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-ventas'
 import TabMetodosPago from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-metodos-pago'
 import TabOtrosIngresos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-otros-ingresos'
@@ -234,10 +234,11 @@ export default function ArqueosDiariosView() {
       <FiltrosArqueos />
 
       {/* Tabla de arqueos */}
-      <div className='h-[220px] w-full mt-6'>
-        <TableBase<any>
-          ref={gridRef}
-          tableKey='arqueos-diarios-v2'
+      <div className='h-[260px] w-full mt-6'>
+        <TableWithTitle<any>
+          id='arqueos-diarios-v2'
+          title='Arqueos Diarios'
+          tableRef={gridRef}
           rowData={arqueos}
           columnDefs={columnasArqueos}
           rowSelection={false}

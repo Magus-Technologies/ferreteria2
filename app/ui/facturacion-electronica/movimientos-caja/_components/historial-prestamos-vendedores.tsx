@@ -8,7 +8,7 @@ import { cierreCajaApi } from "~/lib/api/cierre-caja";
 import ModalAprobarSolicitudEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo";
 import ModalSolicitarEfectivo from "~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo";
 import ButtonBase from "~/components/buttons/button-base";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsPrestamosVendedores, type SolicitudEfectivo } from "./columns-prestamos-vendedores";
 import FiltersPrestamosVendedores from "./filters-prestamos-vendedores";
@@ -146,18 +146,11 @@ export default function HistorialPrestamosVendedores() {
     <div className='w-full'>
       <FiltersPrestamosVendedores onFilter={handleFilter} />
 
-      <div className='flex justify-between items-center mb-4'>
-        <div>
-          <div className='text-lg font-semibold text-slate-700'>
-            Préstamos entre Vendedores
-          </div>
-        </div>
-        
-      </div>
-
       <div className='h-[500px] w-full'>
-        <TableBase<SolicitudEfectivo>
-          ref={gridRef}
+        <TableWithTitle<SolicitudEfectivo>
+          id='historial-prestamos-vendedores'
+          title='Préstamos entre Vendedores'
+          tableRef={gridRef}
           rowData={solicitudes}
           columnDefs={columns}
           loading={loading}

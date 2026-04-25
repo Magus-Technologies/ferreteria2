@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { message, Popconfirm, Tag } from 'antd'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { usuariosApi, Usuario } from '~/lib/api/usuarios'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalUsuarioForm from '../modals/modal-usuario-form'
@@ -160,7 +160,9 @@ export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
 
   return (
     <>
-      <TableBase
+      <TableWithTitle
+        id='configuracion-usuarios'
+        title='Usuarios'
         rowData={data || []}
         columnDefs={columnDefs}
         loading={isLoading}
@@ -168,7 +170,6 @@ export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
         pagination={true}
         paginationPageSize={20}
         onRowClicked={(event) => {
-          // Seleccionar la fila cuando se hace clic en cualquier parte
           event.node.setSelected(true)
         }}
         onSelectionChanged={(event) => {

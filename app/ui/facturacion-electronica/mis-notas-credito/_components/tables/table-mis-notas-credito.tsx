@@ -11,7 +11,7 @@ import { formatFechaPeru } from "~/utils/fechas";
 import ButtonBase from "~/components/buttons/button-base";
 import { FaFilePdf, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { useStoreModalPdfNotaCredito } from "../../_store/store-modal-pdf-nota-credito";
 
 export default function TableMisNotasCredito() {
@@ -236,14 +236,15 @@ export default function TableMisNotasCredito() {
 
   return (
     <div style={{ height: 500, width: "100%" }}>
-      <TableBase
-        ref={gridRef}
+      <TableWithTitle
+        id="mis-notas-credito"
+        title="Mis Notas de Crédito"
+        tableRef={gridRef}
         rowData={response}
         columnDefs={columnDefs}
         loading={isLoading}
         pagination={true}
         paginationPageSize={20}
-        tableKey="mis-notas-credito"
         persistColumnState={true}
       />
     </div>

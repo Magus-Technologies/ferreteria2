@@ -3,7 +3,7 @@
 import { Modal, Button } from "antd";
 import { FaFilePdf } from "react-icons/fa6";
 import { AperturaYCierreCaja } from "~/lib/api/caja";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { ColDef } from "ag-grid-community";
 import { useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
@@ -139,22 +139,17 @@ export default function ModalVendedoresApertura({
           </div>
 
           {/* Tabla de vendedores */}
-          <div>
-            <div className="mb-2">
-              <span className="text-sm font-semibold text-slate-700">
-                Seleccione un vendedor para ver su ticket:
-              </span>
-            </div>
-            <div className="h-[300px] w-full">
-              <TableBase<VendedorDistribucion>
-                ref={gridRef}
-                rowData={vendedores}
-                columnDefs={columns}
-                rowSelection={false}
-                withNumberColumn={true}
-                headerColor="var(--color-amber-600)"
-              />
-            </div>
+          <div className="h-[340px] w-full">
+            <TableWithTitle<VendedorDistribucion>
+              id="modal-vendedores-apertura"
+              title="Seleccione un vendedor para ver su ticket"
+              tableRef={gridRef}
+              rowData={vendedores}
+              columnDefs={columns}
+              rowSelection={false}
+              withNumberColumn={true}
+              headerColor="var(--color-amber-600)"
+            />
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi } from '~/lib/api/venta'
 import { Spin } from 'antd'
@@ -99,8 +99,10 @@ export default function TabCobrosCreditos({ fecha, fecha_fin, user_id }: TabCobr
   return (
     <div className='w-full'>
       <div className='h-[400px] w-full'>
-        <TableBase<any>
-          ref={gridRef}
+        <TableWithTitle<any>
+          id='cierre-caja-tab-cobros-creditos'
+          title='Cobros de Créditos'
+          tableRef={gridRef}
           rowData={ventas}
           columnDefs={columnas}
           rowSelection={false}

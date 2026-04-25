@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal, Button } from 'antd'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import { FaFileInvoiceDollar, FaMoneyBillWave, FaExchangeAlt, FaArrowCircleDown, FaArrowCircleUp, FaSearch } from 'react-icons/fa'
@@ -167,7 +167,9 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen }: Mod
                 {rowData.length > 0 ? (
                     <>
                         <div className='h-[450px] w-full border rounded overflow-hidden'>
-                            <TableBase
+                            <TableWithTitle
+                                id={`modal-detalle-cierre-${tipo || 'default'}`}
+                                title={title}
                                 rowData={rowData}
                                 columnDefs={columns}
                                 withNumberColumn={true}
