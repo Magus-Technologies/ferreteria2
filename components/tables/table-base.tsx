@@ -462,6 +462,10 @@ export default function TableBase<T>({
           // NO aplicar hide aquí porque SelectColumns maneja la visibilidad
           if (savedState && savedState.width !== undefined) {
             (col as any).width = savedState.width;
+            // Si el usuario fijó un ancho manual, AG Grid guarda flex=null en el estado.
+            // Hay que reflejar eso en la colDef o el flex original (ej: flex:1) re-expandirá
+            // la columna al render siguiente y se perderá el resize.
+            (col as any).flex = savedState.flex ?? null;
           }
         });
 
