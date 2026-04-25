@@ -359,14 +359,24 @@ export default function useCreateVenta({
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
 
+          // Si el modal envió cantidades_parciales (split de Domicilio), usar
+          // entregar_programado por unidad. Si no, programar todo por defecto.
+          let parcialIdx = 0
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
               productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                unidadesDerivadas.push({
-                  unidad_derivada_venta_id: unidad.id,
-                  cantidad_entregada: Number(unidad.cantidad),
-                  ubicacion: undefined,
-                })
+                const parcial = cantidades_parciales?.[parcialIdx]
+                parcialIdx++
+                const cantidadAEntregar = parcial
+                  ? Number(parcial.entregar_programado ?? 0)
+                  : Number(unidad.cantidad)
+                if (cantidadAEntregar > 0) {
+                  unidadesDerivadas.push({
+                    unidad_derivada_venta_id: unidad.id,
+                    cantidad_entregada: cantidadAEntregar,
+                    ubicacion: undefined,
+                  })
+                }
               })
             }
           })
