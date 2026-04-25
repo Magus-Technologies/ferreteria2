@@ -12,7 +12,6 @@ import { useEffect, useState, useMemo } from 'react'
 import type { RequerimientoFilters } from '~/lib/api/requerimiento-interno'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import dayjs, { Dayjs } from 'dayjs'
-import { toUTCBD } from '~/utils/fechas'
 import { useDebounce } from 'use-debounce'
 
 interface ValuesFiltersSolicitudOC {
@@ -61,14 +60,18 @@ export default function FiltersSolicitudOC({
     return count
   }, [form])
 
-  // Inicializar con filtros de hoy
+  // Inicializar con filtro de hoy por defecto
   useEffect(() => {
+    const today = dayjs().format('YYYY-MM-DD')
     const initialFilters: RequerimientoFilters = {
-      tipo_solicitud: 'SOC',
-      desde: toUTCBD({ date: dayjs().startOf('day') }),
-      hasta: toUTCBD({ date: dayjs().endOf('day') }),
+      desde: today,
+      hasta: today,
     }
     setFiltros(initialFilters)
+    form.setFieldsValue({
+      desde: dayjs(),
+      hasta: dayjs(),
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -80,11 +83,9 @@ export default function FiltersSolicitudOC({
   const handleFinish = (values: ValuesFiltersSolicitudOC) => {
     const { desde, hasta, ...rest } = values
     const filtros: RequerimientoFilters = {
-      tipo_solicitud: 'SOC',
       ...rest,
-      desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-      hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
-      // Si no hay search en values pero hay en el estado local (para tiempo real)
+      desde: desde ? desde.format('YYYY-MM-DD') : undefined,
+      hasta: hasta ? hasta.format('YYYY-MM-DD') : undefined,
       search: values.search || searchValue || undefined
     }
     setFiltros(filtros)
@@ -96,10 +97,7 @@ export default function FiltersSolicitudOC({
       form={form}
       name="filtros-solicitud-oc"
       className="w-full"
-      initialValues={{
-        desde: dayjs().startOf('day'),
-        hasta: dayjs().endOf('day'),
-      }}
+      initialValues={{}}
       onValuesChange={(changedValues) => {
         if ('search' in changedValues) {
           setSearchValue(changedValues.search)
@@ -172,7 +170,24 @@ export default function FiltersSolicitudOC({
             </div>
           </div>
 
-          <ButtonBase color="info" size="md" type="submit" className="hidden lg:flex items-center gap-2 py-1.5">
+          <ButtonBase 
+            color="info" 
+            size="md" 
+            type="button" 
+            onClick={() => {
+              form.setFieldsValue({
+                desde: undefined,
+                hasta: undefined,
+                estado: undefined,
+                prioridad: undefined,
+                search: '',
+              })
+              setSearchValue('')
+              const filtros: RequerimientoFilters = {}
+              setFiltros(filtros)
+            }}
+            className="hidden lg:flex items-center gap-2 py-1.5"
+          >
             <FaSearch size={14} />
             Refrescar
           </ButtonBase>

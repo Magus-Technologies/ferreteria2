@@ -131,6 +131,18 @@ export function useColumnsSolicitudOC({
       ),
     },
     {
+      colId: 'fecha_emision',
+      headerName: 'Fecha Emisión',
+      field: 'created_at',
+      width: 180,
+      minWidth: 150,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
+        <div className="flex items-center h-full text-xs">
+          {data?.created_at ? dayjs(data.created_at).format('DD/MM/YYYY hh:mm A') : '—'}
+        </div>
+      ),
+    },
+    {
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
