@@ -621,6 +621,54 @@ export default function useCreateVenta({
         } catch (error) {
           console.error('❌ Error al crear entrega en tienda automática:', error)
         }
+      } else if (
+        ventaCreada &&
+        _omitir_entrega &&
+        (tipo_despacho === 'Domicilio' || tipo_despacho === 'Parcial')
+      ) {
+        try {
+          const productosVenta = ventaCreada.productos_por_almacen || []
+          const unidadesDerivadas: any[] = []
+
+          productosVenta.forEach((productoAlmacen: any) => {
+            if (productoAlmacen.unidades_derivadas) {
+              productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                unidadesDerivadas.push({
+                  unidad_derivada_venta_id: unidad.id,
+                  cantidad_entregada: Number(unidad.cantidad),
+                  ubicacion: undefined,
+                })
+              })
+            }
+          })
+
+          const entregaData: CreateEntregaProductoRequest = {
+            venta_id: ventaCreada.id,
+            tipo_entrega:
+              tipo_despacho === 'Parcial'
+                ? TipoEntrega.PARCIAL
+                : TipoEntrega.DESPACHO,
+            tipo_despacho: TipoDespacho.PROGRAMADO,
+            estado_entrega: EstadoEntrega.PENDIENTE,
+            fecha_entrega: dayjs().format('YYYY-MM-DD'),
+            almacen_salida_id: almacen_id,
+            quien_entrega: QuienEntrega.ALMACEN,
+            user_id: user_id,
+            productos_entregados: unidadesDerivadas,
+          }
+
+          const entregaResponse = await entregaProductoApi.create(entregaData)
+
+          if (entregaResponse.error) {
+            console.error('❌ Error al crear entrega pendiente:', entregaResponse.error)
+            notification.warning({
+              message: 'Venta creada pero entrega no pudo ser registrada',
+              description: 'Puedes crearla manualmente desde "Mis Ventas".',
+            })
+          }
+        } catch (error) {
+          console.error('❌ Error al crear entrega pendiente (omitir):', error)
+        }
       }
 
       // ✅ Invalidar caché de productos para que se recarguen con tiene_ingresos actualizado
