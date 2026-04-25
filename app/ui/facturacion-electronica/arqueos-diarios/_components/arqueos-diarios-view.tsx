@@ -27,22 +27,27 @@ import dayjs from 'dayjs'
 
 const columnasArqueos: ColDef[] = [
   {
+    colId: 'vendedor',
     headerName: 'Vendedor',
     valueGetter: p => p.data.vendedor?.name || p.data.user?.name || 'N/A',
     flex: 1,
+    minWidth: 150,
   },
   {
+    colId: 'caja',
     headerName: 'Caja',
     valueGetter: p => p.data.caja_principal?.nombre || 'N/A',
     width: 160,
   },
   {
+    colId: 'fecha',
     headerName: 'Fecha',
     field: 'fecha_apertura',
     width: 120,
     valueFormatter: p => p.value ? dayjs(p.value).format('DD/MM/YYYY') : 'N/A',
   },
   {
+    colId: 'estado',
     headerName: 'Estado',
     field: 'estado',
     width: 110,
@@ -52,6 +57,7 @@ const columnasArqueos: ColDef[] = [
     },
   },
   {
+    colId: 'monto_apertura',
     headerName: 'Monto Apertura',
     field: 'monto_apertura',
     width: 140,
@@ -59,6 +65,7 @@ const columnasArqueos: ColDef[] = [
     cellStyle: { textAlign: 'right' },
   },
   {
+    colId: 'monto_cierre',
     headerName: 'Monto Cierre',
     field: 'monto_cierre',
     width: 130,
@@ -66,8 +73,9 @@ const columnasArqueos: ColDef[] = [
     cellStyle: { textAlign: 'right', fontWeight: 'bold' },
   },
   {
-    headerName: '',
-    width: 60,
+    colId: 'acciones',
+    headerName: 'Acciones',
+    width: 90,
     cellRenderer: () => (
       <div className='h-full flex items-center justify-center'>
         <Tooltip title='Ver detalle'>

@@ -3,6 +3,7 @@ import { App, FormInstance } from 'antd'
 import { useRouter } from 'next/navigation'
 import { guiaRemisionApi, type CreateGuiaRemisionRequest, type GuiaRemisionResponse } from '~/lib/api/guia-remision'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { fechaSubmit } from '~/utils/fechas'
 import type { FormCreateGuia } from '../_components/others/body-crear-guia'
 
 export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
@@ -45,7 +46,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
     // Transformar los datos del formulario al formato de la API
     const data: CreateGuiaRemisionRequest = {
       venta_id: values.venta_id,
-      fecha_emision: values.fecha_emision?.format('YYYY-MM-DD') || '',
+      fecha_emision: values.fecha_emision ? fechaSubmit(values.fecha_emision) : '',
       fecha_traslado: values.fecha_traslado?.format('YYYY-MM-DD') || '',
       serie: values.serie,
       numero: values.numero,

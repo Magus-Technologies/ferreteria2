@@ -7,6 +7,7 @@ import { useStoreFiltrosMisNotasDebito } from "../../_store/store-filtros-mis-no
 import useGetNotasDebito from "../../_hooks/use-get-notas-debito";
 import { Tag, message } from "antd";
 import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import ButtonBase from "~/components/buttons/button-base";
 import { FaFilePdf, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { useStoreModalPdfNotaDebito } from "../../_store/store-modal-pdf-nota-debito";
@@ -50,9 +51,9 @@ export default function TableMisNotasDebito() {
       {
         headerName: "Fecha Emisión",
         field: "fecha",
-        width: 130,
+        width: 180,
         valueFormatter: (params) =>
-          params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+          params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
       },
       {
         headerName: "Factura Afectada",

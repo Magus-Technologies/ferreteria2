@@ -22,7 +22,7 @@ export function useColumnsMisGuias(onRefetch?: () => void) {
     {
       headerName: 'Fecha Emisión',
       field: 'fecha_emision',
-      width: 160,
+      width: 180,
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },

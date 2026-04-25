@@ -31,12 +31,12 @@ export default function ModalRecuperarOrdenCompra({
   )
   const [loading, setLoading] = useState(false)
 
-  const cargarOrden = (orden: OrdenCompra) => {
+  const cargarOrden = async (orden: OrdenCompra) => {
     setLoading(true)
 
     try {
       onOrdenLoaded?.(orden)
-      const result = loadCompraIntoForm(orden, form)
+      const result = await loadCompraIntoForm(orden, form)
 
       if (result.success) {
         message.success('Orden de compra cargada correctamente')
