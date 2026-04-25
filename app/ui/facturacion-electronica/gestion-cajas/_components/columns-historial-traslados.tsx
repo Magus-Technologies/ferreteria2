@@ -27,7 +27,7 @@ export const useColumnsHistorialTraslados = ({
       colId: 'caja',
       headerName: 'Caja',
       field: 'sub_caja',
-      flex: 1,
+      width: 200,
       minWidth: 150,
       lockPosition: true,
       suppressMovable: true,
