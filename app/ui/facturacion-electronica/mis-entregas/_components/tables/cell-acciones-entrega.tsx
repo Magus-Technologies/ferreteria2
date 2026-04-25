@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaMapMarkedAlt, FaTruck, FaBoxOpen, FaCheck } from 'react-icons/fa'
+import { FaMapMarkedAlt, FaTruck, FaBoxOpen, FaCheck, FaEye, FaSplotch } from 'react-icons/fa'
 import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
@@ -10,6 +10,9 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalDespachoEntrega from '../modals/modal-despacho-entrega'
 import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
+import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
+import ModalMarcarEntregada from '../modals/modal-marcar-entregada'
+import ModalEntregarParcial from '../modals/modal-entregar-parcial'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
@@ -21,6 +24,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [loading, setLoading] = useState(false)
   const [modalDespachoOpen, setModalDespachoOpen] = useState(false)
   const [modalConfirmarOpen, setModalConfirmarOpen] = useState(false)
+  const [modalDetallesOpen, setModalDetallesOpen] = useState(false)
+  const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
+  const [modalParcialOpen, setModalParcialOpen] = useState(false)
   const { message } = useApp()
   const queryClient = useQueryClient()
   const openPostDespacho = useStoreEntregaSeleccionada((s) => s.openPostDespacho)
@@ -138,9 +144,25 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     : entrega.estado_entrega === 'ca' ? 'CANCELADO'
     : entrega.estado_entrega
 
+  const tipoEntrega = entrega.tipo_entrega
+  const esRecojoTienda = tipoEntrega === 'rt'
+  const onSuccess = () => {
+    if (onRefetch) onRefetch()
+  }
+
   return (
     <>
       <Space size={4} className="flex items-center justify-center h-full">
+        <Tooltip title="Ver Detalles">
+          <Button
+            type="text"
+            size="small"
+            icon={<FaEye size={15} />}
+            onClick={() => setModalDetallesOpen(true)}
+            className="!text-slate-600 hover:!bg-slate-100 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+          />
+        </Tooltip>
+
         <ConfigurableElement
           componentId="mis-entregas.boton-ver-mapa"
           label="Botón Ver Mapa"
@@ -170,7 +192,19 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           </Tooltip>
         )}
 
-        {estadoEntrega === 'PENDIENTE' && (
+        {estadoEntrega === 'PENDIENTE' && esRecojoTienda && (
+          <Tooltip title="Marcar Entregada">
+            <Button
+              type="text"
+              size="small"
+              icon={<FaCheck size={15} />}
+              onClick={() => setModalMarcarOpen(true)}
+              className="!text-green-600 hover:!bg-green-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+            />
+          </Tooltip>
+        )}
+
+        {estadoEntrega === 'PENDIENTE' && !esRecojoTienda && (
           <ConfigurableElement
             componentId="mis-entregas.boton-en-camino"
             label="Botón En Camino"
@@ -186,6 +220,18 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
               />
             </Tooltip>
           </ConfigurableElement>
+        )}
+
+        {estadoEntrega === 'PENDIENTE' && (entrega.productos_entregados?.length || 0) > 0 && (
+          <Tooltip title="Entregar Parcial">
+            <Button
+              type="text"
+              size="small"
+              icon={<FaSplotch size={15} />}
+              onClick={() => setModalParcialOpen(true)}
+              className="!text-amber-600 hover:!bg-amber-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+            />
+          </Tooltip>
         )}
 
         {estadoEntrega === 'EN_CAMINO' && (
@@ -206,6 +252,26 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           </ConfigurableElement>
         )}
       </Space>
+
+      <ModalDetallesEntregaCompleto
+        open={modalDetallesOpen}
+        onClose={() => setModalDetallesOpen(false)}
+        entrega={entrega}
+      />
+
+      <ModalMarcarEntregada
+        open={modalMarcarOpen}
+        onClose={() => setModalMarcarOpen(false)}
+        entrega={entrega}
+        onSuccess={onSuccess}
+      />
+
+      <ModalEntregarParcial
+        open={modalParcialOpen}
+        onClose={() => setModalParcialOpen(false)}
+        entrega={entrega}
+        onSuccess={onSuccess}
+      />
 
       {/* Modal de Despacho (ticket + botón despachar) */}
       <ModalDespachoEntrega
