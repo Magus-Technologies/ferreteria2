@@ -84,9 +84,9 @@ export default function KardexView() {
     {
       headerName: 'Fecha',
       field: 'fecha',
-      width: 140,
-      minWidth: 120,
-      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
+      width: 200,
+      minWidth: 180,
+      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
     // Mostrar columnas de producto solo cuando no hay producto seleccionado
     ...(!productoId ? [
