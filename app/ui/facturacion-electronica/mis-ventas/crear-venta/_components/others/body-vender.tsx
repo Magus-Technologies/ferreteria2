@@ -7,6 +7,7 @@ import {
   TipoDocumento,
   DescuentoTipo,
 } from '~/lib/api/venta'
+import { TipoPedido } from '~/lib/api/entrega-producto'
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
 import { useState, useEffect } from 'react'
@@ -111,11 +112,16 @@ export type FormCreateVenta = {
   }>
   // Datos para programar la entrega del resto en despacho parcial mixto
   parcial_resto_programado?: {
+    tipo_pedido?: TipoPedido
     despachador_id?: string
+    cargo_destino?: string
     fecha_programada?: string
     hora_inicio?: string
     hora_fin?: string
     direccion_entrega?: string
+    referencia_entrega?: string
+    latitud?: number
+    longitud?: number
     observaciones?: string
     vehiculo_id?: number
   }

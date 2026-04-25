@@ -112,11 +112,13 @@ export default function ModalDetallesEntrega({
   const [programarResto, setProgramarResto] = useState(true)
   const [horaInicioResto, setHoraInicioResto] = useState<string | undefined>(undefined)
   const [horaFinResto, setHoraFinResto] = useState<string | undefined>(undefined)
-  const [direccionResto, setDireccionResto] = useState<string>('')
   const [observacionesResto, setObservacionesResto] = useState<string>('')
   const [mostrarMapaResto, setMostrarMapaResto] = useState(false)
   const [coordenadasResto, setCoordenadasResto] = useState<Coordenadas | null>(null)
   const [direccionSeleccionadaResto, setDireccionSeleccionadaResto] = useState<TipoDireccion | null>(null)
+  const [tipoPedidoResto, setTipoPedidoResto] = useState<TipoPedido>(TipoPedido.INTERNO)
+  const [vehiculoPreseleccionadoResto, setVehiculoPreseleccionadoResto] = useState<{ id: number; name: string; tipo: string; placa: string | null } | null>(null)
+  const [ubicacionGpsResto, setUbicacionGpsResto] = useState<string>('')
 
   // Estados para el modal de calendario de slots
   const [modalCalendarioDomicilio, setModalCalendarioDomicilio] = useState(false)
@@ -179,6 +181,54 @@ export default function ModalDetallesEntrega({
     })
   }, [open, tipoDespacho, user, form])
 
+  // Precargar el vehículo del usuario logueado en la sección "Resto" del Parcial,
+  // si aún no hay vehículo ni despachador seleccionado.
+  useEffect(() => {
+    if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
+    if (!user?.vehiculo || !user.vehiculo.id) return
+    if (form.getFieldValue('_resto_vehiculo_id')) return
+    if (form.getFieldValue('_resto_despachador_id')) return
+
+    form.setFieldValue('_resto_vehiculo_id', user.vehiculo.id)
+    setVehiculoPreseleccionadoResto({
+      id: user.vehiculo.id,
+      name: user.vehiculo.name,
+      tipo: user.vehiculo.tipo,
+      placa: user.vehiculo.placa,
+    })
+  }, [open, tipoDespacho, programarResto, user, form])
+
+  // Cargar dirección inicial cuando se abra el Parcial con programarResto activo
+  useEffect(() => {
+    if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
+    if (direcciones.length === 0) return
+    // Si ya hay dirección en el form, no sobrescribir
+    if (form.getFieldValue('_resto_direccion_entrega')) return
+
+    const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
+    const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm) || direcciones[0]
+
+    if (direccionObj) {
+      form.setFieldValue('_resto_direccion_entrega', direccionObj.direccion)
+      form.setFieldValue('_resto_referencia_entrega', direccionObj.referencia || '')
+      setDireccionSeleccionadaResto(direccionObj.tipo as TipoDireccion)
+
+      if (direccionObj.latitud && direccionObj.longitud) {
+        const coords = {
+          lat: Number(direccionObj.latitud),
+          lng: Number(direccionObj.longitud)
+        }
+        setCoordenadasResto(coords)
+        form.setFieldValue('_resto_latitud', coords.lat)
+        form.setFieldValue('_resto_longitud', coords.lng)
+        obtenerUbicacionGpsResto(coords.lat, coords.lng)
+      } else {
+        setUbicacionGpsResto('')
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tipoDespacho, programarResto, direcciones, form])
+
   // Cargar dirección inicial cuando se abra el modal
   useEffect(() => {
     if (open && tipoDespacho === 'Domicilio' && direcciones.length > 0) {
@@ -239,6 +289,8 @@ export default function ModalDetallesEntrega({
   const quienEntrega = Form.useWatch('quien_entrega', form) as string | undefined
   const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
   const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
+  const restoCargoDestino = Form.useWatch('_resto_cargo_destino', form) as string | undefined
+  const restoDireccionEntrega = Form.useWatch('_resto_direccion_entrega', form) as string | undefined
 
   // Validación de campos obligatorios para Domicilio
   const domicilioInvalido =
@@ -360,13 +412,42 @@ export default function ModalDetallesEntrega({
     }
   }, [direcciones, form, obtenerUbicacionGps])
 
-  // Callback para cambio de dirección en sección "resto" del parcial
+  // Reverse geocoding helper — versión Resto
+  const obtenerUbicacionGpsResto = useCallback(async (lat: number, lng: number) => {
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+      if (!token) return
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1&language=es`
+      )
+      const data = await res.json()
+      if (data.features?.[0]?.place_name) {
+        setUbicacionGpsResto(data.features[0].place_name)
+      }
+    } catch (err) {
+      console.error('Error en geocodificación inversa (resto):', err)
+    }
+  }, [])
+
+  // Cambio de Tipo de Pedido en Resto
+  const handleTipoPedidoChangeResto = (value: TipoPedido) => {
+    setTipoPedidoResto(value)
+    form.setFieldValue('_resto_tipo_pedido', value)
+    if (value === TipoPedido.INTERNO) {
+      form.setFieldValue('_resto_cargo_destino', undefined)
+    } else {
+      form.setFieldValue('_resto_despachador_id', undefined)
+    }
+  }
+
+  // Callback para cambio de dirección (D1-D4) en sección "resto" del parcial
   const handleDireccionChangeResto = useCallback((tipo: TipoDireccion) => {
     setDireccionSeleccionadaResto(tipo)
     const direccionObj = direcciones.find(d => d.tipo === tipo)
 
     if (direccionObj) {
-      setDireccionResto(direccionObj.direccion)
+      form.setFieldValue('_resto_direccion_entrega', direccionObj.direccion)
+      form.setFieldValue('_resto_referencia_entrega', direccionObj.referencia || '')
 
       if (direccionObj.latitud && direccionObj.longitud) {
         const coords = {
@@ -374,17 +455,26 @@ export default function ModalDetallesEntrega({
           lng: Number(direccionObj.longitud)
         }
         setCoordenadasResto(coords)
+        form.setFieldValue('_resto_latitud', coords.lat)
+        form.setFieldValue('_resto_longitud', coords.lng)
         setMostrarMapaResto(true)
+        obtenerUbicacionGpsResto(coords.lat, coords.lng)
       } else {
         setCoordenadasResto(null)
+        setUbicacionGpsResto('')
+        form.setFieldValue('_resto_latitud', undefined)
+        form.setFieldValue('_resto_longitud', undefined)
       }
     }
-  }, [direcciones])
+  }, [direcciones, form, obtenerUbicacionGpsResto])
 
   // Callback para coordenadas del mapa del resto
-  const handleCoordenadaChangeResto = useCallback((nuevasCoordenadas: Coordenadas) => {
+  const handleCoordenadaChangeResto = useCallback((nuevasCoordenadas: Coordenadas, direccionObtenida?: string) => {
     setCoordenadasResto(nuevasCoordenadas)
-  }, [])
+    form.setFieldValue('_resto_latitud', nuevasCoordenadas.lat)
+    form.setFieldValue('_resto_longitud', nuevasCoordenadas.lng)
+    if (direccionObtenida) setUbicacionGpsResto(direccionObtenida)
+  }, [form])
 
   // Setear tipo_despacho en el formulario cuando se abre el modal
   useEffect(() => {
@@ -482,6 +572,18 @@ export default function ModalDetallesEntrega({
     [productosEntrega],
   )
 
+  // Validación: si se va a programar el resto en Parcial, exigir slot, dirección y despachador|cargo
+  const restoInvalido =
+    tipoDespacho === 'Parcial' &&
+    programarResto &&
+    totalAProgramar > 0 &&
+    (
+      !slotResto ||
+      !restoDireccionEntrega?.trim() ||
+      (tipoPedidoResto === TipoPedido.INTERNO && !restoDespachadorId) ||
+      (tipoPedidoResto === TipoPedido.EXTERNO && !restoCargoDestino)
+    )
+
   const handleConfirmar = async () => {
     const ventaValues = form.getFieldsValue()
 
@@ -512,14 +614,24 @@ export default function ModalDetallesEntrega({
         const restoDespachadorId = form.getFieldValue('_resto_despachador_id')
         const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
         const restoVehiculoId = form.getFieldValue('_resto_vehiculo_id')
+        const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
+        const restoReferencia = form.getFieldValue('_resto_referencia_entrega')
+        const restoLatitud = form.getFieldValue('_resto_latitud')
+        const restoLongitud = form.getFieldValue('_resto_longitud')
+        const restoCargo = form.getFieldValue('_resto_cargo_destino')
         ventaValues.parcial_resto_programado = {
-          despachador_id: restoDespachadorId,
+          tipo_pedido: tipoPedidoResto,
+          despachador_id: tipoPedidoResto === TipoPedido.INTERNO ? restoDespachadorId : undefined,
+          cargo_destino: tipoPedidoResto === TipoPedido.EXTERNO ? restoCargo : undefined,
           fecha_programada: restoFechaProgramada
             ? dayjs(restoFechaProgramada).format('YYYY-MM-DD')
             : undefined,
           hora_inicio: horaInicioResto,
           hora_fin: horaFinResto,
-          direccion_entrega: direccionResto,
+          direccion_entrega: restoDireccion,
+          referencia_entrega: restoReferencia,
+          latitud: restoLatitud,
+          longitud: restoLongitud,
           observaciones: observacionesResto,
           vehiculo_id: restoVehiculoId || undefined,
         }
@@ -584,7 +696,7 @@ export default function ModalDetallesEntrega({
             color="success"
             size="md"
             onClick={handleConfirmar}
-            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || domicilioInvalido}
+            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || domicilioInvalido || restoInvalido}
           >
             {creandoVenta
               ? 'Procesando...'
@@ -994,34 +1106,71 @@ export default function ModalDetallesEntrega({
                     />
                   </div>
 
-                  {/* Despachador, Vehículo y botón calendario */}
-                  <div className="grid grid-cols-3 gap-4">
+                  {/* Campos ocultos para tipo_pedido y cargo_destino del resto */}
+                  <div style={{ display: 'none' }}>
+                    <Form.Item name="_resto_tipo_pedido"><Input /></Form.Item>
+                    <Form.Item name="_resto_cargo_destino"><Input /></Form.Item>
+                  </div>
+
+                  {/* Tipo de Pedido + Asignación */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Pedido:
+                    </label>
+                    <Segmented
+                      value={tipoPedidoResto}
+                      onChange={(value) => handleTipoPedidoChangeResto(value as TipoPedido)}
+                      options={[
+                        { value: TipoPedido.INTERNO, label: 'Asignar a usuario' },
+                        { value: TipoPedido.EXTERNO, label: 'Enviar a cargo' },
+                      ]}
+                      className="mb-3"
+                      block
+                    />
+                  </div>
+
+                  {/* Fila 1: Despachador/Cargo + botón calendario */}
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Designar Despachador: <span className="text-red-500">*</span>
-                      </label>
-                      <SelectDespachadores
-                        form={form}
-                        propsForm={{ name: '_resto_despachador_id' }}
-                        placeholder="Seleccionar despachador"
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaTruck className="inline mr-1 text-orange-500" size={13} />
-                        Vehículo:
-                      </label>
-                      <SelectVehiculos
-                        form={form}
-                        propsForm={{ name: '_resto_vehiculo_id' }}
-                        placeholder="Sin vehículo"
-                        className="w-full"
-                        allowClear
-                      />
-                      <div style={{ display: 'none' }}>
-                        <Form.Item name="_resto_vehiculo_id"><Input /></Form.Item>
-                      </div>
+                      {tipoPedidoResto === TipoPedido.INTERNO ? (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Designar Despachador: <span className="text-red-500">*</span>
+                          </label>
+                          <SelectDespachadores
+                            form={form}
+                            propsForm={{ name: '_resto_despachador_id' }}
+                            placeholder="Sin asignar (todos los despachadores lo verán)"
+                            className="w-full"
+                            allowClear
+                            onChange={(_id, despachador) => {
+                              if (despachador?.vehiculo && despachador.vehiculo.id) {
+                                form.setFieldValue('_resto_vehiculo_id', despachador.vehiculo.id)
+                                setVehiculoPreseleccionadoResto(despachador.vehiculo)
+                              } else if (!despachador) {
+                                form.setFieldValue('_resto_vehiculo_id', undefined)
+                                setVehiculoPreseleccionadoResto(null)
+                              }
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Cargo destino: <span className="text-red-500">*</span>
+                          </label>
+                          <Select
+                            placeholder="Seleccionar cargo destino"
+                            value={form.getFieldValue('_resto_cargo_destino')}
+                            onChange={(value) => form.setFieldValue('_resto_cargo_destino', value)}
+                            options={cargos.map((c) => ({
+                              value: c.codigo,
+                              label: c.descripcion,
+                            }))}
+                            className="w-full"
+                          />
+                        </>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1057,67 +1206,109 @@ export default function ModalDetallesEntrega({
                           Elegir en Calendario
                         </ButtonBase>
                       )}
-                      {/* Campo oculto registrado en form */}
                       <div style={{ display: 'none' }}>
                         <Form.Item name="_resto_fecha_programada"><Input /></Form.Item>
                       </div>
                     </div>
                   </div>
 
-                  {/* Selector de dirección del cliente */}
+                  {/* Vehículo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaTruck className="inline mr-1 text-orange-500" size={13} />
+                      Vehículo: <span className="text-gray-400 text-xs">(opcional)</span>
+                    </label>
+                    <SelectVehiculos
+                      form={form}
+                      propsForm={{ name: '_resto_vehiculo_id' }}
+                      placeholder="Sin vehículo asignado"
+                      className="w-full"
+                      allowClear
+                      vehiculoPreseleccionado={vehiculoPreseleccionadoResto}
+                    />
+                    <div style={{ display: 'none' }}>
+                      <Form.Item name="_resto_vehiculo_id"><Input /></Form.Item>
+                    </div>
+                  </div>
+
+                  {/* Fila 3: Selector D1-D4, Referencia y Mapa (sin dirección editable) */}
                   <div className="space-y-3">
-                    {direcciones.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Seleccionar dirección del cliente:
-                        </label>
-                        <Select
-                          placeholder="Seleccionar dirección"
-                          value={direccionSeleccionadaResto}
-                          onChange={handleDireccionChangeResto}
-                          className="w-full"
-                          options={direcciones.map(d => ({
-                            value: d.tipo,
-                            label: (
-                              <div className="flex items-center justify-between">
-                                <span>{d.direccion}</span>
-                                <div className="flex items-center gap-2">
-                                  {d.es_principal && (
-                                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                                      Principal
-                                    </span>
-                                  )}
-                                  {d.latitud && d.longitud && (
-                                    <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                                      📍 GPS
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ),
-                          }))}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          {direccionSeleccionadaResto && direcciones.find(d => d.tipo === direccionSeleccionadaResto)?.latitud
-                            ? '✓ Coordenadas GPS cargadas automáticamente'
-                            : 'Selecciona una dirección o ingresa una nueva abajo'}
-                        </p>
-                      </div>
-                    )}
+                    <div style={{ display: 'none' }}>
+                      <Form.Item name="_resto_direccion_entrega"><Input /></Form.Item>
+                      <Form.Item name="_resto_latitud"><Input /></Form.Item>
+                      <Form.Item name="_resto_longitud"><Input /></Form.Item>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Columna izquierda: Dirección y botones */}
+                      {/* Columna izquierda: Selector de dirección + Referencia + botones */}
                       <div className="space-y-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Dirección de entrega: <span className="text-red-500">*</span>
                           </label>
-                          <Input.TextArea
-                            value={direccionResto}
-                            onChange={(e) => setDireccionResto(e.target.value)}
-                            placeholder="Dirección de entrega del resto"
+                          {cargandoDirecciones ? (
+                            <div className="text-xs text-gray-400">Cargando direcciones del cliente...</div>
+                          ) : direcciones.length === 0 ? (
+                            <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-2">
+                              Este cliente no tiene direcciones registradas. Edita el cliente para agregarlas.
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2">
+                              {(['D1', 'D2', 'D3', 'D4'] as TipoDireccion[]).map((tipo) => {
+                                const dir = direcciones.find(d => d.tipo === tipo)
+                                const activa = direccionSeleccionadaResto === tipo
+                                const disabled = !dir
+                                return (
+                                  <button
+                                    key={tipo}
+                                    type="button"
+                                    disabled={disabled}
+                                    onClick={() => handleDireccionChangeResto(tipo)}
+                                    className={`text-left px-3 py-2 rounded-lg border transition ${
+                                      disabled
+                                        ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
+                                        : activa
+                                        ? 'bg-orange-50 border-orange-500 ring-2 ring-orange-200 text-orange-800'
+                                        : 'bg-white border-gray-300 hover:border-orange-400 text-gray-700'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">{tipo}</span>
+                                      {dir?.es_principal && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                                          Principal
+                                        </span>
+                                      )}
+                                      {dir?.latitud && dir?.longitud && (
+                                        <span className="text-[10px] text-green-600">📍 GPS</span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs mt-1 line-clamp-2">
+                                      {dir?.referencia || (dir ? <span className="italic text-gray-400">Sin referencia</span> : <span className="italic">No registrada</span>)}
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Referencia: <span className="text-gray-400 text-xs">(ubicación para el chofer)</span>
+                          </label>
+                          <TextareaBase
+                            propsForm={{
+                              name: '_resto_referencia_entrega',
+                            }}
+                            placeholder="Ej: frente al parque, portón verde, entre calle X y Y..."
                             rows={3}
                           />
+                          {ubicacionGpsResto && (
+                            <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGpsResto}>
+                              📍 Ubicación GPS: {ubicacionGpsResto}
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex gap-2">
@@ -1163,7 +1354,7 @@ export default function ModalDetallesEntrega({
                           <div className="h-full min-h-[300px]">
                             <MapaDireccionMapbox
                               key={`resto-${direccionSeleccionadaResto}-${coordenadasResto?.lat}-${coordenadasResto?.lng}`}
-                              direccion={direccionResto || ''}
+                              direccion={restoDireccionEntrega || ''}
                               clienteNombre={clienteNombre}
                               onCoordenadaChange={handleCoordenadaChangeResto}
                               coordenadasIniciales={coordenadasResto}
@@ -1173,7 +1364,7 @@ export default function ModalDetallesEntrega({
                         ) : (
                           <div className="h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
                             <FaMapMarkedAlt size={32} className="text-gray-300" />
-                            <span>{direccionResto ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
+                            <span>{restoDireccionEntrega ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
                             {coordenadasResto && (
                               <span className="text-xs text-green-600 font-mono">
                                 Ubicación guardada: {coordenadasResto.lat.toFixed(4)}, {coordenadasResto.lng.toFixed(4)}

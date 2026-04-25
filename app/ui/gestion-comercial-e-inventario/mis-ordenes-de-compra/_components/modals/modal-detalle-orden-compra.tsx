@@ -5,6 +5,7 @@ import { Modal, Table, Tag, Divider, Spin, Empty, Button, Descriptions } from 'a
 import { PrinterOutlined, FilePdfOutlined } from '@ant-design/icons'
 import { ordenCompraApi, type OrdenCompra, type OrdenCompraProducto } from '~/lib/api/orden-compra'
 import TitleForm from '~/components/form/title-form'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface ModalDetalleOrdenCompraProps {
     open: boolean
@@ -154,7 +155,7 @@ export default function ModalDetalleOrdenCompra({
                         <div>
                             <h3 className='text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide'>Información General</h3>
                             <Descriptions column={2} size='small' bordered>
-                                <Descriptions.Item label='Fecha'>{orden.fecha}</Descriptions.Item>
+                                <Descriptions.Item label='Fecha'>{orden.fecha ? formatFechaPeru(orden.fecha, 'DD/MM/YYYY') : '—'}</Descriptions.Item>
                                 <Descriptions.Item label='Solicitante'>{orden.user?.name || '—'}</Descriptions.Item>
                                 <Descriptions.Item label='Almacén'>Almacén Principal</Descriptions.Item>
                                 <Descriptions.Item label='Moneda'>{orden.tipo_moneda === 's' ? 'Soles (S/.)' : 'Dólares ($)'}</Descriptions.Item>
@@ -220,7 +221,7 @@ export default function ModalDetalleOrdenCompra({
                                 {orden.forma_de_pago === 'cr' && (
                                     <>
                                         <Descriptions.Item label='Días de Crédito'>{orden.numero_dias} días</Descriptions.Item>
-                                        <Descriptions.Item label='Fecha de Vencimiento'>{orden.fecha_vencimiento}</Descriptions.Item>
+                                        <Descriptions.Item label='Fecha de Vencimiento'>{orden.fecha_vencimiento ? formatFechaPeru(orden.fecha_vencimiento, 'DD/MM/YYYY') : '—'}</Descriptions.Item>
                                     </>
                                 )}
                             </Descriptions>

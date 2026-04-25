@@ -93,6 +93,9 @@ export interface CreateVentaRequest {
   }>;
   despliegue_de_pago_ventas?: DespliegueDePagoVentaRequest[];
   tipo_despacho?: 'et' | 'do' | 'pa'; // et=En Tienda, do=Domicilio, pa=Parcial
+  // Si true, no descontar stock al crear la venta — se descontará cuando
+  // se cree la entrega-producto manualmente.
+  omitir_entrega?: boolean;
   ingreso_dinero_id?: string;
   codigo_vale?: string;
 }

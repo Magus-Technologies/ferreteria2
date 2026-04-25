@@ -274,6 +274,8 @@ export default function useCreateVenta({
       direccion_seleccionada: direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined,
       // ✅ Enviar tipo de despacho (et=En Tienda, do=Domicilio, pa=Parcial)
       tipo_despacho: tipo_despacho === 'EnTienda' ? 'et' : tipo_despacho === 'Domicilio' ? 'do' : tipo_despacho === 'Parcial' ? 'pa' : undefined,
+      // Si "Omitir entrega" fue presionado, evitar descuento de stock al crear la venta.
+      omitir_entrega: _omitir_entrega || undefined,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,
@@ -488,7 +490,7 @@ export default function useCreateVenta({
                 // ✅ CREAR SEGUNDA ENTREGA PROGRAMADA para el resto (si se configuró)
                 // Usa `entregar_programado` (editable por el usuario) en lugar de `total - entregar`.
                 // Lo que NO se programa queda en cantidad_pendiente para programarlo luego desde Mis Ventas.
-                if (parcial_resto_programado?.despachador_id) {
+                if (parcial_resto_programado && (parcial_resto_programado.despachador_id || parcial_resto_programado.cargo_destino)) {
                   const unidadesDerivadas2: any[] = []
 
                   let parcialIdx2 = 0
@@ -520,9 +522,14 @@ export default function useCreateVenta({
                       hora_inicio: parcial_resto_programado.hora_inicio,
                       hora_fin: parcial_resto_programado.hora_fin,
                       direccion_entrega: parcial_resto_programado.direccion_entrega,
+                      referencia_entrega: parcial_resto_programado.referencia_entrega,
+                      latitud: parcial_resto_programado.latitud ? Number(parcial_resto_programado.latitud) : undefined,
+                      longitud: parcial_resto_programado.longitud ? Number(parcial_resto_programado.longitud) : undefined,
                       observaciones: parcial_resto_programado.observaciones,
                       almacen_salida_id: almacen_id,
                       chofer_id: parcial_resto_programado.despachador_id,
+                      tipo_pedido: parcial_resto_programado.tipo_pedido,
+                      cargo_destino: parcial_resto_programado.cargo_destino,
                       quien_entrega: QuienEntrega.CHOFER,
                       user_id: user_id,
                       vehiculo_id: parcial_resto_programado.vehiculo_id ? Number(parcial_resto_programado.vehiculo_id) : undefined,
@@ -539,23 +546,25 @@ export default function useCreateVenta({
                     } else {
                       message.success('Entrega del resto programada exitosamente')
 
-                      // 🔔 Notificar al despachador del resto
-                      try {
-                        const clienteNombre = ventaCreada.cliente?.nombres
-                          ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
-                          : ventaCreada.cliente?.razon_social || 'Cliente'
+                      // 🔔 Notificar al despachador del resto (solo si hay despachador interno)
+                      if (parcial_resto_programado.despachador_id) {
+                        try {
+                          const clienteNombre = ventaCreada.cliente?.nombres
+                            ? `${ventaCreada.cliente.nombres} ${ventaCreada.cliente.apellidos || ''}`.trim()
+                            : ventaCreada.cliente?.razon_social || 'Cliente'
 
-                        await fcmApi.notifyEntregaProgramada({
-                          despachador_id: parcial_resto_programado.despachador_id,
-                          venta_serie: ventaCreada.serie || '',
-                          venta_numero: ventaCreada.numero || '',
-                          direccion: parcial_resto_programado.direccion_entrega || '',
-                          fecha_programada: parcial_resto_programado.fecha_programada
-                            ? dayjs(parcial_resto_programado.fecha_programada).format('DD/MM/YYYY')
-                            : 'Por confirmar',
-                          cliente_nombre: clienteNombre,
-                        })
-                      } catch (notifError) {
+                          await fcmApi.notifyEntregaProgramada({
+                            despachador_id: parcial_resto_programado.despachador_id,
+                            venta_serie: ventaCreada.serie || '',
+                            venta_numero: ventaCreada.numero || '',
+                            direccion: parcial_resto_programado.direccion_entrega || '',
+                            fecha_programada: parcial_resto_programado.fecha_programada
+                              ? dayjs(parcial_resto_programado.fecha_programada).format('DD/MM/YYYY')
+                              : 'Por confirmar',
+                            cliente_nombre: clienteNombre,
+                          })
+                        } catch (notifError) {
+                        }
                       }
                     }
                   }

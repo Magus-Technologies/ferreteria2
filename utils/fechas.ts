@@ -42,6 +42,11 @@ export function formatFechaPeru(
   formato: string = 'DD/MM/YYYY hh:mm:ss A',
 ): string {
   if (!fecha) return ''
+  // Date-only strings (YYYY-MM-DD) representan un día calendario, no un instante.
+  // Formatearlos sin convertir TZ evita que UTC midnight se desplace a Lima -5h.
+  if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return dayjs(fecha).format(formato)
+  }
   return dayjs.utc(fecha).tz(TZ_PERU).format(formato)
 }
 
