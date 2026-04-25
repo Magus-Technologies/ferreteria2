@@ -12,6 +12,7 @@ import TableBase from '~/components/tables/table-base'
 import { proveedorApi, type Proveedor } from '~/lib/api/proveedor'
 import { useColumnsProveedores } from './_components/tables/columns-proveedores'
 import ModalCreateProveedor from './_components/modals/modal-create-proveedor'
+import ModalCalificacionesProveedor from './_components/modals/modal-calificaciones-proveedor'
 import TableDeudasProveedor from './_components/tables/table-deudas-proveedor'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { greenColors } from '~/lib/colors'
@@ -29,6 +30,8 @@ export default function MisProveedoresPage() {
     const [modalOpen, setModalOpen] = useState(false)
     const [dataEdit, setDataEdit] = useState<Proveedor | undefined>(undefined)
     const [proveedorSeleccionado, setProveedorSeleccionado] = useState<Proveedor | null>(null)
+    const [modalCalificacionesOpen, setModalCalificacionesOpen] = useState(false)
+    const [proveedorACalificar, setProveedorACalificar] = useState<Proveedor | null>(null)
 
     // Query para obtener proveedores
     const { data: proveedores = [], isLoading, refetch } = useQuery({
@@ -56,6 +59,10 @@ export default function MisProveedoresPage() {
         },
         setOpen: setModalOpen,
         onReactivar: refetch,
+        onCalificar: (proveedor) => {
+            setProveedorACalificar(proveedor)
+            setModalCalificacionesOpen(true)
+        },
     })
 
     // Handlers
@@ -206,6 +213,19 @@ export default function MisProveedoresPage() {
                 dataEdit={dataEdit}
                 onSuccess={handleModalSuccess}
             />
+
+            {/* Modal Calificaciones Proveedor */}
+            {proveedorACalificar && (
+                <ModalCalificacionesProveedor
+                    open={modalCalificacionesOpen}
+                    onClose={() => {
+                        setModalCalificacionesOpen(false)
+                        setProveedorACalificar(null)
+                    }}
+                    proveedorId={proveedorACalificar.id}
+                    proveedorNombre={proveedorACalificar.razon_social}
+                />
+            )}
         </ContenedorGeneral>
     )
 }

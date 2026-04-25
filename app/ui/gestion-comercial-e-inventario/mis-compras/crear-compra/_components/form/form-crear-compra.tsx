@@ -18,11 +18,13 @@ export default function FormCrearCompra({
   compra,
   proveedorOptionsDefault,
   initialSearchTextProveedor,
+  onProveedorChange,
 }: {
   form: FormInstance
   compra?: CompraConUnidadDerivadaNormal
   proveedorOptionsDefault?: { id: number; ruc: string; razon_social: string }[]
   initialSearchTextProveedor?: string
+  onProveedorChange?: (proveedorId: number | undefined) => void
 }) {
   return (
     <div className='flex flex-col'>
@@ -101,9 +103,11 @@ export default function FormCrearCompra({
                     form.setFieldValue('proveedor_ruc', proveedor.ruc)
                   }
                   form.setFieldValue('proveedor_razon_social', proveedor.razon_social || '')
+                  onProveedorChange?.(proveedor.id)
                 } else {
                   form.setFieldValue('proveedor_ruc', '')
                   form.setFieldValue('proveedor_razon_social', '')
+                  onProveedorChange?.(undefined)
                 }
               }}
             />

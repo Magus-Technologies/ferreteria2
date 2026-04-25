@@ -28,6 +28,8 @@ import { CompraConUnidadDerivadaNormal } from './header'
 import useInitCompra from '../../../editar-compra/[id]/_hooks/use-init-compra'
 import { ordenCompraApi } from '~/lib/api/orden-compra'
 import dayjs from 'dayjs'
+import { useUltimaCalificacionProveedor } from '../../_hooks/use-ultima-calificacion-proveedor'
+import FloatingCalificacionProveedor from '../alerts/floating-calificacion-proveedor'
 
 export interface FormCreateCompra {
   productos: {
@@ -98,12 +100,22 @@ export default function BodyComprar({
 
   const [proveedorDefault, setProveedorDefault] = useState<{ id: number; ruc: string; razon_social: string }[]>([])
   const [proveedorRucInicial, setProveedorRucInicial] = useState('')
+  const [proveedorId, setProveedorId] = useState<number | undefined>(undefined)
+
+  // Hook para obtener la última calificación del proveedor
+  const { data: calificacionResponse, isLoading: loadingCalificacion } = useUltimaCalificacionProveedor(proveedorId)
 
   useEffect(() => {
     setProductosCompra([])
     setProductoAgregadoCompra(undefined)
     return () => setProductoAgregadoCompra(undefined)
   }, [])
+
+  // Escuchar cambios en el proveedor_id del form usando form.getFieldValue
+  useEffect(() => {
+    const currentProveedorId = form.getFieldValue('proveedor_id')
+    setProveedorId(currentProveedorId)
+  }, [form])
 
   useEffect(() => {
     if (!ordenCompraId) return
@@ -152,6 +164,11 @@ export default function BodyComprar({
         estado_de_compra: EstadoDeCompra.Creado,
       })
 
+      // Set proveedor ID for calificación
+      if (orden.proveedor_id) {
+        setProveedorId(orden.proveedor_id)
+      }
+
       // Auto-submit después de cargar los datos - aumentar timeout para asegurar que los valores se propaguen
       setTimeout(() => {
         form.submit()
@@ -166,11 +183,22 @@ export default function BodyComprar({
   return (
     <>
       <AperturaGuard />
+      <FloatingCalificacionProveedor
+        calificacion={calificacionResponse?.data?.data}
+        loading={loadingCalificacion}
+        proveedorId={proveedorId}
+      />
       <FormBase
         form={form}
         name='compra'
         className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
         onFinish={handleSubmit}
+        onValuesChange={(_, allValues) => {
+          // Actualizar proveedorId cuando cambia en el form
+          if (allValues.proveedor_id !== undefined) {
+            setProveedorId(allValues.proveedor_id)
+          }
+        }}
       >
         <div className='flex-1 flex flex-col gap-2 xl:gap-3 min-w-0 min-h-0'>
           <ConfigurableElement componentId='gestion-comercial.crear-compra.tabla-productos' label='Tabla de Productos'>
@@ -178,7 +206,13 @@ export default function BodyComprar({
               <FormTableComprar form={form} compra={compra} />
             </div>
           </ConfigurableElement>
-          <FormCrearCompra form={form} compra={compra} proveedorOptionsDefault={proveedorDefault} initialSearchTextProveedor={proveedorRucInicial} />
+          <FormCrearCompra 
+            form={form} 
+            compra={compra} 
+            proveedorOptionsDefault={proveedorDefault} 
+            initialSearchTextProveedor={proveedorRucInicial}
+            onProveedorChange={setProveedorId}
+          />
         </div>
         <div className='w-full xl:w-auto'>
           <CardsInfoCompra

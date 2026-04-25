@@ -252,12 +252,6 @@ export default function TableDeudasClientes() {
         </div>
       )}
 
-      {allData.length === 0 && !isLoading && (
-        <div className="flex items-center justify-center h-full text-gray-500">
-          No hay documentos con deuda
-        </div>
-      )}
-
       {/* Modal para ver documento - renderizado dinámicamente en cliente */}
       {typeof window !== "undefined" && (
         <ModalDocVenta

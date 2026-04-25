@@ -6,17 +6,20 @@ import { permissions } from '~/lib/permissions'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { proveedorApi, type Proveedor } from '~/lib/api/proveedor'
 
-import { Button, message, Popconfirm } from 'antd'
-import { FaCheck } from 'react-icons/fa'
+import { Button, message, Popconfirm, Tooltip } from 'antd'
+import { FaCheck, FaStar } from 'react-icons/fa'
+import { useState } from 'react'
 
 export function useColumnsProveedores({
   setDataEdit,
   setOpen,
   onReactivar,
+  onCalificar,
 }: {
   setDataEdit: (data: Proveedor | undefined) => void
   setOpen: (open: boolean) => void
   onReactivar?: () => void
+  onCalificar?: (proveedor: Proveedor) => void
 }) {
   const columns: ColDef<Proveedor>[] = [
     {
@@ -75,12 +78,21 @@ export function useColumnsProveedores({
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
-      width: 120, // increased width because we have more actions
+      width: 150, // increased width because we have more actions
       cellRenderer: (params: ICellRendererParams<Proveedor>) => {
         const isInactive = params.data && params.data.estado === false
 
         return (
           <div className='flex items-center gap-2 h-full'>
+            <Tooltip title='Calificar Proveedor'>
+              <Button
+                type='link'
+                size='small'
+                icon={<FaStar />}
+                className='text-amber-600 hover:!text-amber-700 p-0'
+                onClick={() => onCalificar?.(params.data!)}
+              />
+            </Tooltip>
             <ColumnAction
               id={params.value}
               permiso={permissions.PROVEEDOR_BASE}
