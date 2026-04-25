@@ -98,6 +98,7 @@ export interface EntregaProductoFilters {
   fecha_hasta?: string;
   per_page?: number;
   page?: number;
+  solo_programadas?: boolean;
 }
 
 // ============= RESPONSE TYPES =============

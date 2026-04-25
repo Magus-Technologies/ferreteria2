@@ -25,10 +25,15 @@ export default function ModalVehiculoSearch({
   onRowDoubleClicked,
 }: ModalVehiculoSearchProps) {
   const [text, setText] = useState(textDefault)
+  const [vehiculoMarcado, setVehiculoMarcado] = useState<Vehiculo | undefined>()
 
   useEffect(() => {
     setText(textDefault)
   }, [textDefault])
+
+  useEffect(() => {
+    if (!open) setVehiculoMarcado(undefined)
+  }, [open])
 
   const [value] = useDebounce(text, 1000)
 
@@ -40,7 +45,12 @@ export default function ModalVehiculoSearch({
       classNames={{ content: 'min-w-fit' }}
       title='Buscar Vehículo'
       okText='Seleccionar'
-      onOk={onOk}
+      onOk={(e) => {
+        if (vehiculoMarcado) {
+          onRowDoubleClicked?.(vehiculoMarcado)
+        }
+        onOk?.(e)
+      }}
       cancelText='Cerrar'
       cancelButtonProps={{ className: 'rounded-xl' }}
       okButtonProps={{
@@ -66,6 +76,7 @@ export default function ModalVehiculoSearch({
         <TableVehiculosBusqueda
           value={value}
           onRowDoubleClicked={onRowDoubleClicked}
+          onRowClicked={setVehiculoMarcado}
           selectionColor={orangeColors[10]}
         />
       </div>

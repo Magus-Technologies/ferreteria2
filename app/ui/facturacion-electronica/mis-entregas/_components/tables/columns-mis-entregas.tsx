@@ -60,6 +60,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Fecha Programada',
       field: 'fecha_programada',
       width: 150,
+      sort: 'desc',
       valueFormatter: (params) =>
         params.value ? dayjs(params.value).format('DD/MM/YYYY') : '-',
     },

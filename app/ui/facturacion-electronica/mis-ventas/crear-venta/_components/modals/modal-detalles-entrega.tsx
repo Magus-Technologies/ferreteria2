@@ -1,7 +1,7 @@
 'use client'
 
 import { Select, Modal, FormInstance, Form, Input, Switch, Segmented, InputNumber } from 'antd'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck, FaTruck } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -24,8 +24,45 @@ import { clienteApi, type TipoDireccion } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCalendarioSlot from './modal-calendario-slot'
 import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
+import { useAuth } from '~/lib/auth-context'
 
 dayjs.locale('es')
+
+type ProgramarCellProps = {
+  id: number
+  initialValue: number
+  max: number
+  onCommit: (id: number, value: number | null) => void
+}
+
+const ProgramarCell = memo(function ProgramarCell({
+  id,
+  initialValue,
+  max,
+  onCommit,
+}: ProgramarCellProps) {
+  const [value, setValue] = useState<number | null>(initialValue)
+
+  useEffect(() => {
+    setValue(initialValue)
+  }, [initialValue])
+
+  return (
+    <div className="flex items-center h-full">
+      <InputNumber
+        size="small"
+        value={value}
+        min={0}
+        max={max}
+        precision={2}
+        onChange={setValue}
+        onBlur={() => onCommit(id, value)}
+        onPressEnter={() => onCommit(id, value)}
+        style={{ width: '100%' }}
+      />
+    </div>
+  )
+})
 
 // Importar el mapa de Mapbox dinámicamente para evitar problemas de SSR
 const MapaDireccionMapbox = dynamic(
@@ -90,6 +127,9 @@ export default function ModalDetallesEntrega({
   // Hook para crear/actualizar venta
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
 
+  // Usuario actual (para precargar su vehículo por defecto si registra venta a domicilio)
+  const { user } = useAuth()
+
   // Cargar cargos para pedido externo
   const { data: cargos = [] } = useQuery({
     queryKey: ['catalogos', 'cargos'],
@@ -121,6 +161,23 @@ export default function ModalDetallesEntrega({
   })
 
   const direcciones = direccionesData?.data?.data || []
+
+  // Precargar el vehículo asignado al usuario logueado al abrir el modal de Domicilio,
+  // solo si aún no hay vehículo ni despachador seleccionado en el formulario.
+  useEffect(() => {
+    if (!open || tipoDespacho !== 'Domicilio') return
+    if (!user?.vehiculo || !user.vehiculo.id) return
+    if (form.getFieldValue('vehiculo_id')) return
+    if (form.getFieldValue('despachador_id')) return
+
+    form.setFieldValue('vehiculo_id', user.vehiculo.id)
+    setVehiculoPreseleccionadoDomicilio({
+      id: user.vehiculo.id,
+      name: user.vehiculo.name,
+      tipo: user.vehiculo.tipo,
+      placa: user.vehiculo.placa,
+    })
+  }, [open, tipoDespacho, user, form])
 
   // Cargar dirección inicial cuando se abra el modal
   useEffect(() => {
@@ -380,17 +437,12 @@ export default function ModalDetallesEntrega({
         if (!params.data) return null
         const maxProgramable = Math.max(0, params.data.total - params.data.entregar)
         return (
-          <div className="flex items-center h-full">
-            <InputNumber
-              size="small"
-              value={params.data.entregar_programado}
-              min={0}
-              max={maxProgramable}
-              precision={2}
-              onChange={(val) => handleProgramarChange(params.data!.id, val)}
-              style={{ width: '100%' }}
-            />
-          </div>
+          <ProgramarCell
+            id={params.data.id}
+            initialValue={params.data.entregar_programado}
+            max={maxProgramable}
+            onCommit={handleProgramarChange}
+          />
         )
       },
       cellStyle: { backgroundColor: '#fff7ed' } as Record<string, string>,
@@ -519,7 +571,7 @@ export default function ModalDetallesEntrega({
               size="md"
               onClick={async () => {
                 const ventaValues = form.getFieldsValue()
-                await crearVenta(ventaValues)
+                await crearVenta({ ...ventaValues, _omitir_entrega: true })
                 setOpen(false)
                 onConfirmar()
               }}
@@ -700,40 +752,83 @@ export default function ModalDetallesEntrega({
               </div>
             </div>
 
-            {/* Fila 3: Dirección, Referencia y Mapa (sin selector D1-D4) */}
+            {/* Fila 3: Selector D1-D4, Referencia grande y Mapa (sin dirección editable) */}
             <div className="space-y-3">
+              {/* Campo oculto: dirección de entrega se sincroniza silenciosamente desde el D seleccionado */}
+              <div style={{ display: 'none' }}>
+                <Form.Item name="direccion_entrega"><Input /></Form.Item>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
-                {/* Columna izquierda: Dirección y botones */}
+                {/* Columna izquierda: Selector de dirección + Referencia + botones */}
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección: <span className="text-red-500">*</span>
+                      Dirección de entrega: <span className="text-red-500">*</span>
+                    </label>
+                    {cargandoDirecciones ? (
+                      <div className="text-xs text-gray-400">Cargando direcciones del cliente...</div>
+                    ) : direcciones.length === 0 ? (
+                      <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-2">
+                        Este cliente no tiene direcciones registradas. Edita el cliente para agregarlas.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {(['D1', 'D2', 'D3', 'D4'] as TipoDireccion[]).map((tipo) => {
+                          const dir = direcciones.find(d => d.tipo === tipo)
+                          const activa = direccionSeleccionada === tipo
+                          const disabled = !dir
+                          return (
+                            <button
+                              key={tipo}
+                              type="button"
+                              disabled={disabled}
+                              onClick={() => handleDireccionChange(tipo)}
+                              className={`text-left px-3 py-2 rounded-lg border transition ${
+                                disabled
+                                  ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
+                                  : activa
+                                  ? 'bg-orange-50 border-orange-500 ring-2 ring-orange-200 text-orange-800'
+                                  : 'bg-white border-gray-300 hover:border-orange-400 text-gray-700'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">{tipo}</span>
+                                {dir?.es_principal && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                                    Principal
+                                  </span>
+                                )}
+                                {dir?.latitud && dir?.longitud && (
+                                  <span className="text-[10px] text-green-600">📍 GPS</span>
+                                )}
+                              </div>
+                              <div className="text-xs mt-1 line-clamp-2">
+                                {dir?.referencia || (dir ? <span className="italic text-gray-400">Sin referencia</span> : <span className="italic">No registrada</span>)}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Referencia: <span className="text-gray-400 text-xs">(ubicación para el chofer)</span>
                     </label>
                     <TextareaBase
                       propsForm={{
-                        name: 'direccion_entrega',
+                        name: 'referencia_entrega',
                       }}
-                      placeholder="Dirección de entrega (usa el mapa para marcar la ubicación)"
-                      rows={2}
+                      placeholder="Ej: frente al parque, portón verde, entre calle X y Y..."
+                      rows={3}
                     />
                     {ubicacionGps && (
                       <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGps}>
                         📍 Ubicación GPS: {ubicacionGps}
                       </p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Referencia:
-                    </label>
-                    <TextareaBase
-                      propsForm={{
-                        name: 'referencia_entrega',
-                      }}
-                      placeholder="Ej: frente al parque, portón verde, etc."
-                      rows={2}
-                    />
                   </div>
 
                   <div className="flex gap-2">

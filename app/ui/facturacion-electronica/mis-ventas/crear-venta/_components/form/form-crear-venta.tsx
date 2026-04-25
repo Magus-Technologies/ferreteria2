@@ -17,7 +17,7 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
 import InputCodigoVale from "../others/input-codigo-vale";
 import { useUltimaCalificacionCliente } from "../../_hooks/use-ultima-calificacion-cliente";
-import TooltipCalificacionCliente from "../alerts/tooltip-calificacion-cliente";
+import FloatingCalificacionCliente from "../alerts/floating-calificacion-cliente";
 
 export default function FormCrearVenta({
   form,
@@ -50,6 +50,11 @@ export default function FormCrearVenta({
 
   return (
     <div className="flex flex-col gap-4">
+      <FloatingCalificacionCliente
+        calificacion={calificacionResponse?.data?.data}
+        loading={loadingCalificacion}
+        clienteId={clienteIdSeleccionado}
+      />
       {/* Campos ocultos para que Form.useWatch funcione */}
       <Form.Item name="direccion_seleccionada" hidden>
         <input type="hidden" />
@@ -320,40 +325,35 @@ export default function FormCrearVenta({
           componentId="crear-venta.cliente-nombre"
           label="Campo Nombre Cliente"
         >
-          <TooltipCalificacionCliente
-            calificacion={calificacionResponse?.data?.data}
-            loading={loadingCalificacion}
+          <LabelBase
+            label={
+              <div className="flex items-center gap-2">
+                <span>Cliente:</span>
+                {loadingCalificacion && (
+                  <span className="text-xs text-blue-500">Cargando...</span>
+                )}
+                {!loadingCalificacion && calificacionResponse?.data?.data && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                    Calificado
+                  </span>
+                )}
+              </div>
+            }
+            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+            className={`w-full sm:flex-1 ${clienteTieneDeuda ? '[&_input]:!border-red-500 [&_input]:!border-2 [&_input]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
           >
-            <LabelBase
-              label={
-                <div className="flex items-center gap-2">
-                  <span>Cliente:</span>
-                  {loadingCalificacion && (
-                    <span className="text-xs text-blue-500">Cargando...</span>
-                  )}
-                  {!loadingCalificacion && calificacionResponse?.data?.data && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                      Calificado
-                    </span>
-                  )}
-                </div>
-              }
-              classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-              className={`w-full sm:flex-1 ${clienteTieneDeuda ? '[&_input]:!border-red-500 [&_input]:!border-2 [&_input]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
-            >
-              <InputBase
-                propsForm={{
-                  name: "cliente_nombre",
-                  hasFeedback: false,
-                  className: "w-full",
-                }}
-                placeholder="Nombre del cliente"
-                className="w-full"
-                readOnly
-                uppercase={false}
-              />
-            </LabelBase>
-          </TooltipCalificacionCliente>
+            <InputBase
+              propsForm={{
+                name: "cliente_nombre",
+                hasFeedback: false,
+                className: "w-full",
+              }}
+              placeholder="Nombre del cliente"
+              className="w-full"
+              readOnly
+              uppercase={false}
+            />
+          </LabelBase>
         </ConfigurableElement>
 
         <ConfigurableElement

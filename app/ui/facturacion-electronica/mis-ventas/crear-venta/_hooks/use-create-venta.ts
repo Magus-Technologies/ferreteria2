@@ -75,6 +75,7 @@ export function agruparProductos({
       descuento: p.descuento,
       descuento_tipo: p.descuento_tipo,
       producto_codigo: p.producto_codigo,
+      comision: p.comision,
     })
   }
   return Array.from(mapa.values())
@@ -162,6 +163,7 @@ export default function useCreateVenta({
       quien_entrega,
       cantidades_parciales,
       parcial_resto_programado,
+      _omitir_entrega,
       codigo_vale,
       tipo_pedido,
       cargo_destino,
@@ -246,7 +248,7 @@ export default function useCreateVenta({
         recargo: Number(u.recargo || 0),
         descuento_tipo: mapDescuentoTipo(u.descuento_tipo),
         descuento: Number(u.descuento || 0),
-        comision: 0,
+        comision: Number(u.comision || 0),
       })),
     }))
 
@@ -349,7 +351,7 @@ export default function useCreateVenta({
       // ✅ CREAR ENTREGA AUTOMÁTICAMENTE SI ES DESPACHO A DOMICILIO
       const ventaCreada = response.data?.data
 
-      if (ventaCreada && tipo_despacho === 'Domicilio') {
+      if (ventaCreada && tipo_despacho === 'Domicilio' && !_omitir_entrega) {
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
           const productosVenta = ventaCreada.productos_por_almacen || []
@@ -434,7 +436,7 @@ export default function useCreateVenta({
             description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
           })
         }
-      } else if (tipo_despacho === 'Parcial' && ventaCreada) {
+      } else if (tipo_despacho === 'Parcial' && ventaCreada && !_omitir_entrega) {
         // DESPACHO PARCIAL: entregar solo las cantidades especificadas
         if (cantidades_parciales && cantidades_parciales.some(c => c.entregar > 0)) {
           try {

@@ -3,7 +3,7 @@
 import { Modal, Tag, Timeline } from "antd";
 import type { getVentaResponseProps } from "~/lib/api/venta";
 import TitleForm from "~/components/form/title-form";
-import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import { FaTruck, FaStore, FaCheckCircle, FaClock, FaTimesCircle } from "react-icons/fa";
 import useGetEntregas from "../../_hooks/use-get-entregas";
 
@@ -106,9 +106,7 @@ export default function ModalVerEntregas({
                         </Tag>
                       </div>
                       <div className="text-sm text-gray-600">
-                        {dayjs(entrega.fecha_entrega).format(
-                          "DD/MM/YYYY HH:mm"
-                        )}
+                        {formatFechaPeru(entrega.fecha_entrega, "DD/MM/YYYY HH:mm")}
                       </div>
                     </div>
                   </div>
@@ -124,7 +122,7 @@ export default function ModalVerEntregas({
                       {entrega.fecha_programada && (
                         <div>
                           <span className="font-medium">Fecha programada:</span>{" "}
-                          {dayjs(entrega.fecha_programada).format("DD/MM/YYYY")}
+                          {formatFechaPeru(entrega.fecha_programada, "DD/MM/YYYY")}
                         </div>
                       )}
                       {entrega.hora_inicio && (

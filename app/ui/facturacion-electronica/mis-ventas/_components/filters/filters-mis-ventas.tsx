@@ -25,7 +25,6 @@ import { useEffect } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { useDebounce } from "use-debounce";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import ModalEntregarVenta from "../modals/modal-entregar-venta";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
 import { useStoreVentaSeleccionada } from "../tables/table-mis-ventas";
 import { redColors, orangeColors, greenColors } from "~/lib/colors";
@@ -51,7 +50,6 @@ export default function FiltersMisVentas() {
   const router = useRouter();
   const { message } = App.useApp();
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
-  const [modalEntregarVentaOpen, setModalEntregarVentaOpen] = useState(false);
   const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
@@ -463,21 +461,6 @@ export default function FiltersMisVentas() {
             </ConfigurableElement>
           </div>
           <div className="col-span-3 flex items-center gap-2">
-            <ConfigurableElement componentId="button-entregar" label="Botón Entregar">
-              <ButtonBase
-                color="warning"
-                size="md"
-                type="button"
-                className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
-                onClick={() =>
-                  ventaSeleccionada && setModalEntregarVentaOpen(true)
-                }
-                disabled={!ventaSeleccionada}
-              >
-                <FaTruckFast />
-                Entregar
-              </ButtonBase>
-            </ConfigurableElement>
             <ConfigurableElement componentId="button-ver-entregas" label="Botón Ver Entregas">
               <ButtonBase
                 color="info"
@@ -693,12 +676,6 @@ export default function FiltersMisVentas() {
           </div>
         </div>
       </Drawer>
-
-      <ModalEntregarVenta
-        open={modalEntregarVentaOpen}
-        setOpen={setModalEntregarVentaOpen}
-        venta={ventaSeleccionada}
-      />
 
       <ModalVerEntregas
         open={modalVerEntregasOpen}

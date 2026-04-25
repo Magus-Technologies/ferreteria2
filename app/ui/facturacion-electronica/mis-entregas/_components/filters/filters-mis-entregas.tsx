@@ -59,7 +59,7 @@ export default function FiltersMisEntregas() {
       initialValues={{
         fecha_desde: dayjs().startOf('day'),
         fecha_hasta: dayjs().endOf('day'),
-        estado_entrega: ['pe', 'ec'],
+        estado_entrega: ['pe', 'ec', 'en'],
       }}
       className="w-full"
       onValuesChange={() => form.submit()}

@@ -127,6 +127,7 @@ export function useColumnsCompras({
       field: 'fecha',
       width: 180,
       minWidth: 180,
+      sort: 'desc',
       filter: 'agDateColumnFilter',
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',

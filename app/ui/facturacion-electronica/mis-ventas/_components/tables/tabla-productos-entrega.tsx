@@ -4,7 +4,7 @@ import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
 import { ProductoEntrega } from '../../_hooks/use-productos-entrega'
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useState, useEffect, memo } from 'react'
 import { InputNumber } from 'antd'
 
 interface TablaProductosEntregaProps {
@@ -12,11 +12,46 @@ interface TablaProductosEntregaProps {
   onProductoChange: (productos: ProductoEntrega[]) => void
 }
 
+type EntregarCellProps = {
+  id: number
+  initialValue: number
+  max: number
+  onCommit: (id: number, value: number | null) => void
+}
+
+const EntregarCell = memo(function EntregarCell({
+  id,
+  initialValue,
+  max,
+  onCommit,
+}: EntregarCellProps) {
+  const [value, setValue] = useState<number | null>(initialValue)
+
+  useEffect(() => {
+    setValue(initialValue)
+  }, [initialValue])
+
+  return (
+    <div className='flex items-center h-full'>
+      <InputNumber
+        size='small'
+        value={value}
+        min={0}
+        max={max}
+        precision={2}
+        onChange={setValue}
+        onBlur={() => onCommit(id, value)}
+        onPressEnter={() => onCommit(id, value)}
+        style={{ width: '100%' }}
+      />
+    </div>
+  )
+})
+
 export default function TablaProductosEntrega({
   productos,
   onProductoChange,
 }: TablaProductosEntregaProps) {
-  // Ref para evitar stale closures
   const productosRef = useRef(productos)
   productosRef.current = productos
 
@@ -33,10 +68,6 @@ export default function TablaProductosEntrega({
 
     const updated = productosRef.current.map((p) => {
       if (p.id !== id) return p
-      // Al cambiar "entregar", auto-ajustamos "entregar_programado = total - entregar"
-      // para mantener el comportamiento histórico (todo el resto se programa).
-      // El usuario puede luego reducir "entregar_programado" manualmente en la tabla de abajo
-      // para dejar unidades como "pendientes sin programar".
       const restoAuto = Math.max(0, p.total - newValue)
       return { ...p, entregar: newValue, entregar_programado: restoAuto }
     })
@@ -86,17 +117,12 @@ export default function TablaProductosEntrega({
       cellRenderer: (params: { data: ProductoEntrega }) => {
         if (!params.data) return null
         return (
-          <div className='flex items-center h-full'>
-            <InputNumber
-              size='small'
-              value={params.data.entregar}
-              min={0}
-              max={params.data.pendiente}
-              precision={2}
-              onChange={(val) => handleEntregarChange(params.data.id, val)}
-              style={{ width: '100%' }}
-            />
-          </div>
+          <EntregarCell
+            id={params.data.id}
+            initialValue={params.data.entregar}
+            max={params.data.pendiente}
+            onCommit={handleEntregarChange}
+          />
         )
       },
       cellStyle: {

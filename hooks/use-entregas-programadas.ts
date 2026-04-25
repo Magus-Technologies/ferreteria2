@@ -18,15 +18,17 @@ export function useEntregasProgramadas({
   return useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas', fecha_desde, fecha_hasta, chofer_id],
     queryFn: async () => {
-       
+
       const response = await entregaProductoApi.list({
         fecha_desde,
         fecha_hasta,
         chofer_id,
-        // NO filtrar por estado para traer todas (pendientes, en camino, entregadas)
-        per_page: -1, // Traer todas
+        // Solo entregas con fecha_programada (domicilio/parcial), excluye en-tienda
+        // y entregas ya finalizadas (entregadas/canceladas). Evita duplicados en el calendario.
+        solo_programadas: true,
+        per_page: -1,
       })
-      
+
       return response.data?.data || []
     },
     enabled,

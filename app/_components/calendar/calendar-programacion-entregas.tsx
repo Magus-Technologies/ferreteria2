@@ -10,6 +10,7 @@ import { useEntregasProgramadas } from '~/hooks/use-entregas-programadas'
 import EventEntrega, { EntregaEvent } from './event-entrega'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
+import { formatFechaPeru } from '~/utils/fechas'
 import { Select } from 'antd'
 import { FaChevronLeft, FaChevronRight, FaCalendarDay, FaTruck } from 'react-icons/fa'
 
@@ -231,24 +232,30 @@ export default function CalendarProgramacionEntregas({
     const choferColorMap = new Map<string, string>()
     let colorIndex = 0
 
-    const entregasEvents = entregas.map((entrega: any) => {
+    const entregasEvents = entregas
+      // Defensa extra: filtrar cualquier entrega sin fecha_programada o sin hora_inicio/fin
+      // (el backend con solo_programadas=true ya filtra, pero evita duplicados si se reusa).
+      .filter((e: any) => e.fecha_programada && e.hora_inicio && e.hora_fin)
+      .map((entrega: any) => {
       let color: string
       if (entrega.estado_entrega === 'en') {
         color = '#22c55e'
       } else if (entrega.estado_entrega === 'ec') {
         color = '#eab308'
       } else {
-        if (!choferColorMap.has(entrega.chofer_id)) {
-          choferColorMap.set(entrega.chofer_id, CHOFER_COLORS[colorIndex % CHOFER_COLORS.length])
+        const choferKey = entrega.chofer_id || '__sin_asignar__'
+        if (!choferColorMap.has(choferKey)) {
+          choferColorMap.set(choferKey, CHOFER_COLORS[colorIndex % CHOFER_COLORS.length])
           colorIndex++
         }
-        color = choferColorMap.get(entrega.chofer_id) || CHOFER_COLORS[0]
+        color = choferColorMap.get(choferKey) || CHOFER_COLORS[0]
       }
 
-      const fechaProgramada = entrega.fecha_programada || entrega.fecha_entrega
-      const horaInicio = entrega.hora_inicio || '09:00'
-      const horaFin = entrega.hora_fin || '18:00'
-      const fechaSoloFecha = dayjs(fechaProgramada).format('YYYY-MM-DD')
+      // fecha_programada viene como ISO UTC (Laravel cast datetime). Convertir a Lima
+      // antes de tomar YYYY-MM-DD para evitar corrimientos de día por tz del navegador.
+      const fechaSoloFecha = formatFechaPeru(entrega.fecha_programada, 'YYYY-MM-DD')
+      const horaInicio = entrega.hora_inicio
+      const horaFin = entrega.hora_fin
       const start = dayjs(`${fechaSoloFecha} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
       const end = dayjs(`${fechaSoloFecha} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
 

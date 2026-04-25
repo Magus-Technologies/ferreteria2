@@ -10,7 +10,7 @@ import {
   FaUser,
   FaReceipt,
 } from "react-icons/fa";
-import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import type { DeudaPersonal } from "~/lib/api/deuda-personal";
 import ButtonBase from "~/components/buttons/button-base";
 import { cn } from "~/lib/utils";
@@ -92,7 +92,7 @@ export function CardDeuda({ deuda, onSelect }: CardDeudaProps) {
                 </Tag>
                 <span className="text-slate-400 text-xs flex items-center gap-1">
                   <FaClock className="text-[10px]" />
-                  {dayjs(deuda.arqueo_diario?.apertura_cierre_caja?.fecha_cierre).format("DD MMM, YYYY - HH:mm")}
+                  {formatFechaPeru(deuda.arqueo_diario?.apertura_cierre_caja?.fecha_cierre, "DD MMM, YYYY - HH:mm")}
                 </span>
               </div>
               <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2">

@@ -38,6 +38,13 @@ export interface LoginResponse {
     empresa: Empresa | null;
     all_restrictions: string[];
     rol_sistema: string | null;
+    vehiculo_id?: number | null;
+    vehiculo?: {
+      id: number;
+      name: string;
+      tipo: string;
+      placa: string | null;
+    } | null;
   };
   token: string;
 }

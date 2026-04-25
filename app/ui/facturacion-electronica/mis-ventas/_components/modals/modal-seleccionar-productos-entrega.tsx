@@ -9,6 +9,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import TablaProductosEntrega from '../tables/tabla-productos-entrega'
 import { useProductosEntrega } from '../../_hooks/use-productos-entrega'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface ModalSeleccionarProductosEntregaProps {
   open: boolean
@@ -172,7 +173,7 @@ export default function ModalSeleccionarProductosEntrega({
                 {datosProgramacion.fecha_programada && (
                   <div>
                     <span className="font-medium">Fecha:</span>{' '}
-                    {new Date(datosProgramacion.fecha_programada).toLocaleDateString('es-PE')}
+                    {formatFechaPeru(datosProgramacion.fecha_programada as any, 'DD/MM/YYYY')}
                   </div>
                 )}
                 {datosProgramacion.hora_inicio && datosProgramacion.hora_fin && (
