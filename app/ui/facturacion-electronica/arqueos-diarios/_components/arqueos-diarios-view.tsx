@@ -237,6 +237,7 @@ export default function ArqueosDiariosView() {
       <div className='h-[220px] w-full mt-6'>
         <TableBase<any>
           ref={gridRef}
+          tableKey='arqueos-diarios-v2'
           rowData={arqueos}
           columnDefs={columnasArqueos}
           rowSelection={false}
