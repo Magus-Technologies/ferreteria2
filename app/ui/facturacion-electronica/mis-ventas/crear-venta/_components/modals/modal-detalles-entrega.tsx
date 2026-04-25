@@ -293,6 +293,7 @@ export default function ModalDetallesEntrega({
   const restoDireccionEntrega = Form.useWatch('_resto_direccion_entrega', form) as string | undefined
 
   // Validación de campos obligatorios para Domicilio
+  // (totalAProgramar se calcula más abajo y se valida en el botón)
   const domicilioInvalido =
     tipoDespacho === 'Domicilio' &&
     (
@@ -314,7 +315,7 @@ export default function ModalDetallesEntrega({
   }, [open, tipoDespacho, form])
 
   useEffect(() => {
-    if (open && tipoDespacho === 'Parcial' && productos && productos.length > 0) {
+    if (open && (tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && productos && productos.length > 0) {
       const items: ProductoEntrega[] = productos.map((p, index) => ({
         id: index + 1,
         producto: p.producto_name,
@@ -483,6 +484,68 @@ export default function ModalDetallesEntrega({
     }
   }, [open, tipoDespacho, form])
 
+  // Handler para editar "Programar ahora" en la tabla de Domicilio.
+  // Solo limita por total — lo que sobra queda como pendiente sin programar.
+  const handleProgramarChangeDomicilio = useCallback((id: number, value: number | null) => {
+    let newValue = Number(value) || 0
+    if (newValue < 0) newValue = 0
+    setProductosEntrega((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p
+        if (newValue > p.total) newValue = p.total
+        return { ...p, entregar_programado: newValue }
+      })
+    )
+  }, [])
+
+  // Columnas para la tabla de Domicilio: solo "Programar ahora" editable.
+  const columnDefsDomicilio = useMemo<ColDef<ProductoEntrega>[]>(() => [
+    {
+      headerName: 'Producto',
+      field: 'producto',
+      flex: 1,
+    },
+    {
+      headerName: 'Total',
+      field: 'total',
+      width: 100,
+      valueFormatter: (params) => Number(params.value).toFixed(2),
+    },
+    {
+      headerName: 'Programar ahora',
+      field: 'entregar_programado',
+      width: 150,
+      cellRenderer: (params: { data?: ProductoEntrega }) => {
+        if (!params.data) return null
+        return (
+          <ProgramarCell
+            id={params.data.id}
+            initialValue={params.data.entregar_programado}
+            max={params.data.total}
+            onCommit={handleProgramarChangeDomicilio}
+          />
+        )
+      },
+      cellStyle: { backgroundColor: '#f0fdf4' } as Record<string, string>,
+    },
+    {
+      headerName: 'Pendiente sin programar',
+      width: 180,
+      valueGetter: (params) => {
+        if (!params.data) return 0
+        return Math.max(0, params.data.total - params.data.entregar_programado)
+      },
+      valueFormatter: (params) => Number(params.value).toFixed(2),
+      cellStyle: (params) => {
+        const pendiente = params.value ?? 0
+        return {
+          color: pendiente > 0 ? '#dc2626' : '#9ca3af',
+          fontWeight: 'bold',
+        } as Record<string, string>
+      },
+    },
+  ], [handleProgramarChangeDomicilio])
+
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
   // Valida que entregar + entregar_programado no exceda total; lo que sobra queda como pendiente sin programar.
   const handleProgramarChange = useCallback((id: number, value: number | null) => {
@@ -587,6 +650,23 @@ export default function ModalDetallesEntrega({
   const handleConfirmar = async () => {
     const ventaValues = form.getFieldsValue()
 
+    if (tipoDespacho === 'Domicilio' && productosEntrega.length > 0) {
+      // Domicilio con split: enviar cantidades parciales para crear UNA entrega
+      // con solo los entregar_programado. Lo que sobra queda en cantidad_pendiente.
+      ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
+        producto_id: 0,
+        producto_name: p.producto,
+        producto_codigo: '',
+        unidad_derivada_id: p.unidad_derivada_venta_id,
+        unidad_derivada_name: '',
+        total: p.total,
+        entregado: 0,
+        pendiente: p.total,
+        entregar: 0,
+        entregar_programado: p.entregar_programado,
+      }))
+    }
+
     if (tipoDespacho === 'Parcial') {
       // Entrega inmediata: las cantidades "entregar" ahora.
       // "entregar_programado" se envía para crear la 2ª entrega (programada).
@@ -666,7 +746,7 @@ export default function ModalDetallesEntrega({
       }
       open={open}
       onCancel={() => setOpen(false)}
-      width={tipoDespacho === 'Parcial' ? 950 : 800}
+      width={tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio' ? 950 : 800}
       centered
       footer={
         <div className="flex justify-end gap-2">
@@ -696,7 +776,7 @@ export default function ModalDetallesEntrega({
             color="success"
             size="md"
             onClick={handleConfirmar}
-            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || domicilioInvalido || restoInvalido}
+            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0) || domicilioInvalido || restoInvalido}
           >
             {creandoVenta
               ? 'Procesando...'
@@ -732,6 +812,41 @@ export default function ModalDetallesEntrega({
         {/* Campos para Despacho a Domicilio (solo Domicilio, ya no Parcial) */}
         {tipoDespacho === 'Domicilio' && (
           <div className="space-y-4">
+            {/* Tabla de productos: editar cuántos entregar en esta entrega */}
+            {productosEntrega.length > 0 && (
+              <div className="space-y-2">
+                <div style={{ height: '180px' }}>
+                  <TableWithTitle<ProductoEntrega>
+                    id="productos-entrega-domicilio"
+                    title="Lista de productos"
+                    selectionColor={orangeColors[10]}
+                    columnDefs={columnDefsDomicilio}
+                    rowData={productosEntrega}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 justify-end text-xs">
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
+                    <span className="text-orange-700">A programar: </span>
+                    <span className="font-bold text-orange-800">{totalAProgramar.toFixed(2)}</span>
+                  </div>
+                  <div className={`border rounded-lg px-3 py-1.5 ${totalSinProgramar > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                    <span className={totalSinProgramar > 0 ? 'text-red-700' : 'text-gray-600'}>
+                      Pendientes sin programar:{' '}
+                    </span>
+                    <span className={`font-bold ${totalSinProgramar > 0 ? 'text-red-800' : 'text-gray-700'}`}>
+                      {totalSinProgramar.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                {totalSinProgramar > 0 && (
+                  <p className="text-xs text-gray-500 text-right italic">
+                    Las unidades sin programar quedarán como pendientes en la venta.
+                    Podrás programarlas luego desde <span className="font-semibold">Mis Entregas</span>.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Campos ocultos para tipo_pedido y cargo_destino */}
             <div style={{ display: 'none' }}>
               <Form.Item name="tipo_pedido"><Input /></Form.Item>
