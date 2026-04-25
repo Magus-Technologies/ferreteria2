@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { Popover } from 'antd'
 import { FaEye } from 'react-icons/fa'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -81,7 +81,7 @@ const columnasVentas: ColDef[] = [
     headerName: 'Fecha',
     field: 'created_at',
     width: 180,
-    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A'),
   },
 ]
 
@@ -90,8 +90,10 @@ export default function TabVentas({ data, totalVentas }: TabVentasProps) {
 
   return (
     <div className='h-[420px] w-full'>
-      <TableBase<any>
-        ref={gridRef}
+      <TableWithTitle<any>
+        id='cierre-caja-tab-ventas'
+        title='Ventas del Día'
+        tableRef={gridRef}
         rowData={data}
         columnDefs={columnasVentas}
         rowSelection={false}

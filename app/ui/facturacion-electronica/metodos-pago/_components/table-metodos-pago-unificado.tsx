@@ -12,7 +12,7 @@ import { metodoDePagoApi, type MetodoDePago } from '~/lib/api/metodo-de-pago'
 import { despliegueDePagoApi, type DespliegueDePago } from '~/lib/api/despliegue-de-pago'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonBase from '~/components/buttons/button-base'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import ModalRegistroCompleto from './modal-registro-completo'
 
 interface BancoConMetodos extends MetodoDePago {
@@ -240,30 +240,25 @@ export default function TableMetodosPagoUnificado({ onBancoDoubleClick }: Props)
     },
   ]
 
+  const extraTitle = (
+    <ButtonBase
+      color='success'
+      onClick={() => setOpenRegistro(true)}
+      className='flex items-center gap-2'
+    >
+      <FaPlus />
+      Registrar Banco y Métodos
+    </ButtonBase>
+  )
+
   return (
     <div className='w-full'>
-      <div className='flex justify-between items-center mb-4'>
-        <div>
-          <div className='text-lg font-semibold text-slate-700'>
-            Gestión de Métodos de Pago
-          </div>
-          <p className='text-sm text-slate-500'>
-            Registra bancos y sus métodos de pago
-          </p>
-        </div>
-        <ButtonBase
-          color='success'
-          onClick={() => setOpenRegistro(true)}
-          className='flex items-center gap-2'
-        >
-          <FaPlus />
-          Registrar Banco y Métodos
-        </ButtonBase>
-      </div>
-
       <div className='h-[600px] w-full'>
-        <TableBase<BancoConMetodos>
-          ref={gridRef}
+        <TableWithTitle<BancoConMetodos>
+          id='metodos-pago-unificado'
+          title='Gestión de Métodos de Pago'
+          extraTitle={extraTitle}
+          tableRef={gridRef}
           rowData={bancosConMetodos}
           columnDefs={columns}
           loading={loadingBancos || loadingMetodos}

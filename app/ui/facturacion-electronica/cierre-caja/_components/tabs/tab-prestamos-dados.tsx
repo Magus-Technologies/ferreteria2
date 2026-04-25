@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { formatFechaPeru } from '~/utils/fechas'
 
 interface TabPrestamosDadosProps {
@@ -36,7 +36,7 @@ const columnasPrestamosDados: ColDef[] = [
     headerName: 'Fecha',
     field: 'fecha_transferencia',
     width: 180,
-    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A'),
   },
 ]
 
@@ -45,8 +45,10 @@ export default function TabPrestamosDados({ data, total }: TabPrestamosDadosProp
 
   return (
     <div className='h-[420px] w-full'>
-      <TableBase<any>
-        ref={gridRef}
+      <TableWithTitle<any>
+        id='cierre-caja-tab-prestamos-dados'
+        title='Préstamos Dados'
+        tableRef={gridRef}
         rowData={data}
         columnDefs={columnasPrestamosDados}
         rowSelection={false}

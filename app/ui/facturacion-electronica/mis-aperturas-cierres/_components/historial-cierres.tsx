@@ -12,7 +12,7 @@ import { cierreCajaApi } from "~/lib/api/cierre-caja";
 import { cajaPrincipalApi, type CajaPrincipal } from "~/lib/api/caja-principal";
 import { Select } from "antd";
 import { QueryKeys } from "~/app/_lib/queryKeys";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsCierres } from "./columns-cierres";
 import dayjs, { Dayjs } from "dayjs";
@@ -470,15 +470,16 @@ export default function HistorialCierres() {
           </div>
         </FormBase>
 
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-lg font-semibold">Historial de Cierres de Caja</span>
-          <span className="text-sm text-slate-500">
-            Total: {cierres.length} cierres
-          </span>
-        </div>
         <div className="h-[500px] w-full">
-          <TableBase<AperturaYCierreCaja>
-            ref={gridRef}
+          <TableWithTitle<AperturaYCierreCaja>
+            id="historial-cierres"
+            title="Historial de Cierres de Caja"
+            extraTitle={
+              <span className="text-sm text-slate-500">
+                Total: {cierres.length} cierres
+              </span>
+            }
+            tableRef={gridRef}
             rowData={cierres}
             columnDefs={columns}
             rowSelection={false}

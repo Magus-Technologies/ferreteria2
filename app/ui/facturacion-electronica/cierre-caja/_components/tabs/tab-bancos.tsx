@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 
 interface TabBancosProps {
   data: any[]
@@ -53,8 +53,10 @@ export default function TabBancos({ data }: TabBancosProps) {
   return (
     <div className='w-full'>
       <div className='h-[400px] w-full'>
-        <TableBase<any>
-          ref={gridRef}
+        <TableWithTitle<any>
+          id='cierre-caja-tab-bancos'
+          title='Resumen de Bancos'
+          tableRef={gridRef}
           rowData={data}
           columnDefs={columnasBancos}
           rowSelection={false}

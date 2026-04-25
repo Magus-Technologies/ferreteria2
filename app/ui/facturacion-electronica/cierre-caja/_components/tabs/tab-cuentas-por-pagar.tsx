@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { useQuery } from '@tanstack/react-query'
 import { compraApi } from '~/lib/api/compra'
 import { Spin } from 'antd'
@@ -88,8 +88,10 @@ export default function TabCuentasPorPagar() {
   return (
     <div className='w-full'>
       <div className='h-[400px] w-full'>
-        <TableBase<any>
-          ref={gridRef}
+        <TableWithTitle<any>
+          id='cierre-caja-tab-cuentas-por-pagar'
+          title='Cuentas por Pagar'
+          tableRef={gridRef}
           rowData={compras}
           columnDefs={columnas}
           rowSelection={false}

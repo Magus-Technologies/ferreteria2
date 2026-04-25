@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { formatFechaPeru } from '~/utils/fechas'
 
 interface TabGastosProps {
@@ -25,7 +25,7 @@ const columnasGastos: ColDef[] = [
     headerName: 'Fecha',
     field: 'created_at',
     width: 180,
-    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A'),
   },
 ]
 
@@ -34,8 +34,10 @@ export default function TabGastos({ data, total }: TabGastosProps) {
 
   return (
     <div className='h-[420px] w-full'>
-      <TableBase<any>
-        ref={gridRef}
+      <TableWithTitle<any>
+        id='cierre-caja-tab-gastos'
+        title='Gastos Extras'
+        tableRef={gridRef}
         rowData={data}
         columnDefs={columnasGastos}
         rowSelection={false}

@@ -8,7 +8,7 @@ import { AgGridReact } from 'ag-grid-react'
 import { useQuery } from '@tanstack/react-query'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { proveedorApi, type Proveedor } from '~/lib/api/proveedor'
 import { useColumnsProveedores } from './_components/tables/columns-proveedores'
 import ModalCreateProveedor from './_components/modals/modal-create-proveedor'
@@ -168,16 +168,6 @@ export default function MisProveedoresPage() {
                     </div>
                 </div>
 
-                {/* Info de resultados */}
-                <div className='flex items-center justify-between'>
-                    <span className='text-lg font-semibold text-slate-700'>
-                        Lista de Proveedores
-                    </span>
-                    <span className='text-sm text-slate-500'>
-                        Total: {proveedores.length} proveedores
-                    </span>
-                </div>
-
                 {/* Tabla */}
                 {isLoading ? (
                     <div className='flex justify-center items-center h-[400px]'>
@@ -186,9 +176,16 @@ export default function MisProveedoresPage() {
                         </Spin>
                     </div>
                 ) : (
-                    <div className='h-[calc(50vh-120px)] min-h-[200px] w-full'>
-                        <TableBase<Proveedor>
-                            ref={gridRef}
+                    <div className='h-[calc(50vh-120px)] min-h-[240px] w-full'>
+                        <TableWithTitle<Proveedor>
+                            id='mis-proveedores-lista'
+                            title='Lista de Proveedores'
+                            extraTitle={
+                                <span className='text-sm text-slate-500'>
+                                    Total: {proveedores.length} proveedores
+                                </span>
+                            }
+                            tableRef={gridRef}
                             rowData={proveedores}
                             columnDefs={columns}
                             rowSelection={true}

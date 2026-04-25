@@ -6,7 +6,7 @@ import { Spin, Button, Space, Form } from "antd";
 import { FilterOutlined, ReloadOutlined } from "@ant-design/icons";
 import { cajaApi, type AperturaYCierreCaja } from "~/lib/api/caja";
 import { QueryKeys } from "~/app/_lib/queryKeys";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsAperturas } from "./columns-aperturas";
 import { useServerQuery } from "~/hooks/use-server-query";
@@ -281,15 +281,16 @@ export default function HistorialAperturas() {
           </div>
         </FormBase>
 
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-lg font-semibold">Historial de Aperturas de Caja</span>
-          <span className="text-sm text-slate-500">
-            Total: {aperturas.length} aperturas
-          </span>
-        </div>
         <div className="h-[500px] w-full">
-          <TableBase<AperturaYCierreCaja>
-            ref={gridRef}
+          <TableWithTitle<AperturaYCierreCaja>
+            id="historial-aperturas"
+            title="Historial de Aperturas de Caja"
+            extraTitle={
+              <span className="text-sm text-slate-500">
+                Total: {aperturas.length} aperturas
+              </span>
+            }
+            tableRef={gridRef}
             rowData={aperturas}
             columnDefs={columns}
             rowSelection={false}

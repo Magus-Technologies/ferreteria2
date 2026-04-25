@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spin, Button, Tooltip, Modal, Descriptions, message } from "antd";
 import CardDashboard from "~/app/_components/cards/card-dashboard";
 import { FaMoneyBillWave, FaClock, FaCheckCircle, FaHistory, FaCalendarCheck, FaEye, FaEdit, FaTrash } from "react-icons/fa";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
@@ -241,22 +241,17 @@ export function HistorialAbonos({ deuda, onEditarAbono }: HistorialAbonosProps) 
       </div>
 
       {/* Tabla de Historial */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-2">
-          <FaHistory className="text-slate-400" />
-          <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Línea de Tiempo de Pagos</span>
-        </div>
-
-        <div className="h-[400px] w-full">
-          <TableBase<AbonoDeuda>
-            ref={gridRef}
-            rowData={abonos}
-            columnDefs={columns}
-            rowSelection={false}
-            withNumberColumn={true}
-            headerColor="var(--color-amber-600)"
-          />
-        </div>
+      <div className="h-[440px] w-full">
+        <TableWithTitle<AbonoDeuda>
+          id="historial-abonos"
+          title="Línea de Tiempo de Pagos"
+          tableRef={gridRef}
+          rowData={abonos}
+          columnDefs={columns}
+          rowSelection={false}
+          withNumberColumn={true}
+          headerColor="var(--color-amber-600)"
+        />
       </div>
 
       {/* Modal de Detalles del Abono */}

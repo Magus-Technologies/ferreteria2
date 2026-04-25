@@ -4,7 +4,7 @@ import { App } from "antd";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { movimientoInternoApi } from "~/lib/api/movimiento-interno";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { AgGridReact } from "ag-grid-react";
 import { useColumnsDepositosSeguridad, type DepositoSeguridad } from "./columns-depositos-seguridad";
 import { QueryKeys } from "~/app/_lib/queryKeys";
@@ -61,17 +61,11 @@ export default function HistorialDepositosSeguridad() {
         <div className='w-full'>
             <FiltersDepositosSeguridad onFilter={handleFilter} />
 
-            <div className='flex justify-between items-center mb-4'>
-                <div>
-                    <div className='text-lg font-semibold text-slate-700'>
-                        Depósitos de Seguridad
-                    </div>
-                </div>
-            </div>
-
             <div className='h-[500px] w-full'>
-                <TableBase<DepositoSeguridad>
-                    ref={gridRef}
+                <TableWithTitle<DepositoSeguridad>
+                    id='historial-depositos-seguridad'
+                    title='Depósitos de Seguridad'
+                    tableRef={gridRef}
                     rowData={depositos}
                     columnDefs={columns}
                     loading={loading}

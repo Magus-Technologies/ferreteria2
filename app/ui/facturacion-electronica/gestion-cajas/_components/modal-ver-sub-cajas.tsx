@@ -14,7 +14,7 @@ import ModalCrearSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_c
 import ModalEditarSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-editar-sub-caja'
 import ModalTransferirEntreSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-transferir-entre-sub-cajas'
 import ButtonBase from '~/components/buttons/button-base'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { useColumnsSubCajas } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-sub-cajas'
 import HistorialTrasladosBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/historial-traslados-boveda'
@@ -172,8 +172,10 @@ export default function ModalVerSubCajas({
                             </div>
                         ) : (
                             <div className='h-[400px] w-full'>
-                                <TableBase<SubCaja>
-                                    ref={gridRef}
+                                <TableWithTitle<SubCaja>
+                                    id='gestion-cajas-sub-cajas'
+                                    title='Sub-Cajas'
+                                    tableRef={gridRef}
                                     rowData={cajaData.sub_cajas}
                                     columnDefs={columns}
                                     rowSelection={false}

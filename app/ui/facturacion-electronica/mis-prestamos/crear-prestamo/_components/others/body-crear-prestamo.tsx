@@ -7,7 +7,7 @@ import FormBase from "~/components/form/form-base";
 import FormTablePrestamo from "../form/form-table-prestamo";
 import FormCrearPrestamo from "../form/form-crear-prestamo";
 import CardsInfoPrestamo from "../cards/cards-info-prestamo";
-import { prestamoApi, type CreatePrestamoRequest } from "~/lib/api/prestamo";
+import { prestamoApi, TipoMoneda, type CreatePrestamoRequest } from "~/lib/api/prestamo";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
 import ModalDocPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/_components/modals/modal-doc-prestamo";
@@ -60,8 +60,8 @@ export default function BodyCrearPrestamo() {
         ),
         tipo_operacion: values.tipo_operacion,
         tipo_entidad: values.tipo_entidad,
-        tipo_moneda: values.tipo_moneda,
-        tipo_de_cambio: values.tipo_de_cambio,
+        tipo_moneda: values.tipo_moneda ?? TipoMoneda.SOLES,
+        tipo_de_cambio: values.tipo_de_cambio ?? 1,
         cliente_id:
           values.tipo_entidad === "CLIENTE" ? values.cliente_id : undefined,
         proveedor_id:

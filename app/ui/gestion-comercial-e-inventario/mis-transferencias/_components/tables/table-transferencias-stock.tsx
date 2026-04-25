@@ -58,10 +58,10 @@ export default function TableTransferenciasStock({
       colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
-      width: 150,
-      minWidth: 130,
+      width: 200,
+      minWidth: 180,
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
+        formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
       sort: 'desc',
     },
     {

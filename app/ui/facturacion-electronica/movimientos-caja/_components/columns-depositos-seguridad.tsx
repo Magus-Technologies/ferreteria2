@@ -1,5 +1,6 @@
 import { ColDef } from 'ag-grid-community'
 import { Tag } from 'antd'
+import { formatFechaPeru } from '~/utils/fechas'
 
 export interface DepositoSeguridad {
   id: string
@@ -111,18 +112,8 @@ export const useColumnsDepositosSeguridad = (): ColDef<DepositoSeguridad>[] => {
       colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
-      width: 180,
-      cellRenderer: (params: any) => (
-        <span className='text-sm text-slate-600'>
-          {new Date(params.value).toLocaleString('es-PE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </span>
-      ),
+      width: 200,
+      valueFormatter: (params) => params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
   ]
 }

@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { useQuery } from '@tanstack/react-query'
 import { getGastos } from '~/lib/api/gastos'
 import { Spin } from 'antd'
@@ -32,7 +32,7 @@ const columnas: ColDef[] = [
     headerName: 'Fecha',
     field: 'fecha',
     width: 180,
-    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm'),
+    valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A'),
   },
 ]
 
@@ -61,8 +61,10 @@ export default function TabGastosOperativos({ fecha, fecha_fin, user_id }: TabGa
   return (
     <div className='w-full'>
       <div className='h-[400px] w-full'>
-        <TableBase<any>
-          ref={gridRef}
+        <TableWithTitle<any>
+          id='cierre-caja-tab-gastos-operativos'
+          title='Gastos Operativos'
+          tableRef={gridRef}
           rowData={gastos}
           columnDefs={columnas}
           rowSelection={false}

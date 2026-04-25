@@ -11,7 +11,7 @@ import ModalCrearCaja from '~/app/ui/facturacion-electronica/_components/modals/
 import ModalVerSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-ver-sub-cajas'
 import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
 import ButtonBase from '~/components/buttons/button-base'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { useColumnsCajasPrincipales } from './columns-cajas-principales'
 import { usePermission } from '~/hooks/use-permission'
@@ -83,37 +83,37 @@ export default function TableCajasPrincipales() {
     onEliminar: handleEliminarCaja,
   })
 
+  const extraTitle = (
+    <Space>
+      <ButtonBase
+        color='info'
+        onClick={() => setOpenAperturarCaja(true)}
+        className='flex items-center gap-2'
+      >
+        <FaDoorOpen />
+        Agregar Efectivo
+      </ButtonBase>
+      {canCreateCaja && (
+        <ButtonBase
+          color='success'
+          onClick={() => setOpenCrearCaja(true)}
+          className='flex items-center gap-2'
+        >
+          <FaPlus />
+          Nueva Caja
+        </ButtonBase>
+      )}
+    </Space>
+  )
+
   return (
     <div className='w-full'>
-      <div className='flex justify-between items-center mb-4'>
-        <div className='text-lg font-semibold text-slate-700'>
-          Cajas Principales
-        </div>
-        <Space>
-          <ButtonBase
-            color='info'
-            onClick={() => setOpenAperturarCaja(true)}
-            className='flex items-center gap-2'
-          >
-            <FaDoorOpen />
-            Agregar Efectivo
-          </ButtonBase>
-          {canCreateCaja && (
-            <ButtonBase
-              color='success'
-              onClick={() => setOpenCrearCaja(true)}
-              className='flex items-center gap-2'
-            >
-              <FaPlus />
-              Nueva Caja
-            </ButtonBase>
-          )}
-        </Space>
-      </div>
-
       <div className='h-[500px] w-full'>
-        <TableBase<CajaPrincipal>
-          ref={gridRef}
+        <TableWithTitle<CajaPrincipal>
+          id='gestion-cajas-principales'
+          title='Cajas Principales'
+          extraTitle={extraTitle}
+          tableRef={gridRef}
           rowData={data}
           columnDefs={columns}
           loading={isLoading}

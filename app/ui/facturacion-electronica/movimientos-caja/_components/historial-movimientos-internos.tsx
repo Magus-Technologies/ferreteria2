@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Spin } from 'antd'
 import { transaccionesCajaApi, type MovimientoInterno } from '~/lib/api/transacciones-caja'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
@@ -49,7 +49,7 @@ export default function HistorialMovimientosInternos() {
       field: 'fecha',
       width: 180,
       valueFormatter: (params) =>
-        formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
+        formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
     {
       headerName: 'Monto',
@@ -99,13 +99,14 @@ export default function HistorialMovimientosInternos() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-lg font-semibold">Historial de Movimientos Internos</span>
-        <span className="text-sm text-slate-500">Total: {movimientos.length} movimientos</span>
-      </div>
       <div className="h-[500px] w-full">
-        <TableBase<MovimientoInterno>
-          ref={gridRef}
+        <TableWithTitle<MovimientoInterno>
+          id="historial-movimientos-internos"
+          title="Historial de Movimientos Internos"
+          extraTitle={
+            <span className="text-sm text-slate-500">Total: {movimientos.length} movimientos</span>
+          }
+          tableRef={gridRef}
           rowData={movimientos}
           columnDefs={columns}
           rowSelection={false}

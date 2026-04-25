@@ -8,7 +8,7 @@ import { FaEye } from 'react-icons/fa'
 import { useQuery } from '@tanstack/react-query'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import TabVentas from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-ventas'
 import TabMetodosPago from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-metodos-pago'
 import TabOtrosIngresos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-otros-ingresos'
@@ -24,6 +24,7 @@ import TabCuentasPorPagar from '~/app/ui/facturacion-electronica/cierre-caja/_co
 import TabCobrosCreditos from '~/app/ui/facturacion-electronica/cierre-caja/_components/tabs/tab-cobros-creditos'
 import { useStoreFiltrosArqueos } from '../_store/store-filtros-arqueos'
 import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 
 const columnasArqueos: ColDef[] = [
   {
@@ -43,8 +44,8 @@ const columnasArqueos: ColDef[] = [
     colId: 'fecha',
     headerName: 'Fecha',
     field: 'fecha_apertura',
-    width: 120,
-    valueFormatter: p => p.value ? dayjs(p.value).format('DD/MM/YYYY') : 'N/A',
+    width: 200,
+    valueFormatter: p => p.value ? formatFechaPeru(p.value, 'DD/MM/YYYY hh:mm:ss A') : 'N/A',
   },
   {
     colId: 'estado',
@@ -234,9 +235,11 @@ export default function ArqueosDiariosView() {
       <FiltrosArqueos />
 
       {/* Tabla de arqueos */}
-      <div className='h-[220px] w-full mt-6'>
-        <TableBase<any>
-          ref={gridRef}
+      <div className='h-[260px] w-full mt-6'>
+        <TableWithTitle<any>
+          id='arqueos-diarios-v2'
+          title='Arqueos Diarios'
+          tableRef={gridRef}
           rowData={arqueos}
           columnDefs={columnasArqueos}
           rowSelection={false}
