@@ -19,7 +19,7 @@ interface StoreFiltrosMisEntregas {
 const filtrosIniciales: FiltrosMisEntregas = {
   fecha_desde: dayjs().startOf('day'),
   fecha_hasta: dayjs().endOf('day'),
-  estado_entrega: ['pe', 'ec'],
+  estado_entrega: ['pe', 'ec', 'en'],
 }
 
 export const useStoreFiltrosMisEntregas = create<StoreFiltrosMisEntregas>((set) => ({

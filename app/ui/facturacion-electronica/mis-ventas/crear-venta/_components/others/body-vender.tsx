@@ -123,6 +123,9 @@ export type FormCreateVenta = {
   tipo_pedido?: string
   cargo_destino?: string
   vehiculo_id?: number
+  // Flag para indicar que se presionó "Omitir" en el modal de entrega:
+  // la venta se crea pero NO se genera la entrega automática (no descuenta stock).
+  _omitir_entrega?: boolean
 }
 
 // Componente interno que se recrea completamente cuando cambia la key

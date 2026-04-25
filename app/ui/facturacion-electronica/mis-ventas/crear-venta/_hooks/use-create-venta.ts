@@ -75,6 +75,7 @@ export function agruparProductos({
       descuento: p.descuento,
       descuento_tipo: p.descuento_tipo,
       producto_codigo: p.producto_codigo,
+      comision: p.comision,
     })
   }
   return Array.from(mapa.values())
@@ -247,7 +248,7 @@ export default function useCreateVenta({
         recargo: Number(u.recargo || 0),
         descuento_tipo: mapDescuentoTipo(u.descuento_tipo),
         descuento: Number(u.descuento || 0),
-        comision: 0,
+        comision: Number(u.comision || 0),
       })),
     }))
 

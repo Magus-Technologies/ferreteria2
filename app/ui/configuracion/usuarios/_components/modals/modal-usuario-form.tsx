@@ -682,6 +682,7 @@ export default function ModalUsuarioForm({
                   allowClear
                   classNameIcon="text-orange-500 mx-1"
                   sizeIcon={14}
+                  vehiculoPreseleccionado={usuarioEdit?.vehiculo ?? null}
                 />
               </LabelBase>
             </div>
