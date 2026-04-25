@@ -279,11 +279,33 @@ export default function TableBase<T>({
   const onColumnResized = useCallback(
     (event: ColumnResizedEvent) => {
       if (event.finished && !isApplyingStateRef.current) {
-        saveColumnState();
+        // Solo si es un resize real del usuario, guardar INMEDIATAMENTE.
+        // Si esperamos al debounce (300ms), un refetch de React Query puede
+        // re-aplicar el estado viejo entre medio y perder el nuevo ancho.
+        const isUserResize =
+          event.source === "uiColumnResized" ||
+          event.source === "uiColumnDragged";
+
+        if (isUserResize) {
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+          }
+          try {
+            const state = gridApiRef.current!.getColumnState();
+            columnStateRef.current = state;
+            setColumnStateForRender(state);
+            localStorage.setItem(storageKey, JSON.stringify(state));
+          } catch (error) {
+            console.error("Error guardando estado de resize:", error);
+          }
+        } else {
+          saveColumnState();
+        }
       }
       props.onColumnResized?.(event);
     },
-    [saveColumnState, props],
+    [saveColumnState, props, storageKey],
   );
 
   // Manejar cuando se oculta/muestra una columna
