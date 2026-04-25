@@ -88,10 +88,10 @@ export default function KardexFinanzasView() {
     {
       headerName: 'Fecha',
       field: 'fecha',
-      width: 150,
-      minWidth: 140,
+      width: 200,
+      minWidth: 180,
       sortable: true,
-      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY HH:mm') || '-',
+      valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
     {
       headerName: 'Tipo',
