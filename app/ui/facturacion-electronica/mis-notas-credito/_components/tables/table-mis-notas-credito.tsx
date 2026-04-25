@@ -7,6 +7,7 @@ import { useStoreFiltrosMisNotasCredito } from "../../_store/store-filtros-mis-n
 import useGetNotasCredito from "../../_hooks/use-get-notas-credito";
 import { Tag, message } from "antd";
 import dayjs from "dayjs";
+import { formatFechaPeru } from "~/utils/fechas";
 import ButtonBase from "~/components/buttons/button-base";
 import { FaFilePdf, FaPaperPlane, FaCheckCircle } from "react-icons/fa";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
@@ -49,9 +50,9 @@ export default function TableMisNotasCredito() {
       {
         headerName: "Fecha Emisión",
         field: "fecha",
-        width: 130,
+        width: 180,
         valueFormatter: (params) =>
-          params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
+          params.value ? formatFechaPeru(params.value, "DD/MM/YYYY hh:mm:ss A") : "",
       },
       {
         headerName: "Factura Afectada",
