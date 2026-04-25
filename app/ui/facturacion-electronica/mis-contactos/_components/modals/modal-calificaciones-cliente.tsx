@@ -1,13 +1,12 @@
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Modal, Button, Tooltip, message, Spin, Form, Select, Input } from "antd";
+import { Modal, Button, Tooltip, Popconfirm, message, Spin, Form, Select, Input } from "antd";
 import { FaPlus, FaEdit, FaTrash, FaStar, FaHistory } from "react-icons/fa";
 import TableBase from "~/components/tables/table-base";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { useRef, useState } from "react";
-import dayjs from "dayjs";
 import { formatFechaPeru } from '~/utils/fechas';
 import { clienteCalificacionApi, type ClienteCalificacion, type EstadoOption } from "~/lib/api/cliente-calificacion";
 import { QueryKeys } from "~/app/_lib/queryKeys";
@@ -102,17 +101,6 @@ export default function ModalCalificacionesCliente({
     setModalFormVisible(true);
   };
 
-  const handleEliminar = (calificacion: ClienteCalificacion) => {
-    Modal.confirm({
-      title: "¿Eliminar calificación?",
-      content: `Se eliminará la calificación "${calificacion.estado}".`,
-      okText: "Eliminar",
-      okType: "danger",
-      cancelText: "Cancelar",
-      onOk: () => deleteMutation.mutate(calificacion.id),
-    });
-  };
-
   const handleSubmit = async (values: any) => {
     if (editingCalificacion) {
       updateMutation.mutate(values);
@@ -196,15 +184,24 @@ export default function ModalCalificacionesCliente({
             </Button>
           </Tooltip>
           <Tooltip title="Eliminar">
-            <Button
-              type="link"
-              size="small"
-              onClick={() => handleEliminar(params.data)}
-              className="flex items-center"
-              danger
+            <Popconfirm
+              title="¿Eliminar calificación?"
+              description={`Se eliminará la calificación "${params.data?.estado}".`}
+              okText="Eliminar"
+              okType="danger"
+              cancelText="Cancelar"
+              onConfirm={() => deleteMutation.mutate(params.data.id)}
             >
-              <FaTrash className="text-red-600 text-base" />
-            </Button>
+              <Button
+                type="link"
+                size="small"
+                className="flex items-center"
+                danger
+                loading={deleteMutation.isPending}
+              >
+                <FaTrash className="text-red-600 text-base" />
+              </Button>
+            </Popconfirm>
           </Tooltip>
         </div>
       ),
