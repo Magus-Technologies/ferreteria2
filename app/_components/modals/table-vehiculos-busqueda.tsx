@@ -11,15 +11,17 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 interface TableVehiculosBusquedaProps
   extends Omit<
     TableWithTitleProps<Vehiculo>,
-    'id' | 'title' | 'onRowDoubleClicked'
+    'id' | 'title' | 'onRowDoubleClicked' | 'onRowClicked'
   > {
   value: string
   onRowDoubleClicked?: (vehiculo: Vehiculo | undefined) => void
+  onRowClicked?: (vehiculo: Vehiculo | undefined) => void
 }
 
 export default function TableVehiculosBusqueda({
   value,
   onRowDoubleClicked,
+  onRowClicked,
   ...props
 }: TableVehiculosBusquedaProps) {
   const { data: vehiculos = [], isLoading } = useQuery({
@@ -41,6 +43,9 @@ export default function TableVehiculosBusqueda({
       rowData={vehiculos}
       onRowDoubleClicked={({ data }) => {
         onRowDoubleClicked?.(data)
+      }}
+      onRowClicked={({ data }) => {
+        onRowClicked?.(data)
       }}
       optionsSelectColumns={[
         {

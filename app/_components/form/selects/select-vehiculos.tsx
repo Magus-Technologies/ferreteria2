@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Modal, Input, Form, FormInstance, message } from 'antd'
+import { Modal, Input, Form, message } from 'antd'
 import { FaTruck, FaPlus, FaSearch } from 'react-icons/fa'
 import { IoClose } from 'react-icons/io5'
 import { vehiculosApi, type Vehiculo } from '~/lib/api/catalogos'
@@ -15,7 +15,6 @@ interface SelectVehiculosProps {
   classNameIcon?: string
   sizeIcon?: number
   showCreate?: boolean
-  form?: FormInstance
   propsForm?: { name: string; [key: string]: any }
   className?: string
   allowClear?: boolean
@@ -30,13 +29,13 @@ export default function SelectVehiculos({
   classNameIcon = 'text-orange-600',
   sizeIcon = 16,
   showCreate = true,
-  form,
   propsForm,
   className = '',
   allowClear = false,
   onChange,
   vehiculoPreseleccionado,
 }: SelectVehiculosProps) {
+  const form = Form.useFormInstance()
   const queryClient = useQueryClient()
   const [openBuscar, setOpenBuscar] = useState(false)
   const [openCrear, setOpenCrear] = useState(false)
