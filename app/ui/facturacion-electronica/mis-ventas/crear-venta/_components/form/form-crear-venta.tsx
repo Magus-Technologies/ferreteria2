@@ -11,7 +11,7 @@ import FormFormaDePago from "~/app/_components/form/form-forma-de-pago";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
@@ -27,14 +27,20 @@ export default function FormCrearVenta({
   venta?: VentaConUnidadDerivadaNormal;
 }) {
   const clienteId = Form.useWatch("cliente_id", form);
+  const rucDni = Form.useWatch("ruc_dni", form);
   const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
   const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
 
-  const [clienteIdSeleccionado, setClienteIdSeleccionado] = useState<number | undefined>(
-    venta?.cliente?.id
-  );
+  // Solo mostrar calificación si hay cliente_id seleccionado Y el campo de DNI/RUC tiene contenido.
+  // Cuando el usuario borra el DNI o un dígito, ruc_dni cambia → ocultamos calificación.
+  const clienteIdParaCalificacion = useMemo<number | undefined>(() => {
+    if (!clienteId) return undefined;
+    if (!rucDni || String(rucDni).trim() === "") return undefined;
+    return clienteId as number;
+  }, [clienteId, rucDni]);
+
   const { data: calificacionResponse, isLoading: loadingCalificacion } =
-    useUltimaCalificacionCliente(clienteIdSeleccionado);
+    useUltimaCalificacionCliente(clienteIdParaCalificacion);
 
   // Reset deuda state when client changes
   useEffect(() => {
@@ -53,7 +59,7 @@ export default function FormCrearVenta({
       <FloatingCalificacionCliente
         calificacion={calificacionResponse?.data?.data}
         loading={loadingCalificacion}
-        clienteId={clienteIdSeleccionado}
+        clienteId={clienteIdParaCalificacion}
       />
       {/* Campos ocultos para que Form.useWatch funcione */}
       <Form.Item name="direccion_seleccionada" hidden>
@@ -301,9 +307,6 @@ export default function FormCrearVenta({
                   // Actualizar direccion_entrega con la dirección principal
                   const direccionPrincipal = direcciones.find(d => d.es_principal);
                   form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
-
-                  // Cargar calificación del cliente
-                  setClienteIdSeleccionado(cliente.id);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
@@ -314,7 +317,6 @@ export default function FormCrearVenta({
                   form.setFieldValue("_cliente_direccion_3", "");
                   form.setFieldValue("_cliente_direccion_4", "");
                   form.setFieldValue("direccion_entrega", "");
-                  setClienteIdSeleccionado(undefined);
                 }
               }}
             />
