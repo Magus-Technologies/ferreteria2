@@ -39,6 +39,7 @@ export interface NumeroOperacionPago {
 export interface GetDesplieguesDePagoParams {
   mostrar?: boolean;
   exclude_used_by_caja_principal_id?: number | string;
+  except_sub_caja_id?: number | string;
 }
 
 // Laravel wraps responses in { data: ... }
@@ -81,6 +82,10 @@ class DespliegueDePagoApi {
 
     if (params?.exclude_used_by_caja_principal_id) {
       queryParams.append('exclude_used_by_caja_principal_id', params.exclude_used_by_caja_principal_id.toString());
+    }
+
+    if (params?.except_sub_caja_id) {
+      queryParams.append('except_sub_caja_id', params.except_sub_caja_id.toString());
     }
 
     const queryString = queryParams.toString();
