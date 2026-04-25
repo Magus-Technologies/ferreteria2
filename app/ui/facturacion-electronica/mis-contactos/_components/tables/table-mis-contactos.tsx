@@ -17,6 +17,7 @@ import ModalVerDetalleCliente from "../modals/modal-ver-detalle-cliente";
 import ModalCalificacionesCliente from "../modals/modal-calificaciones-cliente";
 import { autorizacionesApi } from "~/lib/api/autorizaciones";
 import ModalSolicitarAutorizacion from "~/components/autorizaciones/modal-solicitar-autorizacion";
+import { orangeColors } from "~/lib/colors";
 
 export default function TableMisContactos() {
   const { filtros } = useStoreFiltrosMisContactos();
@@ -37,7 +38,7 @@ export default function TableMisContactos() {
   const [solicitandoAuth, setSolicitandoAuth] = useState(false);
 
   // Query para obtener los contactos
-  const { data: response, isLoading, refetch } = useQuery({
+  const { data: response, isFetching, refetch } = useQuery({
     queryKey: [QueryKeys.CLIENTES, filtros],
     queryFn: () => clienteApi.getAll(filtros),
   });
@@ -269,12 +270,12 @@ export default function TableMisContactos() {
       <TableWithTitle<Cliente>
         id="mis-contactos"
         title="CONTACTOS"
-        loading={isLoading}
+        loading={isFetching}
         columnDefs={columnDefs}
         rowData={contactos}
         tableRef={tableRef}
         domLayout="normal"
-        selectionColor="text-cyan-600"
+        selectionColor={orangeColors[10]}
         onSelectionChanged={() => {}}
         onRowClicked={(event) => {
           if (event.data) {

@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { formatFechaPeru } from "~/utils/fechas";
 import { useStoreClienteSeleccionado } from "../../_store/store-cliente-seleccionado";
+import { orangeColors } from "~/lib/colors";
 
 const ModalDocVenta = dynamic(
   () => import("~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-doc-venta"),
@@ -203,12 +204,12 @@ export default function TableDeudasClientes() {
         <TableWithTitle<DeudaCliente>
           id="deudas-clientes"
           title="DOCUMENTOS CON DEUDA"
-          loading={isLoading}
+          loading={isLoading || isFetching}
           columnDefs={columnDefs}
           rowData={allData}
           tableRef={tableRef}
           domLayout="normal"
-          selectionColor="text-red-600"
+          selectionColor={orangeColors[10]}
           onSelectionChanged={() => {}}
           onRowClicked={() => {}}
           defaultColDef={{

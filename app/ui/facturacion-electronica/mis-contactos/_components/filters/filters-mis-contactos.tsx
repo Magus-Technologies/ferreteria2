@@ -3,6 +3,7 @@
 import { Form } from "antd";
 import { FaSearch } from "react-icons/fa";
 import { IoMdContact } from "react-icons/io";
+import { useQueryClient } from "@tanstack/react-query";
 import { TipoCliente } from "~/lib/api/cliente";
 import { useStoreFiltrosMisContactos } from "../../_store/store-filtros-mis-contactos";
 import ButtonCreateCliente from "~/app/_components/form/buttons/button-create-cliente";
@@ -11,6 +12,7 @@ import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectTipoCliente from "~/app/_components/form/selects/select-tipo-cliente";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface ValuesFiltersMisContactos {
   search?: string;
@@ -21,6 +23,7 @@ interface ValuesFiltersMisContactos {
 export default function FiltersMisContactos() {
   const [form] = Form.useForm<ValuesFiltersMisContactos>();
   const { setFiltros, limpiarFiltros } = useStoreFiltrosMisContactos();
+  const queryClient = useQueryClient();
 
   const handleFinish = (values: ValuesFiltersMisContactos) => {
     // Limpiar valores undefined, null o vacíos
@@ -32,6 +35,8 @@ export default function FiltersMisContactos() {
     });
 
     setFiltros(data);
+    // Forzar refetch aunque los filtros no hayan cambiado (feedback visual)
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] });
   };
 
   const handleLimpiar = () => {
