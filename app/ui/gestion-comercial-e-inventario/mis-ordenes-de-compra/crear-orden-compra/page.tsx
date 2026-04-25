@@ -49,6 +49,7 @@ import { productosApiV2 } from '~/lib/api/producto'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
+import { fechaSubmit } from '~/utils/fechas'
 
 export default function CrearOrdenCompraPage() {
   const router = useRouter()
@@ -235,14 +236,14 @@ export default function CrearOrdenCompraPage() {
       const requestData: CreateOrdenCompraRequest = {
         requerimiento_id: reqSeleccionado?.id,
         proveedor_id: values.proveedor_id,
-        fecha: values.fecha?.format?.('YYYY-MM-DD') || new Date().toISOString().split('T')[0],
+        fecha: values.fecha ? fechaSubmit(values.fecha) : dayjs().format('YYYY-MM-DD HH:mm:ss'),
         tipo_moneda: values.tipo_moneda,
         tipo_de_cambio: values.tipo_de_cambio,
         ruc: values.proveedor_ruc,
         tipo_documento: values.tipo_documento,
         forma_de_pago: values.forma_de_pago,
         numero_dias: values.numero_dias,
-        fecha_vencimiento: values.fecha_vencimiento?.format?.('YYYY-MM-DD'),
+        fecha_vencimiento: values.fecha_vencimiento ? fechaSubmit(values.fecha_vencimiento) : undefined,
         almacen_id: values.almacen_id || 1, // Default almacen
         productos: productos.map(p => ({
           producto_id: p.producto_id || p.id,

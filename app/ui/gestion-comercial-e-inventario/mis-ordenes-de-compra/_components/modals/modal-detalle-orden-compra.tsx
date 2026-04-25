@@ -155,7 +155,7 @@ export default function ModalDetalleOrdenCompra({
                         <div>
                             <h3 className='text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide'>Información General</h3>
                             <Descriptions column={2} size='small' bordered>
-                                <Descriptions.Item label='Fecha'>{orden.fecha ? formatFechaPeru(orden.fecha, 'DD/MM/YYYY') : '—'}</Descriptions.Item>
+                                <Descriptions.Item label='Fecha'>{orden.fecha ? formatFechaPeru(orden.fecha, 'DD/MM/YYYY hh:mm:ss A') : '—'}</Descriptions.Item>
                                 <Descriptions.Item label='Solicitante'>{orden.user?.name || '—'}</Descriptions.Item>
                                 <Descriptions.Item label='Almacén'>Almacén Principal</Descriptions.Item>
                                 <Descriptions.Item label='Moneda'>{orden.tipo_moneda === 's' ? 'Soles (S/.)' : 'Dólares ($)'}</Descriptions.Item>
@@ -221,7 +221,7 @@ export default function ModalDetalleOrdenCompra({
                                 {orden.forma_de_pago === 'cr' && (
                                     <>
                                         <Descriptions.Item label='Días de Crédito'>{orden.numero_dias} días</Descriptions.Item>
-                                        <Descriptions.Item label='Fecha de Vencimiento'>{orden.fecha_vencimiento ? formatFechaPeru(orden.fecha_vencimiento, 'DD/MM/YYYY') : '—'}</Descriptions.Item>
+                                        <Descriptions.Item label='Fecha de Vencimiento'>{orden.fecha_vencimiento ? formatFechaPeru(orden.fecha_vencimiento, 'DD/MM/YYYY hh:mm:ss A') : '—'}</Descriptions.Item>
                                     </>
                                 )}
                             </Descriptions>

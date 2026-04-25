@@ -101,7 +101,10 @@ export function useColumnsCompras({
       width: 80,
       minWidth: 80,
       valueFormatter: ({ value }) => {
-        return value === 'nv' ? 'Nota de Venta' : value
+        if (value === '01') return 'Factura'
+        if (value === '03') return 'Boleta'
+        if (value === 'nv') return 'Nota de Venta'
+        return value
       },
       filter: true,
     },

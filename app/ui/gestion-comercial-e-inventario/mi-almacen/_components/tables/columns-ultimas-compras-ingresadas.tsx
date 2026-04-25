@@ -30,6 +30,12 @@ export function useColumnsUltimasComprasIngresadas() {
       width: 80,
       minWidth: 80,
       filter: true,
+      valueFormatter: ({ value }) => {
+        if (value === '01') return 'Factura'
+        if (value === '03') return 'Boleta'
+        if (value === 'nv') return 'Nota de Venta'
+        return value
+      },
     },
     {
       colId: 'serie',

@@ -18,6 +18,12 @@ export function useColumnsMisVentas() {
       headerName: "T.Doc",
       field: "tipo_documento",
       width: 100,
+      valueFormatter: ({ value }) => {
+        if (value === '01') return 'Factura'
+        if (value === '03') return 'Boleta'
+        if (value === 'nv') return 'Nota de Venta'
+        return value
+      },
     },
     {
       headerName: "F.Venta",
