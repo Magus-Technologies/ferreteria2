@@ -20,8 +20,16 @@ export default function useGetVentas({
     // Siempre habilitado, si no hay filtros se cargan todas las ventas
   })
 
+  // Si el usuario NO eligió un estado en el filtro, ocultar "En Espera"
+  // (defensivo, por si el backend en producción no aplica ese exclude por defecto).
+  const rows = data?.data
+  const responseFiltrada =
+    Array.isArray(rows) && !where?.estado_de_venta
+      ? rows.filter((v: any) => v.estado_de_venta !== 'ee')
+      : rows
+
   return {
-    response: data?.data,
+    response: responseFiltrada,
     // isFetching (no isLoading): muestra el overlay "Cargando..." en cada búsqueda,
     // no solo la primera — el cliente lo pidió para que siempre se vea feedback al Buscar.
     loading: isFetching,
