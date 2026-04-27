@@ -29,10 +29,13 @@ export interface ComisionDetalle {
   almacen: string | null
   cliente: string | null
   producto: string | null
+  producto_codigo: string | null
   cantidad: number
   precio: number
   comision: number
   comision_total: number
+  monto_pagado: number
+  estado_pago: 'pagada' | 'parcial' | 'pendiente'
 }
 
 export interface ComisionPago {
@@ -92,6 +95,8 @@ export const comisionApi = {
     return apiRequest<{
       data: ComisionDetalle[]
       total_comision: number
+      total_pagado: number
+      total_pendiente: number
     }>(`/comisiones/detalle/${userId}${buildQuery(filtros as Record<string, unknown>)}`)
   },
 

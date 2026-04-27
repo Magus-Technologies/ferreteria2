@@ -132,6 +132,7 @@ export function useColumnsVender({
     {
       headerName: 'Código',
       field: 'name',
+      colId: 'codigo',
       minWidth: 70,
       width: 70,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -174,6 +175,7 @@ export function useColumnsVender({
     {
       headerName: 'Producto',
       field: 'name',
+      colId: 'producto',
       minWidth: 250,
       width: 250,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -270,6 +272,7 @@ export function useColumnsVender({
     {
       headerName: 'Marca',
       field: 'name',
+      colId: 'marca',
       minWidth: 120,
       width: 120,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -325,6 +328,7 @@ export function useColumnsVender({
     {
       headerName: 'Unidad Derivada',
       field: 'name',
+      colId: 'unidad_derivada',
       minWidth: 150,
       width: 150,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -399,6 +403,7 @@ export function useColumnsVender({
     {
       headerName: 'Cantidad',
       field: 'name',
+      colId: 'cantidad',
       minWidth: 120,
       width: 120,
       wrapText: true,
@@ -493,6 +498,7 @@ export function useColumnsVender({
     {
       headerName: 'T. Precio',
       field: 'name',
+      colId: 'tipo_precio',
       minWidth: 130,
       width: 130,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -525,6 +531,7 @@ export function useColumnsVender({
     {
       headerName: 'Precio',
       field: 'name',
+      colId: 'precio',
       minWidth: 110,
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -582,6 +589,7 @@ export function useColumnsVender({
     {
       headerName: 'Recargo',
       field: 'name',
+      colId: 'recargo',
       minWidth: 110,
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -616,6 +624,7 @@ export function useColumnsVender({
     {
       headerName: 'Descuento',
       field: 'name',
+      colId: 'descuento',
       minWidth: 160,
       width: 160,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -683,6 +692,7 @@ export function useColumnsVender({
     {
       headerName: 'SubTotal',
       field: 'name',
+      colId: 'subtotal',
       minWidth: 110,
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
@@ -739,6 +749,7 @@ export function useColumnsVender({
     {
       headerName: 'Acciones',
       field: 'name',
+      colId: 'acciones',
       width: 40,
       minWidth: 40,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {

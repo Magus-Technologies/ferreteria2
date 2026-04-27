@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { FaMapMarkedAlt, FaTruck, FaBoxOpen, FaCheck, FaEye, FaSplotch } from 'react-icons/fa'
+import { FaMapMarkedAlt, FaTruck, FaBoxOpen, FaCheck, FaEye, FaSplotch, FaPlusCircle } from 'react-icons/fa'
 import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
+import { ventaApi, type getVentaResponseProps } from '~/lib/api/venta'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
@@ -13,6 +14,7 @@ import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
 import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
 import ModalMarcarEntregada from '../modals/modal-marcar-entregada'
 import ModalEntregarParcial from '../modals/modal-entregar-parcial'
+import ModalEntregarVenta from '../../../mis-ventas/_components/modals/modal-entregar-venta'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
@@ -27,11 +29,42 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalDetallesOpen, setModalDetallesOpen] = useState(false)
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
+  const [modalRestanteOpen, setModalRestanteOpen] = useState(false)
+  const [ventaCompleta, setVentaCompleta] = useState<getVentaResponseProps | undefined>()
+  const [loadingRestante, setLoadingRestante] = useState(false)
   const { message } = useApp()
   const queryClient = useQueryClient()
   const openPostDespacho = useStoreEntregaSeleccionada((s) => s.openPostDespacho)
 
   if (!entrega) return null
+
+  // Hay restante por entregar si alguna unidad de la venta tiene cantidad_pendiente > 0.
+  const tieneRestante = (entrega.productos_entregados || []).some(
+    (p: any) => Number(p?.unidad_derivada_venta?.cantidad_pendiente || 0) > 0,
+  )
+
+  const handleAbrirRestante = async () => {
+    if (!entrega.venta_id) {
+      message.error('No se pudo identificar la venta')
+      return
+    }
+    setLoadingRestante(true)
+    try {
+      const res = await ventaApi.getById(entrega.venta_id)
+      if (res.error || !res.data) {
+        message.error(res.error?.message || 'Error al cargar la venta')
+        return
+      }
+      // ventaApi.getById devuelve { data: { data: venta } } en algunos casos
+      const venta = (res.data as any).data ?? res.data
+      setVentaCompleta(venta)
+      setModalRestanteOpen(true)
+    } catch (err: any) {
+      message.error(err?.message || 'Error al cargar la venta')
+    } finally {
+      setLoadingRestante(false)
+    }
+  }
 
   const handleDespachar = async (vehiculoId?: number) => {
     try {
@@ -251,6 +284,25 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
             </Tooltip>
           </ConfigurableElement>
         )}
+
+        {tieneRestante && (
+          <ConfigurableElement
+            componentId="mis-entregas.boton-entregar-restante"
+            label="Botón Entregar Restante"
+            noFullWidth
+          >
+            <Tooltip title="Entregar Restante (crear nueva entrega para lo pendiente de la venta)">
+              <Button
+                type="text"
+                size="small"
+                loading={loadingRestante}
+                icon={<FaPlusCircle size={15} />}
+                onClick={handleAbrirRestante}
+                className="!text-purple-600 hover:!bg-purple-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+              />
+            </Tooltip>
+          </ConfigurableElement>
+        )}
       </Space>
 
       <ModalDetallesEntregaCompleto
@@ -289,6 +341,20 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         onConfirmar={handleEntregar}
         entrega={entrega}
         loading={loading}
+      />
+
+      {/* Modal Entregar Restante: reusa el flujo de mis-ventas */}
+      <ModalEntregarVenta
+        open={modalRestanteOpen}
+        setOpen={(open) => {
+          setModalRestanteOpen(open)
+          if (!open) {
+            // refrescar la tabla cuando se cierre el modal (puede haberse creado entrega)
+            queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+            if (onRefetch) onRefetch()
+          }
+        }}
+        venta={ventaCompleta}
       />
     </>
   )

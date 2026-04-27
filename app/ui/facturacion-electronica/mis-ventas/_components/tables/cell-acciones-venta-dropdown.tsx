@@ -13,6 +13,8 @@ import { useStoreModalPdfVenta } from "../../_store/store-modal-pdf-venta";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 import ModalHistorialVenta from "../modals/modal-historial-venta";
+import ModalEntregarVenta from "../modals/modal-entregar-venta";
+import { FaPlusCircle } from "react-icons/fa";
 
 export default function CellAccionesVentaDropdown(
   props: ICellRendererParams & { ventaId?: string }
@@ -24,8 +26,16 @@ export default function CellAccionesVentaDropdown(
   const { modal } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [entregarRestanteOpen, setEntregarRestanteOpen] = useState(false);
 
   if (!ventaId) return null;
+
+  // Hay restante por entregar si alguna unidad de la venta tiene cantidad_pendiente > 0
+  const tieneRestante = !!(venta?.productos_por_almacen || []).some((pa: any) =>
+    (pa?.unidades_derivadas || []).some(
+      (u: any) => Number(u?.cantidad_pendiente || 0) > 0,
+    ),
+  );
 
   // Usar useMemo para recalcular cuando props.data cambie
   const comprobanteInfo = useMemo(() => {
@@ -254,6 +264,15 @@ export default function CellAccionesVentaDropdown(
       label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Crear Guía</span>,
       onClick: handleCrearGuia,
     },
+    ...(tieneRestante
+      ? [
+          {
+            key: 'entregar-restante',
+            label: <span className="flex items-center gap-2"><FaPlusCircle className="text-purple-600" /> Entregar Restante</span>,
+            onClick: () => setEntregarRestanteOpen(true),
+          } as const,
+        ]
+      : []),
     {
       type: 'divider',
     },
@@ -315,6 +334,12 @@ export default function CellAccionesVentaDropdown(
         ventaId={ventaId}
         ventaSerie={venta?.serie}
         ventaNumero={venta?.numero}
+      />
+
+      <ModalEntregarVenta
+        open={entregarRestanteOpen}
+        setOpen={setEntregarRestanteOpen}
+        venta={venta}
       />
     </div>
   );
