@@ -201,16 +201,24 @@ export default function CardAgregarProductoVenta({
   }, [productoSeleccionadoSearchStore])
 
   // Confirmación explícita del usuario (Enter o click en fila del modal):
-  // siempre mover focus a cantidad, sin importar dónde esté el activeElement.
+  // siempre mover focus a cantidad, sin importar el activeElement.
+  // Maneja race con el fetch: si el producto aún no llegó al confirmar,
+  // marca pending y enfoca cuando llegue.
   const lastConfirmCountRef = useRef(confirmCount)
+  const pendingFocusRef = useRef(false)
   useEffect(() => {
-    if (confirmCount !== lastConfirmCountRef.current) {
+    const confirmCambio = confirmCount !== lastConfirmCountRef.current
+    if (confirmCambio) {
       lastConfirmCountRef.current = confirmCount
       if (productoSeleccionadoSearchStore?.id) {
-        setTimeout(() => {
-          cantidadRef.current?.focus()
-        }, 50)
+        setTimeout(() => cantidadRef.current?.focus(), 50)
+      } else {
+        // Producto aún no llegó: enfocar cuando aparezca.
+        pendingFocusRef.current = true
       }
+    } else if (pendingFocusRef.current && productoSeleccionadoSearchStore?.id) {
+      pendingFocusRef.current = false
+      setTimeout(() => cantidadRef.current?.focus(), 50)
     }
   }, [confirmCount, productoSeleccionadoSearchStore])
   
