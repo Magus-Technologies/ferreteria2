@@ -6,7 +6,7 @@ import { ventaApi, type VentaCompleta, type CobroVenta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
-import { useMemo, useCallback, useState } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
@@ -16,7 +16,6 @@ import { greenColors } from '~/lib/colors'
 import { getAuthToken } from '~/lib/api'
 import { FaFileAlt } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
-import { Spin } from 'antd'
 
 interface ModalRegistrarCobroProps {
   open: boolean
@@ -30,10 +29,18 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
+  // Congelar la venta cuando el modal abre para evitar que la tabla
+  // al refrescar cambie la selección y actualice el modal con otro cliente
+  const [localVenta, setLocalVenta] = useState<VentaCompleta | undefined>()
+  useEffect(() => {
+    if (open && venta) setLocalVenta(venta)
+    if (!open) setLocalVenta(undefined)
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Calcular total de la venta
   const totalVenta = useMemo(() => {
-    if (!venta) return 0
-    return (venta.productos_por_almacen || []).reduce((acc, item: any) => {
+    if (!localVenta) return 0
+    return (localVenta.productos_por_almacen || []).reduce((acc, item: any) => {
       for (const u of item.unidades_derivadas ?? []) {
         const precio = Number(u.precio ?? 0)
         const cantidad = Number(u.cantidad ?? 0)
@@ -44,20 +51,20 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       }
       return acc
     }, 0)
-  }, [venta])
+  }, [localVenta])
 
-  const totalPagado = Number(venta?.total_cobrado || 0)
+  const totalPagado = Number(localVenta?.total_cobrado || 0)
   const saldoPendiente = totalVenta - totalPagado
 
   // Obtener cobros previos
   const { data: cobrosData } = useQuery({
-    queryKey: [QueryKeys.COBROS_VENTA, venta?.id],
+    queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id],
     queryFn: async () => {
-      if (!venta?.id) return { data: [] }
-      const result = await ventaApi.getCobros(venta.id)
+      if (!localVenta?.id) return { data: [] }
+      const result = await ventaApi.getCobros(localVenta.id)
       return result.data ?? { data: [] }
     },
-    enabled: open && !!venta?.id,
+    enabled: open && !!localVenta?.id,
   })
 
   const cobros = cobrosData?.data ?? []
@@ -157,8 +164,8 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   // Mutation para registrar cobro
   const mutation = useMutation({
     mutationFn: async (values: any) => {
-      if (!venta?.id || !user?.id) throw new Error('Datos incompletos')
-      return ventaApi.storeCobro(venta.id, {
+      if (!localVenta?.id || !user?.id) throw new Error('Datos incompletos')
+      return ventaApi.storeCobro(localVenta.id, {
         despliegue_de_pago_id: String(extractDesplieguePagoId(values.despliegue_de_pago_id)),
         monto: values.monto,
         fecha: dayjs(values.fecha).format('YYYY-MM-DD'),
@@ -176,7 +183,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       message.success(result.data?.message || 'Cobro registrado correctamente')
       form.resetFields()
       // Refrescar datos
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, venta?.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
@@ -199,12 +206,12 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   }, [form, mutation])
 
   // Info del cliente
-  const clienteNombre = venta?.cliente?.razon_social ||
-    `${venta?.cliente?.nombres || ''} ${venta?.cliente?.apellidos || ''}`.trim() || 'Sin cliente'
+  const clienteNombre = localVenta?.cliente?.razon_social ||
+    `${localVenta?.cliente?.nombres || ''} ${localVenta?.cliente?.apellidos || ''}`.trim() || 'Sin cliente'
 
-  const nroDocumento = venta ? `${venta.serie}-${venta.numero}` : ''
+  const nroDocumento = localVenta ? `${localVenta.serie}-${localVenta.numero}` : ''
   const tipoDocMap: Record<string, string> = { '01': 'FACTURA', '03': 'BOLETA', 'nv': 'NOTA DE VENTA' }
-  const tipoDoc = tipoDocMap[venta?.tipo_documento || ''] || venta?.tipo_documento || ''
+  const tipoDoc = tipoDocMap[localVenta?.tipo_documento || ''] || localVenta?.tipo_documento || ''
 
   return (
     <>
@@ -229,7 +236,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
             </div>
             <div className='flex items-start gap-2'>
               <span className='text-xs text-gray-500 font-medium min-w-[70px]'>Doc:</span>
-              <span className='font-semibold text-sm text-gray-700'>{venta?.cliente?.numero_documento}</span>
+              <span className='font-semibold text-sm text-gray-700'>{localVenta?.cliente?.numero_documento}</span>
             </div>
           </div>
           <div className='space-y-1 border-r border-gray-300 pr-4'>
@@ -239,7 +246,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-xs text-gray-500 font-medium min-w-[80px]'>Tipo Pago:</span>
-              <span className='font-semibold text-sm text-red-600 bg-red-50 px-2 py-0.5 rounded'>CRÉDITO{venta?.numero_dias ? ` ${venta.numero_dias} DÍAS` : ''}</span>
+              <span className='font-semibold text-sm text-red-600 bg-red-50 px-2 py-0.5 rounded'>CRÉDITO{localVenta?.numero_dias ? ` ${localVenta.numero_dias} DÍAS` : ''}</span>
             </div>
           </div>
           <div className='flex flex-col justify-center gap-2 pl-2'>
