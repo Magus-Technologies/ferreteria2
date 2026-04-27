@@ -132,6 +132,8 @@ export type FormCreateVenta = {
   // Flag para indicar que se presionó "Omitir" en el modal de entrega:
   // la venta se crea pero NO se genera la entrega automática (no descuenta stock).
   _omitir_entrega?: boolean
+  // Toggle manual del usuario: si false, fuerza no descontar stock (equivalente a omitir).
+  descontar_stock?: boolean
 }
 
 // Componente interno que se recrea completamente cuando cambia la key

@@ -163,13 +163,17 @@ export default function useCreateVenta({
       quien_entrega,
       cantidades_parciales,
       parcial_resto_programado,
-      _omitir_entrega,
+      _omitir_entrega: _omitir_entrega_form,
+      descontar_stock,
       codigo_vale,
       tipo_pedido,
       cargo_destino,
       vehiculo_id,
       ...restValues
     } = values
+
+    // Si el usuario eligió "Descontar stock: No" en el form, equivale a omitir.
+    const _omitir_entrega = _omitir_entrega_form || descontar_stock === false
 
 
 
@@ -588,7 +592,7 @@ export default function useCreateVenta({
             })
           }
         }
-      } else if (tipo_despacho === 'EnTienda' && quien_entrega) {
+      } else if (tipo_despacho === 'EnTienda' && quien_entrega && !_omitir_entrega) {
 
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta

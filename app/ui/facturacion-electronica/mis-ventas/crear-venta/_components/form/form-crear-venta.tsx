@@ -9,6 +9,7 @@ import SelectTipoDespacho from "~/app/_components/form/selects/select-tipo-despa
 import { VentaConUnidadDerivadaNormal } from "../others/header-crear-venta";
 import FormFormaDePago from "~/app/_components/form/form-forma-de-pago";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
+import SelectBase from "~/app/_components/form/selects/select-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { useEffect, useState, useCallback } from "react";
@@ -454,6 +455,32 @@ export default function FormCrearVenta({
               }}
               className="w-full"
               classNameIcon="text-cyan-600 mx-1"
+            />
+          </LabelBase>
+        </ConfigurableElement>
+
+        <ConfigurableElement
+          componentId="crear-venta.descontar-stock"
+          label="Campo Descontar Stock"
+        >
+          <LabelBase
+            label="Descontar stock:"
+            classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
+            className="w-full sm:w-auto"
+          >
+            <SelectBase
+              propsForm={{
+                name: "descontar_stock",
+                hasFeedback: false,
+                initialValue: true,
+                className:
+                  "w-full sm:!min-w-[120px] sm:!w-[120px] sm:!max-w-[120px]",
+              }}
+              options={[
+                { value: true, label: "Sí" },
+                { value: false, label: "No" },
+              ]}
+              className="w-full"
             />
           </LabelBase>
         </ConfigurableElement>
