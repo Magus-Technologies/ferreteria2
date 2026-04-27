@@ -100,7 +100,7 @@ export default function FiltersVentasPorCobrar() {
       }}
       className='w-full'
       onFinish={values => {
-        setQuickFilterActive(0) // reset quick filter highlight
+        setQuickFilterActive('todas')
         const {
           desde,
           hasta,
