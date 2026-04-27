@@ -10,7 +10,6 @@ interface SelectEstadoDeVentaProps extends SelectBaseProps {
 const ESTADOS_DE_VENTA = [
   { value: 'cr', label: 'Creado' },
   { value: 'ee', label: 'En Espera' },
-  { value: 'pr', label: 'Procesado' },
   { value: 'an', label: 'Anulado' },
 ]
 

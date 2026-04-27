@@ -26,7 +26,6 @@ export enum TipoMoneda {
 export enum EstadoDeVenta {
   EN_ESPERA = 'ee',
   CREADO = 'cr',
-  PROCESADO = 'pr',
   ANULADO = 'an',
 }
 
