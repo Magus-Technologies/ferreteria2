@@ -89,7 +89,7 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellStyle: { fontWeight: 'bold' },
+      cellStyle: { fontWeight: 'bold' } as Record<string, string>,
     },
     {
       headerName: 'C.CAJ',
@@ -102,7 +102,7 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellStyle: { color: '#dc2626', fontWeight: 'bold' },
+      cellStyle: { color: '#dc2626', fontWeight: 'bold' } as Record<string, string>,
     },
     {
       headerName: 'GANANC',
@@ -114,7 +114,7 @@ export default function TableMisGanancias() {
         color: p.value >= 0 ? '#16a34a' : '#dc2626',
         fontWeight: 'bold',
         background: p.value >= 0 ? '#f0fdf4' : '#fef2f2',
-      }),
+      }) as Record<string, string>,
     },
   ], [])
 
