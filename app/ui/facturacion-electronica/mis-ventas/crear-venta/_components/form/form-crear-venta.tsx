@@ -472,13 +472,13 @@ export default function FormCrearVenta({
               propsForm={{
                 name: "descontar_stock",
                 hasFeedback: false,
-                initialValue: true,
+                initialValue: "si",
                 className:
                   "w-full sm:!min-w-[120px] sm:!w-[120px] sm:!max-w-[120px]",
               }}
               options={[
-                { value: true, label: "Sí" },
-                { value: false, label: "No" },
+                { value: "si", label: "Sí" },
+                { value: "no", label: "No" },
               ]}
               className="w-full"
             />

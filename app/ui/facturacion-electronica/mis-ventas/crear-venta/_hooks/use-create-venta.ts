@@ -173,7 +173,7 @@ export default function useCreateVenta({
     } = values
 
     // Si el usuario eligió "Descontar stock: No" en el form, equivale a omitir.
-    const _omitir_entrega = _omitir_entrega_form || descontar_stock === false
+    const _omitir_entrega = _omitir_entrega_form || descontar_stock === 'no'
 
 
 
