@@ -2,7 +2,6 @@ import { Modal } from "antd";
 import InputBase from "../form/inputs/input-base";
 import SelectBase from "../form/selects/select-base";
 import { useEffect, useRef, useState } from "react";
-import { useDebounce } from "use-debounce";
 import { useStoreProductoSeleccionadoSearch } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search";
 import ButtonCreateProductoPlus from "../form/buttons/button-create-producto-plus";
 import TableProductoSearch, {
@@ -73,11 +72,12 @@ export default function ModalProductoSearch({
     setText(textDefault);
   }, [textDefault]);
 
-  // value: con debounce 150ms → dispara petición al servidor
-  // text: sin debounce → filtra local e instantáneamente sobre los resultados cargados
-  const [value, valueControl] = useDebounce(text, 150);
-  // Hay búsqueda en curso si el debounce aún no se aplicó al backend
-  const debouncePendiente = text !== value;
+  // value: solo se actualiza al presionar Enter (o click en lupa) → dispara fetch.
+  // text: lo que el user escribe, no genera petición automática.
+  const [value, setValue] = useState(textDefault);
+  useEffect(() => {
+    setValue(textDefault);
+  }, [textDefault]);
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
@@ -133,8 +133,8 @@ export default function ModalProductoSearch({
           onChange={(e) => setText(e.target.value)}
           className="w-full sm:max-w-[500px]"
           onPressEnter={(e) => {
-            // Forzar el debounce: dispara el fetch ya con el texto actual
-            valueControl.flush();
+            // Disparar la búsqueda al servidor con el texto actual
+            setValue(text);
             tableRef.current?.handleRefetch();
             // Salir del input y solicitar focus en "Cantidad" de la card.
             (e.currentTarget as HTMLInputElement).blur();
@@ -181,7 +181,6 @@ export default function ModalProductoSearch({
                 selectionColor={selectionColor}
                 isVisible={open}
                 filtroStock={filtroStock}
-                forceLoading={debouncePendiente}
               />
             </div>
             {showUltimasCompras && (
