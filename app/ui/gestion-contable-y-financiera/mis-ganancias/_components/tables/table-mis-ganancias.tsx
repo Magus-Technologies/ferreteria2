@@ -89,7 +89,11 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+<<<<<<< HEAD
       cellStyle: { fontWeight: 'bold' } as CellStyle, // Casting explícito
+=======
+      cellStyle: { fontWeight: 'bold' } as Record<string, string>,
+>>>>>>> 438d4c7a674267da108c677fcf64426284cd6196
     },
     {
       headerName: 'C.CAJ',
@@ -102,7 +106,11 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+<<<<<<< HEAD
       cellStyle: { color: '#dc2626', fontWeight: 'bold' } as CellStyle,
+=======
+      cellStyle: { color: '#dc2626', fontWeight: 'bold' } as Record<string, string>,
+>>>>>>> 438d4c7a674267da108c677fcf64426284cd6196
     },
     {
       headerName: 'GANANC',
@@ -113,8 +121,13 @@ export default function TableMisGanancias() {
       cellStyle: (p): CellStyle => ({ // Retorno tipado explícitamente
         color: (p.value ?? 0) >= 0 ? '#16a34a' : '#dc2626',
         fontWeight: 'bold',
+<<<<<<< HEAD
         background: (p.value ?? 0) >= 0 ? '#f0fdf4' : '#fef2f2',
       }),
+=======
+        background: p.value >= 0 ? '#f0fdf4' : '#fef2f2',
+      }) as Record<string, string>,
+>>>>>>> 438d4c7a674267da108c677fcf64426284cd6196
     },
   ], [])
 
