@@ -29,6 +29,7 @@ export interface ComisionDetalle {
   almacen: string | null
   cliente: string | null
   producto: string | null
+  producto_codigo: string | null
   cantidad: number
   precio: number
   comision: number

@@ -7,6 +7,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { ComisionDetalle, ComisionVendedor } from '~/lib/api/comision'
 import { useComisionDetalleVendedor } from '../../_hooks/use-comisiones'
 import { useStoreFiltrosComisiones } from '../../_store/store-filtros-comisiones'
+import { formatFechaPeru } from '~/utils/fechas'
 
 interface Props {
   vendedor: ComisionVendedor | null
@@ -39,9 +40,9 @@ export default function ModalDetalleVendedor({ vendedor, open, onClose }: Props)
       {
         headerName: 'Fecha',
         field: 'fecha',
-        width: 120,
+        width: 180,
         valueFormatter: p =>
-          p.value ? new Date(p.value).toLocaleDateString('es-PE') : '',
+          p.value ? formatFechaPeru(p.value, 'DD/MM/YYYY hh:mm:ss A') : '',
       },
       {
         headerName: 'Comprobante',
@@ -54,6 +55,13 @@ export default function ModalDetalleVendedor({ vendedor, open, onClose }: Props)
         field: 'cliente',
         flex: 1.2,
         minWidth: 180,
+      },
+      {
+        headerName: 'Cód. Producto',
+        field: 'producto_codigo',
+        width: 130,
+        cellClass: 'font-mono text-xs',
+        valueFormatter: p => p.value || '-',
       },
       {
         headerName: 'Producto',
