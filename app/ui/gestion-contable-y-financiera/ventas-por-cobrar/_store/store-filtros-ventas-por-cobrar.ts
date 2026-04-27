@@ -13,6 +13,6 @@ interface StoreFiltrosVentasPorCobrar {
 export const useStoreFiltrosVentasPorCobrar = create<StoreFiltrosVentasPorCobrar>((set) => ({
   filtros: undefined,
   setFiltros: (filtros) => set({ filtros }),
-  moraRango: 'todas',
+  moraRango: 15,
   setMoraRango: (moraRango) => set({ moraRango }),
 }))

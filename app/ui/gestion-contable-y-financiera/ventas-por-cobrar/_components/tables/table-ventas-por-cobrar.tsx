@@ -207,8 +207,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       sort: 'desc',
       cellRenderer: (params: any) => {
         const mora = calcularMora(params.data as VentaCompleta)
-        if (mora <= 0) return <span className='text-gray-400'>{mora}</span>
-        return <span style={{ color: mora > 30 ? '#dc2626' : mora > 15 ? '#ea580c' : '#ca8a04', fontWeight: 'bold' }}>{mora}</span>
+        if (mora <= 0) return <span className='text-black'>{mora}</span>
+        return <span className='text-black font-bold'>{mora}</span>
       },
       valueGetter: (params: any) => calcularMora(params.data as VentaCompleta),
     },

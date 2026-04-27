@@ -48,7 +48,7 @@ const QUICK_FILTERS: { label: string; value: MoraRango }[] = [
 export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>('todas')
+  const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
@@ -94,10 +94,7 @@ export default function FiltersVentasPorCobrar() {
     <FormBase
       form={form}
       name='filtros-ventas-por-cobrar'
-      initialValues={{
-        desde: dayjs().startOf('day'),
-        hasta: dayjs().endOf('day'),
-      }}
+      initialValues={{}}
       className='w-full'
       onFinish={values => {
         setQuickFilterActive('todas')
