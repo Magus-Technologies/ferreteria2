@@ -40,7 +40,9 @@ export function useProductosSearch({
 
   return {
     data: query.data ?? [],
-    loading: query.isLoading || (query.isFetching && !query.data?.length),
+    // isFetching cubre carga inicial + refetches con cache: muestra loading
+    // siempre que se está pidiendo data nueva (evita tabla en blanco/data vieja).
+    loading: query.isFetching,
     error: query.error,
     refetch: query.refetch,
     isFetched: query.isFetched,

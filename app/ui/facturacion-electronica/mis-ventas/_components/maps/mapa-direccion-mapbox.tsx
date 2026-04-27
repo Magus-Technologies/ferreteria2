@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons'
 
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
 
@@ -32,6 +33,24 @@ export default function MapaDireccionMapbox({
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(coordenadasIniciales || null)
+  const [expanded, setExpanded] = useState(false)
+
+  // Cuando cambia el modo expandido, redimensionar el mapa para que se reajuste al contenedor
+  useEffect(() => {
+    if (!map.current) return
+    const id = window.setTimeout(() => map.current?.resize(), 200)
+    return () => window.clearTimeout(id)
+  }, [expanded])
+
+  // Cerrar con tecla Escape
+  useEffect(() => {
+    if (!expanded) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpanded(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [expanded])
 
   const actualizarMarcador = useCallback(async (lngLat: { lng: number; lat: number }) => {
     if (!map.current) return
@@ -211,7 +230,18 @@ export default function MapaDireccionMapbox({
   }
 
   return (
-    <div className="w-full h-full relative rounded-lg overflow-hidden border border-gray-300">
+    <div
+      className={
+        expanded
+          ? 'fixed inset-0 z-[10000] bg-black/40 p-2 sm:p-4 flex items-center justify-center'
+          : 'w-full h-full'
+      }
+    >
+    <div className={
+      expanded
+        ? 'w-full h-full relative rounded-lg overflow-hidden border border-gray-300 bg-white shadow-2xl'
+        : 'w-full h-full relative rounded-lg overflow-hidden border border-gray-300'
+    }>
       {cargando && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
           <div className="text-center">
@@ -242,6 +272,18 @@ export default function MapaDireccionMapbox({
           <p className="text-xs font-medium">🖱️ Clic para marcar ubicación</p>
         </div>
       )}
+
+      {/* Botón maximizar / minimizar */}
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        title={expanded ? 'Minimizar mapa' : 'Maximizar mapa'}
+        aria-label={expanded ? 'Minimizar mapa' : 'Maximizar mapa'}
+        className="absolute top-2 left-2 z-20 bg-white hover:bg-gray-100 text-gray-700 rounded-md w-8 h-8 flex items-center justify-center shadow-md border border-gray-300 transition-colors cursor-pointer"
+      >
+        {expanded ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+      </button>
+    </div>
     </div>
   )
 }

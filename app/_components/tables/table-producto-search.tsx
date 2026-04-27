@@ -32,6 +32,7 @@ export default function TableProductoSearch({
   isVisible, // Prop para saber si el modal está visible
   quickFilterValue, // Filtro local por coincidencia (sobre resultados ya cargados)
   filtroStock = FiltroStock.TODOS,
+  forceLoading = false, // Forzar loading externo (ej. debounce pendiente)
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -45,6 +46,7 @@ export default function TableProductoSearch({
   isVisible?: boolean; // Prop para saber si el modal está visible
   quickFilterValue?: string; // Filtro local por coincidencia
   filtroStock?: FiltroStock;
+  forceLoading?: boolean;
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const tableGridRef = useRef<any>(null);
@@ -203,7 +205,7 @@ export default function TableProductoSearch({
       title="Productos"
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
-      loading={loading}
+      loading={loading || forceLoading}
       columnDefs={useColumnsProductos({ almacen_id }) as any}
       onRowDoubleClicked={({ data }) => {
         // Con 2 clicks: actualizar el producto Y ejecutar la acción adicional (abrir modal)

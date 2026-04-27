@@ -640,12 +640,15 @@ export default function useCreateVenta({
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
 
+          // OMITIR: crear entrega placeholder con cantidad_entregada=0.
+          // No descuenta stock ni cantidad_pendiente — el usuario configurará
+          // la entrega real luego desde Mis Entregas.
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
               productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
                 unidadesDerivadas.push({
                   unidad_derivada_venta_id: unidad.id,
-                  cantidad_entregada: Number(unidad.cantidad),
+                  cantidad_entregada: 0,
                   ubicacion: undefined,
                 })
               })

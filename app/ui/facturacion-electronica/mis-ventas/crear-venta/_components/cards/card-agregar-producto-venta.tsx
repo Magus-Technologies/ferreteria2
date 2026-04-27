@@ -182,12 +182,18 @@ export default function CardAgregarProductoVenta({
   const lastProductoIdRef = useRef<number | undefined>(undefined)
   
   useEffect(() => {
-    // Enfocar cantidad cada vez que se selecciona un producto
+    // Enfocar cantidad cada vez que se selecciona un producto, EXCEPTO si el
+    // usuario está escribiendo en otro input/textarea (ej. el buscador del modal:
+    // al teclear se auto-selecciona el 1er resultado y robaría el focus mid-typing).
     if (productoSeleccionadoSearchStore?.id &&
         productoSeleccionadoSearchStore.id !== lastProductoIdRef.current) {
-      setTimeout(() => {
-        cantidadRef.current?.focus()
-      }, 50)
+      const activeTag = document.activeElement?.tagName
+      const usuarioEscribiendo = activeTag === 'INPUT' || activeTag === 'TEXTAREA'
+      if (!usuarioEscribiendo) {
+        setTimeout(() => {
+          cantidadRef.current?.focus()
+        }, 50)
+      }
     }
     lastProductoIdRef.current = productoSeleccionadoSearchStore?.id
   }, [productoSeleccionadoSearchStore])

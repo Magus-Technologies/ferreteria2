@@ -264,7 +264,6 @@ export function useColumnsVender({
           </div>
         )
       },
-      flex: 1,
       wrapText: true,
       autoHeight: true,
     },

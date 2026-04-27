@@ -75,7 +75,9 @@ export default function ModalProductoSearch({
 
   // value: con debounce 150ms → dispara petición al servidor
   // text: sin debounce → filtra local e instantáneamente sobre los resultados cargados
-  const [value] = useDebounce(text, 150);
+  const [value, valueControl] = useDebounce(text, 150);
+  // Hay búsqueda en curso si el debounce aún no se aplicó al backend
+  const debouncePendiente = text !== value;
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
@@ -127,7 +129,14 @@ export default function ModalProductoSearch({
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="w-full sm:max-w-[500px]"
-          onPressEnter={() => tableRef.current?.handleRefetch()}
+          onPressEnter={(e) => {
+            // Forzar el debounce: dispara el fetch ya con el texto actual
+            valueControl.flush();
+            tableRef.current?.handleRefetch();
+            // Salir del input para que, al auto-seleccionar la 1ra fila,
+            // el focus pueda moverse a "Cantidad" en la card de la derecha.
+            (e.currentTarget as HTMLInputElement).blur();
+          }}
         />
         <SelectBase
           placeholder="Filtro Stock"
@@ -169,6 +178,7 @@ export default function ModalProductoSearch({
                 selectionColor={selectionColor}
                 isVisible={open}
                 filtroStock={filtroStock}
+                forceLoading={debouncePendiente}
               />
             </div>
             {showUltimasCompras && (
