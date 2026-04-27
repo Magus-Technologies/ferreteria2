@@ -89,6 +89,9 @@ export default function TableProductoSearch({
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto
   );
+  const requestConfirm = useStoreProductoSeleccionadoSearch(
+    (store) => store.requestConfirm
+  );
 
   const productosCompra = useStoreProductoAgregadoCompra(
     (store) => store.productos
@@ -198,9 +201,10 @@ export default function TableProductoSearch({
         setProductoSeleccionadoSearchStore(producto as any);
       }}
       onRowClicked={({ data, node }) => {
-        // Con 1 click: seleccionar la fila (esto la pintará automáticamente)
+        // Con 1 click: seleccionar la fila + solicitar focus en cantidad
         node.setSelected(true);
         setProductoSeleccionadoSearchStore(data as any);
+        requestConfirm();
       }}
       title="Productos"
       schema={ProductoCreateInputSchema}

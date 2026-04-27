@@ -1,11 +1,20 @@
 'use client'
 
 import { ColDef } from 'ag-grid-community'
-import dayjs from 'dayjs'
+import { formatFechaPeru } from '~/utils/fechas'
 import CellAccionesEntrega from './cell-acciones-entrega'
 
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
+    {
+      headerName: 'Registrada',
+      colId: 'created_at',
+      field: 'created_at',
+      width: 200,
+      sort: 'desc',
+      valueFormatter: (params) =>
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
+    },
     {
       headerName: 'N° Venta',
       colId: 'venta_numero',
@@ -60,9 +69,8 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Fecha Programada',
       field: 'fecha_programada',
       width: 150,
-      sort: 'desc',
       valueFormatter: (params) =>
-        params.value ? dayjs(params.value).format('DD/MM/YYYY') : '-',
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY') : '-',
     },
     {
       headerName: 'Horario',

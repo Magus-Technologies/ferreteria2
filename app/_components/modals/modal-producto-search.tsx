@@ -82,6 +82,9 @@ export default function ModalProductoSearch({
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto,
   );
+  const requestConfirm = useStoreProductoSeleccionadoSearch(
+    (store) => store.requestConfirm,
+  );
 
   const [filtroStock, setFiltroStock] = useState<FiltroStock>(FiltroStock.TODOS);
 
@@ -133,9 +136,9 @@ export default function ModalProductoSearch({
             // Forzar el debounce: dispara el fetch ya con el texto actual
             valueControl.flush();
             tableRef.current?.handleRefetch();
-            // Salir del input para que, al auto-seleccionar la 1ra fila,
-            // el focus pueda moverse a "Cantidad" en la card de la derecha.
+            // Salir del input y solicitar focus en "Cantidad" de la card.
             (e.currentTarget as HTMLInputElement).blur();
+            requestConfirm();
           }}
         />
         <SelectBase
