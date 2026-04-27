@@ -193,12 +193,22 @@ export function useColumnsMisVentas() {
       headerName: "Estado",
       field: "estado_de_venta",
       width: 100,
-      valueFormatter: (params) => {
+      cellRenderer: (params: any) => {
         const estado = params.value;
-        if (estado === 'cr') return 'Creado';
-        if (estado === 'ee') return 'En Espera';
-        if (estado === 'an') return 'Anulado';
-        return estado || '';
+        const config: Record<string, { label: string; bg: string; text: string }> = {
+          'pr': { label: 'Pagado',    bg: '#dcfce7', text: '#16a34a' },
+          'cr': { label: 'Creado',    bg: '#f1f5f9', text: '#475569' },
+          'ee': { label: 'En Espera', bg: '#fef9c3', text: '#854d0e' },
+          'an': { label: 'Anulado',   bg: '#fee2e2', text: '#dc2626' },
+        };
+        const { label, bg, text } = config[estado] ?? { label: estado || '', bg: '#f1f5f9', text: '#475569' };
+        return (
+          <div className="flex items-center h-full">
+            <span style={{ background: bg, color: text, fontWeight: 'bold', fontSize: '11px', padding: '2px 8px', borderRadius: '9999px' }}>
+              {label}
+            </span>
+          </div>
+        );
       },
     },
     {
