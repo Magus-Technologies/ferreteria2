@@ -63,40 +63,23 @@ export default function TableDetalleDeudaCliente() {
       valueFormatter: p => `S/. ${Number(p.value ?? 0).toFixed(2)}`,
     },
     {
-      headerName: 'Estado',
-      colId: 'estado',
-      minWidth: 150,
-      flex: 1.2,
+      headerName: 'Mora',
+      colId: 'mora',
+      minWidth: 100,
+      flex: 1,
       cellRenderer: ({ data }: { data?: VentaDeuda }) => {
         if (!data) return null
-        if (data.vencida) {
-          return (
-            <div className='flex items-center justify-center h-full'>
-              <span className='bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold'>
-                Vencido {data.diasMora}d
-              </span>
-            </div>
-          )
-        }
-        if (data.diasFaltantes === null) {
+        if (data.diasFaltantes === null && !data.vencida) {
           return <span className='text-gray-400 text-xs'>Sin fecha</span>
         }
-        if (data.diasFaltantes === 0) {
-          return (
-            <div className='flex items-center justify-center h-full'>
-              <span className='bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-xs font-bold'>
-                Vence hoy
-              </span>
-            </div>
-          )
-        }
-        const color = data.diasFaltantes <= 3
-          ? 'bg-yellow-100 text-yellow-700'
-          : 'bg-green-100 text-green-700'
+
+        const valor = data.vencida ? data.diasMora : -(data.diasFaltantes ?? 0)
+        const colorClass = data.vencida ? 'text-red-700 bg-red-100' : 'text-green-700 bg-green-100'
+
         return (
           <div className='flex items-center justify-center h-full'>
-            <span className={`${color} px-2 py-0.5 rounded-full text-xs font-bold`}>
-              Faltan {data.diasFaltantes}d
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClass}`}>
+              {valor}
             </span>
           </div>
         )

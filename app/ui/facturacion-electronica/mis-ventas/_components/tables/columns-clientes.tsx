@@ -96,11 +96,11 @@ export function useColumnsClientes({
       },
     },
     {
-      headerName: 'Estado Vencimiento',
+      headerName: 'Mora',
       field: 'id',
       colId: 'dias_mora',
-      width: 140,
-      minWidth: 140,
+      width: 100,
+      minWidth: 100,
       cellRenderer: (params: ICellRendererParams<Cliente>) => {
         if (!clientesDeudaMap || !params.data) return <span className='text-gray-400'>-</span>
         const deuda = clientesDeudaMap.get(params.data.id)
@@ -112,7 +112,7 @@ export function useColumnsClientes({
           return (
             <div className='flex items-center justify-center h-full'>
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClass}`}>
-                Mora {dias}d
+                {dias}
               </span>
             </div>
           )
@@ -125,7 +125,7 @@ export function useColumnsClientes({
             : dias <= 3
               ? 'text-yellow-700 bg-yellow-100'
               : 'text-green-700 bg-green-100'
-          const label = dias === 0 ? 'Vence hoy' : `Faltan ${dias}d`
+          const label = -dias
           return (
             <div className='flex items-center justify-center h-full'>
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClass}`}>

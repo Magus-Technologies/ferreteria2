@@ -96,7 +96,7 @@ export default function TableClientesBusqueda({
               'Telefono',
               'Deuda',
               'Ventas Pend.',
-              'Estado Vencimiento',
+              'Mora',
               'Acciones',
             ],
           },
