@@ -2,7 +2,6 @@ import { useState } from "react";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
 import { TipoDocumento } from "~/types";
-import { toUTCBD } from "~/utils/fechas";
 import { FormCreateIngresoSalidaProps } from "../_components/modals/modal-create-ingreso-salida";
 import { ingresosSalidasApi } from "~/lib/api/ingreso-salida";
 import { IngresoSalidaWithRelations } from "~/lib/api/ingreso-salida";
@@ -31,10 +30,11 @@ export default function useCreateIngresoSalida({
       const data = {
         ...values,
         tipo_documento: tipoDocumentoApi,
+        // Enviar fecha en hora local de Perú directo, sin conversión UTC.
+        // toUTCBD() convertía a ISO con Z y Laravel lo guardaba como UTC literal,
+        // resultando en 5 horas adelante en la columna datetime.
         fecha: values.fecha
-          ? toUTCBD({
-              date: values.fecha,
-            })
+          ? values.fecha.format('YYYY-MM-DD HH:mm:ss')
           : undefined,
       };
 
