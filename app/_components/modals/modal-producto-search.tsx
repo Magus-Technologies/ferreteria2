@@ -175,7 +175,7 @@ export default function ModalProductoSearch({
               <TableProductoSearch
                 ref={tableRef}
                 value={value}
-                quickFilterValue={text}
+                quickFilterValue={value}
                 onRowDoubleClicked={onRowDoubleClicked}
                 tipoBusqueda={tipoBusqueda}
                 selectionColor={selectionColor}
