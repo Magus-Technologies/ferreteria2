@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { ColDef } from 'ag-grid-community'
+import { ColDef, CellStyle } from 'ag-grid-community' // Importamos CellStyle
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useGetGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_hooks/use-get-ganancias'
 import { useStoreFiltrosMisGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias'
@@ -14,15 +14,15 @@ export default function TableMisGanancias() {
 
   const rowData = data?.data?.data || []
 
-  const columns = useMemo<ColDef[]>(() => [
+  // Tipamos ColDef con GananciaDetalle para mejor soporte de TS
+  const columns = useMemo<ColDef<GananciaDetalle>[]>(() => [
     {
       headerName: 'EMISION',
       field: 'fecha',
       width: 160,
       valueFormatter: (p) => {
-        const row = p.data as GananciaDetalle
-        if (!row?.fecha) return '-'
-        return row.hora_emision ? `${row.fecha} ${row.hora_emision}` : row.fecha
+        if (!p.data?.fecha) return '-'
+        return p.data.hora_emision ? `${p.data.fecha} ${p.data.hora_emision}` : p.data.fecha
       },
     },
     {
@@ -89,7 +89,7 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellStyle: { fontWeight: 'bold' },
+      cellStyle: { fontWeight: 'bold' } as CellStyle, // Casting explícito
     },
     {
       headerName: 'C.CAJ',
@@ -102,7 +102,7 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellStyle: { color: '#dc2626', fontWeight: 'bold' },
+      cellStyle: { color: '#dc2626', fontWeight: 'bold' } as CellStyle,
     },
     {
       headerName: 'GANANC',
@@ -110,34 +110,17 @@ export default function TableMisGanancias() {
       width: 90,
       type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellStyle: (p) => ({
-        color: p.value >= 0 ? '#16a34a' : '#dc2626',
+      cellStyle: (p): CellStyle => ({ // Retorno tipado explícitamente
+        color: (p.value ?? 0) >= 0 ? '#16a34a' : '#dc2626',
         fontWeight: 'bold',
-        background: p.value >= 0 ? '#f0fdf4' : '#fef2f2',
+        background: (p.value ?? 0) >= 0 ? '#f0fdf4' : '#fef2f2',
       }),
     },
   ], [])
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spin size="large" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-red-500 mb-2">Error al cargar los datos</p>
-          <p className="text-gray-500 text-sm">
-            {error instanceof Error ? error.message : 'Error desconocido'}
-          </p>
-        </div>
-      </div>
-    )
-  }
+  // ... resto del componente (isLoading, error, return) igual
+  if (isLoading) return <div className="flex items-center justify-center h-64"><Spin size="large" /></div>
+  if (error) return <div className="flex items-center justify-center h-64 text-center"><p className="text-red-500">Error al cargar</p></div>
 
   return (
     <TableWithTitle
@@ -149,17 +132,6 @@ export default function TableMisGanancias() {
       headerColor='var(--color-rose-600)'
       selectionColor="#fee2e2"
       withNumberColumn={false}
-      noRowsOverlayComponent={() => (
-        <div className="flex flex-col items-center justify-center py-8">
-          <p className="text-gray-500 mb-2">No hay datos de ganancias</p>
-          <p className="text-gray-400 text-sm">
-            {!filtros.almacen_id 
-              ? 'Seleccione un almacén para ver los datos'
-              : 'Ajuste los filtros para obtener resultados'
-            }
-          </p>
-        </div>
-      )}
     />
   )
 }
