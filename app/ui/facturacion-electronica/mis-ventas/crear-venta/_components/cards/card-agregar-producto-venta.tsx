@@ -185,19 +185,47 @@ export default function CardAgregarProductoVenta({
   const lastProductoIdRef = useRef<number | undefined>(undefined)
   
   useEffect(() => {
-    // Auto-select del 1er resultado: enfocar cantidad SOLO si el usuario no
-    // está escribiendo (ej. mientras teclea en el buscador del modal).
-    if (productoSeleccionadoSearchStore?.id &&
-        productoSeleccionadoSearchStore.id !== lastProductoIdRef.current) {
-      const activeTag = document.activeElement?.tagName
-      const usuarioEscribiendo = activeTag === 'INPUT' || activeTag === 'TEXTAREA'
-      if (!usuarioEscribiendo) {
-        setTimeout(() => {
-          cantidadRef.current?.focus()
-        }, 50)
-      }
+    // Auto-select del 1er resultado: cuando el store tiene un producto:
+    // - Si activeElement es el buscador del modal → debounce 700ms y mover focus
+    //   (asume que el user terminó de escribir cuando no hay más cambios)
+    // - Si activeElement es OTRO INPUT (no el buscador) → no robar focus
+    // - Si no es input → mover focus inmediato
+    const id = productoSeleccionadoSearchStore?.id
+    if (!id || id === lastProductoIdRef.current) {
+      lastProductoIdRef.current = id
+      return
     }
-    lastProductoIdRef.current = productoSeleccionadoSearchStore?.id
+    lastProductoIdRef.current = id
+
+    const activeEl = document.activeElement as HTMLElement | null
+    const placeholder = activeEl?.getAttribute?.('placeholder') || ''
+    const isBuscadorProducto =
+      placeholder === 'Buscar Producto' || placeholder === 'Buscar Servicio'
+    const isOtroInput =
+      (activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA') &&
+      !isBuscadorProducto
+
+    if (isOtroInput) {
+      // El user está en otro input fuera del buscador, respetar.
+      return
+    }
+
+    const delay = isBuscadorProducto ? 700 : 50
+    const timer = setTimeout(() => {
+      // Re-check: solo enfocar si el user sigue en el buscador del modal o no está en input
+      const stillActive = document.activeElement as HTMLElement | null
+      const stillPlaceholder = stillActive?.getAttribute?.('placeholder') || ''
+      const stillBuscador =
+        stillPlaceholder === 'Buscar Producto' ||
+        stillPlaceholder === 'Buscar Servicio'
+      const stillOtroInput =
+        (stillActive?.tagName === 'INPUT' || stillActive?.tagName === 'TEXTAREA') &&
+        !stillBuscador
+      if (!stillOtroInput) {
+        cantidadRef.current?.focus()
+      }
+    }, delay)
+    return () => clearTimeout(timer)
   }, [productoSeleccionadoSearchStore])
 
   // Confirmación explícita del usuario (Enter o click en fila del modal):
