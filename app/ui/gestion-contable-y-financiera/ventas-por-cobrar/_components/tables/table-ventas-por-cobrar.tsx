@@ -2,15 +2,15 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
+import { useRef, memo, useCallback, useMemo, useEffect } from 'react'
 import { redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { VentaCreateInputSchema } from '~/types/zod-schemas'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
-import PaginationControls from '~/app/_components/tables/pagination-controls'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { useQuery } from '@tanstack/react-query'
 import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
+import type { MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import dayjs from 'dayjs'
 import { create } from 'zustand'
 
@@ -25,64 +25,57 @@ export const useStoreVentaSeleccionada = create<UseStoreVentaSeleccionada>((set)
   setVenta: (venta) => set({ venta }),
 }))
 
+// Calcula días de mora: positivo = vencida, negativo = aún no vence
+function calcularMora(venta: VentaCompleta): number {
+  const ref = venta.fecha_vencimiento || venta.fecha
+  return dayjs().startOf('day').diff(dayjs(ref).startOf('day'), 'days')
+}
+
+function aplicarFiltroMora(ventas: VentaCompleta[], rango: MoraRango): VentaCompleta[] {
+  if (rango === 'todas') return ventas
+  if (rango === 'hoy') return ventas.filter(v => calcularMora(v) === 0)
+  if (rango === 'vencidas') return ventas.filter(v => calcularMora(v) > 0)
+  return ventas.filter(v => { const m = calcularMora(v); return m >= -(rango as number) && m <= (rango as number) })
+}
+
 const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const tableRef = useRef<AgGridReact>(null)
-  const [page, setPage] = useState(1)
-  const pageSize = 50
 
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
+  const moraRango = useStoreFiltrosVentasPorCobrar(state => state.moraRango)
 
-  // Convert Prisma filters to API filters
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
-
-    // Extraer fechas
-    const fechaFilter = filtros.fecha as any;
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
-
-    // Extraer búsqueda del filtro OR
-    let search: string | undefined;
+    let search: string | undefined
     if (filtros.OR && Array.isArray(filtros.OR)) {
-      const serieFilter = filtros.OR.find((filter: any) => filter.serie && typeof filter.serie === 'object' && filter.serie.contains);
-      if (serieFilter && serieFilter.serie && typeof serieFilter.serie === 'object' && typeof serieFilter.serie.contains === 'string') {
-        search = serieFilter.serie.contains as string;
-      }
+      const serieFilter = filtros.OR.find((f: any) => f?.serie?.contains)
+      if (serieFilter) search = (serieFilter as any).serie.contains as string
     }
-
     return {
       almacen_id: filtros.almacen_id as number | undefined,
       cliente_id: filtros.cliente_id as number | undefined,
       user_id: filtros.user_id as string | undefined,
-      desde,
-      hasta,
       search,
-      per_page: pageSize,
-      page,
+      per_page: -1,
     }
-  }, [filtros, page])
+  }, [filtros])
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS_POR_COBRAR, apiFilters],
     queryFn: async () => {
       const result = await ventaApi.getVentasPorCobrar(apiFilters)
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
+      if (result.error) throw new Error(result.error.message)
       return result.data!
     },
     enabled: !!filtros,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
-  const totalPages = data?.last_page ?? 0
-  const total = data?.total ?? 0
-  
-  // The backend already filters for credit sales with pending balance
   const rowData = useMemo(() => {
-    return data?.data ?? []
-  }, [data?.data])
+    const ventas = data?.data ?? []
+    const filtradas = aplicarFiltroMora(ventas, moraRango)
+    return [...filtradas].sort((a, b) => calcularMora(b) - calcularMora(a))
+  }, [data?.data, moraRango])
 
   // Función para calcular el total de una venta
   const calcularTotalVenta = useCallback((venta: VentaCompleta) => {
@@ -104,7 +97,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Fecha',
       width: 120,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         if (!params.data?.fecha) return ''
         return dayjs(params.data.fecha).format('DD/MM/YYYY')
       },
@@ -112,7 +105,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Documento',
       width: 120,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const tipoDoc = params.data?.tipo_documento as string
         const tipoDocMap: Record<string, string> = {
           '01': 'Factura',
@@ -125,7 +118,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Serie-Correl',
       width: 140,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const serie = params.data?.serie || ''
         const numero = params.data?.numero || ''
         return serie && numero ? `${serie}-${numero}` : ''
@@ -139,7 +132,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Cliente',
       width: 300,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const cliente = params.data?.cliente
         if (!cliente) return ''
         // Priorizar razon_social, si no existe usar nombres + apellidos
@@ -150,7 +143,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Detalle',
       width: 200,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const venta = params.data as VentaCompleta
         if (!venta?.productos_por_almacen || venta.productos_por_almacen.length === 0) {
           return 'Sin productos'
@@ -184,7 +177,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Paga',
       width: 120,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const pagado = Number(params.data?.total_cobrado || 0)
         return `S/. ${pagado.toFixed(2)}`
       },
@@ -211,34 +204,13 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Moras',
       width: 80,
+      sort: 'desc',
       cellRenderer: (params: any) => {
-        const venta = params.data as VentaCompleta
-        if (!venta?.fecha) return '0'
-        
-        const fechaVenta = dayjs(venta.fecha)
-        const hoy = dayjs()
-        const diasVencidos = hoy.diff(fechaVenta, 'days')
-        
-        return diasVencidos > 0 ? diasVencidos.toString() : '0'
+        const mora = calcularMora(params.data as VentaCompleta)
+        if (mora <= 0) return <span className='text-gray-400'>{mora}</span>
+        return <span style={{ color: mora > 30 ? '#dc2626' : mora > 15 ? '#ea580c' : '#ca8a04', fontWeight: 'bold' }}>{mora}</span>
       },
-      cellStyle: (params: any) => {
-        const venta = params.data as VentaCompleta
-        if (!venta?.fecha) return null
-        
-        const fechaVenta = dayjs(venta.fecha)
-        const hoy = dayjs()
-        const diasVencidos = hoy.diff(fechaVenta, 'days')
-        
-        if (diasVencidos > 30) {
-          return { color: '#dc2626', fontWeight: 'bold' }
-        } else if (diasVencidos > 15) {
-          return { color: '#ea580c', fontWeight: 'bold' }
-        } else if (diasVencidos > 0) {
-          return { color: '#ca8a04', fontWeight: 'bold' }
-        }
-        
-        return null
-      },
+      valueGetter: (params: any) => calcularMora(params.data as VentaCompleta),
     },
   ], [calcularTotalVenta])
 
@@ -290,17 +262,6 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     []
   )
 
-  const nextPage = useCallback(() => {
-    if (page < totalPages) {
-      setPage(p => p + 1)
-    }
-  }, [page, totalPages])
-
-  const prevPage = useCallback(() => {
-    if (page > 1) {
-      setPage(p => p - 1)
-    }
-  }, [page])
 
   // Seleccionar automáticamente la primera fila cuando se cargan los datos
   useEffect(() => {
@@ -337,16 +298,6 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       suppressRowTransform={true}
       rowBuffer={10}
     >
-      {/* Paginación */}
-      <PaginationControls
-        currentPage={page}
-        totalPages={totalPages}
-        total={total}
-        pageSize={pageSize}
-        loading={isLoading}
-        onNextPage={nextPage}
-        onPrevPage={prevPage}
-      />
     </TableWithTitle>
   )
 })

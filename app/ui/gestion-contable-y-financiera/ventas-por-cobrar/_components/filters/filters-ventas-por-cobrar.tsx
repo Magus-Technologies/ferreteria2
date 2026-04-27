@@ -21,7 +21,7 @@ import { toUTCBD } from '~/utils/fechas'
 import dayjs from 'dayjs'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
+import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
 import { FormaDePago } from '~/lib/api/venta'
 
@@ -35,52 +35,37 @@ interface ValuesFiltersVentasPorCobrar {
   busqueda?: string
 }
 
-const QUICK_FILTERS = [
-  { label: 'Todas', days: 0 },
-  { label: '15 días', days: 15 },
-  { label: '30 días', days: 30 },
-  { label: '60 días', days: 60 },
-  { label: '90 días', days: 90 },
-] as const
+const QUICK_FILTERS: { label: string; value: MoraRango }[] = [
+  { label: 'Hoy',      value: 'hoy' },
+  { label: '7 días',   value: 7 },
+  { label: '15 días',  value: 15 },
+  { label: '30 días',  value: 30 },
+  { label: '60 días',  value: 60 },
+  { label: 'Todas',    value: 'todas' },
+  { label: 'Vencidas', value: 'vencidas' },
+]
 
 export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [quickFilterActive, setQuickFilterActive] = useState<number>(30)
+  const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>('todas')
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
+  const setMoraRango = useStoreFiltrosVentasPorCobrar(state => state.setMoraRango)
 
-  const applyQuickFilter = useCallback((days: number) => {
-    setQuickFilterActive(days)
-    if (days === 0) {
-      form.setFieldsValue({ desde: undefined, hasta: undefined })
-      const data = {
-        almacen_id,
-        forma_de_pago: FormaDePago.CREDITO,
-        estado_de_venta: {
-          in: ['Creado', 'Procesado'],
-        },
-      } satisfies VentaWhereInput
-      setFiltros(data)
-      return
-    }
-    const desde = dayjs().subtract(days, 'days').startOf('day')
-    const hasta = dayjs().endOf('day')
-    form.setFieldsValue({ desde, hasta })
+  const applyQuickFilter = useCallback((rango: MoraRango) => {
+    setQuickFilterActive(rango)
+    setMoraRango(rango)
+    // Para todos los rangos, el backend trae todas las ventas cr y el frontend filtra por mora
+    form.setFieldsValue({ desde: undefined, hasta: undefined })
     const data = {
       almacen_id,
       forma_de_pago: FormaDePago.CREDITO,
-      fecha: {
-        gte: toUTCBD({ date: desde }),
-        lte: toUTCBD({ date: hasta }),
-      },
-      estado_de_venta: {
-        in: ['Creado', 'Procesado'],
-      },
+      estado_de_venta: { in: ['Creado'] },
     } satisfies VentaWhereInput
     setFiltros(data)
-  }, [almacen_id, form, setFiltros])
+  }, [almacen_id, form, setFiltros, setMoraRango])
 
   // Contar filtros activos
   const activeFiltersCount = useMemo(() => {
@@ -98,15 +83,8 @@ export default function FiltersVentasPorCobrar() {
   useEffect(() => {
     const data = {
       almacen_id,
-      // Solo mostrar ventas a crédito con saldo pendiente
       forma_de_pago: FormaDePago.CREDITO,
-      fecha: {
-        gte: toUTCBD({ date: dayjs().startOf('day') }),
-        lte: toUTCBD({ date: dayjs().endOf('day') }),
-      },
-      estado_de_venta: {
-        in: ['Creado', 'Procesado'],
-      },
+      estado_de_venta: { in: ['Creado'] },
     } satisfies VentaWhereInput
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,9 +160,9 @@ export default function FiltersVentasPorCobrar() {
         <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
         <Select
           value={quickFilterActive}
-          onChange={(days) => applyQuickFilter(days)}
-          className='w-32'
-          options={QUICK_FILTERS.map(({ label, days }) => ({ label, value: days }))}
+          onChange={(val) => applyQuickFilter(val as MoraRango)}
+          className='w-36'
+          options={QUICK_FILTERS.map(({ label, value }) => ({ label, value }))}
         />
       </div>
 

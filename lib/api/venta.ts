@@ -450,13 +450,13 @@ export interface StoreCobroRequest {
 
 export interface StoreCobroMultipleRequest {
   cliente_id: number
-  despliegue_de_pago_id: string
+  despliegue_de_pago_id?: string
   monto_total: number
   fecha: string
   observacion?: string
   numero_operacion?: string
   user_id: string
-  distribucion: Array<{ venta_id: string; monto: number }>
+  distribucion: Array<{ venta_id: string; monto: number; despliegue_de_pago_id?: string }>
 }
 
 export interface StoreCobroMultipleResponse {
