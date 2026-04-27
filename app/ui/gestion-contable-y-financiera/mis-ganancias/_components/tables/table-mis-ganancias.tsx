@@ -6,6 +6,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { useGetGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_hooks/use-get-ganancias'
 import { useStoreFiltrosMisGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias'
 import { Spin } from 'antd'
+import type { GananciaDetalle } from '~/lib/api/ganancias'
 
 export default function TableMisGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
@@ -15,15 +16,20 @@ export default function TableMisGanancias() {
 
   const columns = useMemo<ColDef[]>(() => [
     {
-      headerName: 'F.VENCE',
+      headerName: 'EMISION',
       field: 'fecha',
-      width: 90,
+      width: 160,
+      valueFormatter: (p) => {
+        const row = p.data as GananciaDetalle
+        if (!row?.fecha) return '-'
+        return row.hora_emision ? `${row.fecha} ${row.hora_emision}` : row.fecha
+      },
     },
     {
-      headerName: 'HORA',
-      field: 'hora_emision',
-      width: 80,
-      // Siempre visible, sin condición
+      headerName: 'F.VENCE',
+      field: 'fecha_vencimiento',
+      width: 95,
+      valueFormatter: (p) => p.value || '-',
     },
     {
       headerName: 'T.DOC',
@@ -33,13 +39,13 @@ export default function TableMisGanancias() {
     {
       headerName: 'NUMERO',
       field: 'numero',
-      width: 130,
-      cellClass: 'font-mono',
+      width: 155,
+      cellClass: 'font-mono text-xs',
     },
     {
       headerName: 'F.PAGO',
       field: 'f_pago',
-      width: 100,
+      width: 75,
     },
     {
       headerName: 'CLIENTE',
@@ -48,7 +54,7 @@ export default function TableMisGanancias() {
       minWidth: 200,
     },
     {
-      headerName: 'VENDEDOR',
+      headerName: 'VENDED',
       field: 'vendedor',
       width: 100,
     },
@@ -61,35 +67,54 @@ export default function TableMisGanancias() {
     {
       headerName: 'MARCA',
       field: 'marca',
-      width: 120,
+      width: 110,
     },
     {
       headerName: 'CANT',
       field: 'cant',
-      width: 70,
+      width: 65,
+      type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellClass: 'text-right',
     },
     {
       headerName: 'P.UNIT',
       field: 'p_unit',
       width: 80,
+      type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellClass: 'text-right',
     },
     {
       headerName: 'SUBTOT',
       field: 'subtot',
       width: 90,
+      type: 'numericColumn',
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
-      cellClass: 'text-right font-semibold',
-      pinned: 'right',
+      cellStyle: { fontWeight: 'bold' },
     },
     {
-      headerName: 'CC',
+      headerName: 'C.CAJ',
       field: 'cc',
-      width: 50,
-      pinned: 'right',
+      width: 65,
+    },
+    {
+      headerName: 'COSTO',
+      field: 'costo_total',
+      width: 90,
+      type: 'numericColumn',
+      valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+      cellStyle: { color: '#dc2626', fontWeight: 'bold' },
+    },
+    {
+      headerName: 'GANANC',
+      field: 'ganancia',
+      width: 90,
+      type: 'numericColumn',
+      valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
+      cellStyle: (p) => ({
+        color: p.value >= 0 ? '#16a34a' : '#dc2626',
+        fontWeight: 'bold',
+        background: p.value >= 0 ? '#f0fdf4' : '#fef2f2',
+      }),
     },
   ], [])
 
@@ -123,6 +148,7 @@ export default function TableMisGanancias() {
       className='h-full w-full'
       headerColor='var(--color-rose-600)'
       selectionColor="#fee2e2"
+      withNumberColumn={false}
       noRowsOverlayComponent={() => (
         <div className="flex flex-col items-center justify-center py-8">
           <p className="text-gray-500 mb-2">No hay datos de ganancias</p>

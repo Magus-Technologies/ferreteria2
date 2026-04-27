@@ -7,6 +7,8 @@ import { apiRequest } from "../api";
 export interface GananciaDetalle {
   id: string;
   fecha: string;
+  hora_emision: string;
+  fecha_vencimiento: string | null;
   tipo_doc: string;
   numero: string;
   f_pago: string;
