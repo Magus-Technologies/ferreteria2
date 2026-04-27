@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal } from 'antd'
+import { Modal, Tag } from 'antd'
 import { useMemo } from 'react'
 import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -8,6 +8,12 @@ import { ComisionDetalle, ComisionVendedor } from '~/lib/api/comision'
 import { useComisionDetalleVendedor } from '../../_hooks/use-comisiones'
 import { useStoreFiltrosComisiones } from '../../_store/store-filtros-comisiones'
 import { formatFechaPeru } from '~/utils/fechas'
+
+const ESTADO_PAGO_TAG: Record<ComisionDetalle['estado_pago'], { color: string; label: string }> = {
+  pagada: { color: 'green', label: 'Pagada' },
+  parcial: { color: 'gold', label: 'Parcial' },
+  pendiente: { color: 'red', label: 'Pendiente' },
+}
 
 interface Props {
   vendedor: ComisionVendedor | null
@@ -97,6 +103,23 @@ export default function ModalDetalleVendedor({ vendedor, open, onClose }: Props)
         cellClass: 'text-right font-mono text-blue-700 font-semibold',
         valueFormatter: p => formatPEN(p.value ?? 0),
       },
+      {
+        headerName: 'Pagado',
+        field: 'monto_pagado',
+        width: 110,
+        cellClass: 'text-right font-mono text-green-700',
+        valueFormatter: p => formatPEN(p.value ?? 0),
+      },
+      {
+        headerName: 'Estado',
+        field: 'estado_pago',
+        width: 110,
+        cellRenderer: (p: { value?: ComisionDetalle['estado_pago'] }) => {
+          const cfg = p.value ? ESTADO_PAGO_TAG[p.value] : null
+          if (!cfg) return null
+          return <Tag color={cfg.color} className="!font-semibold">{cfg.label}</Tag>
+        },
+      },
     ],
     []
   )
@@ -109,16 +132,22 @@ export default function ModalDetalleVendedor({ vendedor, open, onClose }: Props)
       width={1200}
       centered
       title={
-        <div className='flex items-center justify-between pr-6'>
+        <div className='flex items-center justify-between pr-6 gap-4 flex-wrap'>
           <span>
             Detalle de Comisiones — {vendedor?.vendedor ?? ''}
           </span>
           {data && (
-            <span className='text-sm text-gray-600 font-normal'>
-              Total: <span className='font-mono font-semibold text-blue-700'>
-                {formatPEN(data.total_comision)}
+            <div className='flex items-center gap-3 text-sm font-normal'>
+              <span className='text-gray-600'>
+                Total: <span className='font-mono font-semibold text-blue-700'>{formatPEN(data.total_comision)}</span>
               </span>
-            </span>
+              <span className='text-gray-600'>
+                Pagado: <span className='font-mono font-semibold text-green-700'>{formatPEN(data.total_pagado ?? 0)}</span>
+              </span>
+              <span className='text-gray-600'>
+                Pendiente: <span className='font-mono font-semibold text-red-700'>{formatPEN(data.total_pendiente ?? 0)}</span>
+              </span>
+            </div>
           )}
         </div>
       }
