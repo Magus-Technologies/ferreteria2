@@ -77,6 +77,9 @@ export default function CardAgregarProductoVenta({
   const productoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.producto
   )
+  const confirmCount = useStoreProductoSeleccionadoSearch(
+    (store) => store.confirmCount
+  )
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
 
   // Buscar paquetes que contengan este producto
@@ -182,9 +185,8 @@ export default function CardAgregarProductoVenta({
   const lastProductoIdRef = useRef<number | undefined>(undefined)
   
   useEffect(() => {
-    // Enfocar cantidad cada vez que se selecciona un producto, EXCEPTO si el
-    // usuario está escribiendo en otro input/textarea (ej. el buscador del modal:
-    // al teclear se auto-selecciona el 1er resultado y robaría el focus mid-typing).
+    // Auto-select del 1er resultado: enfocar cantidad SOLO si el usuario no
+    // está escribiendo (ej. mientras teclea en el buscador del modal).
     if (productoSeleccionadoSearchStore?.id &&
         productoSeleccionadoSearchStore.id !== lastProductoIdRef.current) {
       const activeTag = document.activeElement?.tagName
@@ -197,6 +199,20 @@ export default function CardAgregarProductoVenta({
     }
     lastProductoIdRef.current = productoSeleccionadoSearchStore?.id
   }, [productoSeleccionadoSearchStore])
+
+  // Confirmación explícita del usuario (Enter o click en fila del modal):
+  // siempre mover focus a cantidad, sin importar dónde esté el activeElement.
+  const lastConfirmCountRef = useRef(confirmCount)
+  useEffect(() => {
+    if (confirmCount !== lastConfirmCountRef.current) {
+      lastConfirmCountRef.current = confirmCount
+      if (productoSeleccionadoSearchStore?.id) {
+        setTimeout(() => {
+          cantidadRef.current?.focus()
+        }, 50)
+      }
+    }
+  }, [confirmCount, productoSeleccionadoSearchStore])
   
   useEffect(() => {
     const primeraUnidad = unidades_derivadas?.[0]?.unidad_derivada?.id
