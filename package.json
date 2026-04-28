@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dev --turbopack",
+    "dev": "next dev --turbopack",
     "dev:https": "next dev --turbopack & npx local-ssl-proxy --source 3001 --target 3000",
     "build": "next build",
     "build:server": "next build --no-lint",
+    "build:fast": "next build --turbopack --no-lint",
     "start": "next start",
     "lint": "next lint",
     "share": "npx tunnelmole 3000",
