@@ -70,6 +70,8 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             tar -xzf deploy.tar.gz
             rm deploy.tar.gz
-            npm ci --production
+            # npm ci (no --production) porque next.config.ts requiere TypeScript
+            # que está en devDependencies. Sin él, Next.js no arranca.
+            npm ci
             pm2 reload ferreteriav2 --update-env || pm2 start ecosystem.config.js --only ferreteriav2 --update-env
             echo "✅ Deploy completado: $(date)"
