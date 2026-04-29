@@ -36,6 +36,8 @@ interface EntregaDB {
   productosEntregados?: any[]
 }
 
+type AccionEntrega = 'despachar' | 'marcar' | 'confirmar' | null
+
 type UseStoreEntregaSeleccionada = {
   entrega?: EntregaDB
   setEntrega: (entrega: EntregaDB | undefined) => void
@@ -44,6 +46,10 @@ type UseStoreEntregaSeleccionada = {
   postDespachoOpen: boolean
   openPostDespacho: (entrega: any) => void
   closePostDespacho: () => void
+  // Trigger desde el botón principal del filter para abrir el modal
+  // de acción correspondiente al estado actual de la entrega seleccionada.
+  accionTrigger: AccionEntrega
+  triggerAccion: (accion: AccionEntrega) => void
 }
 
 export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
@@ -54,6 +60,8 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
     postDespachoOpen: false,
     openPostDespacho: (entrega) => set({ postDespachoOpen: true, postDespachoEntrega: entrega }),
     closePostDespacho: () => set({ postDespachoOpen: false, postDespachoEntrega: undefined }),
+    accionTrigger: null,
+    triggerAccion: (accion) => set({ accionTrigger: accion }),
   })
 )
 

@@ -11,7 +11,7 @@ export default function useGetEntregas() {
   // Solo filtrar por chofer_id si es despachador, admin ve todas
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isFetching, error, refetch } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, filtros, user?.id, esDespachador],
     queryFn: async () => {
       const estadoParam = filtros.estado_entrega?.length
@@ -36,7 +36,9 @@ export default function useGetEntregas() {
 
   return {
     entregas: (data || []) as any[],
-    loading: isLoading,
+    // isFetching: true durante carga inicial Y refetches con cache.
+    // Así siempre se ve "Cargando..." al buscar, igual que mi-almacen.
+    loading: isFetching,
     error,
     refetch,
   }

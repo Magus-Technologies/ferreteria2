@@ -6,6 +6,7 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { useStoreFiltrosMisEntregas } from '../../_store/store-filtros-mis-entregas'
+import { useStoreEntregaSeleccionada } from '../tables/table-mis-entregas'
 import dayjs from 'dayjs'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
@@ -15,6 +16,7 @@ import NotificationPermissionButton from '~/components/notifications/notificatio
 import { useAuth } from '~/lib/auth-context'
 import { useDebounce } from 'use-debounce'
 import { useState, useEffect } from 'react'
+import { orangeColors, blueColors, greenColors, redColors } from '~/lib/colors'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -30,7 +32,27 @@ export default function FiltersMisEntregas() {
   const setFiltros = useStoreFiltrosMisEntregas((state) => state.setFiltros)
   const { user } = useAuth()
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
- 
+  const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
+  const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
+
+  // Botón principal "Entregar/Despachar/Confirmar" — cambia según el estado
+  // de la entrega seleccionada. Reemplaza los botones que estaban en cada fila.
+  const botonPrincipal = (() => {
+    if (!entregaSeleccionada) return null
+    const estado = entregaSeleccionada.estado_entrega
+    const esRecojoTienda = entregaSeleccionada.tipo_entrega === 'rt'
+    if (estado === 'pe' && esRecojoTienda) {
+      return { label: 'Entregar', accion: 'marcar' as const }
+    }
+    if (estado === 'pe' && !esRecojoTienda) {
+      return { label: 'Despachar', accion: 'despachar' as const }
+    }
+    if (estado === 'ec') {
+      return { label: 'Confirmar', accion: 'confirmar' as const }
+    }
+    return null
+  })()
+
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch] = useDebounce(searchValue, 500)
  
@@ -248,6 +270,48 @@ export default function FiltersMisEntregas() {
               </ButtonBase>
             </div>
           </ConfigurableElement>
+
+          {/* Botón principal "Entregar/Despachar/Confirmar" — actúa sobre la
+              entrega seleccionada en la tabla. Cambia su texto según estado. */}
+          <ConfigurableElement
+            componentId="mis-entregas.boton-entregar-principal"
+            label="Botón Entregar Principal"
+          >
+            <div className="col-span-2 flex items-center gap-2">
+              <ButtonBase
+                color="success"
+                size="md"
+                type="button"
+                disabled={!botonPrincipal}
+                className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
+                onClick={() => botonPrincipal && triggerAccion(botonPrincipal.accion)}
+              >
+                <FaTruck />
+                {botonPrincipal ? botonPrincipal.label : 'Entregar'}
+              </ButtonBase>
+            </div>
+          </ConfigurableElement>
+
+          {/* Leyenda de colores (al estilo mis-ventas) */}
+          <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">
+            <span className="font-semibold text-gray-700">Leyenda:</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: orangeColors[2] }} />
+              <span className="text-gray-600">Pendiente</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: blueColors[2] }} />
+              <span className="text-gray-600">En Camino</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: greenColors[2] }} />
+              <span className="text-gray-600">Entregado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: redColors[2] }} />
+              <span className="text-gray-600">Cancelado</span>
+            </div>
+          </div>
         </div>
       </div>
     </FormBase>

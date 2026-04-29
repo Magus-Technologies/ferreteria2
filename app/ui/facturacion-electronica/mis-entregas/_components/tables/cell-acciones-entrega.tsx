@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FaMapMarkedAlt, FaEye } from 'react-icons/fa'
 import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
@@ -35,6 +35,21 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const { message } = useApp()
   const queryClient = useQueryClient()
   const openPostDespacho = useStoreEntregaSeleccionada((s) => s.openPostDespacho)
+  const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
+  const accionTrigger = useStoreEntregaSeleccionada((s) => s.accionTrigger)
+  const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
+
+  // Escuchar el trigger del botón principal (filter) — solo la fila seleccionada
+  // responde al trigger y abre el modal correspondiente.
+  useEffect(() => {
+    if (!accionTrigger || !entrega) return
+    if (entregaSeleccionada?.id !== entrega.id) return
+    if (accionTrigger === 'despachar') setModalDespachoOpen(true)
+    else if (accionTrigger === 'marcar') setModalMarcarOpen(true)
+    else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
+    triggerAccion(null) // resetear el trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accionTrigger])
 
   if (!entrega) return null
 
@@ -183,32 +198,6 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     if (onRefetch) onRefetch()
   }
 
-  // Botón principal "Entregar" según estado actual
-  const botonPrincipal = (() => {
-    if (estadoEntrega === 'PENDIENTE' && esRecojoTienda) {
-      return {
-        label: 'Entregar',
-        onClick: () => setModalMarcarOpen(true),
-        configId: 'mis-entregas.boton-entregar',
-      }
-    }
-    if (estadoEntrega === 'PENDIENTE' && !esRecojoTienda) {
-      return {
-        label: 'Despachar',
-        onClick: () => setModalDespachoOpen(true),
-        configId: 'mis-entregas.boton-en-camino',
-      }
-    }
-    if (estadoEntrega === 'EN_CAMINO') {
-      return {
-        label: 'Confirmar',
-        onClick: () => setModalConfirmarOpen(true),
-        configId: 'mis-entregas.boton-entregar',
-      }
-    }
-    return null
-  })()
-
   return (
     <>
       <Space size={4} className="flex items-center justify-center h-full">
@@ -250,22 +239,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           </Button>
         )}
 
-        {botonPrincipal && (
-          <ConfigurableElement
-            componentId={botonPrincipal.configId}
-            label={`Botón ${botonPrincipal.label}`}
-            noFullWidth
-          >
-            <Button
-              type="primary"
-              size="small"
-              onClick={botonPrincipal.onClick}
-              className="!bg-green-600 hover:!bg-green-700 !border-none !font-semibold"
-            >
-              {botonPrincipal.label}
-            </Button>
-          </ConfigurableElement>
-        )}
+        {/* El botón principal "Entregar/Despachar/Confirmar" se movió arriba al
+            lado de Buscar (en filters-mis-entregas). Solo aplica a la fila
+            SELECCIONADA y se dispara desde ahí vía store. */}
 
         {estadoEntrega === 'PENDIENTE' && (entrega.productos_entregados?.length || 0) > 0 && (
           <Button
