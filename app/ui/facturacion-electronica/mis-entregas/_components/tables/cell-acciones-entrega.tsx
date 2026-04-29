@@ -192,8 +192,6 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     : entrega.estado_entrega === 'ca' ? 'CANCELADO'
     : entrega.estado_entrega
 
-  const tipoEntrega = entrega.tipo_entrega
-  const esRecojoTienda = tipoEntrega === 'rt'
   const onSuccess = () => {
     if (onRefetch) onRefetch()
   }
@@ -239,20 +237,10 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           </Button>
         )}
 
-        {/* El botón principal "Entregar/Despachar/Confirmar" se movió arriba al
-            lado de Buscar (en filters-mis-entregas). Solo aplica a la fila
-            SELECCIONADA y se dispara desde ahí vía store. */}
-
-        {estadoEntrega === 'PENDIENTE' && (entrega.productos_entregados?.length || 0) > 0 && (
-          <Button
-            type="default"
-            size="small"
-            onClick={() => setModalParcialOpen(true)}
-            className="!border-amber-500 !text-amber-700 hover:!bg-amber-50 !font-semibold"
-          >
-            Parcial
-          </Button>
-        )}
+        {/* Botones principales "Entregar/Despachar/Confirmar" se movieron arriba
+            al lado de Buscar (filters-mis-entregas). El botón "Parcial" se movió
+            dentro del modal de Despacho (es una variante de despachar).
+            Solo aplica a la fila SELECCIONADA y se dispara desde ahí vía store. */}
 
         {tieneRestante && (
           <ConfigurableElement
@@ -299,6 +287,10 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         onClose={() => setModalDespachoOpen(false)}
         onDespachar={handleDespachar}
         onDespacharMasTarde={handleDespacharMasTarde}
+        onDespacharParcial={() => {
+          setModalDespachoOpen(false)
+          setModalParcialOpen(true)
+        }}
         entrega={entrega}
       />
 

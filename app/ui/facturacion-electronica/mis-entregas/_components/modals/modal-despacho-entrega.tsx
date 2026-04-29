@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from 'antd'
-import { FaTruck, FaClock } from 'react-icons/fa'
+import { FaTruck, FaClock, FaBoxOpen } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
 import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
@@ -13,6 +13,7 @@ interface ModalDespachoEntregaProps {
   onClose: () => void
   onDespachar: (vehiculoId?: number) => Promise<void>
   onDespacharMasTarde?: () => Promise<void>
+  onDespacharParcial?: () => void
   entrega?: any
   loading?: boolean
 }
@@ -22,6 +23,7 @@ export default function ModalDespachoEntrega({
   onClose,
   onDespachar,
   onDespacharMasTarde,
+  onDespacharParcial,
   entrega,
   loading = false,
 }: ModalDespachoEntregaProps) {
@@ -136,6 +138,15 @@ export default function ModalDespachoEntrega({
           >
             Despachar más tarde
           </Button>
+          {onDespacharParcial && (entrega?.productos_entregados?.length || 0) > 0 && (
+            <Button
+              icon={<FaBoxOpen className="text-amber-600" />}
+              onClick={onDespacharParcial}
+              className="!rounded-xl !h-10 !px-5 !font-semibold !border-amber-500 !text-amber-700 hover:!bg-amber-50"
+            >
+              Despachar parcial
+            </Button>
+          )}
           <Button
             type="primary"
             icon={<FaTruck />}

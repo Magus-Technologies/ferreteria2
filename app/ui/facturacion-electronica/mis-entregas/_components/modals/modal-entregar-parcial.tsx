@@ -6,7 +6,6 @@ import {
   FaBoxOpen,
   FaUser,
   FaWarehouse,
-  FaTruck,
 } from 'react-icons/fa'
 import {
   entregaProductoApi,
@@ -72,14 +71,10 @@ export default function ModalEntregarParcial({
       })
       setFilas(nuevasFilas)
 
-      const tipoEntrega = entrega.tipo_entrega
-      if (tipoEntrega === 'rt') {
-        setQuienEntrega(QuienEntrega.ALMACEN)
-      } else {
-        setQuienEntrega(
-          entrega.chofer_id ? QuienEntrega.CHOFER : QuienEntrega.ALMACEN,
-        )
-      }
+      // Quien "despacha" siempre es Almacén o Vendedor — el chofer es quien
+      // luego entrega al cliente, pero en este modal estamos registrando quién
+      // hace la salida del almacén.
+      setQuienEntrega(QuienEntrega.ALMACEN)
       setObservaciones('')
     }
   }, [open, entrega])
@@ -102,18 +97,14 @@ export default function ModalEntregarParcial({
       ? `${entrega.venta.serie}-${entrega.venta.numero}`
       : 'S/N'
   const tipoEntrega = entrega.tipo_entrega
-  const esRecojoTienda = tipoEntrega === 'rt'
 
-  const opciones = esRecojoTienda
-    ? [
-        { value: QuienEntrega.ALMACEN, label: 'Almacén', icon: <FaWarehouse /> },
-        { value: QuienEntrega.VENDEDOR, label: 'Vendedor', icon: <FaUser /> },
-      ]
-    : [
-        { value: QuienEntrega.CHOFER, label: 'Chofer', icon: <FaTruck /> },
-        { value: QuienEntrega.ALMACEN, label: 'Almacén', icon: <FaWarehouse /> },
-        { value: QuienEntrega.VENDEDOR, label: 'Vendedor', icon: <FaUser /> },
-      ]
+  // El chofer NO aparece como opción aquí: en este modal se registra quién
+  // hace la salida del almacén (el chofer luego entrega al cliente, pero esa
+  // confirmación es otro flujo).
+  const opciones = [
+    { value: QuienEntrega.ALMACEN, label: 'Almacén', icon: <FaWarehouse /> },
+    { value: QuienEntrega.VENDEDOR, label: 'Vendedor', icon: <FaUser /> },
+  ]
 
   const actualizarFila = (idx: number, value: number | null) => {
     setFilas((prev) => {
@@ -366,7 +357,7 @@ export default function ModalEntregarParcial({
             onChange={(e) => setQuienEntrega(e.target.value)}
             className="!w-full"
           >
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {opciones.map((opt) => (
                 <Radio
                   key={opt.value}
