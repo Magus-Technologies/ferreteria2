@@ -54,7 +54,7 @@ export default function SelectChoferes({
     if (!Number.isFinite(idNum)) return
 
     choferApi.getById(idNum).then(res => {
-      const chofer = res.data?.data ?? (res.data as any)
+      const chofer = res.data as any
       if (chofer && chofer.id) {
         setChoferSeleccionado(chofer)
         setText(`${chofer.dni} : ${chofer.nombres} ${chofer.apellidos}`)
