@@ -813,6 +813,19 @@ function onChangeCosto({
   const fields = unidades_derivadas
     .map((item, index) => {
       if (costo && index === value) return null
+      // Si el usuario editó explícitamente un costo (costo definido) y esta fila YA tiene
+      // un costo asignado (no vacío ni cero), NO sobrescribir. Solo se autocompletan filas
+      // que están sin costo (recién agregadas).
+      if (costo) {
+        const costoExistente = item?.costo
+        const costoExistenteNum = Number(costoExistente)
+        const yaTieneCosto =
+          costoExistente !== undefined &&
+          costoExistente !== null &&
+          !isNaN(costoExistenteNum) &&
+          costoExistenteNum !== 0
+        if (yaTieneCosto) return null
+      }
       const factor = Number(item.factor)
       const costoCalculado = costo_disponible ? factor * costo_unidad : 0
       return { name: ['unidades_derivadas', index, 'costo'] as (string | number)[], value: costoCalculado }

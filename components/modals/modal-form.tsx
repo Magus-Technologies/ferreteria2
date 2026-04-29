@@ -23,6 +23,12 @@ export default function ModalForm<T>({
     cancelText = 'Cancelar',
     cancelButtonProps = { className: 'rounded-xl' },
     okButtonProps = {},
+    // Por default destruimos al ocultar para liberar memoria y, sobre todo,
+    // para evitar que el wrap/mask del Modal quede bloqueando clicks en la
+    // página después de cerrarlo (problema observado con React 19 + AntD v5).
+    // Si un modal específico es muy pesado, se puede pasar destroyOnHidden=false
+    // explícitamente en modalProps.
+    destroyOnHidden = true,
     ...restModalProps
   } = modalProps || {}
   const {
@@ -49,6 +55,7 @@ export default function ModalForm<T>({
         formProps?.form?.resetFields()
         onCancel?.()
       }}
+      destroyOnHidden={destroyOnHidden}
       modalRender={dom => <FormBase<T> {...formProps}>{dom}</FormBase>}
     >
       {children}

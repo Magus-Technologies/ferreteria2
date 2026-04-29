@@ -26,10 +26,24 @@ export default function FormSectionUnidadesDerivadas({
                   <ButtonBase
                     type='button'
                     onClick={() => {
+                      // Calcular un factor por defecto que no esté usado.
+                      // Tomamos el siguiente entero disponible >= 1 para evitar
+                      // colisión con la unique key (producto_almacen_id, factor).
+                      const unidadesActuales = (form.getFieldValue('unidades_derivadas') as Array<{ factor?: number | string }> | undefined) ?? []
+                      const factoresUsados = new Set(
+                        unidadesActuales
+                          .map(u => Number(u?.factor))
+                          .filter(n => !isNaN(n))
+                      )
+                      let nuevoFactor = 1
+                      while (factoresUsados.has(nuevoFactor)) {
+                        nuevoFactor++
+                      }
+
                       // Agregar con valores iniciales por defecto
                       add({
                         unidad_derivada_id: undefined,
-                        factor: 1,
+                        factor: nuevoFactor,
                         costo: 0,
                         p_venta: 0,
                         precio_publico: 0,

@@ -173,7 +173,9 @@ export async function apiRequest<T = unknown>(
       return {
         error: {
           message:
-            data.error?.message || data.message || "Error en la petición",
+            (typeof data.error === 'string' ? data.error : data.error?.message) ||
+            data.message ||
+            "Error en la petición",
         },
       };
     }
