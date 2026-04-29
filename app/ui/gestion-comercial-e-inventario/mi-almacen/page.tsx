@@ -26,6 +26,9 @@ const TableUltimasComprasIngresadasMiAlmacen = lazy(
 const ButtonCreateProducto = lazy(
   () => import("./_components/buttons/button-create-producto")
 );
+const ModalCreateProducto = lazy(
+  () => import("./_components/modals/modal-create-producto")
+);
 const ButtonCreateIngresoSalida = lazy(
   () => import("./_components/buttons/button-create-ingreso-salida")
 );
@@ -164,6 +167,11 @@ export default function MiAlmacen() {
           </Suspense>
         </div>
       </div>
+      {canCreateProducto && (
+        <Suspense fallback={null}>
+          <ModalCreateProducto />
+        </Suspense>
+      )}
     </ContenedorGeneral>
   );
 }

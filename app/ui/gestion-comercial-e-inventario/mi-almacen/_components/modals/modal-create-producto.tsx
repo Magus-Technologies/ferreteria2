@@ -1,4 +1,4 @@
-import { Form } from 'antd'
+import { Form, Skeleton } from 'antd'
 import TitleForm from '~/components/form/title-form'
 import ModalForm from '~/components/modals/modal-form'
 import type {
@@ -13,7 +13,7 @@ import TabsForm from '../tabs/tabs-form'
 import { useStoreArchivosProducto } from '../../_store/store-archivos-producto'
 import useCreateProducto from '../../_hooks/use-create-producto'
 import { useStoreEditOrCopyProducto } from '../../_store/store-edit-or-copy-producto'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getStorageUrl } from '~/utils/upload'
 import { useStoreCodigoAutomatico } from '../../_store/store-codigo-automatico'
 import { useStoreAlmacen } from '~/store/store-almacen'
@@ -95,6 +95,21 @@ export default function ModalCreateProducto({
   const setFichaTecnicaUrlExistente = useStoreArchivosProducto(state => state.setFichaTecnicaUrlExistente)
 
   const setDisabled = useStoreCodigoAutomatico(state => state.setDisabled)
+
+  // Diferimos el montaje del contenido pesado (5 selects con queries +
+  // FormSection*) hasta que el modal esté visible, así el modal "abre" al
+  // instante con un esqueleto y el form se hidrata después.
+  const [readyToRender, setReadyToRender] = useState(false)
+  useEffect(() => {
+    if (!open) {
+      setReadyToRender(false)
+      return
+    }
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setReadyToRender(true))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -198,14 +213,9 @@ export default function ModalCreateProducto({
             paddingBottom: '16px',
           },
         },
-        wrapClassName: '!flex !items-center',
         centered: true,
         okButtonProps: { loading, disabled: loading },
         okText: isEditing ? 'Editar' : isDuplicate ? 'Duplicar' : 'Crear',
-        // Mantener el modal montado entre aperturas: la primera carga es lenta
-        // (1.5s aprox por los 5+ selects con queries) pero las siguientes
-        // aperturas son instantáneas porque no hay que remontar nada.
-        destroyOnHidden: false,
       }}
       onCancel={() => {
         resetArchivos()
@@ -221,7 +231,13 @@ export default function ModalCreateProducto({
         onFinish: crearProductoForm,
       }}
     >
-      <TabsForm form={form} />
+      {readyToRender ? (
+        <TabsForm form={form} />
+      ) : (
+        <div className='px-2 py-4'>
+          <Skeleton active paragraph={{ rows: 8 }} />
+        </div>
+      )}
     </ModalForm>
   )
 }
