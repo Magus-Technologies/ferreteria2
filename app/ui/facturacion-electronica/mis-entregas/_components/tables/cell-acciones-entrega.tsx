@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { FaMapMarkedAlt, FaEye, FaTruck } from 'react-icons/fa'
-import { Button, Space, Tooltip } from 'antd'
+import { Button, Modal, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
-import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
+import { entregaProductoApi, EstadoEntrega, TipoEntrega } from '~/lib/api/entrega-producto'
 import { ventaApi, type getVentaResponseProps } from '~/lib/api/venta'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -70,6 +70,42 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     if (entrega.chofer_id) params.set('chofer_id', String(entrega.chofer_id))
     if (entrega.vehiculo?.placa) params.set('vehiculo_placa', String(entrega.vehiculo.placa))
     router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
+  }
+
+  const handleCambiarTipoEntrega = () => {
+    const tipoActual = entrega.tipo_entrega
+    const nuevoTipo =
+      tipoActual === TipoEntrega.RECOJO_EN_TIENDA
+        ? TipoEntrega.DESPACHO
+        : TipoEntrega.RECOJO_EN_TIENDA
+    const labelActual =
+      tipoActual === TipoEntrega.RECOJO_EN_TIENDA ? 'Recojo en Tienda' : 'Despacho a Domicilio'
+    const labelNuevo =
+      nuevoTipo === TipoEntrega.RECOJO_EN_TIENDA ? 'Recojo en Tienda' : 'Despacho a Domicilio'
+
+    Modal.confirm({
+      title: 'Cambiar tipo de entrega',
+      content: `La entrega pasará de "${labelActual}" a "${labelNuevo}". ¿Confirmar?`,
+      okText: 'Sí, cambiar',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          const response = await entregaProductoApi.update(entrega.id, {
+            tipo_entrega: nuevoTipo,
+          })
+          if (response.error) {
+            message.error(response.error.message || 'Error al cambiar tipo de entrega')
+            return
+          }
+          message.success(`Tipo de entrega cambiado a ${labelNuevo}`)
+          setModalDespachoOpen(false)
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+          if (onRefetch) onRefetch()
+        } catch (err: any) {
+          message.error(err?.message || 'Error al cambiar tipo de entrega')
+        }
+      },
+    })
   }
 
   const handleAbrirRestante = async () => {
@@ -265,23 +301,8 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
             dentro del modal de Despacho (es una variante de despachar).
             Solo aplica a la fila SELECCIONADA y se dispara desde ahí vía store. */}
 
-        {tieneRestante && (
-          <ConfigurableElement
-            componentId="mis-entregas.boton-entregar-restante"
-            label="Botón Entregar Restante"
-            noFullWidth
-          >
-            <Button
-              type="default"
-              size="small"
-              loading={loadingRestante}
-              onClick={handleAbrirRestante}
-              className="!border-purple-500 !text-purple-700 hover:!bg-purple-50 !font-semibold"
-            >
-              Restante
-            </Button>
-          </ConfigurableElement>
-        )}
+        {/* "Restante" se movió dentro del modal de Despacho como opción
+            adicional. "Cambiar tipo entrega" también vive ahí. */}
       </Space>
 
       <ModalDetallesEntregaCompleto
@@ -304,7 +325,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         onSuccess={onSuccess}
       />
 
-      {/* Modal de Despacho (ticket + botón despachar) */}
+      {/* Modal de Despacho (ticket + botones de acción) */}
       <ModalDespachoEntrega
         open={modalDespachoOpen}
         onClose={() => setModalDespachoOpen(false)}
@@ -314,6 +335,13 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           setModalDespachoOpen(false)
           setModalParcialOpen(true)
         }}
+        onDespacharRestante={() => {
+          setModalDespachoOpen(false)
+          handleAbrirRestante()
+        }}
+        onCambiarTipoEntrega={handleCambiarTipoEntrega}
+        tieneRestante={tieneRestante}
+        loadingRestante={loadingRestante}
         entrega={entrega}
       />
 

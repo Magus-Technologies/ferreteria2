@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from 'antd'
-import { FaTruck, FaClock, FaBoxOpen } from 'react-icons/fa'
+import { FaTruck, FaClock, FaBoxOpen, FaPlusCircle, FaExchangeAlt } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
 import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
@@ -14,6 +14,10 @@ interface ModalDespachoEntregaProps {
   onDespachar: (vehiculoId?: number) => Promise<void>
   onDespacharMasTarde?: () => Promise<void>
   onDespacharParcial?: () => void
+  onDespacharRestante?: () => void
+  onCambiarTipoEntrega?: () => void
+  tieneRestante?: boolean
+  loadingRestante?: boolean
   entrega?: any
   loading?: boolean
 }
@@ -24,6 +28,10 @@ export default function ModalDespachoEntrega({
   onDespachar,
   onDespacharMasTarde,
   onDespacharParcial,
+  onDespacharRestante,
+  onCambiarTipoEntrega,
+  tieneRestante,
+  loadingRestante,
   entrega,
   loading = false,
 }: ModalDespachoEntregaProps) {
@@ -138,6 +146,25 @@ export default function ModalDespachoEntrega({
           >
             Despachar más tarde
           </Button>
+          {onCambiarTipoEntrega && (
+            <Button
+              icon={<FaExchangeAlt className="text-slate-500" />}
+              onClick={onCambiarTipoEntrega}
+              className="!rounded-xl !h-10 !px-5 !font-semibold !border-slate-400 !text-slate-600 hover:!bg-slate-50"
+            >
+              Cambiar tipo entrega
+            </Button>
+          )}
+          {onDespacharRestante && tieneRestante && (
+            <Button
+              icon={<FaPlusCircle className="text-purple-600" />}
+              onClick={onDespacharRestante}
+              loading={loadingRestante}
+              className="!rounded-xl !h-10 !px-5 !font-semibold !border-purple-500 !text-purple-700 hover:!bg-purple-50"
+            >
+              Despachar restante
+            </Button>
+          )}
           {onDespacharParcial && (entrega?.productos_entregados?.length || 0) > 0 && (
             <Button
               icon={<FaBoxOpen className="text-amber-600" />}
