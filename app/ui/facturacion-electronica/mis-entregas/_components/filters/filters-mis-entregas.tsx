@@ -83,7 +83,6 @@ export default function FiltersMisEntregas() {
         fecha_hasta: dayjs().endOf('day'),
       }}
       className="w-full"
-      onValuesChange={() => form.submit()}
       onFinish={handleFinish}
     >
       <div className="flex items-center justify-between">
