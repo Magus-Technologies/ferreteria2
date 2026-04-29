@@ -38,7 +38,8 @@ export interface KardexResponse {
 }
 
 export interface KardexFilters {
-  producto_id: number
+  producto_id?: number
+  cliente_id?: number
   almacen_id?: number
   desde?: string
   hasta?: string
@@ -49,6 +50,7 @@ export interface KardexFilters {
 
 export interface KardexInventarioFilters {
   producto_id?: number
+  proveedor_id?: number
   almacen_id?: number
   desde?: string
   hasta?: string

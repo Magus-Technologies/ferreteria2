@@ -13,9 +13,11 @@ import { greenColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex, type TipoMovimientoInventario } from '~/lib/api/kardex'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import type { Producto } from '~/app/_types/producto'
+import type { Proveedor } from '~/lib/api/proveedor'
 
 const { RangePicker } = DatePicker
 
@@ -56,6 +58,7 @@ export default function KardexInventarioView() {
   const almacenId = useStoreAlmacen((s) => s.almacen_id)
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState<Proveedor>()
   const [tipo, setTipo] = useState<TipoMovimientoInventario | ''>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
@@ -64,12 +67,14 @@ export default function KardexInventarioView() {
   const [searchKey, setSearchKey] = useState(0)
 
   const productoId = productoSeleccionado?.id
+  const proveedorId = proveedorSeleccionado?.id
 
   const { data, isFetching } = useQuery({
-    queryKey: [QueryKeys.KARDEX_INVENTARIO, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
+    queryKey: [QueryKeys.KARDEX_INVENTARIO, productoId, proveedorId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientosInventario({
         producto_id: productoId,
+        proveedor_id: proveedorId,
         almacen_id: almacenId || undefined,
         tipo: tipo || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
@@ -106,6 +111,14 @@ export default function KardexInventarioView() {
         minWidth: 200,
       },
     ] : []),
+    {
+      headerName: 'Proveedor',
+      field: 'proveedor_nombre' as keyof MovimientoKardex,
+      width: 180,
+      minWidth: 150,
+      cellStyle: { color: '#059669', fontStyle: 'italic' },
+      valueFormatter: (params: any) => params.value || '-',
+    },
     {
       headerName: 'Tipo',
       field: 'tipo',
@@ -256,6 +269,16 @@ export default function KardexInventarioView() {
             </div>
           </div>
           <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Proveedor</label>
+            <SelectProveedores
+              className='!min-w-[250px] !w-[250px] !max-w-[250px]'
+              allowClear
+              onChange={(_id, proveedor) => {
+                setProveedorSeleccionado(proveedor ?? undefined)
+              }}
+            />
+          </div>
+          <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Tipo</label>
             <Select
               className='!min-w-[140px] !w-[140px]'
@@ -345,8 +368,8 @@ export default function KardexInventarioView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />

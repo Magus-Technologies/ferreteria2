@@ -13,9 +13,11 @@ import { orangeColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex, type TipoMovimientoKardex } from '~/lib/api/kardex'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
+import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import type { Producto } from '~/app/_types/producto'
+import type { Cliente } from '~/lib/api/cliente'
 
 const { RangePicker } = DatePicker
 
@@ -41,25 +43,63 @@ const tipoLabels: Record<string, string> = {
   guia: 'Guia',
 }
 
-const movimientoColors: Record<string, string> = {
-  ENTRADA: 'green',
-  SALIDA: 'red',
-  REFERENCIA: 'blue',
-  ANULADO: 'volcano',
-  DEVOLUCION: 'cyan',
+const tipoVentaColors: Record<string, string> = {
   'VENTA CONTADO': 'green',
   'VENTA CRÉDITO': 'gold',
-  'VENTA CONTADO (EDITADA)': 'orange',
-  'VENTA CRÉDITO (EDITADA)': 'orange',
-  'VENTA CONTADO (ANULADA)': 'volcano',
-  'VENTA CRÉDITO (ANULADA)': 'volcano',
+  'COTIZACIÓN': 'blue',
+  'PRÉSTAMO': 'orange',
+  'GUÍA': 'purple',
+}
+
+const estadoColors: Record<string, string> = {
+  'VENTA': 'green',
+  'EDITADA': 'orange',
+  'ANULADA': 'volcano',
   'AJUSTE POR EDICIÓN': 'purple',
+  'DEVOLUCIÓN': 'cyan',
+}
+
+// Función para parsear el movimiento y extraer tipo y estado
+const parseMovimiento = (movimiento: string) => {
+  // Casos especiales con tipo de venta
+  // "AJUSTE POR EDICIÓN (CONTADO)" o "AJUSTE POR EDICIÓN (CRÉDITO)"
+  const ajusteMatch = movimiento.match(/^AJUSTE POR EDICIÓN \((CONTADO|CRÉDITO)\)$/)
+  if (ajusteMatch) {
+    return {
+      tipo: `VENTA ${ajusteMatch[1]}`, // "VENTA CONTADO" o "VENTA CRÉDITO"
+      estado: 'AJUSTE POR EDICIÓN',
+    }
+  }
+
+  // Casos especiales sin tipo de venta
+  if (movimiento === 'AJUSTE POR EDICIÓN') {
+    return { tipo: '', estado: 'AJUSTE POR EDICIÓN' }
+  }
+  if (movimiento === 'DEVOLUCIÓN') {
+    return { tipo: '', estado: 'DEVOLUCIÓN' }
+  }
+  if (movimiento === 'ENTRADA' || movimiento === 'SALIDA' || movimiento === 'REFERENCIA' || movimiento === 'ANULADO') {
+    return { tipo: movimiento, estado: '' }
+  }
+
+  // Patrones: "VENTA CONTADO (EDITADA)", "VENTA CRÉDITO (ANULADA)", etc.
+  const match = movimiento.match(/^(VENTA CONTADO|VENTA CRÉDITO)\s*(?:\((EDITADA|ANULADA)\))?$/)
+  if (match) {
+    return {
+      tipo: match[1], // "VENTA CONTADO" o "VENTA CRÉDITO"
+      estado: match[2] || 'VENTA', // "EDITADA", "ANULADA" o "VENTA" si está vacío
+    }
+  }
+
+  // Si no coincide con ningún patrón, devolver como está
+  return { tipo: movimiento, estado: '' }
 }
 
 export default function KardexView() {
   const almacenId = useStoreAlmacen((s) => s.almacen_id)
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente>()
   const [tipo, setTipo] = useState<TipoMovimientoKardex | ''>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
@@ -68,12 +108,14 @@ export default function KardexView() {
   const [searchKey, setSearchKey] = useState(0)
 
   const productoId = productoSeleccionado?.id
+  const clienteId = clienteSeleccionado?.id
 
   const { data, isFetching, refetch } = useQuery({
-    queryKey: [QueryKeys.KARDEX, productoId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
+    queryKey: [QueryKeys.KARDEX, productoId, clienteId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientos({
         producto_id: productoId || undefined as any,
+        cliente_id: clienteId || undefined as any,
         almacen_id: almacenId || undefined,
         tipo: tipo || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
@@ -112,6 +154,14 @@ export default function KardexView() {
       },
     ] : []),
     {
+      headerName: 'Cliente',
+      field: 'cliente_nombre' as keyof MovimientoKardex,
+      width: 180,
+      minWidth: 150,
+      cellStyle: { color: '#0891b2', fontStyle: 'italic' },
+      valueFormatter: (params: any) => params.value || '-',
+    },
+    {
       headerName: 'Tipo',
       field: 'tipo',
       width: 110,
@@ -128,16 +178,42 @@ export default function KardexView() {
       },
     },
     {
-      headerName: 'Mov.',
+      headerName: 'Tipo Venta',
       field: 'movimiento',
-      width: 110,
-      minWidth: 100,
+      width: 130,
+      minWidth: 120,
+      valueGetter: (params: any) => {
+        const { tipo } = parseMovimiento(params.data?.movimiento || '')
+        return tipo
+      },
       cellRenderer: (params: any) => {
-        const mov = params.value as string
+        const { tipo } = parseMovimiento(params.data?.movimiento || '')
+        if (!tipo) return null
         return (
           <div className='flex items-center h-full'>
-            <Tag color={movimientoColors[mov] || 'default'} className='!m-0 text-xs'>
-              {mov}
+            <Tag color={tipoVentaColors[tipo] || 'default'} className='!m-0 text-xs'>
+              {tipo}
+            </Tag>
+          </div>
+        )
+      },
+    },
+    {
+      headerName: 'Estado',
+      field: 'movimiento',
+      width: 150,
+      minWidth: 130,
+      valueGetter: (params: any) => {
+        const { estado } = parseMovimiento(params.data?.movimiento || '')
+        return estado
+      },
+      cellRenderer: (params: any) => {
+        const { estado } = parseMovimiento(params.data?.movimiento || '')
+        if (!estado) return null
+        return (
+          <div className='flex items-center h-full'>
+            <Tag color={estadoColors[estado] || 'default'} className='!m-0 text-xs'>
+              {estado}
             </Tag>
           </div>
         )
@@ -261,6 +337,16 @@ export default function KardexView() {
             </div>
           </div>
           <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Cliente</label>
+            <SelectClientes
+              className='!min-w-[250px] !w-[250px] !max-w-[250px]'
+              allowClear
+              onChange={(_id, cliente) => {
+                setClienteSeleccionado(cliente ?? undefined)
+              }}
+            />
+          </div>
+          <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Tipo</label>
             <Select
               className='!min-w-[140px] !w-[140px]'
@@ -347,19 +433,23 @@ export default function KardexView() {
           persistColumnState={false}
           quickFilterText={debouncedSearchText}
           getRowStyle={(params) => {
-            const mov = (params.data as MovimientoKardex)?.movimiento
-            if (mov === 'ANULADO' || mov === 'VENTA CONTADO (ANULADA)' || mov === 'VENTA CRÉDITO (ANULADA)') {
+            const movimiento = (params.data as MovimientoKardex)?.movimiento
+            const { estado } = parseMovimiento(movimiento || '')
+            
+            if (estado === 'ANULADA') {
               return { background: '#fef2f2' } as any
             }
-            if (mov === 'DEVOLUCION') return { background: '#ecfdf5' }
+            if (estado === 'DEVOLUCIÓN') {
+              return { background: '#ecfdf5' }
+            }
             return undefined
           }}
           optionsSelectColumns={[
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Tipo', 'Tipo Venta', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Tipo Venta', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
