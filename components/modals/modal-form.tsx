@@ -23,6 +23,10 @@ export default function ModalForm<T>({
     cancelText = 'Cancelar',
     cancelButtonProps = { className: 'rounded-xl' },
     okButtonProps = {},
+    // Por default destruimos al ocultar para liberar memoria; si el modal es
+    // pesado (muchos selects/queries), pasar destroyOnHidden=false hace que
+    // el primer open sea lento pero los siguientes sean instantáneos.
+    destroyOnHidden = true,
     ...restModalProps
   } = modalProps || {}
   const {
@@ -49,7 +53,7 @@ export default function ModalForm<T>({
         formProps?.form?.resetFields()
         onCancel?.()
       }}
-      destroyOnHidden
+      destroyOnHidden={destroyOnHidden}
       modalRender={dom => <FormBase<T> {...formProps}>{dom}</FormBase>}
     >
       {children}

@@ -50,7 +50,8 @@ export function useCuadres() {
 
         rawData.forEach((header: any) => {
             const headerId = header.id;
-            const fecha = dayjs(header.fecha).format('DD/MM/YYYY');
+            // Pasar la fecha cruda (con hora) — la tabla la formatea con formatFechaPeru.
+            const fecha = header.fecha;
             const numero = `${header.serie}-${String(header.numero).padStart(8, '0')}`;
             const proveedor = header.proveedor?.razon_social || header.proveedor_nombre || '---';
             const observacion = header.descripcion || header.observacion || '---';

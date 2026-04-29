@@ -149,13 +149,22 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Estado',
       field: 'estado_entrega',
       width: 130,
-      valueFormatter: (params) => {
+      cellRenderer: (params: any) => {
         const estado = params.value
-        if (estado === 'pe') return '⏳ Pendiente'
-        if (estado === 'ec') return '🚚 En Camino'
-        if (estado === 'en') return '✅ Entregado'
-        if (estado === 'ca') return '❌ Cancelado'
-        return estado || ''
+        const config: Record<string, { label: string; bg: string; text: string }> = {
+          'pe': { label: 'Pendiente',  bg: '#f1f5f9', text: '#475569' },
+          'ec': { label: 'En Camino',  bg: '#dbeafe', text: '#2563eb' },
+          'en': { label: 'Entregado',  bg: '#dcfce7', text: '#16a34a' },
+          'ca': { label: 'Cancelado',  bg: '#fee2e2', text: '#dc2626' },
+        }
+        const { label, bg, text } = config[estado] ?? { label: estado || '', bg: '#f1f5f9', text: '#475569' }
+        return (
+          <div className="flex items-center h-full">
+            <span style={{ background: bg, color: text, fontWeight: 'bold', fontSize: '11px', padding: '2px 8px', borderRadius: '9999px' }}>
+              {label}
+            </span>
+          </div>
+        )
       },
     },
     {

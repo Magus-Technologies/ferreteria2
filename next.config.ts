@@ -1,6 +1,27 @@
 import type { NextConfig } from 'next'
+import { execSync } from 'child_process'
+
+// Deployment ID único por build: usa env NEXT_DEPLOYMENT_ID (CI/CD) o
+// el git commit hash actual como fallback. Sirve para que Next.js detecte
+// pestañas viejas y las recargue limpiamente al hacer deploy.
+function getDeploymentId(): string {
+  if (process.env.NEXT_DEPLOYMENT_ID) return process.env.NEXT_DEPLOYMENT_ID
+  try {
+    return execSync('git rev-parse --short HEAD', { stdio: ['pipe', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+  } catch {
+    // Fallback final: timestamp del build
+    return `build-${Date.now()}`
+  }
+}
 
 const nextConfig: NextConfig = {
+  // ID único por deploy: cuando una pestaña tiene un build viejo y el server
+  // ya recibió uno nuevo, los assets/Server Actions del viejo responden 412
+  // y el cliente recarga limpiamente (sin errores feos en consola).
+  deploymentId: getDeploymentId(),
+
   eslint: {
     ignoreDuringBuilds: true,
   },

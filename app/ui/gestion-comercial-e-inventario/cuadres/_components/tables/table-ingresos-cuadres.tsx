@@ -5,6 +5,7 @@ import { ColDef } from "ag-grid-community";
 import { useMemo } from "react";
 import { Button, Checkbox, Popconfirm, message, Tag } from "antd";
 import { FaBan } from "react-icons/fa6";
+import { formatFechaPeru } from "~/utils/fechas";
 
 import { useCuadresContext } from "../../_contexts/cuadres-context";
 
@@ -21,7 +22,14 @@ export default function TableIngresosCuadres() {
     };
 
     const columns = useMemo<ColDef[]>(() => [
-        { headerName: "Fecha", field: "fecha", width: 100 },
+        {
+            headerName: "Fecha",
+            field: "fecha",
+            width: 200,
+            valueFormatter: (p) =>
+                p.value ? formatFechaPeru(p.value, "DD/MM/YYYY hh:mm:ss A") : "-",
+            sort: "desc",
+        },
         { headerName: "Numero", field: "numero", width: 110, cellClass: "font-mono" },
         { headerName: "Descripcion", field: "descripcion", flex: 1, minWidth: 200 },
         { headerName: "Marca", field: "marca", width: 100 },

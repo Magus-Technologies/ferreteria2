@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { FaMapMarkedAlt, FaTruck, FaBoxOpen, FaCheck, FaEye, FaSplotch, FaPlusCircle } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
+import { FaMapMarkedAlt, FaEye } from 'react-icons/fa'
 import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
@@ -35,6 +35,21 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const { message } = useApp()
   const queryClient = useQueryClient()
   const openPostDespacho = useStoreEntregaSeleccionada((s) => s.openPostDespacho)
+  const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
+  const accionTrigger = useStoreEntregaSeleccionada((s) => s.accionTrigger)
+  const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
+
+  // Escuchar el trigger del botón principal (filter) — solo la fila seleccionada
+  // responde al trigger y abre el modal correspondiente.
+  useEffect(() => {
+    if (!accionTrigger || !entrega) return
+    if (entregaSeleccionada?.id !== entrega.id) return
+    if (accionTrigger === 'despachar') setModalDespachoOpen(true)
+    else if (accionTrigger === 'marcar') setModalMarcarOpen(true)
+    else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
+    triggerAccion(null) // resetear el trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accionTrigger])
 
   if (!entrega) return null
 
@@ -213,76 +228,30 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         </ConfigurableElement>
 
         {esPedidoExternoDisponible && (
-          <Tooltip title="Aceptar Pedido">
-            <Button
-              type="text"
-              size="small"
-              loading={loading}
-              icon={<FaCheck size={15} />}
-              onClick={handleAceptar}
-              className="!text-green-600 hover:!bg-green-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-            />
-          </Tooltip>
-        )}
-
-        {estadoEntrega === 'PENDIENTE' && esRecojoTienda && (
-          <Tooltip title="Marcar Entregada">
-            <Button
-              type="text"
-              size="small"
-              icon={<FaCheck size={15} />}
-              onClick={() => setModalMarcarOpen(true)}
-              className="!text-green-600 hover:!bg-green-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-            />
-          </Tooltip>
-        )}
-
-        {estadoEntrega === 'PENDIENTE' && !esRecojoTienda && (
-          <ConfigurableElement
-            componentId="mis-entregas.boton-en-camino"
-            label="Botón En Camino"
-            noFullWidth
+          <Button
+            type="primary"
+            size="small"
+            loading={loading}
+            onClick={handleAceptar}
+            className="!bg-green-600 hover:!bg-green-700 !border-none !font-semibold"
           >
-            <Tooltip title="Despachar">
-              <Button
-                type="text"
-                size="small"
-                icon={<FaTruck size={15} />}
-                onClick={() => setModalDespachoOpen(true)}
-                className="!text-orange-600 hover:!bg-orange-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-              />
-            </Tooltip>
-          </ConfigurableElement>
+            Aceptar
+          </Button>
         )}
+
+        {/* El botón principal "Entregar/Despachar/Confirmar" se movió arriba al
+            lado de Buscar (en filters-mis-entregas). Solo aplica a la fila
+            SELECCIONADA y se dispara desde ahí vía store. */}
 
         {estadoEntrega === 'PENDIENTE' && (entrega.productos_entregados?.length || 0) > 0 && (
-          <Tooltip title="Entregar Parcial">
-            <Button
-              type="text"
-              size="small"
-              icon={<FaSplotch size={15} />}
-              onClick={() => setModalParcialOpen(true)}
-              className="!text-amber-600 hover:!bg-amber-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-            />
-          </Tooltip>
-        )}
-
-        {estadoEntrega === 'EN_CAMINO' && (
-          <ConfigurableElement
-            componentId="mis-entregas.boton-entregar"
-            label="Botón Entregar"
-            noFullWidth
+          <Button
+            type="default"
+            size="small"
+            onClick={() => setModalParcialOpen(true)}
+            className="!border-amber-500 !text-amber-700 hover:!bg-amber-50 !font-semibold"
           >
-            <Tooltip title="Confirmar Entrega">
-              <Button
-                type="text"
-                size="small"
-                icon={<FaBoxOpen size={15} />}
-                onClick={() => setModalConfirmarOpen(true)}
-                className="!text-green-600 hover:!bg-green-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-              />
-            </Tooltip>
-          </ConfigurableElement>
+            Parcial
+          </Button>
         )}
 
         {tieneRestante && (
@@ -291,16 +260,15 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
             label="Botón Entregar Restante"
             noFullWidth
           >
-            <Tooltip title="Entregar Restante (crear nueva entrega para lo pendiente de la venta)">
-              <Button
-                type="text"
-                size="small"
-                loading={loadingRestante}
-                icon={<FaPlusCircle size={15} />}
-                onClick={handleAbrirRestante}
-                className="!text-purple-600 hover:!bg-purple-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-              />
-            </Tooltip>
+            <Button
+              type="default"
+              size="small"
+              loading={loadingRestante}
+              onClick={handleAbrirRestante}
+              className="!border-purple-500 !text-purple-700 hover:!bg-purple-50 !font-semibold"
+            >
+              Restante
+            </Button>
           </ConfigurableElement>
         )}
       </Space>

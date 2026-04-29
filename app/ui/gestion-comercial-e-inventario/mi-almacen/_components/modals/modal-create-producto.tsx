@@ -202,6 +202,10 @@ export default function ModalCreateProducto({
         centered: true,
         okButtonProps: { loading, disabled: loading },
         okText: isEditing ? 'Editar' : isDuplicate ? 'Duplicar' : 'Crear',
+        // Mantener el modal montado entre aperturas: la primera carga es lenta
+        // (1.5s aprox por los 5+ selects con queries) pero las siguientes
+        // aperturas son instantáneas porque no hay que remontar nada.
+        destroyOnHidden: false,
       }}
       onCancel={() => {
         resetArchivos()

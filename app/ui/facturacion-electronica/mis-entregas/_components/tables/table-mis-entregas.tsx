@@ -7,7 +7,7 @@ import useGetEntregas from '../../_hooks/use-get-entregas'
 import { create } from 'zustand'
 import type { AgGridReact } from 'ag-grid-react'
 import type { RowStyle } from 'ag-grid-community'
-import { orangeColors, greenColors, blueColors, redColors } from '~/lib/colors'
+import { greenColors, blueColors, redColors } from '~/lib/colors'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalPostDespacho from '../modals/modal-post-despacho'
 
@@ -36,6 +36,8 @@ interface EntregaDB {
   productosEntregados?: any[]
 }
 
+type AccionEntrega = 'despachar' | 'marcar' | 'confirmar' | null
+
 type UseStoreEntregaSeleccionada = {
   entrega?: EntregaDB
   setEntrega: (entrega: EntregaDB | undefined) => void
@@ -44,6 +46,10 @@ type UseStoreEntregaSeleccionada = {
   postDespachoOpen: boolean
   openPostDespacho: (entrega: any) => void
   closePostDespacho: () => void
+  // Trigger desde el botón principal del filter para abrir el modal
+  // de acción correspondiente al estado actual de la entrega seleccionada.
+  accionTrigger: AccionEntrega
+  triggerAccion: (accion: AccionEntrega) => void
 }
 
 export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
@@ -54,22 +60,25 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
     postDespachoOpen: false,
     openPostDespacho: (entrega) => set({ postDespachoOpen: true, postDespachoEntrega: entrega }),
     closePostDespacho: () => set({ postDespachoOpen: false, postDespachoEntrega: undefined }),
+    accionTrigger: null,
+    triggerAccion: (accion) => set({ accionTrigger: accion }),
   })
 )
 
-// Función para calcular el color de una entrega
+// Función para calcular el color de una entrega.
+// Convención al estilo mis-ventas: el estado default (Pendiente) es transparente
+// para no saturar visualmente. Solo se pintan los estados que requieren atención.
 function calcularColorEntrega(entrega: EntregaDB): string {
   const estado = entrega.estado_entrega
 
   switch (estado) {
-    case 'pe': // Pendiente
-      return orangeColors[2]
-    case 'ec': // En Camino
+    case 'ec': // En Camino — destaca para que se vea que está en proceso
       return blueColors[2]
-    case 'en': // Entregado
+    case 'en': // Entregado — verde para indicar éxito/completado
       return greenColors[2]
-    case 'ca': // Cancelado
+    case 'ca': // Cancelado — rojo para distinguir
       return redColors[2]
+    case 'pe': // Pendiente — sin color (es el default esperado)
     default:
       return 'transparent'
   }
@@ -119,7 +128,7 @@ export default function TableMisEntregas() {
             id="mis-entregas"
             title="MIS ENTREGAS"
             loading={loading}
-            selectionColor={orangeColors[10]}
+            selectionColor="overlay"
             columnDefs={useColumnsMisEntregas(refetch)}
             rowData={entregas || []}
             tableRef={tableRef}

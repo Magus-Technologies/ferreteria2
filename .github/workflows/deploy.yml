@@ -1,0 +1,77 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: ['master']
+  workflow_dispatch: # permite disparar manualmente desde GitHub UI
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      # Variables NEXT_PUBLIC_* se compilan estáticamente en el bundle JS
+      # durante el build, así que tienen que estar disponibles en GitHub Actions.
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN }}
+      NEXT_PUBLIC_REVERB_APP_KEY: ${{ secrets.NEXT_PUBLIC_REVERB_APP_KEY }}
+      NEXT_PUBLIC_REVERB_HOST: ${{ secrets.NEXT_PUBLIC_REVERB_HOST }}
+      NEXT_PUBLIC_REVERB_PORT: ${{ secrets.NEXT_PUBLIC_REVERB_PORT }}
+      IGNORE_BUILD_ERRORS: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:server
+
+      - name: Create tarball of build artifacts
+        run: |
+          tar -czf deploy.tar.gz .next public package.json package-lock.json ecosystem.config.js next.config.ts
+
+      - name: Copy build to server via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: 'deploy.tar.gz'
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Extract and reload on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
+            # npm ci (no --production) porque next.config.ts requiere TypeScript
+            # que está en devDependencies. Sin él, Next.js no arranca.
+            npm ci
+            pm2 reload ferreteriav2 --update-env || pm2 start ecosystem.config.js --only ferreteriav2 --update-env
+            echo "✅ Deploy completado: $(date)"
