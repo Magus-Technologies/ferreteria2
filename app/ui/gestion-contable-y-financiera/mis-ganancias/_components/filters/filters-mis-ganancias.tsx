@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useQuery } from "@tanstack/react-query";
 import { clienteApi } from "~/lib/api/cliente";
+import { despliegueDePagoApi } from "~/lib/api/despliegue-de-pago";
 import { useDebounce } from "use-debounce";
 
 interface ValuesFiltersMisGanancias {
@@ -53,6 +54,12 @@ export default function FiltersMisGanancias() {
       per_page: 20 
     }),
     enabled: true, // Siempre habilitado para mostrar algunos clientes por defecto
+  });
+
+  // Query para obtener despliegues de pago
+  const { data: desplieguesData, isLoading: desplieguesLoading } = useQuery({
+    queryKey: ['despliegues-de-pago'],
+    queryFn: () => despliegueDePagoApi.getAll({ mostrar: true }),
   });
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
@@ -379,11 +386,19 @@ export default function FiltersMisGanancias() {
                   allowClear
                   placeholder="Todas"
                   className="w-full"
-                  options={[
-                    { value: 'E', label: 'Efectivo' },
-                    { value: 'D', label: 'Digital' },
-                    { value: 'T', label: 'Transferencia' },
-                  ]}
+                  loading={desplieguesLoading}
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={
+                    desplieguesData?.data?.data
+                      ? desplieguesData.data.data.map((despliegue) => ({
+                          value: despliegue.id,
+                          label: despliegue.name.toUpperCase(),
+                        }))
+                      : []
+                  }
                 />
               </Form.Item>
             </ConfigurableElement>

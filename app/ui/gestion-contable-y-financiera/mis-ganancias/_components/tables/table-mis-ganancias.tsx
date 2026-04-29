@@ -7,12 +7,45 @@ import { useGetGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-gana
 import { useStoreFiltrosMisGanancias } from '~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias'
 import { Spin } from 'antd'
 import type { GananciaDetalle } from '~/lib/api/ganancias'
+import { useQuery } from '@tanstack/react-query'
+import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
 
 export default function TableMisGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading, error } = useGetGanancias(filtros)
 
+  // Query para obtener despliegues de pago
+  const { data: desplieguesData } = useQuery({
+    queryKey: ['despliegues-de-pago'],
+    queryFn: () => despliegueDePagoApi.getAll({ mostrar: true }),
+  })
+
   const rowData = data?.data?.data || []
+
+  // Crear mapa de despliegues de pago para conversión rápida
+  const despliegueMap = useMemo(() => {
+    if (!desplieguesData?.data?.data) return {}
+    return desplieguesData.data.data.reduce((acc, despliegue) => {
+      acc[despliegue.id] = despliegue.name.toUpperCase()
+      return acc
+    }, {} as Record<string, string>)
+  }, [desplieguesData])
+
+  // Mapeo de códigos a nombres completos
+  const tipoDocMap: Record<string, string> = {
+    '01': 'FACTURA',
+    '03': 'BOLETA',
+    '07': 'NOTA CRÉDITO',
+    '08': 'NOTA DÉBITO',
+    'GR': 'GUÍA REMISIÓN',
+    'CO': 'COTIZACIÓN',
+    'PR': 'PRÉSTAMO',
+  }
+
+  const formaPagoMap: Record<string, string> = {
+    'co': 'CONTADO',
+    'cr': 'CRÉDITO',
+  }
 
   // Tipamos ColDef con GananciaDetalle para mejor soporte de TS
   const columns = useMemo<ColDef<GananciaDetalle>[]>(() => [
@@ -32,9 +65,10 @@ export default function TableMisGanancias() {
       valueFormatter: (p) => p.value || '-',
     },
     {
-      headerName: 'T.DOC',
+      headerName: 'TIPO DOCUMENTO',
       field: 'tipo_doc',
-      width: 70,
+      width: 140,
+      valueFormatter: (p) => tipoDocMap[p.value?.toUpperCase() || ''] || p.value || '-',
     },
     {
       headerName: 'NUMERO',
@@ -43,9 +77,10 @@ export default function TableMisGanancias() {
       cellClass: 'font-mono text-xs',
     },
     {
-      headerName: 'F.PAGO',
+      headerName: 'FORMA PAGO',
       field: 'f_pago',
-      width: 75,
+      width: 110,
+      valueFormatter: (p) => formaPagoMap[p.value?.toLowerCase() || ''] || p.value || '-',
     },
     {
       headerName: 'CLIENTE',
@@ -92,9 +127,10 @@ export default function TableMisGanancias() {
       cellStyle: { fontWeight: 'bold' } as CellStyle,
     },
     {
-      headerName: 'C.CAJ',
+      headerName: 'C.CAJA',
       field: 'cc',
-      width: 65,
+      width: 130,
+      valueFormatter: (p) => despliegueMap[p.value] || p.value || '-',
     },
     {
       headerName: 'COSTO',
@@ -116,7 +152,7 @@ export default function TableMisGanancias() {
         background: (p.value ?? 0) >= 0 ? '#f0fdf4' : '#fef2f2',
       }),
     },
-  ], [])
+  ], [despliegueMap])
 
   // ... resto del componente (isLoading, error, return) igual
   if (isLoading) return <div className="flex items-center justify-center h-64"><Spin size="large" /></div>
