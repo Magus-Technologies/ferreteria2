@@ -69,6 +69,28 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
   const cobros = cobrosData?.data ?? []
 
+  // Query para obtener despliegues de pago y setear Efectivo por defecto
+  const { data: desplieguesData } = useQuery({
+    queryKey: [QueryKeys.DESPLIEGUES_DE_PAGO],
+    queryFn: async () => {
+      const { despliegueDePagoApi } = await import('~/lib/api/despliegue-de-pago')
+      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      return result.data?.data || []
+    },
+  })
+
+  // Setear Efectivo por defecto cuando se abre el modal
+  useEffect(() => {
+    if (open && desplieguesData && desplieguesData.length > 0) {
+      const efectivo = desplieguesData.find((d: any) =>
+        d.name?.toUpperCase().includes('EFECTIVO') || d.name?.toUpperCase().includes('CCH')
+      )
+      if (efectivo) {
+        form.setFieldsValue({ despliegue_de_pago_id: efectivo.id })
+      }
+    }
+  }, [open, desplieguesData, form])
+
   // Estado para modal de ticket de cobro
   const [ticketModalOpen, setTicketModalOpen] = useState(false)
   const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)

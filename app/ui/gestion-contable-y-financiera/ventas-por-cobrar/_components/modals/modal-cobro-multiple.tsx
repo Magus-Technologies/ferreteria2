@@ -50,11 +50,30 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   const [ventasDistribucion, setVentasDistribucion] = useState<VentaConDistribucion[]>([])
   const [montoTotal, setMontoTotal] = useState<number>(0)
 
+  // Query para obtener despliegues de pago
+  const { data: desplieguesData } = useQuery({
+    queryKey: [QueryKeys.DESPLIEGUES_DE_PAGO],
+    queryFn: async () => {
+      const { despliegueDePagoApi } = await import('~/lib/api/despliegue-de-pago')
+      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      return result.data?.data || []
+    },
+  })
+
   useEffect(() => {
     if (open) {
       form.setFieldValue('fecha', dayjs())
+      // Setear Efectivo por defecto
+      if (desplieguesData && desplieguesData.length > 0) {
+        const efectivo = desplieguesData.find((d: any) =>
+          d.name?.toUpperCase().includes('EFECTIVO') || d.name?.toUpperCase().includes('CCH')
+        )
+        if (efectivo) {
+          form.setFieldValue('despliegue_de_pago_id', efectivo.id)
+        }
+      }
     }
-  }, [open, form])
+  }, [open, form, desplieguesData])
 
   const { data: ventasData, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS_POR_COBRAR, 'cobro-multiple', clienteId],

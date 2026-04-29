@@ -94,7 +94,10 @@ export default function FiltersVentasPorCobrar() {
     <FormBase
       form={form}
       name='filtros-ventas-por-cobrar'
-      initialValues={{}}
+      initialValues={{
+        desde: dayjs().startOf('day'),
+        hasta: dayjs().endOf('day'),
+      }}
       className='w-full'
       onFinish={values => {
         setQuickFilterActive('todas')
