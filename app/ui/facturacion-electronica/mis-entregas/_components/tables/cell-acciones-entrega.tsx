@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FaMapMarkedAlt, FaEye } from 'react-icons/fa'
+import { FaMapMarkedAlt, FaEye, FaTruck } from 'react-icons/fa'
 import { Button, Space, Tooltip } from 'antd'
 import useApp from 'antd/es/app/useApp'
+import { useRouter } from 'next/navigation'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
 import { ventaApi, type getVentaResponseProps } from '~/lib/api/venta'
 import { useQueryClient } from '@tanstack/react-query'
@@ -23,6 +24,7 @@ interface CellAccionesEntregaProps {
 }
 
 export default function CellAccionesEntrega({ entrega, onRefetch }: CellAccionesEntregaProps) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [modalDespachoOpen, setModalDespachoOpen] = useState(false)
   const [modalConfirmarOpen, setModalConfirmarOpen] = useState(false)
@@ -57,6 +59,18 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const tieneRestante = (entrega.productos_entregados || []).some(
     (p: any) => Number(p?.unidad_derivada_venta?.cantidad_pendiente || 0) > 0,
   )
+
+  const handleCrearGuia = () => {
+    if (!entrega.venta_id) {
+      message.error('No se pudo identificar la venta')
+      return
+    }
+    // Pasar venta_id + datos del chofer/vehículo de la entrega para pre-llenar la guía
+    const params = new URLSearchParams({ venta_id: entrega.venta_id })
+    if (entrega.chofer_id) params.set('chofer_id', String(entrega.chofer_id))
+    if (entrega.vehiculo?.placa) params.set('vehiculo_placa', String(entrega.vehiculo.placa))
+    router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
+  }
 
   const handleAbrirRestante = async () => {
     if (!entrega.venta_id) {
@@ -214,6 +228,22 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
               icon={<FaMapMarkedAlt size={15} />}
               onClick={() => openPostDespacho(entrega)}
               className="!text-blue-600 hover:!bg-blue-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+            />
+          </Tooltip>
+        </ConfigurableElement>
+
+        <ConfigurableElement
+          componentId="mis-entregas.boton-crear-guia"
+          label="Botón Crear Guía"
+          noFullWidth
+        >
+          <Tooltip title="Crear Guía de Remisión">
+            <Button
+              type="text"
+              size="small"
+              icon={<FaTruck size={15} />}
+              onClick={handleCrearGuia}
+              className="!text-cyan-700 hover:!bg-cyan-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
             />
           </Tooltip>
         </ConfigurableElement>

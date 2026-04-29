@@ -16,6 +16,8 @@ export default function useInitGuia({
 }) {
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
+  const choferIdParam = searchParams.get('chofer_id')
+  const vehiculoPlacaParam = searchParams.get('vehiculo_placa')
   const { data: empresa } = useEmpresaPublica()
 
   // Obtener datos de la venta si viene el parámetro
@@ -82,6 +84,9 @@ export default function useInitGuia({
         direccion_seleccionada: 'D1',
         // Referencia a la venta
         referencia: `Venta ${venta.serie}-${venta.numero}`,
+        // Pre-llenar chofer/placa si vienen por URL (desde mis-entregas)
+        ...(choferIdParam ? { chofer_id: choferIdParam } : {}),
+        ...(vehiculoPlacaParam ? { vehiculo_placa: vehiculoPlacaParam } : {}),
         // Productos
         productos,
       })
@@ -107,7 +112,7 @@ export default function useInitGuia({
         productos: [],
       })
     }
-  }, [guia, venta, isLoading, form, empresa])
+  }, [guia, venta, isLoading, form, empresa, choferIdParam, vehiculoPlacaParam])
 
   return { venta, isLoading }
 }

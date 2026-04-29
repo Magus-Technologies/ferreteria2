@@ -67,7 +67,11 @@ export function useCuadres() {
                 detail.unidades_derivadas?.forEach((ud: any) => {
                     const cantidad = Number(ud.cantidad || 0);
                     const uMedida = ud.unidad_derivada_inmutable?.name || '---';
-                    const total = costo * cantidad;
+                    // El costo guardado en `detail.costo` es por la unidad base (factor 1).
+                    // Para la unidad derivada actual, el precio unitario es costo_base × factor.
+                    const factor = Number(ud.factor || 1);
+                    const precioUnitario = costo * factor;
+                    const total = precioUnitario * cantidad;
 
                     transformed.push({
                         id: `${headerId}-${detail.id}-${ud.id}`,
@@ -77,7 +81,7 @@ export function useCuadres() {
                         marca,
                         cantidad,
                         unidad_medida: uMedida,
-                        precio: costo,
+                        precio: precioUnitario,
                         proveedor,
                         observacion,
                         usuario,
