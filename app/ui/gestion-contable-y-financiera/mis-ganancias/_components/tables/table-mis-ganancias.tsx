@@ -37,9 +37,18 @@ export default function TableMisGanancias() {
     '03': 'BOLETA',
     '07': 'NOTA CRÉDITO',
     '08': 'NOTA DÉBITO',
+    'nv': 'NOTA DE VENTA',
+    'NV': 'NOTA DE VENTA',
     'GR': 'GUÍA REMISIÓN',
+    'gr': 'GUÍA REMISIÓN',
     'CO': 'COTIZACIÓN',
+    'co': 'COTIZACIÓN',
     'PR': 'PRÉSTAMO',
+    'pr': 'PRÉSTAMO',
+    'BOL': 'BOLETA',
+    'FAC': 'FACTURA',
+    'NC': 'NOTA CRÉDITO',
+    'ND': 'NOTA DÉBITO',
   }
 
   const formaPagoMap: Record<string, string> = {
