@@ -16,6 +16,10 @@ export interface MovimientoKardex {
   costo: number
   entrada: number
   salida: number
+  stock_anterior: number
+  cant_ingreso: number
+  cant_salida: number
+  stock_actual: number
   saldo: number | null
   saldo_anterior: number | null
   referencia_id: string | number
@@ -73,7 +77,7 @@ export const kardexApi = {
       }
     })
 
-    return apiRequest<KardexResponse>(`/kardex?${params.toString()}`)
+    return apiRequest<KardexResponse>(`/kardex-facturacion?${params.toString()}`)
   },
 
   async getMovimientosInventario(filters: KardexInventarioFilters): Promise<ApiResponse<KardexResponse>> {
@@ -85,7 +89,7 @@ export const kardexApi = {
       }
     })
 
-    return apiRequest<KardexResponse>(`/kardex/inventario?${params.toString()}`)
+    return apiRequest<KardexResponse>(`/kardex-inventario?${params.toString()}`)
   },
 
   async getMovimientosFinanzas(filters: KardexFinanzasFilters): Promise<ApiResponse<KardexResponse>> {

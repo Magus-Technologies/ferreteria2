@@ -170,7 +170,7 @@ export default function KardexView() {
     },
     {
       headerName: 'Stock Anterior',
-      field: 'saldo_anterior' as keyof MovimientoKardex,
+      field: 'stock_anterior' as keyof MovimientoKardex,
       width: 115,
       minWidth: 100,
       type: 'numericColumn' as const,
@@ -212,7 +212,7 @@ export default function KardexView() {
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Stock Actual',
-      field: 'saldo' as keyof MovimientoKardex,
+      field: 'stock_actual' as keyof MovimientoKardex,
       width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
@@ -330,7 +330,7 @@ export default function KardexView() {
       {/* Tabla */}
       <div className='h-[calc(100vh-380px)] min-h-[300px]'>
         <TableWithTitle<MovimientoKardex>
-          id='kardex.movimientos'
+          id='kardex.movimientos.facturacion'
           title={productoId ? 'Movimientos' : 'Todos los Movimientos de Hoy'}
           selectionColor={orangeColors[10]}
           loading={isFetching || isSearching}

@@ -172,7 +172,7 @@ export default function KardexInventarioView() {
     },
     {
       headerName: 'Stock Anterior',
-      field: 'saldo_anterior' as keyof MovimientoKardex,
+      field: 'stock_anterior' as keyof MovimientoKardex,
       width: 115,
       minWidth: 100,
       type: 'numericColumn' as const,
@@ -214,7 +214,7 @@ export default function KardexInventarioView() {
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Stock Actual',
-      field: 'saldo' as keyof MovimientoKardex,
+      field: 'stock_actual' as keyof MovimientoKardex,
       width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
