@@ -1,7 +1,7 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaTruck, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan } from "react-icons/fa";
+import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan } from "react-icons/fa";
 import { MoreOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { Dropdown, message } from "antd";
@@ -120,10 +120,6 @@ export default function CellAccionesVentaDropdown(
 
   const handleVerPDF = () => {
     openModal(ventaId);
-  };
-
-  const handleCrearGuia = () => {
-    router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?venta_id=${ventaId}`);
   };
 
   const handleEnviarSunat = async () => {
@@ -258,11 +254,6 @@ export default function CellAccionesVentaDropdown(
       key: 'pdf',
       label: <span className="flex items-center gap-2"><FaFilePdf className="text-red-600" /> Ver PDF</span>,
       onClick: handleVerPDF,
-    },
-    {
-      key: 'guia',
-      label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Crear Guía</span>,
-      onClick: handleCrearGuia,
     },
     ...(tieneRestante
       ? [

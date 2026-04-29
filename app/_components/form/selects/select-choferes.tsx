@@ -39,17 +39,30 @@ export default function SelectChoferes({
     if (text) setTextDefault(text)
   }, [text])
 
-  // Sincronizar valor inicial del formulario
+  // Sincronizar valor inicial del formulario: si el form ya trae un chofer_id
+  // (ej. al editar o pre-llenar desde mis-entregas), traer el chofer del backend
+  // y mostrarlo como opción seleccionada en el SelectBase.
+  const initialIdRef = useRef<number | string | undefined>(undefined)
   useEffect(() => {
-    if (form && propsForm?.name) {
-      const valorInicial = form.getFieldValue(propsForm.name as string);
+    if (!form || !propsForm?.name) return
+    const valorInicial = form.getFieldValue(propsForm.name as string)
+    if (!valorInicial || choferSeleccionado) return
+    if (initialIdRef.current === valorInicial) return // ya intentamos cargar este id
+    initialIdRef.current = valorInicial
 
-      if (valorInicial && !choferSeleccionado) {
-        // Si hay un valor pero no hay chofer seleccionado, necesitamos buscarlo
+    const idNum = Number(valorInicial)
+    if (!Number.isFinite(idNum)) return
 
+    choferApi.getById(idNum).then(res => {
+      const chofer = res.data?.data ?? (res.data as any)
+      if (chofer && chofer.id) {
+        setChoferSeleccionado(chofer)
+        setText(`${chofer.dni} : ${chofer.nombres} ${chofer.apellidos}`)
       }
-    }
-  }, [form, propsForm, choferSeleccionado]);
+    }).catch(() => {
+      // Silenciar errores: si no se puede traer el chofer, el select queda vacío
+    })
+  }, [form, propsForm, choferSeleccionado])
 
   const [value] = useDebounce(text, 1000)
 

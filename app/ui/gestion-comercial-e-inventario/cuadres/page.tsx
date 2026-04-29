@@ -38,13 +38,13 @@ export default function CuadresPage() {
 
                             {/* Columna Principal: Tablas */}
                             <div className="flex flex-col gap-6 min-w-0">
-                                <div className="h-[400px]">
+                                <div className="h-[300px]">
                                     <Suspense fallback={<ComponentLoading />}>
                                         <TableIngresosCuadres />
                                     </Suspense>
                                 </div>
 
-                                <div className="h-[350px]">
+                                <div className="h-[250px]">
                                     <Suspense fallback={<ComponentLoading />}>
                                         <TableSalidasCuadres />
                                     </Suspense>

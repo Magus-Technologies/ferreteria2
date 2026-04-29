@@ -6,6 +6,8 @@ import { useMemo } from "react";
 import { Button, Checkbox, Popconfirm, message, Tag } from "antd";
 import { FaBan } from "react-icons/fa6";
 import { formatFechaPeru } from "~/utils/fechas";
+import { greenColors } from '~/lib/colors'
+
 
 import { useCuadresContext } from "../../_contexts/cuadres-context";
 
@@ -109,6 +111,7 @@ export default function TableIngresosCuadres() {
         <TableWithTitle
             id="cuadres-ingresos-table"
             title="Nota de Ingresos"
+            selectionColor={greenColors[10]}
             columnDefs={columns}
             rowData={ingresos}
             loading={loading}
