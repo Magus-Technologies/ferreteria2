@@ -7,7 +7,7 @@ import useGetEntregas from '../../_hooks/use-get-entregas'
 import { create } from 'zustand'
 import type { AgGridReact } from 'ag-grid-react'
 import type { RowStyle } from 'ag-grid-community'
-import { orangeColors, greenColors, blueColors, redColors } from '~/lib/colors'
+import { greenColors, blueColors, redColors } from '~/lib/colors'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalPostDespacho from '../modals/modal-post-despacho'
 
@@ -128,7 +128,7 @@ export default function TableMisEntregas() {
             id="mis-entregas"
             title="MIS ENTREGAS"
             loading={loading}
-            selectionColor={orangeColors[10]}
+            selectionColor="overlay"
             columnDefs={useColumnsMisEntregas(refetch)}
             rowData={entregas || []}
             tableRef={tableRef}
