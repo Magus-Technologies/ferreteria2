@@ -65,19 +65,20 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
   })
 )
 
-// Función para calcular el color de una entrega
+// Función para calcular el color de una entrega.
+// Convención al estilo mis-ventas: el estado default (Pendiente) es transparente
+// para no saturar visualmente. Solo se pintan los estados que requieren atención.
 function calcularColorEntrega(entrega: EntregaDB): string {
   const estado = entrega.estado_entrega
 
   switch (estado) {
-    case 'pe': // Pendiente
-      return orangeColors[2]
-    case 'ec': // En Camino
+    case 'ec': // En Camino — destaca para que se vea que está en proceso
       return blueColors[2]
-    case 'en': // Entregado
+    case 'en': // Entregado — verde para indicar éxito/completado
       return greenColors[2]
-    case 'ca': // Cancelado
+    case 'ca': // Cancelado — rojo para distinguir
       return redColors[2]
+    case 'pe': // Pendiente — sin color (es el default esperado)
     default:
       return 'transparent'
   }

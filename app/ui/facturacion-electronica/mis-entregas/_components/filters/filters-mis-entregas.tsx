@@ -16,7 +16,7 @@ import NotificationPermissionButton from '~/components/notifications/notificatio
 import { useAuth } from '~/lib/auth-context'
 import { useDebounce } from 'use-debounce'
 import { useState, useEffect } from 'react'
-import { orangeColors, blueColors, greenColors, redColors } from '~/lib/colors'
+import { blueColors, greenColors, redColors } from '~/lib/colors'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -296,7 +296,7 @@ export default function FiltersMisEntregas() {
           <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">
             <span className="font-semibold text-gray-700">Leyenda:</span>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: orangeColors[2] }} />
+              <div className="w-4 h-4 rounded border border-gray-300 bg-white" />
               <span className="text-gray-600">Pendiente</span>
             </div>
             <div className="flex items-center gap-1.5">
