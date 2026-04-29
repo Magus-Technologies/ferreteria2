@@ -54,11 +54,11 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
   const cobrosFiltrados = useMemo(() => {
     let filtered = allCobros ?? []
 
-    // Filtrar por fecha del cobro
+    // Filtrar por fecha del cobro (inclusivo en ambos extremos)
     filtered = filtered.filter(cobro => {
       const fechaCobro = dayjs(cobro.fecha)
-      return fechaCobro.isSame(fechaDesde, 'day') || fechaCobro.isSame(fechaHasta, 'day') ||
-        (fechaCobro.isAfter(fechaDesde, 'day') && fechaCobro.isBefore(fechaHasta, 'day'))
+      return (fechaCobro.isSame(fechaDesde, 'day') || fechaCobro.isAfter(fechaDesde, 'day')) &&
+             (fechaCobro.isSame(fechaHasta, 'day') || fechaCobro.isBefore(fechaHasta, 'day'))
     })
 
     // Filtrar por texto
