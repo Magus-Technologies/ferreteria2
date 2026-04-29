@@ -145,7 +145,9 @@ export default function ModalMetodosPagoCompra({
 
       setMetodosPago([...metodosPago, {
         id: Date.now().toString(),
-        despliegue_de_pago_id: values.despliegue_de_pago_id,
+        despliegue_de_pago_id: values.despliegue_de_pago_id.includes('-') 
+          ? values.despliegue_de_pago_id.split('-')[1] // Extraer solo el ID después del guión
+          : values.despliegue_de_pago_id, // Si no tiene guión, usar el valor completo
         despliegue_name: despliegueName,
         monto: montoFinal,
         referencia: values.referencia || undefined,
