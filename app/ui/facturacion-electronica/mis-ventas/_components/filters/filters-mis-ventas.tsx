@@ -31,6 +31,8 @@ import { redColors, orangeColors, greenColors } from "~/lib/colors";
 import { configuracionApi } from "~/lib/api/configuracion";
 import { ventaApi, type VentaCompleta } from "~/lib/api/venta";
 import { Input } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface ValuesFiltersMisVentas {
   almacen_id: number;
@@ -54,6 +56,7 @@ export default function FiltersMisVentas() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
   const [serieNumeroInput, setSerieNumeroInput] = useState("");
+  const queryClient = useQueryClient();
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const ventaSeleccionada = useStoreVentaSeleccionada((state) => state.venta);
@@ -190,6 +193,10 @@ export default function FiltersMisVentas() {
 
     setFiltros(data);
     setDrawerOpen(false);
+
+    // Forzar refetch aunque los filtros no hayan cambiado, para que se vea
+    // el overlay "Cargando..." siempre que el usuario presiona Buscar.
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] });
   };
 
   return (
@@ -202,7 +209,6 @@ export default function FiltersMisVentas() {
       }}
       className="w-full"
       onFinish={handleFinish}
-      onValuesChange={() => form.submit()}
     >
       <TituloModulos
         title="Mis Ventas"
