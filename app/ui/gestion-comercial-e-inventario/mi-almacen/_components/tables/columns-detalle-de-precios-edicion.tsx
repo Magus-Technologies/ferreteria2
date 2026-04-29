@@ -20,6 +20,7 @@ export function useColumnsDetalleDePreciosEdicion({
   const columns: ColDef<FormListFieldData>[] = [
     {
       headerName: 'Formato de Venta',
+      colId: 'formato_venta',
       field: 'name',
       minWidth: 180,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -65,6 +66,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Factor',
+      colId: 'factor',
       field: 'name',
       minWidth: 110,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -115,6 +117,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Prod. Complementario',
+      colId: 'producto_complementario',
       field: 'name',
       width: 280,
       minWidth: 220,
@@ -189,6 +192,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Cant. Compl.',
+      colId: 'cantidad_complementario',
       field: 'name',
       minWidth: 100,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -211,6 +215,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'P. Compra',
+      colId: 'p_compra',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -270,6 +275,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: '% Venta',
+      colId: 'p_venta',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -310,6 +316,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Ganancia',
+      colId: 'ganancia',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -350,6 +357,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'PRECIO PUBLICO',
+      colId: 'precio_publico',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -405,6 +413,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'PRECIO FERRETERÍA',
+      colId: 'precio_especial',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -440,6 +449,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'PRECIO MÍNIMO',
+      colId: 'precio_minimo',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -475,6 +485,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'PRECIO FINAL',
+      colId: 'precio_ultimo',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -510,6 +521,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Comisión Público',
+      colId: 'comision_publico',
       field: 'name',
       minWidth: 140,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
@@ -554,6 +566,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Comisión Ferretería',
+      colId: 'comision_especial',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -576,6 +589,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Comisión Mínimo',
+      colId: 'comision_minimo',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -598,6 +612,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Comisión Final',
+      colId: 'comision_ultimo',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -620,6 +635,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Activador Ferretería',
+      colId: 'activador_especial',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -641,6 +657,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Activador Mínimo',
+      colId: 'activador_minimo',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -662,6 +679,7 @@ export function useColumnsDetalleDePreciosEdicion({
     },
     {
       headerName: 'Activador Final',
+      colId: 'activador_ultimo',
       field: 'name',
       minWidth: 140,
       width: 160,
@@ -686,6 +704,7 @@ export function useColumnsDetalleDePreciosEdicion({
   const actions: ColDef<FormListFieldData>[] = [
     {
       headerName: 'Acciones',
+      colId: 'acciones',
       field: 'name',
       width: 40,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
