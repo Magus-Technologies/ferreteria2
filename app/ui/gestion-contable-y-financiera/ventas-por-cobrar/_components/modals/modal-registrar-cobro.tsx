@@ -71,7 +71,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUES_DE_PAGO],
+    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
     queryFn: async () => {
       const { despliegueDePagoApi } = await import('~/lib/api/despliegue-de-pago')
       const result = await despliegueDePagoApi.getAll({ mostrar: true })

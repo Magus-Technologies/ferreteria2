@@ -39,6 +39,8 @@ export default function CardsInfoMisGastos() {
   const gastosHoy = resumen?.gastos_hoy ?? 0
   const totalTransacciones = resumen?.total_transacciones ?? 0
   const promedioGasto = resumen?.promedio_gasto ?? 0
+  const gastosExtras = resumen?.gastos_extras ?? 0
+  const perdidasSalidas = resumen?.perdidas_salidas ?? 0
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
@@ -86,6 +88,26 @@ export default function CardsInfoMisGastos() {
         </div>
         <div className='text-2xl font-bold text-rose-600 text-center'>
           {isLoading ? '...' : promedioGasto.toFixed(2)}
+        </div>
+      </div>
+
+      {/* Desglose: Gastos Extras */}
+      <div className='bg-white border border-orange-200 rounded-lg p-3'>
+        <div className='flex items-center justify-center gap-2 mb-1'>
+          <div className='text-xs text-slate-500 font-medium'>Gastos Operativos</div>
+        </div>
+        <div className='text-lg font-semibold text-orange-600 text-center'>
+          {isLoading ? '...' : gastosExtras.toFixed(2)}
+        </div>
+      </div>
+
+      {/* Desglose: Pérdidas por Salidas */}
+      <div className='bg-white border border-red-200 rounded-lg p-3'>
+        <div className='flex items-center justify-center gap-2 mb-1'>
+          <div className='text-xs text-slate-500 font-medium'>Pérdidas (Salidas)</div>
+        </div>
+        <div className='text-lg font-semibold text-red-600 text-center'>
+          {isLoading ? '...' : perdidasSalidas.toFixed(2)}
         </div>
       </div>
 

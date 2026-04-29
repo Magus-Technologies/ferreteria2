@@ -41,6 +41,9 @@ export interface ResumenGastosExtras {
     total_transacciones: number
     transacciones_hoy: number
     promedio_gasto: number
+    // Desglose adicional
+    gastos_extras?: number
+    perdidas_salidas?: number
 }
 
 // Obtener lista de gastos extras

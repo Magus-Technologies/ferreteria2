@@ -52,7 +52,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   // Query para obtener despliegues de pago
   const { data: desplieguesData } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUES_DE_PAGO],
+    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
     queryFn: async () => {
       const { despliegueDePagoApi } = await import('~/lib/api/despliegue-de-pago')
       const result = await despliegueDePagoApi.getAll({ mostrar: true })
