@@ -185,13 +185,6 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     !entrega.chofer_id &&
     entrega.estado_entrega === 'pe'
 
-  // Mapear estados de la DB
-  const estadoEntrega = entrega.estado_entrega === 'pe' ? 'PENDIENTE'
-    : entrega.estado_entrega === 'ec' ? 'EN_CAMINO'
-    : entrega.estado_entrega === 'en' ? 'ENTREGADO'
-    : entrega.estado_entrega === 'ca' ? 'CANCELADO'
-    : entrega.estado_entrega
-
   const onSuccess = () => {
     if (onRefetch) onRefetch()
   }

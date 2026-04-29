@@ -16,7 +16,7 @@ import NotificationPermissionButton from '~/components/notifications/notificatio
 import { useAuth } from '~/lib/auth-context'
 import { useDebounce } from 'use-debounce'
 import { useState, useEffect } from 'react'
-import { blueColors, greenColors, redColors } from '~/lib/colors'
+import { blueColors, greenColors, redColors, orangeColors } from '~/lib/colors'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
@@ -303,7 +303,7 @@ export default function FiltersMisEntregas() {
           <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">
             <span className="font-semibold text-gray-700">Leyenda:</span>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded border border-gray-300 bg-white" />
+              <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: orangeColors[2] }} />
               <span className="text-gray-600">Pendiente</span>
             </div>
             <div className="flex items-center gap-1.5">

@@ -7,7 +7,7 @@ import useGetEntregas from '../../_hooks/use-get-entregas'
 import { create } from 'zustand'
 import type { AgGridReact } from 'ag-grid-react'
 import type { RowStyle } from 'ag-grid-community'
-import { greenColors, blueColors, redColors } from '~/lib/colors'
+import { greenColors, blueColors, redColors, orangeColors } from '~/lib/colors'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalPostDespacho from '../modals/modal-post-despacho'
 
@@ -66,19 +66,18 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
 )
 
 // Función para calcular el color de una entrega.
-// Convención al estilo mis-ventas: el estado default (Pendiente) es transparente
-// para no saturar visualmente. Solo se pintan los estados que requieren atención.
 function calcularColorEntrega(entrega: EntregaDB): string {
   const estado = entrega.estado_entrega
 
   switch (estado) {
-    case 'ec': // En Camino — destaca para que se vea que está en proceso
+    case 'pe': // Pendiente — naranja para que destaque que requiere acción
+      return orangeColors[2]
+    case 'ec': // En Camino — azul para indicar que está en proceso
       return blueColors[2]
     case 'en': // Entregado — verde para indicar éxito/completado
       return greenColors[2]
     case 'ca': // Cancelado — rojo para distinguir
       return redColors[2]
-    case 'pe': // Pendiente — sin color (es el default esperado)
     default:
       return 'transparent'
   }
