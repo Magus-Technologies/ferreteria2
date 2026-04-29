@@ -131,7 +131,7 @@ export default function TableMisGanancias() {
       className='h-full w-full'
       headerColor='var(--color-rose-600)'
       selectionColor="#fee2e2"
-      withNumberColumn={false}
+      withNumberColumn={true}
     />
   )
 }
