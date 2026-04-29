@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { DatePicker, Select, Tag, Empty } from 'antd'
+import { DatePicker, Tag } from 'antd'
 import { FaClipboardList, FaBoxOpen, FaSearch } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
@@ -11,7 +11,7 @@ import { formatFechaPeru } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { kardexApi, type MovimientoKardex, type TipoMovimientoKardex } from '~/lib/api/kardex'
+import { kardexApi, type MovimientoKardex } from '~/lib/api/kardex'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import ButtonBase from '~/components/buttons/button-base'
@@ -20,28 +20,6 @@ import type { Producto } from '~/app/_types/producto'
 import type { Cliente } from '~/lib/api/cliente'
 
 const { RangePicker } = DatePicker
-
-const tipoOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'venta', label: 'Ventas' },
-  { value: 'cotizacion', label: 'Cotizaciones' },
-  { value: 'prestamo', label: 'Prestamos' },
-  { value: 'guia', label: 'Guias' },
-]
-
-const tipoColors: Record<string, string> = {
-  venta: 'red',
-  cotizacion: 'blue',
-  prestamo: 'orange',
-  guia: 'purple',
-}
-
-const tipoLabels: Record<string, string> = {
-  venta: 'Venta',
-  cotizacion: 'Cotizacion',
-  prestamo: 'Prestamo',
-  guia: 'Guia',
-}
 
 const tipoVentaColors: Record<string, string> = {
   'VENTA CONTADO': 'green',
@@ -100,7 +78,6 @@ export default function KardexView() {
 
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto>()
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente>()
-  const [tipo, setTipo] = useState<TipoMovimientoKardex | ''>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
   const [debouncedSearchText] = useDebounce(searchText, 300)
@@ -111,13 +88,12 @@ export default function KardexView() {
   const clienteId = clienteSeleccionado?.id
 
   const { data, isFetching, refetch } = useQuery({
-    queryKey: [QueryKeys.KARDEX, productoId, clienteId, almacenId, tipo, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
+    queryKey: [QueryKeys.KARDEX, productoId, clienteId, almacenId, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientos({
         producto_id: productoId || undefined as any,
         cliente_id: clienteId || undefined as any,
         almacen_id: almacenId || undefined,
-        tipo: tipo || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
         hasta: fechas?.[1]?.format('YYYY-MM-DD'),
         per_page: -1,
@@ -163,25 +139,9 @@ export default function KardexView() {
     },
     {
       headerName: 'Tipo',
-      field: 'tipo',
-      width: 110,
-      minWidth: 100,
-      cellRenderer: (params: any) => {
-        const tipo = params.value as string
-        return (
-          <div className='flex items-center h-full'>
-            <Tag color={tipoColors[tipo] || 'default'} className='!m-0'>
-              {tipoLabels[tipo] || tipo}
-            </Tag>
-          </div>
-        )
-      },
-    },
-    {
-      headerName: 'Tipo Venta',
       field: 'movimiento',
-      width: 130,
-      minWidth: 120,
+      width: 150,
+      minWidth: 130,
       valueGetter: (params: any) => {
         const { tipo } = parseMovimiento(params.data?.movimiento || '')
         return tipo
@@ -201,8 +161,8 @@ export default function KardexView() {
     {
       headerName: 'Estado',
       field: 'movimiento',
-      width: 150,
-      minWidth: 130,
+      width: 170,
+      minWidth: 150,
       valueGetter: (params: any) => {
         const { estado } = parseMovimiento(params.data?.movimiento || '')
         return estado
@@ -347,16 +307,6 @@ export default function KardexView() {
             />
           </div>
           <div>
-            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Tipo</label>
-            <Select
-              className='!min-w-[140px] !w-[140px]'
-              value={tipo}
-              onChange={(v) => setTipo(v as TipoMovimientoKardex | '')}
-              options={tipoOptions}
-              size='middle'
-            />
-          </div>
-          <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Rango de Fechas</label>
             <RangePicker
               value={fechas}
@@ -448,8 +398,8 @@ export default function KardexView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Tipo', 'Tipo Venta', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Tipo', 'Tipo Venta', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
