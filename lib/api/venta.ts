@@ -230,6 +230,38 @@ export const ventaApi = {
   },
 
   /**
+   * Obtener TODOS los cobros con filtros (para el modal de cobros realizados)
+   */
+  async getAllCobros(filters?: {
+    almacen_id?: number;
+    desde?: string;
+    hasta?: string;
+    cliente_id?: number;
+    per_page?: number;
+  }): Promise<ApiResponse<{
+    data: CobroVenta[];
+    total: number;
+    current_page?: number;
+    per_page?: number;
+    last_page?: number;
+  }>> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/ventas/cobros?${queryString}` : '/ventas/cobros';
+
+    return apiRequest(url);
+  },
+
+  /**
    * Registrar un cobro para una venta a crédito
    */
   async storeCobro(ventaId: string, data: StoreCobroRequest): Promise<ApiResponse<{ data: CobroVenta; message: string; saldo_pendiente: number }>> {
@@ -436,6 +468,7 @@ export interface CobroVenta {
     }
   }
   user?: { id: string; name: string }
+  venta?: VentaCompleta // Relación con la venta (cuando se obtienen todos los cobros)
 }
 
 export interface StoreCobroRequest {

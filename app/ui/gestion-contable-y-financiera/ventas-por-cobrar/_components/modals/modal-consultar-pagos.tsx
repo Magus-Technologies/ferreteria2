@@ -17,13 +17,14 @@ interface ModalConsultarPagosProps {
 }
 
 export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPagosProps) {
-  const [fechaDesde, setFechaDesde] = useState(dayjs())
+  // Por defecto: últimos 30 días
+  const [fechaDesde, setFechaDesde] = useState(dayjs().subtract(30, 'days'))
   const [fechaHasta, setFechaHasta] = useState(dayjs())
   const [searchText, setSearchText] = useState('')
 
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
 
-  // Obtener TODAS las ventas por cobrar para extraer sus cobros
+  // Obtener TODOS los cobros directamente con el nuevo endpoint
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
     const fechaFilter = filtros.fecha as any
@@ -37,33 +38,17 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     }
   }, [filtros])
 
-  const { data: ventasData } = useQuery({
-    queryKey: [QueryKeys.VENTAS_POR_COBRAR, 'all-for-cobros', apiFilters],
+  const { data: cobrosResponse, isLoading } = useQuery({
+    queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros', apiFilters],
     queryFn: async () => {
-      const result = await ventaApi.getVentasPorCobrar(apiFilters)
+      const result = await ventaApi.getAllCobros(apiFilters)
       return result.data?.data ?? []
     },
     enabled: open && !!filtros,
-    staleTime: 2 * 60 * 1000,
-  })
-
-  // Obtener cobros de cada venta
-  const ventaIds = useMemo(() => (ventasData || []).map(v => v.id), [ventasData])
-
-  const { data: allCobros, isLoading } = useQuery({
-    queryKey: [QueryKeys.COBROS_VENTA, 'all', ventaIds],
-    queryFn: async () => {
-      const results: (CobroVenta & { venta?: VentaCompleta })[] = []
-      for (const venta of ventasData || []) {
-        const res = await ventaApi.getCobros(venta.id)
-        const cobros = res.data?.data ?? []
-        cobros.forEach(cobro => results.push({ ...cobro, venta }))
-      }
-      return results
-    },
-    enabled: open && ventaIds.length > 0,
     staleTime: 1 * 60 * 1000,
   })
+
+  const allCobros = cobrosResponse ?? []
 
   // Filtrar cobros por fecha y búsqueda
   const cobrosFiltrados = useMemo(() => {
@@ -101,7 +86,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
 
   const tipoDocMap: Record<string, string> = { '01': 'FACTURA', '03': 'BOLETA', 'nv': 'NOTA DE VENTA' }
 
-  const columns: ColDef<(CobroVenta & { venta?: VentaCompleta })>[] = useMemo(() => [
+  const columns: ColDef<CobroVenta>[] = useMemo(() => [
     { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
     {
       headerName: 'Documento',
