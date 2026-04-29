@@ -2,6 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { FormInstance, FormListFieldData, Tooltip } from 'antd'
+import { useMemo } from 'react'
 import { MdDelete } from 'react-icons/md'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectUnidadDerivada from '~/app/_components/form/selects/select-unidad-derivada'
@@ -15,6 +16,7 @@ export function useColumnsDetalleDePreciosEdicion({
   form: FormInstance
   remove: (index: number | number[]) => void
 }) {
+  return useMemo(() => {
   const columns: ColDef<FormListFieldData>[] = [
     {
       headerName: 'Formato de Venta',
@@ -704,6 +706,7 @@ export function useColumnsDetalleDePreciosEdicion({
   ]
 
   return [...actions, ...columns]
+  }, [form, remove])
 }
 
 function onChangeComisiones({
