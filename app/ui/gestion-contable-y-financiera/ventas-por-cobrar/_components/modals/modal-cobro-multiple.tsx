@@ -62,18 +62,22 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   useEffect(() => {
     if (open) {
+      // Establecer fecha de hoy
       form.setFieldValue('fecha', dayjs())
-      // Setear Efectivo por defecto
+      
+      // Setear Efectivo por defecto cuando los datos estén disponibles
       if (desplieguesData && desplieguesData.length > 0) {
         const efectivo = desplieguesData.find((d: any) =>
           d.name?.toUpperCase().includes('EFECTIVO') || d.name?.toUpperCase().includes('CCH')
         )
         if (efectivo) {
           form.setFieldValue('despliegue_de_pago_id', efectivo.id)
+          // También aplicar a todas las filas existentes
+          handleGlobalPagoChange(efectivo.id)
         }
       }
     }
-  }, [open, form, desplieguesData])
+  }, [open, desplieguesData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: ventasData, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS_POR_COBRAR, 'cobro-multiple', clienteId],
