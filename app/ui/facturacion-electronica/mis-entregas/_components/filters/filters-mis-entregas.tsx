@@ -17,6 +17,8 @@ import { useAuth } from '~/lib/auth-context'
 import { useDebounce } from 'use-debounce'
 import { useState, useEffect } from 'react'
 import { blueColors, greenColors, redColors } from '~/lib/colors'
+import { useQueryClient } from '@tanstack/react-query'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
@@ -60,6 +62,8 @@ export default function FiltersMisEntregas() {
     form.submit()
   }, [debouncedSearch, form])
 
+  const queryClient = useQueryClient()
+
   const handleFinish = (values: ValuesFiltersMisEntregas) => {
     const estados = values.estado_entrega
     const estadoFinal = Array.isArray(estados) && estados.length > 0 ? estados : undefined
@@ -72,6 +76,10 @@ export default function FiltersMisEntregas() {
       tipo_entrega: values.tipo_entrega || undefined,
       search: values.search || undefined,
     })
+
+    // Forzar refetch aunque los filtros no hayan cambiado, para que se vea
+    // el overlay "Cargando..." siempre que el usuario presiona Buscar.
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
   }
 
   return (
