@@ -112,30 +112,29 @@ export default function CardAgregarProductoVenta({
       (item) => item.unidad_derivada.id === values.unidad_derivada_id
     )
 
+    // Mapear directamente desde la key seleccionada por el usuario en SelectPrecios.
+    // No inferir por comparación de precio: cuando un producto tiene varios tiers
+    // con el mismo precio (ej. publico=especial=minimo=151.50), la comparación
+    // siempre matchea el primero y guarda la comision equivocada (ej. publico=0
+    // en vez de minimo=9.5). Ver issue venta 21045.
+    const precioKey = (values as any).precio_venta_key as
+      | 'precio_publico'
+      | 'precio_especial'
+      | 'precio_minimo'
+      | 'precio_ultimo'
+      | undefined
+    const comisionByKey: Record<string, { comision: string; tipo: string }> = {
+      precio_publico: { comision: 'comision_publico', tipo: 'publico' },
+      precio_especial: { comision: 'comision_especial', tipo: 'especial' },
+      precio_minimo: { comision: 'comision_minimo', tipo: 'minimo' },
+      precio_ultimo: { comision: 'comision_ultimo', tipo: 'ultimo' },
+    }
     let comision = 0
     let tipo_precio = 'publico'
-    if (unidad_derivada) {
-      if (
-        Number(unidad_derivada.precio_publico) === Number(values.precio_venta)
-      ) {
-        comision = Number(unidad_derivada.comision_publico ?? 0)
-        tipo_precio = 'publico'
-      } else if (
-        Number(unidad_derivada.precio_especial) === Number(values.precio_venta)
-      ) {
-        comision = Number(unidad_derivada.comision_especial ?? 0)
-        tipo_precio = 'especial'
-      } else if (
-        Number(unidad_derivada.precio_minimo) === Number(values.precio_venta)
-      ) {
-        comision = Number(unidad_derivada.comision_minimo ?? 0)
-        tipo_precio = 'minimo'
-      } else if (
-        Number(unidad_derivada.precio_ultimo) === Number(values.precio_venta)
-      ) {
-        comision = Number(unidad_derivada.comision_ultimo ?? 0)
-        tipo_precio = 'ultimo'
-      }
+    if (unidad_derivada && precioKey && comisionByKey[precioKey]) {
+      const { comision: comisionField, tipo } = comisionByKey[precioKey]
+      comision = Number((unidad_derivada as any)[comisionField] ?? 0)
+      tipo_precio = tipo
     }
 
     const valuesFormated = {
