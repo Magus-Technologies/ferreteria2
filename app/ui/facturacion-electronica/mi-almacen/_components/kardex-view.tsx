@@ -47,7 +47,13 @@ const movimientoColors: Record<string, string> = {
   REFERENCIA: 'blue',
   ANULADO: 'volcano',
   DEVOLUCION: 'cyan',
-  'VENTA EDITADA': 'orange',
+  'VENTA CONTADO': 'green',
+  'VENTA CRÉDITO': 'gold',
+  'VENTA CONTADO (EDITADA)': 'orange',
+  'VENTA CRÉDITO (EDITADA)': 'orange',
+  'VENTA CONTADO (ANULADA)': 'volcano',
+  'VENTA CRÉDITO (ANULADA)': 'volcano',
+  'AJUSTE POR EDICIÓN': 'purple',
 }
 
 export default function KardexView() {
@@ -342,7 +348,9 @@ export default function KardexView() {
           quickFilterText={debouncedSearchText}
           getRowStyle={(params) => {
             const mov = (params.data as MovimientoKardex)?.movimiento
-            if (mov === 'ANULADO') return { background: '#fef2f2' } as any
+            if (mov === 'ANULADO' || mov === 'VENTA CONTADO (ANULADA)' || mov === 'VENTA CRÉDITO (ANULADA)') {
+              return { background: '#fef2f2' } as any
+            }
             if (mov === 'DEVOLUCION') return { background: '#ecfdf5' }
             return undefined
           }}
