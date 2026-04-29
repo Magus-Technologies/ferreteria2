@@ -47,6 +47,7 @@ const movimientoColors: Record<string, string> = {
   REFERENCIA: 'blue',
   ANULADO: 'volcano',
   DEVOLUCION: 'cyan',
+  'VENTA EDITADA': 'orange',
 }
 
 export default function KardexView() {
