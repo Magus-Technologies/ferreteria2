@@ -1,21 +1,29 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FaMapMarkedAlt, FaEye, FaTruck } from 'react-icons/fa'
-import { Button, Modal, Space, Tooltip } from 'antd'
+import {
+  FaMapMarkedAlt,
+  FaEye,
+  FaTruck,
+  FaFilePdf,
+  FaCheckCircle,
+} from 'react-icons/fa'
+import { MoreOutlined } from '@ant-design/icons'
+import { Button, Dropdown, Modal, Tooltip } from 'antd'
+import type { MenuProps } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import { entregaProductoApi, EstadoEntrega, TipoEntrega } from '~/lib/api/entrega-producto'
 import { ventaApi, type getVentaResponseProps } from '~/lib/api/venta'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalDespachoEntrega from '../modals/modal-despacho-entrega'
 import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
 import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
 import ModalMarcarEntregada from '../modals/modal-marcar-entregada'
 import ModalEntregarParcial from '../modals/modal-entregar-parcial'
 import ModalEntregarVenta from '../../../mis-ventas/_components/modals/modal-entregar-venta'
+import ModalPdfEntrega from '../modals/modal-pdf-entrega'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
@@ -32,6 +40,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
   const [modalRestanteOpen, setModalRestanteOpen] = useState(false)
+  const [modalPdfOpen, setModalPdfOpen] = useState(false)
   const [ventaCompleta, setVentaCompleta] = useState<getVentaResponseProps | undefined>()
   const [loadingRestante, setLoadingRestante] = useState(false)
   const { message } = useApp()
@@ -242,79 +251,111 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     if (onRefetch) onRefetch()
   }
 
+  // Texto del item PDF según estado: "Vale de Recojo" (pe) vs "Ticket de Entrega" (en).
+  const pdfLabel =
+    entrega.estado_entrega === 'pe'
+      ? 'Imprimir Vale de Recojo'
+      : entrega.estado_entrega === 'ec'
+      ? 'Imprimir Entrega en Camino'
+      : entrega.estado_entrega === 'ca'
+      ? 'Imprimir Entrega Cancelada'
+      : 'Imprimir Ticket de Entrega'
+
+  // Construir el menú del dropdown — mismo patrón que mis-ventas
+  // (cell-acciones-venta-dropdown).
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'detalles',
+      label: (
+        <span className="flex items-center gap-2">
+          <FaEye className="text-slate-600" /> Ver Detalles
+        </span>
+      ),
+      onClick: () => setModalDetallesOpen(true),
+    },
+    {
+      key: 'pdf',
+      label: (
+        <span className="flex items-center gap-2">
+          <FaFilePdf className="text-red-600" /> {pdfLabel}
+        </span>
+      ),
+      onClick: () => setModalPdfOpen(true),
+    },
+    // Ver Mapa solo aplica para entregas a domicilio o parciales — en
+    // recojo en tienda no hay dirección de entrega ni viaje del chofer.
+    ...(entrega.tipo_entrega !== 'rt'
+      ? [
+          {
+            key: 'mapa',
+            label: (
+              <span className="flex items-center gap-2">
+                <FaMapMarkedAlt className="text-blue-600" /> Ver Mapa
+              </span>
+            ),
+            onClick: () => openPostDespacho(entrega),
+          } as const,
+        ]
+      : []),
+    {
+      key: 'guia',
+      label: (
+        <span className="flex items-center gap-2">
+          <FaTruck className="text-cyan-700" /> Crear Guía de Remisión
+        </span>
+      ),
+      onClick: handleCrearGuia,
+    },
+    ...(esPedidoExternoDisponible
+      ? [
+          { type: 'divider' as const },
+          {
+            key: 'aceptar',
+            label: (
+              <span className="flex items-center gap-2 font-semibold">
+                <FaCheckCircle className="text-green-600" /> Aceptar Pedido
+              </span>
+            ),
+            onClick: handleAceptar,
+            disabled: loading,
+          } as const,
+        ]
+      : []),
+  ]
+
   return (
     <>
-      <Space size={4} className="flex items-center justify-center h-full">
-        <Tooltip title="Ver Detalles">
-          <Button
-            type="text"
-            size="small"
-            icon={<FaEye size={15} />}
-            onClick={() => setModalDetallesOpen(true)}
-            className="!text-slate-600 hover:!bg-slate-100 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-          />
-        </Tooltip>
-
-        {/* Ver Mapa solo aplica para entregas a domicilio o parciales — en
-            recojo en tienda no hay dirección de entrega ni viaje del chofer. */}
-        {entrega.tipo_entrega !== 'rt' && (
-          <ConfigurableElement
-            componentId="mis-entregas.boton-ver-mapa"
-            label="Botón Ver Mapa"
-            noFullWidth
-          >
-            <Tooltip title="Ver Mapa">
-              <Button
-                type="text"
-                size="small"
-                icon={<FaMapMarkedAlt size={15} />}
-                onClick={() => openPostDespacho(entrega)}
-                className="!text-blue-600 hover:!bg-blue-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-              />
-            </Tooltip>
-          </ConfigurableElement>
-        )}
-
-        <ConfigurableElement
-          componentId="mis-entregas.boton-crear-guia"
-          label="Botón Crear Guía"
-          noFullWidth
+      <div className="flex items-center justify-center h-full">
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={['click']}
+          placement="bottomRight"
         >
-          <Tooltip title="Crear Guía de Remisión">
+          <Tooltip title="Acciones">
             <Button
               type="text"
               size="small"
-              icon={<FaTruck size={15} />}
-              onClick={handleCrearGuia}
-              className="!text-cyan-700 hover:!bg-cyan-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+              icon={<MoreOutlined style={{ fontSize: 18 }} />}
+              className="!text-slate-600 hover:!bg-slate-100 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
             />
           </Tooltip>
-        </ConfigurableElement>
+        </Dropdown>
+      </div>
 
-        {esPedidoExternoDisponible && (
-          <Button
-            type="primary"
-            size="small"
-            loading={loading}
-            onClick={handleAceptar}
-            className="!bg-green-600 hover:!bg-green-700 !border-none !font-semibold"
-          >
-            Aceptar
-          </Button>
-        )}
-
-        {/* Botones principales "Entregar/Despachar/Confirmar" se movieron arriba
-            al lado de Buscar (filters-mis-entregas). El botón "Parcial" se movió
-            dentro del modal de Despacho (es una variante de despachar).
-            Solo aplica a la fila SELECCIONADA y se dispara desde ahí vía store. */}
-
-        {/* "Restante" se movió dentro del modal de Despacho como opción
-            adicional. "Cambiar tipo entrega" también vive ahí. */}
-      </Space>
+      {/* Botones principales "Entregar/Despachar/Confirmar" se movieron arriba
+          al lado de Buscar (filters-mis-entregas). El botón "Parcial" se movió
+          dentro del modal de Despacho. Las opciones "Restante" y "Cambiar tipo
+          entrega" viven dentro del modal de Despacho. */}
 
       <ModalDetallesEntregaCompleto
         open={modalDetallesOpen}
         onClose={() => setModalDetallesOpen(false)}
+        entrega={entrega}
+      />
+
+      <ModalPdfEntrega
+        open={modalPdfOpen}
+        onClose={() => setModalPdfOpen(false)}
         entrega={entrega}
       />
 
