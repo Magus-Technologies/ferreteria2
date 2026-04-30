@@ -149,20 +149,28 @@ function EntregaDetalle({ entrega }: { entrega: any }) {
             </span>
           </div>
         )}
-        {/* Quien hizo el registro físico de la entrega (usuario logueado al
-            momento). Se muestra el nombre del user + el rol que seleccionó
-            (Almacén/Vendedor/Chofer). Antes solo aparecía como tag arriba
-            sin el nombre, así que no se sabía quién físicamente la hizo. */}
-        {entrega.user?.name && (
+        {/* "Entregado por" = quien marcó la entrega como ENTREGADO
+            (campo user_entregado, distinto de user que es el creador).
+            Solo aparece si la entrega está completada. Si quedó PENDIENTE
+            (caso EnTienda con quien_entrega=almacen esperando al cliente),
+            mostrar el rol esperado pero sin nombre. */}
+        {entrega.user_entregado?.name ? (
           <div className="flex items-center gap-2 text-sm">
             <FaUserTie className="text-slate-400 text-xs" />
             <span className="text-slate-700">
-              Entregado por: <span className="font-semibold">{entrega.user.name}</span>
+              Entregado por: <span className="font-semibold">{entrega.user_entregado.name}</span>
               {entrega.quien_entrega && (
                 <span className="text-slate-500">
                   {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega})
                 </span>
               )}
+            </span>
+          </div>
+        ) : entrega.quien_entrega && entrega.estado_entrega !== 'en' && (
+          <div className="flex items-center gap-2 text-sm">
+            <FaUserTie className="text-slate-400 text-xs" />
+            <span className="text-slate-500 italic">
+              Pendiente de entregar — {QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega}
             </span>
           </div>
         )}

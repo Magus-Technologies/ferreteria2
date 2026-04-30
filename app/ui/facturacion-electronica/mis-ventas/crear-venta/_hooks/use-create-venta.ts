@@ -615,12 +615,22 @@ export default function useCreateVenta({
             }
           })
 
+          // Estado inicial según quién entrega:
+          // - vendedor: el vendedor ya está en la caja con el cliente, la
+          //   entrega ocurre AHORA → ENTREGADO inmediato.
+          // - almacen/chofer: el cliente debe pasar al almacén; la entrega
+          //   queda PENDIENTE hasta que alguien la marque como entregada
+          //   desde "Mis Entregas" (ahí se registra user_entregado_id).
+          const estadoInicial = quien_entrega === QuienEntrega.VENDEDOR
+            ? EstadoEntrega.ENTREGADO
+            : EstadoEntrega.PENDIENTE
+
           // Preparar datos de la entrega en tienda
           const entregaData: CreateEntregaProductoRequest = {
             venta_id: ventaCreada.id,
             tipo_entrega: TipoEntrega.RECOJO_EN_TIENDA,
             tipo_despacho: TipoDespacho.INMEDIATO,
-            estado_entrega: EstadoEntrega.ENTREGADO, // En tienda se entrega inmediatamente
+            estado_entrega: estadoInicial,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),
             almacen_salida_id: almacen_id,
             quien_entrega: quien_entrega as QuienEntrega,
