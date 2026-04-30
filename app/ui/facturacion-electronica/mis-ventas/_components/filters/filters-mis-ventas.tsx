@@ -46,6 +46,8 @@ interface ValuesFiltersMisVentas {
   estado_de_venta?: EstadoDeVenta;
   serie_numero?: string;
   entrega?: 'pendiente' | 'completa';
+  // Filtro por ediciones — se mapea a ?editada=si|no en el backend.
+  editada?: 'si' | 'no';
 }
 
 export default function FiltersMisVentas() {
@@ -448,6 +450,24 @@ export default function FiltersMisVentas() {
                   options={[
                     { value: 'pendiente', label: 'Pendiente' },
                     { value: 'completa', label: 'Completa' },
+                  ]}
+                />
+              </Form.Item>
+            </ConfigurableElement>
+          </div>
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              Editada:
+            </label>
+            <ConfigurableElement componentId="field-editada" label="Campo Editada">
+              <Form.Item name="editada" noStyle>
+                <Select
+                  allowClear
+                  placeholder="Todas"
+                  className="w-full"
+                  options={[
+                    { value: 'si', label: 'Sí' },
+                    { value: 'no', label: 'No' },
                   ]}
                 />
               </Form.Item>

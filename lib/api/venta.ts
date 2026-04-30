@@ -134,6 +134,8 @@ export interface VentaFilters {
   tipo_documento?: TipoDocumento;
   search?: string;
   entrega?: 'pendiente' | 'completa';
+  // Filtra por ediciones según `venta_historial` con accion='edicion'.
+  editada?: 'si' | 'no';
   per_page?: number;
   page?: number;
 }

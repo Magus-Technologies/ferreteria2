@@ -295,6 +295,22 @@ export function useColumnsMisVentas() {
       valueGetter: (params) => params.data?.user?.name || "",
     },
     {
+      // "Editada" — usa total_ediciones del backend (count de venta_historial
+      // con accion='edicion'). Sí cuando ≥1 edición, No cuando 0.
+      headerName: "Editada",
+      colId: "editada",
+      width: 110,
+      valueGetter: (params) => {
+        const n = Number(params.data?.total_ediciones ?? 0)
+        if (n === 0) return "No"
+        return n === 1 ? "Sí (1)" : `Sí (${n})`
+      },
+      cellStyle: (params) => {
+        if (params.value === "No") return { color: '#6b7280' }
+        return { color: '#d97706', fontWeight: 'bold' }
+      },
+    },
+    {
       headerName: "Acciones",
       field: "id",
       width: 110,

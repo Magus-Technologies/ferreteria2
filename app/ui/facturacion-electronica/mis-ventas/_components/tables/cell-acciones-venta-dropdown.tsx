@@ -70,14 +70,12 @@ export default function CellAccionesVentaDropdown(
   //  3. La entrega ya fue completada (Caso B). El backend rechaza igual,
   //     pero el front anticipa para mostrar el motivo y evitar el viaje.
   const estadoVenta = venta?.estado_de_venta;
-  // Cualquier entrega no-cancelada bloquea la edición (Fase 1.1, opción C):
-  //  - 'pe' (pendiente): editar dejaría la entrega huérfana sin items.
-  //    Solución: anular la entrega primero, luego editar.
-  //  - 'ec' (en camino) / 'en' (entregada): cliente ya tiene/recibirá producto.
-  //    Solución: Cambio en Entrega o Nota de Crédito.
-  //  - 'ca' (cancelada): no bloquea.
+  // Solo bloquear si la entrega ya pasó del punto de no retorno físico
+  // (Fase 1.2 — relajado vs Fase 1.1):
+  //  - 'ec' (en camino) / 'en' (entregada): bloquea, cliente tiene/recibirá producto.
+  //  - 'pe' (pendiente): permite editar — el backend regenera los detalles.
+  //  - 'ca' (cancelada): permite editar.
   const entregas = (venta?.entregas_productos || []) as { estado_entrega?: string }[];
-  const tieneEntregaPendiente = entregas.some((e) => e?.estado_entrega === 'pe');
   const tieneEntregaActiva = entregas.some(
     (e) => e?.estado_entrega === 'en' || e?.estado_entrega === 'ec',
   );
@@ -86,7 +84,6 @@ export default function CellAccionesVentaDropdown(
   else if (estadoVenta === 'pr') editLockReason = 'La venta ya fue procesada.';
   else if (isAceptado) editLockReason = 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito para hacer cambios.';
   else if (tieneEntregaActiva) editLockReason = 'La entrega ya fue completada o está en camino. Usa Cambio en Entrega o Nota de Crédito.';
-  else if (tieneEntregaPendiente) editLockReason = 'Hay una entrega pendiente. Anúlala primero desde Mis Entregas y luego edita.';
   const canEdit = editLockReason === null;
 
   // Verificar si se puede anular (no anulado, no procesado)
