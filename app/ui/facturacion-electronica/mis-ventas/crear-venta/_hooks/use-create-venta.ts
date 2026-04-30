@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   TipoDocumento,
+  TipoDespachoVenta,
   FormaDePago,
   TipoMoneda,
   EstadoDeVenta,
@@ -278,7 +279,11 @@ export default function useCreateVenta({
       // ✅ Enviar dirección seleccionada (D1, D2, D3 o D4)
       direccion_seleccionada: direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined,
       // ✅ Enviar tipo de despacho (et=En Tienda, do=Domicilio, pa=Parcial)
-      tipo_despacho: tipo_despacho === 'EnTienda' ? 'et' : tipo_despacho === 'Domicilio' ? 'do' : tipo_despacho === 'Parcial' ? 'pa' : undefined,
+      tipo_despacho:
+        tipo_despacho === 'EnTienda' ? TipoDespachoVenta.EN_TIENDA
+          : tipo_despacho === 'Domicilio' ? TipoDespachoVenta.DOMICILIO
+          : tipo_despacho === 'Parcial' ? TipoDespachoVenta.PARCIAL
+          : undefined,
       // ✅ Enviar quien_entrega para que el backend lo use al auto-crear la
       // entrega de despacho en tienda (antes lo hardcodeaba como 'vendedor').
       quien_entrega: tipo_despacho === 'EnTienda' ? (quien_entrega || 'almacen') as any : undefined,

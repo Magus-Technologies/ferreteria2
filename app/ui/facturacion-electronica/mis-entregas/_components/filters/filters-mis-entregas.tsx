@@ -25,13 +25,14 @@ import {
 } from '~/app/_lib/entrega-labels'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import type { TipoDespacho, TipoEntrega } from '~/lib/api/entrega-producto'
 
 interface ValuesFiltersMisEntregas {
   fecha_desde?: dayjs.Dayjs
   fecha_hasta?: dayjs.Dayjs
   estado_entrega?: string[]
-  tipo_despacho?: 'in' | 'pr'
-  tipo_entrega?: 'rt' | 'de' | 'pa'
+  tipo_despacho?: TipoDespacho
+  tipo_entrega?: TipoEntrega
   search?: string
 }
 

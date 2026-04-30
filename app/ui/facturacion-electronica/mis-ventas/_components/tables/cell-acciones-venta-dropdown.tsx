@@ -63,9 +63,31 @@ export default function CellAccionesVentaDropdown(
     : tipoDocumento === 'nv' ? 'Editar Nota de Venta'
     : 'Editar Venta';
 
-  // Verificar si se puede editar (no anulado ni procesado)
+  // Verificar si se puede editar.
+  // Bloqueado si:
+  //  1. estado_de_venta es anulado o procesado
+  //  2. SUNAT ya aceptó (Caso A en plan-edicion-entregas.md)
+  //  3. La entrega ya fue completada (Caso B). El backend rechaza igual,
+  //     pero el front anticipa para mostrar el motivo y evitar el viaje.
   const estadoVenta = venta?.estado_de_venta;
-  const canEdit = estadoVenta !== 'an' && estadoVenta !== 'pr';
+  // Cualquier entrega no-cancelada bloquea la edición (Fase 1.1, opción C):
+  //  - 'pe' (pendiente): editar dejaría la entrega huérfana sin items.
+  //    Solución: anular la entrega primero, luego editar.
+  //  - 'ec' (en camino) / 'en' (entregada): cliente ya tiene/recibirá producto.
+  //    Solución: Cambio en Entrega o Nota de Crédito.
+  //  - 'ca' (cancelada): no bloquea.
+  const entregas = (venta?.entregas_productos || []) as { estado_entrega?: string }[];
+  const tieneEntregaPendiente = entregas.some((e) => e?.estado_entrega === 'pe');
+  const tieneEntregaActiva = entregas.some(
+    (e) => e?.estado_entrega === 'en' || e?.estado_entrega === 'ec',
+  );
+  let editLockReason: string | null = null;
+  if (estadoVenta === 'an') editLockReason = 'La venta está anulada.';
+  else if (estadoVenta === 'pr') editLockReason = 'La venta ya fue procesada.';
+  else if (isAceptado) editLockReason = 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito para hacer cambios.';
+  else if (tieneEntregaActiva) editLockReason = 'La entrega ya fue completada o está en camino. Usa Cambio en Entrega o Nota de Crédito.';
+  else if (tieneEntregaPendiente) editLockReason = 'Hay una entrega pendiente. Anúlala primero desde Mis Entregas y luego edita.';
+  const canEdit = editLockReason === null;
 
   // Verificar si se puede anular (no anulado, no procesado)
   const canAnular = estadoVenta !== 'an' && estadoVenta !== 'pr';
@@ -234,7 +256,17 @@ export default function CellAccionesVentaDropdown(
   const menuItems: MenuProps['items'] = [
     {
       key: 'editar',
-      label: <span className="flex items-center gap-2"><FaEdit className="text-amber-600" /> {editLabel}</span>,
+      label: (
+        <span
+          className="flex items-center gap-2"
+          title={editLockReason ?? undefined}
+        >
+          <FaEdit className="text-amber-600" /> {editLabel}
+          {editLockReason && (
+            <span className="text-[10px] text-slate-400 ml-1">(bloqueado)</span>
+          )}
+        </span>
+      ),
       onClick: handleEditar,
       disabled: !canEdit,
     },

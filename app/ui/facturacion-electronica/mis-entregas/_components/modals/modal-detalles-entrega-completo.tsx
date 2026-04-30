@@ -99,7 +99,7 @@ export default function ModalDetallesEntregaCompleto({
           )}
           {entrega.quien_entrega && (
             <Tag color="geekblue" className="!text-sm !py-1 !px-3">
-              Entrega: {QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega}
+              Entrega: {QUIEN_ENTREGA_LABEL[entrega.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entrega.quien_entrega}
             </Tag>
           )}
         </div>
@@ -176,7 +176,7 @@ export default function ModalDetallesEntregaCompleto({
                 Entregado por: <span className="font-semibold">{entrega.user.name}</span>
                 {entrega.quien_entrega && (
                   <span className="text-slate-500">
-                    {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega})
+                    {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entrega.quien_entrega})
                   </span>
                 )}
               </span>

@@ -1,12 +1,16 @@
 import { create } from 'zustand'
 import dayjs, { Dayjs } from 'dayjs'
+import type { TipoDespacho, TipoEntrega } from '~/lib/api/entrega-producto'
 
 export interface FiltrosMisEntregas {
   fecha_desde: Dayjs
   fecha_hasta: Dayjs
   estado_entrega?: string[]
-  tipo_despacho?: 'in' | 'pr'
-  tipo_entrega?: 'rt' | 'de' | 'pa'
+  // Antes los tipos eran literales ('in' | 'pr'). El api los pide como enum
+  // TipoDespacho/TipoEntrega y TS no asigna literales a enums aunque tengan
+  // el mismo valor → usar los enums directamente.
+  tipo_despacho?: TipoDespacho
+  tipo_entrega?: TipoEntrega
   search?: string
 }
 

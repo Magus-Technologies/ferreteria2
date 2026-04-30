@@ -86,7 +86,7 @@ function EntregaDetalle({ entrega }: { entrega: any }) {
         )}
         {entrega.quien_entrega && (
           <Tag color="geekblue" className="!text-sm !py-1 !px-3">
-            Entrega: {QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega}
+            Entrega: {QUIEN_ENTREGA_LABEL[entrega.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entrega.quien_entrega}
           </Tag>
         )}
         {entrega.tipo_pedido && (
@@ -161,7 +161,7 @@ function EntregaDetalle({ entrega }: { entrega: any }) {
               Entregado por: <span className="font-semibold">{entrega.user_entregado.name}</span>
               {entrega.quien_entrega && (
                 <span className="text-slate-500">
-                  {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega})
+                  {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entrega.quien_entrega})
                 </span>
               )}
             </span>
@@ -170,7 +170,7 @@ function EntregaDetalle({ entrega }: { entrega: any }) {
           <div className="flex items-center gap-2 text-sm">
             <FaUserTie className="text-slate-400 text-xs" />
             <span className="text-slate-500 italic">
-              Pendiente de entregar — {QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega}
+              Pendiente de entregar — {QUIEN_ENTREGA_LABEL[entrega.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entrega.quien_entrega}
             </span>
           </div>
         )}

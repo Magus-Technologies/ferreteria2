@@ -9,13 +9,15 @@ import BodyVender from '../../crear-venta/_components/others/body-vender'
 import { VentaConUnidadDerivadaNormal } from '../../crear-venta/_components/others/header-crear-venta'
 import { ventaApi } from '~/lib/api/venta'
 import { unidadesDerivadas } from '~/lib/api/catalogos'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Spin } from 'antd'
+import { Spin, Result } from 'antd'
+import ButtonBase from '~/components/buttons/button-base'
 
 export default function EditarVenta() {
   const canAccess = usePermission(permissions.VENTA_UPDATE)
   const params = useParams()
+  const router = useRouter()
   const id = params?.id as string
 
   // Cargar la venta desde la API
@@ -63,6 +65,49 @@ export default function EditarVenta() {
 
   if (!unidadesData) {
     return <NoAutorizado />
+  }
+
+  // Bloqueo paralelo al backend (VentaController::update). Si el usuario llega
+  // al URL directo bypaseando el dropdown, mostrar mensaje claro en vez de
+  // dejarlo editar y fallar al guardar. Ver plan-edicion-entregas.md.
+  const comprobante = (ventaData as any).comprobante_electronico
+  const sunatAceptado =
+    comprobante?.estado_sunat === 'ACEPTADO' ||
+    comprobante?.estado_sunat === 'ACEPTADO_CON_OBSERVACIONES'
+  // Mismas reglas que cell-acciones-venta-dropdown (Fase 1.1, opción C).
+  const entregas = ((ventaData as any).entregas_productos || []) as {
+    estado_entrega?: string
+  }[]
+  const tieneEntregaPendiente = entregas.some((e) => e?.estado_entrega === 'pe')
+  const tieneEntregaActiva = entregas.some(
+    (e) => e?.estado_entrega === 'en' || e?.estado_entrega === 'ec',
+  )
+  let lockReason: string | null = null
+  if (sunatAceptado) {
+    lockReason = 'El comprobante ya fue aceptado por SUNAT. Para hacer cambios usa Nota de Crédito.'
+  } else if (tieneEntregaActiva) {
+    lockReason = 'La entrega ya fue completada o está en camino. Para cambios físicos usa Cambio en Entrega o Nota de Crédito.'
+  } else if (tieneEntregaPendiente) {
+    lockReason = 'Hay una entrega pendiente. Anúlala primero desde Mis Entregas y luego edita.'
+  }
+  if (lockReason) {
+    return (
+      <ContenedorGeneral className='h-full'>
+        <Result
+          status='warning'
+          title='Esta venta no se puede editar'
+          subTitle={lockReason}
+          extra={
+            <ButtonBase
+              color='info'
+              onClick={() => router.push('/ui/facturacion-electronica/mis-ventas')}
+            >
+              Volver a Mis Ventas
+            </ButtonBase>
+          }
+        />
+      </ContenedorGeneral>
+    )
   }
 
   // Extraer nombres de unidades derivadas de la venta

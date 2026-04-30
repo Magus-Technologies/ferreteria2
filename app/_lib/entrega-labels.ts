@@ -100,25 +100,27 @@ export const ESTADO_ENTREGA_LABEL_FILTER: Record<string, string> = {
 // ============================================================
 // Quién entrega — usado en EntregaProducto.quien_entrega
 // ============================================================
-export const QUIEN_ENTREGA_LABEL = {
+// Tipado como Record<string,string> porque suele indexarse con `entrega.quien_entrega`
+// (any/string) — `as const` daba errores TS al usar la key dinámica.
+export const QUIEN_ENTREGA_LABEL: Record<string, string> = {
   almacen: 'Almacén',
   vendedor: 'Vendedor',
   chofer: 'Chofer',
-} as const
+}
 
-export const QUIEN_ENTREGA_ICON = {
+export const QUIEN_ENTREGA_ICON: Record<string, string> = {
   almacen: '📦',
   vendedor: '👤',
   chofer: '🚚',
-} as const
+}
 
 // ============================================================
 // Tipo de pedido — usado en EntregaProducto.tipo_pedido
 // ============================================================
-export const TIPO_PEDIDO_LABEL = {
+export const TIPO_PEDIDO_LABEL: Record<string, string> = {
   interno: 'Interno',
   externo: 'Externo',
-} as const
+}
 
 // ============================================================
 // Helpers
