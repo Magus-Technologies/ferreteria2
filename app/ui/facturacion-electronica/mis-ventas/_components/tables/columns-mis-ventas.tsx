@@ -4,16 +4,23 @@ import { ColDef } from "ag-grid-community";
 import type { getVentaResponseProps } from "~/lib/api/venta";
 import { formatFechaPeru } from "~/utils/fechas";
 import CellAccionesVentaDropdown from "./cell-acciones-venta-dropdown";
+import CellSeleccionarNota from "./cell-seleccionar-nota";
 
 export function useColumnsMisVentas() {
   const columnDefs: ColDef<getVentaResponseProps>[] = [
-    // Columna # comentada porque ya viene automáticamente en la tabla
-    // {
-    //   headerName: '#',
-    //   valueGetter: 'node.rowIndex + 1',
-    //   width: 60,
-    //   pinned: 'left',
-    // },
+    // Checkbox solo visible en filas con tipo_documento = 'nv' (Nota de Venta).
+    // Permite seleccionar varias notas y convertirlas a Factura/Boleta.
+    {
+      headerName: "",
+      colId: "seleccionar_nota",
+      width: 50,
+      pinned: "left",
+      sortable: false,
+      filter: false,
+      resizable: false,
+      cellRenderer: CellSeleccionarNota,
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+    },
     {
       headerName: "T.Doc",
       field: "tipo_documento",

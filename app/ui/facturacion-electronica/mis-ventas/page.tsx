@@ -15,6 +15,7 @@ const FiltersMisVentas = lazy(() => import('./_components/filters/filters-mis-ve
 const TableMisVentas = lazy(() => import('./_components/tables/table-mis-ventas'))
 const TableDetalleVenta = lazy(() => import('./_components/tables/table-detalle-venta'))
 const CardsInfoVentas = lazy(() => import('./_components/others/cards-info-ventas'))
+const BarConvertirNotas = lazy(() => import('./_components/others/bar-convertir-notas'))
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -42,6 +43,9 @@ export default function MisVentas() {
           <div className='grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-5 md:gap-6 lg:gap-8'>
             {/* Columna principal - Tablas */}
             <div className='flex flex-col gap-4 sm:gap-5 md:gap-6 min-w-0'>
+              <Suspense fallback={null}>
+                <BarConvertirNotas />
+              </Suspense>
               <div className='h-[300px]'>
                 <Suspense fallback={<ComponentLoading />}>
                   <TableMisVentas />

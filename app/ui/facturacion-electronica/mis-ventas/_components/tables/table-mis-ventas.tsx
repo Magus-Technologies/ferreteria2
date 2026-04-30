@@ -137,7 +137,7 @@ export default function TableMisVentas() {
   return (
     <div className="w-full" style={{ height: "300px" }}>
       <TableWithTitle<getVentaResponseProps>
-        id="mis-ventas"
+        id="mis-ventas-v2"
         title="N° DE CLIENTES/VENTAS"
         loading={loading}
         columnDefs={useColumnsMisVentas()}
