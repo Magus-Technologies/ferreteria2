@@ -182,17 +182,21 @@ export default function CardAgregarProductoVenta({
   const precio_ventaRef = useRef<RefSelectBaseProps>(null)
   const buttom_masRef = useRef<HTMLButtonElement>(null)
 
+  // Enfocar Cantidad cuando llega/cambia el producto seleccionado:
+  // - Modal pequeño (header onChange): producto ya está en el store al montar.
+  // - Modal grande (BUSCAR PRODUCTO): la tabla auto-selecciona la 1ra fila
+  //   ASÍNCRONAMENTE después del fetch, así que necesitamos reaccionar al
+  //   cambio del id, no solo al mount.
+  // Antes había un guard `usuarioEscribiendo` que bloqueaba el focus cuando
+  // activeElement era cualquier INPUT — el SelectProductos del header
+  // mantiene el focus, así que el guard impedía siempre el focus en la 2da
+  // apertura.
   useEffect(() => {
-    // El modal usa destroyOnHidden → este card se monta nuevo en cada apertura.
-    // Si al montar ya hay producto en el store, enfocar cantidad. Antes había
-    // un guard "no enfocar si activeElement es INPUT" que fallaba al re-abrir
-    // el mismo producto (el SelectProductos del header sigue siendo el active
-    // element y la 2da apertura perdía el focus).
     if (productoSeleccionadoSearchStore?.id) {
       setTimeout(() => cantidadRef.current?.focus(), 50)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [productoSeleccionadoSearchStore?.id])
 
   // Confirmación explícita del usuario (Enter o click en fila del modal):
   // siempre mover focus a cantidad, sin importar el activeElement.

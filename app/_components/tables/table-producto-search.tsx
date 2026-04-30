@@ -159,20 +159,44 @@ export default function TableProductoSearch({
     }
   }, [quickFilterValue]);
 
-  // Seleccionar automáticamente el primer producto cuando cambian los datos
+  // Seleccionar automáticamente el primer producto cuando cambian los datos.
+  //
+  // Hay un caso sutil con React Query: cuando el modal se cierra y reabre con
+  // la MISMA query (ej. "GLOS" 2 veces), la respuesta sale del cache y
+  // productosFiltrados ya tiene datos en el primer render. El requestAnimationFrame
+  // dispara un solo frame después, pero AG Grid aún no terminó de inicializar
+  // su `api`, así que firstNode es undefined y la selección no ocurre.
+  //
+  // Solución: reintentar varios frames hasta que la api de AG Grid responda.
   useEffect(() => {
-    if (productosFiltrados && productosFiltrados.length > 0 && tableGridRef.current) {
-      // Usar requestAnimationFrame para esperar al siguiente render de AG Grid
-      requestAnimationFrame(() => {
-        const firstNode = tableGridRef.current?.api?.getDisplayedRowAtIndex(0);
-        if (firstNode) {
-          firstNode.setSelected(true);
-          setProductoSeleccionadoSearchStore(firstNode.data as any);
-        }
-      });
-    } else {
+    if (!productosFiltrados || productosFiltrados.length === 0) {
       setProductoSeleccionadoSearchStore(undefined);
+      return;
     }
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const trySelect = () => {
+      if (cancelled) return;
+      const api = tableGridRef.current?.api;
+      const firstNode = api?.getDisplayedRowAtIndex(0);
+      if (firstNode) {
+        firstNode.setSelected(true);
+        setProductoSeleccionadoSearchStore(firstNode.data as any);
+        return;
+      }
+      if (++attempts < maxAttempts) {
+        requestAnimationFrame(trySelect);
+      }
+    };
+
+    requestAnimationFrame(trySelect);
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productosFiltrados]);
 
