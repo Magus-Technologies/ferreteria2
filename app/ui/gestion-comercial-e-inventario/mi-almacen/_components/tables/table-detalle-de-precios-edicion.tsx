@@ -37,16 +37,19 @@ export default function TableDetalleDePreciosEdicion({
       <TableWithTitle
         {...rest}
         onRowDragEnd={event => {
-          const indexActual = event.overIndex
-          const indexAnterior = event.node.data!.name
-          const unidades_derivadas = form.getFieldValue(
-            'unidades_derivadas'
-          ) as FormListFieldData[]
-          const unidadDerivadaAnterior = unidades_derivadas[indexAnterior]
-          const unidadDerivadaActual = unidades_derivadas[indexActual]
-          unidades_derivadas[indexAnterior] = unidadDerivadaActual
-          unidades_derivadas[indexActual] = unidadDerivadaAnterior
-          form.setFieldValue('unidades_derivadas', unidades_derivadas)
+          // MOVE (no swap): sacar el item de su posición y insertarlo en la
+          // nueva. Antes hacía un swap (intercambio entre 2 posiciones), lo
+          // que daba un orden inesperado al arrastrar varias filas.
+          const fromIndex = event.node.data!.name as number
+          const toIndex = event.overIndex
+          if (fromIndex === toIndex || toIndex < 0) return
+
+          const unidades = [
+            ...((form.getFieldValue('unidades_derivadas') ?? []) as any[]),
+          ]
+          const [movido] = unidades.splice(fromIndex, 1)
+          unidades.splice(toIndex, 0, movido)
+          form.setFieldValue('unidades_derivadas', unidades)
         }}
         id='g-c-e-i.mi-almacen.detalle-de-precios-edicion'
         title='Detalle de precios'

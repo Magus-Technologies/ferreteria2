@@ -184,10 +184,13 @@ export default function useCreateProducto({
             })
           : undefined,
       },
-      unidades_derivadas: cleanedValues.unidades_derivadas.map((item) => {
+      // El índice del array refleja el orden visual del usuario (drag-and-drop
+      // en la tabla de detalle de precios). El backend lo guarda en la columna
+      // `orden` y al re-leer las unidades respeta ese orden.
+      unidades_derivadas: cleanedValues.unidades_derivadas.map((item, index) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { unidad_derivada: _unidad_derivada, producto_complementario: _producto_complementario, ...rest } = item
-        return rest
+        return { ...rest, orden: index }
       }),
       estado: cleanedValues.estado === 1,
       id: producto?.id,
