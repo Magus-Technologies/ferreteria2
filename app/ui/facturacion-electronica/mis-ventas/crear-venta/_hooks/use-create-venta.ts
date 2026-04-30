@@ -29,6 +29,7 @@ import { fcmApi } from '~/lib/api/fcm'
 import dayjs from 'dayjs'
 import { cajaApi } from '~/lib/api/caja'
 import { fechaSubmit } from '~/utils/fechas'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -690,11 +691,19 @@ export default function useCreateVenta({
 
       // ✅ Invalidar caché de productos para que se recarguen con tiene_ingresos actualizado
       // Esto forzará una recarga automática de la tabla de productos en mi-almacen
-      queryClient.invalidateQueries({ 
-        queryKey: ['productos-by-almacen', almacen_id] 
+      queryClient.invalidateQueries({
+        queryKey: ['productos-by-almacen', almacen_id]
       })
-      queryClient.invalidateQueries({ 
-        queryKey: ['productos-search'] 
+      queryClient.invalidateQueries({
+        queryKey: ['productos-search']
+      })
+      // Invalidar comisiones: la nueva venta puede generar comisión que debe
+      // aparecer en /comisiones sin tener que refrescar la página manualmente.
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.COMISIONES_POR_VENDEDOR],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.COMISIONES_DETALLE_VENDEDOR],
       })
     } catch (error) {
       console.error('Error al crear venta:', error)

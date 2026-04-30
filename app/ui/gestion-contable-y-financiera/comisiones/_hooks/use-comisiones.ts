@@ -30,6 +30,11 @@ export function useComisionDetalleVendedor(
       return res.data
     },
     enabled: !!userId,
+    // Siempre considerar stale para que al abrir el modal del detalle se
+    // refresque (evita que después de pagar o crear una nueva venta el
+    // modal muestre datos viejos cuando se reabre).
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 }
 
@@ -59,6 +64,9 @@ export function useRegistrarPagoComision() {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.COMISIONES_HISTORIAL_PAGOS],
       })
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.COMISIONES_DETALLE_VENDEDOR],
+      })
     },
   })
 }
@@ -77,6 +85,9 @@ export function useEliminarPagoComision() {
       })
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.COMISIONES_HISTORIAL_PAGOS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.COMISIONES_DETALLE_VENDEDOR],
       })
     },
   })
