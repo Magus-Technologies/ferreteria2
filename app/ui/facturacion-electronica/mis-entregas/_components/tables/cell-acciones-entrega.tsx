@@ -9,7 +9,7 @@ import {
   FaCheckCircle,
 } from 'react-icons/fa'
 import { MoreOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Modal, Tooltip } from 'antd'
+import { Dropdown, Modal } from 'antd'
 import type { MenuProps } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
@@ -17,13 +17,15 @@ import { entregaProductoApi, EstadoEntrega, TipoEntrega } from '~/lib/api/entreg
 import { ventaApi, type getVentaResponseProps } from '~/lib/api/venta'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import ButtonBase from '~/components/buttons/button-base'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ModalDespachoEntrega from '../modals/modal-despacho-entrega'
 import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
 import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
 import ModalMarcarEntregada from '../modals/modal-marcar-entregada'
 import ModalEntregarParcial from '../modals/modal-entregar-parcial'
 import ModalEntregarVenta from '../../../mis-ventas/_components/modals/modal-entregar-venta'
-import ModalPdfEntrega from '../modals/modal-pdf-entrega'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
@@ -40,9 +42,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
   const [modalRestanteOpen, setModalRestanteOpen] = useState(false)
-  const [modalPdfOpen, setModalPdfOpen] = useState(false)
   const [ventaCompleta, setVentaCompleta] = useState<getVentaResponseProps | undefined>()
   const [loadingRestante, setLoadingRestante] = useState(false)
+  const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const { message } = useApp()
   const queryClient = useQueryClient()
   const openPostDespacho = useStoreEntregaSeleccionada((s) => s.openPostDespacho)
@@ -280,7 +282,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           <FaFilePdf className="text-red-600" /> {pdfLabel}
         </span>
       ),
-      onClick: () => setModalPdfOpen(true),
+      onClick: () => openPdfModal(entrega),
     },
     // Ver Mapa solo aplica para entregas a domicilio o parciales — en
     // recojo en tienda no hay dirección de entrega ni viaje del chofer.
@@ -324,23 +326,36 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   ]
 
   return (
-    <>
-      <div className="flex items-center justify-center h-full">
+    <div
+      style={{
+        display: 'flex',
+        gap: '8px',
+        justifyContent: 'center',
+        height: '100%',
+        alignItems: 'center',
+      }}
+    >
+      <ConfigurableElement
+        componentId="mis-entregas.dropdown-acciones"
+        label="Dropdown Acciones"
+        noFullWidth
+      >
         <Dropdown
           menu={{ items: menuItems }}
           trigger={['click']}
           placement="bottomRight"
         >
-          <Tooltip title="Acciones">
-            <Button
-              type="text"
-              size="small"
-              icon={<MoreOutlined style={{ fontSize: 18 }} />}
-              className="!text-slate-600 hover:!bg-slate-100 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-            />
-          </Tooltip>
+          <ButtonBase
+            color="info"
+            size="md"
+            className="flex items-center justify-center !px-2"
+            title="Acciones"
+            disabled={loading}
+          >
+            <MoreOutlined style={{ fontSize: '18px' }} />
+          </ButtonBase>
         </Dropdown>
-      </div>
+      </ConfigurableElement>
 
       {/* Botones principales "Entregar/Despachar/Confirmar" se movieron arriba
           al lado de Buscar (filters-mis-entregas). El botón "Parcial" se movió
@@ -353,11 +368,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         entrega={entrega}
       />
 
-      <ModalPdfEntrega
-        open={modalPdfOpen}
-        onClose={() => setModalPdfOpen(false)}
-        entrega={entrega}
-      />
+      {/* Modal del PDF de entrega vive a nivel de página
+          (ModalPdfEntregaWrapper en mis-entregas/page.tsx) — se abre via
+          useStoreModalPdfEntrega.openModal(entrega). */}
 
       <ModalMarcarEntregada
         open={modalMarcarOpen}
@@ -415,6 +428,6 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         }}
         venta={ventaCompleta}
       />
-    </>
+    </div>
   )
 }

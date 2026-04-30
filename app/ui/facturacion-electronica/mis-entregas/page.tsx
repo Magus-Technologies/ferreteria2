@@ -6,6 +6,12 @@ import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
 import { Suspense, lazy } from 'react'
 import { Spin } from 'antd'
+import dynamic from 'next/dynamic'
+
+const ModalPdfEntregaWrapper = dynamic(
+  () => import('./_components/modals/modal-pdf-entrega-wrapper'),
+  { ssr: false },
+)
 
 // Lazy loading de componentes
 const FiltersMisEntregas = lazy(() => import('./_components/filters/filters-mis-entregas'))
@@ -26,8 +32,10 @@ export default function MisEntregas() {
   if (!canAccess) return <NoAutorizado />
 
   return (
-    <ContenedorGeneral>
-      <div className='w-full'>
+    <>
+      <ModalPdfEntregaWrapper />
+      <ContenedorGeneral>
+        <div className='w-full'>
         <Suspense fallback={<ComponentLoading />}>
           <FiltersMisEntregas />
         </Suspense>
@@ -66,7 +74,8 @@ export default function MisEntregas() {
             </Suspense>
           </div>
         </div>
-      </div>
-    </ContenedorGeneral>
+        </div>
+      </ContenedorGeneral>
+    </>
   )
 }

@@ -1,164 +1,109 @@
 'use client'
 
-import { Modal, Spin } from 'antd'
-import { useEffect, useState } from 'react'
-import { FaDownload, FaPrint } from 'react-icons/fa6'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
-import ButtonBase from '~/components/buttons/button-base'
-
-interface ModalPdfEntregaProps {
-  open: boolean
-  onClose: () => void
-  entrega?: any
-}
 
 /**
- * Modal para visualizar el PDF de una entrega.
+ * Modal de PDF de entrega — usa `ModalShowDoc` (mismo componente que mis-ventas)
+ * con toggle Ticket (80mm) / A4. Pre-carga ambos formatos en paralelo al abrir
+ * para que el switch sea instantáneo.
  *
- * Estilo y comportamiento similar al modal de mis-ventas (modal-doc-venta /
- * modal-show-doc): muestra el PDF embebido + acciones de imprimir y descargar.
- *
- * El título del PDF cambia según el estado de la entrega (lo decide el blade
- * en el backend): VALE DE RECOJO si está pendiente, TICKET DE ENTREGA si ya
- * se entregó, etc.
+ * El backend resuelve el formato via `?formato=ticket|a4` en
+ * `/pdf/entrega-producto/{id}`. El blade decide el título según
+ * `estado_entrega` (Vale de Recojo, Ticket de Entrega, etc.).
  */
 export default function ModalPdfEntrega({
   open,
-  onClose,
+  setOpen,
   entrega,
-}: ModalPdfEntregaProps) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+}: {
+  open: boolean
+  setOpen: (open: boolean) => void
+  entrega: any
+}) {
+  const [esTicket, setEsTicket] = useState(true)
+  const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+  const [a4PdfUrl, setA4PdfUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const fetchedRef = useRef<number | null>(null)
 
-  const tituloModal = (() => {
-    switch (entrega?.estado_entrega) {
-      case 'pe':
-        return 'Vale de Recojo'
-      case 'ec':
-        return 'Entrega en Camino'
-      case 'ca':
-        return 'Entrega Cancelada'
-      default:
-        return 'Ticket de Entrega'
-    }
-  })()
-
-  const ventaNumero =
-    entrega?.venta?.serie && entrega?.venta?.numero
-      ? `${entrega.venta.serie}-${entrega.venta.numero}`
+  const ventaSerie = entrega?.venta?.serie
+  const ventaNumero = entrega?.venta?.numero
+  const nroDoc = ventaSerie && ventaNumero
+    ? `${ventaSerie}-${ventaNumero}`
+    : entrega?.id
+      ? `Entrega #${entrega.id}`
       : 'S/N'
 
+  const fetchPdf = useCallback(async (id: number, formato: 'ticket' | 'a4') => {
+    const token = getAuthToken()
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const res = await fetch(
+      `${API_URL}/pdf/entrega-producto/${id}?formato=${formato}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      },
+    )
+    if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+    const blob = await res.blob()
+    return URL.createObjectURL(blob)
+  }, [])
+
+  // Pre-cargar ambos formatos en paralelo al abrir (igual que mis-ventas)
   useEffect(() => {
-    if (!open || !entrega?.id) {
-      // Limpiar la URL anterior al cerrar para liberar memoria
-      setPdfUrl((prev) => {
+    if (open && entrega?.id && fetchedRef.current !== entrega.id) {
+      fetchedRef.current = entrega.id
+      setLoading(true)
+
+      // Ticket primero (es el formato por defecto)
+      fetchPdf(entrega.id, 'ticket')
+        .then((url) => {
+          setTicketPdfUrl(url)
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error('Error ticket PDF entrega:', err)
+          setLoading(false)
+        })
+
+      // A4 en paralelo
+      fetchPdf(entrega.id, 'a4')
+        .then((url) => setA4PdfUrl(url))
+        .catch((err) => console.error('Error A4 PDF entrega:', err))
+    }
+
+    if (!open) {
+      setTicketPdfUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
         return null
       })
-      return
+      setA4PdfUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+      fetchedRef.current = null
     }
+  }, [open, entrega?.id, fetchPdf])
 
-    let cancelled = false
-    setLoading(true)
-    const fetchPdf = async () => {
-      try {
-        const token = getAuthToken()
-        const API_URL = process.env.NEXT_PUBLIC_API_URL
-        const res = await fetch(
-          `${API_URL}/pdf/entrega-producto/${entrega.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: 'application/pdf',
-            },
-          },
-        )
-        if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
-        const blob = await res.blob()
-        if (cancelled) return
-        setPdfUrl(URL.createObjectURL(blob))
-      } catch (err) {
-        console.error('Error cargando PDF entrega:', err)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    fetchPdf()
-
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, entrega?.id])
-
-  const handleDescargar = () => {
-    if (!pdfUrl) return
-    const a = document.createElement('a')
-    a.href = pdfUrl
-    a.download = `${tituloModal.replace(/\s+/g, '-')}-${ventaNumero}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-  }
-
-  const handleImprimir = () => {
-    if (!pdfUrl) return
-    const win = window.open(pdfUrl, '_blank')
-    win?.addEventListener('load', () => win.print())
-  }
+  const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
+  const currentLoading = esTicket ? loading : !a4PdfUrl
 
   return (
-    <Modal
+    <ModalShowDoc
       open={open}
-      onCancel={onClose}
-      width={520}
-      centered
-      destroyOnHidden
-      title={
-        <div>
-          <div className="text-base font-bold text-slate-800">{tituloModal}</div>
-          <div className="text-xs font-normal text-slate-500 mt-0.5">
-            Venta {ventaNumero}
-          </div>
-        </div>
-      }
-      footer={
-        <div className="flex items-center justify-end gap-2">
-          <ButtonBase
-            color="default"
-            onClick={handleDescargar}
-            disabled={!pdfUrl}
-            className="flex items-center gap-2"
-          >
-            <FaDownload /> Descargar
-          </ButtonBase>
-          <ButtonBase
-            color="info"
-            onClick={handleImprimir}
-            disabled={!pdfUrl}
-            className="flex items-center gap-2"
-          >
-            <FaPrint /> Imprimir
-          </ButtonBase>
-        </div>
-      }
+      setOpen={setOpen}
+      nro_doc={nroDoc}
+      esTicket={esTicket}
+      setEsTicket={setEsTicket}
+      backendPdfUrl={currentPdfUrl}
+      backendPdfLoading={currentLoading}
     >
-      <div
-        style={{ height: '70vh' }}
-        className="bg-slate-100 rounded-lg flex items-center justify-center"
-      >
-        {loading && <Spin size="large" tip="Cargando PDF..." />}
-        {!loading && pdfUrl && (
-          <iframe
-            src={pdfUrl}
-            title={tituloModal}
-            className="w-full h-full rounded-lg border-0"
-          />
-        )}
-        {!loading && !pdfUrl && (
-          <div className="text-slate-500 text-sm">No se pudo cargar el PDF</div>
-        )}
-      </div>
-    </Modal>
+      {/* No hay fallback react-pdf — siempre se usa el PDF del backend */}
+      {null}
+    </ModalShowDoc>
   )
 }
