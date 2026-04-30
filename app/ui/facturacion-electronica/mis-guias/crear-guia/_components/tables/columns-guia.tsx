@@ -227,6 +227,26 @@ export function useColumnsGuia({
       ),
     },
     {
+      colId: 'peso_total',
+      headerName: 'Peso (kg)',
+      field: 'name',
+      minWidth: 110,
+      width: 110,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => (
+        <div className='flex items-center h-full'>
+          <InputNumberBase
+            size='small'
+            propsForm={{
+              name: [value, 'peso_total'],
+            }}
+            precision={3}
+            min={0}
+            formWithMessage={false}
+          />
+        </div>
+      ),
+    },
+    {
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'name',

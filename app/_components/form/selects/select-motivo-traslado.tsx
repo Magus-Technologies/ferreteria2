@@ -29,6 +29,8 @@ export default function SelectMotivoTraslado({
   classIconSearch = '',
   motivoTrasladoOptionsDefault = [],
   onChange,
+  form,
+  propsForm,
   ...props
 }: SelectMotivoTrasladoProps) {
   const selectMotivoTrasladoRef = useRef<RefSelectBaseProps>(null)
@@ -75,6 +77,23 @@ export default function SelectMotivoTraslado({
 
   const { response, loading } = useGetMotivosTraslado({ value })
 
+  // Sincronizar valor inicial del formulario: si el form trae un motivo_traslado
+  // pre-cargado (por ejemplo desde una venta), buscar ese motivo en la lista
+  // cargada por useGetMotivosTraslado y mostrarlo como opción seleccionada
+  // (sino sólo se ve el id raw).
+  useEffect(() => {
+    if (!form || !propsForm?.name || motivoTrasladoSeleccionado) return
+    const valorInicial = form.getFieldValue(propsForm.name as string)
+    if (!valorInicial) return
+    const idNum = Number(valorInicial)
+    if (!Number.isFinite(idNum)) return
+    const match = response?.find((m: MotivoTraslado) => Number(m.id) === idNum)
+    if (match) {
+      setMotivoTrasladoSeleccionado(match)
+      setText(`${match.codigo} : ${match.descripcion}`)
+    }
+  }, [form, propsForm, response, motivoTrasladoSeleccionado])
+
   useEffect(() => {
     // Autoseleccionar si hay exactamente 1 resultado
     // PERO NO si el modal de búsqueda está abierto
@@ -97,6 +116,8 @@ export default function SelectMotivoTraslado({
     <div className='flex items-center gap-4 w-full'>
       <SelectBase
         ref={selectMotivoTrasladoRef}
+        form={form}
+        propsForm={propsForm}
         showSearch
         uppercase={true}
         filterOption={false}

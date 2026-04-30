@@ -42,6 +42,7 @@ export interface ProductoAlmacenUnidadDerivada {
   producto_almacen_id: number;
   unidad_derivada_id: number;
   factor: number;
+  peso: number | null;
   precio_publico: number;
   comision_publico: number;
   precio_especial: number;

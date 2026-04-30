@@ -43,11 +43,30 @@ export default function CardsInfoGuia({
     [productos]
   )
 
+  // Calcular Peso Total (suma de peso_total de cada línea)
+  const pesoTotal = useMemo(
+    () =>
+      (productos || []).reduce(
+        (acc, item) => acc + Number(item?.peso_total ?? 0),
+        0
+      ),
+    [productos]
+  )
+
   return (
     <>
       <div className='flex flex-col gap-4 max-w-64'>
         <CardInfoGuia title='Total Costo' value={totalCosto} />
         <CardInfoGuia title='Total Venta' value={totalVenta} className='border-cyan-500 border-2' />
+        <CardInfoGuia
+          title='Peso Total'
+          value={pesoTotal}
+          prefix=''
+          suffix='kg'
+          precision={3}
+          valueColor='text-amber-600'
+          className='border-amber-500 border-2'
+        />
         
         <div className='flex flex-col gap-2 p-3 bg-white rounded-lg shadow-sm border border-gray-200'>
           <CheckboxBase

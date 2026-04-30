@@ -116,6 +116,29 @@ export function useColumnsDetalleDePreciosEdicion({
       width: 160,
     },
     {
+      headerName: 'Peso (kg)',
+      colId: 'peso',
+      field: 'name',
+      minWidth: 110,
+      width: 130,
+      cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
+        const value = data?.name
+        return (
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              propsForm={{
+                name: [value, 'peso'],
+              }}
+              formWithMessage={false}
+              placeholder='Peso (kg)'
+              precision={3}
+              min={0}
+            />
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'Prod. Complementario',
       colId: 'producto_complementario',
       field: 'name',

@@ -83,6 +83,9 @@ export default function CardAgregarProductoGuia({
 
     if (!unidad_derivada) return
 
+    const pesoUnit = Number((unidad_derivada as any).peso ?? 0)
+    const pesoTotal = pesoUnit > 0 ? Number((pesoUnit * Number(values.cantidad)).toFixed(3)) : 0
+
     setProductoAgregadoGuiaStore({
       producto_id: productoSeleccionadoSearchStore.id,
       producto_name: productoSeleccionadoSearchStore.name,
@@ -94,6 +97,7 @@ export default function CardAgregarProductoGuia({
       cantidad: values.cantidad,
       costo: values.costo,
       precio_venta: values.precio_venta,
+      peso_total: pesoTotal,
     })
 
     form.resetFields()

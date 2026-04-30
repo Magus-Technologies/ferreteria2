@@ -20,6 +20,7 @@ export interface ProductoAlmacenUnidadDerivada {
   producto_almacen_id: number
   unidad_derivada_id: number
   factor: number
+  peso?: number | null
   unidad_derivada: {
     id: number
     name: string

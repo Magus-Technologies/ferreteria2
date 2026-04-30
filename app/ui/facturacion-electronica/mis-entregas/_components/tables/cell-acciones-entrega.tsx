@@ -65,9 +65,12 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       message.error('No se pudo identificar la venta')
       return
     }
-    // Pasar venta_id + datos del chofer/vehículo de la entrega para pre-llenar la guía
+    // Pasar venta_id + placa del vehículo de la entrega para pre-llenar la guía.
+    // NO se pasa chofer_id: en entregaproducto.chofer_id se guarda el user.id
+    // del DESPACHADOR (interno), pero la guía SUNAT necesita un chofer externo
+    // de la tabla `chofer` (con dni/licencia). Son conceptos distintos —
+    // el usuario debe seleccionar/registrar el chofer SUNAT manualmente.
     const params = new URLSearchParams({ venta_id: entrega.venta_id })
-    if (entrega.chofer_id) params.set('chofer_id', String(entrega.chofer_id))
     if (entrega.vehiculo?.placa) params.set('vehiculo_placa', String(entrega.vehiculo.placa))
     router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
   }

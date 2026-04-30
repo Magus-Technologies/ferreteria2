@@ -16,7 +16,6 @@ export default function useInitGuia({
 }) {
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
-  const choferIdParam = searchParams.get('chofer_id')
   const vehiculoPlacaParam = searchParams.get('vehiculo_placa')
   const { data: empresa } = useEmpresaPublica()
 
@@ -47,18 +46,32 @@ export default function useInitGuia({
 
       // Preparar productos desde la venta
       const productos = venta.productos_por_almacen?.flatMap((almacen: any) =>
-        almacen.unidades_derivadas?.map((unidad: any) => ({
-          producto_id: almacen.producto_almacen?.producto_id || almacen.producto_id,
-          producto_name: almacen.producto_almacen?.producto?.name || '',
-          producto_codigo: almacen.producto_almacen?.producto?.cod_producto || '',
-          marca_name: almacen.producto_almacen?.producto?.marca?.name || '',
-          unidad_derivada_id: unidad.unidad_derivada_inmutable_id,
-          unidad_derivada_name: unidad.unidad_derivada_inmutable?.name || '',
-          unidad_derivada_factor: Number(unidad.factor) || 1,
-          cantidad: Number(unidad.cantidad),
-          costo: Number(unidad.precio) || 0,
-          precio_venta: Number(unidad.precio) || 0,
-        }))
+        almacen.unidades_derivadas?.map((unidad: any) => {
+          const cantidad = Number(unidad.cantidad) || 0
+          // Buscar la unidad derivada actual del producto (configuración vigente)
+          // para obtener el peso. La unidad de la venta es "inmutable" (snapshot
+          // del nombre al momento de vender), pero el peso vive en la config
+          // actual de productoalmacenunidadderivada.
+          const unidadActual = almacen.producto_almacen?.unidades_derivadas?.find(
+            (ua: any) =>
+              ua.unidad_derivada?.name === unidad.unidad_derivada_inmutable?.name,
+          )
+          const pesoUnit = Number(unidadActual?.peso ?? 0)
+          const peso_total = pesoUnit > 0 ? Number((pesoUnit * cantidad).toFixed(3)) : 0
+          return {
+            producto_id: almacen.producto_almacen?.producto_id || almacen.producto_id,
+            producto_name: almacen.producto_almacen?.producto?.name || '',
+            producto_codigo: almacen.producto_almacen?.producto?.cod_producto || '',
+            marca_name: almacen.producto_almacen?.producto?.marca?.name || '',
+            unidad_derivada_id: unidad.unidad_derivada_inmutable_id,
+            unidad_derivada_name: unidad.unidad_derivada_inmutable?.name || '',
+            unidad_derivada_factor: Number(unidad.factor) || 1,
+            cantidad,
+            costo: Number(unidad.precio) || 0,
+            precio_venta: Number(unidad.precio) || 0,
+            peso_total,
+          }
+        })
       ) || []
 
 
@@ -84,8 +97,7 @@ export default function useInitGuia({
         direccion_seleccionada: 'D1',
         // Referencia a la venta
         referencia: `Venta ${venta.serie}-${venta.numero}`,
-        // Pre-llenar chofer/placa si vienen por URL (desde mis-entregas)
-        ...(choferIdParam ? { chofer_id: choferIdParam } : {}),
+        // Pre-llenar placa si viene por URL (desde mis-entregas)
         ...(vehiculoPlacaParam ? { vehiculo_placa: vehiculoPlacaParam } : {}),
         // Productos
         productos,
@@ -112,7 +124,7 @@ export default function useInitGuia({
         productos: [],
       })
     }
-  }, [guia, venta, isLoading, form, empresa, choferIdParam, vehiculoPlacaParam])
+  }, [guia, venta, isLoading, form, empresa, vehiculoPlacaParam])
 
   return { venta, isLoading }
 }
