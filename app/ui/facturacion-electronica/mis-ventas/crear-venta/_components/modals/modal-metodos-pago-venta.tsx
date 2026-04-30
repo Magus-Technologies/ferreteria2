@@ -98,6 +98,9 @@ export default function ModalMetodosPagoVenta({
       setMetodosPago([])
       setSobrecargo({ tipo: 'ninguno', valor: 0, monto: 0 })
       modalForm.setFieldValue('monto', totalCobrado)
+      // Pre-llenar "Monto Recibe" con el total a cobrar (= saldo pendiente al
+      // momento de abrir). El usuario puede editarlo.
+      modalForm.setFieldValue('recibe_efectivo', parseFloat(totalCobrado.toFixed(2)))
 
       // Si ya tenemos los datos, setear Efectivo inmediatamente
       if (desplieguesPago && desplieguesPago.length > 0) {
@@ -130,12 +133,21 @@ export default function ModalMetodosPagoVenta({
     }
   }, [open, isFetched, desplieguesPago, modalForm])
 
-  // Actualizar monto cuando cambia el saldo pendiente
+  // Actualizar "Monto Recibe" cuando cambia el saldo pendiente — se dispara
+  // al agregar un pago parcial (el form acaba de resetearse, así que el
+  // recibe_efectivo está vacío y aquí lo re-llenamos con el nuevo saldo).
+  // Sólo pre-llenamos si está vacío para no pisar lo que el usuario tipeó.
   useEffect(() => {
-    if (open && saldoPendiente > 0) {
-      modalForm.setFieldValue('monto', saldoPendiente)
+    if (!open || saldoPendiente <= 0) return
+    modalForm.setFieldValue('monto', saldoPendiente)
+    const current = modalForm.getFieldValue('recibe_efectivo')
+    if (current === undefined || current === null || Number(current) === 0) {
+      const valor = isEfectivo
+        ? saldoPendiente
+        : saldoPendiente + sobrecargo.monto
+      modalForm.setFieldValue('recibe_efectivo', parseFloat(valor.toFixed(2)))
     }
-  }, [saldoPendiente, open, modalForm])
+  }, [saldoPendiente, open, modalForm, isEfectivo, sobrecargo.monto])
 
   const handleAgregarMetodo = async () => {
     try {
@@ -343,11 +355,15 @@ export default function ModalMetodosPagoVenta({
                     }
                     setSobrecargo(nuevoSobrecargo)
 
+                    // Pre-llenar "Monto Recibe" con el saldo pendiente (+ sobrecargo
+                    // si aplica). El usuario puede editarlo libremente. Al agregar
+                    // un pago parcial, el saldo pendiente se actualiza y este pre-
+                    // llenado vuelve a aplicar.
                     if (!name.toUpperCase().includes('EFECTIVO')) {
                       modalForm.setFieldValue('recibe_efectivo', parseFloat((saldoPendiente + nuevoSobrecargo.monto).toFixed(2)))
                     } else {
                       modalForm.setFieldValue('referencia', undefined)
-                      modalForm.setFieldValue('recibe_efectivo', undefined)
+                      modalForm.setFieldValue('recibe_efectivo', parseFloat(saldoPendiente.toFixed(2)))
                     }
                   }}
                 />

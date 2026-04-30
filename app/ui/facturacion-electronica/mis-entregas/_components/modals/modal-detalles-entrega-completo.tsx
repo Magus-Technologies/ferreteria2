@@ -14,6 +14,13 @@ import {
   FaCommentDots,
 } from 'react-icons/fa'
 import dayjs from 'dayjs'
+import {
+  TIPO_ENTREGA_LABEL_CON_ICON as TIPO_ENTREGA_LABEL,
+  TIPO_DESPACHO_LABEL_CON_ICON as TIPO_DESPACHO_LABEL,
+  ESTADO_ENTREGA_LABEL,
+  ESTADO_ENTREGA_COLOR,
+  QUIEN_ENTREGA_LABEL,
+} from '~/app/_lib/entrega-labels'
 
 interface ModalDetallesEntregaCompletoProps {
   open: boolean
@@ -21,28 +28,11 @@ interface ModalDetallesEntregaCompletoProps {
   entrega?: any
 }
 
-const TIPO_ENTREGA_LABEL: Record<string, string> = {
-  rt: '🏪 Recojo en Tienda',
-  de: '🏠 Despacho a Domicilio',
-  pa: '🔀 Parcial',
-}
-
-const TIPO_DESPACHO_LABEL: Record<string, string> = {
-  in: '⚡ Inmediato',
-  pr: '📅 Programado',
-}
-
 const ESTADO_LABEL: Record<string, { label: string; color: string }> = {
-  pe: { label: 'Pendiente', color: 'orange' },
-  ec: { label: 'En Camino', color: 'blue' },
-  en: { label: 'Entregado', color: 'green' },
-  ca: { label: 'Cancelado', color: 'red' },
-}
-
-const QUIEN_ENTREGA_LABEL: Record<string, string> = {
-  almacen: 'Almacén',
-  vendedor: 'Vendedor',
-  chofer: 'Chofer',
+  pe: { label: ESTADO_ENTREGA_LABEL.pe, color: ESTADO_ENTREGA_COLOR.pe },
+  ec: { label: ESTADO_ENTREGA_LABEL.ec, color: ESTADO_ENTREGA_COLOR.ec },
+  en: { label: ESTADO_ENTREGA_LABEL.en, color: ESTADO_ENTREGA_COLOR.en },
+  ca: { label: ESTADO_ENTREGA_LABEL.ca, color: ESTADO_ENTREGA_COLOR.ca },
 }
 
 export default function ModalDetallesEntregaCompleto({
@@ -173,6 +163,22 @@ export default function ModalDetallesEntregaCompleto({
               <FaWarehouse className="text-slate-400 text-xs" />
               <span className="text-slate-700">
                 Almacén salida: {entrega.almacenSalida.name}
+              </span>
+            </div>
+          )}
+          {/* Usuario que registró físicamente la entrega + el rol que eligió.
+              Útil cuando la venta se creó con "no descontar stock" y otro
+              usuario distinto al creador de la venta hizo la entrega después. */}
+          {entrega.user?.name && (
+            <div className="flex items-center gap-2 text-sm">
+              <FaUserTie className="text-slate-400 text-xs" />
+              <span className="text-slate-700">
+                Entregado por: <span className="font-semibold">{entrega.user.name}</span>
+                {entrega.quien_entrega && (
+                  <span className="text-slate-500">
+                    {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega})
+                  </span>
+                )}
               </span>
             </div>
           )}

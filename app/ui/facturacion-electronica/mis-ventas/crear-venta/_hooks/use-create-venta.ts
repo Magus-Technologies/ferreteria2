@@ -279,6 +279,9 @@ export default function useCreateVenta({
       direccion_seleccionada: direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined,
       // ✅ Enviar tipo de despacho (et=En Tienda, do=Domicilio, pa=Parcial)
       tipo_despacho: tipo_despacho === 'EnTienda' ? 'et' : tipo_despacho === 'Domicilio' ? 'do' : tipo_despacho === 'Parcial' ? 'pa' : undefined,
+      // ✅ Enviar quien_entrega para que el backend lo use al auto-crear la
+      // entrega de despacho en tienda (antes lo hardcodeaba como 'vendedor').
+      quien_entrega: tipo_despacho === 'EnTienda' ? (quien_entrega || 'almacen') as any : undefined,
       // Si "Omitir entrega" fue presionado, evitar descuento de stock al crear la venta.
       omitir_entrega: _omitir_entrega || undefined,
       recomendado_por_id: recomendado_por_id || undefined,

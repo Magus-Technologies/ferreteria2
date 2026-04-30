@@ -20,6 +20,14 @@ import type { getVentaResponseProps } from "~/lib/api/venta";
 import TitleForm from "~/components/form/title-form";
 import { formatFechaPeru } from "~/utils/fechas";
 import useGetEntregas from "../../_hooks/use-get-entregas";
+import {
+  TIPO_ENTREGA_LABEL_CON_ICON as TIPO_ENTREGA_LABEL,
+  TIPO_DESPACHO_LABEL_CON_ICON as TIPO_DESPACHO_LABEL,
+  ESTADO_ENTREGA_LABEL,
+  ESTADO_ENTREGA_COLOR,
+  QUIEN_ENTREGA_LABEL,
+  TIPO_PEDIDO_LABEL,
+} from "~/app/_lib/entrega-labels";
 
 interface ModalVerEntregasProps {
   open: boolean;
@@ -27,52 +35,32 @@ interface ModalVerEntregasProps {
   venta?: getVentaResponseProps;
 }
 
-const TIPO_ENTREGA_LABEL: Record<string, string> = {
-  rt: "🏪 Recojo en Tienda",
-  de: "🏠 Despacho a Domicilio",
-  pa: "🔀 Parcial",
-};
-
-const TIPO_DESPACHO_LABEL: Record<string, string> = {
-  in: "⚡ Inmediato",
-  pr: "📅 Programado",
-};
-
+// Construye el record de estado con icono — los iconos quedan locales porque
+// usan componentes JSX. Label/color vienen del módulo central.
 const ESTADO_LABEL: Record<
   string,
   { label: string; color: string; icon: React.ReactNode }
 > = {
   pe: {
-    label: "Pendiente",
-    color: "orange",
+    label: ESTADO_ENTREGA_LABEL.pe,
+    color: ESTADO_ENTREGA_COLOR.pe,
     icon: <FaClock className="text-orange-600" />,
   },
   ec: {
-    label: "En Camino",
-    color: "blue",
+    label: ESTADO_ENTREGA_LABEL.ec,
+    color: ESTADO_ENTREGA_COLOR.ec,
     icon: <FaTruck className="text-blue-600" />,
   },
   en: {
-    label: "Entregado",
-    color: "green",
+    label: ESTADO_ENTREGA_LABEL.en,
+    color: ESTADO_ENTREGA_COLOR.en,
     icon: <FaCheckCircle className="text-green-600" />,
   },
   ca: {
-    label: "Cancelado",
-    color: "red",
+    label: ESTADO_ENTREGA_LABEL.ca,
+    color: ESTADO_ENTREGA_COLOR.ca,
     icon: <FaTimesCircle className="text-red-600" />,
   },
-};
-
-const QUIEN_ENTREGA_LABEL: Record<string, string> = {
-  almacen: "Almacén",
-  vendedor: "Vendedor",
-  chofer: "Chofer",
-};
-
-const TIPO_PEDIDO_LABEL: Record<string, string> = {
-  interno: "Interno",
-  externo: "Externo",
 };
 
 function EntregaDetalle({ entrega }: { entrega: any }) {
@@ -158,6 +146,23 @@ function EntregaDetalle({ entrega }: { entrega: any }) {
             <FaWarehouse className="text-slate-400 text-xs" />
             <span className="text-slate-700">
               Almacén salida: {entrega.almacenSalida.name}
+            </span>
+          </div>
+        )}
+        {/* Quien hizo el registro físico de la entrega (usuario logueado al
+            momento). Se muestra el nombre del user + el rol que seleccionó
+            (Almacén/Vendedor/Chofer). Antes solo aparecía como tag arriba
+            sin el nombre, así que no se sabía quién físicamente la hizo. */}
+        {entrega.user?.name && (
+          <div className="flex items-center gap-2 text-sm">
+            <FaUserTie className="text-slate-400 text-xs" />
+            <span className="text-slate-700">
+              Entregado por: <span className="font-semibold">{entrega.user.name}</span>
+              {entrega.quien_entrega && (
+                <span className="text-slate-500">
+                  {' '}({QUIEN_ENTREGA_LABEL[entrega.quien_entrega] || entrega.quien_entrega})
+                </span>
+              )}
             </span>
           </div>
         )}

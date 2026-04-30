@@ -4,8 +4,28 @@
 
 import { apiRequest, type ApiResponse } from '../api';
 import type { ValeCompraAplicado } from './vales-compra';
+// Re-exportamos para que cualquiera que importe de venta.ts pueda acceder
+// a los enums de la entrega sin tener que importar de entrega-producto.ts.
+import {
+  TipoEntrega as TipoEntregaEnum,
+  TipoDespacho as TipoDespachoEntregaEnum,
+  EstadoEntrega as EstadoEntregaEnum,
+} from './entrega-producto';
 
 // ============= ENUMS =============
+
+/**
+ * Tipo de despacho a nivel de Venta. Distinto del enum de EntregaProducto:
+ * - Aquí se elige al CREAR la venta (et/do/pa).
+ * - En la EntregaProducto el equivalente es `tipo_entrega` (rt/de/pa) — tienen
+ *   códigos distintos por razones históricas, no se puede unificar sin migrar
+ *   data en producción.
+ */
+export enum TipoDespachoVenta {
+  EN_TIENDA = 'et',
+  DOMICILIO = 'do',
+  PARCIAL = 'pa',
+}
 
 export enum TipoDocumento {
   FACTURA = '01',
@@ -91,7 +111,10 @@ export interface CreateVentaRequest {
     referencia?: string | null;
   }>;
   despliegue_de_pago_ventas?: DespliegueDePagoVentaRequest[];
-  tipo_despacho?: 'et' | 'do' | 'pa'; // et=En Tienda, do=Domicilio, pa=Parcial
+  tipo_despacho?: TipoDespachoVenta;
+  // Quien entrega: lo usa el backend para crear la entrega automática en
+  // ventas de despacho en tienda. Por defecto 'almacen' si no se envía.
+  quien_entrega?: 'vendedor' | 'almacen' | 'chofer';
   // Si true, no descontar stock al crear la venta — se descontará cuando
   // se cree la entrega-producto manualmente.
   omitir_entrega?: boolean;
@@ -370,8 +393,8 @@ export type VentaCompleta = {
   tipo_moneda: 's' | 'd'
   tipo_de_cambio: number
   fecha: string
-  estado_de_venta: 'cr' | 'ee' | 'pr' | 'an'
-  tipo_despacho?: 'et' | 'do' | 'pa' | null // et=En Tienda, do=Domicilio, pa=Parcial
+  estado_de_venta: EstadoDeVenta
+  tipo_despacho?: TipoDespachoVenta | null
   cliente_id?: number
   direccion_seleccionada?: string
   recomendado_por_id?: number
@@ -390,16 +413,16 @@ export type VentaCompleta = {
   entregas_productos?: Array<{
     id: number
     venta_id: string
-    tipo_entrega: 'rt' | 'de' | 'pa' // rt=Recojo en Tienda, de=Despacho, pa=Parcial
-    tipo_despacho: 'in' | 'pr' // in=Inmediato, pr=Programado
-    estado_entrega: 'pe' | 'ec' | 'en' | 'ca' // pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
+    tipo_entrega: TipoEntregaEnum
+    tipo_despacho: TipoDespachoEntregaEnum
+    estado_entrega: EstadoEntregaEnum
   }>
   entregasProductos?: Array<{
     id: number
     venta_id: string
-    tipo_entrega: 'rt' | 'de' | 'pa'
-    tipo_despacho: 'in' | 'pr'
-    estado_entrega: 'pe' | 'ec' | 'en' | 'ca'
+    tipo_entrega: TipoEntregaEnum
+    tipo_despacho: TipoDespachoEntregaEnum
+    estado_entrega: EstadoEntregaEnum
   }>
   servicios_venta?: Array<{
     id: number

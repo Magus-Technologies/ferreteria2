@@ -3,6 +3,10 @@
 import { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import CellAccionesEntrega from './cell-acciones-entrega'
+import {
+  TIPO_ENTREGA_LABEL_CON_ICON,
+  TIPO_DESPACHO_LABEL_CON_ICON,
+} from '~/app/_lib/entrega-labels'
 
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
@@ -91,11 +95,8 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       field: 'tipo_entrega',
       width: 140,
       valueFormatter: (params) => {
-        const tipo = params.value
-        if (tipo === 'rt') return '🏪 Recojo Tienda'
-        if (tipo === 'de') return '🏠 Despacho'
-        if (tipo === 'pa') return '🔀 Parcial'
-        return tipo || '—'
+        const tipo = params.value as string
+        return TIPO_ENTREGA_LABEL_CON_ICON[tipo] || tipo || '—'
       },
       cellStyle: (params) => {
         const tipo = params.value
@@ -110,10 +111,8 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       field: 'tipo_despacho',
       width: 130,
       valueFormatter: (params) => {
-        const tipo = params.value
-        if (tipo === 'in') return '⚡ Inmediato'
-        if (tipo === 'pr') return '📅 Programado'
-        return tipo || '—'
+        const tipo = params.value as string
+        return TIPO_DESPACHO_LABEL_CON_ICON[tipo] || tipo || '—'
       },
       cellStyle: (params) => {
         const tipo = params.value

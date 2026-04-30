@@ -796,16 +796,26 @@ export default function ModalDetallesEntrega({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               ¿Quién entrega? <span className="text-red-500">*</span>
             </label>
-            <Select
-              placeholder="Seleccionar"
-              value={quienEntrega || 'almacen'}
-              onChange={(value) => form.setFieldValue('quien_entrega', value)}
-              options={[
-                { value: 'vendedor', label: 'Vendedor' },
-                { value: 'almacen', label: 'Almacen' },
-              ]}
-              className="w-full"
-            />
+            {/* Antes era un Select controlado a mano leyendo via useWatch +
+                setFieldValue: en algunos flujos quedaba "Almacen" mostrado
+                visualmente pero el form sin el valor (o con uno viejo de un
+                intento previo). Ahora usamos Form.Item para que la unión
+                form ↔ display sea automática. */}
+            <Form.Item
+              name="quien_entrega"
+              noStyle
+              initialValue="almacen"
+              rules={[{ required: true, message: 'Selecciona quién entrega' }]}
+            >
+              <Select
+                placeholder="Seleccionar"
+                options={[
+                  { value: 'almacen', label: 'Almacen' },
+                  { value: 'vendedor', label: 'Vendedor' },
+                ]}
+                className="w-full"
+              />
+            </Form.Item>
           </div>
         )}
 

@@ -255,21 +255,25 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           />
         </Tooltip>
 
-        <ConfigurableElement
-          componentId="mis-entregas.boton-ver-mapa"
-          label="Botón Ver Mapa"
-          noFullWidth
-        >
-          <Tooltip title="Ver Mapa">
-            <Button
-              type="text"
-              size="small"
-              icon={<FaMapMarkedAlt size={15} />}
-              onClick={() => openPostDespacho(entrega)}
-              className="!text-blue-600 hover:!bg-blue-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
-            />
-          </Tooltip>
-        </ConfigurableElement>
+        {/* Ver Mapa solo aplica para entregas a domicilio o parciales — en
+            recojo en tienda no hay dirección de entrega ni viaje del chofer. */}
+        {entrega.tipo_entrega !== 'rt' && (
+          <ConfigurableElement
+            componentId="mis-entregas.boton-ver-mapa"
+            label="Botón Ver Mapa"
+            noFullWidth
+          >
+            <Tooltip title="Ver Mapa">
+              <Button
+                type="text"
+                size="small"
+                icon={<FaMapMarkedAlt size={15} />}
+                onClick={() => openPostDespacho(entrega)}
+                className="!text-blue-600 hover:!bg-blue-50 !rounded-lg !w-8 !h-8 !flex !items-center !justify-center"
+              />
+            </Tooltip>
+          </ConfigurableElement>
+        )}
 
         <ConfigurableElement
           componentId="mis-entregas.boton-crear-guia"

@@ -17,6 +17,12 @@ import { useAuth } from '~/lib/auth-context'
 import { useDebounce } from 'use-debounce'
 import { useState, useEffect } from 'react'
 import { blueColors, greenColors, redColors, orangeColors } from '~/lib/colors'
+import {
+  TIPO_ENTREGA_LABEL_CON_ICON,
+  TIPO_DESPACHO_LABEL_CON_ICON,
+  ESTADO_ENTREGA_LABEL_FILTER,
+  optionsFromMap,
+} from '~/app/_lib/entrega-labels'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
@@ -128,6 +134,11 @@ export default function FiltersMisEntregas() {
                   <FaCalendar size={15} className="text-amber-600 mx-1" />
                 }
                 allowClear
+                // Forzar uso del calendario para que el form siempre tenga el
+                // valor seleccionado. Al permitir escritura libre, AntD DatePicker
+                // no commitea hasta Enter o blur válido — y si el usuario tipea
+                // y hace click directo en Buscar, el filtro usa la fecha vieja.
+                inputReadOnly
               />
             </div>
           </ConfigurableElement>
@@ -152,6 +163,7 @@ export default function FiltersMisEntregas() {
                   <FaCalendar size={15} className="text-amber-600 mx-1" />
                 }
                 allowClear
+                inputReadOnly
               />
             </div>
           </ConfigurableElement>
@@ -176,12 +188,7 @@ export default function FiltersMisEntregas() {
                 mode="multiple"
                 placeholder="Todos"
                 maxTagCount="responsive"
-                options={[
-                  { value: 'pe', label: '⏳ Pendiente' },
-                  { value: 'ec', label: '🚚 En Camino' },
-                  { value: 'en', label: '✅ Entregado' },
-                  { value: 'ca', label: '❌ Cancelado' },
-                ]}
+                options={optionsFromMap(ESTADO_ENTREGA_LABEL_FILTER)}
               />
             </div>
           </ConfigurableElement>
@@ -204,11 +211,7 @@ export default function FiltersMisEntregas() {
                 formWithMessage={false}
                 allowClear
                 placeholder="Todos"
-                options={[
-                  { value: 'rt', label: '🏪 Recojo Tienda' },
-                  { value: 'de', label: '🏠 Despacho' },
-                  { value: 'pa', label: '🔀 Parcial' },
-                ]}
+                options={optionsFromMap(TIPO_ENTREGA_LABEL_CON_ICON)}
               />
             </div>
           </ConfigurableElement>
@@ -231,10 +234,7 @@ export default function FiltersMisEntregas() {
                 formWithMessage={false}
                 allowClear
                 placeholder="Todos"
-                options={[
-                  { value: 'in', label: '⚡ Inmediato' },
-                  { value: 'pr', label: '📅 Programado' },
-                ]}
+                options={optionsFromMap(TIPO_DESPACHO_LABEL_CON_ICON)}
               />
             </div>
           </ConfigurableElement>
