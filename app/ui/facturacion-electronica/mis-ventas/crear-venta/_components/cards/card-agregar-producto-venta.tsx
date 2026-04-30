@@ -181,22 +181,18 @@ export default function CardAgregarProductoVenta({
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
   const precio_ventaRef = useRef<RefSelectBaseProps>(null)
   const buttom_masRef = useRef<HTMLButtonElement>(null)
-  const lastProductoIdRef = useRef<number | undefined>(undefined)
-  
+
   useEffect(() => {
-    // Auto-select del 1er resultado tras buscar: enfocar cantidad si el user
-    // no está dentro de otro input. La búsqueda es manual (Enter en buscador),
-    // así que cuando llegan los datos el activeElement típicamente ya no es el buscador.
-    if (productoSeleccionadoSearchStore?.id &&
-        productoSeleccionadoSearchStore.id !== lastProductoIdRef.current) {
-      const activeTag = document.activeElement?.tagName
-      const usuarioEscribiendo = activeTag === 'INPUT' || activeTag === 'TEXTAREA'
-      if (!usuarioEscribiendo) {
-        setTimeout(() => cantidadRef.current?.focus(), 50)
-      }
+    // El modal usa destroyOnHidden → este card se monta nuevo en cada apertura.
+    // Si al montar ya hay producto en el store, enfocar cantidad. Antes había
+    // un guard "no enfocar si activeElement es INPUT" que fallaba al re-abrir
+    // el mismo producto (el SelectProductos del header sigue siendo el active
+    // element y la 2da apertura perdía el focus).
+    if (productoSeleccionadoSearchStore?.id) {
+      setTimeout(() => cantidadRef.current?.focus(), 50)
     }
-    lastProductoIdRef.current = productoSeleccionadoSearchStore?.id
-  }, [productoSeleccionadoSearchStore])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Confirmación explícita del usuario (Enter o click en fila del modal):
   // siempre mover focus a cantidad, sin importar el activeElement.

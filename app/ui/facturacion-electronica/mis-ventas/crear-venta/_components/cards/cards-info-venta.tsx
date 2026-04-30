@@ -29,6 +29,7 @@ const ModalTrasladoBoveda = dynamic(() => import("~/app/ui/facturacion-electroni
 export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submitting }: { form: FormInstance; ventaId?: string; onMissingApertura?: () => void; submitting?: boolean }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const forma_de_pago = Form.useWatch("forma_de_pago", form);
+  const numero_dias = Form.useWatch("numero_dias", form);
   const tipo_documento = Form.useWatch("tipo_documento", form);
   const tipo_despacho = Form.useWatch("tipo_despacho", form) as
     | "EnTienda"
@@ -79,6 +80,9 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
     setModalDetallesEntregaOpen(true);
   };
+
+  // Crédito requiere N° de días — sin días no se puede saber el vencimiento.
+  const creditoSinDias = forma_de_pago === "cr" && !Number(numero_dias);
 
   // Filtrar cabeceras de paquete para cálculos (son resumen, no productos reales)
   const productosReales = useMemo(
@@ -279,10 +283,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
           >
             <ButtonBase
               onClick={handleCreditoClick}
-              disabled={submitting}
+              disabled={submitting || creditoSinDias}
               loading={submitting}
               color="success"
               className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
+              title={creditoSinDias ? 'Ingresa el N° de días para habilitar' : undefined}
             >
               <MdSell className="min-w-fit" size={30} />
               {ventaId ? 'Editar Venta a Crédito' : 'Crear Venta a Crédito'}

@@ -75,7 +75,7 @@ export default function FiltersMisEntregas() {
     const estadoFinal = Array.isArray(estados) && estados.length > 0 ? estados : undefined
 
     setFiltros({
-      fecha_desde: values.fecha_desde || dayjs().subtract(1, 'month').startOf('day'),
+      fecha_desde: values.fecha_desde || dayjs().subtract(7, 'days').startOf('day'),
       fecha_hasta: values.fecha_hasta || dayjs().endOf('day'),
       estado_entrega: estadoFinal,
       tipo_despacho: values.tipo_despacho || undefined,
@@ -93,7 +93,7 @@ export default function FiltersMisEntregas() {
       form={form}
       name="filtros-mis-entregas"
       initialValues={{
-        fecha_desde: dayjs().subtract(1, 'month').startOf('day'),
+        fecha_desde: dayjs().subtract(7, 'days').startOf('day'),
         fecha_hasta: dayjs().endOf('day'),
       }}
       className="w-full"
