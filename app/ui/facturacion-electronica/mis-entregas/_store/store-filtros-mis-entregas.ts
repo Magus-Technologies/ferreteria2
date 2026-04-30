@@ -16,11 +16,10 @@ interface StoreFiltrosMisEntregas {
   resetFiltros: () => void
 }
 
-// Defaults: hoy y 7 días atrás. Antes era "1 mes", lo que hacía que se
-// mostraran prácticamente todas las entregas del mes y daba la sensación de
-// que el filtro no funcionaba. 7 días es un rango más útil por defecto.
+// Defaults: solo HOY (igual que mis-ventas). Antes había un rango de varios
+// días que daba la sensación de que el filtro no funcionaba (mostraba todo).
 const filtrosIniciales: FiltrosMisEntregas = {
-  fecha_desde: dayjs().subtract(7, 'days').startOf('day'),
+  fecha_desde: dayjs().startOf('day'),
   fecha_hasta: dayjs().endOf('day'),
 }
 
