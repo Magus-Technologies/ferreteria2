@@ -84,6 +84,8 @@ export interface UpdateEntregaProductoRequest {
   chofer_id?: string;
   quien_entrega?: QuienEntrega;
   vehiculo_id?: number;
+  tipo_pedido?: TipoPedido;
+  cargo_destino?: string;
 }
 
 export interface EntregaProductoFilters {

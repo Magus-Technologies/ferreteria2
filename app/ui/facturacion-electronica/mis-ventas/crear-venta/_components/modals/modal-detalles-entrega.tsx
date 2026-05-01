@@ -64,9 +64,13 @@ function ModalDetallesEntregaInner({
   clienteNombre,
   clienteId,
   ocultar = [],
+  mode,
+  productosIniciales,
 }: ModalDetallesEntregaProps) {
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
   const ocultarSet = useMemo(() => new Set(ocultar), [ocultar])
+  // Si no se pasa `mode`, se asume modo histórico `crear-venta` con el `ventaId` recibido.
+  const resolvedMode = mode ?? { kind: 'crear-venta' as const, ventaId }
   // ── Bloques DOMICILIO + RESTO migrados al Provider (Fase A.3.2 / A.3.3)
   // Solo desestructuramos lo que el archivo principal aún consume — los
   // setters/state del Domicilio y Resto que ya solo se usan dentro de las
@@ -97,7 +101,7 @@ function ModalDetallesEntregaInner({
   // El modo `crear-venta` mantiene el comportamiento histórico. El modo
   // `actualizar-entrega` se usa al reusar este modal desde `mis-entregas`.
   const { handleConfirmar, handleOmitir, loading: creandoVenta } = useConfirmarEntrega({
-    mode: { kind: 'crear-venta', ventaId },
+    mode: resolvedMode,
     form,
     tipoDespacho,
     onSuccess: () => {
@@ -229,7 +233,15 @@ function ModalDetallesEntregaInner({
   }, [open, tipoDespacho, form])
 
   useEffect(() => {
-    if (open && (tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && productos && productos.length > 0) {
+    if (!open) return
+    // Modo `actualizar-entrega` (mis-entregas): los productos vienen ya
+    // pre-armados desde fuera (de la entrega existente), no del form.
+    if (productosIniciales && productosIniciales.length > 0) {
+      setProductosEntrega(productosIniciales)
+      return
+    }
+    // Modo `crear-venta`: derivar productos del form de la venta.
+    if ((tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && productos && productos.length > 0) {
       const items: ProductoEntrega[] = productos.map((p, index) => ({
         id: index + 1,
         producto: p.producto_name,
@@ -245,7 +257,7 @@ function ModalDetallesEntregaInner({
       }))
       setProductosEntrega(items)
     }
-  }, [open, tipoDespacho, productos])
+  }, [open, tipoDespacho, productos, productosIniciales])
 
   const handleEditarCliente = () => {
     onEditarCliente()
@@ -340,9 +352,6 @@ function ModalDetallesEntregaInner({
     restoInvalido,
     despachadorId,
     restoDespachadorId,
-    direccionEntrega,
-    cargoDestino,
-    restoCargoDestino,
     restoDireccionEntrega,
   } = useValidaciones({ tipoDespacho, form, totalAProgramar })
 

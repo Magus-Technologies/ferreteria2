@@ -1,7 +1,13 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import type { FormInstance } from 'antd'
 import dayjs from 'dayjs'
-import { TipoPedido } from '~/lib/api/entrega-producto'
+import {
+  entregaProductoApi,
+  EstadoEntrega,
+  QuienEntrega,
+  TipoPedido,
+  type UpdateEntregaProductoRequest,
+} from '~/lib/api/entrega-producto'
 import useCreateVenta from '../../../../_hooks/use-create-venta'
 import { useDetallesEntrega } from '../context'
 import type { TipoDespachoUI } from '../types'
@@ -149,15 +155,56 @@ export function useConfirmarEntrega({
   ])
 
   // ───────────────────────────────────────────────────────────────────────
-  // Modo ACTUALIZAR-ENTREGA — pendiente. Lo implementamos en Fase G cuando
-  // reusemos el modal en mis-entregas. Por ahora falla explícitamente para
-  // detectar invocaciones tempranas.
+  // Modo ACTUALIZAR-ENTREGA — usado al reusar el modal en mis-entregas.
+  // Construye un payload de UpdateEntregaProductoRequest a partir del form
+  // según el `tipoDespacho` y llama al endpoint PUT /entregas-productos/{id}.
   // ───────────────────────────────────────────────────────────────────────
+  const [actualizandoEntrega, setActualizandoEntrega] = useState(false)
   const handleConfirmarActualizarEntrega = useCallback(async () => {
-    throw new Error(
-      'useConfirmarEntrega: modo "actualizar-entrega" aún no implementado (Fase G).',
-    )
-  }, [])
+    if (mode.kind !== 'actualizar-entrega') return
+    const v = form.getFieldsValue()
+    const payload: UpdateEntregaProductoRequest = {}
+
+    if (tipoDespacho === 'EnTienda') {
+      // Marcar como entregado — el cliente está físicamente en tienda.
+      payload.estado_entrega = EstadoEntrega.ENTREGADO
+      payload.quien_entrega = (v.quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN
+      if (v.observaciones) payload.observaciones = v.observaciones
+    } else if (tipoDespacho === 'Domicilio') {
+      // Despacho a domicilio — pasa a EN_CAMINO con todos los datos del viaje.
+      payload.estado_entrega = EstadoEntrega.EN_CAMINO
+      payload.quien_entrega = QuienEntrega.CHOFER
+      if (v.despachador_id) payload.chofer_id = v.despachador_id
+      if (v.tipo_pedido) payload.tipo_pedido = v.tipo_pedido as TipoPedido
+      if (v.cargo_destino) payload.cargo_destino = v.cargo_destino
+      if (v.fecha_programada) {
+        payload.fecha_programada = dayjs(v.fecha_programada).format('YYYY-MM-DD')
+      }
+      if (v.hora_inicio) payload.hora_inicio = v.hora_inicio
+      if (v.hora_fin) payload.hora_fin = v.hora_fin
+      if (v.direccion_entrega) payload.direccion_entrega = v.direccion_entrega
+      if (v.referencia_entrega) payload.referencia_entrega = v.referencia_entrega
+      if (v.latitud != null) payload.latitud = Number(v.latitud)
+      if (v.longitud != null) payload.longitud = Number(v.longitud)
+      if (v.observaciones) payload.observaciones = v.observaciones
+      if (v.vehiculo_id) payload.vehiculo_id = v.vehiculo_id
+    } else if (tipoDespacho === 'Parcial') {
+      // Despacho parcial — al confirmar marcamos lo de "ahora" como ENTREGADO
+      // (lo programado se gestiona aparte como entrega futura).
+      payload.estado_entrega = EstadoEntrega.ENTREGADO
+      payload.quien_entrega = (quienEntregaParcial as QuienEntrega) || QuienEntrega.ALMACEN
+      if (v.observaciones) payload.observaciones = v.observaciones
+    }
+
+    setActualizandoEntrega(true)
+    try {
+      const response = await entregaProductoApi.update(mode.entregaId, payload)
+      if (response.error) throw new Error(response.error.message || 'Error al actualizar entrega')
+      onSuccess()
+    } finally {
+      setActualizandoEntrega(false)
+    }
+  }, [mode, form, tipoDespacho, quienEntregaParcial, onSuccess])
 
   // ───────────────────────────────────────────────────────────────────────
   // Botón "Omitir" — solo aplica en modo crear-venta. Crea la venta sin
@@ -176,6 +223,6 @@ export function useConfirmarEntrega({
         ? handleConfirmarCrearVenta
         : handleConfirmarActualizarEntrega,
     handleOmitir,
-    loading: mode.kind === 'crear-venta' ? creandoVenta : false,
+    loading: mode.kind === 'crear-venta' ? creandoVenta : actualizandoEntrega,
   }
 }

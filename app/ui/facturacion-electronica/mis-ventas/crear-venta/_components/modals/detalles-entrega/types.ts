@@ -7,6 +7,8 @@
  */
 
 import type { FormInstance } from 'antd'
+import type { ModoConfirmar } from './hooks/use-confirmar-entrega'
+import type { ProductoEntrega } from '../../../../_hooks/use-productos-entrega'
 
 /**
  * Coordenadas geográficas — usadas para el mapa de Mapbox y la tabla.
@@ -79,4 +81,21 @@ export interface ModalDetallesEntregaProps {
    * que el modal solo muestre los campos editables de la entrega existente.
    */
   ocultar?: SeccionOcultable[]
+  /**
+   * Modo del botón "Confirmar".
+   *
+   * - `{ kind: 'crear-venta', ventaId? }` (default): crea o edita una venta
+   *   con su entrega (uso en `mis-ventas/crear-venta`).
+   * - `{ kind: 'actualizar-entrega', entregaId }`: actualiza una entrega
+   *   existente (uso en `mis-entregas`).
+   *
+   * Si se omite, se infiere `crear-venta` con el `ventaId` recibido por prop.
+   */
+  mode?: ModoConfirmar
+  /**
+   * Productos iniciales para poblar la tabla de la sección Parcial/Domicilio.
+   * Útil al reusar el modal en `mis-entregas`, donde la entrega ya existe
+   * y los productos vienen del backend (no del form de la venta).
+   */
+  productosIniciales?: ProductoEntrega[]
 }
