@@ -3,8 +3,12 @@ import dayjs, { Dayjs } from 'dayjs'
 import type { TipoDespacho, TipoEntrega } from '~/lib/api/entrega-producto'
 
 export interface FiltrosMisEntregas {
-  fecha_desde: Dayjs
-  fecha_hasta: Dayjs
+  // Las fechas son opcionales: si el usuario las borra, no se filtra por
+  // fecha (mismo comportamiento que mis-ventas). Antes eran requeridas y
+  // hacían fallback a hoy, lo que confundía porque parecía que el filtro
+  // ignoraba lo que el usuario quería.
+  fecha_desde?: Dayjs
+  fecha_hasta?: Dayjs
   estado_entrega?: string[]
   // Antes los tipos eran literales ('in' | 'pr'). El api los pide como enum
   // TipoDespacho/TipoEntrega y TS no asigna literales a enums aunque tengan

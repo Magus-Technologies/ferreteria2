@@ -46,15 +46,20 @@ export default function FiltersMisEntregas() {
 
   // Botón principal "Entregar/Despachar/Confirmar" — cambia según el estado
   // de la entrega seleccionada. Reemplaza los botones que estaban en cada fila.
+  //
+  // Nota: para entregas pendientes (recojo en tienda o domicilio) usamos el
+  // mismo modal `ModalDespachoEntrega` — ya tiene "Cambiar Tipo Entrega",
+  // PDF embebido, vehículo, etc. La acción 'despachar' adapta su efecto
+  // según `tipo_entrega` (ver `handleDespachar` en cell-acciones-entrega).
   const botonPrincipal = (() => {
     if (!entregaSeleccionada) return null
     const estado = entregaSeleccionada.estado_entrega
     const esRecojoTienda = entregaSeleccionada.tipo_entrega === 'rt'
-    if (estado === 'pe' && esRecojoTienda) {
-      return { label: 'Entregar', accion: 'marcar' as const }
-    }
-    if (estado === 'pe' && !esRecojoTienda) {
-      return { label: 'Despachar', accion: 'despachar' as const }
+    if (estado === 'pe') {
+      return {
+        label: esRecojoTienda ? 'Entregar' : 'Despachar',
+        accion: 'despachar' as const,
+      }
     }
     if (estado === 'ec') {
       return { label: 'Confirmar', accion: 'confirmar' as const }
@@ -75,9 +80,13 @@ export default function FiltersMisEntregas() {
     const estados = values.estado_entrega
     const estadoFinal = Array.isArray(estados) && estados.length > 0 ? estados : undefined
 
+    // Si el usuario borra las fechas y le da Buscar, NO filtrar por fecha
+    // (comportamiento igual a mis-ventas). Antes hacía fallback a "hoy",
+    // lo que confundía al usuario porque parecía que el filtro ignoraba
+    // su acción de limpiar el campo.
     setFiltros({
-      fecha_desde: values.fecha_desde || dayjs().startOf('day'),
-      fecha_hasta: values.fecha_hasta || dayjs().endOf('day'),
+      fecha_desde: values.fecha_desde || undefined,
+      fecha_hasta: values.fecha_hasta || undefined,
       estado_entrega: estadoFinal,
       tipo_despacho: values.tipo_despacho || undefined,
       tipo_entrega: values.tipo_entrega || undefined,

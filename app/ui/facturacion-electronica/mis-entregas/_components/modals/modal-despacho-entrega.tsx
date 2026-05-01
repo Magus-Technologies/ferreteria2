@@ -181,7 +181,10 @@ export default function ModalDespachoEntrega({
             onClick={handleDespachar}
             className="!rounded-xl !h-10 !px-6 !font-bold !bg-orange-600 hover:!bg-orange-700 !border-none !shadow-lg !shadow-orange-600/30"
           >
-            Despachar ahora
+            {/* En Recojo en Tienda no hay viaje — el cliente se lleva el
+                producto en el momento. Por eso el botón dice "Entregar"
+                en lugar de "Despachar ahora". */}
+            {entrega?.tipo_entrega === 'rt' ? 'Entregar' : 'Despachar ahora'}
           </Button>
         </div>,
         document.body

@@ -147,8 +147,17 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   const handleDespachar = async (vehiculoId?: number) => {
     try {
+      // Para Recojo en Tienda no hay viaje del chofer — al "despachar" la
+      // entrega se cierra directamente en ENTREGADO (cliente está físicamente
+      // en la tienda recibiendo). Para Domicilio/Parcial pasa a EN_CAMINO
+      // y luego se confirma con otro paso cuando el chofer vuelve.
+      const esRecojoTienda = entrega.tipo_entrega === 'rt'
+      const nuevoEstado = esRecojoTienda
+        ? EstadoEntrega.ENTREGADO
+        : EstadoEntrega.EN_CAMINO
+
       const response = await entregaProductoApi.update(entrega.id, {
-        estado_entrega: EstadoEntrega.EN_CAMINO,
+        estado_entrega: nuevoEstado,
         ...(vehiculoId ? { vehiculo_id: vehiculoId } : {}),
       })
 
@@ -157,11 +166,17 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         return
       }
 
-      message.success('Entrega despachada correctamente')
+      message.success(
+        esRecojoTienda
+          ? 'Entrega completada'
+          : 'Entrega despachada correctamente',
+      )
       setModalDespachoOpen(false)
 
-      // Abrir modal post-despacho via Zustand (sobrevive re-renders de la tabla)
-      openPostDespacho(entrega)
+      // Para domicilio: abrir mapa post-despacho. Para RT no aplica.
+      if (!esRecojoTienda) {
+        openPostDespacho(entrega)
+      }
 
       // Refrescar tabla
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
