@@ -173,10 +173,10 @@ export default function KardexInventarioView() {
       valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '-',
     },
     {
-      headerName: 'Costo',
+      headerName: 'Precio/Costo',
       field: 'costo',
-      width: 100,
-      minWidth: 90,
+      width: 120,
+      minWidth: 100,
       type: 'numericColumn',
       valueFormatter: (params) => {
         if (!params.value) return '-'
@@ -368,8 +368,8 @@ export default function KardexInventarioView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio/Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio/Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
