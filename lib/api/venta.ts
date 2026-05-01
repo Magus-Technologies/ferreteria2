@@ -533,4 +533,5 @@ export interface StoreCobroMultipleResponse {
   }>
   message: string
   total_cobrado: number
+  cobros_ids?: string[]
 }

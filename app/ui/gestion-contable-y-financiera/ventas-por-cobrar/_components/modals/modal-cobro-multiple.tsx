@@ -2,6 +2,7 @@
 
 import { Modal, Form, InputNumber, DatePicker, Input, App, Checkbox } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiRequest } from '~/lib/api'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
@@ -9,6 +10,7 @@ import dayjs from 'dayjs'
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
+import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
 import { FaMoneyBillWave } from 'react-icons/fa'
@@ -50,15 +52,21 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   const [ventasDistribucion, setVentasDistribucion] = useState<VentaConDistribucion[]>([])
   const [montoTotal, setMontoTotal] = useState<number>(0)
 
-  // Query para obtener despliegues de pago
+  // Query para obtener despliegues de pago (mismo endpoint que SelectDespliegueDePago para consistencia)
   const { data: desplieguesData } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+    queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
-      const { despliegueDePagoApi } = await import('~/lib/api/despliegue-de-pago')
-      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      const result = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/metodos-para-ventas')
       return result.data?.data || []
     },
+    enabled: open,
   })
+
+  // Sincronizar estados cuando cambia la data de ventas
+  const handleGlobalPagoChange = useCallback((value: string | undefined) => {
+    const id = value ? String(extractDesplieguePagoId(value) ?? value) : undefined
+    setVentasDistribucion(prev => prev.map(v => ({ ...v, _desplieguePagoId: id })))
+  }, [])
 
   useEffect(() => {
     if (open) {
@@ -67,17 +75,19 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       
       // Setear Efectivo por defecto cuando los datos estén disponibles
       if (desplieguesData && desplieguesData.length > 0) {
+        // Buscar el método que sea Efectivo (generalmente tiene tipo 'efectivo' o el label contiene 'EFECTIVO')
         const efectivo = desplieguesData.find((d: any) =>
-          d.name?.toUpperCase().includes('EFECTIVO') || d.name?.toUpperCase().includes('CCH')
+          d.tipo?.toLowerCase() === 'efectivo' || 
+          d.label?.toUpperCase().includes('EFECTIVO') || 
+          d.label?.toUpperCase().includes('CCH')
         )
         if (efectivo) {
-          form.setFieldValue('despliegue_de_pago_id', efectivo.id)
-          // También aplicar a todas las filas existentes
-          handleGlobalPagoChange(efectivo.id)
+          form.setFieldValue('despliegue_de_pago_id', efectivo.value)
+          handleGlobalPagoChange(efectivo.value)
         }
       }
     }
-  }, [open, desplieguesData]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, desplieguesData, handleGlobalPagoChange])
 
   const { data: ventasData, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS_POR_COBRAR, 'cobro-multiple', clienteId],
@@ -111,12 +121,6 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
     ventas.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
     setVentasDistribucion(ventas)
   }, [ventasData]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Cuando cambia el modo de pago global, aplica a todas las filas
-  const handleGlobalPagoChange = useCallback((value: string | undefined) => {
-    const id = value ? String(extractDesplieguePagoId(value) ?? value) : undefined
-    setVentasDistribucion(prev => prev.map(v => ({ ...v, _desplieguePagoId: id })))
-  }, [])
 
   const distribuirMonto = useCallback((monto: number, ventas: VentaConDistribucion[]) => {
     let restante = monto
@@ -163,6 +167,17 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
     ))
   }, [])
 
+  // Observar el modo de pago seleccionado para mostrar/ocultar N° Operación
+  const selectedPagoId = Form.useWatch('despliegue_de_pago_id', form)
+  const isEfectivo = useMemo(() => {
+    if (!selectedPagoId || !desplieguesData) return true // Por defecto asumimos efectivo si no hay nada o está cargando
+    const pago = desplieguesData.find((d: any) => d.value === selectedPagoId)
+    if (!pago) return false
+    return pago.tipo?.toLowerCase() === 'efectivo' || 
+           pago.label?.toUpperCase().includes('EFECTIVO') || 
+           pago.label?.toUpperCase().includes('CCH')
+  }, [selectedPagoId, desplieguesData])
+
   const totalDeudaCliente = useMemo(() =>
     ventasDistribucion.reduce((sum, v) => sum + v._saldoPendiente, 0), [ventasDistribucion])
 
@@ -171,10 +186,23 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   const montoSinDistribuir = montoTotal - totalDistribuido
 
+  // Estado para modal de tickets masivos
+  const [ticketModalOpen, setTicketModalOpen] = useState(false)
+  const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+  const [ticketLoading, setTicketLoading] = useState(false)
+
+  const handleCloseTicketModal = useCallback((v: boolean) => {
+    setTicketModalOpen(v)
+    if (!v && ticketPdfUrl) {
+      URL.revokeObjectURL(ticketPdfUrl)
+      setTicketPdfUrl(null)
+    }
+  }, [ticketPdfUrl])
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!clienteId || !user?.id) throw new Error('Datos incompletos')
-      const values = await form.validateFields(['cliente_id', 'fecha'])
+      const values = await form.validateFields()
 
       const distribucion = ventasDistribucion.filter(v => v._montoAPagar > 0)
 
@@ -191,7 +219,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         monto_total: montoTotal,
         fecha: dayjs(values.fecha).format('YYYY-MM-DD'),
         observacion: values.observacion || undefined,
-        numero_operacion: values.numero_operacion || undefined,
+        numero_operacion: isEfectivo ? undefined : values.numero_operacion || undefined,
         user_id: user.id,
         distribucion: distribucion.map(v => ({
           venta_id: v.id,
@@ -200,7 +228,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         })),
       })
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.error) {
         message.error(result.error.message)
         return
@@ -209,6 +237,35 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+      
+      const cobrosIds = result.data?.cobros_ids
+      if (cobrosIds && cobrosIds.length > 0) {
+        // Generar PDF masivo
+        const API_URL = process.env.NEXT_PUBLIC_API_URL
+        const { getAuthToken } = await import('~/lib/api')
+        const token = getAuthToken()
+        setTicketModalOpen(true)
+        setTicketLoading(true)
+        try {
+          const idsParam = cobrosIds.join(',')
+          const res = await fetch(`${API_URL}/pdf/cobro-venta-multiple?ids=${idsParam}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/pdf',
+            },
+          })
+          if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          setTicketPdfUrl(url)
+        } catch (err) {
+          console.error('Error al obtener tickets masivos:', err)
+          message.error('Error al generar los tickets')
+        } finally {
+          setTicketLoading(false)
+        }
+      }
+
       handleClose()
     },
     onError: (error: any) => {
@@ -232,7 +289,8 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   const okDisabled = totalDistribuido <= 0 || Math.abs(montoSinDistribuir) > 0.01 || faltaPago
 
   return (
-    <Modal
+    <>
+      <Modal
       title={
         <div className='flex items-center gap-2'>
           <FaMoneyBillWave className='text-emerald-600' size={20} />
@@ -249,187 +307,205 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       width={1200}
       destroyOnHidden
     >
-      {/* Cabecera: cliente, modo pago global, fecha, operación */}
-      <div className='grid grid-cols-5 gap-3 mb-4'>
-        <div className='col-span-2'>
-          <LabelBase label='Cliente:' orientation='column'>
-            <SelectClientes
-              propsForm={{ name: 'cliente_id', rules: [{ required: true, message: 'Requerido' }] }}
-              placeholder='Buscar cliente...'
-              form={form}
-              onChange={(value) => {
-                setClienteId(value)
-                setMontoTotal(0)
-                setVentasDistribucion([])
-              }}
-              onSelect={(value) => {
-                setClienteId(value as number)
-                setMontoTotal(0)
-                setVentasDistribucion([])
-              }}
+      <Form form={form} layout="vertical">
+        {/* Cabecera: cliente, modo pago global, fecha, operación */}
+        <div className='grid grid-cols-5 gap-3 mb-4'>
+          <div className='col-span-2'>
+            <LabelBase label='Cliente:' orientation='column'>
+              <SelectClientes
+                propsForm={{ name: 'cliente_id', rules: [{ required: true, message: 'Requerido' }] }}
+                placeholder='Buscar cliente...'
+                form={form}
+                onChange={(value) => {
+                  setClienteId(value)
+                  setMontoTotal(0)
+                  setVentasDistribucion([])
+                }}
+                onSelect={(value) => {
+                  setClienteId(value as number)
+                  setMontoTotal(0)
+                  setVentasDistribucion([])
+                }}
+              />
+            </LabelBase>
+          </div>
+          <LabelBase label='Modo Pago (todos):' orientation='column'>
+            <SelectDespliegueDePago
+              propsForm={{ name: 'despliegue_de_pago_id' }}
+              placeholder='Aplica a todas'
+              onChange={(val: any) => handleGlobalPagoChange(val || undefined)}
             />
           </LabelBase>
-        </div>
-        <LabelBase label='Modo Pago (todos):' orientation='column'>
-          <SelectDespliegueDePago
-            propsForm={{ name: 'despliegue_de_pago_id' }}
-            placeholder='Aplica a todas'
-            onChange={(val: any) => handleGlobalPagoChange(val || undefined)}
-          />
-        </LabelBase>
-        <LabelBase label='Fecha:' orientation='column'>
-          <Form.Item name='fecha' rules={[{ required: true, message: '' }]} noStyle>
-            <DatePicker className='w-full' format='DD/MM/YYYY' />
-          </Form.Item>
-        </LabelBase>
-        <LabelBase label='N° Operación:' orientation='column'>
-          <Form.Item name='numero_operacion' noStyle>
-            <Input placeholder='Opcional' />
-          </Form.Item>
-        </LabelBase>
-      </div>
-
-      {clienteId && (
-        <>
-          {/* Resumen de montos */}
-          <div className='flex items-center gap-4 mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border border-emerald-200'>
-            <div className='flex-1'>
-              <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Deuda Total del Cliente</span>
-              <span className='text-2xl font-bold text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span>
-            </div>
-            <div className='flex-1'>
-              <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Monto que Paga</span>
-              <InputNumber
-                className='w-full !text-xl !font-bold'
-                prefix='S/.'
-                precision={2}
-                min={0.01}
-                max={totalDeudaCliente}
-                placeholder='0.00'
-                size='large'
-                value={montoTotal || undefined}
-                onChange={handleMontoChange}
-              />
-            </div>
-            <div className='flex-1 text-center'>
-              <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Distribuido</span>
-              <span className={`text-2xl font-bold ${Math.abs(montoSinDistribuir) < 0.01 ? 'text-emerald-600' : 'text-orange-500'}`}>
-                S/. {totalDistribuido.toFixed(2)}
-              </span>
-              {Math.abs(montoSinDistribuir) >= 0.01 && (
-                <span className='text-xs text-orange-500 block'>Sin asignar: S/. {montoSinDistribuir.toFixed(2)}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Tabla de ventas pendientes con modo de pago por fila */}
-          <div className='border rounded-lg overflow-hidden'>
-            <div className='bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 grid grid-cols-12 gap-2 items-center'>
-              <div className='col-span-1'></div>
-              <div className='col-span-2'>Documento</div>
-              <div className='col-span-2'>Fecha</div>
-              <div className='col-span-1 text-right'>Total</div>
-              <div className='col-span-1 text-right'>Saldo</div>
-              <div className='col-span-2 text-center'>Monto a Pagar</div>
-              <div className='col-span-3 text-center'>Modo de Pago</div>
-            </div>
-            <div className='max-h-[320px] overflow-y-auto divide-y'>
-              {isLoading && (
-                <div className='text-center py-8 text-gray-400'>Cargando ventas pendientes...</div>
-              )}
-              {!isLoading && ventasDistribucion.length === 0 && (
-                <div className='text-center py-8 text-gray-400'>
-                  Este cliente no tiene ventas pendientes
-                </div>
-              )}
-              {ventasDistribucion.map((v) => {
-                const necesitaPago = v._montoAPagar > 0 && !v._desplieguePagoId
-                return (
-                  <div
-                    key={v.id}
-                    className={`px-3 py-2 grid grid-cols-12 gap-2 items-center text-sm transition-colors ${
-                      necesitaPago ? 'bg-red-50' :
-                      v._montoAPagar > 0 ? 'bg-emerald-50' :
-                      v._seleccionada ? 'bg-white' : 'bg-gray-50 opacity-60'
-                    }`}
-                  >
-                    <div className='col-span-1'>
-                      <Checkbox checked={v._seleccionada} onChange={() => toggleVenta(v.id)} />
-                    </div>
-                    <div className='col-span-2'>
-                      <span className='text-[10px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-bold mr-1'>
-                        {tipoDocMap[v.tipo_documento] || v.tipo_documento}
-                      </span>
-                      <span className='font-semibold text-xs'>{v.serie}-{v.numero}</span>
-                    </div>
-                    <div className='col-span-2 text-gray-500 text-xs'>
-                      {dayjs(v.fecha).format('DD/MM/YYYY')}
-                      {v.fecha_vencimiento && (
-                        <span className={`ml-1 text-[10px] ${dayjs(v.fecha_vencimiento).isBefore(dayjs()) ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-                          (Venc: {dayjs(v.fecha_vencimiento).format('DD/MM')})
-                        </span>
-                      )}
-                    </div>
-                    <div className='col-span-1 text-right text-xs font-medium'>
-                      {v._totalVenta.toFixed(2)}
-                    </div>
-                    <div className='col-span-1 text-right text-xs font-bold text-red-600'>
-                      {v._saldoPendiente.toFixed(2)}
-                    </div>
-                    <div className='col-span-2'>
-                      <InputNumber
-                        className='w-full'
-                        prefix='S/.'
-                        precision={2}
-                        min={0}
-                        max={v._saldoPendiente}
-                        value={v._montoAPagar}
-                        onChange={(val) => handleMontoManual(v.id, val || 0)}
-                        disabled={!v._seleccionada}
-                        size='small'
-                      />
-                    </div>
-                    <div className='col-span-3'>
-                      <SelectDespliegueDePago
-                        placeholder={necesitaPago ? '⚠ Requerido' : 'Modo pago'}
-                        value={v._desplieguePagoId}
-                        onChange={(val: any) => handlePagoRow(v.id, val || undefined)}
-                        disabled={!v._seleccionada || v._montoAPagar <= 0}
-                        size='small'
-                        variant='outlined'
-                        formWithMessage={false}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {faltaPago && (
-            <div className='mt-2 text-xs text-red-500 font-medium'>
-              ⚠ Selecciona el modo de pago en cada fila con monto asignado
-            </div>
-          )}
-
-          {/* Observación */}
-          <div className='mt-3'>
-            <LabelBase label='Observación:' orientation='column'>
-              <Form.Item name='observacion' noStyle>
-                <Input placeholder='Observaciones (opcional)' maxLength={500} />
+          <LabelBase label='Fecha:' orientation='column'>
+            <Form.Item name='fecha' rules={[{ required: true, message: 'Requerido' }]} noStyle>
+              <DatePicker className='w-full' format='DD/MM/YYYY' />
+            </Form.Item>
+          </LabelBase>
+          
+          <div className={isEfectivo ? 'invisible' : 'visible'}>
+            <LabelBase label='N° Operación:' orientation='column'>
+              <Form.Item name='numero_operacion' noStyle>
+                <Input placeholder='Opcional' />
               </Form.Item>
             </LabelBase>
           </div>
+        </div>
 
-          {/* Resumen final */}
-          <div className='flex justify-between mt-4 bg-gray-50 rounded-lg p-3 text-sm font-bold border border-gray-200'>
-            <span>Ventas: <span className='text-blue-700'>{filasConMonto.length}</span></span>
-            <span>Total Deuda: <span className='text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span></span>
-            <span>Pagando: <span className='text-emerald-600 text-lg'>S/. {totalDistribuido.toFixed(2)}</span></span>
-            <span>Resta: <span className='text-orange-600'>S/. {(totalDeudaCliente - totalDistribuido).toFixed(2)}</span></span>
-          </div>
-        </>
-      )}
-    </Modal>
+        {clienteId && (
+          <>
+            {/* Resumen de montos */}
+            <div className='flex items-center gap-4 mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border border-emerald-200'>
+              <div className='flex-1'>
+                <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Deuda Total del Cliente</span>
+                <span className='text-2xl font-bold text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span>
+              </div>
+              <div className='flex-1'>
+                <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Monto que Paga</span>
+                <InputNumber
+                  className='w-full !text-xl !font-bold'
+                  prefix='S/.'
+                  precision={2}
+                  min={0.01}
+                  max={totalDeudaCliente}
+                  placeholder='0.00'
+                  size='large'
+                  value={montoTotal || undefined}
+                  onChange={handleMontoChange}
+                />
+              </div>
+              <div className='flex-1 text-center'>
+                <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Distribuido</span>
+                <span className={`text-2xl font-bold ${Math.abs(montoSinDistribuir) < 0.01 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                  S/. {totalDistribuido.toFixed(2)}
+                </span>
+                {Math.abs(montoSinDistribuir) >= 0.01 && (
+                  <span className='text-xs text-orange-500 block'>Sin asignar: S/. {montoSinDistribuir.toFixed(2)}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Tabla de ventas pendientes con modo de pago por fila */}
+            <div className='border rounded-lg overflow-hidden'>
+              <div className='bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 grid grid-cols-12 gap-2 items-center'>
+                <div className='col-span-1'></div>
+                <div className='col-span-2'>Documento</div>
+                <div className='col-span-2'>Fecha</div>
+                <div className='col-span-1 text-right'>Total</div>
+                <div className='col-span-1 text-right'>Saldo</div>
+                <div className='col-span-2 text-center'>Monto a Pagar</div>
+                <div className='col-span-3 text-center'>Modo de Pago</div>
+              </div>
+              <div className='max-h-[320px] overflow-y-auto divide-y'>
+                {isLoading && (
+                  <div className='text-center py-8 text-gray-400'>Cargando ventas pendientes...</div>
+                )}
+                {!isLoading && ventasDistribucion.length === 0 && (
+                  <div className='text-center py-8 text-gray-400'>
+                    Este cliente no tiene ventas pendientes
+                  </div>
+                )}
+                {ventasDistribucion.map((v) => {
+                  const necesitaPago = v._montoAPagar > 0 && !v._desplieguePagoId
+                  return (
+                    <div
+                      key={v.id}
+                      className={`px-3 py-2 grid grid-cols-12 gap-2 items-center text-sm transition-colors ${
+                        necesitaPago ? 'bg-red-50' :
+                        v._montoAPagar > 0 ? 'bg-emerald-50' :
+                        v._seleccionada ? 'bg-white' : 'bg-gray-50 opacity-60'
+                      }`}
+                    >
+                      <div className='col-span-1'>
+                        <Checkbox checked={v._seleccionada} onChange={() => toggleVenta(v.id)} />
+                      </div>
+                      <div className='col-span-2'>
+                        <span className='text-[10px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-bold mr-1'>
+                          {tipoDocMap[v.tipo_documento] || v.tipo_documento}
+                        </span>
+                        <span className='font-semibold text-xs'>{v.serie}-{v.numero}</span>
+                      </div>
+                      <div className='col-span-2 text-gray-500 text-xs'>
+                        {dayjs(v.fecha).format('DD/MM/YYYY')}
+                        {v.fecha_vencimiento && (
+                          <span className={`ml-1 text-[10px] ${dayjs(v.fecha_vencimiento).isBefore(dayjs()) ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                            (Venc: {dayjs(v.fecha_vencimiento).format('DD/MM')})
+                          </span>
+                        )}
+                      </div>
+                      <div className='col-span-1 text-right text-xs font-medium'>
+                        {v._totalVenta.toFixed(2)}
+                      </div>
+                      <div className='col-span-1 text-right text-xs font-bold text-red-600'>
+                        {v._saldoPendiente.toFixed(2)}
+                      </div>
+                      <div className='col-span-2'>
+                        <InputNumber
+                          className='w-full'
+                          prefix='S/.'
+                          precision={2}
+                          min={0}
+                          max={v._saldoPendiente}
+                          value={v._montoAPagar}
+                          onChange={(val) => handleMontoManual(v.id, val || 0)}
+                          disabled={!v._seleccionada}
+                          size='small'
+                        />
+                      </div>
+                      <div className='col-span-3'>
+                        <SelectDespliegueDePago
+                          placeholder={necesitaPago ? '⚠ Requerido' : 'Modo pago'}
+                          value={v._desplieguePagoId}
+                          onChange={(val: any) => handlePagoRow(v.id, val || undefined)}
+                          disabled={!v._seleccionada || v._montoAPagar <= 0}
+                          size='small'
+                          variant='outlined'
+                          formWithMessage={false}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {faltaPago && (
+              <div className='mt-2 text-xs text-red-500 font-medium'>
+                ⚠ Selecciona el modo de pago en cada fila con monto asignado
+              </div>
+            )}
+
+            {/* Observación */}
+            <div className='mt-3'>
+              <LabelBase label='Observación:' orientation='column'>
+                <Form.Item name='observacion' noStyle>
+                  <Input placeholder='Observaciones (opcional)' maxLength={500} />
+                </Form.Item>
+              </LabelBase>
+            </div>
+
+            {/* Resumen final */}
+            <div className='flex justify-between mt-4 bg-gray-50 rounded-lg p-3 text-sm font-bold border border-gray-200'>
+              <span>Ventas: <span className='text-blue-700'>{filasConMonto.length}</span></span>
+              <span>Total Deuda: <span className='text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span></span>
+              <span>Pagando: <span className='text-emerald-600 text-lg'>S/. {totalDistribuido.toFixed(2)}</span></span>
+              <span>Resta: <span className='text-orange-600'>S/. {(totalDeudaCliente - totalDistribuido).toFixed(2)}</span></span>
+            </div>
+          </>
+        )}
+      </Form>
+      </Modal>
+
+      <ModalShowDoc
+        open={ticketModalOpen}
+        setOpen={handleCloseTicketModal}
+        nro_doc='Comprobantes de Cobro'
+        esTicket
+        tipoDocumento='venta'
+        backendPdfUrl={ticketPdfUrl}
+        backendPdfLoading={ticketLoading}
+      >
+        <></>
+      </ModalShowDoc>
+    </>
   )
 }

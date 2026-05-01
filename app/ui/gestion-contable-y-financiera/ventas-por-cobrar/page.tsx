@@ -12,15 +12,17 @@ import ModalRegistrarCobro from './_components/modals/modal-registrar-cobro'
 import ModalConsultarPagos from './_components/modals/modal-consultar-pagos'
 import { useState } from 'react'
 import { App } from 'antd'
-import { FaMoneyCheckAlt, FaListAlt, FaCalendarCheck, FaUsers } from 'react-icons/fa'
+import { FaMoneyCheckAlt, FaListAlt, FaCalendarCheck, FaUsers, FaPrint } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import ModalCobroMultiple from './_components/modals/modal-cobro-multiple'
+import ModalImprimirTicketsMasivos from './_components/modals/modal-imprimir-tickets-masivos'
 
 export default function VentasPorCobrarPage() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
   const [openRegistrarCobro, setOpenRegistrarCobro] = useState(false)
   const [openConsultarPagos, setOpenConsultarPagos] = useState(false)
   const [openCobroMultiple, setOpenCobroMultiple] = useState(false)
+  const [openImprimirMasivo, setOpenImprimirMasivo] = useState(false)
   const ventaSeleccionada = useStoreVentaSeleccionada(state => state.venta)
   const { message } = App.useApp()
 
@@ -58,7 +60,7 @@ export default function VentasPorCobrarPage() {
             {/* Botones de acción */}
             <div className='flex flex-col gap-2 mt-2'>
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-green-500 !text-green-700 font-semibold'
+                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-green-500 !text-green-700 font-semibold hover:bg-green-50'
                 onClick={handleRegistrarCobro}
               >
                 <FaMoneyCheckAlt size={18} />
@@ -66,7 +68,7 @@ export default function VentasPorCobrarPage() {
               </ButtonBase>
 
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-blue-500 !text-blue-700 font-semibold'
+                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-blue-500 !text-blue-700 font-semibold hover:bg-blue-50'
                 onClick={() => {
                   if (!ventaSeleccionada) {
                     message.warning('Seleccione una venta primero')
@@ -80,15 +82,23 @@ export default function VentasPorCobrarPage() {
               </ButtonBase>
 
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-emerald-500 !text-emerald-700 font-semibold'
+                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-emerald-500 !text-emerald-700 font-semibold hover:bg-emerald-50'
                 onClick={() => setOpenCobroMultiple(true)}
               >
-                <FaUsers size={16} />
+                <FaUsers size={18} />
                 Cobro Múltiple por Cliente
               </ButtonBase>
 
               <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-orange-500 !text-orange-700 font-semibold'
+                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-rose-500 !text-rose-700 font-semibold hover:bg-rose-50'
+                onClick={() => setOpenImprimirMasivo(true)}
+              >
+                <FaPrint size={18} />
+                Imprimir Tickets Masivos
+              </ButtonBase>
+
+              <ButtonBase
+                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-orange-500 !text-orange-700 font-semibold hover:bg-orange-50'
                 onClick={() => setOpenConsultarPagos(true)}
               >
                 <FaCalendarCheck size={16} />
@@ -112,6 +122,10 @@ export default function VentasPorCobrarPage() {
       <ModalCobroMultiple
         open={openCobroMultiple}
         setOpen={setOpenCobroMultiple}
+      />
+      <ModalImprimirTicketsMasivos
+        open={openImprimirMasivo}
+        setOpen={setOpenImprimirMasivo}
       />
     </ContenedorGeneral>
   )
