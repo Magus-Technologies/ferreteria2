@@ -204,6 +204,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
           selectionColor={blueColors[1]}
           suppressRowTransform
           exportExcel
+          withNumberColumn={false}
         />
       </div>
 

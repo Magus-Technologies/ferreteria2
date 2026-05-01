@@ -353,6 +353,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           rowData={cobros}
           selectionColor={greenColors[1]}
           suppressRowTransform
+          withNumberColumn={false}
         />
       </div>
 
