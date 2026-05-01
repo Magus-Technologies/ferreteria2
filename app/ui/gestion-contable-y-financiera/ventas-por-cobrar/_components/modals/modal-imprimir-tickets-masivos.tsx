@@ -107,7 +107,14 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
   }, [cobrosFiltrados, message])
 
   const columns: ColDef<CobroVenta>[] = useMemo(() => [
-    { headerName: 'Fecha', width: 100, valueGetter: (p) => dayjs(p.data?.fecha).format('DD/MM/YYYY') },
+    { 
+      headerName: 'Fecha y Hora', 
+      width: 150, 
+      valueGetter: (p) => {
+        const val = p.data?.created_at || p.data?.fecha
+        return dayjs(val).format('DD/MM/YYYY HH:mm')
+      }
+    },
     { headerName: 'Venta', width: 120, valueGetter: (p) => `${p.data?.venta?.serie}-${p.data?.venta?.numero}` },
     {
       headerName: 'Cliente',

@@ -95,11 +95,12 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   // Definir columnas específicas para ventas por cobrar
   const columns: ColDef<VentaCompleta>[] = useMemo(() => [
     {
-      headerName: 'Fecha',
-      width: 120,
+      headerName: 'Fecha y Hora',
+      width: 150,
       valueGetter: (params: any) => {
-        if (!params.data?.fecha) return ''
-        return dayjs(params.data.fecha).format('DD/MM/YYYY')
+        const val = params.data?.created_at || params.data?.fecha
+        if (!val) return ''
+        return dayjs(val).format('DD/MM/YYYY HH:mm')
       },
     },
     {

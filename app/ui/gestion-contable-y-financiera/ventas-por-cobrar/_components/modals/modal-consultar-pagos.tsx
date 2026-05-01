@@ -127,9 +127,12 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       },
     },
     {
-      headerName: 'Fecha Pago',
-      width: 110,
-      valueGetter: (p) => p.data?.fecha ? dayjs(p.data.fecha).format('DD/MM/YYYY') : '',
+      headerName: 'Fecha y Hora Pago',
+      width: 150,
+      valueGetter: (p) => {
+        const val = p.data?.created_at || p.data?.fecha
+        return val ? dayjs(val).format('DD/MM/YYYY HH:mm') : ''
+      },
     },
     {
       headerName: 'T. Pago',

@@ -425,7 +425,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
                         <span className='font-semibold text-xs'>{v.serie}-{v.numero}</span>
                       </div>
                       <div className='col-span-2 text-gray-500 text-xs'>
-                        {dayjs(v.fecha).format('DD/MM/YYYY')}
+                        {dayjs(v.created_at || v.fecha).format('DD/MM/YYYY HH:mm')}
                         {v.fecha_vencimiento && (
                           <span className={`ml-1 text-[10px] ${dayjs(v.fecha_vencimiento).isBefore(dayjs()) ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
                             (Venc: {dayjs(v.fecha_vencimiento).format('DD/MM')})
