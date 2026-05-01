@@ -10,6 +10,12 @@ import { InputNumber } from 'antd'
 interface TablaProductosEntregaProps {
   productos: ProductoEntrega[]
   onProductoChange: (productos: ProductoEntrega[]) => void
+  /**
+   * Modo simple: oculta las columnas "Ubicación" y "Eliminar". Usado al
+   * reusar la tabla en `mis-entregas` para actualizar una entrega existente
+   * (los productos ya están fijados — no se eliminan ni se ubican).
+   */
+  simple?: boolean
 }
 
 type EntregarCellProps = {
@@ -51,6 +57,7 @@ const EntregarCell = memo(function EntregarCell({
 export default function TablaProductosEntrega({
   productos,
   onProductoChange,
+  simple = false,
 }: TablaProductosEntregaProps) {
   const productosRef = useRef(productos)
   productosRef.current = productos
@@ -86,11 +93,13 @@ export default function TablaProductosEntrega({
       field: 'producto',
       flex: 1,
     },
-    {
-      headerName: 'Ubicación',
-      field: 'ubicacion',
-      width: 120,
-    },
+    ...(simple
+      ? []
+      : [{
+          headerName: 'Ubicación',
+          field: 'ubicacion',
+          width: 120,
+        } as ColDef<ProductoEntrega>]),
     {
       headerName: 'Total',
       field: 'total',
@@ -129,22 +138,24 @@ export default function TablaProductosEntrega({
         backgroundColor: '#f0fdf4',
       },
     },
-    {
-      headerName: 'Eliminar',
-      width: 80,
-      cellRenderer: (params: { data: ProductoEntrega }) => (
-        <span
-          style={{ cursor: 'pointer' }}
-          onClick={() => params.data && handleDelete(params.data.id)}
-        >
-          ❌
-        </span>
-      ),
-      cellStyle: {
-        textAlign: 'center',
-        color: '#ef4444',
-      },
-    },
+    ...(simple
+      ? []
+      : [{
+          headerName: 'Eliminar',
+          width: 80,
+          cellRenderer: (params: { data: ProductoEntrega }) => (
+            <span
+              style={{ cursor: 'pointer' }}
+              onClick={() => params.data && handleDelete(params.data.id)}
+            >
+              ❌
+            </span>
+          ),
+          cellStyle: {
+            textAlign: 'center',
+            color: '#ef4444',
+          },
+        } as ColDef<ProductoEntrega>]),
   ]
 
   return (

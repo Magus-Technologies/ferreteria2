@@ -146,28 +146,26 @@ export function SeccionRestoProgramado({
     [form, setCoordenadasResto, setUbicacionGpsResto],
   )
 
-  // Cuando se oculta el switch (modo `actualizar-entrega`), los campos del
-  // resto se muestran siempre — no hay un toggle de "¿programar resto?".
-  const switchOculto = ocultar?.has('programar-resto') ?? false
-  const mostrarCamposResto = switchOculto
-    ? true
-    : programarResto && productosEntrega.some((p) => p.total - p.entregar > 0)
+  // Si el switch está oculto, toda la sub-sección desaparece (caso
+  // `mis-entregas`: la entrega ya existe, no se programa resto desde aquí).
+  if (ocultar?.has('programar-resto')) return null
+
+  const mostrarCamposResto =
+    programarResto && productosEntrega.some((p) => p.total - p.entregar > 0)
 
   return (
     <div className="border-t border-gray-200 pt-4">
-      {!switchOculto && (
-        <div className="flex items-center gap-3">
-          <Switch checked={programarResto} onChange={setProgramarResto} size="small" />
-          <span className="text-sm font-medium text-gray-700">
-            ¿Programar entrega del resto?
+      <div className="flex items-center gap-3">
+        <Switch checked={programarResto} onChange={setProgramarResto} size="small" />
+        <span className="text-sm font-medium text-gray-700">
+          ¿Programar entrega del resto?
+        </span>
+        {productosEntrega.some((p) => p.total - p.entregar > 0) && (
+          <span className="text-xs text-gray-500">
+            ({productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} unidad(es) pendiente(s))
           </span>
-          {productosEntrega.some((p) => p.total - p.entregar > 0) && (
-            <span className="text-xs text-gray-500">
-              ({productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} unidad(es) pendiente(s))
-            </span>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {mostrarCamposResto && (
         <div className="mt-4 space-y-4">

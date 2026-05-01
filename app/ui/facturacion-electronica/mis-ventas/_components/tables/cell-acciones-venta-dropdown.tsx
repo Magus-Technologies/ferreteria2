@@ -67,23 +67,13 @@ export default function CellAccionesVentaDropdown(
   // Bloqueado si:
   //  1. estado_de_venta es anulado o procesado
   //  2. SUNAT ya aceptó (Caso A en plan-edicion-entregas.md)
-  //  3. La entrega ya fue completada (Caso B). El backend rechaza igual,
-  //     pero el front anticipa para mostrar el motivo y evitar el viaje.
+  //  3. (antes: entrega en 'ec'/'en') — ahora se permite editar siempre,
+  //     el backend regenera los detalles de entrega al actualizar la venta.
   const estadoVenta = venta?.estado_de_venta;
-  // Solo bloquear si la entrega ya pasó del punto de no retorno físico
-  // (Fase 1.2 — relajado vs Fase 1.1):
-  //  - 'ec' (en camino) / 'en' (entregada): bloquea, cliente tiene/recibirá producto.
-  //  - 'pe' (pendiente): permite editar — el backend regenera los detalles.
-  //  - 'ca' (cancelada): permite editar.
-  const entregas = (venta?.entregas_productos || []) as { estado_entrega?: string }[];
-  const tieneEntregaActiva = entregas.some(
-    (e) => e?.estado_entrega === 'en' || e?.estado_entrega === 'ec',
-  );
   let editLockReason: string | null = null;
   if (estadoVenta === 'an') editLockReason = 'La venta está anulada.';
   else if (estadoVenta === 'pr') editLockReason = 'La venta ya fue procesada.';
   else if (isAceptado) editLockReason = 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito para hacer cambios.';
-  else if (tieneEntregaActiva) editLockReason = 'La entrega ya fue completada o está en camino. Usa Cambio en Entrega o Nota de Crédito.';
   const canEdit = editLockReason === null;
 
   // Verificar si se puede anular (no anulado, no procesado)

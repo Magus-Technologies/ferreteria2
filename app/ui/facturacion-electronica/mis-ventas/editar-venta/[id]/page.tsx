@@ -74,18 +74,12 @@ export default function EditarVenta() {
   const sunatAceptado =
     comprobante?.estado_sunat === 'ACEPTADO' ||
     comprobante?.estado_sunat === 'ACEPTADO_CON_OBSERVACIONES'
-  // Mismas reglas que cell-acciones-venta-dropdown (Fase 1.2 — relajado).
-  const entregas = ((ventaData as any).entregas_productos || []) as {
-    estado_entrega?: string
-  }[]
-  const tieneEntregaActiva = entregas.some(
-    (e) => e?.estado_entrega === 'en' || e?.estado_entrega === 'ec',
-  )
+  // Solo bloqueamos por SUNAT aceptado — antes también se bloqueaba por
+  // entregas en 'ec'/'en', pero ahora se permite editar (los detalles de
+  // entrega se regeneran en backend al actualizar la venta).
   let lockReason: string | null = null
   if (sunatAceptado) {
     lockReason = 'El comprobante ya fue aceptado por SUNAT. Para hacer cambios usa Nota de Crédito.'
-  } else if (tieneEntregaActiva) {
-    lockReason = 'La entrega ya fue completada o está en camino. Para cambios físicos usa Cambio en Entrega o Nota de Crédito.'
   }
   if (lockReason) {
     return (

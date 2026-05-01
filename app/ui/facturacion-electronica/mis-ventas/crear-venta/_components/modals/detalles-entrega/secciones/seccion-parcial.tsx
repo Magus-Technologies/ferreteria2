@@ -23,6 +23,8 @@ interface SeccionParcialProps {
   totalSinProgramar: number
   restoDireccionEntrega?: string
   ocultar?: Set<SeccionOcultable>
+  /** Tabla simplificada (sin Ubicación / Eliminar) — modo actualizar-entrega. */
+  tablaSimple?: boolean
 }
 
 /**
@@ -45,6 +47,7 @@ export function SeccionParcial({
   totalSinProgramar,
   restoDireccionEntrega,
   ocultar,
+  tablaSimple,
 }: SeccionParcialProps) {
   const {
     productosEntrega,
@@ -78,6 +81,7 @@ export function SeccionParcial({
         <TablaProductosEntrega
           productos={productosEntrega}
           onProductoChange={setProductosEntrega}
+          simple={tablaSimple}
         />
       )}
 

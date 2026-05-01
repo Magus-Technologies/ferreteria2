@@ -66,6 +66,9 @@ function ModalDetallesEntregaInner({
   ocultar = [],
   mode,
   productosIniciales,
+  tituloOverride,
+  infoExtra,
+  accionesHeader,
 }: ModalDetallesEntregaProps) {
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
   const ocultarSet = useMemo(() => new Set(ocultar), [ocultar])
@@ -370,10 +373,18 @@ function ModalDetallesEntregaInner({
     <Modal
       title={
         <TitleForm className="!pb-0">
-          CONFIGURAR ENTREGA
-          <div className="text-sm font-normal text-gray-600 mt-1">
-            {getTipoDespachoLabel()}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span>CONFIGURAR ENTREGA</span>
+            {accionesHeader}
           </div>
+          <div className="text-sm font-normal text-gray-600 mt-1">
+            {tituloOverride ?? getTipoDespachoLabel()}
+          </div>
+          {infoExtra && (
+            <div className="text-xs font-normal text-gray-500 mt-0.5">
+              {infoExtra}
+            </div>
+          )}
         </TitleForm>
       }
       open={open}
@@ -455,6 +466,7 @@ function ModalDetallesEntregaInner({
             totalSinProgramar={totalSinProgramar}
             restoDireccionEntrega={restoDireccionEntrega}
             ocultar={ocultarSet}
+            tablaSimple={resolvedMode.kind === 'actualizar-entrega'}
           />
         )}
       </div>

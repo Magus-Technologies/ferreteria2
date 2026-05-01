@@ -37,6 +37,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalDetallesOpen, setModalDetallesOpen] = useState(false)
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
+  const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const { message } = useApp()
   const queryClient = useQueryClient()
@@ -78,6 +79,46 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     const params = new URLSearchParams({ venta_id: entrega.venta_id })
     if (entrega.vehiculo?.placa) params.set('vehiculo_placa', String(entrega.vehiculo.placa))
     router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
+  }
+
+  // Cambiar tipo de entrega (rt/de/pa). Llama al endpoint update con
+  // tipo_entrega y refresca la lista. Si elige el mismo tipo, avisa y sale.
+  const handleSelectTipoDespacho = async (
+    tipo: 'EnTienda' | 'Domicilio' | 'Parcial',
+  ) => {
+    const nuevoTipo: TipoEntrega =
+      tipo === 'EnTienda'
+        ? TipoEntrega.RECOJO_EN_TIENDA
+        : tipo === 'Domicilio'
+        ? TipoEntrega.DESPACHO
+        : TipoEntrega.PARCIAL
+
+    if (nuevoTipo === entrega.tipo_entrega) {
+      message.info('La entrega ya es de ese tipo')
+      return
+    }
+
+    try {
+      const response = await entregaProductoApi.update(entrega.id, {
+        tipo_entrega: nuevoTipo,
+      })
+      if (response.error) {
+        message.error(response.error.message || 'Error al cambiar tipo de entrega')
+        return
+      }
+      const labelNuevo =
+        tipo === 'EnTienda'
+          ? 'Recojo en Tienda'
+          : tipo === 'Domicilio'
+          ? 'Despacho a Domicilio'
+          : 'Despacho Parcial'
+      message.success(`Tipo de entrega cambiado a ${labelNuevo}`)
+      setModalSeleccionarTipoOpen(false)
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      if (onRefetch) onRefetch()
+    } catch (err: any) {
+      message.error(err?.message || 'Error al cambiar tipo de entrega')
+    }
   }
 
   const handleEntregar = async () => {
@@ -286,6 +327,13 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         loading={loading}
       />
 
+      {/* Selector de tipo de entrega (EnTienda / Domicilio / Parcial) —
+          se abre desde el dropdown "Cambiar Tipo de Entrega". */}
+      <ModalSeleccionarTipoDespacho
+        open={modalSeleccionarTipoOpen}
+        setOpen={setModalSeleccionarTipoOpen}
+        onSelectTipo={handleSelectTipoDespacho}
+      />
     </div>
   )
 }

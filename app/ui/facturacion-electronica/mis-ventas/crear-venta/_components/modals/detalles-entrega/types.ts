@@ -7,6 +7,7 @@
  */
 
 import type { FormInstance } from 'antd'
+import type { ReactNode } from 'react'
 import type { ModoConfirmar } from './hooks/use-confirmar-entrega'
 import type { ProductoEntrega } from '../../../../_hooks/use-productos-entrega'
 
@@ -98,4 +99,23 @@ export interface ModalDetallesEntregaProps {
    * y los productos vienen del backend (no del form de la venta).
    */
   productosIniciales?: ProductoEntrega[]
+  /**
+   * Override del subtítulo bajo "CONFIGURAR ENTREGA". Por defecto se deriva
+   * de `tipoDespacho` ("Despacho en Tienda" / "Despacho a Domicilio" /
+   * "Despacho Parcial"). Útil cuando se reusa el modal y el `tipoDespacho`
+   * lógico no coincide con lo que el usuario ve (ej: forzar Parcial-UI con
+   * header de "Despacho en Tienda" en mis-entregas).
+   */
+  tituloOverride?: string
+  /**
+   * Info adicional a mostrar bajo el subtítulo (quien_entrega, despachador,
+   * etc.). Pensado para `mis-entregas` donde algunos datos son read-only.
+   * Acepta ReactNode para incluir texto + acciones (botones) inline.
+   */
+  infoExtra?: ReactNode
+  /**
+   * Acciones a mostrar al lado del título "CONFIGURAR ENTREGA". Pensado
+   * para botones contextuales como "Cambiar tipo de entrega".
+   */
+  accionesHeader?: ReactNode
 }
