@@ -3,7 +3,7 @@
 import { Select, type FormInstance } from 'antd'
 import type { ColDef } from 'ag-grid-community'
 import TablaProductosEntrega from '../../../../../_components/tables/tabla-productos-entrega'
-import type { ClienteDireccion } from '~/lib/api/cliente'
+import type { DireccionCliente } from '~/lib/api/cliente'
 import type { ProductoEntrega } from '../../../../../_hooks/use-productos-entrega'
 import { useDetallesEntrega } from '../context'
 import { SeccionRestoProgramado } from './seccion-resto-programado'
@@ -14,7 +14,7 @@ interface SeccionParcialProps {
   form: FormInstance
   clienteNombre?: string
   onEditarCliente: () => void
-  direcciones: ClienteDireccion[]
+  direcciones: DireccionCliente[]
   cargandoDirecciones: boolean
   cargos: Cargo[]
   columnDefsResto: ColDef<ProductoEntrega>[]

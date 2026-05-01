@@ -13,7 +13,7 @@ import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
 import { TipoPedido } from '~/lib/api/entrega-producto'
-import type { TipoDireccion, ClienteDireccion } from '~/lib/api/cliente'
+import type { TipoDireccion, DireccionCliente } from '~/lib/api/cliente'
 import type { ProductoEntrega } from '../../../../../_hooks/use-productos-entrega'
 import { useDetallesEntrega } from '../context'
 import { useReverseGeocoding } from '../hooks/use-reverse-geocoding'
@@ -31,7 +31,7 @@ interface SeccionDomicilioProps {
   clienteNombre?: string
   direccion?: string
   onEditarCliente: () => void
-  direcciones: ClienteDireccion[]
+  direcciones: DireccionCliente[]
   cargandoDirecciones: boolean
   cargos: Cargo[]
   columnDefsDomicilio: ColDef<ProductoEntrega>[]
