@@ -490,6 +490,8 @@ export interface CobroVenta {
   numero_letra?: string | null
   numero_operacion?: string | null
   estado: boolean
+  created_at: string
+  updated_at: string
   despliegue_de_pago?: {
     id: string
     name: string
