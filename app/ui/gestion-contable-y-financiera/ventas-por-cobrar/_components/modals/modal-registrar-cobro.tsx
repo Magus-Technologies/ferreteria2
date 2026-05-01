@@ -123,6 +123,30 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     }
   }, [message])
 
+  // Anular un cobro
+  const handleAnularCobro = useCallback(async (cobroId: string) => {
+    if (!localVenta?.id) return
+    
+    const confirmed = window.confirm('¿Está seguro de anular este cobro? Esta acción no se puede deshacer.')
+    if (!confirmed) return
+
+    try {
+      const result = await ventaApi.anularCobro(localVenta.id, cobroId)
+      if (result.error) {
+        message.error(result.error.message)
+        return
+      }
+      message.success(result.data?.message || 'Cobro anulado correctamente')
+      // Refrescar datos
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+    } catch (error: any) {
+      message.error(error?.message || 'Error al anular el cobro')
+    }
+  }, [localVenta, message, queryClient])
+
   // Limpiar URL al cerrar modal de ticket
   const handleCloseTicketModal = useCallback((v: boolean) => {
     setTicketModalOpen(v)
@@ -184,7 +208,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         )
       },
     },
-  ], [handleVerTicket])
+  ], [handleVerTicket, handleAnularCobro])
 
   // Mutation para registrar cobro
   const mutation = useMutation({

@@ -89,6 +89,20 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
   const columns: ColDef<CobroVenta>[] = useMemo(() => [
     { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
     {
+      headerName: 'Estado',
+      width: 90,
+      cellRenderer: (p: any) => {
+        const estado = p.data?.estado
+        return (
+          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+            estado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+            {estado ? 'ACTIVO' : 'ANULADO'}
+          </span>
+        )
+      },
+    },
+    {
       headerName: 'Documento',
       width: 140,
       valueGetter: (p) => {

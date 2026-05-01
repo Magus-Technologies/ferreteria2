@@ -310,6 +310,16 @@ export const ventaApi = {
   },
 
   /**
+   * Anular un cobro de venta
+   */
+  async anularCobro(ventaId: string, cobroId: string, motivo?: string): Promise<ApiResponse<{ data: CobroVenta; message: string; saldo_pendiente: number }>> {
+    return apiRequest(`/ventas/${ventaId}/cobros/${cobroId}/anular`, {
+      method: 'PUT',
+      body: JSON.stringify({ motivo }),
+    });
+  },
+
+  /**
    * Obtener historial de ediciones de una venta
    */
   async getHistorial(id: string): Promise<ApiResponse<{ data: VentaHistorialItem[] }>> {
