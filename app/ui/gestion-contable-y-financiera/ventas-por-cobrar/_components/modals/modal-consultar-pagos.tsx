@@ -131,7 +131,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       width: 150,
       valueGetter: (p) => {
         const val = p.data?.created_at || p.data?.fecha
-        return val ? dayjs(val).format('DD/MM/YYYY HH:mm') : ''
+        return val ? dayjs(val).format('DD/MM/YYYY hh:mm A') : ''
       },
     },
     {
