@@ -146,9 +146,12 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       },
     },
     {
-      headerName: 'Fecha',
-      width: 100,
-      valueGetter: (p) => p.data?.fecha ? dayjs(p.data.fecha).format('DD/MM/YYYY') : '',
+      headerName: 'Fecha y Hora Pago',
+      width: 150,
+      valueGetter: (p) => {
+        const val = p.data?.created_at || p.data?.fecha
+        return val ? dayjs(val).format('DD/MM/YYYY hh:mm A') : ''
+      },
     },
     {
       headerName: 'Monto',
@@ -317,7 +320,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
           <LabelBase label='Fecha Pago:' orientation='column'>
             <Form.Item name='fecha' rules={[{ required: true, message: 'Requerido' }]} noStyle>
-              <DatePicker className='w-full' format='DD/MM/YYYY' />
+              <DatePicker 
+                className='w-full' 
+                showTime={{ format: 'hh:mm A' }}
+                format='DD/MM/YYYY hh:mm A' 
+              />
             </Form.Item>
           </LabelBase>
 

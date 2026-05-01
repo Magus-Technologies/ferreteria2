@@ -20,7 +20,8 @@ interface ModalImprimirTicketsMasivosProps {
 
 export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImprimirTicketsMasivosProps) {
   const { message } = App.useApp()
-  const [fechaDesde, setFechaDesde] = useState(dayjs())
+  // Por defecto: últimos 30 días para que no salga vacío al inicio
+  const [fechaDesde, setFechaDesde] = useState(dayjs().subtract(30, 'days'))
   const [fechaHasta, setFechaHasta] = useState(dayjs())
   const [searchText, setSearchText] = useState('')
 
@@ -30,9 +31,11 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
     if (!filtros) return undefined
     return {
       almacen_id: filtros.almacen_id as number | undefined,
+      desde: fechaDesde.format('YYYY-MM-DD HH:mm:ss'),
+      hasta: fechaHasta.format('YYYY-MM-DD HH:mm:ss'),
       per_page: -1,
     }
-  }, [filtros])
+  }, [filtros, fechaDesde, fechaHasta])
 
   const { data: cobrosResponse, isLoading, refetch } = useQuery({
     queryKey: [QueryKeys.COBROS_VENTA, 'mass-print', apiFilters],
@@ -47,11 +50,6 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
 
   const cobrosFiltrados = useMemo(() => {
     let filtered = allCobros ?? []
-    filtered = filtered.filter(cobro => {
-      const fechaCobro = dayjs(cobro.fecha)
-      return (fechaCobro.isSame(fechaDesde, 'day') || fechaCobro.isAfter(fechaDesde, 'day')) &&
-             (fechaCobro.isSame(fechaHasta, 'day') || fechaCobro.isBefore(fechaHasta, 'day'))
-    })
 
     if (searchText.trim()) {
       const search = searchText.toLowerCase()
@@ -64,7 +62,7 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
       })
     }
     return filtered
-  }, [allCobros, fechaDesde, fechaHasta, searchText])
+  }, [allCobros, searchText])
 
   // Estado para modal de impresión
   const [showPdf, setShowPdf] = useState(false)
@@ -109,7 +107,7 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
   const columns: ColDef<CobroVenta>[] = useMemo(() => [
     { 
       headerName: 'Fecha y Hora', 
-      width: 150, 
+      width: 170, 
       valueGetter: (p) => {
         const val = p.data?.created_at || p.data?.fecha
         return dayjs(val).format('DD/MM/YYYY hh:mm A')
@@ -161,11 +159,23 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
         <div className='flex-1 grid grid-cols-2 gap-2'>
           <div>
             <label className='text-[10px] font-bold text-gray-500 block mb-1'>DESDE:</label>
-            <DatePicker className='w-full' value={fechaDesde} onChange={v => v && setFechaDesde(v)} format='DD/MM/YYYY' />
+            <DatePicker 
+              className='w-full' 
+              value={fechaDesde} 
+              onChange={v => v && setFechaDesde(v)} 
+              showTime={{ format: 'hh:mm A' }}
+              format='DD/MM/YYYY hh:mm A' 
+            />
           </div>
           <div>
             <label className='text-[10px] font-bold text-gray-500 block mb-1'>HASTA:</label>
-            <DatePicker className='w-full' value={fechaHasta} onChange={v => v && setFechaHasta(v)} format='DD/MM/YYYY' />
+            <DatePicker 
+              className='w-full' 
+              value={fechaHasta} 
+              onChange={v => v && setFechaHasta(v)} 
+              showTime={{ format: 'hh:mm A' }}
+              format='DD/MM/YYYY hh:mm A' 
+            />
           </div>
         </div>
         <div className='flex-[2]'>
