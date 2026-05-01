@@ -1,0 +1,82 @@
+/**
+ * Tipos del modal "Detalles de Entrega".
+ *
+ * Se extrajeron del archivo monolítico (`../modal-detalles-entrega.tsx`)
+ * como primer paso del refactor. Otros archivos de esta carpeta los
+ * importan desde aquí.
+ */
+
+import type { FormInstance } from 'antd'
+
+/**
+ * Coordenadas geográficas — usadas para el mapa de Mapbox y la tabla.
+ */
+export interface Coordenadas {
+  lat: number
+  lng: number
+}
+
+/**
+ * Tipo de despacho a nivel de UI del modal — distinto del enum del API.
+ * Aquí los 3 modos son los que el usuario elige al "Cobrar / Crear venta a crédito":
+ *   - EnTienda: el cliente recoge en tienda inmediatamente.
+ *   - Domicilio: el chofer entrega a domicilio (programado).
+ *   - Parcial: una parte se entrega ahora, el resto se programa.
+ */
+export type TipoDespachoUI = 'EnTienda' | 'Domicilio' | 'Parcial'
+
+/**
+ * Snapshot del vehículo asignado al usuario logueado — usado para precargar
+ * el campo "vehículo" en las secciones de Domicilio y Resto Parcial.
+ *
+ * No usamos `Vehiculo` del API porque solo necesitamos estos 4 campos para
+ * mostrar el badge "Vehículo asignado: NOMBRE (placa)".
+ */
+export interface VehiculoPreseleccionado {
+  id: number
+  name: string
+  tipo: string
+  placa: string | null
+}
+
+/**
+ * Llaves de secciones del modal que pueden ocultarse vía el prop `ocultar`.
+ * Útil para reusar el modal en `mis-entregas`, donde algunas piezas ya no
+ * aplican (la venta ya existe, los productos ya están fijados, etc.).
+ *
+ * - `quien-entrega`: selector "¿Quién entrega?" (EnTienda + Parcial).
+ * - `omitir`: botón "Omitir" del footer.
+ * - `tabla-productos`: tabla AG Grid de productos (Domicilio + Parcial).
+ * - `tipo-pedido`: selector Interno/Externo (Domicilio + Resto Parcial).
+ * - `programar-resto`: switch "Programar entrega del resto" (Parcial).
+ */
+export type SeccionOcultable =
+  | 'quien-entrega'
+  | 'omitir'
+  | 'tabla-productos'
+  | 'tipo-pedido'
+  | 'programar-resto'
+
+/**
+ * Props públicas del componente `<ModalDetallesEntrega>`.
+ * Lo que recibe desde fuera (cards-info-venta, etc.).
+ */
+export interface ModalDetallesEntregaProps {
+  open: boolean
+  setOpen: (open: boolean) => void
+  form: FormInstance
+  ventaId?: string
+  tipoDespacho: TipoDespachoUI
+  onConfirmar: () => void
+  onEditarCliente: () => void
+  direccion?: string
+  clienteNombre?: string
+  clienteId?: number
+  /**
+   * Lista de secciones a ocultar — vacío por defecto (modo `crear-venta`).
+   * Cuando se reusa el modal desde `mis-entregas`, se pasan claves como
+   * `['quien-entrega','omitir','tabla-productos','programar-resto']` para
+   * que el modal solo muestre los campos editables de la entrega existente.
+   */
+  ocultar?: SeccionOcultable[]
+}

@@ -1,94 +1,58 @@
 'use client'
 
-import { Select, Modal, FormInstance, Form, Input, Switch, Segmented, InputNumber } from 'antd'
-import { useState, useEffect, useCallback, useMemo, memo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { FaCalendarAlt, FaMapMarkedAlt, FaUserEdit, FaCheck, FaTruck } from 'react-icons/fa'
+import { Modal, Form } from 'antd'
+import { useEffect, useCallback, useMemo } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
-import SelectDespachadores from '~/app/_components/form/selects/select-despachadores'
-import TextareaBase from '~/app/_components/form/inputs/textarea-base'
-import { apiRequest } from '~/lib/api'
-import { TipoPedido } from '~/lib/api/entrega-producto'
 import TitleForm from '~/components/form/title-form'
-import dynamic from 'next/dynamic'
-import useCreateVenta from '../../_hooks/use-create-venta'
+// `useCreateVenta` se consume ahora dentro de `use-confirmar-entrega.ts`.
 import type { FormCreateVenta } from '../others/body-vender'
-import TablaProductosEntrega from '../../../_components/tables/tabla-productos-entrega'
 import type { ProductoEntrega } from '../../../_hooks/use-productos-entrega'
-import TableWithTitle from '~/components/tables/table-with-title'
-import { orangeColors } from '~/lib/colors'
-import type { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
-import { clienteApi, type TipoDireccion } from '~/lib/api/cliente'
-import { QueryKeys } from '~/app/_lib/queryKeys'
+import type { TipoDireccion } from '~/lib/api/cliente'
 import ModalCalendarioSlot from './modal-calendario-slot'
-import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
-import { useAuth } from '~/lib/auth-context'
 
 dayjs.locale('es')
 
-type ProgramarCellProps = {
-  id: number
-  initialValue: number
-  max: number
-  onCommit: (id: number, value: number | null) => void
-}
+// Tipos viven en `./detalles-entrega/types.ts` (Fase A del refactor).
+import type { ModalDetallesEntregaProps } from './detalles-entrega/types'
+// Provider + hook para el state del modal (Fase A.3 — migración progresiva).
+import {
+  DetallesEntregaProvider,
+  useDetallesEntrega,
+} from './detalles-entrega/context'
+// Hooks extraídos en Fase B.
+import { useCargos } from './detalles-entrega/hooks/use-cargos'
+import { useDireccionesCliente } from './detalles-entrega/hooks/use-direcciones-cliente'
+import { usePrecargarVehiculo } from './detalles-entrega/hooks/use-precargar-vehiculo'
+import { useReverseGeocoding } from './detalles-entrega/hooks/use-reverse-geocoding'
+import { useTotalesParcial } from './detalles-entrega/hooks/use-totales-parcial'
+import { useValidaciones } from './detalles-entrega/hooks/use-validaciones'
+import { useConfirmarEntrega } from './detalles-entrega/hooks/use-confirmar-entrega'
+// Column defs extraídos en Fase C.
+import { makeColumnsDomicilio } from './detalles-entrega/columns/columns-domicilio'
+import { makeColumnsResto } from './detalles-entrega/columns/columns-resto'
+// Secciones JSX extraídas en Fase D.
+import { SeccionEnTienda } from './detalles-entrega/secciones/seccion-en-tienda'
+import { SeccionDomicilio } from './detalles-entrega/secciones/seccion-domicilio'
+import { SeccionParcial } from './detalles-entrega/secciones/seccion-parcial'
 
-const ProgramarCell = memo(function ProgramarCell({
-  id,
-  initialValue,
-  max,
-  onCommit,
-}: ProgramarCellProps) {
-  const [value, setValue] = useState<number | null>(initialValue)
+// `ModalDetallesEntregaProps` se mudó a `./detalles-entrega/types.ts`.
 
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
-
+/**
+ * Wrapper público — provee el `DetallesEntregaProvider` para que el
+ * componente interno y todas sus secciones puedan consumir el state
+ * compartido vía `useDetallesEntrega()`.
+ */
+export default function ModalDetallesEntrega(props: ModalDetallesEntregaProps) {
   return (
-    <div className="flex items-center h-full">
-      <InputNumber
-        size="small"
-        value={value}
-        min={0}
-        max={max}
-        precision={2}
-        onChange={setValue}
-        onBlur={() => onCommit(id, value)}
-        onPressEnter={() => onCommit(id, value)}
-        style={{ width: '100%' }}
-      />
-    </div>
+    <DetallesEntregaProvider>
+      <ModalDetallesEntregaInner {...props} />
+    </DetallesEntregaProvider>
   )
-})
-
-// Importar el mapa de Mapbox dinámicamente para evitar problemas de SSR
-const MapaDireccionMapbox = dynamic(
-  () => import('../../../_components/maps/mapa-direccion-mapbox'),
-  { ssr: false }
-)
-
-interface Coordenadas {
-  lat: number
-  lng: number
 }
 
-interface ModalDetallesEntregaProps {
-  open: boolean
-  setOpen: (open: boolean) => void
-  form: FormInstance
-  ventaId?: string
-  tipoDespacho: 'EnTienda' | 'Domicilio' | 'Parcial'
-  onConfirmar: () => void
-  onEditarCliente: () => void
-  direccion?: string
-  clienteNombre?: string
-  clienteId?: number
-}
-
-export default function ModalDetallesEntrega({
+function ModalDetallesEntregaInner({
   open,
   setOpen,
   form,
@@ -99,104 +63,68 @@ export default function ModalDetallesEntrega({
   direccion,
   clienteNombre,
   clienteId,
+  ocultar = [],
 }: ModalDetallesEntregaProps) {
-  const [mostrarMapa, setMostrarMapa] = useState(false)
-  const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(null)
-  const [productosEntrega, setProductosEntrega] = useState<ProductoEntrega[]>([])
-  const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
-  const [tipoPedido, setTipoPedido] = useState<TipoPedido>(TipoPedido.INTERNO)
-  const [direccionSeleccionada, setDireccionSeleccionada] = useState<TipoDireccion | null>(null)
-  // Vehículo pre-seleccionado cuando el despachador tiene uno asignado por default
-  const [vehiculoPreseleccionadoDomicilio, setVehiculoPreseleccionadoDomicilio] = useState<{ id: number; name: string; tipo: string; placa: string | null } | null>(null)
-  // Estado para programar el resto del parcial
-  const [programarResto, setProgramarResto] = useState(true)
-  const [horaInicioResto, setHoraInicioResto] = useState<string | undefined>(undefined)
-  const [horaFinResto, setHoraFinResto] = useState<string | undefined>(undefined)
-  const [observacionesResto, setObservacionesResto] = useState<string>('')
-  const [mostrarMapaResto, setMostrarMapaResto] = useState(false)
-  const [coordenadasResto, setCoordenadasResto] = useState<Coordenadas | null>(null)
-  const [direccionSeleccionadaResto, setDireccionSeleccionadaResto] = useState<TipoDireccion | null>(null)
-  const [tipoPedidoResto, setTipoPedidoResto] = useState<TipoPedido>(TipoPedido.INTERNO)
-  const [vehiculoPreseleccionadoResto, setVehiculoPreseleccionadoResto] = useState<{ id: number; name: string; tipo: string; placa: string | null } | null>(null)
-  const [ubicacionGpsResto, setUbicacionGpsResto] = useState<string>('')
+  // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
+  const ocultarSet = useMemo(() => new Set(ocultar), [ocultar])
+  // ── Bloques DOMICILIO + RESTO migrados al Provider (Fase A.3.2 / A.3.3)
+  // Solo desestructuramos lo que el archivo principal aún consume — los
+  // setters/state del Domicilio y Resto que ya solo se usan dentro de las
+  // secciones se leen ahí mismo via useDetallesEntrega().
+  const {
+    // Domicilio (solo los efectos de pre-carga siguen acá)
+    setCoordenadas,
+    setUbicacionGps,
+    setDireccionSeleccionada,
+    // Resto
+    programarResto,
+    setHoraInicioResto,
+    setHoraFinResto,
+    setCoordenadasResto,
+    setDireccionSeleccionadaResto,
+    setUbicacionGpsResto,
+    // Parcial
+    productosEntrega, setProductosEntrega,
+    // Slots + calendario
+    modalCalendarioDomicilio, setModalCalendarioDomicilio,
+    modalCalendarioResto, setModalCalendarioResto,
+    setSlotDomicilio,
+    setSlotResto,
+  } = useDetallesEntrega()
+  // (Todos los bloques de state ahora viven en el Provider.)
 
-  // Estados para el modal de calendario de slots
-  const [modalCalendarioDomicilio, setModalCalendarioDomicilio] = useState(false)
-  const [modalCalendarioResto, setModalCalendarioResto] = useState(false)
-  const [slotDomicilio, setSlotDomicilio] = useState<{ start: Date; end: Date } | null>(null)
-  const [slotResto, setSlotResto] = useState<{ start: Date; end: Date } | null>(null)
-
-  // Hook para crear/actualizar venta
-  const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
-
-  // Usuario actual (para precargar su vehículo por defecto si registra venta a domicilio)
-  const { user } = useAuth()
-
-  // Cargar cargos para pedido externo
-  const { data: cargos = [] } = useQuery({
-    queryKey: ['catalogos', 'cargos'],
-    queryFn: async () => {
-      const result = await apiRequest<{ data: { codigo: string; descripcion: string }[] }>('/catalogos/cargos')
-      return result.data?.data || []
+  // Submit del modal — extraído a hook (Fase E).
+  // El modo `crear-venta` mantiene el comportamiento histórico. El modo
+  // `actualizar-entrega` se usa al reusar este modal desde `mis-entregas`.
+  const { handleConfirmar, handleOmitir, loading: creandoVenta } = useConfirmarEntrega({
+    mode: { kind: 'crear-venta', ventaId },
+    form,
+    tipoDespacho,
+    onSuccess: () => {
+      setOpen(false)
+      onConfirmar()
+    },
+    onOmitir: () => {
+      setOpen(false)
+      onConfirmar()
     },
   })
 
-  const handleTipoPedidoChange = (value: TipoPedido) => {
-    setTipoPedido(value)
-    form.setFieldValue('tipo_pedido', value)
-    if (value === TipoPedido.INTERNO) {
-      form.setFieldValue('cargo_destino', undefined)
-    } else {
-      form.setFieldValue('despachador_id', undefined)
-    }
-  }
+  // Catálogo de cargos para "pedido externo" — extraído a hook (Fase B).
+  const { data: cargos = [] } = useCargos()
 
-  // Cargar direcciones del cliente
-  const { data: direccionesData, isLoading: cargandoDirecciones } = useQuery({
-    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteId],
-    queryFn: async () => {
-      if (!clienteId) return { data: { data: [] } }
-      const response = await clienteApi.listarDirecciones(clienteId)
-      return response
-    },
-    enabled: open && !!clienteId && (tipoDespacho === 'Domicilio' || tipoDespacho === 'Parcial'),
+  // `handleTipoPedidoChange` se mudó a `secciones/seccion-domicilio.tsx`.
+
+  // Direcciones del cliente (D1..D4) — extraído a hook (Fase B).
+  const { direcciones, cargandoDirecciones } = useDireccionesCliente({
+    open,
+    clienteId,
+    tipoDespacho,
   })
 
-  const direcciones = direccionesData?.data?.data || []
-
-  // Precargar el vehículo asignado al usuario logueado al abrir el modal de Domicilio,
-  // solo si aún no hay vehículo ni despachador seleccionado en el formulario.
-  useEffect(() => {
-    if (!open || tipoDespacho !== 'Domicilio') return
-    if (!user?.vehiculo || !user.vehiculo.id) return
-    if (form.getFieldValue('vehiculo_id')) return
-    if (form.getFieldValue('despachador_id')) return
-
-    form.setFieldValue('vehiculo_id', user.vehiculo.id)
-    setVehiculoPreseleccionadoDomicilio({
-      id: user.vehiculo.id,
-      name: user.vehiculo.name,
-      tipo: user.vehiculo.tipo,
-      placa: user.vehiculo.placa,
-    })
-  }, [open, tipoDespacho, user, form])
-
-  // Precargar el vehículo del usuario logueado en la sección "Resto" del Parcial,
-  // si aún no hay vehículo ni despachador seleccionado.
-  useEffect(() => {
-    if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
-    if (!user?.vehiculo || !user.vehiculo.id) return
-    if (form.getFieldValue('_resto_vehiculo_id')) return
-    if (form.getFieldValue('_resto_despachador_id')) return
-
-    form.setFieldValue('_resto_vehiculo_id', user.vehiculo.id)
-    setVehiculoPreseleccionadoResto({
-      id: user.vehiculo.id,
-      name: user.vehiculo.name,
-      tipo: user.vehiculo.tipo,
-      placa: user.vehiculo.placa,
-    })
-  }, [open, tipoDespacho, programarResto, user, form])
+  // Precarga del vehículo del usuario logueado en Domicilio + Resto Parcial.
+  // Extraído a hook (Fase B.3).
+  usePrecargarVehiculo({ open, tipoDespacho, form })
 
   // Cargar dirección inicial cuando se abra el Parcial con programarResto activo
   useEffect(() => {
@@ -283,25 +211,11 @@ export default function ModalDetallesEntrega({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tipoDespacho, direcciones, form])
 
-  // Obtener valores del formulario (reactivo)
-  const despachadorId = Form.useWatch('despachador_id', form) as string | undefined
-  const restoDespachadorId = Form.useWatch('_resto_despachador_id', form) as string | undefined
-  const quienEntrega = Form.useWatch('quien_entrega', form) as string | undefined
-  const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
-  const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
-  const restoCargoDestino = Form.useWatch('_resto_cargo_destino', form) as string | undefined
-  const restoDireccionEntrega = Form.useWatch('_resto_direccion_entrega', form) as string | undefined
-
-  // Validación de campos obligatorios para Domicilio
-  // (totalAProgramar se calcula más abajo y se valida en el botón)
-  const domicilioInvalido =
-    tipoDespacho === 'Domicilio' &&
-    (
-      !slotDomicilio ||
-      !direccionEntrega?.trim() ||
-      (tipoPedido === TipoPedido.INTERNO && !despachadorId) ||
-      (tipoPedido === TipoPedido.EXTERNO && !cargoDestino)
-    )
+  // Watchers + validaciones (Domicilio + Resto Parcial) — extraídos a hook.
+  // `restoInvalido` requiere `totalAProgramar` que se calcula más abajo,
+  // así que la llamada se hace luego (ver `useValidaciones` después de
+  // `useTotalesParcial`). Aquí el placeholder. Esta organización quedará
+  // limpia cuando se extraigan también las secciones (Fase D).
 
   // Obtener productos del formulario
   const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
@@ -354,128 +268,20 @@ export default function ModalDetallesEntrega({
     setHoraFinResto(dayjs(slot.end).format('HH:mm'))
   }
 
-  // Estado para la dirección GPS obtenida por reverse geocoding del mapa
-  const [ubicacionGps, setUbicacionGps] = useState<string>('')
+  // `ubicacionGps` (dirección obtenida por reverse geocoding) vive ahora en
+  // el Provider — se consume arriba con el resto del bloque DOMICILIO.
 
-  // Reverse geocoding helper
-  const obtenerUbicacionGps = useCallback(async (lat: number, lng: number) => {
-    try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-      if (!token) return
-      const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1&language=es`
-      )
-      const data = await res.json()
-      if (data.features?.[0]?.place_name) {
-        setUbicacionGps(data.features[0].place_name)
-      }
-    } catch (err) {
-      console.error('Error en geocodificación inversa:', err)
-    }
-  }, [])
+  // Reverse geocoding (Mapbox) — devuelve la dirección humana al setter
+  // del context. Extraído a hook (Fase B.4).
+  const obtenerUbicacionGps = useReverseGeocoding(setUbicacionGps)
 
-  // Callback para cuando el usuario marca una ubicación en el mapa
-  const handleCoordenadaChange = useCallback((nuevasCoordenadas: Coordenadas, direccionObtenida?: string) => {
-    setCoordenadas(nuevasCoordenadas)
-    form.setFieldValue('latitud', nuevasCoordenadas.lat)
-    form.setFieldValue('longitud', nuevasCoordenadas.lng)
-    if (direccionObtenida) setUbicacionGps(direccionObtenida)
-  }, [form])
-
-  // Manejar cambio de dirección seleccionada
-  const handleDireccionChange = useCallback((tipo: TipoDireccion) => {
-    setDireccionSeleccionada(tipo)
-    const direccionObj = direcciones.find(d => d.tipo === tipo)
-    
-    if (direccionObj) {
-      // Actualizar dirección y referencia en el formulario
-      form.setFieldValue('direccion_entrega', direccionObj.direccion)
-      form.setFieldValue('direccion_seleccionada', tipo)
-      form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
-
-      // Si tiene coordenadas, cargarlas automáticamente
-      if (direccionObj.latitud && direccionObj.longitud) {
-        const coords = {
-          lat: Number(direccionObj.latitud),
-          lng: Number(direccionObj.longitud)
-        }
-        setCoordenadas(coords)
-        form.setFieldValue('latitud', coords.lat)
-        form.setFieldValue('longitud', coords.lng)
-        setMostrarMapa(true) // Mostrar el mapa automáticamente
-        obtenerUbicacionGps(coords.lat, coords.lng)
-      } else {
-        setCoordenadas(null)
-        setUbicacionGps('')
-        form.setFieldValue('latitud', undefined)
-        form.setFieldValue('longitud', undefined)
-      }
-    }
-  }, [direcciones, form, obtenerUbicacionGps])
-
-  // Reverse geocoding helper — versión Resto
-  const obtenerUbicacionGpsResto = useCallback(async (lat: number, lng: number) => {
-    try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-      if (!token) return
-      const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1&language=es`
-      )
-      const data = await res.json()
-      if (data.features?.[0]?.place_name) {
-        setUbicacionGpsResto(data.features[0].place_name)
-      }
-    } catch (err) {
-      console.error('Error en geocodificación inversa (resto):', err)
-    }
-  }, [])
-
-  // Cambio de Tipo de Pedido en Resto
-  const handleTipoPedidoChangeResto = (value: TipoPedido) => {
-    setTipoPedidoResto(value)
-    form.setFieldValue('_resto_tipo_pedido', value)
-    if (value === TipoPedido.INTERNO) {
-      form.setFieldValue('_resto_cargo_destino', undefined)
-    } else {
-      form.setFieldValue('_resto_despachador_id', undefined)
-    }
-  }
-
-  // Callback para cambio de dirección (D1-D4) en sección "resto" del parcial
-  const handleDireccionChangeResto = useCallback((tipo: TipoDireccion) => {
-    setDireccionSeleccionadaResto(tipo)
-    const direccionObj = direcciones.find(d => d.tipo === tipo)
-
-    if (direccionObj) {
-      form.setFieldValue('_resto_direccion_entrega', direccionObj.direccion)
-      form.setFieldValue('_resto_referencia_entrega', direccionObj.referencia || '')
-
-      if (direccionObj.latitud && direccionObj.longitud) {
-        const coords = {
-          lat: Number(direccionObj.latitud),
-          lng: Number(direccionObj.longitud)
-        }
-        setCoordenadasResto(coords)
-        form.setFieldValue('_resto_latitud', coords.lat)
-        form.setFieldValue('_resto_longitud', coords.lng)
-        setMostrarMapaResto(true)
-        obtenerUbicacionGpsResto(coords.lat, coords.lng)
-      } else {
-        setCoordenadasResto(null)
-        setUbicacionGpsResto('')
-        form.setFieldValue('_resto_latitud', undefined)
-        form.setFieldValue('_resto_longitud', undefined)
-      }
-    }
-  }, [direcciones, form, obtenerUbicacionGpsResto])
-
-  // Callback para coordenadas del mapa del resto
-  const handleCoordenadaChangeResto = useCallback((nuevasCoordenadas: Coordenadas, direccionObtenida?: string) => {
-    setCoordenadasResto(nuevasCoordenadas)
-    form.setFieldValue('_resto_latitud', nuevasCoordenadas.lat)
-    form.setFieldValue('_resto_longitud', nuevasCoordenadas.lng)
-    if (direccionObtenida) setUbicacionGpsResto(direccionObtenida)
-  }, [form])
+  // Handlers de Domicilio y Resto (handleCoordenadaChange, handleDireccionChange,
+  // handleTipoPedidoChangeResto, handleDireccionChangeResto, handleCoordenadaChangeResto)
+  // viven ahora dentro de sus secciones (Fase D).
+  //
+  // `obtenerUbicacionGpsResto` se mantiene aquí porque lo usa el useEffect de
+  // pre-carga de dirección inicial cuando se abre el Parcial con `programarResto` activo.
+  const obtenerUbicacionGpsResto = useReverseGeocoding(setUbicacionGpsResto)
 
   // Setear tipo_despacho en el formulario cuando se abre el modal
   useEffect(() => {
@@ -498,53 +304,11 @@ export default function ModalDetallesEntrega({
     )
   }, [])
 
-  // Columnas para la tabla de Domicilio: solo "Programar ahora" editable.
-  const columnDefsDomicilio = useMemo<ColDef<ProductoEntrega>[]>(() => [
-    {
-      headerName: 'Producto',
-      field: 'producto',
-      flex: 1,
-    },
-    {
-      headerName: 'Total',
-      field: 'total',
-      width: 100,
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-    },
-    {
-      headerName: 'Programar ahora',
-      field: 'entregar_programado',
-      width: 150,
-      cellRenderer: (params: { data?: ProductoEntrega }) => {
-        if (!params.data) return null
-        return (
-          <ProgramarCell
-            id={params.data.id}
-            initialValue={params.data.entregar_programado}
-            max={params.data.total}
-            onCommit={handleProgramarChangeDomicilio}
-          />
-        )
-      },
-      cellStyle: { backgroundColor: '#f0fdf4' } as Record<string, string>,
-    },
-    {
-      headerName: 'Pendiente sin programar',
-      width: 180,
-      valueGetter: (params) => {
-        if (!params.data) return 0
-        return Math.max(0, params.data.total - params.data.entregar_programado)
-      },
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-      cellStyle: (params) => {
-        const pendiente = params.value ?? 0
-        return {
-          color: pendiente > 0 ? '#dc2626' : '#9ca3af',
-          fontWeight: 'bold',
-        } as Record<string, string>
-      },
-    },
-  ], [handleProgramarChangeDomicilio])
+  // Column defs Domicilio — extraídos a archivo (Fase C).
+  const columnDefsDomicilio = useMemo(
+    () => makeColumnsDomicilio(handleProgramarChangeDomicilio),
+    [handleProgramarChangeDomicilio],
+  )
 
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
   // Valida que entregar + entregar_programado no exceda total; lo que sobra queda como pendiente sin programar.
@@ -561,167 +325,26 @@ export default function ModalDetallesEntrega({
     )
   }, [])
 
-  // Columnas para la tabla de productos restantes.
-  // "Programar ahora" es EDITABLE — el resto no programado queda como pendiente sin tocar.
-  const columnDefsResto = useMemo<ColDef<ProductoEntrega>[]>(() => [
-    {
-      headerName: 'Producto',
-      field: 'producto',
-      flex: 1,
-    },
-    {
-      headerName: 'Total',
-      field: 'total',
-      width: 100,
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-    },
-    {
-      headerName: 'Entrega ahora',
-      field: 'entregar',
-      width: 130,
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-      cellStyle: { color: '#16a34a', fontWeight: 'bold' } as Record<string, string>,
-    },
-    {
-      headerName: 'Programar ahora',
-      field: 'entregar_programado',
-      width: 150,
-      cellRenderer: (params: { data?: ProductoEntrega }) => {
-        if (!params.data) return null
-        const maxProgramable = Math.max(0, params.data.total - params.data.entregar)
-        return (
-          <ProgramarCell
-            id={params.data.id}
-            initialValue={params.data.entregar_programado}
-            max={maxProgramable}
-            onCommit={handleProgramarChange}
-          />
-        )
-      },
-      cellStyle: { backgroundColor: '#fff7ed' } as Record<string, string>,
-    },
-    {
-      headerName: 'Pendiente sin programar',
-      width: 180,
-      valueGetter: (params) => {
-        if (!params.data) return 0
-        return Math.max(0, params.data.total - params.data.entregar - params.data.entregar_programado)
-      },
-      valueFormatter: (params) => Number(params.value).toFixed(2),
-      cellStyle: (params) => {
-        const pendiente = params.value ?? 0
-        return {
-          color: pendiente > 0 ? '#dc2626' : '#9ca3af',
-          fontWeight: 'bold',
-        } as Record<string, string>
-      },
-    },
-  ], [handleProgramarChange])
-
-  // Verificar si hay algo que entregar
-  const totalAEntregar = useMemo(
-    () => productosEntrega.reduce((acc, item) => acc + item.entregar, 0),
-    [productosEntrega],
-  )
-  const totalAProgramar = useMemo(
-    () => productosEntrega.reduce((acc, item) => acc + item.entregar_programado, 0),
-    [productosEntrega],
-  )
-  const totalSinProgramar = useMemo(
-    () => productosEntrega.reduce(
-      (acc, item) => acc + Math.max(0, item.total - item.entregar - item.entregar_programado),
-      0,
-    ),
-    [productosEntrega],
+  // Column defs Resto (Parcial) — extraídos a archivo (Fase C).
+  const columnDefsResto = useMemo(
+    () => makeColumnsResto(handleProgramarChange),
+    [handleProgramarChange],
   )
 
-  // Validación: si se va a programar el resto en Parcial, exigir slot, dirección y despachador|cargo
-  const restoInvalido =
-    tipoDespacho === 'Parcial' &&
-    programarResto &&
-    totalAProgramar > 0 &&
-    (
-      !slotResto ||
-      !restoDireccionEntrega?.trim() ||
-      (tipoPedidoResto === TipoPedido.INTERNO && !restoDespachadorId) ||
-      (tipoPedidoResto === TipoPedido.EXTERNO && !restoCargoDestino)
-    )
+  // Totales del modo Parcial — extraído a hook (Fase B.5).
+  const { totalAEntregar, totalAProgramar, totalSinProgramar } = useTotalesParcial(productosEntrega)
 
-  const handleConfirmar = async () => {
-    const ventaValues = form.getFieldsValue()
-
-    if (tipoDespacho === 'Domicilio' && productosEntrega.length > 0) {
-      // Domicilio con split: enviar cantidades parciales para crear UNA entrega
-      // con solo los entregar_programado. Lo que sobra queda en cantidad_pendiente.
-      ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
-        producto_id: 0,
-        producto_name: p.producto,
-        producto_codigo: '',
-        unidad_derivada_id: p.unidad_derivada_venta_id,
-        unidad_derivada_name: '',
-        total: p.total,
-        entregado: 0,
-        pendiente: p.total,
-        entregar: 0,
-        entregar_programado: p.entregar_programado,
-      }))
-    }
-
-    if (tipoDespacho === 'Parcial') {
-      // Entrega inmediata: las cantidades "entregar" ahora.
-      // "entregar_programado" se envía para crear la 2ª entrega (programada).
-      // Lo que queda = total - entregar - entregar_programado → pendiente sin programar
-      //                (no se crea entrega, queda en cantidad_pendiente para programar luego).
-      ventaValues.cantidades_parciales = productosEntrega.map((p) => ({
-        producto_id: 0,
-        producto_name: p.producto,
-        producto_codigo: '',
-        unidad_derivada_id: p.unidad_derivada_venta_id,
-        unidad_derivada_name: '',
-        total: p.total,
-        entregado: p.entregado,
-        pendiente: p.pendiente,
-        entregar: p.entregar,
-        entregar_programado: p.entregar_programado,
-      }))
-      ventaValues.quien_entrega = quienEntregaParcial
-
-      // Entrega programada del resto: pasar los datos directamente en ventaValues
-      // use-create-venta los leerá y creará la segunda entrega tras crear la venta
-      const totalProgramado = productosEntrega.reduce((acc, p) => acc + p.entregar_programado, 0)
-      const tieneResto = programarResto && totalProgramado > 0
-      if (tieneResto) {
-        const restoDespachadorId = form.getFieldValue('_resto_despachador_id')
-        const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
-        const restoVehiculoId = form.getFieldValue('_resto_vehiculo_id')
-        const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
-        const restoReferencia = form.getFieldValue('_resto_referencia_entrega')
-        const restoLatitud = form.getFieldValue('_resto_latitud')
-        const restoLongitud = form.getFieldValue('_resto_longitud')
-        const restoCargo = form.getFieldValue('_resto_cargo_destino')
-        ventaValues.parcial_resto_programado = {
-          tipo_pedido: tipoPedidoResto,
-          despachador_id: tipoPedidoResto === TipoPedido.INTERNO ? restoDespachadorId : undefined,
-          cargo_destino: tipoPedidoResto === TipoPedido.EXTERNO ? restoCargo : undefined,
-          fecha_programada: restoFechaProgramada
-            ? dayjs(restoFechaProgramada).format('YYYY-MM-DD')
-            : undefined,
-          hora_inicio: horaInicioResto,
-          hora_fin: horaFinResto,
-          direccion_entrega: restoDireccion,
-          referencia_entrega: restoReferencia,
-          latitud: restoLatitud,
-          longitud: restoLongitud,
-          observaciones: observacionesResto,
-          vehiculo_id: restoVehiculoId || undefined,
-        }
-      }
-    }
-
-    await crearVenta(ventaValues)
-    setOpen(false)
-    onConfirmar()
-  }
+  // Validaciones del form (Domicilio + Resto Parcial) — extraído a hook (Fase B.6).
+  const {
+    domicilioInvalido,
+    restoInvalido,
+    despachadorId,
+    restoDespachadorId,
+    direccionEntrega,
+    cargoDestino,
+    restoCargoDestino,
+    restoDireccionEntrega,
+  } = useValidaciones({ tipoDespacho, form, totalAProgramar })
 
   const getTipoDespachoLabel = () => {
     switch (tipoDespacho) {
@@ -757,21 +380,17 @@ export default function ModalDetallesEntrega({
           >
             Cancelar
           </ButtonBase>
-          {(tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && (
-            <ButtonBase
-              color="warning"
-              size="md"
-              onClick={async () => {
-                const ventaValues = form.getFieldsValue()
-                await crearVenta({ ...ventaValues, _omitir_entrega: true })
-                setOpen(false)
-                onConfirmar()
-              }}
-              disabled={creandoVenta}
-            >
-              {creandoVenta ? 'Procesando...' : 'Omitir'}
-            </ButtonBase>
-          )}
+          {(tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') &&
+            !ocultarSet.has('omitir') && (
+              <ButtonBase
+                color="warning"
+                size="md"
+                onClick={handleOmitir}
+                disabled={creandoVenta}
+              >
+                {creandoVenta ? 'Procesando...' : 'Omitir'}
+              </ButtonBase>
+            )}
           <ButtonBase
             color="success"
             size="md"
@@ -791,719 +410,43 @@ export default function ModalDetallesEntrega({
     >
       <div className="space-y-4 py-4">
         {/* Campos para Despacho en Tienda */}
-        {tipoDespacho === 'EnTienda' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ¿Quién entrega? <span className="text-red-500">*</span>
-            </label>
-            {/* Antes era un Select controlado a mano leyendo via useWatch +
-                setFieldValue: en algunos flujos quedaba "Almacen" mostrado
-                visualmente pero el form sin el valor (o con uno viejo de un
-                intento previo). Ahora usamos Form.Item para que la unión
-                form ↔ display sea automática. */}
-            <Form.Item
-              name="quien_entrega"
-              noStyle
-              initialValue="almacen"
-              rules={[{ required: true, message: 'Selecciona quién entrega' }]}
-            >
-              <Select
-                placeholder="Seleccionar"
-                options={[
-                  { value: 'almacen', label: 'Almacen' },
-                  { value: 'vendedor', label: 'Vendedor' },
-                ]}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-        )}
+        {tipoDespacho === 'EnTienda' && <SeccionEnTienda ocultar={ocultarSet} />}
 
         {/* Campos para Despacho a Domicilio (solo Domicilio, ya no Parcial) */}
+        {/* Sección Domicilio extraída a archivo (Fase D.2). */}
         {tipoDespacho === 'Domicilio' && (
-          <div className="space-y-4">
-            {/* Tabla de productos: editar cuántos entregar en esta entrega */}
-            {productosEntrega.length > 0 && (
-              <div className="space-y-2">
-                <div style={{ height: '180px' }}>
-                  <TableWithTitle<ProductoEntrega>
-                    id="productos-entrega-domicilio"
-                    title="Lista de productos"
-                    selectionColor={orangeColors[10]}
-                    columnDefs={columnDefsDomicilio}
-                    rowData={productosEntrega}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2 justify-end text-xs">
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
-                    <span className="text-orange-700">A programar: </span>
-                    <span className="font-bold text-orange-800">{totalAProgramar.toFixed(2)}</span>
-                  </div>
-                  <div className={`border rounded-lg px-3 py-1.5 ${totalSinProgramar > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
-                    <span className={totalSinProgramar > 0 ? 'text-red-700' : 'text-gray-600'}>
-                      Pendientes sin programar:{' '}
-                    </span>
-                    <span className={`font-bold ${totalSinProgramar > 0 ? 'text-red-800' : 'text-gray-700'}`}>
-                      {totalSinProgramar.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                {totalSinProgramar > 0 && (
-                  <p className="text-xs text-gray-500 text-right italic">
-                    Las unidades sin programar quedarán como pendientes en la venta.
-                    Podrás programarlas luego desde <span className="font-semibold">Mis Entregas</span>.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Campos ocultos para tipo_pedido y cargo_destino */}
-            <div style={{ display: 'none' }}>
-              <Form.Item name="tipo_pedido"><Input /></Form.Item>
-              <Form.Item name="cargo_destino"><Input /></Form.Item>
-            </div>
-
-            {/* Tipo de Pedido + Asignación */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Pedido:
-              </label>
-              <Segmented
-                value={tipoPedido}
-                onChange={(value) => handleTipoPedidoChange(value as TipoPedido)}
-                options={[
-                  { value: TipoPedido.INTERNO, label: 'Asignar a usuario' },
-                  { value: TipoPedido.EXTERNO, label: 'Enviar a cargo' },
-                ]}
-                className="mb-3"
-                block
-              />
-            </div>
-
-            {/* Fila 1: Despachador/Cargo + botón calendario */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                {tipoPedido === TipoPedido.INTERNO ? (
-                  <>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Designar Despachador: <span className="text-red-500">*</span>
-                    </label>
-                    <SelectDespachadores
-                      form={form}
-                      propsForm={{
-                        name: 'despachador_id',
-                      }}
-                      placeholder="Sin asignar (todos los despachadores lo verán)"
-                      className="w-full"
-                      allowClear
-                      onChange={(_id, despachador) => {
-                        // Auto-cargar el vehículo por defecto del despachador si tiene uno asignado
-                        if (despachador?.vehiculo && despachador.vehiculo.id) {
-                          form.setFieldValue('vehiculo_id', despachador.vehiculo.id)
-                          setVehiculoPreseleccionadoDomicilio(despachador.vehiculo)
-                        } else if (!despachador) {
-                          // Se limpió el despachador → también limpiar el vehículo auto-seleccionado
-                          form.setFieldValue('vehiculo_id', undefined)
-                          setVehiculoPreseleccionadoDomicilio(null)
-                        }
-                      }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cargo destino: <span className="text-red-500">*</span>
-                    </label>
-                    <Select
-                      placeholder="Seleccionar cargo destino"
-                      value={form.getFieldValue('cargo_destino')}
-                      onChange={(value) => form.setFieldValue('cargo_destino', value)}
-                      options={cargos.map((c) => ({
-                        value: c.codigo,
-                        label: c.descripcion,
-                      }))}
-                      className="w-full"
-                    />
-                  </>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha y Hora: <span className="text-red-500">*</span>
-                </label>
-                {slotDomicilio ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-800 font-medium flex items-center gap-2">
-                      <FaCheck size={11} className="text-emerald-600 flex-shrink-0" />
-                      <span>
-                        {dayjs(slotDomicilio.start).format('ddd D MMM')},{' '}
-                        {dayjs(slotDomicilio.start).format('HH:mm')} —{' '}
-                        {dayjs(slotDomicilio.end).format('HH:mm')}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setModalCalendarioDomicilio(true)}
-                      className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                ) : (
-                  <ButtonBase
-                    color="info"
-                    size="md"
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => setModalCalendarioDomicilio(true)}
-                  >
-                    <FaCalendarAlt size={14} />
-                    Elegir en Calendario
-                  </ButtonBase>
-                )}
-                {/* Campos ocultos — registrados en el form para que getFieldsValue() los incluya */}
-                <div style={{ display: 'none' }}>
-                  <Form.Item name="fecha_programada"><Input /></Form.Item>
-                  <Form.Item name="hora_inicio"><Input /></Form.Item>
-                  <Form.Item name="hora_fin"><Input /></Form.Item>
-                </div>
-              </div>
-            </div>
-
-            {/* Vehículo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FaTruck className="inline mr-1 text-orange-500" size={13} />
-                Vehículo: <span className="text-gray-400 text-xs">(opcional)</span>
-              </label>
-              <SelectVehiculos
-                form={form}
-                propsForm={{ name: 'vehiculo_id' }}
-                placeholder="Sin vehículo asignado"
-                className="w-full"
-                allowClear
-                vehiculoPreseleccionado={vehiculoPreseleccionadoDomicilio}
-              />
-              <div style={{ display: 'none' }}>
-                <Form.Item name="vehiculo_id"><Input /></Form.Item>
-              </div>
-            </div>
-
-            {/* Fila 3: Selector D1-D4, Referencia grande y Mapa (sin dirección editable) */}
-            <div className="space-y-3">
-              {/* Campo oculto: dirección de entrega se sincroniza silenciosamente desde el D seleccionado */}
-              <div style={{ display: 'none' }}>
-                <Form.Item name="direccion_entrega"><Input /></Form.Item>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {/* Columna izquierda: Selector de dirección + Referencia + botones */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección de entrega: <span className="text-red-500">*</span>
-                    </label>
-                    {cargandoDirecciones ? (
-                      <div className="text-xs text-gray-400">Cargando direcciones del cliente...</div>
-                    ) : direcciones.length === 0 ? (
-                      <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-2">
-                        Este cliente no tiene direcciones registradas. Edita el cliente para agregarlas.
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2">
-                        {(['D1', 'D2', 'D3', 'D4'] as TipoDireccion[]).map((tipo) => {
-                          const dir = direcciones.find(d => d.tipo === tipo)
-                          const activa = direccionSeleccionada === tipo
-                          const disabled = !dir
-                          return (
-                            <button
-                              key={tipo}
-                              type="button"
-                              disabled={disabled}
-                              onClick={() => handleDireccionChange(tipo)}
-                              className={`text-left px-3 py-2 rounded-lg border transition ${
-                                disabled
-                                  ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
-                                  : activa
-                                  ? 'bg-orange-50 border-orange-500 ring-2 ring-orange-200 text-orange-800'
-                                  : 'bg-white border-gray-300 hover:border-orange-400 text-gray-700'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold">{tipo}</span>
-                                {dir?.es_principal && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">
-                                    Principal
-                                  </span>
-                                )}
-                                {dir?.latitud && dir?.longitud && (
-                                  <span className="text-[10px] text-green-600">📍 GPS</span>
-                                )}
-                              </div>
-                              <div className="text-xs mt-1 line-clamp-2">
-                                {dir?.referencia || (dir ? <span className="italic text-gray-400">Sin referencia</span> : <span className="italic">No registrada</span>)}
-                              </div>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Referencia: <span className="text-gray-400 text-xs">(ubicación para el chofer)</span>
-                    </label>
-                    <TextareaBase
-                      propsForm={{
-                        name: 'referencia_entrega',
-                      }}
-                      placeholder="Ej: frente al parque, portón verde, entre calle X y Y..."
-                      rows={3}
-                    />
-                    {ubicacionGps && (
-                      <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGps}>
-                        📍 Ubicación GPS: {ubicacionGps}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <ButtonBase
-                      color="info"
-                      size="sm"
-                      type="button"
-                      className="flex items-center gap-2 text-sm flex-1"
-                      onClick={() => setMostrarMapa(!mostrarMapa)}
-                    >
-                      <FaMapMarkedAlt size={14} />
-                      {mostrarMapa ? 'Ocultar' : 'Ver'} Mapa
-                    </ButtonBase>
-
-                    <ButtonBase
-                      color="warning"
-                      size="sm"
-                      type="button"
-                      className="flex items-center gap-2 text-sm flex-1"
-                      onClick={handleEditarCliente}
-                    >
-                      <FaUserEdit size={14} />
-                      Editar Cliente
-                    </ButtonBase>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Observaciones:
-                    </label>
-                    <TextareaBase
-                      propsForm={{
-                        name: 'observaciones',
-                      }}
-                      placeholder="Observaciones (opcional)"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                {/* Columna derecha: Mapa */}
-                <div>
-                  {mostrarMapa ? (
-                    <div className="h-full min-h-[300px]">
-                      <MapaDireccionMapbox
-                        key={`${direccionSeleccionada}-${coordenadas?.lat}-${coordenadas?.lng}`}
-                        direccion={form.getFieldValue('direccion_entrega') || direccion || ''}
-                        clienteNombre={clienteNombre}
-                        onCoordenadaChange={handleCoordenadaChange}
-                        coordenadasIniciales={coordenadas}
-                        editable={true}
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
-                      <FaMapMarkedAlt size={32} className="text-gray-300" />
-                      <span>{direccion ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
-                      {coordenadas && (
-                        <span className="text-xs text-green-600 font-mono">
-                          Ubicación guardada: {coordenadas.lat.toFixed(4)}, {coordenadas.lng.toFixed(4)}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <SeccionDomicilio
+            form={form}
+            clienteNombre={clienteNombre}
+            direccion={direccion}
+            onEditarCliente={handleEditarCliente}
+            direcciones={direcciones}
+            cargandoDirecciones={cargandoDirecciones}
+            cargos={cargos}
+            columnDefsDomicilio={columnDefsDomicilio}
+            totalAProgramar={totalAProgramar}
+            totalSinProgramar={totalSinProgramar}
+            ocultar={ocultarSet}
+          />
         )}
 
         {/* Campos para Despacho Parcial - Tabla de productos */}
+        {/* Sección Parcial extraída a archivo (Fase D.3). */}
         {tipoDespacho === 'Parcial' && (
-          <div className="space-y-4">
-            {/* Selector de quién entrega */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                ¿Quién entrega? <span className="text-red-500">*</span>
-              </label>
-              <Select
-                value={quienEntregaParcial}
-                onChange={(value) => setQuienEntregaParcial(value)}
-                options={[
-                  { value: 'almacen', label: 'Almacen' },
-                  { value: 'chofer', label: 'Chofer en Tienda' },
-                ]}
-                className="w-60"
-              />
-            </div>
-
-            {/* Tabla AG Grid de productos */}
-            <TablaProductosEntrega
-              productos={productosEntrega}
-              onProductoChange={setProductosEntrega}
-            />
-
-            {/* Resumen */}
-            {totalAEntregar > 0 && (
-              <div className="flex justify-end">
-                <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-sm">
-                  <span className="text-green-800 font-medium">
-                    Total a entregar ahora: {totalAEntregar} unidad(es)
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Resumen completo del parcial: entregar / programar / pendientes sin programar */}
-            {productosEntrega.length > 0 && (totalAEntregar > 0 || totalAProgramar > 0 || totalSinProgramar > 0) && (
-              <div className="flex flex-wrap gap-2 justify-end text-xs">
-                <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
-                  <span className="text-green-700">A entregar: </span>
-                  <span className="font-bold text-green-800">{totalAEntregar.toFixed(2)}</span>
-                </div>
-                <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
-                  <span className="text-orange-700">A programar: </span>
-                  <span className="font-bold text-orange-800">{totalAProgramar.toFixed(2)}</span>
-                </div>
-                <div className={`border rounded-lg px-3 py-1.5 ${totalSinProgramar > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
-                  <span className={totalSinProgramar > 0 ? 'text-red-700' : 'text-gray-600'}>
-                    Pendientes sin programar:{' '}
-                  </span>
-                  <span className={`font-bold ${totalSinProgramar > 0 ? 'text-red-800' : 'text-gray-700'}`}>
-                    {totalSinProgramar.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            )}
-            {totalSinProgramar > 0 && (
-              <p className="text-xs text-gray-500 text-right italic">
-                Las unidades sin programar quedarán como pendientes en la venta.
-                Podrás programarlas luego desde <span className="font-semibold">Mis Ventas</span>.
-              </p>
-            )}
-
-            {/* Sección: Programar entrega del resto */}
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={programarResto}
-                  onChange={setProgramarResto}
-                  size="small"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  ¿Programar entrega del resto?
-                </span>
-                {productosEntrega.some(p => p.total - p.entregar > 0) && (
-                  <span className="text-xs text-gray-500">
-                    ({productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} unidad(es) pendiente(s))
-                  </span>
-                )}
-              </div>
-
-              {programarResto && productosEntrega.some(p => p.total - p.entregar > 0) && (
-                <div className="mt-4 space-y-4">
-                  {/* Tabla AG Grid de productos restantes - mismo componente que la tabla de arriba */}
-                  <div style={{ height: '150px' }}>
-                    <TableWithTitle<ProductoEntrega>
-                      id="productos-entrega-resto"
-                      title="Productos pendientes para entrega programada"
-                      selectionColor={orangeColors[10]}
-                      columnDefs={columnDefsResto}
-                      rowData={productosEntrega.filter(p => p.total - p.entregar > 0)}
-                    />
-                  </div>
-
-                  {/* Campos ocultos para tipo_pedido y cargo_destino del resto */}
-                  <div style={{ display: 'none' }}>
-                    <Form.Item name="_resto_tipo_pedido"><Input /></Form.Item>
-                    <Form.Item name="_resto_cargo_destino"><Input /></Form.Item>
-                  </div>
-
-                  {/* Tipo de Pedido + Asignación */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Pedido:
-                    </label>
-                    <Segmented
-                      value={tipoPedidoResto}
-                      onChange={(value) => handleTipoPedidoChangeResto(value as TipoPedido)}
-                      options={[
-                        { value: TipoPedido.INTERNO, label: 'Asignar a usuario' },
-                        { value: TipoPedido.EXTERNO, label: 'Enviar a cargo' },
-                      ]}
-                      className="mb-3"
-                      block
-                    />
-                  </div>
-
-                  {/* Fila 1: Despachador/Cargo + botón calendario */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      {tipoPedidoResto === TipoPedido.INTERNO ? (
-                        <>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Designar Despachador: <span className="text-red-500">*</span>
-                          </label>
-                          <SelectDespachadores
-                            form={form}
-                            propsForm={{ name: '_resto_despachador_id' }}
-                            placeholder="Sin asignar (todos los despachadores lo verán)"
-                            className="w-full"
-                            allowClear
-                            onChange={(_id, despachador) => {
-                              if (despachador?.vehiculo && despachador.vehiculo.id) {
-                                form.setFieldValue('_resto_vehiculo_id', despachador.vehiculo.id)
-                                setVehiculoPreseleccionadoResto(despachador.vehiculo)
-                              } else if (!despachador) {
-                                form.setFieldValue('_resto_vehiculo_id', undefined)
-                                setVehiculoPreseleccionadoResto(null)
-                              }
-                            }}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Cargo destino: <span className="text-red-500">*</span>
-                          </label>
-                          <Select
-                            placeholder="Seleccionar cargo destino"
-                            value={form.getFieldValue('_resto_cargo_destino')}
-                            onChange={(value) => form.setFieldValue('_resto_cargo_destino', value)}
-                            options={cargos.map((c) => ({
-                              value: c.codigo,
-                              label: c.descripcion,
-                            }))}
-                            className="w-full"
-                          />
-                        </>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fecha y Hora: <span className="text-red-500">*</span>
-                      </label>
-                      {slotResto ? (
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-800 font-medium flex items-center gap-2">
-                            <FaCheck size={11} className="text-emerald-600 flex-shrink-0" />
-                            <span>
-                              {dayjs(slotResto.start).format('ddd D MMM')},{' '}
-                              {dayjs(slotResto.start).format('HH:mm')} —{' '}
-                              {dayjs(slotResto.end).format('HH:mm')}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setModalCalendarioResto(true)}
-                            className="text-slate-400 hover:text-slate-600 text-xs underline whitespace-nowrap"
-                          >
-                            Cambiar
-                          </button>
-                        </div>
-                      ) : (
-                        <ButtonBase
-                          color="info"
-                          size="md"
-                          type="button"
-                          className="w-full flex items-center justify-center gap-2"
-                          onClick={() => setModalCalendarioResto(true)}
-                        >
-                          <FaCalendarAlt size={14} />
-                          Elegir en Calendario
-                        </ButtonBase>
-                      )}
-                      <div style={{ display: 'none' }}>
-                        <Form.Item name="_resto_fecha_programada"><Input /></Form.Item>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Vehículo */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaTruck className="inline mr-1 text-orange-500" size={13} />
-                      Vehículo: <span className="text-gray-400 text-xs">(opcional)</span>
-                    </label>
-                    <SelectVehiculos
-                      form={form}
-                      propsForm={{ name: '_resto_vehiculo_id' }}
-                      placeholder="Sin vehículo asignado"
-                      className="w-full"
-                      allowClear
-                      vehiculoPreseleccionado={vehiculoPreseleccionadoResto}
-                    />
-                    <div style={{ display: 'none' }}>
-                      <Form.Item name="_resto_vehiculo_id"><Input /></Form.Item>
-                    </div>
-                  </div>
-
-                  {/* Fila 3: Selector D1-D4, Referencia y Mapa (sin dirección editable) */}
-                  <div className="space-y-3">
-                    <div style={{ display: 'none' }}>
-                      <Form.Item name="_resto_direccion_entrega"><Input /></Form.Item>
-                      <Form.Item name="_resto_latitud"><Input /></Form.Item>
-                      <Form.Item name="_resto_longitud"><Input /></Form.Item>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Columna izquierda: Selector de dirección + Referencia + botones */}
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Dirección de entrega: <span className="text-red-500">*</span>
-                          </label>
-                          {cargandoDirecciones ? (
-                            <div className="text-xs text-gray-400">Cargando direcciones del cliente...</div>
-                          ) : direcciones.length === 0 ? (
-                            <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded p-2">
-                              Este cliente no tiene direcciones registradas. Edita el cliente para agregarlas.
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-2 gap-2">
-                              {(['D1', 'D2', 'D3', 'D4'] as TipoDireccion[]).map((tipo) => {
-                                const dir = direcciones.find(d => d.tipo === tipo)
-                                const activa = direccionSeleccionadaResto === tipo
-                                const disabled = !dir
-                                return (
-                                  <button
-                                    key={tipo}
-                                    type="button"
-                                    disabled={disabled}
-                                    onClick={() => handleDireccionChangeResto(tipo)}
-                                    className={`text-left px-3 py-2 rounded-lg border transition ${
-                                      disabled
-                                        ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
-                                        : activa
-                                        ? 'bg-orange-50 border-orange-500 ring-2 ring-orange-200 text-orange-800'
-                                        : 'bg-white border-gray-300 hover:border-orange-400 text-gray-700'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-semibold">{tipo}</span>
-                                      {dir?.es_principal && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">
-                                          Principal
-                                        </span>
-                                      )}
-                                      {dir?.latitud && dir?.longitud && (
-                                        <span className="text-[10px] text-green-600">📍 GPS</span>
-                                      )}
-                                    </div>
-                                    <div className="text-xs mt-1 line-clamp-2">
-                                      {dir?.referencia || (dir ? <span className="italic text-gray-400">Sin referencia</span> : <span className="italic">No registrada</span>)}
-                                    </div>
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Referencia: <span className="text-gray-400 text-xs">(ubicación para el chofer)</span>
-                          </label>
-                          <TextareaBase
-                            propsForm={{
-                              name: '_resto_referencia_entrega',
-                            }}
-                            placeholder="Ej: frente al parque, portón verde, entre calle X y Y..."
-                            rows={3}
-                          />
-                          {ubicacionGpsResto && (
-                            <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mt-1 truncate" title={ubicacionGpsResto}>
-                              📍 Ubicación GPS: {ubicacionGpsResto}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <ButtonBase
-                            color="info"
-                            size="sm"
-                            type="button"
-                            className="flex items-center gap-2 text-sm flex-1"
-                            onClick={() => setMostrarMapaResto(!mostrarMapaResto)}
-                          >
-                            <FaMapMarkedAlt size={14} />
-                            {mostrarMapaResto ? 'Ocultar' : 'Ver'} Mapa
-                          </ButtonBase>
-
-                          <ButtonBase
-                            color="warning"
-                            size="sm"
-                            type="button"
-                            className="flex items-center gap-2 text-sm flex-1"
-                            onClick={onEditarCliente}
-                          >
-                            <FaUserEdit size={14} />
-                            Editar Cliente
-                          </ButtonBase>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Observaciones:
-                          </label>
-                          <Input.TextArea
-                            value={observacionesResto}
-                            onChange={(e) => setObservacionesResto(e.target.value)}
-                            placeholder="Observaciones (opcional)"
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Columna derecha: Mapa */}
-                      <div>
-                        {mostrarMapaResto ? (
-                          <div className="h-full min-h-[300px]">
-                            <MapaDireccionMapbox
-                              key={`resto-${direccionSeleccionadaResto}-${coordenadasResto?.lat}-${coordenadasResto?.lng}`}
-                              direccion={restoDireccionEntrega || ''}
-                              clienteNombre={clienteNombre}
-                              onCoordenadaChange={handleCoordenadaChangeResto}
-                              coordenadasIniciales={coordenadasResto}
-                              editable={true}
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-full min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
-                            <FaMapMarkedAlt size={32} className="text-gray-300" />
-                            <span>{restoDireccionEntrega ? 'Click en "Ver Mapa" para marcar ubicación' : 'Sin dirección'}</span>
-                            {coordenadasResto && (
-                              <span className="text-xs text-green-600 font-mono">
-                                Ubicación guardada: {coordenadasResto.lat.toFixed(4)}, {coordenadasResto.lng.toFixed(4)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <SeccionParcial
+            form={form}
+            clienteNombre={clienteNombre}
+            onEditarCliente={handleEditarCliente}
+            direcciones={direcciones}
+            cargandoDirecciones={cargandoDirecciones}
+            cargos={cargos}
+            columnDefsResto={columnDefsResto}
+            totalAEntregar={totalAEntregar}
+            totalAProgramar={totalAProgramar}
+            totalSinProgramar={totalSinProgramar}
+            restoDireccionEntrega={restoDireccionEntrega}
+            ocultar={ocultarSet}
+          />
         )}
       </div>
 

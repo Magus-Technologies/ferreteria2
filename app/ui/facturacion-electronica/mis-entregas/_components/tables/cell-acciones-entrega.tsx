@@ -9,7 +9,7 @@ import {
   FaCheckCircle,
 } from 'react-icons/fa'
 import { MoreOutlined } from '@ant-design/icons'
-import { Dropdown, Modal } from 'antd'
+import { Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
@@ -26,6 +26,7 @@ import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-compl
 import ModalMarcarEntregada from '../modals/modal-marcar-entregada'
 import ModalEntregarParcial from '../modals/modal-entregar-parcial'
 import ModalEntregarVenta from '../../../mis-ventas/_components/modals/modal-entregar-venta'
+import ModalSeleccionarTipoDespacho from '../../../mis-ventas/crear-venta/_components/modals/modal-seleccionar-tipo-despacho'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
@@ -42,6 +43,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
   const [modalRestanteOpen, setModalRestanteOpen] = useState(false)
+  const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
   const [ventaCompleta, setVentaCompleta] = useState<getVentaResponseProps | undefined>()
   const [loadingRestante, setLoadingRestante] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
@@ -54,12 +56,18 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   // Escuchar el trigger del botón principal (filter) — solo la fila seleccionada
   // responde al trigger y abre el modal correspondiente.
+  //
+  // IMPORTANTE: cada tipo de entrega abre un modal DISTINTO y SIN PDF
+  // (el PDF solo se ve desde el dropdown de la fila). El modal de despacho
+  // antiguo (con PDF embebido) ya no se usa para entregar — solo para casos
+  // legacy si el filter envía 'despachar' explícito.
   useEffect(() => {
     if (!accionTrigger || !entrega) return
     if (entregaSeleccionada?.id !== entrega.id) return
-    if (accionTrigger === 'despachar') setModalDespachoOpen(true)
-    else if (accionTrigger === 'marcar') setModalMarcarOpen(true)
+    if (accionTrigger === 'marcar') setModalMarcarOpen(true)
+    else if (accionTrigger === 'parcial') setModalParcialOpen(true)
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
+    else if (accionTrigger === 'despachar') setModalDespachoOpen(true)
     triggerAccion(null) // resetear el trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accionTrigger])
@@ -86,40 +94,55 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
   }
 
+  // Abre el ModalSeleccionarTipoDespacho que YA EXISTE en mis-ventas/crear-venta
+  // — muestra los 3 tipos (EnTienda 🏪 / Domicilio 🚚 / Parcial 📦) en cards.
+  //
+  // CIERRA el modal de Despacho ANTES de abrir el selector. Si no se cierra,
+  // el selector aparece detrás del ModalDespachoEntrega + su barra flotante
+  // (zIndex 2100) y el usuario no lo ve.
   const handleCambiarTipoEntrega = () => {
-    const tipoActual = entrega.tipo_entrega
-    const nuevoTipo =
-      tipoActual === TipoEntrega.RECOJO_EN_TIENDA
-        ? TipoEntrega.DESPACHO
-        : TipoEntrega.RECOJO_EN_TIENDA
-    const labelActual =
-      tipoActual === TipoEntrega.RECOJO_EN_TIENDA ? 'Recojo en Tienda' : 'Despacho a Domicilio'
-    const labelNuevo =
-      nuevoTipo === TipoEntrega.RECOJO_EN_TIENDA ? 'Recojo en Tienda' : 'Despacho a Domicilio'
+    setModalDespachoOpen(false)
+    // Pequeño delay para que se cierre primero el modal de despacho y su portal,
+    // así el selector se monta limpio sin overlap de z-index.
+    setTimeout(() => setModalSeleccionarTipoOpen(true), 100)
+  }
 
-    Modal.confirm({
-      title: 'Cambiar tipo de entrega',
-      content: `La entrega pasará de "${labelActual}" a "${labelNuevo}". ¿Confirmar?`,
-      okText: 'Sí, cambiar',
-      cancelText: 'Cancelar',
-      onOk: async () => {
-        try {
-          const response = await entregaProductoApi.update(entrega.id, {
-            tipo_entrega: nuevoTipo,
-          })
-          if (response.error) {
-            message.error(response.error.message || 'Error al cambiar tipo de entrega')
-            return
-          }
-          message.success(`Tipo de entrega cambiado a ${labelNuevo}`)
-          setModalDespachoOpen(false)
-          queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
-          if (onRefetch) onRefetch()
-        } catch (err: any) {
-          message.error(err?.message || 'Error al cambiar tipo de entrega')
-        }
-      },
-    })
+  // Mapeo del tipo del modal (EnTienda/Domicilio/Parcial) al enum del API
+  // (rt/de/pa). Cuando el usuario confirma, actualizamos la entrega.
+  const handleSelectTipoDespacho = async (
+    tipo: 'EnTienda' | 'Domicilio' | 'Parcial',
+  ) => {
+    const nuevoTipo: TipoEntrega = tipo === 'EnTienda'
+      ? TipoEntrega.RECOJO_EN_TIENDA
+      : tipo === 'Domicilio'
+      ? TipoEntrega.DESPACHO
+      : TipoEntrega.PARCIAL
+
+    if (nuevoTipo === entrega.tipo_entrega) {
+      message.info('La entrega ya es de ese tipo')
+      return
+    }
+
+    try {
+      const response = await entregaProductoApi.update(entrega.id, {
+        tipo_entrega: nuevoTipo,
+      })
+      if (response.error) {
+        message.error(response.error.message || 'Error al cambiar tipo de entrega')
+        return
+      }
+      const labelNuevo = tipo === 'EnTienda'
+        ? 'Recojo en Tienda'
+        : tipo === 'Domicilio'
+        ? 'Despacho a Domicilio'
+        : 'Despacho Parcial'
+      message.success(`Tipo de entrega cambiado a ${labelNuevo}`)
+      setModalDespachoOpen(false)
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      if (onRefetch) onRefetch()
+    } catch (err: any) {
+      message.error(err?.message || 'Error al cambiar tipo de entrega')
+    }
   }
 
   const handleAbrirRestante = async () => {
@@ -442,6 +465,15 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           }
         }}
         venta={ventaCompleta}
+      />
+
+      {/* Modal de selección con las 3 opciones (EnTienda / Domicilio / Parcial)
+          — REUSADO de mis-ventas/crear-venta. Se abre desde el botón
+          "Cambiar tipo entrega" del ModalDespachoEntrega. */}
+      <ModalSeleccionarTipoDespacho
+        open={modalSeleccionarTipoOpen}
+        setOpen={setModalSeleccionarTipoOpen}
+        onSelectTipo={handleSelectTipoDespacho}
       />
     </div>
   )

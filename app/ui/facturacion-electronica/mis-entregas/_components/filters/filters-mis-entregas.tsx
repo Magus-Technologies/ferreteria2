@@ -45,20 +45,22 @@ export default function FiltersMisEntregas() {
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
 
   // Botón principal "Entregar/Despachar/Confirmar" — cambia según el estado
-  // de la entrega seleccionada. Reemplaza los botones que estaban en cada fila.
-  //
-  // Nota: para entregas pendientes (recojo en tienda o domicilio) usamos el
-  // mismo modal `ModalDespachoEntrega` — ya tiene "Cambiar Tipo Entrega",
-  // PDF embebido, vehículo, etc. La acción 'despachar' adapta su efecto
-  // según `tipo_entrega` (ver `handleDespachar` en cell-acciones-entrega).
+  // de la entrega seleccionada y el tipo de entrega. Cada tipo abre un modal
+  // distinto SIN PDF embebido (el PDF solo se ve desde el dropdown):
+  //   - rt (Recojo en Tienda) → ModalMarcarEntregada (acción 'marcar')
+  //   - pa (Parcial)          → ModalEntregarParcial   (acción 'parcial')
+  //   - de (Despacho)         → ModalMarcarEntregada (acción 'marcar')
   const botonPrincipal = (() => {
     if (!entregaSeleccionada) return null
     const estado = entregaSeleccionada.estado_entrega
-    const esRecojoTienda = entregaSeleccionada.tipo_entrega === 'rt'
+    const tipoEntrega = entregaSeleccionada.tipo_entrega
     if (estado === 'pe') {
+      if (tipoEntrega === 'pa') {
+        return { label: 'Entregar Parcial', accion: 'parcial' as const }
+      }
       return {
-        label: esRecojoTienda ? 'Entregar' : 'Despachar',
-        accion: 'despachar' as const,
+        label: tipoEntrega === 'rt' ? 'Entregar' : 'Despachar',
+        accion: 'marcar' as const,
       }
     }
     if (estado === 'ec') {

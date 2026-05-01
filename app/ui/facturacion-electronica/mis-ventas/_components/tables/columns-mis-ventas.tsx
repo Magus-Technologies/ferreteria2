@@ -306,8 +306,10 @@ export function useColumnsMisVentas() {
         return n === 1 ? "Sí (1)" : `Sí (${n})`
       },
       cellStyle: (params) => {
-        if (params.value === "No") return { color: '#6b7280' }
-        return { color: '#d97706', fontWeight: 'bold' }
+        // Cast a Record<string,string> para que AG Grid acepte el union de
+        // estilos (su index signature no permite `fontWeight: undefined`).
+        if (params.value === "No") return { color: '#6b7280' } as Record<string, string>
+        return { color: '#d97706', fontWeight: 'bold' } as Record<string, string>
       },
     },
     {

@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import { FaWhatsapp, FaCheck, FaMapMarkedAlt } from 'react-icons/fa'
 
 const MapaEntregaMapbox = dynamic(
-  () => import('./mapa-entrega-mapbox'),
+  () => import('./mapbox/mapa-entrega-mapbox'),
   {
     ssr: false,
     loading: () => (

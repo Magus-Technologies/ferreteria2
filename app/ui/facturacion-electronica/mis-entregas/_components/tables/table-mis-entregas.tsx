@@ -36,7 +36,7 @@ interface EntregaDB {
   productosEntregados?: any[]
 }
 
-type AccionEntrega = 'despachar' | 'marcar' | 'confirmar' | null
+type AccionEntrega = 'despachar' | 'marcar' | 'parcial' | 'confirmar' | null
 
 type UseStoreEntregaSeleccionada = {
   entrega?: EntregaDB
