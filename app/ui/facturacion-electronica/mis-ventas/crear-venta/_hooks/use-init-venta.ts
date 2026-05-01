@@ -4,7 +4,8 @@ import { FormInstance } from 'antd'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { VentaConUnidadDerivadaNormal } from '../_components/others/header-crear-venta'
 import { FormCreateVenta } from '../_components/others/body-vender'
-import { clienteApi } from '~/lib/api/cliente'
+import { clienteApi, TipoDireccion } from '~/lib/api/cliente'
+import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
 import { productosApiV2 } from '~/lib/api/producto'
 import { useStoreProductoAgregadoVenta } from '../_store/store-producto-agregado-venta'
 
@@ -49,7 +50,7 @@ export default function useInitVenta({
         telefono: (venta as any).telefono || (venta as any).cliente?.telefono || undefined,
         direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
         email: (venta as any).cliente?.email || undefined,
-        direccion_seleccionada: (venta as any).direccion_seleccionada || 'D1',
+        direccion_seleccionada: (venta as any).direccion_seleccionada || TipoDireccion.D1,
         // Campos de entrega mapeados desde la primera entrega_producto
         tipo_despacho: entrega ? tipoEntregaMap[entrega.tipo_entrega] : 'EnTienda',
         despachador_id: entrega?.chofer_id || undefined,
@@ -206,35 +207,20 @@ export default function useInitVenta({
         clienteApi.listarDirecciones(clienteId).then((response) => {
           if (response.data?.data) {
             const direcciones = response.data.data
+            // Setea los campos legacy desde el array (antes hacía switch).
+            setDireccionesClienteToForm(form, { direcciones })
 
-            direcciones.forEach((dir) => {
-              switch (dir.tipo) {
-                case 'D1':
-                  form.setFieldValue('_cliente_direccion_1', dir.direccion)
-                  break
-                case 'D2':
-                  form.setFieldValue('_cliente_direccion_2', dir.direccion)
-                  break
-                case 'D3':
-                  form.setFieldValue('_cliente_direccion_3', dir.direccion)
-                  break
-                case 'D4':
-                  form.setFieldValue('_cliente_direccion_4', dir.direccion)
-                  break
-              }
-            })
-
-            // Restaurar la dirección según la selección guardada en la venta
-            const direccionSeleccionada = (venta as any).direccion_seleccionada || 'D1'
-            const dirMap: Record<string, string> = { D1: 'D1', D2: 'D2', D3: 'D3', D4: 'D4' }
-            const dirSeleccionada = direcciones.find(d => d.tipo === dirMap[direccionSeleccionada])
+            // Restaurar la dirección según la selección guardada en la venta.
+            const direccionSeleccionada =
+              ((venta as any).direccion_seleccionada as TipoDireccion) || TipoDireccion.D1
+            const dirSeleccionada = direcciones.find((d) => d.tipo === direccionSeleccionada)
 
             if (dirSeleccionada?.direccion) {
               form.setFieldValue('direccion', dirSeleccionada.direccion)
             } else if (!form.getFieldValue('direccion')) {
               // Fallback: usar la principal o D1
               const principal = direcciones.find(d => d.es_principal)
-              const d1 = direcciones.find(d => d.tipo === 'D1')
+              const d1 = direcciones.find(d => d.tipo === TipoDireccion.D1)
               const direccionDefault = principal?.direccion || d1?.direccion || ''
               if (direccionDefault) {
                 form.setFieldValue('direccion', direccionDefault)

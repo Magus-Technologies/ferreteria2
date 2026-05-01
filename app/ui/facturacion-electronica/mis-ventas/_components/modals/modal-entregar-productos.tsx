@@ -15,6 +15,11 @@ import type { Cliente } from "~/lib/api/cliente";
 import { TipoEntrega, TipoDespacho, EstadoEntrega, TipoPedido } from "~/lib/api/entrega-producto";
 import FormDespachoEnTienda from "../forms/form-despacho-en-tienda";
 import FormDespachoDomicilio from "../forms/form-despacho-domicilio";
+import { TipoDireccion } from "~/lib/api/cliente";
+import {
+  setDireccionesClienteToForm,
+  type ClienteDireccionFormFields,
+} from "~/lib/utils/cliente-direcciones-form";
 
 // Configurar dayjs en español
 dayjs.locale('es');
@@ -26,7 +31,7 @@ interface ModalEntregarProductosProps {
   tipoDespacho: "EnTienda" | "Domicilio" | "Parcial";
 }
 
-interface FormValues {
+interface FormValues extends ClienteDireccionFormFields {
   tipo_despacho: "EnTienda" | "Domicilio" | "Parcial";
   quien_entrega?: "vendedor" | "almacen";
   chofer_id?: string | number;
@@ -37,11 +42,7 @@ interface FormValues {
   hora_fin?: string;
   direccion_entrega?: string;
   direccion?: string;
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4';
-  _cliente_direccion_1?: string;
-  _cliente_direccion_2?: string;
-  _cliente_direccion_3?: string;
-  _cliente_direccion_4?: string;
+  direccion_seleccionada?: TipoDireccion;
   observaciones?: string;
 }
 
@@ -90,45 +91,27 @@ export default function ModalEntregarProductos({
   // Inicializar formulario cuando se abre el modal
   useEffect(() => {
     if (open && venta) {
-      // Determinar la dirección correcta según direccion_seleccionada
-      let direccionInicial = '';
-      let seleccionInicial: 'D1' | 'D2' | 'D3' | 'D4' = 'D1';
-      
-      if (venta.direccion_seleccionada) {
-        seleccionInicial = venta.direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4';
-        switch (venta.direccion_seleccionada) {
-          case 'D1':
-            direccionInicial = venta.cliente?.direccion || '';
-            break;
-          case 'D2':
-            direccionInicial = venta.cliente?.direccion_2 || '';
-            break;
-          case 'D3':
-            direccionInicial = venta.cliente?.direccion_3 || '';
-            break;
-          case 'D4':
-            direccionInicial = venta.cliente?.direccion_4 || '';
-            break;
-          default:
-            direccionInicial = venta.cliente?.direccion || '';
-        }
-      } else {
-        // Si no hay direccion_seleccionada, usar la primera disponible
-        direccionInicial = venta.cliente?.direccion || '';
-      }
+      // Determinar la dirección correcta según direccion_seleccionada.
+      // El backend devuelve `cliente.direcciones[]` con `tipo` D1..D4 — antes
+      // se leían 4 campos planos `cliente.direccion_2/3/4` que ya no existen.
+      const direcciones = venta.cliente?.direcciones ?? []
+      const seleccionInicial =
+        (venta.direccion_seleccionada as TipoDireccion | undefined) ??
+        TipoDireccion.D1
+      const direccionInicial =
+        direcciones.find((d) => d.tipo === seleccionInicial)?.direccion ||
+        direcciones.find((d) => d.tipo === TipoDireccion.D1)?.direccion ||
+        ''
 
       form.setFieldsValue({
         tipo_despacho: "EnTienda",
         direccion_entrega: direccionInicial,
         direccion: direccionInicial,
         direccion_seleccionada: seleccionInicial,
-        // Campos ocultos con las direcciones del cliente
-        _cliente_direccion_1: venta.cliente?.direccion || '',
-        _cliente_direccion_2: venta.cliente?.direccion_2 || '',
-        _cliente_direccion_3: venta.cliente?.direccion_3 || '',
-        _cliente_direccion_4: venta.cliente?.direccion_4 || '',
       });
-      
+      // Setea los campos legacy `_cliente_direccion_*` desde el array.
+      setDireccionesClienteToForm(form, venta.cliente)
+
     } else if (!open) {
       form.resetFields();
       // NO resetear datosProgramacion aquí porque puede estar en transición al modal de productos
@@ -319,13 +302,6 @@ export default function ModalEntregarProductos({
                   venta?.cliente?.razon_social ||
                   `${venta?.cliente?.nombres || ''} ${venta?.cliente?.apellidos || ''}`.trim()
                 }
-                clienteDirecciones={{
-                  direccion: venta?.cliente?.direccion,
-                  direccion_2: venta?.cliente?.direccion_2,
-                  direccion_3: venta?.cliente?.direccion_3,
-                  direccion_4: venta?.cliente?.direccion_4,
-                }}
-                direccionSeleccionada={venta?.direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined}
                 onEditarCliente={() => setModalEditarClienteOpen(true)}
               />
             )}

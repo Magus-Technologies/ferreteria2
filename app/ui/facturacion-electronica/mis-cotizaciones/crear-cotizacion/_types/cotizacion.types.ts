@@ -4,6 +4,8 @@
  */
 
 import { Dayjs } from "dayjs";
+import type { TipoDireccion } from "~/lib/api/cliente";
+import type { ClienteDireccionFormFields } from "~/lib/utils/cliente-direcciones-form";
 
 export type TipoMoneda = "s" | "d";
 export type DescuentoTipo = "Porcentaje" | "Monto";
@@ -29,18 +31,18 @@ export interface ProductoCotizacion {
   comision?: number;
 }
 
-export interface FormCreateCotizacion {
+export interface FormCreateCotizacion extends ClienteDireccionFormFields {
   productos: ProductoCotizacion[];
   // Campos principales
   fecha: Dayjs;
   tipo_moneda?: TipoMoneda;
   tipo_de_cambio?: number;
-  
+
   // Campos de vendedor y forma de pago
   vendedor?: string;
   forma_de_pago?: FormaDePago;
   vigencia_dias?: number;
-  
+
   // Campos de cliente
   ruc_dni?: string;
   cliente_id?: number;
@@ -48,11 +50,8 @@ export interface FormCreateCotizacion {
   telefono?: string;
   email?: string;
   direccion?: string;
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4';
-  _cliente_direccion_1?: string;
-  _cliente_direccion_2?: string;
-  _cliente_direccion_3?: string;
-  _cliente_direccion_4?: string;
+  direccion_seleccionada?: TipoDireccion;
+  // Campos `_cliente_direccion_*` heredados de `ClienteDireccionFormFields`.
   
   // Campos de documento
   fecha_vencimiento?: Dayjs;

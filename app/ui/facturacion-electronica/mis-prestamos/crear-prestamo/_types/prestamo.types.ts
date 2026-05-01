@@ -4,6 +4,8 @@
 
 import { Dayjs } from "dayjs";
 import { TipoOperacion, TipoEntidad, TipoMoneda, TipoInteres } from "~/lib/api/prestamo";
+import type { TipoDireccion } from "~/lib/api/cliente";
+import type { ClienteDireccionFormFields } from "~/lib/utils/cliente-direcciones-form";
 
 export interface ProductoPrestamo {
   producto_id: number;
@@ -18,7 +20,7 @@ export interface ProductoPrestamo {
   // subtotal: number; // Comentado: Solo se maneja por cantidad
 }
 
-export interface FormCreatePrestamo {
+export interface FormCreatePrestamo extends ClienteDireccionFormFields {
   productos: ProductoPrestamo[];
 
   // Número de préstamo
@@ -38,11 +40,8 @@ export interface FormCreatePrestamo {
   ruc_dni?: string;
   telefono?: string;
   direccion?: string;
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4';
-  _cliente_direccion_1?: string;
-  _cliente_direccion_2?: string;
-  _cliente_direccion_3?: string;
-  _cliente_direccion_4?: string;
+  direccion_seleccionada?: TipoDireccion;
+  // Campos `_cliente_direccion_*` heredados de `ClienteDireccionFormFields`.
 
   // Montos
   monto_total: number;

@@ -27,6 +27,7 @@ import {
   type CreateEntregaProductoRequest
 } from '~/lib/api/entrega-producto'
 import { fcmApi } from '~/lib/api/fcm'
+import type { TipoDireccion } from '~/lib/api/cliente'
 import dayjs from 'dayjs'
 import { cajaApi } from '~/lib/api/caja'
 import { fechaSubmit } from '~/utils/fechas'
@@ -132,7 +133,15 @@ export default function useCreateVenta({
       }
     }
 
+    // Los `_cliente_direccion_*` solo viven en el form para pintar el
+    // selector D1/D2/D3/D4 — el backend recibe únicamente la `direccion`
+    // efectiva y la `direccion_seleccionada`. Se desestructuran y descartan
+    // antes del `...restValues` para que no lleguen al payload.
     const {
+      _cliente_direccion_1: _d1Ignored,
+      _cliente_direccion_2: _d2Ignored,
+      _cliente_direccion_3: _d3Ignored,
+      _cliente_direccion_4: _d4Ignored,
       productos,
       tipo_de_cambio,
       tipo_moneda,
@@ -140,10 +149,6 @@ export default function useCreateVenta({
       cliente_id,
       recomendado_por_id,
       metodos_de_pago,
-      _cliente_direccion_1,
-      _cliente_direccion_2,
-      _cliente_direccion_3,
-      _cliente_direccion_4,
       direccion,
       direccion_seleccionada,
       ruc_dni,
@@ -277,7 +282,7 @@ export default function useCreateVenta({
       // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
       cliente_id: clienteIdFinal,
       // ✅ Enviar dirección seleccionada (D1, D2, D3 o D4)
-      direccion_seleccionada: direccion_seleccionada as 'D1' | 'D2' | 'D3' | 'D4' | undefined,
+      direccion_seleccionada: direccion_seleccionada as TipoDireccion | undefined,
       // ✅ Enviar tipo de despacho (et=En Tienda, do=Domicilio, pa=Parcial)
       tipo_despacho:
         tipo_despacho === 'EnTienda' ? TipoDespachoVenta.EN_TIENDA

@@ -4,6 +4,7 @@
 
 import { apiRequest, type ApiResponse } from '../api';
 import type { ValeCompraAplicado } from './vales-compra';
+import type { TipoDireccion } from './cliente';
 // Re-exportamos para que cualquiera que importe de venta.ts pueda acceder
 // a los enums de la entrega sin tener que importar de entrega-producto.ts.
 import {
@@ -101,7 +102,7 @@ export interface CreateVentaRequest {
   fecha: string;
   estado_de_venta: EstadoDeVenta;
   cliente_id?: number; // Opcional: Para Boleta/NV sin cliente, backend usa "CLIENTE VARIOS" automáticamente
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4'; // Dirección seleccionada del cliente
+  direccion_seleccionada?: TipoDireccion; // Dirección seleccionada del cliente
   recomendado_por_id?: number;
   user_id: string;
   almacen_id: number;

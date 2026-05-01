@@ -15,6 +15,7 @@ import { useEffect } from "react";
 import { useAuth } from "~/lib/auth-context";
 import { cotizacionesApi } from "~/lib/api/cotizaciones";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
 import { BsGeoAltFill } from "react-icons/bs";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
@@ -57,18 +58,7 @@ export default function FormCrearCotizacion({
       <Form.Item name="direccion_seleccionada" hidden>
         <input type="hidden" />
       </Form.Item>
-      <Form.Item name="_cliente_direccion_1" hidden>
-        <input type="hidden" />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_2" hidden>
-        <input type="hidden" />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_3" hidden>
-        <input type="hidden" />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_4" hidden>
-        <input type="hidden" />
-      </Form.Item>
+      <HiddenDireccionesFormItems />
 
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
       <div className="flex gap-6">

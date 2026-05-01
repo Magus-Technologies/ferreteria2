@@ -4,7 +4,12 @@ import SelectBase, { RefSelectBaseProps, SelectBaseProps } from './select-base'
 import { useEffect, useRef, useState } from 'react'
 import { FaSearch, FaUser } from 'react-icons/fa'
 import iterarChangeValue from '~/app/_utils/iterar-change-value'
-import { Cliente } from '~/lib/api/cliente'
+import { Cliente, TipoDireccion } from '~/lib/api/cliente'
+import {
+  setDireccionesClienteToForm,
+  clearDireccionesClienteFromForm,
+  getDireccionFromForm,
+} from '~/lib/utils/cliente-direcciones-form'
 import useSearchClientes from '~/app/ui/facturacion-electronica/mis-ventas/_hooks/use-search-clientes'
 import { useDebounce } from 'use-debounce'
 import ButtonCreateCliente from '../buttons/button-create-cliente'
@@ -96,10 +101,7 @@ export default function SelectClientes({
       form.setFieldValue('direccion', '')
       form.setFieldValue('telefono', '')
       form.setFieldValue('email', '')
-      form.setFieldValue('_cliente_direccion_1', '')
-      form.setFieldValue('_cliente_direccion_2', '')
-      form.setFieldValue('_cliente_direccion_3', '')
-      form.setFieldValue('_cliente_direccion_4', '')
+      clearDireccionesClienteFromForm(form)
     }
     setClienteSeleccionado(undefined)
     iterarChangeValue({
@@ -163,41 +165,20 @@ export default function SelectClientes({
       
       if (response.data?.data) {
         const direcciones = response.data.data
+        // Setea los campos `_cliente_direccion_*` desde el array (antes
+        // hacía un switch hardcoded por tipo).
+        setDireccionesClienteToForm(form, { direcciones })
 
-        // Limpiar direcciones previas
-        form.setFieldValue('_cliente_direccion_1', '')
-        form.setFieldValue('_cliente_direccion_2', '')
-        form.setFieldValue('_cliente_direccion_3', '')
-        form.setFieldValue('_cliente_direccion_4', '')
-
-        // Mapear direcciones por tipo
-        direcciones.forEach((dir) => {
-          switch (dir.tipo) {
-            case 'D1':
-              form.setFieldValue('_cliente_direccion_1', dir.direccion)
-              break
-            case 'D2':
-              form.setFieldValue('_cliente_direccion_2', dir.direccion)
-              break
-            case 'D3':
-              form.setFieldValue('_cliente_direccion_3', dir.direccion)
-              break
-            case 'D4':
-              form.setFieldValue('_cliente_direccion_4', dir.direccion)
-              break
-          }
-        })
-
-        // Llenar campo de dirección según el checkbox seleccionado (por defecto D1)
-        const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1'
-        const direccionKey = `_cliente_direccion_${direccionSeleccionada.replace('D', '')}`
-        const direccionActual = form.getFieldValue(direccionKey)
-
+        // Llenar campo de dirección según el checkbox seleccionado (por defecto D1).
+        const seleccionada =
+          (form.getFieldValue('direccion_seleccionada') as TipoDireccion) ||
+          TipoDireccion.D1
+        const direccionActual = getDireccionFromForm(form, seleccionada)
         if (direccionActual) {
           form.setFieldValue('direccion', direccionActual)
         } else {
-          // Fallback a dirección 1 si la seleccionada no existe
-          const direccion1 = form.getFieldValue('_cliente_direccion_1')
+          // Fallback a dirección 1 si la seleccionada no existe.
+          const direccion1 = getDireccionFromForm(form, TipoDireccion.D1)
           if (direccion1) {
             form.setFieldValue('direccion', direccion1)
           }

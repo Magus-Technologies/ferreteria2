@@ -8,6 +8,13 @@ import SelectProveedores from "~/app/_components/form/selects/select-proveedores
 import InputBase from "~/app/_components/form/inputs/input-base";
 import LabelBase from "~/components/form/label-base";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
+import { TipoDireccion } from "~/lib/api/cliente";
+import {
+  setDireccionesClienteToForm,
+  clearDireccionesClienteFromForm,
+  getDireccionFromForm,
+} from "~/lib/utils/cliente-direcciones-form";
 
 export type TipoEntidadForm = "cliente" | "proveedor";
 
@@ -85,25 +92,14 @@ export default function FormSeccionCliente({
         : `${cliente.nombres || ""} ${cliente.apellidos || ""}`.trim();
       form.setFieldValue(entidadNombreField, nombreCompleto);
 
-      // Actualizar direcciones ocultas (desde el nuevo sistema)
-      const direcciones = cliente.direcciones || [];
-      const d1 = direcciones.find((d: any) => d.tipo === 'D1')?.direccion || '';
-      const d2 = direcciones.find((d: any) => d.tipo === 'D2')?.direccion || '';
-      const d3 = direcciones.find((d: any) => d.tipo === 'D3')?.direccion || '';
-      const d4 = direcciones.find((d: any) => d.tipo === 'D4')?.direccion || '';
-      
-      form.setFieldValue("_cliente_direccion_1", d1);
-      form.setFieldValue("_cliente_direccion_2", d2);
-      form.setFieldValue("_cliente_direccion_3", d3);
-      form.setFieldValue("_cliente_direccion_4", d4);
+      // Distribuir las direcciones del cliente a los campos legacy.
+      setDireccionesClienteToForm(form, cliente);
 
-      // Actualizar dirección visible según selección
-      const direccionSeleccionada = form.getFieldValue("direccion_seleccionada") || "D1";
-      let direccionActual = d1;
-      if (direccionSeleccionada === "D2") direccionActual = d2;
-      if (direccionSeleccionada === "D3") direccionActual = d3;
-      if (direccionSeleccionada === "D4") direccionActual = d4;
-      form.setFieldValue(direccionField, direccionActual);
+      // Actualizar dirección visible según el radio seleccionado.
+      const seleccionada =
+        (form.getFieldValue("direccion_seleccionada") as TipoDireccion) ||
+        TipoDireccion.D1;
+      form.setFieldValue(direccionField, getDireccionFromForm(form, seleccionada));
 
       // Actualizar teléfono y email
       form.setFieldValue(telefonoField, cliente.telefono || "");
@@ -115,10 +111,7 @@ export default function FormSeccionCliente({
       form.setFieldValue(direccionField, "");
       form.setFieldValue(telefonoField, "");
       form.setFieldValue(emailField, "");
-      form.setFieldValue("_cliente_direccion_1", "");
-      form.setFieldValue("_cliente_direccion_2", "");
-      form.setFieldValue("_cliente_direccion_3", "");
-      form.setFieldValue("_cliente_direccion_4", "");
+      clearDireccionesClienteFromForm(form);
     }
   };
 
@@ -147,18 +140,7 @@ export default function FormSeccionCliente({
           <Form.Item name="direccion_seleccionada" hidden initialValue="D1">
             <input type="hidden" />
           </Form.Item>
-          <Form.Item name="_cliente_direccion_1" hidden initialValue="">
-            <input type="hidden" />
-          </Form.Item>
-          <Form.Item name="_cliente_direccion_2" hidden initialValue="">
-            <input type="hidden" />
-          </Form.Item>
-          <Form.Item name="_cliente_direccion_3" hidden initialValue="">
-            <input type="hidden" />
-          </Form.Item>
-          <Form.Item name="_cliente_direccion_4" hidden initialValue="">
-            <input type="hidden" />
-          </Form.Item>
+          <HiddenDireccionesFormItems />
         </>
       )}
 

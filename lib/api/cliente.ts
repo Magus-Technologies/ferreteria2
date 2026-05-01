@@ -14,6 +14,18 @@ export enum TipoDireccion {
   D4 = 'D4',
 }
 
+/**
+ * Lista canónica de tipos de dirección — usar para iterar (tabs, radios,
+ * payload, etc.) en lugar de hardcodear `['D1','D2','D3','D4']`. Si en el
+ * futuro se agrega `D5`, basta con añadirlo al enum y a este array.
+ */
+export const TIPOS_DIRECCION_LIST: TipoDireccion[] = [
+  TipoDireccion.D1,
+  TipoDireccion.D2,
+  TipoDireccion.D3,
+  TipoDireccion.D4,
+]
+
 // ============= INTERFACES =============
 
 export interface DireccionCliente {
@@ -34,6 +46,60 @@ export interface DireccionFormValues {
   referencia?: string | null;
   latitud?: number | null;
   longitud?: number | null;
+}
+
+/**
+ * Crea una `DireccionCliente` vacía para un tipo dado — útil cuando el
+ * cliente aún no tiene esa dirección registrada y el frontend necesita
+ * mantener un slot para que el usuario la complete.
+ */
+export function crearDireccionVacia(tipo: TipoDireccion): DireccionCliente {
+  return {
+    id: 0,
+    cliente_id: 0,
+    tipo,
+    direccion: '',
+    referencia: null,
+    latitud: null,
+    longitud: null,
+    es_principal: tipo === TipoDireccion.D1,
+    created_at: '',
+    updated_at: '',
+  }
+}
+
+/**
+ * Devuelve un array de DireccionCliente con un slot por cada tipo en
+ * `TIPOS_DIRECCION_LIST`, llenando los slots vacíos con `crearDireccionVacia`.
+ * El frontend siempre puede iterar sobre el resultado de longitud fija sin
+ * preocuparse por direcciones ausentes.
+ */
+export function parseDireccionesFromCliente(
+  cliente?: { direcciones?: DireccionCliente[] | null }
+): DireccionCliente[] {
+  const existentes = cliente?.direcciones ?? []
+  return TIPOS_DIRECCION_LIST.map(
+    (tipo) => existentes.find((d) => d.tipo === tipo) ?? crearDireccionVacia(tipo)
+  )
+}
+
+/**
+ * Convierte el array completo de direcciones (incluyendo las vacías) en el
+ * payload que esperan los endpoints del backend. Filtra las direcciones sin
+ * `direccion` (slots vacíos) — el backend las re-arma del lado de allá.
+ */
+export function buildDireccionesPayload(
+  direcciones: DireccionCliente[]
+): Array<DireccionFormValues & { tipo: TipoDireccion }> {
+  return direcciones
+    .filter((d) => d.direccion && d.direccion.trim().length > 0)
+    .map((d) => ({
+      tipo: d.tipo,
+      direccion: d.direccion,
+      referencia: d.referencia ?? null,
+      latitud: d.latitud ?? null,
+      longitud: d.longitud ?? null,
+    }))
 }
 
 export interface Coordenadas {

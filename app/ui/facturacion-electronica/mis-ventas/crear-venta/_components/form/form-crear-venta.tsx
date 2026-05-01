@@ -14,6 +14,12 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { useEffect, useState, useCallback } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
+import { TipoDireccion } from "~/lib/api/cliente";
+import {
+  setDireccionesClienteToForm,
+  clearDireccionesClienteFromForm,
+} from "~/lib/utils/cliente-direcciones-form";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
 import InputCodigoVale from "../others/input-codigo-vale";
@@ -61,18 +67,7 @@ export default function FormCrearVenta({
       <Form.Item name="direccion_seleccionada" hidden>
         <input type="hidden" />
       </Form.Item>
-      <Form.Item name="_cliente_direccion_1" hidden>
-        <input type="hidden" />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_2" hidden>
-        <input type="hidden" />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_3" hidden>
-        <input type="hidden" />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_4" hidden>
-        <input type="hidden" />
-      </Form.Item>
+      <HiddenDireccionesFormItems />
       <Form.Item name="fecha_nacimiento" hidden>
         <input type="hidden" />
       </Form.Item>
@@ -288,30 +283,22 @@ export default function FormCrearVenta({
                   // Actualizar fecha de nacimiento (campo oculto para edición)
                   form.setFieldValue("fecha_nacimiento", cliente.fecha_nacimiento || null);
 
-                  // Actualizar las 4 direcciones del cliente en campos ocultos (desde el nuevo sistema)
-                  const direcciones = cliente.direcciones || [];
-                  const d1 = direcciones.find(d => d.tipo === 'D1')?.direccion || '';
-                  const d2 = direcciones.find(d => d.tipo === 'D2')?.direccion || '';
-                  const d3 = direcciones.find(d => d.tipo === 'D3')?.direccion || '';
-                  const d4 = direcciones.find(d => d.tipo === 'D4')?.direccion || '';
-
-                  form.setFieldValue("_cliente_direccion_1", d1);
-                  form.setFieldValue("_cliente_direccion_2", d2);
-                  form.setFieldValue("_cliente_direccion_3", d3);
-                  form.setFieldValue("_cliente_direccion_4", d4);
+                  // Distribuir las direcciones del cliente a los campos
+                  // legacy (`_cliente_direccion_*`) iterando sobre el array
+                  // — antes hacía 4 `find(d.tipo === 'Dx')` hardcoded.
+                  setDireccionesClienteToForm(form, cliente);
 
                   // Actualizar direccion_entrega con la dirección principal
+                  const direcciones = cliente.direcciones || [];
                   const direccionPrincipal = direcciones.find(d => d.es_principal);
+                  const d1 = direcciones.find(d => d.tipo === TipoDireccion.D1)?.direccion || '';
                   form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
                   form.setFieldValue("telefono", "");
                   form.setFieldValue("email", "");
-                  form.setFieldValue("_cliente_direccion_1", "");
-                  form.setFieldValue("_cliente_direccion_2", "");
-                  form.setFieldValue("_cliente_direccion_3", "");
-                  form.setFieldValue("_cliente_direccion_4", "");
+                  clearDireccionesClienteFromForm(form);
                   form.setFieldValue("direccion_entrega", "");
                 }
               }}

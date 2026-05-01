@@ -2,6 +2,33 @@ import { apiRequest, type ApiResponse } from '../api';
 
 // ============= INTERFACES =============
 
+export interface ContactoEmpresa {
+  id?: number;
+  empresa_id?: number;
+  cargo: 'gerente' | 'facturacion' | 'contabilidad';
+  nombre?: string;
+  email?: string;
+  celular?: string;
+}
+
+export interface DireccionEmpresa {
+  id?: number;
+  empresa_id?: number;
+  alias?: string;
+  direccion: string;
+  ubigeo_id?: number;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
+}
+
+export interface TerminoEmpresa {
+  id?: number;
+  empresa_id?: number;
+  tipo: 'comprobantes_ventas' | 'letras_cambio' | 'guias_remision' | 'cotizaciones' | 'ordenes_compras';
+  contenido?: string;
+}
+
 export interface Empresa {
   id: number;
   ruc: string;
@@ -18,34 +45,25 @@ export interface Empresa {
   distrito?: string;
   regimen?: string;
   actividad_economica?: string;
-  // Logo
   logo: string | null;
-  logo_url?: string; // URL completa generada por el backend
-  // Gerente o Administrador
-  gerente_nombre?: string;
-  gerente_email?: string;
-  gerente_celular?: string;
-  // Facturación
-  facturacion_nombre?: string;
-  facturacion_email?: string;
-  facturacion_celular?: string;
-  // Contabilidad
-  contabilidad_nombre?: string;
-  contabilidad_email?: string;
-  contabilidad_celular?: string;
-  // Términos de impresión
-  terminos_comprobantes_ventas?: string;
-  terminos_letras_cambio?: string;
-  terminos_guias_remision?: string;
-  terminos_cotizaciones?: string;
-  terminos_ordenes_compras?: string;
+  logo_url?: string;
   imprimir_impuestos_boleta?: boolean;
-  // Campos de configuración (NO se editan en Información Básica)
+  // SUNAT credentials
+  sol_user?: string;
+  sol_pass?: string;
+  sunat_client_id?: string;
+  sunat_secret_client?: string;
+  sunat_modo?: 'beta' | 'produccion';
+  // Campos de configuración
   almacen_id: number;
   marca_id: number;
   serie_ingreso: number;
   serie_salida: number;
   serie_recepcion_almacen: number;
+  // Relaciones
+  contactos?: ContactoEmpresa[];
+  terminos?: TerminoEmpresa[];
+  direcciones?: DireccionEmpresa[];
 }
 
 export interface EmpresaResponse {
@@ -72,38 +90,27 @@ export interface UpdateEmpresaRequest {
   distrito?: string;
   regimen?: string;
   actividad_economica?: string;
-  // Logo
   logo?: string;
-  // Gerente o Administrador
-  gerente_nombre?: string;
-  gerente_email?: string;
-  gerente_celular?: string;
-  // Facturación
-  facturacion_nombre?: string;
-  facturacion_email?: string;
-  facturacion_celular?: string;
-  // Contabilidad
-  contabilidad_nombre?: string;
-  contabilidad_email?: string;
-  contabilidad_celular?: string;
-  // Términos de impresión
-  terminos_comprobantes_ventas?: string;
-  terminos_letras_cambio?: string;
-  terminos_guias_remision?: string;
-  terminos_cotizaciones?: string;
-  terminos_ordenes_compras?: string;
   imprimir_impuestos_boleta?: boolean;
+  // SUNAT credentials
+  sol_user?: string;
+  sol_pass?: string;
+  sunat_client_id?: string;
+  sunat_secret_client?: string;
+  sunat_modo?: 'beta' | 'produccion';
+  // Contactos y términos (nested)
+  contactos?: ContactoEmpresa[];
+  terminos?: TerminoEmpresa[];
+  direcciones?: DireccionEmpresa[];
 }
 
 // ============= API METHODS =============
 
 export const empresaApi = {
-  // Obtener empresa por ID
   getById: async (id: number): Promise<ApiResponse<EmpresaResponse>> => {
     return apiRequest<EmpresaResponse>(`/empresas/${id}`);
   },
 
-  // Actualizar empresa
   update: async (id: number, data: UpdateEmpresaRequest): Promise<ApiResponse<UpdateEmpresaResponse>> => {
     return apiRequest<UpdateEmpresaResponse>(`/empresas/${id}`, {
       method: 'PUT',
@@ -111,17 +118,15 @@ export const empresaApi = {
     });
   },
 
-  // Subir logo (multipart/form-data)
   uploadLogo: async (id: number, formData: FormData): Promise<ApiResponse<UpdateEmpresaResponse>> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-    // Laravel requiere _method=PUT para simular PUT con FormData
     formData.append('_method', 'PUT');
 
     try {
       const response = await fetch(`${API_URL}/empresas/${id}`, {
-        method: 'POST', // Usar POST con _method=PUT
+        method: 'POST',
         headers: {
           'Accept': 'application/json',
           ...(token && { 'Authorization': `Bearer ${token}` }),
