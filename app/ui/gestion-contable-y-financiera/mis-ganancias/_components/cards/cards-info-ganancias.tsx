@@ -9,12 +9,16 @@ import { useState } from 'react'
 import { FaMoneyBillWave, FaFileInvoiceDollar } from 'react-icons/fa'
 import { FaMoneyBills, FaMoneyBillTrendUp } from 'react-icons/fa6'
 import { GiPayMoney, GiReceiveMoney } from 'react-icons/gi'
+import ModalPagosCompras from '../modals/modal-pagos-compras'
+import ModalPerdidas from '../modals/modal-perdidas'
 
 export default function CardsInfoGanancias() {
   const { message } = App.useApp()
   const [email, setEmail] = useState('GRUPOMREDENTORISA@GMAIL.COM')
   const [loadingEmail, setLoadingEmail] = useState(false)
   const [loadingPrint, setLoadingPrint] = useState(false)
+  const [modalPagosOpen, setModalPagosOpen] = useState(false)
+  const [modalPerdidasOpen, setModalPerdidasOpen] = useState(false)
   
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading } = useGetResumenGanancias(filtros)
@@ -102,7 +106,13 @@ export default function CardsInfoGanancias() {
       </div>
 
       {/* Gastos U */}
-      <div className='bg-white border border-slate-200 rounded-lg p-4'>
+      <div 
+        className='bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:border-slate-400 transition-colors relative group'
+        onClick={() => setModalPagosOpen(true)}
+      >
+        <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-slate-400 font-medium'>
+          Ver detalles
+        </div>
         <div className='flex items-center justify-center gap-2 mb-2'>
           <FaFileInvoiceDollar className='text-slate-600' size={16} />
           <div className='text-sm text-slate-600 font-medium'>Gastos U</div>
@@ -111,6 +121,12 @@ export default function CardsInfoGanancias() {
           {isLoading ? '...' : resumen.gastos_u.toFixed(2)}
         </div>
       </div>
+
+      <ModalPagosCompras 
+        open={modalPagosOpen} 
+        onClose={() => setModalPagosOpen(false)} 
+        filtros={filtros}
+      />
 
       {/* Neto */}
       <div className='bg-white border border-slate-200 rounded-lg p-4'>
@@ -124,7 +140,13 @@ export default function CardsInfoGanancias() {
       </div>
 
       {/* Perdida */}
-      <div className='bg-white border border-slate-200 rounded-lg p-4'>
+      <div 
+        className='bg-white border border-slate-200 rounded-lg p-4 cursor-pointer hover:border-red-300 transition-colors relative group'
+        onClick={() => setModalPerdidasOpen(true)}
+      >
+        <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-red-400 font-medium'>
+          Ver detalles
+        </div>
         <div className='flex items-center justify-center gap-2 mb-2'>
           <GiReceiveMoney className='text-red-600' size={16} />
           <div className='text-sm text-slate-600 font-medium'>Perdida</div>
@@ -133,6 +155,12 @@ export default function CardsInfoGanancias() {
           {isLoading ? '...' : resumen.perdida.toFixed(2)}
         </div>
       </div>
+
+      <ModalPerdidas 
+        open={modalPerdidasOpen} 
+        onClose={() => setModalPerdidasOpen(false)} 
+        filtros={filtros}
+      />
 
       {/* Correo electrónico */}
       <div className='bg-white border border-slate-200 rounded-lg p-4'>

@@ -8,25 +8,29 @@ import { useStoreFiltrosMisGanancias } from '~/app/ui/gestion-contable-y-financi
 import { Spin } from 'antd'
 import type { GananciaDetalle } from '~/lib/api/ganancias'
 import { useQuery } from '@tanstack/react-query'
-import { despliegueDePagoApi } from '~/lib/api/despliegue-de-pago'
+import { apiRequest } from '~/lib/api'
 
 export default function TableMisGanancias() {
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading, error } = useGetGanancias(filtros)
 
-  // Query para obtener despliegues de pago
+  // Query para obtener despliegues de pago con el formato detallado
   const { data: desplieguesData } = useQuery({
-    queryKey: ['despliegues-de-pago'],
-    queryFn: () => despliegueDePagoApi.getAll({ mostrar: true }),
+    queryKey: ['metodos-para-ventas'],
+    queryFn: async () => {
+      const response = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/metodos-para-ventas')
+      return response.data
+    },
   })
 
   const rowData = data?.data?.data || []
 
   // Crear mapa de despliegues de pago para conversión rápida
   const despliegueMap = useMemo(() => {
-    if (!desplieguesData?.data?.data) return {}
-    return desplieguesData.data.data.reduce((acc, despliegue) => {
-      acc[despliegue.id] = despliegue.name.toUpperCase()
+    if (!desplieguesData?.data) return {}
+    return desplieguesData.data.reduce((acc, metodo) => {
+      // Usamos despliegue_pago_id como llave porque es lo que viene en el campo 'cc'
+      acc[metodo.despliegue_pago_id] = metodo.label.toUpperCase()
       return acc
     }, {} as Record<string, string>)
   }, [desplieguesData])
@@ -136,7 +140,7 @@ export default function TableMisGanancias() {
       cellStyle: { fontWeight: 'bold' } as CellStyle,
     },
     {
-      headerName: 'C.CAJA',
+      headerName: 'DESPLIEGUE DE PAGO',
       field: 'cc',
       width: 130,
       valueFormatter: (p) => despliegueMap[p.value] || p.value || '-',

@@ -2,7 +2,7 @@
  * API para Gestión Contable y Financiera - Mis Ganancias
  */
 
-import { apiRequest } from "../api";
+import { apiRequest, ApiResponse } from "../api";
 
 export interface GananciaDetalle {
   id: string;
@@ -139,5 +139,39 @@ export const gananciasApi = {
         }),
       }
     );
+  },
+
+  /**
+   * Obtener pagos de compras detallados
+   */
+  getPagosCompras: async (filters?: any) => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/ganancias/pagos-compras?${queryString}` : '/ganancias/pagos-compras';
+    return apiRequest<{ data: { pagos: any[]; resumen: any } }>(url);
+  },
+
+  /**
+   * Obtener detalle de pérdidas
+   */
+  getPerdidasDetalle: async (filters?: any) => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/ganancias/perdidas-detalle?${queryString}` : '/ganancias/perdidas-detalle';
+    return apiRequest<{ data: { detalles: any[]; resumen: any } }>(url);
   },
 };

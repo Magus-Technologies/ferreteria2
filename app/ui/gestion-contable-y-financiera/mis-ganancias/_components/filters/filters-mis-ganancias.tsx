@@ -19,7 +19,7 @@ import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useQuery } from "@tanstack/react-query";
 import { clienteApi } from "~/lib/api/cliente";
-import { despliegueDePagoApi } from "~/lib/api/despliegue-de-pago";
+import SelectDespliegueDePago from "~/app/_components/form/selects/select-despliegue-de-pago";
 import { useDebounce } from "use-debounce";
 
 interface ValuesFiltersMisGanancias {
@@ -56,11 +56,7 @@ export default function FiltersMisGanancias() {
     enabled: true, // Siempre habilitado para mostrar algunos clientes por defecto
   });
 
-  // Query para obtener despliegues de pago
-  const { data: desplieguesData, isLoading: desplieguesLoading } = useQuery({
-    queryKey: ['despliegues-de-pago'],
-    queryFn: () => despliegueDePagoApi.getAll({ mostrar: true }),
-  });
+
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const setFiltros = useStoreFiltrosMisGanancias((state) => state.setFiltros);
@@ -129,6 +125,11 @@ export default function FiltersMisGanancias() {
       }
     });
 
+    // Procesar confirmar_caja si viene con el formato subcaja_id-despliegue_id
+    if (data.confirmar_caja && data.confirmar_caja.includes("-")) {
+      data.confirmar_caja = data.confirmar_caja.split("-")[1];
+    }
+
     console.log("🔍 Filtros aplicados:", data);
     setFiltros(data);
     setDrawerOpen(false);
@@ -191,11 +192,11 @@ export default function FiltersMisGanancias() {
 
       {/* Filtros Desktop - Dos filas optimizadas */}
       <div className="hidden lg:block mt-4">
-        <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
+        <div className="grid grid-cols-12 gap-x-2 gap-y-2.5">
           {/* Fila 1 */}
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Fecha:
+          <div className="col-span-1 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
+              Desde:
             </label>
             <ConfigurableElement componentId="field-fecha-desde" label="Campo Fecha Desde">
               <DatePickerBase
@@ -204,17 +205,14 @@ export default function FiltersMisGanancias() {
                   hasFeedback: false,
                   className: "!w-full",
                 }}
-                placeholder="29/06/2025"
+                placeholder="Inicio"
                 formWithMessage={false}
-                prefix={
-                  <FaCalendar size={13} className="text-rose-600 mx-1" />
-                }
                 allowClear
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-1 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Hasta:
             </label>
             <ConfigurableElement componentId="field-fecha-hasta" label="Campo Fecha Hasta">
@@ -224,18 +222,15 @@ export default function FiltersMisGanancias() {
                   hasFeedback: false,
                   className: "!w-full",
                 }}
-                placeholder="29/06/2025"
+                placeholder="Fin"
                 formWithMessage={false}
-                prefix={
-                  <FaCalendar size={13} className="text-rose-600 mx-1" />
-                }
                 allowClear
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-3 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Producto/Servicio:
+          <div className="col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
+              Producto:
             </label>
             <ConfigurableElement componentId="field-producto-servicio" label="Campo Producto/Servicio">
               <InputBase
@@ -244,21 +239,21 @@ export default function FiltersMisGanancias() {
                   hasFeedback: false,
                   className: "!w-full",
                 }}
-                placeholder=""
+                placeholder="Nombre..."
                 formWithMessage={false}
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Cliente (F1):
+          <div className="col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
+              Cliente:
             </label>
             <ConfigurableElement componentId="field-cliente" label="Campo Cliente">
               <Form.Item name="cliente_id" noStyle>
                 <Select
                   allowClear
                   showSearch
-                  placeholder="Buscar cliente..."
+                  placeholder="Buscar..."
                   className="w-full"
                   loading={clientesLoading}
                   filterOption={false}
@@ -283,8 +278,8 @@ export default function FiltersMisGanancias() {
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-3 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Vendedor:
             </label>
             <ConfigurableElement componentId="field-vendedor" label="Campo Vendedor">
@@ -301,10 +296,8 @@ export default function FiltersMisGanancias() {
               />
             </ConfigurableElement>
           </div>
-
-          {/* Fila 2 */}
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-1 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Incluir:
             </label>
             <ConfigurableElement componentId="field-incluir" label="Campo Incluir">
@@ -315,16 +308,16 @@ export default function FiltersMisGanancias() {
                   className="w-full"
                   options={[
                     { value: 'todos', label: 'Todos' },
-                    { value: 'con_ganancia', label: 'Con Ganancia' },
-                    { value: 'con_perdida', label: 'Con Pérdida' },
-                    { value: 'sin_costo', label: 'Sin Costo' },
+                    { value: 'con_ganancia', label: 'Ganancia' },
+                    { value: 'con_perdida', label: 'Pérdida' },
+                    { value: 'sin_costo', label: 'S. Costo' },
                   ]}
                 />
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-1 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Marca:
             </label>
             <ConfigurableElement componentId="field-marca" label="Campo Marca">
@@ -334,32 +327,20 @@ export default function FiltersMisGanancias() {
                   placeholder="Todas"
                   className="w-full"
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
                   options={[
                     { value: 'PAVCO', label: 'PAVCO' },
-                    { value: 'SIN MARCA', label: 'SIN MARCA' },
+                    { value: 'SIN MARCA', label: 'S. MARCA' },
                     { value: 'TIGRE', label: 'TIGRE' },
                     { value: 'NICOLL', label: 'NICOLL' },
                     { value: 'ETERNIT', label: 'ETERNIT' },
                     { value: 'OTROS', label: 'OTROS' },
-                    { value: 'STANLEY', label: 'STANLEY' },
-                    { value: 'TRUPER', label: 'TRUPER' },
-                    { value: 'DEWALT', label: 'DEWALT' },
-                    { value: 'BLACK DECKER', label: 'BLACK DECKER' },
-                    { value: 'SIKA', label: 'SIKA' },
-                    { value: 'ROTOPLAS', label: 'ROTOPLAS' },
-                    { value: 'TRAMONTINA', label: 'TRAMONTINA' },
-                    { value: '3M', label: '3M' },
-                    { value: 'PHILIPS', label: 'PHILIPS' },
                   ]}
                 />
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-1 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               F.Pago:
             </label>
             <ConfigurableElement componentId="field-forma-pago" label="Campo Forma Pago">
@@ -369,42 +350,15 @@ export default function FiltersMisGanancias() {
                   placeholder="Todas"
                   className="w-full"
                   options={[
-                    { value: 'co', label: 'Contado' },
-                    { value: 'cr', label: 'Crédito' },
+                    { value: 'co', label: 'Cont.' },
+                    { value: 'cr', label: 'Créd.' },
                   ]}
                 />
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              C.Caja:
-            </label>
-            <ConfigurableElement componentId="field-confirmar-caja" label="Campo Confirmar Caja">
-              <Form.Item name="confirmar_caja" noStyle>
-                <Select
-                  allowClear
-                  placeholder="Todas"
-                  className="w-full"
-                  loading={desplieguesLoading}
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  options={
-                    desplieguesData?.data?.data
-                      ? desplieguesData.data.data.map((despliegue) => ({
-                          value: despliegue.id,
-                          label: despliegue.name.toUpperCase(),
-                        }))
-                      : []
-                  }
-                />
-              </Form.Item>
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-1 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               T.Doc:
             </label>
             <ConfigurableElement componentId="field-tipo-doc" label="Campo Tipo Documento">
@@ -414,16 +368,33 @@ export default function FiltersMisGanancias() {
                   placeholder="Todos"
                   className="w-full"
                   options={[
-                    { value: 'nv', label: 'Nota de Venta' },
-                    { value: '03', label: 'Boleta' },
-                    { value: '01', label: 'Factura' },
+                    { value: 'nv', label: 'N.V.' },
+                    { value: '03', label: 'Bol.' },
+                    { value: '01', label: 'Fact.' },
                   ]}
                 />
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+
+          {/* Fila 2 */}
+          <div className="col-span-4 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
+              Despliegue de Pago:
+            </label>
+            <ConfigurableElement componentId="field-confirmar-caja" label="Despliegue de Pago">
+              <Form.Item name="confirmar_caja" noStyle>
+                <SelectDespliegueDePago
+                  allowClear
+                  placeholder="Seleccionar..."
+                  className="w-full"
+                  formWithMessage={false}
+                />
+              </Form.Item>
+            </ConfigurableElement>
+          </div>
+          <div className="col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Serie-N°:
             </label>
             <ConfigurableElement componentId="field-serie-numero" label="Campo Serie y Número">
@@ -433,13 +404,13 @@ export default function FiltersMisGanancias() {
                   hasFeedback: false,
                   className: "!w-full",
                 }}
-                placeholder=""
+                placeholder="000-000"
                 formWithMessage={false}
               />
             </ConfigurableElement>
           </div>
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+          <div className="col-span-2 flex flex-col gap-0.5">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase">
               Sucursal:
             </label>
             <ConfigurableElement componentId="field-sucursal" label="Campo Sucursal">
@@ -449,7 +420,7 @@ export default function FiltersMisGanancias() {
                   placeholder="Todas"
                   className="w-full"
                   options={[
-                    { value: 'principal', label: 'ALMACÉN PRINCIPAL' },
+                    { value: 'principal', label: 'PRINCIPAL' },
                     { value: 'almacen_2', label: 'ALMACÉN 2' },
                     { value: 'almacen_3', label: 'ALMACÉN 3' },
                   ]}
@@ -457,20 +428,20 @@ export default function FiltersMisGanancias() {
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center gap-2">
+          <div className="col-span-2 flex items-end">
             <ConfigurableElement componentId="button-buscar" label="Botón Buscar">
               <ButtonBase
                 color="info"
                 size="md"
                 type="submit"
-                className="flex items-center gap-2 w-full justify-center"
+                className="flex items-center gap-2 w-full justify-center h-[32px]"
               >
-                <FaSearch />
+                <FaSearch size={12} />
                 Buscar
               </ButtonBase>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center gap-2">
+          <div className="col-span-2 flex items-end">
             <ConfigurableElement componentId="button-limpiar" label="Botón Limpiar">
               <ButtonBase
                 color="default"
@@ -479,16 +450,15 @@ export default function FiltersMisGanancias() {
                 onClick={() => {
                   form.resetFields();
                   setClienteSearchText("");
-                  // Aplicar filtros con valores por defecto
                   const filtrosLimpios = {
                     almacen_id,
                     desde: dayjs().startOf("day").format("YYYY-MM-DD"),
                     hasta: dayjs().endOf("day").format("YYYY-MM-DD"),
-                    mostrar_hora: "false", // Reset como string
+                    mostrar_hora: "false",
                   };
                   setFiltros(filtrosLimpios);
                 }}
-                className="flex items-center gap-2 w-full justify-center"
+                className="flex items-center gap-2 w-full justify-center h-[32px]"
               >
                 Limpiar
               </ButtonBase>
