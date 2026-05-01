@@ -124,7 +124,7 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
             sol_pass: solPass || undefined,
             sunat_client_id: sunatClientId || undefined,
             sunat_secret_client: sunatSecretClient || undefined,
-            sunat_modo: sunatModo,
+            sunat_modo: sunatModo as 'beta' | 'produccion',
         });
     };
 

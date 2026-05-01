@@ -15,7 +15,7 @@ import type { Cliente } from "~/lib/api/cliente";
 import { TipoEntrega, TipoDespacho, EstadoEntrega, TipoPedido } from "~/lib/api/entrega-producto";
 import FormDespachoEnTienda from "../forms/form-despacho-en-tienda";
 import FormDespachoDomicilio from "../forms/form-despacho-domicilio";
-import { TipoDireccion } from "~/lib/api/cliente";
+import { TipoDireccion, type DireccionCliente } from "~/lib/api/cliente";
 import {
   setDireccionesClienteToForm,
   type ClienteDireccionFormFields,
@@ -94,7 +94,7 @@ export default function ModalEntregarProductos({
       // Determinar la dirección correcta según direccion_seleccionada.
       // El backend devuelve `cliente.direcciones[]` con `tipo` D1..D4 — antes
       // se leían 4 campos planos `cliente.direccion_2/3/4` que ya no existen.
-      const direcciones = venta.cliente?.direcciones ?? []
+      const direcciones: DireccionCliente[] = venta.cliente?.direcciones ?? []
       const seleccionInicial =
         (venta.direccion_seleccionada as TipoDireccion | undefined) ??
         TipoDireccion.D1
