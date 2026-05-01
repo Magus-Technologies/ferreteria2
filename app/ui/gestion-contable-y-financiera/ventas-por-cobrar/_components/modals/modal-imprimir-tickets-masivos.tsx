@@ -34,7 +34,7 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
     }
   }, [filtros])
 
-  const { data: cobrosResponse, isLoading } = useQuery({
+  const { data: cobrosResponse, isLoading, refetch } = useQuery({
     queryKey: [QueryKeys.COBROS_VENTA, 'mass-print', apiFilters],
     queryFn: async () => {
       const result = await ventaApi.getAllCobros(apiFilters)
@@ -118,7 +118,15 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
       }
     },
     { headerName: 'Monto', width: 100, valueGetter: (p) => `S/. ${Number(p.data?.monto).toFixed(2)}` },
-    { headerName: 'Pago', width: 120, valueGetter: (p) => p.data?.despliegue_de_pago?.name || '' },
+    {
+      headerName: 'Despliegue de Pago',
+      width: 180,
+      valueGetter: (p) => {
+        const dp = p.data?.despliegue_de_pago
+        const metodo = dp?.metodo_de_pago?.name
+        return metodo ? `${metodo} / ${dp.name}` : dp?.name || ''
+      }
+    },
   ], [])
 
   return (
@@ -127,7 +135,7 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
       title='IMPRESIÓN MASIVA DE TICKETS DE COBRO'
       open={open}
       onCancel={() => setOpen(false)}
-      width={900}
+      width={950}
       footer={[
         <Button key="close" onClick={() => setOpen(false)}>Cerrar</Button>,
         <Button 
@@ -142,27 +150,35 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
         </Button>
       ]}
     >
-      <div className='flex gap-4 mb-4 items-end'>
+      <div className='flex gap-4 mb-4 items-end bg-gray-50 p-3 rounded-lg border border-gray-200'>
         <div className='flex-1 grid grid-cols-2 gap-2'>
           <div>
-            <label className='text-[10px] font-bold text-gray-500'>DESDE:</label>
+            <label className='text-[10px] font-bold text-gray-500 block mb-1'>DESDE:</label>
             <DatePicker className='w-full' value={fechaDesde} onChange={v => v && setFechaDesde(v)} format='DD/MM/YYYY' />
           </div>
           <div>
-            <label className='text-[10px] font-bold text-gray-500'>HASTA:</label>
+            <label className='text-[10px] font-bold text-gray-500 block mb-1'>HASTA:</label>
             <DatePicker className='w-full' value={fechaHasta} onChange={v => v && setFechaHasta(v)} format='DD/MM/YYYY' />
           </div>
         </div>
         <div className='flex-[2]'>
-          <label className='text-[10px] font-bold text-gray-500'>BUSCAR CLIENTE / VENTA:</label>
+          <label className='text-[10px] font-bold text-gray-500 block mb-1'>BUSCAR CLIENTE / VENTA:</label>
           <Input placeholder='Ej: 2060... / NV-001' value={searchText} onChange={e => setSearchText(e.target.value)} allowClear />
         </div>
+        <Button 
+          type='primary' 
+          onClick={() => refetch()} 
+          loading={isLoading}
+          className='bg-blue-600'
+        >
+          Buscar
+        </Button>
       </div>
 
-      <div className='h-[300px] border rounded'>
+      <div className='h-[350px] border rounded'>
         <TableWithTitle<CobroVenta>
           id='table-mass-print'
-          title='Cobros Filtrados'
+          title={`Cobros Filtrados: ${cobrosFiltrados.length}`}
           columnDefs={columns}
           rowData={cobrosFiltrados}
           loading={isLoading}
