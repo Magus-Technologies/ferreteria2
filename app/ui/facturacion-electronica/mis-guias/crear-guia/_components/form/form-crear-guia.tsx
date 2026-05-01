@@ -9,6 +9,7 @@ import SelectMotivoTraslado from '~/app/_components/form/selects/select-motivo-t
 import { TbTruckDelivery } from 'react-icons/tb'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
+import RadioDireccionEmpresa from '~/app/_components/form/radio-direccion-empresa'
 import HiddenDireccionesFormItems from '~/app/_components/form/hidden-direcciones-form-items'
 import {
   setDireccionesClienteToForm,
@@ -459,7 +460,16 @@ export default function FormCrearGuia({
 
       {/* Fila 4: Punto de Partida y Punto de Llegada */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
-        <LabelBase label='Punto de Partida:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+        <LabelBase
+          label={
+            <div className='flex items-center justify-between gap-2 w-full'>
+              <span>Punto de Partida:</span>
+              <RadioDireccionEmpresa form={form} fieldName='punto_partida' />
+            </div>
+          }
+          classNames={{ labelParent: 'mb-2' }}
+          className='w-full sm:flex-1'
+        >
           <InputBase
             propsForm={{
               name: 'punto_partida',
@@ -474,6 +484,10 @@ export default function FormCrearGuia({
             className='w-full'
           />
         </LabelBase>
+        {/* Campo oculto para guardar la selección D1..D4 de la empresa. */}
+        <Form.Item name='empresa_direccion_seleccionada' hidden initialValue='D1'>
+          <input type='hidden' />
+        </Form.Item>
         <LabelBase label='Punto de Llegada:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
           <InputBase
             propsForm={{
