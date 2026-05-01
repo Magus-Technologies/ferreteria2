@@ -37,7 +37,6 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalDetallesOpen, setModalDetallesOpen] = useState(false)
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
-  const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const { message } = useApp()
   const queryClient = useQueryClient()
@@ -285,14 +284,6 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         onConfirmar={handleEntregar}
         entrega={entrega}
         loading={loading}
-      />
-
-      {/* Selector de tipo de entrega (EnTienda / Domicilio / Parcial) —
-          se abre desde el dropdown "Cambiar Tipo de Entrega". */}
-      <ModalSeleccionarTipoDespacho
-        open={modalSeleccionarTipoOpen}
-        setOpen={setModalSeleccionarTipoOpen}
-        onSelectTipo={handleSelectTipoDespacho}
       />
     </div>
   )
