@@ -17,28 +17,24 @@ interface ModalCreateClienteProps {
   setTextDefault?: (text: string) => void;
 }
 
+/**
+ * Valores del form de crear/editar cliente. Los campos legacy de
+ * direcciones (`direccion`, `direccion_2..4`, `referencia_d1..4`,
+ * `latitud_d1..4`, `longitud_d1..4`) los maneja `useDireccionesClienteForm`
+ * internamente — el hook los escribe al form via `setFieldValue` cuando
+ * el state interno cambia, y el form los expone al `crearClienteForm`
+ * (use-create-cliente) sin que el modal tenga que mapearlos manualmente.
+ */
 export interface FormCreateClienteValues {
   tipo_cliente: TipoCliente;
   numero_documento: string;
   razon_social: string;
   nombres: string;
   apellidos: string;
+  // Solo conservamos `direccion` (D1) en el tipo público porque algunos
+  // consumidores antiguos la leen — los demás campos vienen del form
+  // pero no necesitan estar en este interface (son detalles internos).
   direccion?: string | null;
-  direccion_2?: string | null;
-  direccion_3?: string | null;
-  direccion_4?: string | null;
-  referencia_d1?: string | null;
-  referencia_d2?: string | null;
-  referencia_d3?: string | null;
-  referencia_d4?: string | null;
-  latitud_d1?: number | null;
-  longitud_d1?: number | null;
-  latitud_d2?: number | null;
-  longitud_d2?: number | null;
-  latitud_d3?: number | null;
-  longitud_d3?: number | null;
-  latitud_d4?: number | null;
-  longitud_d4?: number | null;
   telefono?: string | null;
   email?: string | null;
   fecha_nacimiento?: string | null;
@@ -55,6 +51,11 @@ export default function ModalCreateCliente({
   const [form] = Form.useForm<FormCreateClienteValues>();
   const [cargandoDirecciones, setCargandoDirecciones] = useState(false);
   const [direccionesListas, setDireccionesListas] = useState(false);
+  // Cliente "completo" (con `direcciones[]` cargadas) que se le pasa al
+  // form interno. El hook `useDireccionesClienteForm` que vive adentro
+  // parsea automáticamente el array — este modal ya no necesita el switch
+  // case D1/D2/D3/D4 que escribía 12 campos legacy uno por uno.
+  const [clienteConDirecciones, setClienteConDirecciones] = useState<Cliente | undefined>(dataEdit);
 
   const { crearClienteForm, loading } = useCreateCliente({
     onSuccess: (cliente) => {
@@ -96,45 +97,18 @@ export default function ModalCreateCliente({
               form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
             }
 
-            // Cargar direcciones desde la tabla direcciones_cliente
+            // Cargar direcciones desde la tabla direcciones_cliente y
+            // adjuntarlas al cliente — el hook `useDireccionesClienteForm`
+            // dentro de FormCreateCliente las parsea automáticamente y
+            // escribe los campos legacy del form (sin switch hardcoded).
             setCargandoDirecciones(true);
             try {
               const response = await clienteApi.listarDirecciones(dataEdit.id);
-              if (response.data?.data) {
-                const direcciones = response.data.data;
-
-                // Mapear las direcciones a los campos del formulario
-                direcciones.forEach((dir) => {
-                  switch (dir.tipo) {
-                    case 'D1':
-                      form.setFieldValue('direccion', dir.direccion);
-                      form.setFieldValue('referencia_d1', dir.referencia);
-                      form.setFieldValue('latitud_d1', dir.latitud);
-                      form.setFieldValue('longitud_d1', dir.longitud);
-                      break;
-                    case 'D2':
-                      form.setFieldValue('direccion_2', dir.direccion);
-                      form.setFieldValue('referencia_d2', dir.referencia);
-                      form.setFieldValue('latitud_d2', dir.latitud);
-                      form.setFieldValue('longitud_d2', dir.longitud);
-                      break;
-                    case 'D3':
-                      form.setFieldValue('direccion_3', dir.direccion);
-                      form.setFieldValue('referencia_d3', dir.referencia);
-                      form.setFieldValue('latitud_d3', dir.latitud);
-                      form.setFieldValue('longitud_d3', dir.longitud);
-                      break;
-                    case 'D4':
-                      form.setFieldValue('direccion_4', dir.direccion);
-                      form.setFieldValue('referencia_d4', dir.referencia);
-                      form.setFieldValue('latitud_d4', dir.latitud);
-                      form.setFieldValue('longitud_d4', dir.longitud);
-                      break;
-                  }
-                });
-              }
+              const direcciones = response.data?.data ?? [];
+              setClienteConDirecciones({ ...dataEdit, direcciones });
             } catch (error) {
               console.error('Error cargando direcciones:', error);
+              setClienteConDirecciones(dataEdit);
             } finally {
               setCargandoDirecciones(false);
               setDireccionesListas(true);
@@ -143,6 +117,7 @@ export default function ModalCreateCliente({
             form.setFieldsValue({
               numero_documento: textDefault,
             });
+            setClienteConDirecciones(undefined);
             setDireccionesListas(true);
           }
         } catch (e) {
@@ -181,7 +156,7 @@ export default function ModalCreateCliente({
         onFinish: crearClienteForm,
       }}
     >
-      <FormCreateCliente form={form} dataEdit={dataEdit} direccionesListas={direccionesListas} />
+      <FormCreateCliente form={form} dataEdit={clienteConDirecciones} direccionesListas={direccionesListas} />
     </ModalForm>
   );
 }

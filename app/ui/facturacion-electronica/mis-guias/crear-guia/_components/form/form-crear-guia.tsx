@@ -9,6 +9,14 @@ import SelectMotivoTraslado from '~/app/_components/form/selects/select-motivo-t
 import { TbTruckDelivery } from 'react-icons/tb'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
+import RadioDireccionEmpresa from '~/app/_components/form/radio-direccion-empresa'
+import HiddenDireccionesFormItems from '~/app/_components/form/hidden-direcciones-form-items'
+import {
+  setDireccionesClienteToForm,
+  clearDireccionesClienteFromForm,
+  getDireccionFromForm,
+} from '~/lib/utils/cliente-direcciones-form'
+import { TipoDireccion } from '~/lib/api/cliente'
 import { useEffect, useState, useCallback } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
@@ -94,18 +102,7 @@ export default function FormCrearGuia({
       <Form.Item name='direccion_seleccionada' hidden>
         <input type='hidden' />
       </Form.Item>
-      <Form.Item name='_cliente_direccion_1' hidden>
-        <input type='hidden' />
-      </Form.Item>
-      <Form.Item name='_cliente_direccion_2' hidden>
-        <input type='hidden' />
-      </Form.Item>
-      <Form.Item name='_cliente_direccion_3' hidden>
-        <input type='hidden' />
-      </Form.Item>
-      <Form.Item name='_cliente_direccion_4' hidden>
-        <input type='hidden' />
-      </Form.Item>
+      <HiddenDireccionesFormItems />
 
       {/* Fila 1: Fechas, Serie, Número, Motivo */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
@@ -214,30 +211,16 @@ export default function FormCrearGuia({
                       : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
                     form.setFieldValue('cliente_nombre', nombreCompleto)
 
-                    const direcciones = cliente.direcciones || [];
-                    const d1 = direcciones.find((d: any) => d.tipo === 'D1')?.direccion || '';
-                    const d2 = direcciones.find((d: any) => d.tipo === 'D2')?.direccion || '';
-                    const d3 = direcciones.find((d: any) => d.tipo === 'D3')?.direccion || '';
-                    const d4 = direcciones.find((d: any) => d.tipo === 'D4')?.direccion || '';
+                    setDireccionesClienteToForm(form, cliente)
 
-                    form.setFieldValue('_cliente_direccion_1', d1);
-                    form.setFieldValue('_cliente_direccion_2', d2);
-                    form.setFieldValue('_cliente_direccion_3', d3);
-                    form.setFieldValue('_cliente_direccion_4', d4);
-
-                    const direccionSeleccionada = form.getFieldValue('direccion_seleccionada') || 'D1';
-                    let direccionActual = d1;
-                    if (direccionSeleccionada === 'D2') direccionActual = d2;
-                    if (direccionSeleccionada === 'D3') direccionActual = d3;
-                    if (direccionSeleccionada === 'D4') direccionActual = d4;
-                    form.setFieldValue('punto_llegada', direccionActual);
+                    const seleccionada =
+                      (form.getFieldValue('direccion_seleccionada') as TipoDireccion) ||
+                      TipoDireccion.D1
+                    form.setFieldValue('punto_llegada', getDireccionFromForm(form, seleccionada))
                   } else {
                     form.setFieldValue('cliente_nombre', '')
                     form.setFieldValue('punto_llegada', '')
-                    form.setFieldValue('_cliente_direccion_1', '')
-                    form.setFieldValue('_cliente_direccion_2', '')
-                    form.setFieldValue('_cliente_direccion_3', '')
-                    form.setFieldValue('_cliente_direccion_4', '')
+                    clearDireccionesClienteFromForm(form)
                   }
                 }}
               />
@@ -477,7 +460,16 @@ export default function FormCrearGuia({
 
       {/* Fila 4: Punto de Partida y Punto de Llegada */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
-        <LabelBase label='Punto de Partida:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+        <LabelBase
+          label={
+            <div className='flex items-center justify-between gap-2 w-full'>
+              <span>Punto de Partida:</span>
+              <RadioDireccionEmpresa form={form} fieldName='punto_partida' />
+            </div>
+          }
+          classNames={{ labelParent: 'mb-2' }}
+          className='w-full sm:flex-1'
+        >
           <InputBase
             propsForm={{
               name: 'punto_partida',
@@ -492,6 +484,10 @@ export default function FormCrearGuia({
             className='w-full'
           />
         </LabelBase>
+        {/* Campo oculto para guardar la selección D1..D4 de la empresa. */}
+        <Form.Item name='empresa_direccion_seleccionada' hidden initialValue='D1'>
+          <input type='hidden' />
+        </Form.Item>
         <LabelBase label='Punto de Llegada:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
           <InputBase
             propsForm={{

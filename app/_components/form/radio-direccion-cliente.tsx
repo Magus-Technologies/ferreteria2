@@ -1,32 +1,34 @@
 import { Radio, Form, FormInstance } from 'antd'
+import { TIPOS_DIRECCION_LIST, TipoDireccion } from '~/lib/api/cliente'
 
 interface RadioDireccionClienteProps {
   form: FormInstance
 }
 
+/**
+ * Mapeo de cada `TipoDireccion` al nombre del campo legacy del form que
+ * guarda esa dirección. Antes este mapeo estaba duplicado como switch en
+ * 4 ramas (`_cliente_direccion_1`..`_cliente_direccion_4`); ahora vive
+ * en un solo objeto y el render itera con `TIPOS_DIRECCION_LIST`.
+ */
+const LEGACY_FIELD: Record<TipoDireccion, string> = {
+  [TipoDireccion.D1]: '_cliente_direccion_1',
+  [TipoDireccion.D2]: '_cliente_direccion_2',
+  [TipoDireccion.D3]: '_cliente_direccion_3',
+  [TipoDireccion.D4]: '_cliente_direccion_4',
+}
+
 export default function RadioDireccionCliente({ form }: RadioDireccionClienteProps) {
   const direccionSeleccionadaWatch = Form.useWatch('direccion_seleccionada', form)
 
-  const cambiarDireccion = (opcion: 'D1' | 'D2' | 'D3' | 'D4') => {
-    const direccion1 = form.getFieldValue('_cliente_direccion_1')
-    const direccion2 = form.getFieldValue('_cliente_direccion_2')
-    const direccion3 = form.getFieldValue('_cliente_direccion_3')
-    const direccion4 = form.getFieldValue('_cliente_direccion_4')
-
+  const cambiarDireccion = (opcion: TipoDireccion) => {
     // PRIMERO actualizar la selección
     form.setFieldValue('direccion_seleccionada', opcion)
 
-    // LUEGO actualizar la dirección (tanto 'direccion' como 'direccion_entrega')
-    let direccionSeleccionada = ''
-    if (opcion === 'D1') {
-      direccionSeleccionada = direccion1 || ''
-    } else if (opcion === 'D2') {
-      direccionSeleccionada = direccion2 || ''
-    } else if (opcion === 'D3') {
-      direccionSeleccionada = direccion3 || ''
-    } else if (opcion === 'D4') {
-      direccionSeleccionada = direccion4 || ''
-    }
+    // LUEGO la dirección seleccionada — usa el mapeo común para evitar
+    // 4 if/else.
+    const direccionSeleccionada =
+      form.getFieldValue(LEGACY_FIELD[opcion]) || ''
 
     form.setFieldValue('direccion', direccionSeleccionada)
     form.setFieldValue('direccion_entrega', direccionSeleccionada)
@@ -35,14 +37,15 @@ export default function RadioDireccionCliente({ form }: RadioDireccionClientePro
 
   return (
     <Radio.Group
-      value={direccionSeleccionadaWatch || 'D1'}
-      onChange={(e) => cambiarDireccion(e.target.value)}
+      value={direccionSeleccionadaWatch || TipoDireccion.D1}
+      onChange={(e) => cambiarDireccion(e.target.value as TipoDireccion)}
       className='whitespace-nowrap flex items-center h-8'
     >
-      <Radio value='D1'>D1</Radio>
-      <Radio value='D2'>D2</Radio>
-      <Radio value='D3'>D3</Radio>
-      <Radio value='D4'>D4</Radio>
+      {TIPOS_DIRECCION_LIST.map((tipo) => (
+        <Radio key={tipo} value={tipo}>
+          {tipo}
+        </Radio>
+      ))}
     </Radio.Group>
   )
 }

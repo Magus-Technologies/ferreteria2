@@ -1,5 +1,3 @@
-// tabs informacion, Basica,logo ,configuraciones y contactos
-
 "use client";
 
 import { Tabs } from "antd";
@@ -8,6 +6,7 @@ import FormContactos from "./forms/form-contactos";
 import FormLogo from "./forms/form-logo";
 import FormConfiguracion from "./forms/form-configuracion";
 import FormEnvioSunat from "./forms/form-envio-sunat";
+import FormDirecciones from "./forms/form-direcciones";
 
 interface TabsEmpresaProps {
   empresaId: number;
@@ -31,11 +30,16 @@ export default function TabsEmpresa({ empresaId }: TabsEmpresaProps) {
     },
     {
       key: '4',
+      label: 'Direcciones',
+      children: <FormDirecciones empresaId={empresaId} />
+    },
+    {
+      key: '5',
       label: 'Contactos',
       children: <FormContactos empresaId={empresaId} />
     },
     {
-      key: '5',
+      key: '6',
       label: 'Envío SUNAT',
       children: <FormEnvioSunat empresaId={empresaId} />
     }

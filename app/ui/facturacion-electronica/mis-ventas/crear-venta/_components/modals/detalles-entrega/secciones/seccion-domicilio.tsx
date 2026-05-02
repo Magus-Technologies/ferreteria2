@@ -19,6 +19,7 @@ import { useDetallesEntrega } from '../context'
 import { useReverseGeocoding } from '../hooks/use-reverse-geocoding'
 import type { Coordenadas, SeccionOcultable } from '../types'
 import type { Cargo } from '../hooks/use-cargos'
+import TablaProductosEntrega from '../../../../../_components/tables/tabla-productos-entrega'
 
 // Mapa cargado dinámicamente para evitar problemas de SSR.
 const MapaDireccionMapbox = dynamic(
@@ -38,6 +39,12 @@ interface SeccionDomicilioProps {
   totalAProgramar: number
   totalSinProgramar: number
   ocultar?: Set<SeccionOcultable>
+  /**
+   * Tabla simplificada (Total/Entregado/Pendiente/Entregar) en lugar de
+   * la tabla nativa de "Programar ahora". Activado en modo
+   * `actualizar-entrega` (mis-entregas).
+   */
+  tablaSimple?: boolean
 }
 
 /**
@@ -61,9 +68,11 @@ export function SeccionDomicilio({
   totalAProgramar,
   totalSinProgramar,
   ocultar,
+  tablaSimple,
 }: SeccionDomicilioProps) {
   const {
     productosEntrega,
+    setProductosEntrega,
     mostrarMapa,
     setMostrarMapa,
     coordenadas,
@@ -146,43 +155,54 @@ export function SeccionDomicilio({
 
   return (
     <div className="space-y-4">
-      {/* Tabla de productos: editar cuántos entregar en esta entrega */}
+      {/* Tabla de productos: editar cuántos entregar en esta entrega.
+          En modo `actualizar-entrega` (mis-entregas) usamos la tabla simple
+          (Total/Entregado/Pendiente/Entregar) en lugar de la tabla nativa
+          de Domicilio (Programar ahora). */}
       {!ocultar?.has('tabla-productos') && productosEntrega.length > 0 && (
-        <div className="space-y-2">
-          <div style={{ height: '180px' }}>
-            <TableWithTitle<ProductoEntrega>
-              id="productos-entrega-domicilio"
-              title="Lista de productos"
-              selectionColor={orangeColors[10]}
-              columnDefs={columnDefsDomicilio}
-              rowData={productosEntrega}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2 justify-end text-xs">
-            <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
-              <span className="text-orange-700">A programar: </span>
-              <span className="font-bold text-orange-800">{totalAProgramar.toFixed(2)}</span>
+        tablaSimple ? (
+          <TablaProductosEntrega
+            productos={productosEntrega}
+            onProductoChange={setProductosEntrega}
+            simple
+          />
+        ) : (
+          <div className="space-y-2">
+            <div style={{ height: '180px' }}>
+              <TableWithTitle<ProductoEntrega>
+                id="productos-entrega-domicilio"
+                title="Lista de productos"
+                selectionColor={orangeColors[10]}
+                columnDefs={columnDefsDomicilio}
+                rowData={productosEntrega}
+              />
             </div>
-            <div
-              className={`border rounded-lg px-3 py-1.5 ${
-                totalSinProgramar > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'
-              }`}
-            >
-              <span className={totalSinProgramar > 0 ? 'text-red-700' : 'text-gray-600'}>
-                Pendientes sin programar:{' '}
-              </span>
-              <span className={`font-bold ${totalSinProgramar > 0 ? 'text-red-800' : 'text-gray-700'}`}>
-                {totalSinProgramar.toFixed(2)}
-              </span>
+            <div className="flex flex-wrap gap-2 justify-end text-xs">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
+                <span className="text-orange-700">A programar: </span>
+                <span className="font-bold text-orange-800">{totalAProgramar.toFixed(2)}</span>
+              </div>
+              <div
+                className={`border rounded-lg px-3 py-1.5 ${
+                  totalSinProgramar > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'
+                }`}
+              >
+                <span className={totalSinProgramar > 0 ? 'text-red-700' : 'text-gray-600'}>
+                  Pendientes sin programar:{' '}
+                </span>
+                <span className={`font-bold ${totalSinProgramar > 0 ? 'text-red-800' : 'text-gray-700'}`}>
+                  {totalSinProgramar.toFixed(2)}
+                </span>
+              </div>
             </div>
+            {totalSinProgramar > 0 && (
+              <p className="text-xs text-gray-500 text-right italic">
+                Las unidades sin programar quedarán como pendientes en la venta.
+                Podrás programarlas luego desde <span className="font-semibold">Mis Entregas</span>.
+              </p>
+            )}
           </div>
-          {totalSinProgramar > 0 && (
-            <p className="text-xs text-gray-500 text-right italic">
-              Las unidades sin programar quedarán como pendientes en la venta.
-              Podrás programarlas luego desde <span className="font-semibold">Mis Entregas</span>.
-            </p>
-          )}
-        </div>
+        )
       )}
 
       {/* Campos ocultos para tipo_pedido y cargo_destino */}

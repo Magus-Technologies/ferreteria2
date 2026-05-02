@@ -8,6 +8,8 @@ import {
   DescuentoTipo,
 } from '~/lib/api/venta'
 import { TipoPedido } from '~/lib/api/entrega-producto'
+import type { TipoDireccion } from '~/lib/api/cliente'
+import type { ClienteDireccionFormFields } from '~/lib/utils/cliente-direcciones-form'
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
 import { useState, useEffect } from 'react'
@@ -28,7 +30,7 @@ import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agreg
 import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
 import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 
-export type FormCreateVenta = {
+export type FormCreateVenta = ClienteDireccionFormFields & {
   productos: Array<{
     _tipo?: 'producto' | 'servicio'
     _tipo_fila?: 'paquete_cabecera' | 'paquete_producto' | 'vale_promocional'
@@ -71,12 +73,8 @@ export type FormCreateVenta = {
   cliente_id?: number
   recomendado_por_id?: number
   direccion?: string
-  direccion_seleccionada?: 'D1' | 'D2' | 'D3' | 'D4'
-  // Campos temporales del cliente
-  _cliente_direccion_1?: string
-  _cliente_direccion_2?: string
-  _cliente_direccion_3?: string
-  _cliente_direccion_4?: string
+  direccion_seleccionada?: TipoDireccion
+  // Campos legacy `_cliente_direccion_*` heredados de `ClienteDireccionFormFields`.
   ruc_dni?: string
   cliente_nombre?: string
   telefono?: string

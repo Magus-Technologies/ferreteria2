@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
+import { TipoDireccion } from '~/lib/api/cliente'
 
 export default function useInitGuia({
   guia,
@@ -75,6 +77,12 @@ export default function useInitGuia({
       ) || []
 
 
+      // Dirección del cliente — el modelo Cliente ya no tiene `direccion` /
+      // `direccion_2` / `direccion_3` / `direccion_4` planos: usa
+      // `direcciones[]` con tipo D1/D2/D3/D4. La D1 (principal) se toma
+      // como punto de llegada por defecto.
+      const direccionD1 = cliente?.direcciones?.find((d: any) => d.tipo === TipoDireccion.D1)?.direccion || ''
+
       form.setFieldsValue({
         fecha_emision: dayjs(),
         fecha_traslado: dayjs(),
@@ -88,12 +96,7 @@ export default function useInitGuia({
         cliente_id: cliente?.id,
         cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),
         punto_partida: empresa?.direccion || '',
-        punto_llegada: cliente?.direccion || '',
-        // Guardar direcciones del cliente
-        _cliente_direccion_1: cliente?.direccion || '',
-        _cliente_direccion_2: cliente?.direccion_2 || '',
-        _cliente_direccion_3: cliente?.direccion_3 || '',
-        _cliente_direccion_4: cliente?.direccion_4 || '',
+        punto_llegada: direccionD1,
         direccion_seleccionada: 'D1',
         // Referencia a la venta
         referencia: `Venta ${venta.serie}-${venta.numero}`,
@@ -102,6 +105,8 @@ export default function useInitGuia({
         // Productos
         productos,
       })
+      // Setea los `_cliente_direccion_*` desde el array.
+      setDireccionesClienteToForm(form, cliente)
 
       // Forzar actualización del SelectClientes después de un pequeño delay
       // para que muestre el documento en lugar del ID

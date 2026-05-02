@@ -447,6 +447,7 @@ function ModalDetallesEntregaInner({
             totalAProgramar={totalAProgramar}
             totalSinProgramar={totalSinProgramar}
             ocultar={ocultarSet}
+            tablaSimple={resolvedMode.kind === 'actualizar-entrega'}
           />
         )}
 

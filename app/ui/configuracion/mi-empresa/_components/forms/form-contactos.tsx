@@ -6,27 +6,29 @@ import { FaUser, FaEnvelope, FaPhone } from "react-icons/fa";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import LabelBase from "~/components/form/label-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import { empresaApi, UpdateEmpresaRequest } from "~/lib/api/empresa";
+import { empresaApi, type UpdateEmpresaRequest, type ContactoEmpresa } from "~/lib/api/empresa";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface FormContactosProps {
   empresaId: number;
 }
 
+function getContacto(contactos: ContactoEmpresa[] | undefined, cargo: string): ContactoEmpresa {
+  return contactos?.find((c) => c.cargo === cargo) || { cargo: cargo as ContactoEmpresa['cargo'] };
+}
+
 export default function FormContactos({ empresaId }: FormContactosProps) {
-  const [form] = Form.useForm<UpdateEmpresaRequest>();
+  const [form] = Form.useForm();
   const queryClient = useQueryClient();
   const [copiarDatos, setCopiarDatos] = useState(false);
   const { message } = App.useApp();
 
-  // Query para obtener datos de la empresa
   const { data: empresaData, isLoading } = useQuery({
     queryKey: [QueryKeys.EMPRESAS, empresaId],
     queryFn: () => empresaApi.getById(empresaId),
     enabled: !!empresaId,
   });
 
-  // Mutación para actualizar
   const updateMutation = useMutation({
     mutationFn: (data: UpdateEmpresaRequest) => empresaApi.update(empresaId, data),
     onSuccess: (response) => {
@@ -42,43 +44,45 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
     },
   });
 
-  // Cargar datos al montar
   useEffect(() => {
     if (empresaData?.data?.data) {
-      const empresa = empresaData.data.data;
+      const contactos = empresaData.data.data.contactos || [];
+      const gerente = getContacto(contactos, 'gerente');
+      const facturacion = getContacto(contactos, 'facturacion');
+      const contabilidad = getContacto(contactos, 'contabilidad');
+
       form.setFieldsValue({
-        gerente_nombre: empresa.gerente_nombre || undefined,
-        gerente_email: empresa.gerente_email || undefined,
-        gerente_celular: empresa.gerente_celular || undefined,
-        facturacion_nombre: empresa.facturacion_nombre || undefined,
-        facturacion_email: empresa.facturacion_email || undefined,
-        facturacion_celular: empresa.facturacion_celular || undefined,
-        contabilidad_nombre: empresa.contabilidad_nombre || undefined,
-        contabilidad_email: empresa.contabilidad_email || undefined,
-        contabilidad_celular: empresa.contabilidad_celular || undefined,
+        gerente_nombre: gerente.nombre || undefined,
+        gerente_email: gerente.email || undefined,
+        gerente_celular: gerente.celular || undefined,
+        facturacion_nombre: facturacion.nombre || undefined,
+        facturacion_email: facturacion.email || undefined,
+        facturacion_celular: facturacion.celular || undefined,
+        contabilidad_nombre: contabilidad.nombre || undefined,
+        contabilidad_email: contabilidad.email || undefined,
+        contabilidad_celular: contabilidad.celular || undefined,
       });
     }
   }, [empresaData, form]);
 
-  // Manejar el checkbox de copiar datos
   const handleCopiarDatos = (checked: boolean) => {
     setCopiarDatos(checked);
     if (checked) {
-      const gerenteNombre = form.getFieldValue('gerente_nombre');
-      const gerenteEmail = form.getFieldValue('gerente_email');
-      const gerenteCelular = form.getFieldValue('gerente_celular');
-
       form.setFieldsValue({
-        facturacion_nombre: gerenteNombre,
-        facturacion_email: gerenteEmail,
-        facturacion_celular: gerenteCelular,
+        facturacion_nombre: form.getFieldValue('gerente_nombre'),
+        facturacion_email: form.getFieldValue('gerente_email'),
+        facturacion_celular: form.getFieldValue('gerente_celular'),
       });
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (values: Record<string, any>) => {
-    updateMutation.mutate(values);
+    const contactos: ContactoEmpresa[] = [
+      { cargo: 'gerente', nombre: values.gerente_nombre, email: values.gerente_email, celular: values.gerente_celular },
+      { cargo: 'facturacion', nombre: values.facturacion_nombre, email: values.facturacion_email, celular: values.facturacion_celular },
+      { cargo: 'contabilidad', nombre: values.contabilidad_nombre, email: values.contabilidad_email, celular: values.contabilidad_celular },
+    ];
+    updateMutation.mutate({ contactos });
   };
 
   const loading = updateMutation.isPending || isLoading;
@@ -104,7 +108,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
               />
             </LabelBase>
           </div>
-
           <div>
             <LabelBase label="Email:" orientation="column">
               <InputBase
@@ -115,7 +118,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
               />
             </LabelBase>
           </div>
-
           <div>
             <LabelBase label="Celular:" orientation="column">
               <InputBase
@@ -126,12 +128,8 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
             </LabelBase>
           </div>
         </div>
-
         <div className="mt-4">
-          <Checkbox
-            checked={copiarDatos}
-            onChange={(e) => handleCopiarDatos(e.target.checked)}
-          >
+          <Checkbox checked={copiarDatos} onChange={(e) => handleCopiarDatos(e.target.checked)}>
             Copiar datos al contacto facturación
           </Checkbox>
         </div>
@@ -150,7 +148,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
               />
             </LabelBase>
           </div>
-
           <div>
             <LabelBase label="Email:" orientation="column">
               <InputBase
@@ -161,7 +158,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
               />
             </LabelBase>
           </div>
-
           <div>
             <LabelBase label="Celular:" orientation="column">
               <InputBase
@@ -187,7 +183,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
               />
             </LabelBase>
           </div>
-
           <div>
             <LabelBase label="Email:" orientation="column">
               <InputBase
@@ -198,7 +193,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
               />
             </LabelBase>
           </div>
-
           <div>
             <LabelBase label="Celular:" orientation="column">
               <InputBase
@@ -211,7 +205,6 @@ export default function FormContactos({ empresaId }: FormContactosProps) {
         </div>
       </div>
 
-      {/* Botón Guardar */}
       <div className="flex justify-start pt-4">
         <Button
           type="primary"

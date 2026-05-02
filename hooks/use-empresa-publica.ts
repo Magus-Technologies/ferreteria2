@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import type { DireccionEmpresa } from '~/lib/api/empresa'
 
 // ============= INTERFACES =============
 
@@ -15,6 +16,12 @@ export interface EmpresaPublica {
   celular: string | null
   email: string
   logo: string | null
+  /**
+   * Direcciones adicionales registradas para la empresa. Útil para
+   * selectores como "Punto de Partida" en guías de remisión donde el
+   * usuario elige entre las primeras N direcciones (D1, D2, D3, D4).
+   */
+  direcciones: DireccionEmpresa[]
 }
 
 // ============= HOOK =============

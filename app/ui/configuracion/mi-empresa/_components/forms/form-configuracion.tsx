@@ -1,30 +1,32 @@
 "use client";
 
-import { Form, App, Button, Switch, Checkbox } from "antd";
+import { Form, App, Button, Checkbox } from "antd";
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import LabelBase from "~/components/form/label-base";
 import TextareaBase from "~/app/_components/form/inputs/textarea-base";
-import { empresaApi, UpdateEmpresaRequest } from "~/lib/api/empresa";
+import { empresaApi, type UpdateEmpresaRequest, type TerminoEmpresa } from "~/lib/api/empresa";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface FormConfiguracionProps {
   empresaId: number;
 }
 
+function getTermino(terminos: TerminoEmpresa[] | undefined, tipo: string): TerminoEmpresa {
+  return terminos?.find((t) => t.tipo === tipo) || { tipo: tipo as TerminoEmpresa['tipo'] };
+}
+
 export default function FormConfiguracion({ empresaId }: FormConfiguracionProps) {
-  const [form] = Form.useForm<UpdateEmpresaRequest>();
+  const [form] = Form.useForm();
   const queryClient = useQueryClient();
   const { message } = App.useApp();
 
-  // Query para obtener datos de la empresa
   const { data: empresaData, isLoading } = useQuery({
     queryKey: [QueryKeys.EMPRESAS, empresaId],
     queryFn: () => empresaApi.getById(empresaId),
     enabled: !!empresaId,
   });
 
-  // Mutación para actualizar
   const updateMutation = useMutation({
     mutationFn: (data: UpdateEmpresaRequest) => empresaApi.update(empresaId, data),
     onSuccess: (response) => {
@@ -40,23 +42,34 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
     },
   });
 
-  // Cargar datos al montar
   useEffect(() => {
     if (empresaData?.data?.data) {
       const empresa = empresaData.data.data;
+      const terminos = empresa.terminos || [];
+
       form.setFieldsValue({
-        terminos_comprobantes_ventas: empresa.terminos_comprobantes_ventas || undefined,
-        terminos_letras_cambio: empresa.terminos_letras_cambio || undefined,
-        terminos_guias_remision: empresa.terminos_guias_remision || undefined,
-        terminos_cotizaciones: empresa.terminos_cotizaciones || undefined,
-        terminos_ordenes_compras: empresa.terminos_ordenes_compras || undefined,
+        terminos_comprobantes_ventas: getTermino(terminos, 'comprobantes_ventas').contenido || undefined,
+        terminos_letras_cambio: getTermino(terminos, 'letras_cambio').contenido || undefined,
+        terminos_guias_remision: getTermino(terminos, 'guias_remision').contenido || undefined,
+        terminos_cotizaciones: getTermino(terminos, 'cotizaciones').contenido || undefined,
+        terminos_ordenes_compras: getTermino(terminos, 'ordenes_compras').contenido || undefined,
         imprimir_impuestos_boleta: empresa.imprimir_impuestos_boleta || false,
       });
     }
   }, [empresaData, form]);
 
   const handleSubmit = async (values: any) => {
-    updateMutation.mutate(values);
+    const terminos: TerminoEmpresa[] = [
+      { tipo: 'comprobantes_ventas', contenido: values.terminos_comprobantes_ventas || null },
+      { tipo: 'letras_cambio', contenido: values.terminos_letras_cambio || null },
+      { tipo: 'guias_remision', contenido: values.terminos_guias_remision || null },
+      { tipo: 'cotizaciones', contenido: values.terminos_cotizaciones || null },
+      { tipo: 'ordenes_compras', contenido: values.terminos_ordenes_compras || null },
+    ];
+    updateMutation.mutate({
+      terminos,
+      imprimir_impuestos_boleta: values.imprimir_impuestos_boleta,
+    });
   };
 
   const loading = updateMutation.isPending || isLoading;
@@ -75,7 +88,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
         </h3>
 
         <div className="space-y-6">
-          {/* Comprobantes de Ventas */}
           <div>
             <LabelBase label="Comprobantes de Ventas:" orientation="column">
               <TextareaBase
@@ -86,7 +98,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
             </LabelBase>
           </div>
 
-          {/* Letras de Cambio */}
           <div>
             <LabelBase label="Letras de Cambio:" orientation="column">
               <TextareaBase
@@ -97,7 +108,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
             </LabelBase>
           </div>
 
-          {/* Guías de Remisión */}
           <div>
             <LabelBase label="Guías de Remisión:" orientation="column">
               <TextareaBase
@@ -108,7 +118,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
             </LabelBase>
           </div>
 
-          {/* Cotizaciones */}
           <div>
             <LabelBase label="Cotizaciones:" orientation="column">
               <TextareaBase
@@ -119,7 +128,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
             </LabelBase>
           </div>
 
-          {/* Ordenes de Compras */}
           <div>
             <LabelBase label="Ordenes de Compras:" orientation="column">
               <TextareaBase
@@ -130,7 +138,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
             </LabelBase>
           </div>
 
-          {/* Checkbox - Imprimir impuestos en boleta */}
           <div className="pt-4 border-t border-gray-200">
             <Form.Item
               name="imprimir_impuestos_boleta"
@@ -145,7 +152,6 @@ export default function FormConfiguracion({ empresaId }: FormConfiguracionProps)
         </div>
       </div>
 
-      {/* Botón Guardar */}
       <div className="flex justify-start pt-4">
         <Button
           type="primary"

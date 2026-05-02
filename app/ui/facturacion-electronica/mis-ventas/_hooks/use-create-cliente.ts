@@ -3,13 +3,31 @@ import { App } from "antd";
 import dayjs from "dayjs";
 import {
   clienteApi,
+  TIPOS_DIRECCION_LIST,
+  TipoDireccion,
   type Cliente,
   type CreateClienteRequest,
-  type DireccionFormValues,
-  TipoDireccion,
 } from "~/lib/api/cliente";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { FormCreateClienteValues } from "../_components/modals/modal-create-cliente";
+
+/**
+ * Mapeo de cada tipo de dirección a las 4 keys del form donde el hook
+ * `useDireccionesClienteForm` escribe los valores legacy. Antes este
+ * mapeo estaba duplicado como switch en `crearClienteForm` — ahora vive
+ * acá y se itera con `TIPOS_DIRECCION_LIST`.
+ */
+const FORM_DIRECCION_FIELDS: Record<TipoDireccion, {
+  direccion: keyof FormCreateClienteValues | string
+  referencia: string
+  latitud: string
+  longitud: string
+}> = {
+  [TipoDireccion.D1]: { direccion: "direccion", referencia: "referencia_d1", latitud: "latitud_d1", longitud: "longitud_d1" },
+  [TipoDireccion.D2]: { direccion: "direccion_2", referencia: "referencia_d2", latitud: "latitud_d2", longitud: "longitud_d2" },
+  [TipoDireccion.D3]: { direccion: "direccion_3", referencia: "referencia_d3", latitud: "latitud_d3", longitud: "longitud_d3" },
+  [TipoDireccion.D4]: { direccion: "direccion_4", referencia: "referencia_d4", latitud: "latitud_d4", longitud: "longitud_d4" },
+}
 
 export default function useCreateCliente({
   onSuccess,
@@ -51,98 +69,58 @@ export default function useCreateCliente({
 
       const cliente = clienteResponse.data.data;
 
-      // Paso 2: Guardar/actualizar las direcciones en la tabla direcciones_cliente
+      // Paso 2: Recolectar las direcciones desde el form (un slot por tipo).
+      // El form llena los campos legacy `direccion`/`direccion_2..4` +
+      // `referencia_d*` + `latitud_d*` + `longitud_d*` automáticamente
+      // gracias al hook `useDireccionesClienteForm`.
+      const direccionesDesdeForm = TIPOS_DIRECCION_LIST.map((tipo) => {
+        const fields = FORM_DIRECCION_FIELDS[tipo]
+        const valuesAny = values as unknown as Record<string, unknown>
+        return {
+          tipo,
+          direccion: (valuesAny[fields.direccion as string] as string | null | undefined) ?? "",
+          referencia: (valuesAny[fields.referencia] as string | null | undefined) ?? null,
+          latitud: (valuesAny[fields.latitud] as number | null | undefined) ?? undefined,
+          longitud: (valuesAny[fields.longitud] as number | null | undefined) ?? undefined,
+        }
+      })
+
       if (dataEdit?.id) {
-        // MODO EDICIÓN: Obtener direcciones existentes y actualizarlas
+        // MODO EDICIÓN: comparar con las direcciones existentes y aplicar
+        // create / update / delete por tipo.
         const direccionesExistentesResponse = await clienteApi.listarDirecciones(cliente.id);
         const direccionesExistentes = direccionesExistentesResponse.data?.data || [];
+        const direccionesMap = new Map(direccionesExistentes.map((d) => [d.tipo, d]))
 
-        // Mapear direcciones existentes por tipo
-        const direccionesMap = new Map(
-          direccionesExistentes.map(dir => [dir.tipo, dir])
-        );
-
-        // Actualizar o crear cada dirección
-        const direccionesNuevas = [
-          { tipo: TipoDireccion.D1, direccion: values.direccion, referencia: values.referencia_d1, latitud: values.latitud_d1, longitud: values.longitud_d1 },
-          { tipo: TipoDireccion.D2, direccion: values.direccion_2, referencia: values.referencia_d2, latitud: values.latitud_d2, longitud: values.longitud_d2 },
-          { tipo: TipoDireccion.D3, direccion: values.direccion_3, referencia: values.referencia_d3, latitud: values.latitud_d3, longitud: values.longitud_d3 },
-          { tipo: TipoDireccion.D4, direccion: values.direccion_4, referencia: values.referencia_d4, latitud: values.latitud_d4, longitud: values.longitud_d4 },
-        ];
-
-        for (const dirNueva of direccionesNuevas) {
+        for (const dirNueva of direccionesDesdeForm) {
+          const dirExistente = direccionesMap.get(dirNueva.tipo)
           if (dirNueva.direccion) {
-            const dirExistente = direccionesMap.get(dirNueva.tipo);
-            
+            const payload = {
+              direccion: dirNueva.direccion,
+              referencia: dirNueva.referencia || null,
+              latitud: dirNueva.latitud ?? undefined,
+              longitud: dirNueva.longitud ?? undefined,
+            }
             if (dirExistente) {
-              // Actualizar dirección existente
-              await clienteApi.actualizarDireccion(dirExistente.id, {
-                direccion: dirNueva.direccion,
-                referencia: dirNueva.referencia || null,
-                latitud: dirNueva.latitud ?? undefined,
-                longitud: dirNueva.longitud ?? undefined,
-              });
+              await clienteApi.actualizarDireccion(dirExistente.id, payload)
             } else {
-              // Crear nueva dirección
-              await clienteApi.crearDireccion(cliente.id, {
-                direccion: dirNueva.direccion,
-                referencia: dirNueva.referencia || null,
-                latitud: dirNueva.latitud ?? undefined,
-                longitud: dirNueva.longitud ?? undefined,
-              });
+              await clienteApi.crearDireccion(cliente.id, payload)
             }
-          } else if (direccionesMap.has(dirNueva.tipo)) {
-            // Si la dirección está vacía pero existe en la BD, eliminarla (excepto D1)
-            const dirExistente = direccionesMap.get(dirNueva.tipo);
-            if (dirExistente && dirNueva.tipo !== TipoDireccion.D1) {
-              await clienteApi.eliminarDireccion(dirExistente.id);
-            }
+          } else if (dirExistente && dirNueva.tipo !== TipoDireccion.D1) {
+            // Vacía y existía → eliminar (excepto D1, siempre se conserva).
+            await clienteApi.eliminarDireccion(dirExistente.id)
           }
         }
       } else {
-        // MODO CREACIÓN: Crear direcciones nuevas
-        const direcciones: Array<{ direccion: string; referencia?: string | null; latitud?: number; longitud?: number }> = [];
-
-        if (values.direccion) {
-          direcciones.push({
-            direccion: values.direccion,
-            referencia: values.referencia_d1 || null,
-            latitud: values.latitud_d1 ?? undefined,
-            longitud: values.longitud_d1 ?? undefined,
-          });
-        }
-
-        if (values.direccion_2) {
-          direcciones.push({
-            direccion: values.direccion_2,
-            referencia: values.referencia_d2 || null,
-            latitud: values.latitud_d2 ?? undefined,
-            longitud: values.longitud_d2 ?? undefined,
-          });
-        }
-
-        if (values.direccion_3) {
-          direcciones.push({
-            direccion: values.direccion_3,
-            referencia: values.referencia_d3 || null,
-            latitud: values.latitud_d3 ?? undefined,
-            longitud: values.longitud_d3 ?? undefined,
-          });
-        }
-
-        if (values.direccion_4) {
-          direcciones.push({
-            direccion: values.direccion_4,
-            referencia: values.referencia_d4 || null,
-            latitud: values.latitud_d4 ?? undefined,
-            longitud: values.longitud_d4 ?? undefined,
-          });
-        }
-
-        // Guardar cada dirección en la tabla direcciones_cliente
-        // El servicio asignará automáticamente los tipos D1, D2, D3, D4
-        for (const dir of direcciones) {
-          await clienteApi.crearDireccion(cliente.id, dir);
+        // MODO CREACIÓN: solo se persisten las que tengan dirección.
+        for (const dirNueva of direccionesDesdeForm) {
+          if (!dirNueva.direccion) continue
+          await clienteApi.crearDireccion(cliente.id, {
+            direccion: dirNueva.direccion,
+            referencia: dirNueva.referencia || null,
+            latitud: dirNueva.latitud ?? undefined,
+            longitud: dirNueva.longitud ?? undefined,
+          })
         }
       }
 

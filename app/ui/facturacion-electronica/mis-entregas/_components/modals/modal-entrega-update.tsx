@@ -5,11 +5,15 @@ import { Form } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useQueryClient } from '@tanstack/react-query'
 import { FaExchangeAlt } from 'react-icons/fa'
+import dayjs from 'dayjs'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregaProductoApi, TipoEntrega } from '~/lib/api/entrega-producto'
 import ModalDetallesEntrega from '../../../mis-ventas/crear-venta/_components/modals/modal-detalles-entrega'
 import ModalSeleccionarTipoDespacho from '../../../mis-ventas/crear-venta/_components/modals/modal-seleccionar-tipo-despacho'
-import type { SeccionOcultable } from '../../../mis-ventas/crear-venta/_components/modals/detalles-entrega/types'
+import type {
+  SeccionOcultable,
+  TipoDespachoUI,
+} from '../../../mis-ventas/crear-venta/_components/modals/detalles-entrega/types'
 import type { ProductoEntrega } from '../../../mis-ventas/_hooks/use-productos-entrega'
 
 interface ModalEntregaUpdateProps {
@@ -87,6 +91,20 @@ export default function ModalEntregaUpdate({
     form.setFieldsValue({
       quien_entrega: entrega.quien_entrega || 'almacen',
       observaciones: entrega.observaciones || '',
+      // Datos de Domicilio — el chofer puede editarlos antes de salir.
+      despachador_id: entrega.chofer_id || undefined,
+      tipo_pedido: entrega.tipo_pedido || 'interno',
+      cargo_destino: entrega.cargo_destino || undefined,
+      fecha_programada: entrega.fecha_programada
+        ? dayjs(entrega.fecha_programada).format('YYYY-MM-DD')
+        : undefined,
+      hora_inicio: entrega.hora_inicio || undefined,
+      hora_fin: entrega.hora_fin || undefined,
+      direccion_entrega: entrega.direccion_entrega || '',
+      referencia_entrega: entrega.referencia_entrega || '',
+      latitud: entrega.latitud != null ? Number(entrega.latitud) : undefined,
+      longitud: entrega.longitud != null ? Number(entrega.longitud) : undefined,
+      vehiculo_id: entrega.vehiculo_id || undefined,
     })
   }, [open, entrega, form])
 
@@ -121,23 +139,34 @@ export default function ModalEntregaUpdate({
 
   if (!entrega) return null
 
-  // Para mis-entregas siempre usamos la UI de Parcial (tabla + entregar).
-  // El "quien_entrega", "tipo_pedido", etc. ya quedaron fijados al crear la
-  // venta, por eso se ocultan acá.
-  const ocultar: SeccionOcultable[] = [
-    'quien-entrega',
-    'omitir',
-    'tipo-pedido',
-    'programar-resto',
-  ]
+  // Mapeo del `tipo_entrega` (API) al `tipoDespachoUI` que renderiza el modal.
+  // - 'rt' (Recojo en Tienda) → usamos UI de Parcial PERO con todo oculto
+  //   excepto la tabla, porque el modal nativo de EnTienda no tiene tabla.
+  // - 'de' (Domicilio)        → UI de Domicilio: tabla + dirección + mapa +
+  //   fecha + chofer + vehículo + observaciones.
+  // - 'pa' (Parcial)          → UI de Parcial: tabla + counters.
+  const tipoEntrega = entrega.tipo_entrega as 'rt' | 'de' | 'pa'
+  const tipoDespachoUI: TipoDespachoUI =
+    tipoEntrega === 'de' ? 'Domicilio' : 'Parcial'
 
-  // Header del modal según el tipo real de entrega (no el tipoDespacho UI).
+  // Qué secciones se ocultan según el tipo. Comunes a todos: 'omitir' (no
+  // aplica al actualizar), 'quien-entrega' (ya fijado), 'tipo-pedido' (ya
+  // fijado en la venta).
+  const ocultarBase: SeccionOcultable[] = ['omitir', 'quien-entrega', 'tipo-pedido']
+  const ocultar: SeccionOcultable[] =
+    tipoEntrega === 'rt'
+      ? [...ocultarBase, 'programar-resto'] // RT: solo tabla
+      : tipoEntrega === 'de'
+      ? [...ocultarBase] // Domicilio: tabla + datos de despacho
+      : [...ocultarBase, 'programar-resto'] // Parcial: tabla + counters (sin resto)
+
+  // Header del modal según el tipo real de entrega.
   const tituloPorTipo: Record<string, string> = {
     rt: 'Despacho en Tienda',
     de: 'Despacho a Domicilio',
     pa: 'Despacho Parcial',
   }
-  const tituloOverride = tituloPorTipo[entrega.tipo_entrega as string] ?? 'Configurar Entrega'
+  const tituloOverride = tituloPorTipo[tipoEntrega] ?? 'Configurar Entrega'
 
   // Etiqueta read-only de "quién entrega" — viene de la venta y se muestra
   // como info para el usuario (no se vuelve a preguntar).
@@ -170,7 +199,7 @@ export default function ModalEntregaUpdate({
         open={open}
         setOpen={setOpen}
         form={form}
-        tipoDespacho="Parcial"
+        tipoDespacho={tipoDespachoUI}
         mode={{ kind: 'actualizar-entrega', entregaId: entrega.id }}
         ocultar={ocultar}
         productosIniciales={productosIniciales}

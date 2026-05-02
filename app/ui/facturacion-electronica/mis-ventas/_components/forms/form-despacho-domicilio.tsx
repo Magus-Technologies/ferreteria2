@@ -7,6 +7,7 @@ import SelectUsuariosDespachadores from '~/app/_components/form/selects/select-u
 import ButtonBase from '~/components/buttons/button-base'
 import dynamic from 'next/dynamic'
 import RadioDireccionCliente from '~/app/_components/form/radio-direccion-cliente'
+import HiddenDireccionesFormItems from '~/app/_components/form/hidden-direcciones-form-items'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 
@@ -20,13 +21,6 @@ interface FormDespachoDomicilioProps {
   form: FormInstance
   tipoDespacho: 'Domicilio' | 'Parcial'
   clienteNombre?: string
-  clienteDirecciones?: {
-    direccion?: string | null
-    direccion_2?: string | null
-    direccion_3?: string | null
-    direccion_4?: string | null
-  }
-  direccionSeleccionada?: 'D1' | 'D2' | 'D3' | 'D4'
   onEditarCliente: () => void
 }
 
@@ -34,8 +28,6 @@ export default function FormDespachoDomicilio({
   form,
   tipoDespacho,
   clienteNombre,
-  clienteDirecciones,
-  direccionSeleccionada,
   onEditarCliente,
 }: FormDespachoDomicilioProps) {
   const [mostrarMapa, setMostrarMapa] = useState(false)
@@ -62,18 +54,7 @@ export default function FormDespachoDomicilio({
   return (
     <div className="space-y-4 border-t pt-4">
       {/* Campos ocultos para las direcciones del cliente */}
-      <Form.Item name="_cliente_direccion_1" hidden>
-        <Input />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_2" hidden>
-        <Input />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_3" hidden>
-        <Input />
-      </Form.Item>
-      <Form.Item name="_cliente_direccion_4" hidden>
-        <Input />
-      </Form.Item>
+      <HiddenDireccionesFormItems />
       <Form.Item name="direccion_seleccionada" hidden>
         <Input />
       </Form.Item>
