@@ -62,7 +62,14 @@ export interface CreateGuiaRemisionRequest {
   motivo_traslado_id: number;
   modalidad_transporte: ModalidadTransporte;
   vehiculo_placa?: string;
+  /** Chofer EXTERNO (tabla `chofer`) — usado en transporte PÚBLICO o GRE-Transportista. */
   chofer_id?: number;
+  /**
+   * USER (despachador interno) que cumple rol de chofer cuando es
+   * transporte PRIVADO. Sus datos SUNAT (DNI, nombres, licencia) salen
+   * de la tabla `user` en el backend.
+   */
+  user_chofer_id?: string;
   punto_partida: string;
   punto_llegada: string;
   almacen_origen_id: number;

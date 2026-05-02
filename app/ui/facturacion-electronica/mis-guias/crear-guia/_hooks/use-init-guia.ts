@@ -19,6 +19,11 @@ export default function useInitGuia({
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
   const vehiculoPlacaParam = searchParams.get('vehiculo_placa')
+  // user_chofer_id viene cuando se "convierte a guía" desde mis-entregas:
+  // el `entrega.chofer_id` apunta al USER (despachador interno) y se
+  // mapea aquí como chofer privado de la guía.
+  const userChoferIdParam = searchParams.get('user_chofer_id')
+  const userChoferNombreParam = searchParams.get('user_chofer_nombre')
   const { data: empresa } = useEmpresaPublica()
 
   // Obtener datos de la venta si viene el parámetro
@@ -102,6 +107,12 @@ export default function useInitGuia({
         referencia: `Venta ${venta.serie}-${venta.numero}`,
         // Pre-llenar placa si viene por URL (desde mis-entregas)
         ...(vehiculoPlacaParam ? { vehiculo_placa: vehiculoPlacaParam } : {}),
+        // Pre-llenar user_chofer_id (despachador interno) si viene de mis-entregas.
+        // En transporte PRIVADO los datos del chofer salen de la tabla `user`.
+        ...(userChoferIdParam ? {
+          user_chofer_id: userChoferIdParam,
+          user_chofer_nombre: userChoferNombreParam || '',
+        } : {}),
         // Productos
         productos,
       })
@@ -129,7 +140,7 @@ export default function useInitGuia({
         productos: [],
       })
     }
-  }, [guia, venta, isLoading, form, empresa, vehiculoPlacaParam])
+  }, [guia, venta, isLoading, form, empresa, vehiculoPlacaParam, userChoferIdParam, userChoferNombreParam])
 
   return { venta, isLoading }
 }

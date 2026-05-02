@@ -20,6 +20,7 @@ import { TipoDireccion } from '~/lib/api/cliente'
 import { useEffect, useState, useCallback } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
+import SelectUsuariosDespachadores from '~/app/_components/form/selects/select-usuarios-despachadores'
 import type { MotivoTraslado } from '~/lib/api/motivo-traslado'
 import { useQuery } from '@tanstack/react-query'
 import { almacenesApi } from '~/lib/api/almacen'
@@ -49,6 +50,12 @@ export default function FormCrearGuia({
   const tipoGuia = Form.useWatch('tipo_guia', form) as string | undefined
   const esTransportista = tipoGuia === 'ELECTRONICA_TRANSPORTISTA'
 
+  // Watch sobre modalidad_transporte: si es PRIVADO, el chofer es un USER
+  // (despachador interno, datos vienen de tabla `user`). Si es PUBLICO o
+  // GRE-Transportista, se usa la tabla externa `chofer` con MTC.
+  const modalidad = Form.useWatch('modalidad_transporte', form) as string | undefined
+  const choferEsInterno = modalidad === 'PRIVADO' && !esTransportista
+
   // Limpiar remitente_id cuando se cambia de Transportista a otro tipo.
   useEffect(() => {
     if (!esTransportista) {
@@ -56,6 +63,17 @@ export default function FormCrearGuia({
       form.setFieldValue('remitente_nombre', undefined)
     }
   }, [esTransportista, form])
+
+  // Al cambiar entre chofer interno (USER) y externo (tabla chofer),
+  // limpiar el campo del modo opuesto para evitar enviar ambos al backend.
+  useEffect(() => {
+    if (choferEsInterno) {
+      form.setFieldValue('chofer_id', undefined)
+    } else {
+      form.setFieldValue('user_chofer_id', undefined)
+      form.setFieldValue('user_chofer_nombre', undefined)
+    }
+  }, [choferEsInterno, form])
 
   // Consultar almacenes (para motivo 08)
   const { data: almacenes } = useQuery({
@@ -474,7 +492,7 @@ export default function FormCrearGuia({
             options={[
               { label: 'GRE - Remitente', value: 'ELECTRONICA_REMITENTE' },
               { label: 'GRE - Transportista', value: 'ELECTRONICA_TRANSPORTISTA' },
-              { label: 'Guía Física', value: 'FISICA' },
+              // { label: 'Guía Física', value: 'FISICA' },
             ]}
           />
         </LabelBase>
@@ -521,17 +539,41 @@ export default function FormCrearGuia({
           componentId='crear-guia.chofer'
           label='Campo Chofer'
         >
-          <LabelBase label='Chofer:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
-            <SelectChoferes
-              propsForm={{
-                name: 'chofer_id',
-                hasFeedback: false,
-                className: 'w-full',
-              }}
-              className='w-full'
-              classNameIcon='text-cyan-600 mx-1'
-            />
-          </LabelBase>
+          {choferEsInterno ? (
+            // Transporte PRIVADO: el chofer es un USER (despachador interno).
+            // Sus datos SUNAT (DNI, name, licencia) salen de la tabla `user`
+            // en el backend. Se selecciona del listado de despachadores.
+            <LabelBase
+              label='Chofer (Despachador):'
+              classNames={{ labelParent: 'mb-2' }}
+              className='w-full sm:flex-1'
+            >
+              <SelectUsuariosDespachadores
+                form={form}
+                propsForm={{
+                  name: 'user_chofer_id',
+                  hasFeedback: false,
+                  className: 'w-full',
+                }}
+                placeholder='Seleccionar despachador...'
+                classNameIcon='text-cyan-600 mx-1'
+              />
+            </LabelBase>
+          ) : (
+            // Transporte PÚBLICO o GRE-Transportista: chofer EXTERNO con
+            // MTC + DNI + licencia (tabla `chofer`).
+            <LabelBase label='Chofer:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
+              <SelectChoferes
+                propsForm={{
+                  name: 'chofer_id',
+                  hasFeedback: false,
+                  className: 'w-full',
+                }}
+                className='w-full'
+                classNameIcon='text-cyan-600 mx-1'
+              />
+            </LabelBase>
+          )}
         </ConfigurableElement>
       </div>
 

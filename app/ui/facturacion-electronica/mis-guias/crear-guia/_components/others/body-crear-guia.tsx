@@ -50,6 +50,9 @@ export type FormCreateGuia = {
   tipo_transporte?: string
   vehiculo_placa?: string
   chofer_id?: number
+  /** USER que actúa como chofer en transporte PRIVADO. */
+  user_chofer_id?: string
+  user_chofer_nombre?: string
   punto_partida: string
   punto_llegada: string
   tipo_guia: string

@@ -61,6 +61,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
       almacen_origen_id: values.almacen_origen_id || 1,
       almacen_destino_id: values.almacen_destino_id || undefined,
       chofer_id: values.chofer_id,
+      user_chofer_id: values.user_chofer_id || undefined,
       vehiculo_placa: values.vehiculo_placa,
       referencia: values.referencia,
       afecta_stock: false,

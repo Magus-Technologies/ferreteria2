@@ -70,13 +70,15 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       message.error('No se pudo identificar la venta')
       return
     }
-    // Pasar venta_id + placa del vehículo de la entrega para pre-llenar la guía.
-    // NO se pasa chofer_id: en entregaproducto.chofer_id se guarda el user.id
-    // del DESPACHADOR (interno), pero la guía SUNAT necesita un chofer externo
-    // de la tabla `chofer` (con dni/licencia). Son conceptos distintos —
-    // el usuario debe seleccionar/registrar el chofer SUNAT manualmente.
+    // Pasamos venta_id + placa del vehículo + user_chofer_id (el USER
+    // despachador) al form de crear-guia. La guía PRIVADA (la empresa
+    // misma transporta su mercadería) usa los datos SUNAT del USER:
+    // numero_documento, name, licencia_conducir. La tabla externa `chofer`
+    // se reserva para PÚBLICO o GRE-Transportista.
     const params = new URLSearchParams({ venta_id: entrega.venta_id })
     if (entrega.vehiculo?.placa) params.set('vehiculo_placa', String(entrega.vehiculo.placa))
+    if (entrega.chofer_id) params.set('user_chofer_id', String(entrega.chofer_id))
+    if (entrega.chofer?.name) params.set('user_chofer_nombre', String(entrega.chofer.name))
     router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
   }
 
