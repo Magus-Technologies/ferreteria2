@@ -124,17 +124,19 @@ export default function ModalEntregaUpdate({
     }
   }
 
-  // Pre-llenar el form con los valores actuales de la entrega cada vez
-  // que se abre el modal o cambia la entrega.
+  // Pre-llenar el form con los valores actuales de la entrega cuando se
+  // abre el modal o cambia la entrega seleccionada.
   // En modo restante NO pre-llenamos los datos de despacho del origen
   // (dirección, fecha, chofer): el restante es una entrega nueva y el
   // usuario decide esos datos desde cero.
+  //
+  // IMPORTANTE: la dep es `entrega?.id`, NO `entrega`. Si se usa el objeto
+  // entero, React Query re-emite una nueva referencia en cada refetch y
+  // el `resetFields()` se dispara repetidamente — borra los campos
+  // `_resto_*` que ya pobló el modal de detalles (referencia, lat/lng, etc).
   useEffect(() => {
     if (!open || !entrega) return
     if (restante) {
-      // En restante el form arranca limpio, pero conservamos la dirección
-      // seleccionada de la venta original para que el modal cargue D1/D2/D3/D4
-      // del cliente igual que en crear-venta.
       form.resetFields()
       form.setFieldValue(
         'direccion_seleccionada',
@@ -160,7 +162,8 @@ export default function ModalEntregaUpdate({
       vehiculo_id: entrega.vehiculo_id || undefined,
       direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
     })
-  }, [open, entrega, restante, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, entrega?.id, restante, form])
 
   // Productos pre-cargados desde la entrega para llenar la tabla.
   // Shape del backend (snake_case):
