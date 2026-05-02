@@ -4,6 +4,7 @@ import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 import { orangeColors } from '~/lib/colors'
+import { formatFechaPeru } from '~/utils/fechas'
 
 type DetalleProductoEntrega = {
   producto: string
@@ -18,6 +19,15 @@ type DetalleProductoEntrega = {
   pendiente: number
 }
 
+/** Producto del snapshot `datos_anteriores` (último VentaHistorial.accion='edicion'). */
+type ProductoAnterior = {
+  codigo: string
+  producto: string
+  unidad: string
+  cantidad: number
+  precio: number
+}
+
 export default function TableDetalleEntrega() {
   const entregaSeleccionada = useStoreEntregaSeleccionada(state => state.entrega)
 
@@ -27,6 +37,42 @@ export default function TableDetalleEntrega() {
   const clienteNombre = cliente?.razon_social ||
     `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() ||
     'SIN CLIENTE'
+
+  // Productos anteriores — extraídos del último registro de `venta.historial`
+  // con `accion='edicion'`. Si la venta fue editada, mostramos los productos
+  // que estaban antes del cambio (intercambiados o eliminados) tachados
+  // como referencia para el chofer/operador.
+  const ultimaEdicion = (venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
+  const fechaUltimaEdicion = ultimaEdicion?.fecha
+  const productosAnteriores: ProductoAnterior[] =
+    (ultimaEdicion?.datos_anteriores?.productos || [])
+      .flatMap((p: any) =>
+        (p?.unidades || []).map((ud: any) => ({
+          codigo: p?.codigo || '',
+          producto: p?.nombre || '—',
+          unidad: ud?.unidad || '',
+          cantidad: Number(ud?.cantidad ?? 0),
+          precio: Number(ud?.precio ?? 0),
+        })),
+      ) as ProductoAnterior[]
+
+  const columnDefsAnteriores: ColDef<ProductoAnterior>[] = [
+    { headerName: 'Código', field: 'codigo', width: 120 },
+    { headerName: 'Producto', field: 'producto', flex: 1 },
+    { headerName: 'U.Medida', field: 'unidad', width: 120 },
+    {
+      headerName: 'Cantidad',
+      field: 'cantidad',
+      width: 100,
+      valueFormatter: (p) => Number(p.value).toFixed(2),
+    },
+    {
+      headerName: 'Precio',
+      field: 'precio',
+      width: 100,
+      valueFormatter: (p) => Number(p.value).toFixed(2),
+    },
+  ]
 
   const detalleProductos: DetalleProductoEntrega[] =
     (entregaSeleccionada as any)?.productos_entregados?.map((d: any) => {
@@ -137,6 +183,34 @@ export default function TableDetalleEntrega() {
           rowData={detalleProductos}
         />
       </div>
+
+      {/* Producto anterior — si en la última edición se reemplazó un
+          producto por otro, mostramos el anterior tachado para que el
+          operador entienda el intercambio. */}
+      {productosAnteriores.length > 0 && (
+        <div className='mt-4'>
+          <div className='flex items-center gap-2 mb-2 px-3 py-2 bg-amber-50 border-l-4 border-amber-500 rounded'>
+            <span className='text-amber-700 font-bold text-sm'>🔄 CAMBIO DE PRODUCTO</span>
+            {fechaUltimaEdicion && (
+              <span className='text-amber-600 text-xs'>
+                — {formatFechaPeru(fechaUltimaEdicion, 'DD/MM/YYYY hh:mm A')}
+              </span>
+            )}
+            <span className='text-amber-600 text-xs ml-auto italic'>
+              Producto anterior (reemplazado en la última edición)
+            </span>
+          </div>
+          <div className='w-full min-h-[160px] h-[200px]'>
+            <TableWithTitle<ProductoAnterior>
+              id='detalle-entrega-anteriores'
+              title='Producto Anterior'
+              selectionColor={orangeColors[10]}
+              columnDefs={columnDefsAnteriores}
+              rowData={productosAnteriores}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
