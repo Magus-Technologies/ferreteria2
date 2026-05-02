@@ -171,15 +171,6 @@ export const entregaProductoApi = {
   },
 
   /**
-   * Anular una entrega de producto (revierte cantidad_pendiente)
-   */
-  async anular(id: number): Promise<ApiResponse<{ data: string; message: string }>> {
-    return apiRequest<{ data: string; message: string }>(`/entregas-productos/${id}`, {
-      method: 'DELETE',
-    });
-  },
-
-  /**
    * Aceptar un pedido externo (first-come-first-served)
    */
   async aceptar(id: number): Promise<ApiResponse<EntregaProductoResponse>> {
