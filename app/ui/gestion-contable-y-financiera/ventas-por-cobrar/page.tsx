@@ -58,27 +58,13 @@ export default function VentasPorCobrarPage() {
             <CardsInfoVentasPorCobrar />
 
             {/* Botones de acción */}
-            <div className='flex flex-col gap-2 mt-2'>
+            <div className='flex flex-col gap-2 mt-0'>
               <ButtonBase
                 className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-green-500 !text-green-700 font-semibold hover:bg-green-50'
                 onClick={handleRegistrarCobro}
               >
                 <FaMoneyCheckAlt size={18} />
                 Registrar Cobros
-              </ButtonBase>
-
-              <ButtonBase
-                className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-blue-500 !text-blue-700 font-semibold hover:bg-blue-50'
-                onClick={() => {
-                  if (!ventaSeleccionada) {
-                    message.warning('Seleccione una venta primero')
-                    return
-                  }
-                  setOpenRegistrarCobro(true)
-                }}
-              >
-                <FaListAlt size={16} />
-                Ver Detalle de Pagos
               </ButtonBase>
 
               <ButtonBase
