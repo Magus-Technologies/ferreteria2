@@ -113,24 +113,37 @@ export default function ModalEntregaUpdate({
   // Shape del backend (snake_case):
   //   productos_entregados[].unidad_derivada_venta
   //     .producto_almacen_venta.producto_almacen.producto.name
+  //
+  // IMPORTANTE: el backend al crear la venta auto-crea el detalle de entrega
+  // con `cantidad_entregada = total` y `cantidad_pendiente = 0` ANTES de que
+  // se haya entregado físicamente (es solo el "plan"). Solo cuando
+  // `estado_entrega='en'` la entrega está realmente completada. Por eso aquí
+  // se interpreta `cantidad_entregada` según el estado:
+  //   - 'en' (entregado): la entrega ya se completó, mostrar todo entregado.
+  //   - 'pe' (pendiente) / 'ec' (en camino): nada se ha entregado todavía,
+  //     el `entregar` por defecto es la cantidad total para que el usuario
+  //     solo tenga que confirmar (o ajustar si es entrega parcial).
   const productosIniciales: ProductoEntrega[] = useMemo(() => {
     if (!entrega?.productos_entregados) return []
+    const yaEntregada = entrega.estado_entrega === 'en'
     return entrega.productos_entregados.map((p: any, index: number) => {
       const ud = p.unidad_derivada_venta || {}
       const pav = ud.producto_almacen_venta || {}
       const pa = pav.producto_almacen || {}
       const prod = pa.producto || {}
       const total = Number(ud.cantidad ?? p.cantidad_entregada ?? 0)
-      const entregado = Number(p.cantidad_entregada ?? 0)
-      const pendiente = Number(ud.cantidad_pendiente ?? Math.max(0, total - entregado))
+      const entregadoReal = yaEntregada ? total : 0
+      const pendienteReal = total - entregadoReal
       return {
         id: index + 1,
         producto: prod.name || p.producto_name || '',
         ubicacion: '',
         total,
-        entregado,
-        pendiente,
-        entregar: pendiente,
+        entregado: entregadoReal,
+        pendiente: pendienteReal,
+        // Por defecto sugerimos entregar todo lo pendiente. Si la entrega
+        // ya está completada, `entregar=0` (no hay nada por hacer).
+        entregar: pendienteReal,
         entregar_programado: 0,
         unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
       }
