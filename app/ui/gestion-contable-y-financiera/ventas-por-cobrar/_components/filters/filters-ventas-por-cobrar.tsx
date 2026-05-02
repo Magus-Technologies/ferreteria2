@@ -58,40 +58,13 @@ export default function FiltersVentasPorCobrar() {
     setQuickFilterActive(rango)
     setMoraRango(rango)
     
-    // Calcular fechas según el rango
-    let desde: dayjs.Dayjs | undefined
-    let hasta: dayjs.Dayjs | undefined
-    
-    if (rango === 'hoy') {
-      desde = dayjs().startOf('day')
-      hasta = dayjs().endOf('day')
-    } else if (rango === 'vencidas') {
-      // Para vencidas, traer desde hace 365 días hasta hoy
-      desde = dayjs().subtract(365, 'days').startOf('day')
-      hasta = dayjs().endOf('day')
-    } else if (typeof rango === 'number') {
-      // Para rangos numéricos (7, 15, 30, 60 días)
-      desde = dayjs().subtract(rango, 'days').startOf('day')
-      hasta = dayjs().endOf('day')
-    } else if (rango === 'todas') {
-      // Para todas, no aplicar filtro de fecha
-      desde = undefined
-      hasta = undefined
-    }
-    
-    // Actualizar el formulario con las fechas calculadas
-    form.setFieldsValue({ desde, hasta })
+    // Limpiar fechas del formulario
+    form.setFieldsValue({ desde: undefined, hasta: undefined })
     
     const data = {
       almacen_id,
       forma_de_pago: FormaDePago.CREDITO,
       estado_de_venta: { in: ['Creado'] },
-      ...(desde && hasta && {
-        fecha: {
-          gte: toUTCBD({ date: desde.startOf('day') }),
-          lte: toUTCBD({ date: hasta.endOf('day') }),
-        }
-      }),
     } satisfies VentaWhereInput
     setFiltros(data)
   }, [almacen_id, form, setFiltros, setMoraRango])
