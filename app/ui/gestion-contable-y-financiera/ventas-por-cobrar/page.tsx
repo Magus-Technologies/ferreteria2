@@ -154,7 +154,7 @@ export default function VentasPorCobrarPage() {
                 onClick={handleRegistrarCobro}
               >
                 <FaMoneyCheckAlt size={18} />
-                Registrar Cobros
+                Registro y Detalle de Cobros
               </ButtonBase>
 
               <ButtonBase
@@ -165,13 +165,14 @@ export default function VentasPorCobrarPage() {
                 Cobro Múltiple por Cliente
               </ButtonBase>
 
-              <ButtonBase
+              {/* Botón oculto: Imprimir Tickets Masivos */}
+              {/* <ButtonBase
                 className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-rose-500 !text-rose-700 font-semibold hover:bg-rose-50'
                 onClick={() => setOpenImprimirMasivo(true)}
               >
                 <FaPrint size={18} />
                 Imprimir Tickets Masivos
-              </ButtonBase>
+              </ButtonBase> */}
 
               <ButtonBase
                 className='flex items-center justify-center gap-2 !rounded-md w-full h-10 border-orange-500 !text-orange-700 font-semibold hover:bg-orange-50'
