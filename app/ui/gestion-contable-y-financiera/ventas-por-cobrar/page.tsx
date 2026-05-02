@@ -29,6 +29,7 @@ export default function VentasPorCobrarPage() {
   const [reportePdfUrl, setReportePdfUrl] = useState<string | null>(null)
   const [reporteModalOpen, setReporteModalOpen] = useState(false)
   const [reporteLoading, setReporteLoading] = useState(false)
+  const [esTicketReporte, setEsTicketReporte] = useState(true) // Controla formato del reporte
   const ventaSeleccionada = useStoreVentaSeleccionada(state => state.venta)
   const ventasFiltradas = useStoreVentasFiltradas(state => state.ventas)
   const { message } = App.useApp()
@@ -210,7 +211,9 @@ export default function VentasPorCobrarPage() {
         open={reporteModalOpen}
         setOpen={handleCloseReporteModal}
         nro_doc='Tickets de Cobro de Ventas Filtradas'
-        esTicket={true}
+        esTicket={esTicketReporte}
+        setEsTicket={setEsTicketReporte}
+        tipoDocumento='venta'
         backendPdfUrl={reportePdfUrl}
         backendPdfLoading={reporteLoading}
       >

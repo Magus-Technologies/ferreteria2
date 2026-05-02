@@ -297,346 +297,352 @@ export default function ModalEditarPreciosProducto({
         layout: 'vertical',
       }}
     >
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <div>
-          <LabelBase label="*Unidad Medida:" classNames={{ labelParent: 'mb-4' }}>
-            <SelectBase
-              propsForm={{
-                name: 'unidad_derivada_id',
-                rules: [{ required: true, message: 'Requerido' }],
-              }}
-              prefix={<FaWeightHanging size={15} className="text-rose-700 mx-1" />}
-              options={
-                unidadesDerivadas.map((ud: any) => ({
-                  value: ud.unidad_derivada.id,
-                  label: ud.unidad_derivada.name,
-                }))
-              }
-            />
-          </LabelBase>
-        </div>
-
-        <div>
-          <LabelBase label="*Factor:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'factor',
-                rules: [{ required: true, message: 'Requerido' }],
-              }}
-              disabled
-              precision={3}
-            />
-          </LabelBase>
-        </div>
-
-        <div>
-          <LabelBase label="*P Compra:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'precio_compra',
-                rules: [{ required: true, message: 'Requerido' }],
-              }}
-              prefix={<FaMoneyBill size={15} className="text-rose-700 mx-1" />}
-              precision={4}
-              min={0}
-              onChange={(val) => {
-                const precioPublico = form.getFieldValue('precio_publico')
-                if (!precioPublico) return
-
-                const costo = val ? Number(val) : 0
-                
-                // Validar que el costo sea un número válido
-                if (isNaN(costo) || costo === 0) {
-                  form.setFieldValue('p_venta', 0)
-                  form.setFieldValue('ganancia', precioPublico)
-                  return
+      <div className="space-y-4">
+        {/* Sección 1: Información básica del producto */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <div>
+            <LabelBase label="*Unidad Medida:" classNames={{ labelParent: 'mb-4' }}>
+              <SelectBase
+                propsForm={{
+                  name: 'unidad_derivada_id',
+                  rules: [{ required: true, message: 'Requerido' }],
+                }}
+                prefix={<FaWeightHanging size={15} className="text-rose-700 mx-1" />}
+                options={
+                  unidadesDerivadas.map((ud: any) => ({
+                    value: ud.unidad_derivada.id,
+                    label: ud.unidad_derivada.name,
+                  }))
                 }
-                
-                const ganancia = precioPublico - costo
-                const pVenta = (ganancia * 100) / costo
-                form.setFieldValue('p_venta', pVenta)
-                form.setFieldValue('ganancia', ganancia)
-              }}
-            />
-          </LabelBase>
+              />
+            </LabelBase>
+          </div>
+
+          <div>
+            <LabelBase label="*Factor:" classNames={{ labelParent: 'mb-4' }}>
+              <InputNumberBase
+                propsForm={{
+                  name: 'factor',
+                  rules: [{ required: true, message: 'Requerido' }],
+                }}
+                disabled
+                precision={3}
+              />
+            </LabelBase>
+          </div>
+
+          <div className="col-span-2">
+            <LabelBase label="*Código de Barra:" classNames={{ labelParent: 'mb-4' }}>
+              <InputBase
+                propsForm={{
+                  name: 'cod_barra',
+                }}
+                prefix={<FaBarcode size={15} className="text-cyan-600 mx-1" />}
+                placeholder="Código de barra"
+              />
+            </LabelBase>
+          </div>
         </div>
 
-        <div>
-          <LabelBase label="*% Venta:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'p_venta',
-              }}
-              suffix="%"
-              precision={2}
-              onChange={(val) => {
-                const costo = form.getFieldValue('precio_compra')
-                
-                // Validar que el costo sea un número válido y mayor que 0
-                const costoNum = Number(costo)
-                if (!costo || isNaN(costoNum) || costoNum === 0) return
+        {/* Sección 2: Cálculo de precio base */}
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Cálculo de Precio Base</h3>
+          <div className="grid grid-cols-4 gap-3">
+            <div>
+              <LabelBase label="*P Compra:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'precio_compra',
+                    rules: [{ required: true, message: 'Requerido' }],
+                  }}
+                  prefix={<FaMoneyBill size={15} className="text-rose-700 mx-1" />}
+                  precision={4}
+                  min={0}
+                  onChange={(val) => {
+                    const precioPublico = form.getFieldValue('precio_publico')
+                    if (!precioPublico) return
 
-                const pVenta = val ? Number(val) : 0
-                const precioPublico = costoNum + costoNum * (pVenta / 100)
-                form.setFieldValue('precio_publico', precioPublico)
-                
-                // Copiar a otros precios
-                form.setFieldValue('precio_especial', precioPublico)
-                form.setFieldValue('precio_minimo', precioPublico)
-                form.setFieldValue('precio_ultimo', precioPublico)
-                
-                const ganancia = precioPublico - costoNum
-                form.setFieldValue('ganancia', ganancia)
-                
-                // Recalcular comisiones
-                recalcularComisiones(form, precioPublico)
-              }}
-            />
-          </LabelBase>
+                    const costo = val ? Number(val) : 0
+                    
+                    if (isNaN(costo) || costo === 0) {
+                      form.setFieldValue('p_venta', 0)
+                      form.setFieldValue('ganancia', precioPublico)
+                      return
+                    }
+                    
+                    const ganancia = precioPublico - costo
+                    const pVenta = (ganancia * 100) / costo
+                    form.setFieldValue('p_venta', pVenta)
+                    form.setFieldValue('ganancia', ganancia)
+                  }}
+                />
+              </LabelBase>
+            </div>
+
+            <div>
+              <LabelBase label="*% Venta:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'p_venta',
+                  }}
+                  suffix="%"
+                  precision={2}
+                  onChange={(val) => {
+                    const costo = form.getFieldValue('precio_compra')
+                    
+                    const costoNum = Number(costo)
+                    if (!costo || isNaN(costoNum) || costoNum === 0) return
+
+                    const pVenta = val ? Number(val) : 0
+                    const precioPublico = costoNum + costoNum * (pVenta / 100)
+                    form.setFieldValue('precio_publico', precioPublico)
+                    
+                    form.setFieldValue('precio_especial', precioPublico)
+                    form.setFieldValue('precio_minimo', precioPublico)
+                    form.setFieldValue('precio_ultimo', precioPublico)
+                    
+                    const ganancia = precioPublico - costoNum
+                    form.setFieldValue('ganancia', ganancia)
+                    
+                    recalcularComisiones(form, precioPublico)
+                  }}
+                />
+              </LabelBase>
+            </div>
+
+            <div>
+              <LabelBase label="*Ganancia:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'ganancia',
+                  }}
+                  prefix={<span className="text-green-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  onChange={(val) => {
+                    const costo = form.getFieldValue('precio_compra')
+                    
+                    const costoNum = Number(costo)
+                    if (!costo || isNaN(costoNum) || costoNum === 0) return
+
+                    const ganancia = val ? Number(val) : 0
+                    const precioPublico = costoNum + ganancia
+                    const pVenta = (ganancia * 100) / costoNum
+                    
+                    form.setFieldValue('precio_publico', precioPublico)
+                    form.setFieldValue('p_venta', pVenta)
+                    
+                    form.setFieldValue('precio_especial', precioPublico)
+                    form.setFieldValue('precio_minimo', precioPublico)
+                    form.setFieldValue('precio_ultimo', precioPublico)
+                    
+                    recalcularComisiones(form, precioPublico)
+                  }}
+                />
+              </LabelBase>
+            </div>
+
+            <div>
+              <LabelBase label="*Precio Público:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'precio_publico',
+                    rules: [{ required: true, message: 'Requerido' }],
+                  }}
+                  prefix={<span className="text-blue-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                  onChange={(val) => {
+                    form.setFieldValue('precio_especial', val)
+                    form.setFieldValue('precio_minimo', val)
+                    form.setFieldValue('precio_ultimo', val)
+
+                    const costo = form.getFieldValue('precio_compra')
+                    
+                    const costoNum = Number(costo)
+                    if (!costo || isNaN(costoNum) || costoNum === 0) {
+                      return
+                    }
+
+                    const precioPublico = val ? Number(val) : 0
+                    const ganancia = precioPublico - costoNum
+                    const pVenta = (ganancia * 100) / costoNum
+                    
+                    form.setFieldValue('p_venta', pVenta)
+                    form.setFieldValue('ganancia', ganancia)
+                    
+                    recalcularComisiones(form, precioPublico)
+                  }}
+                />
+              </LabelBase>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <LabelBase label="*Precio público:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'precio_publico',
-                rules: [{ required: true, message: 'Requerido' }],
-              }}
-              prefix={<span className="text-blue-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-              onChange={(val) => {
-                // Copiar a otros precios
-                form.setFieldValue('precio_especial', val)
-                form.setFieldValue('precio_minimo', val)
-                form.setFieldValue('precio_ultimo', val)
+        {/* Sección 3: Precios especiales */}
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Precios Especiales y Comisiones</h3>
+          
+          {/* Precio Público con Comisión */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="col-span-2">
+              <LabelBase label="Comisión Público:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'comision_publico',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                  onChange={(val) => {
+                    const precioPublico = form.getFieldValue('precio_publico')
+                    const precioEspecial = form.getFieldValue('precio_especial')
+                    const precioMinimo = form.getFieldValue('precio_minimo')
+                    const precioUltimo = form.getFieldValue('precio_ultimo')
+                    
+                    const comisionPublicoNum = Number(val)
+                    const precioPublicoNum = Number(precioPublico)
+                    
+                    if (isNaN(comisionPublicoNum) || isNaN(precioPublicoNum)) return
+                    
+                    if (precioEspecial !== undefined && precioEspecial !== null) {
+                      const comisionEspecial = comisionPublicoNum - (precioPublicoNum - Number(precioEspecial))
+                      form.setFieldValue('comision_especial', comisionEspecial > 0 ? comisionEspecial : 0)
+                    }
+                    
+                    if (precioMinimo !== undefined && precioMinimo !== null) {
+                      const comisionMinimo = comisionPublicoNum - (precioPublicoNum - Number(precioMinimo))
+                      form.setFieldValue('comision_minimo', comisionMinimo > 0 ? comisionMinimo : 0)
+                    }
+                    
+                    if (precioUltimo !== undefined && precioUltimo !== null) {
+                      const comisionUltimo = comisionPublicoNum - (precioPublicoNum - Number(precioUltimo))
+                      form.setFieldValue('comision_ultimo', comisionUltimo > 0 ? comisionUltimo : 0)
+                    }
+                  }}
+                />
+              </LabelBase>
+            </div>
+          </div>
 
-                const costo = form.getFieldValue('precio_compra')
-                
-                // Validar que el costo sea un número válido y mayor que 0
-                const costoNum = Number(costo)
-                if (!costo || isNaN(costoNum) || costoNum === 0) {
-                  return
-                }
+          {/* Precio Ferretería */}
+          <div className="bg-gray-50 p-3 rounded-lg mb-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Precio Ferretería</p>
+            <div className="grid grid-cols-3 gap-3">
+              <LabelBase label="Precio:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'precio_especial',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                  onChange={(val) => {
+                    calcularComision(form, 'especial', val)
+                  }}
+                />
+              </LabelBase>
+              <LabelBase label="Comisión:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'comision_especial',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                />
+              </LabelBase>
+              <LabelBase label="Activador:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'activador_especial',
+                  }}
+                  placeholder="Cant. mín."
+                  precision={2}
+                  min={0}
+                />
+              </LabelBase>
+            </div>
+          </div>
 
-                const precioPublico = val ? Number(val) : 0
-                const ganancia = precioPublico - costoNum
-                const pVenta = (ganancia * 100) / costoNum
-                
-                form.setFieldValue('p_venta', pVenta)
-                form.setFieldValue('ganancia', ganancia)
-                
-                // Recalcular comisiones
-                recalcularComisiones(form, precioPublico)
-              }}
-            />
-          </LabelBase>
-        </div>
+          {/* Precio Final */}
+          <div className="bg-gray-50 p-3 rounded-lg mb-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Precio Final</p>
+            <div className="grid grid-cols-3 gap-3">
+              <LabelBase label="Precio:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'precio_ultimo',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                  onChange={(val) => {
+                    calcularComision(form, 'ultimo', val)
+                  }}
+                />
+              </LabelBase>
+              <LabelBase label="Comisión:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'comision_ultimo',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                />
+              </LabelBase>
+              <LabelBase label="Activador:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'activador_ultimo',
+                  }}
+                  placeholder="Cant. mín."
+                  precision={2}
+                  min={0}
+                />
+              </LabelBase>
+            </div>
+          </div>
 
-        <div>
-          <LabelBase label="*Ganancia:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'ganancia',
-              }}
-              prefix={<span className="text-green-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              onChange={(val) => {
-                const costo = form.getFieldValue('precio_compra')
-                
-                // Validar que el costo sea un número válido y mayor que 0
-                const costoNum = Number(costo)
-                if (!costo || isNaN(costoNum) || costoNum === 0) return
-
-                const ganancia = val ? Number(val) : 0
-                const precioPublico = costoNum + ganancia
-                const pVenta = (ganancia * 100) / costoNum
-                
-                form.setFieldValue('precio_publico', precioPublico)
-                form.setFieldValue('p_venta', pVenta)
-                
-                // Copiar a otros precios
-                form.setFieldValue('precio_especial', precioPublico)
-                form.setFieldValue('precio_minimo', precioPublico)
-                form.setFieldValue('precio_ultimo', precioPublico)
-                
-                // Recalcular comisiones
-                recalcularComisiones(form, precioPublico)
-              }}
-            />
-          </LabelBase>
-        </div>
-
-        <div>
-          <LabelBase label="Comisión Público:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'comision_publico',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-              onChange={(val) => {
-                // Recalcular todas las comisiones cuando cambia la comisión pública
-                const precioPublico = form.getFieldValue('precio_publico')
-                const precioEspecial = form.getFieldValue('precio_especial')
-                const precioMinimo = form.getFieldValue('precio_minimo')
-                const precioUltimo = form.getFieldValue('precio_ultimo')
-                
-                const comisionPublicoNum = Number(val)
-                const precioPublicoNum = Number(precioPublico)
-                
-                if (isNaN(comisionPublicoNum) || isNaN(precioPublicoNum)) return
-                
-                // Recalcular comisión especial
-                if (precioEspecial !== undefined && precioEspecial !== null) {
-                  const comisionEspecial = comisionPublicoNum - (precioPublicoNum - Number(precioEspecial))
-                  form.setFieldValue('comision_especial', comisionEspecial > 0 ? comisionEspecial : 0)
-                }
-                
-                // Recalcular comisión mínimo
-                if (precioMinimo !== undefined && precioMinimo !== null) {
-                  const comisionMinimo = comisionPublicoNum - (precioPublicoNum - Number(precioMinimo))
-                  form.setFieldValue('comision_minimo', comisionMinimo > 0 ? comisionMinimo : 0)
-                }
-                
-                // Recalcular comisión ultimo
-                if (precioUltimo !== undefined && precioUltimo !== null) {
-                  const comisionUltimo = comisionPublicoNum - (precioPublicoNum - Number(precioUltimo))
-                  form.setFieldValue('comision_ultimo', comisionUltimo > 0 ? comisionUltimo : 0)
-                }
-              }}
-            />
-          </LabelBase>
-        </div>
-
-        <div>
-          <LabelBase label="Precio Ferretería:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'precio_especial',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-              onChange={(val) => {
-                calcularComision(form, 'especial', val)
-              }}
-            />
-          </LabelBase>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <LabelBase label="Comisión Ferretería:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'comision_especial',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-            />
-          </LabelBase>
-          <LabelBase label="Activador Ferretería:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'activador_especial',
-              }}
-              placeholder="Cant. mín."
-              precision={2}
-              min={0}
-            />
-          </LabelBase>
-        </div>
-
-        <div>
-          <LabelBase label="Precio Final:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'precio_ultimo',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-              onChange={(val) => {
-                calcularComision(form, 'ultimo', val)
-              }}
-            />
-          </LabelBase>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <LabelBase label="Comisión P. Final:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'comision_ultimo',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-            />
-          </LabelBase>
-          <LabelBase label="Activador Final:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'activador_ultimo',
-              }}
-              placeholder="Cant. mín."
-              precision={2}
-              min={0}
-            />
-          </LabelBase>
-        </div>
-
-        <div>
-          <LabelBase label="Precio Mínimo:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'precio_minimo',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-              onChange={(val) => {
-                calcularComision(form, 'minimo', val)
-              }}
-            />
-          </LabelBase>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <LabelBase label="Comisión Mínimo:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'comision_minimo',
-              }}
-              prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-              precision={2}
-              min={0}
-            />
-          </LabelBase>
-          <LabelBase label="Activador Mínimo:" classNames={{ labelParent: 'mb-4' }}>
-            <InputNumberBase
-              propsForm={{
-                name: 'activador_minimo',
-              }}
-              placeholder="Cant. mín."
-              precision={2}
-              min={0}
-            />
-          </LabelBase>
-        </div>
-
-        <div className="col-span-2">
-          <LabelBase label="*Barra Medida:" classNames={{ labelParent: 'mb-4' }}>
-            <InputBase
-              propsForm={{
-                name: 'cod_barra',
-              }}
-              prefix={<FaBarcode size={15} className="text-cyan-600 mx-1" />}
-              placeholder="Código de barra"
-            />
-          </LabelBase>
+          {/* Precio Mínimo */}
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Precio Mínimo</p>
+            <div className="grid grid-cols-3 gap-3">
+              <LabelBase label="Precio:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'precio_minimo',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                  onChange={(val) => {
+                    calcularComision(form, 'minimo', val)
+                  }}
+                />
+              </LabelBase>
+              <LabelBase label="Comisión:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'comision_minimo',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                />
+              </LabelBase>
+              <LabelBase label="Activador:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'activador_minimo',
+                  }}
+                  placeholder="Cant. mín."
+                  precision={2}
+                  min={0}
+                />
+              </LabelBase>
+            </div>
+          </div>
         </div>
       </div>
     </ModalForm>

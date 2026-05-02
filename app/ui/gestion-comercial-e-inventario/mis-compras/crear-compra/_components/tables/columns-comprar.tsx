@@ -4,6 +4,7 @@ import { TipoMoneda } from '~/types'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
+import { TbAlertTriangleFilled } from 'react-icons/tb'
 import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -390,11 +391,25 @@ export function useColumnsComprar({
       colId: 'precio',
       headerName: 'Precio',
       field: 'name',
-      minWidth: 110,
-      width: 110,
+      minWidth: 125,
+      width: 125,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const precioCompra = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
+        const costoActual = Number(form.getFieldValue(['productos', value, 'costo_actual']) ?? 0)
+        const factor = Number(form.getFieldValue(['productos', value, 'unidad_derivada_factor']) ?? 1)
+        const bonificacion = form.getFieldValue(['productos', value, 'bonificacion'])
+        const costoEnUnidad = costoActual * factor
+        const costoCambio = !bonificacion && costoActual > 0 && precioCompra > 0 && Math.abs(precioCompra - costoEnUnidad) > 0.0001
+
         return (
-          <div className='flex items-center h-full'>
+          <div className='flex items-center gap-1 h-full'>
+            {costoCambio && (
+              <Tooltip title={`Costo anterior: S/. ${costoEnUnidad.toFixed(4)}`}>
+                <span className='flex items-center'>
+                  <TbAlertTriangleFilled size={13} className='text-amber-500 shrink-0' />
+                </span>
+              </Tooltip>
+            )}
             <InputNumberBase
               prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
               size='small'

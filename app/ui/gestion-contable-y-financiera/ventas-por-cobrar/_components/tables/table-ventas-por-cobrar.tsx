@@ -60,6 +60,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [ventaSeleccionadaPdf, setVentaSeleccionadaPdf] = useState<VentaCompleta | null>(null)
+  const [esTicketFormato, setEsTicketFormato] = useState(false) // Controla formato del PDF (false = A4, true = ticket)
 
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
   const moraRango = useStoreFiltrosVentasPorCobrar(state => state.moraRango)
@@ -101,7 +102,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   }, [data?.data, moraRango])
 
   // Función para ver el PDF de la venta
-  const handleVerPdf = useCallback(async (venta: VentaCompleta) => {
+  const handleVerPdf = useCallback(async (venta: VentaCompleta, formato: 'a4' | 'ticket' = 'a4') => {
     if (!venta?.id) return
     
     setVentaSeleccionadaPdf(venta)
@@ -112,7 +113,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL
       const token = getAuthToken()
-      const res = await fetch(`${API_URL}/pdf/venta/${venta.id}?formato=a4`, {
+      const res = await fetch(`${API_URL}/pdf/venta/${venta.id}?formato=${formato}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/pdf',
@@ -141,6 +142,20 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       setVentaSeleccionadaPdf(null)
     }
   }, [pdfUrl])
+
+  // Recargar PDF cuando cambie el formato (ticket/A4)
+  useEffect(() => {
+    if (pdfModalOpen && ventaSeleccionadaPdf) {
+      // Limpiar el PDF anterior
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl)
+        setPdfUrl(null)
+      }
+      
+      const formato = esTicketFormato ? 'ticket' : 'a4'
+      handleVerPdf(ventaSeleccionadaPdf, formato)
+    }
+  }, [esTicketFormato, pdfModalOpen, ventaSeleccionadaPdf, handleVerPdf, pdfUrl])
 
   // Función para calcular el total de una venta
   const calcularTotalVenta = useCallback((venta: VentaCompleta) => {
@@ -398,7 +413,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         open={pdfModalOpen}
         setOpen={handleClosePdfModal}
         nro_doc={nroDoc}
-        esTicket={false}
+        esTicket={esTicketFormato}
+        setEsTicket={setEsTicketFormato}
         tipoDocumento='venta'
         backendPdfUrl={pdfUrl}
         backendPdfLoading={pdfLoading}

@@ -60,7 +60,6 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     servicio_nombre?: string
     servicio_codigo_sunat?: string | null
     servicio_referencia?: string
-    // Costo al momento de agregar el producto (para ganancias históricas correctas)
     costo?: number
   }>
   fecha: Dayjs
