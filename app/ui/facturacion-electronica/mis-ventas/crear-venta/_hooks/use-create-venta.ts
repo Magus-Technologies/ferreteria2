@@ -383,7 +383,17 @@ export default function useCreateVenta({
       // ✅ CREAR ENTREGA AUTOMÁTICAMENTE SI ES DESPACHO A DOMICILIO
       const ventaCreada = response.data?.data
 
-      if (!isEditing && ventaCreada && tipo_despacho === 'Domicilio' && !_omitir_entrega) {
+      // En edición, este bloque ejecuta SOLO si el modal envió un split
+      // explícito (`cantidades_parciales` con algún `entregar_programado>0`).
+      // Si solo se editaron datos básicos sin tocar el modal de entrega,
+      // `cantidades_parciales` viene vacío y no se crea nada nuevo (las
+      // entregas viejas se mantienen tal cual, el backend sólo regenera
+      // detalles preservando lo entregado).
+      const tieneSplitDomicilio =
+        cantidades_parciales && cantidades_parciales.some((c) => Number(c.entregar_programado || 0) > 0)
+      const ejecutarBloqueDomicilio = ventaCreada && tipo_despacho === 'Domicilio' && !_omitir_entrega &&
+        (!isEditing || tieneSplitDomicilio)
+      if (ejecutarBloqueDomicilio) {
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
           const productosVenta = ventaCreada.productos_por_almacen || []
@@ -478,7 +488,18 @@ export default function useCreateVenta({
             description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
           })
         }
-      } else if (!isEditing && tipo_despacho === 'Parcial' && ventaCreada && !_omitir_entrega) {
+      } else if (
+        // En edición, ejecutar solo si el modal envió cantidades_parciales
+        // con `entregar > 0` o `entregar_programado > 0`. Si el usuario
+        // solo cambió datos básicos sin abrir el modal, no se crean nuevas
+        // entregas — las viejas quedan preservadas por el backend.
+        (
+          (!isEditing && tipo_despacho === 'Parcial') ||
+          (isEditing && tipo_despacho === 'Parcial' && cantidades_parciales &&
+            cantidades_parciales.some((c) => Number(c.entregar || 0) > 0 || Number(c.entregar_programado || 0) > 0))
+        )
+        && ventaCreada && !_omitir_entrega
+      ) {
         // DESPACHO PARCIAL: entregar solo las cantidades especificadas
         if (cantidades_parciales && cantidades_parciales.some(c => c.entregar > 0)) {
           try {

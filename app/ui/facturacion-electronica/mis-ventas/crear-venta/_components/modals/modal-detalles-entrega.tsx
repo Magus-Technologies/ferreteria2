@@ -2,6 +2,7 @@
 
 import { Modal, Form } from 'antd'
 import { useEffect, useCallback, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
 import TitleForm from '~/components/form/title-form'
 // `useCreateVenta` se consume ahora dentro de `use-confirmar-entrega.ts`.
@@ -10,6 +11,8 @@ import type { ProductoEntrega } from '../../../_hooks/use-productos-entrega'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import type { TipoDireccion } from '~/lib/api/cliente'
+import { ventaApi } from '~/lib/api/venta'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCalendarioSlot from './modal-calendario-slot'
 
 dayjs.locale('es')
@@ -275,6 +278,62 @@ function ModalDetallesEntregaInner({
   // Obtener productos del formulario
   const productos = Form.useWatch('productos', form) as FormCreateVenta['productos']
 
+  // En modo `editar venta` (crear-venta con ventaId), leer la venta del backend
+  // para conocer cuánto se entregó previamente. El backend mantiene
+  // `cantidad_pendiente` por unidad_derivada_venta_id; lo entregado acumulado
+  // en entregas previas = cantidad_BD − cantidad_pendiente.
+  //
+  // En venta nueva (sin ventaId) este query queda deshabilitado y todo cae al
+  // comportamiento histórico (entregado = 0).
+  const ventaIdParaConsulta =
+    resolvedMode.kind === 'crear-venta' ? resolvedMode.ventaId : undefined
+  const { data: ventaResponse } = useQuery({
+    queryKey: [QueryKeys.VENTAS, 'detalle-entrega', ventaIdParaConsulta],
+    queryFn: () => ventaApi.getById(ventaIdParaConsulta!),
+    enabled: !!ventaIdParaConsulta && open,
+  })
+
+  // Mapa "(producto_id):(unidad_derivada_name)" → { cantidadBd, pendienteBd }.
+  //
+  // Match por NOMBRE de unidad porque el form usa `unidad_derivada_id` que
+  // apunta al CATÁLOGO de unidades del producto (id 1=UNIDAD, 2=CAJA, etc.),
+  // mientras que la BD `unidad_derivada_inmutable_venta.id` es la PK del
+  // snapshot inmutable de la venta (id 47 acá, no compatible con el form).
+  // El page de editar-venta solo deriva `unidad_derivada_normal.id` localmente
+  // buscando por `name`, así que reproducimos ese match por nombre acá.
+  const datosEntregaPorUnidad = useMemo(() => {
+    const map = new Map<string, { cantidadBd: number; pendienteBd: number }>()
+    const venta: any = ventaResponse?.data?.data
+    const productosPorAlmacen = venta?.productos_por_almacen
+    if (!Array.isArray(productosPorAlmacen)) return map
+    for (const pa of productosPorAlmacen) {
+      const productoId =
+        pa?.producto_almacen?.producto_id ?? pa?.producto_almacen?.producto?.id
+      const unidades = pa?.unidades_derivadas
+      if (productoId == null || !Array.isArray(unidades)) continue
+      for (const ud of unidades) {
+        const unidadNombre = ud?.unidad_derivada_inmutable?.name
+        if (!unidadNombre) continue
+        const key = `${productoId}:${unidadNombre}`
+        const cantidadBd = Number(ud?.cantidad ?? 0)
+        const pendienteRaw = ud?.cantidad_pendiente
+        const pendienteBd =
+          pendienteRaw == null ? cantidadBd : Number(pendienteRaw)
+        const existing = map.get(key)
+        if (existing) {
+          // Caso raro: dos unidades del mismo nombre y producto. Sumar.
+          map.set(key, {
+            cantidadBd: existing.cantidadBd + cantidadBd,
+            pendienteBd: existing.pendienteBd + pendienteBd,
+          })
+        } else {
+          map.set(key, { cantidadBd, pendienteBd })
+        }
+      }
+    }
+    return map
+  }, [ventaResponse])
+
   // Inicializar cantidades de entrega cuando se abre el modal en modo Parcial
   // Setear almacenero por defecto en EnTienda
   useEffect(() => {
@@ -293,22 +352,34 @@ function ModalDetallesEntregaInner({
     }
     // Modo `crear-venta`: derivar productos del form de la venta.
     if ((tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && productos && productos.length > 0) {
-      const items: ProductoEntrega[] = productos.map((p, index) => ({
-        id: index + 1,
-        producto: p.producto_name,
-        ubicacion: '',
-        total: Number(p.cantidad),
-        entregado: 0,
-        pendiente: Number(p.cantidad),
-        entregar: 0,
-        // Por defecto, todo el resto se programa (comportamiento histórico).
-        // El usuario puede reducirlo en la tabla del resto para dejar pendientes "sin programar".
-        entregar_programado: Number(p.cantidad),
-        unidad_derivada_venta_id: p.unidad_derivada_id,
-      }))
+      const items: ProductoEntrega[] = productos.map((p, index) => {
+        const total = Number(p.cantidad)
+        // Si la venta YA existe en BD (modo editar), descontar lo entregado
+        // en entregas previas. `entregadoYa = cantidadBd − pendienteBd`.
+        // En venta nueva el mapa está vacío y `entregadoYa = 0`.
+        const lookupKey = `${p.producto_id}:${p.unidad_derivada_name}`
+        const datosBd = datosEntregaPorUnidad.get(lookupKey)
+        const entregadoYa = datosBd
+          ? Math.max(0, datosBd.cantidadBd - datosBd.pendienteBd)
+          : 0
+        const pendiente = Math.max(0, total - entregadoYa)
+        return {
+          id: index + 1,
+          producto: p.producto_name,
+          ubicacion: '',
+          total,
+          entregado: entregadoYa,
+          pendiente,
+          entregar: 0,
+          // Por defecto, todo lo pendiente se programa (comportamiento histórico
+          // en venta nueva; en editar respeta lo ya entregado).
+          entregar_programado: pendiente,
+          unidad_derivada_venta_id: p.unidad_derivada_id,
+        }
+      })
       setProductosEntrega(items)
     }
-  }, [open, tipoDespacho, productos, productosIniciales])
+  }, [open, tipoDespacho, productos, productosIniciales, datosEntregaPorUnidad])
 
   const handleEditarCliente = () => {
     onEditarCliente()
