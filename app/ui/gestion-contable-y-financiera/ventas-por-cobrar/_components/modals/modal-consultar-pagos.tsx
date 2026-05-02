@@ -17,9 +17,9 @@ interface ModalConsultarPagosProps {
 }
 
 export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPagosProps) {
-  // Permitir fechas null para traer todos los cobros
-  const [fechaDesde, setFechaDesde] = useState<Dayjs | null>(null)
-  const [fechaHasta, setFechaHasta] = useState<Dayjs | null>(null)
+  // Por defecto: fecha de hoy
+  const [fechaDesde, setFechaDesde] = useState<Dayjs | null>(dayjs())
+  const [fechaHasta, setFechaHasta] = useState<Dayjs | null>(dayjs())
   const [searchText, setSearchText] = useState('')
   const [estadoMetodoPago, setEstadoMetodoPago] = useState<string>('todos')
 
