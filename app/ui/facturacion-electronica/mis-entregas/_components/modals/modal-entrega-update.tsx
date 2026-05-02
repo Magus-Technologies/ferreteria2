@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Form } from 'antd'
 import useApp from 'antd/es/app/useApp'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FaExchangeAlt, FaFilePdf } from 'react-icons/fa'
 import dayjs from 'dayjs'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregaProductoApi, TipoEntrega } from '~/lib/api/entrega-producto'
+import { clienteApi } from '~/lib/api/cliente'
 import ModalDetallesEntrega from '../../../mis-ventas/crear-venta/_components/modals/modal-detalles-entrega'
 import ModalSeleccionarTipoDespacho from '../../../mis-ventas/crear-venta/_components/modals/modal-seleccionar-tipo-despacho'
 import type {
@@ -137,11 +138,41 @@ export default function ModalEntregaUpdate({
   useEffect(() => {
     if (!open || !entrega) return
     if (restante) {
+      // En restante heredamos los datos de despacho de la entrega origen
+      // (chofer, vehículo, fecha/hora, tipo_pedido) — la nueva entrega
+      // normalmente va al mismo destinatario con los mismos recursos. El
+      // usuario puede modificar cualquiera antes de confirmar. Se setean
+      // tanto los campos sin prefijo (Domicilio puro) como los `_resto_*`
+      // (Parcial + programar resto) para que cualquier tipo elegido tenga
+      // los datos pre-cargados.
       form.resetFields()
-      form.setFieldValue(
-        'direccion_seleccionada',
-        entrega.venta?.direccion_seleccionada || 'D1',
-      )
+      const heredados: Record<string, any> = {
+        direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
+      }
+      if (entrega.chofer_id) {
+        heredados.despachador_id = entrega.chofer_id
+        heredados._resto_despachador_id = entrega.chofer_id
+      }
+      if (entrega.vehiculo_id) {
+        heredados.vehiculo_id = entrega.vehiculo_id
+        heredados._resto_vehiculo_id = entrega.vehiculo_id
+      }
+      if (entrega.tipo_pedido) {
+        heredados.tipo_pedido = entrega.tipo_pedido
+        heredados._resto_tipo_pedido = entrega.tipo_pedido
+      }
+      if (entrega.cargo_destino) {
+        heredados.cargo_destino = entrega.cargo_destino
+        heredados._resto_cargo_destino = entrega.cargo_destino
+      }
+      if (entrega.fecha_programada) {
+        const f = dayjs(entrega.fecha_programada).format('YYYY-MM-DD')
+        heredados.fecha_programada = f
+        heredados._resto_fecha_programada = f
+      }
+      if (entrega.hora_inicio) heredados.hora_inicio = entrega.hora_inicio
+      if (entrega.hora_fin) heredados.hora_fin = entrega.hora_fin
+      form.setFieldsValue(heredados)
       return
     }
     form.setFieldsValue({
@@ -164,6 +195,40 @@ export default function ModalEntregaUpdate({
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entrega?.id, restante, form])
+
+  // Pre-cargar campos `_resto_*` con la dirección del cliente en modo restante.
+  //
+  // El `<ModalDetallesEntrega>` interno también tiene un useEffect que hace
+  // esto, pero depende del switch `programarResto` y de timing. Acá lo
+  // hacemos en cuanto llegan las direcciones, antes de que el usuario active
+  // el switch — los inputs `_resto_*` recién aparecen al activarlo, así que
+  // cuando el componente TextareaBase se monta lee el valor ya seteado en
+  // el form. Resuelve el bug donde la "Referencia" salía vacía.
+  const clienteIdRestante = restante
+    ? entrega?.venta?.cliente_id ?? entrega?.venta?.cliente?.id
+    : undefined
+  const { data: direccionesResp } = useQuery({
+    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdRestante],
+    queryFn: () => clienteApi.listarDirecciones(clienteIdRestante!),
+    enabled: !!clienteIdRestante && open,
+  })
+  const direccionesCliente = (direccionesResp?.data?.data as any[]) || []
+
+  useEffect(() => {
+    if (!open || !restante || direccionesCliente.length === 0) return
+    const tipo = (form.getFieldValue('direccion_seleccionada') ||
+      entrega?.venta?.direccion_seleccionada ||
+      'D1') as string
+    const dir = direccionesCliente.find((d: any) => d.tipo === tipo) ||
+      direccionesCliente[0]
+    if (!dir) return
+    form.setFieldValue('_resto_direccion_entrega', dir.direccion || '')
+    form.setFieldValue('_resto_referencia_entrega', dir.referencia || '')
+    if (dir.latitud != null && dir.longitud != null) {
+      form.setFieldValue('_resto_latitud', Number(dir.latitud))
+      form.setFieldValue('_resto_longitud', Number(dir.longitud))
+    }
+  }, [open, restante, direccionesCliente, entrega?.id, form])
 
   // Productos pre-cargados desde la entrega para llenar la tabla.
   // Shape del backend (snake_case):
@@ -320,8 +385,15 @@ export default function ModalEntregaUpdate({
       } as const)
     : ({ kind: 'actualizar-entrega' as const, entregaId: entrega.id } as const)
 
+  // El `<Form>` provider es necesario porque los `Form.Item` que usa el modal
+  // de detalles-entrega (referencia, observaciones, dirección, etc.) consultan
+  // el FormContext via React. Sin envolverlos en `<Form>`, Ant Design 5
+  // imprime "Can not find FormContext" y `form.setFieldValue` no afecta los
+  // inputs aunque sí actualice el store interno del form.
+  // `component={false}` evita el render de un `<form>` HTML (no queremos el
+  // submit nativo, el onConfirmar lo maneja el botón del modal).
   return (
-    <>
+    <Form form={form} component={false}>
       <ModalDetallesEntrega
         open={open}
         setOpen={setOpen}
@@ -352,6 +424,6 @@ export default function ModalEntregaUpdate({
         onSelectTipo={handleSelectTipoDespacho}
         defaultTipo={tipoLocal}
       />
-    </>
+    </Form>
   )
 }

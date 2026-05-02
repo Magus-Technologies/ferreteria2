@@ -37,8 +37,8 @@ export default function FiltersComisiones() {
 
   const onValuesChange = (_: unknown, all: Values) => {
     setFiltros({
-      desde: all.desde ? all.desde.format('YYYY-MM-DD') : filtros.desde,
-      hasta: all.hasta ? all.hasta.format('YYYY-MM-DD') : filtros.hasta,
+      desde: all.desde ? all.desde.format('YYYY-MM-DD') : undefined,
+      hasta: all.hasta ? all.hasta.format('YYYY-MM-DD') : undefined,
       almacen_id: all.almacen_id,
       user_id: all.user_id,
     })

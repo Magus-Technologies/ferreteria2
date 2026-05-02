@@ -15,8 +15,8 @@ interface Store {
 }
 
 const getDefault = (): FiltrosComisiones => ({
-  desde: dayjs().startOf('month').format('YYYY-MM-DD'),
-  hasta: dayjs().endOf('month').format('YYYY-MM-DD'),
+  desde: dayjs().format('YYYY-MM-DD'),
+  hasta: dayjs().format('YYYY-MM-DD'),
 })
 
 export const useStoreFiltrosComisiones = create<Store>((set) => ({
