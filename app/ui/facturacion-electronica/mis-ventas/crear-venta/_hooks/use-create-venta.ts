@@ -639,7 +639,12 @@ export default function useCreateVenta({
             })
           }
         }
-      } else if (tipo_despacho === 'EnTienda' && quien_entrega && !_omitir_entrega) {
+      } else if (!isEditing && tipo_despacho === 'EnTienda' && quien_entrega && !_omitir_entrega) {
+        // Solo crear la entrega EnTienda en CREACIÓN. Al editar una venta
+        // EnTienda, la entrega ya existe en BD: el backend la mantiene y
+        // la pone a 'pe' (pendiente) para que el usuario re-confirme. Si
+        // este bloque se ejecutara al editar, crearía una segunda entrega
+        // EnTienda duplicada.
 
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
@@ -693,10 +698,14 @@ export default function useCreateVenta({
           console.error('❌ Error al crear entrega en tienda automática:', error)
         }
       } else if (
+        !isEditing &&
         ventaCreada &&
         _omitir_entrega &&
         (tipo_despacho === 'Domicilio' || tipo_despacho === 'Parcial')
       ) {
+        // Solo crear el placeholder en CREACIÓN. Al editar no se duplica:
+        // las entregas viejas (incluido el placeholder original) ya las
+        // maneja el backend.
         try {
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
