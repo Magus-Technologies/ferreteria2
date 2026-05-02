@@ -1,11 +1,11 @@
 'use client'
 
-import { Modal, DatePicker, Input, Button, Select } from 'antd'
+import { Modal, DatePicker, Input, Select } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta, type CobroVenta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-ventas-por-cobrar'
-import dayjs from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -17,26 +17,36 @@ interface ModalConsultarPagosProps {
 }
 
 export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPagosProps) {
-  // Por defecto: solo hoy
-  const [fechaDesde, setFechaDesde] = useState(dayjs())
-  const [fechaHasta, setFechaHasta] = useState(dayjs())
+  // Permitir fechas null para traer todos los cobros
+  const [fechaDesde, setFechaDesde] = useState<Dayjs | null>(null)
+  const [fechaHasta, setFechaHasta] = useState<Dayjs | null>(null)
   const [searchText, setSearchText] = useState('')
   const [estadoMetodoPago, setEstadoMetodoPago] = useState<string>('todos')
 
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
 
-  // Obtener TODOS los cobros directamente con el nuevo endpoint
+  // Construir filtros para el API - solo enviar fechas si están definidas
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
-    return {
+    
+    const filters: any = {
       almacen_id: filtros.almacen_id as number | undefined,
-      desde: fechaDesde.format('YYYY-MM-DD'),
-      hasta: fechaHasta.format('YYYY-MM-DD'),
+      estado: estadoMetodoPago, // Enviar el estado al backend
       per_page: -1,
     }
-  }, [filtros, fechaDesde, fechaHasta])
+    
+    // Solo agregar fechas si están definidas
+    if (fechaDesde) {
+      filters.desde = fechaDesde.format('YYYY-MM-DD')
+    }
+    if (fechaHasta) {
+      filters.hasta = fechaHasta.format('YYYY-MM-DD')
+    }
+    
+    return filters
+  }, [filtros, fechaDesde, fechaHasta, estadoMetodoPago])
 
-  const { data: cobrosResponse, isLoading, refetch } = useQuery({
+  const { data: cobrosResponse, isLoading } = useQuery({
     queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros', apiFilters],
     queryFn: async () => {
       const result = await ventaApi.getAllCobros(apiFilters)
@@ -48,7 +58,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
 
   const allCobros = cobrosResponse ?? []
 
-  // Filtrar cobros por búsqueda y estado (la fecha ya se filtra en el backend)
+  // Filtrar cobros por búsqueda (el estado y fecha ya se filtran en el backend)
   const cobrosFiltrados = useMemo(() => {
     let filtered = allCobros ?? []
 
@@ -67,21 +77,8 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       })
     }
 
-    // Filtrar por estado del cobro (activo/anulado)
-    if (estadoMetodoPago !== 'todos') {
-      filtered = filtered.filter(cobro => {
-        const esActivo = cobro.estado ?? true
-        if (estadoMetodoPago === 'activos') {
-          return esActivo
-        } else if (estadoMetodoPago === 'anulados') {
-          return !esActivo
-        }
-        return true
-      })
-    }
-
     return filtered
-  }, [allCobros, searchText, estadoMetodoPago])
+  }, [allCobros, searchText])
 
   // Total importe
   const totalImporte = useMemo(() =>
@@ -91,10 +88,10 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
   const tipoDocMap: Record<string, string> = { '01': 'FACTURA', '03': 'BOLETA', 'nv': 'NOTA DE VENTA' }
 
   const columns: ColDef<CobroVenta>[] = useMemo(() => [
-    { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
     {
       headerName: 'Estado',
-      width: 90,
+      field: 'estado',
+      width: 100,
       cellRenderer: (p: any) => {
         const estado = p.data?.estado
         return (
@@ -108,6 +105,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     },
     {
       headerName: 'Documento',
+      field: 'venta.tipo_documento',
       width: 140,
       valueGetter: (p) => {
         const v = p.data?.venta
@@ -116,6 +114,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     },
     {
       headerName: 'Venta N°',
+      field: 'venta.serie',
       width: 130,
       valueGetter: (p) => {
         const v = p.data?.venta
@@ -124,16 +123,19 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     },
     {
       headerName: 'F. Venta',
-      width: 100,
+      field: 'venta.fecha',
+      width: 110,
       valueGetter: (p) => p.data?.venta?.fecha ? dayjs(p.data.venta.fecha).format('DD/MM/YYYY') : '',
     },
     {
       headerName: 'F. Vence',
-      width: 100,
+      field: 'venta.fecha_vencimiento',
+      width: 110,
       valueGetter: (p) => p.data?.venta?.fecha_vencimiento ? dayjs(p.data.venta.fecha_vencimiento).format('DD/MM/YYYY') : '',
     },
     {
       headerName: 'Cliente',
+      field: 'venta.cliente',
       flex: 1,
       minWidth: 200,
       valueGetter: (p) => {
@@ -146,7 +148,8 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     },
     {
       headerName: 'Fecha y Hora Pago',
-      width: 150,
+      field: 'created_at',
+      width: 160,
       valueGetter: (p) => {
         const val = p.data?.created_at || p.data?.fecha
         return val ? dayjs(val).format('DD/MM/YYYY hh:mm A') : ''
@@ -154,20 +157,23 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     },
     {
       headerName: 'T. Pago',
-      width: 100,
+      field: 'despliegue_de_pago.name',
+      width: 120,
       valueGetter: (p) => p.data?.despliegue_de_pago?.name || '',
     },
     {
       headerName: 'Banco',
-      width: 100,
+      field: 'despliegue_de_pago.metodo_de_pago.name',
+      width: 120,
       valueGetter: (p) => p.data?.despliegue_de_pago?.metodo_de_pago?.name || '',
     },
     {
       headerName: 'Importe',
+      field: 'monto',
       width: 110,
       valueGetter: (p) => `S/. ${Number(p.data?.monto || 0).toFixed(2)}`,
     },
-  ], [])
+  ], [tipoDocMap])
 
   return (
     <Modal
@@ -175,8 +181,8 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       open={open}
       onCancel={() => setOpen(false)}
       footer={null}
-      width={1000}
-      destroyOnHidden
+      width={1200}
+      destroyOnClose
     >
       {/* Filtros */}
       <div className='flex flex-wrap items-end gap-4 mb-4'>
@@ -184,65 +190,69 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
           <label className='text-xs font-medium text-gray-600'>Fecha Cobro Desde:</label>
           <DatePicker
             value={fechaDesde}
-            onChange={(d) => d && setFechaDesde(d)}
+            onChange={(d) => setFechaDesde(d)}
             format='DD/MM/YYYY'
             className='w-full'
+            placeholder='Todas las fechas'
+            allowClear
           />
         </div>
         <div>
           <label className='text-xs font-medium text-gray-600'>Hasta:</label>
           <DatePicker
             value={fechaHasta}
-            onChange={(d) => d && setFechaHasta(d)}
+            onChange={(d) => setFechaHasta(d)}
             format='DD/MM/YYYY'
             className='w-full'
+            placeholder='Todas las fechas'
+            allowClear
           />
         </div>
         <div>
-          <label className='text-xs font-medium text-gray-600'>Estado Método de Pago:</label>
+          <label className='text-xs font-medium text-gray-600'>Estado:</label>
           <Select
             value={estadoMetodoPago}
             onChange={setEstadoMetodoPago}
-            style={{ width: 200 }}
+            style={{ width: 180 }}
             options={[
               { label: 'Todos', value: 'todos' },
               { label: 'Activos', value: 'activos' },
-              { label: 'Anulados/Desactivados', value: 'anulados' },
+              { label: 'Anulados', value: 'anulados' },
             ]}
           />
         </div>
-        <div className='flex-1'>
-          <label className='text-xs font-medium text-gray-600'>Ruc/Razón/Comercial del Cliente:</label>
+        <div className='flex-1 min-w-[200px]'>
+          <label className='text-xs font-medium text-gray-600'>Buscar Cliente:</label>
           <Input
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder='Buscar cliente...'
+            placeholder='RUC, Razón Social, Serie-Número...'
+            allowClear
           />
         </div>
-        <Button type='primary' onClick={() => refetch()}>
-          Buscar
-        </Button>
       </div>
 
       {/* Tabla */}
-      <div className='h-[350px]'>
+      <div className='h-[400px]'>
         <TableWithTitle
-          id='table-cobros-realizados'
-          title={`CABECERA REGISTROS: ${cobrosFiltrados.length}`}
+          id='table-cobros-realizados-detalle'
+          title={`REGISTROS ENCONTRADOS: ${cobrosFiltrados.length}`}
           columnDefs={columns}
           rowData={cobrosFiltrados}
           loading={isLoading}
           selectionColor={blueColors[1]}
           suppressRowTransform
           exportExcel
-          withNumberColumn={false}
+          withNumberColumn={true}
+          isVisible={open}
+          persistColumnState={true}
         />
       </div>
 
       {/* Resumen */}
       <div className='flex justify-center mt-4 bg-gray-100 rounded-lg p-3'>
         <span className='text-sm font-bold'>
-          RESUMEN DE CUENTA — Total Importe: <span className='text-blue-700 text-lg'>S/. {totalImporte.toFixed(2)}</span>
+          TOTAL IMPORTE: <span className='text-blue-700 text-lg'>S/. {totalImporte.toFixed(2)}</span>
         </span>
       </div>
     </Modal>

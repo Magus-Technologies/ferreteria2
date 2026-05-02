@@ -123,7 +123,7 @@ export default function BodyComprar({
 
   // Listener para abrir el modal de editar precios
   useEffect(() => {
-    const handleOpenModal = (event: Event) => {
+    const handleOpenModal = async (event: Event) => {
       const customEvent = event as CustomEvent<{ 
         productoId: number
         unidadDerivadaId: number
@@ -134,40 +134,73 @@ export default function BodyComprar({
       }>
       const { productoId, unidadDerivadaId, costoActual, productoNombre, unidadNombre, factor } = customEvent.detail
       
-      // Construir el detallePrecio con la estructura completa que espera el modal
-      // Esto evita el error "Cannot read properties of undefined (reading 'costo')"
-      setDetallePrecioSeleccionado({
-        id: unidadDerivadaId,
-        producto_id: productoId,
-        unidad_derivada_id: unidadDerivadaId,
-        factor: factor,
-        precio_publico: 0,
-        comision_publico: 0,
-        precio_especial: 0,
-        comision_especial: 0,
-        activador_especial: 0,
-        precio_minimo: 0,
-        comision_minimo: 0,
-        activador_minimo: 0,
-        precio_ultimo: 0,
-        comision_ultimo: 0,
-        activador_ultimo: 0,
-        producto: {
-          id: productoId,
-          name: productoNombre,
-          cod_barra: '',
-        },
-        unidad_derivada: {
-          id: unidadDerivadaId,
-          name: unidadNombre,
-        },
-        producto_almacen: {
-          costo: costoActual,
-          stock_fraccion: 0,
-          ubicacion: null,
-        },
-      } as any)
-      setModalEditarPreciosOpen(true)
+      try {
+        // Consultar la API para obtener todos los datos del producto
+        const { productosApiV2 } = await import('~/lib/api/producto')
+        const response = await productosApiV2.getById(productoId)
+        
+        if (response.data) {
+          const producto = response.data
+          
+          // Buscar el producto en el almacén actual
+          const productoEnAlmacen = producto.producto_en_almacenes?.find(
+            (pa: any) => pa.almacen_id === almacen_id
+          )
+          
+          if (!productoEnAlmacen) {
+            console.error('Producto no encontrado en el almacén actual')
+            return
+          }
+          
+          // Buscar la unidad derivada específica
+          const unidadDerivada = productoEnAlmacen.unidades_derivadas?.find(
+            (ud: any) => ud.unidad_derivada.id === unidadDerivadaId
+          )
+          
+          if (!unidadDerivada) {
+            console.error('Unidad derivada no encontrada')
+            return
+          }
+          
+          // Construir el detallePrecio con todos los datos reales
+          setDetallePrecioSeleccionado({
+            id: unidadDerivada.id,
+            producto_id: productoId,
+            unidad_derivada_id: unidadDerivadaId,
+            factor: unidadDerivada.factor,
+            precio_publico: unidadDerivada.precio_publico || 0,
+            comision_publico: unidadDerivada.comision_publico || 0,
+            precio_especial: unidadDerivada.precio_especial || 0,
+            comision_especial: unidadDerivada.comision_especial || 0,
+            activador_especial: unidadDerivada.activador_especial || 0,
+            precio_minimo: unidadDerivada.precio_minimo || 0,
+            comision_minimo: unidadDerivada.comision_minimo || 0,
+            activador_minimo: unidadDerivada.activador_minimo || 0,
+            precio_ultimo: unidadDerivada.precio_ultimo || 0,
+            comision_ultimo: unidadDerivada.comision_ultimo || 0,
+            activador_ultimo: unidadDerivada.activador_ultimo || 0,
+            producto: {
+              id: producto.id,
+              name: producto.name,
+              cod_barra: producto.cod_barra || '',
+            },
+            unidad_derivada: unidadDerivada.unidad_derivada,
+            producto_almacen: {
+              costo: productoEnAlmacen.costo,
+              stock_fraccion: productoEnAlmacen.stock_fraccion,
+              ubicacion: productoEnAlmacen.ubicacion,
+            },
+          } as any)
+          
+          // Actualizar el store con el producto completo para que el modal lo use
+          const { useStoreProductoSeleccionadoSearch } = await import('~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search')
+          useStoreProductoSeleccionadoSearch.getState().setProducto(producto as any)
+          
+          setModalEditarPreciosOpen(true)
+        }
+      } catch (error) {
+        console.error('Error al cargar datos del producto:', error)
+      }
     }
 
     window.addEventListener('openEditarPreciosModal', handleOpenModal)
