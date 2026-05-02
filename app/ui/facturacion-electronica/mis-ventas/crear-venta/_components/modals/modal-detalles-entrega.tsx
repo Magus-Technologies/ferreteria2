@@ -86,6 +86,7 @@ function ModalDetallesEntregaInner({
     setCoordenadas,
     setUbicacionGps,
     setDireccionSeleccionada,
+    setMostrarMapa,
     // Resto
     programarResto,
     setProgramarResto,
@@ -94,6 +95,7 @@ function ModalDetallesEntregaInner({
     setCoordenadasResto,
     setDireccionSeleccionadaResto,
     setUbicacionGpsResto,
+    setMostrarMapaResto,
     // Parcial
     productosEntrega, setProductosEntrega,
     // Slots + calendario
@@ -216,6 +218,7 @@ function ModalDetallesEntregaInner({
         form.setFieldValue('_resto_latitud', coords.lat)
         form.setFieldValue('_resto_longitud', coords.lng)
         obtenerUbicacionGpsResto(coords.lat, coords.lng)
+        setMostrarMapaResto(true)
       } else {
         setUbicacionGpsResto('')
       }
@@ -239,8 +242,8 @@ function ModalDetallesEntregaInner({
         form.setFieldValue('direccion_entrega', direccionObj.direccion)
         form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
         setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
-        
-        // Si tiene coordenadas, cargarlas
+
+        // Si tiene coordenadas, cargarlas y abrir el mapa automáticamente.
         if (direccionObj.latitud && direccionObj.longitud) {
           const coords = {
             lat: Number(direccionObj.latitud),
@@ -250,6 +253,7 @@ function ModalDetallesEntregaInner({
           form.setFieldValue('latitud', coords.lat)
           form.setFieldValue('longitud', coords.lng)
           obtenerUbicacionGps(coords.lat, coords.lng)
+          setMostrarMapa(true)
         } else {
           setUbicacionGps('')
         }
@@ -269,6 +273,7 @@ function ModalDetallesEntregaInner({
           form.setFieldValue('latitud', coords.lat)
           form.setFieldValue('longitud', coords.lng)
           obtenerUbicacionGps(coords.lat, coords.lng)
+          setMostrarMapa(true)
         } else {
           setUbicacionGps('')
         }

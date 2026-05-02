@@ -138,11 +138,41 @@ export default function ModalEntregaUpdate({
   useEffect(() => {
     if (!open || !entrega) return
     if (restante) {
+      // En restante heredamos los datos de despacho de la entrega origen
+      // (chofer, vehículo, fecha/hora, tipo_pedido) — la nueva entrega
+      // normalmente va al mismo destinatario con los mismos recursos. El
+      // usuario puede modificar cualquiera antes de confirmar. Se setean
+      // tanto los campos sin prefijo (Domicilio puro) como los `_resto_*`
+      // (Parcial + programar resto) para que cualquier tipo elegido tenga
+      // los datos pre-cargados.
       form.resetFields()
-      form.setFieldValue(
-        'direccion_seleccionada',
-        entrega.venta?.direccion_seleccionada || 'D1',
-      )
+      const heredados: Record<string, any> = {
+        direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
+      }
+      if (entrega.chofer_id) {
+        heredados.despachador_id = entrega.chofer_id
+        heredados._resto_despachador_id = entrega.chofer_id
+      }
+      if (entrega.vehiculo_id) {
+        heredados.vehiculo_id = entrega.vehiculo_id
+        heredados._resto_vehiculo_id = entrega.vehiculo_id
+      }
+      if (entrega.tipo_pedido) {
+        heredados.tipo_pedido = entrega.tipo_pedido
+        heredados._resto_tipo_pedido = entrega.tipo_pedido
+      }
+      if (entrega.cargo_destino) {
+        heredados.cargo_destino = entrega.cargo_destino
+        heredados._resto_cargo_destino = entrega.cargo_destino
+      }
+      if (entrega.fecha_programada) {
+        const f = dayjs(entrega.fecha_programada).format('YYYY-MM-DD')
+        heredados.fecha_programada = f
+        heredados._resto_fecha_programada = f
+      }
+      if (entrega.hora_inicio) heredados.hora_inicio = entrega.hora_inicio
+      if (entrega.hora_fin) heredados.hora_fin = entrega.hora_fin
+      form.setFieldsValue(heredados)
       return
     }
     form.setFieldsValue({
