@@ -204,13 +204,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   const columnsCobros: ColDef<CobroVenta>[] = useMemo(() => [
     { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
     {
-      headerName: 'M. Pago',
-      width: 120,
+      headerName: 'Despliegue de Pago',
+      width: 250,
       valueGetter: (p) => {
         const dp = p.data?.despliegue_de_pago
-        return dp?.metodo_de_pago?.name
-          ? `${dp.metodo_de_pago.name} / ${dp.name}`
-          : dp?.name || ''
+        return dp?.name || ''
       },
     },
     {
