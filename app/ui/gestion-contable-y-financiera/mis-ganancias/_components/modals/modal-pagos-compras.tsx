@@ -321,13 +321,13 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
             </div>
           </div>
 
-          <div className="bg-white border border-amber-100 rounded-lg p-4 flex items-center gap-4 shadow-sm">
-            <div className="bg-amber-100 p-3 rounded-full text-amber-600">
+          <div className="bg-white border border-rose-100 rounded-lg p-4 flex items-center gap-4 shadow-sm">
+            <div className="bg-rose-100 p-3 rounded-full text-rose-600">
               <FaMoneyBillWave size={20} />
             </div>
             <div>
-              <div className="text-[10px] uppercase text-amber-600 font-bold">Total Gastos</div>
-              <div className="text-xl font-bold text-amber-700">S/ {resumen.total_gastos.toFixed(2)}</div>
+              <div className="text-[10px] uppercase text-rose-600 font-bold">Total Gastos</div>
+              <div className="text-xl font-bold text-rose-700">S/ {resumen.total_gastos.toFixed(2)}</div>
             </div>
           </div>
 
@@ -368,9 +368,15 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
               rowData={gastos}
               loading={isLoading}
               pinnedBottomRowData={pinnedBottomRowDataGastos}
-              headerColor="var(--color-amber-600)"
-              selectionColor="#fef3c7"
+              headerColor="var(--color-rose-600)"
+              selectionColor="#fee2e2"
               withNumberColumn={true}
+              getRowStyle={(params) => {
+                if (params.data?.tipo === 'gasto_extra' || params.data?.tipo === 'gasto_compra') {
+                  return { backgroundColor: '#fee2e2', color: '#991b1b' }
+                }
+                return undefined
+              }}
             />
           )}
         </div>

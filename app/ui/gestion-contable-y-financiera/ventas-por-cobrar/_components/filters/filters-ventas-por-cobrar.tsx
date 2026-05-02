@@ -18,7 +18,6 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { toUTCBD } from '~/utils/fechas'
-import dayjs from 'dayjs'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
@@ -94,10 +93,7 @@ export default function FiltersVentasPorCobrar() {
     <FormBase
       form={form}
       name='filtros-ventas-por-cobrar'
-      initialValues={{
-        desde: dayjs().startOf('day'),
-        hasta: dayjs().endOf('day'),
-      }}
+      initialValues={{}}
       className='w-full'
       onFinish={values => {
         setQuickFilterActive('todas')

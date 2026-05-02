@@ -167,8 +167,8 @@ export default function CampanitaAutorizaciones() {
     queryKey: ['vencimientos-proximos', diasVencimiento],
     queryFn: async () => {
       const [ventasRes, comprasRes] = await Promise.all([
-        ventaApi.getVentasPorCobrar({ dias: diasVencimiento, per_page: 500 }),
-        compraApi.getComprasPorPagar({ dias: diasVencimiento, per_page: 500 }),
+        ventaApi.getVentasPorCobrar({ dias: diasVencimiento, per_page: 200 }),
+        compraApi.getComprasPorPagar({ dias: diasVencimiento, per_page: 100 }),
       ])
 
       const ventas = ((ventasRes.data?.data || []) as any[])
