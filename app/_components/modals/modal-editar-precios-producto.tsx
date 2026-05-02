@@ -410,7 +410,7 @@ export default function ModalEditarPreciosProducto({
               </LabelBase>
             </div>
 
-            <div>
+            <div className="col-span-2">
               <LabelBase label="*Ganancia:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
                   propsForm={{
@@ -440,7 +440,15 @@ export default function ModalEditarPreciosProducto({
                 />
               </LabelBase>
             </div>
+          </div>
+        </div>
 
+        {/* Sección 3: Precios especiales */}
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Precios Especiales y Comisiones</h3>
+          
+          {/* Precio Público y Comisión Público */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
             <div>
               <LabelBase label="*Precio Público:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
@@ -475,51 +483,45 @@ export default function ModalEditarPreciosProducto({
                 />
               </LabelBase>
             </div>
-          </div>
-        </div>
 
-        {/* Sección 3: Precios especiales */}
-        <div className="border-t pt-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Precios Especiales y Comisiones</h3>
-          
-          {/* Comisión Público */}
-          <div className="mb-3">
-            <LabelBase label="Comisión Público:" classNames={{ labelParent: 'mb-4' }}>
-              <InputNumberBase
-                propsForm={{
-                  name: 'comision_publico',
-                }}
-                prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
-                precision={2}
-                min={0}
-                onChange={(val) => {
-                  const precioPublico = form.getFieldValue('precio_publico')
-                  const precioEspecial = form.getFieldValue('precio_especial')
-                  const precioMinimo = form.getFieldValue('precio_minimo')
-                  const precioUltimo = form.getFieldValue('precio_ultimo')
-                  
-                  const comisionPublicoNum = Number(val)
-                  const precioPublicoNum = Number(precioPublico)
-                  
-                  if (isNaN(comisionPublicoNum) || isNaN(precioPublicoNum)) return
-                  
-                  if (precioEspecial !== undefined && precioEspecial !== null) {
-                    const comisionEspecial = comisionPublicoNum - (precioPublicoNum - Number(precioEspecial))
-                    form.setFieldValue('comision_especial', comisionEspecial > 0 ? comisionEspecial : 0)
-                  }
-                  
-                  if (precioMinimo !== undefined && precioMinimo !== null) {
-                    const comisionMinimo = comisionPublicoNum - (precioPublicoNum - Number(precioMinimo))
-                    form.setFieldValue('comision_minimo', comisionMinimo > 0 ? comisionMinimo : 0)
-                  }
-                  
-                  if (precioUltimo !== undefined && precioUltimo !== null) {
-                    const comisionUltimo = comisionPublicoNum - (precioPublicoNum - Number(precioUltimo))
-                    form.setFieldValue('comision_ultimo', comisionUltimo > 0 ? comisionUltimo : 0)
-                  }
-                }}
-              />
-            </LabelBase>
+            <div>
+              <LabelBase label="*Comisión Público:" classNames={{ labelParent: 'mb-4' }}>
+                <InputNumberBase
+                  propsForm={{
+                    name: 'comision_publico',
+                  }}
+                  prefix={<span className="text-cyan-600 font-bold mx-1">S/.</span>}
+                  precision={2}
+                  min={0}
+                  onChange={(val) => {
+                    const precioPublico = form.getFieldValue('precio_publico')
+                    const precioEspecial = form.getFieldValue('precio_especial')
+                    const precioMinimo = form.getFieldValue('precio_minimo')
+                    const precioUltimo = form.getFieldValue('precio_ultimo')
+                    
+                    const comisionPublicoNum = Number(val)
+                    const precioPublicoNum = Number(precioPublico)
+                    
+                    if (isNaN(comisionPublicoNum) || isNaN(precioPublicoNum)) return
+                    
+                    if (precioEspecial !== undefined && precioEspecial !== null) {
+                      const comisionEspecial = comisionPublicoNum - (precioPublicoNum - Number(precioEspecial))
+                      form.setFieldValue('comision_especial', comisionEspecial > 0 ? comisionEspecial : 0)
+                    }
+                    
+                    if (precioMinimo !== undefined && precioMinimo !== null) {
+                      const comisionMinimo = comisionPublicoNum - (precioPublicoNum - Number(precioMinimo))
+                      form.setFieldValue('comision_minimo', comisionMinimo > 0 ? comisionMinimo : 0)
+                    }
+                    
+                    if (precioUltimo !== undefined && precioUltimo !== null) {
+                      const comisionUltimo = comisionPublicoNum - (precioPublicoNum - Number(precioUltimo))
+                      form.setFieldValue('comision_ultimo', comisionUltimo > 0 ? comisionUltimo : 0)
+                    }
+                  }}
+                />
+              </LabelBase>
+            </div>
           </div>
 
           {/* Precio Ferretería */}
