@@ -247,6 +247,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       setObservacionAnulacion('')
       // Refrescar datos
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros'] }) // ← Agregar esta línea
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
@@ -345,6 +346,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       
       // Refrescar datos - esto actualizará localVenta automáticamente
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros'] }) // ← Agregar esta línea
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
