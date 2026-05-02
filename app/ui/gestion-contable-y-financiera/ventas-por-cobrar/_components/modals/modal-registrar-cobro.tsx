@@ -3,6 +3,7 @@
 import { Modal, Form, InputNumber, DatePicker, Input, App } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta, type CobroVenta } from '~/lib/api/venta'
+import { apiRequest } from '~/lib/api'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
@@ -71,22 +72,24 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({
-    queryKey: [QueryKeys.DESPLIEGUE_DE_PAGO],
+    queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
-      const { despliegueDePagoApi } = await import('~/lib/api/despliegue-de-pago')
-      const result = await despliegueDePagoApi.getAll({ mostrar: true })
+      const result = await apiRequest<{ success: boolean; data: any[] }>('/cajas/sub-cajas/metodos-para-ventas')
       return result.data?.data || []
     },
+    enabled: open,
   })
 
   // Setear Efectivo por defecto cuando se abre el modal
   useEffect(() => {
     if (open && desplieguesData && desplieguesData.length > 0) {
       const efectivo = desplieguesData.find((d: any) =>
-        d.name?.toUpperCase().includes('EFECTIVO') || d.name?.toUpperCase().includes('CCH')
+        d.tipo?.toLowerCase() === 'efectivo' || 
+        d.label?.toUpperCase().includes('EFECTIVO') || 
+        d.label?.toUpperCase().includes('CCH')
       )
       if (efectivo) {
-        form.setFieldsValue({ despliegue_de_pago_id: efectivo.id })
+        form.setFieldsValue({ despliegue_de_pago_id: efectivo.value })
         setMetodoPagoSeleccionado(efectivo)
       }
     }
@@ -208,7 +211,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       width: 250,
       valueGetter: (p) => {
         const dp = p.data?.despliegue_de_pago
-        return dp?.name || ''
+        if (!dp) return ''
+        // Construir el label: Banco/Método
+        const banco = dp.metodo_de_pago?.name || 'Sin Banco'
+        const metodo = dp.name || ''
+        return `${banco}/${metodo}`
       },
     },
     {
@@ -382,7 +389,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
               placeholder='Seleccione método de pago'
               onChange={(value: any) => {
                 // Buscar el método seleccionado en los datos
-                const metodo = desplieguesData?.find((d: any) => d.id === value)
+                const metodo = desplieguesData?.find((d: any) => d.value === value)
                 setMetodoPagoSeleccionado(metodo)
               }}
             />
