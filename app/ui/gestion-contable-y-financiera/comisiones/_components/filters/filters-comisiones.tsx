@@ -28,8 +28,8 @@ export default function FiltersComisiones() {
 
   useEffect(() => {
     form.setFieldsValue({
-      desde: dayjs(filtros.desde),
-      hasta: dayjs(filtros.hasta),
+      desde: filtros.desde ? dayjs(filtros.desde) : undefined,
+      hasta: filtros.hasta ? dayjs(filtros.hasta) : undefined,
       almacen_id: filtros.almacen_id ?? almacenStore,
       user_id: filtros.user_id,
     })
