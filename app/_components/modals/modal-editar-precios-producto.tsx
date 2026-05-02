@@ -347,9 +347,11 @@ export default function ModalEditarPreciosProducto({
         {/* Sección 2: Cálculo de precio base */}
         <div className="border-t pt-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Cálculo de Precio Base</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <div>
-              <LabelBase label="*P Compra:" classNames={{ labelParent: 'mb-4' }}>
+          
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Precio Compra</p>
+            <div className="grid grid-cols-3 gap-3">
+              <LabelBase label="Precio:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
                   propsForm={{
                     name: 'precio_compra',
@@ -377,10 +379,8 @@ export default function ModalEditarPreciosProducto({
                   }}
                 />
               </LabelBase>
-            </div>
 
-            <div>
-              <LabelBase label="*% Venta:" classNames={{ labelParent: 'mb-4' }}>
+              <LabelBase label="% Venta:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
                   propsForm={{
                     name: 'p_venta',
@@ -408,10 +408,8 @@ export default function ModalEditarPreciosProducto({
                   }}
                 />
               </LabelBase>
-            </div>
 
-            <div className="col-span-2">
-              <LabelBase label="*Ganancia:" classNames={{ labelParent: 'mb-4' }}>
+              <LabelBase label="Ganancia:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
                   propsForm={{
                     name: 'ganancia',
@@ -447,10 +445,11 @@ export default function ModalEditarPreciosProducto({
         <div className="border-t pt-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Precios Especiales y Comisiones</h3>
           
-          {/* Precio Público y Comisión Público */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
-            <div>
-              <LabelBase label="*Precio Público:" classNames={{ labelParent: 'mb-4' }}>
+          {/* Precio Público */}
+          <div className="bg-gray-50 p-3 rounded-lg mb-3">
+            <p className="text-xs font-semibold text-gray-600 mb-2">Precio Público</p>
+            <div className="grid grid-cols-2 gap-3">
+              <LabelBase label="Precio:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
                   propsForm={{
                     name: 'precio_publico',
@@ -482,10 +481,7 @@ export default function ModalEditarPreciosProducto({
                   }}
                 />
               </LabelBase>
-            </div>
-
-            <div>
-              <LabelBase label="*Comisión Público:" classNames={{ labelParent: 'mb-4' }}>
+              <LabelBase label="Comisión:" classNames={{ labelParent: 'mb-4' }}>
                 <InputNumberBase
                   propsForm={{
                     name: 'comision_publico',
