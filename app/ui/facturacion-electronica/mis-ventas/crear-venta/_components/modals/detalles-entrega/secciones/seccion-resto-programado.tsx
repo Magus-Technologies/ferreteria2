@@ -151,7 +151,7 @@ export function SeccionRestoProgramado({
   if (ocultar?.has('programar-resto')) return null
 
   const mostrarCamposResto =
-    programarResto && productosEntrega.some((p) => p.total - p.entregar > 0)
+    programarResto && productosEntrega.some((p) => p.total - p.entregar - (p.entregado || 0) > 0)
 
   return (
     <div className="border-t border-gray-200 pt-4">
@@ -160,9 +160,9 @@ export function SeccionRestoProgramado({
         <span className="text-sm font-medium text-gray-700">
           ¿Programar entrega del resto?
         </span>
-        {productosEntrega.some((p) => p.total - p.entregar > 0) && (
+        {productosEntrega.some((p) => p.total - p.entregar - (p.entregado || 0) > 0) && (
           <span className="text-xs text-gray-500">
-            ({productosEntrega.reduce((acc, p) => acc + (p.total - p.entregar), 0)} unidad(es) pendiente(s))
+            ({productosEntrega.reduce((acc, p) => acc + Math.max(0, p.total - p.entregar - (p.entregado || 0)), 0)} unidad(es) pendiente(s))
           </span>
         )}
       </div>
@@ -176,7 +176,7 @@ export function SeccionRestoProgramado({
                 title="Productos pendientes para entrega programada"
                 selectionColor={orangeColors[10]}
                 columnDefs={columnDefsResto}
-                rowData={productosEntrega.filter((p) => p.total - p.entregar > 0)}
+                rowData={productosEntrega.filter((p) => p.total - p.entregar - (p.entregado || 0) > 0)}
               />
             </div>
           )}

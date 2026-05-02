@@ -85,6 +85,7 @@ function ModalDetallesEntregaInner({
     setDireccionSeleccionada,
     // Resto
     programarResto,
+    setProgramarResto,
     setHoraInicioResto,
     setHoraFinResto,
     setCoordenadasResto,
@@ -98,6 +99,53 @@ function ModalDetallesEntregaInner({
     setSlotDomicilio,
     setSlotResto,
   } = useDetallesEntrega()
+
+  // En modo `crear-entrega-resto` el switch "¿Programar entrega del resto?"
+  // arranca apagado: lo natural es entregar todo el pendiente ahora. Si el
+  // usuario quiere otro split, lo activa manualmente.
+  // En `crear-venta` el default histórico es ON (programar todo lo que sobra).
+  useEffect(() => {
+    if (!open) return
+    setProgramarResto(resolvedMode.kind !== 'crear-entrega-resto')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, resolvedMode.kind])
+
+  // En modo `crear-entrega-resto`, cuando el usuario PRENDE el switch
+  // "Programar resto", redistribuir automáticamente: mover todo el pendiente
+  // de `entregar` → `entregar_programado`. Sin esto, la tabla "Productos
+  // pendientes para entrega programada" arranca vacía (porque
+  // `total - entregar - entregado = 0`) y el usuario no entiende por qué.
+  //
+  // Cuando lo APAGA, hacer el inverso: mover todo de `entregar_programado` a
+  // `entregar` para que vuelva al estado "entregar todo el pendiente ahora".
+  //
+  // Solo actúa si `entregado > 0` (hay entregas previas) — en `crear-venta`
+  // este efecto no hace nada y el comportamiento histórico se preserva.
+  useEffect(() => {
+    if (!open) return
+    if (resolvedMode.kind !== 'crear-entrega-resto') return
+    setProductosEntrega((prev) =>
+      prev.map((p) => {
+        if ((p.entregado || 0) <= 0) return p
+        const disponible = Math.max(0, p.total - (p.entregado || 0))
+        if (programarResto) {
+          // Redistribuir hacia "programado" — solo si entregar todavía cubre
+          // todo lo disponible (estado "default" tras abrir).
+          if (p.entregar >= disponible && p.entregar_programado === 0) {
+            return { ...p, entregar: 0, entregar_programado: disponible }
+          }
+        } else {
+          // Inverso: si TODO está en programado y nada en entregar, devolver
+          // todo a "entregar ahora".
+          if (p.entregar === 0 && p.entregar_programado >= disponible) {
+            return { ...p, entregar: disponible, entregar_programado: 0 }
+          }
+        }
+        return p
+      }),
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programarResto, open, resolvedMode.kind])
   // (Todos los bloques de state ahora viven en el Provider.)
 
   // Submit del modal — extraído a hook (Fase E).
@@ -326,14 +374,17 @@ function ModalDetallesEntregaInner({
   )
 
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
-  // Valida que entregar + entregar_programado no exceda total; lo que sobra queda como pendiente sin programar.
+  // Valida que entregar + entregar_programado + entregado no exceda total.
+  // En `crear-venta` `entregado=0` así que el cálculo se simplifica a
+  // `total - entregar`. En `crear-entrega-resto` `entregado` refleja lo que
+  // ya se entregó en entregas anteriores y debe descontarse.
   const handleProgramarChange = useCallback((id: number, value: number | null) => {
     let newValue = Number(value) || 0
     if (newValue < 0) newValue = 0
     setProductosEntrega((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p
-        const maxProgramable = Math.max(0, p.total - p.entregar)
+        const maxProgramable = Math.max(0, p.total - p.entregar - (p.entregado || 0))
         if (newValue > maxProgramable) newValue = maxProgramable
         return { ...p, entregar_programado: newValue }
       })
@@ -447,7 +498,7 @@ function ModalDetallesEntregaInner({
             totalAProgramar={totalAProgramar}
             totalSinProgramar={totalSinProgramar}
             ocultar={ocultarSet}
-            tablaSimple={resolvedMode.kind === 'actualizar-entrega'}
+            tablaSimple={resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto'}
           />
         )}
 
@@ -467,7 +518,7 @@ function ModalDetallesEntregaInner({
             totalSinProgramar={totalSinProgramar}
             restoDireccionEntrega={restoDireccionEntrega}
             ocultar={ocultarSet}
-            tablaSimple={resolvedMode.kind === 'actualizar-entrega'}
+            tablaSimple={resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto'}
           />
         )}
       </div>

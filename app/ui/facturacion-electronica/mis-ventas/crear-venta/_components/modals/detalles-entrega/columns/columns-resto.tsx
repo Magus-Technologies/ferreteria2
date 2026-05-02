@@ -9,9 +9,10 @@ import { ProgramarCell } from './programar-cell'
  *
  * Diferencias vs columnsDomicilio:
  *  - Muestra "Entrega ahora" (read-only) — se editó en la tabla principal de Parcial.
- *  - "Programar ahora" se limita a `total - entregar` (lo que quedó después de la
- *    parte que el cliente lleva ahora).
- *  - "Pendiente sin programar" se calcula `total - entregar - entregar_programado`.
+ *  - "Programar ahora" se limita a `total - entregar - entregado` (lo que queda
+ *    después de descontar lo que el cliente lleva ahora Y lo ya entregado en
+ *    entregas previas — relevante en modo `crear-entrega-resto`).
+ *  - "Pendiente sin programar" = `total - entregar - entregar_programado - entregado`.
  */
 export function makeColumnsResto(
   onProgramarChange: (id: number, value: number | null) => void,
@@ -41,7 +42,10 @@ export function makeColumnsResto(
       width: 150,
       cellRenderer: (params: { data?: ProductoEntrega }) => {
         if (!params.data) return null
-        const maxProgramable = Math.max(0, params.data.total - params.data.entregar)
+        const maxProgramable = Math.max(
+          0,
+          params.data.total - params.data.entregar - (params.data.entregado || 0),
+        )
         return (
           <ProgramarCell
             id={params.data.id}
@@ -60,7 +64,10 @@ export function makeColumnsResto(
         if (!params.data) return 0
         return Math.max(
           0,
-          params.data.total - params.data.entregar - params.data.entregar_programado,
+          params.data.total
+            - params.data.entregar
+            - params.data.entregar_programado
+            - (params.data.entregado || 0),
         )
       },
       valueFormatter: (params) => Number(params.value).toFixed(2),

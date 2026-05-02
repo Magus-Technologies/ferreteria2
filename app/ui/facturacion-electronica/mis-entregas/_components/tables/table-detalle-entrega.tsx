@@ -10,7 +10,12 @@ type DetalleProductoEntrega = {
   codigo: string
   marca: string
   unidad: string
-  cantidad: number
+  /** Total que se vendió en la venta original. */
+  total: number
+  /** Cantidad entregada en ESTA entrega. */
+  entregado: number
+  /** Cantidad que aún queda por entregar (vendido − entregado en todas las entregas). */
+  pendiente: number
 }
 
 export default function TableDetalleEntrega() {
@@ -24,13 +29,27 @@ export default function TableDetalleEntrega() {
     'SIN CLIENTE'
 
   const detalleProductos: DetalleProductoEntrega[] =
-    (entregaSeleccionada as any)?.productos_entregados?.map((d: any) => ({
-      producto: d.unidad_derivada_venta?.producto_almacen_venta?.producto_almacen?.producto?.name || '—',
-      codigo: d.unidad_derivada_venta?.producto_almacen_venta?.producto_almacen?.producto?.cod_producto || '',
-      marca: d.unidad_derivada_venta?.producto_almacen_venta?.producto_almacen?.producto?.marca?.name || '—',
-      unidad: d.unidad_derivada_venta?.unidad_derivada_inmutable?.name || '',
-      cantidad: Number(d.cantidad_entregada),
-    })) || []
+    (entregaSeleccionada as any)?.productos_entregados?.map((d: any) => {
+      const ud = d.unidad_derivada_venta || {}
+      const total = Number(ud.cantidad ?? 0)
+      const entregado = Number(d.cantidad_entregada ?? 0)
+      // El backend mantiene `cantidad_pendiente` agregado (vendido menos
+      // suma de cantidades entregadas en todas las entregas asociadas a
+      // la unidad). Si no viene, lo derivamos del total y lo entregado en
+      // esta entrega — es una aproximación válida para el display.
+      const pendiente = ud.cantidad_pendiente != null
+        ? Number(ud.cantidad_pendiente)
+        : Math.max(0, total - entregado)
+      return {
+        producto: ud.producto_almacen_venta?.producto_almacen?.producto?.name || '—',
+        codigo: ud.producto_almacen_venta?.producto_almacen?.producto?.cod_producto || '',
+        marca: ud.producto_almacen_venta?.producto_almacen?.producto?.marca?.name || '—',
+        unidad: ud.unidad_derivada_inmutable?.name || '',
+        total,
+        entregado,
+        pendiente,
+      }
+    }) || []
 
   const columnDefs: ColDef<DetalleProductoEntrega>[] = [
     {
@@ -54,10 +73,27 @@ export default function TableDetalleEntrega() {
       width: 120,
     },
     {
-      headerName: 'Cantidad',
-      field: 'cantidad',
-      width: 100,
+      headerName: 'Total',
+      field: 'total',
+      width: 90,
       valueFormatter: params => Number(params.value).toFixed(0),
+    },
+    {
+      headerName: 'Entregado',
+      field: 'entregado',
+      width: 110,
+      valueFormatter: params => Number(params.value).toFixed(0),
+      cellStyle: { color: '#16a34a', fontWeight: 'bold' },
+    },
+    {
+      headerName: 'Pendiente',
+      field: 'pendiente',
+      width: 110,
+      valueFormatter: params => Number(params.value).toFixed(0),
+      cellStyle: (params) =>
+        Number(params.value) > 0
+          ? { color: '#d97706', fontWeight: 'bold' }
+          : { color: '#94a3b8', fontWeight: 'normal' },
     },
   ]
 

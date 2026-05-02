@@ -66,6 +66,12 @@ export default function FiltersMisEntregas() {
     if (estado === 'ec') {
       return { label: 'Confirmar', accion: 'confirmar' as const }
     }
+    // Entregado Parcial: si aún hay productos pendientes, mostrar botón
+    if (estado === 'en' && entregaSeleccionada.productos_entregados?.some(
+      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
+    )) {
+      return { label: 'Entregar Restante', accion: 'restante' as const }
+    }
     return null
   })()
 

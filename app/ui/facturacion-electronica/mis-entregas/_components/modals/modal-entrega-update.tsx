@@ -23,23 +23,34 @@ interface ModalEntregaUpdateProps {
   setOpen: (open: boolean) => void
   entrega?: any
   onSuccess?: () => void
+  /**
+   * Si la entrega ya está cerrada como `'en'` pero quedaron productos con
+   * `cantidad_pendiente > 0`, el modal entra en modo "Entregar Restante":
+   * en lugar de actualizar la entrega origen, abre el mismo
+   * `<ModalDetallesEntrega>` para CREAR una nueva entrega que cubra los
+   * productos pendientes. El usuario decide tipo (EnTienda/Domicilio/Parcial)
+   * y cantidades igual que al crear la venta.
+   */
+  restante?: boolean
 }
 
 /**
- * Wrapper que reusa `<ModalDetallesEntrega>` (refactorizado en
- * `mis-ventas/crear-venta`) para ACTUALIZAR una entrega existente desde
- * `mis-entregas`. Reemplaza los modales viejos `ModalMarcarEntregada`,
- * `ModalEntregarParcial` y la acción "Despachar" del `ModalDespachoEntrega`.
+ * Wrapper sobre `<ModalDetallesEntrega>` para uso desde `mis-entregas`.
  *
- * Para todos los tipos de entrega se usa la UI de "Parcial" (tabla de
- * productos + botón Entregar). El `quien_entrega` ya se eligió al crear la
- * venta, así que se oculta junto con el resto de campos no editables aquí.
+ * Soporta dos modos según `restante`:
+ *   - `false` (default): actualiza la entrega existente (mode `actualizar-entrega`).
+ *   - `true`: crea una nueva entrega con los pendientes (mode `crear-entrega-resto`).
+ *
+ * Para todos los tipos se reusa la UI de "Parcial" o "Domicilio" según
+ * corresponda. El selector de "quién entrega" se oculta porque ya se decidió
+ * al crear la venta.
  */
 export default function ModalEntregaUpdate({
   open,
   setOpen,
   entrega,
   onSuccess,
+  restante = false,
 }: ModalEntregaUpdateProps) {
   const [form] = Form.useForm()
   const { message } = useApp()
@@ -47,10 +58,36 @@ export default function ModalEntregaUpdate({
   const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
 
-  // Cambiar tipo de entrega (rt/de/pa) — llamado desde el botón en el header.
+  // Tipo "UI" actualmente activo. En modo update, se inicializa con el tipo
+  // real de la entrega y se persiste en el backend al cambiarlo. En modo
+  // restante (la entrega origen ya está cerrada), solo se cambia local —
+  // el restante puede tener un tipo distinto al de la entrega origen.
+  const tipoInicialUI: TipoDespachoUI = useMemo(() => {
+    const t = entrega?.tipo_entrega as 'rt' | 'de' | 'pa' | undefined
+    if (t === 'de') return 'Domicilio'
+    if (t === 'rt') return 'EnTienda'
+    return 'Parcial'
+  }, [entrega])
+  const [tipoLocal, setTipoLocal] = useState<TipoDespachoUI>(tipoInicialUI)
+  // Re-sincronizar cuando cambia la entrega seleccionada (nueva fila).
+  useEffect(() => {
+    setTipoLocal(tipoInicialUI)
+  }, [tipoInicialUI])
+
   const handleSelectTipoDespacho = async (
     tipo: 'EnTienda' | 'Domicilio' | 'Parcial',
   ) => {
+    if (!entrega) return
+
+    // En modo restante NO tocamos el backend — la entrega origen quedó
+    // cerrada con su `tipo_entrega` original. Solo cambiamos la UI local
+    // para que el usuario elija cómo entregar el restante.
+    if (restante) {
+      setTipoLocal(tipo)
+      setModalSeleccionarTipoOpen(false)
+      return
+    }
+
     const nuevoTipo: TipoEntrega =
       tipo === 'EnTienda'
         ? TipoEntrega.RECOJO_EN_TIENDA
@@ -58,7 +95,6 @@ export default function ModalEntregaUpdate({
         ? TipoEntrega.DESPACHO
         : TipoEntrega.PARCIAL
 
-    if (!entrega) return
     if (nuevoTipo === entrega.tipo_entrega) {
       message.info('La entrega ya es de ese tipo')
       return
@@ -79,6 +115,7 @@ export default function ModalEntregaUpdate({
           ? 'Despacho a Domicilio'
           : 'Despacho Parcial'
       message.success(`Tipo de entrega cambiado a ${labelNuevo}`)
+      setTipoLocal(tipo)
       setModalSeleccionarTipoOpen(false)
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       onSuccess?.()
@@ -89,12 +126,25 @@ export default function ModalEntregaUpdate({
 
   // Pre-llenar el form con los valores actuales de la entrega cada vez
   // que se abre el modal o cambia la entrega.
+  // En modo restante NO pre-llenamos los datos de despacho del origen
+  // (dirección, fecha, chofer): el restante es una entrega nueva y el
+  // usuario decide esos datos desde cero.
   useEffect(() => {
     if (!open || !entrega) return
+    if (restante) {
+      // En restante el form arranca limpio, pero conservamos la dirección
+      // seleccionada de la venta original para que el modal cargue D1/D2/D3/D4
+      // del cliente igual que en crear-venta.
+      form.resetFields()
+      form.setFieldValue(
+        'direccion_seleccionada',
+        entrega.venta?.direccion_seleccionada || 'D1',
+      )
+      return
+    }
     form.setFieldsValue({
       quien_entrega: entrega.quien_entrega || 'almacen',
       observaciones: entrega.observaciones || '',
-      // Datos de Domicilio — el chofer puede editarlos antes de salir.
       despachador_id: entrega.chofer_id || undefined,
       tipo_pedido: entrega.tipo_pedido || 'interno',
       cargo_destino: entrega.cargo_destino || undefined,
@@ -108,26 +158,53 @@ export default function ModalEntregaUpdate({
       latitud: entrega.latitud != null ? Number(entrega.latitud) : undefined,
       longitud: entrega.longitud != null ? Number(entrega.longitud) : undefined,
       vehiculo_id: entrega.vehiculo_id || undefined,
+      direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
     })
-  }, [open, entrega, form])
+  }, [open, entrega, restante, form])
 
-  // Productos pre-cargados desde la entrega para llenar la tabla — el modal
-  // los recibe vía `productosIniciales` (en lugar de derivar del form).
+  // Productos pre-cargados desde la entrega para llenar la tabla.
   // Shape del backend (snake_case):
   //   productos_entregados[].unidad_derivada_venta
   //     .producto_almacen_venta.producto_almacen.producto.name
   //
-  // IMPORTANTE: el backend al crear la venta auto-crea el detalle de entrega
-  // con `cantidad_entregada = total` y `cantidad_pendiente = 0` ANTES de que
-  // se haya entregado físicamente (es solo el "plan"). Solo cuando
-  // `estado_entrega='en'` la entrega está realmente completada. Por eso aquí
-  // se interpreta `cantidad_entregada` según el estado:
-  //   - 'en' (entregado): la entrega ya se completó, mostrar todo entregado.
-  //   - 'pe' (pendiente) / 'ec' (en camino): nada se ha entregado todavía,
-  //     el `entregar` por defecto es la cantidad total para que el usuario
-  //     solo tenga que confirmar (o ajustar si es entrega parcial).
+  // Reglas según el modo:
+  //   - restante=true: solo incluir productos con `cantidad_pendiente > 0`
+  //     (los que faltan por entregar). `total = pendiente`, `entregado = 0`,
+  //     `entregar = pendiente` (sugerencia: entregar todo lo que queda).
+  //   - restante=false: comportamiento histórico — si la entrega ya está 'en'
+  //     mostrar todo entregado, si está 'pe'/'ec' mostrar entregar = total.
   const productosIniciales: ProductoEntrega[] = useMemo(() => {
     if (!entrega?.productos_entregados) return []
+
+    if (restante) {
+      // En modo restante mostramos el total ORIGINAL de la venta (no solo el
+      // pendiente). Eso da contexto al usuario: "se vendieron 10, se entregaron
+      // 5, quedan 5". El campo `entregar` arranca con el pendiente sugerido,
+      // pero el usuario puede entregar solo una parte y programar el resto.
+      return entrega.productos_entregados
+        .map((p: any, index: number) => {
+          const ud = p.unidad_derivada_venta || {}
+          const pav = ud.producto_almacen_venta || {}
+          const prod = pav.producto_almacen?.producto || {}
+          const totalOriginal = Number(ud.cantidad ?? 0)
+          const pendiente = Number(ud.cantidad_pendiente || 0)
+          if (pendiente <= 0) return null
+          const entregadoYa = Math.max(0, totalOriginal - pendiente)
+          return {
+            id: index + 1,
+            producto: prod.name || p.producto_name || '',
+            ubicacion: '',
+            total: totalOriginal,
+            entregado: entregadoYa,
+            pendiente,
+            entregar: pendiente,
+            entregar_programado: 0,
+            unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
+          }
+        })
+        .filter(Boolean) as ProductoEntrega[]
+    }
+
     const yaEntregada = entrega.estado_entrega === 'en'
     return entrega.productos_entregados.map((p: any, index: number) => {
       const ud = p.unidad_derivada_venta || {}
@@ -144,45 +221,51 @@ export default function ModalEntregaUpdate({
         total,
         entregado: entregadoReal,
         pendiente: pendienteReal,
-        // Por defecto sugerimos entregar todo lo pendiente. Si la entrega
-        // ya está completada, `entregar=0` (no hay nada por hacer).
         entregar: pendienteReal,
         entregar_programado: 0,
         unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
       }
     })
-  }, [entrega])
+  }, [entrega, restante])
 
   if (!entrega) return null
 
-  // Mapeo del `tipo_entrega` (API) al `tipoDespachoUI` que renderiza el modal.
-  // - 'rt' (Recojo en Tienda) → usamos UI de Parcial PERO con todo oculto
-  //   excepto la tabla, porque el modal nativo de EnTienda no tiene tabla.
-  // - 'de' (Domicilio)        → UI de Domicilio: tabla + dirección + mapa +
-  //   fecha + chofer + vehículo + observaciones.
-  // - 'pa' (Parcial)          → UI de Parcial: tabla + counters.
-  const tipoEntrega = entrega.tipo_entrega as 'rt' | 'de' | 'pa'
+  // Mapeo del `tipoLocal` (UI) al `tipoDespachoUI` que renderiza el modal.
+  // - 'EnTienda' → UI Parcial con todo oculto excepto la tabla.
+  // - 'Domicilio' → UI Domicilio.
+  // - 'Parcial' → UI Parcial con counters.
   const tipoDespachoUI: TipoDespachoUI =
-    tipoEntrega === 'de' ? 'Domicilio' : 'Parcial'
+    tipoLocal === 'Domicilio' ? 'Domicilio' : 'Parcial'
 
   // Qué secciones se ocultan según el tipo. Comunes a todos: 'omitir' (no
-  // aplica al actualizar), 'quien-entrega' (ya fijado), 'tipo-pedido' (ya
-  // fijado en la venta).
+  // aplica al actualizar/crear-resto), 'quien-entrega' (ya fijado en la venta),
+  // 'tipo-pedido' (ya fijado en la venta).
+  //
+  // Para Parcial:
+  //   - Modo restante: NO ocultamos 'programar-resto' — el usuario puede
+  //     entregar parte ahora y programar el resto con dirección + mapa + chofer
+  //     (igual que al crear la venta).
+  //   - Modo update normal: ocultamos 'programar-resto' porque la entrega
+  //     existente ya tiene su programación previa y solo se confirma.
   const ocultarBase: SeccionOcultable[] = ['omitir', 'quien-entrega', 'tipo-pedido']
   const ocultar: SeccionOcultable[] =
-    tipoEntrega === 'rt'
-      ? [...ocultarBase, 'programar-resto'] // RT: solo tabla
-      : tipoEntrega === 'de'
-      ? [...ocultarBase] // Domicilio: tabla + datos de despacho
-      : [...ocultarBase, 'programar-resto'] // Parcial: tabla + counters (sin resto)
+    tipoLocal === 'EnTienda'
+      ? [...ocultarBase, 'programar-resto']
+      : tipoLocal === 'Domicilio'
+      ? [...ocultarBase]
+      : restante
+      ? [...ocultarBase] // Parcial restante: incluir programar-resto + mapa
+      : [...ocultarBase, 'programar-resto'] // Parcial update: solo tabla + counters
 
-  // Header del modal según el tipo real de entrega.
-  const tituloPorTipo: Record<string, string> = {
-    rt: 'Despacho en Tienda',
-    de: 'Despacho a Domicilio',
-    pa: 'Despacho Parcial',
+  // Header del modal — distingue restante vs actualización normal.
+  const tituloPorTipo: Record<TipoDespachoUI, string> = {
+    EnTienda: 'Despacho en Tienda',
+    Domicilio: 'Despacho a Domicilio',
+    Parcial: 'Despacho Parcial',
   }
-  const tituloOverride = tituloPorTipo[tipoEntrega] ?? 'Configurar Entrega'
+  const tituloOverride = restante
+    ? `Entregar Restante — ${tituloPorTipo[tipoLocal]}`
+    : tituloPorTipo[tipoLocal]
 
   // Etiqueta read-only de "quién entrega" — viene de la venta y se muestra
   // como info para el usuario (no se vuelve a preguntar).
@@ -195,9 +278,11 @@ export default function ModalEntregaUpdate({
     ? `Entrega: ${quienEntregaLabel[entrega.quien_entrega] ?? entrega.quien_entrega}`
     : undefined
 
-  // Botón "Cambiar tipo de entrega" — solo si la entrega no se completó
-  // ('en') ni se canceló ('ca'). Una vez entregada/cancelada no tiene sentido.
-  const puedeCambiarTipo = entrega.estado_entrega !== 'en' && entrega.estado_entrega !== 'ca'
+  // Botón "Cambiar tipo de entrega":
+  //   - En modo restante: siempre disponible (la entrega origen no se toca).
+  //   - En modo update: solo si la entrega no se completó ('en') ni se canceló ('ca').
+  const puedeCambiarTipo =
+    restante || (entrega.estado_entrega !== 'en' && entrega.estado_entrega !== 'ca')
   const accionesHeader = (
     <div className="flex items-center gap-2">
       <ButtonBase
@@ -219,6 +304,19 @@ export default function ModalEntregaUpdate({
     </div>
   )
 
+  // Mode del ModalDetallesEntrega — actualizar la entrega existente vs.
+  // crear una nueva entrega para los productos pendientes.
+  const mode = restante
+    ? ({
+        kind: 'crear-entrega-resto' as const,
+        ventaId: entrega.venta_id,
+        entregaOrigen: {
+          almacen_salida_id: entrega.almacen_salida_id,
+          user_id: entrega.user_id,
+        },
+      } as const)
+    : ({ kind: 'actualizar-entrega' as const, entregaId: entrega.id } as const)
+
   return (
     <>
       <ModalDetallesEntrega
@@ -226,16 +324,17 @@ export default function ModalEntregaUpdate({
         setOpen={setOpen}
         form={form}
         tipoDespacho={tipoDespachoUI}
-        mode={{ kind: 'actualizar-entrega', entregaId: entrega.id }}
+        mode={mode}
         ocultar={ocultar}
         productosIniciales={productosIniciales}
         tituloOverride={tituloOverride}
         infoExtra={quienEntregaInfo}
         accionesHeader={accionesHeader}
         clienteNombre={entrega.venta?.cliente?.razon_social || entrega.venta?.cliente?.nombres}
+        clienteId={entrega.venta?.cliente_id ?? entrega.venta?.cliente?.id}
         direccion={entrega.direccion_entrega || ''}
         onConfirmar={() => {
-          message.success('Entrega actualizada')
+          message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
           onSuccess?.()
         }}
@@ -248,7 +347,7 @@ export default function ModalEntregaUpdate({
         open={modalSeleccionarTipoOpen}
         setOpen={setModalSeleccionarTipoOpen}
         onSelectTipo={handleSelectTipoDespacho}
-        defaultTipo={tipoEntrega === 'rt' ? 'EnTienda' : tipoEntrega === 'de' ? 'Domicilio' : 'Parcial'}
+        defaultTipo={tipoLocal}
       />
     </>
   )

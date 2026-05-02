@@ -32,11 +32,11 @@ interface EntregaDB {
   updated_at: string
   venta?: any
   chofer?: any
-  almacenSalida?: any
-  productosEntregados?: any[]
+  almacen_salida?: any
+  productos_entregados?: any[]
 }
 
-type AccionEntrega = 'despachar' | 'marcar' | 'parcial' | 'confirmar' | null
+type AccionEntrega = 'despachar' | 'marcar' | 'parcial' | 'confirmar' | 'restante' | null
 
 type UseStoreEntregaSeleccionada = {
   entrega?: EntregaDB
@@ -66,16 +66,26 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
 )
 
 // Función para calcular el color de una entrega.
+//
+// Caso especial: una entrega con `estado='en'` puede tener productos con
+// `cantidad_pendiente > 0` (entregado parcial — se entregaron 5 de 10).
+// En ese caso pintamos la fila NARANJA en vez de verde, porque sigue habiendo
+// trabajo pendiente y el usuario tiene que poder verlo de un vistazo.
 function calcularColorEntrega(entrega: EntregaDB): string {
   const estado = entrega.estado_entrega
+
+  if (estado === 'en') {
+    const tienePendiente = entrega.productos_entregados?.some(
+      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0,
+    )
+    return tienePendiente ? orangeColors[2] : greenColors[2]
+  }
 
   switch (estado) {
     case 'pe': // Pendiente — naranja para que destaque que requiere acción
       return orangeColors[2]
     case 'ec': // En Camino — azul para indicar que está en proceso
       return blueColors[2]
-    case 'en': // Entregado — verde para indicar éxito/completado
-      return greenColors[2]
     case 'ca': // Cancelado — rojo para distinguir
       return redColors[2]
     default:

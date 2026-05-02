@@ -24,7 +24,13 @@ export function useTotalesParcial(productos: ProductoEntrega[]) {
     () =>
       productos.reduce(
         (acc, item) =>
-          acc + Math.max(0, item.total - item.entregar - item.entregar_programado),
+          acc +
+          Math.max(
+            0,
+            // Descuenta también `entregado` (>0 solo en `crear-entrega-resto`,
+            // donde representa lo entregado en entregas previas).
+            item.total - item.entregar - item.entregar_programado - (item.entregado || 0),
+          ),
         0,
       ),
     [productos],

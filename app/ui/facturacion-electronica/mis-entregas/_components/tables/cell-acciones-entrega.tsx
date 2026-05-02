@@ -40,6 +40,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
   const [modalAnularOpen, setModalAnularOpen] = useState(false)
+  const [modalRestante, setModalRestante] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const { message } = useApp()
   const queryClient = useQueryClient()
@@ -62,6 +63,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     else if (accionTrigger === 'parcial') setModalParcialOpen(true)
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
     else if (accionTrigger === 'despachar') setModalDespachoOpen(true)
+    else if (accionTrigger === 'restante') { setModalRestante(true); setModalMarcarOpen(true) }
     triggerAccion(null) // resetear el trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accionTrigger])
@@ -293,10 +295,12 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
             setModalMarcarOpen(false)
             setModalParcialOpen(false)
             setModalDespachoOpen(false)
+            setModalRestante(false)
           }
         }}
         entrega={entrega}
         onSuccess={onSuccess}
+        restante={modalRestante}
       />
 
       {/* Modal de Confirmar Entrega */}
@@ -315,6 +319,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         entrega={entrega}
         onSuccess={onSuccess}
       />
+
     </div>
   )
 }
