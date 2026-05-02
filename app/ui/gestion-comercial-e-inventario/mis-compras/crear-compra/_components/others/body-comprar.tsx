@@ -52,6 +52,7 @@ export interface FormCreateCompra {
     nuevo_precio_especial?: number
     nuevo_precio_minimo?: number
     nuevo_precio_ultimo?: number
+    costo_actual?: number
   }[]
   fecha: Dayjs
   tipo_moneda: TipoMoneda
