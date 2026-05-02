@@ -167,6 +167,12 @@ export default function FiltersMisVentas() {
       }
     }
 
+    // Cuando el usuario busca una venta específica (por Serie-N° exacto o
+    // por search/cliente_search_text), las fechas no deben filtrar — la
+    // venta puede ser de cualquier día. Caso contrario, aplicar el rango
+    // de fechas (default = HOY) como antes.
+    const ignorarFechas = !!(serie && numero) || !!globalSearch;
+
     // Construir objeto de filtros solo con valores definidos
     const data: any = {
       ...rest,
@@ -176,9 +182,9 @@ export default function FiltersMisVentas() {
       ...(!cliente_id && globalSearch
         ? { search: globalSearch }
         : {}),
-      // Incluir fechas si existen
-      ...(desde ? { desde: desde.format("YYYY-MM-DD") } : {}),
-      ...(hasta ? { hasta: hasta.format("YYYY-MM-DD") } : {}),
+      // Incluir fechas solo si NO se está buscando algo específico.
+      ...(!ignorarFechas && desde ? { desde: desde.format("YYYY-MM-DD") } : {}),
+      ...(!ignorarFechas && hasta ? { hasta: hasta.format("YYYY-MM-DD") } : {}),
       // Laravel API espera campos simples, no objetos anidados
       ...(serie ? { serie } : {}),
       ...(numero ? { numero } : {}),
