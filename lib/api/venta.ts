@@ -506,6 +506,7 @@ export interface CobroVenta {
   despliegue_de_pago?: {
     id: string
     name: string
+    activo?: boolean
     metodo_de_pago?: {
       id: string
       name: string

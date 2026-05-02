@@ -1,6 +1,6 @@
 'use client'
 
-import { Modal, DatePicker, Input, Button } from 'antd'
+import { Modal, DatePicker, Input, Button, Select } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta, type CobroVenta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -21,6 +21,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
   const [fechaDesde, setFechaDesde] = useState(dayjs().subtract(30, 'days'))
   const [fechaHasta, setFechaHasta] = useState(dayjs())
   const [searchText, setSearchText] = useState('')
+  const [estadoMetodoPago, setEstadoMetodoPago] = useState<string>('todos')
 
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
 
@@ -50,7 +51,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
 
   const allCobros = cobrosResponse ?? []
 
-  // Filtrar cobros por fecha y búsqueda
+  // Filtrar cobros por fecha, búsqueda y estado de método de pago
   const cobrosFiltrados = useMemo(() => {
     let filtered = allCobros ?? []
 
@@ -76,8 +77,21 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       })
     }
 
+    // Filtrar por estado del método de pago
+    if (estadoMetodoPago !== 'todos') {
+      filtered = filtered.filter(cobro => {
+        const esActivo = (cobro.despliegue_de_pago as any)?.activo ?? true
+        if (estadoMetodoPago === 'activos') {
+          return esActivo
+        } else if (estadoMetodoPago === 'anulados') {
+          return !esActivo
+        }
+        return true
+      })
+    }
+
     return filtered
-  }, [allCobros, fechaDesde, fechaHasta, searchText])
+  }, [allCobros, fechaDesde, fechaHasta, searchText, estadoMetodoPago])
 
   // Total importe
   const totalImporte = useMemo(() =>
@@ -192,6 +206,19 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
             onChange={(d) => d && setFechaHasta(d)}
             format='DD/MM/YYYY'
             className='w-full'
+          />
+        </div>
+        <div>
+          <label className='text-xs font-medium text-gray-600'>Estado Método de Pago:</label>
+          <Select
+            value={estadoMetodoPago}
+            onChange={setEstadoMetodoPago}
+            style={{ width: 200 }}
+            options={[
+              { label: 'Todos', value: 'todos' },
+              { label: 'Activos', value: 'activos' },
+              { label: 'Anulados/Desactivados', value: 'anulados' },
+            ]}
           />
         </div>
         <div className='flex-1'>
