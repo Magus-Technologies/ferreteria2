@@ -159,7 +159,7 @@ export const gananciasApi = {
   },
 
   /**
-   * Obtener detalle de pérdidas
+   * Obtener detalle de pérdidas (legacy - solo ventas bajo costo y salidas)
    */
   getPerdidasDetalle: async (filters?: any) => {
     const params = new URLSearchParams();
@@ -173,5 +173,39 @@ export const gananciasApi = {
     const queryString = params.toString();
     const url = queryString ? `/ganancias/perdidas-detalle?${queryString}` : '/ganancias/perdidas-detalle';
     return apiRequest<{ data: { detalles: any[]; resumen: any } }>(url);
+  },
+
+  /**
+   * Obtener análisis completo de pérdidas (todas las categorías)
+   */
+  getAnalisisPerdidas: async (filters?: any) => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/analisis-perdidas?${queryString}` : '/analisis-perdidas';
+    return apiRequest<{ 
+      data: { 
+        detalles: any[]; 
+        resumen: {
+          ventas_bajo_costo: number;
+          descuentos_aplicados: number;
+          comisiones_vendedor: number;
+          salidas_almacen: number;
+          notas_credito: number;
+          total_perdidas: number;
+        };
+        por_categoria: Array<{
+          categoria: string;
+          monto: number;
+          cantidad: number;
+        }>;
+      } 
+    }>(url);
   },
 };
