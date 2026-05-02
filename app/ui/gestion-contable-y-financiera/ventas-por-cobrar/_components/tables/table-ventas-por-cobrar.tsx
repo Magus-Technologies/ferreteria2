@@ -51,10 +51,13 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       const serieFilter = filtros.OR.find((f: any) => f?.serie?.contains)
       if (serieFilter) search = (serieFilter as any).serie.contains as string
     }
+    const fechaFiltro = (filtros as any).fecha
     return {
       almacen_id: filtros.almacen_id as number | undefined,
       cliente_id: filtros.cliente_id as number | undefined,
       user_id: filtros.user_id as string | undefined,
+      desde: fechaFiltro?.gte as string | undefined,
+      hasta: fechaFiltro?.lte as string | undefined,
       search,
       per_page: -1,
     }
@@ -74,7 +77,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const rowData = useMemo(() => {
     const ventas = data?.data ?? []
     const filtradas = aplicarFiltroMora(ventas, moraRango)
-    return [...filtradas].sort((a, b) => calcularMora(a) - calcularMora(b))
+    return [...filtradas].sort((a, b) => Number(b.id) - Number(a.id))
   }, [data?.data, moraRango])
 
   // Función para calcular el total de una venta
@@ -205,7 +208,6 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     {
       headerName: 'Moras',
       width: 80,
-      sort: 'desc',
       cellRenderer: (params: any) => {
         const mora = calcularMora(params.data as VentaCompleta)
         if (mora <= 0) return <span className='text-black'>{mora}</span>

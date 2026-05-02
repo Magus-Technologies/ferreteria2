@@ -54,9 +54,6 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     }, 0)
   }, [localVenta])
 
-  const totalPagado = Number(localVenta?.total_cobrado || 0)
-  const saldoPendiente = totalVenta - totalPagado
-
   // Obtener cobros previos
   const { data: cobrosData } = useQuery({
     queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id],
@@ -69,6 +66,15 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   })
 
   const cobros = cobrosData?.data ?? []
+
+  // Calcular desde cobros en tiempo real para que se actualice sin cerrar el modal
+  const totalPagado = useMemo(
+    () => cobros
+      .filter((c: any) => c.estado !== false && c.estado !== 0)
+      .reduce((sum: number, c: any) => sum + Number(c.monto || 0), 0),
+    [cobros]
+  )
+  const saldoPendiente = totalVenta - totalPagado
 
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({

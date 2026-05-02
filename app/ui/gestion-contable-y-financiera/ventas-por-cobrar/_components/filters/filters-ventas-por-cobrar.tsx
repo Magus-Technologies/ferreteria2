@@ -132,8 +132,8 @@ export default function FiltersVentasPorCobrar() {
           ...rest,
           ...(desde || hasta ? {
             fecha: {
-              ...(desde && { gte: toUTCBD({ date: desde.startOf('day') }) }),
-              ...(hasta && { lte: toUTCBD({ date: hasta.endOf('day') }) }),
+              ...(desde && { gte: desde.format('YYYY-MM-DD') }),
+              ...(hasta && { lte: hasta.format('YYYY-MM-DD') }),
             }
           } : {}),
           estado_de_venta: {
