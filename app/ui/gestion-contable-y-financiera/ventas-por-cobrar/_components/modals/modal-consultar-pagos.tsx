@@ -51,7 +51,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
 
   const allCobros = cobrosResponse ?? []
 
-  // Filtrar cobros por fecha, búsqueda y estado de método de pago
+  // Filtrar cobros por fecha, búsqueda y estado
   const cobrosFiltrados = useMemo(() => {
     let filtered = allCobros ?? []
 
@@ -61,9 +61,9 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       const desde = fechaDesde.startOf('day')
       const hasta = fechaHasta.endOf('day')
       
-      // Verificar que la fecha del cobro esté dentro del rango
-      return fechaCobro.isAfter(desde) && fechaCobro.isBefore(hasta) ||
-             fechaCobro.isSame(desde, 'day') || fechaCobro.isSame(hasta, 'day')
+      // Verificar que la fecha del cobro esté dentro del rango (inclusivo)
+      return (fechaCobro.isAfter(desde) || fechaCobro.isSame(desde, 'day')) &&
+             (fechaCobro.isBefore(hasta) || fechaCobro.isSame(hasta, 'day'))
     })
 
     // Filtrar por texto
@@ -81,10 +81,10 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       })
     }
 
-    // Filtrar por estado del método de pago
+    // Filtrar por estado del cobro (activo/anulado)
     if (estadoMetodoPago !== 'todos') {
       filtered = filtered.filter(cobro => {
-        const esActivo = (cobro.despliegue_de_pago as any)?.activo ?? true
+        const esActivo = cobro.estado ?? true
         if (estadoMetodoPago === 'activos') {
           return esActivo
         } else if (estadoMetodoPago === 'anulados') {

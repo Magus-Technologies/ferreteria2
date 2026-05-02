@@ -108,6 +108,11 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     setVentaSeleccionadaPdf(venta)
     setPdfModalOpen(true)
     setPdfLoading(true)
+    
+    // Limpiar el PDF anterior
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl)
+    }
     setPdfUrl(null)
     
     try {
@@ -131,7 +136,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     } finally {
       setPdfLoading(false)
     }
-  }, [])
+  }, [pdfUrl])
 
   // Limpiar URL al cerrar modal
   const handleClosePdfModal = useCallback((v: boolean) => {
@@ -146,16 +151,11 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   // Recargar PDF cuando cambie el formato (ticket/A4)
   useEffect(() => {
     if (pdfModalOpen && ventaSeleccionadaPdf) {
-      // Limpiar el PDF anterior
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl)
-        setPdfUrl(null)
-      }
-      
       const formato = esTicketFormato ? 'ticket' : 'a4'
       handleVerPdf(ventaSeleccionadaPdf, formato)
     }
-  }, [esTicketFormato, pdfModalOpen, ventaSeleccionadaPdf, handleVerPdf, pdfUrl])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esTicketFormato])
 
   // Función para calcular el total de una venta
   const calcularTotalVenta = useCallback((venta: VentaCompleta) => {
