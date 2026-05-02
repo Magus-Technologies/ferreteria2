@@ -30,6 +30,7 @@ import { ordenCompraApi } from '~/lib/api/orden-compra'
 import dayjs from 'dayjs'
 import { useUltimaCalificacionProveedor } from '../../_hooks/use-ultima-calificacion-proveedor'
 import FloatingCalificacionProveedor from '../alerts/floating-calificacion-proveedor'
+import ModalEditarPreciosProducto from '~/app/_components/modals/modal-editar-precios-producto'
 
 export interface FormCreateCompra {
   productos: {
@@ -107,6 +108,10 @@ export default function BodyComprar({
   const [proveedorRucInicial, setProveedorRucInicial] = useState('')
   const [proveedorId, setProveedorId] = useState<number | undefined>(undefined)
 
+  // Estado para el modal de editar precios
+  const [modalEditarPreciosOpen, setModalEditarPreciosOpen] = useState(false)
+  const [detallePrecioSeleccionado, setDetallePrecioSeleccionado] = useState<any>(null)
+
   // Hook para obtener la última calificación del proveedor
   const { data: calificacionResponse, isLoading: loadingCalificacion } = useUltimaCalificacionProveedor(proveedorId)
 
@@ -115,6 +120,26 @@ export default function BodyComprar({
     setProductoAgregadoCompra(undefined)
     return () => setProductoAgregadoCompra(undefined)
   }, [])
+
+  // Listener para abrir el modal de editar precios
+  useEffect(() => {
+    const handleOpenModal = (event: Event) => {
+      const customEvent = event as CustomEvent<{ productoId: number; unidadDerivadaId: number }>
+      const { productoId, unidadDerivadaId } = customEvent.detail
+      
+      // Construir el detallePrecio a partir de los IDs
+      // El modal espera un objeto con la estructura DetalleDePreciosProps
+      setDetallePrecioSeleccionado({
+        producto_id: productoId,
+        unidad_derivada_id: unidadDerivadaId,
+        almacen_id: almacen_id,
+      })
+      setModalEditarPreciosOpen(true)
+    }
+
+    window.addEventListener('openEditarPreciosModal', handleOpenModal)
+    return () => window.removeEventListener('openEditarPreciosModal', handleOpenModal)
+  }, [almacen_id])
 
   // Escuchar cambios en el proveedor_id del form usando form.getFieldValue
   useEffect(() => {
@@ -142,6 +167,7 @@ export default function BodyComprar({
         lote: p.lote ?? '',
         bonificacion: false,
         subtotal: p.subtotal,
+        costo_actual: (p as any).costo_actual ?? 0,
       }))
       // Pre-cargar proveedor en el SelectProveedores para mostrar RUC correctamente
       if (orden.proveedor) {
@@ -241,6 +267,14 @@ export default function BodyComprar({
           />
         </div>
       </FormBase>
+
+      {/* Modal para editar precios de venta */}
+      <ModalEditarPreciosProducto
+        open={modalEditarPreciosOpen}
+        setOpen={setModalEditarPreciosOpen}
+        detallePrecio={detallePrecioSeleccionado}
+        almacen_id={almacen_id ?? 0}
+      />
     </div>
   )
 }

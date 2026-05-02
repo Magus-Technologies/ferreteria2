@@ -401,13 +401,27 @@ export function useColumnsComprar({
         const costoEnUnidad = costoActual * factor
         const costoCambio = !bonificacion && costoActual > 0 && precioCompra > 0 && Math.abs(precioCompra - costoEnUnidad) > 0.0001
 
+        const productoId = form.getFieldValue(['productos', value, 'producto_id'])
+        const unidadDerivadaId = form.getFieldValue(['productos', value, 'unidad_derivada_id'])
+
         return (
           <div className='flex items-center gap-1 h-full'>
             {costoCambio && (
-              <Tooltip title={`Costo anterior: S/. ${costoEnUnidad.toFixed(4)}`}>
-                <span className='flex items-center'>
-                  <TbAlertTriangleFilled size={13} className='text-amber-500 shrink-0' />
-                </span>
+              <Tooltip title={`Costo anterior: S/. ${costoEnUnidad.toFixed(4)} - Click para ajustar precios de venta`}>
+                <button
+                  type='button'
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // Disparar evento personalizado para abrir el modal
+                    const event = new CustomEvent('openEditarPreciosModal', {
+                      detail: { productoId, unidadDerivadaId }
+                    })
+                    window.dispatchEvent(event)
+                  }}
+                  className='flex items-center cursor-pointer hover:scale-110 transition-transform'
+                >
+                  <TbAlertTriangleFilled size={16} className='text-amber-500 shrink-0' />
+                </button>
               </Tooltip>
             )}
             <InputNumberBase
