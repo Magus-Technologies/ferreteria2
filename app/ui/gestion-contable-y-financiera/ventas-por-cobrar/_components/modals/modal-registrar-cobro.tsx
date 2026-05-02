@@ -15,7 +15,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
 import { greenColors } from '~/lib/colors'
 import { getAuthToken } from '~/lib/api'
-import { FaFileAlt, FaTrash } from 'react-icons/fa'
+import { FaFileAlt, FaTrash, FaPrint } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 
 interface ModalRegistrarCobroProps {
@@ -112,6 +112,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   const [observacionAnulacion, setObservacionAnulacion] = useState('')
   const [anularLoading, setAnularLoading] = useState(false)
 
+  // Estado para modal de impresión masiva de tickets
+  const [impresionMasivaOpen, setImpresionMasivaOpen] = useState(false)
+  const [ticketsMasivosPdfUrl, setTicketsMasivosPdfUrl] = useState<string | null>(null)
+  const [ticketsMasivosLoading, setTicketsMasivosLoading] = useState(false)
+
   // Estado para mostrar/ocultar campo N° Operación
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<any>(null)
 
@@ -159,30 +164,6 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     }
   }, [message])
 
-  // Anular un cobro
-  const handleAnularCobro = useCallback(async (cobroId: string) => {
-    if (!localVenta?.id) return
-    
-    const confirmed = window.confirm('¿Está seguro de anular este cobro? Esta acción no se puede deshacer.')
-    if (!confirmed) return
-
-    try {
-      const result = await ventaApi.anularCobro(localVenta.id, cobroId)
-      if (result.error) {
-        message.error(result.error.message)
-        return
-      }
-      message.success(result.data?.message || 'Cobro anulado correctamente')
-      // Refrescar datos
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta.id] })
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
-    } catch (error: any) {
-      message.error(error?.message || 'Error al anular el cobro')
-    }
-  }, [localVenta, message, queryClient])
-
   // Limpiar URL al cerrar modal de ticket
   const handleCloseTicketModal = useCallback((v: boolean) => {
     setTicketModalOpen(v)
@@ -191,6 +172,48 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       setTicketPdfUrl(null)
     }
   }, [ticketPdfUrl])
+
+  // Imprimir masivamente todos los tickets de cobro
+  const handleImpresionMasiva = useCallback(async () => {
+    if (!cobros || cobros.length === 0) {
+      message.warning('No hay cobros registrados para imprimir')
+      return
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
+    const token = getAuthToken()
+    setImpresionMasivaOpen(true)
+    setTicketsMasivosLoading(true)
+    setTicketsMasivosPdfUrl(null)
+    try {
+      const cobroIds = cobros.map((c: any) => c.id).join(',')
+      const res = await fetch(`${API_URL}/pdf/cobro-venta-multiple?ids=${cobroIds}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      })
+      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      setTicketsMasivosPdfUrl(url)
+    } catch (err) {
+      console.error('Error al obtener tickets masivos:', err)
+      message.error('Error al generar los tickets masivos')
+      setImpresionMasivaOpen(false)
+    } finally {
+      setTicketsMasivosLoading(false)
+    }
+  }, [cobros, message])
+
+  // Limpiar URL al cerrar modal de impresión masiva
+  const handleCloseImpresionMasivaModal = useCallback((v: boolean) => {
+    setImpresionMasivaOpen(v)
+    if (!v && ticketsMasivosPdfUrl) {
+      URL.revokeObjectURL(ticketsMasivosPdfUrl)
+      setTicketsMasivosPdfUrl(null)
+    }
+  }, [ticketsMasivosPdfUrl])
 
   // Abrir modal para anular cobro
   const handleOpenAnularModal = useCallback((cobro: CobroVenta) => {
@@ -417,6 +440,19 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         </div>
       </div>
 
+      {/* Botón de impresión masiva - Arriba */}
+      <div className='mt-3 flex justify-end'>
+        <button
+          onClick={handleImpresionMasiva}
+          disabled={!cobros || cobros.length === 0}
+          className='px-3 py-1.5 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5'
+          title={cobros && cobros.length > 0 ? `Imprimir ${cobros.length} ticket(s)` : 'No hay cobros para imprimir'}
+        >
+          <FaPrint size={12} />
+          <span className='text-xs'>Imprimir Tickets ({cobros?.length || 0})</span>
+        </button>
+      </div>
+
       {/* Formulario */}
       <Form form={form} layout='vertical' initialValues={{ fecha: dayjs() }}>
         <div className='grid grid-cols-4 gap-3'>
@@ -594,6 +630,19 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         </div>
       </div>
     </Modal>
+
+    {/* Modal para impresión masiva de tickets */}
+    <ModalShowDoc
+      open={impresionMasivaOpen}
+      setOpen={handleCloseImpresionMasivaModal}
+      nro_doc='Comprobantes de Cobro Masivos'
+      esTicket
+      tipoDocumento='venta'
+      backendPdfUrl={ticketsMasivosPdfUrl}
+      backendPdfLoading={ticketsMasivosLoading}
+    >
+      <></>
+    </ModalShowDoc>
     </>
   )
 }

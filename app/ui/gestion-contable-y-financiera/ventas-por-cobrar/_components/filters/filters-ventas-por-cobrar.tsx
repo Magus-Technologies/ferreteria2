@@ -2,7 +2,7 @@
 
 // Filtros para ventas por cobrar
 import { Form, Drawer, Badge, Select } from 'antd'
-import { FaSearch, FaFilter } from 'react-icons/fa'
+import { FaSearch, FaFilter, FaPrint } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -284,6 +284,18 @@ export default function FiltersVentasPorCobrar() {
           >
             <FaSearch />
           </ButtonBase>
+          <button
+            type='button'
+            onClick={() => {
+              // Este evento será manejado desde el componente padre
+              const event = new CustomEvent('imprimirReporteVentasPorCobrar')
+              window.dispatchEvent(event)
+            }}
+            className='flex items-center justify-center flex-shrink-0 mt-4 w-10 h-10 rounded bg-red-600 text-white hover:bg-red-700'
+            title='Imprimir reporte de ventas filtradas'
+          >
+            <FaPrint size={16} />
+          </button>
         </div>
 
         {/* Mobile/Tablet: Solo almacén y botones */}
