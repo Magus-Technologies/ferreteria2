@@ -23,6 +23,7 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
 import { FormaDePago } from '~/lib/api/venta'
+import dayjs from 'dayjs'
 
 interface ValuesFiltersVentasPorCobrar {
   almacen_id: number
@@ -56,12 +57,41 @@ export default function FiltersVentasPorCobrar() {
   const applyQuickFilter = useCallback((rango: MoraRango) => {
     setQuickFilterActive(rango)
     setMoraRango(rango)
-    // Para todos los rangos, el backend trae todas las ventas cr y el frontend filtra por mora
-    form.setFieldsValue({ desde: undefined, hasta: undefined })
+    
+    // Calcular fechas según el rango
+    let desde: dayjs.Dayjs | undefined
+    let hasta: dayjs.Dayjs | undefined
+    
+    if (rango === 'hoy') {
+      desde = dayjs().startOf('day')
+      hasta = dayjs().endOf('day')
+    } else if (rango === 'vencidas') {
+      // Para vencidas, traer desde hace 365 días hasta hoy
+      desde = dayjs().subtract(365, 'days').startOf('day')
+      hasta = dayjs().endOf('day')
+    } else if (typeof rango === 'number') {
+      // Para rangos numéricos (7, 15, 30, 60 días)
+      desde = dayjs().subtract(rango, 'days').startOf('day')
+      hasta = dayjs().endOf('day')
+    } else if (rango === 'todas') {
+      // Para todas, no aplicar filtro de fecha
+      desde = undefined
+      hasta = undefined
+    }
+    
+    // Actualizar el formulario con las fechas calculadas
+    form.setFieldsValue({ desde, hasta })
+    
     const data = {
       almacen_id,
       forma_de_pago: FormaDePago.CREDITO,
       estado_de_venta: { in: ['Creado'] },
+      ...(desde && hasta && {
+        fecha: {
+          gte: toUTCBD({ date: desde.startOf('day') }),
+          lte: toUTCBD({ date: hasta.endOf('day') }),
+        }
+      }),
     } satisfies VentaWhereInput
     setFiltros(data)
   }, [almacen_id, form, setFiltros, setMoraRango])
@@ -80,14 +110,25 @@ export default function FiltersVentasPorCobrar() {
   }, [form])
 
   useEffect(() => {
-    const data = {
-      almacen_id,
-      forma_de_pago: FormaDePago.CREDITO,
-      estado_de_venta: { in: ['Creado'] },
-    } satisfies VentaWhereInput
-    setFiltros(data)
+    // Aplicar el filtro rápido inicial (15 días)
+    applyQuickFilter(15)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [almacen_id])
+
+  // Listener para cuando se cambian las fechas manualmente
+  useEffect(() => {
+    // Monitorear cambios en los campos de fecha
+    const checkDateChanges = () => {
+      const { desde, hasta } = form.getFieldsValue(['desde', 'hasta'])
+      if ((desde || hasta) && quickFilterActive !== 'todas') {
+        setQuickFilterActive('todas')
+      }
+    }
+
+    // Ejecutar cuando el formulario cambia
+    const timer = setTimeout(checkDateChanges, 50)
+    return () => clearTimeout(timer)
+  }, [form, quickFilterActive])
 
   return (
     <FormBase
@@ -96,7 +137,6 @@ export default function FiltersVentasPorCobrar() {
       initialValues={{}}
       className='w-full'
       onFinish={values => {
-        setQuickFilterActive('todas')
         const {
           desde,
           hasta,
@@ -106,15 +146,23 @@ export default function FiltersVentasPorCobrar() {
           ...rest
         } = values
 
+        // Si se usan fechas manuales, limpiar el filtro rápido
+        if (desde || hasta) {
+          setQuickFilterActive('todas')
+          setMoraRango('todas')
+        }
+
         const data = {
           almacen_id: almacen_id || almacen_id,
           // Solo mostrar ventas a crédito
           forma_de_pago: FormaDePago.CREDITO,
           ...rest,
-          fecha: {
-            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
-          },
+          ...(desde || hasta ? {
+            fecha: {
+              ...(desde && { gte: toUTCBD({ date: desde.startOf('day') }) }),
+              ...(hasta && { lte: toUTCBD({ date: hasta.endOf('day') }) }),
+            }
+          } : {}),
           estado_de_venta: {
             in: ['Creado', 'Procesado'],
           },

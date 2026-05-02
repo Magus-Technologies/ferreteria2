@@ -423,7 +423,10 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           </LabelBase>
 
           {/* N° Operación solo si el método es digital (no efectivo) */}
-          {metodoPagoSeleccionado && !metodoPagoSeleccionado.name?.toUpperCase().includes('EFECTIVO') && (
+          {metodoPagoSeleccionado && 
+            !metodoPagoSeleccionado.label?.toUpperCase().includes('EFECTIVO') && 
+            !metodoPagoSeleccionado.name?.toUpperCase().includes('EFECTIVO') && 
+            !metodoPagoSeleccionado.tipo?.toUpperCase().includes('EFECTIVO') && (
             <LabelBase label='N° Operación:' orientation='column'>
               <Form.Item name='numero_operacion' rules={[{ required: true, message: 'Requerido para pagos digitales' }]} noStyle>
                 <Input placeholder='Nº operación' />
