@@ -32,11 +32,11 @@ interface EntregaDB {
   updated_at: string
   venta?: any
   chofer?: any
-  almacenSalida?: any
-  productosEntregados?: any[]
+  almacen_salida?: any
+  productos_entregados?: any[]
 }
 
-type AccionEntrega = 'despachar' | 'marcar' | 'parcial' | 'confirmar' | null
+type AccionEntrega = 'despachar' | 'marcar' | 'parcial' | 'confirmar' | 'restante' | null
 
 type UseStoreEntregaSeleccionada = {
   entrega?: EntregaDB

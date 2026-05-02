@@ -447,7 +447,7 @@ function ModalDetallesEntregaInner({
             totalAProgramar={totalAProgramar}
             totalSinProgramar={totalSinProgramar}
             ocultar={ocultarSet}
-            tablaSimple={resolvedMode.kind === 'actualizar-entrega'}
+            tablaSimple={resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto'}
           />
         )}
 
@@ -467,7 +467,7 @@ function ModalDetallesEntregaInner({
             totalSinProgramar={totalSinProgramar}
             restoDireccionEntrega={restoDireccionEntrega}
             ocultar={ocultarSet}
-            tablaSimple={resolvedMode.kind === 'actualizar-entrega'}
+            tablaSimple={resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto'}
           />
         )}
       </div>

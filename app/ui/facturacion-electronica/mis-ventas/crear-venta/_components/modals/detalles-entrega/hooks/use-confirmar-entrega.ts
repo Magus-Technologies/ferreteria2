@@ -5,7 +5,10 @@ import {
   entregaProductoApi,
   EstadoEntrega,
   QuienEntrega,
+  TipoEntrega,
+  TipoDespacho,
   TipoPedido,
+  type CreateEntregaProductoRequest,
   type UpdateEntregaProductoRequest,
 } from '~/lib/api/entrega-producto'
 import useCreateVenta from '../../../../_hooks/use-create-venta'
@@ -13,16 +16,31 @@ import { useDetallesEntrega } from '../context'
 import type { TipoDespachoUI } from '../types'
 
 /**
+ * Snapshot mínimo de la entrega "origen" de un restante — los datos que el
+ * backend ya tenía y que el restante hereda (almacén de salida y user que
+ * registró la venta).
+ */
+export interface EntregaOrigenResto {
+  almacen_salida_id: number
+  user_id: string
+}
+
+/**
  * Modo del modal — define qué pasa cuando el usuario presiona "Confirmar".
  *
  * - `crear-venta`: crea o edita una venta junto con su entrega (uso normal en
  *   `mis-ventas/crear-venta`). Es el comportamiento histórico del modal.
  * - `actualizar-entrega`: actualiza UNA entrega existente — usado al reusar
- *   este modal desde `mis-entregas`. Pendiente de implementar (Fase G).
+ *   este modal desde `mis-entregas` cuando la entrega aún está abierta.
+ * - `crear-entrega-resto`: crea una NUEVA entrega para los productos que
+ *   quedaron pendientes después de cerrar una entrega previa como `'en'`.
+ *   La venta original ya existe (`ventaId`), y el restante hereda
+ *   `almacen_salida_id` + `user_id` de la entrega origen.
  */
 export type ModoConfirmar =
   | { kind: 'crear-venta'; ventaId?: string }
   | { kind: 'actualizar-entrega'; entregaId: number }
+  | { kind: 'crear-entrega-resto'; ventaId: string; entregaOrigen: EntregaOrigenResto }
 
 interface UseConfirmarEntregaParams {
   mode: ModoConfirmar
@@ -207,6 +225,96 @@ export function useConfirmarEntrega({
   }, [mode, form, tipoDespacho, quienEntregaParcial, onSuccess])
 
   // ───────────────────────────────────────────────────────────────────────
+  // Modo CREAR-ENTREGA-RESTO — usado desde mis-entregas cuando la entrega
+  // origen ya está cerrada como 'en' pero quedaron productos con
+  // `cantidad_pendiente > 0`. Crea una NUEVA entrega (POST) sobre la misma
+  // venta usando los productos del Provider y los datos del form según el
+  // tipo de despacho elegido (EnTienda/Domicilio/Parcial).
+  // ───────────────────────────────────────────────────────────────────────
+  const [creandoEntregaResto, setCreandoEntregaResto] = useState(false)
+  const handleConfirmarCrearEntregaResto = useCallback(async () => {
+    if (mode.kind !== 'crear-entrega-resto') return
+    const v = form.getFieldsValue()
+
+    const tipoEntrega: TipoEntrega =
+      tipoDespacho === 'EnTienda'
+        ? TipoEntrega.RECOJO_EN_TIENDA
+        : tipoDespacho === 'Domicilio'
+        ? TipoEntrega.DESPACHO
+        : TipoEntrega.PARCIAL
+
+    // EnTienda y Parcial se entregan al confirmar (INMEDIATO + ENTREGADO).
+    // Domicilio sale a ruta (PROGRAMADO + EN_CAMINO).
+    const tipoDespachoApi: TipoDespacho =
+      tipoDespacho === 'Domicilio' ? TipoDespacho.PROGRAMADO : TipoDespacho.INMEDIATO
+    const estadoEntrega: EstadoEntrega =
+      tipoDespacho === 'Domicilio' ? EstadoEntrega.EN_CAMINO : EstadoEntrega.ENTREGADO
+
+    // Productos a incluir según el tipo:
+    //   - Domicilio: lo programado a entregar ahora (entregar_programado).
+    //     En este modo `tablaSimple`, el column def setea `entregar_programado`
+    //     con el valor que el usuario tipea en "Entregar".
+    //   - EnTienda/Parcial: lo de "entregar" (entrega física al cliente).
+    const productosFiltrados = productosEntrega.filter((p) =>
+      tipoDespacho === 'Domicilio' ? p.entregar_programado > 0 : p.entregar > 0,
+    )
+    if (productosFiltrados.length === 0) {
+      throw new Error('No hay productos a entregar — revisa las cantidades')
+    }
+
+    const payload: CreateEntregaProductoRequest = {
+      venta_id: mode.ventaId,
+      tipo_entrega: tipoEntrega,
+      tipo_despacho: tipoDespachoApi,
+      estado_entrega: estadoEntrega,
+      fecha_entrega: dayjs().format('YYYY-MM-DD'),
+      almacen_salida_id: mode.entregaOrigen.almacen_salida_id,
+      user_id: mode.entregaOrigen.user_id,
+      productos_entregados: productosFiltrados.map((p) => ({
+        unidad_derivada_venta_id: p.unidad_derivada_venta_id,
+        cantidad_entregada:
+          tipoDespacho === 'Domicilio' ? p.entregar_programado : p.entregar,
+      })),
+    }
+
+    if (tipoDespacho === 'EnTienda') {
+      payload.quien_entrega = (v.quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN
+      if (v.observaciones) payload.observaciones = v.observaciones
+    } else if (tipoDespacho === 'Domicilio') {
+      payload.quien_entrega = QuienEntrega.CHOFER
+      if (v.despachador_id) payload.chofer_id = v.despachador_id
+      if (v.tipo_pedido) payload.tipo_pedido = v.tipo_pedido as TipoPedido
+      if (v.cargo_destino) payload.cargo_destino = v.cargo_destino
+      if (v.fecha_programada) {
+        payload.fecha_programada = dayjs(v.fecha_programada).format('YYYY-MM-DD')
+      }
+      if (v.hora_inicio) payload.hora_inicio = v.hora_inicio
+      if (v.hora_fin) payload.hora_fin = v.hora_fin
+      if (v.direccion_entrega) payload.direccion_entrega = v.direccion_entrega
+      if (v.referencia_entrega) payload.referencia_entrega = v.referencia_entrega
+      if (v.latitud != null) payload.latitud = Number(v.latitud)
+      if (v.longitud != null) payload.longitud = Number(v.longitud)
+      if (v.observaciones) payload.observaciones = v.observaciones
+      if (v.vehiculo_id) payload.vehiculo_id = v.vehiculo_id
+    } else if (tipoDespacho === 'Parcial') {
+      payload.quien_entrega =
+        (quienEntregaParcial as QuienEntrega) || QuienEntrega.ALMACEN
+      if (v.observaciones) payload.observaciones = v.observaciones
+    }
+
+    setCreandoEntregaResto(true)
+    try {
+      const response = await entregaProductoApi.create(payload)
+      if (response.error) {
+        throw new Error(response.error.message || 'Error al crear entrega')
+      }
+      onSuccess()
+    } finally {
+      setCreandoEntregaResto(false)
+    }
+  }, [mode, form, tipoDespacho, productosEntrega, quienEntregaParcial, onSuccess])
+
+  // ───────────────────────────────────────────────────────────────────────
   // Botón "Omitir" — solo aplica en modo crear-venta. Crea la venta sin
   // generar la entrega (deja `cantidad_pendiente` para programarse luego).
   // ───────────────────────────────────────────────────────────────────────
@@ -217,12 +325,23 @@ export function useConfirmarEntrega({
     onOmitir?.()
   }, [mode.kind, form, crearVenta, onOmitir])
 
+  // Selector del handler + loading flag según el modo activo.
+  const handleConfirmar =
+    mode.kind === 'crear-venta'
+      ? handleConfirmarCrearVenta
+      : mode.kind === 'actualizar-entrega'
+      ? handleConfirmarActualizarEntrega
+      : handleConfirmarCrearEntregaResto
+  const loading =
+    mode.kind === 'crear-venta'
+      ? creandoVenta
+      : mode.kind === 'actualizar-entrega'
+      ? actualizandoEntrega
+      : creandoEntregaResto
+
   return {
-    handleConfirmar:
-      mode.kind === 'crear-venta'
-        ? handleConfirmarCrearVenta
-        : handleConfirmarActualizarEntrega,
+    handleConfirmar,
     handleOmitir,
-    loading: mode.kind === 'crear-venta' ? creandoVenta : actualizandoEntrega,
+    loading,
   }
 }
