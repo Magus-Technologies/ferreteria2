@@ -155,7 +155,7 @@ export const gananciasApi = {
     }
     const queryString = params.toString();
     const url = queryString ? `/ganancias/pagos-compras?${queryString}` : '/ganancias/pagos-compras';
-    return apiRequest<{ data: { pagos: any[]; gastos: any[]; resumen: any } }>(url);
+    return apiRequest<{ data: { data: { pagos: any[]; gastos: any[]; resumen: any } } }>(url);
   },
 
   /**
