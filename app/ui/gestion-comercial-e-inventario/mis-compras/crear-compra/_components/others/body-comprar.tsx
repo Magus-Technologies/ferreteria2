@@ -48,6 +48,10 @@ export interface FormCreateCompra {
     unidad_derivada_factor: number
 
     producto_id: Producto['id']
+    nuevo_precio_publico?: number
+    nuevo_precio_especial?: number
+    nuevo_precio_minimo?: number
+    nuevo_precio_ultimo?: number
   }[]
   fecha: Dayjs
   tipo_moneda: TipoMoneda

@@ -149,6 +149,7 @@ export default function CardAgregarProductoVenta({
       comision,
       tipo_precio,
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
+      costo: Number(producto_en_almacen?.costo ?? 0),
       // Guardar las unidades derivadas disponibles del producto
       unidades_derivadas_disponibles: unidades_derivadas,
     }

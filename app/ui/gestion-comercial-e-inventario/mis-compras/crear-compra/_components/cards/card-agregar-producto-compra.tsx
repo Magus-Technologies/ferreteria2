@@ -21,11 +21,12 @@ import LabelBase from '~/components/form/label-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { toLocalString } from '~/utils/fechas'
 import dayjs from 'dayjs'
-import { App } from 'antd'
+import { App, Modal } from 'antd'
 import { GetStock } from '~/app/_utils/get-stock'
 import { calcularNuevoStock } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/others/stock-ingreso-salida'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import { FormCreateCompra } from '../others/body-comprar'
+import { productosApiV2 } from '~/lib/api/producto'
 
 export type ValuesCardAgregarProductoCompra = Partial<
   FormCreateCompra['productos'][number]
@@ -97,6 +98,9 @@ export default function CardAgregarProductoCompra({
       item => item.unidad_derivada.id === values.unidad_derivada_id
     )
 
+    const costoActualEnUnidad = Number(unidad_derivada?.factor ?? 0) * Number(producto_en_almacen?.costo ?? 0)
+    const mostrarNuevosPrecios = !values.bonificacion && Number(values.precio_compra ?? 0) > costoActualEnUnidad && costoActualEnUnidad > 0
+
     const valuesFormated = {
       ...values,
       producto_id: productoSeleccionadoSearchStore?.id,
@@ -106,6 +110,12 @@ export default function CardAgregarProductoCompra({
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name,
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_compra: values.bonificacion ? 0 : values.precio_compra,
+      ...(mostrarNuevosPrecios ? {
+        nuevo_precio_publico: values.nuevo_precio_publico,
+        nuevo_precio_especial: values.nuevo_precio_especial,
+        nuevo_precio_minimo: values.nuevo_precio_minimo,
+        nuevo_precio_ultimo: values.nuevo_precio_ultimo,
+      } : {}),
     }
 
     onOk?.(valuesFormated)
@@ -147,6 +157,21 @@ export default function CardAgregarProductoCompra({
   useEffect(() => {
     onChangeValues?.(values)
   }, [values])
+
+  const costoActualEnUnidad = Number(unidad_derivada_seleccionada?.factor ?? 0) * Number(producto_en_almacen?.costo ?? 0)
+  const mostrarNuevosPrecios = !values.bonificacion && Number(values.precio_compra ?? 0) > costoActualEnUnidad && costoActualEnUnidad > 0
+
+  const [openModalPrecios, setOpenModalPrecios] = useState(false)
+  const [loadingGuardarPrecios, setLoadingGuardarPrecios] = useState(false)
+
+  useEffect(() => {
+    if (mostrarNuevosPrecios && unidad_derivada_seleccionada) {
+      handleChange(Number(unidad_derivada_seleccionada.precio_publico ?? 0), 'nuevo_precio_publico')
+      handleChange(Number((unidad_derivada_seleccionada as any).precio_especial ?? 0), 'nuevo_precio_especial')
+      handleChange(Number((unidad_derivada_seleccionada as any).precio_minimo ?? 0), 'nuevo_precio_minimo')
+      handleChange(Number((unidad_derivada_seleccionada as any).precio_ultimo ?? 0), 'nuevo_precio_ultimo')
+    }
+  }, [mostrarNuevosPrecios])
 
   return (
     <div className='flex flex-col gap-2'>
@@ -231,6 +256,80 @@ export default function CardAgregarProductoCompra({
           }}
         />
       </LabelBase>
+      {mostrarNuevosPrecios && (
+        <button
+          type='button'
+          onClick={() => setOpenModalPrecios(true)}
+          className='flex items-center gap-2 w-full px-3 py-2 rounded border border-amber-300 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors'
+        >
+          <TbAlertTriangleFilled size={15} />
+          El costo subió — actualizar precios de venta
+        </button>
+      )}
+
+      <Modal
+        open={openModalPrecios}
+        title={
+          <div className='flex items-center gap-2 text-amber-700'>
+            <TbAlertTriangleFilled size={18} />
+            Actualizar precios de venta
+          </div>
+        }
+        okText='Guardar precios'
+        cancelText='Omitir'
+        confirmLoading={loadingGuardarPrecios}
+        onOk={async () => {
+          const productoId = productoSeleccionadoSearchStore?.id
+          if (!productoId || !almacen_id || !values.unidad_derivada_id) {
+            setOpenModalPrecios(false)
+            return
+          }
+          setLoadingGuardarPrecios(true)
+          try {
+            const result = await productosApiV2.updatePrecios(productoId, almacen_id, [{
+              unidad_derivada_id: values.unidad_derivada_id,
+              precio_publico: Number((values as any).nuevo_precio_publico ?? unidad_derivada_seleccionada?.precio_publico ?? 0),
+              precio_especial: (values as any).nuevo_precio_especial != null ? Number((values as any).nuevo_precio_especial) : undefined,
+              precio_minimo: (values as any).nuevo_precio_minimo != null ? Number((values as any).nuevo_precio_minimo) : undefined,
+              precio_ultimo: (values as any).nuevo_precio_ultimo != null ? Number((values as any).nuevo_precio_ultimo) : undefined,
+            }])
+            if (result.error) {
+              notification.error({ message: 'Error al actualizar precios', description: result.error.message })
+            } else {
+              notification.success({ message: 'Precios actualizados correctamente' })
+              setOpenModalPrecios(false)
+            }
+          } finally {
+            setLoadingGuardarPrecios(false)
+          }
+        }}
+        onCancel={() => setOpenModalPrecios(false)}
+        width={360}
+        zIndex={1100}
+      >
+        <p className='text-xs text-gray-500 mb-3'>
+          El costo de compra subió de{' '}
+          <span className='font-semibold text-gray-700'>S/. {costoActualEnUnidad.toFixed(4)}</span>{' '}
+          a{' '}
+          <span className='font-semibold text-orange-600'>S/. {Number(values.precio_compra ?? 0).toFixed(4)}</span>.
+          Ajuste los precios de venta:
+        </p>
+        <div className='flex flex-col gap-3'>
+          <LabelBase label='Precio Público:' orientation='column'>
+            <InputNumberBase precision={4} min={0} prefix={<FaMoneyBill size={14} className='text-orange-500 mx-1' />} onChange={v => handleChange(v, 'nuevo_precio_publico')} value={(values as any).nuevo_precio_publico} />
+          </LabelBase>
+          <LabelBase label='Precio Especial:' orientation='column'>
+            <InputNumberBase precision={4} min={0} prefix={<FaMoneyBill size={14} className='text-orange-500 mx-1' />} onChange={v => handleChange(v, 'nuevo_precio_especial')} value={(values as any).nuevo_precio_especial} />
+          </LabelBase>
+          <LabelBase label='Precio Mínimo:' orientation='column'>
+            <InputNumberBase precision={4} min={0} prefix={<FaMoneyBill size={14} className='text-orange-500 mx-1' />} onChange={v => handleChange(v, 'nuevo_precio_minimo')} value={(values as any).nuevo_precio_minimo} />
+          </LabelBase>
+          <LabelBase label='Precio Último:' orientation='column'>
+            <InputNumberBase precision={4} min={0} prefix={<FaMoneyBill size={14} className='text-orange-500 mx-1' />} onChange={v => handleChange(v, 'nuevo_precio_ultimo')} value={(values as any).nuevo_precio_ultimo} />
+          </LabelBase>
+        </div>
+      </Modal>
+
       <LabelBase label='Flete:' orientation='column'>
         <InputNumberBase
           placeholder='Flete'

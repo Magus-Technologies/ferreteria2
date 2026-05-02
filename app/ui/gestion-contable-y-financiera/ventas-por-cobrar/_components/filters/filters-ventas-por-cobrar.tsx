@@ -293,7 +293,8 @@ export default function FiltersVentasPorCobrar() {
           >
             <FaSearch />
           </ButtonBase>
-          <button
+          {/* Icono de impresión oculto según requerimiento */}
+          {/* <button
             type='button'
             onClick={() => {
               // Este evento será manejado desde el componente padre
@@ -304,7 +305,7 @@ export default function FiltersVentasPorCobrar() {
             title='Imprimir reporte de ventas filtradas'
           >
             <FaPrint size={16} />
-          </button>
+          </button> */}
         </div>
 
         {/* Mobile/Tablet: Solo almacén y botones */}

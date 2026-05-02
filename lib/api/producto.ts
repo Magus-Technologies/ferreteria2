@@ -223,6 +223,27 @@ export const productosApiV2 = {
   },
 
   /**
+   * Actualizar precios de unidades derivadas de un producto en un almacén
+   * PUT /api/productos/{id}/precios
+   */
+  async updatePrecios(
+    productoId: number,
+    almacenId: number,
+    precios: Array<{
+      unidad_derivada_id: number
+      precio_publico: number
+      precio_especial?: number
+      precio_minimo?: number
+      precio_ultimo?: number
+    }>
+  ): Promise<ApiResponse<unknown>> {
+    return apiRequest<unknown>(`/productos/${productoId}/precios`, {
+      method: 'PUT',
+      body: JSON.stringify({ almacen_id: almacenId, precios }),
+    })
+  },
+
+  /**
    * Eliminar un producto
    * DELETE /api/productos/{id}
    */

@@ -173,10 +173,18 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     }
   }, [ticketPdfUrl])
 
-  // Imprimir masivamente todos los tickets de cobro
+  // Imprimir masivamente todos los tickets de cobro (solo los NO anulados)
   const handleImpresionMasiva = useCallback(async () => {
     if (!cobros || cobros.length === 0) {
       message.warning('No hay cobros registrados para imprimir')
+      return
+    }
+
+    // Filtrar solo cobros activos (no anulados)
+    const cobrosActivos = cobros.filter((c: any) => c.estado !== false && c.estado !== 0)
+    
+    if (cobrosActivos.length === 0) {
+      message.warning('No hay cobros activos para imprimir')
       return
     }
 
@@ -186,7 +194,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     setTicketsMasivosLoading(true)
     setTicketsMasivosPdfUrl(null)
     try {
-      const cobroIds = cobros.map((c: any) => c.id).join(',')
+      const cobroIds = cobrosActivos.map((c: any) => c.id).join(',')
       const res = await fetch(`${API_URL}/pdf/cobro-venta-multiple?ids=${cobroIds}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -288,34 +296,27 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       valueGetter: (p) => p.data?.observacion || '',
     },
     {
-      headerName: 'Ticket',
-      width: 70,
+      headerName: 'Acciones',
+      width: 100,
       cellRenderer: (p: any) => {
         if (!p.data?.id) return null
         return (
-          <button
-            onClick={() => handleVerTicket(p.data.id)}
-            className='flex items-center justify-center w-full h-full text-blue-600 hover:text-blue-800'
-            title='Ver ticket del cobro'
-          >
-            <FaFileAlt size={14} />
-          </button>
-        )
-      },
-    },
-    {
-      headerName: 'Anular',
-      width: 70,
-      cellRenderer: (p: any) => {
-        if (!p.data?.id) return null
-        return (
-          <button
-            onClick={() => handleOpenAnularModal(p.data)}
-            className='flex items-center justify-center w-full h-full text-red-600 hover:text-red-800'
-            title='Anular este cobro'
-          >
-            <FaTrash size={14} />
-          </button>
+          <div className='flex items-center justify-center gap-2 w-full h-full'>
+            <button
+              onClick={() => handleVerTicket(p.data.id)}
+              className='text-blue-600 hover:text-blue-800'
+              title='Ver ticket del cobro'
+            >
+              <FaFileAlt size={14} />
+            </button>
+            <button
+              onClick={() => handleOpenAnularModal(p.data)}
+              className='text-red-600 hover:text-red-800'
+              title='Anular este cobro'
+            >
+              <FaTrash size={14} />
+            </button>
+          </div>
         )
       },
     },
@@ -440,19 +441,6 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         </div>
       </div>
 
-      {/* Botón de impresión masiva - Arriba */}
-      <div className='mt-3 flex justify-end'>
-        <button
-          onClick={handleImpresionMasiva}
-          disabled={!cobros || cobros.length === 0}
-          className='px-3 py-1.5 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5'
-          title={cobros && cobros.length > 0 ? `Imprimir ${cobros.length} ticket(s)` : 'No hay cobros para imprimir'}
-        >
-          <FaPrint size={12} />
-          <span className='text-xs'>Imprimir Tickets ({cobros?.length || 0})</span>
-        </button>
-      </div>
-
       {/* Formulario */}
       <Form form={form} layout='vertical' initialValues={{ fecha: dayjs() }}>
         <div className='grid grid-cols-4 gap-3'>
@@ -543,6 +531,19 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           selectionColor={greenColors[1]}
           suppressRowTransform
           withNumberColumn={false}
+          extraTitle={
+            <button
+              onClick={handleImpresionMasiva}
+              disabled={!cobros || cobros.filter((c: any) => c.estado !== false && c.estado !== 0).length === 0}
+              className='ml-2 px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1'
+              title={cobros && cobros.filter((c: any) => c.estado !== false && c.estado !== 0).length > 0 
+                ? `Imprimir ${cobros.filter((c: any) => c.estado !== false && c.estado !== 0).length} ticket(s) activo(s)` 
+                : 'No hay cobros activos para imprimir'}
+            >
+              <FaPrint size={10} />
+              <span>Imprimir Tickets ({cobros?.filter((c: any) => c.estado !== false && c.estado !== 0).length || 0})</span>
+            </button>
+          }
         />
       </div>
 

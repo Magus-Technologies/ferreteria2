@@ -65,6 +65,10 @@ export function agruparProductos({
       flete: p.flete,
       unidad_derivada_name: p.unidad_derivada_name,
       unidad_derivada_factor: p.unidad_derivada_factor,
+      nuevo_precio_publico: p.nuevo_precio_publico,
+      nuevo_precio_especial: p.nuevo_precio_especial,
+      nuevo_precio_minimo: p.nuevo_precio_minimo,
+      nuevo_precio_ultimo: p.nuevo_precio_ultimo,
     })
   }
 
@@ -154,6 +158,15 @@ export default function useCreateCompra({
               vencimiento: u.vencimiento ?? null,
               bonificacion: u.bonificacion ?? false,
               flete: u.flete ?? 0,
+              ...(u.nuevo_precio_publico != null || u.nuevo_precio_especial != null || u.nuevo_precio_minimo != null || u.nuevo_precio_ultimo != null ? {
+                nuevos_precios: {
+                  unidad_derivada_id: Number(u.unidad_derivada_id),
+                  ...(u.nuevo_precio_publico != null && { precio_publico: Number(u.nuevo_precio_publico) }),
+                  ...(u.nuevo_precio_especial != null && { precio_especial: Number(u.nuevo_precio_especial) }),
+                  ...(u.nuevo_precio_minimo != null && { precio_minimo: Number(u.nuevo_precio_minimo) }),
+                  ...(u.nuevo_precio_ultimo != null && { precio_ultimo: Number(u.nuevo_precio_ultimo) }),
+                }
+              } : {}),
             })),
           }
         }),

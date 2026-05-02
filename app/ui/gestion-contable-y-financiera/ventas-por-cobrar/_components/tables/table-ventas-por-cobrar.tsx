@@ -2,7 +2,7 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useRef, memo, useCallback, useMemo, useEffect } from 'react'
+import { useRef, memo, useCallback, useMemo, useEffect, useState } from 'react'
 import { redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { VentaCreateInputSchema } from '~/types/zod-schemas'
@@ -13,6 +13,9 @@ import { useStoreFiltrosVentasPorCobrar } from '../../_store/store-filtros-venta
 import type { MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import dayjs from 'dayjs'
 import { create } from 'zustand'
+import { FaFilePdf } from 'react-icons/fa'
+import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
+import { getAuthToken } from '~/lib/api'
 
 // Store para la venta seleccionada
 type UseStoreVentaSeleccionada = {
@@ -52,6 +55,12 @@ function aplicarFiltroMora(ventas: VentaCompleta[], rango: MoraRango): VentaComp
 const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const tableRef = useRef<AgGridReact>(null)
 
+  // Estados para el modal de PDF
+  const [pdfModalOpen, setPdfModalOpen] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [ventaSeleccionadaPdf, setVentaSeleccionadaPdf] = useState<VentaCompleta | null>(null)
+
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
   const moraRango = useStoreFiltrosVentasPorCobrar(state => state.moraRango)
 
@@ -90,6 +99,48 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     const filtradas = aplicarFiltroMora(ventas, moraRango)
     return [...filtradas].sort((a, b) => Number(b.id) - Number(a.id))
   }, [data?.data, moraRango])
+
+  // Función para ver el PDF de la venta
+  const handleVerPdf = useCallback(async (venta: VentaCompleta) => {
+    if (!venta?.id) return
+    
+    setVentaSeleccionadaPdf(venta)
+    setPdfModalOpen(true)
+    setPdfLoading(true)
+    setPdfUrl(null)
+    
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL
+      const token = getAuthToken()
+      const res = await fetch(`${API_URL}/pdf/venta/${venta.id}?formato=a4`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      })
+      
+      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+      
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      setPdfUrl(url)
+    } catch (err) {
+      console.error('Error al obtener PDF de venta:', err)
+      setPdfModalOpen(false)
+    } finally {
+      setPdfLoading(false)
+    }
+  }, [])
+
+  // Limpiar URL al cerrar modal
+  const handleClosePdfModal = useCallback((v: boolean) => {
+    setPdfModalOpen(v)
+    if (!v && pdfUrl) {
+      URL.revokeObjectURL(pdfUrl)
+      setPdfUrl(null)
+      setVentaSeleccionadaPdf(null)
+    }
+  }, [pdfUrl])
 
   // Función para calcular el total de una venta
   const calcularTotalVenta = useCallback((venta: VentaCompleta) => {
@@ -226,7 +277,23 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       },
       valueGetter: (params: any) => calcularMora(params.data as VentaCompleta),
     },
-  ], [calcularTotalVenta])
+    {
+      headerName: 'PDF',
+      width: 70,
+      cellRenderer: (params: any) => {
+        if (!params.data?.id) return null
+        return (
+          <button
+            onClick={() => handleVerPdf(params.data)}
+            className='flex items-center justify-center w-full h-full text-red-600 hover:text-red-800'
+            title='Ver comprobante PDF'
+          >
+            <FaFilePdf size={16} />
+          </button>
+        )
+      },
+    },
+  ], [calcularTotalVenta, handleVerPdf])
 
   // Memoizar callbacks para evitar re-renders innecesarios
   const handleSelectionChanged = useCallback(
@@ -270,6 +337,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
           'Saldo',
           'Mon.',
           'Moras',
+          'PDF',
         ],
       },
     ],
@@ -297,27 +365,47 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
 
+  // Construir número de documento para el modal
+  const nroDoc = ventaSeleccionadaPdf 
+    ? `${ventaSeleccionadaPdf.serie}-${ventaSeleccionadaPdf.numero}` 
+    : ''
+
   return (
-    <TableWithTitle<VentaCompleta>
-      id='table-ventas-por-cobrar'
-      selectionColor={redColors[1]}
-      onSelectionChanged={handleSelectionChanged}
-      onRowClicked={handleRowClicked}
-      onRowDoubleClicked={handleRowDoubleClicked}
-      tableRef={tableRef}
-      title='Facturas de Ventas Vencidas'
-      schema={VentaCreateInputSchema}
-      loading={isLoading}
-      columnDefs={columns}
-      rowData={rowData}
-      optionsSelectColumns={optionsSelectColumns}
-      exportExcel={true}
-      exportPdf={true}
-      selectColumns={true}
-      suppressRowTransform={true}
-      rowBuffer={10}
-    >
-    </TableWithTitle>
+    <>
+      <TableWithTitle<VentaCompleta>
+        id='table-ventas-por-cobrar'
+        selectionColor={redColors[1]}
+        onSelectionChanged={handleSelectionChanged}
+        onRowClicked={handleRowClicked}
+        onRowDoubleClicked={handleRowDoubleClicked}
+        tableRef={tableRef}
+        title='Facturas de Ventas Vencidas'
+        schema={VentaCreateInputSchema}
+        loading={isLoading}
+        columnDefs={columns}
+        rowData={rowData}
+        optionsSelectColumns={optionsSelectColumns}
+        exportExcel={true}
+        exportPdf={true}
+        selectColumns={true}
+        suppressRowTransform={true}
+        rowBuffer={10}
+      >
+      </TableWithTitle>
+
+      {/* Modal para ver PDF de la venta */}
+      <ModalShowDoc
+        open={pdfModalOpen}
+        setOpen={handleClosePdfModal}
+        nro_doc={nroDoc}
+        esTicket={false}
+        tipoDocumento='venta'
+        backendPdfUrl={pdfUrl}
+        backendPdfLoading={pdfLoading}
+      >
+        <></>
+      </ModalShowDoc>
+    </>
   )
 })
 

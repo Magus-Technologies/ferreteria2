@@ -39,6 +39,7 @@ type ProductoAgrupado = Pick<
 > & {
   paquete_id?: number
   paquete_nombre?: string
+  costo?: number
   unidades_derivadas: Array<
     Omit<
       FormCreateVenta['productos'][number],
@@ -64,6 +65,7 @@ export function agruparProductos({
         producto_name: p.producto_name,
         paquete_id: p.paquete_id,
         paquete_nombre: p.paquete_nombre,
+        costo: p.costo,
         unidades_derivadas: [],
       })
     }
@@ -254,7 +256,7 @@ export default function useCreateVenta({
     // Transformar al formato de Laravel
     const productos_por_almacen: ProductoVentaRequest[] = productos_agrupados.map((p) => ({
       producto_id: p.producto_id,
-      costo: 0, // El costo se calculará en el backend
+      costo: p.costo ?? 0,
       paquete_id: p.paquete_id || undefined,
       paquete_nombre: p.paquete_nombre || undefined,
       unidades_derivadas: p.unidades_derivadas.map((u) => ({
