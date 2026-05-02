@@ -6,7 +6,6 @@ import FormContactos from "./forms/form-contactos";
 import FormLogo from "./forms/form-logo";
 import FormConfiguracion from "./forms/form-configuracion";
 import FormEnvioSunat from "./forms/form-envio-sunat";
-import FormDirecciones from "./forms/form-direcciones";
 
 interface TabsEmpresaProps {
   empresaId: number;
@@ -30,16 +29,11 @@ export default function TabsEmpresa({ empresaId }: TabsEmpresaProps) {
     },
     {
       key: '4',
-      label: 'Direcciones',
-      children: <FormDirecciones empresaId={empresaId} />
-    },
-    {
-      key: '5',
       label: 'Contactos',
       children: <FormContactos empresaId={empresaId} />
     },
     {
-      key: '6',
+      key: '5',
       label: 'Envío SUNAT',
       children: <FormEnvioSunat empresaId={empresaId} />
     }
