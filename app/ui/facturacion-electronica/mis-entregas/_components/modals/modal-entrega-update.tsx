@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Form } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { FaExchangeAlt, FaFilePdf } from 'react-icons/fa'
+import dynamic from 'next/dynamic'
+import { FaExchangeAlt, FaFilePdf, FaMapMarkedAlt } from 'react-icons/fa'
 import dayjs from 'dayjs'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregaProductoApi, TipoEntrega } from '~/lib/api/entrega-producto'
@@ -18,6 +19,14 @@ import type {
 import type { ProductoEntrega } from '../../../mis-ventas/_hooks/use-productos-entrega'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ButtonBase from '~/components/buttons/button-base'
+
+// Modal "Mapa de Entrega" cargado dinámicamente — incluye Mapbox con
+// geolocalización del usuario + dirección del cliente + navegación
+// (Google Maps / Waze). Se abre desde el botón en el header.
+const ModalMapaEntrega = dynamic(
+  () => import('./mapbox/modal-mapa-entrega'),
+  { ssr: false },
+)
 
 interface ModalEntregaUpdateProps {
   open: boolean
@@ -57,6 +66,7 @@ export default function ModalEntregaUpdate({
   const { message } = useApp()
   const queryClient = useQueryClient()
   const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
+  const [modalMapaEntregaOpen, setModalMapaEntregaOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
 
   // Tipo "UI" actualmente activo. En modo update, se inicializa con el tipo
@@ -351,6 +361,42 @@ export default function ModalEntregaUpdate({
   //   - En modo update: solo si la entrega no se completó ('en') ni se canceló ('ca').
   const puedeCambiarTipo =
     restante || (entrega.estado_entrega !== 'en' && entrega.estado_entrega !== 'ca')
+
+  // Entrega "virtual" para el ModalMapaEntrega — usa los datos actuales del
+  // form (dirección/lat/lng que el usuario seleccionó en D1/D2/D3) en lugar
+  // de la entrega origen, así el mapa muestra la ubicación que efectivamente
+  // se va a despachar. Si el form aún no tiene esos datos, cae a los del
+  // cliente/entrega origen.
+  const entregaParaMapa = useMemo(() => {
+    const direccionForm =
+      form.getFieldValue('direccion_entrega') ||
+      form.getFieldValue('_resto_direccion_entrega') ||
+      entrega.direccion_entrega
+    const refForm =
+      form.getFieldValue('referencia_entrega') ||
+      form.getFieldValue('_resto_referencia_entrega') ||
+      entrega.referencia_entrega
+    const latForm =
+      form.getFieldValue('latitud') ??
+      form.getFieldValue('_resto_latitud') ??
+      entrega.latitud
+    const lngForm =
+      form.getFieldValue('longitud') ??
+      form.getFieldValue('_resto_longitud') ??
+      entrega.longitud
+    return {
+      ...entrega,
+      direccion_entrega: direccionForm,
+      referencia_entrega: refForm,
+      latitud: latForm,
+      longitud: lngForm,
+    }
+    // Recalcular cuando cambia la entrega seleccionada o cuando se abre el
+    // modal — el form en sí no es reactivo, pero al abrir el ModalMapaEntrega
+    // el usuario ya tendrá ajustada la dirección y este memo se evalúa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entrega, modalMapaEntregaOpen])
+
   const accionesHeader = (
     <div className="flex items-center gap-2">
       <ButtonBase
@@ -360,6 +406,15 @@ export default function ModalEntregaUpdate({
       >
         <FaFilePdf size={11} className="mr-1 inline-block" /> Ticket
       </ButtonBase>
+      {(tipoLocal === 'Domicilio' || (restante && tipoLocal === 'Parcial')) && (
+        <ButtonBase
+          color="info"
+          size="sm"
+          onClick={() => setModalMapaEntregaOpen(true)}
+        >
+          <FaMapMarkedAlt size={11} className="mr-1 inline-block" /> Mapa Entrega
+        </ButtonBase>
+      )}
       {puedeCambiarTipo && (
         <ButtonBase
           color="warning"
@@ -416,6 +471,12 @@ export default function ModalEntregaUpdate({
         onEditarCliente={() => {
           message.info('Edita el cliente desde la venta original')
         }}
+      />
+
+      <ModalMapaEntrega
+        open={modalMapaEntregaOpen}
+        onClose={() => setModalMapaEntregaOpen(false)}
+        entrega={entregaParaMapa}
       />
 
       <ModalSeleccionarTipoDespacho
