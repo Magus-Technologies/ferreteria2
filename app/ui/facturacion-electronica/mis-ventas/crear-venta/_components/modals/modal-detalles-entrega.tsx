@@ -85,6 +85,7 @@ function ModalDetallesEntregaInner({
     setDireccionSeleccionada,
     // Resto
     programarResto,
+    setProgramarResto,
     setHoraInicioResto,
     setHoraFinResto,
     setCoordenadasResto,
@@ -98,6 +99,16 @@ function ModalDetallesEntregaInner({
     setSlotDomicilio,
     setSlotResto,
   } = useDetallesEntrega()
+
+  // En modo `crear-entrega-resto` el switch "¿Programar entrega del resto?"
+  // arranca apagado: lo natural es entregar todo el pendiente ahora. Si el
+  // usuario quiere otro split, lo activa manualmente.
+  // En `crear-venta` el default histórico es ON (programar todo lo que sobra).
+  useEffect(() => {
+    if (!open) return
+    setProgramarResto(resolvedMode.kind !== 'crear-entrega-resto')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, resolvedMode.kind])
   // (Todos los bloques de state ahora viven en el Provider.)
 
   // Submit del modal — extraído a hook (Fase E).
@@ -326,14 +337,17 @@ function ModalDetallesEntregaInner({
   )
 
   // Handler para editar "Programar ahora" (entregar_programado) en la tabla del resto.
-  // Valida que entregar + entregar_programado no exceda total; lo que sobra queda como pendiente sin programar.
+  // Valida que entregar + entregar_programado + entregado no exceda total.
+  // En `crear-venta` `entregado=0` así que el cálculo se simplifica a
+  // `total - entregar`. En `crear-entrega-resto` `entregado` refleja lo que
+  // ya se entregó en entregas anteriores y debe descontarse.
   const handleProgramarChange = useCallback((id: number, value: number | null) => {
     let newValue = Number(value) || 0
     if (newValue < 0) newValue = 0
     setProductosEntrega((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p
-        const maxProgramable = Math.max(0, p.total - p.entregar)
+        const maxProgramable = Math.max(0, p.total - p.entregar - (p.entregado || 0))
         if (newValue > maxProgramable) newValue = maxProgramable
         return { ...p, entregar_programado: newValue }
       })

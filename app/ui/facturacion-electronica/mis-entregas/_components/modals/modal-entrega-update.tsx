@@ -169,22 +169,28 @@ export default function ModalEntregaUpdate({
     if (!entrega?.productos_entregados) return []
 
     if (restante) {
+      // En modo restante mostramos el total ORIGINAL de la venta (no solo el
+      // pendiente). Eso da contexto al usuario: "se vendieron 10, se entregaron
+      // 5, quedan 5". El campo `entregar` arranca con el pendiente sugerido,
+      // pero el usuario puede entregar solo una parte y programar el resto.
       return entrega.productos_entregados
         .map((p: any, index: number) => {
           const ud = p.unidad_derivada_venta || {}
           const pav = ud.producto_almacen_venta || {}
           const prod = pav.producto_almacen?.producto || {}
+          const totalOriginal = Number(ud.cantidad ?? 0)
           const pendiente = Number(ud.cantidad_pendiente || 0)
           if (pendiente <= 0) return null
+          const entregadoYa = Math.max(0, totalOriginal - pendiente)
           return {
             id: index + 1,
             producto: prod.name || p.producto_name || '',
             ubicacion: '',
-            total: pendiente,
-            entregado: 0,
+            total: totalOriginal,
+            entregado: entregadoYa,
             pendiente,
             entregar: pendiente,
-            entregar_programado: pendiente,
+            entregar_programado: 0,
             unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
           }
         })
@@ -226,13 +232,22 @@ export default function ModalEntregaUpdate({
   // Qué secciones se ocultan según el tipo. Comunes a todos: 'omitir' (no
   // aplica al actualizar/crear-resto), 'quien-entrega' (ya fijado en la venta),
   // 'tipo-pedido' (ya fijado en la venta).
+  //
+  // Para Parcial:
+  //   - Modo restante: NO ocultamos 'programar-resto' — el usuario puede
+  //     entregar parte ahora y programar el resto con dirección + mapa + chofer
+  //     (igual que al crear la venta).
+  //   - Modo update normal: ocultamos 'programar-resto' porque la entrega
+  //     existente ya tiene su programación previa y solo se confirma.
   const ocultarBase: SeccionOcultable[] = ['omitir', 'quien-entrega', 'tipo-pedido']
   const ocultar: SeccionOcultable[] =
     tipoLocal === 'EnTienda'
-      ? [...ocultarBase, 'programar-resto'] // EnTienda: solo tabla
+      ? [...ocultarBase, 'programar-resto']
       : tipoLocal === 'Domicilio'
-      ? [...ocultarBase] // Domicilio: tabla + datos de despacho
-      : [...ocultarBase, 'programar-resto'] // Parcial: tabla + counters (sin resto)
+      ? [...ocultarBase]
+      : restante
+      ? [...ocultarBase] // Parcial restante: incluir programar-resto + mapa
+      : [...ocultarBase, 'programar-resto'] // Parcial update: solo tabla + counters
 
   // Header del modal — distingue restante vs actualización normal.
   const tituloPorTipo: Record<TipoDespachoUI, string> = {
