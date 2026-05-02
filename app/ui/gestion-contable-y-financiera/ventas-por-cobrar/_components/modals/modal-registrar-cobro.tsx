@@ -14,7 +14,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
 import { greenColors } from '~/lib/colors'
 import { getAuthToken } from '~/lib/api'
-import { FaFileAlt } from 'react-icons/fa'
+import { FaFileAlt, FaTrash } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 
 interface ModalRegistrarCobroProps {
@@ -87,6 +87,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       )
       if (efectivo) {
         form.setFieldsValue({ despliegue_de_pago_id: efectivo.id })
+        setMetodoPagoSeleccionado(efectivo)
       }
     }
   }, [open, desplieguesData, form])
@@ -95,6 +96,15 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   const [ticketModalOpen, setTicketModalOpen] = useState(false)
   const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
   const [ticketLoading, setTicketLoading] = useState(false)
+
+  // Estado para modal de anular cobro
+  const [anularModalOpen, setAnularModalOpen] = useState(false)
+  const [cobroAAnular, setCobroAAnular] = useState<CobroVenta | null>(null)
+  const [observacionAnulacion, setObservacionAnulacion] = useState('')
+  const [anularLoading, setAnularLoading] = useState(false)
+
+  // Estado para mostrar/ocultar campo N° Operación
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<any>(null)
 
   // Ver ticket de un cobro en modal
   const handleVerTicket = useCallback(async (cobroId: string) => {
@@ -156,6 +166,40 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     }
   }, [ticketPdfUrl])
 
+  // Abrir modal para anular cobro
+  const handleOpenAnularModal = useCallback((cobro: CobroVenta) => {
+    setCobroAAnular(cobro)
+    setObservacionAnulacion('')
+    setAnularModalOpen(true)
+  }, [])
+
+  // Confirmar anulación con observación
+  const handleConfirmAnulacion = useCallback(async () => {
+    if (!localVenta?.id || !cobroAAnular?.id) return
+    
+    setAnularLoading(true)
+    try {
+      const result = await ventaApi.anularCobro(localVenta.id, cobroAAnular.id, observacionAnulacion)
+      if (result.error) {
+        message.error(result.error.message)
+        return
+      }
+      message.success(result.data?.message || 'Cobro anulado correctamente')
+      setAnularModalOpen(false)
+      setCobroAAnular(null)
+      setObservacionAnulacion('')
+      // Refrescar datos
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+    } catch (error: any) {
+      message.error(error?.message || 'Error al anular el cobro')
+    } finally {
+      setAnularLoading(false)
+    }
+  }, [localVenta, cobroAAnular, observacionAnulacion, queryClient, message])
+
   // Columnas para tabla de cobros previos
   const columnsCobros: ColDef<CobroVenta>[] = useMemo(() => [
     { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
@@ -208,7 +252,23 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         )
       },
     },
-  ], [handleVerTicket, handleAnularCobro])
+    {
+      headerName: 'Anular',
+      width: 70,
+      cellRenderer: (p: any) => {
+        if (!p.data?.id) return null
+        return (
+          <button
+            onClick={() => handleOpenAnularModal(p.data)}
+            className='flex items-center justify-center w-full h-full text-red-600 hover:text-red-800'
+            title='Anular este cobro'
+          >
+            <FaTrash size={14} />
+          </button>
+        )
+      },
+    },
+  ], [handleVerTicket, handleOpenAnularModal])
 
   // Mutation para registrar cobro
   const mutation = useMutation({
@@ -322,6 +382,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
             <SelectDespliegueDePago
               propsForm={{ name: 'despliegue_de_pago_id', rules: [{ required: true, message: 'Requerido' }] }}
               placeholder='Seleccione método de pago'
+              onChange={(value: any) => {
+                // Buscar el método seleccionado en los datos
+                const metodo = desplieguesData?.find((d: any) => d.id === value)
+                setMetodoPagoSeleccionado(metodo)
+              }}
             />
           </LabelBase>
 
@@ -352,11 +417,14 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
             </Form.Item>
           </LabelBase>
 
-          <LabelBase label='N° Operación:' orientation='column'>
-            <Form.Item name='numero_operacion' noStyle>
-              <Input placeholder='Nº operación' />
-            </Form.Item>
-          </LabelBase>
+          {/* N° Operación solo si el método es digital (no efectivo) */}
+          {metodoPagoSeleccionado && !metodoPagoSeleccionado.name?.toUpperCase().includes('EFECTIVO') && (
+            <LabelBase label='N° Operación:' orientation='column'>
+              <Form.Item name='numero_operacion' rules={[{ required: true, message: 'Requerido para pagos digitales' }]} noStyle>
+                <Input placeholder='Nº operación' />
+              </Form.Item>
+            </LabelBase>
+          )}
         </div>
 
         <div className='mt-3'>
@@ -401,6 +469,70 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     >
       <></>
     </ModalShowDoc>
+
+    {/* Modal para anular cobro con observación */}
+    <Modal
+      title='Anular Cobro'
+      open={anularModalOpen}
+      onCancel={() => {
+        setAnularModalOpen(false)
+        setCobroAAnular(null)
+        setObservacionAnulacion('')
+      }}
+      footer={[
+        <button
+          key='cancel'
+          onClick={() => {
+            setAnularModalOpen(false)
+            setCobroAAnular(null)
+            setObservacionAnulacion('')
+          }}
+          className='px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50'
+        >
+          Cancelar
+        </button>,
+        <button
+          key='submit'
+          onClick={handleConfirmAnulacion}
+          disabled={anularLoading}
+          className='px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50'
+        >
+          {anularLoading ? 'Anulando...' : 'Confirmar Anulación'}
+        </button>,
+      ]}
+      width={500}
+      centered
+    >
+      <div className='space-y-4'>
+        <div className='bg-red-50 border border-red-200 rounded-lg p-3'>
+          <p className='text-sm text-red-800 font-semibold'>
+            ⚠️ Está a punto de anular el siguiente cobro:
+          </p>
+          {cobroAAnular && (
+            <div className='mt-2 text-sm text-red-700 space-y-1'>
+              <p><strong>Monto:</strong> S/. {Number(cobroAAnular.monto || 0).toFixed(2)}</p>
+              <p><strong>Fecha:</strong> {dayjs(cobroAAnular.created_at || cobroAAnular.fecha).format('DD/MM/YYYY hh:mm A')}</p>
+              <p><strong>Método:</strong> {cobroAAnular.despliegue_de_pago?.name || '-'}</p>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className='block text-sm font-semibold text-gray-700 mb-2'>
+            Observación de Anulación:
+          </label>
+          <textarea
+            value={observacionAnulacion}
+            onChange={(e) => setObservacionAnulacion(e.target.value)}
+            placeholder='Indique el motivo de la anulación...'
+            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500'
+            rows={4}
+            maxLength={500}
+          />
+          <p className='text-xs text-gray-500 mt-1'>{observacionAnulacion.length}/500</p>
+        </div>
+      </div>
+    </Modal>
     </>
   )
 }
