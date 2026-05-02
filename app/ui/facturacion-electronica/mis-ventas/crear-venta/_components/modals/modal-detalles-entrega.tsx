@@ -109,6 +109,43 @@ function ModalDetallesEntregaInner({
     setProgramarResto(resolvedMode.kind !== 'crear-entrega-resto')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, resolvedMode.kind])
+
+  // En modo `crear-entrega-resto`, cuando el usuario PRENDE el switch
+  // "Programar resto", redistribuir automáticamente: mover todo el pendiente
+  // de `entregar` → `entregar_programado`. Sin esto, la tabla "Productos
+  // pendientes para entrega programada" arranca vacía (porque
+  // `total - entregar - entregado = 0`) y el usuario no entiende por qué.
+  //
+  // Cuando lo APAGA, hacer el inverso: mover todo de `entregar_programado` a
+  // `entregar` para que vuelva al estado "entregar todo el pendiente ahora".
+  //
+  // Solo actúa si `entregado > 0` (hay entregas previas) — en `crear-venta`
+  // este efecto no hace nada y el comportamiento histórico se preserva.
+  useEffect(() => {
+    if (!open) return
+    if (resolvedMode.kind !== 'crear-entrega-resto') return
+    setProductosEntrega((prev) =>
+      prev.map((p) => {
+        if ((p.entregado || 0) <= 0) return p
+        const disponible = Math.max(0, p.total - (p.entregado || 0))
+        if (programarResto) {
+          // Redistribuir hacia "programado" — solo si entregar todavía cubre
+          // todo lo disponible (estado "default" tras abrir).
+          if (p.entregar >= disponible && p.entregar_programado === 0) {
+            return { ...p, entregar: 0, entregar_programado: disponible }
+          }
+        } else {
+          // Inverso: si TODO está en programado y nada en entregar, devolver
+          // todo a "entregar ahora".
+          if (p.entregar === 0 && p.entregar_programado >= disponible) {
+            return { ...p, entregar: disponible, entregar_programado: 0 }
+          }
+        }
+        return p
+      }),
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programarResto, open, resolvedMode.kind])
   // (Todos los bloques de state ahora viven en el Provider.)
 
   // Submit del modal — extraído a hook (Fase E).

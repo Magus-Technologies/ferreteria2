@@ -132,7 +132,14 @@ export default function ModalEntregaUpdate({
   useEffect(() => {
     if (!open || !entrega) return
     if (restante) {
+      // En restante el form arranca limpio, pero conservamos la dirección
+      // seleccionada de la venta original para que el modal cargue D1/D2/D3/D4
+      // del cliente igual que en crear-venta.
       form.resetFields()
+      form.setFieldValue(
+        'direccion_seleccionada',
+        entrega.venta?.direccion_seleccionada || 'D1',
+      )
       return
     }
     form.setFieldsValue({
@@ -151,6 +158,7 @@ export default function ModalEntregaUpdate({
       latitud: entrega.latitud != null ? Number(entrega.latitud) : undefined,
       longitud: entrega.longitud != null ? Number(entrega.longitud) : undefined,
       vehiculo_id: entrega.vehiculo_id || undefined,
+      direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
     })
   }, [open, entrega, restante, form])
 
@@ -323,6 +331,7 @@ export default function ModalEntregaUpdate({
         infoExtra={quienEntregaInfo}
         accionesHeader={accionesHeader}
         clienteNombre={entrega.venta?.cliente?.razon_social || entrega.venta?.cliente?.nombres}
+        clienteId={entrega.venta?.cliente_id ?? entrega.venta?.cliente?.id}
         direccion={entrega.direccion_entrega || ''}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
