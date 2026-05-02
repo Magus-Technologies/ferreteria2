@@ -22,13 +22,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
   // Filtros locales para el modal
   const [localFiltros, setLocalFiltros] = useState({
     desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
-    desdeHora: '00',
-    desdeMinuto: '00',
-    desdeAmPm: 'AM' as 'AM' | 'PM',
     hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
-    hastaHora: '23',
-    hastaMinuto: '59',
-    hastaAmPm: 'PM' as 'AM' | 'PM',
     search: '',
     vista: 'pagos' as 'pagos' | 'gastos', // Nueva opción para alternar entre pagos y gastos
     tipoGasto: 'todos' as 'todos' | 'gasto_extra' | 'gasto_compra', // Filtro para tipo de gasto
@@ -40,13 +34,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     if (open) {
       setLocalFiltros({
         desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
-        desdeHora: '00',
-        desdeMinuto: '00',
-        desdeAmPm: 'AM',
         hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
-        hastaHora: '23',
-        hastaMinuto: '59',
-        hastaAmPm: 'PM',
         search: '',
         vista: 'pagos',
         tipoGasto: 'todos',
@@ -249,46 +237,6 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
             />
           </div>
 
-          {/* Hora Desde */}
-          <div className="flex gap-1 items-end">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Hora</span>
-              <input 
-                type="number"
-                min="0"
-                max="12"
-                value={localFiltros.desdeHora}
-                onChange={(e) => setLocalFiltros(prev => ({ ...prev, desdeHora: e.target.value.padStart(2, '0') }))}
-                className="w-12 px-2 py-1 border border-slate-300 rounded text-sm text-center"
-              />
-            </div>
-            <span className="text-slate-400">:</span>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Min</span>
-              <input 
-                type="number"
-                min="0"
-                max="59"
-                value={localFiltros.desdeMinuto}
-                onChange={(e) => setLocalFiltros(prev => ({ ...prev, desdeMinuto: e.target.value.padStart(2, '0') }))}
-                className="w-12 px-2 py-1 border border-slate-300 rounded text-sm text-center"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">AM/PM</span>
-              <Select
-                value={localFiltros.desdeAmPm}
-                onChange={(value) => setLocalFiltros(prev => ({ ...prev, desdeAmPm: value }))}
-                options={[
-                  { label: 'AM', value: 'AM' },
-                  { label: 'PM', value: 'PM' },
-                ]}
-                className="w-16"
-                size="small"
-              />
-            </div>
-          </div>
-
           {/* Fecha Hasta */}
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-bold text-slate-500 uppercase">Hasta</span>
@@ -298,46 +246,6 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
               onChange={(e) => setLocalFiltros(prev => ({ ...prev, hasta: e.target.value }))}
               className="px-2 py-1 border border-slate-300 rounded text-sm"
             />
-          </div>
-
-          {/* Hora Hasta */}
-          <div className="flex gap-1 items-end">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Hora</span>
-              <input 
-                type="number"
-                min="0"
-                max="12"
-                value={localFiltros.hastaHora}
-                onChange={(e) => setLocalFiltros(prev => ({ ...prev, hastaHora: e.target.value.padStart(2, '0') }))}
-                className="w-12 px-2 py-1 border border-slate-300 rounded text-sm text-center"
-              />
-            </div>
-            <span className="text-slate-400">:</span>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Min</span>
-              <input 
-                type="number"
-                min="0"
-                max="59"
-                value={localFiltros.hastaMinuto}
-                onChange={(e) => setLocalFiltros(prev => ({ ...prev, hastaMinuto: e.target.value.padStart(2, '0') }))}
-                className="w-12 px-2 py-1 border border-slate-300 rounded text-sm text-center"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">AM/PM</span>
-              <Select
-                value={localFiltros.hastaAmPm}
-                onChange={(value) => setLocalFiltros(prev => ({ ...prev, hastaAmPm: value }))}
-                options={[
-                  { label: 'AM', value: 'AM' },
-                  { label: 'PM', value: 'PM' },
-                ]}
-                className="w-16"
-                size="small"
-              />
-            </div>
           </div>
 
           <div className="flex flex-col gap-1">
