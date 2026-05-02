@@ -274,6 +274,7 @@ export const ventaApi = {
     desde?: string;
     hasta?: string;
     cliente_id?: number;
+    estado?: string;
     per_page?: number;
   }): Promise<ApiResponse<{
     data: CobroVenta[];
