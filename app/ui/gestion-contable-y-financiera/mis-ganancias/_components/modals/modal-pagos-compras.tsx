@@ -73,8 +73,8 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     }, {} as Record<string, string>)
   }, [desplieguesData])
 
-  const pagos = data?.data?.data?.pagos || []
-  const gastosRaw = data?.data?.data?.gastos || []
+  const pagos = data?.data?.pagos || []
+  const gastosRaw = data?.data?.gastos || []
   
   // Filtrar gastos según el tipo seleccionado
   const gastos = useMemo(() => {
@@ -82,7 +82,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     return gastosRaw.filter((g: any) => g.tipo === localFiltros.tipoGasto)
   }, [gastosRaw, localFiltros.tipoGasto])
   
-  const resumen = data?.data?.data?.resumen || { total_compras: 0, total_pagado: 0, total_gastos: 0, pendiente: 0 }
+  const resumen = data?.data?.resumen || { total_compras: 0, total_pagado: 0, total_gastos: 0, pendiente: 0 }
 
   // Calcular total de gastos filtrados
   const totalGastosFiltrados = useMemo(() => {
@@ -151,8 +151,8 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
         return '-'
       },
       cellStyle: (p) => {
-        if (p.value === 'gasto_extra') return { backgroundColor: '#fef3c7', fontWeight: 'bold' } as any
-        if (p.value === 'gasto_compra') return { backgroundColor: '#dbeafe', fontWeight: 'bold' } as any
+        if (p.value === 'gasto_extra') return { backgroundColor: '#fee2e2', fontWeight: 'bold', color: '#991b1b' } as any
+        if (p.value === 'gasto_compra') return { backgroundColor: '#fee2e2', fontWeight: 'bold', color: '#991b1b' } as any
         return {} as any
       }
     },
