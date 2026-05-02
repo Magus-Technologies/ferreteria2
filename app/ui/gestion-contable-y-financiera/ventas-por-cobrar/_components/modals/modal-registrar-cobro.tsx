@@ -313,12 +313,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       }
       message.success(result.data?.message || 'Cobro registrado correctamente')
       
-      // Actualizar localVenta con los nuevos datos del servidor
-      if (result.data?.venta) {
-        setLocalVenta(result.data.venta)
-      }
-      
-      // Refrescar datos
+      // Refrescar datos - esto actualizará localVenta automáticamente
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
