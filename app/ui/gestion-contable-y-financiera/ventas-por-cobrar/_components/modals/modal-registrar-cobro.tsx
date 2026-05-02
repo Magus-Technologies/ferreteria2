@@ -109,6 +109,23 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   // Estado para mostrar/ocultar campo N° Operación
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<any>(null)
 
+  // Función helper para detectar si el método es efectivo
+  const isEfectivo = useCallback((metodo: any) => {
+    if (!metodo) return false
+    const label = metodo.label?.toUpperCase() || ''
+    const name = metodo.name?.toUpperCase() || ''
+    const tipo = metodo.tipo?.toUpperCase() || ''
+    const value = String(metodo.value || '').toUpperCase()
+    
+    return (
+      label.includes('EFECTIVO') ||
+      label.includes('CCH') ||
+      name.includes('EFECTIVO') ||
+      tipo.includes('EFECTIVO') ||
+      value.includes('EFECTIVO')
+    )
+  }, [])
+
   // Ver ticket de un cobro en modal
   const handleVerTicket = useCallback(async (cobroId: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -295,12 +312,31 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
         return
       }
       message.success(result.data?.message || 'Cobro registrado correctamente')
-      form.resetFields()
+      
+      // Actualizar localVenta con los nuevos datos del servidor
+      if (result.data?.venta) {
+        setLocalVenta(result.data.venta)
+      }
+      
       // Refrescar datos
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+
+      // Resetear formulario y setear valores por defecto
+      form.resetFields()
+      if (desplieguesData && desplieguesData.length > 0) {
+        const efectivo = desplieguesData.find((d: any) =>
+          d.tipo?.toLowerCase() === 'efectivo' || 
+          d.label?.toUpperCase().includes('EFECTIVO') || 
+          d.label?.toUpperCase().includes('CCH')
+        )
+        if (efectivo) {
+          form.setFieldsValue({ despliegue_de_pago_id: efectivo.value })
+          setMetodoPagoSeleccionado(efectivo)
+        }
+      }
 
       // Si saldo_pendiente es 0, cerrar el modal
       if (result.data?.saldo_pendiente === 0) {
@@ -391,6 +427,11 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
                 // Buscar el método seleccionado en los datos
                 const metodo = desplieguesData?.find((d: any) => d.value === value)
                 setMetodoPagoSeleccionado(metodo)
+                
+                // Si es efectivo, limpiar el campo de número de operación
+                if (metodo && isEfectivo(metodo)) {
+                  form.setFieldValue('numero_operacion', undefined)
+                }
               }}
             />
           </LabelBase>
@@ -423,15 +464,26 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           </LabelBase>
 
           {/* N° Operación solo si el método es digital (no efectivo) */}
-          {metodoPagoSeleccionado && 
-            !metodoPagoSeleccionado.label?.toUpperCase().includes('EFECTIVO') && 
-            !metodoPagoSeleccionado.name?.toUpperCase().includes('EFECTIVO') && 
-            !metodoPagoSeleccionado.tipo?.toUpperCase().includes('EFECTIVO') && (
-            <LabelBase label='N° Operación:' orientation='column'>
-              <Form.Item name='numero_operacion' rules={[{ required: true, message: 'Requerido para pagos digitales' }]} noStyle>
-                <Input placeholder='Nº operación' />
-              </Form.Item>
-            </LabelBase>
+          {metodoPagoSeleccionado && !isEfectivo(metodoPagoSeleccionado) && (
+            <div className='transition-all duration-300 ease-in-out'>
+              <LabelBase label='N° Operación:' orientation='column'>
+                <Form.Item 
+                  name='numero_operacion' 
+                  rules={[{ required: true, message: 'Requerido para pagos digitales' }]} 
+                  noStyle
+                >
+                  <Input 
+                    placeholder='Nº operación' 
+                    className='transition-all duration-200'
+                  />
+                </Form.Item>
+              </LabelBase>
+            </div>
+          )}
+          
+          {/* Espacio reservado cuando es efectivo para evitar saltos de layout */}
+          {metodoPagoSeleccionado && isEfectivo(metodoPagoSeleccionado) && (
+            <div className='h-[60px]' />
           )}
         </div>
 

@@ -74,7 +74,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const rowData = useMemo(() => {
     const ventas = data?.data ?? []
     const filtradas = aplicarFiltroMora(ventas, moraRango)
-    return [...filtradas].sort((a, b) => calcularMora(b) - calcularMora(a))
+    return [...filtradas].sort((a, b) => calcularMora(a) - calcularMora(b))
   }, [data?.data, moraRango])
 
   // Función para calcular el total de una venta
