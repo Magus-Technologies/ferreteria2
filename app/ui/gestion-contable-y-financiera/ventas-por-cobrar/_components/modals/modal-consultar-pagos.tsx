@@ -17,8 +17,8 @@ interface ModalConsultarPagosProps {
 }
 
 export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPagosProps) {
-  // Por defecto: últimos 30 días
-  const [fechaDesde, setFechaDesde] = useState(dayjs().subtract(30, 'days'))
+  // Por defecto: solo hoy
+  const [fechaDesde, setFechaDesde] = useState(dayjs())
   const [fechaHasta, setFechaHasta] = useState(dayjs())
   const [searchText, setSearchText] = useState('')
   const [estadoMetodoPago, setEstadoMetodoPago] = useState<string>('todos')
@@ -28,18 +28,15 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
   // Obtener TODOS los cobros directamente con el nuevo endpoint
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
-    const fechaFilter = filtros.fecha as any
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined
     return {
       almacen_id: filtros.almacen_id as number | undefined,
-      desde,
-      hasta,
+      desde: fechaDesde.format('YYYY-MM-DD'),
+      hasta: fechaHasta.format('YYYY-MM-DD'),
       per_page: -1,
     }
-  }, [filtros])
+  }, [filtros, fechaDesde, fechaHasta])
 
-  const { data: cobrosResponse, isLoading } = useQuery({
+  const { data: cobrosResponse, isLoading, refetch } = useQuery({
     queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros', apiFilters],
     queryFn: async () => {
       const result = await ventaApi.getAllCobros(apiFilters)
@@ -51,20 +48,9 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
 
   const allCobros = cobrosResponse ?? []
 
-  // Filtrar cobros por fecha, búsqueda y estado
+  // Filtrar cobros por búsqueda y estado (la fecha ya se filtra en el backend)
   const cobrosFiltrados = useMemo(() => {
     let filtered = allCobros ?? []
-
-    // Filtrar por fecha del cobro (inclusivo en ambos extremos)
-    filtered = filtered.filter(cobro => {
-      const fechaCobro = dayjs(cobro.created_at || cobro.fecha)
-      const desde = fechaDesde.startOf('day')
-      const hasta = fechaHasta.endOf('day')
-      
-      // Verificar que la fecha del cobro esté dentro del rango (inclusivo)
-      return (fechaCobro.isAfter(desde) || fechaCobro.isSame(desde, 'day')) &&
-             (fechaCobro.isBefore(hasta) || fechaCobro.isSame(hasta, 'day'))
-    })
 
     // Filtrar por texto
     if (searchText.trim()) {
@@ -95,7 +81,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     }
 
     return filtered
-  }, [allCobros, fechaDesde, fechaHasta, searchText, estadoMetodoPago])
+  }, [allCobros, searchText, estadoMetodoPago])
 
   // Total importe
   const totalImporte = useMemo(() =>
@@ -233,7 +219,7 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
             placeholder='Buscar cliente...'
           />
         </div>
-        <Button type='primary' onClick={() => {/* Los filtros son reactivos */}}>
+        <Button type='primary' onClick={() => refetch()}>
           Buscar
         </Button>
       </div>

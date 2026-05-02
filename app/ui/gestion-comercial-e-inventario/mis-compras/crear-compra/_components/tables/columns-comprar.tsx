@@ -412,9 +412,16 @@ export function useColumnsComprar({
                   type='button'
                   onClick={(e) => {
                     e.stopPropagation()
-                    // Disparar evento personalizado para abrir el modal
+                    // Disparar evento personalizado con todos los datos necesarios
                     const event = new CustomEvent('openEditarPreciosModal', {
-                      detail: { productoId, unidadDerivadaId }
+                      detail: { 
+                        productoId, 
+                        unidadDerivadaId,
+                        costoActual: costoEnUnidad / factor, // Costo base por unidad
+                        productoNombre: form.getFieldValue(['productos', value, 'producto_name']),
+                        unidadNombre: form.getFieldValue(['productos', value, 'unidad_derivada_name']),
+                        factor: factor,
+                      }
                     })
                     window.dispatchEvent(event)
                   }}

@@ -102,7 +102,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   }, [data?.data, moraRango])
 
   // Función para ver el PDF de la venta
-  const handleVerPdf = useCallback(async (venta: VentaCompleta, formato: 'a4' | 'ticket' = 'a4') => {
+  const handleVerPdf = useCallback(async (venta: VentaCompleta, formato?: 'a4' | 'ticket') => {
     if (!venta?.id) return
     
     setVentaSeleccionadaPdf(venta)
@@ -115,10 +115,13 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     }
     setPdfUrl(null)
     
+    // Si no se proporciona formato, usar el estado actual
+    const formatoActual = formato || (esTicketFormato ? 'ticket' : 'a4')
+    
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL
       const token = getAuthToken()
-      const res = await fetch(`${API_URL}/pdf/venta/${venta.id}?formato=${formato}`, {
+      const res = await fetch(`${API_URL}/pdf/venta/${venta.id}?formato=${formatoActual}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/pdf',
@@ -136,7 +139,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     } finally {
       setPdfLoading(false)
     }
-  }, [pdfUrl])
+  }, [pdfUrl, esTicketFormato])
 
   // Limpiar URL al cerrar modal
   const handleClosePdfModal = useCallback((v: boolean) => {
@@ -145,6 +148,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       URL.revokeObjectURL(pdfUrl)
       setPdfUrl(null)
       setVentaSeleccionadaPdf(null)
+      // NO resetear esTicketFormato - mantener el formato elegido por el usuario
     }
   }, [pdfUrl])
 

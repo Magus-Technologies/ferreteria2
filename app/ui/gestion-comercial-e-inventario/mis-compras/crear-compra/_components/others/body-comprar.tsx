@@ -124,16 +124,49 @@ export default function BodyComprar({
   // Listener para abrir el modal de editar precios
   useEffect(() => {
     const handleOpenModal = (event: Event) => {
-      const customEvent = event as CustomEvent<{ productoId: number; unidadDerivadaId: number }>
-      const { productoId, unidadDerivadaId } = customEvent.detail
+      const customEvent = event as CustomEvent<{ 
+        productoId: number
+        unidadDerivadaId: number
+        costoActual: number
+        productoNombre: string
+        unidadNombre: string
+        factor: number
+      }>
+      const { productoId, unidadDerivadaId, costoActual, productoNombre, unidadNombre, factor } = customEvent.detail
       
-      // Construir el detallePrecio a partir de los IDs
-      // El modal espera un objeto con la estructura DetalleDePreciosProps
+      // Construir el detallePrecio con la estructura completa que espera el modal
+      // Esto evita el error "Cannot read properties of undefined (reading 'costo')"
       setDetallePrecioSeleccionado({
+        id: unidadDerivadaId,
         producto_id: productoId,
         unidad_derivada_id: unidadDerivadaId,
-        almacen_id: almacen_id,
-      })
+        factor: factor,
+        precio_publico: 0,
+        comision_publico: 0,
+        precio_especial: 0,
+        comision_especial: 0,
+        activador_especial: 0,
+        precio_minimo: 0,
+        comision_minimo: 0,
+        activador_minimo: 0,
+        precio_ultimo: 0,
+        comision_ultimo: 0,
+        activador_ultimo: 0,
+        producto: {
+          id: productoId,
+          name: productoNombre,
+          cod_barra: '',
+        },
+        unidad_derivada: {
+          id: unidadDerivadaId,
+          name: unidadNombre,
+        },
+        producto_almacen: {
+          costo: costoActual,
+          stock_fraccion: 0,
+          ubicacion: null,
+        },
+      } as any)
       setModalEditarPreciosOpen(true)
     }
 
