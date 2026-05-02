@@ -147,7 +147,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
     {
       headerName: 'Estado',
       field: 'estado_entrega',
-      width: 130,
+      width: 150,
       cellRenderer: (params: any) => {
         const estado = params.value
         const config: Record<string, { label: string; bg: string; text: string }> = {
@@ -157,11 +157,27 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
           'ca': { label: 'Cancelado',  bg: '#fee2e2', text: '#dc2626' },
         }
         const { label, bg, text } = config[estado] ?? { label: estado || '', bg: '#f1f5f9', text: '#475569' }
+        // Si está pendiente PERO tiene motivo_anulacion, indicar al usuario
+        // que esta entrega fue marcada como entregada antes y se anuló — así
+        // sabe el contexto antes de marcarla otra vez.
+        const motivoAnulacion = params.data?.motivo_anulacion
+        const fueAnulada = estado === 'pe' && !!motivoAnulacion
+        const tooltipTitle = fueAnulada
+          ? `Anulada el ${params.data?.fecha_anulacion ?? 'previamente'}. Motivo: ${motivoAnulacion}`
+          : undefined
         return (
-          <div className="flex items-center h-full">
+          <div className="flex items-center h-full gap-1.5" title={tooltipTitle}>
             <span style={{ background: bg, color: text, fontWeight: 'bold', fontSize: '11px', padding: '2px 8px', borderRadius: '9999px' }}>
               {label}
             </span>
+            {fueAnulada && (
+              <span
+                className="text-amber-600"
+                style={{ fontSize: '11px', fontWeight: 'bold' }}
+              >
+                ⚠ Anulada antes
+              </span>
+            )}
           </div>
         )
       },

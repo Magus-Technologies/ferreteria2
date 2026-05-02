@@ -7,6 +7,7 @@ import {
   FaTruck,
   FaFilePdf,
   FaCheckCircle,
+  FaUndoAlt,
 } from 'react-icons/fa'
 import { MoreOutlined } from '@ant-design/icons'
 import { Dropdown } from 'antd'
@@ -22,6 +23,7 @@ import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
 import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
 import ModalEntregaUpdate from '../modals/modal-entrega-update'
+import ModalAnularEntrega from '../modals/modal-anular-entrega'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
 interface CellAccionesEntregaProps {
@@ -37,6 +39,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const [modalDetallesOpen, setModalDetallesOpen] = useState(false)
   const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
   const [modalParcialOpen, setModalParcialOpen] = useState(false)
+  const [modalAnularOpen, setModalAnularOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const { message } = useApp()
   const queryClient = useQueryClient()
@@ -212,6 +215,23 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           } as const,
         ]
       : []),
+    // Anular entrega — solo si está EN_CAMINO o ENTREGADA. Permite
+    // deshacer un "marcar entregada" hecho por error. Vuelve a 'pe'
+    // (pendiente) y registra el motivo. NO toca stock ni SUNAT.
+    ...(entrega.estado_entrega === 'en' || entrega.estado_entrega === 'ec'
+      ? [
+          { type: 'divider' as const },
+          {
+            key: 'anular-entrega',
+            label: (
+              <span className="flex items-center gap-2 text-amber-700">
+                <FaUndoAlt className="text-amber-600" /> Anular Entrega
+              </span>
+            ),
+            onClick: () => setModalAnularOpen(true),
+          } as const,
+        ]
+      : []),
   ]
 
   return (
@@ -286,6 +306,14 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         onConfirmar={handleEntregar}
         entrega={entrega}
         loading={loading}
+      />
+
+      {/* Modal para anular una entrega marcada como entregada por error */}
+      <ModalAnularEntrega
+        open={modalAnularOpen}
+        onClose={() => setModalAnularOpen(false)}
+        entrega={entrega}
+        onSuccess={onSuccess}
       />
     </div>
   )

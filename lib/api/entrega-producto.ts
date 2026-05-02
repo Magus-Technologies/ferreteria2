@@ -187,4 +187,20 @@ export const entregaProductoApi = {
       method: 'POST',
     });
   },
+
+  /**
+   * Anular una entrega que se marcó como entregada por error.
+   * Vuelve `estado_entrega` a `'pe'` (pendiente) y registra el motivo
+   * para auditoría. NO toca stock ni el comprobante SUNAT — la venta
+   * sigue válida, solo se deshace la marca física de entregado.
+   *
+   * Si después se vuelve a marcar como `'en'`, los campos de anulación
+   * se limpian automáticamente (lo hace el backend en el `update()`).
+   */
+  async anular(id: number, motivo: string): Promise<ApiResponse<EntregaProductoResponse>> {
+    return apiRequest<EntregaProductoResponse>(`/entregas-productos/${id}/anular`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo }),
+    });
+  },
 };
