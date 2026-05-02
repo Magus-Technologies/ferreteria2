@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Form } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useQueryClient } from '@tanstack/react-query'
-import { FaExchangeAlt } from 'react-icons/fa'
+import { FaExchangeAlt, FaFilePdf } from 'react-icons/fa'
 import dayjs from 'dayjs'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregaProductoApi, TipoEntrega } from '~/lib/api/entrega-producto'
@@ -15,6 +15,8 @@ import type {
   TipoDespachoUI,
 } from '../../../mis-ventas/crear-venta/_components/modals/detalles-entrega/types'
 import type { ProductoEntrega } from '../../../mis-ventas/_hooks/use-productos-entrega'
+import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
+import ButtonBase from '~/components/buttons/button-base'
 
 interface ModalEntregaUpdateProps {
   open: boolean
@@ -43,6 +45,7 @@ export default function ModalEntregaUpdate({
   const { message } = useApp()
   const queryClient = useQueryClient()
   const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
+  const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
 
   // Cambiar tipo de entrega (rt/de/pa) — llamado desde el botón en el header.
   const handleSelectTipoDespacho = async (
@@ -195,16 +198,26 @@ export default function ModalEntregaUpdate({
   // Botón "Cambiar tipo de entrega" — solo si la entrega no se completó
   // ('en') ni se canceló ('ca'). Una vez entregada/cancelada no tiene sentido.
   const puedeCambiarTipo = entrega.estado_entrega !== 'en' && entrega.estado_entrega !== 'ca'
-  const accionesHeader = puedeCambiarTipo ? (
-    <button
-      type="button"
-      onClick={() => setModalSeleccionarTipoOpen(true)}
-      className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
-    >
-      <FaExchangeAlt size={11} />
-      Cambiar tipo
-    </button>
-  ) : null
+  const accionesHeader = (
+    <div className="flex items-center gap-2">
+      <ButtonBase
+        color="danger"
+        size="sm"
+        onClick={() => openPdfModal(entrega)}
+      >
+        <FaFilePdf size={11} className="mr-1 inline-block" /> Ticket
+      </ButtonBase>
+      {puedeCambiarTipo && (
+        <ButtonBase
+          color="warning"
+          size="sm"
+          onClick={() => setModalSeleccionarTipoOpen(true)}
+        >
+          <FaExchangeAlt size={11} className="mr-1 inline-block" /> Cambiar tipo
+        </ButtonBase>
+      )}
+    </div>
+  )
 
   return (
     <>
@@ -235,6 +248,7 @@ export default function ModalEntregaUpdate({
         open={modalSeleccionarTipoOpen}
         setOpen={setModalSeleccionarTipoOpen}
         onSelectTipo={handleSelectTipoDespacho}
+        defaultTipo={tipoEntrega === 'rt' ? 'EnTienda' : tipoEntrega === 'de' ? 'Domicilio' : 'Parcial'}
       />
     </>
   )
