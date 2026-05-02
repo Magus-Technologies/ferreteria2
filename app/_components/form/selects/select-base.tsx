@@ -137,6 +137,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
         onOpenChange={onOpenChange}
         onChange={onChange}
         optionFilterProp={optionFilterProp}
+        optionLabelProp="label"
         variant={variant}
         uppercase={uppercase}
         onSearch={onSearch}
@@ -157,6 +158,7 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
       }}
       value={props.value !== undefined ? props.value : value}
       optionFilterProp={optionFilterProp}
+      optionLabelProp="label"
       variant={variant}
       uppercase={uppercase}
       onSearch={onSearch}
