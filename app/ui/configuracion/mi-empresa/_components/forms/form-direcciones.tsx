@@ -1,11 +1,12 @@
 "use client";
 
 import { Form, App, Button } from "antd";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import LabelBase from "~/components/form/label-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
+import SelectUbigeo from "../select-ubigeo";
 import { empresaApi, type UpdateEmpresaRequest, type DireccionEmpresa } from "~/lib/api/empresa";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
@@ -17,6 +18,8 @@ export default function FormDirecciones({ empresaId }: FormDireccionesProps) {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
   const { message } = App.useApp();
+
+  const [ubigeoValues, setUbigeoValues] = useState<Record<number, { departamento?: string; provincia?: string; distrito?: string; ubigeo_id?: number }>>({});
 
   const { data: empresaData, isLoading } = useQuery({
     queryKey: [QueryKeys.EMPRESAS, empresaId],
@@ -41,31 +44,44 @@ export default function FormDirecciones({ empresaId }: FormDireccionesProps) {
 
   useEffect(() => {
     if (empresaData?.data?.data) {
-      const dirs = empresaData.data.data.direcciones || [];
+      const dirs = (empresaData.data.data.direcciones || []).filter(d => !d.es_principal);
+      const ubigeo: Record<number, any> = {};
       for (let i = 0; i < 3; i++) {
         const d = dirs[i];
         form.setFieldsValue({
           [`alias_${i}`]: d?.alias || undefined,
           [`direccion_${i}`]: d?.direccion || undefined,
-          [`departamento_${i}`]: d?.departamento || undefined,
-          [`provincia_${i}`]: d?.provincia || undefined,
-          [`distrito_${i}`]: d?.distrito || undefined,
         });
+        if (d?.departamento || d?.provincia || d?.distrito || d?.ubigeo_id) {
+          ubigeo[i] = {
+            departamento: d.departamento || undefined,
+            provincia: d.provincia || undefined,
+            distrito: d.distrito || undefined,
+            ubigeo_id: d.ubigeo_id || undefined,
+          };
+        }
       }
+      setUbigeoValues(ubigeo);
     }
   }, [empresaData, form]);
+
+  const handleUbigeoChange = (index: number, value: { departamento: string; provincia: string; distrito: string; ubigeo_id?: number }) => {
+    setUbigeoValues((prev) => ({ ...prev, [index]: value }));
+  };
 
   const handleSubmit = (values: Record<string, any>) => {
     const direcciones: DireccionEmpresa[] = [];
     for (let i = 0; i < 3; i++) {
       const dir = values[`direccion_${i}`];
       if (dir) {
+        const ub = ubigeoValues[i];
         direcciones.push({
-          alias: values[`alias_${i}`] || null,
+          alias: values[`alias_${i}`] || undefined,
           direccion: dir,
-          departamento: values[`departamento_${i}`] || null,
-          provincia: values[`provincia_${i}`] || null,
-          distrito: values[`distrito_${i}`] || null,
+          ubigeo_id: ub?.ubigeo_id || undefined,
+          departamento: ub?.departamento || undefined,
+          provincia: ub?.provincia || undefined,
+          distrito: ub?.distrito || undefined,
         });
       }
     }
@@ -116,27 +132,11 @@ export default function FormDirecciones({ empresaId }: FormDireccionesProps) {
                 />
               </LabelBase>
             </div>
-            <div>
-              <LabelBase label="Departamento:" orientation="column">
-                <InputBase
-                  propsForm={{ name: `departamento_${index}` }}
-                  placeholder="LA LIBERTAD"
-                />
-              </LabelBase>
-            </div>
-            <div>
-              <LabelBase label="Provincia:" orientation="column">
-                <InputBase
-                  propsForm={{ name: `provincia_${index}` }}
-                  placeholder="TRUJILLO"
-                />
-              </LabelBase>
-            </div>
-            <div>
-              <LabelBase label="Distrito:" orientation="column">
-                <InputBase
-                  propsForm={{ name: `distrito_${index}` }}
-                  placeholder="HUANCHACO"
+            <div className="md:col-span-2">
+              <LabelBase label="Ubicación:" orientation="column">
+                <SelectUbigeo
+                  value={ubigeoValues[index]}
+                  onChange={(value) => handleUbigeoChange(index, value)}
                 />
               </LabelBase>
             </div>

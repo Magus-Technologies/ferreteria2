@@ -14,6 +14,7 @@ export interface ContactoEmpresa {
 export interface DireccionEmpresa {
   id?: number;
   empresa_id?: number;
+  es_principal?: boolean;
   alias?: string;
   direccion: string;
   ubigeo_id?: number;

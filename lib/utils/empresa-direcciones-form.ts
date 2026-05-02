@@ -51,15 +51,24 @@ export interface SlotDireccionEmpresa {
  * exactamente `MAX_DIRECCIONES_EMPRESA` slots — los slots que excedan el
  * largo del array quedan con `direccion: null`. Iterar sobre el resultado
  * garantiza N slots fijos para tabs/radios.
+ *
+ * **Orden:** la dirección con `es_principal === true` siempre va en `D1`.
+ * Las secundarias se distribuyen en `D2..DN` por orden de inserción. Esto
+ * asegura UX consistente: el "punto de partida" sugerido por defecto es
+ * la dirección principal de la empresa, no la primera del array que
+ * podría ser una sucursal.
  */
 export function buildSlotsDireccionEmpresa(
   direcciones: DireccionEmpresa[] | undefined | null,
 ): SlotDireccionEmpresa[] {
   const list = direcciones ?? []
+  const principal = list.find((d) => d.es_principal) ?? null
+  const secundarias = list.filter((d) => !d.es_principal)
+  const ordenadas: (DireccionEmpresa | null)[] = [principal, ...secundarias]
   return TIPOS_DIRECCION_EMPRESA.map((tipo, index) => ({
     tipo,
-    index: index < list.length ? index : undefined,
-    direccion: list[index] ?? null,
+    index: ordenadas[index] ? index : undefined,
+    direccion: ordenadas[index] ?? null,
   }))
 }
 
