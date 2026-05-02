@@ -50,7 +50,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
       search: debouncedSearch,
       almacen_id: filtrosGlobales.almacen_id
     }),
-    enabled: open,
+    enabled: open && !!localFiltros.desde && !!localFiltros.hasta,
   })
 
   // Query para obtener despliegues de pago con el formato detallado
