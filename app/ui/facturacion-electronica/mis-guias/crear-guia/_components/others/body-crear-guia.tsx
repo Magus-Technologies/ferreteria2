@@ -34,6 +34,14 @@ export type FormCreateGuia = {
   cliente_id?: number
   comprador_id?: number
   comprador_nombre?: string
+  /**
+   * Remitente — solo aplica a `tipo_guia === 'ELECTRONICA_TRANSPORTISTA'`.
+   * Es el cliente que CONTRATA el servicio de transporte (dueño de la
+   * mercadería). En el backend se mapea a `remitente_id` y luego a
+   * Greenter `setTercero` para el XML SUNAT GRE-31.
+   */
+  remitente_id?: number
+  remitente_nombre?: string
   almacen_origen_id?: number
   almacen_destino_id?: number
   referencia?: string

@@ -53,6 +53,12 @@ export interface CreateGuiaRemisionRequest {
   afecta_stock?: boolean;
   cliente_id?: number;
   comprador_id?: number;
+  /**
+   * Solo aplica a `tipo_guia === 'ELECTRONICA_TRANSPORTISTA'`. Es el cliente
+   * que contrata el servicio (dueño de la mercadería) — backend lo mapea a
+   * Greenter `setTercero` para el XML GRE-31.
+   */
+  remitente_id?: number;
   motivo_traslado_id: number;
   modalidad_transporte: ModalidadTransporte;
   vehiculo_placa?: string;

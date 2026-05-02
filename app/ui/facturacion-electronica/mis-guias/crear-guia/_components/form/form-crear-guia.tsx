@@ -45,6 +45,18 @@ export default function FormCrearGuia({
   const requiereComprador = MOTIVOS_CON_COMPRADOR.includes(codigoMotivo)
   const esEntreEstablecimientos = codigoMotivo === MOTIVO_ENTRE_ESTABLECIMIENTOS
 
+  // Watch sobre tipo_guia para mostrar campos específicos de GRE-Transportista.
+  const tipoGuia = Form.useWatch('tipo_guia', form) as string | undefined
+  const esTransportista = tipoGuia === 'ELECTRONICA_TRANSPORTISTA'
+
+  // Limpiar remitente_id cuando se cambia de Transportista a otro tipo.
+  useEffect(() => {
+    if (!esTransportista) {
+      form.setFieldValue('remitente_id', undefined)
+      form.setFieldValue('remitente_nombre', undefined)
+    }
+  }, [esTransportista, form])
+
   // Consultar almacenes (para motivo 08)
   const { data: almacenes } = useQuery({
     queryKey: [QueryKeys.ALMACENES],
@@ -316,6 +328,71 @@ export default function FormCrearGuia({
                 className: 'w-full',
               }}
               placeholder='Nombre del comprador (quien paga)'
+              className='w-full'
+              readOnly
+              uppercase={false}
+            />
+          </LabelBase>
+        </div>
+      )}
+
+      {/* Fila 2.6: Remitente — solo para GRE-Transportista. Cliente que
+          contrata el servicio (dueño de la mercadería). Se mapea a
+          `setTercero` de Greenter en el backend. */}
+      {esTransportista && !esEntreEstablecimientos && (
+        <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4 items-start'>
+          <div className='w-full'>
+            <Tag color='purple' className='!text-xs !mb-2'>
+              <FaTruck className='inline mr-1' />
+              GRE-Transportista: tu empresa transporta — el Remitente es el cliente que CONTRATA el servicio (dueño de la mercadería)
+            </Tag>
+          </div>
+          <LabelBase
+            label='Remitente (DNI/RUC):'
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:w-auto'
+          >
+            <SelectClientes
+              form={form}
+              showOnlyDocument={true}
+              propsForm={{
+                name: 'remitente_id',
+                hasFeedback: false,
+                className: 'w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]',
+                rules: [
+                  {
+                    required: true,
+                    message: 'Selecciona el remitente',
+                  },
+                ],
+              }}
+              className='w-full'
+              classNameIcon='text-purple-600 mx-1'
+              placeholder='DNI/RUC remitente'
+              onChange={(_, cliente) => {
+                if (cliente) {
+                  const nombre = cliente.razon_social
+                    ? cliente.razon_social
+                    : `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()
+                  form.setFieldValue('remitente_nombre', nombre)
+                } else {
+                  form.setFieldValue('remitente_nombre', '')
+                }
+              }}
+            />
+          </LabelBase>
+          <LabelBase
+            label='Remitente:'
+            classNames={{ labelParent: 'mb-2' }}
+            className='w-full sm:flex-1'
+          >
+            <InputBase
+              propsForm={{
+                name: 'remitente_nombre',
+                hasFeedback: false,
+                className: 'w-full',
+              }}
+              placeholder='Nombre del remitente (quien contrata el transporte)'
               className='w-full'
               readOnly
               uppercase={false}
