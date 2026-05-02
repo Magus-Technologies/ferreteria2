@@ -150,10 +150,13 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       width: 150,
       cellRenderer: (params: any) => {
         const estado = params.value
+        const tienePendiente = params.data?.productos_entregados?.some(
+          (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
+        )
         const config: Record<string, { label: string; bg: string; text: string }> = {
           'pe': { label: 'Pendiente',  bg: '#f1f5f9', text: '#475569' },
           'ec': { label: 'En Camino',  bg: '#dbeafe', text: '#2563eb' },
-          'en': { label: 'Entregado',  bg: '#dcfce7', text: '#16a34a' },
+          'en': { label: tienePendiente ? 'Entregado Parcial' : 'Entregado',  bg: tienePendiente ? '#fef3c7' : '#dcfce7', text: tienePendiente ? '#d97706' : '#16a34a' },
           'ca': { label: 'Cancelado',  bg: '#fee2e2', text: '#dc2626' },
         }
         const { label, bg, text } = config[estado] ?? { label: estado || '', bg: '#f1f5f9', text: '#475569' }
