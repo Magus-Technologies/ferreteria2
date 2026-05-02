@@ -28,6 +28,7 @@ const tipoOptions = [
   { value: 'recepcion_anulada', label: 'Recepciones Anuladas' },
   { value: 'ingreso', label: 'Ingresos' },
   { value: 'salida', label: 'Salidas' },
+  { value: 'cuadre', label: 'Cuadres' },
 ]
 
 const tipoColors: Record<string, string> = {
@@ -36,6 +37,7 @@ const tipoColors: Record<string, string> = {
   recepcion_anulada: 'volcano',
   ingreso: 'blue',
   salida: 'red',
+  cuadre: 'purple',
 }
 
 const tipoLabels: Record<string, string> = {
@@ -44,6 +46,7 @@ const tipoLabels: Record<string, string> = {
   recepcion_anulada: 'Recepcion Anulada',
   ingreso: 'Ingreso',
   salida: 'Salida',
+  cuadre: 'Cuadre',
 }
 
 const movimientoColors: Record<string, string> = {
