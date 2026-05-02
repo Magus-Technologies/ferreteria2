@@ -8,7 +8,7 @@ import TitleForm from '~/components/form/title-form'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
-import SelectBase from '~/app/_components/form/selects/select-base'
+import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { ComisionVendedor } from '~/lib/api/comision'
 import { useRegistrarPagoComision } from '../../_hooks/use-comisiones'
 import { useStoreFiltrosComisiones } from '../../_store/store-filtros-comisiones'
@@ -37,6 +37,9 @@ const METODO_PAGO_OPTIONS = [
   { value: 'otro', label: 'Otro' },
 ]
 
+// Backup options for when SelectDespliegueDePago is loading or fails
+const FALLBACK_OPTIONS = METODO_PAGO_OPTIONS
+
 function formatPEN(n: number) {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -59,6 +62,7 @@ export default function ModalRegistrarPago({ vendedor, open, onClose }: Props) {
         periodo_desde: dayjs(filtros.desde),
         periodo_hasta: dayjs(filtros.hasta),
         fecha_pago: dayjs(),
+        metodo_pago: 'efectivo',
       })
     }
   }, [open, vendedor, form, filtros.desde, filtros.hasta])
@@ -163,8 +167,8 @@ export default function ModalRegistrarPago({ vendedor, open, onClose }: Props) {
         >
           <DatePickerBase className='w-full' />
         </Form.Item>
-        <Form.Item name='metodo_pago' label='Método de pago'>
-          <SelectBase options={METODO_PAGO_OPTIONS} placeholder='Seleccionar' allowClear />
+        <Form.Item name='metodo_pago' label='Método de pago' initialValue='efectivo'>
+          <SelectDespliegueDePago placeholder='Seleccionar' />
         </Form.Item>
       </div>
 
