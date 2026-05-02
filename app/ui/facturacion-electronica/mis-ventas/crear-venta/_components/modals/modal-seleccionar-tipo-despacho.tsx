@@ -9,14 +9,16 @@ interface ModalSeleccionarTipoDespachoProps {
   open: boolean
   setOpen: (open: boolean) => void
   onSelectTipo: (tipo: 'EnTienda' | 'Domicilio' | 'Parcial') => void
+  defaultTipo?: 'EnTienda' | 'Domicilio' | 'Parcial'
 }
 
 export default function ModalSeleccionarTipoDespacho({
   open,
   setOpen,
   onSelectTipo,
+  defaultTipo,
 }: ModalSeleccionarTipoDespachoProps) {
-  const [selectedTipo, setSelectedTipo] = useState<'EnTienda' | 'Domicilio' | 'Parcial' | null>(null)
+  const [selectedTipo, setSelectedTipo] = useState<'EnTienda' | 'Domicilio' | 'Parcial' | null>(defaultTipo || null)
 
   const handleConfirmar = () => {
     if (selectedTipo) {

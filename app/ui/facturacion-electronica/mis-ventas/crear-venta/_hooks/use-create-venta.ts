@@ -381,7 +381,7 @@ export default function useCreateVenta({
       // ✅ CREAR ENTREGA AUTOMÁTICAMENTE SI ES DESPACHO A DOMICILIO
       const ventaCreada = response.data?.data
 
-      if (ventaCreada && tipo_despacho === 'Domicilio' && !_omitir_entrega) {
+      if (!isEditing && ventaCreada && tipo_despacho === 'Domicilio' && !_omitir_entrega) {
         try {
           // Obtener los IDs de unidades derivadas de venta desde la respuesta
           const productosVenta = ventaCreada.productos_por_almacen || []
@@ -476,7 +476,7 @@ export default function useCreateVenta({
             description: 'La venta se creó correctamente pero hubo un error al registrar la entrega. Puedes crearla manualmente desde "Mis Ventas".',
           })
         }
-      } else if (tipo_despacho === 'Parcial' && ventaCreada && !_omitir_entrega) {
+      } else if (!isEditing && tipo_despacho === 'Parcial' && ventaCreada && !_omitir_entrega) {
         // DESPACHO PARCIAL: entregar solo las cantidades especificadas
         if (cantidades_parciales && cantidades_parciales.some(c => c.entregar > 0)) {
           try {
