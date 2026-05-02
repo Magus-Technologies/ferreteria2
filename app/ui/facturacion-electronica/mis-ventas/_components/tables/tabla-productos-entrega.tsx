@@ -75,7 +75,12 @@ export default function TablaProductosEntrega({
 
     const updated = productosRef.current.map((p) => {
       if (p.id !== id) return p
-      const restoAuto = Math.max(0, p.total - newValue)
+      // Auto-distribuir el resto a "programar". Descontar lo YA entregado en
+      // entregas previas (>0 sólo en `crear-entrega-resto`), si no la suma
+      // entregar+programado podría superar lo realmente disponible. En
+      // `crear-venta` `entregado=0` y la fórmula se simplifica a
+      // `total - newValue` igual que antes.
+      const restoAuto = Math.max(0, p.total - newValue - (p.entregado || 0))
       return { ...p, entregar: newValue, entregar_programado: restoAuto }
     })
     onProductoChangeRef.current(updated)
