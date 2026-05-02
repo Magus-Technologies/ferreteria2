@@ -50,7 +50,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
       search: debouncedSearch,
       almacen_id: filtrosGlobales.almacen_id
     }),
-    enabled: open,
+    enabled: open && !!localFiltros.desde && !!localFiltros.hasta,
   })
 
   // Query para obtener despliegues de pago con el formato detallado
@@ -71,8 +71,8 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     }, {} as Record<string, string>)
   }, [desplieguesData])
 
-  const pagos = data?.data?.pagos || []
-  const gastosRaw = data?.data?.gastos || []
+  const pagos = data?.data?.data?.pagos || []
+  const gastosRaw = data?.data?.data?.gastos || []
 
   // Filtrar gastos según el tipo seleccionado
   const gastos = useMemo(() => {
@@ -80,7 +80,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     return gastosRaw.filter((g: any) => g.tipo === localFiltros.tipoGasto)
   }, [gastosRaw, localFiltros.tipoGasto])
 
-  const resumen = data?.data?.resumen || { total_compras: 0, total_pagado: 0, total_gastos: 0, pendiente: 0 }
+  const resumen = data?.data?.data?.resumen || { total_compras: 0, total_pagado: 0, total_gastos: 0, pendiente: 0 }
 
   // Calcular total de gastos filtrados
   const totalGastosFiltrados = useMemo(() => {
