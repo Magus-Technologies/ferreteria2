@@ -2,7 +2,7 @@
 
 // Filtros para ventas por cobrar
 import { Form, Drawer, Badge, Select } from 'antd'
-import { FaSearch, FaFilter } from 'react-icons/fa'
+import { FaSearch, FaFilter, FaPrint } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -113,10 +113,11 @@ export default function FiltersVentasPorCobrar() {
         const {
           desde,
           hasta,
-          almacen_id,
+          almacen_id: almacenIdForm,
           busqueda,
           cliente_id,
-          ...rest
+          tipo_documento,
+          user_id,
         } = values
 
         // Si se usan fechas manuales, limpiar el filtro rápido
@@ -126,19 +127,31 @@ export default function FiltersVentasPorCobrar() {
         }
 
         const data = {
-          almacen_id: almacen_id || almacen_id,
+          almacen_id: almacenIdForm || almacen_id,
           // Solo mostrar ventas a crédito
           forma_de_pago: FormaDePago.CREDITO,
-          ...rest,
+          estado_de_venta: {
+            in: ['Creado', 'Procesado'],
+          },
+          // Agregar filtro de fechas si existe
           ...(desde || hasta ? {
             fecha: {
               ...(desde && { gte: desde.format('YYYY-MM-DD') }),
               ...(hasta && { lte: hasta.format('YYYY-MM-DD') }),
             }
           } : {}),
-          estado_de_venta: {
-            in: ['Creado', 'Procesado'],
-          },
+          // Agregar filtro de tipo de documento si existe
+          ...(tipo_documento && {
+            tipo_documento: tipo_documento
+          }),
+          // Agregar filtro de usuario si existe
+          ...(user_id && {
+            user_id: user_id
+          }),
+          // Agregar filtro de cliente si existe
+          ...(cliente_id && {
+            cliente_id: cliente_id
+          }),
           // Agregar búsqueda si existe
           ...(busqueda && {
             OR: [
@@ -150,10 +163,6 @@ export default function FiltersVentasPorCobrar() {
               { cliente: { apellidos: { contains: busqueda } } },
               { cliente: { numero_documento: { contains: busqueda } } },
             ]
-          }),
-          // Agregar filtro de cliente si existe
-          ...(cliente_id && {
-            cliente_id: cliente_id
           }),
         } satisfies VentaWhereInput
         setFiltros(data)
@@ -284,6 +293,18 @@ export default function FiltersVentasPorCobrar() {
           >
             <FaSearch />
           </ButtonBase>
+          <button
+            type='button'
+            onClick={() => {
+              // Este evento será manejado desde el componente padre
+              const event = new CustomEvent('imprimirReporteVentasPorCobrar')
+              window.dispatchEvent(event)
+            }}
+            className='flex items-center justify-center flex-shrink-0 mt-4 w-10 h-10 rounded bg-red-600 text-white hover:bg-red-700'
+            title='Imprimir reporte de ventas filtradas'
+          >
+            <FaPrint size={16} />
+          </button>
         </div>
 
         {/* Mobile/Tablet: Solo almacén y botones */}

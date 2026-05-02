@@ -25,6 +25,17 @@ export const useStoreVentaSeleccionada = create<UseStoreVentaSeleccionada>((set)
   setVenta: (venta) => set({ venta }),
 }))
 
+// Store para las ventas filtradas (para el reporte)
+type UseStoreVentasFiltradas = {
+  ventas: VentaCompleta[]
+  setVentas: (ventas: VentaCompleta[]) => void
+}
+
+export const useStoreVentasFiltradas = create<UseStoreVentasFiltradas>((set) => ({
+  ventas: [],
+  setVentas: (ventas) => set({ ventas }),
+}))
+
 // Calcula días de mora: positivo = vencida, negativo = aún no vence
 function calcularMora(venta: VentaCompleta): number {
   const ref = venta.fecha_vencimiento || venta.fecha
@@ -277,6 +288,11 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       }, 100);
     }
   }, [rowData]);
+
+  // Actualizar el store de ventas filtradas para el reporte
+  useEffect(() => {
+    useStoreVentasFiltradas.getState().setVentas(rowData)
+  }, [rowData])
 
   // Solo renderizar cuando hay filtros
   if (!filtros) return null
