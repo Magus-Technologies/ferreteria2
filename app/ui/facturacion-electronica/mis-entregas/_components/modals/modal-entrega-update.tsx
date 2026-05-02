@@ -28,6 +28,7 @@ const ModalMapaEntrega = dynamic(
   { ssr: false },
 )
 
+
 interface ModalEntregaUpdateProps {
   open: boolean
   setOpen: (open: boolean) => void
@@ -352,9 +353,88 @@ export default function ModalEntregaUpdate({
     vendedor: 'Vendedor',
     chofer: 'Chofer',
   }
-  const quienEntregaInfo = entrega.quien_entrega
-    ? `Entrega: ${quienEntregaLabel[entrega.quien_entrega] ?? entrega.quien_entrega}`
+  // Productos anteriores — extraídos del último registro de
+  // `venta.historial` con `accion='edicion'`. Usado para renderizar la
+  // tabla "Productos anteriores" dentro del modal cuando la venta fue
+  // editada (productos intercambiados o eliminados).
+  const ultimaEdicion = (entrega.venta as any)?.historial?.find?.(
+    (h: any) => h.accion === 'edicion',
+  )
+  const productosAnteriores: Array<{
+    codigo: string
+    nombre: string
+    unidad: string
+    cantidad: number
+    precio: number
+  }> = (ultimaEdicion?.datos_anteriores?.productos || []).flatMap((p: any) =>
+    (p?.unidades || []).map((ud: any) => ({
+      codigo: p?.codigo || '',
+      nombre: p?.nombre || '—',
+      unidad: ud?.unidad || '',
+      cantidad: Number(ud?.cantidad ?? 0),
+      precio: Number(ud?.precio ?? 0),
+    })),
+  )
+  const fechaUltimaEdicion = ultimaEdicion?.fecha
+    ? dayjs(ultimaEdicion.fecha).format('DD/MM/YYYY hh:mm A')
     : undefined
+
+  const quienEntregaInfo = (
+    <div className="flex flex-col gap-1.5">
+      {entrega.quien_entrega && (
+        <span>
+          Entrega:{' '}
+          {quienEntregaLabel[entrega.quien_entrega] ?? entrega.quien_entrega}
+        </span>
+      )}
+      {productosAnteriores.length > 0 && (
+        <div className="flex flex-col gap-1 px-2 py-1.5 bg-amber-50 border-l-4 border-amber-500 rounded">
+          <div className="flex items-center justify-between flex-wrap gap-x-2">
+            <span className="text-amber-700 font-bold text-xs">
+              🔄 CAMBIO DE PRODUCTO
+            </span>
+            {fechaUltimaEdicion && (
+              <span className="text-amber-600 text-[10px]">
+                {fechaUltimaEdicion}
+              </span>
+            )}
+          </div>
+          <div className="text-[10px] text-amber-700 italic mb-0.5">
+            Producto anterior (reemplazado):
+          </div>
+          <table className="w-full text-[10px] border-collapse">
+            <thead>
+              <tr className="bg-amber-100 text-amber-800">
+                <th className="text-left px-1 py-0.5">Cód.</th>
+                <th className="text-left px-1 py-0.5">Producto</th>
+                <th className="text-center px-1 py-0.5">U.</th>
+                <th className="text-right px-1 py-0.5">Cant.</th>
+                <th className="text-right px-1 py-0.5">Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {productosAnteriores.map((p, i) => (
+                <tr
+                  key={i}
+                  className="border-t border-amber-200 line-through text-gray-500"
+                >
+                  <td className="px-1 py-0.5">{p.codigo}</td>
+                  <td className="px-1 py-0.5">{p.nombre}</td>
+                  <td className="text-center px-1 py-0.5">{p.unidad}</td>
+                  <td className="text-right px-1 py-0.5">
+                    {p.cantidad.toFixed(2)}
+                  </td>
+                  <td className="text-right px-1 py-0.5">
+                    {p.precio.toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
 
   // Botón "Cambiar tipo de entrega":
   //   - En modo restante: siempre disponible (la entrega origen no se toca).
