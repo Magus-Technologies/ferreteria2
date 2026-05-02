@@ -188,8 +188,16 @@ function ModalDetallesEntregaInner({
   useEffect(() => {
     if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
     if (direcciones.length === 0) return
-    // Si ya hay dirección en el form, no sobrescribir
-    if (form.getFieldValue('_resto_direccion_entrega')) return
+    // Guard "no sobrescribir si ya hay dirección" SOLO en `crear-venta`,
+    // donde el usuario puede editar manualmente antes/durante el flujo.
+    // En `crear-entrega-resto` los inputs `_resto_*` recién se renderizan
+    // al activar el switch, así que no hay edición previa que respetar — y
+    // el guard estaba causando que la referencia quedara vacía cuando el
+    // switch se activaba antes de que llegaran las direcciones del backend.
+    if (
+      resolvedMode.kind !== 'crear-entrega-resto' &&
+      form.getFieldValue('_resto_direccion_entrega')
+    ) return
 
     const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
     const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm) || direcciones[0]
@@ -213,7 +221,7 @@ function ModalDetallesEntregaInner({
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, tipoDespacho, programarResto, direcciones, form])
+  }, [open, tipoDespacho, programarResto, direcciones, form, resolvedMode.kind])
 
   // Cargar dirección inicial cuando se abra el modal
   useEffect(() => {
