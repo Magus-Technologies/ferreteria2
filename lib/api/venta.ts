@@ -122,6 +122,14 @@ export interface CreateVentaRequest {
   // Si true, no descontar stock al crear la venta — se descontará cuando
   // se cree la entrega-producto manualmente.
   omitir_entrega?: boolean;
+  /**
+   * 'si' (default) | 'no'.
+   * Cuando es 'no', el backend NO descuenta stock pero SÍ crea la entrega
+   * como ENTREGADA (caso: cliente ya tiene el producto, consumo interno,
+   * regularización administrativa). Distinto de `omitir_entrega` que
+   * implica no crear entrega en absoluto.
+   */
+  descontar_stock?: 'si' | 'no';
   ingreso_dinero_id?: string;
   codigo_vale?: string;
 }

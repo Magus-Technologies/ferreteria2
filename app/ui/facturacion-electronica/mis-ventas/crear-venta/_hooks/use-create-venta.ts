@@ -179,8 +179,15 @@ export default function useCreateVenta({
       ...restValues
     } = values
 
-    // Si el usuario eligió "Descontar stock: No" en el form, equivale a omitir.
-    const _omitir_entrega = _omitir_entrega_form || descontar_stock === 'no'
+    // `_omitir_entrega` solo se activa con el botón "Omitir" del modal de
+    // detalles-entrega — significa "no creo entrega, queda pendiente para
+    // programar después".
+    //
+    // `descontar_stock = 'no'` es DISTINTO: el cliente ya tiene el producto
+    // (se llevó algo previamente, consumo interno, etc). En ese caso SÍ se
+    // crea la entrega pero como YA ENTREGADA, sin tocar stock. El backend
+    // distingue ambos casos vía `descontar_stock` en el payload.
+    const _omitir_entrega = _omitir_entrega_form
 
 
 
@@ -294,6 +301,9 @@ export default function useCreateVenta({
       quien_entrega: tipo_despacho === 'EnTienda' ? (quien_entrega || 'almacen') as any : undefined,
       // Si "Omitir entrega" fue presionado, evitar descuento de stock al crear la venta.
       omitir_entrega: _omitir_entrega || undefined,
+      // `descontar_stock = 'no'` indica que el cliente ya tiene el producto:
+      // backend NO descuenta stock pero SÍ crea la entrega como ENTREGADA.
+      descontar_stock,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,
