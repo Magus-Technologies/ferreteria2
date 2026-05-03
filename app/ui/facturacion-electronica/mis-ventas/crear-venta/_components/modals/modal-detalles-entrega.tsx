@@ -118,40 +118,28 @@ function ModalDetallesEntregaInner({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, resolvedMode.kind])
 
-  // En modos `crear-entrega-resto` Y `actualizar-entrega`, cuando el usuario
-  // PRENDE el switch "Programar resto", redistribuir automáticamente:
-  // mover todo lo disponible de `entregar` → `entregar_programado`. Sin
-  // esto, la tabla del resto arranca vacía (porque `total - entregar = 0`)
-  // y el usuario no ve los productos para programar ni el mapa.
+  // En `crear-entrega-resto` (botón "Entregar Restante" en mis-entregas), al
+  // PRENDER el switch "Programar resto" redistribuir automáticamente todo
+  // a `entregar_programado` — el usuario está creando una entrega ya
+  // completa para el restante, así que tiene sentido que todo vaya a
+  // "programar" como default, no a "entregar ahora".
   //
-  // Cuando lo APAGA, inverso: mover todo de `entregar_programado` a
-  // `entregar` para volver al estado "entregar todo el pendiente ahora".
-  //
-  // En `crear-venta` no aplica — ahí la tabla principal y la del resto
-  // tienen otro comportamiento histórico (defaults distintos).
+  // En `actualizar-entrega` NO redistribuimos: el usuario está confirmando
+  // una entrega Parcial existente y prefiere mantener su `entregar` en lo
+  // pendiente; si quiere split, reduce manualmente "Entregar" y la sección
+  // del resto le mostrará lo que va sobrando.
   useEffect(() => {
     if (!open) return
-    if (
-      resolvedMode.kind !== 'crear-entrega-resto' &&
-      resolvedMode.kind !== 'actualizar-entrega'
-    ) return
+    if (resolvedMode.kind !== 'crear-entrega-resto') return
     setProductosEntrega((prev) =>
       prev.map((p) => {
-        // El "espacio disponible" es lo no-entregado de este producto:
-        // pendiente = total − entregado. Si no hay nada por entregar
-        // (ya 100% completado), no tocamos.
         const disponible = Math.max(0, p.total - (p.entregado || 0))
         if (disponible <= 0) return p
         if (programarResto) {
-          // Switch ON: si entregar cubre todo y programado=0, mover todo
-          // a programado para que el usuario vea la tabla del resto y el
-          // mapa con la dirección lista para configurar.
           if (p.entregar >= disponible && p.entregar_programado === 0) {
             return { ...p, entregar: 0, entregar_programado: disponible }
           }
         } else {
-          // Switch OFF: si todo estaba en programado, devolverlo a
-          // "entregar ahora" para que la entrega cubra todo lo pendiente.
           if (p.entregar === 0 && p.entregar_programado >= disponible) {
             return { ...p, entregar: disponible, entregar_programado: 0 }
           }

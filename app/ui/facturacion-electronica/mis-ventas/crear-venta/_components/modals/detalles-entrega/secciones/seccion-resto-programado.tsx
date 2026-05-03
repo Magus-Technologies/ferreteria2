@@ -150,8 +150,17 @@ export function SeccionRestoProgramado({
   // `mis-entregas`: la entrega ya existe, no se programa resto desde aquí).
   if (ocultar?.has('programar-resto')) return null
 
-  const mostrarCamposResto =
-    programarResto && productosEntrega.some((p) => p.total - p.entregar - (p.entregado || 0) > 0)
+  // Productos con resto disponible para programar — los que quedan
+  // después de descontar `entregar` y `entregado`.
+  const productosConResto = productosEntrega.filter(
+    (p) => p.total - p.entregar - (p.entregado || 0) > 0,
+  )
+  const hayResto = productosConResto.length > 0
+  // Mostramos la sección entera (mapa, dirección, fecha, chofer, tabla)
+  // cada vez que el switch está ON, aunque la tabla esté vacía. Si no hay
+  // resto, mostramos un aviso educativo: el usuario tiene que reducir la
+  // cantidad en "Entregar" arriba para que aparezcan productos a programar.
+  const mostrarCamposResto = programarResto
 
   return (
     <div className="border-t border-gray-200 pt-4">
@@ -160,7 +169,7 @@ export function SeccionRestoProgramado({
         <span className="text-sm font-medium text-gray-700">
           ¿Programar entrega del resto?
         </span>
-        {productosEntrega.some((p) => p.total - p.entregar - (p.entregado || 0) > 0) && (
+        {hayResto && (
           <span className="text-xs text-gray-500">
             ({productosEntrega.reduce((acc, p) => acc + Math.max(0, p.total - p.entregar - (p.entregado || 0)), 0)} unidad(es) pendiente(s))
           </span>
@@ -170,15 +179,25 @@ export function SeccionRestoProgramado({
       {mostrarCamposResto && (
         <div className="mt-4 space-y-4">
           {!ocultar?.has('tabla-productos') && (
-            <div style={{ height: '150px' }}>
-              <TableWithTitle<ProductoEntrega>
-                id="productos-entrega-resto"
-                title="Productos pendientes para entrega programada"
-                selectionColor={orangeColors[10]}
-                columnDefs={columnDefsResto}
-                rowData={productosEntrega.filter((p) => p.total - p.entregar - (p.entregado || 0) > 0)}
-              />
-            </div>
+            hayResto ? (
+              <div style={{ height: '150px' }}>
+                <TableWithTitle<ProductoEntrega>
+                  id="productos-entrega-resto"
+                  title="Productos pendientes para entrega programada"
+                  selectionColor={orangeColors[10]}
+                  columnDefs={columnDefsResto}
+                  rowData={productosConResto}
+                />
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
+                <span className="font-semibold">No hay productos para programar todavía.</span>
+                <p className="text-xs text-amber-600 mt-1">
+                  Reducí la cantidad en la columna <strong>Entregar</strong> de la tabla de arriba
+                  para que las unidades sobrantes aparezcan acá y puedas programarlas.
+                </p>
+              </div>
+            )
           )}
 
           {/* Campos ocultos — todos con prefijo `_resto_*` */}
