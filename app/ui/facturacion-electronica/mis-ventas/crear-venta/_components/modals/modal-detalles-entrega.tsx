@@ -550,7 +550,7 @@ function ModalDetallesEntregaInner({
             color="success"
             size="md"
             onClick={handleConfirmar}
-            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0) || domicilioInvalido || restoInvalido}
+            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) || domicilioInvalido || restoInvalido}
           >
             {creandoVenta
               ? 'Procesando...'
