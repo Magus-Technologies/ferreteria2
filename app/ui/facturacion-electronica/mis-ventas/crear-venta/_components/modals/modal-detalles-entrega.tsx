@@ -105,43 +105,41 @@ function ModalDetallesEntregaInner({
     setSlotResto,
   } = useDetallesEntrega()
 
-  // En modo `crear-entrega-resto` el switch "¿Programar entrega del resto?"
-  // arranca apagado: lo natural es entregar todo el pendiente ahora. Si el
-  // usuario quiere otro split, lo activa manualmente.
-  // En `crear-venta` el default histórico es ON (programar todo lo que sobra).
+  // El switch "¿Programar entrega del resto?" arranca:
+  //   - OFF en `crear-entrega-resto` y `actualizar-entrega` — lo natural en
+  //     mis-entregas es entregar todo lo pendiente ahora; si el usuario
+  //     quiere split, lo activa manualmente.
+  //   - ON en `crear-venta` — comportamiento histórico para que al crear
+  //     una venta nueva con tipo Parcial, todo el resto se programe por
+  //     defecto.
   useEffect(() => {
     if (!open) return
-    setProgramarResto(resolvedMode.kind !== 'crear-entrega-resto')
+    setProgramarResto(resolvedMode.kind === 'crear-venta')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, resolvedMode.kind])
 
-  // En modo `crear-entrega-resto`, cuando el usuario PRENDE el switch
-  // "Programar resto", redistribuir automáticamente: mover todo el pendiente
-  // de `entregar` → `entregar_programado`. Sin esto, la tabla "Productos
-  // pendientes para entrega programada" arranca vacía (porque
-  // `total - entregar - entregado = 0`) y el usuario no entiende por qué.
+  // En `crear-entrega-resto` (botón "Entregar Restante" en mis-entregas), al
+  // PRENDER el switch "Programar resto" redistribuir automáticamente todo
+  // a `entregar_programado` — el usuario está creando una entrega ya
+  // completa para el restante, así que tiene sentido que todo vaya a
+  // "programar" como default, no a "entregar ahora".
   //
-  // Cuando lo APAGA, hacer el inverso: mover todo de `entregar_programado` a
-  // `entregar` para que vuelva al estado "entregar todo el pendiente ahora".
-  //
-  // Solo actúa si `entregado > 0` (hay entregas previas) — en `crear-venta`
-  // este efecto no hace nada y el comportamiento histórico se preserva.
+  // En `actualizar-entrega` NO redistribuimos: el usuario está confirmando
+  // una entrega Parcial existente y prefiere mantener su `entregar` en lo
+  // pendiente; si quiere split, reduce manualmente "Entregar" y la sección
+  // del resto le mostrará lo que va sobrando.
   useEffect(() => {
     if (!open) return
     if (resolvedMode.kind !== 'crear-entrega-resto') return
     setProductosEntrega((prev) =>
       prev.map((p) => {
-        if ((p.entregado || 0) <= 0) return p
         const disponible = Math.max(0, p.total - (p.entregado || 0))
+        if (disponible <= 0) return p
         if (programarResto) {
-          // Redistribuir hacia "programado" — solo si entregar todavía cubre
-          // todo lo disponible (estado "default" tras abrir).
           if (p.entregar >= disponible && p.entregar_programado === 0) {
             return { ...p, entregar: 0, entregar_programado: disponible }
           }
         } else {
-          // Inverso: si TODO está en programado y nada en entregar, devolver
-          // todo a "entregar ahora".
           if (p.entregar === 0 && p.entregar_programado >= disponible) {
             return { ...p, entregar: disponible, entregar_programado: 0 }
           }
@@ -550,7 +548,7 @@ function ModalDetallesEntregaInner({
             color="success"
             size="md"
             onClick={handleConfirmar}
-            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0) || domicilioInvalido || restoInvalido}
+            disabled={creandoVenta || (tipoDespacho === 'Parcial' && totalAEntregar === 0) || (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) || domicilioInvalido || restoInvalido}
           >
             {creandoVenta
               ? 'Procesando...'
