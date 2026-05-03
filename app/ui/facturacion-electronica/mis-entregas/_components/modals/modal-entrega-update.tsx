@@ -321,20 +321,19 @@ export default function ModalEntregaUpdate({
   // 'tipo-pedido' (ya fijado en la venta).
   //
   // Para Parcial:
-  //   - Modo restante: NO ocultamos 'programar-resto' — el usuario puede
-  //     entregar parte ahora y programar el resto con dirección + mapa + chofer
-  //     (igual que al crear la venta).
-  //   - Modo update normal: ocultamos 'programar-resto' porque la entrega
-  //     existente ya tiene su programación previa y solo se confirma.
+  //   - Parcial (cualquier modo): mostramos 'programar-resto' para que el
+  //     usuario pueda entregar parte ahora y programar el resto con
+  //     dirección + mapa + chofer + fecha. Aplica igual en restante y
+  //     en update (entrega Parcial pendiente que el usuario reabre para
+  //     entregar parte y dejar el resto programado).
+  //   - EnTienda: nunca tiene resto programable (recojo en tienda).
   const ocultarBase: SeccionOcultable[] = ['omitir', 'quien-entrega', 'tipo-pedido']
   const ocultar: SeccionOcultable[] =
     tipoLocal === 'EnTienda'
       ? [...ocultarBase, 'programar-resto']
       : tipoLocal === 'Domicilio'
       ? [...ocultarBase]
-      : restante
-      ? [...ocultarBase] // Parcial restante: incluir programar-resto + mapa
-      : [...ocultarBase, 'programar-resto'] // Parcial update: solo tabla + counters
+      : [...ocultarBase] // Parcial: incluir programar-resto + mapa
 
   // Header del modal — distingue restante vs actualización normal.
   const tituloPorTipo: Record<TipoDespachoUI, string> = {

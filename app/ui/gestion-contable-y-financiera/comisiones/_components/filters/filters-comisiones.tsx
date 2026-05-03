@@ -71,7 +71,7 @@ export default function FiltersComisiones() {
           <SelectUsuarios className='min-w-[200px]' allowClear placeholder='Todos los vendedores' />
         </Form.Item>
         <Form.Item className='mb-0!'>
-          <ButtonBase color='info' size='md' htmlType='submit'>
+          <ButtonBase color='info' size='md' type='submit'>
             <FaSearch className='mr-1 inline-block' /> Buscar
           </ButtonBase>
         </Form.Item>

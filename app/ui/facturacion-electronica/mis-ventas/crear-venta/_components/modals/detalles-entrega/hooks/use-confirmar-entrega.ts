@@ -218,11 +218,93 @@ export function useConfirmarEntrega({
     try {
       const response = await entregaProductoApi.update(mode.entregaId, payload)
       if (response.error) throw new Error(response.error.message || 'Error al actualizar entrega')
+
+      // Parcial + programar resto: además de actualizar la entrega original
+      // (que pasa a ENTREGADO), creamos una segunda entrega PROGRAMADA para
+      // los productos que el usuario quiere despachar después con dirección
+      // + fecha + chofer. Mismo patrón que el modo `crear-entrega-resto`.
+      if (
+        mode.kind === 'actualizar-entrega' &&
+        tipoDespacho === 'Parcial' &&
+        programarResto
+      ) {
+        const productosResto = productosEntrega.filter(
+          (p) => p.entregar_programado > 0,
+        )
+        if (productosResto.length > 0) {
+          // Necesitamos almacen_salida_id y user_id de la entrega origen.
+          // Los pedimos al backend con un fetch corto (no agregamos al payload
+          // del update porque este modo no los conoce de antemano).
+          const entregaResp = await entregaProductoApi.getById(mode.entregaId)
+          const entregaOrig: any = entregaResp.data?.data
+          const restoFecha = form.getFieldValue('_resto_fecha_programada')
+          const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
+          const restoReferencia = form.getFieldValue('_resto_referencia_entrega')
+          const restoLat = form.getFieldValue('_resto_latitud')
+          const restoLng = form.getFieldValue('_resto_longitud')
+          const restoChofer = form.getFieldValue('_resto_despachador_id')
+          const restoVehiculo = form.getFieldValue('_resto_vehiculo_id')
+          const restoCargo = form.getFieldValue('_resto_cargo_destino')
+
+          const payload2: CreateEntregaProductoRequest = {
+            venta_id: entregaOrig?.venta_id,
+            tipo_entrega: TipoEntrega.DESPACHO,
+            tipo_despacho: TipoDespacho.PROGRAMADO,
+            estado_entrega: EstadoEntrega.PENDIENTE,
+            fecha_entrega: dayjs().format('YYYY-MM-DD'),
+            almacen_salida_id: entregaOrig?.almacen_salida_id,
+            user_id: entregaOrig?.user_id,
+            quien_entrega: QuienEntrega.CHOFER,
+            tipo_pedido: tipoPedidoResto,
+            productos_entregados: productosResto.map((p) => ({
+              unidad_derivada_venta_id: p.unidad_derivada_venta_id,
+              cantidad_entregada: p.entregar_programado,
+            })),
+          }
+          if (tipoPedidoResto === TipoPedido.INTERNO && restoChofer) {
+            payload2.chofer_id = restoChofer
+          }
+          if (tipoPedidoResto === TipoPedido.EXTERNO && restoCargo) {
+            payload2.cargo_destino = restoCargo
+          }
+          if (restoFecha) payload2.fecha_programada = dayjs(restoFecha).format('YYYY-MM-DD')
+          if (horaInicioResto) payload2.hora_inicio = horaInicioResto
+          if (horaFinResto) payload2.hora_fin = horaFinResto
+          if (restoDireccion) payload2.direccion_entrega = restoDireccion
+          if (restoReferencia) payload2.referencia_entrega = restoReferencia
+          if (restoLat != null) payload2.latitud = Number(restoLat)
+          if (restoLng != null) payload2.longitud = Number(restoLng)
+          if (observacionesResto) payload2.observaciones = observacionesResto
+          if (restoVehiculo) payload2.vehiculo_id = restoVehiculo
+
+          const r2 = await entregaProductoApi.create(payload2)
+          if (r2.error) {
+            throw new Error(
+              `Entrega actualizada, pero error al programar el resto: ${
+                r2.error.message || 'desconocido'
+              }`,
+            )
+          }
+        }
+      }
+
       onSuccess()
     } finally {
       setActualizandoEntrega(false)
     }
-  }, [mode, form, tipoDespacho, quienEntregaParcial, onSuccess])
+  }, [
+    mode,
+    form,
+    tipoDespacho,
+    quienEntregaParcial,
+    programarResto,
+    productosEntrega,
+    horaInicioResto,
+    horaFinResto,
+    observacionesResto,
+    tipoPedidoResto,
+    onSuccess,
+  ])
 
   // ───────────────────────────────────────────────────────────────────────
   // Modo CREAR-ENTREGA-RESTO — usado desde mis-entregas cuando la entrega
