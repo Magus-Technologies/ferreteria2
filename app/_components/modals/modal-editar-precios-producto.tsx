@@ -98,11 +98,46 @@ export default function ModalEditarPreciosProducto({
       const unidadSeleccionada = unidadesDerivadas.find(
         (ud: any) => ud.unidad_derivada.id === unidad_derivada_id
       )
+      
       if (unidadSeleccionada) {
+        console.log('Unidad derivada seleccionada:', unidadSeleccionada)
+        
+        // Actualizar factor
         form.setFieldValue('factor', unidadSeleccionada.factor)
+        
         // Recalcular precio de compra con el nuevo factor
         const costoBase = Number(productoEnAlmacen?.costo || 0)
-        form.setFieldValue('precio_compra', costoBase * Number(unidadSeleccionada.factor))
+        const precioCompra = costoBase * Number(unidadSeleccionada.factor)
+        form.setFieldValue('precio_compra', precioCompra)
+        
+        // Actualizar todos los precios de esta unidad derivada
+        const precioPublico = Number(unidadSeleccionada.precio_publico) || 0
+        const comisionPublico = Number(unidadSeleccionada.comision_publico) || 0
+        
+        form.setFieldsValue({
+          precio_publico: precioPublico,
+          comision_publico: comisionPublico,
+          precio_especial: Number(unidadSeleccionada.precio_especial) || 0,
+          comision_especial: Number(unidadSeleccionada.comision_especial) || 0,
+          activador_especial: Number(unidadSeleccionada.activador_especial) || 0,
+          precio_minimo: Number(unidadSeleccionada.precio_minimo) || 0,
+          comision_minimo: Number(unidadSeleccionada.comision_minimo) || 0,
+          activador_minimo: Number(unidadSeleccionada.activador_minimo) || 0,
+          precio_ultimo: Number(unidadSeleccionada.precio_ultimo) || 0,
+          comision_ultimo: Number(unidadSeleccionada.comision_ultimo) || 0,
+          activador_ultimo: Number(unidadSeleccionada.activador_ultimo) || 0,
+        })
+        
+        // Calcular % Venta y Ganancia
+        if (precioCompra > 0) {
+          const ganancia = precioPublico - precioCompra
+          const pVenta = (ganancia * 100) / precioCompra
+          form.setFieldValue('p_venta', pVenta)
+          form.setFieldValue('ganancia', ganancia)
+        } else {
+          form.setFieldValue('p_venta', 0)
+          form.setFieldValue('ganancia', precioPublico)
+        }
       }
     }
   }, [unidad_derivada_id, unidadesDerivadas, form, productoEnAlmacen])
