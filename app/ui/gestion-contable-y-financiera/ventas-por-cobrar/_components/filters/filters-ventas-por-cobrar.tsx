@@ -2,7 +2,7 @@
 
 // Filtros para ventas por cobrar
 import { Form, Drawer, Badge, Select } from 'antd'
-import { FaSearch, FaFilter, FaPrint } from 'react-icons/fa'
+import { FaSearch, FaFilter } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -17,13 +17,11 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
-import { toUTCBD } from '~/utils/fechas'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
 import { FormaDePago } from '~/lib/api/venta'
-import dayjs from 'dayjs'
 
 interface ValuesFiltersVentasPorCobrar {
   almacen_id: number
@@ -56,11 +54,12 @@ export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
-  const [estadoPago, setEstadoPago] = useState<'pendientes' | 'pagadas' | 'todas'>('pendientes')
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
   const setMoraRango = useStoreFiltrosVentasPorCobrar(state => state.setMoraRango)
+  const estadoPago = useStoreFiltrosVentasPorCobrar(state => state.estadoPago)
+  const setEstadoPago = useStoreFiltrosVentasPorCobrar(state => state.setEstadoPago)
 
   const applyQuickFilter = useCallback((rango: MoraRango) => {
     setQuickFilterActive(rango)
@@ -93,6 +92,8 @@ export default function FiltersVentasPorCobrar() {
   useEffect(() => {
     // Aplicar el filtro rápido inicial (15 días)
     applyQuickFilter(15)
+    // Inicializar el estado de pago en el formulario
+    form.setFieldValue('estado_pago', 'pendientes')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [almacen_id])
 

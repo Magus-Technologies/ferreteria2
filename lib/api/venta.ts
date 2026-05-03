@@ -236,6 +236,7 @@ export const ventaApi = {
     per_page?: number;
     page?: number;
     dias?: number;
+    estado_pago?: 'pendientes' | 'pagadas' | 'todas';
   }): Promise<ApiResponse<{
     data: VentaCompleta[];
     total: number;

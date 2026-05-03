@@ -64,6 +64,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
 
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
   const moraRango = useStoreFiltrosVentasPorCobrar(state => state.moraRango)
+  const estadoPago = useStoreFiltrosVentasPorCobrar(state => state.estadoPago)
 
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
@@ -80,9 +81,10 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       desde: fechaFiltro?.gte as string | undefined,
       hasta: fechaFiltro?.lte as string | undefined,
       search,
+      estado_pago: estadoPago,
       per_page: -1,
     }
-  }, [filtros])
+  }, [filtros, estadoPago])
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS_POR_COBRAR, apiFilters],
