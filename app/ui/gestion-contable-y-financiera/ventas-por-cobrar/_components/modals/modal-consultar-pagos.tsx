@@ -80,9 +80,18 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
     return filtered
   }, [allCobros, searchText])
 
-  // Total importe
+  // Total importe (solo cobros activos)
   const totalImporte = useMemo(() =>
-    cobrosFiltrados.reduce((acc, c) => acc + Number(c.monto || 0), 0)
+    cobrosFiltrados
+      .filter(c => c.estado === true) // Solo cobros activos
+      .reduce((acc, c) => acc + Number(c.monto || 0), 0)
+  , [cobrosFiltrados])
+
+  // Total de pagos anulados
+  const totalAnulados = useMemo(() =>
+    cobrosFiltrados
+      .filter(c => c.estado === false) // Solo cobros anulados
+      .reduce((acc, c) => acc + Number(c.monto || 0), 0)
   , [cobrosFiltrados])
 
   const tipoDocMap: Record<string, string> = { '01': 'FACTURA', '03': 'BOLETA', 'nv': 'NOTA DE VENTA' }
@@ -250,10 +259,15 @@ export default function ModalConsultarPagos({ open, setOpen }: ModalConsultarPag
       </div>
 
       {/* Resumen */}
-      <div className='flex justify-center mt-4 bg-gray-100 rounded-lg p-3'>
+      <div className='flex justify-between items-center mt-4 bg-gray-100 rounded-lg p-3 gap-6'>
         <span className='text-sm font-bold'>
-          TOTAL IMPORTE: <span className='text-blue-700 text-lg'>S/. {totalImporte.toFixed(2)}</span>
+          TOTAL IMPORTE (ACTIVOS): <span className='text-green-700 text-lg'>S/. {totalImporte.toFixed(2)}</span>
         </span>
+        {totalAnulados > 0 && (
+          <span className='text-sm font-bold'>
+            TOTAL ANULADOS: <span className='text-red-700 text-lg'>S/. {totalAnulados.toFixed(2)}</span>
+          </span>
+        )}
       </div>
     </Modal>
   )

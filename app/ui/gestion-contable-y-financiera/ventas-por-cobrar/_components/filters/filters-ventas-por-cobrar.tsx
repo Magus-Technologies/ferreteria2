@@ -33,6 +33,7 @@ interface ValuesFiltersVentasPorCobrar {
   tipo_documento?: TipoDocumento
   user_id?: string
   busqueda?: string
+  estado_pago?: 'pendientes' | 'pagadas' | 'todas'
 }
 
 const QUICK_FILTERS: { label: string; value: MoraRango }[] = [
@@ -45,10 +46,17 @@ const QUICK_FILTERS: { label: string; value: MoraRango }[] = [
   { label: 'Vencidas', value: 'vencidas' },
 ]
 
+const ESTADO_PAGO_OPTIONS = [
+  { label: 'Pendientes', value: 'pendientes' },
+  { label: 'Pagadas', value: 'pagadas' },
+  { label: 'Todas', value: 'todas' },
+]
+
 export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
+  const [estadoPago, setEstadoPago] = useState<'pendientes' | 'pagadas' | 'todas'>('pendientes')
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
@@ -118,6 +126,7 @@ export default function FiltersVentasPorCobrar() {
           cliente_id,
           tipo_documento,
           user_id,
+          estado_pago,
         } = values
 
         // Si se usan fechas manuales, limpiar el filtro rápido
@@ -130,9 +139,16 @@ export default function FiltersVentasPorCobrar() {
           almacen_id: almacenIdForm || almacen_id,
           // Solo mostrar ventas a crédito
           forma_de_pago: FormaDePago.CREDITO,
-          estado_de_venta: {
-            in: ['Creado', 'Procesado'],
-          },
+          // Filtrar por estado de pago
+          ...(estado_pago === 'pagadas' ? {
+            saldo: 0,
+            estado_de_venta: { in: ['Creado', 'Procesado'] },
+          } : estado_pago === 'pendientes' ? {
+            saldo: { gt: 0 },
+            estado_de_venta: { in: ['Creado', 'Procesado'] },
+          } : {
+            estado_de_venta: { in: ['Creado', 'Procesado'] },
+          }),
           // Agregar filtro de fechas si existe
           ...(desde || hasta ? {
             fecha: {
@@ -182,14 +198,29 @@ export default function FiltersVentasPorCobrar() {
       />
 
       {/* Filtro rápido por días */}
-      <div className='flex items-center gap-2 mt-3'>
-        <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
-        <Select
-          value={quickFilterActive}
-          onChange={(val) => applyQuickFilter(val as MoraRango)}
-          className='w-36'
-          options={QUICK_FILTERS.map(({ label, value }) => ({ label, value }))}
-        />
+      <div className='flex items-center gap-4 mt-3'>
+        <div className='flex items-center gap-2'>
+          <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
+          <Select
+            value={quickFilterActive}
+            onChange={(val) => applyQuickFilter(val as MoraRango)}
+            className='w-36'
+            options={QUICK_FILTERS.map(({ label, value }) => ({ label, value }))}
+          />
+        </div>
+        <div className='flex items-center gap-2'>
+          <span className='text-xs font-semibold text-slate-500 mr-1'>Estado:</span>
+          <Select
+            value={estadoPago}
+            onChange={(val) => {
+              setEstadoPago(val)
+              form.setFieldValue('estado_pago', val)
+              form.submit()
+            }}
+            className='w-36'
+            options={ESTADO_PAGO_OPTIONS}
+          />
+        </div>
       </div>
 
       {/* Filtros principales - Responsivos */}
@@ -438,6 +469,18 @@ export default function FiltersVentasPorCobrar() {
               className='w-full'
               formWithMessage={false}
               allowClear
+            />
+          </LabelBase>
+
+          <LabelBase label='Estado de Pago:'>
+            <Select
+              value={estadoPago}
+              onChange={(val) => {
+                setEstadoPago(val)
+                form.setFieldValue('estado_pago', val)
+              }}
+              className='w-full'
+              options={ESTADO_PAGO_OPTIONS}
             />
           </LabelBase>
 
