@@ -3,14 +3,15 @@
 import { Form } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import { useEffect } from 'react'
+import { FaSearch, FaCalendar } from 'react-icons/fa'
+import { GiMoneyStack } from 'react-icons/gi'
 import FormBase from '~/components/form/form-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
+import ButtonBase from '~/components/buttons/button-base'
 import { useStoreFiltrosComisiones } from '../../_store/store-filtros-comisiones'
-import { FaCalendar } from 'react-icons/fa'
-import { GiMoneyStack } from 'react-icons/gi'
 import { useStoreAlmacen } from '~/store/store-almacen'
 
 interface Values {
@@ -35,12 +36,12 @@ export default function FiltersComisiones() {
     })
   }, [form, filtros, almacenStore])
 
-  const onValuesChange = (_: unknown, all: Values) => {
+  const onFinish = (values: Values) => {
     setFiltros({
-      desde: all.desde ? all.desde.format('YYYY-MM-DD') : undefined,
-      hasta: all.hasta ? all.hasta.format('YYYY-MM-DD') : undefined,
-      almacen_id: all.almacen_id,
-      user_id: all.user_id,
+      desde: values.desde ? values.desde.format('YYYY-MM-DD') : undefined,
+      hasta: values.hasta ? values.hasta.format('YYYY-MM-DD') : undefined,
+      almacen_id: values.almacen_id,
+      user_id: values.user_id,
     })
   }
 
@@ -48,7 +49,7 @@ export default function FiltersComisiones() {
     <div className='flex items-center gap-3 flex-wrap'>
       <TituloModulos title='Comisiones' icon={<GiMoneyStack />} />
 
-      <FormBase form={form} onValuesChange={onValuesChange} layout='inline' className='flex-1'>
+      <FormBase form={form} onFinish={onFinish} layout='inline' className='flex-1'>
         <Form.Item name='desde' className='mb-0!'>
           <DatePickerBase
             placeholder='Desde'
@@ -68,6 +69,11 @@ export default function FiltersComisiones() {
         </Form.Item>
         <Form.Item name='user_id' className='mb-0!'>
           <SelectUsuarios className='min-w-[200px]' allowClear placeholder='Todos los vendedores' />
+        </Form.Item>
+        <Form.Item className='mb-0!'>
+          <ButtonBase color='info' size='md' htmlType='submit'>
+            <FaSearch className='mr-1 inline-block' /> Buscar
+          </ButtonBase>
         </Form.Item>
       </FormBase>
     </div>
