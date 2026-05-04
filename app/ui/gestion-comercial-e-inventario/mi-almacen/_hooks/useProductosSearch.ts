@@ -10,8 +10,8 @@ interface UseProductosSearchParams {
 }
 
 /**
- * Hook para búsqueda de productos (sin paginación, máximo 100 resultados)
- * Usado para cards-info y otros componentes que necesitan datos agregados
+ * Hook para búsqueda de productos.
+ * per_page se puede pasar en filtros; por defecto carga hasta 1500 productos.
  */
 export function useProductosSearch({
   filtros,
@@ -23,8 +23,8 @@ export function useProductosSearch({
       const response = await productosApiV2.getAllByAlmacen({
         ...filtros,
         almacen_id: filtros.almacen_id,
-        per_page: 30,
-        page: 1,
+        per_page: filtros.per_page ?? 1500,
+        page: filtros.page ?? 1,
       });
 
       if (response.error) {

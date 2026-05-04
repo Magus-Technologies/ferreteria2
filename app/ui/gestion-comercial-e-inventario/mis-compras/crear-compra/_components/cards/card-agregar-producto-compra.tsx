@@ -109,6 +109,8 @@ export default function CardAgregarProductoCompra({
       unidad_derivada_factor: Number(unidad_derivada?.factor),
       precio_compra: values.bonificacion ? 0 : values.precio_compra,
       costo_actual: Number(producto_en_almacen?.costo ?? 0),
+      stock_max: productoSeleccionadoSearchStore?.stock_max,
+      stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
     }
 
     onOk?.(valuesFormated)

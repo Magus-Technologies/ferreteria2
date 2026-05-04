@@ -28,9 +28,10 @@ import { useMemo } from "react";
 
 interface UseColumnsProductosProps {
   almacen_id?: number;
+  showStockMaxWarning?: boolean;
 }
 
-export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
+export function useColumnsProductos({ almacen_id, showStockMaxWarning }: UseColumnsProductosProps) {
   const { can } = usePermissionHook();
   const setOpen = useStoreEditOrCopyProducto((state) => state.setOpenModal);
   const setProducto = useStoreEditOrCopyProducto((state) => state.setProducto);
@@ -236,6 +237,21 @@ export function useColumnsProductos({ almacen_id }: UseColumnsProductosProps) {
                   unidades_contenidas={Number(data!.unidades_contenidas)}
                 />
               </div>
+              {showStockMaxWarning && data?.stock_max && (() => {
+                const producto_en_almacen = value?.find(
+                  (item) => item.almacen_id === almacen_id,
+                );
+                const stockActual = Number(producto_en_almacen?.stock_fraccion ?? 0);
+                const stockMax = Number(data.stock_max);
+                if (stockActual > stockMax) {
+                  return (
+                    <Tooltip title={`Stock actual (${stockActual}) excede el máximo (${stockMax})`}>
+                      <GoAlertFill className="text-amber-500 cursor-pointer" size={14} />
+                    </Tooltip>
+                  );
+                }
+                return null;
+              })()}
               <Popover
                 placement="right"
                 trigger="click"

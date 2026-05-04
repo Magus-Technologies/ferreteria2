@@ -81,6 +81,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   autoFocus?: boolean
   selectionColor?: string // Color para la fila seleccionada en el modal
   ignoreAlmacen?: boolean
+  showStockMaxWarning?: boolean
 }
 
 export interface RefSelectProductosProps {
@@ -115,6 +116,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   selectionColor,
   onSearch,
   ignoreAlmacen = false,
+  showStockMaxWarning = false,
   ...props
 }, ref) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -379,6 +381,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           showUltimasCompras={showUltimasCompras}
           selectionColor={colorSeleccion}
           ignoreAlmacen={ignoreAlmacen}
+          showStockMaxWarning={showStockMaxWarning}
           onAfterClose={() => {
             // Devolver focus al buscador después de cerrar el modal
             ;[0, 50, 150, 300, 500].forEach((delay) => {

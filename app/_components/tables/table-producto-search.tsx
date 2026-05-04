@@ -36,6 +36,7 @@ export default function TableProductoSearch({
   categoriaId,
   forceLoading = false, // Forzar loading externo (ej. debounce pendiente)
   ignoreAlmacen = false,
+  showStockMaxWarning = false,
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -53,6 +54,7 @@ export default function TableProductoSearch({
   categoriaId?: number;
   forceLoading?: boolean;
   ignoreAlmacen?: boolean;
+  showStockMaxWarning?: boolean;
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const tableGridRef = useRef<any>(null);
@@ -259,7 +261,10 @@ export default function TableProductoSearch({
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
       loading={loading || forceLoading}
-      columnDefs={useColumnsProductos({ almacen_id: ignoreAlmacen ? undefined : almacen_id }) as any}
+      columnDefs={useColumnsProductos({ 
+        almacen_id: ignoreAlmacen ? undefined : almacen_id,
+        showStockMaxWarning
+      }) as any}
       onRowDoubleClicked={({ data }) => {
         // Con 2 clicks: actualizar el producto Y ejecutar la acción adicional (abrir modal)
         setProductoSeleccionadoSearchStore(data as any);
