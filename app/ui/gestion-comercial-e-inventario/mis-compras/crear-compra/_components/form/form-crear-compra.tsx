@@ -161,6 +161,21 @@ export default function FormCrearCompra({
               placeholder='Serie'
               propsForm={{
                 name: 'serie',
+                rules: [
+                  {
+                    validator: async (_, value) => {
+                      const numero = form.getFieldValue('numero')
+                      if (value === '0' && (numero === 0 || numero === '0')) {
+                        return Promise.reject(new Error('Serie y número no pueden ser ambos 0'))
+                      }
+                      return Promise.resolve()
+                    },
+                  },
+                ],
+              }}
+              onChange={() => {
+                // Revalidar el campo número cuando cambia la serie
+                form.validateFields(['numero']).catch(() => {})
               }}
             />
           </LabelBase>
@@ -173,9 +188,24 @@ export default function FormCrearCompra({
               placeholder='Número'
               propsForm={{
                 name: 'numero',
+                rules: [
+                  {
+                    validator: async (_, value) => {
+                      const serie = form.getFieldValue('serie')
+                      if ((value === 0 || value === '0') && serie === '0') {
+                        return Promise.reject(new Error('Serie y número no pueden ser ambos 0'))
+                      }
+                      return Promise.resolve()
+                    },
+                  },
+                ],
               }}
               precision={0}
               min={0}
+              onChange={() => {
+                // Revalidar el campo serie cuando cambia el número
+                form.validateFields(['serie']).catch(() => {})
+              }}
             />
           </LabelBase>
         </ConfigurableElement>
