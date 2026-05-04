@@ -118,7 +118,6 @@ export default function FiltersVentasPorCobrar() {
 
   // Actualizar el quickFilterText cuando cambie el texto debounced
   useEffect(() => {
-    console.log('🔍 Actualizando quickFilterText:', debouncedBusquedaCliente)
     setQuickFilterText(debouncedBusquedaCliente)
   }, [debouncedBusquedaCliente, setQuickFilterText])
 

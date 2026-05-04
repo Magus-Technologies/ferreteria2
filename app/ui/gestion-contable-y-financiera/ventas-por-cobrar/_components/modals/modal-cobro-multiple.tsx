@@ -14,6 +14,7 @@ import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
 import { FaMoneyBillWave } from 'react-icons/fa'
+import { redColors } from '~/lib/colors'
 
 interface ModalCobroMultipleProps {
   open: boolean
@@ -234,9 +235,12 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         return
       }
       message.success(result.data?.message || 'Cobro múltiple registrado')
+      
+      // Invalidar queries para actualizar datos
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR, 'cobro-multiple', clienteId] })
       
       const cobrosIds = result.data?.cobros_ids
       if (cobrosIds && cobrosIds.length > 0) {
@@ -266,7 +270,25 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         }
       }
 
-      handleClose()
+      // Resetear formulario pero mantener cliente y fecha
+      const currentClienteId = clienteId
+      const currentFecha = form.getFieldValue('fecha')
+      const currentDesplieguePago = form.getFieldValue('despliegue_de_pago_id')
+      
+      // Resetear campos
+      form.setFieldsValue({
+        observacion: undefined,
+        numero_operacion: undefined,
+        fecha: currentFecha,
+        despliegue_de_pago_id: currentDesplieguePago,
+      })
+      
+      // Resetear montos
+      setMontoTotal(0)
+      setVentasDistribucion([])
+      
+      // NO cerrar el modal - el usuario puede seguir registrando pagos
+      // handleClose() <- REMOVIDO
     },
     onError: (error: any) => {
       message.error(error?.message || 'Error al registrar cobro múltiple')
@@ -293,7 +315,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       <Modal
       title={
         <div className='flex items-center gap-2'>
-          <FaMoneyBillWave className='text-emerald-600' size={20} />
+          <FaMoneyBillWave className='text-rose-600' size={20} />
           <span>Cobro Múltiple por Cliente</span>
         </div>
       }
@@ -354,7 +376,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         {clienteId && (
           <>
             {/* Resumen de montos */}
-            <div className='flex items-center gap-4 mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border border-emerald-200'>
+            <div className='flex items-center gap-4 mb-4 bg-gradient-to-r from-rose-50 to-pink-50 p-4 rounded-lg border border-rose-200'>
               <div className='flex-1'>
                 <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Deuda Total del Cliente</span>
                 <span className='text-2xl font-bold text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span>
@@ -375,7 +397,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
               </div>
               <div className='flex-1 text-center'>
                 <span className='text-xs font-bold text-gray-500 uppercase block mb-1'>Distribuido</span>
-                <span className={`text-2xl font-bold ${Math.abs(montoSinDistribuir) < 0.01 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                <span className={`text-2xl font-bold ${Math.abs(montoSinDistribuir) < 0.01 ? 'text-rose-600' : 'text-orange-500'}`}>
                   S/. {totalDistribuido.toFixed(2)}
                 </span>
                 {Math.abs(montoSinDistribuir) >= 0.01 && (
@@ -411,7 +433,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
                       key={v.id}
                       className={`px-3 py-2 grid grid-cols-12 gap-2 items-center text-sm transition-colors ${
                         necesitaPago ? 'bg-red-50' :
-                        v._montoAPagar > 0 ? 'bg-emerald-50' :
+                        v._montoAPagar > 0 ? 'bg-rose-50' :
                         v._seleccionada ? 'bg-white' : 'bg-gray-50 opacity-60'
                       }`}
                     >
@@ -487,7 +509,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
             <div className='flex justify-between mt-4 bg-gray-50 rounded-lg p-3 text-sm font-bold border border-gray-200'>
               <span>Ventas: <span className='text-blue-700'>{filasConMonto.length}</span></span>
               <span>Total Deuda: <span className='text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span></span>
-              <span>Pagando: <span className='text-emerald-600 text-lg'>S/. {totalDistribuido.toFixed(2)}</span></span>
+              <span>Pagando: <span className='text-rose-600 text-lg'>S/. {totalDistribuido.toFixed(2)}</span></span>
               <span>Resta: <span className='text-orange-600'>S/. {(totalDeudaCliente - totalDistribuido).toFixed(2)}</span></span>
             </div>
           </>
