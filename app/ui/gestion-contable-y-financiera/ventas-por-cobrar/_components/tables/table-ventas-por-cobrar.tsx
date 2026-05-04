@@ -68,6 +68,11 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const quickFilterText = useStoreFiltrosVentasPorCobrar(state => state.quickFilterText)
   const isSearching = quickFilterText !== '' && quickFilterText.length < 2 // Mostrar loading si está escribiendo
 
+  // Debug: verificar que quickFilterText se está actualizando
+  useEffect(() => {
+    console.log('📊 Tabla recibió quickFilterText:', quickFilterText)
+  }, [quickFilterText])
+
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
     let search: string | undefined

@@ -118,6 +118,7 @@ export default function FiltersVentasPorCobrar() {
 
   // Actualizar el quickFilterText cuando cambie el texto debounced
   useEffect(() => {
+    console.log('🔍 Actualizando quickFilterText:', debouncedBusquedaCliente)
     setQuickFilterText(debouncedBusquedaCliente)
   }, [debouncedBusquedaCliente, setQuickFilterText])
 
@@ -312,16 +313,11 @@ export default function FiltersVentasPorCobrar() {
           <ConfigurableElement componentId='gestion-contable.ventas-por-cobrar.filtro-cliente' label='Filtro Cliente'>
             <LabelBase label='Cliente:'>
               <InputBase
-                propsForm={{
-                  name: 'busqueda_cliente',
-                  hasFeedback: false,
-                  className: '!min-w-[250px] !w-[250px] !max-w-[250px]',
-                }}
+                className='!min-w-[250px] !w-[250px] !max-w-[250px]'
                 placeholder='Buscar cliente...'
-                formWithMessage={false}
-                allowClear
                 value={busquedaClienteText}
                 onChange={(e) => setBusquedaClienteText(e.target.value)}
+                allowClear
               />
             </LabelBase>
           </ConfigurableElement>
@@ -407,15 +403,10 @@ export default function FiltersVentasPorCobrar() {
         <div className='flex flex-col gap-4'>
           <LabelBase label='Cliente:'>
             <InputBase
-              propsForm={{
-                name: 'busqueda_cliente',
-                hasFeedback: false,
-              }}
               placeholder='Buscar cliente...'
-              formWithMessage={false}
-              allowClear
               value={busquedaClienteText}
               onChange={(e) => setBusquedaClienteText(e.target.value)}
+              allowClear
             />
           </LabelBase>
 
