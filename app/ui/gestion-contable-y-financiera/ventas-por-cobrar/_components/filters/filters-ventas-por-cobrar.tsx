@@ -6,7 +6,7 @@ import { FaSearch, FaFilter } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
-import SelectClientes from '~/app/_components/form/selects/select-clientes'
+// import SelectClientes from '~/app/_components/form/selects/select-clientes' // Ya no se usa
 import InputBase from '~/app/_components/form/inputs/input-base'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
@@ -18,6 +18,7 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
 import { Dayjs } from 'dayjs'
 import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useDebounce } from 'use-debounce'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
@@ -25,7 +26,7 @@ import { FormaDePago } from '~/lib/api/venta'
 
 interface ValuesFiltersVentasPorCobrar {
   almacen_id: number
-  cliente_id?: number
+  busqueda_cliente?: string // Cambio: ahora es texto libre para filtrar clientes
   desde?: Dayjs
   hasta?: Dayjs
   tipo_documento?: TipoDocumento
@@ -54,6 +55,8 @@ export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
+  const [busquedaClienteText, setBusquedaClienteText] = useState('')
+  const [debouncedBusquedaCliente] = useDebounce(busquedaClienteText, 500) // 500ms de delay
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
@@ -80,7 +83,7 @@ export default function FiltersVentasPorCobrar() {
   const activeFiltersCount = useMemo(() => {
     const values = form.getFieldsValue()
     let count = 0
-    if (values.cliente_id) count++
+    if (values.busqueda_cliente) count++
     if (values.desde) count++
     if (values.hasta) count++
     if (values.tipo_documento) count++
@@ -112,6 +115,15 @@ export default function FiltersVentasPorCobrar() {
     return () => clearTimeout(timer)
   }, [form, quickFilterActive])
 
+  // Efecto para aplicar el filtro cuando cambia el texto debounced
+  useEffect(() => {
+    // Solo aplicar si hay al menos 2 caracteres o si está vacío (para limpiar)
+    if (debouncedBusquedaCliente.length >= 2 || debouncedBusquedaCliente === '') {
+      form.setFieldValue('busqueda_cliente', debouncedBusquedaCliente)
+      form.submit()
+    }
+  }, [debouncedBusquedaCliente, form])
+
   return (
     <FormBase
       form={form}
@@ -124,7 +136,7 @@ export default function FiltersVentasPorCobrar() {
           hasta,
           almacen_id: almacenIdForm,
           busqueda,
-          cliente_id,
+          busqueda_cliente,
           tipo_documento,
           user_id,
           estado_pago,
@@ -165,9 +177,16 @@ export default function FiltersVentasPorCobrar() {
           ...(user_id && {
             user_id: user_id
           }),
-          // Agregar filtro de cliente si existe
-          ...(cliente_id && {
-            cliente_id: cliente_id
+          // Agregar filtro de cliente si existe (búsqueda en tiempo real)
+          ...(busqueda_cliente && {
+            cliente: {
+              OR: [
+                { razon_social: { contains: busqueda_cliente } },
+                { nombres: { contains: busqueda_cliente } },
+                { apellidos: { contains: busqueda_cliente } },
+                { numero_documento: { contains: busqueda_cliente } },
+              ]
+            }
           }),
           // Agregar búsqueda si existe
           ...(busqueda && {
@@ -302,38 +321,18 @@ export default function FiltersVentasPorCobrar() {
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-contable.ventas-por-cobrar.filtro-cliente' label='Filtro Cliente'>
             <LabelBase label='Cliente:'>
-              <SelectClientes
+              <InputBase
                 propsForm={{
-                  name: 'cliente_id',
+                  name: 'busqueda_cliente',
                   hasFeedback: false,
                   className: '!min-w-[250px] !w-[250px] !max-w-[250px]',
                 }}
-                className='w-full'
-                classIconSearch='!mb-0'
+                placeholder='Buscar cliente...'
                 formWithMessage={false}
                 allowClear
-                form={form}
-                placeholder='Todos los clientes'
-                onSearchChange={(searchText) => {
-                  // Filtrar en tiempo real mientras el usuario escribe
-                  if (searchText && searchText.length >= 3) {
-                    // Actualizar el campo de búsqueda en el formulario
-                    form.setFieldValue('busqueda', searchText)
-                    // Aplicar el filtro automáticamente
-                    form.submit()
-                  } else if (!searchText) {
-                    // Si borra el texto, limpiar el filtro
-                    form.setFieldValue('busqueda', undefined)
-                    form.setFieldValue('cliente_id', undefined)
-                    form.submit()
-                  }
-                }}
-                onChange={(clienteId) => {
-                  // Cuando selecciona un cliente específico, aplicar ese filtro
-                  if (clienteId) {
-                    form.setFieldValue('busqueda', undefined)
-                    form.submit()
-                  }
+                onChange={(e) => {
+                  const searchText = e.target.value
+                  setBusquedaClienteText(searchText)
                 }}
               />
             </LabelBase>
@@ -419,34 +418,17 @@ export default function FiltersVentasPorCobrar() {
       >
         <div className='flex flex-col gap-4'>
           <LabelBase label='Cliente:'>
-            <SelectClientes
+            <InputBase
               propsForm={{
-                name: 'cliente_id',
+                name: 'busqueda_cliente',
                 hasFeedback: false,
               }}
-              className='w-full'
-              classIconSearch='!mb-0'
+              placeholder='Buscar cliente...'
               formWithMessage={false}
               allowClear
-              form={form}
-              placeholder='Todos los clientes'
-              onSearchChange={(searchText) => {
-                // Filtrar en tiempo real mientras el usuario escribe
-                if (searchText && searchText.length >= 3) {
-                  form.setFieldValue('busqueda', searchText)
-                  form.submit()
-                } else if (!searchText) {
-                  form.setFieldValue('busqueda', undefined)
-                  form.setFieldValue('cliente_id', undefined)
-                  form.submit()
-                }
-              }}
-              onChange={(clienteId) => {
-                // Cuando selecciona un cliente específico
-                if (clienteId) {
-                  form.setFieldValue('busqueda', undefined)
-                  form.submit()
-                }
+              onChange={(e) => {
+                const searchText = e.target.value
+                setBusquedaClienteText(searchText)
               }}
             />
           </LabelBase>
