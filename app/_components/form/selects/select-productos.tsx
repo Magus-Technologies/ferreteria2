@@ -80,6 +80,8 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   limpiarOnChange?: boolean
   autoFocus?: boolean
   selectionColor?: string // Color para la fila seleccionada en el modal
+  ignoreAlmacen?: boolean
+  showStockMaxWarning?: boolean
 }
 
 export interface RefSelectProductosProps {
@@ -113,6 +115,8 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   autoFocus = false,
   selectionColor,
   onSearch,
+  ignoreAlmacen = false,
+  showStockMaxWarning = false,
   ...props
 }, ref) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -186,12 +190,13 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   const [manualSearch, setManualSearch] = useState(false)
 
   const { data: responseData, refetch, isLoading: loading, isFetching } = useQuery({
-    queryKey: [QueryKeys.PRODUCTOS_SEARCH, debouncedText, tipoBusqueda, almacen_id],
+    queryKey: [QueryKeys.PRODUCTOS_SEARCH, debouncedText, tipoBusqueda, ignoreAlmacen ? null : almacen_id],
     queryFn: async () => {
-      if (!debouncedText || !almacen_id) return []
+      if (!debouncedText) return []
+      if (!ignoreAlmacen && !almacen_id) return []
       
       const response = await productosApiV2.getAllByAlmacen({
-        almacen_id,
+        almacen_id: ignoreAlmacen ? undefined : almacen_id,
         search: debouncedText,
         estado: 1,
         per_page: 30,
@@ -204,7 +209,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
       // response.data tiene la estructura { data: Producto[], ... }
       return response.data?.data || []
     },
-    enabled: !!debouncedText && !!almacen_id,
+    enabled: !!debouncedText && (ignoreAlmacen || !!almacen_id),
   })
 
   // Renombrar para mayor claridad
@@ -375,6 +380,8 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           almacenOrigenIdTransferencia={almacenOrigenIdTransferencia}
           showUltimasCompras={showUltimasCompras}
           selectionColor={colorSeleccion}
+          ignoreAlmacen={ignoreAlmacen}
+          showStockMaxWarning={showStockMaxWarning}
           onAfterClose={() => {
             // Devolver focus al buscador después de cerrar el modal
             ;[0, 50, 150, 300, 500].forEach((delay) => {

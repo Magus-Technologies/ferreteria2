@@ -35,6 +35,8 @@ export default function TableProductoSearch({
   marcaId,
   categoriaId,
   forceLoading = false, // Forzar loading externo (ej. debounce pendiente)
+  ignoreAlmacen = false,
+  showStockMaxWarning = false,
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -51,6 +53,8 @@ export default function TableProductoSearch({
   marcaId?: number;
   categoriaId?: number;
   forceLoading?: boolean;
+  ignoreAlmacen?: boolean;
+  showStockMaxWarning?: boolean;
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
   const tableGridRef = useRef<any>(null);
@@ -85,7 +89,7 @@ export default function TableProductoSearch({
 
   const { data: response, refetch, loading } = useProductosSearch({
     filtros: {
-      almacen_id,
+      almacen_id: ignoreAlmacen ? undefined : almacen_id,
       // Si es búsqueda por código de barras o acción técnica, usar el campo específico
       ...(tipoBusqueda === TipoBusquedaProducto.CODIGO_BARRAS && value
         ? { search: value } // El backend busca en cod_barra también
@@ -99,7 +103,7 @@ export default function TableProductoSearch({
       estado: 1, // Solo productos activos
       ...(marcaId ? { marca_id: marcaId } : {}),
       ...(categoriaId ? { categoria_id: categoriaId } : {}),
-      cs_stock: getBackendStockFilter(),
+      cs_stock: ignoreAlmacen ? 'all' : getBackendStockFilter(),
     },
     // Siempre habilitado
     enabled: shouldFetch,
@@ -257,7 +261,10 @@ export default function TableProductoSearch({
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
       loading={loading || forceLoading}
-      columnDefs={useColumnsProductos({ almacen_id }) as any}
+      columnDefs={useColumnsProductos({ 
+        almacen_id: ignoreAlmacen ? undefined : almacen_id,
+        showStockMaxWarning
+      }) as any}
       onRowDoubleClicked={({ data }) => {
         // Con 2 clicks: actualizar el producto Y ejecutar la acción adicional (abrir modal)
         setProductoSeleccionadoSearchStore(data as any);

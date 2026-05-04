@@ -39,6 +39,9 @@ interface ProductoEnOC {
   vencimiento: string | null
   lote: string
   subtotal: number
+  stock_max?: number | null
+  stock_actual?: number
+  unidad_factor?: number
 }
 import type { RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
@@ -199,6 +202,9 @@ export default function CrearOrdenCompraPage() {
       vencimiento: p.vencimiento ? (typeof p.vencimiento === 'string' ? p.vencimiento : p.vencimiento.format('YYYY-MM-DD')) : null,
       lote: p.lote ?? '',
       subtotal: Number(p.cantidad ?? 1) * Number(p.precio_compra ?? 0),
+      stock_max: (p as any).stock_max,
+      stock_actual: (p as any).stock_fraccion,
+      unidad_factor: (p as any).unidad_derivada_factor,
     }
 
     setProductos(prev => {
@@ -389,6 +395,23 @@ export default function CrearOrdenCompraPage() {
               setProductos(prev => prev.map((p, i) => i === node.rowIndex! ? { ...p, cantidad: value, subtotal: value * p.precio_compra } : p))
             }}
           />
+          {data?.stock_max && (() => {
+            const addedFraccion = Number(data.cantidad || 0) * Number(data.unidad_factor || 1);
+            const stockActual = Number(data.stock_actual || 0);
+            const stockTotalPostCompra = stockActual + addedFraccion;
+            const stockMax = Number(data.stock_max);
+            
+            if (stockTotalPostCompra > stockMax) {
+              return (
+                <Tooltip title={`Stock proyectado (${stockTotalPostCompra}) excederá el máximo (${stockMax})`}>
+                  <div className='text-amber-600 text-[11px] mt-1 font-medium leading-tight cursor-help'>
+                    ⚠️ Excede Máx
+                  </div>
+                </Tooltip>
+              );
+            }
+            return null;
+          })()}
         </div>
       ),
     },
@@ -551,6 +574,9 @@ export default function CrearOrdenCompraPage() {
             vencimiento: product.vencimiento,
             lote: product.lote,
             subtotal: product.cantidad * Number(precio_compra),
+            stock_max: productoMatch.stock_max,
+            stock_actual: Number(productoMatch.producto_en_almacenes?.[0]?.stock_fraccion ?? 0),
+            unidad_factor: Number(productoMatch.unidades_contenidas ?? 1),
           }
           
           setProductos(prev => {
@@ -604,6 +630,11 @@ export default function CrearOrdenCompraPage() {
         if (stockAlmacen && stockAlmacen.costo) {
           precio_compra_actual = Number(stockAlmacen.costo)
         }
+        
+        // Agregar info de stock
+        (product as any).stock_max = prodData.stock_max;
+        (product as any).stock_actual = Number(stockAlmacen?.stock_fraccion ?? 0);
+        (product as any).unidad_factor = Number(prodData.unidades_contenidas ?? 1);
       }
       message.destroy('cargandoExtra')
     } catch (e) {
@@ -624,6 +655,9 @@ export default function CrearOrdenCompraPage() {
       vencimiento: product.vencimiento,
       lote: product.lote,
       subtotal: product.cantidad * precio_compra_actual,
+      stock_max: (product as any).stock_max,
+      stock_actual: (product as any).stock_actual,
+      unidad_factor: (product as any).unidad_factor,
     }
     
     setProductos(prev => {
@@ -855,6 +889,7 @@ export default function CrearOrdenCompraPage() {
                 showButtonCreate
                 showCardAgregarProducto
                 autoFillPrecioCompraWithCosto
+                ignoreAlmacen
               />
             </div>
           }

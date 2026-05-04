@@ -166,7 +166,7 @@ export interface DetallePreciosResponse {
 
 // Parámetros de consulta
 export interface GetProductosParams {
-  almacen_id: number;
+  almacen_id?: number;
   search?: string;
   categoria_id?: number;
   marca_id?: number;
