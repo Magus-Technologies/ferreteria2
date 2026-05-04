@@ -59,6 +59,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [compraSeleccionadaPdf, setCompraSeleccionadaPdf] = useState<Compra | null>(null)
+  const [esTicketFormato, setEsTicketFormato] = useState(false) // Controla formato del PDF (false = A4, true = ticket)
 
   const filtros = useStoreFiltrosComprasPorPagar(state => state.filtros)
   const moraRango = useStoreFiltrosComprasPorPagar(state => state.moraRango)
@@ -112,7 +113,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
   }, [data?.data, moraRango])
 
   // Función para ver el PDF de la compra
-  const handleVerPdf = useCallback(async (compra: Compra) => {
+  const handleVerPdf = useCallback(async (compra: Compra, formato?: 'a4' | 'ticket') => {
     if (!compra?.id) return
     
     setCompraSeleccionadaPdf(compra)
@@ -124,10 +125,13 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     }
     setPdfUrl(null)
     
+    // Si no se proporciona formato, usar el estado actual
+    const formatoActual = formato || (esTicketFormato ? 'ticket' : 'a4')
+    
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL
       const token = getAuthToken()
-      const res = await fetch(`${API_URL}/pdf/compra/${compra.id}`, {
+      const res = await fetch(`${API_URL}/pdf/compra/${compra.id}?formato=${formatoActual}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/pdf',
@@ -145,7 +149,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     } finally {
       setPdfLoading(false)
     }
-  }, [pdfUrl])
+  }, [pdfUrl, esTicketFormato])
 
   const handleClosePdfModal = useCallback((v: boolean) => {
     setPdfModalOpen(v)
@@ -153,8 +157,18 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
       URL.revokeObjectURL(pdfUrl)
       setPdfUrl(null)
       setCompraSeleccionadaPdf(null)
+      // NO resetear esTicketFormato - mantener el formato elegido por el usuario
     }
   }, [pdfUrl])
+
+  // Recargar PDF cuando cambie el formato (ticket/A4)
+  useEffect(() => {
+    if (pdfModalOpen && compraSeleccionadaPdf) {
+      const formato = esTicketFormato ? 'ticket' : 'a4'
+      handleVerPdf(compraSeleccionadaPdf, formato)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esTicketFormato])
 
   // Función para calcular el total de una compra
   const calcularTotalCompra = useCallback((compra: Compra) => {
@@ -405,7 +419,8 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
         open={pdfModalOpen}
         setOpen={handleClosePdfModal}
         nro_doc={nroDoc}
-        esTicket={false}
+        esTicket={esTicketFormato}
+        setEsTicket={setEsTicketFormato}
         tipoDocumento='compra'
         backendPdfUrl={pdfUrl}
         backendPdfLoading={pdfLoading}

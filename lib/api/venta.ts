@@ -429,6 +429,7 @@ export type VentaCompleta = {
   created_at: string
   updated_at: string
   total_pagado?: number
+  total_cobrado?: number
   entregas_productos_count?: number
   // Cantidad de ediciones registradas en `venta_historial` con accion='edicion'.
   // Calculado en backend con `withCount('historial as total_ediciones')`.
@@ -470,7 +471,6 @@ export type VentaCompleta = {
     }
   }>
   vales_aplicados?: ValeCompraAplicado[]
-  total_cobrado?: number
   comprobante_electronico?: {
     id: number
     tipo_comprobante: string
