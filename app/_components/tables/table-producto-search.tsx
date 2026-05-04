@@ -68,8 +68,20 @@ export default function TableProductoSearch({
   };
 
   const hasSearch = !!value;
-  // Cuando filtroStock es TODOS, permitir búsqueda sin texto
-  const shouldFetch = filtroStock === FiltroStock.TODOS || hasSearch;
+  // Siempre permitir búsqueda (con o sin texto)
+  const shouldFetch = true;
+
+  // Mapear filtro de stock a parámetro del backend cuando sea posible
+  const getBackendStockFilter = () => {
+    switch (filtroStock) {
+      case FiltroStock.CON_STOCK:
+        return 'con_stock';
+      case FiltroStock.STOCK_CERO:
+        return 'sin_stock';
+      default:
+        return 'all';
+    }
+  };
 
   const { data: response, refetch, loading } = useProductosSearch({
     filtros: {
@@ -87,8 +99,9 @@ export default function TableProductoSearch({
       estado: 1, // Solo productos activos
       ...(marcaId ? { marca_id: marcaId } : {}),
       ...(categoriaId ? { categoria_id: categoriaId } : {}),
+      cs_stock: getBackendStockFilter(),
     },
-    // Buscar cuando hay texto O cuando filtroStock es TODOS
+    // Siempre habilitado
     enabled: shouldFetch,
   });
 
@@ -116,8 +129,8 @@ export default function TableProductoSearch({
         )
     );
 
-    // Aplicar filtro de stock
-    if (filtroStock !== FiltroStock.TODOS) {
+    // Aplicar filtro de STOCK_MINIMO en el frontend (los demás se manejan en el backend)
+    if (filtroStock === FiltroStock.STOCK_MINIMO) {
       productos = productos.filter((producto) => {
         // Obtener el stock actual del almacén actual
         const productoEnAlmacen = producto.producto_en_almacenes?.find(
@@ -126,19 +139,8 @@ export default function TableProductoSearch({
         const stockActual = Number(productoEnAlmacen?.stock_fraccion ?? 0);
         const stockMin = Number(producto.stock_min ?? 0);
 
-        switch (filtroStock) {
-          case FiltroStock.STOCK_MINIMO:
-            // Stock desde el mínimo hacia abajo, incluyendo negativos
-            return stockActual <= stockMin;
-          case FiltroStock.STOCK_CERO:
-            // Stock exactamente en 0
-            return stockActual === 0;
-          case FiltroStock.CON_STOCK:
-            // Stock desde 0.01 hacia arriba
-            return stockActual >= 0.01;
-          default:
-            return true;
-        }
+        // Stock desde el mínimo hacia abajo, incluyendo negativos
+        return stockActual <= stockMin;
       });
     }
 
@@ -150,7 +152,7 @@ export default function TableProductoSearch({
     refetch();
   }
 
-  // Solo refetch manual cuando cambia filtroStock, marcaId o categoriaId
+  // Refetch cuando cambian los filtros
   const filtroStockRef = useRef(filtroStock);
   const marcaIdRef = useRef(marcaId);
   const categoriaIdRef = useRef(categoriaId);
@@ -165,12 +167,13 @@ export default function TableProductoSearch({
       marcaIdRef.current = marcaId;
       categoriaIdRef.current = categoriaId;
       
-      if (isVisible && shouldFetch) {
+      // Siempre hacer refetch cuando cambian los filtros
+      if (isVisible) {
         handleRefetch();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtroStock, marcaId, categoriaId]);
+  }, [filtroStock, marcaId, categoriaId, isVisible]);
 
   // Aplicar quickFilter local cuando cambia el texto
   useEffect(() => {
