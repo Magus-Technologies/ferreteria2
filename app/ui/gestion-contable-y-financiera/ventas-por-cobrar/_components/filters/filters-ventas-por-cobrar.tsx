@@ -314,6 +314,12 @@ export default function FiltersVentasPorCobrar() {
                 allowClear
                 form={form}
                 placeholder='Todos los clientes'
+                onChange={(clienteId) => {
+                  // Cuando se selecciona un cliente, aplicar el filtro automáticamente
+                  if (clienteId) {
+                    form.submit()
+                  }
+                }}
               />
             </LabelBase>
           </ConfigurableElement>
@@ -409,6 +415,12 @@ export default function FiltersVentasPorCobrar() {
               allowClear
               form={form}
               placeholder='Todos los clientes'
+              onChange={(clienteId) => {
+                // Cuando se selecciona un cliente, aplicar el filtro automáticamente
+                if (clienteId) {
+                  form.submit()
+                }
+              }}
             />
           </LabelBase>
 
