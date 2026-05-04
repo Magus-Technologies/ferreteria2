@@ -278,6 +278,11 @@ export const compraApi = {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
+          // Skip per_page if it's -1, let backend use default or use max allowed
+          if (key === 'per_page' && value === -1) {
+            params.append(key, '100'); // Use max allowed by backend
+            return;
+          }
           // Si el valor es un objeto, serializarlo como JSON
           if (typeof value === 'object') {
             params.append(key, JSON.stringify(value));
@@ -303,6 +308,11 @@ export const compraApi = {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
+          // Skip per_page if it's -1, let backend use default
+          if (key === 'per_page' && value === -1) {
+            params.append(key, '100'); // Use max allowed by backend
+            return;
+          }
           params.append(key, String(value));
         }
       });

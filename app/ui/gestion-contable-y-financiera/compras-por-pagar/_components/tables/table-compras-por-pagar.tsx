@@ -2,99 +2,195 @@
 
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useRef, memo, useCallback, useMemo, useState, useEffect } from 'react'
-import { redColors } from '~/lib/colors'
+import { useRef, memo, useCallback, useMemo, useEffect, useState } from 'react'
+import { orangeColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
-import { CompraCreateInputSchema } from '~/types/zod-schemas'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
-import PaginationControls from '~/app/_components/tables/pagination-controls'
 import { compraApi, type Compra } from '~/lib/api/compra'
 import { useQuery } from '@tanstack/react-query'
 import { useStoreFiltrosComprasPorPagar } from '../../_store/store-filtros-compras-por-pagar'
-import { exportComprasToExcel } from '~/utils/export-compras-excel'
+import type { MoraRango } from '../../_store/store-filtros-compras-por-pagar'
 import dayjs from 'dayjs'
+import { create } from 'zustand'
+import { FaFilePdf } from 'react-icons/fa'
+import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
+import { getAuthToken } from '~/lib/api'
+
+// Store para la compra seleccionada
+type UseStoreCompraSeleccionada = {
+  compra: Compra | undefined
+  setCompra: (compra: Compra | undefined) => void
+}
+
+export const useStoreCompraSeleccionada = create<UseStoreCompraSeleccionada>((set) => ({
+  compra: undefined,
+  setCompra: (compra) => set({ compra }),
+}))
+
+// Store para las compras filtradas (para el reporte)
+type UseStoreComprasFiltradas = {
+  compras: Compra[]
+  setCompras: (compras: Compra[]) => void
+}
+
+export const useStoreComprasFiltradas = create<UseStoreComprasFiltradas>((set) => ({
+  compras: [],
+  setCompras: (compras) => set({ compras }),
+}))
+
+// Calcula días de mora: positivo = vencida, negativo = aún no vence
+function calcularMora(compra: Compra): number {
+  const ref = compra.fecha_vencimiento || compra.fecha
+  return dayjs().startOf('day').diff(dayjs(ref).startOf('day'), 'days')
+}
+
+function aplicarFiltroMora(compras: Compra[], rango: MoraRango): Compra[] {
+  if (rango === 'todas') return compras
+  if (rango === 'hoy') return compras.filter(c => calcularMora(c) === 0)
+  if (rango === 'vencidas') return compras.filter(c => calcularMora(c) > 0)
+  return compras.filter(c => { const m = calcularMora(c); return m >= -(rango as number) && m <= (rango as number) })
+}
 
 const TableComprasPorPagar = memo(function TableComprasPorPagar() {
   const tableRef = useRef<AgGridReact>(null)
-  const [page, setPage] = useState(1)
-  const pageSize = 50
+
+  // Estados para el modal de PDF
+  const [pdfModalOpen, setPdfModalOpen] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [compraSeleccionadaPdf, setCompraSeleccionadaPdf] = useState<Compra | null>(null)
 
   const filtros = useStoreFiltrosComprasPorPagar(state => state.filtros)
+  const moraRango = useStoreFiltrosComprasPorPagar(state => state.moraRango)
+  const estadoPago = useStoreFiltrosComprasPorPagar(state => state.estadoPago)
+  const quickFilterText = useStoreFiltrosComprasPorPagar(state => state.quickFilterText)
+  const isSearching = quickFilterText !== '' && quickFilterText.length < 2
 
-  // Convert Prisma filters to API filters
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
-
-    // Extraer fechas
-    const fechaFilter = filtros.fecha as any;
-    const desde = fechaFilter?.gte ? new Date(fechaFilter.gte).toISOString().split('T')[0] : undefined;
-    const hasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toISOString().split('T')[0] : undefined;
-
-    // Extraer búsqueda del filtro OR
-    let search: string | undefined;
+    let search: string | undefined
+    
+    const busquedaProveedor = (filtros as any).busqueda_proveedor as string | undefined
+    
     if (filtros.OR && Array.isArray(filtros.OR)) {
-      const serieFilter = filtros.OR.find((filter: any) => filter.serie && typeof filter.serie === 'object' && filter.serie.contains);
-      if (serieFilter && serieFilter.serie && typeof serieFilter.serie === 'object' && typeof serieFilter.serie.contains === 'string') {
-        search = serieFilter.serie.contains as string;
-      }
+      const serieFilter = filtros.OR.find((f: any) => f?.serie?.contains)
+      if (serieFilter) search = (serieFilter as any).serie.contains as string
     }
-
+    
+    if (busquedaProveedor) {
+      search = busquedaProveedor
+    }
+    
+    const fechaFiltro = (filtros as any).fecha
     return {
       almacen_id: filtros.almacen_id as number | undefined,
-      proveedor_id: filtros.proveedor_id as number | undefined,
+      proveedor_id: (filtros as any).proveedor_id as number | undefined,
       user_id: filtros.user_id as string | undefined,
-      desde,
-      hasta,
+      desde: fechaFiltro?.gte as string | undefined,
+      hasta: fechaFiltro?.lte as string | undefined,
       search,
-      per_page: pageSize,
-      page,
+      estado_pago: estadoPago,
+      per_page: -1,
     }
-  }, [filtros, page])
+  }, [filtros, estadoPago])
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.COMPRAS_POR_PAGAR, apiFilters],
     queryFn: async () => {
       const result = await compraApi.getComprasPorPagar(apiFilters)
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
+      if (result.error) throw new Error(result.error.message)
       return result.data!
     },
     enabled: !!filtros,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 0,
   })
 
-  const totalPages = data?.last_page ?? 0
-  const total = data?.total ?? 0
-  
-  // The backend already filters for credit purchases with pending balance
   const rowData = useMemo(() => {
-    return data?.data ?? []
-  }, [data?.data])
+    const compras = data?.data ?? []
+    const filtradas = aplicarFiltroMora(compras, moraRango)
+    return [...filtradas].sort((a, b) => Number(b.id) - Number(a.id))
+  }, [data?.data, moraRango])
+
+  // Función para ver el PDF de la compra
+  const handleVerPdf = useCallback(async (compra: Compra) => {
+    if (!compra?.id) return
+    
+    setCompraSeleccionadaPdf(compra)
+    setPdfModalOpen(true)
+    setPdfLoading(true)
+    
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl)
+    }
+    setPdfUrl(null)
+    
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL
+      const token = getAuthToken()
+      const res = await fetch(`${API_URL}/pdf/compra/${compra.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+      })
+      
+      if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+      
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      setPdfUrl(url)
+    } catch (err) {
+      console.error('Error al obtener PDF de compra:', err)
+      setPdfModalOpen(false)
+    } finally {
+      setPdfLoading(false)
+    }
+  }, [pdfUrl])
+
+  const handleClosePdfModal = useCallback((v: boolean) => {
+    setPdfModalOpen(v)
+    if (!v && pdfUrl) {
+      URL.revokeObjectURL(pdfUrl)
+      setPdfUrl(null)
+      setCompraSeleccionadaPdf(null)
+    }
+  }, [pdfUrl])
+
+  // Función para calcular el total de una compra
+  const calcularTotalCompra = useCallback((compra: Compra) => {
+    return (compra.productos_por_almacen || []).reduce((acc, item: any) => {
+      for (const u of item.unidades_derivadas ?? []) {
+        const costo = Number(item.costo ?? 0)
+        const cantidad = Number(u.cantidad ?? 0)
+        const flete = Number(u.flete ?? 0)
+        const bonificacion = Boolean(u.bonificacion)
+        const montoLinea = bonificacion ? 0 : (costo * cantidad) + flete
+        acc += montoLinea
+      }
+      return acc
+    }, 0) + Number(compra.percepcion ?? 0)
+  }, [])
 
   // Definir columnas específicas para compras por pagar
   const columns: ColDef<Compra>[] = useMemo(() => [
     {
-      headerName: 'Fecha',
-      width: 120,
-      valueGetter: (params) => {
-        if (!params.data?.fecha) return ''
-        return dayjs(params.data.fecha).format('DD/MM/YYYY')
+      headerName: 'Fecha y Hora',
+      width: 150,
+      valueGetter: (params: any) => {
+        const val = params.data?.created_at || params.data?.fecha
+        if (!val) return ''
+        return dayjs(val).format('DD/MM/YYYY hh:mm A')
       },
     },
     {
       headerName: 'Documento',
       width: 120,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const tipoDoc = params.data?.tipo_documento as string
         const tipoDocMap: Record<string, string> = {
           '01': 'Factura',
           '03': 'Boleta',
-          'nv': 'Nota de Venta',
-          'in': 'Ingreso',
-          'sa': 'Salida',
-          'rc': 'Recepción',
+          'gr': 'Guía Rem.',
         }
         return tipoDocMap[tipoDoc] || tipoDoc || ''
       },
@@ -102,26 +198,30 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     {
       headerName: 'Serie-Correl',
       width: 140,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const serie = params.data?.serie || ''
         const numero = params.data?.numero || ''
         return serie && numero ? `${serie}-${numero}` : ''
       },
     },
     {
-      headerName: 'Ruc',
+      headerName: 'RUC Proveedor',
       width: 120,
       valueGetter: (params) => params.data?.proveedor?.ruc || '',
     },
     {
       headerName: 'Proveedor',
       width: 300,
-      valueGetter: (params) => params.data?.proveedor?.razon_social || '',
+      valueGetter: (params: any) => {
+        const proveedor = params.data?.proveedor
+        if (!proveedor) return ''
+        return proveedor.razon_social || ''
+      },
     },
     {
       headerName: 'Detalle',
       width: 200,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const compra = params.data as Compra
         if (!compra?.productos_por_almacen || compra.productos_por_almacen.length === 0) {
           return 'Sin productos'
@@ -145,30 +245,17 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
       headerName: 'Total',
       width: 120,
       cellRenderer: (params: any) => {
-        const compras = params.data as Compra
-        if (!compras) return 'S/. 0.00'
+        const compra = params.data as Compra
+        if (!compra) return 'S/. 0.00'
         
-        const productos = Array.isArray(compras.productos_por_almacen) ? compras.productos_por_almacen : [];
-        const total = productos.reduce((acc, item) => {
-          const costo = Number(item.costo ?? 0)
-          for (const u of item.unidades_derivadas ?? []) {
-            const cantidad = Number(u.cantidad ?? 0)
-            const factor = Number(u.factor ?? 0)
-            const flete = Number(u.flete ?? 0)
-            const bonificacion = Boolean(u.bonificacion)
-            const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
-            acc += montoLinea
-          }
-          return acc
-        }, 0)
-        
+        const total = calcularTotalCompra(compra)
         return `S/. ${total.toFixed(2)}`
       },
     },
     {
       headerName: 'Paga',
       width: 120,
-      valueGetter: (params) => {
+      valueGetter: (params: any) => {
         const pagado = Number(params.data?.total_pagado || 0)
         return `S/. ${pagado.toFixed(2)}`
       },
@@ -180,20 +267,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
         const compra = params.data as Compra
         if (!compra) return 'S/. 0.00'
         
-        const productos = Array.isArray(compra.productos_por_almacen) ? compra.productos_por_almacen : [];
-        const total = productos.reduce((acc, item) => {
-          const costo = Number(item.costo ?? 0)
-          for (const u of item.unidades_derivadas ?? []) {
-            const cantidad = Number(u.cantidad ?? 0)
-            const factor = Number(u.factor ?? 0)
-            const flete = Number(u.flete ?? 0)
-            const bonificacion = Boolean(u.bonificacion)
-            const montoLinea = (bonificacion ? 0 : costo * cantidad * factor) + flete
-            acc += montoLinea
-          }
-          return acc
-        }, 0)
-        
+        const total = calcularTotalCompra(compra)
         const totalPagado = Number(compra.total_pagado || 0)
         const saldo = total - totalPagado
         
@@ -209,50 +283,41 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
       headerName: 'Moras',
       width: 80,
       cellRenderer: (params: any) => {
-        const compra = params.data as Compra
-        if (!compra?.fecha) return '0'
-        
-        const fechaCompra = dayjs(compra.fecha)
-        const hoy = dayjs()
-        const diasVencidos = hoy.diff(fechaCompra, 'days')
-        
-        return diasVencidos > 0 ? diasVencidos.toString() : '0'
+        const mora = calcularMora(params.data as Compra)
+        if (mora <= 0) return <span className='text-black'>{mora}</span>
+        return <span className='text-black font-bold'>{mora}</span>
       },
-      cellStyle: (params: any) => {
-        const compra = params.data as Compra
-        if (!compra?.fecha) return null
-        
-        const fechaCompra = dayjs(compra.fecha)
-        const hoy = dayjs()
-        const diasVencidos = hoy.diff(fechaCompra, 'days')
-        
-        if (diasVencidos > 30) {
-          return { color: '#dc2626', fontWeight: 'bold' }
-        } else if (diasVencidos > 15) {
-          return { color: '#ea580c', fontWeight: 'bold' }
-        } else if (diasVencidos > 0) {
-          return { color: '#ca8a04', fontWeight: 'bold' }
-        }
-        
-        return null
+      valueGetter: (params: any) => calcularMora(params.data as Compra),
+    },
+    {
+      headerName: 'PDF',
+      width: 70,
+      cellRenderer: (params: any) => {
+        if (!params.data?.id) return null
+        return (
+          <button
+            onClick={() => handleVerPdf(params.data)}
+            className='flex items-center justify-center w-full h-full text-red-600 hover:text-red-800'
+            title='Ver comprobante PDF'
+          >
+            <FaFilePdf size={16} />
+          </button>
+        )
       },
     },
-  ], [page, pageSize])
+  ], [calcularTotalCompra, handleVerPdf])
 
-  // Memoizar callbacks para evitar re-renders innecesarios
   const handleSelectionChanged = useCallback(
     (event: SelectionChangedEvent<Compra>) => {
       const selectedNodes = event.api?.getSelectedNodes() || []
       const selectedCompra = selectedNodes?.[0]?.data as Compra
-      // Aquí podrías manejar la selección si es necesario
-      console.log('Compra seleccionada:', selectedCompra)
+      useStoreCompraSeleccionada.getState().setCompra(selectedCompra)
     },
     []
   )
 
   const handleRowDoubleClicked = useCallback(
     (event: RowDoubleClickedEvent<Compra>) => {
-      // Aquí podrías abrir un modal con detalles de la compra
       console.log('Doble click en compra:', event.data)
     },
     []
@@ -265,7 +330,6 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     []
   )
 
-  // Memoizar opciones de columnas para evitar recreaciones
   const optionsSelectColumns = useMemo(
     () => [
       {
@@ -274,7 +338,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
           'Fecha',
           'Documento',
           'Serie-Correl',
-          'Ruc',
+          'RUC Proveedor',
           'Proveedor',
           'Detalle',
           'Registra',
@@ -283,112 +347,72 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
           'Saldo',
           'Mon.',
           'Moras',
+          'PDF',
         ],
       },
     ],
     []
   )
 
-  const nextPage = useCallback(() => {
-    if (page < totalPages) {
-      setPage(p => p + 1)
-    }
-  }, [page, totalPages])
-
-  const prevPage = useCallback(() => {
-    if (page > 1) {
-      setPage(p => p - 1)
-    }
-  }, [page])
-
-  // Función para exportar todas las compras con los filtros actuales
-  const handleExportExcel = useCallback(async () => {
-    try {
-      // Obtener todas las compras haciendo múltiples peticiones si es necesario
-      let allCompras: Compra[] = []
-      let currentPage = 1
-      let hasMorePages = true
-      const perPage = 100 // Máximo permitido por el backend
-
-      while (hasMorePages) {
-        const result = await compraApi.getComprasPorPagar({
-          ...apiFilters,
-          per_page: perPage,
-          page: currentPage,
-        })
-        
-        if (result.error) {
-          throw new Error(result.error.message)
+  // Seleccionar automáticamente la primera fila
+  useEffect(() => {
+    if (rowData && rowData.length > 0 && tableRef.current) {
+      setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
+        if (firstNode) {
+          firstNode.setSelected(true);
         }
-
-        const pageData = result.data?.data ?? []
-        allCompras = [...allCompras, ...pageData]
-
-        // Verificar si hay más páginas
-        const lastPage = result.data?.last_page ?? 1
-        hasMorePages = currentPage < lastPage
-        currentPage++
-      }
-      
-      if (allCompras.length === 0) {
-        alert('No hay datos para exportar')
-        return
-      }
-
-      // Extraer fechas de los filtros para el reporte
-      const fechaFilter = filtros?.fecha as any
-      const fechaDesde = fechaFilter?.gte ? new Date(fechaFilter.gte).toLocaleDateString('es-PE') : undefined
-      const fechaHasta = fechaFilter?.lte ? new Date(fechaFilter.lte).toLocaleDateString('es-PE') : undefined
-
-      exportComprasToExcel({
-        compras: allCompras,
-        nameFile: 'Compras_Por_Pagar',
-        fechaDesde,
-        fechaHasta,
-      })
-    } catch (error: any) {
-      console.error('Error al exportar:', error)
-      alert(`Error al exportar los datos: ${error.message || 'Error desconocido'}`)
+      }, 100);
     }
-  }, [apiFilters, filtros])
+  }, [rowData]);
 
-  // Solo renderizar cuando hay filtros
+  // Actualizar el store de compras filtradas
+  useEffect(() => {
+    useStoreComprasFiltradas.getState().setCompras(rowData)
+  }, [rowData])
+
   if (!filtros) return null
 
+  const nroDoc = compraSeleccionadaPdf 
+    ? `${compraSeleccionadaPdf.serie}-${compraSeleccionadaPdf.numero}` 
+    : ''
+
   return (
-    <TableWithTitle<Compra>
-      id='table-compras-por-pagar'
-      selectionColor="#fee2e2"
-      onSelectionChanged={handleSelectionChanged}
-      onRowClicked={handleRowClicked}
-      onRowDoubleClicked={handleRowDoubleClicked}
-      tableRef={tableRef}
-      title='Facturas de Compras Vencidas'
-      schema={CompraCreateInputSchema}
-      loading={isLoading}
-      columnDefs={columns}
-      rowData={rowData}
-      optionsSelectColumns={optionsSelectColumns}
-      exportExcel={true}
-      exportPdf={true}
-      selectColumns={true}
-      onExportExcel={handleExportExcel}
-      // Habilitar lazy loading para mejor rendimiento
-      suppressRowTransform={true}
-      rowBuffer={10}
-      cacheBlockSize={100}
-    >
-      {/* Paginación */}
-      <PaginationControls
-        currentPage={page}
-        totalPages={totalPages}
-        total={total}
-        pageSize={pageSize}
-        loading={isLoading}
-        onNextPage={nextPage}
-        onPrevPage={prevPage}
-      />
-    </TableWithTitle>
+    <>
+      <TableWithTitle<Compra>
+        id='table-compras-por-pagar'
+        selectionColor={orangeColors[1]}
+        onSelectionChanged={handleSelectionChanged}
+        onRowClicked={handleRowClicked}
+        onRowDoubleClicked={handleRowDoubleClicked}
+        tableRef={tableRef}
+        title='Facturas de Compras Vencidas'
+        loading={isLoading || isSearching}
+        columnDefs={columns}
+        rowData={rowData}
+        optionsSelectColumns={optionsSelectColumns}
+        exportExcel={true}
+        exportPdf={true}
+        selectColumns={true}
+        suppressRowTransform={true}
+        rowBuffer={10}
+        quickFilterText={quickFilterText}
+      >
+      </TableWithTitle>
+
+      {/* Modal para ver PDF de la compra */}
+      <ModalShowDoc
+        open={pdfModalOpen}
+        setOpen={handleClosePdfModal}
+        nro_doc={nroDoc}
+        esTicket={false}
+        tipoDocumento='compra'
+        backendPdfUrl={pdfUrl}
+        backendPdfLoading={pdfLoading}
+      >
+        <></>
+      </ModalShowDoc>
+    </>
   )
 })
 

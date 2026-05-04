@@ -142,8 +142,11 @@ export default function TableMisGanancias() {
     {
       headerName: 'DESPLIEGUE DE PAGO',
       field: 'cc',
-      width: 130,
-      valueFormatter: (p) => despliegueMap[p.value] || p.value || '-',
+      width: 180,
+      valueFormatter: (p) => {
+        if (!p.value || p.value === 'SIN_METODO') return 'SIN ASIGNAR'
+        return despliegueMap[p.value] || p.value
+      },
     },
     {
       headerName: 'COSTO',

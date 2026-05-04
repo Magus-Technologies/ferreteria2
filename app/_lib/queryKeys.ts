@@ -53,6 +53,7 @@ export enum QueryKeys {
   COMPRAS_POR_PAGAR = 'compras_por_pagar',
   COMPRAS_POR_PAGAR_STATS = 'compras_por_pagar_stats',
   COMPRAS_POR_PAGAR_TOTAL = 'compras_por_pagar_total',
+  PAGOS_COMPRA = 'pagos_compra',
   VENTAS_POR_COBRAR = 'ventas_por_cobrar',
   VENTAS_POR_COBRAR_STATS = 'ventas_por_cobrar_stats',
   VENTAS_POR_COBRAR_TOTAL = 'ventas_por_cobrar_total',

@@ -1,80 +1,90 @@
 'use client'
 
-// Filtros para compras por pagar - versión actualizada sin SelectProveedores
-import { Form, Drawer, Badge } from 'antd'
+// Filtros para compras por pagar
+import { Form, Drawer, Badge, Select } from 'antd'
 import { FaSearch, FaFilter } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
+import InputBase from '~/app/_components/form/inputs/input-base'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import { TipoDocumento, type CompraWhereInput } from '~/types'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
-
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import SelectUsuarios from '~/app/_components/form/selects/select-usuarios'
+import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import { Dayjs } from 'dayjs'
-import { toUTCBD } from '~/utils/fechas'
-import dayjs from 'dayjs'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useDebounce } from 'use-debounce'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useStoreFiltrosComprasPorPagar } from '../../_store/store-filtros-compras-por-pagar'
+import { useStoreFiltrosComprasPorPagar, type MoraRango } from '../../_store/store-filtros-compras-por-pagar'
 import TotalComprasPorPagar from '../others/total-compras-por-pagar'
 import { FormaDePago } from '~/lib/api/venta'
-import ModalProveedorSearch from '~/app/_components/modals/modal-proveedor-search'
-import type { Proveedor } from '~/lib/api/proveedor'
-import { useStoreProveedorSeleccionado } from '~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado'
 
 interface ValuesFiltersComprasPorPagar {
   almacen_id: number
-  proveedor_busqueda?: string
+  busqueda_proveedor?: string
   desde?: Dayjs
   hasta?: Dayjs
   tipo_documento?: TipoDocumento
   user_id?: string
   busqueda?: string
+  estado_pago?: 'pendientes' | 'pagadas' | 'todas'
 }
+
+const QUICK_FILTERS: { label: string; value: MoraRango }[] = [
+  { label: 'Hoy',      value: 'hoy' },
+  { label: '7 días',   value: 7 },
+  { label: '15 días',  value: 15 },
+  { label: '30 días',  value: 30 },
+  { label: '60 días',  value: 60 },
+  { label: 'Todas',    value: 'todas' },
+  { label: 'Vencidas', value: 'vencidas' },
+]
+
+const ESTADO_PAGO_OPTIONS = [
+  { label: 'Pendientes', value: 'pendientes' },
+  { label: 'Pagadas', value: 'pagadas' },
+  { label: 'Todas', value: 'todas' },
+]
 
 export default function FiltersComprasPorPagar() {
   const [form] = Form.useForm<ValuesFiltersComprasPorPagar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [openModalProveedorSearch, setOpenModalProveedorSearch] = useState(false)
-  const [textDefault, setTextDefault] = useState('')
+  const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
+  const [busquedaProveedorText, setBusquedaProveedorText] = useState('')
+  const [debouncedBusquedaProveedor] = useDebounce(busquedaProveedorText, 300)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosComprasPorPagar(state => state.setFiltros)
+  const setMoraRango = useStoreFiltrosComprasPorPagar(state => state.setMoraRango)
+  const estadoPago = useStoreFiltrosComprasPorPagar(state => state.estadoPago)
+  const setEstadoPago = useStoreFiltrosComprasPorPagar(state => state.setEstadoPago)
+  const setQuickFilterText = useStoreFiltrosComprasPorPagar(state => state.setQuickFilterText)
 
-  const proveedorSeleccionadoStore = useStoreProveedorSeleccionado(
-    store => store.proveedor
-  )
-  const setProveedorSeleccionadoStore = useStoreProveedorSeleccionado(
-    store => store.setProveedor
-  )
-
-  // Función para manejar la selección de proveedor
-  function handleProveedorSelect({ data }: { data?: Proveedor } = {}) {
-    const proveedor = data || proveedorSeleccionadoStore
-    if (proveedor) {
-      form.setFieldValue('proveedor_busqueda', proveedor.razon_social)
-      setProveedorSeleccionadoStore(undefined)
-      setOpenModalProveedorSearch(false)
-    }
-  }
-
-  // Función para abrir el modal de búsqueda de proveedor
-  function openProveedorModal() {
-    const currentValue = form.getFieldValue('proveedor_busqueda') || ''
-    setTextDefault(currentValue)
-    setOpenModalProveedorSearch(true)
-  }
+  const applyQuickFilter = useCallback((rango: MoraRango) => {
+    setQuickFilterActive(rango)
+    setMoraRango(rango)
+    
+    // Limpiar fechas del formulario
+    form.setFieldsValue({ desde: undefined, hasta: undefined })
+    
+    const data = {
+      almacen_id,
+      forma_de_pago: FormaDePago.CREDITO,
+      estado_de_compra: { in: ['Creado', 'Procesado'] },
+    } satisfies CompraWhereInput
+    setFiltros(data)
+  }, [almacen_id, form, setFiltros, setMoraRango])
 
   // Contar filtros activos
   const activeFiltersCount = useMemo(() => {
     const values = form.getFieldsValue()
     let count = 0
-    if (values.proveedor_busqueda) count++
+    if (values.busqueda_proveedor) count++
     if (values.desde) count++
     if (values.hasta) count++
     if (values.tipo_documento) count++
@@ -84,71 +94,96 @@ export default function FiltersComprasPorPagar() {
   }, [form])
 
   useEffect(() => {
-    const data = {
-      almacen_id,
-      // Solo mostrar compras a crédito con saldo pendiente
-      forma_de_pago: FormaDePago.CREDITO,
-      fecha: {
-        gte: toUTCBD({ date: dayjs().startOf('day') }),
-        lte: toUTCBD({ date: dayjs().endOf('day') }),
-      },
-      estado_de_compra: {
-        in: ['cr', 'pr'],
-      },
-    } satisfies CompraWhereInput
-    setFiltros(data)
+    // Aplicar el filtro rápido inicial (15 días)
+    applyQuickFilter(15)
+    // Inicializar el estado de pago en el formulario
+    form.setFieldValue('estado_pago', 'pendientes')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [almacen_id])
+
+  // Listener para cuando se cambian las fechas manualmente
+  useEffect(() => {
+    const checkDateChanges = () => {
+      const { desde, hasta } = form.getFieldsValue(['desde', 'hasta'])
+      if ((desde || hasta) && quickFilterActive !== 'todas') {
+        setQuickFilterActive('todas')
+      }
+    }
+
+    const timer = setTimeout(checkDateChanges, 50)
+    return () => clearTimeout(timer)
+  }, [form, quickFilterActive])
+
+  // Actualizar el quickFilterText cuando cambie el texto debounced
+  useEffect(() => {
+    setQuickFilterText(debouncedBusquedaProveedor)
+  }, [debouncedBusquedaProveedor, setQuickFilterText])
 
   return (
     <FormBase
       form={form}
       name='filtros-compras-por-pagar'
-      initialValues={{
-        desde: dayjs().startOf('day'),
-        hasta: dayjs().endOf('day'),
-      }}
+      initialValues={{}}
       className='w-full'
       onFinish={values => {
         const {
           desde,
           hasta,
-          almacen_id,
+          almacen_id: almacenIdForm,
           busqueda,
-          proveedor_busqueda,
-          ...rest
+          busqueda_proveedor,
+          tipo_documento,
+          user_id,
+          estado_pago,
         } = values
-        
+
+        // Si se usan fechas manuales, limpiar el filtro rápido
+        if (desde || hasta) {
+          setQuickFilterActive('todas')
+          setMoraRango('todas')
+        }
+
         const data = {
-          almacen_id: almacen_id || almacen_id,
+          almacen_id: almacenIdForm || almacen_id,
           // Solo mostrar compras a crédito
           forma_de_pago: FormaDePago.CREDITO,
-          ...rest,
-          fecha: {
-            gte: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-            lte: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
-          },
-          estado_de_compra: {
-            in: ['cr', 'pr'],
-          },
+          // Filtrar por estado de pago
+          ...(estado_pago === 'pagadas' ? {
+            saldo: 0,
+            estado_de_compra: { in: ['Creado', 'Procesado'] },
+          } : estado_pago === 'pendientes' ? {
+            saldo: { gt: 0 },
+            estado_de_compra: { in: ['Creado', 'Procesado'] },
+          } : {
+            estado_de_compra: { in: ['Creado', 'Procesado'] },
+          }),
+          // Agregar filtro de fechas si existe
+          ...(desde || hasta ? {
+            fecha: {
+              ...(desde && { gte: desde.format('YYYY-MM-DD') }),
+              ...(hasta && { lte: hasta.format('YYYY-MM-DD') }),
+            }
+          } : {}),
+          // Agregar filtro de tipo de documento si existe
+          ...(tipo_documento && {
+            tipo_documento: tipo_documento
+          }),
+          // Agregar filtro de usuario si existe
+          ...(user_id && {
+            user_id: user_id
+          }),
+          // Agregar búsqueda de proveedor
+          ...(busqueda_proveedor && {
+            busqueda_proveedor: busqueda_proveedor
+          }),
           // Agregar búsqueda si existe
           ...(busqueda && {
             OR: [
               { serie: { contains: busqueda } },
-              // Para número, intentar convertir a entero si es posible
               ...(isNaN(Number(busqueda)) ? [] : [{ numero: Number(busqueda) }]),
               { proveedor: { razon_social: { contains: busqueda } } },
               { proveedor: { ruc: { contains: busqueda } } },
             ]
-          }),
-          // Agregar búsqueda de proveedor si existe
-          ...(proveedor_busqueda && {
-            proveedor: {
-              OR: [
-                { razon_social: { contains: proveedor_busqueda } },
-                { ruc: { contains: proveedor_busqueda } },
-              ]
-            }
           }),
         } satisfies CompraWhereInput
         setFiltros(data)
@@ -166,6 +201,32 @@ export default function FiltersComprasPorPagar() {
           </div>
         }
       />
+
+      {/* Filtro rápido por días */}
+      <div className='flex items-center gap-4 mt-3'>
+        <div className='flex items-center gap-2'>
+          <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
+          <Select
+            value={quickFilterActive}
+            onChange={(val) => applyQuickFilter(val as MoraRango)}
+            className='w-36'
+            options={QUICK_FILTERS.map(({ label, value }) => ({ label, value }))}
+          />
+        </div>
+        <div className='flex items-center gap-2'>
+          <span className='text-xs font-semibold text-slate-500 mr-1'>Estado:</span>
+          <Select
+            value={estadoPago}
+            onChange={(val) => {
+              setEstadoPago(val)
+              form.setFieldValue('estado_pago', val)
+              form.submit()
+            }}
+            className='w-36'
+            options={ESTADO_PAGO_OPTIONS}
+          />
+        </div>
+      </div>
 
       {/* Filtros principales - Responsivos */}
       <div className='flex items-center gap-2 w-full mt-4 overflow-x-auto'>
@@ -218,16 +279,15 @@ export default function FiltersComprasPorPagar() {
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-contable.compras-por-pagar.filtro-busqueda' label='Filtro Búsqueda'>
             <LabelBase label='Serie-N°:'>
-              <Form.Item
-                name='busqueda'
-                className='!mb-0'
-              >
-                <input
-                  type='text'
-                  placeholder='Serie, número...'
-                  className='px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent min-w-[130px] w-[130px]'
-                />
-              </Form.Item>
+              <InputBase
+                propsForm={{
+                  name: 'busqueda',
+                  hasFeedback: false,
+                  className: '!min-w-[130px] !w-[130px]',
+                }}
+                placeholder='F01-15'
+                formWithMessage={false}
+              />
             </LabelBase>
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-contable.compras-por-pagar.filtro-tipo-documento' label='Filtro Tipo Documento'>
@@ -246,30 +306,23 @@ export default function FiltersComprasPorPagar() {
           </ConfigurableElement>
           <ConfigurableElement componentId='gestion-contable.compras-por-pagar.filtro-proveedor' label='Filtro Proveedor'>
             <LabelBase label='Proveedor:'>
-              <div className='flex items-center gap-2'>
-                <Form.Item
-                  name='proveedor_busqueda'
-                  className='!mb-0 flex-1'
-                >
-                  <input
-                    type='text'
-                    placeholder='Buscar proveedor...'
-                    className='px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent min-w-[150px] w-[150px]'
-                    onKeyUp={(e) => {
-                      if (e.key === 'Enter') {
-                        openProveedorModal()
-                      }
-                    }}
-                  />
-                </Form.Item>
-                <FaSearch
-                  className='text-yellow-600 cursor-pointer'
-                  size={15}
-                  onClick={openProveedorModal}
-                />
-              </div>
+              <InputBase
+                className='!min-w-[250px] !w-[250px] !max-w-[250px]'
+                placeholder='Buscar proveedor...'
+                value={busquedaProveedorText}
+                onChange={(e) => setBusquedaProveedorText(e.target.value)}
+                allowClear
+              />
             </LabelBase>
           </ConfigurableElement>
+          <ButtonBase
+            color='info'
+            size='md'
+            type='submit'
+            className='flex items-center gap-2 flex-shrink-0 mt-4'
+          >
+            <FaSearch />
+          </ButtonBase>
         </div>
 
         {/* Mobile/Tablet: Solo almacén y botones */}
@@ -330,41 +383,23 @@ export default function FiltersComprasPorPagar() {
       >
         <div className='flex flex-col gap-4'>
           <LabelBase label='Proveedor:'>
-            <div className='flex items-center gap-2'>
-              <Form.Item
-                name='proveedor_busqueda'
-                className='!mb-0 flex-1'
-              >
-                <input
-                  type='text'
-                  placeholder='Buscar proveedor...'
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent'
-                  onKeyUp={(e) => {
-                    if (e.key === 'Enter') {
-                      openProveedorModal()
-                    }
-                  }}
-                />
-              </Form.Item>
-              <FaSearch
-                className='text-yellow-600 cursor-pointer'
-                size={15}
-                onClick={openProveedorModal}
-              />
-            </div>
+            <InputBase
+              placeholder='Buscar proveedor...'
+              value={busquedaProveedorText}
+              onChange={(e) => setBusquedaProveedorText(e.target.value)}
+              allowClear
+            />
           </LabelBase>
 
           <LabelBase label='Búsqueda:'>
-            <Form.Item
-              name='busqueda'
-              className='!mb-0'
-            >
-              <input
-                type='text'
-                placeholder='Serie, número, RUC...'
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent'
-              />
-            </Form.Item>
+            <InputBase
+              propsForm={{
+                name: 'busqueda',
+                hasFeedback: false,
+              }}
+              placeholder='F01-15'
+              formWithMessage={false}
+            />
           </LabelBase>
 
           <LabelBase label='Fecha Desde:'>
@@ -417,6 +452,18 @@ export default function FiltersComprasPorPagar() {
             />
           </LabelBase>
 
+          <LabelBase label='Estado de Pago:'>
+            <Select
+              value={estadoPago}
+              onChange={(val) => {
+                setEstadoPago(val)
+                form.setFieldValue('estado_pago', val)
+              }}
+              className='w-full'
+              options={ESTADO_PAGO_OPTIONS}
+            />
+          </LabelBase>
+
           <div className='flex gap-2 mt-4'>
             <ButtonBase
               color='default'
@@ -442,15 +489,6 @@ export default function FiltersComprasPorPagar() {
           </div>
         </div>
       </Drawer>
-
-      {/* Modal de búsqueda de proveedor */}
-      <ModalProveedorSearch
-        open={openModalProveedorSearch}
-        setOpen={setOpenModalProveedorSearch}
-        onOk={() => handleProveedorSelect()}
-        textDefault={textDefault}
-        onRowDoubleClicked={handleProveedorSelect}
-      />
     </FormBase>
   )
 }
