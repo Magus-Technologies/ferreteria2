@@ -52,6 +52,23 @@ export default function FormCreateCliente({
           className: "hidden",
         }}
       />
+      {/* Campos hidden para que onFinish incluya los valores escritos por el hook */}
+      <Form.Item name="direccion" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="direccion_2" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="direccion_3" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="direccion_4" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="referencia_d1" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="referencia_d2" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="referencia_d3" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="referencia_d4" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="latitud_d1" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="longitud_d1" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="latitud_d2" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="longitud_d2" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="latitud_d3" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="longitud_d3" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="latitud_d4" hidden><input type="hidden" /></Form.Item>
+      <Form.Item name="longitud_d4" hidden><input type="hidden" /></Form.Item>
       
       {/* Layout: 2 columnas */}
       <div className="grid grid-cols-2 gap-6">

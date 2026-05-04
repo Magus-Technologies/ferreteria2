@@ -63,7 +63,14 @@ export default function TableClientesBusqueda({
 
   return (
     <>
-      <ModalCreateCliente open={open} setOpen={setOpen} dataEdit={dataEdit} />
+      <ModalCreateCliente
+        open={open}
+        setOpen={(v) => {
+          setOpen(v)
+          if (!v) setDataEdit(undefined)
+        }}
+        dataEdit={dataEdit}
+      />
       <TableWithTitle<Cliente>
         {...props}
         id='mis-ventas.clientes'

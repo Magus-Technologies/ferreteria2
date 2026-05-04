@@ -148,7 +148,6 @@ export function useColumnsClientes({
           <ColumnAction
             id={params.value}
             permiso={permissions.CLIENTE_BASE}
-            autorizacion={{ modulo: 'clientes', descripcion: `Cliente: ${params.data?.razon_social || params.data?.nombres || ''}` }}
             propsDelete={{
               action: async ({ id }: { id: number }) => {
                 const result = await clienteApi.delete(id)
