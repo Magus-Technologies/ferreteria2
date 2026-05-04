@@ -314,9 +314,24 @@ export default function FiltersVentasPorCobrar() {
                 allowClear
                 form={form}
                 placeholder='Todos los clientes'
+                onSearchChange={(searchText) => {
+                  // Filtrar en tiempo real mientras el usuario escribe
+                  if (searchText && searchText.length >= 3) {
+                    // Actualizar el campo de búsqueda en el formulario
+                    form.setFieldValue('busqueda', searchText)
+                    // Aplicar el filtro automáticamente
+                    form.submit()
+                  } else if (!searchText) {
+                    // Si borra el texto, limpiar el filtro
+                    form.setFieldValue('busqueda', undefined)
+                    form.setFieldValue('cliente_id', undefined)
+                    form.submit()
+                  }
+                }}
                 onChange={(clienteId) => {
-                  // Cuando se selecciona un cliente, aplicar el filtro automáticamente
+                  // Cuando selecciona un cliente específico, aplicar ese filtro
                   if (clienteId) {
+                    form.setFieldValue('busqueda', undefined)
                     form.submit()
                   }
                 }}
@@ -415,9 +430,21 @@ export default function FiltersVentasPorCobrar() {
               allowClear
               form={form}
               placeholder='Todos los clientes'
+              onSearchChange={(searchText) => {
+                // Filtrar en tiempo real mientras el usuario escribe
+                if (searchText && searchText.length >= 3) {
+                  form.setFieldValue('busqueda', searchText)
+                  form.submit()
+                } else if (!searchText) {
+                  form.setFieldValue('busqueda', undefined)
+                  form.setFieldValue('cliente_id', undefined)
+                  form.submit()
+                }
+              }}
               onChange={(clienteId) => {
-                // Cuando se selecciona un cliente, aplicar el filtro automáticamente
+                // Cuando selecciona un cliente específico
                 if (clienteId) {
+                  form.setFieldValue('busqueda', undefined)
                   form.submit()
                 }
               }}
