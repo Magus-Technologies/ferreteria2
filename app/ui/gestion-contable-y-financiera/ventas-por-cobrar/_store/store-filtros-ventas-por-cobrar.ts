@@ -11,6 +11,8 @@ interface StoreFiltrosVentasPorCobrar {
   setMoraRango: (rango: MoraRango) => void
   estadoPago: EstadoPago
   setEstadoPago: (estado: EstadoPago) => void
+  quickFilterText: string
+  setQuickFilterText: (text: string) => void
 }
 
 export const useStoreFiltrosVentasPorCobrar = create<StoreFiltrosVentasPorCobrar>((set) => ({
@@ -20,4 +22,6 @@ export const useStoreFiltrosVentasPorCobrar = create<StoreFiltrosVentasPorCobrar
   setMoraRango: (moraRango) => set({ moraRango }),
   estadoPago: 'pendientes',
   setEstadoPago: (estadoPago) => set({ estadoPago }),
+  quickFilterText: '',
+  setQuickFilterText: (quickFilterText) => set({ quickFilterText }),
 }))

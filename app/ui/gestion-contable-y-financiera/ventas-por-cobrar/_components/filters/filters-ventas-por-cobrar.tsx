@@ -56,13 +56,14 @@ export default function FiltersVentasPorCobrar() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
   const [busquedaClienteText, setBusquedaClienteText] = useState('')
-  const [debouncedBusquedaCliente] = useDebounce(busquedaClienteText, 500) // 500ms de delay
+  const [debouncedBusquedaCliente] = useDebounce(busquedaClienteText, 300)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
   const setMoraRango = useStoreFiltrosVentasPorCobrar(state => state.setMoraRango)
   const estadoPago = useStoreFiltrosVentasPorCobrar(state => state.estadoPago)
   const setEstadoPago = useStoreFiltrosVentasPorCobrar(state => state.setEstadoPago)
+  const setQuickFilterText = useStoreFiltrosVentasPorCobrar(state => state.setQuickFilterText)
 
   const applyQuickFilter = useCallback((rango: MoraRango) => {
     setQuickFilterActive(rango)
@@ -115,14 +116,10 @@ export default function FiltersVentasPorCobrar() {
     return () => clearTimeout(timer)
   }, [form, quickFilterActive])
 
-  // Efecto para aplicar el filtro cuando cambia el texto debounced
+  // Actualizar el quickFilterText cuando cambie el texto debounced
   useEffect(() => {
-    // Solo aplicar si hay al menos 2 caracteres o si está vacío (para limpiar)
-    if (debouncedBusquedaCliente.length >= 2 || debouncedBusquedaCliente === '') {
-      form.setFieldValue('busqueda_cliente', debouncedBusquedaCliente)
-      form.submit()
-    }
-  }, [debouncedBusquedaCliente, form])
+    setQuickFilterText(debouncedBusquedaCliente)
+  }, [debouncedBusquedaCliente, setQuickFilterText])
 
   return (
     <FormBase
@@ -177,16 +174,9 @@ export default function FiltersVentasPorCobrar() {
           ...(user_id && {
             user_id: user_id
           }),
-          // Agregar filtro de cliente si existe (búsqueda en tiempo real)
+          // Agregar búsqueda de cliente (se enviará como 'search' al backend)
           ...(busqueda_cliente && {
-            cliente: {
-              OR: [
-                { razon_social: { contains: busqueda_cliente } },
-                { nombres: { contains: busqueda_cliente } },
-                { apellidos: { contains: busqueda_cliente } },
-                { numero_documento: { contains: busqueda_cliente } },
-              ]
-            }
+            busqueda_cliente: busqueda_cliente
           }),
           // Agregar búsqueda si existe
           ...(busqueda && {
@@ -330,10 +320,8 @@ export default function FiltersVentasPorCobrar() {
                 placeholder='Buscar cliente...'
                 formWithMessage={false}
                 allowClear
-                onChange={(e) => {
-                  const searchText = e.target.value
-                  setBusquedaClienteText(searchText)
-                }}
+                value={busquedaClienteText}
+                onChange={(e) => setBusquedaClienteText(e.target.value)}
               />
             </LabelBase>
           </ConfigurableElement>
@@ -426,10 +414,8 @@ export default function FiltersVentasPorCobrar() {
               placeholder='Buscar cliente...'
               formWithMessage={false}
               allowClear
-              onChange={(e) => {
-                const searchText = e.target.value
-                setBusquedaClienteText(searchText)
-              }}
+              value={busquedaClienteText}
+              onChange={(e) => setBusquedaClienteText(e.target.value)}
             />
           </LabelBase>
 

@@ -65,14 +65,27 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const filtros = useStoreFiltrosVentasPorCobrar(state => state.filtros)
   const moraRango = useStoreFiltrosVentasPorCobrar(state => state.moraRango)
   const estadoPago = useStoreFiltrosVentasPorCobrar(state => state.estadoPago)
+  const quickFilterText = useStoreFiltrosVentasPorCobrar(state => state.quickFilterText)
+  const isSearching = quickFilterText !== '' && quickFilterText.length < 2 // Mostrar loading si está escribiendo
 
   const apiFilters = useMemo(() => {
     if (!filtros) return undefined
     let search: string | undefined
+    
+    // Extraer búsqueda de cliente si existe
+    const busquedaCliente = (filtros as any).busqueda_cliente as string | undefined
+    
+    // Extraer búsqueda de serie/número si existe
     if (filtros.OR && Array.isArray(filtros.OR)) {
       const serieFilter = filtros.OR.find((f: any) => f?.serie?.contains)
       if (serieFilter) search = (serieFilter as any).serie.contains as string
     }
+    
+    // Priorizar búsqueda de cliente sobre búsqueda de serie
+    if (busquedaCliente) {
+      search = busquedaCliente
+    }
+    
     const fechaFiltro = (filtros as any).fecha
     return {
       almacen_id: filtros.almacen_id as number | undefined,
@@ -402,7 +415,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         tableRef={tableRef}
         title='Facturas de Ventas Vencidas'
         schema={VentaCreateInputSchema}
-        loading={isLoading}
+        loading={isLoading || isSearching}
         columnDefs={columns}
         rowData={rowData}
         optionsSelectColumns={optionsSelectColumns}
@@ -411,6 +424,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
         selectColumns={true}
         suppressRowTransform={true}
         rowBuffer={10}
+        quickFilterText={quickFilterText}
       >
       </TableWithTitle>
 

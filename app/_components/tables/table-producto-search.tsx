@@ -14,9 +14,9 @@ import { orangeColors, greenColors } from "~/lib/colors";
 
 export enum FiltroStock {
   TODOS = 'todos',
-  BAJO_MINIMO = 'bajo_minimo',
-  BAJO_MAXIMO = 'bajo_maximo',
+  STOCK_MINIMO = 'stock_minimo',
   STOCK_CERO = 'stock_cero',
+  CON_STOCK = 'con_stock',
 }
 
 export interface RefTableProductoSearchProps {
@@ -32,6 +32,8 @@ export default function TableProductoSearch({
   isVisible, // Prop para saber si el modal está visible
   quickFilterValue, // Filtro local por coincidencia (sobre resultados ya cargados)
   filtroStock = FiltroStock.TODOS,
+  marcaId,
+  categoriaId,
   forceLoading = false, // Forzar loading externo (ej. debounce pendiente)
 }: {
   value: string;
@@ -46,6 +48,8 @@ export default function TableProductoSearch({
   isVisible?: boolean; // Prop para saber si el modal está visible
   quickFilterValue?: string; // Filtro local por coincidencia
   filtroStock?: FiltroStock;
+  marcaId?: number;
+  categoriaId?: number;
   forceLoading?: boolean;
 }) {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
@@ -64,6 +68,8 @@ export default function TableProductoSearch({
   };
 
   const hasSearch = !!value;
+  // Cuando filtroStock es TODOS, permitir búsqueda sin texto
+  const shouldFetch = filtroStock === FiltroStock.TODOS || hasSearch;
 
   const { data: response, refetch, loading } = useProductosSearch({
     filtros: {
@@ -79,9 +85,11 @@ export default function TableProductoSearch({
         ? { search: value } // Busca en name, cod_producto, cod_barra
         : {}),
       estado: 1, // Solo productos activos
+      ...(marcaId ? { marca_id: marcaId } : {}),
+      ...(categoriaId ? { categoria_id: categoriaId } : {}),
     },
-    // Solo buscar cuando hay texto (evita peticiones sin search al abrir el modal)
-    enabled: hasSearch,
+    // Buscar cuando hay texto O cuando filtroStock es TODOS
+    enabled: shouldFetch,
   });
 
   type ResponseItem = Producto;
@@ -117,15 +125,17 @@ export default function TableProductoSearch({
         );
         const stockActual = Number(productoEnAlmacen?.stock_fraccion ?? 0);
         const stockMin = Number(producto.stock_min ?? 0);
-        const stockMax = Number(producto.stock_max ?? 0);
 
         switch (filtroStock) {
-          case FiltroStock.BAJO_MINIMO:
-            return stockActual < stockMin;
-          case FiltroStock.BAJO_MAXIMO:
-            return stockActual < stockMax;
+          case FiltroStock.STOCK_MINIMO:
+            // Stock desde el mínimo hacia abajo, incluyendo negativos
+            return stockActual <= stockMin;
           case FiltroStock.STOCK_CERO:
-            return Number(stockActual) === 0;
+            // Stock exactamente en 0
+            return stockActual === 0;
+          case FiltroStock.CON_STOCK:
+            // Stock desde 0.01 hacia arriba
+            return stockActual >= 0.01;
           default:
             return true;
         }
@@ -140,17 +150,27 @@ export default function TableProductoSearch({
     refetch();
   }
 
-  // Solo refetch manual cuando cambia filtroStock (React Query maneja el fetch inicial automáticamente)
+  // Solo refetch manual cuando cambia filtroStock, marcaId o categoriaId
   const filtroStockRef = useRef(filtroStock);
+  const marcaIdRef = useRef(marcaId);
+  const categoriaIdRef = useRef(categoriaId);
+  
   useEffect(() => {
-    if (filtroStockRef.current !== filtroStock) {
+    const filtroChanged = filtroStockRef.current !== filtroStock;
+    const marcaChanged = marcaIdRef.current !== marcaId;
+    const categoriaChanged = categoriaIdRef.current !== categoriaId;
+    
+    if (filtroChanged || marcaChanged || categoriaChanged) {
       filtroStockRef.current = filtroStock;
-      if (isVisible && hasSearch) {
+      marcaIdRef.current = marcaId;
+      categoriaIdRef.current = categoriaId;
+      
+      if (isVisible && shouldFetch) {
         handleRefetch();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtroStock]);
+  }, [filtroStock, marcaId, categoriaId]);
 
   // Aplicar quickFilter local cuando cambia el texto
   useEffect(() => {

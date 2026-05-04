@@ -20,6 +20,8 @@ import CardAgregarProductoCotizacion from "~/app/ui/facturacion-electronica/mis-
 import CardAgregarProductoPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/_components/cards/card-agregar-producto-prestamo";
 import CardAgregarProductoGuia from "~/app/ui/facturacion-electronica/mis-guias/crear-guia/_components/cards/card-agregar-producto-guia";
 import CardAgregarProductoTransferencia from "~/app/ui/gestion-comercial-e-inventario/mis-transferencias/_components/cards/card-agregar-producto-transferencia";
+import { marcasApi, categoriasApi } from "~/lib/api/catalogos";
+import { useQuery } from "@tanstack/react-query";
 
 type ModalProductoSearchProps = {
   open: boolean;
@@ -87,6 +89,26 @@ export default function ModalProductoSearch({
   );
 
   const [filtroStock, setFiltroStock] = useState<FiltroStock>(FiltroStock.TODOS);
+  const [marcaId, setMarcaId] = useState<number | undefined>(undefined);
+  const [categoriaId, setCategoriaId] = useState<number | undefined>(undefined);
+
+  // Cargar marcas
+  const { data: marcasResponse } = useQuery({
+    queryKey: ['marcas', 'activas'],
+    queryFn: async () => {
+      const response = await marcasApi.getAll({ estado: true });
+      return response.data?.data || [];
+    },
+  });
+
+  // Cargar categorías
+  const { data: categoriasResponse } = useQuery({
+    queryKey: ['categorias', 'activas'],
+    queryFn: async () => {
+      const response = await categoriasApi.getAll({ estado: true });
+      return response.data?.data || [];
+    },
+  });
 
   useEffect(() => {
     if (open) setProductoSeleccionadoStore(undefined);
@@ -148,9 +170,37 @@ export default function ModalProductoSearch({
           className="w-full sm:!min-w-[200px] sm:!w-[200px] sm:!max-w-[200px]"
           options={[
             { value: FiltroStock.TODOS, label: 'Todos' },
-            { value: FiltroStock.BAJO_MINIMO, label: 'Bajo Mínimo' },
-            { value: FiltroStock.BAJO_MAXIMO, label: 'Bajo Máximo' },
-            { value: FiltroStock.STOCK_CERO, label: 'Stock en 0' },
+            { value: FiltroStock.STOCK_MINIMO, label: 'Stock Mínimo' },
+            { value: FiltroStock.STOCK_CERO, label: 'Stock Cero' },
+            { value: FiltroStock.CON_STOCK, label: 'Con Stock' },
+          ]}
+        />
+        <SelectBase
+          placeholder="Marca"
+          value={marcaId}
+          onChange={(value) => setMarcaId(value as number | undefined)}
+          className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
+          allowClear
+          options={[
+            { value: undefined, label: 'Todas' },
+            ...(marcasResponse || []).map((marca) => ({
+              value: marca.id,
+              label: marca.name,
+            })),
+          ]}
+        />
+        <SelectBase
+          placeholder="Categoría"
+          value={categoriaId}
+          onChange={(value) => setCategoriaId(value as number | undefined)}
+          className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
+          allowClear
+          options={[
+            { value: undefined, label: 'Todas' },
+            ...(categoriasResponse || []).map((categoria) => ({
+              value: categoria.id,
+              label: categoria.name,
+            })),
           ]}
         />
         <ButtonCreateProductoPlus
@@ -181,6 +231,8 @@ export default function ModalProductoSearch({
                 selectionColor={selectionColor}
                 isVisible={open}
                 filtroStock={filtroStock}
+                marcaId={marcaId}
+                categoriaId={categoriaId}
               />
             </div>
             {showUltimasCompras && (
