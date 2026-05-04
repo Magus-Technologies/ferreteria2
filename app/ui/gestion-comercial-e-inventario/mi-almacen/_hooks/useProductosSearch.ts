@@ -22,7 +22,7 @@ export function useProductosSearch({
     queryFn: async () => {
       const response = await productosApiV2.getAllByAlmacen({
         ...filtros,
-        almacen_id: filtros.almacen_id || 1,
+        almacen_id: filtros.almacen_id,
         per_page: 30,
         page: 1,
       });
@@ -33,7 +33,7 @@ export function useProductosSearch({
 
       return response.data?.data ?? [];
     },
-    enabled: enabled && !!filtros.almacen_id,
+    enabled: enabled,
     staleTime: 1000 * 30, // 30 segundos
     placeholderData: (prev) => prev, // Mantener datos previos mientras carga nuevos
   });

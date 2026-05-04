@@ -855,6 +855,7 @@ export default function CrearOrdenCompraPage() {
                 showButtonCreate
                 showCardAgregarProducto
                 autoFillPrecioCompraWithCosto
+                ignoreAlmacen
               />
             </div>
           }

@@ -42,6 +42,7 @@ type ModalProductoSearchProps = {
   showUltimasCompras?: boolean;
   selectionColor?: string; // Color para la fila seleccionada
   onAfterClose?: () => void;
+  ignoreAlmacen?: boolean;
 };
 
 export type CostoUnidadDerivadaSearch = {
@@ -68,6 +69,7 @@ export default function ModalProductoSearch({
   showUltimasCompras = true,
   selectionColor, // Recibir el color de selección
   onAfterClose,
+  ignoreAlmacen = false,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
   useEffect(() => {
@@ -233,6 +235,7 @@ export default function ModalProductoSearch({
                 filtroStock={filtroStock}
                 marcaId={marcaId}
                 categoriaId={categoriaId}
+                ignoreAlmacen={ignoreAlmacen}
               />
             </div>
             {showUltimasCompras && (

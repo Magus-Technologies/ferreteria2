@@ -106,7 +106,7 @@ export const productosApiV2 = {
     params: GetProductosParams
   ): Promise<ApiResponse<PaginatedResponse<Producto>>> {
     // Validar que almacen_id esté presente
-    if (!params.almacen_id) {
+    /* if (!params.almacen_id) {
       return {
         error: {
           message: 'El parámetro almacen_id es requerido',
@@ -115,7 +115,7 @@ export const productosApiV2 = {
           },
         },
       };
-    }
+    } */
 
     const queryParams = new URLSearchParams();
 
