@@ -3,7 +3,7 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRef, memo, useCallback, useMemo, useEffect, useState } from 'react'
-import { orangeColors } from '~/lib/colors'
+import { redColors } from '~/lib/colors'
 import { AgGridReact } from 'ag-grid-react'
 import { ColDef, SelectionChangedEvent, RowDoubleClickedEvent, RowClickedEvent } from 'ag-grid-community'
 import { compraApi, type Compra } from '~/lib/api/compra'
@@ -395,7 +395,7 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
     <>
       <TableWithTitle<Compra>
         id='table-compras-por-pagar'
-        selectionColor={orangeColors[1]}
+        selectionColor={redColors[1]}
         onSelectionChanged={handleSelectionChanged}
         onRowClicked={handleRowClicked}
         onRowDoubleClicked={handleRowDoubleClicked}

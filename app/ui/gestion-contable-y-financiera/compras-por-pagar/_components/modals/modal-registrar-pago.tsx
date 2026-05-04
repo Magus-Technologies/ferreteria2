@@ -105,6 +105,11 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
   const [ticketLoading, setTicketLoading] = useState(false)
 
+  // Estado para modal de anulación
+  const [anularModalOpen, setAnularModalOpen] = useState(false)
+  const [pagoAAnular, setPagoAAnular] = useState<PagoDeCompra | null>(null)
+  const [motivoAnulacion, setMotivoAnulacion] = useState('')
+
   // Estado para mostrar/ocultar campo N° Operación
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<any>(null)
 
@@ -161,6 +166,36 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     }
   }, [ticketPdfUrl])
 
+  // Abrir modal de anulación
+  const handleOpenAnularModal = useCallback((pago: PagoDeCompra) => {
+    setPagoAAnular(pago)
+    setMotivoAnulacion('')
+    setAnularModalOpen(true)
+  }, [])
+
+  // Mutation para anular pago
+  const anularMutation = useMutation({
+    mutationFn: async () => {
+      if (!localCompra?.id || !pagoAAnular?.id) throw new Error('Datos incompletos')
+      return compraApi.anularPago(localCompra.id, pagoAAnular.id, motivoAnulacion)
+    },
+    onSuccess: (result) => {
+      if (result.error) {
+        message.error(result.error.message)
+        return
+      }
+      message.success('Pago anulado correctamente')
+      setAnularModalOpen(false)
+      setPagoAAnular(null)
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PAGOS_COMPRA, localCompra?.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS_POR_PAGAR] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+    },
+    onError: (error: any) => {
+      message.error(error?.message || 'Error al anular el pago')
+    },
+  })
+
   // Columnas para tabla de pagos previos
   const columnsPagos: ColDef<PagoDeCompra>[] = useMemo(() => [
     { headerName: '#', width: 50, valueGetter: (p) => (p.node?.rowIndex ?? 0) + 1 },
@@ -198,6 +233,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       width: 100,
       cellRenderer: (p: any) => {
         if (!p.data?.id) return null
+        const anulado = p.data.estado === false || p.data.estado === 0
         return (
           <div className='flex items-center justify-center gap-2 w-full h-full'>
             <button
@@ -207,11 +243,20 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             >
               <FaFileAlt size={14} />
             </button>
+            {!anulado && (
+              <button
+                onClick={() => handleOpenAnularModal(p.data)}
+                className='text-red-500 hover:text-red-700'
+                title='Anular pago'
+              >
+                <FaTrash size={14} />
+              </button>
+            )}
           </div>
         )
       },
     },
-  ], [handleVerTicket])
+  ], [handleVerTicket, handleOpenAnularModal])
 
   // Mutation para registrar pago
   const mutation = useMutation({
@@ -442,6 +487,40 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     >
       <></>
     </ModalShowDoc>
+
+    {/* Modal para anular pago */}
+    <Modal
+      title='Anular Pago'
+      open={anularModalOpen}
+      onCancel={() => setAnularModalOpen(false)}
+      onOk={() => anularMutation.mutate()}
+      okText='Confirmar Anulación'
+      cancelText='Cancelar'
+      confirmLoading={anularMutation.isPending}
+      okButtonProps={{ danger: true }}
+      destroyOnHidden
+    >
+      {pagoAAnular && (
+        <div className='space-y-3'>
+          <div className='bg-red-50 border border-red-200 rounded-lg p-3 text-sm'>
+            <div className='font-semibold text-red-700 mb-1'>Pago a anular:</div>
+            <div>Monto: <span className='font-bold'>S/. {Number(pagoAAnular.monto || 0).toFixed(2)}</span></div>
+            <div>Fecha: {pagoAAnular.fecha ? new Date(pagoAAnular.fecha).toLocaleDateString('es-PE') : '-'}</div>
+            {pagoAAnular.observacion && <div>Obs: {pagoAAnular.observacion}</div>}
+          </div>
+          <div>
+            <div className='text-sm font-medium mb-1'>Motivo de anulación (opcional):</div>
+            <Input.TextArea
+              rows={3}
+              maxLength={500}
+              placeholder='Ingrese el motivo de anulación...'
+              value={motivoAnulacion}
+              onChange={(e) => setMotivoAnulacion(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+    </Modal>
     </>
   )
 }

@@ -378,6 +378,16 @@ export const compraApi = {
   },
 
   /**
+   * Anular pago de compra
+   */
+  anularPago: async (compraId: string, pagoId: string, motivo?: string): Promise<ApiResponse<{ data: PagoDeCompra; message: string; saldo_pendiente: number }>> => {
+    return apiRequest<{ data: PagoDeCompra; message: string; saldo_pendiente: number }>(`/compras/${compraId}/pagos/${pagoId}/anular`, {
+      method: 'PUT',
+      body: JSON.stringify({ motivo: motivo ?? '' }),
+    });
+  },
+
+  /**
    * Actualizar lotes y vencimientos de unidades derivadas
    */
   updateLotesVencimientos: async (id: string, data: UpdateLotesVencimientosRequest): Promise<ApiResponse<CompraResponse>> => {
