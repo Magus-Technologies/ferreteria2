@@ -76,8 +76,11 @@ export default function CellAccionesVentaDropdown(
   else if (isAceptado) editLockReason = 'SUNAT ya aceptó el comprobante. Usa Nota de Crédito para hacer cambios.';
   const canEdit = editLockReason === null;
 
-  // Verificar si se puede anular (no anulado, no procesado)
-  const canAnular = estadoVenta !== 'an' && estadoVenta !== 'pr';
+  // Verificar si se puede anular (no anulado).
+  // Las ventas 'pr' (Procesado) también se pueden anular si son a crédito
+  // — el backend revierte los cobros asociados y descuenta métodos de pago.
+  const esCreditoPagado = estadoVenta === 'pr' && venta?.forma_de_pago === 'cr';
+  const canAnular = estadoVenta !== 'an' && (estadoVenta !== 'pr' || esCreditoPagado);
 
   const handleAnular = () => {
     modal.confirm({
