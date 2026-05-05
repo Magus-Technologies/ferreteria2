@@ -101,6 +101,14 @@ export default function ModalPerdidas({ open, onClose, filtros: filtrosGlobales 
       },
     },
     {
+      headerName: 'COMISIÓN U.',
+      field: 'comision_unitaria',
+      width: 110,
+      type: 'numericColumn',
+      cellStyle: { color: '#059669' } as any, // green-600
+      valueFormatter: (p) => p.value ? `S/ ${Number(p.value).toFixed(2)}` : 'S/ 0.00',
+    },
+    {
       headerName: 'MONTO PÉRDIDA',
       field: 'monto',
       width: 130,

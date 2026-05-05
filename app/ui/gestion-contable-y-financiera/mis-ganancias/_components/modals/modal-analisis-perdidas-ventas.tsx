@@ -140,6 +140,14 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
       },
     },
     {
+      headerName: 'COMISIÓN U.',
+      field: 'comision_unitaria',
+      width: 110,
+      type: 'numericColumn',
+      cellStyle: { color: '#059669' } as any, // green-600
+      valueFormatter: (p) => p.value ? `S/ ${Number(p.value).toFixed(2)}` : 'S/ 0.00',
+    },
+    {
       headerName: 'MONTO PÉRDIDA',
       field: 'monto',
       width: 140,
@@ -153,7 +161,7 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
     if (detalles.length === 0) return []
     return [
       {
-        producto: 'TOTAL PÉRDIDA ACUMULADA:',
+        producto: 'TOTAL PÉRDIDA SELECCIONADA:',
         monto: resumen.total_perdidas,
       },
     ]
