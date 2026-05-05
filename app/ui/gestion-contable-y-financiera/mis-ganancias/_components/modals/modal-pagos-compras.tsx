@@ -11,6 +11,8 @@ import { apiRequest } from '~/lib/api'
 import { FaShoppingCart, FaCheckCircle, FaExclamationCircle, FaSearch, FaMoneyBillWave } from 'react-icons/fa'
 import { useDebounce } from 'use-debounce'
 import ButtonBase from '~/components/buttons/button-base'
+import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import LabelBase from '~/components/form/label-base'
 
 interface ModalPagosComprasProps {
   open: boolean
@@ -226,27 +228,23 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
       <div className="flex flex-col gap-4">
         {/* Filtros Internos */}
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-wrap items-end gap-3">
-          {/* Fecha Desde */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Desde</span>
-            <input 
-              type="date"
-              value={localFiltros.desde}
-              onChange={(e) => setLocalFiltros(prev => ({ ...prev, desde: e.target.value }))}
-              className="px-2 py-1 border border-slate-300 rounded text-sm"
+          <LabelBase label="Desde" orientation="column" className="!gap-1">
+            <DatePickerBase
+              value={localFiltros.desde ? dayjs(localFiltros.desde) : null}
+              onChange={(date) => setLocalFiltros(prev => ({ ...prev, desde: date ? date.format('YYYY-MM-DD') : '' }))}
+              allowClear
+              className="!w-[130px]"
             />
-          </div>
+          </LabelBase>
 
-          {/* Fecha Hasta */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Hasta</span>
-            <input 
-              type="date"
-              value={localFiltros.hasta}
-              onChange={(e) => setLocalFiltros(prev => ({ ...prev, hasta: e.target.value }))}
-              className="px-2 py-1 border border-slate-300 rounded text-sm"
+          <LabelBase label="Hasta" orientation="column" className="!gap-1">
+            <DatePickerBase
+              value={localFiltros.hasta ? dayjs(localFiltros.hasta) : null}
+              onChange={(date) => setLocalFiltros(prev => ({ ...prev, hasta: date ? date.format('YYYY-MM-DD') : '' }))}
+              allowClear
+              className="!w-[130px]"
             />
-          </div>
+          </LabelBase>
 
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-bold text-slate-500 uppercase">Vista</span>

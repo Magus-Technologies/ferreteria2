@@ -10,6 +10,8 @@ import dayjs from 'dayjs'
 import { FaTag, FaPercentage, FaHandHoldingUsd, FaArrowDown, FaFileInvoice, FaCalculator, FaSearch } from 'react-icons/fa'
 import { useDebounce } from 'use-debounce'
 import ButtonBase from '~/components/buttons/button-base'
+import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import LabelBase from '~/components/form/label-base'
 
 interface ModalAnalisisPerdidasVentasProps {
   open: boolean
@@ -112,6 +114,12 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
       minWidth: 250,
     },
     {
+      headerName: 'N° COMPROBANTE',
+      field: 'comprobante',
+      width: 155,
+      cellClass: 'font-mono text-xs',
+    },
+    {
       headerName: 'REFERENCIA',
       field: 'referencia',
       width: 150,
@@ -126,7 +134,10 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
       field: 'cantidad',
       width: 80,
       type: 'numericColumn',
-      valueFormatter: (p) => p.value ? Number(p.value).toFixed(2) : '-',
+      valueFormatter: (p) => {
+        const val = Number(p.value)
+        return isNaN(val) ? '' : val.toFixed(2)
+      },
     },
     {
       headerName: 'MONTO PÉRDIDA',
@@ -161,27 +172,23 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
       <div className="flex flex-col gap-4">
         {/* Filtros Internos */}
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-wrap items-end gap-3">
-          {/* Fecha Desde */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Desde</span>
-            <input 
-              type="date"
-              value={localFiltros.desde}
-              onChange={(e) => setLocalFiltros(prev => ({ ...prev, desde: e.target.value }))}
-              className="px-2 py-1 border border-slate-300 rounded text-sm"
+          <LabelBase label="Desde" orientation="column" className="!gap-1">
+            <DatePickerBase
+              value={localFiltros.desde ? dayjs(localFiltros.desde) : null}
+              onChange={(date) => setLocalFiltros(prev => ({ ...prev, desde: date ? date.format('YYYY-MM-DD') : '' }))}
+              allowClear
+              className="!w-[130px]"
             />
-          </div>
+          </LabelBase>
 
-          {/* Fecha Hasta */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Hasta</span>
-            <input 
-              type="date"
-              value={localFiltros.hasta}
-              onChange={(e) => setLocalFiltros(prev => ({ ...prev, hasta: e.target.value }))}
-              className="px-2 py-1 border border-slate-300 rounded text-sm"
+          <LabelBase label="Hasta" orientation="column" className="!gap-1">
+            <DatePickerBase
+              value={localFiltros.hasta ? dayjs(localFiltros.hasta) : null}
+              onChange={(date) => setLocalFiltros(prev => ({ ...prev, hasta: date ? date.format('YYYY-MM-DD') : '' }))}
+              allowClear
+              className="!w-[130px]"
             />
-          </div>
+          </LabelBase>
 
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-bold text-slate-500 uppercase">Categoría de Pérdida</span>
