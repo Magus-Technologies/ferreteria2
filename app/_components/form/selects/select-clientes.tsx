@@ -50,8 +50,10 @@ export default function SelectClientes({
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
+  const [text, setText] = useState('')
   const [lastSelectedDocument, setLastSelectedDocument] = useState('')
   const clienteSeleccionadoRef = useRef(false)
+  const [isSelecting, setIsSelecting] = useState(false)
 
   // Aplicar autoFocus cuando el componente se monta
   useEffect(() => {
@@ -77,20 +79,19 @@ export default function SelectClientes({
   )
 
   // Usar el store global para el texto de búsqueda (igual que SelectProductos)
-  const text = useStoreClienteSeleccionado(store => store.searchText)
-  const setText = useStoreClienteSeleccionado(store => store.setSearchText)
-
   const [textDefault, setTextDefault] = useState('')
 
   // Notificar al componente padre del cambio de texto
   useEffect(() => {
     if (text) {
+      setTextDefault(text)
       onSearchChange?.(text)
     }
   }, [text, onSearchChange])
 
   // Detectar cuando el usuario modifica manualmente el texto y limpiar campos relacionados
   useEffect(() => {
+    if (isSelecting) return
     // Solo limpiar si: hay un documento previo seleccionado, el usuario está escribiendo algo diferente,
     // y realmente hay un cliente seleccionado que limpiar
     if (!showOnlyDocument || !lastSelectedDocument || !clienteSeleccionadoRef.current) return
@@ -111,23 +112,26 @@ export default function SelectClientes({
       refObject: selectClientesRef,
       value: undefined,
     })
-  }, [text, lastSelectedDocument, showOnlyDocument, form])
+  }, [text, lastSelectedDocument, showOnlyDocument, form, isSelecting])
 
   function handleSelect({ data }: { data?: Cliente } = {}) {
     const cliente = data || clienteSeleccionadoStore
     if (cliente) {
+      setIsSelecting(true)
       // Marcar que hay un cliente seleccionado
       clienteSeleccionadoRef.current = true
 
       setClienteSeleccionado(cliente)
 
       // Mostrar solo el documento o el formato completo según la prop
-      const clienteLabel = showOnlyDocument
-        ? cliente.numero_documento || ''
-        : cliente.razon_social
-        ? `${cliente.numero_documento} : ${cliente.razon_social}`
-        : `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
-      setText(clienteLabel)
+      if (showOnlyDocument && cliente.numero_documento) {
+        setText(cliente.numero_documento)
+      } else {
+        const clienteLabel = cliente.razon_social
+          ? `${cliente.numero_documento} : ${cliente.razon_social}`
+          : `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+        setText(clienteLabel)
+      }
 
       // Guardar el documento seleccionado para detectar cambios
       if (showOnlyDocument && cliente.numero_documento) {
@@ -155,6 +159,7 @@ export default function SelectClientes({
       setClienteSeleccionadoStore(undefined)
       setOpenModalClienteSearch(false)
       onChange?.(cliente.id, cliente)
+      setTimeout(() => setIsSelecting(false), 100)
     }
   }
 
@@ -196,29 +201,34 @@ export default function SelectClientes({
 
   const { response, loading } = useSearchClientes({ value })
 
-  // Comentado: Auto-selección de clientes (causa que se borre el texto)
-  // useEffect(() => {
-  //   if (!response || response.length === 0) return
-  //   const textoLimpio = text.trim()
-  //   if (!textoLimpio) return
+  useEffect(() => {
+    if (!response || response.length === 0) return
+    const textoLimpio = text.trim()
+    if (!textoLimpio) return
+    if (openModalClienteSearch) return
 
-  //   // Buscar coincidencia exacta del documento entre todos los resultados
-  //   const exactMatch = response.find(c => c.numero_documento === textoLimpio)
-  //   if (exactMatch) {
-  //     handleSelect({ data: exactMatch })
-  //     return
-  //   }
+    // Si ya está seleccionado el mismo documento, no volver a disparar la selección.
+    if (clienteSeleccionadoRef.current && textoLimpio === lastSelectedDocument) {
+      return
+    }
 
-  //   // Si hay exactamente 1 resultado y el texto es suficientemente largo, autoseleccionar
-  //   if (response.length === 1) {
-  //     const cliente = response[0]
-  //     if (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio)) {
-  //       handleSelect({ data: cliente })
-  //     }
-  //   }
+    // Buscar coincidencia exacta del documento entre todos los resultados
+    const exactMatch = response.find(c => c.numero_documento === textoLimpio)
+    if (exactMatch) {
+      handleSelect({ data: exactMatch })
+      return
+    }
 
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [response])
+    // Si hay exactamente 1 resultado y el texto es suficientemente largo, autoseleccionar
+    if (response.length === 1) {
+      const cliente = response[0]
+      if (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio)) {
+        handleSelect({ data: cliente })
+      }
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [response, text, lastSelectedDocument, openModalClienteSearch])
 
   function handleSearch() {
     // Sincronizar textDefault con el texto actual antes de abrir el modal
@@ -248,6 +258,7 @@ export default function SelectClientes({
         uppercase={true}
         filterOption={false}
         onSearch={(val) => {
+          if (!val && isSelecting) return
           setText(val)
           // Si el usuario borra todo el texto, limpiar el cliente seleccionado
           if (val === '' && clienteSeleccionadoRef.current) {
@@ -261,6 +272,10 @@ export default function SelectClientes({
             onChange?.(undefined as any, undefined)
           }
           props.onSearch?.(val)
+        }}
+        onSelect={() => {
+          setIsSelecting(true)
+          setTimeout(() => setIsSelecting(false), 150)
         }}
         searchValue={text}
         prefix={<FaUser className={classNameIcon} size={sizeIcon} />}

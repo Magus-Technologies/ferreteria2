@@ -7,6 +7,7 @@ import SelectFormaDePago from '~/app/_components/form/selects/select-forma-de-pa
 import LabelBase from '~/components/form/label-base'
 import dayjs from 'dayjs'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
+import { EstadoDeVenta } from '~/lib/api/venta'
 
 export interface FormFormaDePagoProps {
   form: FormInstance
@@ -32,6 +33,9 @@ export default function FormFormaDePago({
 
   // Observar el valor de forma de pago
   const formaDePago = Form.useWatch(formaDePagoField, form)
+  const estadoDeVenta = Form.useWatch('estado_de_venta', form)
+  const requiereDatosCredito =
+    formaDePago === 'cr' && estadoDeVenta !== EstadoDeVenta.EN_ESPERA
 
   return (
     <>
@@ -77,7 +81,7 @@ export default function FormFormaDePago({
               name: numeroDiasField,
               rules: [
                 {
-                  required: formaDePago === 'cr',
+                  required: requiereDatosCredito,
                   message: 'Ingresa el número de días',
                 },
               ],
@@ -110,7 +114,7 @@ export default function FormFormaDePago({
               name: fechaVencimientoField,
               rules: [
                 {
-                  required: formaDePago === 'cr',
+                  required: requiereDatosCredito,
                   message: 'Ingresa la fecha de vencimiento',
                 },
               ],
