@@ -1,11 +1,12 @@
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { onChangeCostoTablaCompras, useColumnsComprar } from './columns-comprar'
 import { FormInstance } from 'antd/lib'
 import { FormListFieldData } from 'antd'
 import { StoreValue } from 'antd/es/form/interface'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { AgGridReact } from 'ag-grid-react'
 import dayjs from 'dayjs'
 import { ValuesCardAgregarProductoCompra } from '../cards/card-agregar-producto-compra'
 import { FormCreateCompra } from '../others/body-comprar'
@@ -168,10 +169,15 @@ export default function TableComprar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productoAgregadoCompraStore])
 
+  const agGridRef = useRef<AgGridReact>(null)
+
   return (
     <>
       <CellFocusWithoutStyle />
-      <TableBase
+      <TableWithTitle
+        id="crear-compra-productos"
+        title="Productos de Compra"
+        tableRef={agGridRef}
         className='h-full'
         rowSelection={false}
         rowData={fields}

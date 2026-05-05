@@ -1,4 +1,4 @@
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { FormInstance } from 'antd/lib'
 import { FormListFieldData } from 'antd'
 import { StoreValue } from 'antd/es/form/interface'
@@ -8,7 +8,8 @@ import {
   useStoreProductoAgregadoGuia,
   ValuesCardAgregarProductoGuia,
 } from '../../_store/store-producto-agregado-guia'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { AgGridReact } from 'ag-grid-react'
 import { FormCreateGuia } from '../others/body-crear-guia'
 
 function condicionEditarProductoGuia({
@@ -133,10 +134,15 @@ export default function TableGuia({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productoAgregadoGuiaStore])
 
+  const agGridRef = useRef<AgGridReact>(null)
+
   return (
     <>
       <CellFocusWithoutStyle />
-      <TableBase
+      <TableWithTitle
+        id="crear-guia-productos"
+        title="Productos de Guía"
+        tableRef={agGridRef}
         className='h-full'
         rowSelection={false}
         rowData={fields}

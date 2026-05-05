@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { Form, Tag, App, Modal } from 'antd'
 import { useSearchParams } from 'next/navigation'
 
@@ -20,7 +20,8 @@ import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-docu
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import FormFormaDePagoCompra from '~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/_components/form/form-forma-de-pago-compra'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
+import { AgGridReact } from 'ag-grid-react'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import SidebarSolicitudes, { type ProductoSidebarSelection } from './_components/sidebar-solicitudes'
 import ModalCreateProducto from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_components/modals/modal-create-producto'
@@ -808,6 +809,8 @@ export default function CrearOrdenCompraPage() {
   }
 
 
+  const agGridRef = useRef<AgGridReact>(null)
+
   return (
     <div className="self-stretch w-full flex flex-row overflow-hidden animate-fade animate-ease-in-out animate-delay-[250ms]">
       {/* Modal de crear producto */}
@@ -919,7 +922,10 @@ export default function CrearOrdenCompraPage() {
             {/* TABLA DE PRODUCTOS (ag-grid) */}
             <div className="flex-1 min-h-0">
               <CellFocusWithoutStyle />
-              <TableBase
+              <TableWithTitle
+                id="crear-orden-compra-productos"
+                title="Productos de Orden de Compra"
+                tableRef={agGridRef}
                 className='h-full'
                 rowSelection={false}
                 rowData={productos}

@@ -1,4 +1,4 @@
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { FormInstance } from 'antd/lib'
 import { FormListFieldData } from 'antd'
 import { StoreValue } from 'antd/es/form/interface'
@@ -11,6 +11,7 @@ import {
   ValuesCardAgregarProductoVenta,
 } from '../../_store/store-producto-agregado-venta'
 import { useEffect, useMemo, useCallback, useRef } from 'react'
+import { AgGridReact } from 'ag-grid-react'
 import { FormCreateVenta } from '../others/body-vender'
 import { useConfigMode } from '~/app/ui/configuracion/permisos-visuales/_components/config-mode-context'
 import type { ValeCompra } from '~/lib/api/vales-compra'
@@ -348,14 +349,18 @@ export default function TableVender({
     venta,
   })
 
+  const agGridRef = useRef<AgGridReact>(null)
+
   return (
     <>
       <CellFocusWithoutStyle />
-      <TableBase
-        className='h-full'
-        rowSelection={false}
-        rowData={rowData as any}
+      <TableWithTitle
+        id="crear-venta-productos"
+        title="Productos de Venta"
+        tableRef={agGridRef}
         columnDefs={columns}
+        rowData={rowData as any}
+        rowSelection={false}
         suppressCellFocus={true}
         withNumberColumn={false}
         domLayout={configMode?.enabled ? 'normal' : undefined}

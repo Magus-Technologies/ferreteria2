@@ -3,11 +3,13 @@
 import { FormInstance, FormListFieldData } from "antd";
 import { StoreValue } from "antd/es/form/interface";
 import { useEffect } from "react";
-import TableBase from "~/components/tables/table-base";
+import TableWithTitle from "~/components/tables/table-with-title";
 import { useColumnsPrestamo } from "./columns-prestamo";
 import type { FormCreatePrestamo } from "../../_types/prestamo.types";
 import CellFocusWithoutStyle from "~/components/tables/cell-focus-without-style";
 import { useStoreProductoAgregadoPrestamo } from "../../_store/store-producto-agregado-prestamo";
+import { useRef } from "react";
+import { AgGridReact } from "ag-grid-react";
 
 export default function TablePrestamo({
   form,
@@ -55,10 +57,15 @@ export default function TablePrestamo({
     form.setFieldValue("monto_total", montoTotal);
   };
 
+  const agGridRef = useRef<AgGridReact>(null)
+
   return (
     <>
       <CellFocusWithoutStyle />
-      <TableBase
+      <TableWithTitle
+        id="crear-prestamo-productos"
+        title="Productos del Préstamo"
+        tableRef={agGridRef}
         className="h-full"
         rowSelection={false}
         rowData={fields}
