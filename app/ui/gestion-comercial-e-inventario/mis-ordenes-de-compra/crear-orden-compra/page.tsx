@@ -383,8 +383,10 @@ export default function CrearOrdenCompraPage() {
       field: 'cantidad',
       minWidth: 85,
       width: 85,
+      wrapText: true,
+      autoHeight: true,
       cellRenderer: ({ data, node }: ICellRendererParams) => (
-        <div className='flex items-center h-full'>
+        <div className='flex flex-col justify-center w-full py-2'>
           <InputNumberBase
             size="small"
             precision={2}
@@ -404,11 +406,11 @@ export default function CrearOrdenCompraPage() {
             
             if (stockTotalPostCompra > stockMax) {
               return (
-                <Tooltip title={`Stock proyectado (${stockTotalPostCompra}) excederá el máximo (${stockMax})`}>
-                  <div className='text-amber-600 text-[11px] mt-1 font-medium leading-tight cursor-help'>
-                    ⚠️ Excede Máx
-                  </div>
-                </Tooltip>
+                <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight text-center'>
+                  <Tooltip title={`Stock: ${Math.round(stockTotalPostCompra)} excede máximo: ${Math.round(stockMax)}`}>
+                    <span className='cursor-help'>⚠️ Stock Máx: {Math.round(stockMax)}</span>
+                  </Tooltip>
+                </div>
               );
             }
             return null;
@@ -893,6 +895,8 @@ export default function CrearOrdenCompraPage() {
                 showCardAgregarProducto
                 autoFillPrecioCompraWithCosto
                 ignoreAlmacen
+                showStockMaxWarning
+                showFiltrosAvanzados
               />
             </div>
           }

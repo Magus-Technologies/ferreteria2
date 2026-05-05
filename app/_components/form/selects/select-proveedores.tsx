@@ -43,7 +43,8 @@ export default function SelectProveedores({
   ...props
 }: SelectProveedoresProps) {
   const selectProveedoresRef = useRef<RefSelectBaseProps>(null)
-  const [text, setText] = useState('')
+  const text = useStoreProveedorSeleccionado(store => store.searchText)
+  const setText = useStoreProveedorSeleccionado(store => store.setSearchText)
   const [lastSelectedDocument, setLastSelectedDocument] = useState('')
   const [isSelecting, setIsSelecting] = useState(false) // Flag para evitar limpieza durante selección
 
@@ -71,9 +72,8 @@ export default function SelectProveedores({
     }
   }, [initialSearchText])
 
-  // Actualizar textDefault cuando text cambia (para mantenerlo sincronizado)
+  // Notificar al componente padre del cambio de texto
   useEffect(() => {
-    setTextDefault(text)
     onSearchChange?.(text)
   }, [text, onSearchChange])
 
@@ -160,6 +160,7 @@ export default function SelectProveedores({
           // Si estamos en proceso de selección, ignorar el borrado.
           if (!val && isSelecting) return
           setText(val)
+          props.onSearch?.(val)
         }}
         onSelect={() => {
           // Marcar como seleccionando para prevenir que onSearch("") borre el texto
@@ -209,7 +210,8 @@ export default function SelectProveedores({
       <FaSearch
         className={`text-yellow-600 mb-1 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
-        onClick={() => {
+        onMouseDown={(e) => {
+          e.preventDefault() // Prevenir pérdida de foco inmediata
           setTextDefault(text || '')
           setOpenModalProveedorSearch(true)
         }}

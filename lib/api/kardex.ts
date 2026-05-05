@@ -20,6 +20,8 @@ export interface MovimientoKardex {
   cant_ingreso: number
   cant_salida: number
   stock_actual: number
+  costo_anterior?: number
+  costo_actual?: number
   saldo: number | null
   saldo_anterior: number | null
   referencia_id: string | number

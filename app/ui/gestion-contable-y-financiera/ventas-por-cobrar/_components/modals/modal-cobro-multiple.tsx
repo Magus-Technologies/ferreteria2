@@ -65,8 +65,8 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   // Sincronizar estados cuando cambia la data de ventas
   const handleGlobalPagoChange = useCallback((value: string | undefined) => {
-    const id = value ? String(extractDesplieguePagoId(value) ?? value) : undefined
-    setVentasDistribucion(prev => prev.map(v => ({ ...v, _desplieguePagoId: id })))
+    // No extraer el ID aquí para que el Select pueda mostrar el label correctamente
+    setVentasDistribucion(prev => prev.map(v => ({ ...v, _desplieguePagoId: value })))
   }, [])
 
   useEffect(() => {
@@ -106,8 +106,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       return
     }
     const defaultPagoValue = form.getFieldValue('despliegue_de_pago_id') as string | undefined
-    // Extraer el ID real del despliegue de pago
-    const defaultPago = defaultPagoValue ? String(extractDesplieguePagoId(defaultPagoValue) ?? defaultPagoValue) : undefined
+    const defaultPago = defaultPagoValue
     const ventas: VentaConDistribucion[] = ventasData.map((v: VentaCompleta) => {
       const total = calcularTotalVenta(v)
       const cobrado = Number(v.total_cobrado || 0)
@@ -164,9 +163,8 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   }, [])
 
   const handlePagoRow = useCallback((ventaId: string, value: string | undefined) => {
-    const id = value ? String(extractDesplieguePagoId(value) ?? value) : undefined
     setVentasDistribucion(prev => prev.map(v =>
-      v.id === ventaId ? { ...v, _desplieguePagoId: id } : v
+      v.id === ventaId ? { ...v, _desplieguePagoId: value } : v
     ))
   }, [])
 
@@ -182,7 +180,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   }, [selectedPagoId, desplieguesData])
 
   const totalDeudaCliente = useMemo(() =>
-    ventasDistribucion.reduce((sum, v) => sum + v._saldoPendiente, 0), [ventasDistribucion])
+    ventasDistribucion.filter(v => v._seleccionada).reduce((sum, v) => sum + v._saldoPendiente, 0), [ventasDistribucion])
 
   const totalDistribuido = useMemo(() =>
     ventasDistribucion.reduce((sum, v) => sum + v._montoAPagar, 0), [ventasDistribucion])
@@ -227,7 +225,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         distribucion: distribucion.map(v => ({
           venta_id: v.id,
           monto: v._montoAPagar,
-          despliegue_de_pago_id: v._desplieguePagoId ? String(v._desplieguePagoId) : undefined,
+          despliegue_de_pago_id: v._desplieguePagoId ? String(extractDesplieguePagoId(v._desplieguePagoId) ?? v._desplieguePagoId) : undefined,
         })),
       })
     },
@@ -568,10 +566,10 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
             {/* Resumen final */}
             <div className='flex justify-between mt-4 bg-gray-50 rounded-lg p-3 text-sm font-bold border border-gray-200'>
-              <span>Ventas: <span className='text-blue-700'>{filasConMonto.length}</span></span>
-              <span>Total Deuda: <span className='text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span></span>
-              <span>Pagando: <span className='text-rose-600 text-lg'>S/. {totalDistribuido.toFixed(2)}</span></span>
-              <span>Resta: <span className='text-orange-600'>S/. {(totalDeudaCliente - totalDistribuido).toFixed(2)}</span></span>
+              <span>Ventas Seleccionadas: <span className='text-blue-700'>{ventasDistribucion.filter(v => v._seleccionada).length}</span></span>
+              <span>Total Deuda Pendiente: <span className='text-red-600'>S/. {totalDeudaCliente.toFixed(2)}</span></span>
+              <span>Monto a Pagar: <span className='text-rose-600 text-lg'>S/. {totalDistribuido.toFixed(2)}</span></span>
+              <span>Saldo Restante: <span className='text-orange-600'>S/. {(totalDeudaCliente - totalDistribuido).toFixed(2)}</span></span>
             </div>
           </>
         )}

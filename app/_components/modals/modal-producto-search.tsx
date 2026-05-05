@@ -44,6 +44,7 @@ type ModalProductoSearchProps = {
   onAfterClose?: () => void;
   ignoreAlmacen?: boolean;
   showStockMaxWarning?: boolean;
+  showFiltrosAvanzados?: boolean;
 };
 
 export type CostoUnidadDerivadaSearch = {
@@ -72,6 +73,7 @@ export default function ModalProductoSearch({
   onAfterClose,
   ignoreAlmacen = false,
   showStockMaxWarning = false,
+  showFiltrosAvanzados = false,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
   useEffect(() => {
@@ -179,34 +181,38 @@ export default function ModalProductoSearch({
             { value: FiltroStock.CON_STOCK, label: 'Con Stock' },
           ]}
         />
-        <SelectBase
-          placeholder="Marca"
-          value={marcaId}
-          onChange={(value) => setMarcaId(value as number | undefined)}
-          className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
-          allowClear
-          options={[
-            { value: undefined, label: 'Todas' },
-            ...(marcasResponse || []).map((marca) => ({
-              value: marca.id,
-              label: marca.name,
-            })),
-          ]}
-        />
-        <SelectBase
-          placeholder="Categoría"
-          value={categoriaId}
-          onChange={(value) => setCategoriaId(value as number | undefined)}
-          className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
-          allowClear
-          options={[
-            { value: undefined, label: 'Todas' },
-            ...(categoriasResponse || []).map((categoria) => ({
-              value: categoria.id,
-              label: categoria.name,
-            })),
-          ]}
-        />
+        {showFiltrosAvanzados && (
+          <>
+            <SelectBase
+              placeholder="Marca"
+              value={marcaId}
+              onChange={(value) => setMarcaId(value as number | undefined)}
+              className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
+              allowClear
+              options={[
+                { value: undefined, label: 'Todas' },
+                ...(marcasResponse || []).map((marca) => ({
+                  value: marca.id,
+                  label: marca.name,
+                })),
+              ]}
+            />
+            <SelectBase
+              placeholder="Categoría"
+              value={categoriaId}
+              onChange={(value) => setCategoriaId(value as number | undefined)}
+              className="w-full sm:!min-w-[180px] sm:!w-[180px] sm:!max-w-[180px]"
+              allowClear
+              options={[
+                { value: undefined, label: 'Todas' },
+                ...(categoriasResponse || []).map((categoria) => ({
+                  value: categoria.id,
+                  label: categoria.name,
+                })),
+              ]}
+            />
+          </>
+        )}
         <ButtonCreateProductoPlus
           className="mb-0! w-full sm:w-auto"
           onSuccess={(res) => setText(res.name)}
@@ -264,6 +270,7 @@ export default function ModalProductoSearch({
             <CardAgregarProductoCompra
               setOpen={setOpen}
               autoFillPrecioCompraWithCosto={autoFillPrecioCompraWithCosto}
+              showStockMaxWarning={showStockMaxWarning}
               onChangeValues={(values) => {
                 setCostoUnidadDerivada({
                   costo: values.precio_compra,

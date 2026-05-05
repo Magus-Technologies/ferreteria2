@@ -261,8 +261,8 @@ export default function TableProductoSearch({
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
       loading={loading || forceLoading}
-      columnDefs={useColumnsProductos({ 
-        almacen_id: ignoreAlmacen ? undefined : almacen_id,
+      columnDefs={useColumnsProductos({
+        almacen_id,
         showStockMaxWarning
       }) as any}
       onRowDoubleClicked={({ data }) => {

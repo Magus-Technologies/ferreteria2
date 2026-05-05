@@ -84,7 +84,7 @@ export default function TableMisGanancias() {
       valueFormatter: (p) => tipoDocMap[p.value?.toUpperCase() || ''] || p.value || '-',
     },
     {
-      headerName: 'NUMERO',
+      headerName: 'N° COMPROBANTE',
       field: 'numero',
       width: 155,
       cellClass: 'font-mono text-xs',

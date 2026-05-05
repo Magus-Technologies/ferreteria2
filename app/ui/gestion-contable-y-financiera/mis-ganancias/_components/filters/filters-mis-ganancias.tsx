@@ -3,7 +3,8 @@
 import { Form, Drawer, Badge, Select } from "antd";
 import { FaSearch, FaFilter, FaCalendar } from "react-icons/fa";
 import { GiMoneyStack } from "react-icons/gi";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import LabelBase from "~/components/form/label-base";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
@@ -15,7 +16,6 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { Dayjs } from "dayjs";
 import { useStoreFiltrosMisGanancias } from "~/app/ui/gestion-contable-y-financiera/mis-ganancias/_store/store-filtros-mis-ganancias";
 import { useStoreAlmacen } from "~/store/store-almacen";
-import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useQuery } from "@tanstack/react-query";
 import { clienteApi } from "~/lib/api/cliente";

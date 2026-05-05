@@ -82,6 +82,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   selectionColor?: string // Color para la fila seleccionada en el modal
   ignoreAlmacen?: boolean
   showStockMaxWarning?: boolean
+  showFiltrosAvanzados?: boolean
 }
 
 export interface RefSelectProductosProps {
@@ -117,6 +118,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   onSearch,
   ignoreAlmacen = false,
   showStockMaxWarning = false,
+  showFiltrosAvanzados = false,
   ...props
 }, ref) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -356,7 +358,8 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         <FaSearch
           className={`text-yellow-600 mb-7 cursor-pointer min-w-fit ${classIconSearch}`}
           size={15}
-          onClick={() => {
+          onMouseDown={(e) => {
+            e.preventDefault() // Prevenir pérdida de foco inmediata
             handleSearch()
           }}
         />
@@ -382,6 +385,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           selectionColor={colorSeleccion}
           ignoreAlmacen={ignoreAlmacen}
           showStockMaxWarning={showStockMaxWarning}
+          showFiltrosAvanzados={showFiltrosAvanzados}
           onAfterClose={() => {
             // Devolver focus al buscador después de cerrar el modal
             ;[0, 50, 150, 300, 500].forEach((delay) => {

@@ -2,7 +2,7 @@
 
 // Filtros para ventas por cobrar
 import { Form, Drawer, Badge, Select } from 'antd'
-import { FaSearch, FaFilter } from 'react-icons/fa'
+import { FaSearch, FaFilter, FaUsers, FaBrush } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -23,6 +23,8 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
 import { FormaDePago } from '~/lib/api/venta'
+import ModalClienteSearch from '~/app/_components/modals/modal-cliente-search'
+import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
 
 interface ValuesFiltersVentasPorCobrar {
   almacen_id: number
@@ -57,6 +59,8 @@ export default function FiltersVentasPorCobrar() {
   const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
   const [busquedaClienteText, setBusquedaClienteText] = useState('')
   const [debouncedBusquedaCliente] = useDebounce(busquedaClienteText, 300)
+  const [openModalCliente, setOpenModalCliente] = useState(false)
+  const clienteSeleccionado = useStoreClienteSeleccionado(state => state.cliente)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
@@ -317,6 +321,14 @@ export default function FiltersVentasPorCobrar() {
                 value={busquedaClienteText}
                 onChange={(e) => setBusquedaClienteText(e.target.value)}
                 allowClear
+                suffix={
+                  <FaSearch 
+                    className='text-blue-500 cursor-pointer hover:text-blue-700' 
+                    size={16}
+                    onClick={() => setOpenModalCliente(true)}
+                    title='Buscar cliente en modal'
+                  />
+                }
               />
             </LabelBase>
           </ConfigurableElement>
@@ -324,9 +336,27 @@ export default function FiltersVentasPorCobrar() {
             color='info'
             size='md'
             type='submit'
-            className='flex items-center gap-2 flex-shrink-0 mt-4'
+            className='flex items-center gap-2 flex-shrink-0 mt-4 h-10'
           >
             <FaSearch />
+            Buscar
+          </ButtonBase>
+
+          <ButtonBase
+            color='default'
+            size='md'
+            type='button'
+            className='flex items-center gap-2 flex-shrink-0 mt-4 h-10 border-slate-300 !text-slate-600'
+            onClick={() => {
+              form.resetFields()
+              setBusquedaClienteText('')
+              setQuickFilterActive('todas')
+              form.setFieldValue('estado_pago', 'pendientes')
+              form.submit()
+            }}
+          >
+            <FaBrush />
+            Limpiar
           </ButtonBase>
           {/* Icono de impresión oculto según requerimiento */}
           {/* <button
@@ -406,6 +436,13 @@ export default function FiltersVentasPorCobrar() {
               value={busquedaClienteText}
               onChange={(e) => setBusquedaClienteText(e.target.value)}
               allowClear
+              suffix={
+                <FaSearch 
+                  className='text-blue-500 cursor-pointer hover:text-blue-700' 
+                  size={16}
+                  onClick={() => setOpenModalCliente(true)}
+                />
+              }
             />
           </LabelBase>
 
@@ -489,6 +526,7 @@ export default function FiltersVentasPorCobrar() {
               type='button'
               onClick={() => {
                 form.resetFields()
+                setBusquedaClienteText('')
                 form.submit()
               }}
               className='flex-1'
@@ -507,6 +545,24 @@ export default function FiltersVentasPorCobrar() {
           </div>
         </div>
       </Drawer>
+
+      <ModalClienteSearch
+        open={openModalCliente}
+        setOpen={setOpenModalCliente}
+        textDefault={busquedaClienteText}
+        onOk={() => {
+          if (clienteSeleccionado) {
+            setBusquedaClienteText(clienteSeleccionado.razon_social || `${clienteSeleccionado.nombres} ${clienteSeleccionado.apellidos}`)
+          }
+          setOpenModalCliente(false)
+        }}
+        onRowDoubleClicked={({ data }) => {
+          if (data) {
+            setBusquedaClienteText(data.razon_social || `${data.nombres} ${data.apellidos}`)
+          }
+          setOpenModalCliente(false)
+        }}
+      />
     </FormBase>
   )
 }

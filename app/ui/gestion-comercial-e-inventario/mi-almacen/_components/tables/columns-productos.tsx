@@ -457,7 +457,7 @@ export function useColumnsProductos({ almacen_id, showStockMaxWarning }: UseColu
         type: "actions",
       },
     ],
-    [almacen_id, can, setOpen, setProducto],
+    [almacen_id, can, setOpen, setProducto, showStockMaxWarning],
   );
 
   return columns;
