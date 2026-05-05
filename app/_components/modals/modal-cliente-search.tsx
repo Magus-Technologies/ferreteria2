@@ -1,4 +1,5 @@
 import { Input, Modal, ModalProps } from 'antd'
+import { FaSearch } from 'react-icons/fa'
 import type { InputRef } from 'antd'
 import { classOkButtonModal } from '~/lib/clases'
 import TableClientesBusqueda from '~/app/ui/facturacion-electronica/mis-ventas/_components/tables/table-clientes-busqueda'
@@ -83,6 +84,7 @@ export default function ModalClienteSearch({
           onChange={e => setText(e.target.value)}
           className='max-w-[500px]'
           autoComplete='off'
+          prefix={<FaSearch className='text-slate-400 mr-1' />}
         />
         <ButtonCreateCliente
           className='mb-0!'
