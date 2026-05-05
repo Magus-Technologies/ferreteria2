@@ -372,7 +372,7 @@ export default function CardAgregarProductoVenta({
             cantidad: values.cantidad ?? 0,
             descuento: values.descuento ?? 0,
             descuento_tipo: values.descuento_tipo || DescuentoTipo.MONTO,
-          })}
+          }).toFixed(2)}
         </div>
       </div>
 
