@@ -3,10 +3,11 @@
 import { FormInstance, FormListFieldData } from 'antd'
 import { StoreValue } from 'antd/es/form/interface'
 import type { FormCreateCotizacion } from '../../_types/cotizacion.types'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsCotizar, calcularSubtotalCotizacion } from './columns-cotizar'
 import { useStoreProductoAgregadoCotizacion, ProductoCotizacionConUnidades } from '../../_store/store-producto-agregado-cotizacion'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { AgGridReact } from 'ag-grid-react'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 
 function condicionEditarProductoCotizacion({
@@ -162,10 +163,15 @@ export default function TableCotizar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productoAgregado])
 
+  const agGridRef = useRef<AgGridReact>(null)
+
   return (
     <>
       <CellFocusWithoutStyle />
-      <TableBase
+      <TableWithTitle
+        id="crear-cotizacion-productos"
+        title="Productos de Cotización"
+        tableRef={agGridRef}
         className='h-full'
         rowSelection={false}
         rowData={fields}
