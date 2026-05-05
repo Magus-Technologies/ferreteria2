@@ -105,7 +105,9 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       setVentasDistribucion([])
       return
     }
-    const defaultPago = form.getFieldValue('despliegue_de_pago_id') as string | undefined
+    const defaultPagoValue = form.getFieldValue('despliegue_de_pago_id') as string | undefined
+    // Extraer el ID real del despliegue de pago
+    const defaultPago = defaultPagoValue ? String(extractDesplieguePagoId(defaultPagoValue) ?? defaultPagoValue) : undefined
     const ventas: VentaConDistribucion[] = ventasData.map((v: VentaCompleta) => {
       const total = calcularTotalVenta(v)
       const cobrado = Number(v.total_cobrado || 0)
