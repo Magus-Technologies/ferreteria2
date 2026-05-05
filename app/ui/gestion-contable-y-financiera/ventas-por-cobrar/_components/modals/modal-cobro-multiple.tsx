@@ -225,7 +225,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         distribucion: distribucion.map(v => ({
           venta_id: v.id,
           monto: v._montoAPagar,
-          despliegue_de_pago_id: v._desplieguePagoId,
+          despliegue_de_pago_id: v._desplieguePagoId ? String(v._desplieguePagoId) : undefined,
         })),
       })
     },

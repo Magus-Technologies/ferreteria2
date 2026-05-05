@@ -36,7 +36,7 @@ const tipoLabels: Record<string, string> = {
 }
 
 export default function KardexFinanzasView() {
-  const [metodoPagoId, setMetodoPagoId] = useState<string>('')
+  const [desplieguePagoId, setDesplieguePagoId] = useState<string>('')
   const [subCajaId, setSubCajaId] = useState<string>('')
   const [vendedorId, setVendedorId] = useState<string>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
@@ -45,19 +45,14 @@ export default function KardexFinanzasView() {
   const isSearching = searchText !== debouncedSearchText
   const [searchKey, setSearchKey] = useState(0)
 
-  // Consultas para filtros
-  const { data: metodosData } = useQuery({
-    queryKey: ['metodos-pago-all'],
+  // Consultas para filtros - Despliegues de pago
+  const { data: desplieguesData } = useQuery({
+    queryKey: ['despliegues-pago-all'],
     queryFn: async () => {
       const result = await metodoDePagoApi.getAll()
       return result.data?.data || []
     }
   })
-
-  // Para sub-cajas, necesitamos una caja principal. Como esto es reporte general, tal vez listar todas?
-  // Pero la API de sub-cajas suele pedir ID de principal.
-  // Por ahora buscaremos las sub-cajas activas si hay alguna forma, o simplemente el filtro de método de pago.
-  // Actualización: Usaremos los métodos de pago como filtro principal.
 
   const { data: usuariosData } = useQuery({
     queryKey: ['vendedores-all'],
@@ -68,10 +63,10 @@ export default function KardexFinanzasView() {
   })
 
   const { data: kardexData, isFetching } = useQuery({
-    queryKey: [QueryKeys.KARDEX_FINANZAS, metodoPagoId, subCajaId, vendedorId, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
+    queryKey: [QueryKeys.KARDEX_FINANZAS, desplieguePagoId, subCajaId, vendedorId, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientosFinanzas({
-        metodo_pago_id: metodoPagoId || undefined,
+        metodo_pago_id: desplieguePagoId || undefined,
         sub_caja_id: subCajaId || undefined,
         vendedor_id: vendedorId || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
@@ -117,7 +112,7 @@ export default function KardexFinanzasView() {
       cellStyle: { fontWeight: '500' }
     },
     {
-      headerName: 'Método de Pago',
+      headerName: 'Despliegue de Pago',
       field: 'metodo_pago' as any,
       width: 180,
       minWidth: 150,
@@ -127,6 +122,22 @@ export default function KardexFinanzasView() {
           <span>{params.value || '-'}</span>
         </div>
       )
+    },
+    {
+      headerName: 'Estado',
+      field: 'anulada' as any,
+      width: 120,
+      minWidth: 100,
+      cellRenderer: (params: any) => {
+        const anulada = params.value
+        return (
+          <div className='flex items-center h-full'>
+            <Tag color={anulada ? 'red' : 'green'} className='!m-0 font-medium'>
+              {anulada ? 'Anulada' : 'Activa'}
+            </Tag>
+          </div>
+        )
+      },
     },
     {
       headerName: 'Entrada',
@@ -179,16 +190,16 @@ export default function KardexFinanzasView() {
         <div className='flex flex-wrap items-end gap-3 w-full'>
           <div className='flex-1 min-w-[180px] space-y-1.5'>
             <label className='text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2 px-1'>
-              <FaWallet className='text-blue-400' /> Cuenta / Banco
+              <FaWallet className='text-blue-400' /> Despliegue de Pago
             </label>
             <Select
               className='w-full'
-              placeholder='Todos los bancos'
-              value={metodoPagoId}
-              onChange={setMetodoPagoId}
+              placeholder='Todos los despliegues'
+              value={desplieguePagoId}
+              onChange={setDesplieguePagoId}
               options={[
-                { value: '', label: 'Todos los bancos' },
-                ...(metodosData?.map(m => ({ value: m.id, label: m.name })) || [])
+                { value: '', label: 'Todos los despliegues' },
+                ...(desplieguesData?.map(m => ({ value: m.id, label: m.name })) || [])
               ]}
               size='middle'
               showSearch
