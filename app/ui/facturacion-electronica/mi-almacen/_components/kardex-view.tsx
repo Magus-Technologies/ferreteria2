@@ -18,6 +18,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import type { Producto } from '~/app/_types/producto'
 import type { Cliente } from '~/lib/api/cliente'
+import { GetStock } from '~/app/_utils/get-stock'
 
 const { RangePicker } = DatePicker
 
@@ -201,14 +202,38 @@ export default function KardexView() {
       valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '-',
     },
     {
-      headerName: 'Precio',
+      headerName: 'P. Venta',
       field: 'precio',
       width: 100,
       minWidth: 90,
       type: 'numericColumn',
       valueFormatter: (params) => {
         if (!params.value) return '-'
-        return `S/. ${Number(params.value).toFixed(4)}`
+        return `S/. ${Number(params.value).toFixed(2)}`
+      },
+    },
+    {
+      headerName: 'Costo Anterior',
+      field: 'costo_anterior' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 100,
+      type: 'numericColumn',
+      cellStyle: { color: '#6b7280' },
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        return `S/. ${Number(params.value).toFixed(2)}`
+      },
+    },
+    {
+      headerName: 'Costo Actual',
+      field: 'costo_actual' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 100,
+      type: 'numericColumn',
+      cellStyle: { color: '#059669', fontWeight: 'bold' },
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        return `S/. ${Number(params.value).toFixed(2)}`
       },
     },
     {
@@ -222,6 +247,15 @@ export default function KardexView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (params.value == null) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Ingreso',
@@ -237,6 +271,15 @@ export default function KardexView() {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (!params.value || params.value === 0) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Salida',
@@ -252,6 +295,15 @@ export default function KardexView() {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (!params.value || params.value === 0) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Stock Actual',
@@ -264,6 +316,15 @@ export default function KardexView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (params.value == null) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
   ]
 
@@ -373,7 +434,7 @@ export default function KardexView() {
       {/* Tabla */}
       <div className='h-[calc(100vh-380px)] min-h-[300px]'>
         <TableWithTitle<MovimientoKardex>
-          id='kardex.movimientos.facturacion'
+          id='kardex.movimientos.facturacion.v2'
           title={productoId ? 'Movimientos' : 'Todos los Movimientos de Hoy'}
           selectionColor={orangeColors[10]}
           loading={isFetching || isSearching}
@@ -398,8 +459,8 @@ export default function KardexView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'Precio', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'P. Venta', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Cliente', 'Tipo', 'Estado', 'Documento', 'Unidad', 'Cantidad', 'P. Venta', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />

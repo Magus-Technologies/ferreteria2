@@ -18,6 +18,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import type { Producto } from '~/app/_types/producto'
 import type { Proveedor } from '~/lib/api/proveedor'
+import { GetStock } from '~/app/_utils/get-stock'
 
 const { RangePicker } = DatePicker
 
@@ -176,14 +177,27 @@ export default function KardexInventarioView() {
       valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '-',
     },
     {
-      headerName: 'Precio/Costo',
-      field: 'costo',
-      width: 120,
+      headerName: 'Costo Anterior',
+      field: 'costo_anterior' as keyof MovimientoKardex,
+      width: 110,
       minWidth: 100,
       type: 'numericColumn',
+      cellStyle: { color: '#6b7280' },
       valueFormatter: (params) => {
         if (!params.value) return '-'
-        return `S/. ${Number(params.value).toFixed(4)}`
+        return `S/. ${Number(params.value).toFixed(2)}`
+      },
+    },
+    {
+      headerName: 'Costo Actual',
+      field: 'costo_actual' as keyof MovimientoKardex,
+      width: 110,
+      minWidth: 100,
+      type: 'numericColumn',
+      cellStyle: { color: '#059669', fontWeight: 'bold' },
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        return `S/. ${Number(params.value).toFixed(2)}`
       },
     },
     {
@@ -197,6 +211,15 @@ export default function KardexInventarioView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (params.value == null) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Ingreso',
@@ -212,6 +235,15 @@ export default function KardexInventarioView() {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (!params.value || params.value === 0) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Cant. Salida',
@@ -227,6 +259,15 @@ export default function KardexInventarioView() {
         if (!params.value || params.value === 0) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (!params.value || params.value === 0) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
     {
       headerName: 'Stock Actual',
@@ -239,6 +280,15 @@ export default function KardexInventarioView() {
         if (params.value == null) return '-'
         return Number(params.value).toFixed(2)
       },
+      cellRenderer: (params: any) => {
+        if (params.value == null) return '-'
+        return (
+          <GetStock
+            stock_fraccion={Number(params.value)}
+            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
+          />
+        )
+      }
     } as ColDef<MovimientoKardex>,
   ]
 
@@ -359,7 +409,7 @@ export default function KardexInventarioView() {
       {/* Tabla */}
       <div className='h-[calc(100vh-380px)] min-h-[300px]'>
         <TableWithTitle<MovimientoKardex>
-          id='kardex.inventario.movimientos'
+          id='kardex.inventario.movimientos.v2'
           title={productoId ? 'Movimientos de Inventario' : 'Todos los Movimientos de Hoy'}
           selectionColor={greenColors[10]}
           loading={isFetching || isSearching}
@@ -372,8 +422,8 @@ export default function KardexInventarioView() {
             {
               label: 'Default',
               columns: productoId
-                ? ['Fecha', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio/Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
-                : ['Fecha', 'Código', 'Producto', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Precio/Costo', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
+                ? ['Fecha', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual']
+                : ['Fecha', 'Código', 'Producto', 'Proveedor', 'Tipo', 'Mov.', 'Documento', 'Unidad', 'Cantidad', 'Costo Anterior', 'Costo Actual', 'Stock Anterior', 'Cant. Ingreso', 'Cant. Salida', 'Stock Actual'],
             },
           ]}
         />
