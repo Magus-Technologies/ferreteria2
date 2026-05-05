@@ -1,5 +1,3 @@
-'use client'
-
 import { Modal, Form, InputNumber, DatePicker, Input, App, Checkbox } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
@@ -7,14 +5,15 @@ import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
 import { FaMoneyBillWave } from 'react-icons/fa'
-import { redColors } from '~/lib/colors'
+import TableBase from '~/components/tables/table-base'
+import type { ColDef, ICellRendererParams, RowStyle } from 'ag-grid-community'
 
 interface ModalCobroMultipleProps {
   open: boolean
@@ -48,6 +47,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   const { message } = App.useApp()
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const gridRef = useRef<any>(null)
 
   const [clienteId, setClienteId] = useState<number | undefined>()
   const [ventasDistribucion, setVentasDistribucion] = useState<VentaConDistribucion[]>([])
@@ -305,6 +305,124 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   const tipoDocMap: Record<string, string> = { '01': 'FAC', '03': 'BOL', 'nv': 'NV' }
 
+  // Definir columnas para AG Grid
+  const columnDefs = useMemo<ColDef<VentaConDistribucion>[]>(() => [
+    {
+      headerName: '',
+      field: '_seleccionada',
+      width: 60,
+      cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
+        return (
+          <div className="flex items-center justify-center h-full">
+            <Checkbox
+              checked={params.data?._seleccionada}
+              onChange={() => params.data && toggleVenta(params.data.id)}
+            />
+          </div>
+        )
+      },
+      suppressMovable: true,
+      lockPosition: 'left',
+    },
+    {
+      headerName: 'Documento',
+      field: 'serie',
+      width: 150,
+      cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
+        if (!params.data) return null
+        const tipo = tipoDocMap[params.data.tipo_documento] || params.data.tipo_documento
+        return (
+          <div className="flex items-center gap-1">
+            <span className='text-[10px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-bold'>
+              {tipo}
+            </span>
+            <span className='font-semibold text-xs'>{params.data.serie}-{params.data.numero}</span>
+          </div>
+        )
+      },
+    },
+    {
+      headerName: 'Fecha',
+      field: 'created_at',
+      width: 180,
+      cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
+        if (!params.data) return null
+        const vencida = params.data.fecha_vencimiento && dayjs(params.data.fecha_vencimiento).isBefore(dayjs())
+        return (
+          <div className="text-gray-500 text-xs">
+            {dayjs(params.data.created_at || params.data.fecha).format('DD/MM/YYYY hh:mm A')}
+            {params.data.fecha_vencimiento && (
+              <span className={`ml-1 text-[10px] ${vencida ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                (Venc: {dayjs(params.data.fecha_vencimiento).format('DD/MM')})
+              </span>
+            )}
+          </div>
+        )
+      },
+    },
+    {
+      headerName: 'Total',
+      field: '_totalVenta',
+      width: 100,
+      type: 'numericColumn',
+      valueFormatter: (params) => params.value?.toFixed(2) || '0.00',
+      cellClass: 'text-xs font-medium',
+    },
+    {
+      headerName: 'Saldo',
+      field: '_saldoPendiente',
+      width: 100,
+      type: 'numericColumn',
+      valueFormatter: (params) => params.value?.toFixed(2) || '0.00',
+      cellClass: 'text-xs font-bold text-red-600',
+    },
+    {
+      headerName: 'Monto a Pagar',
+      field: '_montoAPagar',
+      width: 150,
+      cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
+        if (!params.data) return null
+        return (
+          <div className="py-1">
+            <InputNumber
+              className='w-full'
+              prefix='S/.'
+              precision={2}
+              min={0}
+              max={params.data._saldoPendiente}
+              value={params.data._montoAPagar}
+              onChange={(val) => handleMontoManual(params.data!.id, val || 0)}
+              disabled={!params.data._seleccionada}
+              size='small'
+            />
+          </div>
+        )
+      },
+    },
+    {
+      headerName: 'Modo de Pago',
+      field: '_desplieguePagoId',
+      width: 200,
+      cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
+        if (!params.data) return null
+        const necesitaPago = params.data._montoAPagar > 0 && !params.data._desplieguePagoId
+        return (
+          <div className="py-1">
+            <SelectDespliegueDePago
+              placeholder={necesitaPago ? '⚠ Requerido' : 'Modo pago'}
+              value={params.data._desplieguePagoId}
+              onChange={(val: any) => handlePagoRow(params.data!.id, val || undefined)}
+              disabled={!params.data._seleccionada || params.data._montoAPagar <= 0}
+              size='small'
+              variant='outlined'
+              formWithMessage={false}
+            />
+          </div>
+        )
+      },
+    },
+  ], [])
+
   // ¿Todas las filas con monto tienen modo de pago?
   const filasConMonto = ventasDistribucion.filter(v => v._montoAPagar > 0)
   const faltaPago = filasConMonto.some(v => !v._desplieguePagoId)
@@ -406,88 +524,29 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
               </div>
             </div>
 
-            {/* Tabla de ventas pendientes con modo de pago por fila */}
-            <div className='border rounded-lg overflow-hidden'>
-              <div className='bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 grid grid-cols-12 gap-2 items-center'>
-                <div className='col-span-1'></div>
-                <div className='col-span-2'>Documento</div>
-                <div className='col-span-2'>Fecha</div>
-                <div className='col-span-1 text-right'>Total</div>
-                <div className='col-span-1 text-right'>Saldo</div>
-                <div className='col-span-2 text-center'>Monto a Pagar</div>
-                <div className='col-span-3 text-center'>Modo de Pago</div>
-              </div>
-              <div className='max-h-[320px] overflow-y-auto divide-y'>
-                {isLoading && (
-                  <div className='text-center py-8 text-gray-400'>Cargando ventas pendientes...</div>
-                )}
-                {!isLoading && ventasDistribucion.length === 0 && (
-                  <div className='text-center py-8 text-gray-400'>
-                    Este cliente no tiene ventas pendientes
-                  </div>
-                )}
-                {ventasDistribucion.map((v) => {
-                  const necesitaPago = v._montoAPagar > 0 && !v._desplieguePagoId
-                  return (
-                    <div
-                      key={v.id}
-                      className={`px-3 py-2 grid grid-cols-12 gap-2 items-center text-sm transition-colors ${
-                        necesitaPago ? 'bg-red-50' :
-                        v._montoAPagar > 0 ? 'bg-rose-50' :
-                        v._seleccionada ? 'bg-white' : 'bg-gray-50 opacity-60'
-                      }`}
-                    >
-                      <div className='col-span-1'>
-                        <Checkbox checked={v._seleccionada} onChange={() => toggleVenta(v.id)} />
-                      </div>
-                      <div className='col-span-2'>
-                        <span className='text-[10px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-bold mr-1'>
-                          {tipoDocMap[v.tipo_documento] || v.tipo_documento}
-                        </span>
-                        <span className='font-semibold text-xs'>{v.serie}-{v.numero}</span>
-                      </div>
-                      <div className='col-span-2 text-gray-500 text-xs'>
-                        {dayjs(v.created_at || v.fecha).format('DD/MM/YYYY hh:mm A')}
-                        {v.fecha_vencimiento && (
-                          <span className={`ml-1 text-[10px] ${dayjs(v.fecha_vencimiento).isBefore(dayjs()) ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-                            (Venc: {dayjs(v.fecha_vencimiento).format('DD/MM')})
-                          </span>
-                        )}
-                      </div>
-                      <div className='col-span-1 text-right text-xs font-medium'>
-                        {v._totalVenta.toFixed(2)}
-                      </div>
-                      <div className='col-span-1 text-right text-xs font-bold text-red-600'>
-                        {v._saldoPendiente.toFixed(2)}
-                      </div>
-                      <div className='col-span-2'>
-                        <InputNumber
-                          className='w-full'
-                          prefix='S/.'
-                          precision={2}
-                          min={0}
-                          max={v._saldoPendiente}
-                          value={v._montoAPagar}
-                          onChange={(val) => handleMontoManual(v.id, val || 0)}
-                          disabled={!v._seleccionada}
-                          size='small'
-                        />
-                      </div>
-                      <div className='col-span-3'>
-                        <SelectDespliegueDePago
-                          placeholder={necesitaPago ? '⚠ Requerido' : 'Modo pago'}
-                          value={v._desplieguePagoId}
-                          onChange={(val: any) => handlePagoRow(v.id, val || undefined)}
-                          disabled={!v._seleccionada || v._montoAPagar <= 0}
-                          size='small'
-                          variant='outlined'
-                          formWithMessage={false}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+            {/* Tabla de ventas pendientes con AG Grid */}
+            <div className='h-[400px] w-full'>
+              <TableBase<VentaConDistribucion>
+                ref={gridRef}
+                columnDefs={columnDefs}
+                rowData={ventasDistribucion}
+                rowSelection={false}
+                withNumberColumn={false}
+                selectionColor="transparent"
+                persistColumnState={true}
+                tableKey="modal-cobro-multiple-ventas"
+                isVisible={open}
+                getRowStyle={(params): RowStyle | undefined => {
+                  if (!params.data) return undefined
+                  const necesitaPago = params.data._montoAPagar > 0 && !params.data._desplieguePagoId
+                  if (necesitaPago) return { background: '#fef2f2' } as RowStyle
+                  if (params.data._montoAPagar > 0) return { background: '#fff1f2' } as RowStyle
+                  if (!params.data._seleccionada) return { background: '#f9fafb', opacity: '0.6' } as RowStyle
+                  return undefined
+                }}
+                domLayout="normal"
+                suppressHorizontalScroll={false}
+              />
             </div>
 
             {faltaPago && (
