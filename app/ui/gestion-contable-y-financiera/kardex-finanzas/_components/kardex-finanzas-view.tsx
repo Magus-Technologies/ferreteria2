@@ -13,7 +13,6 @@ import { blueColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex } from '~/lib/api/kardex'
 import ButtonBase from '~/components/buttons/button-base'
-import { metodoDePagoApi } from '~/lib/api/metodo-de-pago'
 import { subCajaApi } from '~/lib/api/sub-caja'
 import { usuariosApi } from '~/lib/api/usuarios'
 
@@ -45,19 +44,20 @@ export default function KardexFinanzasView() {
   const isSearching = searchText !== debouncedSearchText
   const [searchKey, setSearchKey] = useState(0)
 
-  // Consultas para filtros - Despliegues de pago
+  // Consultas para filtros - Despliegues de pago (con formato completo)
   const { data: desplieguesData } = useQuery({
-    queryKey: ['despliegues-pago-all'],
+    queryKey: ['metodos-pago-ventas'],
     queryFn: async () => {
-      const result = await metodoDePagoApi.getAll()
+      const result = await subCajaApi.getMetodosParaVentas()
       return result.data?.data || []
     }
   })
 
+  // Consultas para filtros - Usuarios (todos los roles, no solo vendedores)
   const { data: usuariosData } = useQuery({
-    queryKey: ['vendedores-all'],
+    queryKey: ['usuarios-all-activos'],
     queryFn: async () => {
-      const result = await usuariosApi.getAll({ rol_sistema: 'VENDEDOR' })
+      const result = await usuariosApi.getAll({ estado: true })
       return result.data?.data || []
     }
   })
@@ -199,7 +199,10 @@ export default function KardexFinanzasView() {
               onChange={setDesplieguePagoId}
               options={[
                 { value: '', label: 'Todos los despliegues' },
-                ...(desplieguesData?.map(m => ({ value: m.id, label: m.name })) || [])
+                ...(desplieguesData?.map(m => ({ 
+                  value: m.despliegue_pago_id, 
+                  label: m.label 
+                })) || [])
               ]}
               size='middle'
               showSearch
