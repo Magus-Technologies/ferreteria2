@@ -270,6 +270,7 @@ export default function ModalProductoSearch({
             <CardAgregarProductoCompra
               setOpen={setOpen}
               autoFillPrecioCompraWithCosto={autoFillPrecioCompraWithCosto}
+              showStockMaxWarning={showStockMaxWarning}
               onChangeValues={(values) => {
                 setCostoUnidadDerivada({
                   costo: values.precio_compra,

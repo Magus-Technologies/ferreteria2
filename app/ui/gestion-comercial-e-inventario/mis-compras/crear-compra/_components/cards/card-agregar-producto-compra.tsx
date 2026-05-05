@@ -52,11 +52,13 @@ export default function CardAgregarProductoCompra({
   setOpen,
   onChangeValues,
   autoFillPrecioCompraWithCosto = false,
+  showStockMaxWarning = false,
 }: {
   onOk?: (values: ValuesCardAgregarProductoCompra) => void
   setOpen: (open: boolean) => void
   onChangeValues?: (values: ValuesCardAgregarProductoCompra) => void
   autoFillPrecioCompraWithCosto?: boolean
+  showStockMaxWarning?: boolean
 }) {
   const [values, setValues] =
     useState<ValuesCardAgregarProductoCompra>(valuesDefault)
@@ -186,6 +188,11 @@ export default function CardAgregarProductoCompra({
         } as DetalleDePreciosProps)
       : null
 
+  // Calcular si se excede el stock máximo
+  const stockMax = productoSeleccionadoSearchStore?.stock_max
+  const cantidadAgregada = Number(values.cantidad ?? 0) * Number(unidad_derivada_seleccionada?.factor ?? 1)
+  const excedeStockMax = showStockMaxWarning && stockMax && cantidadAgregada > stockMax
+
   return (
     <div className='flex flex-col gap-2'>
       <LabelBase label='Cantidad:' orientation='column'>
@@ -202,6 +209,11 @@ export default function CardAgregarProductoCompra({
             if (e.key === 'Enter') precio_compraRef.current?.focus()
           }}
         />
+        {excedeStockMax && (
+          <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight text-center'>
+            ⚠️ Stock Máx: {Math.round(stockMax)}
+          </div>
+        )}
       </LabelBase>
       <LabelBase label='Unidad Derivada:' orientation='column'>
         <SelectBase

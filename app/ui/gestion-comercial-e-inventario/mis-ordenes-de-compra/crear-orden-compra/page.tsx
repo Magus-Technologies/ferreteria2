@@ -895,6 +895,7 @@ export default function CrearOrdenCompraPage() {
                 showCardAgregarProducto
                 autoFillPrecioCompraWithCosto
                 ignoreAlmacen
+                showStockMaxWarning
                 showFiltrosAvanzados
               />
             </div>
