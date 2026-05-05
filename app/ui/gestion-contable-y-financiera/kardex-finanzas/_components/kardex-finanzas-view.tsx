@@ -21,7 +21,9 @@ const { RangePicker } = DatePicker
 const tipoColors: Record<string, string> = {
   VENTA: 'blue',
   COBRO: 'cyan',
+  'COBRO ANULADO': 'red',
   COMPRA: 'red',
+  'PAGO ANULADO': 'orange',
   ING_EXTRA: 'green',
   GAS_EXTRA: 'orange',
 }
@@ -29,7 +31,9 @@ const tipoColors: Record<string, string> = {
 const tipoLabels: Record<string, string> = {
   VENTA: 'Venta',
   COBRO: 'Cobro',
+  'COBRO ANULADO': 'Cobro Anulado',
   COMPRA: 'Compra',
+  'PAGO ANULADO': 'Pago Anulado',
   ING_EXTRA: 'Ingreso Extra',
   GAS_EXTRA: 'Gasto Extra',
 }

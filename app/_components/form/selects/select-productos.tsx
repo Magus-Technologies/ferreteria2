@@ -358,7 +358,8 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         <FaSearch
           className={`text-yellow-600 mb-7 cursor-pointer min-w-fit ${classIconSearch}`}
           size={15}
-          onClick={() => {
+          onMouseDown={(e) => {
+            e.preventDefault() // Prevenir pérdida de foco inmediata
             handleSearch()
           }}
         />

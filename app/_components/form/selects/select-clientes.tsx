@@ -50,7 +50,6 @@ export default function SelectClientes({
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
-  const [text, setText] = useState('')
   const [lastSelectedDocument, setLastSelectedDocument] = useState('')
   const clienteSeleccionadoRef = useRef(false)
 
@@ -77,11 +76,15 @@ export default function SelectClientes({
     store => store.setCliente
   )
 
+  // Usar el store global para el texto de búsqueda (igual que SelectProductos)
+  const text = useStoreClienteSeleccionado(store => store.searchText)
+  const setText = useStoreClienteSeleccionado(store => store.setSearchText)
+
   const [textDefault, setTextDefault] = useState('')
+
+  // Notificar al componente padre del cambio de texto
   useEffect(() => {
     if (text) {
-      setTextDefault(text)
-      // Notificar al componente padre del cambio de texto
       onSearchChange?.(text)
     }
   }, [text, onSearchChange])
@@ -193,52 +196,35 @@ export default function SelectClientes({
 
   const { response, loading } = useSearchClientes({ value })
 
-  useEffect(() => {
-    if (!response || response.length === 0) return
-    const textoLimpio = text.trim()
-    if (!textoLimpio) return
+  // Comentado: Auto-selección de clientes (causa que se borre el texto)
+  // useEffect(() => {
+  //   if (!response || response.length === 0) return
+  //   const textoLimpio = text.trim()
+  //   if (!textoLimpio) return
 
-    // Buscar coincidencia exacta del documento entre todos los resultados
-    const exactMatch = response.find(c => c.numero_documento === textoLimpio)
-    if (exactMatch) {
-      handleSelect({ data: exactMatch })
-      return
-    }
+  //   // Buscar coincidencia exacta del documento entre todos los resultados
+  //   const exactMatch = response.find(c => c.numero_documento === textoLimpio)
+  //   if (exactMatch) {
+  //     handleSelect({ data: exactMatch })
+  //     return
+  //   }
 
-    // Si hay exactamente 1 resultado y el texto es suficientemente largo, autoseleccionar
-    if (response.length === 1) {
-      const cliente = response[0]
-      if (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio)) {
-        handleSelect({ data: cliente })
-      }
-    }
+  //   // Si hay exactamente 1 resultado y el texto es suficientemente largo, autoseleccionar
+  //   if (response.length === 1) {
+  //     const cliente = response[0]
+  //     if (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio)) {
+  //       handleSelect({ data: cliente })
+  //     }
+  //   }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response])
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [response])
 
   function handleSearch() {
+    // Sincronizar textDefault con el texto actual antes de abrir el modal
     setTextDefault(text)
-
-    // Si no hay texto, abrir el modal sin filtro
-    if (!text) {
-      setOpenModalClienteSearch(true)
-      return
-    }
-
-    // Si ya hay resultados y hay una coincidencia clara, el useEffect de response ya lo manejará
-    // Pero si no hay resultados o hay varios, abrimos el modal
-    if (!response || response.length !== 1) {
-      setOpenModalClienteSearch(true)
-    } else {
-      // Forzar una validación rápida
-      const cliente = response[0]
-      const textoLimpio = text.trim()
-      if (cliente.numero_documento === textoLimpio || (textoLimpio.length >= 8 && cliente.numero_documento.startsWith(textoLimpio))) {
-         handleSelect({ data: cliente })
-      } else {
-         setOpenModalClienteSearch(true)
-      }
-    }
+    // Siempre abrir el modal, sin importar si hay resultados o no
+    setOpenModalClienteSearch(true)
   }
 
   const getLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
@@ -274,6 +260,7 @@ export default function SelectClientes({
             })
             onChange?.(undefined as any, undefined)
           }
+          props.onSearch?.(val)
         }}
         searchValue={text}
         prefix={<FaUser className={classNameIcon} size={sizeIcon} />}
@@ -328,9 +315,9 @@ export default function SelectClientes({
       <FaSearch
         className={`text-yellow-600 mb-7 cursor-pointer z-10 ${classIconSearch}`}
         size={15}
-        onClick={() => {
-          setTextDefault(text)
-          setOpenModalClienteSearch(true)
+        onMouseDown={(e) => {
+          e.preventDefault() // Prevenir pérdida de foco inmediata
+          handleSearch()
         }}
       />
       <ModalClienteSearch

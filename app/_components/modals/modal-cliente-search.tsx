@@ -29,10 +29,14 @@ export default function ModalClienteSearch({
   textDefault,
   onRowDoubleClicked,
 }: ModalClienteSearchProps) {
-  const [text, setText] = useState(textDefault)
+  const [text, setText] = useState('')
+  
+  // Sincronizar text con textDefault cuando el modal se abre o textDefault cambia
   useEffect(() => {
-    setText(textDefault)
-  }, [textDefault])
+    if (open) {
+      setText(textDefault)
+    }
+  }, [open, textDefault])
 
   const [value] = useDebounce(text, 500)
   const inputRef = useRef<InputRef>(null)

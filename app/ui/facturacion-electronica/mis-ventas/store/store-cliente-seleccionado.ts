@@ -4,6 +4,8 @@ import { Cliente } from '~/lib/api/cliente'
 type UseStoreClienteSeleccionadoProps = {
   cliente?: Cliente
   setCliente: (value: Cliente | undefined) => void
+  searchText: string
+  setSearchText: (value: string) => void
 }
 
 export const useStoreClienteSeleccionado =
@@ -11,5 +13,7 @@ export const useStoreClienteSeleccionado =
     return {
       cliente: undefined,
       setCliente: value => set({ cliente: value }),
+      searchText: '',
+      setSearchText: value => set({ searchText: value }),
     }
   })
