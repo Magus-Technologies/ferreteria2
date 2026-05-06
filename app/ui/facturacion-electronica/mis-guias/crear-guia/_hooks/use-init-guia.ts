@@ -8,6 +8,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
 import { TipoDireccion } from '~/lib/api/cliente'
+import { buildSlotsDireccionEmpresa } from '~/lib/utils/empresa-direcciones-form'
 
 export default function useInitGuia({
   guia,
@@ -88,6 +89,9 @@ export default function useInitGuia({
       // como punto de llegada por defecto.
       const direccionD1 = cliente?.direcciones?.find((d: any) => d.tipo === TipoDireccion.D1)?.direccion || ''
 
+      const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
+      const primerSlot = empresaSlots.find((s) => s.direccion)
+
       form.setFieldsValue({
         fecha_emision: dayjs(),
         fecha_traslado: dayjs(),
@@ -100,7 +104,8 @@ export default function useInitGuia({
         // Datos del cliente - Guardar el ID pero el SelectClientes mostrará el documento
         cliente_id: cliente?.id,
         cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),
-        punto_partida: empresa?.direccion || '',
+        punto_partida: primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
         punto_llegada: direccionD1,
         direccion_seleccionada: 'D1',
         // Referencia a la venta
@@ -129,6 +134,8 @@ export default function useInitGuia({
       }, 100)
     } else if (!venta && !guia) {
       // Valores por defecto para nueva guía sin venta
+      const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
+      const primerSlot = empresaSlots.find((s) => s.direccion)
       form.setFieldsValue({
         fecha_emision: dayjs(),
         fecha_traslado: dayjs(),
@@ -136,7 +143,8 @@ export default function useInitGuia({
         validar_modalidad: true,
         validar_costo: true,
         tipo_guia: 'ELECTRONICA_REMITENTE',
-        punto_partida: empresa?.direccion || '',
+        punto_partida: primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
         productos: [],
       })
     }

@@ -22,7 +22,6 @@ import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_compo
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
 import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
-import ModalEntregaUpdate from '../modals/modal-entrega-update'
 import ModalAnularEntrega from '../modals/modal-anular-entrega'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 
@@ -34,13 +33,9 @@ interface CellAccionesEntregaProps {
 export default function CellAccionesEntrega({ entrega, onRefetch }: CellAccionesEntregaProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [modalDespachoOpen, setModalDespachoOpen] = useState(false)
   const [modalConfirmarOpen, setModalConfirmarOpen] = useState(false)
   const [modalDetallesOpen, setModalDetallesOpen] = useState(false)
-  const [modalMarcarOpen, setModalMarcarOpen] = useState(false)
-  const [modalParcialOpen, setModalParcialOpen] = useState(false)
   const [modalAnularOpen, setModalAnularOpen] = useState(false)
-  const [modalRestante, setModalRestante] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const { message } = useApp()
   const queryClient = useQueryClient()
@@ -48,6 +43,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
   const accionTrigger = useStoreEntregaSeleccionada((s) => s.accionTrigger)
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
+  const openUpdateModal = useStoreEntregaSeleccionada((s) => s.openUpdateModal)
 
   // Escuchar el trigger del botón principal (filter) — solo la fila seleccionada
   // responde al trigger y abre el modal correspondiente.
@@ -59,12 +55,12 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   useEffect(() => {
     if (!accionTrigger || !entrega) return
     if (entregaSeleccionada?.id !== entrega.id) return
-    if (accionTrigger === 'marcar') setModalMarcarOpen(true)
-    else if (accionTrigger === 'parcial') setModalParcialOpen(true)
+    if (accionTrigger === 'marcar') openUpdateModal(entrega, false)
+    else if (accionTrigger === 'parcial') openUpdateModal(entrega, false)
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
-    else if (accionTrigger === 'despachar') setModalDespachoOpen(true)
-    else if (accionTrigger === 'restante') { setModalRestante(true); setModalMarcarOpen(true) }
-    triggerAccion(null) // resetear el trigger
+    else if (accionTrigger === 'despachar') openUpdateModal(entrega, false)
+    else if (accionTrigger === 'restante') openUpdateModal(entrega, true)
+    triggerAccion(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accionTrigger])
 
@@ -283,25 +279,8 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           (ModalPdfEntregaWrapper en mis-entregas/page.tsx) — se abre via
           useStoreModalPdfEntrega.openModal(entrega). */}
 
-      {/* Modal de actualizar entrega (rt/de/pa) — reusa `ModalDetallesEntrega`
-          de `mis-ventas/crear-venta` configurado para actualizar una entrega
-          existente. Reemplaza ModalMarcarEntregada / ModalEntregarParcial /
-          ModalDespachoEntrega. El triger viene de `accionTrigger` (filters)
-          y mapea a 'marcar' (rt) | 'parcial' (pa) | 'despachar' (de). */}
-      <ModalEntregaUpdate
-        open={modalMarcarOpen || modalParcialOpen || modalDespachoOpen}
-        setOpen={(o) => {
-          if (!o) {
-            setModalMarcarOpen(false)
-            setModalParcialOpen(false)
-            setModalDespachoOpen(false)
-            setModalRestante(false)
-          }
-        }}
-        entrega={entrega}
-        onSuccess={onSuccess}
-        restante={modalRestante}
-      />
+      {/* ModalEntregaUpdate vive en TableMisEntregas (fuera de AG Grid)
+          para sobrevivir re-renders de la tabla. Se abre via openUpdateModal(). */}
 
       {/* Modal de Confirmar Entrega */}
       <ModalConfirmarEntrega

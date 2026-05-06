@@ -79,12 +79,15 @@ export default function ModalEntregaUpdate({
     if (t === 'de') return 'Domicilio'
     if (t === 'rt') return 'EnTienda'
     return 'Parcial'
-  }, [entrega])
+  }, [entrega?.tipo_entrega])
   const [tipoLocal, setTipoLocal] = useState<TipoDespachoUI>(tipoInicialUI)
-  // Re-sincronizar cuando cambia la entrega seleccionada (nueva fila).
+  // Re-sincronizar solo cuando cambia el tipo real de la entrega (valor primitivo).
+  // Antes dependía de `tipoInicialUI` que a su vez dependía del objeto `entrega`
+  // completo — cada refetch traía una nueva referencia y disparaba setTipoLocal
+  // innecesariamente, causando un re-render que cerraba el modal.
   useEffect(() => {
     setTipoLocal(tipoInicialUI)
-  }, [tipoInicialUI])
+  }, [entrega?.id, entrega?.tipo_entrega])
 
   const handleSelectTipoDespacho = async (
     tipo: 'EnTienda' | 'Domicilio' | 'Parcial',
@@ -130,7 +133,8 @@ export default function ModalEntregaUpdate({
       setTipoLocal(tipo)
       setModalSeleccionarTipoOpen(false)
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
-      onSuccess?.()
+      // No llamar onSuccess aquí — el modal sigue abierto y el usuario
+      // continúa configurando la entrega. El refetch ya actualiza la tabla.
     } catch (err: any) {
       message.error(err?.message || 'Error al cambiar tipo de entrega')
     }
@@ -307,6 +311,35 @@ export default function ModalEntregaUpdate({
     })
   }, [entrega, restante])
 
+  // entregaParaMapa debe estar ANTES del return null para no violar las reglas de hooks.
+  const entregaParaMapa = useMemo(() => {
+    if (!entrega) return null
+    const direccionForm =
+      form.getFieldValue('direccion_entrega') ||
+      form.getFieldValue('_resto_direccion_entrega') ||
+      entrega.direccion_entrega
+    const refForm =
+      form.getFieldValue('referencia_entrega') ||
+      form.getFieldValue('_resto_referencia_entrega') ||
+      entrega.referencia_entrega
+    const latForm =
+      form.getFieldValue('latitud') ??
+      form.getFieldValue('_resto_latitud') ??
+      entrega.latitud
+    const lngForm =
+      form.getFieldValue('longitud') ??
+      form.getFieldValue('_resto_longitud') ??
+      entrega.longitud
+    return {
+      ...entrega,
+      direccion_entrega: direccionForm,
+      referencia_entrega: refForm,
+      latitud: latForm,
+      longitud: lngForm,
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entrega, modalMapaEntregaOpen])
+
   if (!entrega) return null
 
   // Mapeo del `tipoLocal` (UI) al `tipoDespachoUI` que renderiza el modal.
@@ -440,41 +473,6 @@ export default function ModalEntregaUpdate({
   //   - En modo update: solo si la entrega no se completó ('en') ni se canceló ('ca').
   const puedeCambiarTipo =
     restante || (entrega.estado_entrega !== 'en' && entrega.estado_entrega !== 'ca')
-
-  // Entrega "virtual" para el ModalMapaEntrega — usa los datos actuales del
-  // form (dirección/lat/lng que el usuario seleccionó en D1/D2/D3) en lugar
-  // de la entrega origen, así el mapa muestra la ubicación que efectivamente
-  // se va a despachar. Si el form aún no tiene esos datos, cae a los del
-  // cliente/entrega origen.
-  const entregaParaMapa = useMemo(() => {
-    const direccionForm =
-      form.getFieldValue('direccion_entrega') ||
-      form.getFieldValue('_resto_direccion_entrega') ||
-      entrega.direccion_entrega
-    const refForm =
-      form.getFieldValue('referencia_entrega') ||
-      form.getFieldValue('_resto_referencia_entrega') ||
-      entrega.referencia_entrega
-    const latForm =
-      form.getFieldValue('latitud') ??
-      form.getFieldValue('_resto_latitud') ??
-      entrega.latitud
-    const lngForm =
-      form.getFieldValue('longitud') ??
-      form.getFieldValue('_resto_longitud') ??
-      entrega.longitud
-    return {
-      ...entrega,
-      direccion_entrega: direccionForm,
-      referencia_entrega: refForm,
-      latitud: latForm,
-      longitud: lngForm,
-    }
-    // Recalcular cuando cambia la entrega seleccionada o cuando se abre el
-    // modal — el form en sí no es reactivo, pero al abrir el ModalMapaEntrega
-    // el usuario ya tendrá ajustada la dirección y este memo se evalúa.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entrega, modalMapaEntregaOpen])
 
   const accionesHeader = (
     <div className="flex items-center gap-2">

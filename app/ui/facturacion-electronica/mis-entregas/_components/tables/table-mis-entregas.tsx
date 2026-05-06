@@ -10,6 +10,7 @@ import type { RowStyle } from 'ag-grid-community'
 import { greenColors, blueColors, redColors, orangeColors } from '~/lib/colors'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ModalPostDespacho from '../modals/modal-post-despacho'
+import ModalEntregaUpdate from '../modals/modal-entrega-update'
 
 // Tipo para las entregas que vienen de la API (con códigos de DB)
 interface EntregaDB {
@@ -46,6 +47,12 @@ type UseStoreEntregaSeleccionada = {
   postDespachoOpen: boolean
   openPostDespacho: (entrega: any) => void
   closePostDespacho: () => void
+  // Modal de configurar entrega (update) — fuera de AG Grid para no cerrarse al refrescar
+  updateModalOpen: boolean
+  updateModalRestante: boolean
+  updateModalEntrega?: EntregaDB
+  openUpdateModal: (entrega: EntregaDB, restante?: boolean) => void
+  closeUpdateModal: () => void
   // Trigger desde el botón principal del filter para abrir el modal
   // de acción correspondiente al estado actual de la entrega seleccionada.
   accionTrigger: AccionEntrega
@@ -60,6 +67,11 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
     postDespachoOpen: false,
     openPostDespacho: (entrega) => set({ postDespachoOpen: true, postDespachoEntrega: entrega }),
     closePostDespacho: () => set({ postDespachoOpen: false, postDespachoEntrega: undefined }),
+    updateModalOpen: false,
+    updateModalRestante: false,
+    updateModalEntrega: undefined,
+    openUpdateModal: (entrega, restante = false) => set({ updateModalOpen: true, updateModalEntrega: entrega, updateModalRestante: restante }),
+    closeUpdateModal: () => set({ updateModalOpen: false, updateModalRestante: false }),
     accionTrigger: null,
     triggerAccion: (accion) => set({ accionTrigger: accion }),
   })
@@ -97,6 +109,10 @@ export default function TableMisEntregas() {
   const tableRef = useRef<AgGridReact>(null)
   const { entregas, loading, refetch } = useGetEntregas()
   const { postDespachoOpen, postDespachoEntrega, closePostDespacho } = useStoreEntregaSeleccionada()
+  const updateModalOpen = useStoreEntregaSeleccionada((s) => s.updateModalOpen)
+  const updateModalRestante = useStoreEntregaSeleccionada((s) => s.updateModalRestante)
+  const closeUpdateModal = useStoreEntregaSeleccionada((s) => s.closeUpdateModal)
+  const entregaParaUpdate = useStoreEntregaSeleccionada((s) => s.updateModalEntrega)
 
   const setEntregaSeleccionada = useStoreEntregaSeleccionada(
     (state) => state.setEntrega
@@ -161,6 +177,15 @@ export default function TableMisEntregas() {
         open={postDespachoOpen}
         onClose={closePostDespacho}
         entrega={postDespachoEntrega}
+      />
+
+      {/* Modal Configurar Entrega - fuera de AG Grid para no cerrarse al refrescar la tabla */}
+      <ModalEntregaUpdate
+        open={updateModalOpen}
+        setOpen={(o) => { if (!o) closeUpdateModal() }}
+        entrega={entregaParaUpdate}
+        onSuccess={refetch}
+        restante={updateModalRestante}
       />
     </>
   )
