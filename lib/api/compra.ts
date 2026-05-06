@@ -47,7 +47,7 @@ export interface Compra {
   id: string;
   tipo_documento: string;
   serie: string | null;
-  numero: number | null;
+  numero: string | null;
   descripcion: string | null;
   forma_de_pago: string;
   tipo_moneda: string;
@@ -231,7 +231,7 @@ export interface CompraReporteItem {
   fecha: string;
   tipo_documento: string;
   serie: string | null;
-  numero: number | null;
+  numero: string | null;
   proveedor_ruc: string;
   proveedor_nombre: string;
   total: number;
