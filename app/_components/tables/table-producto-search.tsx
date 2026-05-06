@@ -87,7 +87,14 @@ export default function TableProductoSearch({
     }
   };
 
-  const { data: response, refetch, loading } = useProductosSearch({
+  const {
+    data: response,
+    refetch,
+    loading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useProductosSearch({
     filtros: {
       almacen_id: ignoreAlmacen ? undefined : almacen_id,
       // Si es búsqueda por código de barras o acción técnica, usar el campo específico
@@ -108,6 +115,22 @@ export default function TableProductoSearch({
     // Siempre habilitado
     enabled: shouldFetch,
   });
+
+  // Handler para detectar scroll al final de la tabla y cargar más datos
+  const onBodyScroll = (event: any) => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const api = event.api;
+    // Obtener el índice de la última fila visible
+    const lastVisibleIndex = api.getLastDisplayedRowIndex();
+    // Obtener el total de filas mostradas
+    const totalRows = api.getDisplayedRowCount();
+
+    // Si estamos cerca del final (ej. quedan 10 filas o menos para llegar al tope actual)
+    if (lastVisibleIndex >= totalRows - 10) {
+      fetchNextPage();
+    }
+  };
 
   type ResponseItem = Producto;
 
@@ -270,6 +293,7 @@ export default function TableProductoSearch({
         setProductoSeleccionadoSearchStore(data as any);
         onRowDoubleClicked?.({ data: data as any });
       }}
+      onBodyScroll={onBodyScroll}
       rowData={productosFiltrados}
       selectionColor={colorSeleccion}
       isVisible={isVisible}
@@ -289,6 +313,12 @@ export default function TableProductoSearch({
           ],
         },
       ]}
-    />
+    >
+      {isFetchingNextPage && (
+        <div className="text-center py-2 text-xs font-medium text-emerald-600 animate-pulse bg-emerald-50/50 rounded-b-xl border-t border-emerald-100">
+          Cargando más productos...
+        </div>
+      )}
+    </TableWithTitle>
   );
 }

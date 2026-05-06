@@ -231,7 +231,7 @@ export default function ModalProductoSearch({
               showUltimasCompras ? "grid-rows-7" : "grid-rows-5"
             } gap-y-4 size-full`}
           >
-            <div className="row-start-1 row-end-4">
+            <div className="row-start-1 row-end-4 min-h-0 flex flex-col">
               <TableProductoSearch
                 ref={tableRef}
                 value={value}
@@ -248,15 +248,15 @@ export default function ModalProductoSearch({
               />
             </div>
             {showUltimasCompras && (
-              <div className="row-start-4 row-end-6">
+              <div className="row-start-4 row-end-6 min-h-0 flex flex-col">
                 <TableUltimasComprasIngresadasSearch />
               </div>
             )}
             <div
               className={
                 showUltimasCompras
-                  ? "row-start-6 row-end-8"
-                  : "row-start-4 row-end-6"
+                  ? "row-start-6 row-end-8 min-h-0 flex flex-col"
+                  : "row-start-4 row-end-6 min-h-0 flex flex-col"
               }
             >
               <TableDetalleDePreciosSearch
