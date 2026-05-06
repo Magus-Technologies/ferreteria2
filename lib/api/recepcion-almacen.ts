@@ -123,7 +123,7 @@ export interface AlmacenResponse {
 export interface CompraResponse {
   id: string
   serie: string
-  numero: number | null
+  numero: string | null
   fecha: string
   guia: string | null
   almacen_id: number

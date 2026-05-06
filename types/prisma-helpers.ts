@@ -33,7 +33,7 @@ export interface CompraWhereInput extends BaseWhereInput {
   id?: StringFilter
   tipo_documento?: StringFilter
   serie?: StringNullableFilter
-  numero?: NumberNullableFilter
+  numero?: StringNullableFilter
   descripcion?: StringNullableFilter
   forma_de_pago?: StringFilter
   tipo_moneda?: StringFilter

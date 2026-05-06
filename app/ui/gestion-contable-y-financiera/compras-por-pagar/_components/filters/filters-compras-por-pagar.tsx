@@ -180,7 +180,7 @@ export default function FiltersComprasPorPagar() {
           ...(busqueda && {
             OR: [
               { serie: { contains: busqueda } },
-              ...(isNaN(Number(busqueda)) ? [] : [{ numero: Number(busqueda) }]),
+              ...(isNaN(Number(busqueda)) ? [] : [{ numero: { contains: busqueda } }]),
               { proveedor: { razon_social: { contains: busqueda } } },
               { proveedor: { ruc: { contains: busqueda } } },
             ]

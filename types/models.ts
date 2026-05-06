@@ -116,7 +116,7 @@ export interface Compra {
   id: string
   tipo_documento: TipoDocumento
   serie: string | null
-  numero: number | null
+  numero: string | null
   descripcion: string | null
   forma_de_pago: FormaDePago
   tipo_moneda: TipoMoneda
