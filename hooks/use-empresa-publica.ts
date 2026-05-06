@@ -35,7 +35,7 @@ export function useEmpresaPublica() {
     queryKey: ['empresa-publica'],
     queryFn: async () => {
       const API_URL = process.env.NEXT_PUBLIC_API_URL
-      const response = await fetch(`${API_URL}/api/empresa/datos-publicos`)
+      const response = await fetch(`${API_URL}/empresa/datos-publicos`)
 
       if (!response.ok) {
         throw new Error('Error al cargar datos de empresa')

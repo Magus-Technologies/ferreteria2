@@ -55,7 +55,9 @@ export default function useInitGuia({
       // Preparar productos desde la venta
       const productos = venta.productos_por_almacen?.flatMap((almacen: any) =>
         almacen.unidades_derivadas?.map((unidad: any) => {
-          const cantidad = Number(unidad.cantidad) || 0
+          const cantidadTotal = Number(unidad.cantidad) || 0
+          const cantidadGuiada = Number(unidad.cantidad_guiada) || 0
+          const cantidad = Math.max(0, cantidadTotal - cantidadGuiada)
           // Buscar la unidad derivada actual del producto (configuración vigente)
           // para obtener el peso. La unidad de la venta es "inmutable" (snapshot
           // del nombre al momento de vender), pero el peso vive en la config
