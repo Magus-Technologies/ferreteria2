@@ -286,7 +286,9 @@ export default function useCreateVenta({
       }),
       tipo_moneda: tipo_moneda as TipoMoneda,
       tipo_de_cambio: tipoMonedaValue === 's' ? 1 : (tipo_de_cambio || 1),
-      fecha: fechaSubmit(restValues.fecha),
+      fecha: isEditing
+        ? dayjs(restValues.fecha).format('YYYY-MM-DD HH:mm:ss')
+        : fechaSubmit(restValues.fecha),
       estado_de_venta: estadoVenta as EstadoDeVenta,
       // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
       cliente_id: clienteIdFinal,
