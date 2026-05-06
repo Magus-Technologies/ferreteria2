@@ -80,6 +80,7 @@ export default function useInitGuia({
             costo: Number(unidad.precio) || 0,
             precio_venta: Number(unidad.precio) || 0,
             peso_total,
+            unidad_derivada_venta_id: unidad.id, // ID de unidadderivadainmutableventa para rastrear cantidad_guiada
           }
         })
       ) || []
