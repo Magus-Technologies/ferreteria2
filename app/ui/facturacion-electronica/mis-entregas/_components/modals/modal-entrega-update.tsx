@@ -110,7 +110,7 @@ export default function ModalEntregaUpdate({
         ? TipoEntrega.DESPACHO
         : TipoEntrega.PARCIAL
 
-    if (nuevoTipo === entrega.tipo_entrega) {
+    if (tipo === tipoLocal) {
       message.info('La entrega ya es de ese tipo')
       return
     }
