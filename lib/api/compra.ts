@@ -108,7 +108,7 @@ export interface CreateCompraRequest {
   id?: string; // Optional - backend generates if not provided
   tipo_documento: string; // TipoDocumento enum as string
   serie?: string | null;
-  numero?: number | null;
+  numero?: string | null;
   descripcion?: string | null;
   forma_de_pago: string; // FormaDePago enum as string
   tipo_moneda: string; // TipoMoneda enum as string

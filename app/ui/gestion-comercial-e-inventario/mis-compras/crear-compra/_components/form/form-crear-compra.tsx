@@ -182,7 +182,7 @@ export default function FormCrearCompra({
         </ConfigurableElement>
         <ConfigurableElement componentId='gestion-comercial.crear-compra.campo-numero' label='Campo Número'>
           <LabelBase label='N°:' classNames={{ labelParent: 'mb-6' }}>
-            <InputNumberBase
+            <InputBase
               prefix={<IoIosDocument className='text-rose-700 mr-1' size={20} />}
               className='!w-[120px] !min-w-[120px] !max-w-[120px]'
               placeholder='Número'
@@ -192,7 +192,7 @@ export default function FormCrearCompra({
                   {
                     validator: async (_, value) => {
                       const serie = form.getFieldValue('serie')
-                      if ((value === 0 || value === '0') && serie === '0') {
+                      if ((value === '0' || value === 0) && serie === '0') {
                         return Promise.reject(new Error('Serie y número no pueden ser ambos 0'))
                       }
                       return Promise.resolve()
@@ -200,10 +200,7 @@ export default function FormCrearCompra({
                   },
                 ],
               }}
-              precision={0}
-              min={0}
               onChange={() => {
-                // Revalidar el campo serie cuando cambia el número
                 form.validateFields(['serie']).catch(() => {})
               }}
             />

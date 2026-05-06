@@ -63,7 +63,7 @@ export interface FormCreateCompra {
   proveedor_ruc?: string
   tipo_documento: TipoDocumento
   serie?: string
-  numero?: number
+  numero?: string
   descripcion?: string
   guia?: string
   forma_de_pago: FormaDePago
