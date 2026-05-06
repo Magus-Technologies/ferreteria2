@@ -374,6 +374,7 @@ function ModalDetallesEntregaInner({
           ? Math.max(0, datosBd.cantidadBd - datosBd.pendienteBd)
           : 0
         const pendiente = Math.max(0, total - entregadoYa)
+        const esProductoNuevoEnEdicion = !!ventaIdParaConsulta && !datosBd
         return {
           id: index + 1,
           producto: p.producto_name,
@@ -381,10 +382,14 @@ function ModalDetallesEntregaInner({
           total,
           entregado: entregadoYa,
           pendiente,
-          entregar: 0,
-          // Por defecto, todo lo pendiente se programa (comportamiento histórico
-          // en venta nueva; en editar respeta lo ya entregado).
-          entregar_programado: pendiente,
+          // En editar-venta, si el producto se agregó recién y no existía en el
+          // snapshot de la venta, se asume que todo su pendiente va "a entregar
+          // ahora". El usuario puede bajarlo manualmente si quiere programar
+          // una parte para después.
+          entregar: esProductoNuevoEnEdicion ? pendiente : 0,
+          // En venta nueva y en productos ya existentes mantenemos el
+          // comportamiento histórico: el pendiente arranca como programado.
+          entregar_programado: esProductoNuevoEnEdicion ? 0 : pendiente,
           unidad_derivada_venta_id: p.unidad_derivada_id,
         }
       })

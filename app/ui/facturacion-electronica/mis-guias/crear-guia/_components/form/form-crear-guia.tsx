@@ -587,22 +587,6 @@ export default function FormCrearGuia({
 
       {/* Fila 4: Punto de Partida y Punto de Llegada */}
       <div className='flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 lg:gap-4'>
-        <LabelBase label='Referencia (Comprobante):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
-          <InputBase
-            propsForm={{ name: 'referencia' }}
-            placeholder='Ej: Factura F001-00000123'
-            className='w-full sm:!min-w-[260px] sm:!w-[260px]'
-            uppercase={false}
-          />
-        </LabelBase>
-        <LabelBase label='Referencia (Comprobante):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
-          <InputBase
-            propsForm={{ name: 'referencia' }}
-            placeholder='Ej: Factura F001-00000123'
-            className='w-full sm:!min-w-[260px] sm:!w-[260px]'
-            uppercase={false}
-          />
-        </LabelBase>
         <LabelBase
           label={
             <div className='flex items-center justify-between gap-2 w-full'>

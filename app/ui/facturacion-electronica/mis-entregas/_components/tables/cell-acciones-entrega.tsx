@@ -66,6 +66,14 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   if (!entrega) return null
 
+  // Verificar si todos los productos ya fueron completamente guiados
+  const todoGuiado = entrega.productos_entregados?.length > 0 &&
+    entrega.productos_entregados.every((p: any) => {
+      const ud = p.unidad_derivada_venta
+      if (!ud) return false
+      return Number(ud.cantidad_guiada ?? 0) >= Number(ud.cantidad ?? 0)
+    })
+
   const handleCrearGuia = () => {
     if (!entrega.venta_id) {
       message.error('No se pudo identificar la venta')
@@ -193,10 +201,12 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       key: 'guia',
       label: (
         <span className="flex items-center gap-2">
-          <FaTruck className="text-cyan-700" /> Crear Guía de Remisión
+          <FaTruck className={todoGuiado ? 'text-gray-400' : 'text-cyan-700'} />
+          {todoGuiado ? 'Guía completa (todo guiado)' : 'Crear Guía de Remisión'}
         </span>
       ),
-      onClick: handleCrearGuia,
+      onClick: todoGuiado ? undefined : handleCrearGuia,
+      disabled: todoGuiado,
     },
     ...(esPedidoExternoDisponible
       ? [
