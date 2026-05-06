@@ -74,7 +74,7 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
         factor: p.unidad_derivada_factor || 1,
         cantidad: p.cantidad,
         peso_total: p.peso_total,
-        unidad_derivada_venta_id: p.unidad_derivada_venta_id || null,
+        unidad_derivada_venta_id: p.unidad_derivada_venta_id ?? undefined,
       })) || [],
     }
 
