@@ -49,6 +49,7 @@ export default function useCreateCliente({
         apellidos: values.apellidos || "",
         razon_social: values.razon_social || null,
         telefono: values.telefono || null,
+        profesion: values.profesion || null,
         email: values.email || null,
         fecha_nacimiento: values.fecha_nacimiento
           ? dayjs(values.fecha_nacimiento).format('YYYY-MM-DD')

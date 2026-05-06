@@ -6,6 +6,7 @@ import { MdEmail, MdFactory } from "react-icons/md";
 import { FormInstance, DatePicker } from "antd/lib";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { FaMobileButton } from "react-icons/fa6";
+import { FaUserTie } from "react-icons/fa";
 import type { Cliente } from "~/lib/api/cliente";
 import SelectTipoCliente from "~/app/_components/form/selects/select-tipo-cliente";
 import DireccionesTabsForm from "~/app/_components/form/direcciones-tabs-form";
@@ -131,6 +132,7 @@ export default function FormCreateCliente({
                   "nombres",
                   "apellidos",
                   "telefono",
+                  "profesion",
                   "email",
                   "fecha_nacimiento",
                 ]);
@@ -210,6 +212,16 @@ export default function FormCreateCliente({
               }}
               placeholder="Telefono"
               maxLength={9}
+            />
+          </LabelBase>
+
+          <LabelBase label="Profesion:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+            <InputBase
+              prefix={<FaUserTie className="text-cyan-600 mx-1" />}
+              propsForm={{
+                name: "profesion",
+              }}
+              placeholder="Profesion"
             />
           </LabelBase>
 

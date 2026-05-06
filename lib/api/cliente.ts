@@ -115,6 +115,7 @@ export interface Cliente {
   apellidos: string;
   razon_social: string | null;
   telefono: string | null;
+  profesion: string | null;
   celular: string | null;
   horario_atencion: string | null;
   fecha_nacimiento: string | null;
@@ -137,6 +138,7 @@ export interface CreateClienteRequest {
   apellidos: string;
   razon_social?: string | null;
   telefono?: string | null;
+  profesion?: string | null;
   celular?: string | null;
   horario_atencion?: string | null;
   fecha_nacimiento?: string | null;
@@ -149,6 +151,7 @@ export interface UpdateClienteRequest extends Partial<CreateClienteRequest> {}
 
 export interface ClienteFilters {
   search?: string;
+  profesion?: string;
   tipo_cliente?: TipoCliente;
   estado?: boolean;
   per_page?: number;

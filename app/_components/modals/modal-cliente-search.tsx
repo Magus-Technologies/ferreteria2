@@ -31,15 +31,18 @@ export default function ModalClienteSearch({
   onRowDoubleClicked,
 }: ModalClienteSearchProps) {
   const [text, setText] = useState('')
+  const [profesion, setProfesion] = useState('')
   
   // Sincronizar text con textDefault cuando el modal se abre o textDefault cambia
   useEffect(() => {
     if (open) {
       setText(textDefault)
+      setProfesion('')
     }
   }, [open, textDefault])
 
   const [value] = useDebounce(text, 500)
+  const [profesionValue] = useDebounce(profesion, 500)
   const inputRef = useRef<InputRef>(null)
 
   const setClienteSeleccionadoStore = useStoreClienteSeleccionado(
@@ -86,6 +89,14 @@ export default function ModalClienteSearch({
           autoComplete='off'
           prefix={<FaSearch className='text-slate-400 mr-1' />}
         />
+        <Input
+          variant='filled'
+          placeholder='Filtrar por profesion'
+          value={profesion}
+          onChange={e => setProfesion(e.target.value)}
+          className='max-w-[260px]'
+          autoComplete='off'
+        />
         <ButtonCreateCliente
           className='mb-0!'
           onSuccess={res => setText(res.numero_documento)}
@@ -96,6 +107,7 @@ export default function ModalClienteSearch({
       <div className='h-[420px] min-w-[1200px] w-full mt-4'>
         <TableClientesBusqueda
           value={value}
+          profesion={profesionValue}
           onRowDoubleClicked={onRowDoubleClicked}
         />
       </div>

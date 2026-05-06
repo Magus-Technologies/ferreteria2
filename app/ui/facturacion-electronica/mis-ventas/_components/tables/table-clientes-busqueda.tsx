@@ -19,6 +19,7 @@ interface TableClientesBusquedaProps
     'id' | 'title' | 'onRowDoubleClicked'
   > {
   value: string
+  profesion?: string
   onRowDoubleClicked?: ({
     data,
   }: {
@@ -28,10 +29,11 @@ interface TableClientesBusquedaProps
 
 export default function TableClientesBusqueda({
   value,
+  profesion,
   onRowDoubleClicked,
   ...props
 }: TableClientesBusquedaProps) {
-  const { response, loading } = useSearchClientes({ value })
+  const { response, loading } = useSearchClientes({ value, profesion })
 
   const [open, setOpen] = useState(false)
   const [dataEdit, setDataEdit] = useState<Cliente>()
@@ -99,6 +101,7 @@ export default function TableClientesBusqueda({
               '#',
               'Documento',
               'Razon Social / Nombres',
+              'Profesion',
               'Direccion',
               'Telefono',
               'Deuda',

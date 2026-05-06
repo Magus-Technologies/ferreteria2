@@ -2,12 +2,19 @@ import { useQuery } from '@tanstack/react-query'
 import { clienteApi } from '~/lib/api/cliente'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
-export default function useSearchClientes({ value }: { value: string }) {
+export default function useSearchClientes({
+  value,
+  profesion,
+}: {
+  value: string
+  profesion?: string
+}) {
   const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.CLIENTES_SEARCH, value],
+    queryKey: [QueryKeys.CLIENTES_SEARCH, value, profesion],
     queryFn: async () => {
       const res = await clienteApi.getAll({
         search: value || undefined,
+        profesion: profesion || undefined,
         per_page: 20,
       })
 
@@ -19,12 +26,12 @@ export default function useSearchClientes({ value }: { value: string }) {
       return res.data?.data || []
     },
     // Solo ejecutar la query si hay al menos 2 caracteres
-    enabled: value.length >= 2,
+    enabled: value.length >= 2 || (profesion?.length || 0) >= 2,
   })
 
   // Si no hay suficientes caracteres, devolver array vacío
   return { 
-    response: value.length >= 2 ? (data || []) : [], 
+    response: value.length >= 2 || (profesion?.length || 0) >= 2 ? (data || []) : [], 
     loading: isLoading 
   }
 }
