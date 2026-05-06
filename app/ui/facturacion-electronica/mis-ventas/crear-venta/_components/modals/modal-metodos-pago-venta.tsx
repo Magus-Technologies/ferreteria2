@@ -22,6 +22,10 @@ interface MetodoPago {
   recibe_efectivo?: number
 }
 
+function roundMoney(value: number) {
+  return Number(value.toFixed(2))
+}
+
 export default function ModalMetodosPagoVenta({
   open,
   onCancel,
@@ -66,12 +70,12 @@ export default function ModalMetodosPagoVenta({
 
   // Calcular total pagado
   const totalPagado = useMemo(() => {
-    return metodosPago.reduce((sum, metodo) => sum + metodo.monto, 0)
+    return roundMoney(metodosPago.reduce((sum, metodo) => sum + metodo.monto, 0))
   }, [metodosPago])
 
   // Calcular saldo pendiente
   const saldoPendiente = useMemo(() => {
-    return Math.max(0, totalCobrado - totalPagado)
+    return roundMoney(Math.max(0, totalCobrado - totalPagado))
   }, [totalCobrado, totalPagado])
 
   // Calcular vuelto total de todos los métodos agregados
@@ -97,10 +101,10 @@ export default function ModalMetodosPagoVenta({
       setDespliegueName('')
       setMetodosPago([])
       setSobrecargo({ tipo: 'ninguno', valor: 0, monto: 0 })
-      modalForm.setFieldValue('monto', totalCobrado)
+      modalForm.setFieldValue('monto', roundMoney(totalCobrado))
       // Pre-llenar "Monto Recibe" con el total a cobrar (= saldo pendiente al
       // momento de abrir). El usuario puede editarlo.
-      modalForm.setFieldValue('recibe_efectivo', parseFloat(totalCobrado.toFixed(2)))
+      modalForm.setFieldValue('recibe_efectivo', roundMoney(totalCobrado))
 
       // Si ya tenemos los datos, setear Efectivo inmediatamente
       if (desplieguesPago && desplieguesPago.length > 0) {
@@ -114,7 +118,7 @@ export default function ModalMetodosPagoVenta({
         }
       }
     }
-  }, [open, modalForm, totalCobrado, desplieguesPago])
+  }, [open, modalForm, totalCobrado])
 
   // Si los datos llegan después de abrir el modal, setear Efectivo
   useEffect(() => {
@@ -139,13 +143,13 @@ export default function ModalMetodosPagoVenta({
   // Sólo pre-llenamos si está vacío para no pisar lo que el usuario tipeó.
   useEffect(() => {
     if (!open || saldoPendiente <= 0) return
-    modalForm.setFieldValue('monto', saldoPendiente)
+    modalForm.setFieldValue('monto', roundMoney(saldoPendiente))
     const current = modalForm.getFieldValue('recibe_efectivo')
     if (current === undefined || current === null || Number(current) === 0) {
       const valor = isEfectivo
         ? saldoPendiente
         : saldoPendiente + sobrecargo.monto
-      modalForm.setFieldValue('recibe_efectivo', parseFloat(valor.toFixed(2)))
+      modalForm.setFieldValue('recibe_efectivo', roundMoney(valor))
     }
   }, [saldoPendiente, open, modalForm, isEfectivo, sobrecargo.monto])
 
@@ -157,10 +161,10 @@ export default function ModalMetodosPagoVenta({
       // El monto siempre viene de recibe_efectivo
       // Para efectivo: puede ser mayor que el saldo (hay vuelto)
       // Para otros métodos: debe ser exactamente lo que pagas (máximo el saldo)
-      const montoRecibido = values.recibe_efectivo || 0
+      const montoRecibido = roundMoney(Number(values.recibe_efectivo) || 0)
       
       // El monto registrado es el menor entre lo que recibe y el saldo pendiente
-      const montoFinal = Math.min(montoRecibido, saldoPendiente)
+      const montoFinal = roundMoney(Math.min(montoRecibido, saldoPendiente))
 
       // Validar que el monto sea mayor a 0
       if (montoFinal <= 0) {
@@ -177,7 +181,7 @@ export default function ModalMetodosPagoVenta({
         recibe_efectivo: values.recibe_efectivo || undefined,
       }
 
-      setMetodosPago([...metodosPago, nuevoMetodo])
+      setMetodosPago((prev) => [...prev, nuevoMetodo])
       modalForm.resetFields()
       setDespliegueName('')
       setSobrecargo({ tipo: 'ninguno', valor: 0, monto: 0 })
@@ -202,7 +206,7 @@ export default function ModalMetodosPagoVenta({
       return
     }
 
-    if (totalPagado < totalCobrado) {
+    if (roundMoney(totalPagado) < roundMoney(totalCobrado)) {
       message.error('El total pagado debe ser igual al total a cobrar')
       return
     }
@@ -360,10 +364,10 @@ export default function ModalMetodosPagoVenta({
                     // un pago parcial, el saldo pendiente se actualiza y este pre-
                     // llenado vuelve a aplicar.
                     if (!name.toUpperCase().includes('EFECTIVO')) {
-                      modalForm.setFieldValue('recibe_efectivo', parseFloat((saldoPendiente + nuevoSobrecargo.monto).toFixed(2)))
+                      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente + nuevoSobrecargo.monto))
                     } else {
                       modalForm.setFieldValue('referencia', undefined)
-                      modalForm.setFieldValue('recibe_efectivo', parseFloat(saldoPendiente.toFixed(2)))
+                      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
                     }
                   }}
                 />
@@ -401,7 +405,7 @@ export default function ModalMetodosPagoVenta({
                   prefix={<span className='text-rose-700 font-bold text-xs'>{monedaSymbol}</span>}
                   placeholder='0.00'
                   min={0}
-                  max={!isEfectivo ? parseFloat((saldoPendiente + sobrecargo.monto).toFixed(2)) : undefined}
+                  max={!isEfectivo ? roundMoney(saldoPendiente + sobrecargo.monto) : undefined}
                   precision={2}
                   propsForm={{
                     name: 'recibe_efectivo',

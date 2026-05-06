@@ -207,7 +207,7 @@ export default function useCreateVenta({
     // Si no hay cliente, el backend usará automáticamente "CLIENTE VARIOS" (DNI: 99999999)
     // Para Factura, SÍ requerir selección manual de cliente
 
-    if (!cliente_id && restValues.tipo_documento === '01') {
+    if (!esEnEspera && !cliente_id && restValues.tipo_documento === '01') {
       return notification.error({
         message: 'Por favor, selecciona un cliente',
         description: 'Las facturas requieren obligatoriamente un cliente registrado.',
@@ -215,7 +215,7 @@ export default function useCreateVenta({
     }
 
     // Validar cliente obligatorio para ventas a crédito
-    if (!cliente_id && restValues.forma_de_pago === FormaDePago.CREDITO) {
+    if (!esEnEspera && !cliente_id && restValues.forma_de_pago === FormaDePago.CREDITO) {
       return notification.error({
         message: 'Por favor, selecciona un cliente',
         description: 'Las ventas a crédito requieren obligatoriamente un cliente registrado.',
@@ -286,7 +286,9 @@ export default function useCreateVenta({
       }),
       tipo_moneda: tipo_moneda as TipoMoneda,
       tipo_de_cambio: tipoMonedaValue === 's' ? 1 : (tipo_de_cambio || 1),
-      fecha: fechaSubmit(restValues.fecha),
+      fecha: isEditing
+        ? dayjs(restValues.fecha).format('YYYY-MM-DD HH:mm:ss')
+        : fechaSubmit(restValues.fecha),
       estado_de_venta: estadoVenta as EstadoDeVenta,
       // Enviar cliente_id solo si existe, sino undefined (backend usará "CLIENTE VARIOS")
       cliente_id: clienteIdFinal,

@@ -186,6 +186,14 @@ export default function FormCrearGuia({
             className='w-full sm:!w-[120px] sm:!min-w-[120px] sm:!max-w-[120px]'
           />
         </LabelBase>
+        <LabelBase label='Referencia (Comprobante):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
+          <InputBase
+            propsForm={{ name: 'referencia' }}
+            placeholder='Ej: Factura F001-00000123'
+            className='w-full sm:!min-w-[260px] sm:!w-[260px]'
+            uppercase={false}
+          />
+        </LabelBase>
         <ConfigurableElement
           componentId='crear-guia.motivo-traslado'
           label='Campo Motivo de Traslado'

@@ -23,6 +23,7 @@ export type FormCreateGuia = {
     costo: number
     precio_venta: number
     peso_total?: number
+    unidad_derivada_venta_id?: number
   }>
   venta_id?: string
   fecha_emision: Dayjs

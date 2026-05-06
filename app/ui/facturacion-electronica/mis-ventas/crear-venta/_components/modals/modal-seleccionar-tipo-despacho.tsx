@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
 import TitleForm from '~/components/form/title-form'
 
@@ -19,6 +19,10 @@ export default function ModalSeleccionarTipoDespacho({
   defaultTipo,
 }: ModalSeleccionarTipoDespachoProps) {
   const [selectedTipo, setSelectedTipo] = useState<'EnTienda' | 'Domicilio' | 'Parcial' | null>(defaultTipo || null)
+
+  useEffect(() => {
+    if (open) setSelectedTipo(defaultTipo || null)
+  }, [open, defaultTipo])
 
   const handleConfirmar = () => {
     if (selectedTipo) {

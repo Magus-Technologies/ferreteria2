@@ -22,7 +22,7 @@ export const CompraCreateInputSchema = z.object({
   id: z.string().optional(),
   tipo_documento: z.string().optional(),
   serie: z.string().optional().nullable(),
-  numero: z.number().int().optional().nullable(),
+  numero: z.string().optional().nullable(),
   descripcion: z.string().optional().nullable(),
   forma_de_pago: z.string().optional(),
   tipo_moneda: z.string().optional(),

@@ -33,6 +33,10 @@ export default function TableDetalleEntrega() {
 
   const venta = entregaSeleccionada?.venta
   const cliente = venta?.cliente
+  const entregaFueEntregadaAntes = Boolean(
+    (entregaSeleccionada as any)?.user_entregado_id ||
+    (entregaSeleccionada as any)?.userEntregado?.id,
+  )
 
   const clienteNombre = cliente?.razon_social ||
     `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() ||
@@ -42,7 +46,9 @@ export default function TableDetalleEntrega() {
   // con `accion='edicion'`. Si la venta fue editada, mostramos los productos
   // que estaban antes del cambio (intercambiados o eliminados) tachados
   // como referencia para el chofer/operador.
-  const ultimaEdicion = (venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
+  const ultimaEdicion = entregaFueEntregadaAntes
+    ? (venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
+    : undefined
   const fechaUltimaEdicion = ultimaEdicion?.fecha
   const productosAnteriores: ProductoAnterior[] =
     (ultimaEdicion?.datos_anteriores?.productos || [])

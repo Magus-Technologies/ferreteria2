@@ -47,7 +47,7 @@ export default function useInitCompra({
         proveedor_ruc: compra.proveedor?.ruc || '',
         tipo_documento: compra.tipo_documento as any,
         serie: compra.serie ?? '',
-        numero: compra.numero ?? undefined,
+        numero: compra.numero != null ? String(compra.numero) : undefined,
         guia: compra.guia ?? '',
         forma_de_pago: compra.forma_de_pago as any,
         numero_dias: compra.numero_dias ?? undefined,

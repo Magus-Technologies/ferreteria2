@@ -6,6 +6,7 @@ import TableClientesBusqueda from '~/app/ui/facturacion-electronica/mis-ventas/_
 import TableDetalleDeudaCliente from '~/app/ui/facturacion-electronica/mis-ventas/_components/tables/table-detalle-deuda-cliente'
 import { useEffect, useRef, useState } from 'react'
 import ButtonCreateCliente from '../form/buttons/button-create-cliente'
+import SelectProfesion from '../form/selects/select-profesion'
 import { useDebounce } from 'use-debounce'
 import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
 import { Cliente } from '~/lib/api/cliente'
@@ -31,11 +32,13 @@ export default function ModalClienteSearch({
   onRowDoubleClicked,
 }: ModalClienteSearchProps) {
   const [text, setText] = useState('')
+  const [profesionId, setProfesionId] = useState<number | undefined>(undefined)
   
   // Sincronizar text con textDefault cuando el modal se abre o textDefault cambia
   useEffect(() => {
     if (open) {
       setText(textDefault)
+      setProfesionId(undefined)
     }
   }, [open, textDefault])
 
@@ -92,10 +95,18 @@ export default function ModalClienteSearch({
           textDefault={text}
           setTextDefault={setText}
         />
+          <SelectProfesion
+          value={profesionId}
+          onChange={(value) => setProfesionId(value as number | undefined)}
+          className='min-w-[260px]'
+          placeholder='Filtrar por profesión'
+          allowClear
+        />
       </div>
       <div className='h-[420px] min-w-[1200px] w-full mt-4'>
         <TableClientesBusqueda
           value={value}
+          profesionId={profesionId}
           onRowDoubleClicked={onRowDoubleClicked}
         />
       </div>

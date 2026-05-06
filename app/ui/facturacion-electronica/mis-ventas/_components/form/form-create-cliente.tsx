@@ -6,8 +6,11 @@ import { MdEmail, MdFactory } from "react-icons/md";
 import { FormInstance, DatePicker } from "antd/lib";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { FaMobileButton } from "react-icons/fa6";
+import { FaUserTie } from "react-icons/fa";
 import type { Cliente } from "~/lib/api/cliente";
 import SelectTipoCliente from "~/app/_components/form/selects/select-tipo-cliente";
+import SelectProfesion from "~/app/_components/form/selects/select-profesion";
+import ButtonCreateProfesion from "~/app/_components/form/buttons/button-create-profesion";
 import DireccionesTabsForm from "~/app/_components/form/direcciones-tabs-form";
 import { Form } from "antd";
 import { useEffect } from "react";
@@ -131,6 +134,7 @@ export default function FormCreateCliente({
                   "nombres",
                   "apellidos",
                   "telefono",
+                  "profesion_id",
                   "email",
                   "fecha_nacimiento",
                 ]);
@@ -211,6 +215,25 @@ export default function FormCreateCliente({
               placeholder="Telefono"
               maxLength={9}
             />
+          </LabelBase>
+
+          <LabelBase label="Profesion:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+            <div className="flex items-center gap-2">
+              <SelectProfesion
+                form={form}
+                propsForm={{
+                  name: "profesion_id",
+                  className: "w-full",
+                }}
+                placeholder="Seleccionar profesión"
+                className="w-full"
+                suffixIcon={<FaUserTie className="text-cyan-600" />}
+              />
+              <ButtonCreateProfesion
+                className="mb-0"
+                onSuccess={(profesion) => form.setFieldValue('profesion_id', profesion.id)}
+              />
+            </div>
           </LabelBase>
 
           <LabelBase label="Email:" orientation="column" classNames={{ labelParent: "!mb-0" }}>

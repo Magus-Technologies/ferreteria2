@@ -237,7 +237,7 @@ export default function FormCrearVenta({
           <LabelBase
             label="DNI/RUC:"
             classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className={`w-full sm:w-auto ${clienteTieneDeuda ? '[&_.ant-select-selector]:!border-red-500 [&_.ant-select-selector]:!border-2 [&_.ant-select-selector]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
+            className="w-full sm:w-auto"
           >
             <SelectClientes
               form={form}
@@ -248,7 +248,7 @@ export default function FormCrearVenta({
                 className:
                   "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
               }}
-              className="w-full"
+              className={`w-full ${clienteTieneDeuda ? '[&_.ant-select-selection-item]:!text-red-600 [&_.ant-select-selection-search-input]:!text-red-600 [&_.ant-select-selection-placeholder]:!text-red-600' : ''}`}
               classNameIcon="text-rose-700 mx-1"
               placeholder="DNI/RUC"
               clienteOptionsDefault={venta?.cliente ? [{
@@ -325,7 +325,7 @@ export default function FormCrearVenta({
               </div>
             }
             classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
-            className={`w-full sm:flex-1 ${clienteTieneDeuda ? '[&_input]:!border-red-500 [&_input]:!border-2 [&_input]:!shadow-[0_0_4px_rgba(239,68,68,0.3)]' : ''}`}
+            className="w-full sm:flex-1"
           >
             <InputBase
               propsForm={{
@@ -334,7 +334,7 @@ export default function FormCrearVenta({
                 className: "w-full",
               }}
               placeholder="Nombre del cliente"
-              className="w-full"
+              className={`w-full ${clienteTieneDeuda ? '!text-red-600' : ''}`}
               readOnly
               uppercase={false}
             />

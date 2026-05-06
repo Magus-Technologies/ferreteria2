@@ -8,6 +8,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
 import { TipoDireccion } from '~/lib/api/cliente'
+import { buildSlotsDireccionEmpresa } from '~/lib/utils/empresa-direcciones-form'
 
 export default function useInitGuia({
   guia,
@@ -54,7 +55,9 @@ export default function useInitGuia({
       // Preparar productos desde la venta
       const productos = venta.productos_por_almacen?.flatMap((almacen: any) =>
         almacen.unidades_derivadas?.map((unidad: any) => {
-          const cantidad = Number(unidad.cantidad) || 0
+          const cantidadTotal = Number(unidad.cantidad) || 0
+          const cantidadGuiada = Number(unidad.cantidad_guiada) || 0
+          const cantidad = Math.max(0, cantidadTotal - cantidadGuiada)
           // Buscar la unidad derivada actual del producto (configuración vigente)
           // para obtener el peso. La unidad de la venta es "inmutable" (snapshot
           // del nombre al momento de vender), pero el peso vive en la config
@@ -77,6 +80,7 @@ export default function useInitGuia({
             costo: Number(unidad.precio) || 0,
             precio_venta: Number(unidad.precio) || 0,
             peso_total,
+            unidad_derivada_venta_id: unidad.id, // ID de unidadderivadainmutableventa para rastrear cantidad_guiada
           }
         })
       ) || []
@@ -87,6 +91,9 @@ export default function useInitGuia({
       // `direcciones[]` con tipo D1/D2/D3/D4. La D1 (principal) se toma
       // como punto de llegada por defecto.
       const direccionD1 = cliente?.direcciones?.find((d: any) => d.tipo === TipoDireccion.D1)?.direccion || ''
+
+      const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
+      const primerSlot = empresaSlots.find((s) => s.direccion)
 
       form.setFieldsValue({
         fecha_emision: dayjs(),
@@ -100,11 +107,19 @@ export default function useInitGuia({
         // Datos del cliente - Guardar el ID pero el SelectClientes mostrará el documento
         cliente_id: cliente?.id,
         cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),
-        punto_partida: empresa?.direccion || '',
+        punto_partida: primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
         punto_llegada: direccionD1,
         direccion_seleccionada: 'D1',
-        // Referencia a la venta
-        referencia: `Venta ${venta.serie}-${venta.numero}`,
+        // Referencia a la venta — mostrar número de comprobante electrónico si existe
+        referencia: (() => {
+          const comp = (venta as any).comprobante_electronico
+          if (comp?.tipo_comprobante && comp?.serie && comp?.correlativo) {
+            const tipo = comp.tipo_comprobante === 'FACTURA' ? 'Factura' : comp.tipo_comprobante === 'BOLETA' ? 'Boleta' : comp.tipo_comprobante
+            return `${tipo} ${comp.serie}-${comp.correlativo}`
+          }
+          return `Venta ${venta.serie}-${venta.numero}`
+        })(),
         // Pre-llenar placa si viene por URL (desde mis-entregas)
         ...(vehiculoPlacaParam ? { vehiculo_placa: vehiculoPlacaParam } : {}),
         // Pre-llenar user_chofer_id (despachador interno) si viene de mis-entregas.
@@ -129,6 +144,8 @@ export default function useInitGuia({
       }, 100)
     } else if (!venta && !guia) {
       // Valores por defecto para nueva guía sin venta
+      const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
+      const primerSlot = empresaSlots.find((s) => s.direccion)
       form.setFieldsValue({
         fecha_emision: dayjs(),
         fecha_traslado: dayjs(),
@@ -136,7 +153,8 @@ export default function useInitGuia({
         validar_modalidad: true,
         validar_costo: true,
         tipo_guia: 'ELECTRONICA_REMITENTE',
-        punto_partida: empresa?.direccion || '',
+        punto_partida: primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
         productos: [],
       })
     }

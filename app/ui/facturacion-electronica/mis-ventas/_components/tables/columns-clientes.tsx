@@ -37,6 +37,14 @@ export function useColumnsClientes({
       },
     },
     {
+      headerName: 'Profesion',
+      field: 'profesion_id',
+      width: 160,
+      minWidth: 140,
+      valueGetter: (params) => params.data?.profesion?.nombre || '-',
+      filter: true,
+    },
+    {
       headerName: 'Direccion',
       field: 'direcciones',
       width: 120,
