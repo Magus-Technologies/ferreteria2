@@ -109,6 +109,7 @@ export default function TableSalidasCuadres() {
         <TableWithTitle
             id="cuadres-salidas-table"
             title="Nota de Salidas"
+            selectionColor="#d1fae5"
             columnDefs={columns}
             rowData={salidas}
             loading={loading}

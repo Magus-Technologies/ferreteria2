@@ -111,7 +111,7 @@ export default function TableIngresosCuadres() {
         <TableWithTitle
             id="cuadres-ingresos-table"
             title="Nota de Ingresos"
-            selectionColor={greenColors[10]}
+            selectionColor="#d1fae5"
             columnDefs={columns}
             rowData={ingresos}
             loading={loading}

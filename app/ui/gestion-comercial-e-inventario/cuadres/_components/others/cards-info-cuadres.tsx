@@ -1,22 +1,31 @@
 "use client";
 
+import { FaArrowDown, FaArrowUp, FaDollarSign, FaWallet, FaCoins } from "react-icons/fa6";
+
 function CardVertical({
     title,
     value,
-    colorClass = "text-emerald-600",
+    icon,
+    bgColor = "bg-emerald-500",
+    textColor = "text-emerald-700",
     borderColor = "border-gray-200"
 }: {
     title: string;
     value: number;
-    colorClass?: string;
+    icon?: React.ReactNode;
+    bgColor?: string;
+    textColor?: string;
     borderColor?: string;
 }) {
     return (
         <div className={`flex flex-col items-center justify-center p-4 bg-white border ${borderColor} rounded-2xl shadow-sm flex-1 transition-all hover:shadow-md border-gray-100`}>
-            <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 text-center leading-none mb-2">
+            <div className={`mb-3 p-3 rounded-xl ${bgColor} text-white shadow-sm`}>
+                {icon}
+            </div>
+            <span className={`text-[10px] uppercase tracking-widest font-black ${textColor.replace('700', '400').replace('600', '400')} text-center leading-none mb-2 opacity-80`}>
                 {title}
             </span>
-            <span className={`text-base md:text-lg lg:text-xl font-black ${colorClass} text-center whitespace-nowrap`}>
+            <span className={`text-base md:text-lg lg:text-xl font-black ${textColor} text-center whitespace-nowrap`}>
                 S/. {value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
         </div>
@@ -33,28 +42,38 @@ export default function CardsInfoCuadres() {
             <CardVertical
                 title="Ingresos [Und]"
                 value={totals.ingresosUnd}
-                colorClass="text-emerald-500"
+                icon={<FaArrowDown size={18} />}
+                bgColor="bg-emerald-500"
+                textColor="text-emerald-600"
             />
             <CardVertical
                 title="Ingresos S/."
                 value={totals.ingresosSol}
-                colorClass="text-emerald-600"
+                icon={<FaCoins size={18} />}
+                bgColor="bg-teal-500"
+                textColor="text-teal-600"
             />
             <CardVertical
                 title="Salidas [Und]"
                 value={totals.salidasUnd}
-                colorClass="text-rose-500"
+                icon={<FaArrowUp size={18} />}
+                bgColor="bg-rose-500"
+                textColor="text-rose-600"
             />
             <CardVertical
                 title="Salidas S/."
                 value={totals.salidasSol}
-                colorClass="text-rose-600"
+                icon={<FaDollarSign size={18} />}
+                bgColor="bg-orange-500"
+                textColor="text-orange-600"
             />
             <CardVertical
                 title="Total S/."
                 value={totals.totalSol}
-                colorClass="text-emerald-700"
-                borderColor="border-emerald-200 bg-emerald-50/10"
+                icon={<FaWallet size={18} />}
+                bgColor="bg-indigo-500"
+                textColor="text-indigo-600"
+                borderColor="border-indigo-100"
             />
         </div>
     );

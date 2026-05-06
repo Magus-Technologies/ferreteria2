@@ -44,7 +44,7 @@ export default function CuadresPage() {
                                     </Suspense>
                                 </div>
 
-                                <div className="h-[250px]">
+                                <div className="h-[350px]">
                                     <Suspense fallback={<ComponentLoading />}>
                                         <TableSalidasCuadres />
                                     </Suspense>

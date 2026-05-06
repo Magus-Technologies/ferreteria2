@@ -84,57 +84,28 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
 
   const resumen = data?.data?.data?.resumen || { total_compras: 0, total_pagado: 0, total_gastos: 0, pendiente: 0 }
 
-  // Calcular total de gastos filtrados
-  const totalGastosFiltrados = useMemo(() => {
-    return gastos.reduce((sum: number, g: any) => sum + (Number(g.monto) || 0), 0)
-  }, [gastos])
+  // Unificar pagos y gastos en una sola lista
+  const dataUnificada = useMemo(() => {
+    const pagosFormateados = pagos.map((p: any) => ({
+      ...p,
+      tipo_mov: 'PAGO',
+      detalle: despliegueMap[p.despliegue_id] || p.metodo_pago?.toUpperCase() || p.numero_operacion || '-',
+      monto_valor: Number(p.monto) || 0,
+      row_color: 'bg-emerald-50 text-emerald-700'
+    }))
 
-  const columnasPagos = useMemo<ColDef[]>(() => [
-    {
-      headerName: 'FECHA',
-      field: 'fecha',
-      width: 150,
-      valueFormatter: (p) => p.value ? dayjs(p.value).format('DD/MM/YYYY HH:mm') : '-',
-    },
-    {
-      headerName: 'PROVEEDOR',
-      field: 'proveedor',
-      flex: 2,
-      minWidth: 200,
-    },
-    {
-      headerName: 'DOCUMENTO',
-      field: 'numero',
-      width: 130,
-      valueFormatter: (p) => {
-        if (!p.data) return ''
-        return `${p.data.serie || ''}-${String(p.data.numero || '').padStart(8, '0')}`
-      },
-    },
-    {
-      headerName: 'DESPLIEGUE DE PAGO',
-      field: 'despliegue_id',
-      width: 250,
-      valueFormatter: (p) => despliegueMap[p.value] || p.data?.metodo_pago?.toUpperCase() || '-',
-      cellStyle: { fontSize: '10px' } as any
-    },
-    {
-      headerName: 'MONTO',
-      field: 'monto',
-      width: 110,
-      type: 'numericColumn',
-      cellStyle: { fontWeight: 'bold' },
-      valueFormatter: (p) => p.value ? `S/ ${Number(p.value).toFixed(2)}` : 'S/ 0.00',
-    },
-    {
-      headerName: 'OPERACIÓN',
-      field: 'numero_operacion',
-      width: 130,
-      valueFormatter: (p) => p.value || '-',
-    },
-  ], [despliegueMap])
+    const gastosFormateados = gastosRaw.map((g: any) => ({
+      ...g,
+      tipo_mov: g.tipo === 'gasto_extra' ? 'GASTO OPERATIVO' : 'GASTO COMPRA',
+      detalle: g.descripcion || g.tipo_gasto?.toUpperCase() || '-',
+      monto_valor: Number(g.monto) || 0,
+      row_color: 'bg-rose-50 text-rose-700'
+    }))
 
-  const columnasGastos = useMemo<ColDef[]>(() => [
+    return [...pagosFormateados, ...gastosFormateados].sort((a, b) => dayjs(b.fecha).unix() - dayjs(a.fecha).unix())
+  }, [pagos, gastosRaw, despliegueMap])
+
+  const columnasUnificadas = useMemo<ColDef[]>(() => [
     {
       headerName: 'FECHA',
       field: 'fecha',
@@ -143,85 +114,72 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     },
     {
       headerName: 'TIPO',
-      field: 'tipo',
-      width: 150,
-      valueFormatter: (p) => {
-        if (p.value === 'gasto_extra') return 'GASTO OPERATIVO'
-        if (p.value === 'gasto_compra') return 'GASTO COMPRA'
-        return '-'
-      },
-      cellStyle: (p) => {
-        if (p.value === 'gasto_extra') return { backgroundColor: '#fee2e2', fontWeight: 'bold', color: '#991b1b' } as any
-        if (p.value === 'gasto_compra') return { backgroundColor: '#fee2e2', fontWeight: 'bold', color: '#991b1b' } as any
-        return {} as any
+      field: 'tipo_mov',
+      width: 160,
+      cellRenderer: (p: any) => {
+        const isPago = p.value === 'PAGO'
+        return (
+          <div className="flex items-center h-full">
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isPago ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+              {p.value}
+            </span>
+          </div>
+        )
       }
-    },
-    {
-      headerName: 'TIPO GASTO',
-      field: 'tipo_gasto',
-      flex: 1,
-      minWidth: 150,
-      valueFormatter: (p) => p.value?.toUpperCase() || '-',
-    },
-    {
-      headerName: 'DESCRIPCIÓN',
-      field: 'descripcion',
-      flex: 2,
-      minWidth: 200,
     },
     {
       headerName: 'PROVEEDOR',
       field: 'proveedor',
       flex: 1,
-      minWidth: 150,
+      minWidth: 180,
       valueFormatter: (p) => p.value || '-',
     },
     {
       headerName: 'DOCUMENTO',
       field: 'numero',
-      width: 130,
+      width: 140,
       valueFormatter: (p) => {
-        if (!p.data || !p.data.serie) return '-'
+        if (!p.data || (!p.data.numero && !p.data.serie)) return '-'
         return `${p.data.serie || ''}-${String(p.data.numero || '').padStart(8, '0')}`
       },
+      cellClass: 'font-mono text-xs'
+    },
+    {
+      headerName: 'DESCRIPCIÓN / DETALLE',
+      field: 'detalle',
+      flex: 2,
+      minWidth: 250,
     },
     {
       headerName: 'MONTO',
-      field: 'monto',
-      width: 110,
+      field: 'monto_valor',
+      width: 120,
       type: 'numericColumn',
-      cellStyle: { fontWeight: 'bold', color: '#dc2626' },
+      cellStyle: (p) => ({ 
+        fontWeight: 'bold', 
+        color: p.data?.tipo_mov === 'PAGO' ? '#059669' : '#dc2626' 
+      }) as any,
       valueFormatter: (p) => p.value ? `S/ ${Number(p.value).toFixed(2)}` : 'S/ 0.00',
     },
   ], [])
 
-  const pinnedBottomRowDataPagos = useMemo(() => {
-    if (pagos.length === 0) return []
+  const pinnedBottomRowData = useMemo(() => {
+    if (dataUnificada.length === 0) return []
     return [
       {
-        proveedor: 'TOTAL PAGADO:',
-        monto: resumen.total_pagado,
+        proveedor: 'TOTAL ACUMULADO (PAGOS + GASTOS):',
+        monto_valor: resumen.total_pagado + resumen.total_gastos,
       },
     ]
-  }, [pagos, resumen.total_pagado])
-
-  const pinnedBottomRowDataGastos = useMemo(() => {
-    if (gastos.length === 0) return []
-    return [
-      {
-        descripcion: localFiltros.tipoGasto === 'todos' ? 'TOTAL GASTOS:' : 'TOTAL FILTRADO:',
-        monto: totalGastosFiltrados,
-      },
-    ]
-  }, [gastos, totalGastosFiltrados, localFiltros.tipoGasto])
+  }, [dataUnificada, resumen.total_pagado, resumen.total_gastos])
 
   return (
     <Modal
-      title="Análisis de Pagos y Gastos de Compras"
+      title="Análisis Unificado de Pagos y Gastos de Compras"
       open={open}
       onCancel={onClose}
       footer={null}
-      width={1200}
+      width={1300}
       centered
       styles={{ body: { padding: '16px' } }}
     >
@@ -245,39 +203,10 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
               className="!w-[130px]"
             />
           </LabelBase>
-
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Vista</span>
-            <Select
-              className="w-40"
-              value={localFiltros.vista}
-              onChange={(value) => setLocalFiltros(prev => ({ ...prev, vista: value }))}
-              options={[
-                { label: 'Pagos', value: 'pagos' },
-                { label: 'Gastos', value: 'gastos' },
-              ]}
-            />
-          </div>
-
-          {localFiltros.vista === 'gastos' && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Tipo de Gasto</span>
-              <Select
-                className="w-48"
-                value={localFiltros.tipoGasto}
-                onChange={(value) => setLocalFiltros(prev => ({ ...prev, tipoGasto: value }))}
-                options={[
-                  { label: 'Todos', value: 'todos' },
-                  { label: 'Gasto Operativo', value: 'gasto_extra' },
-                  { label: 'Gasto Compra', value: 'gasto_compra' },
-                ]}
-              />
-            </div>
-          )}
           
           <div className="flex flex-col gap-1 flex-1">
             <span className="text-[10px] font-bold text-slate-500 uppercase">
-              {localFiltros.vista === 'pagos' ? 'Buscar Proveedor / Operación / Documento' : 'Buscar Descripción / Tipo / Proveedor'}
+              Buscar Proveedor / Descripción / Documento
             </span>
             <Input 
               placeholder="Escriba aquí para buscar..." 
@@ -344,40 +273,26 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
           </div>
         </div>
 
-        {/* Tabla */}
-        <div className="h-[450px] w-full border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        {/* Tabla Unificada */}
+        <div className="h-[500px] w-full border border-slate-200 rounded-lg overflow-hidden shadow-sm">
           {isLoading ? (
             <div className="h-full w-full flex items-center justify-center bg-white">
-              <Spin size="large" tip={`Cargando ${localFiltros.vista === 'pagos' ? 'pagos' : 'gastos'}...`} />
+              <Spin size="large" tip="Consolidando información de pagos y gastos..." />
             </div>
-          ) : localFiltros.vista === 'pagos' ? (
-            <TableWithTitle
-              id="table-modal-pagos-compras"
-              title={`Historial de Pagos Realizados`}
-              columnDefs={columnasPagos}
-              rowData={pagos}
-              loading={isLoading}
-              pinnedBottomRowData={pinnedBottomRowDataPagos}
-              headerColor="var(--color-rose-600)"
-              selectionColor="#fee2e2"
-              withNumberColumn={true}
-            />
           ) : (
             <TableWithTitle
-              id="table-modal-gastos-compras"
-              title={`Historial de Gastos`}
-              columnDefs={columnasGastos}
-              rowData={gastos}
+              id="table-modal-unificada-pagos-gastos"
+              title="Historial Consolidado de Pagos y Gastos"
+              columnDefs={columnasUnificadas}
+              rowData={dataUnificada}
               loading={isLoading}
-              pinnedBottomRowData={pinnedBottomRowDataGastos}
-              headerColor="var(--color-rose-600)"
-              selectionColor="#fee2e2"
+              pinnedBottomRowData={pinnedBottomRowData}
+              headerColor="var(--color-slate-800)"
+              selectionColor="#f1f5f9"
               withNumberColumn={true}
               getRowStyle={(params) => {
-                if (params.data?.tipo === 'gasto_extra' || params.data?.tipo === 'gasto_compra') {
-                  return { backgroundColor: '#fee2e2', color: '#991b1b' }
-                }
-                return undefined
+                if (params.data?.tipo_mov === 'PAGO') return { borderLeft: '4px solid #10b981' }
+                return { borderLeft: '4px solid #f43f5e' }
               }}
             />
           )}
