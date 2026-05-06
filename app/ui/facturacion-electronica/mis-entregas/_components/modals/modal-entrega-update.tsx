@@ -385,13 +385,19 @@ export default function ModalEntregaUpdate({
     vendedor: 'Vendedor',
     chofer: 'Chofer',
   }
+  const entregaFueEntregadaAntes = Boolean(
+    (entrega as any)?.user_entregado_id ||
+    (entrega as any)?.userEntregado?.id,
+  )
   // Productos anteriores — extraídos del último registro de
   // `venta.historial` con `accion='edicion'`. Usado para renderizar la
   // tabla "Productos anteriores" dentro del modal cuando la venta fue
   // editada (productos intercambiados o eliminados).
-  const ultimaEdicion = (entrega.venta as any)?.historial?.find?.(
-    (h: any) => h.accion === 'edicion',
-  )
+  const ultimaEdicion = entregaFueEntregadaAntes
+    ? (entrega.venta as any)?.historial?.find?.(
+        (h: any) => h.accion === 'edicion',
+      )
+    : undefined
   const productosAnteriores: Array<{
     codigo: string
     nombre: string

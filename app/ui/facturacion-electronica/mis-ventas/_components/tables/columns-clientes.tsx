@@ -38,10 +38,10 @@ export function useColumnsClientes({
     },
     {
       headerName: 'Profesion',
-      field: 'profesion',
+      field: 'profesion_id',
       width: 160,
       minWidth: 140,
-      valueFormatter: (params) => params.value || '-',
+      valueGetter: (params) => params.data?.profesion?.nombre || '-',
       filter: true,
     },
     {
