@@ -111,8 +111,15 @@ export default function useInitGuia({
         empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
         punto_llegada: direccionD1,
         direccion_seleccionada: 'D1',
-        // Referencia a la venta
-        referencia: `Venta ${venta.serie}-${venta.numero}`,
+        // Referencia a la venta — mostrar número de comprobante electrónico si existe
+        referencia: (() => {
+          const comp = (venta as any).comprobante_electronico
+          if (comp?.tipo_comprobante && comp?.serie && comp?.correlativo) {
+            const tipo = comp.tipo_comprobante === 'FACTURA' ? 'Factura' : comp.tipo_comprobante === 'BOLETA' ? 'Boleta' : comp.tipo_comprobante
+            return `${tipo} ${comp.serie}-${comp.correlativo}`
+          }
+          return `Venta ${venta.serie}-${venta.numero}`
+        })(),
         // Pre-llenar placa si viene por URL (desde mis-entregas)
         ...(vehiculoPlacaParam ? { vehiculo_placa: vehiculoPlacaParam } : {}),
         // Pre-llenar user_chofer_id (despachador interno) si viene de mis-entregas.
