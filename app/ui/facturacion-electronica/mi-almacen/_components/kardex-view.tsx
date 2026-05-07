@@ -292,21 +292,18 @@ export default function KardexView() {
       width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
-      cellStyle: (params: any) => {
-        if (params.value > 0) return { color: '#16a34a', fontWeight: 'bold' }
-        return null
-      },
       valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
-        return Number(params.value).toFixed(2)
+        return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!params.value || params.value === 0) return '-'
+        if (!params.value || params.value === 0) return <span>-</span>
+        const cantidad = Number(params.data?.cantidad ?? 0)
+        const unidad = params.data?.unidad || ''
         return (
-          <GetStock
-            stock_fraccion={Number(params.value)}
-            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
-          />
+          <div className='flex items-center h-full'>
+            <span className='text-emerald-600 font-bold text-xs'>{cantidad} <span className='font-normal text-gray-500'>{unidad}</span></span>
+          </div>
         )
       }
     } as ColDef<MovimientoKardex>,
@@ -316,21 +313,18 @@ export default function KardexView() {
       width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
-      cellStyle: (params: any) => {
-        if (params.value > 0) return { color: '#dc2626', fontWeight: 'bold' }
-        return null
-      },
       valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
-        return Number(params.value).toFixed(2)
+        return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!params.value || params.value === 0) return '-'
+        if (!params.value || params.value === 0) return <span>-</span>
+        const cantidad = Number(params.data?.cantidad ?? 0)
+        const unidad = params.data?.unidad || ''
         return (
-          <GetStock
-            stock_fraccion={Number(params.value)}
-            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
-          />
+          <div className='flex items-center h-full'>
+            <span className='text-red-600 font-bold text-xs'>{cantidad} <span className='font-normal text-gray-500'>{unidad}</span></span>
+          </div>
         )
       }
     } as ColDef<MovimientoKardex>,
