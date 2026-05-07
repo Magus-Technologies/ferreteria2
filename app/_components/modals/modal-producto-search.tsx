@@ -45,6 +45,7 @@ type ModalProductoSearchProps = {
   ignoreAlmacen?: boolean;
   showStockMaxWarning?: boolean;
   showFiltrosAvanzados?: boolean;
+  stockFilterMode?: 'default' | 'venta';
 };
 
 export type CostoUnidadDerivadaSearch = {
@@ -74,6 +75,7 @@ export default function ModalProductoSearch({
   ignoreAlmacen = false,
   showStockMaxWarning = false,
   showFiltrosAvanzados = false,
+  stockFilterMode = 'default',
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
   useEffect(() => {
@@ -169,6 +171,19 @@ export default function ModalProductoSearch({
             requestConfirm();
           }}
         />
+        {stockFilterMode === 'venta' && (
+          <SelectBase
+            placeholder="Filtro Stock"
+            value={filtroStock}
+            onChange={(value) => setFiltroStock(value as FiltroStock)}
+            className="w-full sm:!min-w-[200px] sm:!w-[200px] sm:!max-w-[200px]"
+            options={[
+              { value: FiltroStock.TODOS, label: 'Todos' },
+              { value: FiltroStock.CON_STOCK, label: 'Con Stock' },
+            ]}
+          />
+        )}
+        {stockFilterMode !== 'venta' && (
         <SelectBase
           placeholder="Filtro Stock"
           value={filtroStock}
@@ -181,6 +196,7 @@ export default function ModalProductoSearch({
             { value: FiltroStock.CON_STOCK, label: 'Con Stock' },
           ]}
         />
+        )}
         {showFiltrosAvanzados && (
           <>
             <SelectBase

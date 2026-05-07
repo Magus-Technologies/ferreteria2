@@ -442,6 +442,13 @@ export default function FormCrearVenta({
               }}
               className="w-full"
               classNameIcon="text-cyan-600 mx-1"
+              clienteOptionsDefault={venta?.recomendadoPor ? [{
+                id: venta.recomendadoPor.id,
+                numero_documento: venta.recomendadoPor.numero_documento || '',
+                razon_social: venta.recomendadoPor.razon_social || '',
+                nombres: venta.recomendadoPor.nombres || '',
+                apellidos: venta.recomendadoPor.apellidos || '',
+              }] : []}
             />
           </LabelBase>
         </ConfigurableElement>

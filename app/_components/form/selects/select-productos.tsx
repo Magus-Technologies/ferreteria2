@@ -83,6 +83,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   ignoreAlmacen?: boolean
   showStockMaxWarning?: boolean
   showFiltrosAvanzados?: boolean
+  stockFilterMode?: 'default' | 'venta'
 }
 
 export interface RefSelectProductosProps {
@@ -119,6 +120,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   ignoreAlmacen = false,
   showStockMaxWarning = false,
   showFiltrosAvanzados = false,
+  stockFilterMode = 'default',
   ...props
 }, ref) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -386,6 +388,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           ignoreAlmacen={ignoreAlmacen}
           showStockMaxWarning={showStockMaxWarning}
           showFiltrosAvanzados={showFiltrosAvanzados}
+          stockFilterMode={stockFilterMode}
           onAfterClose={() => {
             // Devolver focus al buscador después de cerrar el modal
             ;[0, 50, 150, 300, 500].forEach((delay) => {
