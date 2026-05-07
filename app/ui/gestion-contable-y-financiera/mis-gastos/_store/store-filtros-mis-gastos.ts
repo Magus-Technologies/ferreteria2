@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import dayjs from 'dayjs'
 
 // API-compatible filter interface for gastos
 interface FiltrosMisGastos {
@@ -18,7 +19,10 @@ interface StoreFiltrosMisGastos {
 }
 
 export const useStoreFiltrosMisGastos = create<StoreFiltrosMisGastos>((set) => ({
-  filtros: null,
+  filtros: {
+    fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+    fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+  },
   setFiltros: (filtros) => set({ filtros }),
   resetFiltros: () => set({ filtros: null }),
 }))

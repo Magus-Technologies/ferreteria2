@@ -47,8 +47,11 @@ export interface ResumenGastosExtras {
 }
 
 // Obtener lista de gastos extras
-export const getGastosExtras = async (): Promise<{ data: GastoExtra[] }> => {
-    const response = await apiRequest<{ data: GastoExtra[] }>('/gastos-extras')
+export const getGastosExtras = async (filtros?: Record<string, any>): Promise<{ data: GastoExtra[] }> => {
+    const response = await apiRequest<{ data: GastoExtra[] }>('/gastos-extras', { 
+        method: 'GET',
+        params: filtros 
+    })
     if (response.error) {
         throw new Error(response.error.message)
     }
