@@ -44,8 +44,8 @@ export default function FiltersMisGastos() {
 
   useEffect(() => {
     const data = {
-      fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD'),
-      fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD'),
+      fechaDesde: dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+      fechaHasta: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
     }
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,8 +68,8 @@ export default function FiltersMisGastos() {
         } = values
         
         const data = {
-          fechaDesde: fechaDesde?.format('YYYY-MM-DD'),
-          fechaHasta: fechaHasta?.format('YYYY-MM-DD'),
+          fechaDesde: fechaDesde?.startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+          fechaHasta: fechaHasta?.endOf('day').format('YYYY-MM-DD HH:mm:ss'),
           ...rest,
         }
         setFiltros(data)

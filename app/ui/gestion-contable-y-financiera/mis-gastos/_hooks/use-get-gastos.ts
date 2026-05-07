@@ -7,7 +7,7 @@ export const useGetGastos = (
 ) => {
   return useQuery({
     queryKey: ['gastos-extras', filtros],
-    queryFn: () => getGastosExtras(),
+    queryFn: () => getGastosExtras(filtros),
     enabled: enabled && !!filtros,
     staleTime: 0,
   })
