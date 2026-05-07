@@ -19,6 +19,8 @@ export enum FiltroStock {
   CON_STOCK = 'con_stock',
 }
 
+const STOCK_THRESHOLD = 0.01;
+
 export interface RefTableProductoSearchProps {
   handleRefetch: () => void;
 }
@@ -162,7 +164,11 @@ export default function TableProductoSearch({
     // Aplicar filtros de STOCK en el frontend
     // 1. STOCK_MINIMO siempre se filtra en el frontend
     // 2. Si ignoreAlmacen es true, los filtros de stock del backend no funcionan, así que los hacemos aquí
-    const esFiltroFrontend = filtroStock === FiltroStock.STOCK_MINIMO || ignoreAlmacen;
+    const esFiltroFrontend =
+      filtroStock === FiltroStock.STOCK_MINIMO ||
+      filtroStock === FiltroStock.CON_STOCK ||
+      filtroStock === FiltroStock.STOCK_CERO ||
+      ignoreAlmacen;
 
     if (esFiltroFrontend && filtroStock !== FiltroStock.TODOS) {
       productos = productos.filter((producto) => {
@@ -178,11 +184,11 @@ export default function TableProductoSearch({
         }
 
         if (filtroStock === FiltroStock.CON_STOCK) {
-          return stockActual > 0;
+          return stockActual >= STOCK_THRESHOLD;
         }
 
         if (filtroStock === FiltroStock.STOCK_CERO) {
-          return stockActual <= 0;
+          return stockActual < STOCK_THRESHOLD;
         }
 
         return true;

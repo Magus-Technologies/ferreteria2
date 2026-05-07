@@ -39,8 +39,11 @@ export default function useInitVenta({
         tipo_moneda: venta.tipo_moneda as any,
         tipo_de_cambio: Number(venta.tipo_de_cambio),
         cliente_id: venta.cliente_id || undefined,
+        recomendado_por_id: (venta as any).recomendado_por_id || undefined,
         tipo_documento: venta.tipo_documento as any,
         forma_de_pago: venta.forma_de_pago as any,
+        numero_dias: venta.numero_dias ? Number(venta.numero_dias) : undefined,
+        fecha_vencimiento: venta.fecha_vencimiento ? dayjs(venta.fecha_vencimiento) : undefined,
         // Datos del cliente si existen
         ruc_dni: (venta as any).ruc_dni || (venta as any).cliente?.numero_documento || undefined,
         cliente_nombre: (venta as any).cliente?.razon_social ||
