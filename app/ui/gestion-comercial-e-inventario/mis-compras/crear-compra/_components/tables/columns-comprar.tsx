@@ -1,7 +1,7 @@
 'use client'
 
 import { TipoMoneda } from '~/types'
-import { ColDef, ICellRendererParams } from 'ag-grid-community'
+import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
 import { TbAlertTriangleFilled } from 'react-icons/tb'
@@ -26,6 +26,7 @@ export function useColumnsComprar({
   compra?: CompraConUnidadDerivadaNormal
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
+  const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form) || 1
 
   const columns: ColDef<FormListFieldData>[] = [
     {
@@ -113,30 +114,16 @@ export function useColumnsComprar({
               variant='borderless'
               formWithMessage={false}
             />
-            <CheckboxBase
-              propsForm={{
-                name: [value, 'bonificacion'],
-                rules: [
-                  {
-                    required: true,
-                    message: '',
-                  },
-                ],
-                hidden: true,
-              }}
-              formWithMessage={false}
-            />
           </div>
         )
       },
-      flex: 1,
     },
     {
       colId: 'marca',
       headerName: 'Marca',
       field: 'name',
-      minWidth: 120,
-      width: 120,
+      minWidth: 100,
+      width: 100,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
@@ -168,11 +155,11 @@ export function useColumnsComprar({
       },
     },
     {
-      colId: 'unidad_derivada',
-      headerName: 'Unidad Derivada',
+      colId: 'unidad',
+      headerName: 'Unidad',
       field: 'name',
-      minWidth: 90,
-      width: 90,
+      minWidth: 100,
+      width: 100,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
@@ -185,11 +172,7 @@ export function useColumnsComprar({
               ])}
             >
               <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-                {form.getFieldValue([
-                  'productos',
-                  value,
-                  'unidad_derivada_name',
-                ])}
+                {form.getFieldValue(['productos', value, 'unidad_derivada_name'])}
               </div>
             </Tooltip>
             <InputNumberBase
@@ -388,6 +371,65 @@ export function useColumnsComprar({
       },
     },
     {
+      colId: 'precio_conversion',
+      headerName: 'Precio ($)',
+      field: 'name',
+      minWidth: 100,
+      width: 100,
+      valueGetter: (params: ValueGetterParams<FormListFieldData>) => {
+        const value = params.data?.name
+        if (value === undefined) return 0
+        const allValues = form.getFieldsValue(true)
+        const currentTipoDeCambio = Number(allValues.tipo_de_cambio) || 1
+        const precioCompraSoles = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
+        
+        // Convertimos de Soles a Dólares
+        return precioCompraSoles / currentTipoDeCambio
+      },
+      cellRenderer: (params: ICellRendererParams) => {
+        return (
+          <div className='flex items-center h-full font-semibold text-slate-500 italic'>
+            $ 
+            {Number(params.value || 0).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 4,
+            })}
+          </div>
+        )
+      },
+      hide: !incluye_precios || tipo_moneda !== TipoMoneda.d,
+    },
+    {
+      colId: 'subtotal_conversion',
+      headerName: 'SubTotal ($)',
+      field: 'name',
+      minWidth: 110,
+      width: 110,
+      valueGetter: (params: ValueGetterParams<FormListFieldData>) => {
+        const value = params.data?.name
+        if (value === undefined) return 0
+        const allValues = form.getFieldsValue(true)
+        const currentTipoDeCambio = Number(allValues.tipo_de_cambio) || 1
+        const precioCompraSoles = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
+        const cantidad = Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
+        
+        const conversionPrecioDolares = precioCompraSoles / currentTipoDeCambio
+        return conversionPrecioDolares * cantidad
+      },
+      cellRenderer: (params: ICellRendererParams) => {
+        return (
+          <div className='flex items-center h-full font-semibold text-slate-500 italic'>
+            $ 
+            {Number(params.value || 0).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </div>
+        )
+      },
+      hide: !incluye_precios || tipo_moneda !== TipoMoneda.d,
+    },
+    {
       colId: 'precio',
       headerName: 'Precio',
       field: 'name',
@@ -399,6 +441,7 @@ export function useColumnsComprar({
         const factor = Number(form.getFieldValue(['productos', value, 'unidad_derivada_factor']) ?? 1)
         const bonificacion = form.getFieldValue(['productos', value, 'bonificacion'])
         const costoEnUnidad = costoActual * factor
+        // El costo anterior siempre se compara en soles para la alerta
         const costoCambio = !bonificacion && costoActual > 0 && precioCompra > 0 && Math.abs(precioCompra - costoEnUnidad) > 0.0001
 
         const productoId = form.getFieldValue(['productos', value, 'producto_id'])
@@ -412,12 +455,11 @@ export function useColumnsComprar({
                   type='button'
                   onClick={(e) => {
                     e.stopPropagation()
-                    // Disparar evento personalizado con todos los datos necesarios
                     const event = new CustomEvent('openEditarPreciosModal', {
                       detail: { 
                         productoId, 
                         unidadDerivadaId,
-                        costoActual: costoEnUnidad / factor, // Costo base por unidad
+                        costoActual: costoEnUnidad / factor,
                         productoNombre: form.getFieldValue(['productos', value, 'producto_name']),
                         unidadNombre: form.getFieldValue(['productos', value, 'unidad_derivada_name']),
                         factor: factor,
@@ -432,7 +474,7 @@ export function useColumnsComprar({
               </Tooltip>
             )}
             <InputNumberBase
-              prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+              prefix="S/. "
               size='small'
               propsForm={{
                 name: [value, 'precio_compra'],
@@ -509,7 +551,7 @@ export function useColumnsComprar({
                   'bonificacion',
                 ]),
               }}
-              prefix={tipo_moneda === TipoMoneda.Soles ? 'S/. ' : '$. '}
+              prefix="S/. "
               precision={2}
               formWithMessage={false}
               readOnly
@@ -534,10 +576,26 @@ export function useColumnsComprar({
               propsForm={{
                 name: [value, 'flete'],
               }}
-              prefix='S/. '
-              precision={4}
+              prefix="S/. "
+              precision={2}
               min={0}
               formWithMessage={false}
+              onChange={val => {
+                form.setFieldValue(
+                  ['productos', value, 'subtotal'],
+                  Number(val ?? 0) +
+                    Number(
+                      form.getFieldValue(['productos', value, 'cantidad']) ?? 0
+                    ) *
+                      Number(
+                        form.getFieldValue([
+                          'productos',
+                          value,
+                          'precio_compra',
+                        ]) ?? 0
+                      )
+                )
+              }}
               disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
               (compra?.pagos_de_compras_count ?? 0) > 0}
               readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||
@@ -555,11 +613,40 @@ export function useColumnsComprar({
       hide: !incluye_precios,
     },
     {
-      colId: 'vencimiento',
-      headerName: 'F. Vencimiento',
+      colId: 'bonificacion',
+      headerName: 'Bon.',
       field: 'name',
-      minWidth: 150,
-      width: 150,
+      minWidth: 40,
+      width: 40,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        return (
+          <div className='flex items-center h-full'>
+            <CheckboxBase
+              propsForm={{
+                name: [value, 'bonificacion'],
+                valuePropName: 'checked',
+              }}
+              onChange={val => {
+                if (val.target.checked) {
+                  form.setFieldValue(['productos', value, 'subtotal'], 0)
+                  form.setFieldValue(['productos', value, 'precio_compra'], 0)
+                  form.setFieldValue(['productos', value, 'flete'], 0)
+                }
+              }}
+              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
+              (compra?.pagos_de_compras_count ?? 0) > 0}
+            />
+          </div>
+        )
+      },
+      hide: !incluye_precios,
+    },
+    {
+      colId: 'vencimiento',
+      headerName: 'Vencimiento',
+      field: 'name',
+      minWidth: 120,
+      width: 120,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
@@ -567,9 +654,8 @@ export function useColumnsComprar({
               propsForm={{
                 name: [value, 'vencimiento'],
               }}
-              placeholder='Vencimiento'
-              formWithMessage={false}
               size='small'
+              formWithMessage={false}
               disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
               (compra?.pagos_de_compras_count ?? 0) > 0}
               readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||

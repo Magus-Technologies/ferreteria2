@@ -1,6 +1,6 @@
 import TableWithTitle from '~/components/tables/table-with-title'
 import { onChangeCostoTablaCompras, useColumnsComprar } from './columns-comprar'
-import { FormInstance } from 'antd/lib'
+import { Form, FormInstance } from 'antd'
 import { FormListFieldData } from 'antd'
 import { StoreValue } from 'antd/es/form/interface'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
@@ -111,7 +111,7 @@ export default function TableComprar({
       const nueva_cantidad =
         Number(productoAgregadoCompra.cantidad) +
         Number(producto_unidad_derivada_existente.cantidad)
-      
+
       setProductosCompra(prev =>
         prev.map(item => {
           return condicionEditarProductoCompra({
@@ -119,15 +119,15 @@ export default function TableComprar({
             item,
           })
             ? {
-                ...item,
-                cantidad: nueva_cantidad,
-                subtotal: Number(
-                  (
-                    Number(item.precio_compra) *
-                    Number(nueva_cantidad)
-                  ).toFixed(2)
-                ),
-              }
+              ...item,
+              cantidad: nueva_cantidad,
+              subtotal: Number(
+                (
+                  Number(item.precio_compra) *
+                  Number(nueva_cantidad)
+                ).toFixed(2)
+              ),
+            }
             : item
         })
       )
@@ -137,15 +137,15 @@ export default function TableComprar({
         productos.map((item, i) =>
           i === index
             ? {
-                ...item,
-                cantidad: nueva_cantidad,
-                subtotal: Number(
-                  (
-                    Number(item.precio_compra) *
-                    Number(nueva_cantidad)
-                  ).toFixed(2)
-                ),
-              }
+              ...item,
+              cantidad: nueva_cantidad,
+              subtotal: Number(
+                (
+                  Number(item.precio_compra) *
+                  Number(nueva_cantidad)
+                ).toFixed(2)
+              ),
+            }
             : item
         )
       )
@@ -163,13 +163,31 @@ export default function TableComprar({
         productoAgregadoCompra.producto_name = `🎁 ${productoAgregadoCompra.producto_name} (Bonificación)`
 
       agregarProducto({ producto: productoAgregadoCompra })
-      
+
       setProductosCompra(prev => [...prev, productoAgregadoCompra])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productoAgregadoCompraStore])
 
+  const tipo_moneda = Form.useWatch('tipo_moneda', form)
+  const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form)
+  const productos = Form.useWatch('productos', form)
+
   const agGridRef = useRef<AgGridReact>(null)
+
+  const columns = useColumnsComprar({
+    remove,
+    form,
+    incluye_precios,
+    cantidad_pendiente,
+    compra,
+  })
+
+  useEffect(() => {
+    if (agGridRef.current?.api) {
+      agGridRef.current.api.refreshCells({ force: true })
+    }
+  }, [tipo_moneda, tipo_de_cambio, productos])
 
   return (
     <>
@@ -181,13 +199,7 @@ export default function TableComprar({
         className='h-full'
         rowSelection={false}
         rowData={fields}
-        columnDefs={useColumnsComprar({
-          remove,
-          form,
-          incluye_precios,
-          cantidad_pendiente,
-          compra,
-        })}
+        columnDefs={columns}
       />
     </>
   )

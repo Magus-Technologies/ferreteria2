@@ -76,7 +76,7 @@ export default function CardsInfoCompra({
     [productos]
   )
 
-  const totalAPagar = subTotal + flete * (tipo_de_cambio || 1) + (percepcion ?? 0)
+  const totalAPagar = subTotal + flete + (percepcion ?? 0)
   const esContado = forma_de_pago === FormaDePago.Contado
 
   const handleCrearCompra = async () => {
@@ -139,22 +139,22 @@ export default function CardsInfoCompra({
         <ButtonRecuperarCompraEnEspera />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.card-v-bruto' label='Card V. Bruto'>
-        <CardInfo title='V. Bruto' value={subTotal} moneda={tipo_moneda} />
+        <CardInfo title='V. Bruto' value={subTotal} moneda={TipoMoneda.Soles} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.card-subtotal' label='Card Sub Total'>
-        <CardInfo title='Sub Total' value={subTotal / (IGV + 1)} moneda={tipo_moneda} />
+        <CardInfo title='Sub Total' value={subTotal / (IGV + 1)} moneda={TipoMoneda.Soles} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.card-igv' label='Card IGV'>
-        <CardInfo title='IGV' value={subTotal - subTotal / (IGV + 1) + (percepcion ?? 0)} moneda={tipo_moneda} />
+        <CardInfo title='IGV' value={subTotal - subTotal / (IGV + 1) + (percepcion ?? 0)} moneda={TipoMoneda.Soles} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.card-flete' label='Card Flete'>
         <CardInfo title='Flete' value={flete} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.card-percepcion' label='Card Percepción'>
-        <CardInfo title='Percepción' value={percepcion ?? 0} moneda={tipo_moneda} />
+        <CardInfo title='Percepción' value={percepcion ?? 0} moneda={TipoMoneda.Soles} />
       </ConfigurableElement>
       <ConfigurableElement componentId='gestion-comercial.crear-compra.card-total' label='Card Total'>
-        <CardInfo title='Total' value={totalAPagar} moneda={tipo_moneda} />
+        <CardInfo title='Total' value={totalAPagar} moneda={TipoMoneda.Soles} />
       </ConfigurableElement>
       {montoGastoExtra > 0 && (
         <>
@@ -211,7 +211,7 @@ export default function CardsInfoCompra({
         totalAPagar={totalAPagar}
         montoEgresoAsociado={montoGastoExtra}
         gastoExtraInfo={gastoExtraInfo}
-        tipo_moneda={tipo_moneda ?? TipoMoneda.Soles}
+        tipo_moneda={TipoMoneda.Soles}
         onContinuar={() => {
           form.setFieldValue('estado_de_compra', EstadoDeCompra.Creado)
           form.submit()

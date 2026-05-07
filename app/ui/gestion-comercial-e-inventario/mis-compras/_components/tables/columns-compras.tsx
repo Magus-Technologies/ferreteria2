@@ -21,15 +21,13 @@ import useApp from 'antd/es/app/useApp'
 import { useState } from 'react'
 import ModalFinalizarRecepcion from '../modals/modal-finalizar-recepcion'
 
-// Helper para formatear moneda según el tipo
-const formatCurrency = (value: number, tipoMoneda: string | undefined) => {
+// Helper para formatear moneda: Siempre en Soles por requerimiento del usuario
+const formatCurrencySoles = (value: number) => {
   const formatted = Number(value).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
-  // Verificar si es dólar (d o D) o soles (s o S o cualquier otro valor)
-  const isDolar = tipoMoneda?.toLowerCase() === 'd'
-  return isDolar ? `$. ${formatted}` : `S/. ${formatted}`
+  return `S/. ${formatted}`
 }
 
 export function useColumnsCompras({
@@ -178,7 +176,7 @@ export function useColumnsCompras({
       }) => String(Number(getSubTotal(value)) / (IGV + 1)),
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const subtotal = Number(getSubTotal(params.value)) / (IGV + 1)
-        return formatCurrency(subtotal, params.data?.tipo_moneda)
+        return formatCurrencySoles(subtotal)
       },
     },
     {
@@ -198,7 +196,7 @@ export function useColumnsCompras({
       filter: 'agNumberColumnFilter',
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const igv = Number(getSubTotal(params.value)) - Number(getSubTotal(params.value)) / (IGV + 1)
-        return formatCurrency(igv, params.data?.tipo_moneda)
+        return formatCurrencySoles(igv)
       },
     },
     {
@@ -211,15 +209,15 @@ export function useColumnsCompras({
       valueFormatter: ({ value }) => String(Number(value || 0)),
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const percepcion = Number(params.value || 0)
-        return formatCurrency(percepcion, params.data?.tipo_moneda)
+        return formatCurrencySoles(percepcion)
       },
     },
     {
       colId: 'total',
-      headerName: 'Total',
+      headerName: 'Total S/.',
       field: 'productos_por_almacen',
-      width: 90,
-      minWidth: 90,
+      width: 110,
+      minWidth: 110,
       valueFormatter: ({
         value,
       }: {
@@ -228,7 +226,11 @@ export function useColumnsCompras({
       filter: 'agNumberColumnFilter',
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const total = Number(getSubTotal(params.value))
-        return formatCurrency(total, params.data?.tipo_moneda)
+        return (
+          <div className='flex items-center h-full'>
+            <span className='font-bold text-slate-800'>{formatCurrencySoles(total)}</span>
+          </div>
+        )
       },
     },
     {
@@ -241,37 +243,9 @@ export function useColumnsCompras({
       valueFormatter: ({ value }) => value != null ? Number(value).toFixed(4) : '-',
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const tc = Number(params.data?.tipo_de_cambio ?? 1)
-        const esDolar = params.data?.tipo_moneda?.toLowerCase() === 'd'
         return (
-          <div className='flex items-center h-full gap-1'>
-            {esDolar && <span className='text-[10px] text-blue-500 font-bold'>$</span>}
-            <span className={esDolar ? 'text-blue-700 font-medium' : 'text-gray-400'}>
-              {tc.toFixed(4)}
-            </span>
-          </div>
-        )
-      },
-    },
-    {
-      colId: 'total_soles',
-      headerName: 'Total S/.',
-      field: 'productos_por_almacen',
-      width: 100,
-      minWidth: 100,
-      filter: 'agNumberColumnFilter',
-      cellRenderer: (params: ICellRendererParams<Compra>) => {
-        const total = Number(getSubTotal(params.value))
-        const tc = Number(params.data?.tipo_de_cambio ?? 1)
-        const esDolar = params.data?.tipo_moneda?.toLowerCase() === 'd'
-        const totalSoles = esDolar ? total * tc : total
-        return (
-          <div className='flex items-center h-full gap-1'>
-            <span className='font-medium'>S/. {totalSoles.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            {esDolar && (
-              <span className='text-[10px] text-gray-400 ml-1'>
-                (${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
-              </span>
-            )}
+          <div className='flex items-center h-full'>
+            <span className='text-slate-600'>{tc.toFixed(4)}</span>
           </div>
         )
       },
@@ -302,7 +276,7 @@ export function useColumnsCompras({
       filter: 'agNumberColumnFilter',
       cellRenderer: (params: ICellRendererParams<Compra>) => {
         const totalPagado = Number(params.data?.total_pagado || 0)
-        return formatCurrency(totalPagado, params.data?.tipo_moneda)
+        return formatCurrencySoles(totalPagado)
       },
     },
     {
@@ -322,7 +296,7 @@ export function useColumnsCompras({
         const total = Number(getSubTotal(params.value))
         const totalPagado = Number(params.data?.total_pagado || 0)
         const resta = total - totalPagado
-        return formatCurrency(resta, params.data?.tipo_moneda)
+        return formatCurrencySoles(resta)
       },
     },
     {

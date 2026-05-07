@@ -55,7 +55,7 @@ export default function ModalMetodosPagoCompra({
   const [egresosSeleccionados, setEgresosSeleccionados] = useState<GastoExtraDisponible[]>([])
   const [modalEgresoOpen, setModalEgresoOpen] = useState(false)
 
-  const monedaSymbol = tipo_moneda === TipoMoneda.d ? '$.' : 'S/.'
+  const monedaSymbol = 'S/.'
 
   const montoTotalEgresos = useMemo(
     () => egresosSeleccionados.reduce((sum, g) => sum + Number(g.monto), 0) + montoEgresoAsociado,
