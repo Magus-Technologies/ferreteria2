@@ -6,6 +6,7 @@ export type EstadoPago = 'pendientes' | 'pagadas' | 'todas'
 
 interface StoreFiltrosVentasPorCobrar {
   filtros: VentaWhereInput | undefined
+  searchKey: number
   setFiltros: (filtros: VentaWhereInput) => void
   moraRango: MoraRango
   setMoraRango: (rango: MoraRango) => void
@@ -17,7 +18,8 @@ interface StoreFiltrosVentasPorCobrar {
 
 export const useStoreFiltrosVentasPorCobrar = create<StoreFiltrosVentasPorCobrar>((set) => ({
   filtros: undefined,
-  setFiltros: (filtros) => set({ filtros }),
+  searchKey: 0,
+  setFiltros: (filtros) => set((state) => ({ filtros, searchKey: state.searchKey + 1 })),
   moraRango: 15,
   setMoraRango: (moraRango) => set({ moraRango }),
   estadoPago: 'pendientes',

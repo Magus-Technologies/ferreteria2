@@ -8,6 +8,7 @@ interface SelectTipoDocumentoProps extends SelectBaseProps {
 
 // Tipos de documento con códigos SUNAT
 const TIPOS_DOCUMENTO = [
+  { value: '', label: 'Todos' },
   { value: '01', label: 'Factura' },
   { value: '03', label: 'Boleta' },
   { value: 'nv', label: 'Nota de Venta' },

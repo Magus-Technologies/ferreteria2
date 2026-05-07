@@ -2,7 +2,7 @@
 
 // Filtros para ventas por cobrar
 import { Form, Drawer, Badge, Select } from 'antd'
-import { FaSearch, FaFilter, FaUsers, FaBrush } from 'react-icons/fa'
+import { FaSearch, FaFilter, FaBrush } from 'react-icons/fa'
 import { FaCalendar, FaFileInvoiceDollar } from 'react-icons/fa6'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
@@ -100,8 +100,9 @@ export default function FiltersVentasPorCobrar() {
   useEffect(() => {
     // Aplicar el filtro rápido inicial (15 días)
     applyQuickFilter(15)
-    // Inicializar el estado de pago en el formulario
+    // Inicializar el estado de pago y tipo de documento en el formulario
     form.setFieldValue('estado_pago', 'pendientes')
+    form.setFieldValue('tipo_documento', '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [almacen_id])
 
