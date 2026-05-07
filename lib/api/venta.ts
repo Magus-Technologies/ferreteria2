@@ -435,6 +435,7 @@ export type VentaCompleta = {
   // Calculado en backend con `withCount('historial as total_ediciones')`.
   total_ediciones?: number
   cliente?: any
+  recomendado_por?: any
   recomendadoPor?: any
   productos_por_almacen?: any[]
   despliegueDePagoVentas?: any[]

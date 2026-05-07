@@ -75,6 +75,7 @@ export default function ModalEntregaDomicilio({
 
   // Watched form values
   const despachadorId = Form.useWatch('despachador_id', form) as string | undefined
+  const vehiculoId = Form.useWatch('vehiculo_id', form) as number | undefined
   const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
   const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
 
@@ -520,7 +521,7 @@ export default function ModalEntregaDomicilio({
         open={modalCalendario}
         onClose={() => setModalCalendario(false)}
         onAplicar={handleAplicarSlot}
-        chofer_id={despachadorId}
+        vehiculo_id={vehiculoId}
       />
     </Modal>
   )

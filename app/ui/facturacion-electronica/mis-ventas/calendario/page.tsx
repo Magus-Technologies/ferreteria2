@@ -86,11 +86,38 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
             {estado.label}
           </div>
 
+          {/* Unidad */}
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Unidad</span>
+            <div className="flex items-center gap-2 text-slate-700">
+              <FaTruck size={13} className="text-amber-500 flex-shrink-0" />
+              <span className="text-sm font-medium">
+                {data?.vehiculo
+                  ? `${data.vehiculo.name}${data.vehiculo.placa ? ` (${data.vehiculo.placa})` : ''}`
+                  : evento.resource.vehiculo_nombre || 'Sin asignar'}
+              </span>
+            </div>
+            {data?.vehiculo?.tipo && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaTruck size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">
+                  {data.vehiculo.tipo}
+                </span>
+              </div>
+            )}
+            {data?.vehiculo?.placa && (
+              <div className="flex items-center gap-2 ml-5">
+                <FaIdCard size={10} className="text-slate-400" />
+                <span className="text-xs text-slate-500">{data.vehiculo.placa}</span>
+              </div>
+            )}
+          </div>
+
           {/* Despachador */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Despachador</span>
             <div className="flex items-center gap-2 text-slate-700">
-              <FaTruck size={13} className="text-amber-500 flex-shrink-0" />
+              <FaUser size={13} className="text-amber-500 flex-shrink-0" />
               <span className="text-sm font-medium">
                 {data?.despachador?.name || evento.resource.chofer_nombre || 'Sin asignar'}
               </span>

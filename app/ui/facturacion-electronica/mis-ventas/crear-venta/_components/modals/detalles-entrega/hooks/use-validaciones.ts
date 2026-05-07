@@ -24,6 +24,8 @@ export function useValidaciones({
   // Watchers reactivos del form — recalculan al instante cuando cambian.
   const despachadorId = Form.useWatch('despachador_id', form) as string | undefined
   const restoDespachadorId = Form.useWatch('_resto_despachador_id', form) as string | undefined
+  const vehiculoId = Form.useWatch('vehiculo_id', form) as number | undefined
+  const restoVehiculoId = Form.useWatch('_resto_vehiculo_id', form) as number | undefined
   const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
   const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
   const restoCargoDestino = Form.useWatch('_resto_cargo_destino', form) as string | undefined
@@ -57,6 +59,8 @@ export function useValidaciones({
     // Watchers expuestos por si el caller los usa fuera de la validación.
     despachadorId,
     restoDespachadorId,
+    vehiculoId,
+    restoVehiculoId,
     direccionEntrega,
     cargoDestino,
     restoCargoDestino,

@@ -195,6 +195,7 @@ interface CalendarProgramacionEntregasProps {
   onSelectEvent?: (event: EntregaEvent) => void
   selectedDate?: Date
   chofer_id?: string
+  vehiculo_id?: number
   /** Si es true, no carga entregas del backend (solo selección de slot) */
   soloSeleccion?: boolean
 }
@@ -204,6 +205,7 @@ export default function CalendarProgramacionEntregas({
   onSelectEvent,
   selectedDate,
   chofer_id,
+  vehiculo_id,
   soloSeleccion = false,
 }: CalendarProgramacionEntregasProps) {
   const [view, setView] = useState<View>('day')
@@ -224,12 +226,13 @@ export default function CalendarProgramacionEntregas({
     fecha_desde,
     fecha_hasta,
     chofer_id,
-    enabled: !soloSeleccion || !!chofer_id,
+    vehiculo_id,
+    enabled: !soloSeleccion || !!vehiculo_id,
   })
 
   // Transformar entregas a eventos del calendario
   const events: EntregaEvent[] = useMemo(() => {
-    const choferColorMap = new Map<string, string>()
+    const vehiculoColorMap = new Map<string, string>()
     let colorIndex = 0
 
     const entregasEvents = entregas
@@ -243,12 +246,12 @@ export default function CalendarProgramacionEntregas({
       } else if (entrega.estado_entrega === 'ec') {
         color = '#eab308'
       } else {
-        const choferKey = entrega.chofer_id || '__sin_asignar__'
-        if (!choferColorMap.has(choferKey)) {
-          choferColorMap.set(choferKey, CHOFER_COLORS[colorIndex % CHOFER_COLORS.length])
+        const vehiculoKey = String(entrega.vehiculo_id || '__sin_unidad__')
+        if (!vehiculoColorMap.has(vehiculoKey)) {
+          vehiculoColorMap.set(vehiculoKey, CHOFER_COLORS[colorIndex % CHOFER_COLORS.length])
           colorIndex++
         }
-        color = choferColorMap.get(choferKey) || CHOFER_COLORS[0]
+        color = vehiculoColorMap.get(vehiculoKey) || CHOFER_COLORS[0]
       }
 
       // fecha_programada viene como ISO UTC (Laravel cast datetime). Convertir a Lima
@@ -263,6 +266,9 @@ export default function CalendarProgramacionEntregas({
         `${entrega.venta?.cliente?.nombres || ''} ${entrega.venta?.cliente?.apellidos || ''}`.trim() ||
         'Cliente'
       const despachadorNombre = entrega.despachador?.name || 'Sin asignar'
+      const vehiculoNombre = entrega.vehiculo
+        ? `${entrega.vehiculo.name}${entrega.vehiculo.placa ? ` (${entrega.vehiculo.placa})` : ''}`
+        : 'Sin unidad'
 
       // Armar número de venta con tipo de documento
       const tipoDoc = entrega.venta?.tipo_documento
@@ -273,13 +279,15 @@ export default function CalendarProgramacionEntregas({
 
       return {
         id: entrega.id,
-        title: `${despachadorNombre} - ${clienteNombre}`,
+        title: `${vehiculoNombre} - ${clienteNombre}`,
         start,
         end,
         resource: {
           venta_id: entrega.venta_id,
           chofer_id: entrega.chofer_id,
           chofer_nombre: despachadorNombre,
+          vehiculo_id: entrega.vehiculo_id,
+          vehiculo_nombre: vehiculoNombre,
           cliente_nombre: clienteNombre,
           direccion: entrega.direccion_entrega || '',
           productos_count: entrega.productos_entregados?.length || 0,
@@ -300,6 +308,8 @@ export default function CalendarProgramacionEntregas({
           venta_id: '',
           chofer_id: '',
           chofer_nombre: '',
+          vehiculo_id: undefined,
+          vehiculo_nombre: '',
           cliente_nombre: '',
           direccion: '',
           productos_count: 0,

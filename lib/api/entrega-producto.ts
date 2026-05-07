@@ -92,6 +92,7 @@ export interface EntregaProductoFilters {
   venta_id?: string;
   almacen_salida_id?: number;
   chofer_id?: string;
+  vehiculo_id?: number;
   estado_entrega?: EstadoEntrega | string;
   // Los enums TipoDespacho y TipoEntrega ya cubren estos valores literales —
   // antes había una unión redundante `TipoDespacho | 'in' | 'pr'`.

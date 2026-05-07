@@ -33,6 +33,7 @@ export default function FormCrearVenta({
   form: FormInstance;
   venta?: VentaConUnidadDerivadaNormal;
 }) {
+  const recomendadoPor = (venta as any)?.recomendado_por || venta?.recomendadoPor;
   const clienteId = Form.useWatch("cliente_id", form);
   const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
   const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
@@ -434,6 +435,7 @@ export default function FormCrearVenta({
             className="w-full sm:w-auto"
           >
             <SelectClientes
+              form={form}
               propsForm={{
                 name: "recomendado_por_id",
                 hasFeedback: false,
@@ -442,12 +444,12 @@ export default function FormCrearVenta({
               }}
               className="w-full"
               classNameIcon="text-cyan-600 mx-1"
-              clienteOptionsDefault={venta?.recomendadoPor ? [{
-                id: venta.recomendadoPor.id,
-                numero_documento: venta.recomendadoPor.numero_documento || '',
-                razon_social: venta.recomendadoPor.razon_social || '',
-                nombres: venta.recomendadoPor.nombres || '',
-                apellidos: venta.recomendadoPor.apellidos || '',
+              clienteOptionsDefault={recomendadoPor ? [{
+                id: recomendadoPor.id,
+                numero_documento: recomendadoPor.numero_documento || '',
+                razon_social: recomendadoPor.razon_social || '',
+                nombres: recomendadoPor.nombres || '',
+                apellidos: recomendadoPor.apellidos || '',
               }] : []}
             />
           </LabelBase>

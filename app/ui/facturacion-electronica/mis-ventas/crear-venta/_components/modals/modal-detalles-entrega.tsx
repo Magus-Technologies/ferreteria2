@@ -493,6 +493,8 @@ function ModalDetallesEntregaInner({
     restoInvalido,
     despachadorId,
     restoDespachadorId,
+    vehiculoId,
+    restoVehiculoId,
     restoDireccionEntrega,
   } = useValidaciones({ tipoDespacho, form, totalAProgramar })
 
@@ -615,7 +617,7 @@ function ModalDetallesEntregaInner({
         open={modalCalendarioDomicilio}
         onClose={() => setModalCalendarioDomicilio(false)}
         onAplicar={handleAplicarSlotDomicilio}
-        chofer_id={despachadorId}
+        vehiculo_id={vehiculoId}
       />
 
       {/* Modal de calendario para seleccionar slot - Resto Parcial */}
@@ -623,7 +625,7 @@ function ModalDetallesEntregaInner({
         open={modalCalendarioResto}
         onClose={() => setModalCalendarioResto(false)}
         onAplicar={handleAplicarSlotResto}
-        chofer_id={restoDespachadorId}
+        vehiculo_id={restoVehiculoId}
       />
     </Modal>
   )
