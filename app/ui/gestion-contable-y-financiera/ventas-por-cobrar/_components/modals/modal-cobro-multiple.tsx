@@ -53,6 +53,10 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   const [clienteId, setClienteId] = useState<number | undefined>()
   const [ventasDistribucion, setVentasDistribucion] = useState<VentaConDistribucion[]>([])
   const [montoTotal, setMontoTotal] = useState<number>(0)
+  // Ref para guardar valores de N° Operación individuales sin causar re-renders
+  const numeroOpRefs = useRef<Map<string, string>>(new Map())
+  // Versión que solo incrementa cuando el N° Operación global cambia → fuerza remount de inputs
+  const [globalNumOpVersion, setGlobalNumOpVersion] = useState(0)
 
   // Query para obtener despliegues de pago (mismo endpoint que SelectDespliegueDePago para consistencia)
   const { data: desplieguesData } = useQuery({
@@ -71,8 +75,10 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   }, [])
 
   const handleGlobalNumeroOperacionChange = useCallback((value: string | undefined) => {
-    // Actualizar el número de operación en todas las filas
     setVentasDistribucion(prev => prev.map(v => ({ ...v, _numeroOperacion: value })))
+    // Limpiar overrides individuales y forzar remount de todos los inputs
+    numeroOpRefs.current.clear()
+    setGlobalNumOpVersion(v => v + 1)
   }, [])
 
   const { data: ventasData, isLoading } = useQuery({
@@ -149,9 +155,12 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   }, [])
 
   const handleNumeroOperacion = useCallback((ventaId: string, value: string | undefined) => {
-    setVentasDistribucion(prev => prev.map(v =>
-      v.id === ventaId ? { ...v, _numeroOperacion: value } : v
-    ))
+    // Guardar en ref sin causar re-render (evita que el input pierda el foco)
+    if (value) {
+      numeroOpRefs.current.set(ventaId, value)
+    } else {
+      numeroOpRefs.current.delete(ventaId)
+    }
   }, [])
 
   useEffect(() => {
@@ -174,15 +183,6 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       }
     }
   }, [open, desplieguesData, form, handleGlobalPagoChange])
-
-  // Observar cambios en el número de operación global del formulario
-  const numeroOperacionGlobal = Form.useWatch('numero_operacion', form)
-  
-  useEffect(() => {
-    if (numeroOperacionGlobal !== undefined) {
-      handleGlobalNumeroOperacionChange(numeroOperacionGlobal || undefined)
-    }
-  }, [numeroOperacionGlobal, handleGlobalNumeroOperacionChange])
 
   // Observar el modo de pago seleccionado para mostrar/ocultar N° Operación
   const selectedPagoId = Form.useWatch('despliegue_de_pago_id', form)
@@ -241,7 +241,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
           venta_id: v.id,
           monto: v._montoAPagar,
           despliegue_de_pago_id: values.despliegue_de_pago_id ? String(extractDesplieguePagoId(values.despliegue_de_pago_id) ?? values.despliegue_de_pago_id) : undefined,
-          numero_operacion: v._numeroOperacion || undefined,
+          numero_operacion: numeroOpRefs.current.get(v.id) ?? v._numeroOperacion ?? undefined,
         })),
       })
     },
@@ -302,6 +302,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       // Resetear montos
       setMontoTotal(0)
       setVentasDistribucion([])
+      numeroOpRefs.current.clear()
       
       // NO cerrar el modal - el usuario puede seguir registrando pagos
       // handleClose() <- REMOVIDO
@@ -440,8 +441,9 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         return (
           <div className="py-1" onClick={(e) => e.stopPropagation()}>
             <Input
+              key={`num-op-${params.data.id}-${globalNumOpVersion}`}
               placeholder='N° Op.'
-              value={params.data._numeroOperacion || ''}
+              defaultValue={params.data._numeroOperacion || ''}
               onChange={(e) => {
                 e.stopPropagation()
                 handleNumeroOperacion(params.data!.id, e.target.value || undefined)
@@ -456,12 +458,9 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
           </div>
         )
       },
-      suppressKeyboardEvent: (params) => {
-        // Permitir que el teclado funcione dentro del input
-        return true
-      },
+      suppressKeyboardEvent: () => true,
     },
-  ], [desplieguesData, form, handleNumeroOperacion, handleMontoManual, toggleVenta])
+  ], [desplieguesData, form, handleNumeroOperacion, handleMontoManual, toggleVenta, globalNumOpVersion])
 
   // Validar que se haya seleccionado modo de pago global
   const desplieguePagoGlobal = Form.useWatch('despliegue_de_pago_id', form)
