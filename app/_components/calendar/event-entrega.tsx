@@ -11,6 +11,8 @@ export interface EntregaEvent extends Event {
     venta_id: string
     chofer_id: string
     chofer_nombre: string
+    vehiculo_id?: number
+    vehiculo_nombre: string
     cliente_nombre: string
     direccion: string
     productos_count: number
@@ -65,7 +67,7 @@ export default function EventEntrega({ event }: EventEntregaProps) {
       }}
     >
       <div className="font-bold truncate text-[12px] leading-tight mb-0.5" style={{ textShadow: '0 0 1px rgba(255,255,255,0.3)' }}>
-        {event.resource.chofer_nombre}
+        {event.resource.vehiculo_nombre}
       </div>
       <div className="truncate text-[11px] leading-tight mb-0.5" style={{ textShadow: '0 0 1px rgba(255,255,255,0.3)' }}>
         {event.resource.cliente_nombre}

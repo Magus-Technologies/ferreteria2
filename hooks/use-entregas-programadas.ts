@@ -6,6 +6,7 @@ interface UseEntregasProgramadasParams {
   fecha_desde?: string
   fecha_hasta?: string
   chofer_id?: string
+  vehiculo_id?: number
   enabled?: boolean
 }
 
@@ -13,16 +14,18 @@ export function useEntregasProgramadas({
   fecha_desde,
   fecha_hasta,
   chofer_id,
+  vehiculo_id,
   enabled = true,
 }: UseEntregasProgramadasParams = {}) {
   return useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas', fecha_desde, fecha_hasta, chofer_id],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas', fecha_desde, fecha_hasta, chofer_id, vehiculo_id],
     queryFn: async () => {
 
       const response = await entregaProductoApi.list({
         fecha_desde,
         fecha_hasta,
         chofer_id,
+        vehiculo_id,
         // Solo entregas con fecha_programada (domicilio/parcial), excluye en-tienda
         // y entregas ya finalizadas (entregadas/canceladas). Evita duplicados en el calendario.
         solo_programadas: true,
