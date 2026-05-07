@@ -27,6 +27,7 @@ export interface MovimientoKardex {
   referencia_id: string | number
   producto_nombre?: string
   producto_codigo?: string
+  unidades_contenidas?: number
 }
 
 export interface KardexResponse {
