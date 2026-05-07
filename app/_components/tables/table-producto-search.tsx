@@ -76,8 +76,8 @@ export default function TableProductoSearch({
   const shouldFetch = true;
 
   // Mapear filtro de stock a parámetro del backend cuando sea posible
-  const getBackendStockFilter = () => {
-    switch (filtroStock) {
+  const getBackendStockFilterValue = (filtro: FiltroStock) => {
+    switch (filtro) {
       case FiltroStock.CON_STOCK:
         return 'con_stock';
       case FiltroStock.STOCK_CERO:
@@ -110,7 +110,10 @@ export default function TableProductoSearch({
       estado: 1, // Solo productos activos
       ...(marcaId ? { marca_id: marcaId } : {}),
       ...(categoriaId ? { categoria_id: categoriaId } : {}),
-      cs_stock: ignoreAlmacen ? 'all' : getBackendStockFilter(),
+      cs_stock: ignoreAlmacen
+        ? 'all'
+        : (filtroStock === FiltroStock.STOCK_MINIMO ? 'all' : getBackendStockFilterValue(filtroStock)),
+      per_page: 250,
     },
     // Siempre habilitado
     enabled: shouldFetch,
@@ -156,18 +159,33 @@ export default function TableProductoSearch({
         )
     );
 
-    // Aplicar filtro de STOCK_MINIMO en el frontend (los demás se manejan en el backend)
-    if (filtroStock === FiltroStock.STOCK_MINIMO) {
+    // Aplicar filtros de STOCK en el frontend
+    // 1. STOCK_MINIMO siempre se filtra en el frontend
+    // 2. Si ignoreAlmacen es true, los filtros de stock del backend no funcionan, así que los hacemos aquí
+    const esFiltroFrontend = filtroStock === FiltroStock.STOCK_MINIMO || ignoreAlmacen;
+
+    if (esFiltroFrontend && filtroStock !== FiltroStock.TODOS) {
       productos = productos.filter((producto) => {
         // Obtener el stock actual del almacén actual
         const productoEnAlmacen = producto.producto_en_almacenes?.find(
           (pa) => pa.almacen_id === almacen_id
         );
         const stockActual = Number(productoEnAlmacen?.stock_fraccion ?? 0);
-        const stockMin = Number(producto.stock_min ?? 0);
 
-        // Stock desde el mínimo hacia abajo, incluyendo negativos
-        return stockActual <= stockMin;
+        if (filtroStock === FiltroStock.STOCK_MINIMO) {
+          const stockMin = Number(producto.stock_min ?? 0);
+          return stockActual <= stockMin;
+        }
+
+        if (filtroStock === FiltroStock.CON_STOCK) {
+          return stockActual > 0;
+        }
+
+        if (filtroStock === FiltroStock.STOCK_CERO) {
+          return stockActual <= 0;
+        }
+
+        return true;
       });
     }
 
@@ -175,7 +193,6 @@ export default function TableProductoSearch({
   }, [response, productosCompra, filtroStock, almacen_id]);
 
   function handleRefetch() {
-    setProductosCompra([]);
     refetch();
   }
 
@@ -183,19 +200,25 @@ export default function TableProductoSearch({
   const filtroStockRef = useRef(filtroStock);
   const marcaIdRef = useRef(marcaId);
   const categoriaIdRef = useRef(categoriaId);
-  
+
   useEffect(() => {
     const filtroChanged = filtroStockRef.current !== filtroStock;
     const marcaChanged = marcaIdRef.current !== marcaId;
     const categoriaChanged = categoriaIdRef.current !== categoriaId;
-    
+
     if (filtroChanged || marcaChanged || categoriaChanged) {
+      // Calcular valores para el backend ANTES de actualizar los refs
+      const backendStockAnterior = ignoreAlmacen ? 'all' : (filtroStockRef.current === FiltroStock.STOCK_MINIMO ? 'all' : getBackendStockFilterValue(filtroStockRef.current));
+      const backendStockNuevo = ignoreAlmacen ? 'all' : (filtroStock === FiltroStock.STOCK_MINIMO ? 'all' : getBackendStockFilterValue(filtroStock));
+
+      const elStockCambiaEnBackend = backendStockAnterior !== backendStockNuevo;
+
+      // Actualizar los refs
       filtroStockRef.current = filtroStock;
       marcaIdRef.current = marcaId;
       categoriaIdRef.current = categoriaId;
-      
-      // Siempre hacer refetch cuando cambian los filtros
-      if (isVisible) {
+
+      if (isVisible && (elStockCambiaEnBackend || marcaChanged || categoriaChanged)) {
         handleRefetch();
       }
     }
@@ -257,11 +280,11 @@ export default function TableProductoSearch({
   const pathname = usePathname();
   // Usar el color pasado como prop, o detectar automáticamente
   const colorSeleccion = selectionColorProp || (
-    pathname?.includes('facturacion-electronica') 
-      ? orangeColors[10] 
+    pathname?.includes('facturacion-electronica')
+      ? orangeColors[10]
       : pathname?.includes('gestion-comercial-e-inventario')
-      ? greenColors[10]
-      : undefined
+        ? greenColors[10]
+        : undefined
   );
 
   return (
