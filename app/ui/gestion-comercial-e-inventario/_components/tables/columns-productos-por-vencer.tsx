@@ -4,11 +4,12 @@ import dayjs from 'dayjs'
 
 interface ProductosPorVencerProps {
   name: string
-  cantidad: string
+  cantidad: number
   stock_min: string
   almacen: string
   vencimiento: string
   lote: string | null
+  unidad?: string | null
   estado: string
   dias_restantes: number
 }
@@ -49,6 +50,14 @@ export function useColumnsProductosPorVencer() {
       valueFormatter: (params) => params.value || '-',
     },
     {
+      colId: 'unidad',
+      headerName: 'Unidad',
+      field: 'unidad',
+      minWidth: 100,
+      filter: true,
+      valueFormatter: (params) => params.value || '-',
+    },
+    {
       colId: 'situacion',
       headerName: 'Situación',
       field: 'dias_restantes',
@@ -71,11 +80,11 @@ export function useColumnsProductosPorVencer() {
     },
     {
       colId: 'cantidad',
-      headerName: 'Cant. Stock',
+      headerName: 'Cant. lote',
       field: 'cantidad',
       width: 120,
       minWidth: 90,
-      filter: true,
+      filter: 'agNumberColumnFilter',
     },
     {
       colId: 'stock_min',
