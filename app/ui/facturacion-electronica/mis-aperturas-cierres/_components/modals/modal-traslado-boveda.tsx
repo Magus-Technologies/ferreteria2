@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Modal, Form, InputNumber, Input, Select, message } from "antd";
-import { LockOutlined, DollarOutlined } from "@ant-design/icons";
+import { useState, useRef, useMemo } from "react";
+import { Modal, Form, InputNumber, Input, Select, App } from "antd";
+import { DollarOutlined } from "@ant-design/icons";
 import { trasladoBovedaApi } from "../../../../../../lib/api/traslado-boveda";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "~/lib/api";
@@ -29,9 +29,11 @@ export default function ModalTrasladoBoveda({
   aperturaCierreId,
   vendedorId,
 }: ModalTrasladoBovedaProps) {
+  const { message, modal } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const [loading, setLoading] = useState(false);
   const [efectivoDisponible, setEfectivoDisponible] = useState<number>(0);
+  const efectivoDisponibleRef = useRef<number>(0);
 
   // Cargar las sub cajas asignadas al usuario para ventas
   const { data: subCajas = [], isLoading: loadingSubCajas } = useQuery({
@@ -42,6 +44,18 @@ export default function ModalTrasladoBoveda({
     },
     enabled: open,
   })
+
+  // Mapa value → saldo para no depender de campos custom en el option de Ant Design
+  const saldoMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    subCajas.forEach((caja: any) => {
+      (caja.metodos_pago || []).forEach((metodo: any) => {
+        const key = `${caja.id}|||${metodo.despliegue_pago_id}`;
+        map[key] = parseFloat(metodo.saldo_vendedor || '0');
+      });
+    });
+    return map;
+  }, [subCajas]);
 
   const handleSubmit = async (values: FormValues) => {
     try {
@@ -59,19 +73,23 @@ export default function ModalTrasladoBoveda({
       });
 
       if (result?.error) {
-        message.error(result.error.message || 'Error al registrar traslado');
+        modal.warning({
+          title: 'No se pudo registrar el traslado',
+          content: result.error.message || 'Error al registrar traslado',
+        });
         return;
       }
 
       message.success("Traslado a bóveda registrado exitosamente");
       form.resetFields();
       setEfectivoDisponible(0);
+      efectivoDisponibleRef.current = 0;
       onSuccess();
     } catch (error: any) {
-      message.error(
-        error.response?.data?.message ||
-        "Error al registrar traslado a bóveda"
-      );
+      modal.warning({
+        title: 'No se pudo registrar el traslado',
+        content: error.response?.data?.message || error?.message || 'Error al registrar traslado a bóveda',
+      });
     } finally {
       setLoading(false);
     }
@@ -79,6 +97,8 @@ export default function ModalTrasladoBoveda({
 
   const handleCancel = () => {
     form.resetFields();
+    setEfectivoDisponible(0);
+    efectivoDisponibleRef.current = 0;
     onCancel();
   };
 
@@ -119,10 +139,10 @@ export default function ModalTrasladoBoveda({
           <Select
             placeholder="Seleccione la caja"
             loading={loadingSubCajas}
-            onChange={(value, option: any) => {
-              setEfectivoDisponible(parseFloat(option?.saldo_efectivo || '0'));
-              // Validate the "monto" field again since available cash changed
-              form.validateFields(['monto']).catch(() => { });
+            onChange={(value) => {
+              const saldo = saldoMap[value as string] ?? 0;
+              efectivoDisponibleRef.current = saldo;
+              setEfectivoDisponible(saldo);
             }}
             options={subCajas.flatMap((caja: any) =>
               (caja.metodos_pago || [])
@@ -158,16 +178,6 @@ export default function ModalTrasladoBoveda({
               min: 0.01,
               message: "El monto debe ser mayor a 0",
             },
-            {
-              validator: (_, value) => {
-                if (value && value > efectivoDisponible) {
-                  return Promise.reject(
-                    "El monto excede el efectivo disponible"
-                  );
-                }
-                return Promise.resolve();
-              },
-            },
           ]}
         >
           <InputNumber
@@ -175,7 +185,6 @@ export default function ModalTrasladoBoveda({
             placeholder="0.00"
             className="w-full"
             min={0.01}
-            max={efectivoDisponible}
             step={0.01}
             precision={2}
           />
