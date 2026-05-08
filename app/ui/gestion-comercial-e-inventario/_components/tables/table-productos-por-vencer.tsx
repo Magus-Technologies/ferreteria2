@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ColDef } from 'ag-grid-community'
 import { Tag, Spin } from 'antd'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -29,6 +29,7 @@ type ProductoVencimientoRow = {
 }
 
 type ProductoVencimientoResumenRow = {
+  groupKey: string
   name: string
   cantidad: number
   stock_min: string
@@ -99,6 +100,7 @@ const resumenColumns: ColDef<ProductoVencimientoResumenRow>[] = [
 
 export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: TableProductosPorVencerProps) {
   const { almacen_id } = useStoreAlmacen()
+  const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['productos-vencidos', almacen_id, dias],
@@ -138,6 +140,7 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
       if (!existente) {
         mapa.set(key, {
           ...item,
+          groupKey: key,
           lotes_total: 1,
         })
         continue
@@ -159,6 +162,35 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
       dayjs(a.vencimiento).valueOf() - dayjs(b.vencimiento).valueOf()
     )
   }, [filteredData])
+
+  useEffect(() => {
+    if (!resumenData.length) {
+      setSelectedGroupKey(null)
+      return
+    }
+
+    const exists = selectedGroupKey
+      ? resumenData.some((row) => row.groupKey === selectedGroupKey)
+      : false
+
+    if (!exists) {
+      setSelectedGroupKey(resumenData[0].groupKey)
+    }
+  }, [resumenData, selectedGroupKey])
+
+  const selectedResumen = useMemo(() => {
+    if (!resumenData.length) return null
+    return resumenData.find((row) => row.groupKey === selectedGroupKey) ?? resumenData[0]
+  }, [resumenData, selectedGroupKey])
+
+  const detalleFiltrado = useMemo(() => {
+    if (!selectedResumen) return filteredData
+    return filteredData.filter((item: ProductoVencimientoRow) =>
+      item.name === selectedResumen.name &&
+      item.almacen === selectedResumen.almacen &&
+      (item.unidad || '') === (selectedResumen.unidad || '')
+    )
+  }, [filteredData, selectedResumen])
 
   const getTitle = () => {
     if (dias === 0) return 'Productos Vencidos'
@@ -188,6 +220,9 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
         selectionColor={greenColors[10]}
         columnDefs={resumenColumns}
         rowData={resumenData}
+        onRowClicked={({ data }) => {
+          if (data?.groupKey) setSelectedGroupKey(data.groupKey)
+        }}
         style={{ height: '250px' }}
       />
 
@@ -196,12 +231,12 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
         title={`${getTitle()} - Detalle por lote`}
         extraTitle={
           <span className='text-xs text-slate-400 font-normal'>
-            ({filteredData.length} {filteredData.length === 1 ? 'registro' : 'registros'})
+            ({detalleFiltrado.length} {detalleFiltrado.length === 1 ? 'registro' : 'registros'})
           </span>
         }
         selectionColor={greenColors[10]}
         columnDefs={useColumnsProductosPorVencer()}
-        rowData={filteredData}
+        rowData={detalleFiltrado}
         style={{ height: '280px' }}
       />
     </div>

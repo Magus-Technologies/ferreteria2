@@ -75,11 +75,14 @@ export function SeccionRestoProgramado({
     setTipoPedidoResto,
     vehiculoPreseleccionadoResto,
     setVehiculoPreseleccionadoResto,
+    setHoraInicioResto,
+    setHoraFinResto,
     ubicacionGpsResto,
     setUbicacionGpsResto,
     observacionesResto,
     setObservacionesResto,
     slotResto,
+    setSlotResto,
     setModalCalendarioResto,
   } = useDetallesEntrega()
 
@@ -243,6 +246,10 @@ export function SeccionRestoProgramado({
                         form.setFieldValue('_resto_vehiculo_id', undefined)
                         setVehiculoPreseleccionadoResto(null)
                       }
+                      setSlotResto(null)
+                      form.setFieldValue('_resto_fecha_programada', undefined)
+                      setHoraInicioResto(undefined)
+                      setHoraFinResto(undefined)
                     }}
                   />
                 </>
@@ -325,6 +332,10 @@ export function SeccionRestoProgramado({
                       }
                     : null,
                 )
+                setSlotResto(null)
+                form.setFieldValue('_resto_fecha_programada', undefined)
+                setHoraInicioResto(undefined)
+                setHoraFinResto(undefined)
               }}
             />
             <div style={{ display: 'none' }}>

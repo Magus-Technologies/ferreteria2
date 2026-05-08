@@ -86,6 +86,7 @@ export function SeccionDomicilio({
     ubicacionGps,
     setUbicacionGps,
     slotDomicilio,
+    setSlotDomicilio,
     setModalCalendarioDomicilio,
   } = useDetallesEntrega()
 
@@ -251,6 +252,10 @@ export function SeccionDomicilio({
                     form.setFieldValue('vehiculo_id', undefined)
                     setVehiculoPreseleccionadoDomicilio(null)
                   }
+                  setSlotDomicilio(null)
+                  form.setFieldValue('fecha_programada', undefined)
+                  form.setFieldValue('hora_inicio', undefined)
+                  form.setFieldValue('hora_fin', undefined)
                 }}
               />
             </>
@@ -336,6 +341,10 @@ export function SeccionDomicilio({
                   }
                 : null,
             )
+            setSlotDomicilio(null)
+            form.setFieldValue('fecha_programada', undefined)
+            form.setFieldValue('hora_inicio', undefined)
+            form.setFieldValue('hora_fin', undefined)
           }}
         />
         <div style={{ display: 'none' }}>
