@@ -260,8 +260,12 @@ export default function TableProductoSearch({
       const api = tableGridRef.current?.api;
       const firstNode = api?.getDisplayedRowAtIndex(0);
       if (firstNode) {
-        firstNode.setSelected(true);
-        setProductoSeleccionadoSearchStore(firstNode.data as any);
+        // Don't override if the user already selected a row manually
+        const alreadySelected = (api?.getSelectedNodes()?.length ?? 0) > 0;
+        if (!alreadySelected) {
+          firstNode.setSelected(true);
+          setProductoSeleccionadoSearchStore(firstNode.data as any);
+        }
         return;
       }
       if (++attempts < maxAttempts) {

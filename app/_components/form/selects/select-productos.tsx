@@ -234,13 +234,16 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   }
 
   const primeraVez = useRef(true)
+  const prevIsFetchingRef = useRef(false)
 
   useEffect(() => {
     if (primeraVez.current) {
       primeraVez.current = false
       return
     }
-    if (manualSearch) {
+    const fetchJustCompleted = prevIsFetchingRef.current === true && isFetching === false
+    prevIsFetchingRef.current = isFetching
+    if (manualSearch && fetchJustCompleted) {
       setManualSearch(false)
       if (productos && productos.length === 1) {
         handleOnlyOneResult?.(productos[0])
