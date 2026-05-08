@@ -20,12 +20,14 @@ export function useColumnsComprar({
   incluye_precios = true,
   cantidad_pendiente = false,
   compra,
+  onRefreshCells,
 }: {
   form: FormInstance
   remove: (index: number | number[]) => void
   incluye_precios?: boolean
   cantidad_pendiente?: boolean
   compra?: CompraConUnidadDerivadaNormal
+  onRefreshCells?: () => void
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form) || 1
@@ -314,18 +316,13 @@ export function useColumnsComprar({
                   : undefined
               }
               formWithMessage={false}
-              onChange={val => {
+              onBlur={() => {
+                const cant = Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
-                  Number(val ?? 0) *
-                    Number(
-                      form.getFieldValue([
-                        'productos',
-                        value,
-                        'precio_compra',
-                      ]) ?? 0
-                    )
+                  cant * Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
                 )
+                onRefreshCells?.()
               }}
               disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
               (compra?.pagos_de_compras_count ?? 0) > 0}
@@ -506,6 +503,7 @@ export function useColumnsComprar({
                     form.getFieldValue(['productos', value, 'producto_id'])
                   ),
                 })
+                onRefreshCells?.()
               }}
               disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
               (compra?.pagos_de_compras_count ?? 0) > 0}
@@ -592,6 +590,7 @@ export function useColumnsComprar({
                         ]) ?? 0
                       )
                 )
+                onRefreshCells?.()
               }}
               disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
               (compra?.pagos_de_compras_count ?? 0) > 0}

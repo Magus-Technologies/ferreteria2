@@ -21,6 +21,7 @@ function condicionEditarProductoCompra({
 }) {
   return (
     item.producto_id === producto.producto_id &&
+    item.unidad_derivada_id === producto.unidad_derivada_id &&
     item.bonificacion === producto.bonificacion
   )
 }
@@ -171,9 +172,10 @@ export default function TableComprar({
 
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form)
-  const productos = Form.useWatch('productos', form)
 
   const agGridRef = useRef<AgGridReact>(null)
+
+  const refreshCells = () => agGridRef.current?.api?.refreshCells({ force: true })
 
   const columns = useColumnsComprar({
     remove,
@@ -181,13 +183,14 @@ export default function TableComprar({
     incluye_precios,
     cantidad_pendiente,
     compra,
+    onRefreshCells: refreshCells,
   })
 
   useEffect(() => {
     if (agGridRef.current?.api) {
       agGridRef.current.api.refreshCells({ force: true })
     }
-  }, [tipo_moneda, tipo_de_cambio, productos])
+  }, [tipo_moneda, tipo_de_cambio])
 
   return (
     <>
