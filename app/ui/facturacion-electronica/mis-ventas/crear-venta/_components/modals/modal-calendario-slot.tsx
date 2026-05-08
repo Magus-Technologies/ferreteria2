@@ -19,11 +19,19 @@ interface SlotSeleccionado {
   end: Date
 }
 
+interface VehiculoVisible {
+  id: number
+  name: string
+  tipo?: string | null
+  placa?: string | null
+}
+
 interface ModalCalendarioSlotProps {
   open: boolean
   onClose: () => void
   onAplicar: (slot: SlotSeleccionado) => void
   vehiculo_id?: number
+  vehiculo?: VehiculoVisible | null
 }
 
 export default function ModalCalendarioSlot({
@@ -31,6 +39,7 @@ export default function ModalCalendarioSlot({
   onClose,
   onAplicar,
   vehiculo_id,
+  vehiculo,
 }: ModalCalendarioSlotProps) {
   const [slotPendiente, setSlotPendiente] = useState<SlotSeleccionado | null>(null)
 
@@ -63,9 +72,21 @@ export default function ModalCalendarioSlot({
       open={open}
       onCancel={handleCancel}
       title={
-        <div className="flex items-center gap-2">
-          <FaCalendar className="text-amber-500" />
-          <span className="font-bold text-slate-700">Elegir fecha y hora de entrega</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <FaCalendar className="text-amber-500" />
+            <span className="font-bold text-slate-700">Elegir fecha y hora de entrega</span>
+          </div>
+          <div className="text-xs text-slate-500 ml-6">
+            Unidad:
+            <span className="font-semibold text-slate-700 ml-1">
+              {vehiculo
+                ? `${vehiculo.name}${vehiculo.placa ? ` (${vehiculo.placa})` : ''}${vehiculo.tipo ? ` - ${vehiculo.tipo}` : ''}`
+                : vehiculo_id
+                  ? `ID ${vehiculo_id}`
+                  : 'Sin unidad asignada'}
+            </span>
+          </div>
         </div>
       }
       width={900}
@@ -114,7 +135,6 @@ export default function ModalCalendarioSlot({
             onSelectSlot={handleSelectSlot}
             onSelectEvent={() => {}}
             soloSeleccion
-            vehiculo_id={vehiculo_id}
           />
         </div>
       </Suspense>

@@ -87,6 +87,7 @@ function ModalDetallesEntregaInner({
     setUbicacionGps,
     setDireccionSeleccionada,
     setMostrarMapa,
+    vehiculoPreseleccionadoDomicilio,
     // Resto
     programarResto,
     setProgramarResto,
@@ -96,6 +97,7 @@ function ModalDetallesEntregaInner({
     setDireccionSeleccionadaResto,
     setUbicacionGpsResto,
     setMostrarMapaResto,
+    vehiculoPreseleccionadoResto,
     // Parcial
     productosEntrega, setProductosEntrega,
     // Slots + calendario
@@ -618,6 +620,7 @@ function ModalDetallesEntregaInner({
         onClose={() => setModalCalendarioDomicilio(false)}
         onAplicar={handleAplicarSlotDomicilio}
         vehiculo_id={vehiculoId}
+        vehiculo={vehiculoPreseleccionadoDomicilio}
       />
 
       {/* Modal de calendario para seleccionar slot - Resto Parcial */}
@@ -626,6 +629,7 @@ function ModalDetallesEntregaInner({
         onClose={() => setModalCalendarioResto(false)}
         onAplicar={handleAplicarSlotResto}
         vehiculo_id={restoVehiculoId}
+        vehiculo={vehiculoPreseleccionadoResto}
       />
     </Modal>
   )

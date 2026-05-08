@@ -227,7 +227,7 @@ export default function CalendarProgramacionEntregas({
     fecha_hasta,
     chofer_id,
     vehiculo_id,
-    enabled: !soloSeleccion || !!vehiculo_id,
+    enabled: true,
   })
 
   // Transformar entregas a eventos del calendario

@@ -19,7 +19,7 @@ interface SelectVehiculosProps {
   className?: string
   allowClear?: boolean
   value?: number
-  onChange?: (value: number | undefined) => void
+  onChange?: (value: number | undefined, vehiculo?: Vehiculo) => void
   vehiculoPreseleccionado?: (Pick<Vehiculo, 'id' | 'name' | 'tipo' | 'placa'> & Partial<Vehiculo>) | null
   [key: string]: any
 }
@@ -64,7 +64,7 @@ export default function SelectVehiculos({
       if (form && propsForm?.name) {
         form.setFieldValue(propsForm.name, vehiculo.id)
       }
-      onChange?.(vehiculo.id)
+      onChange?.(vehiculo.id, vehiculo)
       setOpenBuscar(false)
     }
   }
@@ -74,7 +74,7 @@ export default function SelectVehiculos({
     if (form && propsForm?.name) {
       form.setFieldValue(propsForm.name, undefined)
     }
-    onChange?.(undefined)
+    onChange?.(undefined, undefined)
   }
 
   const handleCrear = async () => {

@@ -314,6 +314,18 @@ export function SeccionRestoProgramado({
               className="w-full"
               allowClear
               vehiculoPreseleccionado={vehiculoPreseleccionadoResto}
+              onChange={(_id, vehiculo) => {
+                setVehiculoPreseleccionadoResto(
+                  vehiculo
+                    ? {
+                        id: vehiculo.id,
+                        name: vehiculo.name,
+                        tipo: vehiculo.tipo,
+                        placa: vehiculo.placa ?? null,
+                      }
+                    : null,
+                )
+              }}
             />
             <div style={{ display: 'none' }}>
               <Form.Item name="_resto_vehiculo_id"><Input /></Form.Item>
@@ -471,4 +483,3 @@ export function SeccionRestoProgramado({
     </div>
   )
 }
-
