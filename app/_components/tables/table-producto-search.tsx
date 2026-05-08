@@ -188,7 +188,7 @@ export default function TableProductoSearch({
         }
 
         if (filtroStock === FiltroStock.STOCK_CERO) {
-          return stockActual < STOCK_THRESHOLD;
+          return stockActual >= 0 && stockActual < STOCK_THRESHOLD;
         }
 
         return true;

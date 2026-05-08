@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { TipoMoneda } from '~/types'
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
@@ -27,6 +28,8 @@ export function useColumnsComprar({
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form) || 1
+  // Captura el valor dólar mientras el usuario escribe sin disparar re-renders
+  const dollarValueRefs = useRef<Map<number, number>>(new Map())
 
   const columns: ColDef<FormListFieldData>[] = [
     {
@@ -374,26 +377,48 @@ export function useColumnsComprar({
       colId: 'precio_conversion',
       headerName: 'Precio ($)',
       field: 'name',
-      minWidth: 100,
-      width: 100,
-      valueGetter: (params: ValueGetterParams<FormListFieldData>) => {
-        const value = params.data?.name
-        if (value === undefined) return 0
-        const allValues = form.getFieldsValue(true)
-        const currentTipoDeCambio = Number(allValues.tipo_de_cambio) || 1
-        const precioCompraSoles = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
-        
-        // Convertimos de Soles a Dólares
-        return precioCompraSoles / currentTipoDeCambio
-      },
-      cellRenderer: (params: ICellRendererParams) => {
+      minWidth: 110,
+      width: 110,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const precioSoles = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
+        const precioUsd = tipo_de_cambio > 0 ? precioSoles / tipo_de_cambio : 0
+        const isReadOnly = (compra?.recepciones_almacen_count ?? 0) > 0 || (compra?.pagos_de_compras_count ?? 0) > 0
         return (
-          <div className='flex items-center h-full font-semibold text-slate-500 italic'>
-            $ 
-            {Number(params.value || 0).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 4,
-            })}
+          <div className='flex items-center h-full'>
+            <InputNumberBase
+              prefix='$ '
+              size='small'
+              defaultValue={precioUsd}
+              precision={4}
+              min={0}
+              formWithMessage={false}
+              onChange={(val) => {
+                // Solo guardar en ref, sin tocar el form → no re-render → no pierde el foco
+                if (val !== null && val !== undefined) {
+                  dollarValueRefs.current.set(value, Number(val))
+                }
+              }}
+              onBlur={() => {
+                const dolares = dollarValueRefs.current.get(value)
+                if (dolares === undefined) return
+                const soles = dolares * tipo_de_cambio
+                form.setFieldValue(['productos', value, 'precio_compra'], soles)
+                form.setFieldValue(
+                  ['productos', value, 'subtotal'],
+                  soles * Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
+                )
+                onChangeCostoTablaCompras({
+                  form,
+                  value,
+                  costo: soles,
+                  producto_id: Number(form.getFieldValue(['productos', value, 'producto_id'])),
+                })
+                dollarValueRefs.current.delete(value)
+              }}
+              disabled={isReadOnly}
+              readOnly={isReadOnly}
+              variant={isReadOnly ? 'borderless' : undefined}
+            />
           </div>
         )
       },
@@ -494,6 +519,7 @@ export function useColumnsComprar({
               min={0}
               formWithMessage={false}
               onChange={val => {
+                dollarValueRefs.current.delete(value)
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
                   Number(val ?? 0) *

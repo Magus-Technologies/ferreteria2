@@ -12,7 +12,7 @@ import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
 import { FaMoneyBillWave } from 'react-icons/fa'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import type { ColDef, ICellRendererParams, RowStyle } from 'ag-grid-community'
 
 interface ModalCobroMultipleProps {
@@ -27,6 +27,7 @@ interface VentaConDistribucion extends VentaCompleta {
   _montoAPagar: number
   _seleccionada: boolean
   _desplieguePagoId: string | undefined
+  _numeroOperacion: string | undefined
 }
 
 function calcularTotalVenta(venta: VentaCompleta): number {
@@ -52,6 +53,10 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
   const [clienteId, setClienteId] = useState<number | undefined>()
   const [ventasDistribucion, setVentasDistribucion] = useState<VentaConDistribucion[]>([])
   const [montoTotal, setMontoTotal] = useState<number>(0)
+  // Ref para guardar valores de N° Operación individuales sin causar re-renders
+  const numeroOpRefs = useRef<Map<string, string>>(new Map())
+  // Versión que solo incrementa cuando el N° Operación global cambia → fuerza remount de inputs
+  const [globalNumOpVersion, setGlobalNumOpVersion] = useState(0)
 
   // Query para obtener despliegues de pago (mismo endpoint que SelectDespliegueDePago para consistencia)
   const { data: desplieguesData } = useQuery({
@@ -69,26 +74,12 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
     setVentasDistribucion(prev => prev.map(v => ({ ...v, _desplieguePagoId: value })))
   }, [])
 
-  useEffect(() => {
-    if (open) {
-      // Establecer fecha de hoy
-      form.setFieldValue('fecha', dayjs())
-      
-      // Setear Efectivo por defecto cuando los datos estén disponibles
-      if (desplieguesData && desplieguesData.length > 0) {
-        // Buscar el método que sea Efectivo (generalmente tiene tipo 'efectivo' o el label contiene 'EFECTIVO')
-        const efectivo = desplieguesData.find((d: any) =>
-          d.tipo?.toLowerCase() === 'efectivo' || 
-          d.label?.toUpperCase().includes('EFECTIVO') || 
-          d.label?.toUpperCase().includes('CCH')
-        )
-        if (efectivo) {
-          form.setFieldValue('despliegue_de_pago_id', efectivo.value)
-          handleGlobalPagoChange(efectivo.value)
-        }
-      }
-    }
-  }, [open, desplieguesData, handleGlobalPagoChange])
+  const handleGlobalNumeroOperacionChange = useCallback((value: string | undefined) => {
+    setVentasDistribucion(prev => prev.map(v => ({ ...v, _numeroOperacion: value })))
+    // Limpiar overrides individuales y forzar remount de todos los inputs
+    numeroOpRefs.current.clear()
+    setGlobalNumOpVersion(v => v + 1)
+  }, [])
 
   const { data: ventasData, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS_POR_COBRAR, 'cobro-multiple', clienteId],
@@ -118,6 +109,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         _montoAPagar: 0,
         _seleccionada: true,
         _desplieguePagoId: defaultPago,
+        _numeroOperacion: undefined,
       }
     })
     ventas.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
@@ -162,11 +154,35 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
     ))
   }, [])
 
-  const handlePagoRow = useCallback((ventaId: string, value: string | undefined) => {
-    setVentasDistribucion(prev => prev.map(v =>
-      v.id === ventaId ? { ...v, _desplieguePagoId: value } : v
-    ))
+  const handleNumeroOperacion = useCallback((ventaId: string, value: string | undefined) => {
+    // Guardar en ref sin causar re-render (evita que el input pierda el foco)
+    if (value) {
+      numeroOpRefs.current.set(ventaId, value)
+    } else {
+      numeroOpRefs.current.delete(ventaId)
+    }
   }, [])
+
+  useEffect(() => {
+    if (open) {
+      // Establecer fecha de hoy
+      form.setFieldValue('fecha', dayjs())
+      
+      // Setear Efectivo por defecto cuando los datos estén disponibles
+      if (desplieguesData && desplieguesData.length > 0) {
+        // Buscar el método que sea Efectivo (generalmente tiene tipo 'efectivo' o el label contiene 'EFECTIVO')
+        const efectivo = desplieguesData.find((d: any) =>
+          d.tipo?.toLowerCase() === 'efectivo' || 
+          d.label?.toUpperCase().includes('EFECTIVO') || 
+          d.label?.toUpperCase().includes('CCH')
+        )
+        if (efectivo) {
+          form.setFieldValue('despliegue_de_pago_id', efectivo.value)
+          handleGlobalPagoChange(efectivo.value)
+        }
+      }
+    }
+  }, [open, desplieguesData, form, handleGlobalPagoChange])
 
   // Observar el modo de pago seleccionado para mostrar/ocultar N° Operación
   const selectedPagoId = Form.useWatch('despliegue_de_pago_id', form)
@@ -209,10 +225,9 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
       if (distribucion.length === 0) throw new Error('No hay montos asignados')
 
-      // Validar que cada fila con monto tenga modo de pago
-      const sinPago = distribucion.filter(v => !v._desplieguePagoId)
-      if (sinPago.length > 0) {
-        throw new Error(`Falta modo de pago en: ${sinPago.map(v => `${v.serie}-${v.numero}`).join(', ')}`)
+      // Validar que se haya seleccionado un modo de pago global
+      if (!values.despliegue_de_pago_id) {
+        throw new Error('Debe seleccionar un modo de pago')
       }
 
       return ventaApi.storeCobroMultiple({
@@ -225,7 +240,8 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         distribucion: distribucion.map(v => ({
           venta_id: v.id,
           monto: v._montoAPagar,
-          despliegue_de_pago_id: v._desplieguePagoId ? String(extractDesplieguePagoId(v._desplieguePagoId) ?? v._desplieguePagoId) : undefined,
+          despliegue_de_pago_id: values.despliegue_de_pago_id ? String(extractDesplieguePagoId(values.despliegue_de_pago_id) ?? values.despliegue_de_pago_id) : undefined,
+          numero_operacion: numeroOpRefs.current.get(v.id) ?? v._numeroOperacion ?? undefined,
         })),
       })
     },
@@ -286,6 +302,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       // Resetear montos
       setMontoTotal(0)
       setVentasDistribucion([])
+      numeroOpRefs.current.clear()
       
       // NO cerrar el modal - el usuario puede seguir registrando pagos
       // handleClose() <- REMOVIDO
@@ -405,28 +422,49 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       width: 200,
       cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
         if (!params.data) return null
-        const necesitaPago = params.data._montoAPagar > 0 && !params.data._desplieguePagoId
+        const globalPago = form.getFieldValue('despliegue_de_pago_id')
+        const pagoLabel = desplieguesData?.find((d: any) => d.value === globalPago)?.label || 'No seleccionado'
         return (
-          <div className="py-1">
-            <SelectDespliegueDePago
-              placeholder={necesitaPago ? '⚠ Requerido' : 'Modo pago'}
-              value={params.data._desplieguePagoId}
-              onChange={(val: any) => handlePagoRow(params.data!.id, val || undefined)}
-              disabled={!params.data._seleccionada || params.data._montoAPagar <= 0}
-              size='small'
-              variant='outlined'
-              formWithMessage={false}
-            />
+          <div className="py-1 flex items-center h-full">
+            <span className='text-xs text-gray-900 font-medium'>{pagoLabel}</span>
           </div>
         )
       },
     },
-  ], [])
+    {
+      headerName: 'N° Operación',
+      field: '_numeroOperacion',
+      width: 150,
+      cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
+        if (!params.data) return null
+        const disabled = !params.data._seleccionada || params.data._montoAPagar <= 0
+        return (
+          <div className="py-1" onClick={(e) => e.stopPropagation()}>
+            <Input
+              key={`num-op-${params.data.id}-${globalNumOpVersion}`}
+              placeholder='N° Op.'
+              defaultValue={params.data._numeroOperacion || ''}
+              onChange={(e) => {
+                e.stopPropagation()
+                handleNumeroOperacion(params.data!.id, e.target.value || undefined)
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onFocus={(e) => e.stopPropagation()}
+              disabled={disabled}
+              size='small'
+              maxLength={50}
+              className='w-full'
+            />
+          </div>
+        )
+      },
+      suppressKeyboardEvent: () => true,
+    },
+  ], [desplieguesData, form, handleNumeroOperacion, handleMontoManual, toggleVenta, globalNumOpVersion])
 
-  // ¿Todas las filas con monto tienen modo de pago?
-  const filasConMonto = ventasDistribucion.filter(v => v._montoAPagar > 0)
-  const faltaPago = filasConMonto.some(v => !v._desplieguePagoId)
-  const okDisabled = totalDistribuido <= 0 || Math.abs(montoSinDistribuir) > 0.01 || faltaPago
+  // Validar que se haya seleccionado modo de pago global
+  const desplieguePagoGlobal = Form.useWatch('despliegue_de_pago_id', form)
+  const okDisabled = totalDistribuido <= 0 || Math.abs(montoSinDistribuir) > 0.01 || !desplieguePagoGlobal
 
   return (
     <>
@@ -485,7 +523,10 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
           <div className={isEfectivo ? 'invisible' : 'visible'}>
             <LabelBase label='N° Operación:' orientation='column'>
               <Form.Item name='numero_operacion' noStyle>
-                <Input placeholder='Opcional' />
+                <Input 
+                  placeholder='Opcional' 
+                  onChange={(e) => handleGlobalNumeroOperacionChange(e.target.value || undefined)}
+                />
               </Form.Item>
             </LabelBase>
           </div>
@@ -524,36 +565,27 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
               </div>
             </div>
 
-            {/* Tabla de ventas pendientes con AG Grid */}
+            {/* Tabla de ventas pendientes con TableWithTitle */}
             <div className='h-[400px] w-full'>
-              <TableBase<VentaConDistribucion>
-                ref={gridRef}
+              <TableWithTitle<VentaConDistribucion>
+                id="modal-cobro-multiple-ventas"
+                title="Ventas Pendientes"
                 columnDefs={columnDefs}
                 rowData={ventasDistribucion}
+                tableRef={gridRef}
                 rowSelection={false}
-                withNumberColumn={false}
                 selectionColor="transparent"
-                persistColumnState={true}
-                tableKey="modal-cobro-multiple-ventas"
-                isVisible={open}
+                exportExcel={true}
+                exportPdf={true}
+                selectColumns={true}
                 getRowStyle={(params): RowStyle | undefined => {
                   if (!params.data) return undefined
-                  const necesitaPago = params.data._montoAPagar > 0 && !params.data._desplieguePagoId
-                  if (necesitaPago) return { background: '#fef2f2' } as RowStyle
                   if (params.data._montoAPagar > 0) return { background: '#fff1f2' } as RowStyle
                   if (!params.data._seleccionada) return { background: '#f9fafb', opacity: '0.6' } as RowStyle
                   return undefined
                 }}
-                domLayout="normal"
-                suppressHorizontalScroll={false}
               />
             </div>
-
-            {faltaPago && (
-              <div className='mt-2 text-xs text-red-500 font-medium'>
-                ⚠ Selecciona el modo de pago en cada fila con monto asignado
-              </div>
-            )}
 
             {/* Observación */}
             <div className='mt-3'>

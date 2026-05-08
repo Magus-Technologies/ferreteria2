@@ -215,25 +215,54 @@ export default function KardexView() {
     {
       headerName: 'Costo Anterior',
       field: 'costo_anterior' as keyof MovimientoKardex,
-      width: 110,
-      minWidth: 100,
-      type: 'numericColumn',
-      cellStyle: { color: '#6b7280' },
-      valueFormatter: (params) => {
-        if (!params.value) return '-'
-        return `S/. ${Number(params.value).toFixed(2)}`
+      width: 130,
+      minWidth: 110,
+      cellRenderer: (params: any) => {
+        const costoFrac = Number(params.value ?? 0)
+        if (!costoFrac) return <span className='text-gray-400 text-xs'>-</span>
+        const cantidad = Number(params.data?.cantidad ?? 0)
+        const cantidadFraccion = Number(params.data?.cantidad_fraccion ?? 0)
+        const factor = (cantidad > 0 && cantidadFraccion > 0) ? cantidadFraccion / cantidad : 1
+        const costoUnd = costoFrac * factor
+        const unidad = params.data?.unidad || 'und'
+        return (
+          <div className='flex items-center h-full'>
+            <span className='text-gray-700 font-semibold text-xs'>
+              S/. {costoUnd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+              <span className='text-gray-400 font-normal ml-1'>/ {unidad}</span>
+            </span>
+          </div>
+        )
       },
     },
     {
       headerName: 'Costo Actual',
       field: 'costo_actual' as keyof MovimientoKardex,
-      width: 110,
-      minWidth: 100,
-      type: 'numericColumn',
-      cellStyle: { color: '#059669', fontWeight: 'bold' },
-      valueFormatter: (params) => {
-        if (!params.value) return '-'
-        return `S/. ${Number(params.value).toFixed(2)}`
+      width: 160,
+      minWidth: 130,
+      cellRenderer: (params: any) => {
+        const costoFrac = Number(params.value ?? 0)
+        if (!costoFrac) return <span className='text-gray-400 text-xs'>-</span>
+        const cantidad = Number(params.data?.cantidad ?? 0)
+        const cantidadFraccion = Number(params.data?.cantidad_fraccion ?? 0)
+        const factor = (cantidad > 0 && cantidadFraccion > 0) ? cantidadFraccion / cantidad : 1
+        const costoUnd = costoFrac * factor
+        const costoAnt = Number(params.data?.costo_anterior ?? 0)
+        const costoAntUnd = costoAnt * factor
+        const cambio = costoAntUnd > 0 ? ((costoUnd - costoAntUnd) / costoAntUnd) * 100 : 0
+        const subio = cambio > 0.01
+        const bajo = cambio < -0.01
+        const unidad = params.data?.unidad || 'und'
+        return (
+          <div className='flex items-center h-full'>
+            <span className={`font-bold text-xs ${subio ? 'text-rose-600' : bajo ? 'text-emerald-600' : 'text-emerald-700'}`}>
+              S/. {costoUnd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+              <span className='font-normal text-gray-500 ml-1'>/ {unidad}</span>
+              {subio && <span className='ml-1 text-rose-500 text-[10px]'>▲{Math.abs(cambio).toFixed(1)}%</span>}
+              {bajo && <span className='ml-1 text-emerald-500 text-[10px]'>▼{Math.abs(cambio).toFixed(1)}%</span>}
+            </span>
+          </div>
+        )
       },
     },
     {
@@ -263,21 +292,18 @@ export default function KardexView() {
       width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
-      cellStyle: (params: any) => {
-        if (params.value > 0) return { color: '#16a34a', fontWeight: 'bold' }
-        return null
-      },
       valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
-        return Number(params.value).toFixed(2)
+        return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!params.value || params.value === 0) return '-'
+        if (!params.value || params.value === 0) return <span>-</span>
+        const cantidad = Number(params.data?.cantidad ?? 0)
+        const unidad = params.data?.unidad || ''
         return (
-          <GetStock
-            stock_fraccion={Number(params.value)}
-            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
-          />
+          <div className='flex items-center h-full'>
+            <span className='text-emerald-600 font-bold text-xs'>{cantidad} <span className='font-normal text-gray-500'>{unidad}</span></span>
+          </div>
         )
       }
     } as ColDef<MovimientoKardex>,
@@ -287,21 +313,18 @@ export default function KardexView() {
       width: 110,
       minWidth: 90,
       type: 'numericColumn' as const,
-      cellStyle: (params: any) => {
-        if (params.value > 0) return { color: '#dc2626', fontWeight: 'bold' }
-        return null
-      },
       valueFormatter: (params: any) => {
         if (!params.value || params.value === 0) return '-'
-        return Number(params.value).toFixed(2)
+        return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!params.value || params.value === 0) return '-'
+        if (!params.value || params.value === 0) return <span>-</span>
+        const cantidad = Number(params.data?.cantidad ?? 0)
+        const unidad = params.data?.unidad || ''
         return (
-          <GetStock
-            stock_fraccion={Number(params.value)}
-            unidades_contenidas={Number(params.data?.unidades_contenidas ?? 0)}
-          />
+          <div className='flex items-center h-full'>
+            <span className='text-red-600 font-bold text-xs'>{cantidad} <span className='font-normal text-gray-500'>{unidad}</span></span>
+          </div>
         )
       }
     } as ColDef<MovimientoKardex>,

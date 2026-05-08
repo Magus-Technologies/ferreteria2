@@ -233,6 +233,7 @@ export const ventaApi = {
     desde?: string;
     hasta?: string;
     search?: string;
+    tipo_documento?: string;
     per_page?: number;
     page?: number;
     dias?: number;
