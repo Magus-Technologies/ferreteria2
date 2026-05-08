@@ -303,7 +303,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         }}
         searchValue={text}
         prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
-        loading={loading}
+        loading={withSearch ? false : loading}
         variant={variant}
         placeholder={
           placeholder ||
@@ -341,6 +341,12 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           (item, index, self) =>
             self.findIndex((i) => i.value === item.value) === index
         )}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+        }}
         onKeyUp={(e) => {
           if (e.key === 'Enter') {
             if (withSearch) {
