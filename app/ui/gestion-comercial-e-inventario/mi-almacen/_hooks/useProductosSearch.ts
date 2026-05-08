@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { productosApiV2 } from '~/lib/api';
 import type { GetProductosParams } from '~/app/_types/producto';
@@ -44,8 +45,13 @@ export function useProductosSearch({
     staleTime: 1000 * 60 * 5, // 5 minutos de cache
   });
 
-  // Aplanar todas las páginas cargadas en un solo array de productos para AG Grid
-  const data = query.data?.pages.flatMap((page) => page?.data ?? []) ?? [];
+  // Aplanar todas las páginas cargadas en un solo array de productos para AG Grid.
+  // useMemo garantiza referencia estable — sin esto flatMap crea un array nuevo
+  // en cada render, lo que resetea la selección de AG Grid innecesariamente.
+  const data = useMemo(
+    () => query.data?.pages.flatMap((page) => page?.data ?? []) ?? [],
+    [query.data]
+  );
 
   return {
     data,
