@@ -293,11 +293,11 @@ export default function KardexView() {
       minWidth: 90,
       type: 'numericColumn' as const,
       valueFormatter: (params: any) => {
-        if (!params.value || params.value === 0) return '-'
+        if (!Number(params.value)) return '-'
         return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!params.value || params.value === 0) return <span>-</span>
+        if (!Number(params.value)) return <span>-</span>
         const cantidad = Number(params.data?.cantidad ?? 0)
         const unidad = params.data?.unidad || ''
         return (
@@ -314,11 +314,11 @@ export default function KardexView() {
       minWidth: 90,
       type: 'numericColumn' as const,
       valueFormatter: (params: any) => {
-        if (!params.value || params.value === 0) return '-'
+        if (!Number(params.value)) return '-'
         return Number(params.data?.cantidad ?? 0).toFixed(2)
       },
       cellRenderer: (params: any) => {
-        if (!params.value || params.value === 0) return <span>-</span>
+        if (!Number(params.value)) return <span>-</span>
         const cantidad = Number(params.data?.cantidad ?? 0)
         const unidad = params.data?.unidad || ''
         return (

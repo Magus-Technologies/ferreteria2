@@ -127,13 +127,20 @@ export default function ModalTrasladoBoveda({
             options={subCajas.flatMap((caja: any) =>
               (caja.metodos_pago || [])
                 .filter((metodo: any) => {
-                  const nombre = (metodo.metodo_de_pago_nombre || '').toLowerCase();
+                  const nombreMetodo = (metodo.metodo_de_pago_nombre || '').toLowerCase();
+                  const nombreDespliegue = (metodo.nombre || '').toLowerCase();
                   const cuenta = metodo.cuenta_bancaria;
                   const sinCuenta = !cuenta || cuenta === 'SIN-CUENTA';
-                  return sinCuenta && nombre.includes('efectivo');
+                  const esEfectivo = sinCuenta && (
+                    nombreMetodo.includes('efectivo') ||
+                    nombreDespliegue.includes('efectivo')
+                  );
+                  // Solo mostrar efectivos que tengan saldo > 0
+                  const tieneSaldo = parseFloat(metodo.saldo_vendedor || '0') > 0;
+                  return esEfectivo && tieneSaldo;
                 })
                 .map((metodo: any) => ({
-                  label: `${caja.nombre} / ${metodo.nombre} ${metodo.nombre_titular ? `(${metodo.nombre_titular})` : ''} - S/ ${metodo.saldo_vendedor}`,
+                  label: `${caja.nombre} / ${metodo.nombre} - S/ ${parseFloat(metodo.saldo_vendedor).toFixed(2)}`,
                   value: `${caja.id}|||${metodo.despliegue_pago_id}`,
                   saldo_efectivo: metodo.saldo_vendedor,
                 }))
@@ -167,7 +174,8 @@ export default function ModalTrasladoBoveda({
             prefix="S/"
             placeholder="0.00"
             className="w-full"
-            min={0}
+            min={0.01}
+            max={efectivoDisponible}
             step={0.01}
             precision={2}
           />
