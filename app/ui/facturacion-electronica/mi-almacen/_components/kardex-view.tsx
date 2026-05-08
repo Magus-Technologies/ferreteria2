@@ -28,6 +28,7 @@ const tipoVentaColors: Record<string, string> = {
   'COTIZACIÓN': 'blue',
   'PRÉSTAMO': 'orange',
   'GUÍA': 'purple',
+  'ENTREGA': 'geekblue',
 }
 
 const estadoColors: Record<string, string> = {
@@ -36,10 +37,20 @@ const estadoColors: Record<string, string> = {
   'ANULADA': 'volcano',
   'AJUSTE POR EDICIÓN': 'purple',
   'DEVOLUCIÓN': 'cyan',
+  'RECEPCIONADO': 'cyan',
+  'ENTREGA ANULADA': 'magenta',
 }
 
 // Función para parsear el movimiento y extraer tipo y estado
 const parseMovimiento = (movimiento: string) => {
+  // Entregas
+  if (movimiento === 'ENTREGA ANULADA') {
+    return { tipo: 'ENTREGA', estado: 'ENTREGA ANULADA' }
+  }
+  if (movimiento === 'ENTREGA') {
+    return { tipo: 'ENTREGA', estado: 'RECEPCIONADO' }
+  }
+
   // Casos especiales con tipo de venta
   // "AJUSTE POR EDICIÓN (CONTADO)" o "AJUSTE POR EDICIÓN (CRÉDITO)"
   const ajusteMatch = movimiento.match(/^AJUSTE POR EDICIÓN \((CONTADO|CRÉDITO)\)$/)
@@ -132,7 +143,7 @@ export default function KardexView() {
     ] : []),
     {
       headerName: 'Cliente',
-      field: 'cliente_nombre' as keyof MovimientoKardex,
+      field: 'cliente_nombre',
       width: 180,
       minWidth: 150,
       cellStyle: { color: '#0891b2', fontStyle: 'italic' },
@@ -184,8 +195,20 @@ export default function KardexView() {
       headerName: 'Documento',
       field: 'documento',
       flex: productoId ? 1 : undefined,
-      width: productoId ? undefined : 200,
+      width: productoId ? undefined : 220,
       minWidth: 200,
+      cellRenderer: (params: any) => {
+        const nota = params.data?.nota
+        if (nota) {
+          return (
+            <div className='flex flex-col justify-center h-full leading-tight'>
+              <span>{params.value || '-'}</span>
+              <span className='text-[10px] text-magenta-500 text-pink-500'>Motivo: {nota}</span>
+            </div>
+          )
+        }
+        return params.value || '-'
+      },
     },
     {
       headerName: 'Unidad',
@@ -467,15 +490,13 @@ export default function KardexView() {
           persistColumnState={false}
           quickFilterText={debouncedSearchText}
           getRowStyle={(params) => {
-            const movimiento = (params.data as MovimientoKardex)?.movimiento
-            const { estado } = parseMovimiento(movimiento || '')
-            
-            if (estado === 'ANULADA') {
-              return { background: '#fef2f2' } as any
-            }
-            if (estado === 'DEVOLUCIÓN') {
-              return { background: '#ecfdf5' }
-            }
+            const mov = (params.data as MovimientoKardex)?.movimiento
+            const { estado } = parseMovimiento(mov || '')
+
+            if (estado === 'ANULADA') return { background: '#fef2f2' } as any
+            if (estado === 'DEVOLUCIÓN') return { background: '#ecfdf5' }
+            if (estado === 'ENTREGA ANULADA') return { background: '#fdf4ff' }
+            if (estado === 'ENTREGA') return { background: '#eff6ff' }
             return undefined
           }}
           optionsSelectColumns={[
