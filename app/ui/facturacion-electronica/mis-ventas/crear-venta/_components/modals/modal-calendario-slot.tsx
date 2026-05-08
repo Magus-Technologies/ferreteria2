@@ -134,6 +134,7 @@ export default function ModalCalendarioSlot({
           <CalendarProgramacionEntregas
             onSelectSlot={handleSelectSlot}
             onSelectEvent={() => {}}
+            vehiculo_id={vehiculo_id}
             soloSeleccion
           />
         </div>
