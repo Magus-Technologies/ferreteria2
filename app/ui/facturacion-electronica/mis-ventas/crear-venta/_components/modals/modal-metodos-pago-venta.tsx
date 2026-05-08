@@ -94,6 +94,15 @@ export default function ModalMetodosPagoVenta({
     return Math.max(0, (Number(recibe_efectivo) || 0) - saldoPendiente)
   }, [isEfectivo, recibe_efectivo, saldoPendiente])
 
+  // Filtrar despliegues por tipo de documento (igual que hace el Select)
+  const desplieguesFiltradosPorTipo = useMemo(() => {
+    if (!desplieguesPago) return []
+    if (!tipo_documento) return desplieguesPago
+    return desplieguesPago.filter((d: any) =>
+      d.tipos_comprobante?.includes(tipo_documento)
+    )
+  }, [desplieguesPago, tipo_documento])
+
   // Resetear formulario y setear Efectivo por defecto al abrir
   useEffect(() => {
     if (open) {
@@ -106,9 +115,10 @@ export default function ModalMetodosPagoVenta({
       // momento de abrir). El usuario puede editarlo.
       modalForm.setFieldValue('recibe_efectivo', roundMoney(totalCobrado))
 
-      // Si ya tenemos los datos, setear Efectivo inmediatamente
-      if (desplieguesPago && desplieguesPago.length > 0) {
-        const efectivo = desplieguesPago.find((d: any) =>
+      // Si ya tenemos los datos, setear Efectivo del tipo de documento correcto
+      if (desplieguesFiltradosPorTipo.length > 0) {
+        const efectivo = desplieguesFiltradosPorTipo.find((d: any) =>
+          d.tipo === 'efectivo' ||
           d.label?.toUpperCase().includes('EFECTIVO') ||
           d.label?.toUpperCase().includes('CCH')
         )
@@ -118,14 +128,15 @@ export default function ModalMetodosPagoVenta({
         }
       }
     }
-  }, [open, modalForm, totalCobrado])
+  }, [open, modalForm, totalCobrado, desplieguesFiltradosPorTipo])
 
   // Si los datos llegan después de abrir el modal, setear Efectivo
   useEffect(() => {
-    if (open && isFetched && desplieguesPago && desplieguesPago.length > 0) {
+    if (open && isFetched && desplieguesFiltradosPorTipo.length > 0) {
       const currentValue = modalForm.getFieldValue('despliegue_de_pago_id')
       if (!currentValue) {
-        const efectivo = desplieguesPago.find((d: any) =>
+        const efectivo = desplieguesFiltradosPorTipo.find((d: any) =>
+          d.tipo === 'efectivo' ||
           d.label?.toUpperCase().includes('EFECTIVO') ||
           d.label?.toUpperCase().includes('CCH')
         )
@@ -135,7 +146,7 @@ export default function ModalMetodosPagoVenta({
         }
       }
     }
-  }, [open, isFetched, desplieguesPago, modalForm])
+  }, [open, isFetched, desplieguesFiltradosPorTipo, modalForm])
 
   // Actualizar "Monto Recibe" cuando cambia el saldo pendiente — se dispara
   // al agregar un pago parcial (el form acaba de resetearse, así que el
