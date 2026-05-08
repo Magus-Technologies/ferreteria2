@@ -325,6 +325,18 @@ export function SeccionDomicilio({
           className="w-full"
           allowClear
           vehiculoPreseleccionado={vehiculoPreseleccionadoDomicilio}
+          onChange={(_id, vehiculo) => {
+            setVehiculoPreseleccionadoDomicilio(
+              vehiculo
+                ? {
+                    id: vehiculo.id,
+                    name: vehiculo.name,
+                    tipo: vehiculo.tipo,
+                    placa: vehiculo.placa ?? null,
+                  }
+                : null,
+            )
+          }}
         />
         <div style={{ display: 'none' }}>
           <Form.Item name="vehiculo_id"><Input /></Form.Item>

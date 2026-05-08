@@ -81,7 +81,7 @@ export default function ModalProductosVencidos() {
                                 </div>
                                 <div>
                                     <h4 className='text-sm font-semibold text-slate-800 m-0'>
-                                        {getTitulo()}
+                                        {getTitulo()} - Resumen y detalle por lote
                                     </h4>
                                     <p className='text-xs text-slate-500 m-0'>
                                         {getDescripcion()}
