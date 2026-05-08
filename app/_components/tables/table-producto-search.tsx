@@ -73,9 +73,7 @@ export default function TableProductoSearch({
     }
   };
 
-  const hasSearch = !!value;
-  // Siempre permitir búsqueda (con o sin texto)
-  const shouldFetch = true;
+  const shouldFetch = !!value
 
   // Mapear filtro de stock a parámetro del backend cuando sea posible
   const getBackendStockFilterValue = (filtro: FiltroStock) => {

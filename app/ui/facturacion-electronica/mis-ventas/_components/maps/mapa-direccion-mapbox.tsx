@@ -212,11 +212,11 @@ export default function MapaDireccionMapbox({
   }
 
   useEffect(() => {
-    if (map.current && direccion && !coordenadasIniciales) {
+    if (map.current && direccion && !coordenadasIniciales && !coordenadas) {
       geocodificarDireccion(direccion)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [direccion])
+  }, [])
 
   if (!MAPBOX_ACCESS_TOKEN) {
     return (
