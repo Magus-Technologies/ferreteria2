@@ -5,7 +5,7 @@ import { FormListFieldData } from 'antd'
 import { StoreValue } from 'antd/es/form/interface'
 import CellFocusWithoutStyle from '~/components/tables/cell-focus-without-style'
 import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import dayjs from 'dayjs'
 import { ValuesCardAgregarProductoCompra } from '../cards/card-agregar-producto-compra'
@@ -172,10 +172,17 @@ export default function TableComprar({
 
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form)
+  const productos = Form.useWatch('productos', form)
 
   const agGridRef = useRef<AgGridReact>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const refreshCells = () => agGridRef.current?.api?.refreshCells({ force: true })
+  const refreshCellsDebounced = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      agGridRef.current?.api?.refreshCells({ force: true })
+    }, 400)
+  }, [])
 
   const columns = useColumnsComprar({
     remove,
@@ -183,7 +190,6 @@ export default function TableComprar({
     incluye_precios,
     cantidad_pendiente,
     compra,
-    onRefreshCells: refreshCells,
   })
 
   useEffect(() => {
@@ -191,6 +197,10 @@ export default function TableComprar({
       agGridRef.current.api.refreshCells({ force: true })
     }
   }, [tipo_moneda, tipo_de_cambio])
+
+  useEffect(() => {
+    refreshCellsDebounced()
+  }, [productos, refreshCellsDebounced])
 
   return (
     <>

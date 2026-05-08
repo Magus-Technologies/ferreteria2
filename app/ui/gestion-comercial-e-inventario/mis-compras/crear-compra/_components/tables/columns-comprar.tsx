@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useRef } from 'react'
 import { focusNext } from '~/app/_utils/autofocus'
 import { TipoMoneda } from '~/types'
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community'
@@ -15,87 +15,23 @@ import { FormCreateCompra } from '../others/body-comprar'
 import { CompraConUnidadDerivadaNormal } from '../others/header'
 import SelectUnidadDerivadaCompra from '../form/select-unidad-derivada-compra'
 
-function DollarPriceInput({
-  form,
-  fieldIndex,
-  tipoDeCambio,
-  precioSoles,
-  isReadOnly,
-  onCommit,
-}: {
-  form: FormInstance
-  fieldIndex: number
-  tipoDeCambio: number
-  precioSoles: number
-  isReadOnly: boolean
-  onCommit: () => void
-}) {
-  const [dollarValue, setDollarValue] = useState(() =>
-    tipoDeCambio > 0 ? precioSoles / tipoDeCambio : 0
-  )
-
-  useEffect(() => {
-    setDollarValue(tipoDeCambio > 0 ? precioSoles / tipoDeCambio : 0)
-  }, [precioSoles, tipoDeCambio])
-
-  const commit = () => {
-    const soles = dollarValue * tipoDeCambio
-    form.setFieldValue(['productos', fieldIndex, 'precio_compra'], soles)
-    form.setFieldValue(
-      ['productos', fieldIndex, 'subtotal'],
-      soles * Number(form.getFieldValue(['productos', fieldIndex, 'cantidad']) ?? 0)
-    )
-    onChangeCostoTablaCompras({
-      form,
-      value: fieldIndex,
-      costo: soles,
-      producto_id: Number(form.getFieldValue(['productos', fieldIndex, 'producto_id'])),
-    })
-    onCommit()
-  }
-
-  return (
-    <InputNumberBase
-      prefix='$ '
-      size='small'
-      className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
-      precision={4}
-      min={0}
-      formWithMessage={false}
-      value={dollarValue}
-      onChange={(val) => setDollarValue(Number(val ?? 0))}
-      onBlur={commit}
-      nextInEnter={false}
-      onKeyUp={(e) => {
-        if (e.key === 'Enter') {
-          commit()
-          focusNext()
-        }
-      }}
-      disabled={isReadOnly}
-      readOnly={isReadOnly}
-      variant={isReadOnly ? 'borderless' : undefined}
-    />
-  )
-}
-
 export function useColumnsComprar({
   form,
   remove,
   incluye_precios = true,
   cantidad_pendiente = false,
   compra,
-  onRefreshCells,
 }: {
   form: FormInstance
   remove: (index: number | number[]) => void
   incluye_precios?: boolean
   cantidad_pendiente?: boolean
   compra?: CompraConUnidadDerivadaNormal
-  onRefreshCells?: () => void
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form) || 1
+  // Captura el valor dólar mientras el usuario escribe sin disparar re-renders
+  const dollarValueRefs = useRef<Map<number, number>>(new Map())
 
   const columns: ColDef<FormListFieldData>[] = [
     {
@@ -249,8 +185,6 @@ export function useColumnsComprar({
               form={form}
               fieldIndex={value}
               productoId={form.getFieldValue(['productos', value, 'producto_id'])}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-                (compra?.pagos_de_compras_count ?? 0) > 0}
             />
           </div>
         )
@@ -379,24 +313,19 @@ export function useColumnsComprar({
                   : undefined
               }
               formWithMessage={false}
-              onBlur={() => {
-                const cant = Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
+              onChange={val => {
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
-                  cant * Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
+                  Number(val ?? 0) *
+                    Number(
+                      form.getFieldValue([
+                        'productos',
+                        value,
+                        'precio_compra',
+                      ]) ?? 0
+                    )
                 )
-                onRefreshCells?.()
               }}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              variant={
-                (compra?.recepciones_almacen_count ?? 0) > 0 ||
-                (compra?.pagos_de_compras_count ?? 0) > 0
-                  ? 'borderless'
-                  : undefined
-              }
             />
           </div>
         )
@@ -410,16 +339,61 @@ export function useColumnsComprar({
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         const precioSoles = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
-        const isReadOnly = (compra?.recepciones_almacen_count ?? 0) > 0 || (compra?.pagos_de_compras_count ?? 0) > 0
+        const precioUsd = tipo_de_cambio > 0 ? precioSoles / tipo_de_cambio : 0
         return (
           <div className='flex items-center h-full'>
-            <DollarPriceInput
-              form={form}
-              fieldIndex={value}
-              tipoDeCambio={tipo_de_cambio}
-              precioSoles={precioSoles}
-              isReadOnly={isReadOnly}
-              onCommit={() => onRefreshCells?.()}
+            <InputNumberBase
+              prefix='$ '
+              size='small'
+              className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
+              defaultValue={precioUsd}
+              precision={4}
+              min={0}
+              formWithMessage={false}
+              onChange={(val) => {
+                if (val !== null && val !== undefined) {
+                  dollarValueRefs.current.set(value, Number(val))
+                }
+              }}
+              onBlur={() => {
+                const dolares = dollarValueRefs.current.get(value)
+                if (dolares === undefined) return
+                const soles = dolares * tipo_de_cambio
+                form.setFieldValue(['productos', value, 'precio_compra'], soles)
+                form.setFieldValue(
+                  ['productos', value, 'subtotal'],
+                  soles * Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
+                )
+                onChangeCostoTablaCompras({
+                  form,
+                  value,
+                  costo: soles,
+                  producto_id: Number(form.getFieldValue(['productos', value, 'producto_id'])),
+                })
+                dollarValueRefs.current.delete(value)
+              }}
+              nextInEnter={false}
+              onKeyUp={(e) => {
+                if (e.key === 'Enter') {
+                  const dolares = dollarValueRefs.current.get(value)
+                  if (dolares !== undefined) {
+                    const soles = dolares * tipo_de_cambio
+                    form.setFieldValue(['productos', value, 'precio_compra'], soles)
+                    form.setFieldValue(
+                      ['productos', value, 'subtotal'],
+                      soles * Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
+                    )
+                    onChangeCostoTablaCompras({
+                      form,
+                      value,
+                      costo: soles,
+                      producto_id: Number(form.getFieldValue(['productos', value, 'producto_id'])),
+                    })
+                    dollarValueRefs.current.delete(value)
+                  }
+                  focusNext()
+                }
+              }}
             />
           </div>
         )
@@ -439,14 +413,14 @@ export function useColumnsComprar({
         const currentTipoDeCambio = Number(allValues.tipo_de_cambio) || 1
         const precioCompraSoles = Number(form.getFieldValue(['productos', value, 'precio_compra']) ?? 0)
         const cantidad = Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
-        
+
         const conversionPrecioDolares = precioCompraSoles / currentTipoDeCambio
         return conversionPrecioDolares * cantidad
       },
       cellRenderer: (params: ICellRendererParams) => {
         return (
           <div className='flex items-center h-full font-semibold text-slate-500 italic'>
-            $ 
+            $
             {Number(params.value || 0).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -468,7 +442,6 @@ export function useColumnsComprar({
         const factor = Number(form.getFieldValue(['productos', value, 'unidad_derivada_factor']) ?? 1)
         const bonificacion = form.getFieldValue(['productos', value, 'bonificacion'])
         const costoEnUnidad = costoActual * factor
-        // El costo anterior siempre se compara en soles para la alerta
         const costoCambio = !bonificacion && costoActual > 0 && precioCompra > 0 && Math.abs(precioCompra - costoEnUnidad) > 0.0001
 
         const productoId = form.getFieldValue(['productos', value, 'producto_id'])
@@ -483,8 +456,8 @@ export function useColumnsComprar({
                   onClick={(e) => {
                     e.stopPropagation()
                     const event = new CustomEvent('openEditarPreciosModal', {
-                      detail: { 
-                        productoId, 
+                      detail: {
+                        productoId,
                         unidadDerivadaId,
                         costoActual: costoEnUnidad / factor,
                         productoNombre: form.getFieldValue(['productos', value, 'producto_name']),
@@ -537,18 +510,7 @@ export function useColumnsComprar({
                     form.getFieldValue(['productos', value, 'producto_id'])
                   ),
                 })
-                onRefreshCells?.()
               }}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              variant={
-                (compra?.recepciones_almacen_count ?? 0) > 0 ||
-                (compra?.pagos_de_compras_count ?? 0) > 0
-                  ? 'borderless'
-                  : undefined
-              }
             />
           </div>
         )
@@ -624,18 +586,7 @@ export function useColumnsComprar({
                         ]) ?? 0
                       )
                 )
-                onRefreshCells?.()
               }}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              variant={
-                (compra?.recepciones_almacen_count ?? 0) > 0 ||
-                (compra?.pagos_de_compras_count ?? 0) > 0
-                  ? 'borderless'
-                  : undefined
-              }
             />
           </div>
         )
@@ -663,8 +614,6 @@ export function useColumnsComprar({
                   form.setFieldValue(['productos', value, 'flete'], 0)
                 }
               }}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
             />
           </div>
         )
@@ -686,16 +635,6 @@ export function useColumnsComprar({
               }}
               size='small'
               formWithMessage={false}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              variant={
-                (compra?.recepciones_almacen_count ?? 0) > 0 ||
-                (compra?.pagos_de_compras_count ?? 0) > 0
-                  ? 'borderless'
-                  : undefined
-              }
             />
           </div>
         )
@@ -716,16 +655,6 @@ export function useColumnsComprar({
               }}
               size='small'
               formWithMessage={false}
-              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              readOnly={(compra?.recepciones_almacen_count ?? 0) > 0 ||
-              (compra?.pagos_de_compras_count ?? 0) > 0}
-              variant={
-                (compra?.recepciones_almacen_count ?? 0) > 0 ||
-                (compra?.pagos_de_compras_count ?? 0) > 0
-                  ? 'borderless'
-                  : undefined
-              }
             />
           </div>
         )
@@ -739,8 +668,7 @@ export function useColumnsComprar({
       minWidth: 40,
       cellRenderer: ({ data }: ICellRendererParams<FormListFieldData>) => {
         const value = data?.name
-        return (compra?.recepciones_almacen_count ?? 0) > 0 ||
-        (compra?.pagos_de_compras_count ?? 0) > 0 ? null : (
+        return (
           <div className='flex items-center gap-2 h-full'>
             <Tooltip title='Eliminar'>
               <MdDelete
