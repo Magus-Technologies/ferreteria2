@@ -425,7 +425,7 @@ export default function ModalEntregaUpdate({
           {quienEntregaLabel[entrega.quien_entrega] ?? entrega.quien_entrega}
         </span>
       )}
-      {productosAnteriores.length > 0 && (
+      {false && (
         <div className="flex flex-col gap-1 px-2 py-1.5 bg-amber-50 border-l-4 border-amber-500 rounded">
           <div className="flex items-center justify-between flex-wrap gap-x-2">
             <span className="text-amber-700 font-bold text-xs">
