@@ -113,6 +113,7 @@ export default function CardAgregarProductoCompra({
       costo_actual: Number(producto_en_almacen?.costo ?? 0),
       stock_max: productoSeleccionadoSearchStore?.stock_max,
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
+      unidades_derivadas_disponibles: unidades_derivadas,
     }
 
     onOk?.(valuesFormated)

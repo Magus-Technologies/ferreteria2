@@ -162,13 +162,10 @@ export default function ModalProductoSearch({
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="w-full sm:max-w-[500px]"
-          onPressEnter={(e) => {
+          onPressEnter={() => {
             // Disparar la búsqueda al servidor con el texto actual
             setValue(text);
             tableRef.current?.handleRefetch();
-            // Salir del input y solicitar focus en "Cantidad" de la card.
-            (e.currentTarget as HTMLInputElement).blur();
-            requestConfirm();
           }}
         />
         {stockFilterMode === 'venta' && (

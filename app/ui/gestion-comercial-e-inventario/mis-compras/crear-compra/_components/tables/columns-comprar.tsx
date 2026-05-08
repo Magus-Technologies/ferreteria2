@@ -12,6 +12,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { FormCreateCompra } from '../others/body-comprar'
 import { CompraConUnidadDerivadaNormal } from '../others/header'
+import SelectUnidadDerivadaCompra from '../form/select-unidad-derivada-compra'
 
 export function useColumnsComprar({
   form,
@@ -166,18 +167,6 @@ export function useColumnsComprar({
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         return (
           <div className='flex items-center h-full'>
-            <Tooltip
-              classNames={{ body: 'text-center!' }}
-              title={form.getFieldValue([
-                'productos',
-                value,
-                'unidad_derivada_name',
-              ])}
-            >
-              <div className='overflow-hidden text-ellipsis whitespace-nowrap'>
-                {form.getFieldValue(['productos', value, 'unidad_derivada_name'])}
-              </div>
-            </Tooltip>
             <InputNumberBase
               propsForm={{
                 name: [value, 'unidad_derivada_id'],
@@ -191,33 +180,12 @@ export function useColumnsComprar({
               }}
               formWithMessage={false}
             />
-            <InputNumberBase
-              propsForm={{
-                name: [value, 'unidad_derivada_factor'],
-                rules: [
-                  {
-                    required: true,
-                    message: '',
-                  },
-                ],
-                hidden: true,
-              }}
-              formWithMessage={false}
-            />
-            <InputBase
-              propsForm={{
-                name: [value, 'unidad_derivada_name'],
-                rules: [
-                  {
-                    required: true,
-                    message: '',
-                  },
-                ],
-                hidden: true,
-              }}
-              readOnly
-              variant='borderless'
-              formWithMessage={false}
+            <SelectUnidadDerivadaCompra
+              form={form}
+              fieldIndex={value}
+              productoId={form.getFieldValue(['productos', value, 'producto_id'])}
+              disabled={(compra?.recepciones_almacen_count ?? 0) > 0 ||
+                (compra?.pagos_de_compras_count ?? 0) > 0}
             />
           </div>
         )
@@ -322,6 +290,7 @@ export function useColumnsComprar({
           <div className='flex items-center h-full'>
             <InputNumberBase
               size='small'
+              className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
               propsForm={{
                 name: [value, 'cantidad'],
                 rules: [
@@ -388,6 +357,7 @@ export function useColumnsComprar({
             <InputNumberBase
               prefix='$ '
               size='small'
+              className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
               defaultValue={precioUsd}
               precision={4}
               min={0}
@@ -501,6 +471,7 @@ export function useColumnsComprar({
             <InputNumberBase
               prefix="S/. "
               size='small'
+              className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
               propsForm={{
                 name: [value, 'precio_compra'],
                 rules: [

@@ -197,7 +197,19 @@ export default function TableProductoSearch({
   }, [response, productosCompra, filtroStock, almacen_id]);
 
   function handleRefetch() {
-    refetch();
+    // Al hacer una nueva búsqueda (Enter), limpiar el filtro de productos ya agregados
+    // para que todos los resultados del servidor vuelvan a mostrarse.
+    // El form de compra no se ve afectado porque usa form.getFieldValue('productos') internamente.
+    setProductosCompra([]);
+
+    if (tableGridRef.current?.api) {
+      tableGridRef.current.api.setGridOption('quickFilterText', '');
+    }
+    refetch().then(() => {
+      if (tableGridRef.current?.api) {
+        tableGridRef.current.api.setGridOption('quickFilterText', quickFilterValue || '');
+      }
+    });
   }
 
   // Refetch cuando cambian los filtros
