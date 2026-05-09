@@ -142,8 +142,10 @@ export default function FiltersVentasPorCobrar() {
           busqueda_cliente,
           tipo_documento,
           user_id,
-          estado_pago,
         } = values
+
+        // estado_pago is managed by localEstadoPago because there is no Form.Item
+        const estado_pago = localEstadoPago
 
         // Commitear estado de pago al store (antes de setFiltros)
         setEstadoPago(estado_pago ?? 'pendientes')
@@ -358,6 +360,7 @@ export default function FiltersVentasPorCobrar() {
               setBusquedaClienteText('')
               setQuickFilterActive('todas')
               form.setFieldValue('estado_pago', 'pendientes')
+              setLocalEstadoPago('pendientes')
               form.submit()
             }}
           >
@@ -533,6 +536,9 @@ export default function FiltersVentasPorCobrar() {
               onClick={() => {
                 form.resetFields()
                 setBusquedaClienteText('')
+                setQuickFilterActive('todas')
+                form.setFieldValue('estado_pago', 'pendientes')
+                setLocalEstadoPago('pendientes')
                 form.submit()
               }}
               className='flex-1'
