@@ -451,6 +451,8 @@ export function useColumnsComprar({
         const productoId = form.getFieldValue(['productos', value, 'producto_id'])
         const unidadDerivadaId = form.getFieldValue(['productos', value, 'unidad_derivada_id'])
 
+        if (bonificacion) return null
+
         return (
           <div className='flex items-center gap-1 h-full'>
             {costoCambio && (
@@ -482,20 +484,7 @@ export function useColumnsComprar({
               size='small'
               type='text'
               className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
-              propsForm={{
-                name: [value, 'precio_compra'],
-                rules: [
-                  {
-                    required: true,
-                    message: '',
-                  },
-                ],
-                hidden: form.getFieldValue([
-                  'productos',
-                  value,
-                  'bonificacion',
-                ]),
-              }}
+              defaultValue={precioCompra > 0 ? precioCompra : undefined}
               precision={4}
               min={0}
               formWithMessage={false}
