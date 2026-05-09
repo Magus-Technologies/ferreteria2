@@ -222,15 +222,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   function handleSearch() {
     setTextDefault(text)
     setProductoCreado(undefined)
-
-    if (text) {
-      flush() // Sincronizar el texto debounced inmediatamente
-      setManualSearch(true)
-      refetch()
-    } else {
-      // Si no hay texto, abrir el modal directamente
-      setOpenModalProductoSearch(true)
-    }
+    setOpenModalProductoSearch(true)
   }
 
   const primeraVez = useRef(true)

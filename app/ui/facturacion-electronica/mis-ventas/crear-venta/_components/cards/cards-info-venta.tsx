@@ -3,6 +3,8 @@
 import { DescuentoTipo, EstadoDeVenta } from "~/lib/api/venta";
 import { Form, FormInstance } from "antd";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { clienteApi } from "~/lib/api/cliente";
 import useApp from "antd/es/app/useApp";
 import ButtonBase from "~/components/buttons/button-base";
 import { FormCreateVenta } from "../others/body-vender";
@@ -63,6 +65,14 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] =
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
+
+  // Cargar el cliente completo desde la API cuando se va a editar
+  const { data: clienteData } = useQuery({
+    queryKey: ['cliente', clienteId],
+    queryFn: () => clienteApi.getById(clienteId!),
+    enabled: !!clienteId && modalEditarClienteOpen,
+    select: (res) => res.data?.data,
+  });
 
   const { cajaActiva } = useCheckAperturaDiaria();
   const [modalTrasladoBovedaOpen, setModalTrasladoBovedaOpen] = useState(false);
@@ -383,25 +393,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
       <ModalCreateCliente
         open={modalEditarClienteOpen}
         setOpen={setModalEditarClienteOpen}
-        dataEdit={
-          clienteId ? {
-            id: clienteId,
-            tipo_cliente: form.getFieldValue("tipo_cliente") || "PERSONA",
-            numero_documento: form.getFieldValue("numero_documento"),
-            razon_social: form.getFieldValue("razon_social") || null,
-            nombres: form.getFieldValue("nombres") || "",
-            apellidos: form.getFieldValue("apellidos") || "",
-            telefono: form.getFieldValue("telefono") || null,
-            celular: null,
-            horario_atencion: null,
-            fecha_nacimiento: form.getFieldValue("fecha_nacimiento") || null,
-            puntos: 0,
-            centimos: 0,
-            contacto_referencia: null,
-            email: form.getFieldValue("email") || null,
-            estado: true,
-          } as Cliente : undefined
-        }
+        dataEdit={clienteData}
         onSuccess={(cliente) => {
           // Actualizar los datos del cliente en el formulario de venta
           const nombreCompleto = cliente.razon_social
