@@ -167,6 +167,20 @@ export interface MotivoNota {
   updated_at: string;
 }
 
+export interface DetalleComunicacionBaja {
+  tipo_doc: "01" | "03";
+  serie: string;
+  correlativo: string;
+  motivo: string;
+}
+
+export interface ComunicacionBajaResult {
+  success: boolean;
+  message: string;
+  codigo_sunat?: string;
+  xml?: string;
+}
+
 export interface CrearNotaCreditoData {
   venta_id: string;
   motivo_id: number;
@@ -400,5 +414,26 @@ export const facturacionElectronicaApi = {
 
   async getMotivoNotaById(id: number) {
     return apiRequest<{ data: MotivoNota }>(`/facturacion-electronica/motivos-nota/${id}`);
+  },
+
+  // Comunicaciones de Baja
+  async generarXmlBaja(detalles: DetalleComunicacionBaja[]) {
+    return apiRequest<{ success: boolean; xml: string }>(
+      "/facturacion-electronica/comunicacion-baja/generar-xml",
+      {
+        method: "POST",
+        body: JSON.stringify({ detalles }),
+      }
+    );
+  },
+
+  async enviarBajaSunat(detalles: DetalleComunicacionBaja[]) {
+    return apiRequest<ComunicacionBajaResult>(
+      "/facturacion-electronica/comunicacion-baja/enviar",
+      {
+        method: "POST",
+        body: JSON.stringify({ detalles }),
+      }
+    );
   },
 };
