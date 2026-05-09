@@ -8,6 +8,7 @@ import { EntregaEvent } from '~/app/_components/calendar/event-entrega'
 import ButtonBase from '~/components/buttons/button-base'
 import { useEntregasProgramadas } from '~/hooks/use-entregas-programadas'
 import dayjs from 'dayjs'
+import { FaTruck } from 'react-icons/fa'
 
 interface ModalCalendarioEntregasProps {
   open: boolean
@@ -102,30 +103,30 @@ export default function ModalCalendarioEntregas({
     >
       <div className="space-y-4">
         {/* Leyenda de colores */}
-        <div className="flex flex-wrap items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-          <div className="text-sm font-bold text-gray-800">📊 Leyenda:</div>
-          
+        <div className="flex flex-wrap items-center gap-3 p-4 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 rounded-xl border border-slate-200/60 shadow-sm">
+          <div className="text-sm font-bold text-slate-700">📊 Leyenda:</div>
+
           {/* Estados */}
-          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
-            <div className="w-5 h-5 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-            <span className="text-xs font-semibold text-gray-700">✅ Entregado</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+            <div className="w-5 h-5 rounded shadow-inner" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}></div>
+            <span className="text-xs font-semibold text-slate-700">✅ Entregado</span>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
-            <div className="w-5 h-5 rounded" style={{ backgroundColor: '#eab308' }}></div>
-            <span className="text-xs font-semibold text-gray-700">🚚 En Camino</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+            <div className="w-5 h-5 rounded shadow-inner" style={{ background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)' }}></div>
+            <span className="text-xs font-semibold text-slate-700">🚚 En Camino</span>
           </div>
-          
+
           {/* Separador */}
-          {despachadores.length > 0 && <div className="h-6 w-px bg-gray-300"></div>}
-          
+          {despachadores.length > 0 && <div className="h-6 w-px bg-slate-300"></div>}
+
           {/* Despachadores dinámicos */}
           {despachadores.length > 0 && (
             <>
-              <div className="text-xs font-medium text-gray-600">Despachadores:</div>
+              <div className="text-xs font-medium text-slate-600">Despachadores:</div>
               {despachadores.map((despachador) => (
-                <div key={despachador.id} className="flex items-center gap-2 px-3 py-1 bg-white rounded-md shadow-sm">
-                  <div className="w-5 h-5 rounded" style={{ backgroundColor: despachador.color }}></div>
-                  <span className="text-xs font-semibold text-gray-700">{despachador.nombre}</span>
+                <div key={despachador.id} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
+                  <div className="w-5 h-5 rounded shadow-inner" style={{ background: `linear-gradient(135deg, ${despachador.color} 0%, ${adjustColor(despachador.color, -20)} 100%)` }}></div>
+                  <span className="text-xs font-semibold text-slate-700">{despachador.nombre}</span>
                 </div>
               ))}
             </>
@@ -142,26 +143,83 @@ export default function ModalCalendarioEntregas({
 
         {/* Detalles del evento seleccionado */}
         {eventoSeleccionado && (
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="text-sm font-semibold text-blue-900 mb-2">
-              📦 Detalles de la Entrega
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 border border-slate-200/80 shadow-lg">
+            {/* Header decorativo */}
+            <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 px-5 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
+                    <FaTruck size={15} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold text-sm leading-tight">Detalles de la Entrega</div>
+                    <div className="text-emerald-100 text-xs font-medium mt-0.5">
+                      {eventoSeleccionado.resource.vehiculo_nombre}
+                    </div>
+                  </div>
+                </div>
+                {eventoSeleccionado.resource.venta_nro && (
+                  <div className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg">
+                    <span className="text-white font-bold text-sm">{eventoSeleccionado.resource.venta_nro}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="font-medium text-gray-700">Despachador:</span>{' '}
-                <span className="text-gray-900">{eventoSeleccionado.resource.chofer_nombre}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Cliente:</span>{' '}
-                <span className="text-gray-900">{eventoSeleccionado.resource.cliente_nombre}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Productos:</span>{' '}
-                <span className="text-gray-900">{eventoSeleccionado.resource.productos_count}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Dirección:</span>{' '}
-                <span className="text-gray-900">{eventoSeleccionado.resource.direccion || 'No especificada'}</span>
+
+            {/* Cuerpo con información */}
+            <div className="p-5">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Cliente */}
+                <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-indigo-600 text-xs">👤</span>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cliente</span>
+                  </div>
+                  <div className="text-slate-800 font-semibold text-sm pl-8 leading-tight">
+                    {eventoSeleccionado.resource.cliente_nombre}
+                  </div>
+                </div>
+
+                {/* Productos */}
+                <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-6 h-6 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-amber-600 text-xs">📦</span>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Productos</span>
+                  </div>
+                  <div className="text-slate-800 font-bold text-sm pl-8 leading-tight">
+                    {eventoSeleccionado.resource.productos_count} producto(s)
+                  </div>
+                </div>
+
+                {/* Despachador */}
+                <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-6 h-6 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-teal-600 text-xs">🚚</span>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Despachador</span>
+                  </div>
+                  <div className="text-slate-800 font-semibold text-sm pl-8 leading-tight">
+                    {eventoSeleccionado.resource.chofer_nombre}
+                  </div>
+                </div>
+
+                {/* Dirección */}
+                <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-6 h-6 bg-rose-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-rose-600 text-xs">📍</span>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Dirección</span>
+                  </div>
+                  <div className="text-slate-800 font-medium text-sm pl-8 leading-tight">
+                    {eventoSeleccionado.resource.direccion || 'No especificada'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -169,4 +227,12 @@ export default function ModalCalendarioEntregas({
       </div>
     </Modal>
   )
+}
+
+function adjustColor(hex: string, amount: number): string {
+  const num = parseInt(hex.replace('#', ''), 16)
+  const r = Math.max(0, Math.min(255, ((num >> 16) & 0xff) + amount))
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amount))
+  const b = Math.max(0, Math.min(255, (num & 0xff) + amount))
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }
