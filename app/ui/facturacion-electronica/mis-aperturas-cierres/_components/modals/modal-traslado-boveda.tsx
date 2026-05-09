@@ -150,7 +150,7 @@ export default function ModalTrasladoBoveda({
                   const nombreMetodo = (metodo.metodo_de_pago_nombre || '').toLowerCase();
                   const nombreDespliegue = (metodo.nombre || '').toLowerCase();
                   const cuenta = metodo.cuenta_bancaria;
-                  const sinCuenta = !cuenta || cuenta === 'SIN-CUENTA';
+                  const sinCuenta = !cuenta || cuenta === 'SIN-CUENTA' || cuenta === '-';
                   const esEfectivo = sinCuenta && (
                     nombreMetodo.includes('efectivo') ||
                     nombreDespliegue.includes('efectivo')
