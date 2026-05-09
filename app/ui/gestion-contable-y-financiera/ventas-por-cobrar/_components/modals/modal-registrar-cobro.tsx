@@ -278,7 +278,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       width: 150,
       valueGetter: (p) => {
         const val = p.data?.created_at || p.data?.fecha
-        return val ? dayjs(val).format('DD/MM/YYYY hh:mm A') : ''
+        return val ? dayjs(val).format('DD/MM/YYYY hh:mm:ss A') : ''
       },
     },
     {
@@ -330,7 +330,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       return ventaApi.storeCobro(localVenta.id, {
         despliegue_de_pago_id: String(extractDesplieguePagoId(values.despliegue_de_pago_id)),
         monto: values.monto,
-        fecha: dayjs(values.fecha).format('YYYY-MM-DD'),
+        fecha: dayjs(values.fecha).format('YYYY-MM-DD HH:mm:ss'),
         observacion: values.observacion || undefined,
         numero_letra: values.numero_letra || undefined,
         numero_operacion: values.numero_operacion || undefined,
@@ -484,8 +484,8 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
             <Form.Item name='fecha' rules={[{ required: true, message: 'Requerido' }]} noStyle>
               <DatePicker 
                 className='w-full' 
-                showTime={{ format: 'hh:mm A' }}
-                format='DD/MM/YYYY hh:mm A' 
+                showTime={{ format: 'hh:mm:ss A' }}
+                format='DD/MM/YYYY hh:mm:ss A' 
               />
             </Form.Item>
           </LabelBase>
@@ -611,7 +611,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           {cobroAAnular && (
             <div className='mt-2 text-sm text-red-700 space-y-1'>
               <p><strong>Monto:</strong> S/. {Number(cobroAAnular.monto || 0).toFixed(2)}</p>
-              <p><strong>Fecha:</strong> {dayjs(cobroAAnular.created_at || cobroAAnular.fecha).format('DD/MM/YYYY hh:mm A')}</p>
+              <p><strong>Fecha:</strong> {dayjs(cobroAAnular.created_at || cobroAAnular.fecha).format('DD/MM/YYYY hh:mm:ss A')}</p>
               <p><strong>Método:</strong> {cobroAAnular.despliegue_de_pago?.name || '-'}</p>
             </div>
           )}
