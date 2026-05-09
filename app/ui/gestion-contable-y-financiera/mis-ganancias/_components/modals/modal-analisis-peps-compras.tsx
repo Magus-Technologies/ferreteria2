@@ -289,7 +289,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
             <div className="peps-main-table">
               <style>{`
                 .peps-main-table .ant-table-thead > tr > th {
-                  background-color: #1e40af !important;
+                  background-color: var(--color-rose-600) !important;
                   color: white !important;
                   font-size: 11px;
                   font-weight: 700;
@@ -358,7 +358,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
             </div>
 
             {/* Ventas */}
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">
+            <div className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--color-rose-600)' }}>
               Ventas de esta compra ({drawerCompra.ventas.length})
             </div>
 
@@ -371,13 +371,13 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
               return (
                 <div key={venta.venta_id} className="border border-slate-200 rounded-lg bg-white overflow-hidden">
                   {/* Header venta */}
-                  <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200 flex-wrap">
-                    <span className="font-semibold text-sm text-slate-700">Venta {idx + 1}</span>
+                  <div className="flex items-center gap-2 px-3 py-2 border-b flex-wrap" style={{ backgroundColor: 'var(--color-rose-600)', borderColor: 'var(--color-rose-600)' }}>
+                    <span className="font-semibold text-sm text-white">Venta {idx + 1}</span>
                     {badge}
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-rose-100">
                       {dayjs(venta.fecha).format('DD/MM/YYYY')}
                       <span className="mx-1">·</span>
-                      {venta.cantidad.toFixed(2)} u × S/{fmt(venta.precio)} = <b className="text-slate-700">S/{fmt(venta.ingreso)}</b>
+                      {venta.cantidad.toFixed(2)} u × S/{fmt(venta.precio)} = <b className="text-white">S/{fmt(venta.ingreso)}</b>
                     </span>
                   </div>
 
