@@ -4,6 +4,7 @@ import { Badge, Dropdown, Empty, Spin, Tag, Tabs, message } from 'antd'
 import { FaBell, FaBirthdayCake, FaCalendarAlt } from 'react-icons/fa'
 import { MdSecurity } from 'react-icons/md'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { consultaTipoDeCambio } from '~/app/_actions/consulta-tipo-de-cambio'
 import { autorizacionesApi, autorizacionesKeys, type SolicitudAutorizacion } from '~/lib/api/autorizaciones'
 import { cumpleanosApi, type CumpleanosUsuario } from '~/lib/api/cumpleanos'
 import { configuracionNotificacionesApi } from '~/lib/api/configuracion-notificaciones'
@@ -88,6 +89,16 @@ export default function CampanitaAutorizaciones() {
   const [solicitudSeleccionada, setSolicitudSeleccionada] = useState<SolicitudAutorizacion | null>(null)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('autorizaciones')
+
+  // === TIPO DE CAMBIO ===
+  const { data: tipoDeCambio } = useQuery({
+    queryKey: ['tipo-cambio-header'],
+    queryFn: async () => {
+      const res = await consultaTipoDeCambio()
+      return res.data
+    },
+    staleTime: 1000 * 60 * 30,
+  })
 
   // === AUTORIZACIONES ===
   const { data: countData } = useQuery({
@@ -419,7 +430,14 @@ export default function CampanitaAutorizaciones() {
   const dropdownContent = (
     <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-[360px] max-h-[420px] overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <span className="font-bold text-sm text-gray-800">Notificaciones</span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm text-gray-800">Notificaciones</span>
+          {tipoDeCambio && tipoDeCambio > 1 && (
+            <span className="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded">
+              $ {tipoDeCambio.toFixed(3)}
+            </span>
+          )}
+        </div>
         {totalCount > 0 && (
           <Tag color="orange" className="!m-0">{totalCount}</Tag>
         )}
