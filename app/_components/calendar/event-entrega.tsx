@@ -16,6 +16,14 @@ export interface EntregaEvent extends Event {
     cliente_nombre: string
     direccion: string
     productos_count: number
+    productos_detallado?: Array<{
+      producto: string
+      codigo?: string
+      cantidad: number | string
+      unidad?: string
+      unidad_medida?: string
+      marca?: string
+    }>
     color: string
     venta_nro?: string
   }
