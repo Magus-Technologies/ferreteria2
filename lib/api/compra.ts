@@ -138,6 +138,7 @@ export interface PagoDeCompra {
   compra_id: string;
   despliegue_de_pago_id: string; // ULID
   monto: number;
+  tipo_de_cambio: number | null;
   fecha: string; // ISO date string
   observacion: string | null;
   numero_letra: string | null;
@@ -158,6 +159,7 @@ export interface PagoDeCompra {
 export interface CreatePagoCompraRequest {
   despliegue_de_pago_id: string; // ULID
   monto: number;
+  tipo_de_cambio?: number | null;
   fecha: string; // ISO date string
   observacion?: string | null;
   afecta_caja: boolean;

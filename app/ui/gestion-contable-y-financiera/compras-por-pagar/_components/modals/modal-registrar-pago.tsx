@@ -265,6 +265,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       return compraApi.storePago(localCompra.id, {
         despliegue_de_pago_id: String(extractDesplieguePagoId(values.despliegue_de_pago_id)),
         monto: values.monto,
+        tipo_de_cambio: values.tipo_de_cambio || undefined,
         fecha: dayjs(values.fecha).format('YYYY-MM-DD'),
         observacion: values.observacion || undefined,
         numero_letra: values.numero_letra || undefined,
@@ -378,7 +379,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
 
       {/* Formulario */}
       <Form form={form} layout='vertical' initialValues={{ fecha: dayjs() }}>
-        <div className='grid grid-cols-4 gap-3'>
+        <div className='grid grid-cols-5 gap-3'>
           <LabelBase label='Modo Pago:' orientation='column'>
             <SelectDespliegueDePago
               propsForm={{ name: 'despliegue_de_pago_id', rules: [{ required: true, message: 'Requerido' }] }}
@@ -411,12 +412,24 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             </Form.Item>
           </LabelBase>
 
+          <LabelBase label='TC Pago (S/$):' orientation='column'>
+            <Form.Item name='tipo_de_cambio' noStyle>
+              <InputNumber
+                className='w-full'
+                precision={4}
+                min={0.0001}
+                step={0.01}
+                placeholder='Ej: 3.75'
+              />
+            </Form.Item>
+          </LabelBase>
+
           <LabelBase label='Fecha Pago:' orientation='column'>
             <Form.Item name='fecha' rules={[{ required: true, message: 'Requerido' }]} noStyle>
-              <DatePicker 
-                className='w-full' 
+              <DatePicker
+                className='w-full'
                 showTime={{ format: 'hh:mm A' }}
-                format='DD/MM/YYYY hh:mm A' 
+                format='DD/MM/YYYY hh:mm A'
               />
             </Form.Item>
           </LabelBase>

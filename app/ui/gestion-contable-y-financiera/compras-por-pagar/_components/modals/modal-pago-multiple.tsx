@@ -219,6 +219,7 @@ export default function ModalPagoMultiple({ open, setOpen }: ModalPagoMultiplePr
         compraApi.storePago(c.id, {
           despliegue_de_pago_id: c._desplieguePagoId!,
           monto: c._montoAPagar,
+          tipo_de_cambio: values.tipo_de_cambio || undefined,
           fecha: dayjs(values.fecha).format('YYYY-MM-DD'),
           observacion: values.observacion || undefined,
           numero_operacion: isEfectivo ? undefined : values.numero_operacion || undefined,
@@ -414,7 +415,7 @@ export default function ModalPagoMultiple({ open, setOpen }: ModalPagoMultiplePr
     >
       <Form form={form} layout="vertical">
         {/* Cabecera: proveedor, modo pago global, fecha, operación */}
-        <div className='grid grid-cols-5 gap-3 mb-4'>
+        <div className='grid grid-cols-6 gap-3 mb-4'>
           <div className='col-span-2'>
             <LabelBase label='Proveedor:' orientation='column'>
               <SelectProveedores
@@ -446,7 +447,11 @@ export default function ModalPagoMultiple({ open, setOpen }: ModalPagoMultiplePr
               <DatePicker className='w-full' format='DD/MM/YYYY' />
             </Form.Item>
           </LabelBase>
-          
+          <LabelBase label='TC Pago (S/$):' orientation='column'>
+            <Form.Item name='tipo_de_cambio' noStyle>
+              <InputNumber className='w-full' precision={4} step={0.01} min={0.0001} placeholder='Ej: 3.75' />
+            </Form.Item>
+          </LabelBase>
           <div className={isEfectivo ? 'invisible' : 'visible'}>
             <LabelBase label='N° Operación:' orientation='column'>
               <Form.Item name='numero_operacion' noStyle>

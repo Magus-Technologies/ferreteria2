@@ -13,6 +13,7 @@ import { MdAnalytics } from 'react-icons/md'
 import ModalPagosCompras from '../modals/modal-pagos-compras'
 import ModalPerdidas from '../modals/modal-perdidas'
 import ModalAnalisisPerdidasVentas from '../modals/modal-analisis-perdidas-ventas'
+import ModalAnalisisPepsCompras from '../modals/modal-analisis-peps-compras'
 
 export default function CardsInfoGanancias() {
   const { message } = App.useApp()
@@ -22,6 +23,7 @@ export default function CardsInfoGanancias() {
   const [modalPagosOpen, setModalPagosOpen] = useState(false)
   const [modalPerdidasOpen, setModalPerdidasOpen] = useState(false)
   const [modalAnalisisPerdidasOpen, setModalAnalisisPerdidasOpen] = useState(false)
+  const [modalPepsOpen, setModalPepsOpen] = useState(false)
   
   const filtros = useStoreFiltrosMisGanancias((state) => state.filtros)
   const { data, isLoading } = useGetResumenGanancias(filtros)
@@ -182,9 +184,32 @@ export default function CardsInfoGanancias() {
         </div>
       </div>
 
-      <ModalAnalisisPerdidasVentas 
-        open={modalAnalisisPerdidasOpen} 
-        onClose={() => setModalAnalisisPerdidasOpen(false)} 
+      <ModalAnalisisPerdidasVentas
+        open={modalAnalisisPerdidasOpen}
+        onClose={() => setModalAnalisisPerdidasOpen(false)}
+        filtros={filtros}
+      />
+
+      {/* Análisis PEPS - Diferencia de Cambio */}
+      <div
+        className='bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-2.5 cursor-pointer hover:border-blue-400 transition-all relative group shadow-sm'
+        onClick={() => setModalPepsOpen(true)}
+      >
+        <div className='absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-blue-500 font-bold'>
+          CALCULAR
+        </div>
+        <div className='flex items-center justify-center gap-1.5 mb-1'>
+          <MdAnalytics className='text-blue-600' size={14} />
+          <div className='text-[11px] text-blue-700 font-bold text-center'>PEPS + Cambio</div>
+        </div>
+        <div className='text-[9px] text-blue-600 text-center font-medium'>
+          Diferencia de tipo de cambio
+        </div>
+      </div>
+
+      <ModalAnalisisPepsCompras
+        open={modalPepsOpen}
+        onClose={() => setModalPepsOpen(false)}
         filtros={filtros}
       />
 

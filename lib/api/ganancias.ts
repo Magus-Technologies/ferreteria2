@@ -189,9 +189,9 @@ export const gananciasApi = {
     }
     const queryString = params.toString();
     const url = queryString ? `/analisis-perdidas?${queryString}` : '/analisis-perdidas';
-    return apiRequest<{ 
-      data: { 
-        detalles: any[]; 
+    return apiRequest<{
+      data: {
+        detalles: any[];
         resumen: {
           ventas_bajo_costo: number;
           descuentos_aplicados: number;
@@ -205,7 +205,156 @@ export const gananciasApi = {
           monto: number;
           cantidad: number;
         }>;
-      } 
+      }
     }>(url);
   },
+
+  /**
+   * Obtener análisis PEPS real desde la base de datos.
+   * GET /analisis-peps
+   */
+  getAnalisisPeps: async (filtros?: FiltrosPepsAnalisis) => {
+    const params = new URLSearchParams();
+    if (filtros) {
+      Object.entries(filtros).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/analisis-peps?${queryString}` : '/analisis-peps';
+    return apiRequest<{ data: PepsAnalisisResponse }>(url);
+  },
+
+  /**
+   * Calcular análisis PEPS con diferencia de tipo de cambio.
+   * POST /analisis-peps/calcular
+   */
+  calcularPeps: async (lotes: PepsLote[], ventas: PepsVenta[]) => {
+    return apiRequest<{ data: PepsResultado }>('/analisis-peps/calcular', {
+      method: 'POST',
+      body: JSON.stringify({ lotes, ventas }),
+    });
+  },
 };
+
+// ============= TIPOS PEPS =============
+
+export interface PepsLote {
+  id: number | string;
+  label: string;
+  costo_usd: number;
+  stock: number;
+  tc_compra: number;
+  tc_pago: number;
+}
+
+export interface PepsVenta {
+  id: number | string;
+  cantidad: number;
+  precio: number;
+}
+
+export interface PepsFraccion {
+  lote_id: number | string;
+  lote_label: string;
+  cantidad: number;
+  costo_usd: number;
+  tc_compra: number;
+  tc_pago: number;
+  costo_tc_compra: number;
+  costo_tc_pago: number;
+}
+
+export interface PepsResultadoVenta {
+  idx: number;
+  cantidad: number;
+  precio: number;
+  ingreso: number;
+  fracciones: PepsFraccion[];
+  total_costo_tc_compra: number;
+  total_costo_tc_pago: number;
+  ganancia_tc_compra: number;
+  ganancia_tc_pago: number;
+  diferencia_cambio: number;
+  sin_stock: boolean;
+  faltante: number;
+}
+
+export interface PepsResultado {
+  ventas: PepsResultadoVenta[];
+  stock_restante: Record<string, number>;
+  resumen: {
+    ingreso_total: number;
+    ganancia_tc_compra: number;
+    ganancia_tc_pago: number;
+    diferencia_total: number;
+    perdida_por_cambio: boolean;
+  };
+}
+
+// ============= TIPOS ANÁLISIS PEPS (GET desde DB) =============
+
+export interface FiltrosPepsAnalisis {
+  almacen_id?: number;
+  desde?: string;
+  hasta?: string;
+  producto_id?: number;
+}
+
+export interface PepsFraccionAnalisis {
+  compra_id: number;
+  serie_numero: string;
+  lote: string | null;
+  cantidad: number;
+  costo_usd: number;
+  tc_compra: number;
+  tc_pago: number;
+  tc_pago_real: boolean;
+  costo_tc_compra: number;
+  costo_tc_pago: number;
+}
+
+export interface PepsVentaAnalisis {
+  venta_id: number;
+  fecha: string;
+  cantidad: number;
+  precio: number;
+  ingreso: number;
+  fracciones: PepsFraccionAnalisis[];
+  total_costo_tc_compra: number;
+  total_costo_tc_pago: number;
+  ganancia_tc_compra: number;
+  ganancia_tc_pago: number;
+  diferencia_cambio: number;
+  sin_stock: boolean;
+  faltante: number;
+}
+
+export interface PepsProductoAnalisis {
+  producto_id: number;
+  producto_nombre: string;
+  marca_nombre: string | null;
+  total_lotes: number;
+  total_ventas: number;
+  ventas: PepsVentaAnalisis[];
+  resumen_producto: {
+    ganancia_tc_compra: number;
+    ganancia_tc_pago: number;
+    diferencia_cambio: number;
+  };
+}
+
+export interface PepsAnalisisResponse {
+  productos: PepsProductoAnalisis[];
+  resumen: {
+    ingreso_total: number;
+    ganancia_tc_compra: number;
+    ganancia_tc_pago: number;
+    diferencia_total: number;
+    perdida_por_cambio: boolean;
+    total_productos: number;
+    aviso_sin_tc_pago: boolean;
+  };
+}

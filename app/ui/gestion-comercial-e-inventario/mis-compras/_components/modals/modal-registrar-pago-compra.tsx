@@ -206,8 +206,9 @@ export default function ModalRegistrarPagoCompra({
       : values.despliegue_de_pago_id
 
     registrarPago({
-      despliegue_de_pago_id: desplieguePagoId, // Mantener como string (ULID)
+      despliegue_de_pago_id: desplieguePagoId,
       monto: values.monto,
+      tipo_de_cambio: values.tipo_cambio || undefined,
       fecha: values.fecha_pago.toISOString(),
       observacion: values.observacion,
       afecta_caja: values.afecta_caja,
