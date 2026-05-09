@@ -32,6 +32,8 @@ export function useColumnsComprar({
   const tipo_de_cambio = Form.useWatch('tipo_de_cambio', form) || 1
   // Captura el valor dólar mientras el usuario escribe sin disparar re-renders
   const dollarValueRefs = useRef<Map<number, number>>(new Map())
+  // Captura el valor soles mientras el usuario escribe sin disparar re-renders
+  const precioSolesRefs = useRef<Map<number, number>>(new Map())
 
   const columns: ColDef<FormListFieldData>[] = [
     {
@@ -289,6 +291,7 @@ export function useColumnsComprar({
           <div className='flex items-center h-full'>
             <InputNumberBase
               size='small'
+              type='text'
               className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
               propsForm={{
                 name: [value, 'cantidad'],
@@ -345,6 +348,7 @@ export function useColumnsComprar({
             <InputNumberBase
               prefix='$ '
               size='small'
+              type='text'
               className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
               defaultValue={precioUsd}
               precision={4}
@@ -476,6 +480,7 @@ export function useColumnsComprar({
             <InputNumberBase
               prefix="S/. "
               size='small'
+              type='text'
               className='bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
               propsForm={{
                 name: [value, 'precio_compra'],
@@ -494,22 +499,47 @@ export function useColumnsComprar({
               precision={4}
               min={0}
               formWithMessage={false}
-              onChange={val => {
+              nextInEnter={false}
+              onChange={(val) => {
+                if (val !== null && val !== undefined) {
+                  precioSolesRefs.current.set(value, Number(val))
+                }
+              }}
+              onBlur={() => {
+                const soles = precioSolesRefs.current.get(value)
+                if (soles === undefined) return
+                form.setFieldValue(['productos', value, 'precio_compra'], soles)
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
-                  Number(val ?? 0) *
-                    Number(
-                      form.getFieldValue(['productos', value, 'cantidad']) ?? 0
-                    )
+                  soles * Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
                 )
                 onChangeCostoTablaCompras({
                   form,
                   value,
-                  costo: Number(val ?? 0),
-                  producto_id: Number(
-                    form.getFieldValue(['productos', value, 'producto_id'])
-                  ),
+                  costo: soles,
+                  producto_id: Number(form.getFieldValue(['productos', value, 'producto_id'])),
                 })
+                precioSolesRefs.current.delete(value)
+              }}
+              onKeyUp={(e) => {
+                if (e.key === 'Enter') {
+                  const soles = precioSolesRefs.current.get(value)
+                  if (soles !== undefined) {
+                    form.setFieldValue(['productos', value, 'precio_compra'], soles)
+                    form.setFieldValue(
+                      ['productos', value, 'subtotal'],
+                      soles * Number(form.getFieldValue(['productos', value, 'cantidad']) ?? 0)
+                    )
+                    onChangeCostoTablaCompras({
+                      form,
+                      value,
+                      costo: soles,
+                      producto_id: Number(form.getFieldValue(['productos', value, 'producto_id'])),
+                    })
+                    precioSolesRefs.current.delete(value)
+                  }
+                  focusNext()
+                }
               }}
             />
           </div>
@@ -564,6 +594,7 @@ export function useColumnsComprar({
           <div className='flex items-center h-full'>
             <InputNumberBase
               size='small'
+              type='text'
               propsForm={{
                 name: [value, 'flete'],
               }}

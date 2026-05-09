@@ -211,6 +211,7 @@ export default function TableComprar({
         tableRef={agGridRef}
         className='h-full'
         rowSelection={false}
+        suppressCellFocus={true}
         rowData={fields}
         columnDefs={columns}
       />
