@@ -1,20 +1,29 @@
 'use client'
 
 import { Modal, Button } from 'antd'
+import { useQuery } from '@tanstack/react-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import type { ColDef } from 'ag-grid-community'
 import { formatFechaPeru } from '~/utils/fechas'
 import { FaFileInvoiceDollar, FaMoneyBillWave, FaExchangeAlt, FaArrowCircleDown, FaArrowCircleUp, FaSearch } from 'react-icons/fa'
+import { trasladoBovedaApi } from '~/lib/api/traslado-boveda'
 
 interface ModalDetalleCierreProps {
     open: boolean
     onClose: () => void
     tipo: string | null
     resumen: any
+    aperturaId?: string
 }
 
-export default function ModalDetalleCierre({ open, onClose, tipo, resumen }: ModalDetalleCierreProps) {
+export default function ModalDetalleCierre({ open, onClose, tipo, resumen, aperturaId }: ModalDetalleCierreProps) {
     if (!resumen) return null
+
+    const { data: trasladosQueryData } = useQuery({
+        queryKey: ['traslados-boveda-modal', aperturaId],
+        queryFn: () => trasladoBovedaApi.obtenerTrasladosPorCaja(aperturaId!),
+        enabled: !!aperturaId && tipo === 'traslados_boveda' && open,
+    })
 
     let columns: ColDef[] = []
     let rowData: any[] = []
@@ -118,6 +127,19 @@ export default function ModalDetalleCierre({ open, onClose, tipo, resumen }: Mod
             icon = <FaExchangeAlt className='text-purple-500' />
             columns = columnasMovimientosInternos
             rowData = resumen.movimientos_internos || []
+            break
+        case 'traslados_boveda':
+            title = 'Traslados a Bóveda (no afecta total)'
+            icon = <FaExchangeAlt className='text-amber-500' />
+            columns = [
+                { headerName: 'Fecha', field: 'fecha_traslado', width: 160, valueFormatter: (p) => formatFechaPeru(p.value, 'DD/MM HH:mm') },
+                { headerName: 'Sub Caja', width: 150, valueGetter: (p) => p.data?.sub_caja?.nombre ?? '-' },
+                { headerName: 'Vendedor', flex: 1, minWidth: 130, valueGetter: (p) => p.data?.vendedor?.name ?? '-' },
+                { headerName: 'Supervisor', flex: 1, minWidth: 130, valueGetter: (p) => p.data?.supervisor?.name ?? '-' },
+                { headerName: 'Justificación', field: 'justificacion', flex: 2, valueFormatter: (p) => p.value ?? '-' },
+                { headerName: 'Monto', field: 'monto', width: 120, valueFormatter: (p) => `S/. ${Number(p.value).toFixed(2)}`, cellStyle: { fontWeight: 'bold' } },
+            ]
+            rowData = (trasladosQueryData as any)?.data ?? []
             break
     }
 

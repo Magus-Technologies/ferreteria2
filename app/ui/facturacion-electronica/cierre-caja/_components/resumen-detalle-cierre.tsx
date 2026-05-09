@@ -1,6 +1,7 @@
 'use client'
 
 import { Tabs } from 'antd'
+import { useQuery } from '@tanstack/react-query'
 import TabVentas from './tabs/tab-ventas'
 import TabMetodosPago from './tabs/tab-metodos-pago'
 import TabOtrosIngresos from './tabs/tab-otros-ingresos'
@@ -14,29 +15,36 @@ import TabIngresosOperativos from './tabs/tab-ingresos-operativos'
 import TabGastosOperativos from './tabs/tab-gastos-operativos'
 import TabCuentasPorPagar from './tabs/tab-cuentas-por-pagar'
 import TabCobrosCreditos from './tabs/tab-cobros-creditos'
+import TabTrasladosBoveda from './tabs/tab-traslados-boveda'
+import { trasladoBovedaApi } from '~/lib/api/traslado-boveda'
 
 interface ResumenDetalleCierreProps {
   resumen: any
   montoEsperado: number
   fecha?: string
+  aperturaId?: string
 }
 
-export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha }: ResumenDetalleCierreProps) {
+export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha, aperturaId }: ResumenDetalleCierreProps) {
   const ventasData = resumen.detalle_ventas || []
   const metodosPagoData = resumen.detalle_metodos_pago || []
-  const otrosIngresosData = resumen.detalle_ingresos ? Object.values(resumen.detalle_ingresos) : []
   const ingresosExtrasData = resumen.detalle_ingresos_extras ? Object.values(resumen.detalle_ingresos_extras) : []
   const prestamosRecibidosData = resumen.prestamos_recibidos || []
-  const gastosData = resumen.detalle_egresos ? Object.values(resumen.detalle_egresos) : []
   const gastosExtrasData = resumen.detalle_gastos_extras ? Object.values(resumen.detalle_gastos_extras) : []
   const prestamosDadosData = resumen.prestamos_dados || []
   const movimientosData = resumen.movimientos_internos || []
   const bancosData = resumen.resumen_bancos || []
 
-  const totalOtrosIngresos = resumen.total_otros_ingresos || 0
   const totalIngresosExtras = resumen.total_ingresos_extras || 0
-  const totalGastos = resumen.total_gastos || 0
   const totalGastosExtras = resumen.total_gastos_extras || 0
+
+  const { data: trasladosData } = useQuery({
+    queryKey: ['traslados-boveda', aperturaId],
+    queryFn: () => trasladoBovedaApi.obtenerTrasladosPorCaja(aperturaId!),
+    enabled: !!aperturaId,
+  })
+
+  const trasladosBoveda = (trasladosData as any)?.data ?? []
 
   const items = [
     {
@@ -74,6 +82,11 @@ export default function ResumenDetalleCierre({ resumen, montoEsperado, fecha }: 
       label: `Movimientos Internos (${movimientosData.length})`,
       children: <TabMovimientos data={movimientosData} />,
     },
+    ...(trasladosBoveda.length > 0 ? [{
+      key: 'traslados_boveda',
+      label: `Traslados Bóveda (${trasladosBoveda.length}) — no afecta total`,
+      children: <TabTrasladosBoveda data={trasladosBoveda} />,
+    }] : []),
     {
       key: '8',
       label: `Resumen de Bancos (${bancosData.length})`,

@@ -580,6 +580,29 @@ export default function CierreCajaView() {
                           </div>
                         )}
 
+                        {/* Traslados a Bóveda (Informativo) */}
+                        {(resumen?.total_traslados_boveda || 0) > 0 && (
+                          <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 bg-blue-50'>
+                            <div className='flex items-center gap-2'>
+                              <span className='text-sm font-semibold text-blue-700'>Traslados a Bóveda</span>
+                              <span className='text-xs text-blue-500'>({resumen?.traslados_boveda?.length || 0})</span>
+                              <span className='text-xs text-blue-600 italic'>(no afecta total)</span>
+                            </div>
+                            <div className='flex items-center gap-2.5'>
+                              <span className='text-base font-bold text-blue-700 min-w-[100px] text-right'>
+                                {(resumen?.total_traslados_boveda || 0).toFixed(2)}
+                              </span>
+                              <Button
+                                size='small'
+                                type='text'
+                                icon={<FaSearch className='text-sm text-blue-600' />}
+                                className='h-7 w-7 p-0'
+                                onClick={() => handleOpenDetalle('traslados_boveda')}
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         {/* Movimientos Internos (informativo, no afecta total) */}
                         {resumen?.movimientos_internos && resumen.movimientos_internos.length > 0 && (
                           <div className='flex justify-between items-center py-2 px-4 border-b border-slate-100 bg-amber-50'>
@@ -813,7 +836,7 @@ export default function CierreCajaView() {
           ...(mostrarResumen ? [{
             key: '2',
             label: 'Resumen detalle',
-            children: <ResumenDetalleCierre resumen={resumen} montoEsperado={montoEsperado} />,
+            children: <ResumenDetalleCierre resumen={resumen} montoEsperado={montoEsperado} aperturaId={cajaActiva.id} />,
           }] : []),
         ]}
       />
@@ -831,6 +854,7 @@ export default function CierreCajaView() {
         onClose={() => setModalDetalleOpen(false)}
         tipo={detalleTipo}
         resumen={resumen}
+        aperturaId={cajaActiva?.id}
       />
 
       {/* Modal de Éxito al Enviar */}
