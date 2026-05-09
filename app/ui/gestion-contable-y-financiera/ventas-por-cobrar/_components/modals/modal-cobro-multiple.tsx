@@ -186,14 +186,17 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
 
   // Observar el modo de pago seleccionado para mostrar/ocultar N° Operación
   const selectedPagoId = Form.useWatch('despliegue_de_pago_id', form)
-  const isEfectivo = useMemo(() => {
+  const isEfectivo = useMemo<boolean>(() => {
     if (!selectedPagoId || !desplieguesData) return true // Por defecto asumimos efectivo si no hay nada o está cargando
     const pago = desplieguesData.find((d: any) => d.value === selectedPagoId)
     if (!pago) return false
-    return pago.tipo?.toLowerCase() === 'efectivo' || 
-           pago.label?.toUpperCase().includes('EFECTIVO') || 
+    return pago.tipo?.toLowerCase() === 'efectivo' ||
+           pago.label?.toUpperCase().includes('EFECTIVO') ||
            pago.label?.toUpperCase().includes('CCH')
   }, [selectedPagoId, desplieguesData])
+
+  // La visibilidad de la columna N° Operación ahora se maneja directamente en columnDefs
+
 
   const totalDeudaCliente = useMemo(() =>
     ventasDistribucion.filter(v => v._seleccionada).reduce((sum, v) => sum + v._saldoPendiente, 0), [ventasDistribucion])
@@ -435,8 +438,9 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       headerName: 'N° Operación',
       field: '_numeroOperacion',
       width: 150,
+      hide: isEfectivo,
       cellRenderer: (params: ICellRendererParams<VentaConDistribucion>) => {
-        if (!params.data) return null
+        if (!params.data || isEfectivo) return null
         const disabled = !params.data._seleccionada || params.data._montoAPagar <= 0
         return (
           <div className="py-1" onClick={(e) => e.stopPropagation()}>
@@ -460,7 +464,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
       },
       suppressKeyboardEvent: () => true,
     },
-  ], [desplieguesData, form, handleNumeroOperacion, handleMontoManual, toggleVenta, globalNumOpVersion])
+  ], [desplieguesData, form, handleNumeroOperacion, handleMontoManual, toggleVenta, globalNumOpVersion, isEfectivo])
 
   // Validar que se haya seleccionado modo de pago global
   const desplieguePagoGlobal = Form.useWatch('despliegue_de_pago_id', form)

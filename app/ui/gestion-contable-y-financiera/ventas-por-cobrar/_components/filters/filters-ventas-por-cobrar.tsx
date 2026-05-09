@@ -20,7 +20,7 @@ import { Dayjs } from 'dayjs'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useStoreFiltrosVentasPorCobrar, type MoraRango } from '../../_store/store-filtros-ventas-por-cobrar'
+import { useStoreFiltrosVentasPorCobrar, type MoraRango, type EstadoPago } from '../../_store/store-filtros-ventas-por-cobrar'
 import TotalVentasPorCobrar from '../others/total-ventas-por-cobrar'
 import { FormaDePago } from '~/lib/api/venta'
 import ModalClienteSearch from '~/app/_components/modals/modal-cliente-search'
@@ -57,6 +57,7 @@ export default function FiltersVentasPorCobrar() {
   const [form] = Form.useForm<ValuesFiltersVentasPorCobrar>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [quickFilterActive, setQuickFilterActive] = useState<MoraRango>(15)
+  const [localEstadoPago, setLocalEstadoPago] = useState<EstadoPago>('pendientes')
   const [busquedaClienteText, setBusquedaClienteText] = useState('')
   const [debouncedBusquedaCliente] = useDebounce(busquedaClienteText, 300)
   const [openModalCliente, setOpenModalCliente] = useState(false)
@@ -65,23 +66,23 @@ export default function FiltersVentasPorCobrar() {
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
   const setFiltros = useStoreFiltrosVentasPorCobrar(state => state.setFiltros)
   const setMoraRango = useStoreFiltrosVentasPorCobrar(state => state.setMoraRango)
-  const estadoPago = useStoreFiltrosVentasPorCobrar(state => state.estadoPago)
   const setEstadoPago = useStoreFiltrosVentasPorCobrar(state => state.setEstadoPago)
   const setQuickFilterText = useStoreFiltrosVentasPorCobrar(state => state.setQuickFilterText)
 
-  const applyQuickFilter = useCallback((rango: MoraRango) => {
+  const applyQuickFilter = useCallback((rango: MoraRango, triggerSearch = false) => {
     setQuickFilterActive(rango)
-    setMoraRango(rango)
-    
     // Limpiar fechas del formulario
     form.setFieldsValue({ desde: undefined, hasta: undefined })
-    
-    const data = {
-      almacen_id,
-      forma_de_pago: FormaDePago.CREDITO,
-      estado_de_venta: { in: ['Creado'] },
-    } satisfies VentaWhereInput
-    setFiltros(data)
+
+    if (triggerSearch) {
+      setMoraRango(rango)
+      const data = {
+        almacen_id,
+        forma_de_pago: FormaDePago.CREDITO,
+        estado_de_venta: { in: ['Creado'] },
+      } satisfies VentaWhereInput
+      setFiltros(data)
+    }
   }, [almacen_id, form, setFiltros, setMoraRango])
 
   // Contar filtros activos
@@ -98,8 +99,8 @@ export default function FiltersVentasPorCobrar() {
   }, [form])
 
   useEffect(() => {
-    // Aplicar el filtro rápido inicial (15 días)
-    applyQuickFilter(15)
+    // Aplicar el filtro rápido inicial (15 días) y disparar búsqueda inicial
+    applyQuickFilter(15, true)
     // Inicializar el estado de pago y tipo de documento en el formulario
     form.setFieldValue('estado_pago', 'pendientes')
     form.setFieldValue('tipo_documento', '')
@@ -144,10 +145,15 @@ export default function FiltersVentasPorCobrar() {
           estado_pago,
         } = values
 
-        // Si se usan fechas manuales, limpiar el filtro rápido
+        // Commitear estado de pago al store (antes de setFiltros)
+        setEstadoPago(estado_pago ?? 'pendientes')
+
+        // Commitear rango al store
         if (desde || hasta) {
           setQuickFilterActive('todas')
           setMoraRango('todas')
+        } else {
+          setMoraRango(quickFilterActive)
         }
 
         const data = {
@@ -218,7 +224,7 @@ export default function FiltersVentasPorCobrar() {
           <span className='text-xs font-semibold text-slate-500 mr-1'>Rango:</span>
           <Select
             value={quickFilterActive}
-            onChange={(val) => applyQuickFilter(val as MoraRango)}
+            onChange={(val) => applyQuickFilter(val as MoraRango, false)}
             className='w-36'
             options={QUICK_FILTERS.map(({ label, value }) => ({ label, value }))}
           />
@@ -226,11 +232,10 @@ export default function FiltersVentasPorCobrar() {
         <div className='flex items-center gap-2'>
           <span className='text-xs font-semibold text-slate-500 mr-1'>Estado:</span>
           <Select
-            value={estadoPago}
+            value={localEstadoPago}
             onChange={(val) => {
-              setEstadoPago(val)
+              setLocalEstadoPago(val)
               form.setFieldValue('estado_pago', val)
-              form.submit()
             }}
             className='w-36'
             options={ESTADO_PAGO_OPTIONS}
@@ -510,9 +515,9 @@ export default function FiltersVentasPorCobrar() {
 
           <LabelBase label='Estado de Pago:'>
             <Select
-              value={estadoPago}
+              value={localEstadoPago}
               onChange={(val) => {
-                setEstadoPago(val)
+                setLocalEstadoPago(val)
                 form.setFieldValue('estado_pago', val)
               }}
               className='w-full'
