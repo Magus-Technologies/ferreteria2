@@ -320,6 +320,47 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       valueGetter: (params: any) => calcularMora(params.data as VentaCompleta),
     },
     {
+      headerName: 'Último Pago',
+      width: 150,
+      valueGetter: (params: any) => {
+        const ultimoPago = params.data?.ultimo_pago
+        if (!ultimoPago) return 'Sin pagos'
+        return dayjs(ultimoPago).format('DD/MM/YYYY hh:mm A')
+      },
+    },
+    {
+      headerName: 'Estado',
+      width: 110,
+      valueGetter: (params: any) => {
+        const venta = params.data as VentaCompleta
+        if (!venta) return ''
+        const total = (venta.productos_por_almacen || []).reduce((acc: number, item: any) => {
+          for (const u of item.unidades_derivadas ?? []) {
+            const precio = Number(u.precio ?? 0)
+            const cantidad = Number(u.cantidad ?? 0)
+            const descuento = Number(u.descuento ?? 0)
+            const bonificacion = Boolean(u.bonificacion)
+            acc += bonificacion ? 0 : (precio * cantidad) - descuento
+          }
+          return acc
+        }, 0)
+        const totalPagado = Number(venta.total_cobrado || 0)
+        return (total - totalPagado) <= 0.01 ? 'Pagado' : 'Pendiente'
+      },
+      cellRenderer: (params: any) => {
+        const estado = params.value // Usa el valor calculado por valueGetter
+        const isPagado = estado === 'Pagado'
+        
+        return (
+          <div className="flex items-center h-full">
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isPagado ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+              {estado}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'PDF',
       width: 70,
       cellRenderer: (params: any) => {
@@ -379,6 +420,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
           'Saldo',
           'Mon.',
           'Moras',
+          'Último Pago',
+          'Estado',
           'PDF',
         ],
       },
