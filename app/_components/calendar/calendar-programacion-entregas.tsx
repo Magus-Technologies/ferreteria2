@@ -299,6 +299,21 @@ export default function CalendarProgramacionEntregas({
         ? `${tipoLabel ? tipoLabel + ' ' : ''}${entrega.venta.serie}-${entrega.venta.numero}`
         : ''
 
+      // Productos detallados
+      const productosDetallado = (entrega.productos_entregados || []).map((detalle: any) => {
+        const udv = detalle.unidad_derivada_venta || {}
+        const pav = udv.producto_almacen_venta || {}
+        const pa = pav.producto_almacen || {}
+        const producto = pa.producto || {}
+        return {
+          producto: producto.name || '',
+          codigo: producto.cod_producto || '',
+          cantidad: Number(udv.cantidad || detalle.cantidad_entregada || 0),
+          unidad: udv.unidad_derivada_inmutable?.name || '',
+          marca: producto.marca?.name || '',
+        }
+      })
+
       return {
         id: entrega.id,
         title: `${vehiculoNombre} - ${clienteNombre}`,
@@ -313,6 +328,7 @@ export default function CalendarProgramacionEntregas({
           cliente_nombre: clienteNombre,
           direccion: entrega.direccion_entrega || '',
           productos_count: entrega.productos_entregados?.length || 0,
+          productos_detallado: productosDetallado,
           color,
           venta_nro: ventaNro,
         },
@@ -335,6 +351,7 @@ export default function CalendarProgramacionEntregas({
           cliente_nombre: '',
           direccion: '',
           productos_count: 0,
+          productos_detallado: [],
           color: '#3b82f6',
           venta_nro: '',
         },

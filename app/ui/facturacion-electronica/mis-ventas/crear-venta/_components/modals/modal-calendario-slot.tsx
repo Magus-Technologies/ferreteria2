@@ -44,6 +44,7 @@ export default function ModalCalendarioSlot({
 }: ModalCalendarioSlotProps) {
   const [slotPendiente, setSlotPendiente] = useState<SlotSeleccionado | null>(null)
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
+  const [productosExpandidos, setProductosExpandidos] = useState(false)
   const tieneVehiculo = !!vehiculo_id
 
   // onSelectSlot se dispara desde el popup del calendario al dar "Aplicar"
@@ -64,6 +65,7 @@ export default function ModalCalendarioSlot({
   const handleCancel = () => {
     setSlotPendiente(null)
     setEventoSeleccionado(null)
+    setProductosExpandidos(false)
     onClose()
   }
 
@@ -209,16 +211,60 @@ export default function ModalCalendarioSlot({
                       )}
                     </div>
 
-                    <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FaBox size={10} className="text-amber-600" />
+                    {/* Productos expandibles */}
+                    <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setProductosExpandidos(!productosExpandidos)}
+                        className="w-full flex items-center justify-between p-3 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FaBox size={10} className="text-amber-600" />
+                          </div>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Productos</span>
                         </div>
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Productos</span>
-                      </div>
-                      <div className="text-slate-800 font-bold text-sm pl-7 leading-tight">
-                        {eventoSeleccionado.resource.productos_count} producto(s)
-                      </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-slate-700">
+                            {productosExpandidos ? '' : `${eventoSeleccionado.resource.productos_count} producto(s)`}
+                          </span>
+                          <span className={`text-slate-400 transition-transform ${productosExpandidos ? 'rotate-180' : ''}`}>
+                            ▼
+                          </span>
+                        </div>
+                      </button>
+
+                      {productosExpandidos && (
+                        <div className="px-3 pb-3 space-y-2 border-t border-slate-50">
+                          {eventoSeleccionado.resource.productos_detallado && eventoSeleccionado.resource.productos_detallado.length > 0 ? (
+                            eventoSeleccionado.resource.productos_detallado.map((producto: any, idx: number) => (
+                              <div key={idx} className="flex items-start gap-2 pt-2">
+                                <div className="w-5 h-5 bg-emerald-100 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <span className="text-emerald-600 text-[10px]">✓</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-semibold text-slate-700 truncate">
+                                    {producto.producto}
+                                  </div>
+                                  {producto.codigo && (
+                                    <div className="text-[10px] text-slate-500">
+                                      {producto.codigo}
+                                    </div>
+                                  )}
+                                  <div className="text-[10px] text-slate-600 mt-0.5">
+                                    <span className="font-semibold">{producto.cantidad}</span> {producto.unidad || 'und'}
+                                    {producto.marca && <span className="text-slate-400 ml-1">• {producto.marca}</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-slate-400 pt-2 text-center">
+                              {eventoSeleccionado.resource.productos_count} producto(s) en esta entrega
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {eventoSeleccionado.resource.direccion && (
