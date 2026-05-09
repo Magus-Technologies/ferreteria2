@@ -209,6 +209,10 @@ function SlotPopup({ slot, position, onAplicar, onCerrar, soloSeleccion }: SlotP
 interface CalendarProgramacionEntregasProps {
   onSelectSlot?: (slotInfo: { start: Date; end: Date }) => void
   onSelectEvent?: (event: EntregaEvent) => void
+  /** Callback para cerrar popup de slot cuando se selecciona un evento */
+  onClearSlot?: () => void
+  /** Callback cuando se abre el popup de slot (para limpiar evento seleccionado) */
+  onSlotOpen?: () => void
   selectedDate?: Date
   chofer_id?: string
   vehiculo_id?: number
@@ -219,6 +223,8 @@ interface CalendarProgramacionEntregasProps {
 export default function CalendarProgramacionEntregas({
   onSelectSlot,
   onSelectEvent,
+  onClearSlot,
+  onSlotOpen,
   selectedDate,
   chofer_id,
   vehiculo_id,
@@ -395,8 +401,11 @@ export default function CalendarProgramacionEntregas({
         left = slotInfo.box.clientX + 12
       }
       setPopupPos({ top, left })
+
+      // Notificar al padre que se abrió el popup de slot (limpiar evento seleccionado)
+      onSlotOpen?.()
     },
-    [soloSeleccion, onSelectSlot]
+    [soloSeleccion, onSelectSlot, onSlotOpen]
   )
 
   const handleAplicarSlot = useCallback(() => {
@@ -416,9 +425,15 @@ export default function CalendarProgramacionEntregas({
     (event: EntregaEvent) => {
       if (event.id === -1) return
       setSelectedEventId(event.id)
+      // Cerrar popup de slot si está abierto (cuando se selecciona un evento)
+      if (popupPos) {
+        setSelectedSlot(null)
+        setPopupPos(null)
+        onClearSlot?.()
+      }
       onSelectEvent?.(event)
     },
-    [onSelectEvent]
+    [onSelectEvent, popupPos, onClearSlot]
   )
 
   if (isLoading) {

@@ -140,77 +140,96 @@ export default function ModalCalendarioSlot({
               <CalendarProgramacionEntregas
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={setEventoSeleccionado}
+                onClearSlot={() => setSlotPendiente(null)}
+                onSlotOpen={() => setEventoSeleccionado(null)}
                 vehiculo_id={vehiculo_id}
                 soloSeleccion
               />
               {eventoSeleccionado && (
-                <div className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
-                  <div
-                    className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-slate-800"
-                  >
+                <div className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 px-4 py-3.5">
                     <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-[11px] uppercase tracking-wide text-slate-500">Entrega programada</div>
-                        <div className="font-bold text-sm truncate">
-                          {eventoSeleccionado.resource.vehiculo_nombre || 'Sin unidad'}
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
+                          <FaTruck size={14} className="text-white" />
+                        </div>
+                        <div>
+                          <div className="text-emerald-100 text-[10px] uppercase tracking-wider font-semibold">Entrega Programada</div>
+                          <div className="font-bold text-sm text-white truncate leading-tight">
+                            {eventoSeleccionado.resource.vehiculo_nombre || 'Sin unidad'}
+                          </div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setEventoSeleccionado(null)}
-                        className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition-all text-lg leading-none flex-shrink-0"
                       >
                         ×
                       </button>
                     </div>
                   </div>
 
-                  <div className="p-4 space-y-3 text-sm">
-                    <div>
-                      <div className="flex items-center gap-2 text-slate-400 text-xs uppercase font-semibold">
-                        <FaCalendarAlt size={11} />
-                        Horario
+                  <div className="p-4 space-y-3.5 text-sm bg-gradient-to-b from-slate-50 to-white">
+                    <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FaCalendarAlt size={10} className="text-amber-600" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Horario</span>
                       </div>
-                      <div className="mt-1 font-medium text-slate-700">
+                      <div className="text-slate-800 font-semibold text-sm capitalize pl-7 leading-tight">
                         {dayjs(eventoSeleccionado.start).format('dddd D [de] MMMM')}
                       </div>
-                      <div className="text-slate-500">
-                        {dayjs(eventoSeleccionado.start).format('HH:mm')} - {dayjs(eventoSeleccionado.end).format('HH:mm')}
+                      <div className="flex items-center gap-1.5 mt-1.5 pl-7">
+                        <div className="px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-lg">
+                          <span className="text-blue-700 font-bold text-xs">{dayjs(eventoSeleccionado.start).format('HH:mm')}</span>
+                        </div>
+                        <span className="text-slate-400 text-xs">—</span>
+                        <div className="px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-lg">
+                          <span className="text-blue-700 font-bold text-xs">{dayjs(eventoSeleccionado.end).format('HH:mm')}</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 text-slate-400 text-xs uppercase font-semibold">
-                        <FaUser size={11} />
-                        Cliente
+                    <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-5 h-5 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FaUser size={10} className="text-indigo-600" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Cliente</span>
                       </div>
-                      <div className="mt-1 font-medium text-slate-700">
+                      <div className="text-slate-800 font-semibold text-sm pl-7 leading-tight">
                         {eventoSeleccionado.resource.cliente_nombre || 'Sin cliente'}
                       </div>
                       {eventoSeleccionado.resource.venta_nro && (
-                        <div className="text-xs text-slate-400 mt-1">
-                          Venta: {eventoSeleccionado.resource.venta_nro}
+                        <div className="text-xs text-teal-600 font-medium mt-1 pl-7">
+                          🧾 {eventoSeleccionado.resource.venta_nro}
                         </div>
                       )}
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 text-slate-400 text-xs uppercase font-semibold">
-                        <FaBox size={11} />
-                        Productos
+                    <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FaBox size={10} className="text-amber-600" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Productos</span>
                       </div>
-                      <div className="mt-1 font-medium text-slate-700">
+                      <div className="text-slate-800 font-bold text-sm pl-7 leading-tight">
                         {eventoSeleccionado.resource.productos_count} producto(s)
                       </div>
                     </div>
 
                     {eventoSeleccionado.resource.direccion && (
-                      <div>
-                        <div className="flex items-center gap-2 text-slate-400 text-xs uppercase font-semibold">
-                          <FaMapMarkerAlt size={11} />
-                          Dirección
+                      <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className="w-5 h-5 bg-rose-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FaMapMarkerAlt size={10} className="text-rose-600" />
+                          </div>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Dirección</span>
                         </div>
-                        <div className="mt-1 text-slate-700">
+                        <div className="text-slate-700 font-medium text-sm pl-7 leading-tight">
                           {eventoSeleccionado.resource.direccion}
                         </div>
                       </div>
