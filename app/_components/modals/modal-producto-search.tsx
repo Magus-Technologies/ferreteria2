@@ -163,9 +163,8 @@ export default function ModalProductoSearch({
           onChange={(e) => setText(e.target.value)}
           className="w-full sm:max-w-[500px]"
           onPressEnter={() => {
-            // Disparar la búsqueda al servidor con el texto actual
             setValue(text);
-            tableRef.current?.handleRefetch();
+            setTextDefault(text);
           }}
         />
         {stockFilterMode === 'venta' && (
