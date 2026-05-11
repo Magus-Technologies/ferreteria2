@@ -641,64 +641,6 @@ export default function useCreateVenta({
             })
           }
         }
-      } else if (!isEditing && tipo_despacho === 'EnTienda' && quien_entrega && !_omitir_entrega) {
-        // Solo crear la entrega EnTienda en CREACIÓN. Al editar una venta
-        // EnTienda, la entrega ya existe en BD: el backend la mantiene y
-        // la pone a 'pe' (pendiente) para que el usuario re-confirme. Si
-        // este bloque se ejecutara al editar, crearía una segunda entrega
-        // EnTienda duplicada.
-
-        try {
-          // Obtener los IDs de unidades derivadas de venta desde la respuesta
-          const productosVenta = ventaCreada.productos_por_almacen || []
-          const unidadesDerivadas: any[] = []
-
-          productosVenta.forEach((productoAlmacen: any) => {
-            if (productoAlmacen.unidades_derivadas) {
-              productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                unidadesDerivadas.push({
-                  unidad_derivada_venta_id: unidad.id,
-                  cantidad_entregada: Number(unidad.cantidad),
-                  ubicacion: undefined,
-                })
-              })
-            }
-          })
-
-          // Estado inicial según quién entrega:
-          // - vendedor: el vendedor ya está en la caja con el cliente, la
-          //   entrega ocurre AHORA → ENTREGADO inmediato.
-          // - almacen/chofer: el cliente debe pasar al almacén; la entrega
-          //   queda PENDIENTE hasta que alguien la marque como entregada
-          //   desde "Mis Entregas" (ahí se registra user_entregado_id).
-          const estadoInicial = quien_entrega === QuienEntrega.VENDEDOR
-            ? EstadoEntrega.ENTREGADO
-            : EstadoEntrega.PENDIENTE
-
-          // Preparar datos de la entrega en tienda
-          const entregaData: CreateEntregaProductoRequest = {
-            venta_id: ventaCreada.id,
-            tipo_entrega: TipoEntrega.RECOJO_EN_TIENDA,
-            tipo_despacho: TipoDespacho.INMEDIATO,
-            estado_entrega: estadoInicial,
-            fecha_entrega: dayjs().format('YYYY-MM-DD'),
-            almacen_salida_id: almacen_id,
-            quien_entrega: quien_entrega as QuienEntrega,
-            user_id: user_id,
-            productos_entregados: unidadesDerivadas,
-          }
-
-
-          // Crear la entrega
-          const entregaResponse = await entregaProductoApi.create(entregaData)
-
-          if (entregaResponse.error) {
-            console.error('❌ Error al crear entrega en tienda:', entregaResponse.error)
-          } else {
-          }
-        } catch (error) {
-          console.error('❌ Error al crear entrega en tienda automática:', error)
-        }
       } else if (
         !isEditing &&
         ventaCreada &&
