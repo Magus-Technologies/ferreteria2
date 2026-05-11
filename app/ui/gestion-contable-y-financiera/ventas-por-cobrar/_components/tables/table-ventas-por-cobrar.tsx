@@ -203,6 +203,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
   const columns: ColDef<VentaCompleta>[] = useMemo(() => [
     {
       headerName: 'Fecha y Hora',
+      field: 'fecha' as any,
+      colId: 'fecha',
       width: 150,
       valueGetter: (params: any) => {
         const val = params.data?.created_at || params.data?.fecha
@@ -212,6 +214,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Documento',
+      field: 'tipo_documento' as any,
+      colId: 'tipo_documento',
       width: 120,
       valueGetter: (params: any) => {
         const tipoDoc = params.data?.tipo_documento as string
@@ -225,6 +229,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Serie-Correl',
+      field: 'serie' as any,
+      colId: 'serie',
       width: 140,
       valueGetter: (params: any) => {
         const serie = params.data?.serie || ''
@@ -234,11 +240,15 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Doc. Cliente',
+      field: 'cliente.numero_documento' as any,
+      colId: 'cliente_documento',
       width: 120,
       valueGetter: (params) => params.data?.cliente?.numero_documento || '',
     },
     {
       headerName: 'Cliente',
+      field: 'cliente.razon_social' as any,
+      colId: 'cliente',
       width: 300,
       valueGetter: (params: any) => {
         const cliente = params.data?.cliente
@@ -250,6 +260,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Detalle',
+      field: 'productos_por_almacen' as any,
+      colId: 'detalle',
       width: 200,
       valueGetter: (params: any) => {
         const venta = params.data as VentaCompleta
@@ -268,11 +280,15 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Registra',
+      field: 'user.name' as any,
+      colId: 'registra',
       width: 150,
       valueGetter: (params) => params.data?.user?.name || '',
     },
     {
       headerName: 'Total',
+      field: 'total' as any,
+      colId: 'total',
       width: 120,
       cellRenderer: (params: any) => {
         const venta = params.data as VentaCompleta
@@ -284,6 +300,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Paga',
+      field: 'total_cobrado' as any,
+      colId: 'paga',
       width: 120,
       valueGetter: (params: any) => {
         const pagado = Number(params.data?.total_cobrado || 0)
@@ -292,6 +310,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Saldo',
+      field: 'saldo' as any,
+      colId: 'saldo',
       width: 120,
       cellRenderer: (params: any) => {
         const venta = params.data as VentaCompleta
@@ -306,11 +326,15 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Mon.',
+      field: 'moneda' as any,
+      colId: 'moneda',
       width: 80,
       valueGetter: () => 'PEN',
     },
     {
       headerName: 'Moras',
+      field: 'moras' as any,
+      colId: 'moras',
       width: 80,
       cellRenderer: (params: any) => {
         const mora = calcularMora(params.data as VentaCompleta)
@@ -321,6 +345,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Último Pago',
+      field: 'ultimo_pago' as any,
+      colId: 'ultimo_pago',
       width: 150,
       valueGetter: (params: any) => {
         const ultimoPago = params.data?.ultimo_pago
@@ -330,6 +356,8 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'Estado',
+      field: 'estado' as any,
+      colId: 'estado',
       width: 110,
       valueGetter: (params: any) => {
         const venta = params.data as VentaCompleta
@@ -362,7 +390,10 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
     },
     {
       headerName: 'PDF',
+      field: 'pdf' as any,
+      colId: 'pdf',
       width: 70,
+      suppressMovable: true, // No permitir mover esta columna (siempre al final)
       cellRenderer: (params: any) => {
         if (!params.data?.id) return null
         return (

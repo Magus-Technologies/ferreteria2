@@ -654,6 +654,7 @@ export default function TableBase<T>({
             floatingFilter: false, // Desactiva filtros flotantes (opcionales)
             sortable: true, // Habilita ordenamiento
             resizable: true, // Habilita redimensionamiento
+            suppressMovable: false, // Habilita movimiento de columnas
             ...props.defaultColDef, // Permite sobrescribir desde props
           }}
           localeText={AG_GRID_LOCALE_ES}

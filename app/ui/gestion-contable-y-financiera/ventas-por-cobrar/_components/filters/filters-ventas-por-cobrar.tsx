@@ -68,6 +68,7 @@ export default function FiltersVentasPorCobrar() {
   const setMoraRango = useStoreFiltrosVentasPorCobrar(state => state.setMoraRango)
   const setEstadoPago = useStoreFiltrosVentasPorCobrar(state => state.setEstadoPago)
   const setQuickFilterText = useStoreFiltrosVentasPorCobrar(state => state.setQuickFilterText)
+  const resetToDefaults = useStoreFiltrosVentasPorCobrar(state => state.resetToDefaults)
 
   const applyQuickFilter = useCallback((rango: MoraRango, triggerSearch = false) => {
     setQuickFilterActive(rango)
@@ -99,6 +100,10 @@ export default function FiltersVentasPorCobrar() {
   }, [form])
 
   useEffect(() => {
+    // Resetear a valores por defecto al montar el componente
+    resetToDefaults()
+    setQuickFilterActive(15)
+    setLocalEstadoPago('pendientes')
     // Aplicar el filtro rápido inicial (15 días) y disparar búsqueda inicial
     applyQuickFilter(15, true)
     // Inicializar el estado de pago y tipo de documento en el formulario

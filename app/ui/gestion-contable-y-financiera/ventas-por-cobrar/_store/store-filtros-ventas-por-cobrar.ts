@@ -14,16 +14,27 @@ interface StoreFiltrosVentasPorCobrar {
   setEstadoPago: (estado: EstadoPago) => void
   quickFilterText: string
   setQuickFilterText: (text: string) => void
+  resetToDefaults: () => void
+}
+
+const DEFAULT_VALUES = {
+  moraRango: 15 as MoraRango,
+  estadoPago: 'pendientes' as EstadoPago,
 }
 
 export const useStoreFiltrosVentasPorCobrar = create<StoreFiltrosVentasPorCobrar>((set) => ({
   filtros: undefined,
   searchKey: 0,
   setFiltros: (filtros) => set((state) => ({ filtros, searchKey: state.searchKey + 1 })),
-  moraRango: 15,
+  moraRango: DEFAULT_VALUES.moraRango,
   setMoraRango: (moraRango) => set({ moraRango }),
-  estadoPago: 'pendientes',
+  estadoPago: DEFAULT_VALUES.estadoPago,
   setEstadoPago: (estadoPago) => set({ estadoPago }),
   quickFilterText: '',
   setQuickFilterText: (quickFilterText) => set({ quickFilterText }),
+  resetToDefaults: () => set({
+    moraRango: DEFAULT_VALUES.moraRango,
+    estadoPago: DEFAULT_VALUES.estadoPago,
+    quickFilterText: '',
+  }),
 }))
