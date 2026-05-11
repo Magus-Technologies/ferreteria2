@@ -207,7 +207,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       valueGetter: (params: any) => {
         const val = params.data?.created_at || params.data?.fecha
         if (!val) return ''
-        return dayjs(val).format('DD/MM/YYYY hh:mm A')
+        return dayjs(val).format('DD/MM/YYYY hh:mm:ss A')
       },
     },
     {
@@ -325,7 +325,7 @@ const TableVentasPorCobrar = memo(function TableVentasPorCobrar() {
       valueGetter: (params: any) => {
         const ultimoPago = params.data?.ultimo_pago
         if (!ultimoPago) return 'Sin pagos'
-        return dayjs(ultimoPago).format('DD/MM/YYYY hh:mm A')
+        return dayjs(ultimoPago).format('DD/MM/YYYY hh:mm:ss A')
       },
     },
     {

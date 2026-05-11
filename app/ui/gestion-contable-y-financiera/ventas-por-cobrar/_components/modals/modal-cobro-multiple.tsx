@@ -370,7 +370,7 @@ export default function ModalCobroMultiple({ open, setOpen }: ModalCobroMultiple
         const vencida = params.data.fecha_vencimiento && dayjs(params.data.fecha_vencimiento).isBefore(dayjs())
         return (
           <div className="text-gray-500 text-xs">
-            {dayjs(params.data.created_at || params.data.fecha).format('DD/MM/YYYY hh:mm A')}
+            {dayjs(params.data.created_at || params.data.fecha).format('DD/MM/YYYY hh:mm:ss A')}
             {params.data.fecha_vencimiento && (
               <span className={`ml-1 text-[10px] ${vencida ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
                 (Venc: {dayjs(params.data.fecha_vencimiento).format('DD/MM')})

@@ -33,9 +33,16 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   // Congelar la compra cuando el modal abre
   const [localCompra, setLocalCompra] = useState<Compra | undefined>()
   useEffect(() => {
-    if (open && compra) setLocalCompra(compra)
+    if (open && compra) {
+      setLocalCompra(compra)
+      if (compra.tipo_moneda?.toLowerCase() === 'd' && compra.tipo_de_cambio) {
+        form.setFieldValue('tipo_de_cambio', Number(compra.tipo_de_cambio))
+      } else {
+        form.setFieldValue('tipo_de_cambio', undefined)
+      }
+    }
     if (!open) setLocalCompra(undefined)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, compra, form])
 
   // Calcular total de la compra
   const totalCompra = useMemo(() => {
@@ -412,17 +419,19 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             </Form.Item>
           </LabelBase>
 
-          <LabelBase label='TC Pago (S/$):' orientation='column'>
-            <Form.Item name='tipo_de_cambio' noStyle>
-              <InputNumber
-                className='w-full'
-                precision={4}
-                min={0.0001}
-                step={0.01}
-                placeholder='Ej: 3.75'
-              />
-            </Form.Item>
-          </LabelBase>
+          {localCompra?.tipo_moneda?.toLowerCase() === 'd' && (
+            <LabelBase label='TC Pago (S/$):' orientation='column'>
+              <Form.Item name='tipo_de_cambio' noStyle>
+                <InputNumber
+                  className='w-full'
+                  precision={4}
+                  min={0.0001}
+                  step={0.01}
+                  placeholder='Ej: 3.75'
+                />
+              </Form.Item>
+            </LabelBase>
+          )}
 
           <LabelBase label='Fecha Pago:' orientation='column'>
             <Form.Item name='fecha' rules={[{ required: true, message: 'Requerido' }]} noStyle>

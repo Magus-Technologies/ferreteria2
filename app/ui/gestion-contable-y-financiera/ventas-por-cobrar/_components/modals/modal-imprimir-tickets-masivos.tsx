@@ -110,7 +110,7 @@ export default function ModalImprimirTicketsMasivos({ open, setOpen }: ModalImpr
       width: 170, 
       valueGetter: (p) => {
         const val = p.data?.created_at || p.data?.fecha
-        return dayjs(val).format('DD/MM/YYYY hh:mm A')
+        return dayjs(val).format('DD/MM/YYYY hh:mm:ss A')
       }
     },
     { headerName: 'Venta', width: 120, valueGetter: (p) => `${p.data?.venta?.serie}-${p.data?.venta?.numero}` },
