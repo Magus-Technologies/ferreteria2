@@ -56,7 +56,7 @@ export default function ModalCreateCliente({
   // form interno. El hook `useDireccionesClienteForm` que vive adentro
   // parsea automáticamente el array — este modal ya no necesita el switch
   // case D1/D2/D3/D4 que escribía 12 campos legacy uno por uno.
-  const [clienteConDirecciones, setClienteConDirecciones] = useState<Cliente | undefined>(dataEdit);
+  const [clienteConDirecciones, setClienteConDirecciones] = useState<Cliente | undefined>(undefined);
 
   const { crearClienteForm, loading } = useCreateCliente({
     onSuccess: (cliente) => {
@@ -70,67 +70,74 @@ export default function ModalCreateCliente({
     dataEdit,
   });
 
+  // Función para cargar los datos del cliente y sus direcciones.
+  // Extraída para poder re-usarla tanto en la apertura inicial como en re-aperturas.
+  const cargarDatosCliente = async (clienteDataEdit: Cliente) => {
+    // Usar setTimeout para asegurar que el formulario de Ant Design se haya montado y conectado
+    // a la instancia creada por useForm antes de intentar resetear campos.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    
+    try {
+      form.resetFields();
+      
+      // Transformar null a undefined para compatibilidad con Ant Design Form
+      const formValues = Object.fromEntries(
+        Object.entries(clienteDataEdit).map(([key, value]) => [
+          key,
+          value ?? undefined,
+        ]),
+      );
+      form.setFieldsValue(formValues);
+
+      // Convertir fecha_nacimiento string a Dayjs para el DatePicker
+      if (clienteDataEdit.fecha_nacimiento) {
+        form.setFieldValue('fecha_nacimiento', dayjs(clienteDataEdit.fecha_nacimiento));
+      }
+
+      // Cargar direcciones desde la tabla direcciones_cliente y
+      // adjuntarlas al cliente — el hook `useDireccionesClienteForm`
+      // dentro de FormCreateCliente las parsea automáticamente y
+      // escribe los campos legacy del form (sin switch hardcoded).
+      setCargandoDirecciones(true);
+      try {
+        const response = await clienteApi.listarDirecciones(clienteDataEdit.id);
+        const direcciones = response.data?.data ?? [];
+        setClienteConDirecciones({ ...clienteDataEdit, direcciones });
+      } catch (error) {
+        console.error('Error cargando direcciones:', error);
+        setClienteConDirecciones(clienteDataEdit);
+      } finally {
+        setCargandoDirecciones(false);
+        setDireccionesListas(true);
+      }
+    } catch (e) {
+      // Si el formulario aún no está conectado, reintentar o ignorar
+      console.warn('Formulario no conectado aún:', e);
+      setDireccionesListas(true);
+    }
+  };
+
   useEffect(() => {
     if (!open) {
       setDireccionesListas(false);
       return;
     }
 
-    const cargarDatos = async () => {
-      // Usar setTimeout para asegurar que el formulario de Ant Design se haya montado y conectado
-      // a la instancia creada por useForm antes de intentar resetear campos.
-      setTimeout(async () => {
-        try {
-          form.resetFields();
-
-          if (dataEdit) {
-            // Transformar null a undefined para compatibilidad con Ant Design Form
-            const formValues = Object.fromEntries(
-              Object.entries(dataEdit).map(([key, value]) => [
-                key,
-                value ?? undefined,
-              ]),
-            );
-            form.setFieldsValue(formValues);
-
-            // Convertir fecha_nacimiento string a Dayjs para el DatePicker
-            if (dataEdit.fecha_nacimiento) {
-              form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
-            }
-
-            // Cargar direcciones desde la tabla direcciones_cliente y
-            // adjuntarlas al cliente — el hook `useDireccionesClienteForm`
-            // dentro de FormCreateCliente las parsea automáticamente y
-            // escribe los campos legacy del form (sin switch hardcoded).
-            setCargandoDirecciones(true);
-            try {
-              const response = await clienteApi.listarDirecciones(dataEdit.id);
-              const direcciones = response.data?.data ?? [];
-              setClienteConDirecciones({ ...dataEdit, direcciones });
-            } catch (error) {
-              console.error('Error cargando direcciones:', error);
-              setClienteConDirecciones(dataEdit);
-            } finally {
-              setCargandoDirecciones(false);
-              setDireccionesListas(true);
-            }
-          } else {
-            form.setFieldsValue({
-              numero_documento: textDefault,
-            });
-            setClienteConDirecciones(undefined);
-            setDireccionesListas(true);
-          }
-        } catch (e) {
-          // Si el formulario aún no está conectado, reintentar o ignorar
-          console.warn('Formulario no conectado aún:', e);
-          setDireccionesListas(true);
-        }
+    // Siempre usar dataEdit fresco (props) para obtener los datos más recientes
+    if (dataEdit) {
+      cargarDatosCliente(dataEdit);
+    } else {
+      // Modo crear: reset completo
+      setTimeout(() => {
+        form.resetFields();
+        form.setFieldsValue({
+          numero_documento: textDefault,
+        });
+        setClienteConDirecciones(undefined);
+        setDireccionesListas(true);
       }, 0);
-    };
-
-    cargarDatos();
-  }, [form, dataEdit, open, textDefault]);
+    }
+  }, [form, dataEdit, open, textDefault, cargarDatosCliente]);
 
   return (
     <ModalForm

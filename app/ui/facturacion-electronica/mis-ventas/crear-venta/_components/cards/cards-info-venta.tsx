@@ -3,7 +3,7 @@
 import { DescuentoTipo, EstadoDeVenta } from "~/lib/api/venta";
 import { Form, FormInstance } from "antd";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { clienteApi } from "~/lib/api/cliente";
 import useApp from "antd/es/app/useApp";
 import ButtonBase from "~/components/buttons/button-base";
@@ -66,13 +66,20 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
 
-  // Cargar el cliente completo desde la API cuando se va a editar
+  // Cargar el cliente completo desde la API cuando se va a editar.
+  // Se re-fetchea cada vez que se abre el modal (staleTime: 0) para
+  // garantizar datos frescos y no usar caché que podría estar desactualizado.
   const { data: clienteData } = useQuery({
-    queryKey: ['cliente', clienteId],
+    queryKey: ['cliente', clienteId, 'editar'],
     queryFn: () => clienteApi.getById(clienteId!),
     enabled: !!clienteId && modalEditarClienteOpen,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: false,
     select: (res) => res.data?.data,
   });
+
+  const queryClient = useQueryClient();
 
   const { cajaActiva } = useCheckAperturaDiaria();
   const [modalTrasladoBovedaOpen, setModalTrasladoBovedaOpen] = useState(false);
@@ -408,6 +415,10 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
 
           // Actualizar direcciones en campos ocultos.
           setDireccionesClienteToForm(form, cliente);
+
+          // Invalidar la caché del cliente para que la próxima vez que se
+          // abra el modal de editar se carguen los datos más recientes.
+          queryClient.invalidateQueries({ queryKey: ['cliente', clienteId, 'editar'] });
 
           setModalEditarClienteOpen(false);
         }}
