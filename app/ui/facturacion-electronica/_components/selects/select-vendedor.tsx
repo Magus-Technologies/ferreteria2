@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { cajaPrincipalApi, type Usuario } from '~/lib/api/caja-principal'
 import { FaUser } from 'react-icons/fa'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface SelectVendedorProps extends SelectBaseProps {
   classNameIcon?: string
@@ -25,6 +25,7 @@ export default function SelectVendedor({
   sinCaja = false,
   mostrarDocumento = true,
   excludeIds = [],
+  value,
   ...props
 }: SelectVendedorProps) {
   const [shouldFetch, setShouldFetch] = useState(false)
@@ -42,6 +43,13 @@ export default function SelectVendedor({
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
+  // Si hay un valor seleccionado, cargar los datos inmediatamente
+  useEffect(() => {
+    if (value && !shouldFetch) {
+      setShouldFetch(true)
+    }
+  }, [value, shouldFetch])
+
   return (
     <SelectBase
       showSearch
@@ -49,6 +57,7 @@ export default function SelectVendedor({
       variant={variant}
       placeholder={placeholder}
       loading={isLoading}
+      value={value}
       options={data
         ?.filter((v: Usuario) => !excludeIds.includes(v.id))
         .map((vendedor: Usuario) => ({

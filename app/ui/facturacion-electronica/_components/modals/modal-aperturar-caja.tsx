@@ -369,42 +369,34 @@ export default function ModalAperturarCaja({
                     {index + 1}
                   </div>
                   <div className='flex-1 min-w-0'>
-                    {vendedor.user_id ? (
-                      // Mostrar el nombre del usuario cuando ya está seleccionado
-                      <div className='text-sm font-medium text-slate-700 truncate'>
-                        {cajasPrincipales?.find(c => c.user.id === vendedor.user_id)?.user.name || vendedor.user_id}
-                      </div>
-                    ) : (
-                      // Mostrar el select cuando no hay usuario seleccionado
-                      <SelectVendedor
-                        placeholder='Seleccionar vendedor'
-                        value={vendedor.user_id}
-                        soloVendedores={false}
-                        mostrarDocumento={false}
-                        excludeIds={vendedores
-                          .filter(v => v.id !== vendedor.id && v.user_id)
-                          .map(v => v.user_id as string)
-                        }
-                        disabled={
-                          // Bloquear si NO es admin Y es el usuario actual
-                          !(user as any)?.roles?.some((role: any) =>
-                            role.name?.toLowerCase() === 'admin' ||
-                            role.name?.toLowerCase() === 'administrador'
-                          ) && vendedor.user_id === user?.id
-                        }
-                        onChange={(value) => {
-                          const userId = value as string
-                          const caja = cajasPrincipales?.find(c => c.user.id === userId)
+                    <SelectVendedor
+                      placeholder='Seleccionar vendedor'
+                      value={vendedor.user_id}
+                      soloVendedores={false}
+                      mostrarDocumento={false}
+                      excludeIds={vendedores
+                        .filter(v => v.id !== vendedor.id && v.user_id)
+                        .map(v => v.user_id as string)
+                      }
+                      disabled={
+                        // Bloquear si NO es admin Y es el usuario actual
+                        !(user as any)?.roles?.some((role: any) =>
+                          role.name?.toLowerCase() === 'admin' ||
+                          role.name?.toLowerCase() === 'administrador'
+                        ) && vendedor.user_id === user?.id
+                      }
+                      onChange={(value) => {
+                        const userId = value as string
+                        const caja = cajasPrincipales?.find(c => c.user.id === userId)
 
-                          setVendedores(vendedores.map(v =>
-                            v.id === vendedor.id
-                              ? { ...v, user_id: userId, caja_principal_id: caja?.id }
-                              : v
-                          ))
-                          seleccionarVendedor(vendedor.id)
-                        }}
-                      />
-                    )}
+                        setVendedores(vendedores.map(v =>
+                          v.id === vendedor.id
+                            ? { ...v, user_id: userId, caja_principal_id: caja?.id }
+                            : v
+                        ))
+                        seleccionarVendedor(vendedor.id)
+                      }}
+                    />
                   </div>
                   <div className='w-24 text-right'>
                     <span className={`font-bold ${vendedor.monto <= 0 ? 'text-red-500' : 'text-orange-600'}`}>
