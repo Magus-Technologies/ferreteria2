@@ -6,6 +6,7 @@ export type ProductoEntrega = {
   producto: string
   ubicacion: string
   total: number
+  recibido?: number
   entregado: number
   pendiente: number
   entregar: number

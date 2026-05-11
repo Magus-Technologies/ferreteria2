@@ -38,6 +38,7 @@ export default function TableDetalleEntrega() {
 
   const venta = entregaSeleccionada?.venta
   const cliente = venta?.cliente
+  const direccionSeleccionada = venta?.direccion_seleccionada
   const entregaFueEntregadaAntes = Boolean(
     (entregaSeleccionada as any)?.user_entregado_id ||
     (entregaSeleccionada as any)?.userEntregado?.id,
@@ -46,6 +47,15 @@ export default function TableDetalleEntrega() {
   const clienteNombre = cliente?.razon_social ||
     `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() ||
     'SIN CLIENTE'
+  const direccionCliente = useMemo(() => {
+    const direcciones = cliente?.direcciones || []
+    if (!direcciones.length) return undefined
+    return direcciones.find((d: any) => d.tipo === direccionSeleccionada)
+      || direcciones.find((d: any) => d.es_principal)
+      || direcciones[0]
+  }, [cliente?.direcciones, direccionSeleccionada])
+  const direccionMostrar = (entregaSeleccionada as any)?.direccion_entrega || direccionCliente?.direccion
+  const referenciaMostrar = (entregaSeleccionada as any)?.referencia_entrega || direccionCliente?.referencia
 
   const ultimaEdicion = useMemo(() => {
     if (!entregaFueEntregadaAntes) return undefined
@@ -236,10 +246,16 @@ export default function TableDetalleEntrega() {
               <span>{cliente.telefono}</span>
             </div>
           )}
-          {(entregaSeleccionada as any)?.direccion_entrega && (
+          {direccionMostrar && (
             <div className='text-sm'>
               <span className='font-semibold'>Direccion: </span>
-              <span>{(entregaSeleccionada as any).direccion_entrega}</span>
+              <span>{direccionMostrar}</span>
+            </div>
+          )}
+          {referenciaMostrar && (
+            <div className='text-sm'>
+              <span className='font-semibold'>Ref: </span>
+              <span>{referenciaMostrar}</span>
             </div>
           )}
         </div>

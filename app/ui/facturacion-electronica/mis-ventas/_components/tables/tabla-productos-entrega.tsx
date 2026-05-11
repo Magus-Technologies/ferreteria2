@@ -59,6 +59,7 @@ export default function TablaProductosEntrega({
   onProductoChange,
   simple = false,
 }: TablaProductosEntregaProps) {
+  const mostrarRecibido = productos.some((p) => Number(p.recibido || 0) > 0)
   const productosRef = useRef(productos)
   productosRef.current = productos
 
@@ -111,6 +112,15 @@ export default function TablaProductosEntrega({
       width: 100,
       valueFormatter: (params) => Number(params.value).toFixed(2),
     },
+    ...(mostrarRecibido
+      ? [{
+          headerName: 'Recibido',
+          field: 'recibido',
+          width: 110,
+          valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+          cellStyle: { color: '#b45309', fontWeight: 'bold' },
+        } as ColDef<ProductoEntrega>]
+      : []),
     {
       headerName: 'Entregado',
       field: 'entregado',

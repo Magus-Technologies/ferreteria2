@@ -219,13 +219,11 @@ export default function ModalEntregaUpdate({
   // el switch — los inputs `_resto_*` recién aparecen al activarlo, así que
   // cuando el componente TextareaBase se monta lee el valor ya seteado en
   // el form. Resuelve el bug donde la "Referencia" salía vacía.
-  const clienteIdRestante = restante
-    ? entrega?.venta?.cliente_id ?? entrega?.venta?.cliente?.id
-    : undefined
+  const clienteIdDirecciones = entrega?.venta?.cliente_id ?? entrega?.venta?.cliente?.id
   const { data: direccionesResp } = useQuery({
-    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdRestante],
-    queryFn: () => clienteApi.listarDirecciones(clienteIdRestante!),
-    enabled: !!clienteIdRestante && open,
+    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
+    queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
+    enabled: !!clienteIdDirecciones && open,
   })
   const direccionesCliente = (direccionesResp?.data?.data as any[]) || []
 
@@ -245,6 +243,33 @@ export default function ModalEntregaUpdate({
     }
   }, [open, restante, direccionesCliente, entrega?.id, form])
 
+  useEffect(() => {
+    if (!open || restante || direccionesCliente.length === 0) return
+    const yaTieneDireccion = !!form.getFieldValue('direccion_entrega')
+    const yaTieneReferencia = form.getFieldValue('referencia_entrega') != null
+      && form.getFieldValue('referencia_entrega') !== ''
+    const yaTieneCoords = form.getFieldValue('latitud') != null && form.getFieldValue('longitud') != null
+
+    if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords) return
+
+    const tipo = (form.getFieldValue('direccion_seleccionada') ||
+      entrega?.venta?.direccion_seleccionada ||
+      'D1') as string
+    const dir = direccionesCliente.find((d: any) => d.tipo === tipo) || direccionesCliente[0]
+    if (!dir) return
+
+    if (!yaTieneDireccion) {
+      form.setFieldValue('direccion_entrega', dir.direccion || '')
+    }
+    if (!yaTieneReferencia) {
+      form.setFieldValue('referencia_entrega', dir.referencia || '')
+    }
+    if (!yaTieneCoords && dir.latitud != null && dir.longitud != null) {
+      form.setFieldValue('latitud', Number(dir.latitud))
+      form.setFieldValue('longitud', Number(dir.longitud))
+    }
+  }, [open, restante, direccionesCliente, entrega?.id, form])
+
   // Productos pre-cargados desde la entrega para llenar la tabla.
   // Shape del backend (snake_case):
   //   productos_entregados[].unidad_derivada_venta
@@ -258,6 +283,33 @@ export default function ModalEntregaUpdate({
   //     mostrar todo entregado, si está 'pe'/'ec' mostrar entregar = total.
   const productosIniciales: ProductoEntrega[] = useMemo(() => {
     if (!entrega?.productos_entregados) return []
+
+    const entregaFueEntregadaAntes = Boolean(
+      (entrega as any)?.user_entregado_id ||
+      (entrega as any)?.userEntregado?.id,
+    )
+    const ultimaEdicion = entregaFueEntregadaAntes
+      ? (entrega.venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
+      : undefined
+
+    const productosAnteriores = new Map<string, {
+      cantidad: number
+      producto: string
+      unidad: string
+    }>()
+    for (const producto of ultimaEdicion?.datos_anteriores?.productos || []) {
+      for (const unidad of producto?.unidades || []) {
+        const clave = `${producto?.codigo || ''}|${unidad?.unidad || ''}`.trim().toLowerCase()
+        productosAnteriores.set(
+          clave,
+          {
+            cantidad: Number(productosAnteriores.get(clave)?.cantidad || 0) + Number(unidad?.cantidad ?? 0),
+            producto: producto?.nombre || '—',
+            unidad: unidad?.unidad || '',
+          },
+        )
+      }
+    }
 
     if (restante) {
       // En modo restante mostramos el total ORIGINAL de la venta (no solo el
@@ -278,6 +330,7 @@ export default function ModalEntregaUpdate({
             producto: prod.name || p.producto_name || '',
             ubicacion: '',
             total: totalOriginal,
+            recibido: 0,
             entregado: entregadoYa,
             pendiente,
             entregar: pendiente,
@@ -288,22 +341,30 @@ export default function ModalEntregaUpdate({
         .filter(Boolean) as ProductoEntrega[]
     }
 
-    return entrega.productos_entregados.map((p: any, index: number) => {
+    const productos = entrega.productos_entregados.map((p: any, index: number) => {
       const ud = p.unidad_derivada_venta || {}
       const pav = ud.producto_almacen_venta || {}
       const pa = pav.producto_almacen || {}
       const prod = pa.producto || {}
       const total = Number(ud.cantidad ?? p.cantidad_entregada ?? 0)
+      const codigo = prod.cod_producto || ''
+      const unidad = ud.unidad_derivada_inmutable?.name || ''
+      const clave = `${codigo}|${unidad}`.trim().toLowerCase()
+      const cantidadAnterior = Number(productosAnteriores.get(clave)?.cantidad || 0)
       const pendienteRaw = ud.cantidad_pendiente
       const pendienteReal = pendienteRaw == null
         ? Math.max(0, total - Number(p.cantidad_entregada ?? 0))
         : Number(pendienteRaw)
       const entregadoReal = Math.max(0, total - pendienteReal)
+      const recibidoReal = entregaFueEntregadaAntes
+        ? Math.max(cantidadAnterior - total, 0)
+        : 0
       return {
         id: index + 1,
         producto: prod.name || p.producto_name || '',
         ubicacion: '',
         total,
+        recibido: recibidoReal,
         entregado: entregadoReal,
         pendiente: pendienteReal,
         entregar: pendienteReal,
@@ -311,6 +372,32 @@ export default function ModalEntregaUpdate({
         unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
       }
     })
+
+    for (const [clave, anterior] of productosAnteriores.entries()) {
+      const existeEnActuales = entrega.productos_entregados.some((p: any) => {
+        const ud = p.unidad_derivada_venta || {}
+        const prod = ud.producto_almacen_venta?.producto_almacen?.producto || {}
+        const codigo = prod.cod_producto || ''
+        const unidad = ud.unidad_derivada_inmutable?.name || ''
+        return `${codigo}|${unidad}`.trim().toLowerCase() === clave
+      })
+      if (existeEnActuales) continue
+
+      productos.push({
+        id: productos.length + 1,
+        producto: anterior.producto,
+        ubicacion: '',
+        total: anterior.cantidad,
+        recibido: anterior.cantidad,
+        entregado: 0,
+        pendiente: 0,
+        entregar: 0,
+        entregar_programado: 0,
+        unidad_derivada_venta_id: -productos.length - 1,
+      })
+    }
+
+    return productos
   }, [entrega, restante])
 
   // entregaParaMapa debe estar ANTES del return null para no violar las reglas de hooks.
