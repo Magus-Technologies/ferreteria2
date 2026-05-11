@@ -23,6 +23,7 @@ type ProductoFila = {
   marca: string
   unidad: string
   cantidad: number
+  cantidadPendiente: number
 }
 
 type ProductoHistorial = {
@@ -63,6 +64,9 @@ export default function TableDetalleEntrega() {
         marca: producto.marca?.name || '—',
         unidad: ud.unidad_derivada_inmutable?.name || '',
         cantidad: Number(ud.cantidad ?? 0),
+        cantidadPendiente: ud.cantidad_pendiente == null
+          ? 0
+          : Number(ud.cantidad_pendiente),
       }
     })
   }, [entregaSeleccionada])
@@ -107,8 +111,8 @@ export default function TableDetalleEntrega() {
     if (!mostrarRecibido) {
       return [...actualesAgrupados.values()].map((producto) => {
         const total = Number(producto.cantidad ?? 0)
-        const entregado = entregaSeleccionada?.estado_entrega === 'en' ? total : 0
-        const pendiente = Math.max(0, total - entregado)
+        const pendiente = Math.max(0, Number((producto as ProductoFila).cantidadPendiente ?? 0))
+        const entregado = Math.max(0, total - pendiente)
         return {
           producto: producto.producto,
           codigo: producto.codigo,

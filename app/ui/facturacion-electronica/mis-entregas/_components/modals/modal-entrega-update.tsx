@@ -288,15 +288,17 @@ export default function ModalEntregaUpdate({
         .filter(Boolean) as ProductoEntrega[]
     }
 
-    const yaEntregada = entrega.estado_entrega === 'en'
     return entrega.productos_entregados.map((p: any, index: number) => {
       const ud = p.unidad_derivada_venta || {}
       const pav = ud.producto_almacen_venta || {}
       const pa = pav.producto_almacen || {}
       const prod = pa.producto || {}
       const total = Number(ud.cantidad ?? p.cantidad_entregada ?? 0)
-      const entregadoReal = yaEntregada ? total : 0
-      const pendienteReal = total - entregadoReal
+      const pendienteRaw = ud.cantidad_pendiente
+      const pendienteReal = pendienteRaw == null
+        ? Math.max(0, total - Number(p.cantidad_entregada ?? 0))
+        : Number(pendienteRaw)
+      const entregadoReal = Math.max(0, total - pendienteReal)
       return {
         id: index + 1,
         producto: prod.name || p.producto_name || '',
