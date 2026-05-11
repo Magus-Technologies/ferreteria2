@@ -219,13 +219,11 @@ export default function ModalEntregaUpdate({
   // el switch — los inputs `_resto_*` recién aparecen al activarlo, así que
   // cuando el componente TextareaBase se monta lee el valor ya seteado en
   // el form. Resuelve el bug donde la "Referencia" salía vacía.
-  const clienteIdRestante = restante
-    ? entrega?.venta?.cliente_id ?? entrega?.venta?.cliente?.id
-    : undefined
+  const clienteIdDirecciones = entrega?.venta?.cliente_id ?? entrega?.venta?.cliente?.id
   const { data: direccionesResp } = useQuery({
-    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdRestante],
-    queryFn: () => clienteApi.listarDirecciones(clienteIdRestante!),
-    enabled: !!clienteIdRestante && open,
+    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
+    queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
+    enabled: !!clienteIdDirecciones && open,
   })
   const direccionesCliente = (direccionesResp?.data?.data as any[]) || []
 
@@ -242,6 +240,33 @@ export default function ModalEntregaUpdate({
     if (dir.latitud != null && dir.longitud != null) {
       form.setFieldValue('_resto_latitud', Number(dir.latitud))
       form.setFieldValue('_resto_longitud', Number(dir.longitud))
+    }
+  }, [open, restante, direccionesCliente, entrega?.id, form])
+
+  useEffect(() => {
+    if (!open || restante || direccionesCliente.length === 0) return
+    const yaTieneDireccion = !!form.getFieldValue('direccion_entrega')
+    const yaTieneReferencia = form.getFieldValue('referencia_entrega') != null
+      && form.getFieldValue('referencia_entrega') !== ''
+    const yaTieneCoords = form.getFieldValue('latitud') != null && form.getFieldValue('longitud') != null
+
+    if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords) return
+
+    const tipo = (form.getFieldValue('direccion_seleccionada') ||
+      entrega?.venta?.direccion_seleccionada ||
+      'D1') as string
+    const dir = direccionesCliente.find((d: any) => d.tipo === tipo) || direccionesCliente[0]
+    if (!dir) return
+
+    if (!yaTieneDireccion) {
+      form.setFieldValue('direccion_entrega', dir.direccion || '')
+    }
+    if (!yaTieneReferencia) {
+      form.setFieldValue('referencia_entrega', dir.referencia || '')
+    }
+    if (!yaTieneCoords && dir.latitud != null && dir.longitud != null) {
+      form.setFieldValue('latitud', Number(dir.latitud))
+      form.setFieldValue('longitud', Number(dir.longitud))
     }
   }, [open, restante, direccionesCliente, entrega?.id, form])
 

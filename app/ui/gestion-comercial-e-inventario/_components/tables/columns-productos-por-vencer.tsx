@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 
 interface ProductosPorVencerProps {
   name: string
+  cod_producto: string
   cantidad: number
   stock_min: string
   almacen: string
@@ -31,6 +32,14 @@ export function useColumnsProductosPorVencer() {
         )
       },
       sortable: true,
+      filter: true,
+    },
+    {
+      colId: 'cod_producto',
+      headerName: 'Código',
+      field: 'cod_producto',
+      minWidth: 90,
+      width: 100,
       filter: true,
     },
     {

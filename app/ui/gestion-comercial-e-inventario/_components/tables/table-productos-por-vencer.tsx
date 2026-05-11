@@ -18,6 +18,7 @@ interface TableProductosPorVencerProps {
 
 type ProductoVencimientoRow = {
   name: string
+  cod_producto: string
   cantidad: number
   stock_min: string
   almacen: string
@@ -31,6 +32,7 @@ type ProductoVencimientoRow = {
 type ProductoVencimientoResumenRow = {
   groupKey: string
   name: string
+  cod_producto: string
   cantidad: number
   stock_min: string
   almacen: string
@@ -43,6 +45,13 @@ type ProductoVencimientoResumenRow = {
 }
 
 const resumenColumns: ColDef<ProductoVencimientoResumenRow>[] = [
+  {
+    colId: 'cod_producto',
+    headerName: 'Código',
+    field: 'cod_producto',
+    width: 100,
+    filter: true,
+  },
   {
     colId: 'producto',
     headerName: 'Producto',
@@ -119,6 +128,7 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     const term = busqueda.toLowerCase().trim()
     return data.filter((item: any) =>
       item.name?.toLowerCase().includes(term) ||
+      item.cod_producto?.toLowerCase().includes(term) ||
       item.lote?.toLowerCase().includes(term) ||
       item.almacen?.toLowerCase().includes(term)
     )
@@ -128,7 +138,10 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     const mapa = new Map<string, ProductoVencimientoResumenRow>()
 
     for (const item of filteredData as ProductoVencimientoRow[]) {
+      // Incluir cod_producto en la clave para separar productos con mismo nombre
+      // pero diferente código (casos de productos con nombres similares/duplicados)
       const key = [
+        item.cod_producto || '',
         item.name,
         item.almacen,
         item.unidad || '',
@@ -185,7 +198,10 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
 
   const detalleFiltrado = useMemo(() => {
     if (!selectedResumen) return filteredData
+    // Filtrar por cod_producto, nombre, almacen y unidad para ser más específico
+    // y evitar mostrar productos con nombres similares pero códigos diferentes
     return filteredData.filter((item: ProductoVencimientoRow) =>
+      (item.cod_producto || '') === (selectedResumen.cod_producto || '') &&
       item.name === selectedResumen.name &&
       item.almacen === selectedResumen.almacen &&
       (item.unidad || '') === (selectedResumen.unidad || '')
