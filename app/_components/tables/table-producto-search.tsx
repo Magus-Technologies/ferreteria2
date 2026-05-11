@@ -73,7 +73,7 @@ export default function TableProductoSearch({
     }
   };
 
-  const shouldFetch = !!value
+  const shouldFetch = true // Siempre cargar datos, incluso sin búsqueda
 
   // Mapear filtro de stock a parámetro del backend cuando sea posible
   const getBackendStockFilterValue = (filtro: FiltroStock) => {
@@ -107,6 +107,7 @@ export default function TableProductoSearch({
       ...(tipoBusqueda === TipoBusquedaProducto.CODIGO_DESCRIPCION && value
         ? { search: value } // Busca en name, cod_producto, cod_barra
         : {}),
+      // Si no hay valor de búsqueda, no enviar ningún filtro de búsqueda (listar todos)
       estado: 1, // Solo productos activos
       ...(marcaId ? { marca_id: marcaId } : {}),
       ...(categoriaId ? { categoria_id: categoriaId } : {}),
