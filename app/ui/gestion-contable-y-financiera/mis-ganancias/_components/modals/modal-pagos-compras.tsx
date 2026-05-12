@@ -22,7 +22,6 @@ interface ModalPagosComprasProps {
 const TIPOS_GASTO = [
   { value: 'todos', label: 'Todos los Gastos' },
   { value: 'gasto_operativo', label: 'Gastos Operativos' },
-  { value: 'gasto_compra', label: 'Gastos de Compras' },
   { value: 'comision_vendedor', label: 'Comisiones Vendedores' },
 ]
 
@@ -31,7 +30,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
     hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
     search: '',
-    tipo_gasto: 'todos',
+    tipo_gasto: 'gasto_operativo',
   })
   const [debouncedSearch] = useDebounce(localFiltros.search, 500)
 
@@ -41,7 +40,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
         desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
         hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
         search: '',
-        tipo_gasto: 'todos',
+        tipo_gasto: 'gasto_operativo',
       })
     }
   }, [open, filtrosGlobales.desde, filtrosGlobales.hasta])
@@ -151,8 +150,6 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
     }]
   }, [gastosFiltrados, totalGastos])
 
-  const tipoSeleccionado = TIPOS_GASTO.find(t => t.value === localFiltros.tipo_gasto)
-
   return (
     <Modal
       title="Gastos"
@@ -215,7 +212,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
         </div>
 
         {/* Cards por tipo de gasto */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {/* Card Todos */}
           <div 
             className={`bg-white border rounded-lg p-3 shadow-sm cursor-pointer transition-all hover:shadow-md ${
@@ -250,25 +247,6 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
                 <div className="text-[9px] uppercase text-red-600 font-bold">Gastos Operativos</div>
                 <div className="text-lg font-bold text-red-700">S/ {totalesPorTipo.operativos.total.toFixed(2)}</div>
                 <div className="text-[9px] text-red-400">{totalesPorTipo.operativos.count} registro(s)</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card Gastos de Compras */}
-          <div 
-            className={`bg-white border rounded-lg p-3 shadow-sm cursor-pointer transition-all hover:shadow-md ${
-              localFiltros.tipo_gasto === 'gasto_compra' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-orange-200'
-            }`}
-            onClick={() => setLocalFiltros(prev => ({ ...prev, tipo_gasto: 'gasto_compra' }))}
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-orange-100 p-2 rounded-full text-orange-600">
-                <FaMoneyBillWave size={16} />
-              </div>
-              <div className="flex-1">
-                <div className="text-[9px] uppercase text-orange-600 font-bold">Gastos de Compras</div>
-                <div className="text-lg font-bold text-orange-700">S/ {totalesPorTipo.compras.total.toFixed(2)}</div>
-                <div className="text-[9px] text-orange-400">{totalesPorTipo.compras.count} registro(s)</div>
               </div>
             </div>
           </div>
