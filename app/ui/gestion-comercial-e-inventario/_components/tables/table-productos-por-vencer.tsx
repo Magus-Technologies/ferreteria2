@@ -138,12 +138,13 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     const mapa = new Map<string, ProductoVencimientoResumenRow>()
 
     for (const item of filteredData as ProductoVencimientoRow[]) {
-      // Incluir cod_producto en la clave para separar productos con mismo nombre
-      // pero diferente código (casos de productos con nombres similares/duplicados)
+      // Normalize name: trim whitespace and collapse multiple spaces to prevent
+      // duplicate entries when product names have trailing spaces or encoding differences
+      const normalizedName = item.name?.trim().replace(/\s+/g, ' ') || ''
       const key = [
         item.cod_producto || '',
-        item.name,
-        item.almacen,
+        normalizedName,
+        item.almacen || '',
         item.unidad || '',
       ].join('|')
 
@@ -153,6 +154,7 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
       if (!existente) {
         mapa.set(key, {
           ...item,
+          name: normalizedName,
           groupKey: key,
           lotes_total: 1,
         })
