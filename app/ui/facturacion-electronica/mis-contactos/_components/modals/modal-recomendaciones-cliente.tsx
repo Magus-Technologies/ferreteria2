@@ -1,13 +1,13 @@
 'use client'
 
-import { Modal, Tag, DatePicker } from 'antd'
+import { Modal, DatePicker } from 'antd'
 import { useQuery } from '@tanstack/react-query'
-import { clienteApi, type Cliente } from '~/lib/api/cliente'
 import { apiRequest } from '~/lib/api'
 import TableWithTitle from '~/components/tables/table-with-title'
 import dayjs, { type Dayjs } from 'dayjs'
 import { useState, useMemo } from 'react'
 import type { ColDef } from 'ag-grid-community'
+import type { Cliente } from '~/lib/api/cliente'
 
 const { RangePicker } = DatePicker
 
@@ -24,6 +24,7 @@ type VentaRec = {
   fecha: string
   tipo_moneda: string
   total: number
+  costo: number
   ganancia: number
   cliente: { id: number; numero_documento: string; nombres: string; apellidos: string; razon_social: string | null } | null
 }
