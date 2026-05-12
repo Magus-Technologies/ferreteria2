@@ -15,6 +15,11 @@ interface ProductosPorVencerProps {
   dias_restantes: number
 }
 
+/**
+ * Columnas para la tabla de DETALLE POR LOTE.
+ * NOTA: No incluye la columna "Producto" ya que el detalle muestra
+ * los lotes del producto seleccionado en el Resumen.
+ */
 export function useColumnsProductosPorVencer() {
   const columns: ColDef<ProductosPorVencerProps>[] = [
     {
@@ -43,14 +48,6 @@ export function useColumnsProductosPorVencer() {
       filter: true,
     },
     {
-      colId: 'producto',
-      headerName: 'Producto',
-      field: 'name',
-      minWidth: 200,
-      filter: true,
-      flex: 2,
-    },
-    {
       colId: 'lote',
       headerName: 'Lote',
       field: 'lote',
@@ -70,7 +67,7 @@ export function useColumnsProductosPorVencer() {
       colId: 'situacion',
       headerName: 'Situación',
       field: 'dias_restantes',
-      minWidth: 120,
+      minWidth: 130,
       cellRenderer: (params: any) => {
         const dias = params.value
         if (dias < 0) return <span className='text-rose-600 font-bold'>Venció hace {Math.abs(dias)} días</span>
@@ -99,7 +96,7 @@ export function useColumnsProductosPorVencer() {
       colId: 'stock_min',
       headerName: 'Stock Mín.',
       field: 'stock_min',
-      width: 120,
+      width: 100,
       minWidth: 90,
       filter: 'agNumberColumnFilter',
     },
@@ -107,7 +104,7 @@ export function useColumnsProductosPorVencer() {
       colId: 'almacen',
       headerName: 'Almacén',
       field: 'almacen',
-      minWidth: 100,
+      minWidth: 120,
       filter: true,
     },
   ]
