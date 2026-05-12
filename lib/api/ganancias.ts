@@ -351,10 +351,35 @@ export interface PepsAnalisisResponse {
   resumen: {
     ingreso_total: number;
     ganancia_tc_compra: number;
-    ganancia_tc_pago: number;
-    diferencia_total: number;
-    perdida_por_cambio: boolean;
+    ganancia_tc_pago?: number;
+    diferencia_total?: number;
+    perdida_por_cambio?: boolean;
     total_productos: number;
     aviso_sin_tc_pago: boolean;
+    tc_actual: number;
+    compras_con_riesgo: Array<{
+      compra_id: number;
+      serie_numero: string;
+      variacion_porcentaje: number;
+      recomendacion: string;
+    }>;
+    impacto_si_pagas_hoy: number;
   };
+  pending_payments?: Array<{
+    compra_id: number;
+    serie_numero: string;
+    fecha: string;
+    proveedor: string;
+    dias_desde_compra: number;
+    cantidad_total: number;
+    costo_usd: number;
+    costo_soles: number;
+    tc_compra: number;
+    tc_actual: number;
+    variacion_tc: number;
+    variacion_porcentaje: number;
+    riesgo_alto: boolean;
+    impacto_si_pagas_hoy: number;
+    recomendacion: string;
+  }>;
 }

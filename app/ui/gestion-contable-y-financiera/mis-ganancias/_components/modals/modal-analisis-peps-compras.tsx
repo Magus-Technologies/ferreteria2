@@ -23,8 +23,8 @@ interface VentaEnCompra {
   precio: number
   ingreso: number
   ganancia_tc_compra: number
-  ganancia_tc_pago: number
-  diferencia_cambio: number
+  ganancia_tc_pago?: number
+  diferencia_cambio?: number
   fracciones: PepsFraccionAnalisis[]
 }
 
@@ -32,7 +32,7 @@ interface CompraView {
   compra_id: number
   serie_numero: string
   tc_compra: number
-  tc_pago: number
+  tc_pago?: number
   tc_pago_real: boolean
   costo_usd: number
   cantidad_total: number
@@ -42,10 +42,13 @@ interface CompraView {
   ventas: VentaEnCompra[]
 }
 
-const fmt = (n: number) => n.toFixed(2)
-const fmtS = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2)
-const colorPos = (n: number) => (n >= 0 ? '#16a34a' : '#dc2626')
-const colorImpacto = (n: number) => (n <= 0 ? '#16a34a' : '#dc2626')
+const fmt = (n: number | undefined) => (n !== undefined ? n.toFixed(2) : '0.00')
+const fmtS = (n: number | undefined) => {
+  if (n === undefined) return '+0.00'
+  return (n >= 0 ? '+' : '') + n.toFixed(2)
+}
+const colorPos = (n: number | undefined) => (n !== undefined && n >= 0 ? '#16a34a' : '#dc2626')
+const colorImpacto = (n: number | undefined) => (n !== undefined && n <= 0 ? '#16a34a' : '#dc2626')
 
 function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
   const comprasMap = new Map<number, CompraView>()
@@ -95,8 +98,10 @@ function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
 
         compra.cantidad_total += fraccion.cantidad
         compra.costo_tc_compra_total += fraccion.costo_tc_compra
-        compra.costo_tc_pago_total += fraccion.costo_tc_pago
-        compra.diferencia_total += fraccion.costo_tc_pago - fraccion.costo_tc_compra
+        if (fraccion.costo_tc_pago !== undefined) {
+          compra.costo_tc_pago_total += fraccion.costo_tc_pago
+          compra.diferencia_total += fraccion.costo_tc_pago - fraccion.costo_tc_compra
+        }
       })
     })
   })
@@ -133,6 +138,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
   const resultado = data?.data?.data
   const resumen = resultado?.resumen
   const productos = resultado?.productos ?? []
+  const pendingPayments = resultado?.pending_payments ?? []
   const comprasView = useMemo(() => buildComprasView(productos), [productos])
 
   const mainColumns = useMemo(() => [
@@ -155,11 +161,14 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
       render: (_: any, row: CompraView) => (
         <span className="text-xs">
           <span className="text-blue-600 font-medium">{row.tc_compra.toFixed(4)}</span>
-          <span className="text-slate-400 mx-1">→</span>
-          <span className="text-green-600 font-medium">
-            {row.tc_pago.toFixed(4)}
-            {!row.tc_pago_real && <span className="text-slate-400 ml-0.5">*</span>}
-          </span>
+          {row.tc_pago_real && row.tc_pago ? (
+            <>
+              <span className="text-slate-400 mx-1">→</span>
+              <span className="text-green-600 font-medium">{row.tc_pago.toFixed(4)}</span>
+            </>
+          ) : (
+            <span className="text-slate-300 text-[10px] ml-1">(sin pago)</span>
+          )}
         </span>
       ),
     },
@@ -242,24 +251,34 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                 <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Ingreso total</div>
                 <div className="text-lg font-bold text-slate-700">S/ {fmt(resumen.ingreso_total)}</div>
               </div>
-              <div className="bg-white border border-green-100 rounded-lg p-3 text-center shadow-sm">
-                <div className="text-[10px] text-green-600 font-bold uppercase mb-1">Ganancia real (TC pago)</div>
-                <div className="text-lg font-bold" style={{ color: colorPos(resumen.ganancia_tc_pago) }}>
-                  S/ {fmt(resumen.ganancia_tc_pago)}
+              {resumen.ganancia_tc_pago !== undefined ? (
+                <>
+                  <div className="bg-white border border-green-100 rounded-lg p-3 text-center shadow-sm">
+                    <div className="text-[10px] text-green-600 font-bold uppercase mb-1">Ganancia real (TC pago)</div>
+                    <div className="text-lg font-bold" style={{ color: colorPos(resumen.ganancia_tc_pago) }}>
+                      S/ {fmt(resumen.ganancia_tc_pago)}
+                    </div>
+                  </div>
+                  <div className={`border rounded-lg p-3 text-center shadow-sm ${resumen.perdida_por_cambio ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+                    <div className={`text-[10px] font-bold uppercase mb-1 flex items-center justify-center gap-1 ${resumen.perdida_por_cambio ? 'text-red-600' : 'text-green-600'}`}>
+                      <FaExchangeAlt size={10} />
+                      Impacto diferencia TC
+                    </div>
+                    <div className="text-lg font-bold" style={{ color: colorPos(resumen.diferencia_total) }}>
+                      {fmtS(resumen.diferencia_total)}
+                    </div>
+                    <div className={`text-[10px] mt-0.5 ${resumen.perdida_por_cambio ? 'text-red-500' : 'text-green-500'}`}>
+                      {resumen.total_productos} producto(s)
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-2 bg-slate-50 border border-slate-200 rounded-lg p-3 text-center shadow-sm">
+                  <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Estado</div>
+                  <div className="text-sm text-slate-600">Sin pagos registrados</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{resumen.total_productos} producto(s)</div>
                 </div>
-              </div>
-              <div className={`border rounded-lg p-3 text-center shadow-sm ${resumen.perdida_por_cambio ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                <div className={`text-[10px] font-bold uppercase mb-1 flex items-center justify-center gap-1 ${resumen.perdida_por_cambio ? 'text-red-600' : 'text-green-600'}`}>
-                  <FaExchangeAlt size={10} />
-                  Impacto diferencia TC
-                </div>
-                <div className="text-lg font-bold" style={{ color: colorPos(resumen.diferencia_total) }}>
-                  {fmtS(resumen.diferencia_total)}
-                </div>
-                <div className={`text-[10px] mt-0.5 ${resumen.perdida_por_cambio ? 'text-red-500' : 'text-green-500'}`}>
-                  {resumen.total_productos} producto(s)
-                </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -269,7 +288,35 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
               message="Algunos pagos no tienen TC registrado. Se usa el TC de compra como referencia para esos lotes."
             />
           )}
-          {resumen?.perdida_por_cambio && (
+          
+          {/* Alertas de riesgo por TC */}
+          {resumen?.compras_con_riesgo && resumen.compras_con_riesgo.length > 0 && (
+            <Alert type="warning" showIcon
+              message={`⚠️ ${resumen.compras_con_riesgo.length} compra(s) con variación de TC > 2%`}
+              description={
+                <div className="text-xs space-y-1 mt-2">
+                  {resumen.compras_con_riesgo.map((compra, idx) => (
+                    <div key={idx} className="flex justify-between items-center">
+                      <span>{compra.serie_numero}: {compra.variacion_porcentaje > 0 ? '+' : ''}{compra.variacion_porcentaje}%</span>
+                      <span className={`font-semibold ${compra.variacion_porcentaje > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {compra.recomendacion}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              }
+            />
+          )}
+
+          {/* Impacto si pagas hoy */}
+          {resumen && !resumen.aviso_sin_tc_pago && (
+            <Alert type="info" showIcon
+              message={`Impacto si pagas hoy (TC actual ${resumen.tc_actual.toFixed(4)}): ${resumen.impacto_si_pagas_hoy >= 0 ? '+' : ''}S/ ${resumen.impacto_si_pagas_hoy.toFixed(2)}`}
+              description={resumen.impacto_si_pagas_hoy > 0 ? 'Pagarías más (TC subió)' : 'Pagarías menos (TC bajó)'}
+            />
+          )}
+
+          {resumen?.perdida_por_cambio && resumen.diferencia_total !== undefined && (
             <Alert type="warning" showIcon
               message={`La diferencia de tipo de cambio genera una pérdida neta de S/ ${fmt(Math.abs(resumen.diferencia_total))}. El TC al momento del pago fue mayor que al de la compra.`}
             />
@@ -278,7 +325,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
           {/* Tabla compras */}
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <Spin size="large" tip="Calculando análisis PEPS..." />
+              <Spin size="large" />
             </div>
           ) : comprasView.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
@@ -309,6 +356,57 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
               />
             </div>
           )}
+
+          {/* Compras pendientes de pago (sin ventas) */}
+          {pendingPayments && pendingPayments.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <div className="mb-3">
+                <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                  <FaExchangeAlt size={14} className="text-amber-600" />
+                  Compras pendientes de pago (sin ventas)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Compras en USD a crédito sin pagos registrados. Analiza el TC para decidir cuándo pagar.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {pendingPayments.map((compra) => (
+                  <div key={compra.compra_id} className={`border rounded-lg p-3 ${compra.riesgo_alto ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex-1 min-w-[200px]">
+                        <div className="font-semibold text-slate-700 text-sm">{compra.serie_numero}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {compra.proveedor}
+                          <span className="mx-1 text-slate-300">·</span>
+                          {dayjs(compra.fecha).format('DD/MM/YYYY')}
+                          <span className="mx-1 text-slate-300">·</span>
+                          {compra.dias_desde_compra} días
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs">
+                        <div className="text-right">
+                          <div className="text-slate-600">${compra.costo_usd.toFixed(4)}</div>
+                          <div className="text-slate-400 text-[10px]">S/ {compra.costo_soles.toFixed(2)}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-blue-600 font-medium">TC: {compra.tc_compra.toFixed(4)}</div>
+                          <div className={`font-medium ${compra.variacion_porcentaje > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {compra.variacion_porcentaje > 0 ? '+' : ''}{compra.variacion_porcentaje.toFixed(2)}%
+                          </div>
+                        </div>
+                        <div className={`text-right px-2 py-1 rounded ${compra.impacto_si_pagas_hoy > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                          <div className="font-semibold text-xs">
+                            {compra.impacto_si_pagas_hoy > 0 ? '+' : ''}S/ {compra.impacto_si_pagas_hoy.toFixed(2)}
+                          </div>
+                          <div className="text-[10px]">{compra.recomendacion}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
 
@@ -322,9 +420,14 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                 ${drawerCompra.costo_usd.toFixed(4)}/u
                 <span className="mx-2 text-slate-300">·</span>
                 TC compra: <b className="text-blue-600">{drawerCompra.tc_compra.toFixed(4)}</b>
-                <span className="mx-1 text-slate-400"> → </span>
-                TC pago: <b className="text-green-600">{drawerCompra.tc_pago.toFixed(4)}</b>
-                {!drawerCompra.tc_pago_real && <span className="text-slate-400 ml-1 text-[10px]">(referencial)</span>}
+                {drawerCompra.tc_pago_real && drawerCompra.tc_pago ? (
+                  <>
+                    <span className="mx-1 text-slate-400"> → </span>
+                    TC pago: <b className="text-green-600">{drawerCompra.tc_pago.toFixed(4)}</b>
+                  </>
+                ) : (
+                  <span className="text-slate-400 ml-1 text-[10px]">(sin pago registrado)</span>
+                )}
               </span>
             </div>
           ) : null
@@ -347,14 +450,21 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                 <div className="text-[10px] text-blue-600 font-bold uppercase mb-1">Costo TC compra</div>
                 <div className="text-base font-bold text-blue-700">S/ {fmt(drawerCompra.costo_tc_compra_total)}</div>
               </div>
-              <div className={`border rounded-lg p-3 text-center ${drawerCompra.diferencia_total > 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
-                <div className={`text-[10px] font-bold uppercase mb-1 ${drawerCompra.diferencia_total > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  Impacto TC total
+              {drawerCompra.tc_pago_real ? (
+                <div className={`border rounded-lg p-3 text-center ${drawerCompra.diferencia_total > 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+                  <div className={`text-[10px] font-bold uppercase mb-1 ${drawerCompra.diferencia_total > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    Impacto TC total
+                  </div>
+                  <div className="text-base font-bold" style={{ color: colorImpacto(drawerCompra.diferencia_total) }}>
+                    S/ {fmtS(drawerCompra.diferencia_total)}
+                  </div>
                 </div>
-                <div className="text-base font-bold" style={{ color: colorImpacto(drawerCompra.diferencia_total) }}>
-                  S/ {fmtS(drawerCompra.diferencia_total)}
+              ) : (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+                  <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Estado</div>
+                  <div className="text-sm text-slate-600">Sin pago</div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Ventas */}
@@ -397,9 +507,11 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                           <span className="text-slate-500">
                             TC {f.tc_compra}:<b className="text-blue-600 ml-1">S/{fmt(f.costo_tc_compra)}</b>
                           </span>
-                          <span className="text-slate-500">
-                            TC {f.tc_pago}:<b className="text-green-600 ml-1">S/{fmt(f.costo_tc_pago)}</b>
-                          </span>
+                          {f.costo_tc_pago !== undefined && (
+                            <span className="text-slate-500">
+                              TC {f.tc_pago}:<b className="text-green-600 ml-1">S/{fmt(f.costo_tc_pago)}</b>
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -411,14 +523,18 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                       <span className="text-slate-600">Ganancia con TC compra</span>
                       <span style={{ color: colorPos(venta.ganancia_tc_compra) }}>S/ {fmt(venta.ganancia_tc_compra)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-500">Ganancia con TC pago (real)</span>
-                      <span style={{ color: colorPos(venta.ganancia_tc_pago) }}>S/ {fmt(venta.ganancia_tc_pago)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs font-bold border-t border-slate-100 pt-1 mt-0.5">
-                      <span className="text-slate-500">Diferencia TC (impacto)</span>
-                      <span style={{ color: colorImpacto(venta.diferencia_cambio) }}>S/ {fmtS(venta.diferencia_cambio)}</span>
-                    </div>
+                    {venta.ganancia_tc_pago !== undefined && (
+                      <>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-slate-500">Ganancia con TC pago (real)</span>
+                          <span style={{ color: colorPos(venta.ganancia_tc_pago) }}>S/ {fmt(venta.ganancia_tc_pago)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-bold border-t border-slate-100 pt-1 mt-0.5">
+                          <span className="text-slate-500">Diferencia TC (impacto)</span>
+                          <span style={{ color: colorImpacto(venta.diferencia_cambio) }}>S/ {fmtS(venta.diferencia_cambio)}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )
