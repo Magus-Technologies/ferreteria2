@@ -212,7 +212,6 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
                 { label: 'Descuentos Aplicados', value: 'descuentos' },
                 { label: 'Comisiones de Vendedor', value: 'comisiones' },
                 { label: 'Salidas de Almacén', value: 'salidas' },
-                { label: 'Notas de Crédito', value: 'notas_credito' },
               ]}
             />
           </div>
@@ -242,7 +241,7 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
         </div>
 
         {/* Cards Informativos */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-5 gap-3">
           <div className="bg-white border border-orange-100 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
             <div className="flex items-center gap-2">
               <div className="bg-orange-100 p-2 rounded-full text-orange-600">
@@ -283,22 +282,12 @@ export default function ModalAnalisisPerdidasVentas({ open, onClose, filtros: fi
             <div className="text-lg font-bold text-rose-700">S/ {resumen.salidas_almacen.toFixed(2)}</div>
           </div>
 
-          <div className="bg-white border border-purple-100 rounded-lg p-3 flex flex-col gap-2 shadow-sm">
+          <div className="bg-indigo-900 border border-indigo-800 rounded-lg p-3 flex flex-col gap-2 text-white shadow-md">
             <div className="flex items-center gap-2">
-              <div className="bg-purple-100 p-2 rounded-full text-purple-600">
-                <FaFileInvoice size={14} />
-              </div>
-              <div className="text-[9px] uppercase text-purple-600 font-bold">N. Crédito</div>
-            </div>
-            <div className="text-lg font-bold text-purple-700">S/ {resumen.notas_credito.toFixed(2)}</div>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col gap-2 text-white shadow-md">
-            <div className="flex items-center gap-2">
-              <div className="bg-slate-800 p-2 rounded-full text-slate-300">
+              <div className="bg-indigo-800 p-2 rounded-full text-indigo-300">
                 <FaCalculator size={14} />
               </div>
-              <div className="text-[9px] uppercase text-slate-400 font-bold">Total</div>
+              <div className="text-[9px] uppercase text-indigo-400 font-bold">Total</div>
             </div>
             <div className="text-lg font-bold">S/ {resumen.total_perdidas.toFixed(2)}</div>
           </div>

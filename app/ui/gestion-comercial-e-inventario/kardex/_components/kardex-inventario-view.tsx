@@ -62,6 +62,8 @@ const movimientoColors: Record<string, string> = {
   COMPRA: 'orange',
   REFERENCIA: 'blue',
   ANULACION: 'volcano',
+  'ENTRADA ANULADO': 'magenta',
+  'SALIDA ANULADO': 'purple',
   ANULADA_ENTRADA: 'volcano',
   ANULADA_SALIDA: 'geekblue',
 }
