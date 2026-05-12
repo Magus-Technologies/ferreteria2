@@ -327,6 +327,7 @@ export const clienteApi = {
     data: {
       total_ventas: number
       monto_total: number
+      ganancia_total: number
       ventas: Array<{
         id: string
         serie: string
@@ -334,6 +335,7 @@ export const clienteApi = {
         fecha: string
         tipo_moneda: string
         total: number
+        ganancia: number
         cliente: { id: number; numero_documento: string; nombres: string; apellidos: string; razon_social: string | null } | null
       }>
     }
