@@ -34,27 +34,41 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
   })
   const [debouncedSearch] = useDebounce(localFiltros.search, 500)
 
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['pagos-compras', localFiltros.desde, localFiltros.hasta, debouncedSearch, filtrosGlobales.almacen_id],
+    queryFn: async () => {
+      const result = await gananciasApi.getPagosCompras({
+        desde: localFiltros.desde,
+        hasta: localFiltros.hasta,
+        search: debouncedSearch,
+        almacen_id: filtrosGlobales.almacen_id
+      })
+      return result
+    },
+    enabled: open && !!localFiltros.desde && !!localFiltros.hasta,
+    staleTime: 0,
+    gcTime: 0,
+  })
+
+  // Refetch automático cuando el modal se abre o los filtros globales cambian
   useEffect(() => {
     if (open) {
-      setLocalFiltros({
+      const nuevosFiltros = {
         desde: filtrosGlobales.desde || dayjs().format('YYYY-MM-DD'),
         hasta: filtrosGlobales.hasta || dayjs().format('YYYY-MM-DD'),
         search: '',
         tipo_gasto: 'gasto_operativo',
-      })
+      }
+      setLocalFiltros(nuevosFiltros)
     }
   }, [open, filtrosGlobales.desde, filtrosGlobales.hasta])
 
-  const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['pagos-compras', localFiltros.desde, localFiltros.hasta, debouncedSearch, filtrosGlobales.almacen_id],
-    queryFn: () => gananciasApi.getPagosCompras({
-      desde: localFiltros.desde,
-      hasta: localFiltros.hasta,
-      search: debouncedSearch,
-      almacen_id: filtrosGlobales.almacen_id
-    }),
-    enabled: open && !!localFiltros.desde && !!localFiltros.hasta,
-  })
+  // Refetch cuando los filtros locales cambian
+  useEffect(() => {
+    if (open && localFiltros.desde && localFiltros.hasta) {
+      refetch()
+    }
+  }, [open, localFiltros.desde, localFiltros.hasta, refetch])
 
   const gastosRaw = data?.data?.data?.gastos || []
 

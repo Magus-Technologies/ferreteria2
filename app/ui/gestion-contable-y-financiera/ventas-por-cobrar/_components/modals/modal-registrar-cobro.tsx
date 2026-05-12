@@ -119,6 +119,7 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
 
   // Estado para mostrar/ocultar campo N° Operación
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<any>(null)
+  const [sobrecargoCalculado, setSobrecargoCalculado] = useState(0)
 
   // Función helper para detectar si el método es efectivo
   const isEfectivo = useCallback((metodo: any) => {
@@ -136,6 +137,27 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       value.includes('EFECTIVO')
     )
   }, [])
+
+  // Calcular sobrecargo cuando cambia el método de pago
+  useEffect(() => {
+    if (!metodoPagoSeleccionado) {
+      setSobrecargoCalculado(0)
+      return
+    }
+
+    const tipoSobrecargo = metodoPagoSeleccionado.tipo_sobrecargo || 'ninguno'
+    const porcentajeSobrecargo = Number(metodoPagoSeleccionado.sobrecargo_porcentaje || 0)
+    const adicional = Number(metodoPagoSeleccionado.adicional || 0)
+
+    if (tipoSobrecargo === 'ninguno') {
+      setSobrecargoCalculado(0)
+    } else if (tipoSobrecargo === 'porcentaje') {
+      const sobrecargo = saldoPendiente * (porcentajeSobrecargo / 100)
+      setSobrecargoCalculado(sobrecargo)
+    } else if (tipoSobrecargo === 'fijo') {
+      setSobrecargoCalculado(adicional)
+    }
+  }, [metodoPagoSeleccionado, saldoPendiente])
 
   // Ver ticket de un cobro en modal
   const handleVerTicket = useCallback(async (cobroId: string) => {
@@ -346,10 +368,13 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       
       // Refrescar datos - esto actualizará localVenta automáticamente
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, localVenta?.id] })
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros'] }) // ← Agregar esta línea
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COBROS_VENTA, 'all-cobros'] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS_POR_COBRAR_STATS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+      // Invalidar queries de ganancias para que se actualice en mis-ganancias
+      queryClient.invalidateQueries({ queryKey: ['ganancias'] })
+      queryClient.invalidateQueries({ queryKey: ['mis-ganancias'] })
 
       // Resetear formulario y setear valores por defecto
       form.resetFields()
@@ -428,17 +453,23 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
           </div>
           <div className='flex flex-col justify-center gap-2 pl-2'>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-blue-100'>
-              <span className='text-[10px] text-gray-500 font-bold uppercase'>Total Neto</span>
-              <span className='text-gray-800 font-bold text-lg'>S/. {totalVenta.toFixed(2)}</span>
+              <span className='text-[10px] text-gray-500 font-bold uppercase'>Total a Cobrar</span>
+              <span className='text-gray-800 font-bold text-lg'>S/. {(saldoPendiente + sobrecargoCalculado).toFixed(2)}</span>
             </div>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-green-100'>
-              <span className='text-[10px] text-gray-500 font-bold uppercase'>Cancelado</span>
+              <span className='text-[10px] text-gray-500 font-bold uppercase'>Total Pagado</span>
               <span className='text-green-600 font-bold text-lg'>S/. {totalPagado.toFixed(2)}</span>
             </div>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-red-100'>
-              <span className='text-[10px] text-gray-500 font-bold uppercase'>Saldo</span>
+              <span className='text-[10px] text-gray-500 font-bold uppercase'>Saldo Pendiente</span>
               <span className={`font-bold text-lg ${saldoPendiente > 0 ? 'text-red-500' : 'text-green-600'}`}>S/. {saldoPendiente.toFixed(2)}</span>
             </div>
+            {sobrecargoCalculado > 0 && (
+              <div className='flex justify-between items-center bg-orange-50/50 px-3 py-1 rounded border border-orange-200'>
+                <span className='text-[10px] text-orange-600 font-bold uppercase'>Sobrecargo</span>
+                <span className='text-orange-600 font-bold text-lg'>+S/. {sobrecargoCalculado.toFixed(2)}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
