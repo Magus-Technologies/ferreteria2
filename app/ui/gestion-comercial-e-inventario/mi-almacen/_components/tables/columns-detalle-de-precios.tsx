@@ -132,25 +132,51 @@ export function useColumnsDetalleDePrecios() {
       headerName: 'Costo Referencial',
       minWidth: 160,
       cellRenderer: ({ data }: any) => {
+        // Validar que tenemos datos válidos
+        if (!data) {
+          return <span className='text-gray-400'>-</span>
+        }
+
         const compras = data?.compras ?? []
+        const factor = Number(data?.factor ?? 1)
         
+        if (compras.length === 0) {
+          return <span className='text-gray-400'>-</span>
+        }
+
+        // Ordenar compras por fecha descendente (más reciente primero)
+        const comprasOrdenadas = [...compras].sort((a, b) => {
+          const fechaA = new Date(a.compra?.fecha || 0).getTime()
+          const fechaB = new Date(b.compra?.fecha || 0).getTime()
+          return fechaB - fechaA // Descendente: más reciente primero
+        })
+
         // Obtener el costo referencial: segunda compra si hay 2+, primera si hay 1
         let costoReferencial = null
-        if (compras.length >= 2) {
-          costoReferencial = compras[1]?.costo
-        } else if (compras.length === 1) {
-          costoReferencial = compras[0]?.costo
+        if (comprasOrdenadas.length >= 2) {
+          costoReferencial = comprasOrdenadas[1]?.costo
+        } else if (comprasOrdenadas.length === 1) {
+          costoReferencial = comprasOrdenadas[0]?.costo
         }
         
         if (!costoReferencial) {
           return <span className='text-gray-400'>-</span>
         }
 
+        // Asegurar que el costo es un número válido
+        const costoNumerico = Number(costoReferencial)
+        if (isNaN(costoNumerico) || isNaN(factor)) {
+          return <span className='text-gray-400'>-</span>
+        }
+
+        // Multiplicar por el factor de la unidad derivada (igual que en "Últimas compras ingresadas")
+        const costoConFactor = costoNumerico * factor
+
         return (
           <Tooltip title={`Costo de la segunda compra más reciente. Se mantiene fijo hasta que su stock se agote (PEPS)`}>
-            <div title={`Costo: S/. ${Number(costoReferencial).toFixed(4)}`}>
+            <div title={`Costo: S/. ${costoConFactor.toFixed(4)}`}>
               <span className='text-sm font-semibold text-blue-600'>
-                S/. {Number(costoReferencial).toFixed(4)}
+                S/. {costoConFactor.toFixed(4)}
               </span>
             </div>
           </Tooltip>

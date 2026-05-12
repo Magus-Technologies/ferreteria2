@@ -11,7 +11,7 @@ import InputImport from '~/app/_components/form/inputs/input-import'
 import { useEffect, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { ProductoAlmacenUnidadDerivadaCreateInputSchema } from '~/types/zod-schemas'
-import { detallePreciosApi, ImportDetallePreciosItem } from '~/lib/api/detalle-precios'
+import { detallePreciosApi } from '~/lib/api/detalle-precios'
 import { useQueryClient } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
 import ActionButtonsWrapper from '../others/action-buttons-wrapper'
@@ -78,6 +78,8 @@ export default function TableDetalleDePrecios() {
             stock_costo_actual: producto_en_almacen?.stock_costo_actual,
           },
           compras: producto_en_almacen?.compras,
+          // Agregar ID único para forzar re-render cuando cambia el producto
+          _producto_id: productoSeleccionado?.id,
         }))
       : productos_completos?.flatMap(producto_seleccionado_aux =>
           producto_seleccionado_aux?.producto_en_almacenes?.flatMap(
@@ -96,6 +98,8 @@ export default function TableDetalleDePrecios() {
                   stock_costo_actual: producto_en_almacen_aux?.stock_costo_actual,
                 },
                 compras: producto_en_almacen_aux?.compras,
+                // Agregar ID único para forzar re-render cuando cambia el producto
+                _producto_id: producto_seleccionado_aux?.id,
               }))
           )
         )
