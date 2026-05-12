@@ -145,7 +145,6 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
         item.cod_producto || '',
         normalizedName,
         item.almacen || '',
-        item.unidad || '',
       ].join('|')
 
       const existente = mapa.get(key)
