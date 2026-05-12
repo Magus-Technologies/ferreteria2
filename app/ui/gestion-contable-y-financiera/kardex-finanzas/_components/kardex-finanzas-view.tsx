@@ -9,7 +9,6 @@ import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 import TableWithTitle from '~/components/tables/table-with-title'
-import { blueColors } from '~/lib/colors'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { kardexApi, type MovimientoKardex } from '~/lib/api/kardex'
 import ButtonBase from '~/components/buttons/button-base'
@@ -26,6 +25,17 @@ const tipoColors: Record<string, string> = {
   'PAGO ANULADO': 'orange',
   ING_EXTRA: 'green',
   GAS_EXTRA: 'orange',
+}
+
+// Colores RGB para las filas seleccionadas (tonalidades claras de Ant Design)
+const tipoSelectionColors: Record<string, string> = {
+  VENTA: 'rgba(24, 144, 255, 0.2)', // blue (#1890ff) con 20% opacidad
+  COBRO: 'rgba(19, 194, 194, 0.2)', // cyan (#13c2c2) con 20% opacidad
+  'COBRO ANULADO': 'rgba(255, 77, 79, 0.2)', // red (#ff4d4f) con 20% opacidad
+  COMPRA: 'rgba(255, 77, 79, 0.2)', // red (#ff4d4f) con 20% opacidad
+  'PAGO ANULADO': 'rgba(250, 140, 22, 0.2)', // orange (#fa8c16) con 20% opacidad
+  ING_EXTRA: 'rgba(82, 196, 26, 0.2)', // green (#52c41a) con 20% opacidad
+  GAS_EXTRA: 'rgba(250, 140, 22, 0.2)', // orange (#fa8c16) con 20% opacidad
 }
 
 const tipoLabels: Record<string, string> = {
@@ -321,13 +331,26 @@ export default function KardexFinanzasView() {
         <TableWithTitle<MovimientoKardex>
           id='kardex.finanzas.movimientos'
           title='Movimientos de Finanzas'
-          selectionColor={blueColors[10]}
+          selectionColor='none'
           loading={isFetching || isSearching}
           columnDefs={columns}
           rowData={data?.data || []}
           pagination={false}
           persistColumnState={true}
           quickFilterText={debouncedSearchText}
+          getRowStyle={(params) => {
+            const rowData = params.data as MovimientoKardex
+            const tipo = rowData.tipo as string
+            const selectionColor = tipoSelectionColors[tipo] || 'transparent'
+            
+            // Si la fila está seleccionada, aplicar el color de fondo
+            if (params.node?.isSelected()) {
+              return {
+                backgroundColor: selectionColor,
+              } as any
+            }
+            return undefined
+          }}
           optionsSelectColumns={[
             {
               label: 'Default',
