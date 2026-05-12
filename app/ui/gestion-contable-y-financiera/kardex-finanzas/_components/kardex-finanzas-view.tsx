@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from 'use-debounce'
-import { DatePicker, Select, Tag, Tooltip } from 'antd'
-import { FaSearch, FaMoneyBillWave, FaArrowUp, FaArrowDown, FaWallet, FaUser } from 'react-icons/fa'
+import { DatePicker, Select, Tag } from 'antd'
+import { FaMoneyBillWave, FaSearch, FaArrowUp, FaArrowDown } from 'react-icons/fa'
 import { ColDef } from 'ag-grid-community'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -40,7 +40,6 @@ const tipoLabels: Record<string, string> = {
 
 export default function KardexFinanzasView() {
   const [desplieguePagoId, setDesplieguePagoId] = useState<string>('')
-  const [subCajaId, setSubCajaId] = useState<string>('')
   const [vendedorId, setVendedorId] = useState<string>('')
   const [fechas, setFechas] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>([dayjs(), dayjs()])
   const [searchText, setSearchText] = useState('')
@@ -48,7 +47,18 @@ export default function KardexFinanzasView() {
   const isSearching = searchText !== debouncedSearchText
   const [searchKey, setSearchKey] = useState(0)
 
-  // Consultas para filtros - Despliegues de pago (con formato completo)
+  // Ensure Responsable column is visible by default
+  useEffect(() => {
+    const storageKey = 'ag-grid-state-kardex.finanzas.movimientos'
+    try {
+      // Clear localStorage to force default columns on first load
+      localStorage.removeItem(storageKey)
+    } catch (error) {
+      console.error('Error clearing localStorage:', error)
+    }
+  }, [])
+
+  // Consultas para filtros
   const { data: desplieguesData } = useQuery({
     queryKey: ['metodos-pago-ventas'],
     queryFn: async () => {
@@ -57,7 +67,6 @@ export default function KardexFinanzasView() {
     }
   })
 
-  // Consultas para filtros - Usuarios (todos los roles, no solo vendedores)
   const { data: usuariosData } = useQuery({
     queryKey: ['usuarios-all-activos'],
     queryFn: async () => {
@@ -66,12 +75,11 @@ export default function KardexFinanzasView() {
     }
   })
 
-  const { data: kardexData, isFetching } = useQuery({
-    queryKey: [QueryKeys.KARDEX_FINANZAS, desplieguePagoId, subCajaId, vendedorId, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
+  const { data, isFetching } = useQuery({
+    queryKey: [QueryKeys.KARDEX_FINANZAS, desplieguePagoId, vendedorId, fechas?.[0]?.format('YYYY-MM-DD'), fechas?.[1]?.format('YYYY-MM-DD'), searchKey],
     queryFn: async () => {
       const result = await kardexApi.getMovimientosFinanzas({
         metodo_pago_id: desplieguePagoId || undefined,
-        sub_caja_id: subCajaId || undefined,
         vendedor_id: vendedorId || undefined,
         desde: fechas?.[0]?.format('YYYY-MM-DD'),
         hasta: fechas?.[1]?.format('YYYY-MM-DD'),
@@ -89,7 +97,6 @@ export default function KardexFinanzasView() {
       field: 'fecha',
       width: 200,
       minWidth: 180,
-      sortable: true,
       valueFormatter: (params) => formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') || '-',
     },
     {
@@ -109,7 +116,40 @@ export default function KardexFinanzasView() {
       },
     },
     {
-      headerName: 'Documento / Concepto',
+      headerName: 'Responsable / Tercero',
+      field: 'cliente_nombre',
+      width: 300,
+      minWidth: 250,
+      cellRenderer: (params: any) => {
+        const data = params.data as MovimientoKardex
+        const tipo = data.tipo as string
+        
+        // Determinar qué mostrar según el tipo de transacción
+        let tercero = ''
+        if (tipo === 'VENTA' || tipo === 'COBRO' || tipo === 'COBRO ANULADO') {
+          tercero = data.cliente_nombre || '-'
+        } else if (tipo === 'COMPRA' || tipo === 'PAGO ANULADO') {
+          tercero = data.proveedor_nombre || '-'
+        } else {
+          tercero = '-'
+        }
+        
+        const usuario = data.usuario_nombre || '-'
+        
+        return (
+          <div className='flex flex-col gap-0.5 h-full justify-center'>
+            <div className='text-sm' style={{ color: '#059669', fontStyle: 'italic' }}>
+              {tercero}
+            </div>
+            <div className='text-xs' style={{ color: '#7c3aed', fontStyle: 'italic' }}>
+              {usuario}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      headerName: 'Documento',
       field: 'documento',
       flex: 1,
       minWidth: 250,
@@ -117,31 +157,9 @@ export default function KardexFinanzasView() {
     },
     {
       headerName: 'Despliegue de Pago',
-      field: 'metodo_pago' as any,
+      field: 'metodo_pago',
       width: 180,
       minWidth: 150,
-      cellRenderer: (params: any) => (
-        <div className='flex items-center gap-2 h-full'>
-          <FaWallet size={12} className='text-gray-400' />
-          <span>{params.value || '-'}</span>
-        </div>
-      )
-    },
-    {
-      headerName: 'Estado',
-      field: 'anulada' as any,
-      width: 120,
-      minWidth: 100,
-      cellRenderer: (params: any) => {
-        const anulada = params.value
-        return (
-          <div className='flex items-center h-full'>
-            <Tag color={anulada ? 'red' : 'green'} className='!m-0 font-medium'>
-              {anulada ? 'Anulada' : 'Activa'}
-            </Tag>
-          </div>
-        )
-      },
     },
     {
       headerName: 'Entrada',
@@ -172,32 +190,26 @@ export default function KardexFinanzasView() {
     },
   ]
 
-  // Calcular totales del set de datos actual
-  const totalEntradas = kardexData?.data.reduce((sum, m) => sum + Number(m.entrada ?? 0), 0) ?? 0
-  const totalSalidas = kardexData?.data.reduce((sum, m) => sum + Number(m.salida ?? 0), 0) ?? 0
+  // Calcular totales
+  const totalEntradas = data?.data.reduce((sum, m) => sum + Number(m.entrada ?? 0), 0) ?? 0
+  const totalSalidas = data?.data.reduce((sum, m) => sum + Number(m.salida ?? 0), 0) ?? 0
   const saldoNeto = totalEntradas - totalSalidas
 
   return (
-    <div className='flex flex-col gap-4 w-full h-full p-2 bg-[#f8fafc]'>
-      {/* Cabecera y Filtros en una sola línea */}
-      <div className='flex flex-col gap-4 py-2'>
-        <div className='flex items-center gap-3'>
-          <div className='p-2 bg-blue-100 rounded-lg'>
-            <FaMoneyBillWave size={20} className='text-blue-600' />
-          </div>
-          <div>
-            <h1 className='text-xl font-bold text-slate-800 leading-none'>Kardex de Finanzas</h1>
-            <p className='text-xs text-slate-500 mt-1'>Flujo de caja detallado por cuentas y usuarios</p>
-          </div>
+    <div className='flex flex-col gap-4 w-full'>
+      {/* Filtros */}
+      <div className='bg-white rounded-xl border p-4 flex flex-col gap-3'>
+        <div className='flex items-center gap-2 mb-1'>
+          <FaMoneyBillWave size={18} className='text-blue-600' />
+          <span className='font-bold text-gray-800'>Kardex de Finanzas</span>
+          <span className='text-xs text-gray-500'>Flujo de caja detallado</span>
         </div>
 
-        <div className='flex flex-wrap items-end gap-3 w-full'>
-          <div className='flex-1 min-w-[180px] space-y-1.5'>
-            <label className='text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2 px-1'>
-              <FaWallet className='text-blue-400' /> Despliegue de Pago
-            </label>
+        <div className='flex flex-wrap gap-3 items-end'>
+          <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Despliegue de Pago</label>
             <Select
-              className='w-full'
+              className='!min-w-[250px] !w-[250px]'
               placeholder='Todos los despliegues'
               value={desplieguePagoId}
               onChange={setDesplieguePagoId}
@@ -214,12 +226,10 @@ export default function KardexFinanzasView() {
             />
           </div>
 
-          <div className='flex-1 min-w-[180px] space-y-1.5'>
-            <label className='text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2 px-1'>
-              <FaUser className='text-blue-400' /> Responsable
-            </label>
+          <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Responsable</label>
             <Select
-              className='w-full'
+              className='!min-w-[250px] !w-[250px]'
               placeholder='Todos los usuarios'
               value={vendedorId}
               onChange={setVendedorId}
@@ -233,8 +243,8 @@ export default function KardexFinanzasView() {
             />
           </div>
 
-          <div className='flex-1 min-w-[220px] space-y-1.5'>
-            <label className='text-[10px] uppercase tracking-wider font-bold text-slate-400 px-1'>Período</label>
+          <div>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Período</label>
             <RangePicker
               className='w-full'
               value={fechas}
@@ -244,14 +254,14 @@ export default function KardexFinanzasView() {
             />
           </div>
 
-          <div className='flex-[2] min-w-[300px] space-y-1.5'>
-            <label className='text-[10px] uppercase tracking-wider font-bold text-slate-400 px-1'>Búsqueda rápida</label>
+          <div className='flex-1 min-w-[200px]'>
+            <label className='text-xs font-semibold text-gray-600 mb-1 block'>Búsqueda rápida</label>
             <div className='relative'>
-              <FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10' size={14} />
+              <FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10' size={14} />
               <input
                 type='text'
-                placeholder='Buscar por número de documento, serie, concepto o descripción...'
-                className='w-full pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-md text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all'
+                placeholder='Buscar documento, concepto...'
+                className='w-full pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all'
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
@@ -261,69 +271,80 @@ export default function KardexFinanzasView() {
           <ButtonBase
             color='info'
             size='md'
-            className='flex items-center gap-2 h-[32px] mb-[2px]'
+            className='flex items-center gap-2 w-fit self-end'
             onClick={() => setSearchKey(k => k + 1)}
             loading={isFetching}
           >
-            <FaSearch size={14} />
-            Actualizar
+            <FaSearch />
+            Buscar
           </ButtonBase>
         </div>
       </div>
 
-      <div className='flex flex-col lg:flex-row gap-4 flex-1'>
-        {/* Columna Principal (Tabla) */}
-        <div className='flex-1 h-full min-h-[600px]'>
-          <TableWithTitle<MovimientoKardex>
-            id='kardex.finanzas.movimientos'
-            title=''
-            selectionColor='#ffe4e6'
-            loading={isFetching || isSearching}
-            columnDefs={columns}
-            rowData={kardexData?.data || []}
-            pagination={false}
-            persistColumnState={false}
-            quickFilterText={debouncedSearchText}
-          />
-        </div>
-
-        {/* Sidebar Derecha (Resumen alineado con los datos de la tabla) */}
-        <div className='lg:w-80 flex flex-col gap-3 flex-shrink-0 pt-[20px]'>
-          {/* Ingresos */}
-          <div className='bg-white border border-slate-200 rounded-lg p-4'>
-            <div className='flex items-center justify-center gap-2 mb-2'>
+      {/* Resumen */}
+      {data && (
+        <div className='grid grid-cols-3 gap-4'>
+          <div className='bg-white rounded-lg border p-4'>
+            <div className='flex items-center gap-2 mb-2'>
               <FaArrowUp className='text-emerald-600' size={16} />
-              <div className='text-sm text-slate-600 font-medium'>Total Ingresos</div>
+              <span className='text-sm text-gray-600 font-medium'>Total Ingresos</span>
             </div>
-            <div className='text-2xl font-bold text-emerald-600 text-center'>
+            <div className='text-2xl font-bold text-emerald-600'>
               S/. {totalEntradas.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
             </div>
           </div>
 
-          {/* Egresos */}
-          <div className='bg-white border border-slate-200 rounded-lg p-4'>
-            <div className='flex items-center justify-center gap-2 mb-2'>
+          <div className='bg-white rounded-lg border p-4'>
+            <div className='flex items-center gap-2 mb-2'>
               <FaArrowDown className='text-rose-600' size={16} />
-              <div className='text-sm text-slate-600 font-medium'>Total Egresos</div>
+              <span className='text-sm text-gray-600 font-medium'>Total Egresos</span>
             </div>
-            <div className='text-2xl font-bold text-rose-600 text-center'>
+            <div className='text-2xl font-bold text-rose-600'>
               S/. {totalSalidas.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
             </div>
           </div>
 
-          {/* Balance */}
-          <div className='bg-white border border-slate-200 rounded-lg p-4'>
-            <div className='flex items-center justify-center gap-2 mb-2'>
+          <div className='bg-white rounded-lg border p-4'>
+            <div className='flex items-center gap-2 mb-2'>
               <FaMoneyBillWave className={saldoNeto >= 0 ? 'text-blue-600' : 'text-amber-600'} size={16} />
-              <div className='text-sm text-slate-600 font-medium'>Balance Neto</div>
+              <span className='text-sm text-gray-600 font-medium'>Balance Neto</span>
             </div>
-            <div className={`text-2xl font-bold ${saldoNeto >= 0 ? 'text-blue-600' : 'text-amber-600'} text-center`}>
+            <div className={`text-2xl font-bold ${saldoNeto >= 0 ? 'text-blue-600' : 'text-amber-600'}`}>
               S/. {saldoNeto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tabla */}
+      <div className='h-[calc(100vh-480px)] min-h-[300px]'>
+        <TableWithTitle<MovimientoKardex>
+          id='kardex.finanzas.movimientos'
+          title='Movimientos de Finanzas'
+          selectionColor={blueColors[10]}
+          loading={isFetching || isSearching}
+          columnDefs={columns}
+          rowData={data?.data || []}
+          pagination={false}
+          persistColumnState={true}
+          quickFilterText={debouncedSearchText}
+          optionsSelectColumns={[
+            {
+              label: 'Default',
+              columns: ['Fecha', 'Tipo', 'Responsable / Tercero', 'Documento', 'Despliegue de Pago', 'Entrada', 'Salida', 'Saldo'],
+            },
+          ]}
+        />
       </div>
 
+      {/* Barra de estado */}
+      <div className='flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-1.5 min-h-[32px]'>
+        {(isFetching || isSearching) && (
+          <div className='text-xs text-gray-500 text-center'>
+            Cargando movimientos...
+          </div>
+        )}
+      </div>
     </div>
   )
 }

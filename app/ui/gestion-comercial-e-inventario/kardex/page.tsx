@@ -8,8 +8,9 @@ import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
 import KardexInventarioView from './_components/kardex-inventario-view'
 import KardexView from '~/app/ui/facturacion-electronica/mi-almacen/_components/kardex-view'
+import KardexFinanzasView from '~/app/ui/gestion-contable-y-financiera/kardex-finanzas/_components/kardex-finanzas-view'
 
-type KardexTipo = 'inventario' | 'facturacion'
+type KardexTipo = 'inventario' | 'facturacion' | 'finanzas'
 
 export default function KardexInventarioPage() {
   const canAccess = usePermission(permissions.GESTION_COMERCIAL_E_INVENTARIO_KARDEX_INDEX)
@@ -18,19 +19,22 @@ export default function KardexInventarioPage() {
   if (!canAccess) return <NoAutorizado />
 
   return (
-    <ContenedorGeneral className='w-full !items-stretch'>
-      <div className='flex justify-end'>
+    <ContenedorGeneral className='w-full !items-stretch !p-0'>
+      <div className='flex justify-end p-4 border-b'>
         <Select
           value={tipo}
           onChange={setTipo}
           options={[
             { value: 'inventario', label: 'Kardex Inventario' },
             { value: 'facturacion', label: 'Kardex Facturación' },
+            { value: 'finanzas', label: 'Kardex Finanzas' },
           ]}
           className='w-56'
         />
       </div>
-      {tipo === 'inventario' ? <KardexInventarioView /> : <KardexView />}
+      <div className='flex-1 overflow-auto'>
+        {tipo === 'inventario' ? <KardexInventarioView /> : tipo === 'facturacion' ? <KardexView /> : <KardexFinanzasView />}
+      </div>
     </ContenedorGeneral>
   )
 }

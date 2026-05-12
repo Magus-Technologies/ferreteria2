@@ -115,6 +115,8 @@ const SelectColumns = forwardRef<SelectColumnsRef, SelectColumnsProps>(
                 name !== undefined && name !== null && name !== "",
             ) ?? [];
 
+        // If we have visible columns from the grid, use them
+        // Otherwise, use saved default columns or all available columns
         const initialColumns =
           visibleColumns.length > 0
             ? visibleColumns
@@ -122,7 +124,9 @@ const SelectColumns = forwardRef<SelectColumnsRef, SelectColumnsProps>(
               ? defaultColumns.filter((col) => plainOptions.includes(col))
               : plainOptions;
 
-        setCheckedList(initialColumns.length > 0 ? initialColumns : plainOptions);
+        // Ensure all available columns are shown if no saved state exists
+        const columnsToShow = initialColumns.length > 0 ? initialColumns : plainOptions;
+        setCheckedList(columnsToShow);
         setIsInitialized(true);
       }
     }, [plainOptions.length, isInitialized, defaultColumns, gridApi]);

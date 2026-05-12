@@ -9,17 +9,17 @@ export interface MovimientoKardex {
   movimiento: string
   fecha: string
   documento: string
-  unidad: string
-  cantidad: number
-  cantidad_fraccion: number
-  precio: number
-  costo: number
+  unidad?: string
+  cantidad?: number
+  cantidad_fraccion?: number
+  precio?: number
+  costo?: number
   entrada: number
   salida: number
-  stock_anterior: number
-  cant_ingreso: number
-  cant_salida: number
-  stock_actual: number
+  stock_anterior?: number
+  cant_ingreso?: number
+  cant_salida?: number
+  stock_actual?: number
   costo_anterior?: number
   costo_actual?: number
   saldo: number | null
@@ -29,8 +29,21 @@ export interface MovimientoKardex {
   producto_codigo?: string
   cliente_id?: number | null
   cliente_nombre?: string | null
+  cliente?: {
+    id?: number | string
+    razon_social?: string
+    nombre_comercial?: string
+  }
   unidades_contenidas?: number
   nota?: string | null
+  // Campos para Kardex Finanzas
+  metodo_pago?: string
+  user_id?: string
+  metodo_de_pago_id?: string
+  subcaja_id?: string | null
+  anulada?: boolean
+  usuario_nombre?: string | null
+  proveedor_nombre?: string | null
 }
 
 export interface KardexResponse {
