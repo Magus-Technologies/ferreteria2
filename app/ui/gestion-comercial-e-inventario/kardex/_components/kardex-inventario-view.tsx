@@ -47,7 +47,7 @@ const tipoColors: Record<string, string> = {
 const tipoLabels: Record<string, string> = {
   compra: 'Compra',
   recepcion: 'Recepcion',
-  recepcion_anulada: 'Recepcion Anulada',
+  recepcion_anulada: 'Recepcion',
   ingreso: 'Ingreso',
   salida: 'Salida',
   cuadre: 'Cuadre',
