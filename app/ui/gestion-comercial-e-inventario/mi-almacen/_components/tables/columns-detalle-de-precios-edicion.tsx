@@ -297,6 +297,54 @@ export function useColumnsDetalleDePreciosEdicion({
       width: 160,
     },
     {
+      headerName: 'Costo Anterior',
+      colId: 'costo_anterior',
+      minWidth: 160,
+      cellRenderer: ({ data }: ICellRendererParams<any>) => {
+        const costoAnterior = data?.costo_anterior
+        const stockAnterior = data?.stock_costo_anterior ?? 0
+        
+        if (!costoAnterior) {
+          return <div className='flex items-center h-full text-gray-400'>-</div>
+        }
+
+        return (
+          <Tooltip title={`Costo: S/. ${costoAnterior.toFixed(4)} | Stock: ${stockAnterior}`}>
+            <div className='flex items-center h-full cursor-help'>
+              <span className='text-sm'>
+                S/. {costoAnterior.toFixed(4)} ({stockAnterior})
+              </span>
+            </div>
+          </Tooltip>
+        )
+      },
+      width: 180,
+    },
+    {
+      headerName: 'Costo Actual',
+      colId: 'costo_actual',
+      minWidth: 160,
+      cellRenderer: ({ data }: ICellRendererParams<any>) => {
+        const costoActual = data?.costo_actual
+        const stockActual = data?.stock_costo_actual ?? 0
+        
+        if (!costoActual) {
+          return <div className='flex items-center h-full text-gray-400'>-</div>
+        }
+
+        return (
+          <Tooltip title={`Costo: S/. ${costoActual.toFixed(4)} | Stock: ${stockActual}`}>
+            <div className='flex items-center h-full cursor-help'>
+              <span className='text-sm'>
+                S/. {costoActual.toFixed(4)} ({stockActual})
+              </span>
+            </div>
+          </Tooltip>
+        )
+      },
+      width: 180,
+    },
+    {
       headerName: '% Venta',
       colId: 'p_venta',
       field: 'name',

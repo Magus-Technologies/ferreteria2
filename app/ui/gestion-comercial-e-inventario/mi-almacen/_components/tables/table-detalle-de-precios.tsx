@@ -72,6 +72,10 @@ export default function TableDetalleDePrecios() {
             costo: producto_en_almacen?.costo,
             stock_fraccion: producto_en_almacen?.stock_fraccion,
             ubicacion: producto_en_almacen?.ubicacion,
+            costo_anterior: producto_en_almacen?.costo_anterior,
+            stock_costo_anterior: producto_en_almacen?.stock_costo_anterior,
+            costo_actual: producto_en_almacen?.costo_actual,
+            stock_costo_actual: producto_en_almacen?.stock_costo_actual,
           },
         }))
       : productos_completos?.flatMap(producto_seleccionado_aux =>
@@ -85,6 +89,10 @@ export default function TableDetalleDePrecios() {
                   costo: producto_en_almacen_aux?.costo,
                   stock_fraccion: producto_en_almacen_aux?.stock_fraccion,
                   ubicacion: producto_en_almacen_aux?.ubicacion,
+                  costo_anterior: producto_en_almacen_aux?.costo_anterior,
+                  stock_costo_anterior: producto_en_almacen_aux?.stock_costo_anterior,
+                  costo_actual: producto_en_almacen_aux?.costo_actual,
+                  stock_costo_actual: producto_en_almacen_aux?.stock_costo_actual,
                 },
               }))
           )

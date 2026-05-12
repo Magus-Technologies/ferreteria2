@@ -10,6 +10,7 @@ import type {
 } from '~/types'
 import { ColDef } from 'ag-grid-community'
 import { useMemo } from 'react'
+import { Tooltip } from 'antd'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   almacen: Pick<Almacen, 'id' | 'name'>
@@ -19,6 +20,10 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
     costo: Decimal
     stock_fraccion: Decimal
     ubicacion: Ubicacion
+    costo_anterior?: Decimal | null
+    stock_costo_anterior?: Decimal
+    costo_actual?: Decimal | null
+    stock_costo_actual?: Decimal
   }
 }
 
@@ -70,6 +75,52 @@ export function useColumnsDetalleDePrecios() {
       },
       width: 130,
       type: 'pen4',
+    },
+    {
+      colId: 'costo_anterior',
+      headerName: 'Costo Anterior',
+      field: 'producto_almacen.costo_anterior',
+      minWidth: 160,
+      cellRenderer: ({ data }: any) => {
+        const costoAnterior = data?.producto_almacen?.costo_anterior
+        const stockAnterior = data?.producto_almacen?.stock_costo_anterior ?? 0
+        
+        if (!costoAnterior) {
+          return <span className='text-gray-400'>-</span>
+        }
+
+        return (
+          <div title={`Costo: S/. ${Number(costoAnterior).toFixed(4)} | Stock: ${stockAnterior}`}>
+            <span className='text-sm'>
+              S/. {Number(costoAnterior).toFixed(4)} ({stockAnterior})
+            </span>
+          </div>
+        )
+      },
+      width: 180,
+    },
+    {
+      colId: 'costo_actual',
+      headerName: 'Costo Actual',
+      field: 'producto_almacen.costo_actual',
+      minWidth: 160,
+      cellRenderer: ({ data }: any) => {
+        const costoActual = data?.producto_almacen?.costo_actual
+        const stockActual = data?.producto_almacen?.stock_costo_actual ?? 0
+        
+        if (!costoActual) {
+          return <span className='text-gray-400'>-</span>
+        }
+
+        return (
+          <div title={`Costo: S/. ${Number(costoActual).toFixed(4)} | Stock: ${stockActual}`}>
+            <span className='text-sm'>
+              S/. {Number(costoActual).toFixed(4)} ({stockActual})
+            </span>
+          </div>
+        )
+      },
+      width: 180,
     },
     {
       colId: 'p_venta',
