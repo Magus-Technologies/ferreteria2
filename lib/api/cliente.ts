@@ -319,4 +319,25 @@ export const clienteApi = {
       method: 'POST',
     });
   },
+
+  /**
+   * Obtener ventas donde este cliente fue el recomendador
+   */
+  recomendaciones: async (clienteId: number): Promise<ApiResponse<{
+    data: {
+      total_ventas: number
+      monto_total: number
+      ventas: Array<{
+        id: string
+        serie: string
+        numero: number
+        fecha: string
+        tipo_moneda: string
+        total: number
+        cliente: { id: number; numero_documento: string; nombres: string; apellidos: string; razon_social: string | null } | null
+      }>
+    }
+  }>> => {
+    return apiRequest(`/clientes/${clienteId}/recomendaciones`)
+  },
 };

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Button, Popconfirm, Tag } from "antd";
-import { FaEye, FaEdit, FaTrash, FaStar } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaStar, FaHandshake } from "react-icons/fa";
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import TableWithTitle from "~/components/tables/table-with-title";
@@ -15,6 +15,7 @@ import { App } from "antd";
 import ModalCreateCliente from "../../../mis-ventas/_components/modals/modal-create-cliente";
 import ModalVerDetalleCliente from "../modals/modal-ver-detalle-cliente";
 import ModalCalificacionesCliente from "../modals/modal-calificaciones-cliente";
+import ModalRecomendacionesCliente from "../modals/modal-recomendaciones-cliente";
 import { autorizacionesApi } from "~/lib/api/autorizaciones";
 import ModalSolicitarAutorizacion from "~/components/autorizaciones/modal-solicitar-autorizacion";
 import { orangeColors } from "~/lib/colors";
@@ -32,6 +33,8 @@ export default function TableMisContactos() {
   const [modalVerOpen, setModalVerOpen] = useState(false);
   const [clienteParaCalificar, setClienteParaCalificar] = useState<Cliente | null>(null);
   const [modalCalificacionesOpen, setModalCalificacionesOpen] = useState(false);
+  const [clienteParaRecomendaciones, setClienteParaRecomendaciones] = useState<Cliente | null>(null);
+  const [modalRecomendacionesOpen, setModalRecomendacionesOpen] = useState(false);
   const [modalAutorizacionOpen, setModalAutorizacionOpen] = useState(false);
   const [autorizacionAccion, setAutorizacionAccion] = useState<'editar' | 'eliminar'>('editar');
   const [autorizacionDesc, setAutorizacionDesc] = useState('');
@@ -201,6 +204,25 @@ export default function TableMisContactos() {
       },
     },
     {
+      headerName: "Recomendaciones",
+      width: 130,
+      cellRenderer: (params: any) => {
+        const cliente = params.data as Cliente
+        if (!cliente) return null
+        return (
+          <Button
+            type="text"
+            size="small"
+            className="flex items-center gap-1 text-purple-600 hover:bg-purple-50"
+            onClick={() => { setClienteParaRecomendaciones(cliente); setModalRecomendacionesOpen(true) }}
+          >
+            <FaHandshake size={13} />
+            <span className="text-xs">Ver</span>
+          </Button>
+        )
+      },
+    },
+    {
       headerName: "Acciones",
       width: 150,
       pinned: "right",
@@ -338,6 +360,12 @@ export default function TableMisContactos() {
         descripcion={autorizacionDesc}
         onSolicitar={handleSolicitarAuth}
         solicitando={solicitandoAuth}
+      />
+
+      <ModalRecomendacionesCliente
+        open={modalRecomendacionesOpen}
+        onClose={() => setModalRecomendacionesOpen(false)}
+        cliente={clienteParaRecomendaciones}
       />
     </>
   );
