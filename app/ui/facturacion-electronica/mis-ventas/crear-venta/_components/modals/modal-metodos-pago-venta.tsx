@@ -73,9 +73,11 @@ export default function ModalMetodosPagoVenta({
     [despliegueName]
   )
 
-  // Calcular total pagado
+  // Calcular total pagado (incluye sobrecargo)
   const totalPagado = useMemo(() => {
-    return roundMoney(metodosPago.reduce((sum, metodo) => sum + metodo.monto, 0))
+    return roundMoney(metodosPago.reduce((sum, metodo) => {
+      return sum + metodo.monto + (metodo.sobrecargo?.monto || 0)
+    }, 0))
   }, [metodosPago])
 
   // Calcular saldo pendiente
@@ -84,13 +86,14 @@ export default function ModalMetodosPagoVenta({
   }, [totalCobrado, totalPagado])
 
   // Calcular vuelto total de todos los métodos agregados
-  // El vuelto es: lo que recibe - monto (sin incluir sobrecargo)
+  // El vuelto es: lo que recibe - monto (incluyendo sobrecargo)
   const vueltoTotal = useMemo(() => {
     return metodosPago.reduce((sum, metodo) => {
       if (metodo.recibe_efectivo) {
-        // El vuelto es solo de la diferencia entre lo recibido y el monto a pagar
-        // No incluye el sobrecargo porque ese es un costo que se deduce del pago
-        const vueltoMetodo = Math.max(0, metodo.recibe_efectivo - metodo.monto - (metodo.sobrecargo?.monto || 0))
+        // El monto total que debería recibir es monto + sobrecargo
+        const montoTotalConSobrecargo = metodo.monto + (metodo.sobrecargo?.monto || 0)
+        // El vuelto es la diferencia entre lo recibido y lo que realmente se cobra
+        const vueltoMetodo = Math.max(0, metodo.recibe_efectivo - montoTotalConSobrecargo)
         return sum + vueltoMetodo
       }
       return sum
@@ -305,24 +308,27 @@ export default function ModalMetodosPagoVenta({
                   <tr>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>#</th>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Tipo de Pago</th>
-                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Monto</th>
+                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Subtotal</th>
                     <th className='px-4 py-2 text-left text-sm font-semibold text-slate-700'>Referencia</th>
                     <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Sobrecargo</th>
-                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Monto Recibe</th>
+                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Total Cobrado</th>
+                    <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Recibe</th>
                     <th className='px-4 py-2 text-right text-sm font-semibold text-slate-700'>Vuelto</th>
                     <th className='px-4 py-2 text-center text-sm font-semibold text-slate-700'>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
                   {metodosPago.map((metodo, index) => {
+                    // El monto total cobrado incluye sobrecargo
+                    const montoTotalCobrado = metodo.monto + (metodo.sobrecargo?.monto || 0)
                     const vueltoMetodo = metodo.recibe_efectivo 
-                      ? Math.max(0, metodo.recibe_efectivo - metodo.monto - (metodo.sobrecargo?.monto || 0))
+                      ? Math.max(0, metodo.recibe_efectivo - montoTotalCobrado)
                       : 0
                     return (
                       <tr key={metodo.id} className='border-t hover:bg-slate-50'>
                         <td className='px-4 py-3 text-sm text-slate-600'>{index + 1}</td>
                         <td className='px-4 py-3 text-sm font-medium text-slate-700'>{metodo.despliegue_name}</td>
-                        <td className='px-4 py-3 text-sm font-semibold text-right text-blue-600'>
+                        <td className='px-4 py-3 text-sm text-right text-blue-600'>
                           {monedaSymbol} {metodo.monto.toFixed(2)}
                         </td>
                         <td className='px-4 py-3 text-sm text-slate-600'>{metodo.referencia || '-'}</td>
@@ -336,6 +342,9 @@ export default function ModalMetodosPagoVenta({
                           ) : (
                             <span className='text-slate-400'>-</span>
                           )}
+                        </td>
+                        <td className='px-4 py-3 text-sm font-bold text-right text-green-700'>
+                          {monedaSymbol} {montoTotalCobrado.toFixed(2)}
                         </td>
                         <td className='px-4 py-3 text-sm text-right text-slate-600'>
                           {metodo.recibe_efectivo ? `${monedaSymbol} ${metodo.recibe_efectivo.toFixed(2)}` : '-'}
