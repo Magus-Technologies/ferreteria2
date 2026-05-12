@@ -89,6 +89,10 @@ export interface ProductoAlmacen {
   almacen_id: number;
   stock_fraccion: number;
   costo: number;
+  costo_anterior: number | null;
+  costo_actual: number | null;
+  stock_costo_anterior: number;
+  stock_costo_actual: number;
   ubicacion_id: number;
   created_at: string;
   updated_at: string;

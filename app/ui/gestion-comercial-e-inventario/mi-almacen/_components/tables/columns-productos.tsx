@@ -162,6 +162,72 @@ export function useColumnsProductos({ almacen_id, showStockMaxWarning }: UseColu
         type: "pen4",
       },
       {
+        headerName: "Costo Anterior",
+        colId: "costo_anterior",
+        field: "producto_en_almacenes",
+        width: 100,
+        filter: true,
+        cellRenderer: ({
+          value,
+          data,
+        }: ICellRendererParams<
+          Producto,
+          Producto["producto_en_almacenes"]
+        >) => {
+          const producto_en_almacen = value?.find(
+            (item) => item.almacen_id === almacen_id,
+          );
+          const costoAnterior = Number(producto_en_almacen?.costo_anterior ?? 0);
+          const stockAnterior = Number(producto_en_almacen?.stock_costo_anterior ?? 0);
+          
+          if (costoAnterior === 0 || stockAnterior === 0) {
+            return <span className="text-gray-400">-</span>;
+          }
+          
+          return (
+            <Tooltip title={`Stock: ${stockAnterior} | Costo: S/ ${costoAnterior.toFixed(4)}`}>
+              <div className="flex flex-col text-xs">
+                <span className="font-semibold">S/ {costoAnterior.toFixed(2)}</span>
+                <span className="text-gray-500">({stockAnterior} unid.)</span>
+              </div>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        headerName: "Costo Actual",
+        colId: "costo_actual",
+        field: "producto_en_almacenes",
+        width: 100,
+        filter: true,
+        cellRenderer: ({
+          value,
+          data,
+        }: ICellRendererParams<
+          Producto,
+          Producto["producto_en_almacenes"]
+        >) => {
+          const producto_en_almacen = value?.find(
+            (item) => item.almacen_id === almacen_id,
+          );
+          const costoActual = Number(producto_en_almacen?.costo_actual ?? 0);
+          const stockActual = Number(producto_en_almacen?.stock_costo_actual ?? 0);
+          
+          if (costoActual === 0) {
+            return <span className="text-gray-400">-</span>;
+          }
+          
+          return (
+            <Tooltip title={`Stock: ${stockActual} | Costo: S/ ${costoActual.toFixed(4)}`}>
+              <div className="flex flex-col text-xs">
+                <span className="font-semibold text-blue-600">S/ {costoActual.toFixed(2)}</span>
+                <span className="text-gray-500">({stockActual} unid.)</span>
+              </div>
+            </Tooltip>
+          );
+        },
+      },
+      {
         headerName: "U. Contenidas",
         colId: "unidades_contenidas",
         field: "unidades_contenidas",
