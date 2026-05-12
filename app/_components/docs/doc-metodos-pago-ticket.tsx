@@ -1,15 +1,22 @@
 import { Text, View } from '@react-pdf/renderer'
 import { styles_ticket } from './styles'
 
+interface Sobrecargo {
+  tipo: string
+  valor: number
+  monto: number
+}
+
 interface DocMetodosPagoTicketProps {
   metodos_de_pago: Array<{
     forma_de_pago: string
     monto: number
+    sobrecargo?: Sobrecargo
   }>
-  getEstiloCampo?: (campo: string) => { 
+  getEstiloCampo?: (campo: string) => {
     fontFamily?: string
     fontSize?: number
-    fontWeight?: string 
+    fontWeight?: string
   }
 }
 
@@ -32,14 +39,27 @@ export default function DocMetodosPagoTicket({
             Métodos de Pago:
           </Text>
           <View style={styles_ticket.textValueSubSectionInformacionGeneral}>
-            {metodos_de_pago.map((mp, index) => (
-              <Text
-                key={index}
-                style={getEstiloCampo('metodo_pago')}
-              >
-                {mp.forma_de_pago}: S/ {mp.monto.toFixed(2)}
-              </Text>
-            ))}
+            {metodos_de_pago.map((mp, index) => {
+              const totalConSobrecargo = mp.monto + (mp.sobrecargo?.monto || 0)
+              return (
+                <View key={index} style={{ marginBottom: 2 }}>
+                  <Text style={getEstiloCampo('metodo_pago')}>
+                    {mp.forma_de_pago}: S/ {mp.monto.toFixed(2)}
+                    {mp.sobrecargo && mp.sobrecargo.monto > 0 && (
+                      <> (+
+                        {mp.sobrecargo.tipo === 'porcentaje'
+                          ? `${mp.sobrecargo.valor}% = S/ ${mp.sobrecargo.monto.toFixed(2)}`
+                          : `S/ ${mp.sobrecargo.monto.toFixed(2)}`
+                        })
+                      </>
+                    )}
+                  </Text>
+                  <Text style={getEstiloCampo('metodo_pago')}>
+                    {'  '}Total: S/ {totalConSobrecargo.toFixed(2)}
+                  </Text>
+                </View>
+              )
+            })}
           </View>
         </View>
       </View>

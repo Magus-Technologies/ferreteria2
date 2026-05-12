@@ -84,6 +84,11 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     despliegue_de_pago_id: string
     monto: number
     numero_operacion?: string
+    sobrecargo?: {
+      tipo: string
+      valor: number
+      monto: number
+    }
   }>
   // ✅ Campos de entrega
   tipo_despacho?: 'EnTienda' | 'Domicilio' | 'Parcial'
