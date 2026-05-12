@@ -122,7 +122,7 @@ export default function ModalPagosCompras({ open, onClose, filtros: filtrosGloba
         if (tipo === 'gasto_operativo') return { fontWeight: 'bold', color: '#dc2626' }
         if (tipo === 'gasto_compra') return { fontWeight: 'bold', color: '#ea580c' }
         if (tipo === 'comision_vendedor') return { fontWeight: 'bold', color: '#9333ea' }
-        return { fontWeight: 'bold' }
+        return { fontWeight: 'bold', color: '#000000' }
       },
     },
     {
