@@ -240,6 +240,7 @@ export default function ModalMetodosPagoVenta({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
       numero_operacion: m.referencia || undefined,
+      sobrecargo: m.sobrecargo?.monto > 0 ? m.sobrecargo : undefined,
     }))
 
     // Guardar en el formulario de venta
