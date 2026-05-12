@@ -70,8 +70,18 @@ export default function TableDeudasClientes() {
   useEffect(() => {
     if (response?.data) {
       const transformedData: DeudaCliente[] = response.data.map((venta: VentaCompleta) => {
-        const monto_total = venta.comprobante_electronico?.total || 0;
-        const monto_pagado = venta.total_cobrado || 0;
+        // Calcular total sumando productos (igual que ventas-por-cobrar)
+        const monto_total = (venta.productos_por_almacen || []).reduce((acc: number, item: any) => {
+          for (const u of item.unidades_derivadas ?? []) {
+            const precio = Number(u.precio ?? 0)
+            const cantidad = Number(u.cantidad ?? 0)
+            const descuento = Number(u.descuento ?? 0)
+            const bonificacion = Boolean(u.bonificacion)
+            acc += bonificacion ? 0 : (precio * cantidad) - descuento
+          }
+          return acc
+        }, 0)
+        const monto_pagado = Number(venta.total_cobrado) || 0;
         const deuda = monto_total - monto_pagado;
 
         return {

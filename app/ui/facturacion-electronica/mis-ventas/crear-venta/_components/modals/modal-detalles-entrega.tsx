@@ -28,6 +28,7 @@ import {
 import { useCargos } from './detalles-entrega/hooks/use-cargos'
 import { useDireccionesCliente } from './detalles-entrega/hooks/use-direcciones-cliente'
 import { usePrecargarVehiculo } from './detalles-entrega/hooks/use-precargar-vehiculo'
+import { vehiculosApi } from '~/lib/api/catalogos'
 import { useReverseGeocoding } from './detalles-entrega/hooks/use-reverse-geocoding'
 import { useTotalesParcial } from './detalles-entrega/hooks/use-totales-parcial'
 import { useValidaciones } from './detalles-entrega/hooks/use-validaciones'
@@ -105,6 +106,7 @@ function ModalDetallesEntregaInner({
     modalCalendarioResto, setModalCalendarioResto,
     setSlotDomicilio,
     setSlotResto,
+    setVehiculoPreseleccionadoDomicilio,
   } = useDetallesEntrega()
 
   // El switch "¿Programar entrega del resto?" arranca:
@@ -248,14 +250,57 @@ function ModalDetallesEntregaInner({
         form.getFieldValue('latitud') != null && 
         form.getFieldValue('longitud') != null
       
-      if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords) return
+      // También verificar campos de configuración de entrega que se pre-cargan
+      // desde la entrega existente y no deben sobrescribirse
+      const yaTieneDespachador = !!form.getFieldValue('despachador_id')
+      const yaTieneVehiculo = form.getFieldValue('vehiculo_id') != null
+      const yaTieneFecha = !!form.getFieldValue('fecha_programada')
+      const yaTieneHorario = !!form.getFieldValue('hora_inicio') || !!form.getFieldValue('hora_fin')
       
+      // Si ya tiene TODOS los campos críticos, no hacer nada
+      if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords && 
+          yaTieneDespachador && yaTieneVehiculo && yaTieneFecha && yaTieneHorario) return
+      
+      // En modo `actualizar-entrega` o `crear-entrega-resto`, NO sobrescribir
+      // NADA si ya hay datos (vienen de la entrega existente en BD)
+      if (resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto') {
+        // Para estos modos, solo cargar lo que falte Y venga de datos del cliente
+        if (!yaTieneDireccion || !yaTieneReferencia || !yaTieneCoords) {
+          const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
+          const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm)
+          
+          if (direccionObj) {
+            if (!yaTieneDireccion) {
+              form.setFieldValue('direccion_entrega', direccionObj.direccion)
+            }
+            if (!yaTieneReferencia) {
+              form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
+            }
+            if (!yaTieneCoords && direccionObj.latitud && direccionObj.longitud) {
+              const coords = {
+                lat: Number(direccionObj.latitud),
+                lng: Number(direccionObj.longitud)
+              }
+              setCoordenadas(coords)
+              form.setFieldValue('latitud', coords.lat)
+              form.setFieldValue('longitud', coords.lng)
+              setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
+              obtenerUbicacionGps(coords.lat, coords.lng)
+              setMostrarMapa(true)
+            }
+          }
+        }
+        return
+      }
+      
+      // Para `crear-venta` (nuevo), usar el comportamiento original:
+      // cargar todos los campos desde las direcciones del cliente
       // Buscar la dirección seleccionada en el formulario principal
       const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
       const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm)
       
       if (direccionObj) {
-        // Cargar la dirección seleccionada y referencia SOLO si no existen
+        // Cargar la dirección seleccionada y referencia
         if (!yaTieneDireccion) {
           form.setFieldValue('direccion_entrega', direccionObj.direccion)
         }
@@ -305,7 +350,7 @@ function ModalDetallesEntregaInner({
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, tipoDespacho, direcciones, form])
+  }, [open, tipoDespacho, direcciones, form, resolvedMode.kind])
 
   // Watchers + validaciones (Domicilio + Resto Parcial) — extraídos a hook.
   // `restoInvalido` requiere `totalAProgramar` que se calcula más abajo,
@@ -445,6 +490,52 @@ function ModalDetallesEntregaInner({
     setHoraFinResto(dayjs(slot.end).format('HH:mm'))
   }
 
+  // Inicializar slotDomicilio desde valores del form cuando viene de una entrega existente
+  useEffect(() => {
+    if (!open) return
+    // Solo en modo actualizar/resto donde ya hay fecha/hora guardadas
+    if (resolvedMode.kind !== 'actualizar-entrega' && resolvedMode.kind !== 'crear-entrega-resto') return
+    
+    const fecha = form.getFieldValue('fecha_programada')
+    const horaInicio = form.getFieldValue('hora_inicio')
+    const horaFin = form.getFieldValue('hora_fin')
+    
+    if (fecha && horaInicio && horaFin) {
+      // Reconstruir el slot desde los valores guardados
+      const fechaStr = dayjs(fecha).format('YYYY-MM-DD')
+      const startDate = dayjs(`${fechaStr} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
+      const endDate = dayjs(`${fechaStr} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
+      setSlotDomicilio({ start: startDate, end: endDate })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, resolvedMode.kind])
+
+  // Inicializar vehiculoPreseleccionadoDomicilio si hay vehiculo_id guardado
+  useEffect(() => {
+    if (!open) return
+    if (resolvedMode.kind !== 'actualizar-entrega' && resolvedMode.kind !== 'crear-entrega-resto') return
+    
+    const vehiculoIdValue = form.getFieldValue('vehiculo_id')
+    if (vehiculoIdValue && !vehiculoPreseleccionadoDomicilio) {
+      // Cargar datos del vehículo para mostrar el badge
+      vehiculosApi.getById(vehiculoIdValue).then((response) => {
+        if (response.data) {
+          const vehiculoData = response.data
+          setVehiculoPreseleccionadoDomicilio({
+            id: vehiculoData.id,
+            name: vehiculoData.name,
+            tipo: vehiculoData.tipo,
+            placa: vehiculoData.placa || null,
+          })
+        }
+      }).catch(console.error)
+    } else if (!vehiculoIdValue) {
+      // Limpiar si no hay vehículo seleccionado
+      setVehiculoPreseleccionadoDomicilio(null)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, resolvedMode.kind])
+
   // `ubicacionGps` (dirección obtenida por reverse geocoding) vive ahora en
   // el Provider — se consume arriba con el resto del bloque DOMICILIO.
 
@@ -518,8 +609,6 @@ function ModalDetallesEntregaInner({
   const {
     domicilioInvalido,
     restoInvalido,
-    despachadorId,
-    restoDespachadorId,
     vehiculoId,
     restoVehiculoId,
     restoDireccionEntrega,

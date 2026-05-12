@@ -66,6 +66,15 @@ export default function ModalRecomendacionesCliente({ open, onClose, cliente }: 
       type: 'numericColumn',
     },
     {
+      colId: 'costo',
+      headerName: 'Costo',
+      field: 'costo',
+      valueFormatter: (p) => `S/. ${Number(p.value).toFixed(2)}`,
+      width: 110,
+      type: 'numericColumn',
+      cellStyle: { color: '#b45309', fontWeight: 'bold' },
+    },
+    {
       colId: 'ganancia',
       headerName: 'Ganancia',
       field: 'ganancia',

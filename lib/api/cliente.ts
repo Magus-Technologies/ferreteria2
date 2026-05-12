@@ -336,6 +336,7 @@ export const clienteApi = {
         tipo_moneda: string
         total: number
         ganancia: number
+        costo: number
         cliente: { id: number; numero_documento: string; nombres: string; apellidos: string; razon_social: string | null } | null
       }>
     }
