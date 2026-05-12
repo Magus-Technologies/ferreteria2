@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import { TipoCliente } from "~/lib/api/cliente";
+import dayjs from "dayjs";
 
 interface FiltrosMisContactos {
   search?: string;
   tipo_cliente?: TipoCliente;
-  estado?: boolean;
+  fecha_desde?: string;
+  fecha_hasta?: string;
+  con_recomendaciones?: boolean;
   page?: number;
   per_page?: number;
 }
@@ -15,29 +18,26 @@ interface StoreFiltrosMisContactos {
   limpiarFiltros: () => void;
 }
 
+const hoy = dayjs().format("YYYY-MM-DD");
+
 const filtrosIniciales: FiltrosMisContactos = {
   search: "",
   tipo_cliente: undefined,
-  estado: undefined,
+  fecha_desde: hoy,
+  fecha_hasta: hoy,
   page: 1,
   per_page: 50,
 };
 
 export const useStoreFiltrosMisContactos = create<StoreFiltrosMisContactos>((set) => ({
   filtros: filtrosIniciales,
-  
   setFiltros: (nuevosFiltros) =>
     set((state) => ({
       filtros: {
         ...state.filtros,
         ...nuevosFiltros,
-        // Resetear página cuando se cambian otros filtros
         page: nuevosFiltros.page !== undefined ? nuevosFiltros.page : 1,
       },
     })),
-    
-  limpiarFiltros: () =>
-    set({
-      filtros: filtrosIniciales,
-    }),
+  limpiarFiltros: () => set({ filtros: filtrosIniciales }),
 }));
