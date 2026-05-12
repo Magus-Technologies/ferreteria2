@@ -190,15 +190,19 @@ function ModalDetallesEntregaInner({
   useEffect(() => {
     if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
     if (direcciones.length === 0) return
-    // Guard "no sobrescribir si ya hay dirección" SOLO en `crear-venta`,
-    // donde el usuario puede editar manualmente antes/durante el flujo.
-    // En `crear-entrega-resto` los inputs `_resto_*` recién se renderizan
-    // al activar el switch, así que no hay edición previa que respetar — y
-    // el guard estaba causando que la referencia quedara vacía cuando el
-    // switch se activaba antes de que llegaran las direcciones del backend.
+    // Guard "no sobrescribir si ya hay valores guardados en la entrega"
+    // En `crear-entrega-resto` y `actualizar-entrega` los valores ya fueron
+    // pre-cargados desde la entrega existente. En `crear-venta` normal, el
+    // guard permite que el usuario edite manualmente antes de confirmar.
     if (
       resolvedMode.kind !== 'crear-entrega-resto' &&
       form.getFieldValue('_resto_direccion_entrega')
+    ) return
+    // Si estamos en modo update/resto y ya tenemos valores guardados (referencia,
+    // lat/lng), no sobrescribir con datos del cliente (que podrían haber cambiado)
+    if (
+      resolvedMode.kind === 'crear-entrega-resto' &&
+      (form.getFieldValue('_resto_direccion_entrega') || form.getFieldValue('_resto_referencia_entrega'))
     ) return
 
     const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
@@ -227,24 +231,41 @@ function ModalDetallesEntregaInner({
   }, [open, tipoDespacho, programarResto, direcciones, form, resolvedMode.kind])
 
   // Cargar dirección inicial cuando se abra el modal
+  // ⚠️ IMPORTANTE: No sobrescribir si ya hay valores guardados (vienen de la entrega existente)
   useEffect(() => {
     if (open && tipoDespacho === 'Domicilio' && direcciones.length > 0) {
       // Setear almacenero por defecto como quien entrega en domicilio
       if (!form.getFieldValue('quien_entrega')) {
         form.setFieldValue('quien_entrega', 'almacen')
       }
+      
+      // 🚨 NO sobrescribir si ya hay valores de la entrega existente (mis-entregas)
+      // En modo `actualizar-entrega` y `crear-entrega-resto`, los valores ya fueron
+      // pre-cargados desde la entrega y no deben sobrescribirse con datos del cliente.
+      const yaTieneDireccion = !!form.getFieldValue('direccion_entrega')
+      const yaTieneReferencia = !!form.getFieldValue('referencia_entrega')
+      const yaTieneCoords = 
+        form.getFieldValue('latitud') != null && 
+        form.getFieldValue('longitud') != null
+      
+      if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords) return
+      
       // Buscar la dirección seleccionada en el formulario principal
       const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
       const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm)
       
       if (direccionObj) {
-        // Cargar la dirección seleccionada y referencia
-        form.setFieldValue('direccion_entrega', direccionObj.direccion)
-        form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
+        // Cargar la dirección seleccionada y referencia SOLO si no existen
+        if (!yaTieneDireccion) {
+          form.setFieldValue('direccion_entrega', direccionObj.direccion)
+        }
+        if (!yaTieneReferencia) {
+          form.setFieldValue('referencia_entrega', direccionObj.referencia || '')
+        }
         setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
 
-        // Si tiene coordenadas, cargarlas y abrir el mapa automáticamente.
-        if (direccionObj.latitud && direccionObj.longitud) {
+        // Si tiene coordenadas y no las teníamos, cargarlas y abrir el mapa automáticamente.
+        if (direccionObj.latitud && direccionObj.longitud && !yaTieneCoords) {
           const coords = {
             lat: Number(direccionObj.latitud),
             lng: Number(direccionObj.longitud)
@@ -254,17 +275,21 @@ function ModalDetallesEntregaInner({
           form.setFieldValue('longitud', coords.lng)
           obtenerUbicacionGps(coords.lat, coords.lng)
           setMostrarMapa(true)
-        } else {
+        } else if (!yaTieneCoords) {
           setUbicacionGps('')
         }
       } else if (direcciones.length > 0) {
         // Si no encuentra la seleccionada, usar la primera (D1)
         const primeraDir = direcciones[0]
-        form.setFieldValue('direccion_entrega', primeraDir.direccion)
-        form.setFieldValue('referencia_entrega', primeraDir.referencia || '')
+        if (!yaTieneDireccion) {
+          form.setFieldValue('direccion_entrega', primeraDir.direccion)
+        }
+        if (!yaTieneReferencia) {
+          form.setFieldValue('referencia_entrega', primeraDir.referencia || '')
+        }
         setDireccionSeleccionada(primeraDir.tipo as TipoDireccion)
 
-        if (primeraDir.latitud && primeraDir.longitud) {
+        if (primeraDir.latitud && primeraDir.longitud && !yaTieneCoords) {
           const coords = {
             lat: Number(primeraDir.latitud),
             lng: Number(primeraDir.longitud)
@@ -274,7 +299,7 @@ function ModalDetallesEntregaInner({
           form.setFieldValue('longitud', coords.lng)
           obtenerUbicacionGps(coords.lat, coords.lng)
           setMostrarMapa(true)
-        } else {
+        } else if (!yaTieneCoords) {
           setUbicacionGps('')
         }
       }

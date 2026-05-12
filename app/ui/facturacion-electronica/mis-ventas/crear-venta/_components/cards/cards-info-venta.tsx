@@ -65,6 +65,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   const [modalDetallesEntregaOpen, setModalDetallesEntregaOpen] =
     useState(false);
   const [modalEditarClienteOpen, setModalEditarClienteOpen] = useState(false);
+  const [surchargeTotal, setSurchargeTotal] = useState(0);
 
   // Cargar el cliente completo desde la API cuando se va a editar.
   // Se re-fetchea cada vez que se abre el modal (staleTime: 0) para
@@ -156,10 +157,10 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     [productosReales],
   );
 
-  // Calcular Total Cobrado
+  // Calcular Total Cobrado (incluye surcharge de métodos de pago)
   const totalCobrado = useMemo(
-    () => subTotal - totalDescuento,
-    [subTotal, totalDescuento],
+    () => subTotal - totalDescuento + surchargeTotal,
+    [subTotal, totalDescuento, surchargeTotal],
   );
 
   // Total Comisión
@@ -389,6 +390,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
+        baseAmount={subTotal - totalDescuento}
+        onSurchargeChange={setSurchargeTotal}
         onContinuar={() => {
           // Cerrar modal de pago y abrir modal de detalles de entrega para todos los tipos
           setModalOpen(false);

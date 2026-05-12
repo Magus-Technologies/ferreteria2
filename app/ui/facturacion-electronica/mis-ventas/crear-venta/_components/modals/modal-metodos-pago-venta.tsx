@@ -38,6 +38,8 @@ export default function ModalMetodosPagoVenta({
   totalCobrado,
   tipo_moneda,
   tipo_documento,
+  baseAmount,
+  onSurchargeChange,
   onContinuar,
 }: {
   open: boolean
@@ -46,6 +48,8 @@ export default function ModalMetodosPagoVenta({
   totalCobrado: number
   tipo_moneda: TipoMoneda
   tipo_documento?: string
+  baseAmount: number
+  onSurchargeChange: (surcharge: number) => void
   onContinuar?: () => void
 }) {
   const [modalForm] = Form.useForm()
@@ -53,7 +57,13 @@ export default function ModalMetodosPagoVenta({
   const [despliegueName, setDespliegueName] = useState<string>('')
   const [sobrecargo, setSobrecargo] = useState<{ tipo: string; valor: number; monto: number }>({ tipo: 'ninguno', valor: 0, monto: 0 })
 
-  // Cargar despliegues de pago para obtener el ID de CCH/Efectivo
+  // Notificar al componente padre cuando cambia el surcharge total
+  useEffect(() => {
+    const totalSurcharge = metodosPago.reduce((sum, m) => sum + (m.sobrecargo?.monto || 0), 0)
+    onSurchargeChange(totalSurcharge)
+  }, [metodosPago, onSurchargeChange])
+
+  // Cargar depliegues de pago para obtener el ID de CCH/Efectivo
   const { data: desplieguesPago, isFetched } = useQuery({
     queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
     queryFn: async () => {
@@ -391,27 +401,21 @@ export default function ModalMetodosPagoVenta({
                     const name = option?.label || ''
                     setDespliegueName(name)
 
-                    // Calcular sobrecargo del método seleccionado
+                    // Calcular sobrecargo del método seleccionado basado en el monto BASE
                     const despliegueData = desplieguesPago?.find((d: any) => d.value === value)
                     let nuevoSobrecargo = { tipo: 'ninguno', valor: 0, monto: 0 }
                     if (despliegueData?.tipo_sobrecargo === 'porcentaje' && Number(despliegueData.sobrecargo_porcentaje) > 0) {
-                      const monto = saldoPendiente * Number(despliegueData.sobrecargo_porcentaje) / 100
+                      // El surcharge se calcula sobre el monto base y se suma al total
+                      const monto = baseAmount * Number(despliegueData.sobrecargo_porcentaje) / 100
                       nuevoSobrecargo = { tipo: 'porcentaje', valor: Number(despliegueData.sobrecargo_porcentaje), monto }
                     } else if (despliegueData?.tipo_sobrecargo === 'monto_fijo' && Number(despliegueData.adicional) > 0) {
                       nuevoSobrecargo = { tipo: 'monto_fijo', valor: Number(despliegueData.adicional), monto: Number(despliegueData.adicional) }
                     }
                     setSobrecargo(nuevoSobrecargo)
 
-                    // Pre-llenar "Monto Recibe" con el saldo pendiente (+ sobrecargo
-                    // si aplica). El usuario puede editarlo libremente. Al agregar
-                    // un pago parcial, el saldo pendiente se actualiza y este pre-
-                    // llenado vuelve a aplicar.
-                    if (!name.toUpperCase().includes('EFECTIVO')) {
-                      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente + nuevoSobrecargo.monto))
-                    } else {
-                      modalForm.setFieldValue('referencia', undefined)
-                      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
-                    }
+                    // Pre-llenar "Monto Recibe" con el saldo pendiente (sin sumar surcharge,
+                    // ya que el surcharge se muestra aparte y se suma al total general)
+                    modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
                   }}
                 />
               </div>
