@@ -1,11 +1,13 @@
 'use client'
 
-import { Modal, Table, Tag, DatePicker } from 'antd'
+import { Modal, Tag, DatePicker } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import { clienteApi, type Cliente } from '~/lib/api/cliente'
 import { apiRequest } from '~/lib/api'
+import TableWithTitle from '~/components/tables/table-with-title'
 import dayjs, { type Dayjs } from 'dayjs'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import type { ColDef } from 'ag-grid-community'
 
 const { RangePicker } = DatePicker
 
@@ -15,21 +17,73 @@ interface ModalRecomendacionesClienteProps {
   cliente: Cliente | null
 }
 
-export default function ModalRecomendacionesCliente({ open, onClose, cliente }: ModalRecomendacionesClienteProps) {
-  const [rango, setRango] = useState<[Dayjs | null, Dayjs | null] | null>(null)
+type VentaRec = {
+  id: string
+  serie: string
+  numero: number
+  fecha: string
+  tipo_moneda: string
+  total: number
+  ganancia: number
+  cliente: { id: number; numero_documento: string; nombres: string; apellidos: string; razon_social: string | null } | null
+}
 
-  const fechaDesde = rango?.[0]?.format('YYYY-MM-DD')
-  const fechaHasta = rango?.[1]?.format('YYYY-MM-DD')
+export default function ModalRecomendacionesCliente({ open, onClose, cliente }: ModalRecomendacionesClienteProps) {
+  const hoy = dayjs()
+  const [rango, setRango] = useState<[Dayjs, Dayjs]>([hoy.startOf('day'), hoy.endOf('day')])
+
+  const columns = useMemo<ColDef<VentaRec>[]>(() => [
+    {
+      colId: 'comprobante',
+      headerName: 'Comprobante',
+      valueGetter: (p) => `${p.data?.serie}-${String(p.data?.numero).padStart(8, '0')}`,
+      width: 140,
+    },
+    {
+      colId: 'fecha',
+      headerName: 'Fecha',
+      field: 'fecha',
+      valueFormatter: (p) => p.value ? dayjs(p.value).format('DD/MM/YYYY') : '-',
+      width: 110,
+    },
+    {
+      colId: 'cliente',
+      headerName: 'Cliente',
+      valueGetter: (p) => {
+        const c = p.data?.cliente
+        if (!c) return '-'
+        return c.razon_social || `${c.nombres} ${c.apellidos}`.trim()
+      },
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      colId: 'total',
+      headerName: 'Total',
+      field: 'total',
+      valueFormatter: (p) => `S/. ${Number(p.value).toFixed(2)}`,
+      width: 110,
+      type: 'numericColumn',
+    },
+    {
+      colId: 'ganancia',
+      headerName: 'Ganancia',
+      field: 'ganancia',
+      valueFormatter: (p) => `S/. ${Number(p.value).toFixed(2)}`,
+      width: 110,
+      type: 'numericColumn',
+      cellStyle: (p) => ({ color: Number(p.value) >= 0 ? '#7c3aed' : '#dc2626', fontWeight: 'bold' }),
+    },
+  ], [])
+
+  const fechaDesde = rango[0].format('YYYY-MM-DD')
+  const fechaHasta = rango[1].format('YYYY-MM-DD')
 
   const { data, isLoading } = useQuery({
     queryKey: ['recomendaciones-cliente', cliente?.id, fechaDesde, fechaHasta],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (fechaDesde) params.set('fecha_desde', fechaDesde)
-      if (fechaHasta) params.set('fecha_hasta', fechaHasta)
-      const qs = params.toString()
-      const res = await apiRequest<{ data: { total_ventas: number; monto_total: number; ganancia_total: number; ventas: any[] } }>(
-        `/clientes/${cliente!.id}/recomendaciones${qs ? `?${qs}` : ''}`
+      const res = await apiRequest<{ data: { total_ventas: number; monto_total: number; ganancia_total: number; ventas: VentaRec[] } }>(
+        `/clientes/${cliente!.id}/recomendaciones?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`
       )
       return res.data?.data
     },
@@ -39,21 +93,15 @@ export default function ModalRecomendacionesCliente({ open, onClose, cliente }: 
   const nombre = cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim()
 
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      title={`Ventas recomendadas por: ${nombre}`}
-      width={820}
-      centered
-    >
+    <Modal open={open} onCancel={onClose} footer={null} title={`Ventas recomendadas por: ${nombre}`} width={860} centered destroyOnHidden={false}>
       {/* Filtro por fecha */}
       <div className='mb-4 flex items-center gap-3'>
-        <span className='text-sm text-gray-600'>Filtrar por fecha:</span>
+        <span className='text-sm text-gray-600'>Período:</span>
         <RangePicker
+          value={rango}
           format='DD/MM/YYYY'
-          onChange={(v) => setRango(v as [Dayjs | null, Dayjs | null] | null)}
-          allowClear
+          onChange={(v) => { if (v?.[0] && v?.[1]) setRango([v[0], v[1]]) }}
+          allowClear={false}
           size='small'
         />
       </div>
@@ -74,50 +122,18 @@ export default function ModalRecomendacionesCliente({ open, onClose, cliente }: 
         </div>
       </div>
 
-      <Table
-        loading={isLoading}
-        dataSource={data?.ventas ?? []}
-        rowKey='id'
-        size='small'
-        pagination={{ pageSize: 10 }}
-        columns={[
-          {
-            title: 'Comprobante',
-            render: (_, r) => `${r.serie}-${String(r.numero).padStart(8, '0')}`,
-            width: 130,
-          },
-          {
-            title: 'Fecha',
-            dataIndex: 'fecha',
-            render: (v) => dayjs(v).format('DD/MM/YYYY'),
-            width: 100,
-          },
-          {
-            title: 'Cliente',
-            render: (_, r) => r.cliente
-              ? r.cliente.razon_social || `${r.cliente.nombres} ${r.cliente.apellidos}`.trim()
-              : '-',
-          },
-          {
-            title: 'Total',
-            dataIndex: 'total',
-            render: (v, r) => (
-              <Tag color='green'>{r.tipo_moneda === 's' ? 'S/.' : '$.'} {Number(v).toFixed(2)}</Tag>
-            ),
-            width: 110,
-            align: 'right',
-          },
-          {
-            title: 'Ganancia',
-            dataIndex: 'ganancia',
-            render: (v) => (
-              <Tag color={Number(v) >= 0 ? 'purple' : 'red'}>S/. {Number(v).toFixed(2)}</Tag>
-            ),
-            width: 110,
-            align: 'right',
-          },
-        ]}
-      />
+      <div className='h-[320px]'>
+        <TableWithTitle<VentaRec>
+          id='recomendaciones-cliente-modal'
+          title='Ventas'
+          loading={isLoading}
+          columnDefs={columns}
+          rowData={data?.ventas ?? []}
+          isVisible={open}
+          selectionColor='#7c3aed22'
+          persistColumnState={false}
+        />
+      </div>
     </Modal>
   )
 }
