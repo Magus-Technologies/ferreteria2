@@ -132,6 +132,14 @@ export default function TableMisGanancias() {
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
     },
     {
+      headerName: 'P.COSTO',
+      field: 'costo',
+      width: 80,
+      type: 'numericColumn',
+      valueFormatter: (p) => p.value?.toFixed(4) || '0.0000',
+      cellStyle: { color: '#7c3aed', fontWeight: 'bold' } as CellStyle,
+    },
+    {
       headerName: 'SUBTOT',
       field: 'subtot',
       width: 90,

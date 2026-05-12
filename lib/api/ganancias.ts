@@ -19,7 +19,7 @@ export interface GananciaDetalle {
   cant: number;
   p_unit: number;
   subtot: number;
-  costo_unit: number;
+  costo: number;
   costo_total: number;
   ganancia: number;
   cc: string;
