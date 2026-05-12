@@ -491,50 +491,76 @@ function ModalDetallesEntregaInner({
   }
 
   // Inicializar slotDomicilio desde valores del form cuando viene de una entrega existente
+  // Usa entregaId como dependencia para asegurar que modal-entrega-update ya settó valores
   useEffect(() => {
     if (!open) return
     // Solo en modo actualizar/resto donde ya hay fecha/hora guardadas
     if (resolvedMode.kind !== 'actualizar-entrega' && resolvedMode.kind !== 'crear-entrega-resto') return
     
+    // En modo actualizar, esperar a que entregaId esté disponible (modal-entrega-update settó valores)
+    // En modo crear-venta, no necesitamos esperar ya que el form empieza vacío
+    if (resolvedMode.kind === 'actualizar-entrega' && resolvedMode.entregaId) {
+      // Esperar un tick para que el form se actualice después de setFieldsValue
+      const timer = setTimeout(() => {
+        const fecha = form.getFieldValue('fecha_programada')
+        const horaInicio = form.getFieldValue('hora_inicio')
+        const horaFin = form.getFieldValue('hora_fin')
+        
+        if (fecha && horaInicio && horaFin) {
+          const fechaStr = dayjs(fecha).format('YYYY-MM-DD')
+          const startDate = dayjs(`${fechaStr} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
+          const endDate = dayjs(`${fechaStr} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
+          setSlotDomicilio({ start: startDate, end: endDate })
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+    
+    // Para crear-venta o crear-entrega-resto, usar lógica simple
     const fecha = form.getFieldValue('fecha_programada')
     const horaInicio = form.getFieldValue('hora_inicio')
     const horaFin = form.getFieldValue('hora_fin')
     
     if (fecha && horaInicio && horaFin) {
-      // Reconstruir el slot desde los valores guardados
       const fechaStr = dayjs(fecha).format('YYYY-MM-DD')
       const startDate = dayjs(`${fechaStr} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
       const endDate = dayjs(`${fechaStr} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
       setSlotDomicilio({ start: startDate, end: endDate })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, resolvedMode.kind])
+  }, [open, resolvedMode.kind, resolvedMode.kind === 'actualizar-entrega' ? resolvedMode.entregaId : null])
 
   // Inicializar vehiculoPreseleccionadoDomicilio si hay vehiculo_id guardado
+  // Usa timeout para asegurar que el form ya se actualizó después de setFieldsValue
   useEffect(() => {
     if (!open) return
     if (resolvedMode.kind !== 'actualizar-entrega' && resolvedMode.kind !== 'crear-entrega-resto') return
     
-    const vehiculoIdValue = form.getFieldValue('vehiculo_id')
-    if (vehiculoIdValue && !vehiculoPreseleccionadoDomicilio) {
-      // Cargar datos del vehículo para mostrar el badge
-      vehiculosApi.getById(vehiculoIdValue).then((response) => {
-        if (response.data) {
-          const vehiculoData = response.data
-          setVehiculoPreseleccionadoDomicilio({
-            id: vehiculoData.id,
-            name: vehiculoData.name,
-            tipo: vehiculoData.tipo,
-            placa: vehiculoData.placa || null,
-          })
-        }
-      }).catch(console.error)
-    } else if (!vehiculoIdValue) {
-      // Limpiar si no hay vehículo seleccionado
-      setVehiculoPreseleccionadoDomicilio(null)
-    }
+    // Esperar a que modal-entrega-update termine de setters valores
+    const timer = setTimeout(() => {
+      const vehiculoIdValue = form.getFieldValue('vehiculo_id')
+      if (vehiculoIdValue && !vehiculoPreseleccionadoDomicilio) {
+        vehiculosApi.getById(vehiculoIdValue).then((response) => {
+          // vehiculosApi.getById retorna ApiResponse<Vehiculo> directo
+          // response.data = Vehiculo (no anidado como en usuariosApi)
+          if (response.data) {
+            const vehiculoData = response.data
+            setVehiculoPreseleccionadoDomicilio({
+              id: vehiculoData.id,
+              name: vehiculoData.name,
+              tipo: vehiculoData.tipo,
+              placa: vehiculoData.placa || null,
+            })
+          }
+        }).catch(console.error)
+      } else if (!vehiculoIdValue) {
+        setVehiculoPreseleccionadoDomicilio(null)
+      }
+    }, 150)
+    
+    return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, resolvedMode.kind])
+  }, [open, resolvedMode.kind, form])
 
   // `ubicacionGps` (dirección obtenida por reverse geocoding) vive ahora en
   // el Provider — se consume arriba con el resto del bloque DOMICILIO.
@@ -609,10 +635,32 @@ function ModalDetallesEntregaInner({
   const {
     domicilioInvalido,
     restoInvalido,
+    despachadorId,
+    restoDespachadorId,
     vehiculoId,
     restoVehiculoId,
     restoDireccionEntrega,
   } = useValidaciones({ tipoDespacho, form, totalAProgramar })
+
+  // Sincronizar despachadorId (del SelectDespachadores) con el form
+  // para que los guards de "ya tiene" funcionen correctamente
+  // Solo sincroniza si el valor del form está vacío y despachadorId tiene valor
+  // (evita loop circular con modal-entrega-update que ya seteó el valor)
+  useEffect(() => {
+    const formValue = form.getFieldValue('despachador_id')
+    if (despachadorId && !formValue) {
+      form.setFieldValue('despachador_id', String(despachadorId))
+    }
+  }, [despachadorId, form])
+
+  // Sincronizar restoDespachadorId con el form
+  // Solo sincroniza si el valor del form está vacío
+  useEffect(() => {
+    const formValue = form.getFieldValue('_resto_despachador_id')
+    if (restoDespachadorId && !formValue) {
+      form.setFieldValue('_resto_despachador_id', String(restoDespachadorId))
+    }
+  }, [restoDespachadorId, form])
 
   const getTipoDespachoLabel = () => {
     switch (tipoDespacho) {

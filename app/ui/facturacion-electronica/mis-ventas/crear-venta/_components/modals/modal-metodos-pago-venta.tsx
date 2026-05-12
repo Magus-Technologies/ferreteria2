@@ -57,11 +57,11 @@ export default function ModalMetodosPagoVenta({
   const [despliegueName, setDespliegueName] = useState<string>('')
   const [sobrecargo, setSobrecargo] = useState<{ tipo: string; valor: number; monto: number }>({ tipo: 'ninguno', valor: 0, monto: 0 })
 
-  // Notificar al componente padre cuando cambia el surcharge total
+  // Notificar al componente padre cuando cambia el surcharge (del método actual o de la lista)
   useEffect(() => {
-    const totalSurcharge = metodosPago.reduce((sum, m) => sum + (m.sobrecargo?.monto || 0), 0)
+    const totalSurcharge = metodosPago.reduce((sum, m) => sum + (m.sobrecargo?.monto || 0), 0) + sobrecargo.monto
     onSurchargeChange(totalSurcharge)
-  }, [metodosPago, onSurchargeChange])
+  }, [metodosPago, sobrecargo, onSurchargeChange])
 
   // Cargar depliegues de pago para obtener el ID de CCH/Efectivo
   const { data: desplieguesPago, isFetched } = useQuery({

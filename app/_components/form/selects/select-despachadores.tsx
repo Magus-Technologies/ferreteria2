@@ -77,6 +77,31 @@ export default function SelectDespachadores({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [despachadores])
 
+  // Inicializar desde el form si ya tiene un valor (precarga desde mis-entregas)
+  // Usa timeout para asegurar que el form ya se actualizó después de setFieldsValue
+  useEffect(() => {
+    if (form && propsForm?.name) {
+      const value = form.getFieldValue(propsForm.name)
+      if (value && typeof value === 'string' && value.length > 0) {
+        // Solo buscar si no hay despachador seleccionado o si el valor cambió
+        if (!despachadorSeleccionado || despachadorSeleccionado.id !== value) {
+          usuariosApi.getById(value).then((response) => {
+            // response.data = { data: Usuario, message: string } según ApiResponse
+            if (response.data?.data) {
+              setDespachadorSeleccionado(response.data.data as Usuario)
+            }
+          }).catch(() => {
+            // Si no se encuentra, solo guardar el ID en el form
+          })
+        }
+      } else if (!value && despachadorSeleccionado) {
+        // Si el form se limpió, limpiar también la selección
+        setDespachadorSeleccionado(undefined)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, propsForm?.name])
+
   function handleSelect(despachador?: Usuario) {
     if (despachador) {
       setDespachadorSeleccionado(despachador)
