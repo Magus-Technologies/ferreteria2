@@ -200,14 +200,13 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
 
   const detalleFiltrado = useMemo(() => {
     if (!selectedResumen) return filteredData
-    // Filtrar por cod_producto, nombre, almacen y unidad para ser más específico
-    // y evitar mostrar productos con nombres similares pero códigos diferentes
-    return filteredData.filter((item: ProductoVencimientoRow) =>
-      (item.cod_producto || '') === (selectedResumen.cod_producto || '') &&
-      item.name === selectedResumen.name &&
-      item.almacen === selectedResumen.almacen &&
-      (item.unidad || '') === (selectedResumen.unidad || '')
-    )
+    const normalizedSelectedName = selectedResumen.name?.trim().replace(/\s+/g, ' ') || ''
+    return filteredData.filter((item: ProductoVencimientoRow) => {
+      const normalizedItemName = item.name?.trim().replace(/\s+/g, ' ') || ''
+      return (item.cod_producto || '') === (selectedResumen.cod_producto || '') &&
+        normalizedItemName === normalizedSelectedName &&
+        item.almacen === selectedResumen.almacen
+    })
   }, [filteredData, selectedResumen])
 
   const getTitle = () => {
