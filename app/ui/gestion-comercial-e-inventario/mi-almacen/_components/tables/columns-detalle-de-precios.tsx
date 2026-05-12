@@ -25,6 +25,11 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
     costo_actual?: Decimal | null
     stock_costo_actual?: Decimal
   }
+  compras?: Array<{
+    costo: Decimal
+    compra: any
+    unidades_derivadas: any[]
+  }>
 }
 
 export function useColumnsDetalleDePrecios() {
@@ -118,6 +123,37 @@ export function useColumnsDetalleDePrecios() {
               S/. {Number(costoActual).toFixed(4)} ({stockActual})
             </span>
           </div>
+        )
+      },
+      width: 180,
+    },
+    {
+      colId: 'costo_referencial',
+      headerName: 'Costo Referencial',
+      minWidth: 160,
+      cellRenderer: ({ data }: any) => {
+        const compras = data?.compras ?? []
+        
+        // Obtener el costo referencial: segunda compra si hay 2+, primera si hay 1
+        let costoReferencial = null
+        if (compras.length >= 2) {
+          costoReferencial = compras[1]?.costo
+        } else if (compras.length === 1) {
+          costoReferencial = compras[0]?.costo
+        }
+        
+        if (!costoReferencial) {
+          return <span className='text-gray-400'>-</span>
+        }
+
+        return (
+          <Tooltip title={`Costo de la segunda compra más reciente. Se mantiene fijo hasta que su stock se agote (PEPS)`}>
+            <div title={`Costo: S/. ${Number(costoReferencial).toFixed(4)}`}>
+              <span className='text-sm font-semibold text-blue-600'>
+                S/. {Number(costoReferencial).toFixed(4)}
+              </span>
+            </div>
+          </Tooltip>
         )
       },
       width: 180,

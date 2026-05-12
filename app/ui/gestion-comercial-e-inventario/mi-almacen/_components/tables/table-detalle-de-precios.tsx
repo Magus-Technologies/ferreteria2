@@ -77,6 +77,7 @@ export default function TableDetalleDePrecios() {
             costo_actual: producto_en_almacen?.costo_actual,
             stock_costo_actual: producto_en_almacen?.stock_costo_actual,
           },
+          compras: producto_en_almacen?.compras,
         }))
       : productos_completos?.flatMap(producto_seleccionado_aux =>
           producto_seleccionado_aux?.producto_en_almacenes?.flatMap(
@@ -94,6 +95,7 @@ export default function TableDetalleDePrecios() {
                   costo_actual: producto_en_almacen_aux?.costo_actual,
                   stock_costo_actual: producto_en_almacen_aux?.stock_costo_actual,
                 },
+                compras: producto_en_almacen_aux?.compras,
               }))
           )
         )
