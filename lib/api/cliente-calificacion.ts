@@ -65,7 +65,7 @@ export const clienteCalificacionApi = {
    * Actualizar calificación
    */
   update: async (calificacionId: number, data: UpdateClienteCalificacionRequest): Promise<ApiResponse<{ data: ClienteCalificacion; message: string }>> => {
-    return apiRequest<{ data: ClienteCalificacion; message: string }>(`/calificaciones/${calificacionId}`, {
+    return apiRequest<{ data: ClienteCalificacion; message: string }>(`/calificaciones-cliente/${calificacionId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -75,7 +75,7 @@ export const clienteCalificacionApi = {
    * Eliminar calificación
    */
   delete: async (calificacionId: number): Promise<ApiResponse<{ message: string }>> => {
-    return apiRequest<{ message: string }>(`/calificaciones/${calificacionId}`, {
+    return apiRequest<{ message: string }>(`/calificaciones-cliente/${calificacionId}`, {
       method: 'DELETE',
     });
   },
@@ -84,6 +84,6 @@ export const clienteCalificacionApi = {
    * Obtener estados disponibles
    */
   getEstados: async (): Promise<ApiResponse<{ data: EstadoOption[] }>> => {
-    return apiRequest<{ data: EstadoOption[] }>('/calificaciones/estados');
+    return apiRequest<{ data: EstadoOption[] }>('/calificaciones-cliente/estados');
   },
 };

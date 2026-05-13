@@ -38,6 +38,22 @@ export default function TableMisProveedores() {
   const { data: response, isFetching, refetch } = useQuery({
     queryKey: [QueryKeys.PROVEEDORES, filtros],
     queryFn: async () => {
+      // Si se selecciona ordenar por compras, usar el endpoint especial
+      if (filtros.ordenar_por === 'compras') {
+        const result = await proveedorApi.getProveedoresOrdenadosPorCompras({
+          search: filtros.search || undefined,
+          estado: filtros.estado,
+          per_page: 100,
+        })
+
+        if (result.error) {
+          throw new Error(result.error.message)
+        }
+
+        return result.data?.data || []
+      }
+
+      // Si no, usar el endpoint normal
       const result = await proveedorApi.getAll({
         search: filtros.search || undefined,
         estado: filtros.estado,
@@ -126,19 +142,26 @@ export default function TableMisProveedores() {
 
   // Hook para obtener calificaciones de todos los proveedores
   const { data: calificacionesMap } = useQuery({
-    queryKey: [QueryKeys.PROVEEDORES, 'calificaciones'],
+    queryKey: [QueryKeys.PROVEEDORES, 'calificaciones', proveedores?.map(p => p.id).join(',')],
     queryFn: async () => {
       if (!proveedores || proveedores.length === 0) return {}
       
       const calificacionesData: Record<number, any> = {}
       
-      for (const proveedor of proveedores) {
-        const result = await proveedorCalificacionApi.getUltima(proveedor.id)
-        if (result.data?.data) {
-          calificacionesData[proveedor.id] = result.data.data
-        }
-      }
+      // Obtener todas las calificaciones en paralelo
+      const promises = proveedores.map(proveedor =>
+        proveedorCalificacionApi.getUltima(proveedor.id)
+          .then(result => {
+            if (result.data?.data) {
+              calificacionesData[proveedor.id] = result.data.data
+            }
+          })
+          .catch(() => {
+            // Ignorar errores individuales
+          })
+      )
       
+      await Promise.all(promises)
       return calificacionesData
     },
     enabled: !!proveedores && proveedores.length > 0,
@@ -173,7 +196,7 @@ export default function TableMisProveedores() {
         return 'green'
       case 'regular':
         return 'orange'
-      case 'malo':
+      case 'problematico':
         return 'red'
       default:
         return 'default'
@@ -188,8 +211,8 @@ export default function TableMisProveedores() {
         return 'Bueno'
       case 'regular':
         return 'Regular'
-      case 'malo':
-        return 'Malo'
+      case 'problematico':
+        return 'Problemático'
       default:
         return 'Sin calificar'
     }
