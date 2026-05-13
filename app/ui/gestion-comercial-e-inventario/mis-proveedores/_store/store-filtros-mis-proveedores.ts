@@ -4,6 +4,7 @@ export interface ProveedorFilters {
   search?: string
   estado?: boolean
   calificacion?: string
+  ordenar_por?: 'compras' // solo se envía si está activado
 }
 
 interface StoreFiltrosMisProveedores {

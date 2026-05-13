@@ -1,6 +1,6 @@
 'use client'
 
-import { Form } from 'antd'
+import { Form, Switch } from 'antd'
 import { FaSearch, FaTruck, FaPlus } from 'react-icons/fa'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -17,6 +17,7 @@ interface ValuesFiltersMisProveedores {
   search?: string
   estado?: string
   calificacion?: string
+  ordenar_por?: boolean
 }
 
 export default function FiltersMisProveedores() {
@@ -30,6 +31,7 @@ export default function FiltersMisProveedores() {
     if (values.search) data.search = values.search
     if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true'
     if (values.calificacion !== undefined && values.calificacion !== '') data.calificacion = values.calificacion
+    if (values.ordenar_por) data.ordenar_por = 'compras'
     setFiltros(data)
     queryClient.invalidateQueries({ queryKey: [QueryKeys.PROVEEDORES] })
   }
@@ -85,8 +87,16 @@ export default function FiltersMisProveedores() {
               />
             </div>
 
+            {/* Switch Más Compras */}
+            <div className="col-span-2 flex items-center gap-2">
+              <Form.Item name="ordenar_por" valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+              <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Más compras</label>
+            </div>
+
             {/* Buscar + Crear */}
-            <div className="col-span-5 flex items-center gap-2 justify-end">
+            <div className="col-span-3 flex items-center gap-2 justify-end">
               <ButtonBase color="info" size="md" type="submit" className="flex items-center gap-2 justify-center h-10">
                 <FaSearch />
                 Buscar

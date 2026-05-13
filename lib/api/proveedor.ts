@@ -177,4 +177,24 @@ export const proveedorApi = {
   getProveedoresConCompras: async (): Promise<ApiResponse<{ data: number[] }>> => {
     return apiRequest<{ data: number[] }>('/proveedores/con-compras/ids');
   },
+
+  /**
+   * Obtener proveedores ordenados por cantidad de compras
+   */
+  getProveedoresOrdenadosPorCompras: async (filters?: ProveedorFilters): Promise<ApiResponse<ProveedoresListResponse>> => {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/proveedores/ordenar-por-compras?${queryString}` : '/proveedores/ordenar-por-compras';
+
+    return apiRequest<ProveedoresListResponse>(url);
+  },
 };
