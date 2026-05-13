@@ -3,7 +3,7 @@ import { create } from 'zustand'
 export interface ProveedorFilters {
   search?: string
   estado?: boolean
-  calificacion?: string
+  calificacion?: string // 'excelente' | 'bueno' | 'regular' | 'malo'
   ordenar_por?: 'compras' // solo se envía si está activado
 }
 

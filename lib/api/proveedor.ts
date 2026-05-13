@@ -28,6 +28,17 @@ export interface Chofer {
   proveedor_id: number;
 }
 
+export interface ProveedorCalificacion {
+  id: number;
+  proveedor_id: number;
+  estado: string; // 'excelente' | 'bueno' | 'regular' | 'problematico'
+  razon: string | null;
+  observacion: string | null;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Proveedor {
   id: number;
   razon_social: string;
@@ -39,6 +50,7 @@ export interface Proveedor {
   vendedores?: Vendedor[];
   carros?: Carro[];
   choferes?: Chofer[];
+  ultimaCalificacion?: ProveedorCalificacion | null;
 }
 
 // ============= REQUEST TYPES =============
@@ -80,6 +92,7 @@ export interface UpdateProveedorRequest extends Partial<CreateProveedorRequest> 
 export interface ProveedorFilters {
   search?: string;
   estado?: boolean | string;
+  calificacion?: string;
   per_page?: number;
   page?: number;
 }

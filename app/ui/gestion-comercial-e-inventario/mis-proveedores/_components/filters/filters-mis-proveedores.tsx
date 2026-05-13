@@ -29,8 +29,12 @@ export default function FiltersMisProveedores() {
   const handleFinish = (values: ValuesFiltersMisProveedores) => {
     const data: any = {}
     if (values.search) data.search = values.search
-    if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true'
-    if (values.calificacion !== undefined && values.calificacion !== '') data.calificacion = values.calificacion
+    if (values.estado !== undefined && values.estado !== '') {
+      data.estado = values.estado === 'true' ? true : false
+    }
+    if (values.calificacion !== undefined && values.calificacion !== '') {
+      data.calificacion = values.calificacion
+    }
     if (values.ordenar_por) data.ordenar_por = 'compras'
     setFiltros(data)
     queryClient.invalidateQueries({ queryKey: [QueryKeys.PROVEEDORES] })
@@ -82,7 +86,7 @@ export default function FiltersMisProveedores() {
                   { value: 'excelente', label: 'Excelente' },
                   { value: 'bueno', label: 'Bueno' },
                   { value: 'regular', label: 'Regular' },
-                  { value: 'malo', label: 'Malo' },
+                  { value: 'problematico', label: 'Problemático' },
                 ]}
               />
             </div>
