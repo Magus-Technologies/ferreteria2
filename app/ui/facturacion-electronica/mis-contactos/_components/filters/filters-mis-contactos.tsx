@@ -33,8 +33,15 @@ export default function FiltersMisContactos() {
     const data: any = {};
     if (values.search) data.search = values.search;
     if (values.tipo_cliente) data.tipo_cliente = values.tipo_cliente;
+<<<<<<< HEAD
     if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true';
     if (values.calificacion !== undefined && values.calificacion !== '') data.calificacion = values.calificacion;
+=======
+    // Enviar siempre estado (undefined limpia el filtro en el store)
+    data.estado = (values.estado !== undefined && values.estado !== null && values.estado !== '')
+      ? values.estado === 'true' || values.estado === true
+      : undefined;
+>>>>>>> 21a73bdb0cf4f5d7c872979ea05721881927759b
     data.con_recomendaciones = values.con_recomendaciones || undefined;
     data.ordenar_por_frecuencia = values.ordenar_por_frecuencia || undefined;
     setFiltros(data);

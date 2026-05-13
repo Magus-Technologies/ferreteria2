@@ -4,6 +4,7 @@ import { TipoCliente } from "~/lib/api/cliente";
 interface FiltrosMisContactos {
   search?: string;
   tipo_cliente?: TipoCliente;
+  estado?: boolean;
   con_recomendaciones?: boolean;
   calificacion?: string;
   ordenar_por_frecuencia?: boolean;
