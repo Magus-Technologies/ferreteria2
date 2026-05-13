@@ -47,7 +47,7 @@ export default function FiltersMisProveedores() {
             <div className="col-span-3 flex items-center gap-1">
               <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Buscar:</label>
               <InputBase
-                propsForm={{ name: 'search', hasFeedback: false, className: '!w-full' }}
+                propsForm={{ name: 'search', hasFeedback: false, className: '!w-full !h-8' }}
                 placeholder="RUC, Razón Social, Teléfono..."
                 formWithMessage={false}
               />
@@ -96,18 +96,18 @@ export default function FiltersMisProveedores() {
             </div>
 
             {/* Buscar + Crear */}
-            <div className="col-span-3 flex items-center gap-2 justify-end">
-              <ButtonBase color="info" size="md" type="submit" className="flex items-center gap-2 justify-center h-10">
-                <FaSearch />
+            <div className="col-span-3 flex items-center gap-1 justify-end">
+              <ButtonBase color="info" size="sm" type="submit" className="flex items-center gap-1 justify-center h-8 px-2 text-sm">
+                <FaSearch size={12} />
                 Buscar
               </ButtonBase>
               <button 
                 type="button"
                 onClick={() => setModalOpen(true)}
-                className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-colors flex-shrink-0"
                 title="Crear nuevo proveedor"
               >
-                <FaPlus size={12} />
+                <FaPlus size={10} />
               </button>
             </div>
           </div>
