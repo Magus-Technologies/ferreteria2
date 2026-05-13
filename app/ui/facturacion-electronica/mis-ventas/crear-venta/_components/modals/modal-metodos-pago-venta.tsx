@@ -2,7 +2,7 @@
 
 import { TipoMoneda, EstadoDeVenta } from '~/lib/api/venta'
 import { Form, FormInstance, Modal, Select, message } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
 import { FaSave, FaPlus, FaTrash } from 'react-icons/fa'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
@@ -56,6 +56,7 @@ export default function ModalMetodosPagoVenta({
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<any>(null)
   const [selectedDespliegueValue, setSelectedDespliegueValue] = useState<string | null>(null)
   const [sobrecargo, setSobrecargo] = useState<{ tipo: string; valor: number; monto: number }>({ tipo: 'ninguno', valor: 0, monto: 0 })
+  const wasOpenRef = useRef(false)
 
   // Notificar al componente padre cuando cambia el surcharge o metodosPago
   useEffect(() => {
@@ -130,9 +131,12 @@ export default function ModalMetodosPagoVenta({
     return Math.max(0, (Number(recibe_efectivo) || 0) - saldoPendiente)
   }, [isEfectivo, recibe_efectivo, saldoPendiente])
 
-  // Resetear formulario al abrir el modal
+  // Resetear formulario SOLO al abrir el modal (transición false → true).
+  // No incluir totalCobrado como disparador: cuando el usuario selecciona un
+  // método con sobrecargo, el padre recalcula totalCobrado y este efecto se
+  // dispararía reseteando la selección de vuelta a efectivo.
   useEffect(() => {
-    if (open) {
+    if (open && !wasOpenRef.current) {
       modalForm.resetFields()
       setMetodosPago([])
       setMetodoPagoSeleccionado(null)
@@ -141,6 +145,7 @@ export default function ModalMetodosPagoVenta({
       modalForm.setFieldValue('monto', roundMoney(totalCobrado))
       modalForm.setFieldValue('recibe_efectivo', roundMoney(totalCobrado))
     }
+    wasOpenRef.current = open
   }, [open, modalForm, totalCobrado])
 
   // Cuando ya tenemos los datos de la API, setear Efectivo por defecto SOLO si no hay selección
