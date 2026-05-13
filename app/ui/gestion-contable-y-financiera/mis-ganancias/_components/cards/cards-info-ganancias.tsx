@@ -89,7 +89,7 @@ export default function CardsInfoGanancias() {
       </div>
 
       {/* Costo */}
-      <div className='bg-white border border-slate-200 rounded-lg p-3'>
+      <div className='bg-white border border-slate-200 rounded-lg p-2'>
         <div className='flex items-center justify-center gap-1 mb-0.5'>
           <GiPayMoney className='text-orange-600' size={12} />
           <div className='text-[11px] text-slate-600 font-medium'>Costo</div>
