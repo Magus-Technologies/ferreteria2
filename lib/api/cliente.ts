@@ -158,6 +158,9 @@ export interface ClienteFilters {
   profesion_id?: number;
   tipo_cliente?: TipoCliente;
   estado?: boolean;
+  con_recomendaciones?: boolean;
+  calificacion?: string;
+  ordenar_por_frecuencia?: boolean;
   per_page?: number;
   page?: number;
 }
