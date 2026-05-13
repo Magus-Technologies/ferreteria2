@@ -206,7 +206,9 @@ export default function TableProductoSearch({
     if (tableGridRef.current?.api) {
       tableGridRef.current.api.setGridOption('quickFilterText', '');
     }
-    refetch().then(() => {
+    
+    // Usar refetch con opciones para no resetear los datos mientras se carga
+    refetch({ throwOnError: false }).then(() => {
       if (tableGridRef.current?.api) {
         tableGridRef.current.api.setGridOption('quickFilterText', quickFilterValue || '');
       }
