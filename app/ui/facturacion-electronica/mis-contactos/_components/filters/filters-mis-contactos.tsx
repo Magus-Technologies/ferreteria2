@@ -11,12 +11,14 @@ import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
+import SelectBase from "~/app/_components/form/selects/select-base";
 import SelectTipoCliente from "~/app/_components/form/selects/select-tipo-cliente";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
 interface ValuesFiltersMisContactos {
   search?: string;
   tipo_cliente?: TipoCliente;
+  estado?: string;
   con_recomendaciones?: boolean;
 }
 
@@ -29,28 +31,20 @@ export default function FiltersMisContactos() {
     const data: any = {};
     if (values.search) data.search = values.search;
     if (values.tipo_cliente) data.tipo_cliente = values.tipo_cliente;
-    // Siempre enviar el valor del switch (true o undefined para limpiar)
+    if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true';
     data.con_recomendaciones = values.con_recomendaciones || undefined;
     setFiltros(data);
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] });
   };
 
   return (
-    <FormBase
-      form={form}
-      name="filtros-mis-contactos"
-      className="w-full"
-      onFinish={handleFinish}
-    >
-      <TituloModulos
-        title="Mis Clientes"
-        icon={<IoMdContact className="text-cyan-600" />}
-      />
+    <FormBase form={form} name="filtros-mis-contactos" className="w-full" onFinish={handleFinish}>
+      <TituloModulos title="Mis Clientes" icon={<IoMdContact className="text-cyan-600" />} />
 
       <div className="mt-4">
         <div className="grid grid-cols-12 gap-x-2 gap-y-2 items-center">
           {/* Buscar */}
-          <div className="col-span-5 flex items-center gap-1">
+          <div className="col-span-4 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Buscar:</label>
             <InputBase
               propsForm={{ name: "search", hasFeedback: false, className: "!w-full" }}
@@ -58,9 +52,6 @@ export default function FiltersMisContactos() {
               formWithMessage={false}
             />
           </div>
-              <ButtonCreateCliente
-              onSuccess={() => queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] })}
-            />
 
           {/* Tipo */}
           <div className="col-span-1 flex items-center gap-1">
@@ -74,6 +65,22 @@ export default function FiltersMisContactos() {
             />
           </div>
 
+          {/* Estado */}
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Estado:</label>
+            <SelectBase
+              propsForm={{ name: "estado", hasFeedback: false, className: "!w-full" }}
+              className="w-full"
+              formWithMessage={false}
+              allowClear
+              placeholder="Todos"
+              options={[
+                { value: "true", label: "Activo" },
+                { value: "false", label: "Inactivo" },
+              ]}
+            />
+          </div>
+
           {/* Con recomendaciones */}
           <div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Con recomendaciones:</label>
@@ -84,16 +91,13 @@ export default function FiltersMisContactos() {
 
           {/* Buscar + Crear */}
           <div className="col-span-2 flex items-center gap-2">
-            <ButtonBase
-              color="info"
-              size="md"
-              type="submit"
-              className="flex items-center gap-2 justify-center h-10 flex-1"
-            >
+            <ButtonBase color="info" size="md" type="submit" className="flex items-center gap-2 justify-center h-10 flex-1">
               <FaSearch />
               Buscar
             </ButtonBase>
-        
+            <ButtonCreateCliente
+              onSuccess={() => queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] })}
+            />
           </div>
         </div>
       </div>

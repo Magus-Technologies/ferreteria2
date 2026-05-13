@@ -3,6 +3,7 @@ import InputConsultaRuc from "~/app/_components/form/inputs/input-consulta-ruc";
 import { ConsultaDni, ConsultaRuc } from "~/app/_types/consulta-ruc";
 import LabelBase from "~/components/form/label-base";
 import { MdEmail, MdFactory } from "react-icons/md";
+import SelectEstado from "~/app/_components/form/selects/select-estado";
 import { FormInstance, DatePicker } from "antd/lib";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import { FaMobileButton } from "react-icons/fa6";
@@ -251,6 +252,13 @@ export default function FormCreateCliente({
               }}
               placeholder="Email"
               uppercase={false}
+            />
+          </LabelBase>
+
+          <LabelBase label="Estado:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+            <SelectEstado
+              classNameIcon="text-rose-700 mx-1"
+              propsForm={{ name: "estado" }}
             />
           </LabelBase>
 
