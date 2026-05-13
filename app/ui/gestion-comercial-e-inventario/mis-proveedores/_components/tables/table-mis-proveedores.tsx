@@ -15,7 +15,6 @@ import { App } from 'antd'
 import ModalCreateProveedor from '../modals/modal-create-proveedor'
 import ModalCalificacionesProveedor from '../modals/modal-calificaciones-proveedor'
 import { greenColors } from '~/lib/colors'
-import { proveedorCalificacionApi } from '~/lib/api/proveedor-calificacion'
 
 export default function TableMisProveedores() {
   const { filtros } = useStoreFiltrosMisProveedores()
@@ -43,6 +42,7 @@ export default function TableMisProveedores() {
         const result = await proveedorApi.getProveedoresOrdenadosPorCompras({
           search: filtros.search || undefined,
           estado: filtros.estado,
+          calificacion: filtros.calificacion,
           per_page: 100,
         })
 
@@ -57,6 +57,7 @@ export default function TableMisProveedores() {
       const result = await proveedorApi.getAll({
         search: filtros.search || undefined,
         estado: filtros.estado,
+        calificacion: filtros.calificacion,
         per_page: 100,
       })
 
@@ -140,33 +141,6 @@ export default function TableMisProveedores() {
 
   const proveedores = Array.isArray(response) ? response : []
 
-  // Hook para obtener calificaciones de todos los proveedores
-  const { data: calificacionesMap } = useQuery({
-    queryKey: [QueryKeys.PROVEEDORES, 'calificaciones', proveedores?.map(p => p.id).join(',')],
-    queryFn: async () => {
-      if (!proveedores || proveedores.length === 0) return {}
-      
-      const calificacionesData: Record<number, any> = {}
-      
-      // Obtener todas las calificaciones en paralelo
-      const promises = proveedores.map(proveedor =>
-        proveedorCalificacionApi.getUltima(proveedor.id)
-          .then(result => {
-            if (result.data?.data) {
-              calificacionesData[proveedor.id] = result.data.data
-            }
-          })
-          .catch(() => {
-            // Ignorar errores individuales
-          })
-      )
-      
-      await Promise.all(promises)
-      return calificacionesData
-    },
-    enabled: !!proveedores && proveedores.length > 0,
-  })
-
   // Hook para obtener IDs de proveedores que tienen compras
   const { data: proveedoresConCompras } = useQuery({
     queryKey: [QueryKeys.PROVEEDORES, 'con-compras'],
@@ -179,44 +153,6 @@ export default function TableMisProveedores() {
       return new Set(result.data?.data || [])
     },
   })
-
-  // Filtrar proveedores por calificación si está seleccionada
-  const proveedoresFiltrados = filtros.calificacion
-    ? proveedores.filter((proveedor) => {
-        const calificacion = calificacionesMap?.[proveedor.id]
-        return calificacion?.estado === filtros.calificacion
-      })
-    : proveedores
-
-  const getCalificacionColor = (estado?: string) => {
-    switch (estado) {
-      case 'excelente':
-        return 'gold'
-      case 'bueno':
-        return 'green'
-      case 'regular':
-        return 'orange'
-      case 'problematico':
-        return 'red'
-      default:
-        return 'default'
-    }
-  }
-
-  const getCalificacionLabel = (estado?: string) => {
-    switch (estado) {
-      case 'excelente':
-        return 'Excelente'
-      case 'bueno':
-        return 'Bueno'
-      case 'regular':
-        return 'Regular'
-      case 'problematico':
-        return 'Problemático'
-      default:
-        return 'Sin calificar'
-    }
-  }
 
   const columnDefs: ColDef<Proveedor>[] = [
     {
@@ -253,43 +189,45 @@ export default function TableMisProveedores() {
     },
     {
       headerName: 'Calificación',
-      width: 130,
+      field: 'ultimaCalificacion.estado',
+      width: 120,
       cellRenderer: (params: any) => {
-        const proveedor = params.data as Proveedor
-        const calificacion = calificacionesMap?.[proveedor.id]
-        
-        if (!calificacion) {
-          return <Tag>Sin calificar</Tag>
+        const calificacion = params.data?.ultimaCalificacion?.estado
+        if (!calificacion) return <span className="text-gray-400">Sin calificar</span>
+
+        const colorMap: Record<string, string> = {
+          excelente: 'green',
+          bueno: 'blue',
+          regular: 'orange',
+          problematico: 'red',
+        }
+
+        const labelMap: Record<string, string> = {
+          excelente: 'Excelente',
+          bueno: 'Bueno',
+          regular: 'Regular',
+          problematico: 'Problemático',
         }
 
         return (
-          <Tooltip title={calificacion.observacion || 'Sin observaciones'}>
-            <Tag color={getCalificacionColor(calificacion.estado)}>
-              <div className="flex items-center gap-1">
-                <FaStar size={12} />
-                {getCalificacionLabel(calificacion.estado)}
-              </div>
-            </Tag>
-          </Tooltip>
+          <Tag color={colorMap[calificacion] || 'default'}>
+            {labelMap[calificacion] || calificacion}
+          </Tag>
         )
       },
     },
     {
       headerName: 'Observación',
-      width: 200,
+      field: 'ultimaCalificacion.observacion',
       flex: 1,
-      minWidth: 150,
+      minWidth: 200,
+      valueGetter: (params) => params.data?.ultimaCalificacion?.observacion || '-',
       cellRenderer: (params: any) => {
-        const proveedor = params.data as Proveedor
-        const calificacion = calificacionesMap?.[proveedor.id]
-        
-        if (!calificacion || !calificacion.observacion) {
-          return <span className="text-gray-400">-</span>
-        }
-
+        const observacion = params.data?.ultimaCalificacion?.observacion
+        if (!observacion) return <span className="text-gray-400">-</span>
         return (
-          <Tooltip title={calificacion.observacion}>
-            <span className="text-gray-700 truncate block">{calificacion.observacion}</span>
+          <Tooltip title={observacion}>
+            <span className="truncate block">{observacion}</span>
           </Tooltip>
         )
       },
@@ -387,7 +325,7 @@ export default function TableMisProveedores() {
         title="PROVEEDORES"
         loading={isFetching}
         columnDefs={columnDefs}
-        rowData={proveedoresFiltrados}
+        rowData={proveedores}
         tableRef={tableRef}
         domLayout="normal"
         selectionColor={greenColors[10]}
