@@ -1,9 +1,11 @@
 'use client'
 
 import { Modal, DatePicker } from 'antd'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
 import TableWithTitle from '~/components/tables/table-with-title'
+import ButtonBase from '~/components/buttons/button-base'
+import { FaSearch } from 'react-icons/fa'
 import dayjs, { type Dayjs } from 'dayjs'
 import { useState, useMemo } from 'react'
 import type { ColDef } from 'ag-grid-community'
@@ -32,6 +34,14 @@ type VentaRec = {
 export default function ModalRecomendacionesCliente({ open, onClose, cliente }: ModalRecomendacionesClienteProps) {
   const hoy = dayjs()
   const [rango, setRango] = useState<[Dayjs, Dayjs]>([hoy.startOf('day'), hoy.endOf('day')])
+  const [rangoAplicado, setRangoAplicado] = useState<[Dayjs, Dayjs]>([hoy.startOf('day'), hoy.endOf('day')])
+  const queryClient = useQueryClient()
+
+  const handleBuscar = () => {
+    setRangoAplicado(rango)
+    // Si el rango no cambió, refetch fuerza la petición igual
+    setTimeout(() => refetch(), 0)
+  }
 
   const columns = useMemo<ColDef<VentaRec>[]>(() => [
     {
@@ -86,10 +96,10 @@ export default function ModalRecomendacionesCliente({ open, onClose, cliente }: 
     },
   ], [])
 
-  const fechaDesde = rango[0].format('YYYY-MM-DD')
-  const fechaHasta = rango[1].format('YYYY-MM-DD')
+  const fechaDesde = rangoAplicado[0].format('YYYY-MM-DD')
+  const fechaHasta = rangoAplicado[1].format('YYYY-MM-DD')
 
-  const { data, isLoading } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: ['recomendaciones-cliente', cliente?.id, fechaDesde, fechaHasta],
     queryFn: async () => {
       const res = await apiRequest<{ data: { total_ventas: number; monto_total: number; ganancia_total: number; ventas: VentaRec[] } }>(
@@ -114,6 +124,16 @@ export default function ModalRecomendacionesCliente({ open, onClose, cliente }: 
           allowClear={false}
           size='small'
         />
+        <ButtonBase
+          color='info'
+          size='sm'
+          onClick={handleBuscar}
+          loading={isFetching}
+          className='flex items-center gap-2'
+        >
+          <FaSearch size={11} />
+          {isFetching ? 'Cargando...' : 'Buscar'}
+        </ButtonBase>
       </div>
 
       {/* Resumen */}
@@ -136,7 +156,7 @@ export default function ModalRecomendacionesCliente({ open, onClose, cliente }: 
         <TableWithTitle<VentaRec>
           id='recomendaciones-cliente-modal'
           title='Ventas'
-          loading={isLoading}
+          loading={isFetching}
           columnDefs={columns}
           rowData={data?.ventas ?? []}
           isVisible={open}

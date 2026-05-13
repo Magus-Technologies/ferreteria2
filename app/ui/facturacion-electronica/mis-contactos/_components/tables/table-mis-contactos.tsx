@@ -184,6 +184,12 @@ export default function TableMisContactos() {
       valueGetter: (params) => params.data?.telefono || "-",
     },
     {
+      headerName: "Profesión",
+      field: "profesion" as any,
+      width: 140,
+      valueGetter: (params) => (params.data as any)?.profesion?.nombre || "-",
+    },
+    {
       headerName: "Email",
       field: "email",
       flex: 1,

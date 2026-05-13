@@ -1,12 +1,9 @@
 import { create } from "zustand";
 import { TipoCliente } from "~/lib/api/cliente";
-import dayjs from "dayjs";
 
 interface FiltrosMisContactos {
   search?: string;
   tipo_cliente?: TipoCliente;
-  fecha_desde?: string;
-  fecha_hasta?: string;
   con_recomendaciones?: boolean;
   page?: number;
   per_page?: number;
@@ -18,13 +15,10 @@ interface StoreFiltrosMisContactos {
   limpiarFiltros: () => void;
 }
 
-const hoy = dayjs().format("YYYY-MM-DD");
-
 const filtrosIniciales: FiltrosMisContactos = {
   search: "",
   tipo_cliente: undefined,
-  fecha_desde: hoy,
-  fecha_hasta: hoy,
+  con_recomendaciones: undefined,
   page: 1,
   per_page: 50,
 };
@@ -32,12 +26,13 @@ const filtrosIniciales: FiltrosMisContactos = {
 export const useStoreFiltrosMisContactos = create<StoreFiltrosMisContactos>((set) => ({
   filtros: filtrosIniciales,
   setFiltros: (nuevosFiltros) =>
-    set((state) => ({
-      filtros: {
-        ...state.filtros,
-        ...nuevosFiltros,
-        page: nuevosFiltros.page !== undefined ? nuevosFiltros.page : 1,
-      },
-    })),
+    set((state) => {
+      const merged = { ...state.filtros, ...nuevosFiltros, page: nuevosFiltros.page ?? 1 }
+      // Limpiar keys que llegaron como undefined
+      Object.keys(nuevosFiltros).forEach((k) => {
+        if ((nuevosFiltros as any)[k] === undefined) delete (merged as any)[k]
+      })
+      return { filtros: merged }
+    }),
   limpiarFiltros: () => set({ filtros: filtrosIniciales }),
 }));
