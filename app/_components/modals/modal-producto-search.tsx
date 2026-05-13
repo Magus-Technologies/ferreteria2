@@ -128,6 +128,19 @@ export default function ModalProductoSearch({
   const [costoUnidadDerivada, setCostoUnidadDerivada] =
     useState<CostoUnidadDerivadaSearch>(null);
 
+  const handleSearchEnter = () => {
+    // Si el texto es igual al valor actual, forzar un refetch
+    if (text === value) {
+      if (tableRef.current) {
+        tableRef.current.handleRefetch();
+      }
+    } else {
+      // Si es diferente, actualizar value para que React Query dispare la búsqueda
+      setValue(text);
+      setTextDefault(text);
+    }
+  };
+
   return (
     <Modal
       centered
@@ -162,10 +175,7 @@ export default function ModalProductoSearch({
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="w-full sm:max-w-[500px]"
-          onPressEnter={() => {
-            setValue(text);
-            setTextDefault(text);
-          }}
+          onPressEnter={handleSearchEnter}
         />
         {stockFilterMode === 'venta' && (
           <SelectBase
