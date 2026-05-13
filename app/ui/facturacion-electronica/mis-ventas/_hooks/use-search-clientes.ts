@@ -13,7 +13,7 @@ export default function useSearchClientes({
     queryKey: [QueryKeys.CLIENTES_SEARCH, value, profesionId],
     queryFn: async () => {
       const res = await clienteApi.getAll({
-        search: value || undefined,
+        search: value.length >= 2 ? value : undefined,
         profesion_id: profesionId || undefined,
         per_page: 20,
       })
@@ -25,13 +25,11 @@ export default function useSearchClientes({
 
       return res.data?.data || []
     },
-    // Solo ejecutar la query si hay al menos 2 caracteres
-    enabled: value.length >= 2 || !!profesionId,
+    enabled: value.length === 0 || value.length >= 2 || !!profesionId,
   })
 
-  // Si no hay suficientes caracteres, devolver array vacío
-  return { 
-    response: value.length >= 2 || !!profesionId ? (data || []) : [], 
-    loading: isLoading 
+  return {
+    response: data || [],
+    loading: isLoading,
   }
 }
