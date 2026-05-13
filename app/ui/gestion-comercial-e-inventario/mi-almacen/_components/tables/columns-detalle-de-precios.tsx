@@ -11,6 +11,7 @@ import type {
 import { ColDef } from 'ag-grid-community'
 import { useMemo } from 'react'
 import { Tooltip } from 'antd'
+import { GetStock } from '~/app/_utils/get-stock'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   almacen: Pick<Almacen, 'id' | 'name'>
@@ -89,6 +90,7 @@ export function useColumnsDetalleDePrecios() {
       cellRenderer: ({ data }: any) => {
         const costoAnterior = data?.producto_almacen?.costo_anterior
         const stockAnterior = data?.producto_almacen?.stock_costo_anterior ?? 0
+        const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
         
         if (!costoAnterior) {
           return <span className='text-gray-400'>-</span>
@@ -97,7 +99,12 @@ export function useColumnsDetalleDePrecios() {
         return (
           <div title={`Costo: S/. ${Number(costoAnterior).toFixed(4)} | Stock: ${stockAnterior}`}>
             <span className='text-sm'>
-              S/. {Number(costoAnterior).toFixed(4)} ({stockAnterior})
+              S/. {Number(costoAnterior).toFixed(4)} (
+              <GetStock
+                stock_fraccion={Number(stockAnterior)}
+                unidades_contenidas={unidadesContenidas}
+              />
+              )
             </span>
           </div>
         )
@@ -112,6 +119,7 @@ export function useColumnsDetalleDePrecios() {
       cellRenderer: ({ data }: any) => {
         const costoActual = data?.producto_almacen?.costo_actual
         const stockActual = data?.producto_almacen?.stock_costo_actual ?? 0
+        const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
         
         if (!costoActual) {
           return <span className='text-gray-400'>-</span>
@@ -120,7 +128,12 @@ export function useColumnsDetalleDePrecios() {
         return (
           <div title={`Costo: S/. ${Number(costoActual).toFixed(4)} | Stock: ${stockActual}`}>
             <span className='text-sm'>
-              S/. {Number(costoActual).toFixed(4)} ({stockActual})
+              S/. {Number(costoActual).toFixed(4)} (
+              <GetStock
+                stock_fraccion={Number(stockActual)}
+                unidades_contenidas={unidadesContenidas}
+              />
+              )
             </span>
           </div>
         )
