@@ -32,9 +32,11 @@ export default function FiltersMisContactos() {
   const handleFinish = (values: ValuesFiltersMisContactos) => {
     const data: any = {};
     if (values.search) data.search = values.search;
-    if (values.tipo_cliente) data.tipo_cliente = values.tipo_cliente;
-    if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true';
-    if (values.calificacion !== undefined && values.calificacion !== '') data.calificacion = values.calificacion;
+    data.tipo_cliente = values.tipo_cliente || undefined;
+    data.estado = (values.estado !== undefined && values.estado !== null && values.estado !== '')
+      ? values.estado === 'true'
+      : undefined;
+    if (values.calificacion) data.calificacion = values.calificacion;
     data.con_recomendaciones = values.con_recomendaciones || undefined;
     data.ordenar_por_frecuencia = values.ordenar_por_frecuencia || undefined;
     setFiltros(data);

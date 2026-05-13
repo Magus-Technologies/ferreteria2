@@ -135,7 +135,6 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
         nextWithPrevent={nextWithPrevent}
         onKeyUp={onKeyUp}
         onOpenChange={onOpenChange}
-        onChange={onChange}
         optionFilterProp={optionFilterProp}
         optionLabelProp="label"
         variant={variant}
@@ -143,6 +142,10 @@ const SelectBase = forwardRef<RefSelectBaseProps, SelectBaseProps>(function Sele
         onSearch={onSearch}
         showSearch={showSearch}
         {...props}
+        onChange={(val) => {
+          setValue(val);
+          onChange?.(val);
+        }}
       />
     </Form.Item>
   ) : (
