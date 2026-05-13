@@ -8,7 +8,6 @@ import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { Cliente, clienteApi, TipoCliente } from "~/lib/api/cliente";
-import { ventaApi } from "~/lib/api/venta";
 import { useStoreFiltrosMisContactos } from "../../_store/store-filtros-mis-contactos";
 import { useStoreClienteSeleccionado } from "../../_store/store-cliente-seleccionado";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -101,35 +100,6 @@ export default function TableMisContactos() {
     enabled: !!contactos && contactos.length > 0,
   });
 
-  // Hook para obtener ventas por cliente cuando se activa el filtro de frecuentes
-  const { data: ventasData } = useQuery({
-    queryKey: [QueryKeys.CLIENTES, 'ventas-por-cliente', filtros.ordenar_por_frecuencia],
-    queryFn: async () => {
-      if (!filtros.ordenar_por_frecuencia || !contactos || contactos.length === 0) return {}
-      
-      const ventasPorClienteData: Record<number, number> = {}
-      
-      for (const cliente of contactos) {
-        const result = await ventaApi.list({ cliente_id: cliente.id, per_page: 1 })
-        if (result.data?.total) {
-          ventasPorClienteData[cliente.id] = result.data.total
-        } else {
-          ventasPorClienteData[cliente.id] = 0
-        }
-      }
-      
-      return ventasPorClienteData
-    },
-    enabled: !!filtros.ordenar_por_frecuencia && !!contactos && contactos.length > 0,
-  });
-
-  // Actualizar el estado de ventas por cliente
-  React.useEffect(() => {
-    if (ventasData) {
-      setVentasPorCliente(ventasData)
-    }
-  }, [ventasData])
-
   // Filtrar clientes por calificación si está seleccionada
   let clientesFiltrados = filtros.calificacion
     ? contactos.filter((cliente) => {
@@ -138,14 +108,18 @@ export default function TableMisContactos() {
       })
     : contactos
 
-  // Ordenar por frecuencia si está activado
-  if (filtros.ordenar_por_frecuencia && Object.keys(ventasPorCliente).length > 0) {
-    clientesFiltrados = [...clientesFiltrados].sort((a, b) => {
-      const ventasA = ventasPorCliente[a.id] || 0
-      const ventasB = ventasPorCliente[b.id] || 0
-      return ventasB - ventasA // Orden descendente: más compras primero
-    })
-  }
+  // Extraer el conteo de ventas del response si está disponible
+  React.useEffect(() => {
+    if (response?.data && Array.isArray(response.data)) {
+      const ventasMap: Record<number, number> = {}
+      response.data.forEach((cliente: any) => {
+        if (cliente.ventas_count !== undefined) {
+          ventasMap[cliente.id] = cliente.ventas_count
+        }
+      })
+      setVentasPorCliente(ventasMap)
+    }
+  }, [response?.data])
 
   const handleVerDetalles = (cliente: Cliente) => {
     setClienteParaVer(cliente);
