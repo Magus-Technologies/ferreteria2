@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { clienteApi } from '~/lib/api/cliente'
-import { FaCheckCircle, FaTimesCircle, FaCrown, FaHeart, FaExclamationTriangle, FaUserPlus, FaHandshake } from 'react-icons/fa'
+import { FaCheckCircle, FaTimesCircle, FaHeart, FaExclamationTriangle, FaUserPlus, FaHandshake } from 'react-icons/fa'
 import { useStoreClienteSeleccionado } from '../../_store/store-cliente-seleccionado'
 
 export default function CardsInfoContactos() {
@@ -61,14 +61,6 @@ export default function CardsInfoContactos() {
           <div className='text-sm text-slate-600 font-medium'>Inactivos</div>
         </div>
         <div className='text-2xl font-bold text-red-600 text-center'>{estadisticas.inactivos}</div>
-      </div>
-
-      <div className='bg-white border border-slate-200 rounded-lg p-4'>
-        <div className='flex items-center justify-center gap-2 mb-2'>
-          <FaCrown className='text-yellow-600' size={16} />
-          <div className='text-sm text-slate-600 font-medium'>VIP (Empresas)</div>
-        </div>
-        <div className='text-2xl font-bold text-yellow-600 text-center'>{estadisticas.vip}</div>
       </div>
 
       <div className='bg-white border border-slate-200 rounded-lg p-4'>

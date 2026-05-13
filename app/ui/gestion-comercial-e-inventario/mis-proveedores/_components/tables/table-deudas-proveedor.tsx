@@ -12,9 +12,10 @@ import { formatFechaPeru } from '~/utils/fechas'
 import type { Proveedor } from '~/lib/api/proveedor'
 import ModalDetalleDeudaCompra from '../modals/modal-detalle-deuda-compra'
 import { greenColors } from '~/lib/colors'
+import { useStoreProveedorSeleccionado } from '../../_store/store-proveedor-seleccionado'
 
 interface TableDeudasProveedorProps {
-  proveedorSeleccionado: Proveedor | null
+  proveedorSeleccionado?: Proveedor | null
 }
 
 function calcularTotalCompra(compra: Compra): number {
@@ -32,14 +33,17 @@ function calcularTotalCompra(compra: Compra): number {
 }
 
 export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeudasProveedorProps) {
+  const { proveedorId } = useStoreProveedorSeleccionado()
+  const proveedor = proveedorSeleccionado || (proveedorId ? { id: proveedorId } as Proveedor : null)
+  
   const [compraDetalle, setCompraDetalle] = useState<Compra | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
   const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.COMPRAS_POR_PAGAR, 'deudas', proveedorSeleccionado?.id],
+    queryKey: [QueryKeys.COMPRAS_POR_PAGAR, 'deudas', proveedor?.id],
     queryFn: async () => {
       const result = await compraApi.getComprasPorPagar({
-        proveedor_id: proveedorSeleccionado?.id,
+        proveedor_id: proveedor?.id,
         per_page: 100,
       })
       if (result.error) throw new Error(result.error.message)
@@ -166,7 +170,7 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       <div className='h-[calc(50vh-120px)] min-h-[220px] w-full'>
         <TableWithTitle<Compra>
           id='deudas-proveedor'
-          title={`Deudas Pendientes ${proveedorSeleccionado ? `— ${proveedorSeleccionado.razon_social}` : '(Todos los proveedores)'}`}
+          title={`Deudas Pendientes ${proveedor ? `— ${proveedor.razon_social || ''}` : '(Todos los proveedores)'}`}
           extraTitle={
             <div className='flex items-center gap-3'>
               <Tag color='blue'>{compras.length} compras</Tag>

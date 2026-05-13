@@ -6,6 +6,8 @@ interface FiltrosMisContactos {
   tipo_cliente?: TipoCliente;
   estado?: boolean;
   con_recomendaciones?: boolean;
+  calificacion?: string;
+  ordenar_por_frecuencia?: boolean;
   page?: number;
   per_page?: number;
 }
@@ -20,6 +22,8 @@ const filtrosIniciales: FiltrosMisContactos = {
   search: "",
   tipo_cliente: undefined,
   con_recomendaciones: undefined,
+  calificacion: undefined,
+  ordenar_por_frecuencia: undefined,
   page: 1,
   per_page: 50,
 };

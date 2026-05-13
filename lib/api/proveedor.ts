@@ -170,4 +170,11 @@ export const proveedorApi = {
     }
     return apiRequest<{ exists: boolean }>(`/proveedores/check-documento?${params}`);
   },
+
+  /**
+   * Obtener IDs de proveedores que tienen compras
+   */
+  getProveedoresConCompras: async (): Promise<ApiResponse<{ data: number[] }>> => {
+    return apiRequest<{ data: number[] }>('/proveedores/con-compras/ids');
+  },
 };
