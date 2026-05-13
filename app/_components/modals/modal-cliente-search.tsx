@@ -42,7 +42,7 @@ export default function ModalClienteSearch({
     }
   }, [open, textDefault])
 
-  const [value] = useDebounce(text, 500)
+  const [value] = useDebounce(text, text === '' ? 0 : 500)
   const inputRef = useRef<InputRef>(null)
 
   const setClienteSeleccionadoStore = useStoreClienteSeleccionado(
