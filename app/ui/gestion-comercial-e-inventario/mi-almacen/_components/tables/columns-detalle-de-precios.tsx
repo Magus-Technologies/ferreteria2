@@ -91,15 +91,18 @@ export function useColumnsDetalleDePrecios() {
         const costoAnterior = data?.producto_almacen?.costo_anterior
         const stockAnterior = data?.producto_almacen?.stock_costo_anterior ?? 0
         const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
+        const factor = Number(data?.factor ?? 1)
         
         if (!costoAnterior) {
           return <span className='text-gray-400'>-</span>
         }
 
+        const costoTotal = Number(costoAnterior) * factor
+
         return (
-          <div title={`Costo: S/. ${Number(costoAnterior).toFixed(4)} | Stock: ${stockAnterior}`}>
+          <div title={`Costo por unidad: S/. ${Number(costoAnterior).toFixed(4)} | Costo total: S/. ${costoTotal.toFixed(4)} | Stock: ${stockAnterior}`}>
             <span className='text-sm'>
-              S/. {Number(costoAnterior).toFixed(4)} (
+              S/. {costoTotal.toFixed(4)} (
               <GetStock
                 stock_fraccion={Number(stockAnterior)}
                 unidades_contenidas={unidadesContenidas}
@@ -120,15 +123,18 @@ export function useColumnsDetalleDePrecios() {
         const costoActual = data?.producto_almacen?.costo_actual
         const stockActual = data?.producto_almacen?.stock_costo_actual ?? 0
         const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
+        const factor = Number(data?.factor ?? 1)
         
         if (!costoActual) {
           return <span className='text-gray-400'>-</span>
         }
 
+        const costoTotal = Number(costoActual) * factor
+
         return (
-          <div title={`Costo: S/. ${Number(costoActual).toFixed(4)} | Stock: ${stockActual}`}>
+          <div title={`Costo por unidad: S/. ${Number(costoActual).toFixed(4)} | Costo total: S/. ${costoTotal.toFixed(4)} | Stock: ${stockActual}`}>
             <span className='text-sm'>
-              S/. {Number(costoActual).toFixed(4)} (
+              S/. {costoTotal.toFixed(4)} (
               <GetStock
                 stock_fraccion={Number(stockActual)}
                 unidades_contenidas={unidadesContenidas}
