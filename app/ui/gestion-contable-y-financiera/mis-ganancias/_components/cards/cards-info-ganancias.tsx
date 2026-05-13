@@ -76,53 +76,53 @@ export default function CardsInfoGanancias() {
     }
   }
   return (
-    <div className='flex flex-col gap-4 h-full pt-[22px]'>
+    <div className='flex flex-col gap-4 h-full'>
       {/* Ventas */}
       <div className='bg-white border border-slate-200 rounded-lg p-3'>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <FaMoneyBillWave className='text-blue-600' size={13} />
-          <div className='text-xs text-slate-600 font-medium'>Ventas</div>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <FaMoneyBillWave className='text-blue-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Ventas</div>
         </div>
-        <div className='text-lg font-bold text-blue-600 text-center'>
+        <div className='text-base font-bold text-blue-600 text-center'>
           {isLoading ? '...' : resumen.ventas.toFixed(2)}
         </div>
       </div>
 
       {/* Costo */}
       <div className='bg-white border border-slate-200 rounded-lg p-3'>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <GiPayMoney className='text-orange-600' size={13} />
-          <div className='text-xs text-slate-600 font-medium'>Costo</div>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <GiPayMoney className='text-orange-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Costo</div>
         </div>
-        <div className='text-lg font-bold text-orange-600 text-center'>
+        <div className='text-base font-bold text-orange-600 text-center'>
           {isLoading ? '...' : resumen.costo.toFixed(2)}
         </div>
       </div>
 
       {/* Ganancia */}
-      <div className='bg-white border border-slate-200 rounded-lg p-3'>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <FaMoneyBillTrendUp className='text-green-600' size={13} />
-          <div className='text-xs text-slate-600 font-medium'>Ganancia</div>
+      <div className='bg-white border border-slate-200 rounded-lg p-2'>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <FaMoneyBillTrendUp className='text-green-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Ganancia</div>
         </div>
-        <div className='text-lg font-bold text-green-600 text-center'>
+        <div className='text-base font-bold text-green-600 text-center'>
           {isLoading ? '...' : resumen.ganancia.toFixed(2)}
         </div>
       </div>
 
       {/* Gastos U */}
       <div 
-        className='bg-white border border-slate-200 rounded-lg p-3 cursor-pointer hover:border-slate-400 transition-colors relative group'
+        className='bg-white border border-slate-200 rounded-lg p-2 cursor-pointer hover:border-slate-400 transition-colors relative group'
         onClick={() => setModalPagosOpen(true)}
       >
-        <div className='absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] text-slate-400 font-medium'>
+        <div className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-slate-400 font-medium'>
           Ver detalles
         </div>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <FaFileInvoiceDollar className='text-slate-600' size={13} />
-          <div className='text-xs text-slate-600 font-medium'>Gastos U</div>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <FaFileInvoiceDollar className='text-slate-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Gastos U</div>
         </div>
-        <div className='text-lg font-bold text-slate-600 text-center'>
+        <div className='text-base font-bold text-slate-600 text-center'>
           {isLoading ? '...' : resumen.gastos_u.toFixed(2)}
         </div>
       </div>
@@ -134,29 +134,29 @@ export default function CardsInfoGanancias() {
       />
 
       {/* Neto */}
-      <div className='bg-white border border-slate-200 rounded-lg p-2.5'>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <FaMoneyBills className='text-cyan-600' size={13} />
-          <div className='text-xs text-slate-600 font-medium'>Neto</div>
+      <div className='bg-white border border-slate-200 rounded-lg p-2'>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <FaMoneyBills className='text-cyan-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Neto</div>
         </div>
-        <div className='text-lg font-bold text-cyan-600 text-center'>
+        <div className='text-base font-bold text-cyan-600 text-center'>
           {isLoading ? '...' : resumen.neto.toFixed(2)}
         </div>
       </div>
 
       {/* Perdida */}
       <div 
-        className='bg-white border border-slate-200 rounded-lg p-2.5 cursor-pointer hover:border-red-300 transition-colors relative group'
+        className='bg-white border border-slate-200 rounded-lg p-2 cursor-pointer hover:border-red-300 transition-colors relative group'
         onClick={() => setModalPerdidasOpen(true)}
       >
-        <div className='absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] text-red-400 font-medium'>
+        <div className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-red-400 font-medium'>
           Ver detalles
         </div>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <GiReceiveMoney className='text-red-600' size={13} />
-          <div className='text-xs text-slate-600 font-medium'>Perdida</div>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <GiReceiveMoney className='text-red-600' size={12} />
+          <div className='text-[11px] text-slate-600 font-medium'>Perdida</div>
         </div>
-        <div className='text-lg font-bold text-red-600 text-center'>
+        <div className='text-base font-bold text-red-600 text-center'>
           {isLoading ? '...' : resumen.perdida.toFixed(2)}
         </div>
       </div>
@@ -169,17 +169,17 @@ export default function CardsInfoGanancias() {
 
       {/* Análisis de Pérdidas en Ventas */}
       <div 
-        className='bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-lg p-2.5 cursor-pointer hover:border-red-400 transition-all relative group shadow-sm'
+        className='bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-lg p-2 cursor-pointer hover:border-red-400 transition-all relative group shadow-sm'
         onClick={() => setModalAnalisisPerdidasOpen(true)}
       >
-        <div className='absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-red-500 font-bold'>
+        <div className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-red-500 font-bold'>
           ANALIZAR
         </div>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <MdAnalytics className='text-red-600' size={14} />
-          <div className='text-[11px] text-red-700 font-bold text-center'>Análisis Pérdidas</div>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <MdAnalytics className='text-red-600' size={12} />
+          <div className='text-[10px] text-red-700 font-bold text-center'>Análisis Pérdidas</div>
         </div>
-        <div className='text-[9px] text-red-600 text-center font-medium'>
+        <div className='text-[8px] text-red-600 text-center font-medium'>
           Click para ver detalles
         </div>
       </div>
@@ -192,17 +192,17 @@ export default function CardsInfoGanancias() {
 
       {/* Análisis PEPS - Diferencia de Cambio */}
       <div
-        className='bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-2.5 cursor-pointer hover:border-blue-400 transition-all relative group shadow-sm'
+        className='bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition-all relative group shadow-sm'
         onClick={() => setModalPepsOpen(true)}
       >
-        <div className='absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-blue-500 font-bold'>
+        <div className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] text-blue-500 font-bold'>
           CALCULAR
         </div>
-        <div className='flex items-center justify-center gap-1.5 mb-1'>
-          <MdAnalytics className='text-blue-600' size={14} />
-          <div className='text-[11px] text-blue-700 font-bold text-center'>PEPS + Cambio</div>
+        <div className='flex items-center justify-center gap-1 mb-0.5'>
+          <MdAnalytics className='text-blue-600' size={12} />
+          <div className='text-[10px] text-blue-700 font-bold text-center'>PEPS + Cambio</div>
         </div>
-        <div className='text-[9px] text-blue-600 text-center font-medium'>
+        <div className='text-[8px] text-blue-600 text-center font-medium'>
           Diferencia de tipo de cambio
         </div>
       </div>
@@ -214,23 +214,23 @@ export default function CardsInfoGanancias() {
       />
 
       {/* Correo electrónico */}
-      <div className='bg-white border border-slate-200 rounded-lg p-2.5'>
-        <div className='text-xs text-slate-600 mb-2 font-medium text-center'>Correo Destino</div>
+      <div className='bg-white border border-slate-200 rounded-lg p-2'>
+        <div className='text-[10px] text-slate-600 mb-1.5 font-medium text-center'>Correo Destino</div>
         <Input
           placeholder='correo@ejemplo.com'
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className='mb-2'
+          className='mb-1.5'
           size='small'
         />
-        <div className='flex flex-col gap-1.5'>
+        <div className='flex flex-col gap-1'>
           <ButtonBase
             color='default'
             size='sm'
             type='button'
             onClick={handleImprimir}
             disabled={loadingPrint}
-            className='w-full text-xs'
+            className='w-full text-[11px]'
           >
             {loadingPrint ? 'Imprimiendo...' : 'Imprimir'}
           </ButtonBase>
@@ -240,7 +240,7 @@ export default function CardsInfoGanancias() {
             type='button'
             onClick={handleEnviarCorreo}
             disabled={loadingEmail}
-            className='w-full text-xs'
+            className='w-full text-[11px]'
           >
             {loadingEmail ? 'Enviando...' : 'Enviar a Correo'}
           </ButtonBase>

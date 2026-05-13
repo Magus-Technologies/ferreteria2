@@ -21,7 +21,7 @@ export default function MisGananciasPage() {
         {/* Layout: Cards a la derecha, Tabla a la izquierda */}
         <div className='flex gap-4 w-full'>
           {/* Tabla - Ocupa el espacio principal */}
-          <div className='flex-1 h-[calc(100vh-280px)] min-w-0'>
+          <div className='flex-1 h-[calc(100vh-300px)] min-w-0'>
             <TableMisGanancias />
           </div>
 
