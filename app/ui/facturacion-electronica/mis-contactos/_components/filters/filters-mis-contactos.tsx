@@ -31,7 +31,10 @@ export default function FiltersMisContactos() {
     const data: any = {};
     if (values.search) data.search = values.search;
     if (values.tipo_cliente) data.tipo_cliente = values.tipo_cliente;
-    if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true';
+    // Enviar siempre estado (undefined limpia el filtro en el store)
+    data.estado = (values.estado !== undefined && values.estado !== null && values.estado !== '')
+      ? values.estado === 'true' || values.estado === true
+      : undefined;
     data.con_recomendaciones = values.con_recomendaciones || undefined;
     setFiltros(data);
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] });
