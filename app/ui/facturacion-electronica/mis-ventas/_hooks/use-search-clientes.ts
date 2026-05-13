@@ -27,6 +27,7 @@ export default function useSearchClientes({
     },
     enabled: value.length === 0 || value.length >= 2 || !!profesionId,
     staleTime: 0,
+    gcTime: 0,
   })
 
   return {
