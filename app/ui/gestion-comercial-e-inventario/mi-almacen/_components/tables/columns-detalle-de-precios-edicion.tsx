@@ -863,7 +863,9 @@ function onChangeCosto({
   const factor = form.getFieldValue(['unidades_derivadas', value, 'factor'])
   let factor_disponible = Number(factor)
   let costo_disponible = costo
-  if (!costo) {
+  
+  // Si no se pasó un costo explícito, buscar otro factor/costo válido para calcular la relación
+  if (costo === undefined) {
     const index_factor_and_costo = factores.findIndex((factor, index) => {
       return (
         factor &&
@@ -879,26 +881,18 @@ function onChangeCosto({
     }
   }
 
+  // Calcular el costo por unidad base: costo_disponible / factor_disponible
   const costo_unidad = (costo_disponible ?? 0) / Number(factor_disponible)
 
+  // Recalcular todos los costos basándose en la nueva relación
   const fields = unidades_derivadas
     .map((item, index) => {
-      if (costo && index === value) return null
-      // Si el usuario editó explícitamente un costo (costo definido) y esta fila YA tiene
-      // un costo asignado (no vacío ni cero), NO sobrescribir. Solo se autocompletan filas
-      // que están sin costo (recién agregadas).
-      if (costo) {
-        const costoExistente = item?.costo
-        const costoExistenteNum = Number(costoExistente)
-        const yaTieneCosto =
-          costoExistente !== undefined &&
-          costoExistente !== null &&
-          !isNaN(costoExistenteNum) &&
-          costoExistenteNum !== 0
-        if (yaTieneCosto) return null
-      }
+      // Saltar la fila que se está editando si se pasó un costo explícito
+      if (costo !== undefined && index === value) return null
+      
       const factor = Number(item.factor)
-      const costoCalculado = costo_disponible ? factor * costo_unidad : 0
+      // Multiplicar el costo por unidad base por el factor de esta fila
+      const costoCalculado = factor * costo_unidad
       return { name: ['unidades_derivadas', index, 'costo'] as (string | number)[], value: costoCalculado }
     })
     .filter((f): f is { name: (string | number)[]; value: number } => f !== null)
