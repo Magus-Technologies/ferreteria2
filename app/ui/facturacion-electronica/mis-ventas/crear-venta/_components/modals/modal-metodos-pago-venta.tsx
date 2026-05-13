@@ -170,21 +170,17 @@ export default function ModalMetodosPagoVenta({
     }
   }, [open, isFetched, desplieguesFiltradosPorTipo, modalForm])
 
-  // Actualizar "Monto Recibe" cuando cambia el saldo pendiente — se dispara
-  // al agregar un pago parcial (el form acaba de resetearse, así que el
-  // recibe_efectivo está vacío y aquí lo re-llenamos con el nuevo saldo).
-  // Sólo pre-llenamos si está vacío para no pisar lo que el usuario tipeó.
+  // Actualizar "Monto Recibe" cuando cambia el saldo pendiente
+  // IMPORTANTE: No sumar sobrecargo al monto - el surcharge se muestra aparte y se suma al total general
   useEffect(() => {
     if (!open || saldoPendiente <= 0) return
     modalForm.setFieldValue('monto', roundMoney(saldoPendiente))
     const current = modalForm.getFieldValue('recibe_efectivo')
     if (current === undefined || current === null || Number(current) === 0) {
-      const valor = isEfectivo
-        ? saldoPendiente
-        : saldoPendiente + sobrecargo.monto
-      modalForm.setFieldValue('recibe_efectivo', roundMoney(valor))
+      // El monto a recibir es siempre el saldo pendiente (sin surcharge)
+      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
     }
-  }, [saldoPendiente, open, modalForm, isEfectivo, sobrecargo.monto])
+  }, [saldoPendiente, open, modalForm])
 
   const handleAgregarMetodo = async () => {
     try {
