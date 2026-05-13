@@ -258,7 +258,7 @@ export default function FormCreateCliente({
           <LabelBase label="Estado:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
             <SelectEstado
               classNameIcon="text-rose-700 mx-1"
-              propsForm={{ name: "estado" }}
+              propsForm={{ name: "estado", initialValue: 1 }}
             />
           </LabelBase>
 

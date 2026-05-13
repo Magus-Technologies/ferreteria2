@@ -86,6 +86,10 @@ export default function ModalCreateCliente({
             Object.entries(dataEdit).map(([key, value]) => [key, value ?? undefined]),
           );
           form.setFieldsValue(formValues);
+          // SelectEstado usa 1/0, el modelo usa boolean
+          form.setFieldValue('estado', dataEdit.estado ? 1 : 0);
+          // SelectEstado usa 1/0, el modelo usa boolean
+          form.setFieldValue('estado', dataEdit.estado ? 1 : 0);
           if (dataEdit.fecha_nacimiento) {
             form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
           }
