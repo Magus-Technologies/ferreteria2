@@ -20,6 +20,8 @@ interface ValuesFiltersMisContactos {
   tipo_cliente?: TipoCliente;
   estado?: string;
   con_recomendaciones?: boolean;
+  calificacion?: string;
+  ordenar_por_frecuencia?: boolean;
 }
 
 export default function FiltersMisContactos() {
@@ -32,7 +34,9 @@ export default function FiltersMisContactos() {
     if (values.search) data.search = values.search;
     if (values.tipo_cliente) data.tipo_cliente = values.tipo_cliente;
     if (values.estado !== undefined && values.estado !== '') data.estado = values.estado === 'true';
+    if (values.calificacion !== undefined && values.calificacion !== '') data.calificacion = values.calificacion;
     data.con_recomendaciones = values.con_recomendaciones || undefined;
+    data.ordenar_por_frecuencia = values.ordenar_por_frecuencia || undefined;
     setFiltros(data);
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] });
   };
@@ -44,7 +48,7 @@ export default function FiltersMisContactos() {
       <div className="mt-4">
         <div className="grid grid-cols-12 gap-x-2 gap-y-2 items-center">
           {/* Buscar */}
-          <div className="col-span-4 flex items-center gap-1">
+          <div className="col-span-3 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Buscar:</label>
             <InputBase
               propsForm={{ name: "search", hasFeedback: false, className: "!w-full" }}
@@ -66,7 +70,7 @@ export default function FiltersMisContactos() {
           </div>
 
           {/* Estado */}
-          <div className="col-span-2 flex items-center gap-1">
+          <div className="col-span-1 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Estado:</label>
             <SelectBase
               propsForm={{ name: "estado", hasFeedback: false, className: "!w-full" }}
@@ -81,10 +85,36 @@ export default function FiltersMisContactos() {
             />
           </div>
 
+          {/* Calificación */}
+          <div className="col-span-1 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap text-right">Cal.:</label>
+            <SelectBase
+              propsForm={{ name: "calificacion", hasFeedback: false, className: "!w-full" }}
+              className="w-full"
+              formWithMessage={false}
+              allowClear
+              placeholder="Todos"
+              options={[
+                { value: "excelente", label: "Excelente" },
+                { value: "bueno", label: "Bueno" },
+                { value: "regular", label: "Regular" },
+                { value: "problematico", label: "Problemático" },
+              ]}
+            />
+          </div>
+
           {/* Con recomendaciones */}
-          <div className="col-span-2 flex items-center gap-2">
+          <div className="col-span-2 flex items-center gap-2 px-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Con recomendaciones:</label>
             <Form.Item name="con_recomendaciones" valuePropName="checked" noStyle>
+              <Switch size="small" onChange={() => form.submit()} />
+            </Form.Item>
+          </div>
+
+          {/* Frecuentes */}
+          <div className="col-span-1 flex items-center gap-2 px-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Frecuentes:</label>
+            <Form.Item name="ordenar_por_frecuencia" valuePropName="checked" noStyle>
               <Switch size="small" onChange={() => form.submit()} />
             </Form.Item>
           </div>

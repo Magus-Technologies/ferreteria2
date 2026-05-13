@@ -68,8 +68,9 @@ export default function TableDeudasClientes() {
 
   // Actualizar datos cuando llega nueva página
   useEffect(() => {
-    if (response?.data) {
-      const transformedData: DeudaCliente[] = response.data.map((venta: VentaCompleta) => {
+    if (response) {
+      const dataArray = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : (response as any)?.data?.data || [])
+      const transformedData: DeudaCliente[] = dataArray.map((venta: VentaCompleta) => {
         // Calcular total sumando productos (igual que ventas-por-cobrar)
         const monto_total = (venta.productos_por_almacen || []).reduce((acc: number, item: any) => {
           for (const u of item.unidades_derivadas ?? []) {

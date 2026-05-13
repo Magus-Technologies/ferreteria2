@@ -102,7 +102,7 @@ export default function TableBase<T>({
     if (!persistColumnState) return null;
     try {
       const savedState = localStorage.getItem(storageKey);
-      if (savedState) {
+      if (savedState && savedState !== 'undefined') {
         const parsed = JSON.parse(savedState);
         // console.log(
         //   "🔵 [TableBase] Estado cargado desde localStorage:",

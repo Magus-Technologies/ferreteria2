@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button, Popconfirm, Tag } from "antd";
+import React from "react";
+import { Button, Tag, Tooltip, Modal } from "antd";
 import { FaEye, FaEdit, FaTrash, FaStar, FaHandshake } from "react-icons/fa";
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import TableWithTitle from "~/components/tables/table-with-title";
 import { Cliente, clienteApi, TipoCliente } from "~/lib/api/cliente";
+import { ventaApi } from "~/lib/api/venta";
 import { useStoreFiltrosMisContactos } from "../../_store/store-filtros-mis-contactos";
 import { useStoreClienteSeleccionado } from "../../_store/store-cliente-seleccionado";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +21,7 @@ import ModalRecomendacionesCliente from "../modals/modal-recomendaciones-cliente
 import { autorizacionesApi } from "~/lib/api/autorizaciones";
 import ModalSolicitarAutorizacion from "~/components/autorizaciones/modal-solicitar-autorizacion";
 import { orangeColors } from "~/lib/colors";
+import { clienteCalificacionApi } from "~/lib/api/cliente-calificacion";
 
 export default function TableMisContactos() {
   const { filtros } = useStoreFiltrosMisContactos();
@@ -39,6 +42,8 @@ export default function TableMisContactos() {
   const [autorizacionAccion, setAutorizacionAccion] = useState<'editar' | 'eliminar'>('editar');
   const [autorizacionDesc, setAutorizacionDesc] = useState('');
   const [solicitandoAuth, setSolicitandoAuth] = useState(false);
+  const [clienteAEliminar, setClienteAEliminar] = useState<number | null>(null);
+  const [ventasPorCliente, setVentasPorCliente] = useState<Record<number, number>>({});
 
   // Query para obtener los contactos
   const { data: response, isFetching, refetch } = useQuery({
@@ -73,6 +78,74 @@ export default function TableMisContactos() {
       });
     },
   });
+
+  const contactos = response?.data?.data || [];
+
+  // Hook para obtener calificaciones de todos los clientes
+  const { data: calificacionesMap } = useQuery({
+    queryKey: [QueryKeys.CLIENTES, 'calificaciones', contactos.map(c => c.id).join(',')],
+    queryFn: async () => {
+      if (!contactos || contactos.length === 0) return {}
+      
+      const calificacionesData: Record<number, any> = {}
+      
+      for (const cliente of contactos) {
+        const result = await clienteCalificacionApi.getUltima(cliente.id)
+        if (result.data?.data) {
+          calificacionesData[cliente.id] = result.data.data
+        }
+      }
+      
+      return calificacionesData
+    },
+    enabled: !!contactos && contactos.length > 0,
+  });
+
+  // Hook para obtener ventas por cliente cuando se activa el filtro de frecuentes
+  const { data: ventasData } = useQuery({
+    queryKey: [QueryKeys.CLIENTES, 'ventas-por-cliente', filtros.ordenar_por_frecuencia],
+    queryFn: async () => {
+      if (!filtros.ordenar_por_frecuencia || !contactos || contactos.length === 0) return {}
+      
+      const ventasPorClienteData: Record<number, number> = {}
+      
+      for (const cliente of contactos) {
+        const result = await ventaApi.list({ cliente_id: cliente.id, per_page: 1 })
+        if (result.data?.total) {
+          ventasPorClienteData[cliente.id] = result.data.total
+        } else {
+          ventasPorClienteData[cliente.id] = 0
+        }
+      }
+      
+      return ventasPorClienteData
+    },
+    enabled: !!filtros.ordenar_por_frecuencia && !!contactos && contactos.length > 0,
+  });
+
+  // Actualizar el estado de ventas por cliente
+  React.useEffect(() => {
+    if (ventasData) {
+      setVentasPorCliente(ventasData)
+    }
+  }, [ventasData])
+
+  // Filtrar clientes por calificación si está seleccionada
+  let clientesFiltrados = filtros.calificacion
+    ? contactos.filter((cliente) => {
+        const calificacion = calificacionesMap?.[cliente.id]
+        return calificacion?.estado === filtros.calificacion
+      })
+    : contactos
+
+  // Ordenar por frecuencia si está activado
+  if (filtros.ordenar_por_frecuencia && Object.keys(ventasPorCliente).length > 0) {
+    clientesFiltrados = [...clientesFiltrados].sort((a, b) => {
+      const ventasA = ventasPorCliente[a.id] || 0
+      const ventasB = ventasPorCliente[b.id] || 0
+      return ventasB - ventasA // Orden descendente: más compras primero
+    })
+  }
 
   const handleVerDetalles = (cliente: Cliente) => {
     setClienteParaVer(cliente);
@@ -111,7 +184,7 @@ export default function TableMisContactos() {
   const handleEliminar = (id: number, nombre?: string) => {
     const desc = `Cliente: ${nombre || ''}`;
     verificarAutorizacion('eliminar', desc, () => {
-      deleteMutation.mutate(id);
+      setClienteAEliminar(id);
     });
   };
 
@@ -127,6 +200,36 @@ export default function TableMisContactos() {
       setSolicitandoAuth(false);
     }
   };
+
+  const getCalificacionColor = (estado?: string) => {
+    switch (estado) {
+      case 'excelente':
+        return 'green'
+      case 'bueno':
+        return 'blue'
+      case 'regular':
+        return 'orange'
+      case 'problematico':
+        return 'red'
+      default:
+        return 'default'
+    }
+  }
+
+  const getCalificacionLabel = (estado?: string) => {
+    switch (estado) {
+      case 'excelente':
+        return 'Excelente'
+      case 'bueno':
+        return 'Bueno'
+      case 'regular':
+        return 'Regular'
+      case 'problematico':
+        return 'Problemático'
+      default:
+        return 'Sin calificar'
+    }
+  }
 
   const columnDefs: ColDef<Cliente>[] = [
     {
@@ -210,6 +313,49 @@ export default function TableMisContactos() {
       },
     },
     {
+      headerName: "Calificación",
+      width: 130,
+      cellRenderer: (params: any) => {
+        const cliente = params.data as Cliente
+        const calificacion = calificacionesMap?.[cliente.id]
+        
+        if (!calificacion) {
+          return <Tag color="default">Sin calificar</Tag>
+        }
+
+        return (
+          <Tooltip title={calificacion.observacion || 'Sin observaciones'}>
+            <Tag color={getCalificacionColor(calificacion.estado)}>
+              <div className="flex items-center gap-1">
+                <FaStar size={12} />
+                {getCalificacionLabel(calificacion.estado)}
+              </div>
+            </Tag>
+          </Tooltip>
+        )
+      },
+    },
+    {
+      headerName: "Observación",
+      width: 200,
+      flex: 1,
+      minWidth: 150,
+      cellRenderer: (params: any) => {
+        const cliente = params.data as Cliente
+        const calificacion = calificacionesMap?.[cliente.id]
+        
+        if (!calificacion || !calificacion.observacion) {
+          return <span className="text-gray-400">-</span>
+        }
+
+        return (
+          <Tooltip title={calificacion.observacion}>
+            <span className="text-gray-700 truncate block">{calificacion.observacion}</span>
+          </Tooltip>
+        )
+      },
+    },
+    {
       headerName: "Recomendaciones",
       width: 130,
       cellRenderer: (params: any) => {
@@ -228,6 +374,19 @@ export default function TableMisContactos() {
         )
       },
     },
+    ...(filtros.ordenar_por_frecuencia ? [{
+      headerName: "Compras/Mes",
+      width: 100,
+      cellRenderer: (params: any) => {
+        const cliente = params.data as Cliente
+        const compras = ventasPorCliente[cliente.id] || 0
+        return (
+          <div className="text-center font-semibold text-blue-600">
+            {compras}
+          </div>
+        )
+      },
+    }] : []),
     {
       headerName: "Acciones",
       width: 150,
@@ -269,29 +428,19 @@ export default function TableMisContactos() {
             </Button>
 
             {/* Botón Eliminar */}
-            <Popconfirm
-              title="¿Eliminar contacto?"
-              description="Esta acción no se puede deshacer"
-              onConfirm={() => handleEliminar(cliente.id, cliente.razon_social || cliente.nombres)}
-              okText="Sí, eliminar"
-              cancelText="Cancelar"
-              okButtonProps={{ danger: true }}
+            <Button
+              type="text"
+              size="small"
+              className="flex items-center justify-center hover:bg-red-50"
+              onClick={() => handleEliminar(cliente.id, cliente.razon_social || cliente.nombres)}
             >
-              <Button
-                type="text"
-                size="small"
-                className="flex items-center justify-center hover:bg-red-50"
-              >
-                <FaTrash className="text-red-600" size={14} />
-              </Button>
-            </Popconfirm>
+              <FaTrash className="text-red-600" size={14} />
+            </Button>
           </div>
         );
       },
     },
   ];
-
-  const contactos = response?.data?.data || [];
 
   return (
     <>
@@ -300,7 +449,7 @@ export default function TableMisContactos() {
         title="CONTACTOS"
         loading={isFetching}
         columnDefs={columnDefs}
-        rowData={contactos}
+        rowData={clientesFiltrados}
         tableRef={tableRef}
         domLayout="normal"
         selectionColor={orangeColors[10]}
@@ -373,6 +522,24 @@ export default function TableMisContactos() {
         onClose={() => setModalRecomendacionesOpen(false)}
         cliente={clienteParaRecomendaciones}
       />
+
+      {/* Modal para confirmar eliminación */}
+      <Modal
+        title="¿Eliminar contacto?"
+        open={clienteAEliminar !== null}
+        onOk={() => {
+          if (clienteAEliminar) {
+            deleteMutation.mutate(clienteAEliminar)
+            setClienteAEliminar(null)
+          }
+        }}
+        onCancel={() => setClienteAEliminar(null)}
+        okText="Sí, eliminar"
+        cancelText="Cancelar"
+        okButtonProps={{ danger: true }}
+      >
+        <p>Esta acción no se puede deshacer. ¿Deseas continuar?</p>
+      </Modal>
     </>
   );
 }
