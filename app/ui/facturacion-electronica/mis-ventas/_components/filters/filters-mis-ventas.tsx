@@ -12,8 +12,6 @@ import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import { EstadoDeVenta, FormaDePago, TipoDocumento } from "~/lib/api/venta";
 import { useStoreFiltrosMisVentas } from "../../_store/store-filtros-mis-ventas";
-import { FaCalendar } from "react-icons/fa6";
-import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectFormaDePago from "~/app/_components/form/selects/select-forma-de-pago";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
@@ -33,6 +31,7 @@ import { ventaApi, type VentaCompleta } from "~/lib/api/venta";
 import { Input } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 
 interface ValuesFiltersMisVentas {
   almacen_id: number;
@@ -275,46 +274,17 @@ export default function FiltersMisVentas() {
       <div className="hidden lg:block mt-4">
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
           {/* Fila 1: Fechas + Cliente + Serie */}
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Desde:
-            </label>
-            <ConfigurableElement componentId="field-fecha-desde" label="Campo Fecha Desde">
-              <DatePickerBase
-                propsForm={{
-                  name: "desde",
-                  hasFeedback: false,
-                  className: "!w-full",
-                }}
-                placeholder="Fecha"
-                formWithMessage={false}
-                prefix={
-                  <FaCalendar size={13} className="text-amber-600 mx-1" />
-                }
-                allowClear
+          <ConfigurableElement componentId="mis-ventas.filtro-rango-fechas" label="Campo Fecha Desde y Hasta">
+            <div className="col-span-4 grid grid-cols-2 gap-3">
+              <FilterDateRangeFields
+                fromName="desde"
+                toName="hasta"
+                fromLabel="Desde:"
+                itemClassName="flex items-center gap-1"
+                fromPlaceholder="Fecha"
               />
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Hasta:
-            </label>
-            <ConfigurableElement componentId="field-fecha-hasta" label="Campo Fecha Hasta">
-              <DatePickerBase
-                propsForm={{
-                  name: "hasta",
-                  hasFeedback: false,
-                  className: "!w-full",
-                }}
-                placeholder="Hasta"
-                formWithMessage={false}
-                prefix={
-                  <FaCalendar size={13} className="text-amber-600 mx-1" />
-                }
-                allowClear
-              />
-            </ConfigurableElement>
-          </div>
+            </div>
+          </ConfigurableElement>
           <div className="col-span-4 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Cliente:
@@ -555,32 +525,13 @@ export default function FiltersMisVentas() {
         )}
       >
         <div className="flex flex-col gap-4">
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">
-              Fecha Venta:
-            </label>
-            <DatePickerBase
-              propsForm={{ name: "desde", hasFeedback: false }}
-              placeholder="Fecha Venta"
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
-              allowClear
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">
-              Hasta:
-            </label>
-            <DatePickerBase
-              propsForm={{ name: "hasta", hasFeedback: false }}
-              placeholder="Hasta"
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
-              allowClear
-              className="w-full"
-            />
-          </div>
+          <FilterDateRangeFields
+            fromName="desde"
+            toName="hasta"
+            fromLabel="Fecha Venta:"
+            fromPlaceholder="Fecha Venta"
+            stacked
+          />
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-2">
               Cliente:
