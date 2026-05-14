@@ -474,7 +474,7 @@ export function SeccionDomicilio({
             {mostrarMapa ? (
               <div className="h-full min-h-[300px]">
                 <MapaDireccionMapbox
-                  key={`${direccionSeleccionada}-${coordenadas?.lat}-${coordenadas?.lng}`}
+                  key={`${direccionSeleccionada}-${mostrarMapa ? 'visible' : 'hidden'}`}
                   direccion={form.getFieldValue('direccion_entrega') || direccion || ''}
                   clienteNombre={clienteNombre}
                   onCoordenadaChange={handleCoordenadaChange}

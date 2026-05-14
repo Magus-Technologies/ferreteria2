@@ -32,18 +32,29 @@ export default function MapaDireccionMapbox({
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const marker = useRef<mapboxgl.Marker | null>(null)
+  const resizeTimeoutsRef = useRef<number[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(coordenadasIniciales || null)
   const [expanded, setExpanded] = useState(false)
 
   const forzarResize = useCallback(() => {
-    if (!map.current) return
-    window.requestAnimationFrame(() => {
-      map.current?.resize()
-    })
-    window.setTimeout(() => map.current?.resize(), 120)
-    window.setTimeout(() => map.current?.resize(), 320)
+    const safeResize = () => {
+      const mapInstance = map.current as any
+      const container = mapContainer.current
+      if (!mapInstance || !container || !container.isConnected) return
+      if (!mapInstance._canvas || !mapInstance._container) return
+      try {
+        mapInstance.resize()
+      } catch {
+        // Ignorar resizes tardíos mientras el mapa se desmonta o se recrea
+      }
+    }
+
+    safeResize()
+    window.requestAnimationFrame(safeResize)
+    resizeTimeoutsRef.current.push(window.setTimeout(safeResize, 120))
+    resizeTimeoutsRef.current.push(window.setTimeout(safeResize, 320))
   }, [])
 
   // Cuando cambia el modo expandido, redimensionar el mapa para que se reajuste al contenedor
@@ -74,7 +85,10 @@ export default function MapaDireccionMapbox({
     return () => window.removeEventListener('keydown', onKey)
   }, [expanded])
 
-  const actualizarMarcador = useCallback(async (lngLat: { lng: number; lat: number }) => {
+  const actualizarMarcador = useCallback(async (
+    lngLat: { lng: number; lat: number },
+    emitirCambio = true,
+  ) => {
     if (!map.current) return
 
     if (marker.current) {
@@ -114,7 +128,11 @@ export default function MapaDireccionMapbox({
       }
     }
 
-    setCoordenadas({ lat: lngLat.lat, lng: lngLat.lng })
+    setCoordenadas((prev) => {
+      if (prev?.lat === lngLat.lat && prev?.lng === lngLat.lng) return prev
+      return { lat: lngLat.lat, lng: lngLat.lng }
+    })
+    if (!emitirCambio) return
     // Obtener dirección mediante geocodificación inversa
     const direccionObtenida = await obtenerDireccionDesdeCoordenadas(lngLat.lng, lngLat.lat)
     onCoordenadaChange?.({ lat: lngLat.lat, lng: lngLat.lng }, direccionObtenida)
@@ -177,7 +195,7 @@ export default function MapaDireccionMapbox({
         forzarResize()
 
         if (coordenadasIniciales) {
-          actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat })
+          actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat }, false)
           return
         }
 
@@ -207,8 +225,12 @@ export default function MapaDireccionMapbox({
     }
 
     return () => {
+      resizeTimeoutsRef.current.forEach((id) => window.clearTimeout(id))
+      resizeTimeoutsRef.current = []
       marker.current?.remove()
+      marker.current = null
       map.current?.remove()
+      map.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -245,7 +267,7 @@ export default function MapaDireccionMapbox({
       actualizarMarcador({
         lng: coordenadasIniciales.lng,
         lat: coordenadasIniciales.lat,
-      })
+      }, false)
       return
     }
 

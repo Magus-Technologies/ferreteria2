@@ -164,6 +164,12 @@ export default function useCreateCliente({
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.CLIENTES_SEARCH],
         });
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.DIRECCIONES_CLIENTE, response.data.data.id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.DIRECCION_CLIENTE],
+        });
 
         // Llamar al callback de éxito
         onSuccess?.(response.data.data);
