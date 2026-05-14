@@ -76,7 +76,7 @@ export default function FiltersMisContactos() {
           </div>
 
           {/* Estado */}
-          <div className="col-span-1 flex items-center gap-1">
+          <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Estado:</label>
             <SelectBase
               propsForm={{ name: "estado", hasFeedback: false, className: "!w-full" }}
@@ -92,8 +92,8 @@ export default function FiltersMisContactos() {
           </div>
 
           {/* Calificación */}
-          <div className="col-span-1 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap text-right">Cal.:</label>
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Calif.:</label>
             <SelectBase
               propsForm={{ name: "calificacion", hasFeedback: false, className: "!w-full" }}
               className="w-full"
@@ -110,8 +110,8 @@ export default function FiltersMisContactos() {
           </div>
 
           {/* Con recomendaciones */}
-          <div className="col-span-2 flex items-center gap-2 px-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Con recomendaciones:</label>
+          <div className="col-span-1 flex items-center gap-2 px-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Recom.:</label>
             <Form.Item name="con_recomendaciones" valuePropName="checked" noStyle>
               <Switch size="small" />
             </Form.Item>

@@ -5,7 +5,7 @@ import { Tag, Spin, Tooltip } from "antd";
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { HiDocumentText } from "react-icons/hi2";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaExclamationTriangle } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import TableWithTitle from "~/components/tables/table-with-title";
 import ModalDetalleDeudaCliente, { type DeudaClienteDetalle } from "../modals/modal-detalle-deuda-cliente";
@@ -114,7 +114,22 @@ export default function TableDeudasClientes() {
   }, [response, page]);
 
   const totalDeuda = allData.reduce((sum, item) => sum + item.deuda, 0)
-  const tituloTabla = `DOCUMENTOS CON DEUDA  ·  ${allData.length} documentos  ·  Total deuda: S/. ${totalDeuda.toFixed(2)}`
+  const hoyInicio = new Date();
+  hoyInicio.setHours(0, 0, 0, 0);
+  const isVencida = (fecha?: string) => {
+    if (!fecha) return false;
+    const f = new Date(fecha);
+    if (isNaN(f.getTime())) return false;
+    f.setHours(0, 0, 0, 0);
+    return f.getTime() < hoyInicio.getTime();
+  };
+  const tituloExtra = (
+    <span className="font-semibold">
+      ·&nbsp;
+      <span className="text-red-600">{allData.length} documentos</span>
+      &nbsp;·&nbsp;Total deuda: S/. {totalDeuda.toFixed(2)}
+    </span>
+  );
 
   const handleViewDoc = useCallback((deuda: DeudaCliente) => {
     setVentaIdSeleccionada(deuda.id);
@@ -147,8 +162,22 @@ export default function TableDeudasClientes() {
       field: "fecha_vencimiento",
       width: 150,
       minWidth: 150,
-      valueFormatter: (params) =>
-        params.value ? formatFechaPeru(params.value, "DD/MM/YYYY") : "-",
+      cellRenderer: (params: any) => {
+        if (!params.value) return <span className="text-gray-400">-</span>;
+        const vencido = isVencida(params.value);
+        return (
+          <span
+            className={
+              vencido
+                ? "text-red-600 font-semibold flex items-center gap-1"
+                : ""
+            }
+          >
+            {vencido && <FaExclamationTriangle size={12} />}
+            {formatFechaPeru(params.value, "DD/MM/YYYY")}
+          </span>
+        );
+      },
     },
     {
       headerName: "Monto Total",
@@ -168,6 +197,7 @@ export default function TableDeudasClientes() {
       width: 120,
       minWidth: 120,
       type: "numericColumn",
+      cellStyle: { color: "#16a34a", fontWeight: "bold" },
       cellRenderer: (params: any) => {
         const monto = Number(params.value || 0);
         const moneda = params.data?.tipo_moneda === "d" ? "$" : "S/.";
@@ -227,7 +257,8 @@ export default function TableDeudasClientes() {
       <div className="flex-1 min-h-0 relative w-full">
         <TableWithTitle<DeudaCliente>
           id="deudas-clientes"
-          title={tituloTabla}
+          title="DOCUMENTOS CON DEUDA"
+          extraTitle={tituloExtra}
           loading={isLoading || isFetching}
           columnDefs={columnDefs}
           rowData={allData}

@@ -1,6 +1,6 @@
 import { Form } from 'antd'
 import { useEffect } from 'react'
-import { FaAddressCard, FaIdCard } from 'react-icons/fa'
+import { FaAddressCard } from 'react-icons/fa'
 import InputConsultaRuc from '~/app/_components/form/inputs/input-consulta-ruc'
 import { ConsultaDni, ConsultaRuc } from '~/app/_types/consulta-ruc'
 import LabelBase from '~/components/form/label-base'
@@ -22,13 +22,11 @@ export default function FormCreateProveedor({
 }) {
   const rucValue: string = Form.useWatch('ruc', form) ?? ''
 
-  // Detectar tipo automáticamente según longitud
+  // Detectar tipo automáticamente según longitud (solo para sincronizar el campo oculto)
   const tipoDetectado: 'empresa' | 'persona' | null =
     rucValue.length === 11 ? 'empresa' :
     rucValue.length === 8  ? 'persona' :
     null
-
-  const esEmpresa = tipoDetectado !== 'persona'
 
   // Sincronizar tipo_proveedor con el documento ingresado
   useEffect(() => {
@@ -36,16 +34,6 @@ export default function FormCreateProveedor({
       form.setFieldValue('tipo_proveedor', tipoDetectado)
     }
   }, [tipoDetectado, form])
-
-  const labelDoc =
-    tipoDetectado === 'empresa' ? 'RUC:' :
-    tipoDetectado === 'persona' ? 'DNI (opcional):' :
-    'RUC / DNI:'
-
-  const placeholderDoc =
-    tipoDetectado === 'empresa' ? 'RUC (11 dígitos)' :
-    tipoDetectado === 'persona' ? 'DNI (8 dígitos)' :
-    'RUC (11) o DNI (8 dígitos)'
 
   return (
     <>
@@ -56,16 +44,12 @@ export default function FormCreateProveedor({
 
       <div className='flex gap-4 items-center justify-center'>
         <LabelBase
-          label={labelDoc}
+          label='RUC / DNI:'
           className='w-full'
           classNames={{ labelParent: 'mb-6' }}
         >
           <InputConsultaRuc
-            prefix={
-              esEmpresa
-                ? <FaAddressCard className='text-rose-700 mx-1' />
-                : <FaIdCard className='text-rose-700 mx-1' />
-            }
+            prefix={<FaAddressCard className='text-rose-700 mx-1' />}
             propsForm={{
               name: 'ruc',
               validateTrigger: 'onBlur',
@@ -88,7 +72,7 @@ export default function FormCreateProveedor({
                 },
               ],
             }}
-            placeholder={placeholderDoc}
+            placeholder='RUC (11) o DNI (8 dígitos)'
             automatico={!dataEdit}
             onSuccess={res => {
               const dniData = (res as ConsultaDni)?.dni ? (res as ConsultaDni) : undefined
@@ -125,7 +109,7 @@ export default function FormCreateProveedor({
       </div>
 
       <LabelBase
-        label={esEmpresa ? 'Razon Social:' : 'Nombres y Apellidos:'}
+        label='Razón Social / Nombres y Apellidos:'
         orientation='column'
       >
         <InputBase
@@ -135,11 +119,11 @@ export default function FormCreateProveedor({
             rules: [
               {
                 required: true,
-                message: `Por favor, ingresa ${esEmpresa ? 'la razón social' : 'los nombres y apellidos'}`,
+                message: 'Por favor, ingresa la razón social o los nombres y apellidos',
               },
             ],
           }}
-          placeholder={esEmpresa ? 'Razon Social' : 'Nombres y Apellidos'}
+          placeholder='Razón Social / Nombres y Apellidos'
           autoComplete='new-password'
         />
       </LabelBase>
