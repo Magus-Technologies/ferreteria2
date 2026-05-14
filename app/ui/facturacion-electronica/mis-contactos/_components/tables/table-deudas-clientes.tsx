@@ -124,11 +124,12 @@ export default function TableDeudasClientes() {
     return f.getTime() < hoyInicio.getTime();
   };
   const tituloExtra = (
-    <span className="font-semibold">
-      ·&nbsp;
-      <span className="text-red-600">{allData.length} documentos</span>
-      &nbsp;·&nbsp;Total deuda: S/. {totalDeuda.toFixed(2)}
-    </span>
+    <div className="flex items-center gap-3">
+      <Tag color="blue">{allData.length} documentos</Tag>
+      <span className="text-sm font-bold text-red-600">
+        Total deuda: S/. {totalDeuda.toFixed(2)}
+      </span>
+    </div>
   );
 
   const handleViewDoc = useCallback((deuda: DeudaCliente) => {
@@ -138,18 +139,21 @@ export default function TableDeudasClientes() {
 
   const columnDefs: ColDef<DeudaCliente>[] = [
     {
+      colId: "cliente_nombre",
       headerName: "Cliente",
       field: "cliente_nombre",
       flex: 1,
       minWidth: 200,
     },
     {
+      colId: "serie_numero",
       headerName: "Documento",
       field: "serie_numero",
       width: 130,
       minWidth: 130,
     },
     {
+      colId: "fecha_emision",
       headerName: "Fecha Emisión",
       field: "fecha_emision",
       width: 140,
@@ -158,6 +162,7 @@ export default function TableDeudasClientes() {
         params.value ? formatFechaPeru(params.value, "DD/MM/YYYY") : "-",
     },
     {
+      colId: "fecha_vencimiento",
       headerName: "Fecha Vencimiento",
       field: "fecha_vencimiento",
       width: 150,
@@ -180,6 +185,7 @@ export default function TableDeudasClientes() {
       },
     },
     {
+      colId: "monto_total",
       headerName: "Monto Total",
       field: "monto_total",
       width: 120,
@@ -192,6 +198,7 @@ export default function TableDeudasClientes() {
       },
     },
     {
+      colId: "monto_pagado",
       headerName: "Pagado",
       field: "monto_pagado",
       width: 120,
@@ -205,6 +212,7 @@ export default function TableDeudasClientes() {
       },
     },
     {
+      colId: "deuda",
       headerName: "Deuda",
       field: "deuda",
       width: 120,
@@ -218,6 +226,7 @@ export default function TableDeudasClientes() {
       },
     },
     {
+      colId: "estado_de_cuenta",
       headerName: "Estado",
       field: "estado_de_cuenta",
       width: 100,
@@ -227,6 +236,7 @@ export default function TableDeudasClientes() {
       ),
     },
     {
+      colId: "acciones",
       headerName: "Acciones",
       field: "id",
       width: 100,

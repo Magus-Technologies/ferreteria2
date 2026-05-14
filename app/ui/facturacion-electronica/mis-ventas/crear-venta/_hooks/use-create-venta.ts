@@ -304,7 +304,13 @@ export default function useCreateVenta({
       // entrega de despacho en tienda (antes lo hardcodeaba como 'vendedor').
       quien_entrega: tipo_despacho === 'EnTienda' ? (quien_entrega || 'almacen') as any : undefined,
       // Si "Omitir entrega" fue presionado, evitar descuento de stock al crear la venta.
-      omitir_entrega: _omitir_entrega || undefined,
+      // También se omite la auto-creación en Despacho en Tienda + Almacén:
+      // el almacenero confirmará la entrega manualmente desde Mis Entregas.
+      // Despacho en Tienda + Vendedor mantiene el auto-entregar histórico.
+      omitir_entrega: (
+        _omitir_entrega ||
+        (tipo_despacho === 'EnTienda' && quien_entrega === 'almacen')
+      ) || undefined,
       // `descontar_stock = 'no'` indica que el cliente ya tiene el producto:
       // backend NO descuenta stock pero SÍ crea la entrega como ENTREGADA.
       descontar_stock,
@@ -644,18 +650,21 @@ export default function useCreateVenta({
       } else if (
         !isEditing &&
         ventaCreada &&
-        _omitir_entrega &&
-        (tipo_despacho === 'Domicilio' || tipo_despacho === 'Parcial')
+        (
+          (_omitir_entrega && (tipo_despacho === 'Domicilio' || tipo_despacho === 'Parcial')) ||
+          (tipo_despacho === 'EnTienda' && quien_entrega === 'almacen')
+        )
       ) {
         // Solo crear el placeholder en CREACIÓN. Al editar no se duplica:
         // las entregas viejas (incluido el placeholder original) ya las
         // maneja el backend.
+        const esEnTiendaAlmacen = tipo_despacho === 'EnTienda' && quien_entrega === 'almacen'
         try {
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
 
-          // OMITIR: crear entrega placeholder con cantidad_entregada=0.
-          // No descuenta stock ni cantidad_pendiente — el usuario configurará
+          // OMITIR / EnTienda+Almacén: crear entrega placeholder con cantidad_entregada=0.
+          // No descuenta stock ni cantidad_pendiente — el almacenero confirmará
           // la entrega real luego desde Mis Entregas.
           productosVenta.forEach((productoAlmacen: any) => {
             if (productoAlmacen.unidades_derivadas) {
@@ -672,10 +681,12 @@ export default function useCreateVenta({
           const entregaData: CreateEntregaProductoRequest = {
             venta_id: ventaCreada.id,
             tipo_entrega:
-              tipo_despacho === 'Parcial'
-                ? TipoEntrega.PARCIAL
-                : TipoEntrega.DESPACHO,
-            tipo_despacho: TipoDespacho.PROGRAMADO,
+              esEnTiendaAlmacen
+                ? TipoEntrega.RECOJO_EN_TIENDA
+                : tipo_despacho === 'Parcial'
+                  ? TipoEntrega.PARCIAL
+                  : TipoEntrega.DESPACHO,
+            tipo_despacho: esEnTiendaAlmacen ? TipoDespacho.INMEDIATO : TipoDespacho.PROGRAMADO,
             estado_entrega: EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),
             almacen_salida_id: almacen_id,
@@ -690,7 +701,7 @@ export default function useCreateVenta({
             console.error('❌ Error al crear entrega pendiente:', entregaResponse.error)
             notification.warning({
               message: 'Venta creada pero entrega no pudo ser registrada',
-              description: 'Puedes crearla manualmente desde "Mis Ventas".',
+              description: 'Puedes crearla manualmente desde "Mis Entregas".',
             })
           }
         } catch (error) {

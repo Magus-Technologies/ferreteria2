@@ -105,6 +105,7 @@ export default function TableMisProveedores() {
 
   const columnDefs: ColDef<Proveedor>[] = [
     {
+      colId: 'tipo_proveedor',
       headerName: 'Tipo',
       field: 'tipo_proveedor',
       width: 110,
@@ -118,18 +119,21 @@ export default function TableMisProveedores() {
       },
     },
     {
+      colId: 'ruc',
       headerName: 'RUC / DNI',
       field: 'ruc',
       width: 120,
       valueGetter: (params) => params.data?.ruc || '-',
     },
     {
+      colId: 'razon_social',
       headerName: 'Razón Social',
       field: 'razon_social',
       flex: 1,
       minWidth: 200,
     },
     {
+      colId: 'direccion',
       headerName: 'Dirección',
       field: 'direccion',
       flex: 1,
@@ -137,12 +141,14 @@ export default function TableMisProveedores() {
       valueGetter: (params) => params.data?.direccion || '-',
     },
     {
+      colId: 'telefono',
       headerName: 'Teléfono',
       field: 'telefono',
       width: 120,
       valueGetter: (params) => params.data?.telefono || '-',
     },
     {
+      colId: 'email',
       headerName: 'Email',
       field: 'email',
       flex: 1,
@@ -150,6 +156,7 @@ export default function TableMisProveedores() {
       valueGetter: (params) => params.data?.email || '-',
     },
     {
+      colId: 'calificacion',
       headerName: 'Calificación',
       field: 'ultimaCalificacion.estado',
       width: 120,
@@ -166,6 +173,7 @@ export default function TableMisProveedores() {
       },
     },
     {
+      colId: 'observacion',
       headerName: 'Observación',
       field: 'ultimaCalificacion.observacion',
       flex: 1,
@@ -181,6 +189,7 @@ export default function TableMisProveedores() {
       },
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       field: 'estado',
       width: 100,
@@ -191,6 +200,7 @@ export default function TableMisProveedores() {
       ),
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       width: 145,
       cellRenderer: (params: any) => {

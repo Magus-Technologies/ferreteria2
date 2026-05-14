@@ -227,12 +227,14 @@ export default function TableMisContactos() {
 
   const columnDefs: ColDef<Cliente>[] = [
     {
+      colId: "numero_documento",
       headerName: "RUC/DNI",
       field: "numero_documento",
       width: 120,
       pinned: "left",
     },
     {
+      colId: "razon_social",
       headerName: "Razón Social / Nombres",
       field: "razon_social",
       flex: 1,
@@ -240,7 +242,7 @@ export default function TableMisContactos() {
       valueGetter: (params) => {
         const cliente = params.data;
         if (!cliente) return "";
-        
+
         if (cliente.razon_social) {
           return cliente.razon_social;
         }
@@ -248,6 +250,7 @@ export default function TableMisContactos() {
       },
     },
     {
+      colId: "tipo_cliente",
       headerName: "Tipo",
       field: "tipo_cliente",
       width: 100,
@@ -263,6 +266,7 @@ export default function TableMisContactos() {
       },
     },
     {
+      colId: "direccion_principal",
       headerName: "Dirección Principal",
       field: "direcciones",
       flex: 1,
@@ -275,18 +279,21 @@ export default function TableMisContactos() {
       },
     },
     {
+      colId: "telefono",
       headerName: "Teléfono",
       field: "telefono",
       width: 120,
       valueGetter: (params) => params.data?.telefono || "-",
     },
     {
+      colId: "profesion",
       headerName: "Profesión",
       field: "profesion" as any,
       width: 140,
       valueGetter: (params) => (params.data as any)?.profesion?.nombre || "-",
     },
     {
+      colId: "email",
       headerName: "Email",
       field: "email",
       flex: 1,
@@ -294,6 +301,7 @@ export default function TableMisContactos() {
       valueGetter: (params) => params.data?.email || "-",
     },
     {
+      colId: "estado",
       headerName: "Estado",
       field: "estado",
       width: 100,
@@ -307,6 +315,7 @@ export default function TableMisContactos() {
       },
     },
     {
+      colId: "calificacion",
       headerName: "Calificación",
       width: 130,
       cellRenderer: (params: any) => {
@@ -330,6 +339,7 @@ export default function TableMisContactos() {
       },
     },
     {
+      colId: "observacion",
       headerName: "Observación",
       width: 200,
       flex: 1,
@@ -350,6 +360,7 @@ export default function TableMisContactos() {
       },
     },
     {
+      colId: "recomendaciones",
       headerName: "Recomendaciones",
       width: 130,
       cellRenderer: (params: any) => {
@@ -369,6 +380,7 @@ export default function TableMisContactos() {
       },
     },
     ...(filtros.ordenar_por_frecuencia ? [{
+      colId: "compras_mes",
       headerName: "Compras/Mes",
       width: 100,
       cellRenderer: (params: any) => {
@@ -382,6 +394,7 @@ export default function TableMisContactos() {
       },
     }] : []),
     {
+      colId: "acciones",
       headerName: "Acciones",
       width: 150,
       pinned: "right",

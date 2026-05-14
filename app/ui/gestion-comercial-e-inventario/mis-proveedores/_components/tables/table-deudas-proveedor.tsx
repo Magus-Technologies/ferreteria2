@@ -66,12 +66,14 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
 
   const columns: ColDef<Compra>[] = [
     {
+      colId: 'documento',
       headerName: 'Documento',
       width: 140,
       flex: 1,
       valueGetter: (p) => `${tipoDocLabel[p.data?.tipo_documento ?? ''] ?? p.data?.tipo_documento} ${p.data?.serie ?? ''}-${p.data?.numero ?? ''}`,
     },
     {
+      colId: 'proveedor',
       headerName: 'Proveedor',
       field: 'proveedor',
       flex: 2,
@@ -80,12 +82,14 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       hide: !!proveedorSeleccionado,
     },
     {
+      colId: 'fecha',
       headerName: 'Fecha',
       field: 'fecha',
       width: 110,
       valueFormatter: (p) => formatFechaPeru(p.value, 'DD/MM/YYYY') ?? '-',
     },
     {
+      colId: 'fecha_vencimiento',
       headerName: 'Vencimiento',
       field: 'fecha_vencimiento',
       width: 110,
@@ -103,6 +107,7 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       },
     },
     {
+      colId: 'total',
       headerName: 'Total',
       width: 110,
       type: 'numericColumn',
@@ -110,6 +115,7 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       valueFormatter: (p) => `S/. ${Number(p.value).toFixed(2)}`,
     },
     {
+      colId: 'total_pagado',
       headerName: 'Pagado',
       field: 'total_pagado',
       width: 110,
@@ -118,6 +124,7 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       cellStyle: { color: '#16a34a', fontWeight: 'bold' },
     },
     {
+      colId: 'saldo',
       headerName: 'Saldo',
       width: 110,
       type: 'numericColumn',
@@ -129,6 +136,7 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       cellStyle: { color: '#dc2626', fontWeight: 'bold' },
     },
     {
+      colId: 'estado',
       headerName: 'Estado',
       width: 100,
       cellRenderer: (p: ICellRendererParams<Compra>) => {
@@ -143,6 +151,7 @@ export default function TableDeudasProveedor({ proveedorSeleccionado }: TableDeu
       },
     },
     {
+      colId: 'acciones',
       headerName: 'Acciones',
       width: 90,
       cellRenderer: (p: ICellRendererParams<Compra>) => (
