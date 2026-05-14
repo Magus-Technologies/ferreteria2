@@ -147,11 +147,13 @@ function FormVentaInternal({
   handleSubmit,
   onMissingApertura,
   submitting,
+  isEditingVenta,
 }: {
   venta?: VentaConUnidadDerivadaNormal
   handleSubmit: (values: FormCreateVenta) => void
   onMissingApertura?: () => void
   submitting?: boolean
+  isEditingVenta?: boolean
 }) {
   const [form] = Form.useForm<FormCreateVenta>()
   useInitVenta({ venta, form })
@@ -171,7 +173,7 @@ function FormVentaInternal({
         <FormCrearVenta form={form} venta={venta} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoVenta form={form} ventaId={venta?.id} onMissingApertura={onMissingApertura} submitting={submitting} />
+        <CardsInfoVenta form={form} ventaId={isEditingVenta ? venta?.id : undefined} onMissingApertura={onMissingApertura} submitting={submitting} />
       </div>
     </FormBase>
   )
@@ -220,7 +222,7 @@ export default function BodyVender({
   const ventaData_ = venta || ventaFromCotizacion
   // Determinar si estamos editando una venta existente (NO una cotización convertida)
   // Las notas de venta tienen IDs que empiezan con 'ven', las notasMerged son ventas reales
-  const isEditingVenta = venta?.id && String(venta.id).startsWith('ven')
+  const isEditingVenta = !!(venta?.id && String(venta.id).startsWith('ven'))
   const { handleSubmit, loading: creandoVenta } = useCreateVenta({ 
     ventaId: isEditingVenta ? venta.id : undefined 
   })
@@ -287,6 +289,7 @@ export default function BodyVender({
         venta={ventaData_}
         handleSubmit={handleSubmit}
         submitting={creandoVenta}
+        isEditingVenta={isEditingVenta}
       />
     </>
   )
