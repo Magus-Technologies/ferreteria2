@@ -467,7 +467,7 @@ export function SeccionRestoProgramado({
                 {mostrarMapaResto ? (
                   <div className="h-full min-h-[300px]">
                     <MapaDireccionMapbox
-                      key={`resto-${direccionSeleccionadaResto}-${coordenadasResto?.lat}-${coordenadasResto?.lng}`}
+                      key={`resto-${direccionSeleccionadaResto}-${mostrarMapaResto ? 'visible' : 'hidden'}`}
                       direccion={restoDireccionEntrega || ''}
                       clienteNombre={clienteNombre}
                       onCoordenadaChange={handleCoordenadaChangeResto}

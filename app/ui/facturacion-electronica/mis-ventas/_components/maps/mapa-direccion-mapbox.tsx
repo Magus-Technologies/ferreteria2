@@ -85,7 +85,10 @@ export default function MapaDireccionMapbox({
     return () => window.removeEventListener('keydown', onKey)
   }, [expanded])
 
-  const actualizarMarcador = useCallback(async (lngLat: { lng: number; lat: number }) => {
+  const actualizarMarcador = useCallback(async (
+    lngLat: { lng: number; lat: number },
+    emitirCambio = true,
+  ) => {
     if (!map.current) return
 
     if (marker.current) {
@@ -125,7 +128,11 @@ export default function MapaDireccionMapbox({
       }
     }
 
-    setCoordenadas({ lat: lngLat.lat, lng: lngLat.lng })
+    setCoordenadas((prev) => {
+      if (prev?.lat === lngLat.lat && prev?.lng === lngLat.lng) return prev
+      return { lat: lngLat.lat, lng: lngLat.lng }
+    })
+    if (!emitirCambio) return
     // Obtener dirección mediante geocodificación inversa
     const direccionObtenida = await obtenerDireccionDesdeCoordenadas(lngLat.lng, lngLat.lat)
     onCoordenadaChange?.({ lat: lngLat.lat, lng: lngLat.lng }, direccionObtenida)
@@ -188,7 +195,7 @@ export default function MapaDireccionMapbox({
         forzarResize()
 
         if (coordenadasIniciales) {
-          actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat })
+          actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat }, false)
           return
         }
 
@@ -260,7 +267,7 @@ export default function MapaDireccionMapbox({
       actualizarMarcador({
         lng: coordenadasIniciales.lng,
         lat: coordenadasIniciales.lat,
-      })
+      }, false)
       return
     }
 
