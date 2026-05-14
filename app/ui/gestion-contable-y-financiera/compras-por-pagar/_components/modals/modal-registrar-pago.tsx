@@ -82,6 +82,12 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   )
   const saldoPendiente = totalCompra - totalPagado
 
+  const esDolares = localCompra?.tipo_moneda?.toLowerCase() === 'd'
+  const tipoDeCambio = Number(localCompra?.tipo_de_cambio ?? 0)
+  const totalCompraDolares  = esDolares && tipoDeCambio ? totalCompra  / tipoDeCambio : null
+  const totalPagadoDolares  = esDolares && tipoDeCambio ? totalPagado  / tipoDeCambio : null
+  const saldoDolares        = esDolares && tipoDeCambio ? saldoPendiente / tipoDeCambio : null
+
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({
     queryKey: [QueryKeys.SUB_CAJAS, 'metodos-para-ventas'],
@@ -370,15 +376,30 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
           <div className='flex flex-col justify-center gap-2 pl-2'>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-red-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Total Neto</span>
-              <span className='text-gray-800 font-bold text-lg'>S/. {totalCompra.toFixed(2)}</span>
+              <div className='text-right'>
+                <div className='text-gray-800 font-bold text-lg leading-tight'>S/. {totalCompra.toFixed(2)}</div>
+                {totalCompraDolares !== null && (
+                  <div className='text-blue-600 font-semibold text-sm leading-tight'>$ {totalCompraDolares.toFixed(2)}</div>
+                )}
+              </div>
             </div>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-green-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Cancelado</span>
-              <span className='text-green-600 font-bold text-lg'>S/. {totalPagado.toFixed(2)}</span>
+              <div className='text-right'>
+                <div className='text-green-600 font-bold text-lg leading-tight'>S/. {totalPagado.toFixed(2)}</div>
+                {totalPagadoDolares !== null && (
+                  <div className='text-blue-600 font-semibold text-sm leading-tight'>$ {totalPagadoDolares.toFixed(2)}</div>
+                )}
+              </div>
             </div>
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-red-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Saldo</span>
-              <span className={`font-bold text-lg ${saldoPendiente > 0 ? 'text-red-500' : 'text-green-600'}`}>S/. {saldoPendiente.toFixed(2)}</span>
+              <div className='text-right'>
+                <div className={`font-bold text-lg leading-tight ${saldoPendiente > 0 ? 'text-red-500' : 'text-green-600'}`}>S/. {saldoPendiente.toFixed(2)}</div>
+                {saldoDolares !== null && (
+                  <div className='text-blue-600 font-semibold text-sm leading-tight'>$ {saldoDolares.toFixed(2)}</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -421,7 +442,11 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
 
           {localCompra?.tipo_moneda?.toLowerCase() === 'd' && (
             <LabelBase label='TC Pago (S/$):' orientation='column'>
-              <Form.Item name='tipo_de_cambio' noStyle>
+              <Form.Item
+                name='tipo_de_cambio'
+                noStyle
+                rules={[{ required: true, message: 'Ingresa el TC del pago' }]}
+              >
                 <InputNumber
                   className='w-full'
                   precision={4}
@@ -491,9 +516,18 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
 
       {/* Resumen */}
       <div className='flex justify-between mt-4 bg-gray-50 rounded-lg p-3 text-sm font-bold border border-gray-200'>
-        <span>Facturado: <span className='text-red-700'>S/. {totalCompra.toFixed(2)}</span></span>
-        <span>Cancelado: <span className='text-green-700'>S/. {totalPagado.toFixed(2)}</span></span>
-        <span>Saldo Pendiente: <span className='text-red-600 text-lg'>S/. {saldoPendiente.toFixed(2)}</span></span>
+        <span>
+          Facturado: <span className='text-red-700'>S/. {totalCompra.toFixed(2)}</span>
+          {totalCompraDolares !== null && <span className='text-blue-600 ml-1'>($ {totalCompraDolares.toFixed(2)})</span>}
+        </span>
+        <span>
+          Cancelado: <span className='text-green-700'>S/. {totalPagado.toFixed(2)}</span>
+          {totalPagadoDolares !== null && <span className='text-blue-600 ml-1'>($ {totalPagadoDolares.toFixed(2)})</span>}
+        </span>
+        <span>
+          Saldo Pendiente: <span className='text-red-600 text-lg'>S/. {saldoPendiente.toFixed(2)}</span>
+          {saldoDolares !== null && <span className='text-blue-600 ml-1'>($ {saldoDolares.toFixed(2)})</span>}
+        </span>
       </div>
     </Modal>
 

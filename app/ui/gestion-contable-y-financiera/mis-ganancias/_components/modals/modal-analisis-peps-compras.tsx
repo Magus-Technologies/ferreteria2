@@ -34,6 +34,7 @@ interface CompraView {
   tc_compra: number
   tc_pago?: number
   tc_pago_real: boolean
+  tc_es_fallback: boolean
   costo_usd: number
   cantidad_total: number
   costo_tc_compra_total: number
@@ -80,6 +81,7 @@ function buildComprasView(productos: PepsProductoAnalisis[]): CompraView[] {
             tc_compra: fraccion.tc_compra,
             tc_pago: fraccion.tc_pago,
             tc_pago_real: fraccion.tc_pago_real,
+            tc_es_fallback: (fraccion as any).tc_es_fallback ?? false,
             costo_usd: fraccion.costo_usd,
             cantidad_total: 0,
             costo_tc_compra_total: 0,
@@ -156,7 +158,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
     {
       title: 'TC Compra → Pago',
       key: 'tc',
-      width: 175,
+      width: 200,
       align: 'center' as const,
       render: (_: any, row: CompraView) => (
         <span className="text-xs">
@@ -165,6 +167,9 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
             <>
               <span className="text-slate-400 mx-1">→</span>
               <span className="text-green-600 font-medium">{row.tc_pago.toFixed(4)}</span>
+              {(row as any).tc_es_fallback && (
+                <span className="text-amber-500 text-[10px] ml-1" title="Pago registrado sin TC — se usa el TC de compra">*sin TC</span>
+              )}
             </>
           ) : (
             <span className="text-slate-300 text-[10px] ml-1">(sin pago)</span>
@@ -264,7 +269,7 @@ export default function ModalAnalisisPepsCompras({ open, onClose, filtros: filtr
                       <FaExchangeAlt size={10} />
                       Impacto diferencia TC
                     </div>
-                    <div className="text-lg font-bold" style={{ color: colorPos(resumen.diferencia_total) }}>
+                    <div className="text-lg font-bold" style={{ color: colorImpacto(resumen.diferencia_total) }}>
                       {fmtS(resumen.diferencia_total)}
                     </div>
                     <div className={`text-[10px] mt-0.5 ${resumen.perdida_por_cambio ? 'text-red-500' : 'text-green-500'}`}>
