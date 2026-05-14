@@ -103,6 +103,7 @@ export interface Cotizacion {
   almacen?: Almacen;
   productosPorAlmacen?: ProductoAlmacenCotizacion[];
   productos_por_almacen?: ProductoAlmacenCotizacion[]; // Fallback snake_case
+  recomendado_por?: Cliente | null;
 }
 
 export interface ProductoCotizacion {

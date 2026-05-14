@@ -29,7 +29,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
   const { almacen_id, setAlmacenId } = useStoreAlmacen();
   const [openDoc, setOpenDoc] = useState(false);
   const [cotizacionData, setCotizacionData] = useState<CotizacionResponse>();
-  const [cotizacionActual, setCotizacionActual] = useState<CotizacionResponse['data']>();
+  const [cotizacionActual, setCotizacionActual] = useState<Cotizacion>();
   const router = useRouter();
 
   // Cargar datos de la cotización existente
@@ -231,8 +231,8 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
           </div>
           <FormCrearCotizacion
             form={form}
-            initialCliente={cotizacionActual?.cliente}
-            initialRecomendadoPor={cotizacionActual?.recomendado_por}
+            initialCliente={cotizacionActual?.cliente ?? undefined}
+            initialRecomendadoPor={cotizacionActual?.recomendado_por ?? undefined}
           />
         </div>
         <CardsInfoCotizacion form={form} />
