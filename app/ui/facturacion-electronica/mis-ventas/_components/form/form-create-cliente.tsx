@@ -29,16 +29,26 @@ export default function FormCreateCliente({
   form,
   dataEdit,
   direccionesListas = true,
+  mapSessionKey = 0,
 }: {
   form: FormInstance;
   dataEdit?: Cliente;
   direccionesListas?: boolean;
+  mapSessionKey?: number;
 }) {
   const numero_documento = Form.useWatch("numero_documento", form);
 
   // Hook canónico — reemplaza los 8 useWatch + 4 useState + 4 switch que
   // antes manejaban las direcciones/coordenadas/labels-Mapbox por separado.
   const direccionesHook = useDireccionesClienteForm({ form, cliente: dataEdit });
+  const coordenadasActivas = direccionesHook.getCoordenadas(direccionesHook.tipoActivo);
+  const mapaKey = [
+    mapSessionKey,
+    direccionesHook.tipoActivo,
+    direccionesHook.direccionActiva.direccion || 'sin-direccion',
+    coordenadasActivas?.lat ?? 'sin-lat',
+    coordenadasActivas?.lng ?? 'sin-lng',
+  ].join('-');
 
   useEffect(() => {
     if (numero_documento?.length === 8) {
@@ -288,12 +298,12 @@ export default function FormCreateCliente({
             <div className="h-[280px] border-2 border-gray-300 rounded-lg overflow-hidden">
               {direccionesListas ? (
                 <MapaDireccionMapbox
-                  key={tipoActivo}
+                  key={mapaKey}
                   direccion={direccionesHook.direccionActiva.direccion || ''}
                   onCoordenadaChange={(coords, dir) =>
                     direccionesHook.actualizarCoordenadas(tipoActivo, coords, dir)
                   }
-                  coordenadasIniciales={direccionesHook.getCoordenadas(tipoActivo)}
+                  coordenadasIniciales={coordenadasActivas}
                   editable={true}
                 />
               ) : (
