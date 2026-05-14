@@ -80,7 +80,7 @@ export default function ModalProveedorSearch({
         />
         <ButtonCreateProveedor
           className='mb-0!'
-          onSuccess={res => setText(res.ruc)}
+          onSuccess={res => setText(res.ruc ?? '')}
           textDefault={text}
           setTextDefault={setText}
         />

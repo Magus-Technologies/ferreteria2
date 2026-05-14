@@ -101,8 +101,9 @@ export interface ProductoAlmacenUnidadDerivada {
 // ============================================================
 export interface Proveedor {
   id: number
+  tipo_proveedor: 'empresa' | 'persona'
   razon_social: string
-  ruc: string
+  ruc: string | null
   direccion: string | null
   telefono: string | null
   email: string | null
