@@ -9,11 +9,13 @@ export default function useSearchClientes({
   value: string
   profesionId?: number
 }) {
+  const searchText = value.trim()
+
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.CLIENTES_SEARCH, value, profesionId],
     queryFn: async () => {
       const res = await clienteApi.getAll({
-        search: value.length >= 2 ? value : undefined,
+        search: searchText.length >= 2 ? searchText : undefined,
         profesion_id: profesionId || undefined,
         per_page: 20,
       })
@@ -25,7 +27,7 @@ export default function useSearchClientes({
 
       return res.data?.data || []
     },
-    enabled: value.length === 0 || value.length >= 2 || !!profesionId,
+    enabled: searchText.length >= 2 || !!profesionId,
     staleTime: 0,
     gcTime: 0,
   })
