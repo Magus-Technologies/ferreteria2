@@ -35,13 +35,15 @@ export default function SelectVehiculos({
   onChange,
   vehiculoPreseleccionado,
 }: SelectVehiculosProps) {
-  const form = Form.useFormInstance()
+  const formFromContext = Form.useFormInstance()
+  const form = formFromContext
   const queryClient = useQueryClient()
   const [openBuscar, setOpenBuscar] = useState(false)
   const [openCrear, setOpenCrear] = useState(false)
   const [creando, setCreando] = useState(false)
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<Vehiculo>()
   const [nuevoVehiculo, setNuevoVehiculo] = useState({ name: '', tipo: '', marca_modelo: '', placa: '' })
+  const vehiculoIdForm = Form.useWatch(propsForm?.name || '__vehiculo_id__', form)
 
   useEffect(() => {
     if (vehiculoPreseleccionado && vehiculoPreseleccionado.id !== vehiculoSeleccionado?.id) {
@@ -57,6 +59,31 @@ export default function SelectVehiculos({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehiculoPreseleccionado?.id])
+
+  useEffect(() => {
+    if (!propsForm?.name) return
+
+    const vehiculoId = vehiculoIdForm ? Number(vehiculoIdForm) : undefined
+    if (!vehiculoId) {
+      if (!vehiculoPreseleccionado && vehiculoSeleccionado) {
+        setVehiculoSeleccionado(undefined)
+      }
+      return
+    }
+
+    if (vehiculoSeleccionado?.id === vehiculoId) return
+    if (vehiculoPreseleccionado?.id === vehiculoId) return
+
+    vehiculosApi.getById(vehiculoId).then((response) => {
+      const vehiculoData = (response.data as any)?.data ?? response.data
+      if (!vehiculoData) return
+      setVehiculoSeleccionado(vehiculoData as Vehiculo)
+    }).catch(() => {
+      // Si falla la carga del detalle, dejamos el id en el form
+      // y evitamos romper el resto del modal.
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propsForm?.name, vehiculoIdForm, vehiculoPreseleccionado?.id])
 
   function handleSelect(vehiculo?: Vehiculo) {
     if (vehiculo) {

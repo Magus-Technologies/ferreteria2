@@ -544,10 +544,8 @@ function ModalDetallesEntregaInner({
         String(vehiculoPreseleccionadoDomicilio?.id ?? '') !== String(vehiculoIdValue)
       ) {
         vehiculosApi.getById(vehiculoIdValue).then((response) => {
-          // vehiculosApi.getById retorna ApiResponse<Vehiculo> directo
-          // response.data = Vehiculo (no anidado como en usuariosApi)
-          if (response.data) {
-            const vehiculoData = response.data
+          const vehiculoData = (response.data as any)?.data ?? response.data
+          if (vehiculoData) {
             setVehiculoPreseleccionadoDomicilio({
               id: vehiculoData.id,
               name: vehiculoData.name,
