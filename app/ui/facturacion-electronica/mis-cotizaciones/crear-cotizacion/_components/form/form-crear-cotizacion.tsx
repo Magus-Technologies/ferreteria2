@@ -1,6 +1,6 @@
 "use client";
 
-import { FormInstance, Form } from "antd";
+import { FormInstance, Form, Checkbox } from "antd";
 import type { FormCreateCotizacion } from "../../_types/cotizacion.types";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
@@ -125,6 +125,7 @@ export default function FormCrearCotizacion({
               propsForm={{
                 name: "tipo_documento",
                 hasFeedback: false,
+                initialValue: "03",
                 className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
               }}
               className="w-full"
@@ -165,23 +166,9 @@ export default function FormCrearCotizacion({
               initialValue={false}
               className="mb-0"
             >
-              <div className="flex items-center gap-2 h-[40px]">
-                <input
-                  type="checkbox"
-                  id="reservar_stock"
-                  className="w-4 h-4 text-rose-600 bg-gray-100 border-gray-300 rounded focus:ring-rose-500 focus:ring-2 cursor-pointer"
-                  checked={form.getFieldValue("reservar_stock")}
-                  onChange={(e) => {
-                    form.setFieldValue("reservar_stock", e.target.checked);
-                  }}
-                />
-                <label
-                  htmlFor="reservar_stock"
-                  className="text-sm font-medium text-gray-700 cursor-pointer select-none"
-                >
-                  📦 Reservar Stock
-                </label>
-              </div>
+              <Checkbox className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                📦 Reservar Stock
+              </Checkbox>
             </Form.Item>
           </ConfigurableElement>
         </LabelBase>

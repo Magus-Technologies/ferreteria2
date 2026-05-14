@@ -191,34 +191,39 @@ export default function BodyVender({
   const [formKey, setFormKey] = useState(0)
   useCheckAperturaDiaria()
 
-  const { handleSubmit, loading: creandoVenta } = useCreateVenta({ ventaId: venta?.id })
-  
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
   const setProductos = useStoreProductoAgregadoVenta(state => state.setProductos)
   const setValesAplicables = useStoreProductoAgregadoVenta(state => state.setValesAplicables)
 
   // Convertir cotización a formato de venta si existe
+  // Laravel puede devolver productosPorAlmacen (camelCase) o productos_por_almacen (snake_case)
+  // y unidades_derivadas viene como snake_case del backend
+  const productosFromCotizacion = cotizacion?.productosPorAlmacen ?? cotizacion?.productos_por_almacen;
   const ventaFromCotizacion = cotizacion ? {
     ...cotizacion,
-    // Mapear los campos de cotización a venta
-    productos_por_almacen: cotizacion.productos_por_almacen?.map((ppa: any) => ({
+    productos_por_almacen: productosFromCotizacion?.map((ppa: any) => ({
       ...ppa,
       unidades_derivadas: ppa.unidades_derivadas?.map((ud: any) => ({
         ...ud,
         // Mapear unidad_derivada_inmutable a unidad_derivada_normal
         unidad_derivada_normal: {
-          id: ud.unidad_derivada_inmutable?.id,
-          name: ud.unidad_derivada_inmutable?.name,
+          id: ud.unidad_derivada_inmutable?.id ?? ud.unidadDerivadaInmutable?.id,
+          name: ud.unidad_derivada_inmutable?.name ?? ud.unidadDerivadaInmutable?.name,
         },
       })),
     })),
   } : undefined
 
-  // Usar venta si existe, sino usar ventaFromCotizacion
-  const ventaData_  = venta || ventaFromCotizacion
-
-  // Escuchar evento de venta creada
+  // Usar venta si existe (notasMerged), sino usar ventaFromCotizacion
+  // NO usar ventaId de cotizacion porque es un ID de cotización, no de venta
+  const ventaData_ = venta || ventaFromCotizacion
+  // Determinar si estamos editando una venta existente (NO una cotización convertida)
+  // Las notas de venta tienen IDs que empiezan con 'ven', las notasMerged son ventas reales
+  const isEditingVenta = venta?.id && String(venta.id).startsWith('ven')
+  const { handleSubmit, loading: creandoVenta } = useCreateVenta({ 
+    ventaId: isEditingVenta ? venta.id : undefined 
+  })
   useEffect(() => {
     const unsubscribe = ventaEvents.on((data) => {
       setVentaId(String(data.id))

@@ -86,6 +86,7 @@ export function useDireccionesClienteForm({
   cliente,
   writeLegacyFields = true,
 }: UseDireccionesClienteFormParams) {
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
   const [direcciones, setDirecciones] = useState<DireccionCliente[]>(() =>
     parseDireccionesFromCliente(cliente),
   )
@@ -107,6 +108,54 @@ export function useDireccionesClienteForm({
   useEffect(() => {
     setDirecciones(parseDireccionesFromCliente(cliente))
   }, [cliente])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const cargarDireccionesMapa = async () => {
+      if (!mapboxToken) return
+
+      const pendientes = direcciones.filter((d) =>
+        d.latitud != null &&
+        d.longitud != null &&
+        !direccionesMapa[d.tipo],
+      )
+
+      if (!pendientes.length) return
+
+      await Promise.all(
+        pendientes.map(async (d) => {
+          try {
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${d.longitud},${d.latitud}.json?access_token=${mapboxToken}&limit=1&language=es`
+            )
+            const data = await response.json()
+            const placeName = data.features?.[0]?.place_name
+            if (cancelled || !placeName) return
+            setDireccionesMapa((prev) => {
+              if (prev[d.tipo]) return prev
+              return { ...prev, [d.tipo]: placeName }
+            })
+          } catch {
+            if (cancelled) return
+            setDireccionesMapa((prev) => {
+              if (prev[d.tipo]) return prev
+              return {
+                ...prev,
+                [d.tipo]: `${Number(d.latitud).toFixed(6)}, ${Number(d.longitud).toFixed(6)}`,
+              }
+            })
+          }
+        }),
+      )
+    }
+
+    cargarDireccionesMapa()
+
+    return () => {
+      cancelled = true
+    }
+  }, [direcciones, direccionesMapa, mapboxToken])
 
   // Escribir todos los slots al form como campos legacy. Se ejecuta cada
   // vez que cambia el state interno — así los archivos consumidores que
