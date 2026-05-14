@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button, Tag, Tooltip, Modal } from 'antd'
 import { FaEdit, FaTrash, FaStar, FaEye } from 'react-icons/fa'
 import type { ColDef } from 'ag-grid-community'
@@ -85,6 +85,23 @@ export default function TableMisProveedores() {
   })
 
   const proveedores = Array.isArray(response) ? response : []
+
+  const initialSelectionDone = useRef(false)
+
+  useEffect(() => {
+    if (!proveedores.length || initialSelectionDone.current) return
+    const timer = setTimeout(() => {
+      const api = tableRef.current?.api
+      if (!api) return
+      const firstNode = api.getDisplayedRowAtIndex(0)
+      if (firstNode?.data) {
+        firstNode.setSelected(true)
+        setProveedorId(firstNode.data.id)
+        initialSelectionDone.current = true
+      }
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [proveedores, setProveedorId])
 
   const columnDefs: ColDef<Proveedor>[] = [
     {
