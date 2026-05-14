@@ -95,11 +95,12 @@ export interface Cotizacion {
   venta_id: string | null;
   created_at: string;
   updated_at: string;
-  // Relaciones
+  // Relaciones - Laravel devuelve camelCase (productosPorAlmacen)
   cliente?: Cliente | null;
   user?: User;
   almacen?: Almacen;
-  productos_por_almacen?: ProductoAlmacenCotizacion[];
+  productosPorAlmacen?: ProductoAlmacenCotizacion[];
+  productos_por_almacen?: ProductoAlmacenCotizacion[]; // Fallback snake_case
 }
 
 export interface ProductoCotizacion {
