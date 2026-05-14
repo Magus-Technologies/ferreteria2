@@ -125,6 +125,7 @@ export default function FormCrearCotizacion({
               propsForm={{
                 name: "tipo_documento",
                 hasFeedback: false,
+                initialValue: "03",
                 className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
               }}
               className="w-full"

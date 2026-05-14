@@ -92,31 +92,41 @@ export default function ModalCreateCliente({
           if (cargaActualRef.current !== cargaId) return;
           form.resetFields();
           setClienteConDirecciones(undefined);
+          setCargandoDirecciones(true);
+
+          const [clienteResponse, direccionesResponse] = await Promise.all([
+            clienteApi.getById(dataEdit.id),
+            clienteApi.listarDirecciones(dataEdit.id),
+          ]);
+
+          if (cargaActualRef.current !== cargaId) return;
+
+          const clienteCompleto = clienteResponse.data?.data ?? dataEdit;
+          const direcciones = direccionesResponse.data?.data ?? [];
+
+          const formValues = Object.fromEntries(
+            Object.entries(clienteCompleto).map(([key, value]) => [key, value ?? undefined]),
+          );
+          form.setFieldsValue(formValues);
+          // SelectEstado usa 1/0, el modelo usa boolean
+          form.setFieldValue('estado', clienteCompleto.estado ? 1 : 0);
+          if (clienteCompleto.fecha_nacimiento) {
+            form.setFieldValue('fecha_nacimiento', dayjs(clienteCompleto.fecha_nacimiento));
+          }
+          setClienteConDirecciones({ ...clienteCompleto, direcciones });
+          setCargandoDirecciones(false);
+          setDireccionesListas(true);
+        } catch {
+          if (cargaActualRef.current !== cargaId) return;
           const formValues = Object.fromEntries(
             Object.entries(dataEdit).map(([key, value]) => [key, value ?? undefined]),
           );
           form.setFieldsValue(formValues);
-          // SelectEstado usa 1/0, el modelo usa boolean
           form.setFieldValue('estado', dataEdit.estado ? 1 : 0);
           if (dataEdit.fecha_nacimiento) {
             form.setFieldValue('fecha_nacimiento', dayjs(dataEdit.fecha_nacimiento));
           }
-          setCargandoDirecciones(true);
-          try {
-            const response = await clienteApi.listarDirecciones(dataEdit.id);
-            if (cargaActualRef.current !== cargaId) return;
-            const direcciones = response.data?.data ?? [];
-            setClienteConDirecciones({ ...dataEdit, direcciones });
-          } catch {
-            if (cargaActualRef.current !== cargaId) return;
-            setClienteConDirecciones(dataEdit);
-          } finally {
-            if (cargaActualRef.current !== cargaId) return;
-            setCargandoDirecciones(false);
-            setDireccionesListas(true);
-          }
-        } catch {
-          if (cargaActualRef.current !== cargaId) return;
+          setClienteConDirecciones(dataEdit);
           setCargandoDirecciones(false);
           setDireccionesListas(true);
         }

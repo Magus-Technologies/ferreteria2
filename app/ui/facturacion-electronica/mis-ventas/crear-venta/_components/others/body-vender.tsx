@@ -191,8 +191,6 @@ export default function BodyVender({
   const [formKey, setFormKey] = useState(0)
   useCheckAperturaDiaria()
 
-  const { handleSubmit, loading: creandoVenta } = useCreateVenta({ ventaId: venta?.id })
-  
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
   const setProductos = useStoreProductoAgregadoVenta(state => state.setProductos)
