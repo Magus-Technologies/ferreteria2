@@ -79,7 +79,7 @@ export default function useCreateCliente({
         const valuesAny = values as unknown as Record<string, unknown>
         return {
           tipo,
-          direccion: (valuesAny[fields.direccion as string] as string | null | undefined) ?? "",
+          direccion: ((valuesAny[fields.direccion as string] as string | null | undefined) ?? "").trim(),
           referencia: (valuesAny[fields.referencia] as string | null | undefined) ?? null,
           latitud: (valuesAny[fields.latitud] as number | null | undefined) ?? undefined,
           longitud: (valuesAny[fields.longitud] as number | null | undefined) ?? undefined,
@@ -95,13 +95,18 @@ export default function useCreateCliente({
 
         for (const dirNueva of direccionesDesdeForm) {
           const dirExistente = direccionesMap.get(dirNueva.tipo)
-          if (dirNueva.direccion) {
-            const payload = {
-              direccion: dirNueva.direccion,
-              referencia: dirNueva.referencia || null,
-              latitud: dirNueva.latitud ?? undefined,
-              longitud: dirNueva.longitud ?? undefined,
-            }
+          const tieneDatos =
+            dirNueva.direccion.length > 0 ||
+            !!dirNueva.referencia?.trim() ||
+            dirNueva.latitud != null ||
+            dirNueva.longitud != null
+          const payload = {
+            direccion: dirNueva.direccion,
+            referencia: dirNueva.referencia || null,
+            latitud: dirNueva.latitud ?? undefined,
+            longitud: dirNueva.longitud ?? undefined,
+          }
+          if (tieneDatos) {
             if (dirExistente) {
               await clienteApi.actualizarDireccion(dirExistente.id, payload)
             } else {
@@ -115,7 +120,12 @@ export default function useCreateCliente({
       } else {
         // MODO CREACIÓN: solo se persisten las que tengan dirección.
         for (const dirNueva of direccionesDesdeForm) {
-          if (!dirNueva.direccion) continue
+          const tieneDatos =
+            dirNueva.direccion.length > 0 ||
+            !!dirNueva.referencia?.trim() ||
+            dirNueva.latitud != null ||
+            dirNueva.longitud != null
+          if (!tieneDatos) continue
           await clienteApi.crearDireccion(cliente.id, {
             direccion: dirNueva.direccion,
             referencia: dirNueva.referencia || null,
