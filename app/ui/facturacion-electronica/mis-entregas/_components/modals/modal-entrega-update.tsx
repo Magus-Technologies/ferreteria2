@@ -279,8 +279,11 @@ export default function ModalEntregaUpdate({
   //   - restante=true: solo incluir productos con `cantidad_pendiente > 0`
   //     (los que faltan por entregar). `total = pendiente`, `entregado = 0`,
   //     `entregar = pendiente` (sugerencia: entregar todo lo que queda).
-  //   - restante=false: comportamiento histórico — si la entrega ya está 'en'
-  //     mostrar todo entregado, si está 'pe'/'ec' mostrar entregar = total.
+  //   - restante=false:
+  //       * si la entrega ya está 'en': mostrar todo entregado / lo que queda.
+  //       * si la entrega está 'pe'/'ec': usar la cantidad PROGRAMADA en esta
+  //         entrega (`detalle.cantidad_entregada`) como base de `entregar`,
+  //         no el total de la venta.
   const productosIniciales: ProductoEntrega[] = useMemo(() => {
     if (!entrega?.productos_entregados) return []
 
@@ -348,28 +351,49 @@ export default function ModalEntregaUpdate({
       const pav = ud.producto_almacen_venta || {}
       const pa = pav.producto_almacen || {}
       const prod = pa.producto || {}
-      const total = Number(ud.cantidad ?? p.cantidad_entregada ?? 0)
+      const totalVenta = Number(ud.cantidad ?? 0)
+      const cantidadProgramadaEstaEntrega = Number(p.cantidad_entregada ?? 0)
       const codigo = prod.cod_producto || ''
       const unidad = ud.unidad_derivada_inmutable?.name || ''
       const clave = `${codigo}|${unidad}`.trim().toLowerCase()
       const cantidadAnterior = Number(productosAnteriores.get(clave)?.cantidad || 0)
       const pendienteRaw = ud.cantidad_pendiente
-      const pendienteReal = pendienteRaw == null
-        ? Math.max(0, total - Number(p.cantidad_entregada ?? 0))
+      const pendienteVentaReal = pendienteRaw == null
+        ? Math.max(0, totalVenta - cantidadProgramadaEstaEntrega)
         : Number(pendienteRaw)
-      const entregadoReal = entregaTieneEntregaFisica ? Math.max(0, total - pendienteReal) : 0
-      const recibidoReal = entregaFueEntregadaAntes
-        ? Math.max(cantidadAnterior - total, 0)
+      const entregadoReal = entregaTieneEntregaFisica
+        ? Math.max(0, totalVenta - pendienteVentaReal)
         : 0
+      const recibidoReal = entregaFueEntregadaAntes
+        ? Math.max(cantidadAnterior - totalVenta, 0)
+        : 0
+
+      if (!entregaTieneEntregaFisica) {
+        const pendienteEstaEntrega = cantidadProgramadaEstaEntrega
+        return {
+          id: index + 1,
+          producto: prod.name || p.producto_name || '',
+          ubicacion: '',
+          total: totalVenta,
+          recibido: recibidoReal,
+          programado: cantidadProgramadaEstaEntrega,
+          entregado: 0,
+          pendiente: pendienteVentaReal,
+          entregar: pendienteEstaEntrega,
+          entregar_programado: 0,
+          unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
+        }
+      }
+
       return {
         id: index + 1,
         producto: prod.name || p.producto_name || '',
         ubicacion: '',
-        total,
+        total: totalVenta,
         recibido: recibidoReal,
         entregado: entregadoReal,
-        pendiente: entregaTieneEntregaFisica ? pendienteReal : total,
-        entregar: entregaTieneEntregaFisica ? pendienteReal : total,
+        pendiente: pendienteVentaReal,
+        entregar: pendienteVentaReal,
         entregar_programado: 0,
         unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
       }

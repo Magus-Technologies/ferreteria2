@@ -83,6 +83,8 @@ export interface Cotizacion {
   observaciones: string | null;
   estado_cotizacion: 'pe' | 'co' | 've' | 'ca'; // pendiente, confirmado, vendido, cancelado
   reservar_stock: boolean;
+  fecha_vencimiento_reserva: string | null;
+  recomendado_por_id: number | null;
   cliente_id: number | null;
   ruc_dni: string | null;
   telefono: string | null;
@@ -131,6 +133,8 @@ export interface CreateCotizacionRequest {
   tipo_documento?: string;
   observaciones?: string;
   reservar_stock?: boolean;
+  fecha_vencimiento_reserva?: string;
+  recomendado_por_id?: number;
   almacen_id: number;
 }
 

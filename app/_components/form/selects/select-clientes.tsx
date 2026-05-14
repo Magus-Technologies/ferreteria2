@@ -30,6 +30,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   showOnlyDocument?: boolean
   autoFocus?: boolean
   open?: boolean // Permitir controlar si se abre el dropdown
+  initialCliente?: Cliente // Cliente pre-cargado (para pre-llenar sin búsqueda)
 }
 
 export default function SelectClientes({
@@ -47,6 +48,7 @@ export default function SelectClientes({
   showOnlyDocument = false,
   autoFocus = false,
   open, // Nueva prop para controlar el dropdown
+  initialCliente, // Cliente pre-cargado (para pre-llenar sin búsqueda)
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
@@ -78,8 +80,33 @@ export default function SelectClientes({
     store => store.setCliente
   )
 
-  // Usar el store global para el texto de búsqueda (igual que SelectProductos)
+// Usar el store global para el texto de búsqueda (igual que SelectProductos)
   const [textDefault, setTextDefault] = useState('')
+
+  // Pre-llenar cliente desde initialCliente (para edición)
+  useEffect(() => {
+    if (initialCliente && !clienteSeleccionado) {
+      setClienteSeleccionado(initialCliente)
+      // Settear el texto según el modo
+      if (showOnlyDocument) {
+        setText(initialCliente.numero_documento || '')
+        setLastSelectedDocument(initialCliente.numero_documento || '')
+      } else {
+        const label = initialCliente.razon_social
+          ? `${initialCliente.numero_documento} : ${initialCliente.razon_social}`
+          : `${initialCliente.numero_documento} : ${initialCliente.nombres} ${initialCliente.apellidos}`
+        setText(label)
+      }
+      // Settear el valor en el SelectBase
+      iterarChangeValue({
+        refObject: selectClientesRef,
+        value: initialCliente.id,
+      })
+      // Marcar como seleccionado
+      clienteSeleccionadoRef.current = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCliente])
 
   // Notificar al componente padre del cambio de texto
   useEffect(() => {

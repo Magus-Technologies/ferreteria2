@@ -65,6 +65,8 @@ export default function BodyCotizar() {
         tipo_documento: values.tipo_documento,
         observaciones: values.observaciones,
         reservar_stock: values.reservar_stock ?? false,
+        fecha_vencimiento_reserva: values.fecha_vencimiento_reserva?.format("YYYY-MM-DD"),
+        recomendado_por_id: values.recomendado_por_id,
         almacen_id: almacen_id,
       };
 

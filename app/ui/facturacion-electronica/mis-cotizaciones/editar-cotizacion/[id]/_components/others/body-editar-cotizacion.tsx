@@ -29,6 +29,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
   const { almacen_id, setAlmacenId } = useStoreAlmacen();
   const [openDoc, setOpenDoc] = useState(false);
   const [cotizacionData, setCotizacionData] = useState<CotizacionResponse>();
+  const [cotizacionActual, setCotizacionActual] = useState<CotizacionResponse['data']>();
   const router = useRouter();
 
   // Cargar datos de la cotización existente
@@ -60,6 +61,9 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
 
         // Establecer el almacén
         setAlmacenId(cotizacion.almacen_id);
+
+        // Guardar cotización para usar en el render
+        setCotizacionActual(cotizacion);
 
         // Transformar productos para el formulario
         const productos: FormCreateCotizacion["productos"] = cotizacion.productos_por_almacen?.flatMap((pac) =>
@@ -95,6 +99,8 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
           tipo_documento: cotizacion.tipo_documento || undefined,
           observaciones: cotizacion.observaciones || undefined,
           reservar_stock: cotizacion.reservar_stock,
+          fecha_vencimiento_reserva: cotizacion.fecha_vencimiento_reserva ? dayjs(cotizacion.fecha_vencimiento_reserva) : undefined,
+          recomendado_por_id: cotizacion.recomendado_por_id || undefined,
         });
 
       } catch (error) {
@@ -151,6 +157,8 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
         tipo_documento: values.tipo_documento,
         observaciones: values.observaciones,
         reservar_stock: values.reservar_stock ?? false,
+        fecha_vencimiento_reserva: values.fecha_vencimiento_reserva?.format("YYYY-MM-DD"),
+        recomendado_por_id: values.recomendado_por_id,
         almacen_id: almacen_id,
       };
 
@@ -221,7 +229,11 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
           <div className="flex-1 min-h-0">
             <FormTableCotizar form={form} />
           </div>
-          <FormCrearCotizacion form={form} />
+          <FormCrearCotizacion
+            form={form}
+            initialCliente={cotizacionActual?.cliente}
+            initialRecomendadoPor={cotizacionActual?.recomendado_por}
+          />
         </div>
         <CardsInfoCotizacion form={form} />
       </FormBase>

@@ -61,6 +61,10 @@ export interface FormCreateCotizacion extends ClienteDireccionFormFields {
   
   // Opciones
   reservar_stock?: boolean;
+  fecha_vencimiento_reserva?: Dayjs;
+
+  // Campos de recomendado
+  recomendado_por_id?: number;
   
   // Observaciones
   observaciones?: string;
