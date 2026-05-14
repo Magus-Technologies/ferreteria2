@@ -32,18 +32,29 @@ export default function MapaDireccionMapbox({
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const marker = useRef<mapboxgl.Marker | null>(null)
+  const resizeTimeoutsRef = useRef<number[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(coordenadasIniciales || null)
   const [expanded, setExpanded] = useState(false)
 
   const forzarResize = useCallback(() => {
-    if (!map.current) return
-    window.requestAnimationFrame(() => {
-      map.current?.resize()
-    })
-    window.setTimeout(() => map.current?.resize(), 120)
-    window.setTimeout(() => map.current?.resize(), 320)
+    const safeResize = () => {
+      const mapInstance = map.current as any
+      const container = mapContainer.current
+      if (!mapInstance || !container || !container.isConnected) return
+      if (!mapInstance._canvas || !mapInstance._container) return
+      try {
+        mapInstance.resize()
+      } catch {
+        // Ignorar resizes tardíos mientras el mapa se desmonta o se recrea
+      }
+    }
+
+    safeResize()
+    window.requestAnimationFrame(safeResize)
+    resizeTimeoutsRef.current.push(window.setTimeout(safeResize, 120))
+    resizeTimeoutsRef.current.push(window.setTimeout(safeResize, 320))
   }, [])
 
   // Cuando cambia el modo expandido, redimensionar el mapa para que se reajuste al contenedor
@@ -207,8 +218,12 @@ export default function MapaDireccionMapbox({
     }
 
     return () => {
+      resizeTimeoutsRef.current.forEach((id) => window.clearTimeout(id))
+      resizeTimeoutsRef.current = []
       marker.current?.remove()
+      marker.current = null
       map.current?.remove()
+      map.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -26,6 +26,7 @@ import {
 } from "~/lib/utils/cliente-direcciones-form";
 import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
 import { BankOutlined } from "@ant-design/icons";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 // Modales pesados cargados bajo demanda
 const ModalMetodosPagoVenta = dynamic(() => import("../modals/modal-metodos-pago-venta"), { ssr: false });
@@ -422,6 +423,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
           // Invalidar la caché del cliente para que la próxima vez que se
           // abra el modal de editar se carguen los datos más recientes.
           queryClient.invalidateQueries({ queryKey: ['cliente', clienteId, 'editar'] });
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteId] });
 
           setModalEditarClienteOpen(false);
         }}
