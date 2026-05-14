@@ -1,8 +1,8 @@
 'use client'
 
 import { Form } from 'antd'
-import { FaCalendar, FaSearch, FaTruck } from 'react-icons/fa'
-import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import { FaSearch, FaTruck } from 'react-icons/fa'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { useStoreFiltrosMisEntregas } from '../../_store/store-filtros-mis-entregas'
@@ -133,54 +133,14 @@ export default function FiltersMisEntregas() {
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
           {/* Fila 1 */}
           <ConfigurableElement
-            componentId="mis-entregas.filtro-fecha-desde"
-            label="Filtro Fecha Desde"
+            componentId="mis-entregas.filtro-rango-fechas"
+            label="Filtro Rango Fechas"
           >
-            <div className="col-span-2 flex items-center gap-2">
-              <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-                Fecha Desde:
-              </label>
-              <DatePickerBase
-                propsForm={{
-                  name: 'fecha_desde',
-                  hasFeedback: false,
-                  className: '!w-full',
-                }}
-                placeholder="Fecha"
-                formWithMessage={false}
-                prefix={
-                  <FaCalendar size={15} className="text-amber-600 mx-1" />
-                }
-                allowClear
-                // Forzar uso del calendario para que el form siempre tenga el
-                // valor seleccionado. Al permitir escritura libre, AntD DatePicker
-                // no commitea hasta Enter o blur válido — y si el usuario tipea
-                // y hace click directo en Buscar, el filtro usa la fecha vieja.
-                inputReadOnly
-              />
-            </div>
-          </ConfigurableElement>
-
-          <ConfigurableElement
-            componentId="mis-entregas.filtro-fecha-hasta"
-            label="Filtro Fecha Hasta"
-          >
-            <div className="col-span-2 flex items-center gap-2">
-              <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-                Hasta:
-              </label>
-              <DatePickerBase
-                propsForm={{
-                  name: 'fecha_hasta',
-                  hasFeedback: false,
-                  className: '!w-full',
-                }}
-                placeholder="Hasta"
-                formWithMessage={false}
-                prefix={
-                  <FaCalendar size={15} className="text-amber-600 mx-1" />
-                }
-                allowClear
+            <div className="col-span-4 grid grid-cols-2 gap-3">
+              <FilterDateRangeFields
+                fromName="fecha_desde"
+                toName="fecha_hasta"
+                itemClassName="flex items-center gap-2"
                 inputReadOnly
               />
             </div>

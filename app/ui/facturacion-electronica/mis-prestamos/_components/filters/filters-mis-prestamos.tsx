@@ -9,9 +9,8 @@ import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import FormBase from '~/components/form/form-base'
-import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import SelectClientes from '~/app/_components/form/selects/select-clientes'
-import { FaCalendar } from 'react-icons/fa6'
 import dayjs, { Dayjs } from 'dayjs'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -153,36 +152,11 @@ export default function FiltersMisPrestamos() {
       <div className='hidden lg:block mt-4'>
         <div className='grid grid-cols-12 gap-x-3 gap-y-2.5'>
           {/* Fila 1 */}
-          <div className='col-span-2 flex items-center gap-2'>
-            <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
-              Fecha Desde:
-            </label>
-            <DatePickerBase
-              propsForm={{
-                name: 'desde',
-                hasFeedback: false,
-                className: '!w-full',
-              }}
-              placeholder='Fecha'
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className='text-amber-600 mx-1' />}
-              allowClear
-            />
-          </div>
-          <div className='col-span-2 flex items-center gap-2'>
-            <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
-              Hasta:
-            </label>
-            <DatePickerBase
-              propsForm={{
-                name: 'hasta',
-                hasFeedback: false,
-                className: '!w-full',
-              }}
-              placeholder='Hasta'
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className='text-amber-600 mx-1' />}
-              allowClear
+          <div className='col-span-4 grid grid-cols-2 gap-3'>
+            <FilterDateRangeFields
+              fromName='desde'
+              toName='hasta'
+              itemClassName='flex items-center gap-2'
             />
           </div>
           <div className='col-span-4 flex items-center gap-2'>
@@ -356,32 +330,12 @@ export default function FiltersMisPrestamos() {
         )}
       >
         <div className='flex flex-col gap-4'>
-          <div>
-            <label className='text-sm font-semibold text-gray-700 block mb-2'>
-              Fecha Desde:
-            </label>
-            <DatePickerBase
-              propsForm={{ name: 'desde', hasFeedback: false }}
-              placeholder='Fecha Desde'
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className='text-amber-600 mx-1' />}
-              allowClear
-              className='w-full'
-            />
-          </div>
-          <div>
-            <label className='text-sm font-semibold text-gray-700 block mb-2'>
-              Hasta:
-            </label>
-            <DatePickerBase
-              propsForm={{ name: 'hasta', hasFeedback: false }}
-              placeholder='Hasta'
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className='text-amber-600 mx-1' />}
-              allowClear
-              className='w-full'
-            />
-          </div>
+          <FilterDateRangeFields
+            fromName='desde'
+            toName='hasta'
+            fromPlaceholder='Fecha Desde'
+            stacked
+          />
           <div>
             <label className='text-sm font-semibold text-gray-700 block mb-2'>
               Cliente:

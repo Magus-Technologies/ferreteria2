@@ -4,14 +4,14 @@ import { Form } from 'antd'
 import { useStoreFiltrosMisGuias } from '../../_store/store-filtros-mis-guias'
 import FormBase from '~/components/form/form-base'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
-import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
-import { FaCalendar, FaSearch, FaTruckLoading } from 'react-icons/fa'
+import { FaSearch, FaTruckLoading } from 'react-icons/fa'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import ButtonBase from '~/components/buttons/button-base'
 import dayjs from 'dayjs'
 import { useEffect } from 'react'
+import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 
 export default function FiltersMisGuias() {
   const [form] = Form.useForm()
@@ -67,53 +67,19 @@ export default function FiltersMisGuias() {
       <div className='mt-4'>
         <div className='grid grid-cols-12 gap-x-3 gap-y-2.5'>
           {/* Fila 1 */}
-          <div className='col-span-2 flex items-center gap-2'>
-            <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
-              Fecha Desde:
-            </label>
-            <ConfigurableElement
-              componentId='mis-guias.filtro-fecha-desde'
-              label='Campo Fecha Desde'
-            >
-              <DatePickerBase
-                propsForm={{
-                  name: 'fecha_desde',
-                  hasFeedback: false,
-                  className: '!w-full',
-                }}
-                placeholder='Fecha'
-                formWithMessage={false}
-                prefix={
-                  <FaCalendar size={15} className='text-orange-600 mx-1' />
-                }
-                allowClear
+          <ConfigurableElement
+            componentId='mis-guias.filtro-rango-fechas'
+            label='Campo Fecha Desde y Hasta'
+          >
+            <div className='col-span-4 grid grid-cols-2 gap-3'>
+              <FilterDateRangeFields
+                fromName='fecha_desde'
+                toName='fecha_hasta'
+                itemClassName='flex items-center gap-2'
+                fromPlaceholder='Fecha'
               />
-            </ConfigurableElement>
-          </div>
-
-          <div className='col-span-2 flex items-center gap-2'>
-            <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
-              Hasta:
-            </label>
-            <ConfigurableElement
-              componentId='mis-guias.filtro-fecha-hasta'
-              label='Campo Fecha Hasta'
-            >
-              <DatePickerBase
-                propsForm={{
-                  name: 'fecha_hasta',
-                  hasFeedback: false,
-                  className: '!w-full',
-                }}
-                placeholder='Hasta'
-                formWithMessage={false}
-                prefix={
-                  <FaCalendar size={15} className='text-orange-600 mx-1' />
-                }
-                allowClear
-              />
-            </ConfigurableElement>
-          </div>
+            </div>
+          </ConfigurableElement>
 
           <div className='col-span-2 flex items-center gap-2'>
             <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>

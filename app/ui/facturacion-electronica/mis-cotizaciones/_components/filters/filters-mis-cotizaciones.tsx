@@ -8,9 +8,7 @@ import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
-import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import SelectClientes from "~/app/_components/form/selects/select-clientes";
-import { FaCalendar } from "react-icons/fa6";
 import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
 import { useStoreAlmacen } from "~/store/store-almacen";
@@ -18,6 +16,7 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { useDebounce } from "use-debounce";
 import { useStoreFiltrosMisCotizaciones } from "../../_store/store-filtros-mis-cotizaciones";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 
 interface ValuesFiltersMisCotizaciones {
   almacen_id: number;
@@ -101,38 +100,12 @@ export default function FiltersMisCotizaciones() {
       <div className="mt-4 space-y-2.5">
         {/* Fila 1: Fecha Desde, Hasta, Cliente */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Fecha Desde:
-            </label>
-            <DatePickerBase
-              propsForm={{
-                name: "desde",
-                hasFeedback: false,
-                className: "!w-[150px]",
-              }}
-              placeholder="Fecha Desde"
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
-              allowClear
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Hasta:
-            </label>
-            <DatePickerBase
-              propsForm={{
-                name: "hasta",
-                hasFeedback: false,
-                className: "!w-[150px]",
-              }}
-              placeholder="Hasta"
-              formWithMessage={false}
-              prefix={<FaCalendar size={15} className="text-amber-600 mx-1" />}
-              allowClear
-            />
-          </div>
+          <FilterDateRangeFields
+            fromName="desde"
+            toName="hasta"
+            fromFieldClassName="!w-[150px]"
+            toFieldClassName="!w-[150px]"
+          />
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Cliente:
