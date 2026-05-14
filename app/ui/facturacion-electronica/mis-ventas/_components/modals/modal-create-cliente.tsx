@@ -5,7 +5,7 @@ import TitleForm from "~/components/form/title-form";
 import ModalForm from "~/components/modals/modal-form";
 import useCreateCliente from "../../_hooks/use-create-cliente";
 import FormCreateCliente from "../form/form-create-cliente";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Cliente } from "~/lib/api/cliente";
 
 interface ModalCreateClienteProps {
@@ -54,6 +54,7 @@ export default function ModalCreateCliente({
   const [cargandoDirecciones, setCargandoDirecciones] = useState(false);
   const [direccionesListas, setDireccionesListas] = useState(false);
   const [mapSessionKey, setMapSessionKey] = useState(0);
+  const cargaActualRef = useRef(0);
   // Cliente "completo" (con `direcciones[]` cargadas) que se le pasa al
   // form interno. El hook `useDireccionesClienteForm` que vive adentro
   // parsea automáticamente el array — este modal ya no necesita el switch
@@ -75,22 +76,26 @@ export default function ModalCreateCliente({
   useEffect(() => {
     if (!open) {
       setDireccionesListas(false);
+      setCargandoDirecciones(false);
+      setClienteConDirecciones(undefined);
       return;
     }
 
+    const cargaId = ++cargaActualRef.current;
     setMapSessionKey((prev) => prev + 1);
+    setDireccionesListas(false);
 
     if (dataEdit) {
       const cargar = async () => {
         await new Promise(resolve => setTimeout(resolve, 0));
         try {
+          if (cargaActualRef.current !== cargaId) return;
           form.resetFields();
+          setClienteConDirecciones(undefined);
           const formValues = Object.fromEntries(
             Object.entries(dataEdit).map(([key, value]) => [key, value ?? undefined]),
           );
           form.setFieldsValue(formValues);
-          // SelectEstado usa 1/0, el modelo usa boolean
-          form.setFieldValue('estado', dataEdit.estado ? 1 : 0);
           // SelectEstado usa 1/0, el modelo usa boolean
           form.setFieldValue('estado', dataEdit.estado ? 1 : 0);
           if (dataEdit.fecha_nacimiento) {
@@ -99,24 +104,31 @@ export default function ModalCreateCliente({
           setCargandoDirecciones(true);
           try {
             const response = await clienteApi.listarDirecciones(dataEdit.id);
+            if (cargaActualRef.current !== cargaId) return;
             const direcciones = response.data?.data ?? [];
             setClienteConDirecciones({ ...dataEdit, direcciones });
           } catch {
+            if (cargaActualRef.current !== cargaId) return;
             setClienteConDirecciones(dataEdit);
           } finally {
+            if (cargaActualRef.current !== cargaId) return;
             setCargandoDirecciones(false);
             setDireccionesListas(true);
           }
         } catch {
+          if (cargaActualRef.current !== cargaId) return;
+          setCargandoDirecciones(false);
           setDireccionesListas(true);
         }
       };
       cargar();
     } else {
       setTimeout(() => {
+        if (cargaActualRef.current !== cargaId) return;
         form.resetFields();
         form.setFieldsValue({ numero_documento: textDefault });
         setClienteConDirecciones(undefined);
+        setCargandoDirecciones(false);
         setDireccionesListas(true);
       }, 0);
     }
