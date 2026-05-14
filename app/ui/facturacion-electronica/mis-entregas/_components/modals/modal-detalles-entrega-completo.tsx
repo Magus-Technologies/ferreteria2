@@ -52,6 +52,12 @@ export default function ModalDetallesEntregaCompleto({
     venta?.serie && venta?.numero ? `${venta.serie}-${venta.numero}` : 'S/N'
 
   const productos = entrega.productos_entregados || []
+  const entregaFueEntregadaAntes = Boolean(
+    entrega?.user_entregado_id ||
+    entrega?.userEntregado?.id,
+  )
+  const entregaTieneEntregaFisica =
+    entrega?.estado_entrega === 'en' || entregaFueEntregadaAntes
   const estado = ESTADO_LABEL[entrega.estado_entrega] || {
     label: entrega.estado_entrega,
     color: 'default',
@@ -223,9 +229,11 @@ export default function ModalDetallesEntregaCompleto({
                 const nombre = prod?.name || 'Producto'
                 const codigo = prod?.cod_producto
                 const unidad = udv?.unidad_derivada_inmutable?.name || ''
-                const cantidadEntregada = Number(p.cantidad_entregada || 0)
                 const cantidadTotal = Number(udv?.cantidad || 0)
-                const cantidadPendiente = Number(udv?.cantidad_pendiente || 0)
+                const cantidadEntregadaPersistida = Number(p.cantidad_entregada || 0)
+                const cantidadPendientePersistida = Number(udv?.cantidad_pendiente || 0)
+                const cantidadEntregada = entregaTieneEntregaFisica ? cantidadEntregadaPersistida : 0
+                const cantidadPendiente = entregaTieneEntregaFisica ? cantidadPendientePersistida : cantidadTotal
                 return (
                   <div
                     key={p.id || i}
