@@ -41,8 +41,9 @@ export interface ProveedorCalificacion {
 
 export interface Proveedor {
   id: number;
+  tipo_proveedor: 'empresa' | 'persona';
   razon_social: string;
-  ruc: string;
+  ruc: string | null;
   direccion: string | null;
   telefono: string | null;
   email: string | null;
@@ -76,8 +77,9 @@ export interface CreateChoferRequest {
 }
 
 export interface CreateProveedorRequest {
+  tipo_proveedor: 'empresa' | 'persona';
   razon_social: string;
-  ruc: string;
+  ruc?: string | null;
   direccion?: string | null;
   telefono?: string | null;
   email?: string | null;
@@ -93,6 +95,7 @@ export interface ProveedorFilters {
   search?: string;
   estado?: boolean | string;
   calificacion?: string;
+  tipo_proveedor?: 'empresa' | 'persona';
   per_page?: number;
   page?: number;
 }

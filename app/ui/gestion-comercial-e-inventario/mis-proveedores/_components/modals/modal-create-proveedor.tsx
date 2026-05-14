@@ -25,6 +25,7 @@ export type dataProveedorModalProps = Omit<
   Proveedor,
   'id' | 'estado' | 'vendedores' | 'carros' | 'choferes'
 > & {
+  tipo_proveedor: 'empresa' | 'persona'
   estado: number
   vendedores?: {
     dni: string
@@ -92,6 +93,7 @@ export default function ModalCreateProveedor({
     if (dataEdit) {
       form.setFieldsValue({
         ...dataEdit,
+        tipo_proveedor: dataEdit.tipo_proveedor ?? 'empresa',
         estado: dataEdit.estado ? 1 : 0,
         vendedores: dataEdit.vendedores?.map(item => ({
           ...item,
@@ -101,6 +103,7 @@ export default function ModalCreateProveedor({
       })
     } else {
       form.setFieldsValue({
+        tipo_proveedor: 'empresa',
         estado: 1,
         ruc: textDefault,
       })
