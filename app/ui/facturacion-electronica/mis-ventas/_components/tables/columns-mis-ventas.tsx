@@ -179,6 +179,35 @@ export function useColumnsMisVentas() {
       valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
     },
     {
+      headerName: "Método Pago",
+      colId: "despliegue_pago",
+      width: 160,
+      valueGetter: (params) => {
+        const pagos = params.data?.despliegue_de_pago_ventas ?? params.data?.despliegueDePagoVentas
+        if (!pagos || pagos.length === 0) return '—'
+        return pagos[0].despliegue_de_pago?.name || '—'
+      },
+    },
+    {
+      headerName: "Sobrecargo",
+      colId: "sobrecargo_total",
+      width: 120,
+      valueGetter: (params) => {
+        const pagos = params.data?.despliegue_de_pago_ventas ?? params.data?.despliegueDePagoVentas
+        if (!pagos || pagos.length === 0) return 0
+        return pagos.reduce((sum: number, p: any) => sum + Number(p.sobrecargo_aplicado || 0), 0)
+      },
+      valueFormatter: (params) => {
+        const val = Number(params.value || 0)
+        if (val === 0) return '—'
+        return `S/. ${val.toFixed(2)}`
+      },
+      cellStyle: (params) => {
+        if (Number(params.value || 0) > 0) return { color: '#d97706', fontWeight: 'bold' } as Record<string, string>
+        return { color: '#9ca3af' } as Record<string, string>
+      },
+    },
+    {
       headerName: "F.Pago",
       field: "forma_de_pago",
       width: 100,

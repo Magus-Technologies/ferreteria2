@@ -84,6 +84,7 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     despliegue_de_pago_id: string
     monto: number
     numero_operacion?: string
+    recibe_efectivo?: number
     sobrecargo?: {
       tipo: string
       valor: number

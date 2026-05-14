@@ -86,6 +86,7 @@ export interface DespliegueDePagoVentaRequest {
   despliegue_de_pago_id: string;
   monto: number;
   numero_operacion?: string;
+  recibe_efectivo?: number;
 }
 
 export interface CreateVentaRequest {
@@ -440,7 +441,27 @@ export type VentaCompleta = {
   recomendado_por?: any
   recomendadoPor?: any
   productos_por_almacen?: any[]
-  despliegueDePagoVentas?: any[]
+  despliegue_de_pago_ventas?: Array<{
+    id?: number
+    venta_id: string
+    despliegue_de_pago_id: string
+    monto: number | string
+    sobrecargo_aplicado?: number | string | null
+    referencia?: string | null
+    recibe_efectivo?: number | string | null
+    despliegue_de_pago?: { id: string; name: string }
+  }>
+  /** @deprecated usar despliegue_de_pago_ventas */
+  despliegueDePagoVentas?: Array<{
+    id?: number
+    venta_id: string
+    despliegue_de_pago_id: string
+    monto: number | string
+    sobrecargo_aplicado?: number | string | null
+    referencia?: string | null
+    recibe_efectivo?: number | string | null
+    despliegue_de_pago?: { id: string; name: string }
+  }>
   user?: { id: string; name: string }
   almacen?: { id: number; name: string }
   entregas_productos?: Array<{

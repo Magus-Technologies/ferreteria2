@@ -84,6 +84,12 @@ export default function ModalMetodosPagoVenta({
     }, 0))
   }, [metodosPago])
 
+  // Sobrecargo total: métodos ya agregados + método actual en formulario
+  const totalSobrecargo = useMemo(() => {
+    const agregado = metodosPago.reduce((sum, m) => sum + (m.sobrecargo?.monto || 0), 0)
+    return roundMoney(agregado + sobrecargo.monto)
+  }, [metodosPago, sobrecargo])
+
   // Calcular saldo pendiente
   const saldoPendiente = useMemo(() => {
     return roundMoney(Math.max(0, totalCobrado - totalPagado))
@@ -239,6 +245,7 @@ export default function ModalMetodosPagoVenta({
       despliegue_de_pago_id: m.despliegue_de_pago_id,
       monto: m.monto,
       numero_operacion: m.referencia || undefined,
+      recibe_efectivo: m.recibe_efectivo || undefined,
       sobrecargo: m.sobrecargo && m.sobrecargo.monto > 0 ? m.sobrecargo : undefined,
     }))
 
@@ -275,7 +282,7 @@ export default function ModalMetodosPagoVenta({
     >
       <div className='mt-4'>
         {/* Total a Cobrar y Saldo */}
-        <div className='grid grid-cols-3 gap-4 mb-6'>
+        <div className='grid grid-cols-4 gap-4 mb-6'>
           <div className='p-4 bg-blue-50 rounded-lg border-2 border-blue-300'>
             <div className='text-sm font-medium text-slate-600'>Total a Cobrar</div>
             <div className='text-2xl font-bold text-blue-600'>
@@ -292,6 +299,12 @@ export default function ModalMetodosPagoVenta({
             <div className='text-sm font-medium text-slate-600'>Saldo Pendiente</div>
             <div className={`text-2xl font-bold ${saldoPendiente > 0 ? 'text-orange-600' : 'text-green-600'}`}>
               {monedaSymbol} {saldoPendiente.toFixed(2)}
+            </div>
+          </div>
+          <div className={`p-4 rounded-lg border-2 ${totalSobrecargo > 0 ? 'bg-amber-50 border-amber-400' : 'bg-slate-50 border-slate-200'}`}>
+            <div className='text-sm font-medium text-slate-600'>Sobrecargo</div>
+            <div className={`text-2xl font-bold ${totalSobrecargo > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+              {monedaSymbol} {totalSobrecargo.toFixed(2)}
             </div>
           </div>
         </div>
@@ -371,7 +384,7 @@ export default function ModalMetodosPagoVenta({
           <Form form={modalForm} className='border-t pt-4'>
             <div className='text-sm font-semibold text-slate-700 mb-3'>Agregar Método de Pago</div>
             
-            <div className='flex items-end gap-3'>
+            <div className='flex items-start gap-3'>
               {/* Tipo de Pago */}
               <div className='flex-1 min-w-[200px]'>
                 <label className='block text-xs font-medium text-slate-600 mb-1'>Tipo de Pago</label>
@@ -477,7 +490,7 @@ export default function ModalMetodosPagoVenta({
               </div>
 
               {/* Botón Agregar */}
-              <div className='w-[140px]'>
+              <div className='w-[140px] pt-5'>
                 <ButtonBase
                   onClick={handleAgregarMetodo}
                   color='info'
