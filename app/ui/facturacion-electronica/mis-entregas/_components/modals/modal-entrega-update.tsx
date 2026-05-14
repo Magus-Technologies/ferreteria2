@@ -288,6 +288,8 @@ export default function ModalEntregaUpdate({
       (entrega as any)?.user_entregado_id ||
       (entrega as any)?.userEntregado?.id,
     )
+    const entregaTieneEntregaFisica =
+      entrega?.estado_entrega === 'en' || entregaFueEntregadaAntes
     const ultimaEdicion = entregaFueEntregadaAntes
       ? (entrega.venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
       : undefined
@@ -355,7 +357,7 @@ export default function ModalEntregaUpdate({
       const pendienteReal = pendienteRaw == null
         ? Math.max(0, total - Number(p.cantidad_entregada ?? 0))
         : Number(pendienteRaw)
-      const entregadoReal = Math.max(0, total - pendienteReal)
+      const entregadoReal = entregaTieneEntregaFisica ? Math.max(0, total - pendienteReal) : 0
       const recibidoReal = entregaFueEntregadaAntes
         ? Math.max(cantidadAnterior - total, 0)
         : 0
@@ -366,8 +368,8 @@ export default function ModalEntregaUpdate({
         total,
         recibido: recibidoReal,
         entregado: entregadoReal,
-        pendiente: pendienteReal,
-        entregar: pendienteReal,
+        pendiente: entregaTieneEntregaFisica ? pendienteReal : total,
+        entregar: entregaTieneEntregaFisica ? pendienteReal : total,
         entregar_programado: 0,
         unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
       }

@@ -43,6 +43,8 @@ export default function TableDetalleEntrega() {
     (entregaSeleccionada as any)?.user_entregado_id ||
     (entregaSeleccionada as any)?.userEntregado?.id,
   )
+  const entregaTieneEntregaFisica =
+    entregaSeleccionada?.estado_entrega === 'en' || entregaFueEntregadaAntes
 
   const clienteNombre = cliente?.razon_social ||
     `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() ||
@@ -121,8 +123,9 @@ export default function TableDetalleEntrega() {
     if (!mostrarRecibido) {
       return [...actualesAgrupados.values()].map((producto) => {
         const total = Number(producto.cantidad ?? 0)
-        const pendiente = Math.max(0, Number((producto as ProductoFila).cantidadPendiente ?? 0))
-        const entregado = Math.max(0, total - pendiente)
+        const pendientePersistido = Math.max(0, Number((producto as ProductoFila).cantidadPendiente ?? 0))
+        const pendiente = entregaTieneEntregaFisica ? pendientePersistido : total
+        const entregado = entregaTieneEntregaFisica ? Math.max(0, total - pendientePersistido) : 0
         return {
           producto: producto.producto,
           codigo: producto.codigo,
@@ -177,7 +180,7 @@ export default function TableDetalleEntrega() {
     }
 
     return filas
-  }, [entregaSeleccionada?.estado_entrega, mostrarRecibido, productosActuales, productosAnteriores])
+  }, [entregaTieneEntregaFisica, entregaSeleccionada?.estado_entrega, mostrarRecibido, productosActuales, productosAnteriores])
 
   const columnDefs = useMemo<ColDef<DetalleProductoEntrega>[]>(() => {
     const defs: ColDef<DetalleProductoEntrega>[] = [
