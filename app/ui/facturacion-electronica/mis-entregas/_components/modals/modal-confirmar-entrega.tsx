@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useMemo, useState } from 'react'
 import { Modal, Button } from 'antd'
 import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice } from 'react-icons/fa'
-import { getAuthToken } from '~/lib/api'
 
 interface ModalConfirmarEntregaProps {
   open: boolean
@@ -11,6 +10,14 @@ interface ModalConfirmarEntregaProps {
   onConfirmar: () => Promise<void>
   entrega?: any
   loading?: boolean
+}
+
+type ProductoConfirmacion = {
+  id: string | number
+  codigo: string
+  producto: string
+  unidad: string
+  cantidad: number
 }
 
 export default function ModalConfirmarEntrega({
@@ -33,7 +40,30 @@ export default function ModalConfirmarEntrega({
   const direccion = entrega.direccion_entrega || 'No especificada'
   const telefono = cliente?.telefono || ''
 
-  const productos = entrega.productos_entregados || []
+  const productos = useMemo<ProductoConfirmacion[]>(() => {
+    return (entrega.productos_entregados || []).map((p: any, index: number) => {
+      const ud = p.unidad_derivada_venta || {}
+      const producto = ud.producto_almacen_venta?.producto_almacen?.producto || {}
+      const total = Number(ud.cantidad ?? 0)
+      const pendiente = Math.max(0, Number(ud.cantidad_pendiente ?? 0))
+      const entregadoHistorico = Math.max(0, Number(p.cantidad_entregada ?? 0))
+
+      const cantidadAConfirmar =
+        entrega.estado_entrega === 'en'
+          ? entregadoHistorico || Math.max(total - pendiente, 0)
+          : pendiente > 0
+            ? pendiente
+            : total
+
+      return {
+        id: p.id || index,
+        codigo: producto.cod_producto || '—',
+        producto: producto.name || 'Producto',
+        unidad: ud.unidad_derivada_inmutable?.name || '—',
+        cantidad: cantidadAConfirmar,
+      }
+    })
+  }, [entrega.estado_entrega, entrega.productos_entregados])
 
   const handleConfirmar = async () => {
     setConfirmando(true)
@@ -132,20 +162,29 @@ export default function ModalConfirmarEntrega({
             <div className="bg-gray-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
               Productos a entregar ({productos.length})
             </div>
-            <div className="divide-y divide-gray-100 max-h-[200px] overflow-y-auto">
-              {productos.map((p: any, i: number) => {
-                const nombre = p.unidad_derivada_venta?.producto_almacen_venta?.producto_almacen?.producto?.name || 'Producto'
-                const cantidad = Number(p.cantidad_entregada)
-                const unidad = p.unidad_derivada_venta?.unidad_derivada_inmutable?.name || ''
-                return (
-                  <div key={p.id || i} className="px-4 py-2.5 flex items-center justify-between">
-                    <span className="text-sm text-slate-700 truncate flex-1 mr-3">{nombre}</span>
-                    <span className="text-sm font-semibold text-slate-800 whitespace-nowrap">
-                      {cantidad} {unidad}
-                    </span>
-                  </div>
-                )
-              })}
+            <div className="max-h-[220px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Código</th>
+                    <th className="px-4 py-2 text-left font-semibold">Producto</th>
+                    <th className="px-4 py-2 text-left font-semibold">Unidad</th>
+                    <th className="px-4 py-2 text-right font-semibold">Entregar</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {productos.map((p: ProductoConfirmacion) => (
+                    <tr key={p.id} className="bg-white">
+                      <td className="px-4 py-2.5 text-slate-700 whitespace-nowrap">{p.codigo}</td>
+                      <td className="px-4 py-2.5 text-slate-700">{p.producto}</td>
+                      <td className="px-4 py-2.5 text-slate-700 whitespace-nowrap">{p.unidad}</td>
+                      <td className="px-4 py-2.5 text-right font-semibold text-emerald-700 whitespace-nowrap">
+                        {Number(p.cantidad).toFixed(0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
