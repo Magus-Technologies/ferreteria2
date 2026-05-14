@@ -22,40 +22,11 @@ export default function CardsInfoContactos() {
     select: (r) => r.data?.data,
   })
 
-  // Query para obtener todos los clientes
-  const { data: allClientes } = useQuery({
-    queryKey: [QueryKeys.CLIENTES],
-    queryFn: async () => {
-      const result = await clienteApi.getAll({ per_page: 1000 })
-      return result.data?.data || []
-    },
-  })
-
-  // Hook para obtener calificaciones de todos los clientes
-  const { data: calificacionesMap } = useQuery({
-    queryKey: [QueryKeys.CLIENTES, 'calificaciones', allClientes?.map(c => c.id).join(',')],
-    queryFn: async () => {
-      if (!allClientes || allClientes.length === 0) return {}
-      
-      const calificacionesData: Record<number, any> = {}
-      
-      // Obtener todas las calificaciones en paralelo
-      const promises = allClientes.map(cliente =>
-        clienteCalificacionApi.getUltima(cliente.id)
-          .then(result => {
-            if (result.data?.data) {
-              calificacionesData[cliente.id] = result.data.data
-            }
-          })
-          .catch(() => {
-            // Ignorar errores individuales
-          })
-      )
-      
-      await Promise.all(promises)
-      return calificacionesData
-    },
-    enabled: !!allClientes && allClientes.length > 0,
+  const { data: resumenCalificaciones } = useQuery({
+    queryKey: ['cliente-calificaciones-resumen'],
+    queryFn: () => clienteCalificacionApi.getResumen(),
+    select: (r) => r.data?.data,
+    staleTime: 5 * 60 * 1000,
   })
 
   const estadisticas = response?.data?.data || {
@@ -64,10 +35,10 @@ export default function CardsInfoContactos() {
 
   // Contar calificaciones
   const calificacionesCount = {
-    excelente: allClientes?.filter(c => calificacionesMap?.[c.id]?.estado === 'excelente').length || 0,
-    bueno: allClientes?.filter(c => calificacionesMap?.[c.id]?.estado === 'bueno').length || 0,
-    regular: allClientes?.filter(c => calificacionesMap?.[c.id]?.estado === 'regular').length || 0,
-    problematicos: allClientes?.filter(c => calificacionesMap?.[c.id]?.estado === 'problematico').length || 0,
+    excelente: resumenCalificaciones?.excelente || 0,
+    bueno: resumenCalificaciones?.bueno || 0,
+    regular: resumenCalificaciones?.regular || 0,
+    problematicos: resumenCalificaciones?.problematico || 0,
   }
 
   return (

@@ -86,18 +86,24 @@ export default function TableMisContactos() {
     queryFn: async () => {
       if (!contactos || contactos.length === 0) return {}
       
+      const results = await Promise.all(
+        contactos.map(async (cliente) => {
+          const result = await clienteCalificacionApi.getUltima(cliente.id)
+          return [cliente.id, result.data?.data || null] as const
+        }),
+      )
+
       const calificacionesData: Record<number, any> = {}
-      
-      for (const cliente of contactos) {
-        const result = await clienteCalificacionApi.getUltima(cliente.id)
-        if (result.data?.data) {
-          calificacionesData[cliente.id] = result.data.data
+      for (const [clienteId, calificacion] of results) {
+        if (calificacion) {
+          calificacionesData[clienteId] = calificacion
         }
       }
       
       return calificacionesData
     },
     enabled: !!contactos && contactos.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Filtrar clientes por calificación si está seleccionada
