@@ -54,7 +54,10 @@ export default function useCreateCliente({
         fecha_nacimiento: values.fecha_nacimiento
           ? dayjs(values.fecha_nacimiento).format('YYYY-MM-DD')
           : null,
-        estado: true,
+        estado:
+          values.estado === undefined || values.estado === null
+            ? true
+            : Boolean(Number(values.estado)),
       };
 
       let clienteResponse;

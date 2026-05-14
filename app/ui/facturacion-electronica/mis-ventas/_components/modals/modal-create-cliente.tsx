@@ -39,7 +39,7 @@ export interface FormCreateClienteValues {
   profesion_id?: number | null;
   email?: string | null;
   fecha_nacimiento?: string | null;
-  estado?: boolean;
+  estado?: boolean | number;
 }
 
 export default function ModalCreateCliente({
