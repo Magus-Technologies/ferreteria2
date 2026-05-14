@@ -17,6 +17,7 @@ interface ValuesFiltersMisProveedores {
   search?: string
   estado?: string
   calificacion?: string
+  tipo_proveedor?: string
   ordenar_por?: boolean
 }
 
@@ -35,6 +36,9 @@ export default function FiltersMisProveedores() {
     if (values.calificacion !== undefined && values.calificacion !== '') {
       data.calificacion = values.calificacion
     }
+    if (values.tipo_proveedor !== undefined && values.tipo_proveedor !== '') {
+      data.tipo_proveedor = values.tipo_proveedor
+    }
     if (values.ordenar_por) data.ordenar_por = 'compras'
     setFiltros(data)
     queryClient.invalidateQueries({ queryKey: [QueryKeys.PROVEEDORES] })
@@ -42,17 +46,17 @@ export default function FiltersMisProveedores() {
 
   return (
     <>
-      <FormBase form={form} name="filtros-mis-proveedores" className="w-full" onFinish={handleFinish}>
+      <FormBase form={form} name="filtros-mis-proveedores" className="w-full" onFinish={handleFinish} initialValues={{ estado: 'true' }}>
         <TituloModulos title="Mis Proveedores" icon={<FaTruck className="text-green-600" />} />
 
         <div className="mt-4">
           <div className="grid grid-cols-12 gap-x-2 gap-y-2 items-center">
             {/* Buscar */}
-            <div className="col-span-3 flex items-center gap-1">
+            <div className="col-span-2 flex items-center gap-1">
               <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Buscar:</label>
               <InputBase
                 propsForm={{ name: 'search', hasFeedback: false, className: '!w-full !h-8' }}
-                placeholder="RUC, Razón Social, Teléfono..."
+                placeholder="RUC, Razón Social..."
                 formWithMessage={false}
               />
             </div>
@@ -69,6 +73,22 @@ export default function FiltersMisProveedores() {
                 options={[
                   { value: 'true', label: 'Activo' },
                   { value: 'false', label: 'Inactivo' },
+                ]}
+              />
+            </div>
+
+            {/* Tipo */}
+            <div className="col-span-2 flex items-center gap-1">
+              <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Tipo:</label>
+              <SelectBase
+                propsForm={{ name: 'tipo_proveedor', hasFeedback: false, className: '!w-full' }}
+                className="w-full"
+                formWithMessage={false}
+                allowClear
+                placeholder="Todos"
+                options={[
+                  { value: 'empresa', label: 'Empresa' },
+                  { value: 'persona', label: 'Persona' },
                 ]}
               />
             </div>
@@ -100,12 +120,12 @@ export default function FiltersMisProveedores() {
             </div>
 
             {/* Buscar + Crear */}
-            <div className="col-span-3 flex items-center gap-1 justify-end">
+            <div className="col-span-2 flex items-center gap-1 justify-start">
               <ButtonBase color="info" size="sm" type="submit" className="flex items-center gap-1 justify-center h-8 px-2 text-sm">
                 <FaSearch size={12} />
                 Buscar
               </ButtonBase>
-              <button 
+              <button
                 type="button"
                 onClick={() => setModalOpen(true)}
                 className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-colors flex-shrink-0"

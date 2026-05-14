@@ -43,6 +43,7 @@ export default function TableMisProveedores() {
           search: filtros.search || undefined,
           estado: filtros.estado,
           calificacion: filtros.calificacion,
+          tipo_proveedor: filtros.tipo_proveedor,
           per_page: 100,
         })
 
@@ -58,6 +59,7 @@ export default function TableMisProveedores() {
         search: filtros.search || undefined,
         estado: filtros.estado,
         calificacion: filtros.calificacion,
+        tipo_proveedor: filtros.tipo_proveedor,
         per_page: 100,
       })
 
@@ -156,10 +158,23 @@ export default function TableMisProveedores() {
 
   const columnDefs: ColDef<Proveedor>[] = [
     {
-      headerName: 'RUC',
+      headerName: 'Tipo',
+      field: 'tipo_proveedor',
+      width: 110,
+      cellRenderer: (params: any) => {
+        const tipo = params.value as string
+        return (
+          <Tag color={tipo === 'empresa' ? 'blue' : 'purple'}>
+            {tipo === 'empresa' ? 'Empresa' : 'Persona'}
+          </Tag>
+        )
+      },
+    },
+    {
+      headerName: 'RUC / DNI',
       field: 'ruc',
       width: 120,
-      pinned: 'left',
+      valueGetter: (params) => params.data?.ruc || '-',
     },
     {
       headerName: 'Razón Social',
