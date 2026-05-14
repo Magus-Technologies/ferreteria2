@@ -17,6 +17,9 @@ import ModalClienteSearch from '../../modals/modal-cliente-search'
 import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
 import { FormInstance } from 'antd'
 
+// Cliente parcial para initialCliente (solo necesita las props que usamos)
+type PartialCliente = Partial<Cliente>
+
 interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
@@ -30,7 +33,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   showOnlyDocument?: boolean
   autoFocus?: boolean
   open?: boolean // Permitir controlar si se abre el dropdown
-  initialCliente?: Cliente // Cliente pre-cargado (para pre-llenar sin búsqueda)
+  initialCliente?: PartialCliente // Cliente pre-cargado (para pre-llenar sin búsqueda)
 }
 
 export default function SelectClientes({
@@ -71,7 +74,7 @@ export default function SelectClientes({
 
   const [clienteCreado, setClienteCreado] = useState<Cliente>()
   const [clienteSeleccionado, setClienteSeleccionado] =
-    useState<Cliente>()
+    useState<PartialCliente | undefined>()
 
   const clienteSeleccionadoStore = useStoreClienteSeleccionado(
     store => store.cliente
@@ -141,7 +144,7 @@ export default function SelectClientes({
     })
   }, [text, lastSelectedDocument, showOnlyDocument, form, isSelecting])
 
-  function handleSelect({ data }: { data?: Cliente } = {}) {
+  function handleSelect({ data }: { data?: PartialCliente } = {}) {
     const cliente = data || clienteSeleccionadoStore
     if (cliente) {
       setIsSelecting(true)
@@ -171,7 +174,7 @@ export default function SelectClientes({
       })
 
       // Autocompletar campos del formulario si se proporciona form
-      if (form) {
+      if (form && cliente.id !== undefined) {
         if (cliente.numero_documento) {
           form.setFieldValue('ruc_dni', cliente.numero_documento)
         }
@@ -183,9 +186,11 @@ export default function SelectClientes({
         cargarDireccionesCliente(cliente.id)
       }
 
-      setClienteSeleccionadoStore(undefined)
+setClienteSeleccionadoStore(undefined)
       setOpenModalClienteSearch(false)
-      onChange?.(cliente.id, cliente)
+      if (cliente.id !== undefined) {
+        onChange?.(cliente.id, cliente as unknown as Cliente)
+      }
       setTimeout(() => setIsSelecting(false), 100)
     }
   }
