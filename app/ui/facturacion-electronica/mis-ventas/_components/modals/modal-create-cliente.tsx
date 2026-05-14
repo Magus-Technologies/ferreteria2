@@ -53,6 +53,7 @@ export default function ModalCreateCliente({
   const [form] = Form.useForm<FormCreateClienteValues>();
   const [cargandoDirecciones, setCargandoDirecciones] = useState(false);
   const [direccionesListas, setDireccionesListas] = useState(false);
+  const [mapSessionKey, setMapSessionKey] = useState(0);
   // Cliente "completo" (con `direcciones[]` cargadas) que se le pasa al
   // form interno. El hook `useDireccionesClienteForm` que vive adentro
   // parsea automáticamente el array — este modal ya no necesita el switch
@@ -76,6 +77,8 @@ export default function ModalCreateCliente({
       setDireccionesListas(false);
       return;
     }
+
+    setMapSessionKey((prev) => prev + 1);
 
     if (dataEdit) {
       const cargar = async () => {
@@ -144,7 +147,12 @@ export default function ModalCreateCliente({
         onFinish: crearClienteForm,
       }}
     >
-      <FormCreateCliente form={form} dataEdit={clienteConDirecciones} direccionesListas={direccionesListas} />
+      <FormCreateCliente
+        form={form}
+        dataEdit={clienteConDirecciones}
+        direccionesListas={direccionesListas}
+        mapSessionKey={mapSessionKey}
+      />
     </ModalForm>
   );
 }

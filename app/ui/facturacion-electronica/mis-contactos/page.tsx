@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import ContenedorGeneral from "~/app/_components/containers/contenedor-general";
 import NoAutorizado from "~/components/others/no-autorizado";
 import { usePermission } from "~/hooks/use-permission";
+import { useRealtime } from "~/hooks/use-realtime";
 import { permissions } from "~/lib/permissions";
 import FiltersMisContactos from "./_components/filters/filters-mis-contactos";
 import TableMisContactos from "./_components/tables/table-mis-contactos";
@@ -14,6 +15,7 @@ import { useStoreClienteSeleccionado } from "./_store/store-cliente-seleccionado
 export default function MisContactosPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_MIS_CONTACTOS_INDEX);
   const { setClienteId } = useStoreClienteSeleccionado();
+  useRealtime();
 
   // Limpiar cliente seleccionado al desmontar
   useEffect(() => {

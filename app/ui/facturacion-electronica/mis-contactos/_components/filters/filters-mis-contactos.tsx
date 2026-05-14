@@ -31,7 +31,7 @@ export default function FiltersMisContactos() {
 
   const handleFinish = (values: ValuesFiltersMisContactos) => {
     const data: any = {};
-    if (values.search) data.search = values.search;
+    data.search = values.search?.trim() || undefined;
     data.tipo_cliente = values.tipo_cliente || undefined;
     data.estado = (values.estado !== undefined && values.estado !== null && values.estado !== '')
       ? values.estado === 'true'
