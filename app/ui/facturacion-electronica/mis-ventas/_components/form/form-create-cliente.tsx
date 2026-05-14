@@ -305,6 +305,7 @@ export default function FormCreateCliente({
                   }
                   coordenadasIniciales={coordenadasActivas}
                   editable={true}
+                  geocodificarDesdeDireccion={false}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-50">

@@ -18,6 +18,7 @@ interface MapaDireccionMapboxProps {
   onCoordenadaChange?: (coordenadas: Coordenadas, direccion?: string) => void
   coordenadasIniciales?: Coordenadas | null
   editable?: boolean
+  geocodificarDesdeDireccion?: boolean
 }
 
 export default function MapaDireccionMapbox({
@@ -26,6 +27,7 @@ export default function MapaDireccionMapbox({
   onCoordenadaChange,
   coordenadasIniciales,
   editable = true,
+  geocodificarDesdeDireccion = true,
 }: MapaDireccionMapboxProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
@@ -179,7 +181,7 @@ export default function MapaDireccionMapbox({
           return
         }
 
-        if (direccion) {
+        if (direccion && geocodificarDesdeDireccion) {
           geocodificarDireccion(direccion)
         }
       })
@@ -247,10 +249,10 @@ export default function MapaDireccionMapbox({
       return
     }
 
-    if (direccion && !coordenadas) {
+    if (geocodificarDesdeDireccion && direccion && !coordenadas) {
       geocodificarDireccion(direccion)
     }
-  }, [actualizarMarcador, coordenadas, coordenadasIniciales, direccion, forzarResize])
+  }, [actualizarMarcador, coordenadas, coordenadasIniciales, direccion, forzarResize, geocodificarDesdeDireccion])
 
   if (!MAPBOX_ACCESS_TOKEN) {
     return (
