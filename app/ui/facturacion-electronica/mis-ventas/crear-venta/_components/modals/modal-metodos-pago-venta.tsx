@@ -134,8 +134,8 @@ export default function ModalMetodosPagoVenta({
   // Calcular vuelto del formulario actual (antes de agregar)
   const vuelto = useMemo(() => {
     if (!isEfectivo) return 0
-    return Math.max(0, (Number(recibe_efectivo) || 0) - saldoPendiente)
-  }, [isEfectivo, recibe_efectivo, saldoPendiente])
+    return Math.max(0, (Number(recibe_efectivo) || 0) - (saldoPendiente + sobrecargo.monto))
+  }, [isEfectivo, recibe_efectivo, saldoPendiente, sobrecargo.monto])
 
   // Resetear formulario SOLO al abrir el modal (transición false → true).
   // No incluir totalCobrado como disparador: cuando el usuario selecciona un
@@ -172,15 +172,16 @@ export default function ModalMetodosPagoVenta({
     }
   }, [open, isFetched, desplieguesFiltradosPorTipo, selectedDespliegueValue])
 
-  // Actualizar "Monto Recibe" cuando cambia el saldo pendiente
+  // Actualizar "Monto Recibe" cuando cambia el saldo pendiente o el sobrecargo
   useEffect(() => {
     if (!open || saldoPendiente <= 0) return
     modalForm.setFieldValue('monto', roundMoney(saldoPendiente))
+    const totalConSobrecargo = roundMoney(saldoPendiente + sobrecargo.monto)
     const current = modalForm.getFieldValue('recibe_efectivo')
     if (current === undefined || current === null || Number(current) === 0) {
-      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
+      modalForm.setFieldValue('recibe_efectivo', totalConSobrecargo)
     }
-  }, [saldoPendiente, open, modalForm])
+  }, [saldoPendiente, sobrecargo.monto, open, modalForm])
 
   const handleAgregarMetodo = async () => {
     try {
@@ -286,13 +287,13 @@ export default function ModalMetodosPagoVenta({
           <div className='p-4 bg-blue-50 rounded-lg border-2 border-blue-300'>
             <div className='text-sm font-medium text-slate-600'>Total a Cobrar</div>
             <div className='text-2xl font-bold text-blue-600'>
-              {monedaSymbol} {totalCobrado.toFixed(2)}
+              {monedaSymbol} {baseAmount.toFixed(2)}
             </div>
           </div>
-          <div className='p-4 bg-green-50 rounded-lg border-2 border-green-300'>
-            <div className='text-sm font-medium text-slate-600'>Total Pagado</div>
-            <div className='text-2xl font-bold text-green-600'>
-              {monedaSymbol} {totalPagado.toFixed(2)}
+          <div className={`p-4 rounded-lg border-2 ${totalSobrecargo > 0 ? 'bg-amber-50 border-amber-400' : 'bg-slate-50 border-slate-200'}`}>
+            <div className='text-sm font-medium text-slate-600'>Sobrecargo</div>
+            <div className={`text-2xl font-bold ${totalSobrecargo > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+              {monedaSymbol} {totalSobrecargo.toFixed(2)}
             </div>
           </div>
           <div className={`p-4 rounded-lg border-2 ${saldoPendiente > 0 ? 'bg-orange-50 border-orange-300' : 'bg-green-50 border-green-300'}`}>
@@ -301,10 +302,10 @@ export default function ModalMetodosPagoVenta({
               {monedaSymbol} {saldoPendiente.toFixed(2)}
             </div>
           </div>
-          <div className={`p-4 rounded-lg border-2 ${totalSobrecargo > 0 ? 'bg-amber-50 border-amber-400' : 'bg-slate-50 border-slate-200'}`}>
-            <div className='text-sm font-medium text-slate-600'>Sobrecargo</div>
-            <div className={`text-2xl font-bold ${totalSobrecargo > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
-              {monedaSymbol} {totalSobrecargo.toFixed(2)}
+          <div className='p-4 bg-green-50 rounded-lg border-2 border-green-300'>
+            <div className='text-sm font-medium text-slate-600'>Total Pagado</div>
+            <div className='text-2xl font-bold text-green-600'>
+              {monedaSymbol} {totalPagado.toFixed(2)}
             </div>
           </div>
         </div>
@@ -425,7 +426,7 @@ export default function ModalMetodosPagoVenta({
                       modalForm.setFieldValue('referencia', undefined)
                     }
 
-                    modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
+                    modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente + nuevoSobrecargo.monto))
                   }}
                 />
                 {!selectedDespliegueValue && (
