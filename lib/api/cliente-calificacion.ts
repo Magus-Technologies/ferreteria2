@@ -36,6 +36,13 @@ export interface EstadoOption {
   color: string;
 }
 
+export interface ClienteCalificacionResumen {
+  excelente: number;
+  bueno: number;
+  regular: number;
+  problematico: number;
+}
+
 export const clienteCalificacionApi = {
   /**
    * Listar calificaciones de un cliente
@@ -49,6 +56,13 @@ export const clienteCalificacionApi = {
    */
   getUltima: async (clienteId: number): Promise<ApiResponse<{ data: ClienteCalificacion | null }>> => {
     return apiRequest<{ data: ClienteCalificacion | null }>(`/clientes/${clienteId}/calificaciones/ultima`);
+  },
+
+  /**
+   * Obtener resumen global de últimas calificaciones por estado
+   */
+  getResumen: async (): Promise<ApiResponse<{ data: ClienteCalificacionResumen }>> => {
+    return apiRequest<{ data: ClienteCalificacionResumen }>(`/clientes/calificaciones/resumen`);
   },
 
   /**

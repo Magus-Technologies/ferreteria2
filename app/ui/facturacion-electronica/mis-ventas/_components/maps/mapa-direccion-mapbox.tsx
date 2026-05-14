@@ -18,6 +18,7 @@ interface MapaDireccionMapboxProps {
   onCoordenadaChange?: (coordenadas: Coordenadas, direccion?: string) => void
   coordenadasIniciales?: Coordenadas | null
   editable?: boolean
+  geocodificarDesdeDireccion?: boolean
 }
 
 export default function MapaDireccionMapbox({
@@ -26,6 +27,7 @@ export default function MapaDireccionMapbox({
   onCoordenadaChange,
   coordenadasIniciales,
   editable = true,
+  geocodificarDesdeDireccion = true,
 }: MapaDireccionMapboxProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
@@ -35,12 +37,32 @@ export default function MapaDireccionMapbox({
   const [coordenadas, setCoordenadas] = useState<Coordenadas | null>(coordenadasIniciales || null)
   const [expanded, setExpanded] = useState(false)
 
+  const forzarResize = useCallback(() => {
+    if (!map.current) return
+    window.requestAnimationFrame(() => {
+      map.current?.resize()
+    })
+    window.setTimeout(() => map.current?.resize(), 120)
+    window.setTimeout(() => map.current?.resize(), 320)
+  }, [])
+
   // Cuando cambia el modo expandido, redimensionar el mapa para que se reajuste al contenedor
   useEffect(() => {
     if (!map.current) return
-    const id = window.setTimeout(() => map.current?.resize(), 200)
+    const id = window.setTimeout(() => forzarResize(), 200)
     return () => window.clearTimeout(id)
-  }, [expanded])
+  }, [expanded, forzarResize])
+
+  // Si el contenedor cambia de tamaño al abrir/cerrar modales o colapsables,
+  // forzar resize para evitar el lienzo blanco de Mapbox.
+  useEffect(() => {
+    if (!mapContainer.current || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => {
+      if (map.current) forzarResize()
+    })
+    observer.observe(mapContainer.current)
+    return () => observer.disconnect()
+  }, [forzarResize])
 
   // Cerrar con tecla Escape
   useEffect(() => {
@@ -152,13 +174,14 @@ export default function MapaDireccionMapbox({
 
       map.current.on('load', () => {
         setCargando(false)
+        forzarResize()
 
         if (coordenadasIniciales) {
           actualizarMarcador({ lng: coordenadasIniciales.lng, lat: coordenadasIniciales.lat })
           return
         }
 
-        if (direccion) {
+        if (direccion && geocodificarDesdeDireccion) {
           geocodificarDireccion(direccion)
         }
       })
@@ -188,6 +211,7 @@ export default function MapaDireccionMapbox({
       map.current?.remove()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const geocodificarDireccion = async (dir: string) => {
@@ -212,11 +236,23 @@ export default function MapaDireccionMapbox({
   }
 
   useEffect(() => {
-    if (map.current && direccion && !coordenadasIniciales && !coordenadas) {
+    if (!map.current) return
+
+    forzarResize()
+
+    if (coordenadasIniciales) {
+      setCoordenadas(coordenadasIniciales)
+      actualizarMarcador({
+        lng: coordenadasIniciales.lng,
+        lat: coordenadasIniciales.lat,
+      })
+      return
+    }
+
+    if (geocodificarDesdeDireccion && direccion && !coordenadas) {
       geocodificarDireccion(direccion)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [actualizarMarcador, coordenadas, coordenadasIniciales, direccion, forzarResize, geocodificarDesdeDireccion])
 
   if (!MAPBOX_ACCESS_TOKEN) {
     return (

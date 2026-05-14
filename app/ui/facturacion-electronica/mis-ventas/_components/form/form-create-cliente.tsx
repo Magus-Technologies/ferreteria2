@@ -45,7 +45,6 @@ export default function FormCreateCliente({
   const mapaKey = [
     mapSessionKey,
     direccionesHook.tipoActivo,
-    direccionesHook.direccionActiva.direccion || 'sin-direccion',
     coordenadasActivas?.lat ?? 'sin-lat',
     coordenadasActivas?.lng ?? 'sin-lng',
   ].join('-');
@@ -305,6 +304,7 @@ export default function FormCreateCliente({
                   }
                   coordenadasIniciales={coordenadasActivas}
                   editable={true}
+                  geocodificarDesdeDireccion={false}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-50">

@@ -539,12 +539,13 @@ function ModalDetallesEntregaInner({
     // Esperar a que modal-entrega-update termine de setters valores
     const timer = setTimeout(() => {
       const vehiculoIdValue = form.getFieldValue('vehiculo_id')
-      if (vehiculoIdValue && !vehiculoPreseleccionadoDomicilio) {
+      if (
+        vehiculoIdValue &&
+        String(vehiculoPreseleccionadoDomicilio?.id ?? '') !== String(vehiculoIdValue)
+      ) {
         vehiculosApi.getById(vehiculoIdValue).then((response) => {
-          // vehiculosApi.getById retorna ApiResponse<Vehiculo> directo
-          // response.data = Vehiculo (no anidado como en usuariosApi)
-          if (response.data) {
-            const vehiculoData = response.data
+          const vehiculoData = (response.data as any)?.data ?? response.data
+          if (vehiculoData) {
             setVehiculoPreseleccionadoDomicilio({
               id: vehiculoData.id,
               name: vehiculoData.name,
@@ -560,7 +561,12 @@ function ModalDetallesEntregaInner({
     
     return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, resolvedMode.kind, form])
+  }, [
+    open,
+    resolvedMode.kind,
+    resolvedMode.kind === 'actualizar-entrega' ? resolvedMode.entregaId : null,
+    vehiculoPreseleccionadoDomicilio?.id,
+  ])
 
   // `ubicacionGps` (dirección obtenida por reverse geocoding) vive ahora en
   // el Provider — se consume arriba con el resto del bloque DOMICILIO.
