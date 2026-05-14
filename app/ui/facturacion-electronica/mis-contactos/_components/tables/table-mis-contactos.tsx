@@ -422,14 +422,17 @@ export default function TableMisContactos() {
             </Button>
 
             {/* Botón Eliminar */}
-            <Button
-              type="text"
-              size="small"
-              className="flex items-center justify-center hover:bg-red-50"
-              onClick={() => handleEliminar(cliente.id, cliente.razon_social || cliente.nombres)}
-            >
-              <FaTrash className="text-red-600" size={14} />
-            </Button>
+            <Tooltip title={(cliente.ventas_count ?? 0) > 0 ? 'No se puede eliminar: tiene ventas registradas' : 'Eliminar'}>
+              <Button
+                type="text"
+                size="small"
+                disabled={(cliente.ventas_count ?? 0) > 0}
+                className="flex items-center justify-center"
+                onClick={() => handleEliminar(cliente.id, cliente.razon_social || cliente.nombres)}
+              >
+                <FaTrash className={(cliente.ventas_count ?? 0) > 0 ? 'text-gray-300' : 'text-red-600'} size={14} />
+              </Button>
+            </Tooltip>
           </div>
         );
       },

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Button, Tag, Tooltip, Modal } from 'antd'
-import { FaEdit, FaTrash, FaStar, FaCheck, FaTimes } from 'react-icons/fa'
+import { FaEdit, FaTrash, FaStar, FaEye } from 'react-icons/fa'
 import type { ColDef } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -14,6 +14,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { App } from 'antd'
 import ModalCreateProveedor from '../modals/modal-create-proveedor'
 import ModalCalificacionesProveedor from '../modals/modal-calificaciones-proveedor'
+import ModalDetalleProveedor from '../modals/modal-detalle-proveedor'
 import { greenColors } from '~/lib/colors'
 
 export default function TableMisProveedores() {
@@ -27,17 +28,13 @@ export default function TableMisProveedores() {
   const [modalEditarOpen, setModalEditarOpen] = useState(false)
   const [proveedorParaCalificar, setProveedorParaCalificar] = useState<Proveedor | null>(null)
   const [modalCalificacionesOpen, setModalCalificacionesOpen] = useState(false)
-  
-  // Estados para confirmación de acciones
+  const [proveedorParaDetalle, setProveedorParaDetalle] = useState<Proveedor | null>(null)
+  const [modalDetalleOpen, setModalDetalleOpen] = useState(false)
   const [proveedorAEliminar, setProveedorAEliminar] = useState<number | null>(null)
-  const [proveedorADesactivar, setProveedorADesactivar] = useState<number | null>(null)
-  const [proveedorAActivar, setProveedorAActivar] = useState<number | null>(null)
 
-  // Query para obtener los proveedores
   const { data: response, isFetching, refetch } = useQuery({
     queryKey: [QueryKeys.PROVEEDORES, filtros],
     queryFn: async () => {
-      // Si se selecciona ordenar por compras, usar el endpoint especial
       if (filtros.ordenar_por === 'compras') {
         const result = await proveedorApi.getProveedoresOrdenadosPorCompras({
           search: filtros.search || undefined,
@@ -46,15 +43,10 @@ export default function TableMisProveedores() {
           tipo_proveedor: filtros.tipo_proveedor,
           per_page: 100,
         })
-
-        if (result.error) {
-          throw new Error(result.error.message)
-        }
-
+        if (result.error) throw new Error(result.error.message)
         return result.data?.data || []
       }
 
-      // Si no, usar el endpoint normal
       const result = await proveedorApi.getAll({
         search: filtros.search || undefined,
         estado: filtros.estado,
@@ -62,99 +54,37 @@ export default function TableMisProveedores() {
         tipo_proveedor: filtros.tipo_proveedor,
         per_page: 100,
       })
-
-      if (result.error) {
-        throw new Error(result.error.message)
-      }
-
+      if (result.error) throw new Error(result.error.message)
       return result.data?.data || []
     },
   })
 
-  // Mutation para eliminar proveedor
   const deleteMutation = useMutation({
     mutationFn: (id: number) => proveedorApi.delete(id),
     onSuccess: (response) => {
-      console.log('Delete response:', response)
-      
       if (response.error) {
-        notification.error({
-          message: 'Error',
-          description: response.error.message,
-        })
+        notification.error({ message: 'Error', description: response.error.message })
         return
       }
-
-      notification.success({
-        message: 'Proveedor eliminado',
-        description: 'El proveedor ha sido eliminado exitosamente',
-      })
-
+      notification.success({ message: 'Proveedor eliminado' })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PROVEEDORES] })
       refetch()
     },
     onError: (error: Error) => {
-      console.error('Delete error:', error)
-      notification.error({
-        message: 'Error',
-        description: error.message || 'Error al eliminar el proveedor',
-      })
+      notification.error({ message: 'Error', description: error.message })
     },
   })
 
-  // Mutation para cambiar estado del proveedor
-  const updateEstadoMutation = useMutation({
-    mutationFn: (data: { id: number; estado: boolean }) =>
-      proveedorApi.update(data.id, { ...data, estado: data.estado } as any),
-    onSuccess: (response, variables) => {
-      if (response.error) {
-        notification.error({
-          message: 'Error',
-          description: response.error.message,
-        })
-        return
-      }
-
-      notification.success({
-        message: variables.estado ? 'Proveedor activado' : 'Proveedor desactivado',
-        description: `El proveedor ha sido ${variables.estado ? 'activado' : 'desactivado'} exitosamente`,
-      })
-
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.PROVEEDORES] })
-      refetch()
-    },
-    onError: (error: Error) => {
-      notification.error({
-        message: 'Error',
-        description: error.message || 'Error al cambiar el estado del proveedor',
-      })
-    },
-  })
-
-  const handleEditar = (proveedor: Proveedor) => {
-    setProveedorParaEditar(proveedor)
-    setModalEditarOpen(true)
-  }
-
-  const handleCalificaciones = (proveedor: Proveedor) => {
-    setProveedorParaCalificar(proveedor)
-    setModalCalificacionesOpen(true)
-  }
-
-  const proveedores = Array.isArray(response) ? response : []
-
-  // Hook para obtener IDs de proveedores que tienen compras
   const { data: proveedoresConCompras } = useQuery({
     queryKey: [QueryKeys.PROVEEDORES, 'con-compras'],
     queryFn: async () => {
       const result = await proveedorApi.getProveedoresConCompras()
-      if (result.error) {
-        console.error('Error fetching providers with purchases:', result.error)
-        return new Set<number>()
-      }
+      if (result.error) return new Set<number>()
       return new Set(result.data?.data || [])
     },
   })
+
+  const proveedores = Array.isArray(response) ? response : []
 
   const columnDefs: ColDef<Proveedor>[] = [
     {
@@ -209,26 +139,13 @@ export default function TableMisProveedores() {
       cellRenderer: (params: any) => {
         const calificacion = params.data?.ultimaCalificacion?.estado
         if (!calificacion) return <span className="text-gray-400">Sin calificar</span>
-
         const colorMap: Record<string, string> = {
-          excelente: 'green',
-          bueno: 'blue',
-          regular: 'orange',
-          problematico: 'red',
+          excelente: 'green', bueno: 'blue', regular: 'orange', problematico: 'red',
         }
-
         const labelMap: Record<string, string> = {
-          excelente: 'Excelente',
-          bueno: 'Bueno',
-          regular: 'Regular',
-          problematico: 'Problemático',
+          excelente: 'Excelente', bueno: 'Bueno', regular: 'Regular', problematico: 'Problemático',
         }
-
-        return (
-          <Tag color={colorMap[calificacion] || 'default'}>
-            {labelMap[calificacion] || calificacion}
-          </Tag>
-        )
+        return <Tag color={colorMap[calificacion] || 'default'}>{labelMap[calificacion] || calificacion}</Tag>
       },
     },
     {
@@ -236,7 +153,6 @@ export default function TableMisProveedores() {
       field: 'ultimaCalificacion.observacion',
       flex: 1,
       minWidth: 200,
-      valueGetter: (params) => params.data?.ultimaCalificacion?.observacion || '-',
       cellRenderer: (params: any) => {
         const observacion = params.data?.ultimaCalificacion?.observacion
         if (!observacion) return <span className="text-gray-400">-</span>
@@ -251,82 +167,64 @@ export default function TableMisProveedores() {
       headerName: 'Estado',
       field: 'estado',
       width: 100,
-      cellRenderer: (params: any) => {
-        const estado = params.value
-        return (
-          <Tag color={estado ? 'green' : 'red'}>
-            {estado ? 'Activo' : 'Inactivo'}
-          </Tag>
-        )
-      },
+      cellRenderer: (params: any) => (
+        <Tag color={params.value ? 'green' : 'red'}>
+          {params.value ? 'Activo' : 'Inactivo'}
+        </Tag>
+      ),
     },
     {
       headerName: 'Acciones',
-      width: 150,
-      pinned: 'right',
+      width: 145,
       cellRenderer: (params: any) => {
         const proveedor = params.data as Proveedor
         if (!proveedor) return null
-
         const tieneCompras = proveedoresConCompras?.has(proveedor.id) ?? false
 
         return (
           <div className="flex items-center gap-1">
-            {/* Botón Calificaciones */}
+            {/* Ver detalle */}
+            <Button
+              type="text"
+              size="small"
+              className="flex items-center justify-center hover:bg-blue-50"
+              onClick={() => { setProveedorParaDetalle(proveedor); setModalDetalleOpen(true) }}
+            >
+              <FaEye className="text-blue-600" size={14} />
+            </Button>
+
+            {/* Calificaciones */}
             <Button
               type="text"
               size="small"
               className="flex items-center justify-center hover:bg-amber-50"
-              onClick={() => handleCalificaciones(proveedor)}
+              onClick={() => { setProveedorParaCalificar(proveedor); setModalCalificacionesOpen(true) }}
             >
               <FaStar className="text-amber-600" size={14} />
             </Button>
 
-            {/* Botón Editar */}
+            {/* Editar */}
             <Button
               type="text"
               size="small"
               className="flex items-center justify-center hover:bg-green-50"
-              onClick={() => handleEditar(proveedor)}
+              onClick={() => { setProveedorParaEditar(proveedor); setModalEditarOpen(true) }}
             >
               <FaEdit className="text-green-600" size={14} />
             </Button>
 
-            {/* Botón Activar/Desactivar */}
-            {proveedor.estado ? (
+            {/* Eliminar — gris y deshabilitado si tiene compras */}
+            <Tooltip title={tieneCompras ? 'No se puede eliminar: tiene compras registradas' : 'Eliminar'}>
               <Button
                 type="text"
                 size="small"
-                className="flex items-center justify-center hover:bg-red-50"
-                title="Desactivar proveedor"
-                onClick={() => setProveedorADesactivar(proveedor.id)}
-              >
-                <FaTimes className="text-red-600" size={14} />
-              </Button>
-            ) : (
-              <Button
-                type="text"
-                size="small"
-                className="flex items-center justify-center hover:bg-green-50"
-                title="Activar proveedor"
-                onClick={() => setProveedorAActivar(proveedor.id)}
-              >
-                <FaCheck className="text-green-600" size={14} />
-              </Button>
-            )}
-
-            {/* Botón Eliminar - Solo si no tiene compras */}
-            {!tieneCompras && (
-              <Button
-                type="text"
-                size="small"
-                className="flex items-center justify-center hover:bg-red-50"
-                title="Eliminar proveedor"
+                disabled={tieneCompras}
+                className="flex items-center justify-center"
                 onClick={() => setProveedorAEliminar(proveedor.id)}
               >
-                <FaTrash className="text-red-600" size={14} />
+                <FaTrash className={tieneCompras ? 'text-gray-300' : 'text-red-600'} size={14} />
               </Button>
-            )}
+            </Tooltip>
           </div>
         )
       },
@@ -346,15 +244,9 @@ export default function TableMisProveedores() {
         selectionColor={greenColors[10]}
         onSelectionChanged={() => {}}
         onRowClicked={(event) => {
-          if (event.data) {
-            setProveedorId(event.data.id)
-          }
+          if (event.data) setProveedorId(event.data.id)
         }}
-        defaultColDef={{
-          sortable: true,
-          filter: true,
-          resizable: true,
-        }}
+        defaultColDef={{ sortable: true, filter: true, resizable: true }}
         getRowId={(params) => params.data.id.toString()}
         className="h-full"
         exportExcel={true}
@@ -362,7 +254,12 @@ export default function TableMisProveedores() {
         selectColumns={true}
       />
 
-      {/* Modal para editar proveedor */}
+      <ModalDetalleProveedor
+        open={modalDetalleOpen}
+        setOpen={setModalDetalleOpen}
+        proveedor={proveedorParaDetalle}
+      />
+
       <ModalCreateProveedor
         open={modalEditarOpen}
         setOpen={setModalEditarOpen}
@@ -375,20 +272,15 @@ export default function TableMisProveedores() {
         }}
       />
 
-      {/* Modal para calificaciones del proveedor */}
       {proveedorParaCalificar && (
         <ModalCalificacionesProveedor
           open={modalCalificacionesOpen}
-          onClose={() => {
-            setModalCalificacionesOpen(false)
-            setProveedorParaCalificar(null)
-          }}
+          onClose={() => { setModalCalificacionesOpen(false); setProveedorParaCalificar(null) }}
           proveedorId={proveedorParaCalificar.id}
           proveedorNombre={proveedorParaCalificar.razon_social}
         />
       )}
 
-      {/* Modal para confirmar eliminación */}
       <Modal
         title="¿Eliminar proveedor?"
         open={proveedorAEliminar !== null}
@@ -404,41 +296,6 @@ export default function TableMisProveedores() {
         okButtonProps={{ danger: true }}
       >
         <p>Esta acción no se puede deshacer. ¿Deseas continuar?</p>
-      </Modal>
-
-      {/* Modal para confirmar desactivación */}
-      <Modal
-        title="¿Desactivar proveedor?"
-        open={proveedorADesactivar !== null}
-        onOk={() => {
-          if (proveedorADesactivar) {
-            updateEstadoMutation.mutate({ id: proveedorADesactivar, estado: false })
-            setProveedorADesactivar(null)
-          }
-        }}
-        onCancel={() => setProveedorADesactivar(null)}
-        okText="Sí, desactivar"
-        cancelText="Cancelar"
-        okButtonProps={{ danger: true }}
-      >
-        <p>El proveedor no podrá ser utilizado hasta que sea reactivado.</p>
-      </Modal>
-
-      {/* Modal para confirmar activación */}
-      <Modal
-        title="¿Activar proveedor?"
-        open={proveedorAActivar !== null}
-        onOk={() => {
-          if (proveedorAActivar) {
-            updateEstadoMutation.mutate({ id: proveedorAActivar, estado: true })
-            setProveedorAActivar(null)
-          }
-        }}
-        onCancel={() => setProveedorAActivar(null)}
-        okText="Sí, activar"
-        cancelText="Cancelar"
-      >
-        <p>El proveedor volverá a estar disponible.</p>
       </Modal>
     </>
   )

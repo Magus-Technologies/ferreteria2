@@ -36,7 +36,7 @@ export default function MisContactosPage() {
             <div className="flex-1 min-h-0">
               <TableMisContactos />
             </div>
-            {/* Tabla de Deudas con scroll infinito */}
+            {/* Tabla de Deudas de Clientes */}
             <div className="flex-1 min-h-0">
               <TableDeudasClientes />
             </div>

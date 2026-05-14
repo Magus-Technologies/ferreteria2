@@ -5,8 +5,10 @@ import { Tag, Spin, Tooltip } from "antd";
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { HiDocumentText } from "react-icons/hi2";
+import { FaEye } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import TableWithTitle from "~/components/tables/table-with-title";
+import ModalDetalleDeudaCliente, { type DeudaClienteDetalle } from "../modals/modal-detalle-deuda-cliente";
 import { ventaApi, type VentaCompleta } from "~/lib/api/venta";
 import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
@@ -38,13 +40,16 @@ export default function TableDeudasClientes() {
   const { clienteId } = useStoreClienteSeleccionado();
   const [page, setPage] = useState(1);
   const [allData, setAllData] = useState<DeudaCliente[]>([]);
-  const [hasMore, setHasMore] = useState(true);
   const tableRef = useRef<AgGridReact<DeudaCliente>>(null);
   const pageSize = 50;
 
   // Estado para el modal de documento
   const [modalOpen, setModalOpen] = useState(false);
   const [ventaIdSeleccionada, setVentaIdSeleccionada] = useState<string | undefined>(undefined);
+
+  // Estado para el modal de detalle de deuda
+  const [modalDeudaOpen, setModalDeudaOpen] = useState(false);
+  const [deudaSeleccionada, setDeudaSeleccionada] = useState<DeudaClienteDetalle | null>(null);
 
   // Query para obtener deudas con scroll infinito
   const { data: response, isLoading, isFetching } = useQuery({
@@ -63,7 +68,6 @@ export default function TableDeudasClientes() {
   useEffect(() => {
     setPage(1);
     setAllData([]);
-    setHasMore(true);
   }, [clienteId]);
 
   // Actualizar datos cuando llega nueva página
@@ -106,9 +110,11 @@ export default function TableDeudasClientes() {
       } else {
         setAllData((prev) => [...prev, ...transformedData]);
       }
-      setHasMore(page < (response.last_page || 1));
     }
   }, [response, page]);
+
+  const totalDeuda = allData.reduce((sum, item) => sum + item.deuda, 0)
+  const tituloTabla = `DOCUMENTOS CON DEUDA  ·  ${allData.length} documentos  ·  Total deuda: S/. ${totalDeuda.toFixed(2)}`
 
   const handleViewDoc = useCallback((deuda: DeudaCliente) => {
     setVentaIdSeleccionada(deuda.id);
@@ -193,15 +199,22 @@ export default function TableDeudasClientes() {
     {
       headerName: "Acciones",
       field: "id",
-      width: 80,
-      minWidth: 80,
+      width: 100,
+      minWidth: 100,
       cellRenderer: (params: any) => (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center gap-2 h-full">
           <Tooltip title="Ver Documento">
             <HiDocumentText
               onClick={() => handleViewDoc(params.data)}
               className="cursor-pointer hover:scale-110 transition-all text-amber-600"
               size={18}
+            />
+          </Tooltip>
+          <Tooltip title="Ver detalle de deuda">
+            <FaEye
+              onClick={() => { setDeudaSeleccionada(params.data); setModalDeudaOpen(true) }}
+              className="cursor-pointer hover:scale-110 transition-all text-blue-600"
+              size={15}
             />
           </Tooltip>
         </div>
@@ -214,7 +227,7 @@ export default function TableDeudasClientes() {
       <div className="flex-1 min-h-0 relative w-full">
         <TableWithTitle<DeudaCliente>
           id="deudas-clientes"
-          title="DOCUMENTOS CON DEUDA"
+          title={tituloTabla}
           loading={isLoading || isFetching}
           columnDefs={columnDefs}
           rowData={allData}
@@ -259,6 +272,12 @@ export default function TableDeudasClientes() {
           ventaId={ventaIdSeleccionada}
         />
       )}
+
+      <ModalDetalleDeudaCliente
+        open={modalDeudaOpen}
+        setOpen={setModalDeudaOpen}
+        deuda={deudaSeleccionada}
+      />
     </div>
   );
 }

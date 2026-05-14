@@ -131,6 +131,7 @@ export interface Cliente {
   created_at?: string;
   updated_at?: string;
   direcciones?: DireccionCliente[];
+  ventas_count?: number;
 }
 
 // ============= REQUEST TYPES =============

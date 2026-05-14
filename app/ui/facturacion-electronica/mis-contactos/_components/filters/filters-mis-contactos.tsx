@@ -29,7 +29,7 @@ export default function FiltersMisContactos() {
   const { setFiltros } = useStoreFiltrosMisContactos();
   const queryClient = useQueryClient();
 
-  const handleFinish = (values: ValuesFiltersMisContactos) => {
+  const aplicarFiltros = (values: ValuesFiltersMisContactos) => {
     const data: any = {};
     data.search = values.search?.trim() || undefined;
     data.tipo_cliente = values.tipo_cliente || undefined;
@@ -41,6 +41,10 @@ export default function FiltersMisContactos() {
     data.ordenar_por_frecuencia = values.ordenar_por_frecuencia || undefined;
     setFiltros(data);
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CLIENTES] });
+  };
+
+  const handleFinish = (values: ValuesFiltersMisContactos) => {
+    aplicarFiltros(values);
   };
 
   return (
@@ -109,7 +113,7 @@ export default function FiltersMisContactos() {
           <div className="col-span-2 flex items-center gap-2 px-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Con recomendaciones:</label>
             <Form.Item name="con_recomendaciones" valuePropName="checked" noStyle>
-              <Switch size="small" onChange={() => form.submit()} />
+              <Switch size="small" />
             </Form.Item>
           </div>
 
@@ -117,7 +121,7 @@ export default function FiltersMisContactos() {
           <div className="col-span-1 flex items-center gap-2 px-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">Frecuentes:</label>
             <Form.Item name="ordenar_por_frecuencia" valuePropName="checked" noStyle>
-              <Switch size="small" onChange={() => form.submit()} />
+              <Switch size="small" />
             </Form.Item>
           </div>
 
