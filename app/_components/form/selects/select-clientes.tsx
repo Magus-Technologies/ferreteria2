@@ -269,16 +269,16 @@ setClienteSeleccionadoStore(undefined)
     setOpenModalClienteSearch(true)
   }
 
-  const getLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
+  const getLabel = (cliente: PartialCliente) => {
       if (showOnlyDocument) return cliente.numero_documento || ''
-      if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
-      return `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+      if (cliente.razon_social) return `${cliente.numero_documento || ''} : ${cliente.razon_social}`
+      return `${cliente.numero_documento || ''} : ${cliente.nombres || ''} ${cliente.apellidos || ''}`
   }
 
   // Label completo para el dropdown (siempre mostrar nombre para identificar)
-  const getDropdownLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
-      if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
-      return `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+  const getDropdownLabel = (cliente: PartialCliente) => {
+      if (cliente.razon_social) return `${cliente.numero_documento || ''} : ${cliente.razon_social}`
+      return `${cliente.numero_documento || ''} : ${cliente.nombres || ''} ${cliente.apellidos || ''}`
   }
 
   return (
