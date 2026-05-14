@@ -19,8 +19,8 @@ import ModalCalificacionesCliente from "../modals/modal-calificaciones-cliente";
 import ModalRecomendacionesCliente from "../modals/modal-recomendaciones-cliente";
 import { autorizacionesApi } from "~/lib/api/autorizaciones";
 import ModalSolicitarAutorizacion from "~/components/autorizaciones/modal-solicitar-autorizacion";
-import { orangeColors } from "~/lib/colors";
 import { clienteCalificacionApi } from "~/lib/api/cliente-calificacion";
+import { orangeColors } from "~/lib/colors";
 
 export default function TableMisContactos() {
   const { filtros } = useStoreFiltrosMisContactos();
@@ -81,11 +81,11 @@ export default function TableMisContactos() {
   const contactos = response?.data?.data || [];
 
   // Hook para obtener calificaciones de todos los clientes
-  const { data: calificacionesMap } = useQuery({
+  const { data: calificacionesMap, isFetching: isFetchingCalificaciones } = useQuery({
     queryKey: [QueryKeys.CLIENTES, 'calificaciones', contactos.map(c => c.id).join(',')],
     queryFn: async () => {
       if (!contactos || contactos.length === 0) return {}
-      
+
       const results = await Promise.all(
         contactos.map(async (cliente) => {
           const result = await clienteCalificacionApi.getUltima(cliente.id)
@@ -99,20 +99,34 @@ export default function TableMisContactos() {
           calificacionesData[clienteId] = calificacion
         }
       }
-      
+
       return calificacionesData
     },
     enabled: !!contactos && contactos.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Filtrar clientes por calificación si está seleccionada
-  let clientesFiltrados = filtros.calificacion
+  // Filtrar clientes por calificación solo cuando el mapa ya terminó de cargar
+  // (evita tabla vacía mientras calificacionesMap está cargando)
+  const clientesFiltrados = filtros.calificacion && calificacionesMap !== undefined && !isFetchingCalificaciones
     ? contactos.filter((cliente) => {
-        const calificacion = calificacionesMap?.[cliente.id]
+        const calificacion = calificacionesMap[cliente.id]
         return calificacion?.estado === filtros.calificacion
       })
     : contactos
+
+  // Seleccionar automáticamente la primera fila cuando se cargan los datos
+  React.useEffect(() => {
+    if (clientesFiltrados.length > 0 && tableRef.current) {
+      setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0)
+        if (firstNode) {
+          firstNode.setSelected(true)
+          setClienteId(firstNode.data?.id ?? null)
+        }
+      }, 100)
+    }
+  }, [clientesFiltrados, setClienteId])
 
   // Extraer el conteo de ventas del response si está disponible
   React.useEffect(() => {
@@ -427,7 +441,7 @@ export default function TableMisContactos() {
       <TableWithTitle<Cliente>
         id="mis-contactos"
         title="CONTACTOS"
-        loading={isFetching}
+        loading={isFetching || (!!filtros.calificacion && isFetchingCalificaciones)}
         columnDefs={columnDefs}
         rowData={clientesFiltrados}
         tableRef={tableRef}

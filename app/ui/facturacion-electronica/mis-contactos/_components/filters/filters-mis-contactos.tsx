@@ -36,7 +36,7 @@ export default function FiltersMisContactos() {
     data.estado = (values.estado !== undefined && values.estado !== null && values.estado !== '')
       ? values.estado === 'true'
       : undefined;
-    if (values.calificacion) data.calificacion = values.calificacion;
+    data.calificacion = values.calificacion || undefined;
     data.con_recomendaciones = values.con_recomendaciones || undefined;
     data.ordenar_por_frecuencia = values.ordenar_por_frecuencia || undefined;
     setFiltros(data);
@@ -44,7 +44,7 @@ export default function FiltersMisContactos() {
   };
 
   return (
-    <FormBase form={form} name="filtros-mis-contactos" className="w-full" onFinish={handleFinish}>
+    <FormBase form={form} name="filtros-mis-contactos" className="w-full" onFinish={handleFinish} initialValues={{ estado: 'true' }}>
       <TituloModulos title="Mis Clientes" icon={<IoMdContact className="text-cyan-600" />} />
 
       <div className="mt-4">

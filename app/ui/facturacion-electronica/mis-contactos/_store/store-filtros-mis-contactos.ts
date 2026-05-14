@@ -21,6 +21,7 @@ interface StoreFiltrosMisContactos {
 const filtrosIniciales: FiltrosMisContactos = {
   search: "",
   tipo_cliente: undefined,
+  estado: true,
   con_recomendaciones: undefined,
   calificacion: undefined,
   ordenar_por_frecuencia: undefined,
