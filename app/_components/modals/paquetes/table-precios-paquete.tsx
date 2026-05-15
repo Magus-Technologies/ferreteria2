@@ -69,13 +69,15 @@ export default function TablePreciosPaquete({
         cellRenderer: (params: any) => {
           if (!params.data) return null
           const precio = getPrecioPaquete(params.data, tipo)
+          const descuento = getDescuentoPaquete(params.data, tipo)
+          const precioFinal = Math.max(0, precio - descuento)
           return (
             <div className="flex items-center h-full">
               <InputNumber
                 size="small"
                 className="w-full"
                 prefix="S/."
-                value={precio}
+                value={precioFinal}
                 precision={2}
                 controls={false}
                 readOnly
@@ -86,7 +88,7 @@ export default function TablePreciosPaquete({
         },
       },
       {
-        headerName: `Desc.`,
+        headerName: `Desc. ${label}`,
         width: 100,
         cellRenderer: (params: any) => {
           if (!params.data) return null
@@ -110,6 +112,29 @@ export default function TablePreciosPaquete({
       cellClass: 'font-medium',
       minWidth: 150,
     },
+    {
+      headerName: 'Costo',
+      field: 'costo',
+      width: 110,
+      cellRenderer: (params: any) => {
+        if (!params.data) return null
+        const costo = Number(params.data.costo ?? 0)
+        return (
+          <div className="flex items-center h-full">
+            <InputNumber
+              size="small"
+              className="w-full"
+              prefix="S/."
+              value={costo}
+              precision={2}
+              controls={false}
+              readOnly
+              variant="borderless"
+            />
+          </div>
+        )
+      },
+    },
     ...colsPrecio('publico', 'Precio Público'),
     ...colsPrecio('especial', 'Precio Especial'),
     ...colsPrecio('minimo', 'Precio Mínimo'),
@@ -130,7 +155,7 @@ export default function TablePreciosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Producto', 'Precio Público', 'Desc.', 'Precio Especial', 'Desc.', 'Precio Mínimo', 'Desc.', 'Precio ', 'Desc.'],
+          columns: ['Producto', 'Costo', 'Precio Público', 'Desc. Precio Público', 'Precio Especial', 'Desc. Precio Especial', 'Precio Mínimo', 'Desc. Precio Mínimo', 'Precio Final', 'Desc. Precio Final'],
         },
       ]}
     />

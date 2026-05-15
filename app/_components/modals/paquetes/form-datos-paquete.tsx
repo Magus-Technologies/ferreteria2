@@ -20,22 +20,35 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
     }, 0)
 
     const ventaPublico = productos.reduce((sum, p) => {
-      return sum + (Number(p.precio_publico || 0) * (p.cantidad || 0))
+      const precio = Math.max(0, Number(p.precio_publico || 0) - Number(p.descuento_publico || 0))
+      return sum + precio * (p.cantidad || 0)
     }, 0)
 
     const ventaEspecial = productos.reduce((sum, p) => {
-      return sum + (Number(p.precio_especial || 0) * (p.cantidad || 0))
+      const precio = Math.max(0, Number(p.precio_especial || 0) - Number(p.descuento_especial || 0))
+      return sum + precio * (p.cantidad || 0)
     }, 0)
 
     const ventaMinimo = productos.reduce((sum, p) => {
-      return sum + (Number(p.precio_minimo || 0) * (p.cantidad || 0))
+      const precio = Math.max(0, Number(p.precio_minimo || 0) - Number(p.descuento_minimo || 0))
+      return sum + precio * (p.cantidad || 0)
     }, 0)
 
     const ventaUltimo = productos.reduce((sum, p) => {
-      return sum + (Number(p.precio_ultimo || 0) * (p.cantidad || 0))
+      const precio = Math.max(0, Number(p.precio_ultimo || 0) - Number(p.descuento_ultimo || 0))
+      return sum + precio * (p.cantidad || 0)
     }, 0)
 
-    return { costoTotal, ventaPublico, ventaEspecial, ventaMinimo, ventaUltimo }
+    const gananciaPublico = ventaPublico - costoTotal
+    const gananciaEspecial = ventaEspecial - costoTotal
+    const gananciaMinimo = ventaMinimo - costoTotal
+    const gananciaUltimo = ventaUltimo - costoTotal
+
+    return {
+      costoTotal,
+      ventaPublico, ventaEspecial, ventaMinimo, ventaUltimo,
+      gananciaPublico, gananciaEspecial, gananciaMinimo, gananciaUltimo,
+    }
   }, [productos])
 
   return (
@@ -101,6 +114,23 @@ export default function FormDatosPaquete({ form, productos }: FormDatosPaquetePr
               </span>
             </div>
           </LabelBase>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+          {[
+            { label: 'Gan. Precio Público', ganancia: totales.gananciaPublico },
+            { label: 'Gan. Precio Especial', ganancia: totales.gananciaEspecial },
+            { label: 'Gan. Precio Mínimo', ganancia: totales.gananciaMinimo },
+            { label: 'Gan. Precio Final', ganancia: totales.gananciaUltimo },
+          ].map(({ label, ganancia }) => (
+            <LabelBase key={label} label={`${label}:`} orientation="column">
+              <div className={`flex items-center h-10 px-3 rounded-lg border ${ganancia >= 0 ? 'bg-emerald-50 border-emerald-300' : 'bg-red-50 border-red-300'}`}>
+                <span className={`text-sm font-semibold ${ganancia >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                  S/. {ganancia.toFixed(2)}
+                </span>
+              </div>
+            </LabelBase>
+          ))}
         </div>
       </div>
     </Form>

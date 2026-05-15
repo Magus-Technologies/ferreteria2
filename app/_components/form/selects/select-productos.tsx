@@ -263,8 +263,14 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
       })
       setProductoSeleccionadoSearchStore(undefined)
       setOpenModalProductoSearch(false)
-      if (limpiarOnChange) setText('')
       onChange?.(producto.id, producto)
+      if (limpiarOnChange) {
+        setText('')
+        setTextDefault('')
+        iterarChangeValue({ refObject: selectProductoRef, value: undefined })
+        setProductoSeleccionado(undefined)
+        setProductoCreado(undefined)
+      }
     }
   }
 
@@ -288,13 +294,21 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         }}
         onChange={(value) => {
           const producto = productos?.find((item) => item.id === value)
-          
+
           if (producto) {
             // Ejecutar handleOnlyOneResult si existe
             handleOnlyOneResult?.(producto)
           }
-          
+
           onChange?.(value, producto)
+
+          if (limpiarOnChange && producto) {
+            setText('')
+            setTextDefault('')
+            iterarChangeValue({ refObject: selectProductoRef, value: undefined })
+            setProductoSeleccionado(undefined)
+            setProductoCreado(undefined)
+          }
         }}
         filterOption={false}
         onSearch={(val) => {
