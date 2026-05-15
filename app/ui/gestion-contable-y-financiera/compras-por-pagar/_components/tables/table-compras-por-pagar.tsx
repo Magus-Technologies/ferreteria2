@@ -107,7 +107,8 @@ const TableComprasPorPagar = memo(function TableComprasPorPagar() {
   })
 
   const rowData = useMemo(() => {
-    const compras = Array.isArray(data?.data) ? data!.data : []
+    const raw = data?.data
+    const compras: Compra[] = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? Object.values(raw) : []
     const filtradas = aplicarFiltroMora(compras, moraRango)
     return [...filtradas].sort((a, b) => Number(b.id) - Number(a.id))
   }, [data?.data, moraRango])
