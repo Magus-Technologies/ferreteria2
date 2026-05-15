@@ -347,7 +347,7 @@ export default function ModalEntregaUpdate({
         ? Math.max(0, totalVenta - cantidadProgramadaEstaEntrega)
         : Number(pendienteRaw)
       const entregadoReal = entregaTieneEntregaFisica
-        ? Math.max(0, totalVenta - pendienteVentaReal)
+        ? cantidadProgramadaEstaEntrega
         : 0
       const recibidoReal = entregaFueEntregadaAntes
         ? Math.max(cantidadAnterior - totalVenta, 0)

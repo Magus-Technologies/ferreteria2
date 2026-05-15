@@ -14,9 +14,9 @@ import {
 } from "~/lib/api/cotizaciones";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import type { FormCreateCotizacion, DescuentoTipo } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_types/cotizacion.types";
+import { useStoreProductoAgregadoCotizacion, type ProductoCotizacionConUnidades } from "~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_store/store-producto-agregado-cotizacion";
 import ModalDocCotizacion, { CotizacionResponse } from "~/app/ui/facturacion-electronica/mis-cotizaciones/_components/modals/modal-doc-cotizacion";
 import dayjs from "dayjs";
-import { fechaSubmit } from "~/utils/fechas";
 
 interface BodyEditarCotizacionProps {
   cotizacionId: string;
@@ -30,6 +30,9 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
   const [openDoc, setOpenDoc] = useState(false);
   const [cotizacionData, setCotizacionData] = useState<CotizacionResponse>();
   const [cotizacionActual, setCotizacionActual] = useState<Cotizacion>();
+  const setProductosStore = useStoreProductoAgregadoCotizacion(
+    (store) => store.setProductos
+  );
   const router = useRouter();
 
   // Cargar datos de la cotización existente
@@ -84,6 +87,32 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
           }))
         ) || [];
 
+        // Poblar el store con las unidades derivadas disponibles de cada
+        // producto. Los selects de tipo_precio y unidad_derivada en columns-cotizar
+        // leen de aquí; sin esto, al refrescar la página de edición muestran
+        // "-" porque el store solo se llena al agregar productos manualmente.
+        const productosStore: ProductoCotizacionConUnidades[] =
+          cotizacion.productos_por_almacen?.map((pac) => {
+            const primeraUd = pac.unidades_derivadas[0];
+            return {
+              producto_id: pac.producto_almacen.producto.id,
+              producto_name: pac.producto_almacen.producto.name,
+              producto_codigo: pac.producto_almacen.producto.cod_producto || '',
+              marca_name: pac.producto_almacen.producto.marca.name,
+              unidad_derivada_id: primeraUd?.unidad_derivada_inmutable.id ?? 0,
+              unidad_derivada_name: primeraUd?.unidad_derivada_inmutable.name ?? '',
+              unidad_derivada_factor: Number(primeraUd?.factor ?? 0),
+              cantidad: Number(primeraUd?.cantidad ?? 0),
+              precio_venta: Number(primeraUd?.precio ?? 0),
+              recargo: Number(primeraUd?.recargo ?? 0),
+              subtotal: Number(primeraUd?.cantidad ?? 0) * Number(primeraUd?.precio ?? 0),
+              descuento_tipo: (primeraUd?.descuento_tipo === '%' ? 'Porcentaje' : 'Monto') as DescuentoTipo,
+              descuento: Number(primeraUd?.descuento ?? 0),
+              unidades_derivadas_disponibles: pac.producto_almacen.unidades_derivadas,
+            };
+          }) || [];
+        setProductosStore(productosStore);
+
         // Establecer valores iniciales del formulario
         form.setFieldsValue({
           productos,
@@ -115,7 +144,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
     if (cotizacionId) {
       loadCotizacion();
     }
-  }, [cotizacionId, form, router, setAlmacenId]);
+  }, [cotizacionId, form, router, setAlmacenId, setProductosStore]);
 
   const handleSubmit = async (values: FormCreateCotizacion) => {
     if (!almacen_id) {
@@ -131,7 +160,9 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
     setLoading(true);
 
     try {
-      // Transformar datos del formulario al formato del backend
+      // Transformar datos del formulario al formato del backend.
+      // Nota: `fecha` y `fecha_proforma` se omiten intencionalmente — son la
+      // fecha de emisión original de la cotización y no deben modificarse al editar.
       const requestData: Partial<CreateCotizacionRequest> = {
         productos: values.productos.map((p) => ({
           producto_id: p.producto_id,
@@ -143,8 +174,6 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
           descuento_tipo: p.descuento_tipo === "Porcentaje" ? "%" : "m",
           descuento: p.descuento,
         })),
-        fecha: fechaSubmit(values.fecha),
-        fecha_proforma: fechaSubmit(values.fecha),
         tipo_moneda: "s",
         vigencia_dias: values.vigencia_dias,
         fecha_vencimiento: values.fecha_vencimiento?.format("YYYY-MM-DD HH:mm:ss"),
@@ -191,9 +220,9 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
         setOpenDoc(true);
       }
 
-      // Redirigir a la lista después de cerrar el modal
+      // Redirigir a crear-cotización después de cerrar el modal
       setTimeout(() => {
-        router.push('/ui/facturacion-electronica/mis-cotizaciones');
+        router.push('/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion');
       }, 1000);
 
     } catch (error) {

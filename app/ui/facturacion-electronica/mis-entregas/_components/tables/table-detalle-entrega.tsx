@@ -143,6 +143,15 @@ export default function TableDetalleEntrega() {
           0,
           Number((producto as ProductoFila).cantidadPendiente ?? 0),
         )
+        const cantidadEstaEntrega = Number(
+          (entregaSeleccionada?.productos_entregados || []).find((detalle: any) => {
+            const ud = detalle.unidad_derivada_venta || {}
+            const prod = ud.producto_almacen_venta?.producto_almacen?.producto || {}
+            const codigo = prod.cod_producto || ''
+            const unidad = ud.unidad_derivada_inmutable?.name || ''
+            return normalizarClave(codigo, unidad) === normalizarClave(producto.codigo, producto.unidad)
+          })?.cantidad_entregada ?? 0,
+        )
 
         if (entregaTieneEntregaFisica) {
           return {
@@ -153,7 +162,7 @@ export default function TableDetalleEntrega() {
             total,
             recibido: 0,
             programado: 0,
-            entregado: Math.max(0, total - pendientePersistido),
+            entregado: cantidadEstaEntrega,
             pendiente: pendientePersistido,
           }
         }

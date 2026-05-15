@@ -1,5 +1,6 @@
 import { apiRequest } from '../api';
 import type { ApiResponse } from '~/app/_types/api';
+import type { ProductoAlmacenUnidadDerivada } from '~/app/_types/producto';
 
 // ============= INTERFACES =============
 
@@ -42,6 +43,10 @@ export interface ProductoAlmacen {
   producto_id: number;
   almacen_id: number;
   producto: Producto;
+  // Unidades derivadas disponibles del producto en el almacén (con todos los
+  // precios/comisiones). Se incluye solo en GET /cotizaciones/{id} para
+  // alimentar los selects de tipo_precio y unidad_derivada al editar.
+  unidades_derivadas?: ProductoAlmacenUnidadDerivada[];
 }
 
 export interface UnidadDerivadaInmutable {
