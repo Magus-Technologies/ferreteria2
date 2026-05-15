@@ -1,7 +1,8 @@
 "use client";
 
-import { Form, Checkbox } from "antd";
+import { Form } from "antd";
 import { FaSearch, FaCalendarAlt } from "react-icons/fa";
+import { useState } from "react";
 import FormBase from "~/components/form/form-base";
 import LabelBase from "~/components/form/label-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
@@ -11,130 +12,213 @@ import ButtonBase from "~/components/buttons/button-base";
 import dayjs from "dayjs";
 import SelectBase from "~/app/_components/form/selects/select-base";
 import { useCuadresContext } from "../../_contexts/cuadres-context";
+import ModalProductoSearch from "~/app/_components/modals/modal-producto-search";
+import ModalProveedorSearch from "~/app/_components/modals/modal-proveedor-search";
+import { TipoBusquedaProducto } from "~/app/_components/form/selects/select-tipo-busqueda-producto";
+import { useStoreAlmacen } from "~/store/store-almacen";
+import { useStoreProveedorSeleccionado } from "~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado";
 
 export default function FiltersCuadres() {
     const [form] = Form.useForm();
     const { handleSearch, loading } = useCuadresContext();
+    const almacenIdDefault = useStoreAlmacen((store) => store.almacen_id);
+
+    // Modal buscador de producto
+    const [openModalProducto, setOpenModalProducto] = useState(false);
+    const [textDefaultProducto, setTextDefaultProducto] = useState("");
+    const [tipoBusqueda, setTipoBusqueda] = useState<TipoBusquedaProducto>(
+        TipoBusquedaProducto.CODIGO_DESCRIPCION
+    );
+
+    const abrirModalProducto = () => {
+        setTextDefaultProducto(form.getFieldValue("search_producto") || "");
+        setOpenModalProducto(true);
+    };
+
+    // Modal buscador de proveedor
+    const [openModalProveedor, setOpenModalProveedor] = useState(false);
+    const [textDefaultProveedor, setTextDefaultProveedor] = useState("");
+    const proveedorSeleccionado = useStoreProveedorSeleccionado(
+        (store) => store.proveedor
+    );
+
+    const abrirModalProveedor = () => {
+        setTextDefaultProveedor(form.getFieldValue("search_proveedor") || "");
+        setOpenModalProveedor(true);
+    };
+
+    const aplicarProveedor = (prov?: { ruc?: string | null; razon_social?: string }) => {
+        if (!prov) return;
+        form.setFieldValue(
+            "search_proveedor",
+            prov.razon_social || prov.ruc || ""
+        );
+        setOpenModalProveedor(false);
+    };
 
     return (
-        <div className="w-full p-2">
+        <div className="w-full p-1.5">
             <FormBase
                 form={form}
                 name="filters-cuadres"
                 initialValues={{
                     desde: dayjs().startOf('day'),
                     hasta: dayjs(),
-                    listar_no_anuladas: false,
-                    tipo: 'TODOS'
+                    estado_filtro: 'activos',
+                    tipo: 'TODOS',
+                    almacen_id: almacenIdDefault ?? 1
                 }}
                 onFinish={handleSearch}
                 className="w-full"
             >
-                <div className="flex flex-col gap-4">
-                    {/* Fila 1 */}
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                        <div className="col-span-1">
-                            <LabelBase label="Desde:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[70px]">
-                                <DatePickerBase
-                                    propsForm={{ name: "desde" }}
-                                    className="w-full !h-11"
-                                    placeholder="Desde"
-                                    prefix={<FaCalendarAlt className="text-emerald-600 mx-1" size={13} />}
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                        <div className="col-span-1">
-                            <LabelBase label="Hasta:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[70px]">
-                                <DatePickerBase
-                                    propsForm={{ name: "hasta" }}
-                                    className="w-full !h-11"
-                                    placeholder="Hasta"
-                                    prefix={<FaCalendarAlt className="text-emerald-600 mx-1" size={13} />}
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                        <div className="col-span-1">
-                            <LabelBase label="Sucursal:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[80px]">
-                                <SelectAlmacen
-                                    propsForm={{ name: "almacen_id" }}
-                                    className="!min-w-0 w-full !h-11"
-                                    size="middle"
-                                    sizeIcon={14}
-                                    classNameIcon="text-emerald-600 mx-1"
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                        <div className="col-span-1">
-                            <LabelBase label="Tipo:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[60px]">
-                                <SelectBase
-                                    propsForm={{ name: "tipo" }}
-                                    className="w-full !h-11"
-                                    size="middle"
-                                    options={[
-                                        { label: 'TODOS', value: 'TODOS' },
-                                        { label: 'AJUSTE', value: 'AJUSTE' },
-                                        { label: 'CUADRE INVENTARIO', value: 'CUADRE INVENTARIO' },
-                                        { label: 'MERMA', value: 'MERMA' },
-                                    ]}
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                        <div className="col-span-1">
-                            <LabelBase label="Producto:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[80px]">
-                                <InputBase
-                                    propsForm={{ name: "search_producto" }}
-                                    placeholder="Buscar..."
-                                    className="w-full !h-11 bg-yellow-50/50"
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                    </div>
-
-                    {/* Fila 2 */}
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                        <div className="col-span-1">
-                            <LabelBase label="Proveedor:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[90px]">
-                                <InputBase
-                                    propsForm={{ name: "search_proveedor" }}
-                                    placeholder="F1..."
-                                    className="w-full !h-11 bg-yellow-50/50"
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                        <div className="col-span-1">
-                            <LabelBase label="Observación:" orientation="row" className="w-full !text-[12px] font-semibold min-w-[100px]">
-                                <InputBase
-                                    propsForm={{ name: "observacion" }}
-                                    placeholder="..."
-                                    className="w-full !h-11 bg-yellow-50/50"
-                                    formWithMessage={false}
-                                />
-                            </LabelBase>
-                        </div>
-                        <div className="col-span-3 flex items-center justify-start gap-3">
-                            <Form.Item name="listar_no_anuladas" valuePropName="checked" noStyle>
-                                <Checkbox className="!text-[11px] font-bold uppercase text-gray-600 whitespace-nowrap">
-                                    NO ANULADAS
-                                </Checkbox>
-                            </Form.Item>
-                            <ButtonBase
-                                color="info"
-                                size="md"
-                                className="!h-11 flex items-center justify-center gap-2 !text-[12px] px-5"
-                                type="submit"
-                            >
-                                <FaSearch size={13} /> Buscar
-                            </ButtonBase>
-                        </div>
-                    </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-2 items-center">
+                    <LabelBase label="Desde:" orientation="row" className="!text-[12px] font-semibold">
+                        <DatePickerBase
+                            propsForm={{ name: "desde", className: "!mb-0 w-[115px]" }}
+                            className="w-full !h-9"
+                            placeholder="Desde"
+                            prefix={<FaCalendarAlt className="text-emerald-600 mx-1" size={13} />}
+                            formWithMessage={false}
+                        />
+                    </LabelBase>
+                    <LabelBase label="Hasta:" orientation="row" className="!text-[12px] font-semibold">
+                        <DatePickerBase
+                            propsForm={{ name: "hasta", className: "!mb-0 w-[115px]" }}
+                            className="w-full !h-9"
+                            placeholder="Hasta"
+                            prefix={<FaCalendarAlt className="text-emerald-600 mx-1" size={13} />}
+                            formWithMessage={false}
+                        />
+                    </LabelBase>
+                    <LabelBase label="Sucursal:" orientation="row" className="!text-[12px] font-semibold">
+                        <SelectAlmacen
+                            propsForm={{ name: "almacen_id", className: "!mb-0 w-[145px]" }}
+                            className="!min-w-0 w-full !h-9"
+                            size="middle"
+                            sizeIcon={14}
+                            classNameIcon="text-emerald-600 mx-1"
+                            formWithMessage={false}
+                        />
+                    </LabelBase>
+                    <LabelBase label="Tipo:" orientation="row" className="!text-[12px] font-semibold">
+                        <SelectBase
+                            propsForm={{ name: "tipo", className: "!mb-0 w-[145px]" }}
+                            className="w-full !h-9"
+                            size="middle"
+                            options={[
+                                { label: 'TODOS', value: 'TODOS' },
+                                { label: 'AJUSTE', value: 'AJUSTE' },
+                                { label: 'CUADRE INVENTARIO', value: 'CUADRE INVENTARIO' },
+                                { label: 'MERMA', value: 'MERMA' },
+                            ]}
+                            formWithMessage={false}
+                        />
+                    </LabelBase>
+                    <LabelBase label="Producto:" orientation="row" className="!text-[12px] font-semibold">
+                        <InputBase
+                            propsForm={{ name: "search_producto", className: "!mb-0 w-[145px]" }}
+                            placeholder="Buscar..."
+                            className="w-full !h-9 bg-yellow-50/50"
+                            formWithMessage={false}
+                            allowClear
+                            nextInEnter={false}
+                            onPressEnter={(e) => {
+                                e.preventDefault();
+                                abrirModalProducto();
+                            }}
+                        />
+                        <FaSearch
+                            className="text-yellow-600 cursor-pointer min-w-fit"
+                            size={15}
+                            title="Buscar producto"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                abrirModalProducto();
+                            }}
+                        />
+                    </LabelBase>
+                    <LabelBase label="Proveedor:" orientation="row" className="!text-[12px] font-semibold">
+                        <InputBase
+                            propsForm={{ name: "search_proveedor", className: "!mb-0 w-[130px]" }}
+                            placeholder="F1..."
+                            className="w-full !h-9 bg-yellow-50/50"
+                            formWithMessage={false}
+                            allowClear
+                            nextInEnter={false}
+                            onPressEnter={(e) => {
+                                e.preventDefault();
+                                abrirModalProveedor();
+                            }}
+                        />
+                        <FaSearch
+                            className="text-yellow-600 cursor-pointer min-w-fit"
+                            size={15}
+                            title="Buscar proveedor"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                abrirModalProveedor();
+                            }}
+                        />
+                    </LabelBase>
+                    <LabelBase label="Observación:" orientation="row" className="!text-[12px] font-semibold">
+                        <InputBase
+                            propsForm={{ name: "observacion", className: "!mb-0 w-[145px]" }}
+                            placeholder="..."
+                            className="w-full !h-9 bg-yellow-50/50"
+                            formWithMessage={false}
+                            allowClear
+                        />
+                    </LabelBase>
+                    <LabelBase label="Estado:" orientation="row" className="!text-[12px] font-semibold">
+                        <SelectBase
+                            propsForm={{ name: "estado_filtro", className: "!mb-0 w-[145px]" }}
+                            className="w-full !h-9"
+                            size="middle"
+                            options={[
+                                { label: 'TODOS', value: 'todos' },
+                                { label: 'ACTIVOS', value: 'activos' },
+                                { label: 'ANULADOS', value: 'anulados' },
+                            ]}
+                            formWithMessage={false}
+                        />
+                    </LabelBase>
+                    <ButtonBase
+                        color="info"
+                        size="md"
+                        className="!h-9 flex items-center justify-center gap-2 !text-[12px] px-4"
+                        type="submit"
+                    >
+                        <FaSearch size={13} /> Buscar
+                    </ButtonBase>
                 </div>
             </FormBase>
+
+            <ModalProductoSearch
+                open={openModalProducto}
+                setOpen={setOpenModalProducto}
+                textDefault={textDefaultProducto}
+                setTextDefault={setTextDefaultProducto}
+                tipoBusqueda={tipoBusqueda}
+                setTipoBusqueda={setTipoBusqueda}
+                onRowDoubleClicked={({ data }) => {
+                    if (!data) return;
+                    form.setFieldValue(
+                        "search_producto",
+                        data.name || data.cod_producto || ""
+                    );
+                    setOpenModalProducto(false);
+                }}
+                showUltimasCompras={false}
+                ignoreAlmacen
+            />
+
+            <ModalProveedorSearch
+                open={openModalProveedor}
+                setOpen={setOpenModalProveedor}
+                textDefault={textDefaultProveedor}
+                onOk={() => aplicarProveedor(proveedorSeleccionado)}
+                onRowDoubleClicked={({ data }) => aplicarProveedor(data)}
+            />
         </div>
     );
 }
