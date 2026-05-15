@@ -50,14 +50,14 @@ export default function ModalRegistrarDevolucion({
         const unidad = pa.unidadesDerivadas?.[0]
         return {
           producto_almacen_prestamo_id: pa.id,
-          cantidad: Number(pa.monto_pendiente || 0),
+          cantidad: unidad ? Number(unidad.cantidad) : Number(prestamo.monto_pendiente || 0),
           factor: unidad ? Number(unidad.factor) : 1,
           selected: true,
         }
       })
       setProductos(initialProductos)
     }
-  }, [prestamo?.productosPorAlmacen])
+  }, [prestamo?.productosPorAlmacen, prestamo?.monto_pendiente])
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {

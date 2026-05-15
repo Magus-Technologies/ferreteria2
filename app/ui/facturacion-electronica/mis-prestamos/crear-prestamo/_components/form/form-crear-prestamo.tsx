@@ -87,7 +87,7 @@ export default function FormCrearPrestamo({
             <DatePickerBase
               propsForm={{
                 name: "fecha_vencimiento",
-                initialValue: dayjs().add(30, "days"),
+                initialValue: dayjs(),
                 rules: [{ required: true, message: "Requerido" }],
               }}
               className="!w-[150px]"
