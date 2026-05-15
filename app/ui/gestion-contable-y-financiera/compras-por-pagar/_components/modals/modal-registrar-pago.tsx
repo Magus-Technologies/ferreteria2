@@ -105,11 +105,15 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   const saldoPendiente = totalCompra - totalPagado
 
   const esDolares = localCompra?.tipo_moneda?.toLowerCase() === 'd'
-  // Para los $ que se muestran en pantalla (Total Neto / Cancelado / Saldo) usamos
-  // el TC del día. Si todavía no llegó, caemos al TC histórico de la compra.
-  const tipoDeCambio = (tcDelDia && tcDelDia > 0)
-    ? tcDelDia
-    : Number(localCompra?.tipo_de_cambio ?? 0)
+  // Watch del campo del form para que los $ de las cajas reaccionen en vivo
+  // cuando el usuario edita el TC. Prioridad: lo que está escrito en el input >
+  // TC del día > TC histórico de la compra.
+  const tcEnForm = Form.useWatch('tipo_de_cambio', form)
+  const tipoDeCambio = Number(tcEnForm) > 0
+    ? Number(tcEnForm)
+    : (tcDelDia && tcDelDia > 0)
+      ? tcDelDia
+      : Number(localCompra?.tipo_de_cambio ?? 0)
   const totalCompraDolares  = esDolares && tipoDeCambio ? totalCompra  / tipoDeCambio : null
   const totalPagadoDolares  = esDolares && tipoDeCambio ? totalPagado  / tipoDeCambio : null
   const saldoDolares        = esDolares && tipoDeCambio ? saldoPendiente / tipoDeCambio : null
