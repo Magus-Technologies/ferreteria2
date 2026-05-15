@@ -59,7 +59,8 @@ export default function CardsInfoComprasPorPagar() {
 
   // Calcular estadísticas de las compras por pagar
   const estadisticas = useMemo(() => {
-    const compras = Array.isArray(data?.data) ? data!.data : []
+    const raw = data?.data
+    const compras: any[] = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? Object.values(raw) : []
     
     let totalSaldo = 0
     let saldoVencido30 = 0
