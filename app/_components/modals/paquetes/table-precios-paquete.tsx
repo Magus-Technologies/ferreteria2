@@ -92,11 +92,17 @@ export default function TablePreciosPaquete({
         width: 100,
         cellRenderer: (params: any) => {
           if (!params.data) return null
+          const precio = getPrecioPaquete(params.data, tipo)
           const descuento = getDescuentoPaquete(params.data, tipo)
           return (
             <CellInputPrecio
               value={descuento}
-              onChange={(val) => onDescuentoChange(params.data.key, tipo, val)}
+              max={precio}
+              onChange={(val) => {
+                // Validar que el descuento no sea mayor que el precio
+                const descuentoFinal = val !== undefined && val > precio ? precio : val
+                onDescuentoChange(params.data.key, tipo, descuentoFinal)
+              }}
             />
           )
         },

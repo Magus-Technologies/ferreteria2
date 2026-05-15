@@ -12,6 +12,15 @@ import { MdDelete } from 'react-icons/md'
 import SelectUnidadDerivadaVenta from '../form/select-unidad-derivada-venta'
 import SelectTipoPrecioVenta from '../form/select-tipo-precio-venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import SelectBase from '~/app/_components/form/selects/select-base'
+import { MdPriceChange } from 'react-icons/md'
+
+const TIPO_PRECIO_PAQUETE_OPTIONS = [
+  { value: 'publico', label: 'Público' },
+  { value: 'especial', label: 'Ferretería' },
+  { value: 'minimo', label: 'Mínimo' },
+  { value: 'ultimo', label: 'Final' },
+]
 
 export function useColumnsVender({
   form,
@@ -27,8 +36,32 @@ export function useColumnsVender({
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
   const recalcDebounceRef = useRef<ReturnType<typeof setTimeout>>(null)
   const productosVentaStore = useStoreProductoAgregadoVenta((store) => store.productos)
+  
+  // Mantener un Map con los precios y descuentos de paquetes
+  // Clave: `${paquete_id}_${producto_id}`, Valor: { paq_precio_*, paq_descuento_* }
+  const paqueteDiscountsRef = useRef<Map<string, any>>(new Map())
 
   const monedaPrefix = tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'
+
+  // Guardar los precios y descuentos en el Map cuando se agrega un paquete
+  useEffect(() => {
+    const allProductos = form.getFieldValue('productos') || []
+    for (const producto of allProductos) {
+      if (producto._tipo_fila === 'paquete_producto' && producto.paquete_id) {
+        const key = `${producto.paquete_id}_${producto.producto_id}`
+        paqueteDiscountsRef.current.set(key, {
+          paq_precio_publico: producto.paq_precio_publico,
+          paq_precio_especial: producto.paq_precio_especial,
+          paq_precio_minimo: producto.paq_precio_minimo,
+          paq_precio_ultimo: producto.paq_precio_ultimo,
+          paq_descuento_publico: producto.paq_descuento_publico,
+          paq_descuento_especial: producto.paq_descuento_especial,
+          paq_descuento_minimo: producto.paq_descuento_minimo,
+          paq_descuento_ultimo: producto.paq_descuento_ultimo,
+        })
+      }
+    }
+  }, [form])
 
   /** Recalcular sub-productos de un paquete cuando cambia cantidad_paquete */
   function recalcularSubProductosPaquete(paqueteId: number, nuevaCantidadPaquete: number) {
@@ -88,6 +121,66 @@ export function useColumnsVender({
       }
     }
     return total
+  }
+
+  /** Cambiar tipo de precio para todos los sub-productos de un paquete */
+  function cambiarTipoPrecioPaquete(paqueteId: number, nuevoTipo: string) {
+    const allProductos = form.getFieldValue('productos') || []
+    const updates = [...allProductos]
+    let precioPaqueteUnitario = 0
+
+    for (let i = 0; i < updates.length; i++) {
+      if (updates[i]?.paquete_id !== paqueteId) continue
+
+      if (updates[i]._tipo_fila === 'paquete_producto') {
+        const key = `${paqueteId}_${updates[i].producto_id}`
+        const discountData = paqueteDiscountsRef.current.get(key)
+        
+        // Leer los valores del Map o del objeto del producto
+        const precio = Number(discountData?.[`paq_precio_${nuevoTipo}`] || updates[i][`paq_precio_${nuevoTipo}`] || 0)
+        const descuento = Number(discountData?.[`paq_descuento_${nuevoTipo}`] || updates[i][`paq_descuento_${nuevoTipo}`] || 0)
+        const cantidadBase = Number(updates[i].cantidad_base || 0)
+        const cantidadPaquete = Number(
+          allProductos.find((p: any) => p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_cabecera')?.cantidad_paquete || 1
+        )
+        const cantidad = cantidadBase * cantidadPaquete
+        
+        // IMPORTANTE: Preservar TODOS los campos paq_precio_* y paq_descuento_* para que no se pierdan
+        updates[i] = {
+          ...updates[i],
+          tipo_precio: nuevoTipo,
+          precio_venta: precio,
+          descuento: descuento,
+          cantidad,
+          subtotal: (precio - descuento) * cantidad,
+          // Preservar todos los precios y descuentos de todos los tipos
+          paq_precio_publico: updates[i].paq_precio_publico,
+          paq_precio_especial: updates[i].paq_precio_especial,
+          paq_precio_minimo: updates[i].paq_precio_minimo,
+          paq_precio_ultimo: updates[i].paq_precio_ultimo,
+          paq_descuento_publico: updates[i].paq_descuento_publico,
+          paq_descuento_especial: updates[i].paq_descuento_especial,
+          paq_descuento_minimo: updates[i].paq_descuento_minimo,
+          paq_descuento_ultimo: updates[i].paq_descuento_ultimo,
+        }
+        precioPaqueteUnitario += (precio - descuento) * cantidadBase
+      }
+    }
+
+    for (let i = 0; i < updates.length; i++) {
+      if (updates[i]?.paquete_id === paqueteId && updates[i]._tipo_fila === 'paquete_cabecera') {
+        const cantidadPaquete = Number(updates[i].cantidad_paquete || 1)
+        updates[i] = {
+          ...updates[i],
+          tipo_precio: nuevoTipo,
+          precio_venta: precioPaqueteUnitario,
+          subtotal: precioPaqueteUnitario * cantidadPaquete,
+        }
+      }
+    }
+
+    form.setFieldValue('productos', updates)
+    form.setFieldValue('_refresh_paquete', Date.now())
   }
 
   const columns: ColDef<FormListFieldData>[] = [
@@ -505,7 +598,32 @@ export function useColumnsVender({
         const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
         const tipo = form.getFieldValue(['productos', value, '_tipo'])
 
-        if (tipoFila === 'paquete_cabecera' || tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional' || tipo === 'servicio') {
+        if (tipoFila === 'paquete_cabecera') {
+          const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
+          return (
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const tipoPrecioActual = form.getFieldValue(['productos', value, 'tipo_precio']) || 'publico'
+                return (
+                  <div className='flex items-center h-full'>
+                    <SelectBase
+                      size='small'
+                      variant='borderless'
+                      className='w-full'
+                      value={tipoPrecioActual}
+                      options={TIPO_PRECIO_PAQUETE_OPTIONS}
+                      onChange={(nuevoTipo) => cambiarTipoPrecioPaquete(paqueteId, nuevoTipo as string)}
+                      prefix={<MdPriceChange size={14} className='text-amber-600' />}
+                    />
+                    <InputBase propsForm={{ name: [value, 'tipo_precio'], hidden: true }} formWithMessage={false} />
+                  </div>
+                )
+              }}
+            </Form.Item>
+          )
+        }
+
+        if (tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional' || tipo === 'servicio') {
           return (
             <div className='flex items-center h-full'>
               <span className='text-gray-300'>-</span>
@@ -548,22 +666,36 @@ export function useColumnsVender({
         }
 
         if (tipoFila === 'paquete_cabecera') {
-          const precioUnitario = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
           return (
-            <div className='flex items-center h-full'>
-              <span className='text-sm font-medium text-amber-700'>{monedaPrefix} {precioUnitario.toFixed(2)}</span>
-              <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
-            </div>
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const precioUnitario = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
+                return (
+                  <div className='flex items-center h-full'>
+                    <span className='text-sm font-medium text-amber-700'>{monedaPrefix} {precioUnitario.toFixed(2)}</span>
+                    <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
+                  </div>
+                )
+              }}
+            </Form.Item>
           )
         }
 
         if (tipoFila === 'paquete_producto') {
-          const precio = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
           return (
-            <div className='flex items-center h-full'>
-              <span className='text-gray-600 text-xs'>{monedaPrefix} {precio.toFixed(2)}</span>
-              <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
-            </div>
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const precio = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
+                const descuento = Number(form.getFieldValue(['productos', value, 'descuento']) || 0)
+                const neto = Math.max(0, precio - descuento)
+                return (
+                  <div className='flex items-center h-full'>
+                    <span className='text-gray-600 text-xs'>{monedaPrefix} {neto.toFixed(2)}</span>
+                    <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
+                  </div>
+                )
+              }}
+            </Form.Item>
           )
         }
 
@@ -630,7 +762,7 @@ export function useColumnsVender({
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
-        if (tipoFila === 'paquete_cabecera' || tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional') {
+        if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
           return (
             <div className='flex items-center h-full'>
               <span className='text-gray-300'>-</span>
@@ -642,6 +774,32 @@ export function useColumnsVender({
               />
               <InputNumberBase propsForm={{ name: [value, 'descuento'], hidden: true }} formWithMessage={false} />
             </div>
+          )
+        }
+
+        if (tipoFila === 'paquete_producto') {
+          return (
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const descuento = Number(form.getFieldValue(['productos', value, 'descuento']) || 0)
+                return (
+                  <div className='flex items-center h-full'>
+                    <SelectDescuentoTipo
+                      tipoMoneda={tipo_moneda}
+                      formWithMessage={false}
+                      size='small'
+                      propsForm={{ name: [value, 'descuento_tipo'], hidden: true }}
+                    />
+                    <InputNumberBase propsForm={{ name: [value, 'descuento'], hidden: true }} formWithMessage={false} />
+                    {descuento > 0 ? (
+                      <span className='text-xs text-orange-600 font-medium'>- S/. {descuento.toFixed(2)}</span>
+                    ) : (
+                      <span className='text-gray-300'>-</span>
+                    )}
+                  </div>
+                )
+              }}
+            </Form.Item>
           )
         }
 
@@ -709,22 +867,34 @@ export function useColumnsVender({
         }
 
         if (tipoFila === 'paquete_cabecera') {
-          const subtotalPaquete = getPaqueteSubtotales(paqueteId!)
           return (
-            <div className='flex items-center h-full'>
-              <span className='text-sm font-bold text-amber-700'>{monedaPrefix} {subtotalPaquete.toFixed(2)}</span>
-              <InputNumberBase propsForm={{ name: [value, 'subtotal'], hidden: true }} formWithMessage={false} />
-            </div>
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const subtotalPaquete = getPaqueteSubtotales(paqueteId!)
+                return (
+                  <div className='flex items-center h-full'>
+                    <span className='text-sm font-bold text-amber-700'>{monedaPrefix} {subtotalPaquete.toFixed(2)}</span>
+                    <InputNumberBase propsForm={{ name: [value, 'subtotal'], hidden: true }} formWithMessage={false} />
+                  </div>
+                )
+              }}
+            </Form.Item>
           )
         }
 
         if (tipoFila === 'paquete_producto') {
-          const subtotal = Number(form.getFieldValue(['productos', value, 'subtotal']) || 0)
           return (
-            <div className='flex items-center h-full'>
-              <span className='text-gray-600 text-xs'>{monedaPrefix} {subtotal.toFixed(2)}</span>
-              <InputNumberBase propsForm={{ name: [value, 'subtotal'], hidden: true }} formWithMessage={false} />
-            </div>
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const subtotal = Number(form.getFieldValue(['productos', value, 'subtotal']) || 0)
+                return (
+                  <div className='flex items-center h-full'>
+                    <span className='text-gray-600 text-xs'>{monedaPrefix} {subtotal.toFixed(2)}</span>
+                    <InputNumberBase propsForm={{ name: [value, 'subtotal'], hidden: true }} formWithMessage={false} />
+                  </div>
+                )
+              }}
+            </Form.Item>
           )
         }
 
