@@ -50,6 +50,7 @@ export default function BodyCrearPrestamo() {
         productos: values.productos.map((p) => ({
           producto_id: p.producto_id,
           unidad_derivada_id: p.unidad_derivada_id,
+          unidad_derivada_name: p.unidad_derivada_name,
           unidad_derivada_factor: p.unidad_derivada_factor,
           cantidad: p.cantidad,
           // costo no se envía (opcional)

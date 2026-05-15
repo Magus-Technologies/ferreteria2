@@ -158,6 +158,7 @@ export interface Prestamo {
 export interface ProductoPrestamoRequest {
   producto_id: number;
   unidad_derivada_id: number;
+  unidad_derivada_name?: string;
   unidad_derivada_factor: number;
   cantidad: number;
   costo?: number; // Opcional: Solo se maneja por cantidad
@@ -192,6 +193,27 @@ export interface CreatePagoRequest {
   metodo_pago: string;
   numero_operacion?: string;
   observaciones?: string;
+}
+
+export interface ProductoDevolucionRequest {
+  producto_almacen_prestamo_id: number;
+  cantidad: number;
+  factor: number;
+}
+
+export interface CreateDevolucionRequest {
+  productos: ProductoDevolucionRequest[];
+  fecha_devolucion: string;
+  observaciones?: string;
+}
+
+export interface DevolucionResponse {
+  data: {
+    prestamo: Prestamo;
+    devolucion: any;
+    ingreso_salida: any;
+  };
+  message: string;
 }
 
 export interface PrestamoFilters {
@@ -305,6 +327,16 @@ export const prestamoApi = {
   eliminarPago: async (prestamoId: string, pagoId: string): Promise<ApiResponse<{ message: string; prestamo: Prestamo }>> => {
     return apiRequest<{ message: string; prestamo: Prestamo }>(`/prestamos/${prestamoId}/pagos/${pagoId}`, {
       method: 'DELETE',
+    });
+  },
+
+  // ========= DEVOLUCIONES =========
+
+  // Registrar devolución con productos
+  registrarDevolucion: async (prestamoId: string, data: CreateDevolucionRequest): Promise<ApiResponse<DevolucionResponse>> => {
+    return apiRequest<DevolucionResponse>(`/prestamos/${prestamoId}/devolucion`, {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 };

@@ -206,14 +206,22 @@ export default function BodyVender({
     ...cotizacion,
     productos_por_almacen: productosFromCotizacion?.map((ppa: any) => ({
       ...ppa,
-      unidades_derivadas: ppa.unidades_derivadas?.map((ud: any) => ({
-        ...ud,
-        // Mapear unidad_derivada_inmutable a unidad_derivada_normal
-        unidad_derivada_normal: {
-          id: ud.unidad_derivada_inmutable?.id ?? ud.unidadDerivadaInmutable?.id,
-          name: ud.unidad_derivada_inmutable?.name ?? ud.unidadDerivadaInmutable?.name,
-        },
-      })),
+      unidades_derivadas: ppa.unidades_derivadas?.map((ud: any) => {
+        // Resolver la unidad real buscando por factor (estable y único por producto_almacen).
+        // `unidad_derivada_inmutable.id` es un snapshot histórico y NO coincide con el
+        // `unidad_derivada.id` actual, por eso los selects mostraban "-".
+        const factorBuscado = Number(ud.factor);
+        const unidadDisponible = ppa.producto_almacen?.unidades_derivadas?.find(
+          (u: any) => Number(u.factor) === factorBuscado
+        );
+        return {
+          ...ud,
+          unidad_derivada_normal: {
+            id: unidadDisponible?.unidad_derivada?.id ?? ud.unidad_derivada_inmutable?.id ?? ud.unidadDerivadaInmutable?.id,
+            name: unidadDisponible?.unidad_derivada?.name ?? ud.unidad_derivada_inmutable?.name ?? ud.unidadDerivadaInmutable?.name,
+          },
+        };
+      }),
     })),
   } : undefined
 
