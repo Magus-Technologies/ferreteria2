@@ -274,6 +274,7 @@ export default function CalendarioEntregasPage() {
                   setEventoSeleccionado(event)
                 }}
                 onSelectSlot={() => setEventoSeleccionado(null)}
+                soloProgramadasActivas={false}
               />
             </Suspense>
           </div>

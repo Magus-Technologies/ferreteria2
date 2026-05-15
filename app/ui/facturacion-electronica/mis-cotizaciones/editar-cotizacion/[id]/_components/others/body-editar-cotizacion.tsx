@@ -235,7 +235,7 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
             initialRecomendadoPor={cotizacionActual?.recomendado_por ?? undefined}
           />
         </div>
-        <CardsInfoCotizacion form={form} />
+        <CardsInfoCotizacion form={form} isEditing />
       </FormBase>
     </>
   );

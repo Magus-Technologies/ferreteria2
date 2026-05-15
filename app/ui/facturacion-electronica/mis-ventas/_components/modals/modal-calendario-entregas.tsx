@@ -35,6 +35,7 @@ export default function ModalCalendarioEntregas({
   const { data: entregas = [], isLoading, error } = useEntregasProgramadas({
     fecha_desde: dayjs().subtract(7, 'days').format('YYYY-MM-DD'),
     fecha_hasta: dayjs().add(30, 'days').format('YYYY-MM-DD'),
+    solo_programadas: false,
   })
 
 
@@ -138,6 +139,7 @@ export default function ModalCalendarioEntregas({
           <CalendarProgramacionEntregas
             onSelectEvent={handleSelectEvent}
             onSelectSlot={() => {}} // No hacer nada al seleccionar slot
+            soloProgramadasActivas={false}
           />
         </div>
 

@@ -107,6 +107,20 @@ export default function SelectClientes({
       })
       // Marcar como seleccionado
       clienteSeleccionadoRef.current = true
+
+      // Cargar direcciones del cliente para que los radios D1/D2 funcionen,
+      // pero SIN sobreescribir el campo `direccion` (que ya viene del registro
+      // padre — ej. la dirección guardada de la cotización al editar).
+      if (form && initialCliente.id !== undefined) {
+        cargarDireccionesCliente(initialCliente.id, { setDireccion: false })
+      }
+
+      // Notificar al padre para que llene los campos derivados
+      // (cliente_nombre, ruc_dni, telefono, email). Sin esto, en modo edición
+      // solo aparece el documento y el resto del cliente queda vacío.
+      if (initialCliente.id !== undefined) {
+        onChange?.(initialCliente.id, initialCliente as unknown as Cliente)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialCliente])
@@ -195,19 +209,27 @@ setClienteSeleccionadoStore(undefined)
     }
   }
 
-  // Función para cargar direcciones desde la API
-  const cargarDireccionesCliente = async (clienteId: number) => {
+  // Función para cargar direcciones desde la API.
+  // `setDireccion=false` para casos de edición donde la dirección ya viene
+  // persistida en el registro padre y no debe sobreescribirse con la D1 actual.
+  const cargarDireccionesCliente = async (
+    clienteId: number,
+    options: { setDireccion?: boolean } = {}
+  ) => {
     if (!form) return
+    const { setDireccion = true } = options
 
     try {
       const { clienteApi } = await import('~/lib/api/cliente')
       const response = await clienteApi.listarDirecciones(clienteId)
-      
+
       if (response.data?.data) {
         const direcciones = response.data.data
         // Setea los campos `_cliente_direccion_*` desde el array (antes
         // hacía un switch hardcoded por tipo).
         setDireccionesClienteToForm(form, { direcciones })
+
+        if (!setDireccion) return
 
         // Llenar campo de dirección según el checkbox seleccionado (por defecto D1).
         const seleccionada =

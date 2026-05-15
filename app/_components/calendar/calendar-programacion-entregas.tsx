@@ -218,6 +218,8 @@ interface CalendarProgramacionEntregasProps {
   vehiculo_id?: number
   /** Si es true, no carga entregas del backend (solo selección de slot) */
   soloSeleccion?: boolean
+  /** true: oculta entregadas/canceladas. false: muestra histórico programado también. */
+  soloProgramadasActivas?: boolean
 }
 
 export default function CalendarProgramacionEntregas({
@@ -229,6 +231,7 @@ export default function CalendarProgramacionEntregas({
   chofer_id,
   vehiculo_id,
   soloSeleccion = false,
+  soloProgramadasActivas = true,
 }: CalendarProgramacionEntregasProps) {
   const [view, setView] = useState<View>('day')
   const [date, setDate] = useState(selectedDate || new Date())
@@ -249,6 +252,7 @@ export default function CalendarProgramacionEntregas({
     fecha_hasta,
     chofer_id,
     vehiculo_id,
+    solo_programadas: soloProgramadasActivas,
     enabled: true,
   })
 

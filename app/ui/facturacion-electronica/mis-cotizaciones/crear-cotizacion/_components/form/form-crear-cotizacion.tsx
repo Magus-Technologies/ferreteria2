@@ -30,6 +30,9 @@ export default function FormCrearCotizacion({
 }) {
   const { user } = useAuth();
 
+  // Nota: La fecha por defecto de vencimiento_reserva se establece en el DatePicker
+  // mediante initialValue = dayjs().endOf('day')
+
   // Autocompletar vendedor con el usuario logueado
   useEffect(() => {
     if (user?.name) {
@@ -55,6 +58,8 @@ export default function FormCrearCotizacion({
       form.setFieldValue("direccion_seleccionada", "D1");
     }
   }, [form]);
+
+
 
   return (
     <div className="flex flex-col">
@@ -181,6 +186,10 @@ export default function FormCrearCotizacion({
         <Form.Item noStyle shouldUpdate={(prev, curr) => prev.reservar_stock !== curr.reservar_stock}>
           {(form) => {
             const reservarStock = form.getFieldValue("reservar_stock");
+            // Establecer fecha por defecto cuando se activa reservar_stock
+            if (reservarStock && !form.getFieldValue("fecha_vencimiento_reserva")) {
+              form.setFieldValue("fecha_vencimiento_reserva", dayjs().endOf("day"));
+            }
             return (
               <LabelBase label="Vence Reserva:" classNames={{ labelParent: "mb-6" }}>
                 <ConfigurableElement componentId="field-fecha-vencimiento-reserva-cotizacion" label="Campo Fecha Vencimiento Reserva">

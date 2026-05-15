@@ -11,8 +11,10 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 
 export default function CardsInfoCotizacion({
   form,
+  isEditing = false,
 }: {
   form: FormInstance<FormCreateCotizacion>;
+  isEditing?: boolean;
 }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const productos = Form.useWatch(
@@ -104,7 +106,7 @@ export default function CardsInfoCotizacion({
           className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
         >
           <MdSell className="min-w-fit" size={30} />
-          Guardar Cotización
+          {isEditing ? 'Actualizar Cotización' : 'Guardar Cotización'}
         </ButtonBase>
       </ConfigurableElement>
 
