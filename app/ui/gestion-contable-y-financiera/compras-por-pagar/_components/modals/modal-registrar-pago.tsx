@@ -7,14 +7,14 @@ import { apiRequest } from '~/lib/api'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import { consultaTipoDeCambio } from '~/app/_actions/consulta-tipo-de-cambio'
 import LabelBase from '~/components/form/label-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
-import { orangeColors } from '~/lib/colors'
+import { redColors } from '~/lib/colors'
 import { getAuthToken } from '~/lib/api'
 import { FaFileAlt, FaTrash } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
@@ -46,11 +46,13 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     enabled: open,
   })
 
+  const autofilledMonto = useRef(false)
+
   useEffect(() => {
     if (open && compra) {
       setLocalCompra(compra)
+      autofilledMonto.current = false
       if (compra.tipo_moneda?.toLowerCase() === 'd') {
-        // Preferir el TC del día; si aún no llegó, usar el TC histórico de la compra.
         form.setFieldValue(
           'tipo_de_cambio',
           tcDelDia && tcDelDia > 0
@@ -63,7 +65,10 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
         form.setFieldValue('tipo_de_cambio', undefined)
       }
     }
-    if (!open) setLocalCompra(undefined)
+    if (!open) {
+      setLocalCompra(undefined)
+      autofilledMonto.current = false
+    }
   }, [open, compra, form, tcDelDia])
 
   // Calcular total de la compra
@@ -105,18 +110,41 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   const saldoPendiente = totalCompra - totalPagado
 
   const esDolares = localCompra?.tipo_moneda?.toLowerCase() === 'd'
-  // Watch del campo del form para que los $ de las cajas reaccionen en vivo
-  // cuando el usuario edita el TC. Prioridad: lo que está escrito en el input >
-  // TC del día > TC histórico de la compra.
   const tcEnForm = Form.useWatch('tipo_de_cambio', form)
   const tipoDeCambio = Number(tcEnForm) > 0
     ? Number(tcEnForm)
     : (tcDelDia && tcDelDia > 0)
       ? tcDelDia
       : Number(localCompra?.tipo_de_cambio ?? 0)
-  const totalCompraDolares  = esDolares && tipoDeCambio ? totalCompra  / tipoDeCambio : null
-  const totalPagadoDolares  = esDolares && tipoDeCambio ? totalPagado  / tipoDeCambio : null
-  const saldoDolares        = esDolares && tipoDeCambio ? saldoPendiente / tipoDeCambio : null
+
+  // $ fijos: usan el TC original de la compra (nunca cambian)
+  const tcOriginal = Number(localCompra?.tipo_de_cambio ?? 0)
+  const totalCompraDolares = esDolares && tcOriginal ? totalCompra / tcOriginal : null
+  // Cada pago usa su propio TC para calcular cuántos dólares se pagaron
+  const totalPagadoDolares = esDolares
+    ? pagos
+        .filter((p: any) => p.estado !== false && p.estado !== 0)
+        .reduce((sum: number, p: any) => {
+          const tc = Number(p.tipo_de_cambio || 0)
+          return sum + (tc > 0 ? Number(p.monto || 0) / tc : 0)
+        }, 0)
+    : null
+  const saldoDolares = esDolares && totalCompraDolares != null && totalPagadoDolares != null
+    ? totalCompraDolares - totalPagadoDolares
+    : null
+
+  // S/. reactivos: dolares × TC actual del input
+  const totalCompraTC    = esDolares && totalCompraDolares && tipoDeCambio ? totalCompraDolares * tipoDeCambio : totalCompra
+  const totalPagadoTC    = esDolares && totalPagadoDolares && tipoDeCambio ? totalPagadoDolares * tipoDeCambio : totalPagado
+  const saldoTC          = totalCompraTC - totalPagadoTC
+
+  // Autofill monto con el saldo visible (saldoTC para compras en dólares, saldoPendiente para soles)
+  useEffect(() => {
+    if (open && saldoTC > 0 && !autofilledMonto.current) {
+      form.setFieldValue('monto', Number(saldoTC.toFixed(2)))
+      autofilledMonto.current = true
+    }
+  }, [open, saldoTC, form])
 
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({
@@ -267,6 +295,23 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       valueGetter: (p) => `S/. ${Number(p.data?.monto || 0).toFixed(2)}`,
     },
     {
+      headerName: 'TC Pago',
+      width: 85,
+      valueGetter: (p) => {
+        const tc = Number(p.data?.tipo_de_cambio || 0)
+        return tc > 0 ? tc.toFixed(4) : '-'
+      },
+    },
+    {
+      headerName: 'Monto $',
+      width: 95,
+      valueGetter: (p) => {
+        const monto = Number(p.data?.monto || 0)
+        const tc = Number(p.data?.tipo_de_cambio || 0)
+        return tc > 0 ? `$ ${(monto / tc).toFixed(2)}` : '-'
+      },
+    },
+    {
       headerName: 'Obs.',
       flex: 1,
       valueGetter: (p) => p.data?.observacion || '',
@@ -327,6 +372,9 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PAGOS_COMPRA, localCompra?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS_POR_PAGAR] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.COMPRAS] })
+
+      // Permitir nuevo autofill del monto con el saldo actualizado
+      autofilledMonto.current = false
 
       // Resetear formulario y setear valores por defecto
       form.resetFields()
@@ -407,7 +455,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-red-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Total Neto</span>
               <div className='text-right'>
-                <div className='text-gray-800 font-bold text-lg leading-tight'>S/. {totalCompra.toFixed(2)}</div>
+                <div className='text-gray-800 font-bold text-lg leading-tight'>S/. {totalCompraTC.toFixed(2)}</div>
                 {totalCompraDolares !== null && (
                   <div className='text-blue-600 font-semibold text-sm leading-tight'>$ {totalCompraDolares.toFixed(2)}</div>
                 )}
@@ -416,7 +464,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-green-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Cancelado</span>
               <div className='text-right'>
-                <div className='text-green-600 font-bold text-lg leading-tight'>S/. {totalPagado.toFixed(2)}</div>
+                <div className='text-green-600 font-bold text-lg leading-tight'>S/. {totalPagadoTC.toFixed(2)}</div>
                 {totalPagadoDolares !== null && (
                   <div className='text-blue-600 font-semibold text-sm leading-tight'>$ {totalPagadoDolares.toFixed(2)}</div>
                 )}
@@ -425,7 +473,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
             <div className='flex justify-between items-center bg-white/50 px-3 py-1 rounded border border-red-100'>
               <span className='text-[10px] text-gray-500 font-bold uppercase'>Saldo</span>
               <div className='text-right'>
-                <div className={`font-bold text-lg leading-tight ${saldoPendiente > 0 ? 'text-red-500' : 'text-green-600'}`}>S/. {saldoPendiente.toFixed(2)}</div>
+                <div className={`font-bold text-lg leading-tight ${saldoTC > 0 ? 'text-red-500' : 'text-green-600'}`}>S/. {saldoTC.toFixed(2)}</div>
                 {saldoDolares !== null && (
                   <div className='text-blue-600 font-semibold text-sm leading-tight'>$ {saldoDolares.toFixed(2)}</div>
                 )}
@@ -538,7 +586,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
           title={`Registros de pagos realizados: #${pagos.length}`}
           columnDefs={columnsPagos}
           rowData={pagos}
-          selectionColor={orangeColors[1]}
+          selectionColor={redColors[1]}
           suppressRowTransform
           withNumberColumn={false}
         />
@@ -547,15 +595,15 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
       {/* Resumen */}
       <div className='flex justify-between mt-4 bg-gray-50 rounded-lg p-3 text-sm font-bold border border-gray-200'>
         <span>
-          Facturado: <span className='text-red-700'>S/. {totalCompra.toFixed(2)}</span>
+          Facturado: <span className='text-red-700'>S/. {totalCompraTC.toFixed(2)}</span>
           {totalCompraDolares !== null && <span className='text-blue-600 ml-1'>($ {totalCompraDolares.toFixed(2)})</span>}
         </span>
         <span>
-          Cancelado: <span className='text-green-700'>S/. {totalPagado.toFixed(2)}</span>
+          Cancelado: <span className='text-green-700'>S/. {totalPagadoTC.toFixed(2)}</span>
           {totalPagadoDolares !== null && <span className='text-blue-600 ml-1'>($ {totalPagadoDolares.toFixed(2)})</span>}
         </span>
         <span>
-          Saldo Pendiente: <span className='text-red-600 text-lg'>S/. {saldoPendiente.toFixed(2)}</span>
+          Saldo Pendiente: <span className='text-red-600 text-lg'>S/. {saldoTC.toFixed(2)}</span>
           {saldoDolares !== null && <span className='text-blue-600 ml-1'>($ {saldoDolares.toFixed(2)})</span>}
         </span>
       </div>

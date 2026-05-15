@@ -7,7 +7,7 @@ import { apiRequest } from '~/lib/api'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useAuth } from '~/lib/auth-context'
 import dayjs from 'dayjs'
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
 import LabelBase from '~/components/form/label-base'
@@ -33,9 +33,16 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
   // Congelar la venta cuando el modal abre para evitar que la tabla
   // al refrescar cambie la selección y actualice el modal con otro cliente
   const [localVenta, setLocalVenta] = useState<VentaCompleta | undefined>()
+  const autofilledMonto = useRef(false)
   useEffect(() => {
-    if (open && venta) setLocalVenta(venta)
-    if (!open) setLocalVenta(undefined)
+    if (open && venta) {
+      setLocalVenta(venta)
+      autofilledMonto.current = false
+    }
+    if (!open) {
+      setLocalVenta(undefined)
+      autofilledMonto.current = false
+    }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calcular total de la venta
@@ -75,6 +82,14 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
     [cobros]
   )
   const saldoPendiente = totalVenta - totalPagado
+
+  // Autofill monto con el saldo pendiente cada vez que cambia (al abrir o tras registrar un cobro)
+  useEffect(() => {
+    if (open && saldoPendiente > 0 && !autofilledMonto.current) {
+      form.setFieldValue('monto', Number(saldoPendiente.toFixed(2)))
+      autofilledMonto.current = true
+    }
+  }, [open, saldoPendiente, form])
 
   // Query para obtener despliegues de pago y setear Efectivo por defecto
   const { data: desplieguesData } = useQuery({
@@ -375,6 +390,9 @@ export default function ModalRegistrarCobro({ open, setOpen, venta }: ModalRegis
       // Invalidar queries de ganancias para que se actualice en mis-ganancias
       queryClient.invalidateQueries({ queryKey: ['ganancias'] })
       queryClient.invalidateQueries({ queryKey: ['mis-ganancias'] })
+
+      // Permitir nuevo autofill del monto con el saldo actualizado
+      autofilledMonto.current = false
 
       // Resetear formulario y setear valores por defecto
       form.resetFields()
