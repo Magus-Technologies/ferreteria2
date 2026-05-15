@@ -109,6 +109,7 @@ export interface GetIngresosSalidasParams {
   observacion?: string;
   tipo?: string;
   listar_no_anuladas?: boolean;
+  estado_filtro?: "todos" | "activos" | "anulados";
   per_page?: number;
   page?: number;
 }

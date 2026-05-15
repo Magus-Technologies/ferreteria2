@@ -28,7 +28,7 @@ export function useCuadres() {
     const [filters, setFilters] = useState<GetIngresosSalidasParams>({
         desde: dayjs().startOf('day').format('YYYY-MM-DD'),
         hasta: dayjs().format('YYYY-MM-DD'),
-        listar_no_anuladas: false,
+        estado_filtro: 'activos',
         tipo: 'TODOS',
         per_page: 500 // Traemos bastantes para el reporte
     });
@@ -117,11 +117,21 @@ export function useCuadres() {
     }, [response]);
 
     const handleSearch = (newFilters: any) => {
+        // Reconstruir los filtros desde cero (no mezclar con los anteriores)
+        // para que al limpiar un campo realmente se quite del filtro.
+        const limpio = (v: any) =>
+            v === undefined || v === null || v === '' ? undefined : v;
+
         setFilters({
-            ...filters,
-            ...newFilters,
+            per_page: 500,
             desde: newFilters.desde ? dayjs(newFilters.desde).format('YYYY-MM-DD') : undefined,
             hasta: newFilters.hasta ? dayjs(newFilters.hasta).format('YYYY-MM-DD') : undefined,
+            almacen_id: limpio(newFilters.almacen_id),
+            tipo: limpio(newFilters.tipo) ?? 'TODOS',
+            estado_filtro: limpio(newFilters.estado_filtro) ?? 'activos',
+            search_producto: limpio(newFilters.search_producto),
+            search_proveedor: limpio(newFilters.search_proveedor),
+            observacion: limpio(newFilters.observacion),
         });
     };
 
