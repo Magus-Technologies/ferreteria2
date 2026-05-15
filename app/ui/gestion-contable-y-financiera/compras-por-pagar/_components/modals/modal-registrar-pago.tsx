@@ -603,7 +603,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
           id='table-pagos-previos'
           title={`Registros de pagos realizados: #${pagos.length}`}
           columnDefs={columnsPagos}
-          rowData={[...pagos].reverse()}
+          rowData={[...pagos].sort((a, b) => (b.id ?? '').localeCompare(a.id ?? ''))}
           selectionColor={redColors[1]}
           suppressRowTransform
           withNumberColumn={false}
