@@ -3,7 +3,7 @@
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'

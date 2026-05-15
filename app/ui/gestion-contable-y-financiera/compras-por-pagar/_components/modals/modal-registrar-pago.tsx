@@ -19,6 +19,23 @@ import { getAuthToken } from '~/lib/api'
 import { FaFileAlt, FaTrash } from 'react-icons/fa'
 import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 
+// Decodifica el timestamp del ULID (primeros 10 chars en Crockford base32)
+function ulidToDate(ulid: string): Date | null {
+  try {
+    const ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+    const timeStr = ulid.substring(0, 10).toUpperCase()
+    let ms = 0
+    for (let i = 0; i < timeStr.length; i++) {
+      const idx = ENCODING.indexOf(timeStr[i])
+      if (idx === -1) return null
+      ms = ms * 32 + idx
+    }
+    return new Date(ms)
+  } catch {
+    return null
+  }
+}
+
 interface ModalRegistrarPagoProps {
   open: boolean
   setOpen: (open: boolean) => void
@@ -283,10 +300,11 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
     },
     {
       headerName: 'Fecha y Hora Pago',
-      width: 150,
+      width: 170,
       valueGetter: (p) => {
-        const val = p.data?.created_at || p.data?.fecha
-        return val ? dayjs(val).format('DD/MM/YYYY hh:mm A') : ''
+        if (!p.data?.id) return ''
+        const date = ulidToDate(p.data.id)
+        return date ? dayjs(date).format('DD/MM/YYYY hh:mm:ss A') : (p.data?.fecha ? dayjs(p.data.fecha).format('DD/MM/YYYY') : '')
       },
     },
     {
@@ -585,7 +603,7 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
           id='table-pagos-previos'
           title={`Registros de pagos realizados: #${pagos.length}`}
           columnDefs={columnsPagos}
-          rowData={pagos}
+          rowData={[...pagos].reverse()}
           selectionColor={redColors[1]}
           suppressRowTransform
           withNumberColumn={false}
