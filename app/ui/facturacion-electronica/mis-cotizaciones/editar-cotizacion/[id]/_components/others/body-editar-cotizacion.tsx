@@ -68,23 +68,34 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
         // Guardar cotización para usar en el render
         setCotizacionActual(cotizacion);
 
-        // Transformar productos para el formulario
+        // Transformar productos para el formulario.
+        // Importante: el `unidad_derivada_inmutable` guarda solo el nombre snapshot
+        // (ej. "CAJAX25") y NO el id real de la unidad actual. Para que los selects
+        // de tipo_precio/unidad_derivada hagan match con las opciones disponibles
+        // del producto, resolvemos la unidad actual buscando por `factor` (que sí
+        // es estable y único por producto_almacen).
         const productos: FormCreateCotizacion["productos"] = cotizacion.productos_por_almacen?.flatMap((pac) =>
-          pac.unidades_derivadas.map((ud) => ({
-            producto_id: pac.producto_almacen.producto.id,
-            producto_name: pac.producto_almacen.producto.name,
-            producto_codigo: pac.producto_almacen.producto.cod_producto || '',
-            marca_name: pac.producto_almacen.producto.marca.name,
-            unidad_derivada_id: ud.unidad_derivada_inmutable.id,
-            unidad_derivada_name: ud.unidad_derivada_inmutable.name,
-            unidad_derivada_factor: ud.factor,
-            cantidad: ud.cantidad,
-            precio_venta: ud.precio,
-            recargo: ud.recargo,
-            subtotal: ud.cantidad * ud.precio,
-            descuento_tipo: (ud.descuento_tipo === '%' ? 'Porcentaje' : 'Monto') as DescuentoTipo,
-            descuento: ud.descuento,
-          }))
+          pac.unidades_derivadas.map((ud) => {
+            const factorBuscado = Number(ud.factor);
+            const unidadDisponible = pac.producto_almacen.unidades_derivadas?.find(
+              (u) => Number(u.factor) === factorBuscado
+            );
+            return {
+              producto_id: pac.producto_almacen.producto.id,
+              producto_name: pac.producto_almacen.producto.name,
+              producto_codigo: pac.producto_almacen.producto.cod_producto || '',
+              marca_name: pac.producto_almacen.producto.marca.name,
+              unidad_derivada_id: unidadDisponible?.unidad_derivada.id ?? ud.unidad_derivada_inmutable.id,
+              unidad_derivada_name: unidadDisponible?.unidad_derivada.name ?? ud.unidad_derivada_inmutable.name,
+              unidad_derivada_factor: Number(ud.factor),
+              cantidad: Number(ud.cantidad),
+              precio_venta: Number(ud.precio),
+              recargo: Number(ud.recargo),
+              subtotal: Number(ud.cantidad) * Number(ud.precio),
+              descuento_tipo: (ud.descuento_tipo === '%' ? 'Porcentaje' : 'Monto') as DescuentoTipo,
+              descuento: Number(ud.descuento),
+            };
+          })
         ) || [];
 
         // Poblar el store con las unidades derivadas disponibles de cada
@@ -94,14 +105,18 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
         const productosStore: ProductoCotizacionConUnidades[] =
           cotizacion.productos_por_almacen?.map((pac) => {
             const primeraUd = pac.unidades_derivadas[0];
+            const factorBuscado = Number(primeraUd?.factor ?? 0);
+            const unidadDisponible = pac.producto_almacen.unidades_derivadas?.find(
+              (u) => Number(u.factor) === factorBuscado
+            );
             return {
               producto_id: pac.producto_almacen.producto.id,
               producto_name: pac.producto_almacen.producto.name,
               producto_codigo: pac.producto_almacen.producto.cod_producto || '',
               marca_name: pac.producto_almacen.producto.marca.name,
-              unidad_derivada_id: primeraUd?.unidad_derivada_inmutable.id ?? 0,
-              unidad_derivada_name: primeraUd?.unidad_derivada_inmutable.name ?? '',
-              unidad_derivada_factor: Number(primeraUd?.factor ?? 0),
+              unidad_derivada_id: unidadDisponible?.unidad_derivada.id ?? primeraUd?.unidad_derivada_inmutable.id ?? 0,
+              unidad_derivada_name: unidadDisponible?.unidad_derivada.name ?? primeraUd?.unidad_derivada_inmutable.name ?? '',
+              unidad_derivada_factor: factorBuscado,
               cantidad: Number(primeraUd?.cantidad ?? 0),
               precio_venta: Number(primeraUd?.precio ?? 0),
               recargo: Number(primeraUd?.recargo ?? 0),
