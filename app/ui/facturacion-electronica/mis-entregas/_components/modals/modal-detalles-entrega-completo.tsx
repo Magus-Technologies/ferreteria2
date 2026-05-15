@@ -1,6 +1,7 @@
 'use client'
 
 import { Modal, Tag } from 'antd'
+import { useQuery } from '@tanstack/react-query'
 import {
   FaUser,
   FaPhone,
@@ -12,8 +13,11 @@ import {
   FaTruck,
   FaUserTie,
   FaCommentDots,
+  FaLayerGroup,
 } from 'react-icons/fa'
 import dayjs from 'dayjs'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import { entregaProductoApi } from '~/lib/api/entrega-producto'
 import {
   TIPO_ENTREGA_LABEL_CON_ICON as TIPO_ENTREGA_LABEL,
   TIPO_DESPACHO_LABEL_CON_ICON as TIPO_DESPACHO_LABEL,
@@ -40,9 +44,22 @@ export default function ModalDetallesEntregaCompleto({
   onClose,
   entrega,
 }: ModalDetallesEntregaCompletoProps) {
+  const { data: entregaCompleta } = useQuery({
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-completo', entrega?.id],
+    queryFn: async () => {
+      const res = await entregaProductoApi.getById(entrega.id)
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? res.data
+    },
+    enabled: open && !!entrega?.id,
+    staleTime: 0,
+  })
+
   if (!entrega) return null
 
-  const venta = entrega.venta
+  const entregaView = entregaCompleta ?? entrega
+
+  const venta = entregaView.venta
   const cliente = venta?.cliente
   const clienteNombre =
     cliente?.razon_social ||
@@ -51,17 +68,32 @@ export default function ModalDetallesEntregaCompleto({
   const ventaNumero =
     venta?.serie && venta?.numero ? `${venta.serie}-${venta.numero}` : 'S/N'
 
-  const productos = entrega.productos_entregados || []
+  const productos = entregaView.productos_entregados || entregaView.productosEntregados || []
   const entregaFueEntregadaAntes = Boolean(
-    entrega?.user_entregado_id ||
-    entrega?.userEntregado?.id,
+    entregaView?.user_entregado_id ||
+    entregaView?.userEntregado?.id,
   )
   const entregaTieneEntregaFisica =
-    entrega?.estado_entrega === 'en' || entregaFueEntregadaAntes
-  const estado = ESTADO_LABEL[entrega.estado_entrega] || {
-    label: entrega.estado_entrega,
+    entregaView?.estado_entrega === 'en' || entregaFueEntregadaAntes
+  const estado = ESTADO_LABEL[entregaView.estado_entrega] || {
+    label: entregaView.estado_entrega,
     color: 'default',
   }
+  const entregasRelacionadas = Array.isArray(venta?.entregas_productos)
+    ? [...venta.entregas_productos].sort((a: any, b: any) => {
+        const fechaA = dayjs(a.created_at || 0).valueOf()
+        const fechaB = dayjs(b.created_at || 0).valueOf()
+        if (fechaA !== fechaB) return fechaA - fechaB
+        return Number(a.id || 0) - Number(b.id || 0)
+      })
+    : []
+  const totalEntregasVenta = entregasRelacionadas.length || 1
+  const indiceEntregaVenta = totalEntregasVenta > 1
+    ? Math.max(
+        1,
+        entregasRelacionadas.findIndex((e: any) => Number(e.id) === Number(entregaView.id)) + 1,
+      )
+    : 1
 
   return (
     <Modal
@@ -93,22 +125,37 @@ export default function ModalDetallesEntregaCompleto({
           <Tag color={estado.color} className="!text-sm !py-1 !px-3 !font-semibold">
             {estado.label}
           </Tag>
-          {entrega.tipo_entrega && (
+          {entregaView.tipo_entrega && (
             <Tag color="purple" className="!text-sm !py-1 !px-3">
-              {TIPO_ENTREGA_LABEL[entrega.tipo_entrega] || entrega.tipo_entrega}
+              {TIPO_ENTREGA_LABEL[entregaView.tipo_entrega] || entregaView.tipo_entrega}
             </Tag>
           )}
-          {entrega.tipo_despacho && (
+          {entregaView.tipo_despacho && (
             <Tag color="cyan" className="!text-sm !py-1 !px-3">
-              {TIPO_DESPACHO_LABEL[entrega.tipo_despacho] || entrega.tipo_despacho}
+              {TIPO_DESPACHO_LABEL[entregaView.tipo_despacho] || entregaView.tipo_despacho}
             </Tag>
           )}
-          {entrega.quien_entrega && (
+          {entregaView.quien_entrega && (
             <Tag color="geekblue" className="!text-sm !py-1 !px-3">
-              Entrega: {QUIEN_ENTREGA_LABEL[entrega.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entrega.quien_entrega}
+              Entrega: {QUIEN_ENTREGA_LABEL[entregaView.quien_entrega as keyof typeof QUIEN_ENTREGA_LABEL] || entregaView.quien_entrega}
+            </Tag>
+          )}
+          {totalEntregasVenta > 1 && (
+            <Tag color="gold" className="!text-sm !py-1 !px-3 !font-semibold">
+              Entrega {indiceEntregaVenta} de {totalEntregasVenta}
             </Tag>
           )}
         </div>
+
+        {totalEntregasVenta > 1 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+            <FaLayerGroup className="mt-0.5 text-amber-600 flex-shrink-0" />
+            <div>
+              Esta venta fue dividida en <span className="font-semibold">{totalEntregasVenta} entregas</span>.
+              Estás viendo la <span className="font-semibold">entrega {indiceEntregaVenta}</span>.
+            </div>
+          </div>
+        )}
 
         {/* Cliente */}
         <div className="bg-slate-50 rounded-xl p-4 space-y-2">
