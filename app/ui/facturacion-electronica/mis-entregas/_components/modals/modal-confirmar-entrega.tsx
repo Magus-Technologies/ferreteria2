@@ -45,15 +45,17 @@ export default function ModalConfirmarEntrega({
       const ud = p.unidad_derivada_venta || {}
       const producto = ud.producto_almacen_venta?.producto_almacen?.producto || {}
       const total = Number(ud.cantidad ?? 0)
-      const pendiente = Math.max(0, Number(ud.cantidad_pendiente ?? 0))
-      const entregadoHistorico = Math.max(0, Number(p.cantidad_entregada ?? 0))
+      const pendienteVenta = Math.max(0, Number(ud.cantidad_pendiente ?? 0))
+      const cantidadEstaEntrega = Math.max(0, Number(p.cantidad_entregada ?? 0))
 
       const cantidadAConfirmar =
         entrega.estado_entrega === 'en'
-          ? entregadoHistorico || Math.max(total - pendiente, 0)
-          : pendiente > 0
-            ? pendiente
-            : total
+          ? cantidadEstaEntrega || Math.max(total - pendienteVenta, 0)
+          : cantidadEstaEntrega > 0
+            ? cantidadEstaEntrega
+            : pendienteVenta > 0
+              ? pendienteVenta
+              : total
 
       return {
         id: p.id || index,

@@ -13,6 +13,7 @@ type DetalleProductoEntrega = {
   unidad: string
   total: number
   recibido: number
+  programado: number
   entregado: number
   pendiente: number
 }
@@ -34,7 +35,7 @@ type ProductoHistorial = {
 }
 
 export default function TableDetalleEntrega() {
-  const entregaSeleccionada = useStoreEntregaSeleccionada(state => state.entrega)
+  const entregaSeleccionada = useStoreEntregaSeleccionada((state) => state.entrega)
 
   const venta = entregaSeleccionada?.venta
   const cliente = venta?.cliente
@@ -46,18 +47,25 @@ export default function TableDetalleEntrega() {
   const entregaTieneEntregaFisica =
     entregaSeleccionada?.estado_entrega === 'en' || entregaFueEntregadaAntes
 
-  const clienteNombre = cliente?.razon_social ||
+  const clienteNombre =
+    cliente?.razon_social ||
     `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() ||
     'SIN CLIENTE'
+
   const direccionCliente = useMemo(() => {
     const direcciones = cliente?.direcciones || []
     if (!direcciones.length) return undefined
-    return direcciones.find((d: any) => d.tipo === direccionSeleccionada)
-      || direcciones.find((d: any) => d.es_principal)
-      || direcciones[0]
+    return (
+      direcciones.find((d: any) => d.tipo === direccionSeleccionada) ||
+      direcciones.find((d: any) => d.es_principal) ||
+      direcciones[0]
+    )
   }, [cliente?.direcciones, direccionSeleccionada])
-  const direccionMostrar = (entregaSeleccionada as any)?.direccion_entrega || direccionCliente?.direccion
-  const referenciaMostrar = (entregaSeleccionada as any)?.referencia_entrega || direccionCliente?.referencia
+
+  const direccionMostrar =
+    (entregaSeleccionada as any)?.direccion_entrega || direccionCliente?.direccion
+  const referenciaMostrar =
+    (entregaSeleccionada as any)?.referencia_entrega || direccionCliente?.referencia
 
   const ultimaEdicion = useMemo(() => {
     if (!entregaFueEntregadaAntes) return undefined
@@ -76,9 +84,8 @@ export default function TableDetalleEntrega() {
         marca: producto.marca?.name || '—',
         unidad: ud.unidad_derivada_inmutable?.name || '',
         cantidad: Number(ud.cantidad ?? 0),
-        cantidadPendiente: ud.cantidad_pendiente == null
-          ? 0
-          : Number(ud.cantidad_pendiente),
+        cantidadPendiente:
+          ud.cantidad_pendiente == null ? 0 : Number(ud.cantidad_pendiente),
       }
     })
   }, [entregaSeleccionada])
@@ -97,7 +104,15 @@ export default function TableDetalleEntrega() {
   const normalizarClave = (codigo: string, unidad: string) =>
     `${codigo}`.trim().toLowerCase() + '|' + `${unidad}`.trim().toLowerCase()
 
-  const agruparProductos = <T extends { codigo: string; unidad: string; cantidad: number; producto: string; marca?: string }>(
+  const agruparProductos = <
+    T extends {
+      codigo: string
+      unidad: string
+      cantidad: number
+      producto: string
+      marca?: string
+    },
+  >(
     items: T[],
   ) => {
     const mapa = new Map<string, T & { cantidad: number }>()
@@ -120,12 +135,30 @@ export default function TableDetalleEntrega() {
     if (!productosActuales.length) return []
 
     const actualesAgrupados = agruparProductos(productosActuales)
+
     if (!mostrarRecibido) {
       return [...actualesAgrupados.values()].map((producto) => {
         const total = Number(producto.cantidad ?? 0)
-        const pendientePersistido = Math.max(0, Number((producto as ProductoFila).cantidadPendiente ?? 0))
-        const pendiente = entregaTieneEntregaFisica ? pendientePersistido : total
-        const entregado = entregaTieneEntregaFisica ? Math.max(0, total - pendientePersistido) : 0
+        const pendientePersistido = Math.max(
+          0,
+          Number((producto as ProductoFila).cantidadPendiente ?? 0),
+        )
+
+        if (entregaTieneEntregaFisica) {
+          return {
+            producto: producto.producto,
+            codigo: producto.codigo,
+            marca: producto.marca || '—',
+            unidad: producto.unidad,
+            total,
+            recibido: 0,
+            programado: 0,
+            entregado: Math.max(0, total - pendientePersistido),
+            pendiente: pendientePersistido,
+          }
+        }
+
+        const programado = Math.max(0, total - pendientePersistido)
         return {
           producto: producto.producto,
           codigo: producto.codigo,
@@ -133,8 +166,9 @@ export default function TableDetalleEntrega() {
           unidad: producto.unidad,
           total,
           recibido: 0,
-          entregado,
-          pendiente,
+          programado,
+          entregado: 0,
+          pendiente: pendientePersistido,
         }
       })
     }
@@ -160,6 +194,7 @@ export default function TableDetalleEntrega() {
         unidad: actual.unidad,
         total: cantidadActual,
         recibido: Math.max(cantidadAnterior - cantidadActual, 0),
+        programado: 0,
         entregado: 0,
         pendiente: Math.max(cantidadActual - cantidadAnterior, 0),
       })
@@ -174,15 +209,20 @@ export default function TableDetalleEntrega() {
         unidad: anterior.unidad,
         total: Number(anterior.cantidad ?? 0),
         recibido: Number(anterior.cantidad ?? 0),
+        programado: 0,
         entregado: 0,
         pendiente: 0,
       })
     }
 
     return filas
-  }, [entregaTieneEntregaFisica, entregaSeleccionada?.estado_entrega, mostrarRecibido, productosActuales, productosAnteriores])
+  }, [entregaTieneEntregaFisica, mostrarRecibido, productosActuales, productosAnteriores])
 
   const columnDefs = useMemo<ColDef<DetalleProductoEntrega>[]>(() => {
+    const mostrarProgramado =
+      !entregaTieneEntregaFisica &&
+      detalleProductos.some((p) => Number(p.programado || 0) > 0)
+
     const defs: ColDef<DetalleProductoEntrega>[] = [
       { headerName: 'Codigo', field: 'codigo', width: 120 },
       { headerName: 'Producto', field: 'producto', flex: 1 },
@@ -192,7 +232,7 @@ export default function TableDetalleEntrega() {
         headerName: 'Total',
         field: 'total',
         width: 90,
-        valueFormatter: params => Number(params.value).toFixed(0),
+        valueFormatter: (params) => Number(params.value).toFixed(0),
       },
     ]
 
@@ -201,8 +241,21 @@ export default function TableDetalleEntrega() {
         headerName: 'Recibido',
         field: 'recibido',
         width: 110,
-        valueFormatter: params => Number(params.value).toFixed(0),
+        valueFormatter: (params) => Number(params.value).toFixed(0),
         cellStyle: { color: '#b45309', fontWeight: 'bold' },
+      })
+    }
+
+    if (mostrarProgramado) {
+      defs.push({
+        headerName: 'Programado',
+        field: 'programado',
+        width: 110,
+        valueFormatter: (params) => Number(params.value || 0).toFixed(0),
+        cellStyle: (params) =>
+          Number(params.value) > 0
+            ? { color: '#2563eb', fontWeight: 'bold' }
+            : { color: '#94a3b8', fontWeight: 'normal' },
       })
     }
 
@@ -211,14 +264,14 @@ export default function TableDetalleEntrega() {
         headerName: 'Entregado',
         field: 'entregado',
         width: 110,
-        valueFormatter: params => Number(params.value).toFixed(0),
+        valueFormatter: (params) => Number(params.value).toFixed(0),
         cellStyle: { color: '#16a34a', fontWeight: 'bold' },
       },
       {
         headerName: 'Pendiente',
         field: 'pendiente',
         width: 110,
-        valueFormatter: params => Number(params.value).toFixed(0),
+        valueFormatter: (params) => Number(params.value).toFixed(0),
         cellStyle: (params) =>
           Number(params.value) > 0
             ? { color: '#d97706', fontWeight: 'bold' }
@@ -227,47 +280,47 @@ export default function TableDetalleEntrega() {
     )
 
     return defs
-  }, [mostrarRecibido])
+  }, [detalleProductos, entregaTieneEntregaFisica, mostrarRecibido])
 
   return (
-    <div className='w-full'>
+    <div className="w-full">
       {entregaSeleccionada && (
-        <div className='flex flex-wrap items-center gap-x-6 gap-y-1 mb-3'>
-          <div className='text-sm'>
-            <span className='font-semibold'>Cliente: </span>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mb-3">
+          <div className="text-sm">
+            <span className="font-semibold">Cliente: </span>
             <span>{clienteNombre}</span>
           </div>
           {cliente?.numero_documento && (
-            <div className='text-sm'>
-              <span className='font-semibold'>Doc: </span>
+            <div className="text-sm">
+              <span className="font-semibold">Doc: </span>
               <span>{cliente.numero_documento}</span>
             </div>
           )}
           {cliente?.telefono && (
-            <div className='text-sm'>
-              <span className='font-semibold'>Tel: </span>
+            <div className="text-sm">
+              <span className="font-semibold">Tel: </span>
               <span>{cliente.telefono}</span>
             </div>
           )}
           {direccionMostrar && (
-            <div className='text-sm'>
-              <span className='font-semibold'>Direccion: </span>
+            <div className="text-sm">
+              <span className="font-semibold">Direccion: </span>
               <span>{direccionMostrar}</span>
             </div>
           )}
           {referenciaMostrar && (
-            <div className='text-sm'>
-              <span className='font-semibold'>Ref: </span>
+            <div className="text-sm">
+              <span className="font-semibold">Ref: </span>
               <span>{referenciaMostrar}</span>
             </div>
           )}
         </div>
       )}
 
-      <div className='w-full min-h-[230px] h-[calc(100vh-600px)] max-h-[600px]'>
+      <div className="w-full min-h-[230px] h-[calc(100vh-600px)] max-h-[600px]">
         <TableWithTitle<DetalleProductoEntrega>
-          id='detalle-entrega'
-          title='Detalle de Entrega'
+          id="detalle-entrega"
+          title="Detalle de Entrega"
           selectionColor={orangeColors[10]}
           columnDefs={columnDefs}
           rowData={detalleProductos}

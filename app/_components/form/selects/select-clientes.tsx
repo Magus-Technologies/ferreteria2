@@ -17,6 +17,9 @@ import ModalClienteSearch from '../../modals/modal-cliente-search'
 import { useStoreClienteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-cliente-seleccionado'
 import { FormInstance } from 'antd'
 
+// Cliente parcial para initialCliente (solo necesita las props que usamos)
+type PartialCliente = Partial<Cliente>
+
 interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameIcon?: string
   sizeIcon?: number
@@ -30,6 +33,7 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   showOnlyDocument?: boolean
   autoFocus?: boolean
   open?: boolean // Permitir controlar si se abre el dropdown
+  initialCliente?: PartialCliente // Cliente pre-cargado (para pre-llenar sin búsqueda)
 }
 
 export default function SelectClientes({
@@ -47,6 +51,7 @@ export default function SelectClientes({
   showOnlyDocument = false,
   autoFocus = false,
   open, // Nueva prop para controlar el dropdown
+  initialCliente, // Cliente pre-cargado (para pre-llenar sin búsqueda)
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
@@ -69,7 +74,7 @@ export default function SelectClientes({
 
   const [clienteCreado, setClienteCreado] = useState<Cliente>()
   const [clienteSeleccionado, setClienteSeleccionado] =
-    useState<Cliente>()
+    useState<PartialCliente | undefined>()
 
   const clienteSeleccionadoStore = useStoreClienteSeleccionado(
     store => store.cliente
@@ -78,8 +83,33 @@ export default function SelectClientes({
     store => store.setCliente
   )
 
-  // Usar el store global para el texto de búsqueda (igual que SelectProductos)
+// Usar el store global para el texto de búsqueda (igual que SelectProductos)
   const [textDefault, setTextDefault] = useState('')
+
+  // Pre-llenar cliente desde initialCliente (para edición)
+  useEffect(() => {
+    if (initialCliente && !clienteSeleccionado) {
+      setClienteSeleccionado(initialCliente)
+      // Settear el texto según el modo
+      if (showOnlyDocument) {
+        setText(initialCliente.numero_documento || '')
+        setLastSelectedDocument(initialCliente.numero_documento || '')
+      } else {
+        const label = initialCliente.razon_social
+          ? `${initialCliente.numero_documento} : ${initialCliente.razon_social}`
+          : `${initialCliente.numero_documento} : ${initialCliente.nombres} ${initialCliente.apellidos}`
+        setText(label)
+      }
+      // Settear el valor en el SelectBase
+      iterarChangeValue({
+        refObject: selectClientesRef,
+        value: initialCliente.id,
+      })
+      // Marcar como seleccionado
+      clienteSeleccionadoRef.current = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCliente])
 
   // Notificar al componente padre del cambio de texto
   useEffect(() => {
@@ -114,7 +144,7 @@ export default function SelectClientes({
     })
   }, [text, lastSelectedDocument, showOnlyDocument, form, isSelecting])
 
-  function handleSelect({ data }: { data?: Cliente } = {}) {
+  function handleSelect({ data }: { data?: PartialCliente } = {}) {
     const cliente = data || clienteSeleccionadoStore
     if (cliente) {
       setIsSelecting(true)
@@ -144,7 +174,7 @@ export default function SelectClientes({
       })
 
       // Autocompletar campos del formulario si se proporciona form
-      if (form) {
+      if (form && cliente.id !== undefined) {
         if (cliente.numero_documento) {
           form.setFieldValue('ruc_dni', cliente.numero_documento)
         }
@@ -156,9 +186,11 @@ export default function SelectClientes({
         cargarDireccionesCliente(cliente.id)
       }
 
-      setClienteSeleccionadoStore(undefined)
+setClienteSeleccionadoStore(undefined)
       setOpenModalClienteSearch(false)
-      onChange?.(cliente.id, cliente)
+      if (cliente.id !== undefined) {
+        onChange?.(cliente.id, cliente as unknown as Cliente)
+      }
       setTimeout(() => setIsSelecting(false), 100)
     }
   }
@@ -237,16 +269,16 @@ export default function SelectClientes({
     setOpenModalClienteSearch(true)
   }
 
-  const getLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
+  const getLabel = (cliente: PartialCliente) => {
       if (showOnlyDocument) return cliente.numero_documento || ''
-      if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
-      return `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+      if (cliente.razon_social) return `${cliente.numero_documento || ''} : ${cliente.razon_social}`
+      return `${cliente.numero_documento || ''} : ${cliente.nombres || ''} ${cliente.apellidos || ''}`
   }
 
   // Label completo para el dropdown (siempre mostrar nombre para identificar)
-  const getDropdownLabel = (cliente: Pick<Cliente, 'numero_documento' | 'razon_social' | 'nombres' | 'apellidos'>) => {
-      if (cliente.razon_social) return `${cliente.numero_documento} : ${cliente.razon_social}`
-      return `${cliente.numero_documento} : ${cliente.nombres} ${cliente.apellidos}`
+  const getDropdownLabel = (cliente: PartialCliente) => {
+      if (cliente.razon_social) return `${cliente.numero_documento || ''} : ${cliente.razon_social}`
+      return `${cliente.numero_documento || ''} : ${cliente.nombres || ''} ${cliente.apellidos || ''}`
   }
 
   return (

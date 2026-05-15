@@ -219,7 +219,7 @@ export default function ModalDetallesEntregaCompleto({
             <div className="bg-slate-100 px-4 py-2 text-xs font-bold uppercase text-slate-600 tracking-wide flex items-center justify-between">
               <span>Productos</span>
               <span className="text-slate-500 font-normal normal-case">
-                Pedida / Esta entrega / Pendiente venta
+                Pedida / Programado / Entregado / Pendiente venta
               </span>
             </div>
             <div className="divide-y divide-slate-100 max-h-[280px] overflow-y-auto">
@@ -232,8 +232,13 @@ export default function ModalDetallesEntregaCompleto({
                 const cantidadTotal = Number(udv?.cantidad || 0)
                 const cantidadEntregadaPersistida = Number(p.cantidad_entregada || 0)
                 const cantidadPendientePersistida = Number(udv?.cantidad_pendiente || 0)
+                const cantidadProgramada = entregaTieneEntregaFisica
+                  ? 0
+                  : Math.max(0, cantidadTotal - cantidadPendientePersistida)
                 const cantidadEntregada = entregaTieneEntregaFisica ? cantidadEntregadaPersistida : 0
-                const cantidadPendiente = entregaTieneEntregaFisica ? cantidadPendientePersistida : cantidadTotal
+                const cantidadPendiente = entregaTieneEntregaFisica
+                  ? cantidadPendientePersistida
+                  : cantidadPendientePersistida
                 return (
                   <div
                     key={p.id || i}
@@ -250,6 +255,16 @@ export default function ModalDetallesEntregaCompleto({
                     <div className="flex items-center gap-2 text-xs whitespace-nowrap">
                       <span className="text-slate-500">
                         {cantidadTotal} {unidad}
+                      </span>
+                      <span className="text-slate-300">/</span>
+                      <span
+                        className={
+                          cantidadProgramada > 0
+                            ? 'font-bold text-blue-700'
+                            : 'text-slate-400'
+                        }
+                      >
+                        {cantidadProgramada} {unidad}
                       </span>
                       <span className="text-slate-300">/</span>
                       <span className="font-bold text-green-700">

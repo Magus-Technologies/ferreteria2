@@ -21,8 +21,12 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 
 export default function FormCrearCotizacion({
   form,
+  initialCliente,
+  initialRecomendadoPor,
 }: {
   form: FormInstance<FormCreateCotizacion>;
+  initialCliente?: { id: number; numero_documento: string; nombres?: string; apellidos?: string; razon_social?: string | null };
+  initialRecomendadoPor?: { id: number; numero_documento: string; nombres?: string; apellidos?: string; razon_social?: string | null };
 }) {
   const { user } = useAuth();
 
@@ -172,6 +176,34 @@ export default function FormCrearCotizacion({
             </Form.Item>
           </ConfigurableElement>
         </LabelBase>
+
+        {/* Fecha Vencimiento Reserva - solo requerido si reservar_stock esta checked */}
+        <Form.Item noStyle shouldUpdate={(prev, curr) => prev.reservar_stock !== curr.reservar_stock}>
+          {(form) => {
+            const reservarStock = form.getFieldValue("reservar_stock");
+            return (
+              <LabelBase label="Vence Reserva:" classNames={{ labelParent: "mb-6" }}>
+                <ConfigurableElement componentId="field-fecha-vencimiento-reserva-cotizacion" label="Campo Fecha Vencimiento Reserva">
+                  <DatePickerBase
+                    propsForm={{
+                      name: "fecha_vencimiento_reserva",
+                      rules: [
+                        {
+                          required: reservarStock,
+                          message: "La fecha de vencimiento de la reserva es requerida",
+                        },
+                      ],
+                    }}
+                    placeholder="dd/mm/yyyy"
+                    disabled={!reservarStock}
+                    prefix={<FaCalendar size={15} className="text-rose-700 mx-1" />}
+                    className="!w-[160px] !min-w-[160px] !max-w-[160px]"
+                  />
+                </ConfigurableElement>
+              </LabelBase>
+            );
+          }}
+        </Form.Item>
       </div>
 
       {/* Fila 3: DNI/RUC (con lupa), Cliente y direccion*/}
@@ -189,6 +221,7 @@ export default function FormCrearCotizacion({
               className="w-full"
               classNameIcon="text-rose-700 mx-1"
               placeholder="DNI/RUC"
+              initialCliente={initialCliente}
               onChange={(_, cliente) => {
                 // Actualizar los campos relacionados
                 if (cliente) {
@@ -264,7 +297,7 @@ export default function FormCrearCotizacion({
         </div>
       </div>
 
-      {/* Fila 4: Telefono, Email */}
+      {/* Fila 4: Telefono, Email, Recomendado por */}
       <div className="flex gap-6">
         <LabelBase label="Tele/Cel:" classNames={{ labelParent: "mb-6" }}>
           <ConfigurableElement componentId="field-telefono-cotizacion" label="Campo Teléfono">
@@ -292,6 +325,23 @@ export default function FormCrearCotizacion({
               placeholder="Email del cliente"
               readOnly
               uppercase={false}
+            />
+          </ConfigurableElement>
+        </LabelBase>
+
+        <LabelBase label="Recomendado por:" classNames={{ labelParent: "mb-6" }}>
+          <ConfigurableElement componentId="field-recomendado-cotizacion" label="Campo Recomendado Por">
+            <SelectClientes
+              form={form}
+              propsForm={{
+                name: "recomendado_por_id",
+                hasFeedback: false,
+                className: "!min-w-[200px] !w-[200px] !max-w-[200px]",
+              }}
+              className="w-full"
+              classNameIcon="text-cyan-600 mx-1"
+              placeholder="¿Quién lo recomendó?"
+              initialCliente={initialRecomendadoPor}
             />
           </ConfigurableElement>
         </LabelBase>

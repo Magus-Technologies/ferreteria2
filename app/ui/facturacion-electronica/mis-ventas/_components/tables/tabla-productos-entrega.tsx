@@ -60,6 +60,7 @@ export default function TablaProductosEntrega({
   simple = false,
 }: TablaProductosEntregaProps) {
   const mostrarRecibido = productos.some((p) => Number(p.recibido || 0) > 0)
+  const mostrarProgramado = productos.some((p) => Number(p.programado || 0) > 0)
   const productosRef = useRef(productos)
   productosRef.current = productos
 
@@ -119,6 +120,15 @@ export default function TablaProductosEntrega({
           width: 110,
           valueFormatter: (params) => Number(params.value || 0).toFixed(2),
           cellStyle: { color: '#b45309', fontWeight: 'bold' },
+        } as ColDef<ProductoEntrega>]
+      : []),
+    ...(mostrarProgramado
+      ? [{
+          headerName: 'Programado',
+          field: 'programado',
+          width: 120,
+          valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+          cellStyle: { color: '#2563eb', fontWeight: 'bold' },
         } as ColDef<ProductoEntrega>]
       : []),
     {
