@@ -34,9 +34,7 @@ export function usePaqueteForm(
       const productosFormateados: ProductoPaquete[] = paqueteData.productos.map((p) => {
         const productoAny = p.producto as any
         const productoEnAlmacen = productoAny?.producto_en_almacenes?.[0]
-        const costo = productoEnAlmacen?.costo
-          ? Number(productoEnAlmacen.costo)
-          : undefined
+        const costo_base = productoEnAlmacen?.costo ? Number(productoEnAlmacen.costo) : undefined
         const unidades_derivadas_disponibles = productoEnAlmacen?.unidades_derivadas?.map((ud: any) => ({
           unidad_derivada: ud.unidad_derivada || { id: ud.unidad_derivada_id, name: '' },
           factor: ud.factor,
@@ -45,6 +43,11 @@ export function usePaqueteForm(
           precio_minimo: ud.precio_minimo,
           precio_ultimo: ud.precio_ultimo,
         })) || []
+        const selectedUnit = unidades_derivadas_disponibles.find(
+          (ud: any) => ud.unidad_derivada.id === p.unidad_derivada_id
+        )
+        const factor = selectedUnit ? Number(selectedUnit.factor) : 1
+        const costo = costo_base != null ? costo_base * factor : undefined
         return {
           key: `${p.producto_id}-${p.unidad_derivada_id}`,
           producto_id: p.producto_id,
@@ -63,6 +66,7 @@ export function usePaqueteForm(
           descuento_minimo: (p as any).descuento_minimo != null ? Number((p as any).descuento_minimo) : 0,
           descuento_ultimo: (p as any).descuento_ultimo != null ? Number((p as any).descuento_ultimo) : 0,
           tipo_precio_vista: ((p as any).tipo_precio || 'publico') as TipoPrecioPaquete,
+          costo_base,
           costo,
           unidades_derivadas_disponibles,
         }
@@ -102,10 +106,13 @@ export function usePaqueteForm(
           const unidad = p.unidades_derivadas_disponibles?.find(
             (u) => u.unidad_derivada.id === unidadDerivadaId
           )
+          const factor = unidad ? Number(unidad.factor) : 1
+          const nuevoCosto = p.costo_base != null ? p.costo_base * factor : undefined
           return {
             ...p,
             unidad_derivada_id: unidadDerivadaId,
             unidad_derivada_name: unidad?.unidad_derivada.name || p.unidad_derivada_name,
+            costo: nuevoCosto,
           }
         }
         return p

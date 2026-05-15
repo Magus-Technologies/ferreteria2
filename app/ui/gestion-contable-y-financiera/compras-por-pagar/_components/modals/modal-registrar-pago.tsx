@@ -10,6 +10,7 @@ import dayjs from 'dayjs'
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { extractDesplieguePagoId } from '~/lib/utils/despliegue-pago-utils'
+import { consultaTipoDeCambio } from '~/app/_actions/consulta-tipo-de-cambio'
 import LabelBase from '~/components/form/label-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -32,17 +33,38 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
 
   // Congelar la compra cuando el modal abre
   const [localCompra, setLocalCompra] = useState<Compra | undefined>()
+
+  // TC del día (SUNAT) — se usa por defecto al pagar y para las conversiones a USD
+  // en las cajas Total Neto / Cancelado / Saldo. Si la consulta falla devuelve 1.
+  const { data: tcDelDia } = useQuery({
+    queryKey: [QueryKeys.TIPO_CAMBIO],
+    queryFn: async () => {
+      const res = await consultaTipoDeCambio()
+      return Number(res?.data ?? 0) || 0
+    },
+    staleTime: 30 * 60 * 1000,
+    enabled: open,
+  })
+
   useEffect(() => {
     if (open && compra) {
       setLocalCompra(compra)
-      if (compra.tipo_moneda?.toLowerCase() === 'd' && compra.tipo_de_cambio) {
-        form.setFieldValue('tipo_de_cambio', Number(compra.tipo_de_cambio))
+      if (compra.tipo_moneda?.toLowerCase() === 'd') {
+        // Preferir el TC del día; si aún no llegó, usar el TC histórico de la compra.
+        form.setFieldValue(
+          'tipo_de_cambio',
+          tcDelDia && tcDelDia > 0
+            ? tcDelDia
+            : compra.tipo_de_cambio
+              ? Number(compra.tipo_de_cambio)
+              : undefined,
+        )
       } else {
         form.setFieldValue('tipo_de_cambio', undefined)
       }
     }
     if (!open) setLocalCompra(undefined)
-  }, [open, compra, form])
+  }, [open, compra, form, tcDelDia])
 
   // Calcular total de la compra
   const totalCompra = useMemo(() => {
@@ -83,7 +105,15 @@ export default function ModalRegistrarPago({ open, setOpen, compra }: ModalRegis
   const saldoPendiente = totalCompra - totalPagado
 
   const esDolares = localCompra?.tipo_moneda?.toLowerCase() === 'd'
-  const tipoDeCambio = Number(localCompra?.tipo_de_cambio ?? 0)
+  // Watch del campo del form para que los $ de las cajas reaccionen en vivo
+  // cuando el usuario edita el TC. Prioridad: lo que está escrito en el input >
+  // TC del día > TC histórico de la compra.
+  const tcEnForm = Form.useWatch('tipo_de_cambio', form)
+  const tipoDeCambio = Number(tcEnForm) > 0
+    ? Number(tcEnForm)
+    : (tcDelDia && tcDelDia > 0)
+      ? tcDelDia
+      : Number(localCompra?.tipo_de_cambio ?? 0)
   const totalCompraDolares  = esDolares && tipoDeCambio ? totalCompra  / tipoDeCambio : null
   const totalPagadoDolares  = esDolares && tipoDeCambio ? totalPagado  / tipoDeCambio : null
   const saldoDolares        = esDolares && tipoDeCambio ? saldoPendiente / tipoDeCambio : null

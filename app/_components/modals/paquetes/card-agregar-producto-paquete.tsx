@@ -60,7 +60,8 @@ export default function CardAgregarProductoPaquete({
       precio_minimo: Number(unidad_derivada.precio_minimo) || 0,
       precio_ultimo: Number(unidad_derivada.precio_ultimo) || 0,
       tipo_precio_vista: 'publico',
-      costo: producto_en_almacen?.costo ? Number(producto_en_almacen.costo) : undefined,
+      costo_base: producto_en_almacen?.costo ? Number(producto_en_almacen.costo) : undefined,
+      costo: producto_en_almacen?.costo ? Number(producto_en_almacen.costo) * Number(unidad_derivada.factor) : undefined,
       unidades_derivadas_disponibles: unidades_derivadas,
     }
 

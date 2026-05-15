@@ -17,6 +17,43 @@ export const TIPO_PRECIO_OPTIONS = [
   { value: 'ultimo', label: 'Precio Final' },
 ]
 
+/** Input con estado local que solo notifica al padre en blur/enter */
+function CellInputCantidad({
+  value,
+  onCommit,
+}: {
+  value: number
+  onCommit: (val: number) => void
+}) {
+  const [localValue, setLocalValue] = useState<number | null>(value)
+
+  useEffect(() => {
+    setLocalValue(value)
+  }, [value])
+
+  const commit = () => {
+    const final = Number(localValue ?? 0)
+    if (final !== value) onCommit(final > 0 ? final : value)
+    else if (localValue !== value) setLocalValue(value)
+  }
+
+  return (
+    <div className="flex items-center h-full">
+      <InputNumber
+        size="small"
+        className="w-full"
+        value={localValue}
+        min={0.001}
+        precision={2}
+        controls={false}
+        onChange={(v) => setLocalValue(v === null ? null : Number(v))}
+        onBlur={commit}
+        onPressEnter={commit}
+      />
+    </div>
+  )
+}
+
 export interface ProductoPaquete {
   key: string
   producto_id: number
@@ -36,6 +73,7 @@ export interface ProductoPaquete {
   descuento_ultimo?: number
   tipo_precio_vista: TipoPrecioPaquete
   costo?: number
+  costo_base?: number
   unidades_derivadas_disponibles?: any[]
 }
 
@@ -155,31 +193,12 @@ export default function TableProductosPaquete({
       headerName: 'Cantidad',
       field: 'cantidad',
       width: 80,
-      cellRenderer: (params: any) => {
-        const CantidadCell = () => {
-          const [val, setVal] = useState(params.value ?? 1)
-          useEffect(() => { setVal(params.value ?? 1) }, [params.value])
-          const commit = () => {
-            if (val !== params.value) onCantidadChange(params.data.key, Number(val ?? 1))
-          }
-          return (
-            <div className="flex items-center h-full">
-              <InputNumber
-                size="small"
-                className="w-full"
-                value={val}
-                min={0.001}
-                precision={2}
-                controls={false}
-                onChange={(v) => setVal(Number(v ?? 1))}
-                onBlur={commit}
-                onPressEnter={commit}
-              />
-            </div>
-          )
-        }
-        return <CantidadCell />
-      },
+      cellRenderer: (params: any) => (
+        <CellInputCantidad
+          value={Number(params.value ?? 1)}
+          onCommit={(val) => onCantidadChange(params.data.key, val)}
+        />
+      ),
     },
     {
       headerName: 'Acciones',

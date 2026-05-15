@@ -117,6 +117,7 @@ export default function ModalCrearEditarPaquete({
                 withTipoBusqueda
                 showUltimasCompras={false}
                 selectionColor="#fb923c"
+                limpiarOnChange
                 handleOnlyOneResult={(producto) => {
                   setProductoSeleccionado(producto)
                   if (producto) setOpenModalAgregarProducto(true)

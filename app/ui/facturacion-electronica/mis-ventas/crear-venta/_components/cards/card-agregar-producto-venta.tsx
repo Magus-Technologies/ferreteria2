@@ -432,8 +432,9 @@ export default function CardAgregarProductoVenta({
             <div
               key={paquete.id}
               className="border border-gray-200 rounded-lg p-3 hover:border-cyan-400 hover:shadow-md transition-all cursor-pointer"
-              onClick={() => {
-                setPaqueteParaAgregar(paquete)
+              onClick={async () => {
+                const response = await paqueteApi.getById(paquete.id)
+                setPaqueteParaAgregar(response.data?.data ?? paquete)
                 setOpenModalTipoPrecioPaquete(true)
               }}
             >
@@ -501,7 +502,8 @@ export default function CardAgregarProductoVenta({
             comision: 0,
             paquete_id: paqueteParaAgregar.id,
             paquete_nombre: paqueteParaAgregar.nombre,
-          })
+            tipo_precio: tipoPrecioPaquete,
+          } as any)
           await new Promise(resolve => setTimeout(resolve, 50))
 
           // 2. Agregar sub-productos
@@ -511,7 +513,9 @@ export default function CardAgregarProductoVenta({
               const precio = Number((paqueteProducto as any)[precioKey] || 0)
               const descuento = Number((paqueteProducto as any)[descuentoKey] || 0)
               const cantidadBase = Number(paqueteProducto.cantidad)
-              setProductoAgregadoVenta({
+              
+              // Crear objeto con todos los precios y descuentos de todos los tipos
+              const productoData = {
                 _tipo_fila: 'paquete_producto',
                 producto_id: paqueteProducto.producto_id,
                 producto_name: paqueteProducto.producto.name,
@@ -530,7 +534,20 @@ export default function CardAgregarProductoVenta({
                 comision: 0,
                 paquete_id: paqueteParaAgregar.id,
                 paquete_nombre: paqueteParaAgregar.nombre,
-              })
+                tipo_precio: tipoPrecioPaquete,
+                // Guardar TODOS los precios y descuentos de todos los tipos
+                // Estos se usan cuando el usuario cambia el tipo de precio
+                paq_precio_publico: Number(paqueteProducto.precio_publico || 0),
+                paq_precio_especial: Number(paqueteProducto.precio_especial || 0),
+                paq_precio_minimo: Number(paqueteProducto.precio_minimo || 0),
+                paq_precio_ultimo: Number(paqueteProducto.precio_ultimo || 0),
+                paq_descuento_publico: Number((paqueteProducto as any).descuento_publico || 0),
+                paq_descuento_especial: Number((paqueteProducto as any).descuento_especial || 0),
+                paq_descuento_minimo: Number((paqueteProducto as any).descuento_minimo || 0),
+                paq_descuento_ultimo: Number((paqueteProducto as any).descuento_ultimo || 0),
+              } as any
+              
+              setProductoAgregadoVenta(productoData)
               productosAgregados++
               await new Promise(resolve => setTimeout(resolve, 50))
             }
