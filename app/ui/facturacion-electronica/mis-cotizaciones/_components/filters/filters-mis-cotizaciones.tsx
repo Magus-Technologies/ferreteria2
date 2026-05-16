@@ -17,6 +17,8 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import { useDebounce } from "use-debounce";
 import { useStoreFiltrosMisCotizaciones } from "../../_store/store-filtros-mis-cotizaciones";
 import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 const ESTADO_OPTIONS = [
   { value: '', label: 'Todos los estados' },
@@ -49,16 +51,28 @@ export default function FiltersMisCotizaciones() {
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
   const setFiltros = useStoreFiltrosMisCotizaciones((state) => state.setFiltros);
 
+  const queryClient = useQueryClient();
+
   const [proformaSearchText, setProformaSearchText] = useState("");
   const [debouncedProformaSearch] = useDebounce(proformaSearchText, 500);
 
+  // Set initial filtros with today's dates (runs once)
+  useEffect(() => {
+    setFiltros({
+      fecha_desde: dayjs().format("YYYY-MM-DD"),
+      fecha_hasta: dayjs().format("YYYY-MM-DD"),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-search when numero text changes (debounced, like mis-ventas)
   useEffect(() => {
     form.submit();
   }, [debouncedProformaSearch, form]);
 
+  // When almacen changes just update the form field; table auto-refetches via queryKey
   useEffect(() => {
     form.setFieldValue("almacen_id", almacen_id);
-    form.submit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [almacen_id]);
 
@@ -72,6 +86,7 @@ export default function FiltersMisCotizaciones() {
       estado_cotizacion: (values.estado_cotizacion as any) || undefined,
       reservar_stock: values.reservar_stock === 'si' ? true : values.reservar_stock === 'no' ? false : undefined,
     });
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.COTIZACIONES] });
   };
 
   return (
@@ -83,7 +98,6 @@ export default function FiltersMisCotizaciones() {
         hasta: dayjs().endOf("day"),
       }}
       className="w-full"
-      onValuesChange={() => form.submit()}
       onFinish={handleFinish}
     >
       <TituloModulos
@@ -166,7 +180,6 @@ export default function FiltersMisCotizaciones() {
             <Form.Item name="estado_cotizacion" className="!mb-0">
               <select
                 className="border border-gray-300 rounded px-2 py-1 text-sm bg-white w-[180px]"
-                onChange={() => form.submit()}
               >
                 {ESTADO_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -181,7 +194,6 @@ export default function FiltersMisCotizaciones() {
             <Form.Item name="reservar_stock" className="!mb-0">
               <select
                 className="border border-gray-300 rounded px-2 py-1 text-sm bg-white w-[160px]"
-                onChange={() => form.submit()}
               >
                 {RESERVAR_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>

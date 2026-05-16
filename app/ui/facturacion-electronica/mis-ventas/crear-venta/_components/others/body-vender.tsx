@@ -265,22 +265,19 @@ export default function BodyVender({
   // Limpiar formulario cuando se cierra el modal
   useEffect(() => {
     if (!openDoc && ventaId) {
-      // Limpiar el store de productos agregados
       setProductoAgregado(undefined)
       setProductos([])
       setValesAplicables([])
 
-      // Limpiar formulario
-      setFormKey(prev => prev + 1)
-
       // Si venimos de editar una venta o de convertir una cotización,
-      // redirigir a crear-venta limpia para que el form quede vacío
+      // redirigir sin incrementar formKey — la navegación ya muestra el form limpio.
+      // Incrementar formKey antes de navegar causa dos flashes visibles.
       if (venta?.id || cotizacion?.id) {
         router.push('/ui/facturacion-electronica/mis-ventas/crear-venta')
         return
       }
 
-      // Limpiar ventaId y datos después de un momento
+      setFormKey(prev => prev + 1)
       setTimeout(() => {
         setVentaId(undefined)
         setVentaCreada(undefined)
