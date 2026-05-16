@@ -219,39 +219,40 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   // Renombrar para mayor claridad
   const productos = responseData
 
-  function handleSearch() {
+  const handleSearch = async () => {
     setTextDefault(text)
     setProductoCreado(undefined)
 
     if (text) {
-      flush() // Sincronizar el texto debounced inmediatamente
       setManualSearch(true)
-      refetch()
+      try {
+        const response = await productosApiV2.getAllByAlmacen({
+          almacen_id: ignoreAlmacen ? undefined : almacen_id,
+          search: text,
+          estado: 1,
+          per_page: 30,
+        })
+        
+        const results = response.data?.data || []
+        
+        if (results.length === 1) {
+          handleOnlyOneResult?.(results[0])
+        } else {
+          setOpenModalProductoSearch(true)
+        }
+      } catch (error) {
+        console.error("Error en búsqueda manual:", error)
+        setOpenModalProductoSearch(true)
+      } finally {
+        setManualSearch(false)
+      }
     } else {
-      // Si no hay texto, abrir el modal directamente
       setOpenModalProductoSearch(true)
     }
   }
 
-  const primeraVez = useRef(true)
-  const prevIsFetchingRef = useRef(false)
-
-  useEffect(() => {
-    if (primeraVez.current) {
-      primeraVez.current = false
-      return
-    }
-    const fetchJustCompleted = prevIsFetchingRef.current === true && isFetching === false
-    prevIsFetchingRef.current = isFetching
-    if (manualSearch && fetchJustCompleted) {
-      setManualSearch(false)
-      if (productos && productos.length === 1) {
-        handleOnlyOneResult?.(productos[0])
-      } else {
-        setOpenModalProductoSearch(true)
-      }
-    }
-  }, [productos, isFetching, manualSearch])
+  // Eliminamos el useEffect que manejaba la apertura del modal basado en isFetching
+  // ya que ahora lo manejamos directamente en handleSearch para mayor robustez
 
   function handleSelect({ data }: { data?: Producto } = {}) {
     const producto = data || productoSeleccionadoSearchStore
