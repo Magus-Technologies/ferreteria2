@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ColDef } from 'ag-grid-community'
+import { ColDef, RowStyle } from 'ag-grid-community'
 import { Button, InputNumber } from 'antd'
 import { FaTrash, FaWeightHanging } from 'react-icons/fa'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -192,6 +192,12 @@ export default function TableProductosPaquete({
         background: params.data?.key === selectedKey ? orangeColors[10] : '',
         cursor: 'pointer',
       })}
+      getRowStyle={(params): RowStyle => {
+        if (params.data?.key === selectedKey) {
+          return { background: orangeColors[10], cursor: 'pointer' }
+        }
+        return { cursor: 'pointer' }
+      }}
       onRowClicked={(event) => {
         if (event.data) onProductoSelected?.(event.data.key)
       }}
