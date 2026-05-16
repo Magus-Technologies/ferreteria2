@@ -87,7 +87,11 @@ export default function FiltersMisPrestamos() {
         delete data[key]
       }
     })
-    
+
+    // Fuerza una nueva petición al backend en cada clic de Buscar,
+    // aunque los filtros no hayan cambiado
+    data.searchTrigger = Date.now()
+
     setFiltros(data)
     setDrawerOpen(false)
   }
