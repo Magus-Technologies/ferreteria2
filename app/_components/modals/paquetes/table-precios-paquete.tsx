@@ -65,6 +65,7 @@ export default function TablePreciosPaquete({
     return [
       {
         headerName: label,
+        colId: `precio_${tipo}`,
         width: 110,
         cellRenderer: (params: any) => {
           if (!params.data) return null
@@ -88,6 +89,7 @@ export default function TablePreciosPaquete({
       },
       {
         headerName: `Desc. ${label}`,
+        colId: `descuento_${tipo}`,
         width: 100,
         cellRenderer: (params: any) => {
           if (!params.data) return null
