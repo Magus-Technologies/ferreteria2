@@ -1012,6 +1012,7 @@ export default function CrearOrdenCompraPage() {
                     }}
                     className='w-full'
                     classNameIcon='text-cyan-600 mx-1'
+                    classIconSearch='!mb-7'
                     placeholder='RUC'
                     onChange={(_, proveedor) => {
                       if (proveedor) {

@@ -92,6 +92,7 @@ export default function FormCrearCompra({
               }}
               className='w-full'
               classNameIcon='text-cyan-600 mx-1'
+              classIconSearch='!mb-7'
               placeholder='RUC'
               proveedorOptionsDefault={
                 proveedorOptionsDefault?.length ? proveedorOptionsDefault : compra?.proveedor ? [compra.proveedor] : []

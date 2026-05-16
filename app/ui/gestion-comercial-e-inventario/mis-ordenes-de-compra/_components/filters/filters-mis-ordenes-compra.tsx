@@ -45,8 +45,8 @@ export default function FiltersMisOrdenesCompra() {
             almacen_id,
             desde: dayjs().startOf('day'),
             hasta: dayjs().endOf('day'),
-            tipo_documento: '01',
-            forma_de_pago: 'co',
+            tipo_documento: 'todos',
+            forma_de_pago: 'todos',
         }
         form.setFieldsValue(initialValues)
         
@@ -54,8 +54,6 @@ export default function FiltersMisOrdenesCompra() {
             almacen_id,
             desde: dayjs().startOf('day').format('YYYY-MM-DD'),
             hasta: dayjs().endOf('day').format('YYYY-MM-DD'),
-            tipo_documento: '01',
-            forma_de_pago: 'co',
         }
         setFiltros(data)
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,8 +81,8 @@ export default function FiltersMisOrdenesCompra() {
                 if (hasta) cleanedFilters.hasta = hasta.format('YYYY-MM-DD')
                 if (rest.estado) cleanedFilters.estado = rest.estado
                 if (rest.proveedor_id) cleanedFilters.proveedor_id = rest.proveedor_id
-                if (rest.tipo_documento) cleanedFilters.tipo_documento = rest.tipo_documento
-                if (rest.forma_de_pago) cleanedFilters.forma_de_pago = rest.forma_de_pago
+                if (rest.tipo_documento && rest.tipo_documento !== 'todos') cleanedFilters.tipo_documento = rest.tipo_documento
+                if (rest.forma_de_pago && rest.forma_de_pago !== 'todos') cleanedFilters.forma_de_pago = rest.forma_de_pago
                 
                 // Keep almacen_id as it is crucial
                 cleanedFilters.almacen_id = almacen_id
@@ -100,12 +98,9 @@ export default function FiltersMisOrdenesCompra() {
                 if (values.desde) count++
                 if (values.hasta) count++
                 if (values.estado) count++
-                if (values.tipo_documento) count++
-                if (values.forma_de_pago) count++
+                if (values.tipo_documento && values.tipo_documento !== 'todos') count++
+                if (values.forma_de_pago && values.forma_de_pago !== 'todos') count++
                 setActiveFiltersCount(count)
-                
-                // Submit form to update table automatically
-                form.submit()
             }}
         >
             {/* Fila 1: Título */}
@@ -125,7 +120,7 @@ export default function FiltersMisOrdenesCompra() {
                             propsForm={{ name: 'desde' }}
                             placeholder='Desde'
                             formWithMessage={false}
-                            className='!w-[110px]'
+                            className='!w-[140px]'
                             prefix={<FaCalendar size={12} className='text-cyan-600 mx-1' />}
                             allowClear
                         />
@@ -137,7 +132,7 @@ export default function FiltersMisOrdenesCompra() {
                             propsForm={{ name: 'hasta' }}
                             placeholder='Hasta'
                             formWithMessage={false}
-                            className='!w-[110px]'
+                            className='!w-[140px]'
                             prefix={<FaCalendar size={12} className='text-cyan-600 mx-1' />}
                             allowClear
                         />
@@ -162,15 +157,15 @@ export default function FiltersMisOrdenesCompra() {
                     </div>
 
                     <ConfigurableElement componentId='mis-ordenes-compra.filtro-proveedor' label='Filtro Proveedor'>
-                        <div className='w-[200px] shrink-0'>
+                        <div className='w-[320px] shrink-0 pr-4'>
                             <SelectProveedores
                                 propsForm={{
                                     name: 'proveedor_id',
                                     hasFeedback: false,
                                     className: '!mb-0 w-full',
                                 }}
-                                className='w-full'
-                                classIconSearch=''
+                                className='flex-1'
+                                classIconSearch='!mb-0 shrink-0'
                                 formWithMessage={false}
                                 allowClear
                                 form={form}
@@ -184,11 +179,12 @@ export default function FiltersMisOrdenesCompra() {
                         <SelectTipoDocumento
                             propsForm={{
                                 name: 'tipo_documento',
-                                className: '!mb-0 !min-w-[100px] !w-[100px]',
+                                className: '!mb-0 !min-w-[130px] !w-[130px]',
                             }}
                             formWithMessage={false}
                             allowClear
                             placeholder="Tipo"
+                            withTodos
                         />
                     </div>
 
@@ -197,11 +193,12 @@ export default function FiltersMisOrdenesCompra() {
                         <SelectFormaDePago
                             propsForm={{
                                 name: 'forma_de_pago',
-                                className: '!mb-0 !min-w-[100px] !w-[100px]',
+                                className: '!mb-0 !min-w-[130px] !w-[130px]',
                             }}
                             formWithMessage={false}
                             allowClear
                             placeholder="Forma"
+                            withTodos
                         />
                     </div>
 
@@ -253,7 +250,7 @@ export default function FiltersMisOrdenesCompra() {
                         <SelectProveedores
                             propsForm={{ name: 'proveedor_id' }}
                             className='w-full'
-                            classIconSearch='hidden'
+                            classIconSearch='!mb-7'
                             allowClear
                             form={form}
                         />
@@ -282,6 +279,7 @@ export default function FiltersMisOrdenesCompra() {
                             propsForm={{ name: 'tipo_documento' }}
                             className='w-full'
                             allowClear
+                            withTodos
                         />
                     </LabelBase>
                     <LabelBase label='Forma de Pago:'>
@@ -289,6 +287,7 @@ export default function FiltersMisOrdenesCompra() {
                             propsForm={{ name: 'forma_de_pago' }}
                             className='w-full'
                             allowClear
+                            withTodos
                         />
                     </LabelBase>
                     <div className='flex gap-2 mt-4'>
