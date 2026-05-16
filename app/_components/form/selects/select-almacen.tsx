@@ -12,6 +12,8 @@ interface SelectAlmacenProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
   afecta_store?: boolean
+  /** IDs de almacenes que no deben aparecer como opción */
+  excludeIds?: (number | undefined)[]
 }
 
 export default function SelectAlmacen({
@@ -22,6 +24,7 @@ export default function SelectAlmacen({
   className = 'min-w-[300px]',
   size = 'large',
   afecta_store = true,
+  excludeIds = [],
   onChange,
   ...props
 }: SelectAlmacenProps) {
@@ -53,10 +56,12 @@ export default function SelectAlmacen({
       placeholder={placeholder}
       className={className}
       size={size}
-      options={data?.map(item => ({
-        value: item.id,
-        label: item.name,
-      }))}
+      options={data
+        ?.filter(item => !excludeIds.includes(item.id))
+        .map(item => ({
+          value: item.id,
+          label: item.name,
+        }))}
       onChange={value => {
         if (afecta_store) setAlmacenId(value)
         onChange?.(value)
