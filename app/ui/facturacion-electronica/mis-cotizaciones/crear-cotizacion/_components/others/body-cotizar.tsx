@@ -78,6 +78,7 @@ export default function BodyCotizar() {
               subtotal: Number(ud.cantidad) * Number(ud.precio),
               descuento_tipo: (ud.descuento_tipo === '%' ? 'Porcentaje' : 'Monto') as DescuentoTipo,
               descuento: Number(ud.descuento),
+              stock_fraccion: Number((pac.producto_almacen as any).stock_fraccion || 0),
             };
           })
         ) || [];
@@ -103,6 +104,7 @@ export default function BodyCotizar() {
               subtotal: Number(primeraUd?.cantidad ?? 0) * Number(primeraUd?.precio ?? 0),
               descuento_tipo: (primeraUd?.descuento_tipo === '%' ? 'Porcentaje' : 'Monto') as DescuentoTipo,
               descuento: Number(primeraUd?.descuento ?? 0),
+              stock_fraccion: Number((pac.producto_almacen as any).stock_fraccion || 0),
               unidades_derivadas_disponibles: pac.producto_almacen.unidades_derivadas,
             };
           }) || [];

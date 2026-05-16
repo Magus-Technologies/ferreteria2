@@ -249,22 +249,40 @@ export function useColumnsCotizar({
       colId: 'cantidad',
       headerName: 'Cant.',
       field: 'name',
-      width: 85,
-      cellRenderer: ({ value }: ICellRendererParams) => (
-        <div className='flex items-center h-full'>
-          <InputNumberBase
-            size='small'
-            propsForm={{
-              name: [value, 'cantidad'],
-              rules: [{ required: true, message: '' }],
-            }}
-            precision={2}
-            min={0}
-            formWithMessage={false}
-            onChange={() => calcularSubtotalForm({ form, value })}
-          />
-        </div>
-      ),
+      width: 120,
+      wrapText: true,
+      autoHeight: true,
+      cellRenderer: ({ value }: ICellRendererParams) => {
+        const cantidad = form.getFieldValue(['productos', value, 'cantidad']);
+        const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor']);
+        const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion']);
+
+        const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1);
+        const stockDisponible = Number(stock_fraccion || 0);
+        const stockEnUnidad = stockDisponible / Number(unidad_derivada_factor || 1);
+        const stockInsuficiente = cantidadEnFraccion > stockDisponible;
+
+        return (
+          <div className='flex flex-col justify-center w-full py-2'>
+            <InputNumberBase
+              size='small'
+              propsForm={{
+                name: [value, 'cantidad'],
+                rules: [{ required: true, message: '' }],
+              }}
+              precision={2}
+              min={0}
+              formWithMessage={false}
+              onChange={() => calcularSubtotalForm({ form, value })}
+            />
+            {stockInsuficiente && cantidad && (
+              <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight'>
+                ⚠️ Stock: {stockEnUnidad.toFixed(2)}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       colId: 'precio',

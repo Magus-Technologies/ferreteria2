@@ -29,6 +29,7 @@ export interface ProductoCotizacion {
   descuento?: number;
   tipo_precio?: TipoPrecio;
   comision?: number;
+  stock_fraccion?: number;
 }
 
 export interface FormCreateCotizacion extends ClienteDireccionFormFields {
