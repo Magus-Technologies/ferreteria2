@@ -1,6 +1,6 @@
 "use client";
 
-import { Form } from "antd";
+import { Form, Select } from "antd";
 import { FaSearch, FaPlus } from "react-icons/fa";
 import { MdPointOfSale } from "react-icons/md";
 import { useRouter } from "next/navigation";
@@ -21,16 +21,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 
 const ESTADO_OPTIONS = [
-  { value: '', label: 'Todos los estados' },
   { value: 'pe', label: 'Pendiente' },
-  { value: 'co', label: 'Confirmado/Convertido' },
-  { value: 've', label: 'Vendido' },
-  { value: 'ca', label: 'Cancelado' },
-  { value: 'el', label: 'Eliminado' },
+  { value: 'co', label: 'Convertida a Venta' },
+  { value: 've', label: 'Vendida' },
+  { value: 'el', label: 'Eliminada' },
 ];
 
 const RESERVAR_OPTIONS = [
-  { value: '', label: 'Con y sin reserva' },
   { value: 'si', label: 'Con stock reservado' },
   { value: 'no', label: 'Sin stock reservado' },
 ];
@@ -177,28 +174,26 @@ export default function FiltersMisCotizaciones() {
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Estado:
             </label>
-            <Form.Item name="estado_cotizacion" className="!mb-0">
-              <select
-                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white w-[180px]"
-              >
-                {ESTADO_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+            <Form.Item name="estado_cotizacion" noStyle>
+              <Select
+                allowClear
+                placeholder="Todos"
+                className="!w-[190px]"
+                options={ESTADO_OPTIONS}
+              />
             </Form.Item>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Reserva:
             </label>
-            <Form.Item name="reservar_stock" className="!mb-0">
-              <select
-                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white w-[160px]"
-              >
-                {RESERVAR_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+            <Form.Item name="reservar_stock" noStyle>
+              <Select
+                allowClear
+                placeholder="Con y sin reserva"
+                className="!w-[175px]"
+                options={RESERVAR_OPTIONS}
+              />
             </Form.Item>
           </div>
           <ConfigurableElement componentId="mis-cotizaciones.boton-buscar" label="Botón Buscar">
