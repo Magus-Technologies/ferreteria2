@@ -121,7 +121,7 @@ export default function FiltersMisPrestamos() {
           />
 
           {/* Mobile/Tablet: Botón para abrir drawer */}
-          <div className='flex lg:hidden items-center gap-2'>
+          <div className='flex md:hidden items-center gap-2'>
             <ButtonBase
               color='info'
               size='md'
@@ -147,7 +147,7 @@ export default function FiltersMisPrestamos() {
       </TituloModulos>
 
       {/* Filtros Desktop - Ocupan todo el espacio */}
-      <div className='hidden lg:block mt-4'>
+      <div className='hidden md:block mt-4'>
         <div className='grid grid-cols-12 gap-x-3 gap-y-2.5'>
           {/* Fila 1 */}
           <div className='col-span-4 grid grid-cols-2 gap-3'>

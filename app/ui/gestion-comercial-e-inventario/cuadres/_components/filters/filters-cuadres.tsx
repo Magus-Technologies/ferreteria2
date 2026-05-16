@@ -110,6 +110,8 @@ export default function FiltersCuadres() {
                                 { label: 'AJUSTE', value: 'AJUSTE' },
                                 { label: 'CUADRE INVENTARIO', value: 'CUADRE INVENTARIO' },
                                 { label: 'MERMA', value: 'MERMA' },
+                                { label: 'PRESTAMO', value: 'PRESTAMO' },
+                                { label: 'LO PRESTADO', value: 'LO PRESTADO' },
                             ]}
                             formWithMessage={false}
                         />
