@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { AgGridReact } from 'ag-grid-react'
-import { orangeColors, greenColors } from '~/lib/colors'
+import { orangeColors, greenColors, redColors } from '~/lib/colors'
 import { RowStyle } from 'ag-grid-community'
 import { useStoreFiltrosMisCotizaciones } from '../../_store/store-filtros-mis-cotizaciones'
 
@@ -27,6 +27,9 @@ export const useStoreCotizacionSeleccionada =
 // Función para calcular el color de una cotización
 function calcularColorCotizacion(cotizacion: Cotizacion): string {
   const estadoCotizacion = cotizacion.estado_cotizacion;
+
+  // Rojo claro: Eliminada
+  if (estadoCotizacion === 'el') return redColors[1];
 
   // Verde: Confirmado o Vendido
   if (estadoCotizacion === 'co' || estadoCotizacion === 've') {

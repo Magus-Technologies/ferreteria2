@@ -1,14 +1,13 @@
 import { create } from "zustand";
 
-// TODO: Reemplazar con Prisma.CotizacionWhereInput cuando se cree el modelo
-type CotizacionWhereInput = {
+export type CotizacionWhereInput = {
   almacen_id?: number;
   cliente_id?: number;
-  fecha?: {
-    gte?: Date;
-    lte?: Date;
-  };
+  fecha_desde?: string;
+  fecha_hasta?: string;
   numero?: string;
+  estado_cotizacion?: 'pe' | 'co' | 've' | 'ca' | 'el';
+  reservar_stock?: boolean;
   [key: string]: unknown;
 };
 

@@ -51,6 +51,17 @@ export function useColumnsMisVentas() {
       },
     },
     {
+      headerName: "N°Cot",
+      colId: "cotizacion_numero",
+      width: 130,
+      valueGetter: (params) => {
+        const desc = (params.data as any)?.descripcion || '';
+        const match = desc.match(/cotizaci[oó]n\s+(.+)$/i);
+        return match ? match[1] : '';
+      },
+      cellStyle: { color: '#0369a1', fontWeight: '500' },
+    },
+    {
       headerName: "Cliente",
       colId: "cliente_nombre",
       field: "cliente.razon_social",
