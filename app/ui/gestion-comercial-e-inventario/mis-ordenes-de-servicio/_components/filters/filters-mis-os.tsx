@@ -9,9 +9,8 @@ import FormBase from '~/components/form/form-base'
 import LabelBase from '~/components/form/label-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { useStoreFiltrosMisOS } from '../../_store/store-filtros-mis-os'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { RequerimientoFilters } from '~/lib/api/requerimiento-interno'
-import { useDebounce } from 'use-debounce'
 import dayjs, { type Dayjs } from 'dayjs'
 
 interface ValuesFiltersMisOS {
@@ -23,6 +22,7 @@ interface ValuesFiltersMisOS {
 }
 
 const ESTADO_OPTIONS = [
+  { label: 'Todos', value: '' },
   { label: 'Pendiente', value: 'pendiente' },
   { label: 'Aprobado', value: 'aprobado' },
   { label: 'Rechazado', value: 'rechazado' },
@@ -30,6 +30,7 @@ const ESTADO_OPTIONS = [
 ]
 
 const PRIORIDAD_OPTIONS = [
+  { label: 'Todas', value: '' },
   { label: 'Baja', value: 'BAJA' },
   { label: 'Media', value: 'MEDIA' },
   { label: 'Alta', value: 'ALTA' },
@@ -43,26 +44,18 @@ export default function FiltersMisOS({
 }) {
   const [form] = Form.useForm<ValuesFiltersMisOS>()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState('')
-  const [debouncedSearchValue] = useDebounce(searchValue, 500)
-  
-  const setFiltros = useStoreFiltrosMisOS(state => state.setFiltros)
 
-  // Trigger search when debounced value changes
-  useEffect(() => {
-    if (form) {
-      form.submit()
-    }
-  }, [debouncedSearchValue, form])
+  const setFiltros = useStoreFiltrosMisOS(state => state.setFiltros)
 
   const handleFinish = (values: ValuesFiltersMisOS) => {
     const filtros: RequerimientoFilters = {
       tipo_solicitud: 'OS',
-      estado: values.estado,
-      prioridad: values.prioridad,
+      estado: values.estado || undefined,
+      prioridad: values.prioridad || undefined,
       search: values.search,
       desde: values.desde ? values.desde.format('YYYY-MM-DD') : undefined,
       hasta: values.hasta ? values.hasta.format('YYYY-MM-DD') : undefined,
+      searchTrigger: Date.now(),
     }
     setFiltros(filtros)
     setDrawerOpen(false)
@@ -75,11 +68,10 @@ export default function FiltersMisOS({
       initialValues={{
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
+        estado: 'pendiente',
+        prioridad: '',
       }}
       className="w-full"
-      onValuesChange={() => {
-        form.submit()
-      }}
       onFinish={handleFinish}
     >
       <TituloModulos
@@ -115,7 +107,7 @@ export default function FiltersMisOS({
                 prefix={<FaSearch className="text-slate-400" />}
                 className="!w-[250px]"
                 allowClear
-                onChange={(e) => setSearchValue(e.target.value)}
+                onPressEnter={() => form.submit()}
               />
             </Form.Item>
           </div>
@@ -143,6 +135,12 @@ export default function FiltersMisOS({
               />
             </Form.Item>
           </div>
+
+          {/* Botón buscador desktop */}
+          <ButtonBase color="info" size="md" type="button" onClick={() => form.submit()} className="flex items-center gap-2 shrink-0">
+            <FaSearch />
+            Buscar
+          </ButtonBase>
         </div>
 
         {/* Desktop: button nueva */}
@@ -163,7 +161,7 @@ export default function FiltersMisOS({
               </ButtonBase>
             </Badge>
           </div>
-          <ButtonBase color="info" size="md" type="submit">
+          <ButtonBase color="info" size="md" type="button" onClick={() => form.submit()}>
             <FaSearch />
           </ButtonBase>
           <ButtonBase color="success" size="md" type="button" onClick={onNueva}>
@@ -200,7 +198,6 @@ export default function FiltersMisOS({
                 prefix={<FaSearch className="text-slate-400" />}
                 className="w-full"
                 allowClear
-                onChange={(e) => setSearchValue(e.target.value)}
               />
             </Form.Item>
           </LabelBase>
