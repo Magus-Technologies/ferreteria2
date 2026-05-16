@@ -312,7 +312,31 @@ export default function CrearOrdenCompraPage() {
           : response.data?.message || 'Orden de compra creada exitosamente'
       
       message.success(successMessage)
-      router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra')
+      
+      if (isEditMode) {
+        router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra')
+      } else {
+        // Limpiar todo para permitir una nueva creación
+        setProductos([])
+        setReqSeleccionado(null)
+        setProductosPendientesCrear([])
+        setCurrentProductoIndex(0)
+        setProductoManualActual(null)
+        
+        form.resetFields()
+        form.setFieldsValue({
+          fecha: dayjs(),
+          tipo_moneda: 's',
+          tipo_de_cambio: 1,
+          tipo_documento: '01',
+          forma_de_pago: 'co',
+          almacen_id: 1,
+        })
+
+        if (isDuplicateMode) {
+          router.replace('/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra/crear-orden-compra')
+        }
+      }
     } catch (error: unknown) {
       const errorMessage = isEditMode
         ? (error as { message?: string })?.message || 'Error al actualizar la orden de compra'
