@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Form, message } from 'antd'
 import { useCreatePaquete, useUpdatePaquete, usePaquete } from '~/hooks/use-paquetes'
-import type { ProductoPaquete, TipoPrecioPaquete } from './table-productos-paquete'
+import type { ProductoPaquete, TipoPrecioPaquete } from './paquete-types'
 
 export function usePaqueteForm(
   paqueteId: number | undefined,

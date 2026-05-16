@@ -5,18 +5,17 @@ import { ColDef } from 'ag-grid-community'
 import { InputNumber } from 'antd'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
-import type { ProductoPaquete, TipoPrecioPaquete } from './table-productos-paquete'
-import { getPrecioPaquete, getDescuentoPaquete } from './table-productos-paquete'
+import type { ProductoPaquete, TipoPrecioPaquete } from './paquete-types'
+import { getPrecioPaquete, getDescuentoPaquete } from './paquete-types'
 
-/** Input con estado local que solo notifica al padre en blur/enter */
+// ============= CELDA PRECIO EDITABLE =============
+
 function CellInputPrecio({
   value,
-  min,
   max,
   onChange,
 }: {
   value: number
-  min?: number
   max?: number
   onChange: (val: number | undefined) => void
 }) {
@@ -27,9 +26,7 @@ function CellInputPrecio({
   }, [value])
 
   const commit = () => {
-    if (localValue !== value) {
-      onChange(localValue)
-    }
+    if (localValue !== value) onChange(localValue)
   }
 
   return (
@@ -39,7 +36,7 @@ function CellInputPrecio({
         className="w-full"
         prefix="S/."
         value={localValue}
-        min={min ?? 0}
+        min={0}
         max={max}
         precision={2}
         controls={false}
@@ -51,16 +48,19 @@ function CellInputPrecio({
   )
 }
 
+// ============= PROPS =============
+
 interface TablePreciosPaqueteProps {
   productos: ProductoPaquete[]
   onDescuentoChange: (key: string, tipo: TipoPrecioPaquete, descuento: number | undefined) => void
 }
 
+// ============= COMPONENTE =============
+
 export default function TablePreciosPaquete({
   productos,
   onDescuentoChange,
 }: TablePreciosPaqueteProps) {
-  /** Genera par de columnas: Precio + Descuento para un tipo */
   function colsPrecio(tipo: TipoPrecioPaquete, label: string): ColDef<ProductoPaquete>[] {
     return [
       {
@@ -70,14 +70,13 @@ export default function TablePreciosPaquete({
           if (!params.data) return null
           const precio = getPrecioPaquete(params.data, tipo)
           const descuento = getDescuentoPaquete(params.data, tipo)
-          const precioFinal = Math.max(0, precio - descuento)
           return (
             <div className="flex items-center h-full">
               <InputNumber
                 size="small"
                 className="w-full"
                 prefix="S/."
-                value={precioFinal}
+                value={Math.max(0, precio - descuento)}
                 precision={2}
                 controls={false}
                 readOnly
@@ -99,7 +98,6 @@ export default function TablePreciosPaquete({
               value={descuento}
               max={precio}
               onChange={(val) => {
-                // Validar que el descuento no sea mayor que el precio
                 const descuentoFinal = val !== undefined && val > precio ? precio : val
                 onDescuentoChange(params.data.key, tipo, descuentoFinal)
               }}
@@ -117,14 +115,13 @@ export default function TablePreciosPaquete({
       width: 110,
       cellRenderer: (params: any) => {
         if (!params.data) return null
-        const costo = Number(params.data.costo ?? 0)
         return (
           <div className="flex items-center h-full">
             <InputNumber
               size="small"
               className="w-full"
               prefix="S/."
-              value={costo}
+              value={Number(params.data.costo ?? 0)}
               precision={2}
               controls={false}
               readOnly

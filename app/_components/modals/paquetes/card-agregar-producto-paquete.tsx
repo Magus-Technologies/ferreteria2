@@ -9,7 +9,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import { App } from 'antd'
-import type { ProductoPaquete } from './table-productos-paquete'
+import type { ProductoPaquete } from './paquete-types'
 
 export default function CardAgregarProductoPaquete({
   setOpen,
