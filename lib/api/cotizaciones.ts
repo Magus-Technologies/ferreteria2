@@ -241,4 +241,23 @@ export const cotizacionesApi = {
       method: 'POST',
     });
   },
+
+  /**
+   * Vincular una cotización a una venta ya creada (flujo manual desde el formulario)
+   */
+  async vincularVenta(id: string, ventaId: string): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest<{ message: string }>(`/cotizaciones/${id}/vincular-venta`, {
+      method: 'POST',
+      body: JSON.stringify({ venta_id: ventaId }),
+    });
+  },
+
+  /**
+   * Duplicar una cotización
+   */
+  async duplicar(id: string): Promise<ApiResponse<{ data: { id: string; numero: string }; message: string }>> {
+    return apiRequest<{ data: { id: string; numero: string }; message: string }>(`/cotizaciones/${id}/duplicar`, {
+      method: 'POST',
+    });
+  },
 };

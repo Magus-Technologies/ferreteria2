@@ -74,8 +74,9 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
     {
       colId: "direccion",
       headerName: "Dirección",
-      valueGetter: (params) => params.data?.cliente?.direccion || "",
-      width: 150,
+      valueGetter: (params) => params.data?.direccion || params.data?.cliente?.direccion || "",
+      flex: 1,
+      minWidth: 150,
     },
     {
       colId: "telefono",
@@ -135,7 +136,7 @@ export function useColumnsMisCotizaciones(): ColDef<Cotizacion>[] {
     {
       colId: "acciones",
       headerName: "Acciones",
-      width: 150,
+      width: 200,
       pinned: "right",
       cellRenderer: CellAccionesCotizacion,
       cellRendererParams: (params: { data?: Cotizacion }) => ({

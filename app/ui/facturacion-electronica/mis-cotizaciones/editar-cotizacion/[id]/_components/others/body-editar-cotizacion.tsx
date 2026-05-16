@@ -35,6 +35,13 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
   );
   const router = useRouter();
 
+  // Redirigir cuando el usuario cierra el modal del PDF
+  useEffect(() => {
+    if (cotizacionData && !openDoc) {
+      router.push('/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion');
+    }
+  }, [openDoc, cotizacionData, router]);
+
   // Cargar datos de la cotización existente
   useEffect(() => {
     const loadCotizacion = async () => {
@@ -229,16 +236,13 @@ export default function BodyEditarCotizacion({ cotizacionId }: BodyEditarCotizac
         response.data?.message || "Cotización actualizada exitosamente"
       );
 
-      // Abrir modal con el documento PDF
+      // Abrir modal con el documento PDF; la redirección ocurre al cerrar el modal
       if (response.data?.data) {
         setCotizacionData(response.data.data);
         setOpenDoc(true);
-      }
-
-      // Redirigir a crear-cotización después de cerrar el modal
-      setTimeout(() => {
+      } else {
         router.push('/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion');
-      }, 1000);
+      }
 
     } catch (error) {
       console.error("Error al actualizar cotización:", error);

@@ -69,7 +69,8 @@ export default function useInitVenta({
         tipo_pedido: entrega?.tipo_pedido ? tipoPedidoMap[entrega.tipo_pedido] : undefined,
         cargo_destino: entrega?.cargo_destino || undefined,
         vehiculo_id: entrega?.vehiculo_id ? Number(entrega.vehiculo_id) : undefined,
-        descontar_stock: (venta as any).stock_aplicado === true ? 'si' : 'no' as const,
+        // Si es venta editada usa stock_aplicado; si viene de cotización (sin ese campo) default 'si'
+        descontar_stock: (venta as any).stock_aplicado === false ? 'no' : 'si',
         productos: [
           // Productos normales
           ...venta.productos_por_almacen.flatMap((ppa) =>

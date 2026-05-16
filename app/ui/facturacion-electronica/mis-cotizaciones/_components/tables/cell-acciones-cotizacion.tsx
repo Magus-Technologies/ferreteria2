@@ -1,10 +1,15 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileInvoice, FaPencil } from "react-icons/fa6";
+import { FaFilePdf, FaFileInvoice, FaPencil, FaCopy } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { message } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfCotizacion } from "../../_store/store-modal-pdf-cotizacion";
+import { cotizacionesApi } from "~/lib/api/cotizaciones";
+import { QueryKeys } from "~/app/_lib/queryKeys";
 
 export default function CellAccionesCotizacion(
   props: ICellRendererParams & { cotizacionId?: string }
@@ -13,15 +18,16 @@ export default function CellAccionesCotizacion(
   const estadoCotizacion = props.data?.estado_cotizacion;
   const openModal = useStoreModalPdfCotizacion((state) => state.openModal);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [duplicando, setDuplicando] = useState(false);
 
   if (!cotizacionId) return null;
 
-  const handleVerPDF = () => {
-    openModal(cotizacionId);
-  };
+  const bloqueada = estadoCotizacion === 'co' || estadoCotizacion === 've' || estadoCotizacion === 'ca';
+
+  const handleVerPDF = () => openModal(cotizacionId);
 
   const handleConvertirAVenta = () => {
-    // Redirigir a crear venta con el ID de la cotización
     router.push(`/ui/facturacion-electronica/mis-ventas/crear-venta?cotizacion=${cotizacionId}`);
   };
 
@@ -29,23 +35,30 @@ export default function CellAccionesCotizacion(
     router.push(`/ui/facturacion-electronica/mis-cotizaciones/editar-cotizacion/${cotizacionId}`);
   };
 
+  const handleDuplicar = async () => {
+    setDuplicando(true);
+    try {
+      const res = await cotizacionesApi.duplicar(cotizacionId);
+      if (res.error) {
+        message.error(res.error.message || "Error al duplicar");
+        return;
+      }
+      message.success(res.data?.message || "Cotización duplicada");
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COTIZACIONES] });
+    } finally {
+      setDuplicando(false);
+    }
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "8px",
-        justifyContent: "center",
-        height: "100%",
-        alignItems: "center",
-      }}
-    >
+    <div style={{ display: "flex", gap: "8px", justifyContent: "center", height: "100%", alignItems: "center" }}>
       <ButtonBase
         color="info"
         size="md"
         onClick={handleEditar}
         className="flex items-center !px-3"
         title="Editar Cotización"
-        disabled={estadoCotizacion === 'co' || estadoCotizacion === 've' || estadoCotizacion === 'ca'}
+        disabled={bloqueada}
       >
         <FaPencil />
       </ButtonBase>
@@ -56,11 +69,22 @@ export default function CellAccionesCotizacion(
         onClick={handleConvertirAVenta}
         className="flex items-center !px-3"
         title="Convertir a Venta"
-        disabled={estadoCotizacion === 'co' || estadoCotizacion === 've' || estadoCotizacion === 'ca'}
+        disabled={bloqueada}
       >
         <FaFileInvoice />
       </ButtonBase>
-      
+
+      <ButtonBase
+        color="warning"
+        size="md"
+        onClick={handleDuplicar}
+        className="flex items-center !px-3"
+        title="Duplicar Cotización"
+        loading={duplicando}
+      >
+        <FaCopy />
+      </ButtonBase>
+
       <ButtonBase
         color="danger"
         size="md"

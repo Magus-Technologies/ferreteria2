@@ -27,6 +27,7 @@ import AlertaPreciosActualizados from '../alerts/alerta-precios-actualizados'
 
 const ModalDocVenta = dynamic(() => import('../../../_components/modals/modal-doc-venta'), { ssr: false })
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import { cotizacionesApi } from '~/lib/api/cotizaciones'
 import { useCheckAperturaDiaria } from '../../_hooks/use-check-apertura-diaria'
 import AperturaGuard from '~/app/ui/_components/apertura-auto-check'
 
@@ -239,6 +240,10 @@ export default function BodyVender({
       setVentaId(String(data.id))
       setVentaCreada(data)
       setOpenDoc(true)
+      // Vincular la cotización a la venta recién creada para bloquear el botón
+      if (cotizacion?.id) {
+        cotizacionesApi.vincularVenta(cotizacion.id, String(data.id)).catch(() => {})
+      }
     })
 
     // Cleanup al desmontar
@@ -268,9 +273,9 @@ export default function BodyVender({
       // Limpiar formulario
       setFormKey(prev => prev + 1)
 
-      // Si venimos de editar una venta (ej: recuperada de "en espera"),
-      // redirigir a crear-venta para que la página quede limpia
-      if (venta?.id) {
+      // Si venimos de editar una venta o de convertir una cotización,
+      // redirigir a crear-venta limpia para que el form quede vacío
+      if (venta?.id || cotizacion?.id) {
         router.push('/ui/facturacion-electronica/mis-ventas/crear-venta')
         return
       }
