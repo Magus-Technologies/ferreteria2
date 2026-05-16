@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ColDef } from 'ag-grid-community'
+import { ColDef, RowStyle } from 'ag-grid-community'
 import { Button, InputNumber } from 'antd'
 import { FaTrash, FaWeightHanging } from 'react-icons/fa'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -232,7 +232,7 @@ export default function TableProductosPaquete({
       pagination={false}
       domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">No hay productos agregados</span>'
-      getRowStyle={(params) => {
+      getRowStyle={(params): RowStyle => {
         if (params.data?.key === selectedKey) {
           return { background: orangeColors[10], cursor: 'pointer' }
         }
