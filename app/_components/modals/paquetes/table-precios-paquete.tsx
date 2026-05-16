@@ -146,7 +146,6 @@ export default function TablePreciosPaquete({
       rowData={productos}
       getRowId={(params) => params.data.key}
       pagination={false}
-      domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">Agrega productos arriba para ver sus precios</span>'
       optionsSelectColumns={[
         {

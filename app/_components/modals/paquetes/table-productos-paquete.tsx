@@ -187,7 +187,6 @@ export default function TableProductosPaquete({
       rowData={productos}
       getRowId={(params) => params.data.key}
       pagination={false}
-      domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">No hay productos agregados</span>'
       getRowStyle={(params) => ({
         background: params.data?.key === selectedKey ? orangeColors[10] : '',

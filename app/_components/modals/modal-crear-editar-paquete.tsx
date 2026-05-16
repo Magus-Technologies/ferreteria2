@@ -142,23 +142,27 @@ export default function ModalCrearEditarPaquete({
             </div>
 
             {/* Tabla 1: Productos del Paquete — clic en una fila la muestra en Precios */}
-            <TableProductosPaquete
-              productos={productos}
-              selectedKey={selectedProductoKey}
-              onProductoSelected={setSelectedProductoKey}
-              onEliminar={eliminarProducto}
-              onUnidadDerivadaChange={actualizarUnidadDerivada}
-              onCantidadChange={actualizarCantidad}
-              onPrecioChange={actualizarPrecio}
-              onTipoPrecioChange={actualizarTipoPrecio}
-            />
+            <div className="h-[260px]">
+              <TableProductosPaquete
+                productos={productos}
+                selectedKey={selectedProductoKey}
+                onProductoSelected={setSelectedProductoKey}
+                onEliminar={eliminarProducto}
+                onUnidadDerivadaChange={actualizarUnidadDerivada}
+                onCantidadChange={actualizarCantidad}
+                onPrecioChange={actualizarPrecio}
+                onTipoPrecioChange={actualizarTipoPrecio}
+              />
+            </div>
 
             {/* Tabla 2: Precios — muestra solo el producto seleccionado arriba */}
             {selectedProductoKey && (
-              <TablePreciosPaquete
-                productos={productos.filter((p) => p.key === selectedProductoKey)}
-                onDescuentoChange={actualizarDescuento}
-              />
+              <div className="h-[120px]">
+                <TablePreciosPaquete
+                  productos={productos.filter((p) => p.key === selectedProductoKey)}
+                  onDescuentoChange={actualizarDescuento}
+                />
+              </div>
             )}
 
             {/* Datos del paquete */}
