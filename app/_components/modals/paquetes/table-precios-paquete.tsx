@@ -112,13 +112,6 @@ export default function TablePreciosPaquete({
 
   const columnDefs: ColDef<ProductoPaquete>[] = [
     {
-      headerName: 'Producto',
-      field: 'producto_name',
-      flex: 1,
-      cellClass: 'font-medium',
-      minWidth: 150,
-    },
-    {
       headerName: 'Costo',
       field: 'costo',
       width: 110,
@@ -161,7 +154,7 @@ export default function TablePreciosPaquete({
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['Producto', 'Costo', 'Precio Público', 'Desc. Precio Público', 'Precio Especial', 'Desc. Precio Especial', 'Precio Mínimo', 'Desc. Precio Mínimo', 'Precio Final', 'Desc. Precio Final'],
+          columns: ['Costo', 'Precio Público', 'Desc. Precio Público', 'Precio Especial', 'Desc. Precio Especial', 'Precio Mínimo', 'Desc. Precio Mínimo', 'Precio Final', 'Desc. Precio Final'],
         },
       ]}
     />

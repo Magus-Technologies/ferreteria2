@@ -100,6 +100,8 @@ export function getDescuentoPaquete(producto: ProductoPaquete, tipo?: TipoPrecio
 
 interface TableProductosPaqueteProps {
   productos: ProductoPaquete[]
+  selectedKey?: string
+  onProductoSelected?: (key: string) => void
   onEliminar: (key: string) => void
   onCantidadChange: (key: string, cantidad: number) => void
   onPrecioChange: (key: string, tipo: TipoPrecioPaquete, precio: number | undefined) => void
@@ -109,6 +111,8 @@ interface TableProductosPaqueteProps {
 
 export default function TableProductosPaquete({
   productos,
+  selectedKey,
+  onProductoSelected,
   onEliminar,
   onCantidadChange,
   onPrecioChange,
@@ -228,6 +232,15 @@ export default function TableProductosPaquete({
       pagination={false}
       domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">No hay productos agregados</span>'
+      getRowStyle={(params) => {
+        if (params.data?.key === selectedKey) {
+          return { background: orangeColors[10], cursor: 'pointer' }
+        }
+        return { cursor: 'pointer' }
+      }}
+      onRowClicked={(event) => {
+        if (event.data) onProductoSelected?.(event.data.key)
+      }}
       optionsSelectColumns={[
         {
           label: 'Default',

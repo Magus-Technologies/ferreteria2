@@ -7,8 +7,78 @@ import TablePaquetesBusqueda from '~/app/ui/facturacion-electronica/mis-ventas/_
 import { useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useStorePaqueteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-paquete-seleccionado'
-import type { Paquete } from '~/lib/api/paquete'
+import type { Paquete, PaqueteProducto } from '~/lib/api/paquete'
 import ButtonCreatePaquete from '../form/buttons/button-create-paquete'
+import TableWithTitle from '~/components/tables/table-with-title'
+import { ColDef } from 'ag-grid-community'
+import { orangeColors } from '~/lib/colors'
+
+function TableDetallePaquete({ productos }: { productos: PaqueteProducto[] }) {
+  const columnDefs: ColDef<PaqueteProducto>[] = [
+    {
+      headerName: 'Código',
+      width: 90,
+      valueGetter: (params) => params.data?.producto?.cod_producto || '-',
+    },
+    {
+      headerName: 'Producto',
+      flex: 2,
+      cellClass: 'font-medium',
+      valueGetter: (params) => params.data?.producto?.name || '-',
+    },
+    {
+      headerName: 'Marca',
+      width: 100,
+      valueGetter: (params) => params.data?.producto?.marca?.name || '-',
+    },
+    {
+      headerName: 'U. Derivada',
+      width: 110,
+      valueGetter: (params) => params.data?.unidad_derivada?.name || '-',
+    },
+    {
+      headerName: 'Cantidad',
+      field: 'cantidad',
+      width: 90,
+      cellClass: 'text-right',
+    },
+    {
+      headerName: 'Precio',
+      width: 110,
+      cellClass: 'text-right font-semibold',
+      valueGetter: (params) => {
+        if (!params.data) return 0
+        const tipo = params.data.tipo_precio
+        const campo = `precio_${tipo}` as keyof PaqueteProducto
+        const precio = Number(params.data[campo] ?? 0)
+        const descCampo = `descuento_${tipo}` as keyof PaqueteProducto
+        const desc = Number(params.data[descCampo] ?? 0)
+        return Math.max(0, precio - desc)
+      },
+      valueFormatter: (params) => `S/. ${Number(params.value || 0).toFixed(2)}`,
+    },
+  ]
+
+  return (
+    <TableWithTitle<PaqueteProducto>
+      id="paquetes.detalle-busqueda"
+      title="Detalle del Paquete"
+      selectionColor={orangeColors[10]}
+      columnDefs={columnDefs}
+      rowData={productos}
+      getRowId={(params) => String(params.data.id)}
+      pagination={false}
+      domLayout="autoHeight"
+      overlayNoRowsTemplate='<span class="text-gray-500">Selecciona un paquete para ver sus productos</span>'
+      optionsSelectColumns={[
+        {
+          label: 'Default',
+          columns: ['Código', 'Producto', 'Marca', 'U. Derivada', 'Cantidad', 'Precio'],
+        },
+      ]}
+    />
+  )
+}
 
 type ModalBuscarPaqueteProps = {
   open: boolean
@@ -30,7 +100,8 @@ export default function ModalBuscarPaquete({
   onRowDoubleClicked,
 }: ModalBuscarPaqueteProps) {
   const [text, setText] = useState(textDefault)
-  
+  const [paqueteDetalle, setPaqueteDetalle] = useState<Paquete | undefined>(undefined)
+
   useEffect(() => {
     setText(textDefault)
   }, [textDefault])
@@ -42,7 +113,10 @@ export default function ModalBuscarPaquete({
   )
 
   useEffect(() => {
-    if (open) setPaqueteSeleccionadoStore(undefined)
+    if (open) {
+      setPaqueteSeleccionadoStore(undefined)
+      setPaqueteDetalle(undefined)
+    }
   }, [open, setPaqueteSeleccionadoStore])
 
   return (
@@ -67,23 +141,30 @@ export default function ModalBuscarPaquete({
       keyboard={false}
       destroyOnHidden
     >
-      <div className='flex items-center gap-2'>
-        <InputBase
-          placeholder='Buscar por nombre o descripción...'
-          value={text}
-          onChange={e => setText(e.target.value)}
-          className='max-w-[500px]'
-        />
-        <ButtonCreatePaquete className='mb-0!' />
-      </div>
-      <div className='h-[500px] min-w-[1000px] w-full mt-4'>
-        <TablePaquetesBusqueda
-          value={value}
-          onRowDoubleClicked={onRowDoubleClicked}
-          onPaqueteSeleccionado={setPaqueteSeleccionadoStore}
-        />
+      <div className='space-y-3 mt-4'>
+        <div className='flex items-center gap-2'>
+          <InputBase
+            placeholder='Buscar por nombre o descripción...'
+            value={text}
+            onChange={e => setText(e.target.value)}
+            className='max-w-[500px]'
+          />
+          <ButtonCreatePaquete className='mb-0!' />
+        </div>
+
+        <div className='h-[320px] min-w-[1000px] w-full'>
+          <TablePaquetesBusqueda
+            value={value}
+            onRowDoubleClicked={onRowDoubleClicked}
+            onPaqueteSeleccionado={(paquete) => {
+              setPaqueteSeleccionadoStore(paquete)
+              setPaqueteDetalle(paquete)
+            }}
+          />
+        </div>
+
+        <TableDetallePaquete productos={paqueteDetalle?.productos || []} />
       </div>
     </Modal>
   )
 }
-
