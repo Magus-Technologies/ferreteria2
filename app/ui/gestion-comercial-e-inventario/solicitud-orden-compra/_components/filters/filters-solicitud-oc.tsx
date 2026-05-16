@@ -12,7 +12,6 @@ import { useEffect, useState, useMemo } from 'react'
 import type { RequerimientoFilters } from '~/lib/api/requerimiento-interno'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import dayjs, { Dayjs } from 'dayjs'
-import { useDebounce } from 'use-debounce'
 
 interface ValuesFiltersSolicitudOC {
   estado?: string
@@ -23,6 +22,7 @@ interface ValuesFiltersSolicitudOC {
 }
 
 const ESTADO_OPTIONS = [
+  { label: 'Todos', value: '' },
   { label: 'Pendiente', value: 'pendiente' },
   { label: 'Aprobado', value: 'aprobado' },
   { label: 'Rechazado', value: 'rechazado' },
@@ -30,6 +30,7 @@ const ESTADO_OPTIONS = [
 ]
 
 const PRIORIDAD_OPTIONS = [
+  { label: 'Todas', value: '' },
   { label: 'Baja', value: 'BAJA' },
   { label: 'Media', value: 'MEDIA' },
   { label: 'Alta', value: 'ALTA' },
@@ -43,9 +44,7 @@ export default function FiltersSolicitudOC({
 }) {
   const [form] = Form.useForm<ValuesFiltersSolicitudOC>()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState('')
-  const [debouncedSearchValue] = useDebounce(searchValue, 500)
-  
+
   const setFiltros = useStoreFiltrosSolicitudOC(state => state.setFiltros)
 
   // Contar filtros activos (excluyendo el default de tipo_solicitud)
@@ -64,6 +63,7 @@ export default function FiltersSolicitudOC({
   useEffect(() => {
     const today = dayjs().format('YYYY-MM-DD')
     const initialFilters: RequerimientoFilters = {
+      estado: 'pendiente',
       desde: today,
       hasta: today,
     }
@@ -71,22 +71,24 @@ export default function FiltersSolicitudOC({
     form.setFieldsValue({
       desde: dayjs(),
       hasta: dayjs(),
+      estado: 'pendiente',
+      prioridad: '',
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Trigger search when debounced value changes
-  useEffect(() => {
-    form.submit()
-  }, [debouncedSearchValue, form])
 
   const handleFinish = (values: ValuesFiltersSolicitudOC) => {
     const { desde, hasta, ...rest } = values
     const filtros: RequerimientoFilters = {
       ...rest,
+      estado: values.estado || undefined,
+      prioridad: values.prioridad || undefined,
       desde: desde ? desde.format('YYYY-MM-DD') : undefined,
       hasta: hasta ? hasta.format('YYYY-MM-DD') : undefined,
-      search: values.search || searchValue || undefined
+      search: values.search || undefined,
+      // Fuerza una nueva consulta al backend en cada clic de Buscar,
+      // aunque los filtros no hayan cambiado (para detectar nuevas órdenes)
+      searchTrigger: Date.now(),
     }
     setFiltros(filtros)
     setDrawerOpen(false)
@@ -98,13 +100,6 @@ export default function FiltersSolicitudOC({
       name="filtros-solicitud-oc"
       className="w-full"
       initialValues={{}}
-      onValuesChange={(changedValues) => {
-        if ('search' in changedValues) {
-          setSearchValue(changedValues.search)
-        } else {
-          form.submit()
-        }
-      }}
       onFinish={handleFinish}
     >
       <TituloModulos
@@ -168,28 +163,29 @@ export default function FiltersSolicitudOC({
                 />
               </Form.Item>
             </div>
+
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="text-[11px] font-medium text-slate-500">Prioridad:</span>
+              <Form.Item name="prioridad" className="!mb-0">
+                <Select
+                  placeholder="Todas"
+                  allowClear
+                  options={PRIORIDAD_OPTIONS}
+                  className="!w-[120px]"
+                />
+              </Form.Item>
+            </div>
           </div>
 
-          <ButtonBase 
-            color="info" 
-            size="md" 
-            type="button" 
-            onClick={() => {
-              form.setFieldsValue({
-                desde: undefined,
-                hasta: undefined,
-                estado: undefined,
-                prioridad: undefined,
-                search: '',
-              })
-              setSearchValue('')
-              const filtros: RequerimientoFilters = {}
-              setFiltros(filtros)
-            }}
+          <ButtonBase
+            color="info"
+            size="md"
+            type="button"
+            onClick={() => form.submit()}
             className="hidden lg:flex items-center gap-2 py-1.5"
           >
             <FaSearch size={14} />
-            Refrescar
+            Buscar
           </ButtonBase>
         </div>
 
@@ -246,7 +242,6 @@ export default function FiltersSolicitudOC({
               className="flex-1" 
               onClick={() => {
                 form.resetFields()
-                setSearchValue('')
                 form.submit()
               }}
             >
