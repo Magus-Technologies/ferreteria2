@@ -230,7 +230,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           almacen_id: ignoreAlmacen ? undefined : almacen_id,
           search: text,
           estado: 1,
-          per_page: 30,
+          per_page: 2,
         })
         
         const results = response.data?.data || []
@@ -317,6 +317,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           onSearch?.(val)
         }}
         searchValue={text}
+        nextInEnter={false}
         prefix={<FaBoxOpen className={classNameIcon} size={sizeIcon} />}
         loading={withSearch ? false : loading}
         variant={variant}
@@ -364,6 +365,8 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         }}
         onKeyUp={(e) => {
           if (e.key === 'Enter') {
+            e.preventDefault()
+            e.stopPropagation()
             if (withSearch) {
               handleSearch()
             } else {
