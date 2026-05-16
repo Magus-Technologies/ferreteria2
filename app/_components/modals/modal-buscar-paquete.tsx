@@ -44,6 +44,7 @@ function TableDetallePaquete({ productos }: { productos: PaqueteProducto[] }) {
     },
     {
       headerName: 'Precio',
+      colId: 'precio_final',
       width: 110,
       cellClass: 'text-right font-semibold',
       valueGetter: (params) => {

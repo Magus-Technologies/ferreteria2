@@ -11,11 +11,25 @@ import {
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
     {
-      headerName: 'Registrada',
+      headerName: 'Fecha Operativa',
+      colId: 'fecha_operativa',
+      width: 170,
+      sort: 'desc',
+      valueGetter: (params) => params.data?.fecha_programada || params.data?.fecha_entrega,
+      tooltipValueGetter: (params) => {
+        const fechaOperativa = params.data?.fecha_programada || params.data?.fecha_entrega
+        return fechaOperativa
+          ? `La tabla se filtra por esta fecha: ${formatFechaPeru(fechaOperativa, 'DD/MM/YYYY hh:mm:ss A')}`
+          : 'Sin fecha operativa'
+      },
+      valueFormatter: (params) =>
+        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
+    },
+    {
+      headerName: 'Fecha Registro',
       colId: 'created_at',
       field: 'created_at',
-      width: 200,
-      sort: 'desc',
+      width: 170,
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
@@ -73,6 +87,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Fecha Programada',
       field: 'fecha_programada',
       width: 150,
+      hide: true,
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY') : '-',
     },
