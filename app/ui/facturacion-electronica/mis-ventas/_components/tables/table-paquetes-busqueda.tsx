@@ -91,7 +91,7 @@ export default function TablePaquetesBusqueda({
         return (
           <ColumnAction
             id={params.value}
-            permiso={permissions.CLIENTE_BASE} // TODO: Cambiar por permiso de paquetes cuando esté implementado
+            permiso={permissions.PRODUCTO_BASE}
             propsDelete={{
               action: async ({ id }: { id: number }) => {
                 const result = await paqueteApi.delete(id)
