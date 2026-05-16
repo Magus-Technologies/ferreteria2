@@ -266,10 +266,15 @@ function ModalDetallesEntregaInner({
       if (resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto') {
         // Para estos modos, solo cargar lo que falte Y venga de datos del cliente
         if (!yaTieneDireccion || !yaTieneReferencia || !yaTieneCoords) {
+          const direccionActual = form.getFieldValue('direccion_entrega')
           const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
-          const direccionObj = direcciones.find(d => d.tipo === direccionSeleccionadaForm)
+          const direccionObj =
+            direcciones.find(d => d.direccion === direccionActual) ||
+            direcciones.find(d => d.tipo === direccionSeleccionadaForm)
           
           if (direccionObj) {
+            setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
+            form.setFieldValue('direccion_seleccionada', direccionObj.tipo)
             if (!yaTieneDireccion) {
               form.setFieldValue('direccion_entrega', direccionObj.direccion)
             }
@@ -284,7 +289,6 @@ function ModalDetallesEntregaInner({
               setCoordenadas(coords)
               form.setFieldValue('latitud', coords.lat)
               form.setFieldValue('longitud', coords.lng)
-              setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
               obtenerUbicacionGps(coords.lat, coords.lng)
               setMostrarMapa(true)
             }
