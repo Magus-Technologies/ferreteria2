@@ -15,7 +15,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
-import { TipoOperacion, EstadoPrestamo, TipoEntidad } from '~/lib/api/prestamo'
+import { TipoOperacion, EstadoPrestamo } from '~/lib/api/prestamo'
 import { useStoreFiltrosMisPrestamos } from '../../store/store-filtros-mis-prestamos'
 import { UseStorePrestamoSeleccionada } from '../tables/table-mis-prestamos'
 import ModalRegistrarDevolucion from '../modals/modal-registrar-devolucion'
@@ -30,7 +30,6 @@ interface ValuesFiltersMisPrestamos {
   hasta?: Dayjs
   numero?: string
   tipo_operacion?: TipoOperacion
-  tipo_entidad?: TipoEntidad
   estado_prestamo?: EstadoPrestamo
 }
 
@@ -59,7 +58,6 @@ export default function FiltersMisPrestamos() {
     let count = 0
     if (values.cliente_id) count++
     if (values.tipo_operacion) count++
-    if (values.tipo_entidad) count++
     if (values.estado_prestamo) count++
     if (values.numero) count++
     return count
@@ -225,30 +223,11 @@ export default function FiltersMisPrestamos() {
             </label>
             <SelectBase
               propsForm={{
-                name: 'tipo_entidad',
-                hasFeedback: false,
-                className: '!w-full',
-              }}
-              placeholder='Todos'
-              formWithMessage={false}
-              allowClear
-              options={[
-                { value: TipoEntidad.CLIENTE, label: 'Cliente' },
-                { value: TipoEntidad.PROVEEDOR, label: 'Proveedor' },
-              ]}
-            />
-          </div>
-          <div className='col-span-2 flex items-center gap-2'>
-            <label className='text-xs font-semibold text-gray-700 whitespace-nowrap'>
-              Operación:
-            </label>
-            <SelectBase
-              propsForm={{
                 name: 'tipo_operacion',
                 hasFeedback: false,
                 className: '!w-full',
               }}
-              placeholder='Todas'
+              placeholder='Todos'
               formWithMessage={false}
               allowClear
               options={[
@@ -378,23 +357,8 @@ export default function FiltersMisPrestamos() {
               Tipo:
             </label>
             <SelectBase
-              propsForm={{ name: 'tipo_entidad', hasFeedback: false }}
-              placeholder='Todos'
-              formWithMessage={false}
-              allowClear
-              options={[
-                { value: TipoEntidad.CLIENTE, label: 'Cliente' },
-                { value: TipoEntidad.PROVEEDOR, label: 'Proveedor' },
-              ]}
-            />
-          </div>
-          <div>
-            <label className='text-sm font-semibold text-gray-700 block mb-2'>
-              Operación:
-            </label>
-            <SelectBase
               propsForm={{ name: 'tipo_operacion', hasFeedback: false }}
-              placeholder='Todas'
+              placeholder='Todos'
               formWithMessage={false}
               allowClear
               options={[

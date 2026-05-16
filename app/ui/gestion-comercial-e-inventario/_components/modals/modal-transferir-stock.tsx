@@ -67,6 +67,7 @@ export default function ModalTransferirStock({
   const [docData, setDocData] = useState<TransferenciaStock | undefined>()
 
   const almacenOrigenId = Form.useWatch('almacen_origen_id', form)
+  const almacenDestinoId = Form.useWatch('almacen_destino_id', form)
 
   // Escuchar la store de producto agregado
   const productoAgregadoStore = useStoreProductoAgregadoTransferencia(
@@ -425,6 +426,7 @@ export default function ModalTransferirStock({
               className="w-full"
               classNameIcon="text-emerald-700 mx-1"
               afecta_store={false}
+              excludeIds={[almacenDestinoId]}
               propsForm={{
                 name: 'almacen_origen_id',
                 rules: [
@@ -447,6 +449,7 @@ export default function ModalTransferirStock({
               className="w-full"
               classNameIcon="text-blue-700 mx-1"
               afecta_store={false}
+              excludeIds={[almacenOrigenId]}
               propsForm={{
                 name: 'almacen_destino_id',
                 rules: [

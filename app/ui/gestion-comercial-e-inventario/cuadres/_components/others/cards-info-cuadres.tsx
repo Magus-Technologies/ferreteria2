@@ -8,7 +8,8 @@ function CardVertical({
     icon,
     bgColor = "bg-emerald-500",
     textColor = "text-emerald-700",
-    borderColor = "border-gray-200"
+    borderColor = "border-gray-200",
+    esMoneda = true
 }: {
     title: string;
     value: number;
@@ -16,6 +17,7 @@ function CardVertical({
     bgColor?: string;
     textColor?: string;
     borderColor?: string;
+    esMoneda?: boolean;
 }) {
     return (
         <div className={`flex flex-col items-center justify-center p-4 bg-white border ${borderColor} rounded-2xl shadow-sm flex-1 transition-all hover:shadow-md border-gray-100`}>
@@ -26,7 +28,9 @@ function CardVertical({
                 {title}
             </span>
             <span className={`text-base md:text-lg lg:text-xl font-black ${textColor} text-center whitespace-nowrap`}>
-                S/. {value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {esMoneda
+                    ? `S/. ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : value.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             </span>
         </div>
     );
@@ -45,6 +49,7 @@ export default function CardsInfoCuadres() {
                 icon={<FaArrowDown size={18} />}
                 bgColor="bg-emerald-500"
                 textColor="text-emerald-600"
+                esMoneda={false}
             />
             <CardVertical
                 title="Ingresos S/."
@@ -59,6 +64,7 @@ export default function CardsInfoCuadres() {
                 icon={<FaArrowUp size={18} />}
                 bgColor="bg-rose-500"
                 textColor="text-rose-600"
+                esMoneda={false}
             />
             <CardVertical
                 title="Salidas S/."
