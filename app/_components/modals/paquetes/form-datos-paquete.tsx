@@ -3,7 +3,7 @@
 import { Form } from 'antd'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import LabelBase from '~/components/form/label-base'
-import type { ProductoPaquete } from './table-productos-paquete'
+import type { ProductoPaquete } from './paquete-types'
 import { useMemo } from 'react'
 
 interface FormDatosPaqueteProps {

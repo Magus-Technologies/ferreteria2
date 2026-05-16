@@ -7,17 +7,15 @@ import { FaTrash, FaWeightHanging } from 'react-icons/fa'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { orangeColors } from '~/lib/colors'
 import SelectBase from '~/app/_components/form/selects/select-base'
+import type { ProductoPaquete, TipoPrecioPaquete } from './paquete-types'
+import { TIPO_PRECIO_OPTIONS } from './paquete-types'
 
-export type TipoPrecioPaquete = 'publico' | 'especial' | 'minimo' | 'ultimo'
+// Re-export for backward compat with files that import types from here
+export type { ProductoPaquete, TipoPrecioPaquete } from './paquete-types'
+export { TIPO_PRECIO_OPTIONS, getPrecioOriginal, getPrecioPaquete, getDescuentoPaquete } from './paquete-types'
 
-export const TIPO_PRECIO_OPTIONS = [
-  { value: 'publico', label: 'Precio Público' },
-  { value: 'especial', label: 'Precio Ferreteria' },
-  { value: 'minimo', label: 'Precio Mínimo' },
-  { value: 'ultimo', label: 'Precio Final' },
-]
+// ============= CELDA CANTIDAD =============
 
-/** Input con estado local que solo notifica al padre en blur/enter */
 function CellInputCantidad({
   value,
   onCommit,
@@ -54,49 +52,7 @@ function CellInputCantidad({
   )
 }
 
-export interface ProductoPaquete {
-  key: string
-  producto_id: number
-  producto_name: string
-  producto_codigo: string
-  marca_name?: string
-  unidad_derivada_id: number
-  unidad_derivada_name: string
-  cantidad: number
-  precio_publico?: number
-  precio_especial?: number
-  precio_minimo?: number
-  precio_ultimo?: number
-  descuento_publico?: number
-  descuento_especial?: number
-  descuento_minimo?: number
-  descuento_ultimo?: number
-  tipo_precio_vista: TipoPrecioPaquete
-  costo?: number
-  costo_base?: number
-  unidades_derivadas_disponibles?: any[]
-}
-
-/** Obtener el precio original del producto según tipo y unidad derivada */
-export function getPrecioOriginal(producto: ProductoPaquete, tipo?: TipoPrecioPaquete): number {
-  const unidades = producto.unidades_derivadas_disponibles || []
-  const unidad = unidades.find((u: any) => u.unidad_derivada.id === producto.unidad_derivada_id)
-  if (!unidad) return 0
-  const campo = `precio_${tipo || producto.tipo_precio_vista}`
-  return Number(unidad[campo] || 0)
-}
-
-/** Obtener el precio del paquete según el tipo */
-export function getPrecioPaquete(producto: ProductoPaquete, tipo?: TipoPrecioPaquete): number {
-  const campo = `precio_${tipo || producto.tipo_precio_vista}` as keyof ProductoPaquete
-  return Number(producto[campo] || 0)
-}
-
-/** Obtener el descuento del paquete según el tipo */
-export function getDescuentoPaquete(producto: ProductoPaquete, tipo?: TipoPrecioPaquete): number {
-  const campo = `descuento_${tipo || producto.tipo_precio_vista}` as keyof ProductoPaquete
-  return Number(producto[campo] || 0)
-}
+// ============= PROPS =============
 
 interface TableProductosPaqueteProps {
   productos: ProductoPaquete[]
@@ -108,6 +64,8 @@ interface TableProductosPaqueteProps {
   onUnidadDerivadaChange: (key: string, unidadDerivadaId: number) => void
   onTipoPrecioChange: (key: string, tipo: TipoPrecioPaquete) => void
 }
+
+// ============= COMPONENTE =============
 
 export default function TableProductosPaquete({
   productos,
@@ -162,7 +120,6 @@ export default function TableProductosPaquete({
             options={options}
             onChange={(nuevoId) => {
               onUnidadDerivadaChange(params.data.key, nuevoId)
-
               const unidadSeleccionada = unidades.find((u: any) => u.unidad_derivada.id === nuevoId)
               if (unidadSeleccionada) {
                 onPrecioChange(params.data.key, 'publico', Number(unidadSeleccionada.precio_publico) || 0)
@@ -232,6 +189,10 @@ export default function TableProductosPaquete({
       pagination={false}
       domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">No hay productos agregados</span>'
+      getRowStyle={(params) => ({
+        background: params.data?.key === selectedKey ? orangeColors[10] : '',
+        cursor: 'pointer',
+      })}
       getRowStyle={(params): RowStyle => {
         if (params.data?.key === selectedKey) {
           return { background: orangeColors[10], cursor: 'pointer' }
