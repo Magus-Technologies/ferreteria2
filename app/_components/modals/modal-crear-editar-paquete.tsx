@@ -10,7 +10,7 @@ import TablePreciosPaquete from './paquetes/table-precios-paquete'
 import SelectProductos from '../form/selects/select-productos'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CardAgregarProductoPaquete from './paquetes/card-agregar-producto-paquete'
 
 interface ModalCrearEditarPaqueteProps {
@@ -43,6 +43,17 @@ export default function ModalCrearEditarPaquete({
   } = usePaqueteForm(paqueteId, open, onClose, onSuccess)
 
   const [openModalAgregarProducto, setOpenModalAgregarProducto] = useState(false)
+  const [selectedProductoKey, setSelectedProductoKey] = useState<string | undefined>(undefined)
+
+  // Mantener selección válida: auto-selecciona el primero cuando cambia la lista
+  useEffect(() => {
+    if (productos.length === 0) {
+      setSelectedProductoKey(undefined)
+      return
+    }
+    const exists = productos.some((p) => p.key === selectedProductoKey)
+    if (!exists) setSelectedProductoKey(productos[0].key)
+  }, [productos])
 
   const productoSeleccionado = useStoreProductoSeleccionadoSearch((store) => store.producto)
   const setProductoSeleccionado = useStoreProductoSeleccionadoSearch((store) => store.setProducto)
@@ -130,9 +141,11 @@ export default function ModalCrearEditarPaquete({
               />
             </div>
 
-            {/* Tabla 1: Productos del Paquete */}
+            {/* Tabla 1: Productos del Paquete — clic en una fila la muestra en Precios */}
             <TableProductosPaquete
               productos={productos}
+              selectedKey={selectedProductoKey}
+              onProductoSelected={setSelectedProductoKey}
               onEliminar={eliminarProducto}
               onUnidadDerivadaChange={actualizarUnidadDerivada}
               onCantidadChange={actualizarCantidad}
@@ -140,10 +153,10 @@ export default function ModalCrearEditarPaquete({
               onTipoPrecioChange={actualizarTipoPrecio}
             />
 
-            {/* Tabla 2: Precios del Paquete */}
-            {productos.length > 0 && (
+            {/* Tabla 2: Precios — muestra solo el producto seleccionado arriba */}
+            {selectedProductoKey && (
               <TablePreciosPaquete
-                productos={productos}
+                productos={productos.filter((p) => p.key === selectedProductoKey)}
                 onDescuentoChange={actualizarDescuento}
               />
             )}

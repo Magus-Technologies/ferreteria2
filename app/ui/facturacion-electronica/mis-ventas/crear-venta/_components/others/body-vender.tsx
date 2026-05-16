@@ -192,7 +192,15 @@ export default function BodyVender({
   const [ventaId, setVentaId] = useState<string>()
   const [ventaCreada, setVentaCreada] = useState<any>()
   const [formKey, setFormKey] = useState(0)
+  // Cuando se cierra el modal forzamos formCleaned=true para que ventaData_ sea undefined
+  // inmediatamente, sin esperar los ~500ms de la navegación de Next.js.
+  const [formCleaned, setFormCleaned] = useState(false)
   useCheckAperturaDiaria()
+
+  // Cuando llega una nueva cotización (o se quita), resetear el flag de limpieza
+  useEffect(() => {
+    if (cotizacion) setFormCleaned(false)
+  }, [cotizacion])
 
   // Obtener funciones del store para limpiar
   const setProductoAgregado = useStoreProductoAgregadoVenta(state => state.setProductoAgregado)
@@ -226,9 +234,10 @@ export default function BodyVender({
     })),
   } : undefined
 
-  // Usar venta si existe (notasMerged), sino usar ventaFromCotizacion
-  // NO usar ventaId de cotizacion porque es un ID de cotización, no de venta
-  const ventaData_ = venta || ventaFromCotizacion
+  // Usar venta si existe (notasMerged), sino usar ventaFromCotizacion.
+  // formCleaned=true fuerza undefined para que el form quede vacío inmediatamente
+  // al cerrar el modal, sin esperar la navegación de Next.js (~500ms).
+  const ventaData_ = formCleaned ? undefined : (venta || ventaFromCotizacion)
   // Determinar si estamos editando una venta existente (NO una cotización convertida)
   // Las notas de venta tienen IDs que empiezan con 'ven', las notasMerged son ventas reales
   const isEditingVenta = !!(venta?.id && String(venta.id).startsWith('ven'))
@@ -269,10 +278,12 @@ export default function BodyVender({
       setProductos([])
       setValesAplicables([])
 
-      // Si venimos de editar una venta o de convertir una cotización,
-      // redirigir sin incrementar formKey — la navegación ya muestra el form limpio.
-      // Incrementar formKey antes de navegar causa dos flashes visibles.
       if (venta?.id || cotizacion?.id) {
+        // formCleaned=true hace que ventaData_=undefined en el mismo ciclo de React,
+        // así el form queda vacío DURANTE la animación de cierre del modal (sin esperar
+        // los ~500ms de la navegación). La navegación sólo limpia la URL.
+        setFormCleaned(true)
+        setFormKey(prev => prev + 1)
         router.push('/ui/facturacion-electronica/mis-ventas/crear-venta')
         return
       }
