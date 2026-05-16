@@ -19,7 +19,6 @@ export default function CellAccionesCotizacion(
   const openModal = useStoreModalPdfCotizacion((state) => state.openModal);
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [duplicando, setDuplicando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const yaEliminada = estadoCotizacion === 'el';
 
@@ -52,19 +51,8 @@ export default function CellAccionesCotizacion(
     }
   };
 
-  const handleDuplicar = async () => {
-    setDuplicando(true);
-    try {
-      const res = await cotizacionesApi.duplicar(cotizacionId);
-      if (res.error) {
-        message.error(res.error.message || "Error al duplicar");
-        return;
-      }
-      message.success(res.data?.message || "Cotización duplicada");
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.COTIZACIONES] });
-    } finally {
-      setDuplicando(false);
-    }
+  const handleDuplicar = () => {
+    router.push(`/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion?duplicar=${cotizacionId}`);
   };
 
   return (
@@ -97,7 +85,6 @@ export default function CellAccionesCotizacion(
         onClick={handleDuplicar}
         className="flex items-center !px-3"
         title="Duplicar Cotización"
-        loading={duplicando}
       >
         <FaCopy />
       </ButtonBase>
