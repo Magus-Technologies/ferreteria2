@@ -173,6 +173,7 @@ export default function ModalRequerimientoInterno({
                                     areas={AREAS}
                                     prioridades={PRIORIDADES}
                                     cargos={dataHook.cargos}
+                                    defaultTipoSolicitud={defaultTipoSolicitud}
                                 />
                             )}
 

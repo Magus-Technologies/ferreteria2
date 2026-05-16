@@ -20,9 +20,10 @@ interface StepGeneralProps {
     areas: string[]
     prioridades: PRIORIDAD[]
     cargos: { label: string; value: string }[]
+    defaultTipoSolicitud?: 'OC' | 'OS' | 'SOC'
 }
 
-export default function StepGeneral({ form, setField, errors, areas, prioridades, cargos }: StepGeneralProps) {
+export default function StepGeneral({ form, setField, errors, areas, prioridades, cargos, defaultTipoSolicitud = 'OC' }: StepGeneralProps) {
     return (
         <div className="space-y-4">
             {/* Título */}
@@ -135,9 +136,9 @@ export default function StepGeneral({ form, setField, errors, areas, prioridades
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                     <div
-                        onClick={() => setField("tipoSolicitud", "OC")}
+                        onClick={() => setField("tipoSolicitud", defaultTipoSolicitud === "SOC" ? "SOC" : "OC")}
                         className={`cursor-pointer border-2 rounded-lg p-4 transition-all ${
-                            form.tipoSolicitud === "OC"
+                            form.tipoSolicitud === "OC" || form.tipoSolicitud === "SOC"
                                 ? "border-blue-500 bg-blue-50"
                                 : "border-gray-200 hover:border-gray-300"
                         }`}

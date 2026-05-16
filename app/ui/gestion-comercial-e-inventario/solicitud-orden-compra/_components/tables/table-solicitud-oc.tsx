@@ -24,6 +24,7 @@ const TableSolicitudOC = memo(function TableSolicitudOC({ id, columns, filtros, 
 
   const apiFilters = useMemo(() => ({
     ...filtros,
+    tipo_solicitud: 'SOC',
     per_page: pageSize,
     page,
   }), [filtros, page])
