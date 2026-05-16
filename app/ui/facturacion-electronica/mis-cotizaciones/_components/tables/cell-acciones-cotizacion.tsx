@@ -24,7 +24,7 @@ export default function CellAccionesCotizacion(
 
   if (!cotizacionId) return null;
 
-  const bloqueada = estadoCotizacion === 'co' || estadoCotizacion === 've' || estadoCotizacion === 'ca';
+  const bloqueada = estadoCotizacion === 'co' || estadoCotizacion === 've' || estadoCotizacion === 'el';
 
   const handleVerPDF = () => openModal(cotizacionId);
 
