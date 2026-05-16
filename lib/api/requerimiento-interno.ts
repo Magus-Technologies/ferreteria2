@@ -107,6 +107,7 @@ export interface RequerimientoFilters {
     search?: string;
     per_page?: number;
     page?: number;
+    searchTrigger?: number;
 }
 
 // ============= RESPONSE TYPES =============

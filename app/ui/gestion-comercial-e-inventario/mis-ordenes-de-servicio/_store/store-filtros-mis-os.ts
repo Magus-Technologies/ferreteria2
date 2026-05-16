@@ -11,7 +11,7 @@ type UseStoreFiltrosMisOSProps = {
 }
 
 export const useStoreFiltrosMisOS = create<UseStoreFiltrosMisOSProps>(set => ({
-  filtros: { tipo_solicitud: 'OS', desde: new Date().toISOString().split('T')[0], hasta: new Date().toISOString().split('T')[0] },
+  filtros: { tipo_solicitud: 'OS', estado: 'pendiente', desde: new Date().toISOString().split('T')[0], hasta: new Date().toISOString().split('T')[0] },
   setFiltros: value =>
     set(state => ({
       filtros: typeof value === 'function' ? value(state.filtros) : value,
