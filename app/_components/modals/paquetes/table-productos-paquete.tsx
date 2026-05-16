@@ -188,10 +188,6 @@ export default function TableProductosPaquete({
       getRowId={(params) => params.data.key}
       pagination={false}
       overlayNoRowsTemplate='<span class="text-gray-500">No hay productos agregados</span>'
-      getRowStyle={(params) => ({
-        background: params.data?.key === selectedKey ? orangeColors[10] : '',
-        cursor: 'pointer',
-      })}
       getRowStyle={(params): RowStyle => {
         if (params.data?.key === selectedKey) {
           return { background: orangeColors[10], cursor: 'pointer' }
