@@ -4,6 +4,7 @@ import { FaFileInvoice } from 'react-icons/fa6'
 interface SelectTipoDocumentoProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
+  withTodos?: boolean
 }
 
 // Tipos de documento con códigos SUNAT
@@ -19,15 +20,20 @@ export default function SelectTipoDocumento({
   variant = 'filled',
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 16,
+  withTodos = false,
   ...props
 }: SelectTipoDocumentoProps) {
+  const options = withTodos 
+    ? [{ value: 'todos', label: 'Todos' }, ...TIPOS_DOCUMENTO] 
+    : TIPOS_DOCUMENTO
+
   return (
     <SelectBase
       {...props}
       prefix={<FaFileInvoice className={classNameIcon} size={sizeIcon} />}
       variant={variant}
       placeholder={placeholder}
-      options={TIPOS_DOCUMENTO}
+      options={options}
     />
   )
 }
