@@ -11,7 +11,7 @@ type UseStoreFiltrosSolicitudOCProps = {
 }
 
 export const useStoreFiltrosSolicitudOC = create<UseStoreFiltrosSolicitudOCProps>(set => ({
-  filtros: {},
+  filtros: { estado: 'pendiente' },
   setFiltros: value =>
     set(state => ({
       filtros: typeof value === 'function' ? value(state.filtros) : value,
