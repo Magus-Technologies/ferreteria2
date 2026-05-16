@@ -18,12 +18,29 @@ import { useDebounce } from "use-debounce";
 import { useStoreFiltrosMisCotizaciones } from "../../_store/store-filtros-mis-cotizaciones";
 import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 
+const ESTADO_OPTIONS = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'pe', label: 'Pendiente' },
+  { value: 'co', label: 'Confirmado/Convertido' },
+  { value: 've', label: 'Vendido' },
+  { value: 'ca', label: 'Cancelado' },
+  { value: 'el', label: 'Eliminado' },
+];
+
+const RESERVAR_OPTIONS = [
+  { value: '', label: 'Con y sin reserva' },
+  { value: 'si', label: 'Con stock reservado' },
+  { value: 'no', label: 'Sin stock reservado' },
+];
+
 interface ValuesFiltersMisCotizaciones {
   almacen_id: number;
   cliente_id?: number;
   desde?: Dayjs;
   hasta?: Dayjs;
   numero?: string;
+  estado_cotizacion?: string;
+  reservar_stock?: string;
 }
 
 export default function FiltersMisCotizaciones() {
@@ -52,6 +69,8 @@ export default function FiltersMisCotizaciones() {
       fecha_desde: values.desde ? values.desde.format("YYYY-MM-DD") : undefined,
       fecha_hasta: values.hasta ? values.hasta.format("YYYY-MM-DD") : undefined,
       numero: values.numero,
+      estado_cotizacion: (values.estado_cotizacion as any) || undefined,
+      reservar_stock: values.reservar_stock === 'si' ? true : values.reservar_stock === 'no' ? false : undefined,
     });
   };
 
@@ -142,17 +161,33 @@ export default function FiltersMisCotizaciones() {
           </div>
           <div className="flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Modalidad:
+              Estado:
             </label>
-            <InputBase
-              propsForm={{
-                name: "modalidad",
-                hasFeedback: false,
-                className: "!w-[150px]",
-              }}
-              placeholder="TODOS"
-              formWithMessage={false}
-            />
+            <Form.Item name="estado_cotizacion" className="!mb-0">
+              <select
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white w-[180px]"
+                onChange={() => form.submit()}
+              >
+                {ESTADO_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </Form.Item>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              Reserva:
+            </label>
+            <Form.Item name="reservar_stock" className="!mb-0">
+              <select
+                className="border border-gray-300 rounded px-2 py-1 text-sm bg-white w-[160px]"
+                onChange={() => form.submit()}
+              >
+                {RESERVAR_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </Form.Item>
           </div>
           <ConfigurableElement componentId="mis-cotizaciones.boton-buscar" label="Botón Buscar">
             <ButtonBase

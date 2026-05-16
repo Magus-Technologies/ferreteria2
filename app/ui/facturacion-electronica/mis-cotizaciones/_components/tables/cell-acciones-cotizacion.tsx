@@ -1,10 +1,10 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileInvoice, FaPencil, FaCopy } from "react-icons/fa6";
+import { FaFilePdf, FaFileInvoice, FaPencil, FaCopy, FaTrash } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { message } from "antd";
+import { message, Popconfirm } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfCotizacion } from "../../_store/store-modal-pdf-cotizacion";
@@ -20,6 +20,8 @@ export default function CellAccionesCotizacion(
   const router = useRouter();
   const queryClient = useQueryClient();
   const [duplicando, setDuplicando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const yaEliminada = estadoCotizacion === 'el';
 
   if (!cotizacionId) return null;
 
@@ -33,6 +35,21 @@ export default function CellAccionesCotizacion(
 
   const handleEditar = () => {
     router.push(`/ui/facturacion-electronica/mis-cotizaciones/editar-cotizacion/${cotizacionId}`);
+  };
+
+  const handleEliminar = async () => {
+    setEliminando(true);
+    try {
+      const res = await cotizacionesApi.eliminar(cotizacionId);
+      if (res.error) {
+        message.error(res.error.message || "Error al eliminar");
+        return;
+      }
+      message.success("Cotización eliminada");
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.COTIZACIONES] });
+    } finally {
+      setEliminando(false);
+    }
   };
 
   const handleDuplicar = async () => {
@@ -84,6 +101,26 @@ export default function CellAccionesCotizacion(
       >
         <FaCopy />
       </ButtonBase>
+
+      <Popconfirm
+        title="¿Eliminar cotización?"
+        description="Se marcará como eliminada pero seguirá visible."
+        onConfirm={handleEliminar}
+        okText="Eliminar"
+        cancelText="Cancelar"
+        disabled={yaEliminada}
+      >
+        <ButtonBase
+          color="danger"
+          size="md"
+          className="flex items-center !px-3"
+          title="Eliminar Cotización"
+          loading={eliminando}
+          disabled={yaEliminada}
+        >
+          <FaTrash />
+        </ButtonBase>
+      </Popconfirm>
 
       <ButtonBase
         color="danger"

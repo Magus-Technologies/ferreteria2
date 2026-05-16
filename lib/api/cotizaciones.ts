@@ -86,7 +86,7 @@ export interface Cotizacion {
   tipo_moneda: 's' | 'd';
   tipo_de_cambio: number;
   observaciones: string | null;
-  estado_cotizacion: 'pe' | 'co' | 've' | 'ca'; // pendiente, confirmado, vendido, cancelado
+  estado_cotizacion: 'pe' | 'co' | 've' | 'ca' | 'el'; // pendiente, confirmado, vendido, cancelado, eliminado
   reservar_stock: boolean;
   fecha_vencimiento_reserva: string | null;
   recomendado_por_id: number | null;
@@ -145,7 +145,7 @@ export interface CreateCotizacionRequest {
 }
 
 interface GetCotizacionesParams {
-  estado_cotizacion?: 'pe' | 'co' | 've' | 'ca';
+  estado_cotizacion?: 'pe' | 'co' | 've' | 'ca' | 'el';
   almacen_id?: number;
   cliente_id?: number;
   fecha_desde?: string;
@@ -153,6 +153,8 @@ interface GetCotizacionesParams {
   search?: string;
   per_page?: number;
   page?: number;
+  numero?: string;
+  reservar_stock?: boolean;
 }
 
 // ============= RESPONSES =============
@@ -257,6 +259,15 @@ export const cotizacionesApi = {
    */
   async duplicar(id: string): Promise<ApiResponse<{ data: { id: string; numero: string }; message: string }>> {
     return apiRequest<{ data: { id: string; numero: string }; message: string }>(`/cotizaciones/${id}/duplicar`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Eliminar lógicamente una cotización (queda visible con estado 'el')
+   */
+  async eliminar(id: string): Promise<ApiResponse<{ message: string }>> {
+    return apiRequest<{ message: string }>(`/cotizaciones/${id}/eliminar`, {
       method: 'POST',
     });
   },
