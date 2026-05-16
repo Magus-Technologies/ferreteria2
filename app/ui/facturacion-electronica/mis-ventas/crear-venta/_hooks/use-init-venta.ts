@@ -65,7 +65,12 @@ export default function useInitVenta({
         latitud: entrega?.latitud ? Number(entrega.latitud) : undefined,
         longitud: entrega?.longitud ? Number(entrega.longitud) : undefined,
         observaciones: entrega?.observaciones || undefined,
-        quien_entrega: entrega?.quien_entrega || undefined,
+        // Si viene de cotización (tiene estado_cotizacion, las ventas no lo tienen), usar
+        // 'vendedor' para que el backend auto-entregue y descuente stock al crear la venta.
+        // Con 'almacen' (el default cuando queda undefined) el backend crea un placeholder
+        // con cantidad=0 y el stock nunca se descuenta hasta que el almacenero confirma.
+        quien_entrega: entrega?.quien_entrega ||
+          ((venta as any).estado_cotizacion !== undefined ? 'vendedor' : undefined),
         tipo_pedido: entrega?.tipo_pedido ? tipoPedidoMap[entrega.tipo_pedido] : undefined,
         cargo_destino: entrega?.cargo_destino || undefined,
         vehiculo_id: entrega?.vehiculo_id ? Number(entrega.vehiculo_id) : undefined,
