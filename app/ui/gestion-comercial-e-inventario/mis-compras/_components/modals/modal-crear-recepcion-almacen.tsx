@@ -11,7 +11,6 @@ import dayjs from 'dayjs'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { FaCalendar } from 'react-icons/fa'
 import useCreateRecepcionAlmacen from '../../_hooks/use-create-recepcion-almacen'
-import { useRouter } from 'next/navigation'
 import FormCrearRecepcionAlmacen from '../form/form-crear-recepcion-almacen'
 import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
 
@@ -46,7 +45,6 @@ export default function ModalCrearRecepcionAlmacen({
   setOrdenCompra?: (orden: OrdenCompra | undefined) => void
 }) {
   const [form] = Form.useForm<FormCreateRecepcionAlmacen>()
-  const route = useRouter()
 
   const nro_doc = compra ? getNroDocCompra({ compra }) : (ordenCompra?.codigo ?? '')
 
@@ -57,7 +55,8 @@ export default function ModalCrearRecepcionAlmacen({
       setOpen(false)
       setCompra(undefined)
       setOrdenCompra?.(undefined)
-      route.push('/ui/gestion-comercial-e-inventario/mis-recepciones')
+      // No redirigir: el hook ya invalida COMPRAS/ORDENES_COMPRA y la tabla
+      // de mis-compras se refresca sola. El usuario se queda en esta vista.
     },
   })
 
