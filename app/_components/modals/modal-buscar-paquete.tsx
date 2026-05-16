@@ -68,7 +68,6 @@ function TableDetallePaquete({ productos }: { productos: PaqueteProducto[] }) {
       rowData={productos}
       getRowId={(params) => String(params.data.id)}
       pagination={false}
-      domLayout="autoHeight"
       overlayNoRowsTemplate='<span class="text-gray-500">Selecciona un paquete para ver sus productos</span>'
       optionsSelectColumns={[
         {
@@ -163,7 +162,9 @@ export default function ModalBuscarPaquete({
           />
         </div>
 
-        <TableDetallePaquete productos={paqueteDetalle?.productos || []} />
+        <div className="h-[200px]">
+          <TableDetallePaquete productos={paqueteDetalle?.productos || []} />
+        </div>
       </div>
     </Modal>
   )
