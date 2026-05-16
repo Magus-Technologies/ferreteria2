@@ -116,6 +116,25 @@ export default function useInitVenta({
       form.setFieldsValue(dataFormated)
       setAlmacenId(venta.almacen_id)
 
+      // Poblar el store inmediatamente con las unidades que ya vienen en la cotización/venta,
+      // así los selects muestran el valor correcto sin esperar el fetch de stock.
+      const storeInmediato: any[] = []
+      venta.productos_por_almacen.forEach((ppa) => {
+        const udsDispo = (ppa.producto_almacen as any).unidades_derivadas
+        if (!udsDispo?.length) return
+        const yaExiste = storeInmediato.some((p) => p.producto_id === ppa.producto_almacen.producto_id)
+        if (!yaExiste) {
+          storeInmediato.push({
+            producto_id: ppa.producto_almacen.producto_id,
+            producto_name: ppa.producto_almacen.producto.name,
+            unidades_derivadas_disponibles: udsDispo,
+          })
+        }
+      })
+      if (storeInmediato.length > 0) {
+        setProductos(storeInmediato)
+      }
+
       // Cargar stock actual y unidades derivadas de cada producto desde la API
       const productoIds = [
         ...new Set(
@@ -166,9 +185,12 @@ export default function useInitVenta({
                 })
               }
 
-              // Determinar tipo_precio basándose en el precio actual
+              // Determinar tipo_precio basándose en el precio actual.
+              // Buscar primero por ID (caso normal), luego por factor como fallback.
               const udBackend = productoEnAlmacen.unidades_derivadas?.find(
                 (ud: any) => ud.unidad_derivada?.id === prod.unidad_derivada_id
+              ) ?? productoEnAlmacen.unidades_derivadas?.find(
+                (ud: any) => Number(ud.factor) === prod.unidad_derivada_factor
               )
               let tipo_precio = 'publico'
               if (udBackend) {
