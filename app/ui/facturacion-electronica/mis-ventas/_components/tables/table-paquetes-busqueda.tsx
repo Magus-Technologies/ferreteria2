@@ -85,6 +85,7 @@ export default function TablePaquetesBusqueda({
     },
     {
       headerName: 'Acciones',
+      colId: 'acciones',
       field: 'id',
       width: 80,
       cellRenderer: (params: ICellRendererParams<Paquete>) => {
@@ -110,7 +111,6 @@ export default function TablePaquetesBusqueda({
           />
         )
       },
-      type: 'actions',
     },
   ]
 
