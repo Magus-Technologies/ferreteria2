@@ -17,22 +17,26 @@ function TableDetallePaquete({ productos }: { productos: PaqueteProducto[] }) {
   const columnDefs: ColDef<PaqueteProducto>[] = [
     {
       headerName: 'Código',
+      colId: 'codigo',
       width: 90,
       valueGetter: (params) => params.data?.producto?.cod_producto || '-',
     },
     {
       headerName: 'Producto',
+      colId: 'producto',
       flex: 2,
       cellClass: 'font-medium',
       valueGetter: (params) => params.data?.producto?.name || '-',
     },
     {
       headerName: 'Marca',
+      colId: 'marca',
       width: 100,
       valueGetter: (params) => params.data?.producto?.marca?.name || '-',
     },
     {
       headerName: 'U. Derivada',
+      colId: 'unidad_derivada',
       width: 110,
       valueGetter: (params) => params.data?.unidad_derivada?.name || '-',
     },

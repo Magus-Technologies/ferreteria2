@@ -163,6 +163,7 @@ export default function TableProductosPaquete({
     },
     {
       headerName: 'Acciones',
+      colId: 'acciones',
       width: 70,
       cellClass: 'text-center',
       cellRenderer: (params: any) => (
