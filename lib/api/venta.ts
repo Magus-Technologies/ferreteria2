@@ -131,6 +131,11 @@ export interface CreateVentaRequest {
    * implica no crear entrega en absoluto.
    */
   descontar_stock?: 'si' | 'no';
+  /**
+   * Cuando es true, la cotización origen ya descontó stock (reservar_stock=true).
+   * El backend NO vuelve a descontar pero sí marca stock_aplicado=true en la venta.
+   */
+  stock_ya_aplicado?: boolean;
   ingreso_dinero_id?: string;
   codigo_vale?: string;
 }

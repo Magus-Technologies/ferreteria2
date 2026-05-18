@@ -174,6 +174,7 @@ export default function useCreateVenta({
       parcial_resto_programado,
       _omitir_entrega: _omitir_entrega_form,
       descontar_stock,
+      stock_ya_aplicado,
       codigo_vale,
       tipo_pedido,
       cargo_destino,
@@ -314,6 +315,9 @@ export default function useCreateVenta({
       // `descontar_stock = 'no'` indica que el cliente ya tiene el producto:
       // backend NO descuenta stock pero SÍ crea la entrega como ENTREGADA.
       descontar_stock,
+      // `stock_ya_aplicado = true` cuando la cotización origen reservó stock:
+      // backend NO descuenta de nuevo pero sí marca stock_aplicado=true.
+      stock_ya_aplicado: stock_ya_aplicado || undefined,
       recomendado_por_id: recomendado_por_id || undefined,
       user_id: user_id,
       almacen_id: almacen_id,
