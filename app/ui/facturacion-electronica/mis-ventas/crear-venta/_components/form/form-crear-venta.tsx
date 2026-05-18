@@ -65,6 +65,9 @@ export default function FormCrearVenta({
         clienteId={clienteIdParaCalificacion}
       />
       {/* Campos ocultos para que Form.useWatch funcione */}
+      <Form.Item name="stock_ya_aplicado" hidden>
+        <input type="hidden" />
+      </Form.Item>
       <Form.Item name="direccion_seleccionada" hidden>
         <input type="hidden" />
       </Form.Item>
