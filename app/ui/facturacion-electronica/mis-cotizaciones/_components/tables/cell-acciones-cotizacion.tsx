@@ -95,7 +95,7 @@ export default function CellAccionesCotizacion(
         onConfirm={handleEliminar}
         okText="Eliminar"
         cancelText="Cancelar"
-        disabled={yaEliminada}
+        disabled={bloqueada}
       >
         <ButtonBase
           color="danger"
@@ -103,7 +103,7 @@ export default function CellAccionesCotizacion(
           className="flex items-center !px-3"
           title="Eliminar Cotización"
           loading={eliminando}
-          disabled={yaEliminada}
+          disabled={bloqueada}
         >
           <FaTrash />
         </ButtonBase>
