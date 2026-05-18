@@ -142,6 +142,7 @@ export interface VentaFilters {
   estado_de_venta?: EstadoDeVenta;
   cliente_id?: number;
   tipo_documento?: TipoDocumento;
+  despliegue_de_pago_id?: string;
   search?: string;
   entrega?: 'pendiente' | 'completa';
   // Filtra por ediciones según `venta_historial` con accion='edicion'.

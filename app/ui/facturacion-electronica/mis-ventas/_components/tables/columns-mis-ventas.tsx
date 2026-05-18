@@ -196,7 +196,10 @@ export function useColumnsMisVentas() {
       valueGetter: (params) => {
         const pagos = params.data?.despliegue_de_pago_ventas ?? params.data?.despliegueDePagoVentas
         if (!pagos || pagos.length === 0) return '—'
-        return pagos[0].despliegue_de_pago?.name || '—'
+        return pagos
+          .map((p: any) => p.despliegue_de_pago?.name || '—')
+          .filter((name: string) => name !== '—')
+          .join(', ') || '—'
       },
     },
     {
