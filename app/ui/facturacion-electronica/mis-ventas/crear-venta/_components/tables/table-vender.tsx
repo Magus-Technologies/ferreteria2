@@ -95,10 +95,10 @@ export default function TableVender({
     ) {
       // Sub-produto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
       // Usa path-based getFieldValue igual que getRowStyle, garantizado por Form.List
-      if (productoAgregadoVenta._tipo_fila === 'paquete_produto') {
+      if (productoAgregadoVenta._tipo_fila === 'paquete_producto') {
         const paqueteId = (productoAgregadoVenta as any).paquete_id
         const alreadyExists = fields.some((f) =>
-          form.getFieldValue(['productos', f.name, '_tipo_fila']) === 'paquete_produto' &&
+          form.getFieldValue(['productos', f.name, '_tipo_fila']) === 'paquete_producto' &&
           form.getFieldValue(['productos', f.name, 'paquete_id']) === paqueteId &&
           form.getFieldValue(['productos', f.name, 'producto_id']) === productoAgregadoVenta.producto_id
         )
@@ -115,11 +115,12 @@ export default function TableVender({
 
         if (existingField) {
           const cabIdx = existingField.name
-          // Recoger sub-products consecutivos usando path-based lookup
+          const cabFieldsPos = fields.findIndex((f) => f.name === cabIdx)
+          // Recoger sub-products consecutivos usando path-based lookup (misma técnica que getRowStyle)
           const subFields: number[] = []
-          for (let i = cabIdx + 1; i < fields.length; i++) {
-            const fIdx = fields[i]?.name ?? i
-            if (form.getFieldValue(['productos', fIdx, '_tipo_fila']) !== 'paquete_produto') break
+          for (let pos = cabFieldsPos + 1; pos < fields.length; pos++) {
+            const fIdx = fields[pos].name
+            if (form.getFieldValue(['productos', fIdx, '_tipo_fila']) !== 'paquete_producto') break
             subFields.push(fIdx)
           }
 
