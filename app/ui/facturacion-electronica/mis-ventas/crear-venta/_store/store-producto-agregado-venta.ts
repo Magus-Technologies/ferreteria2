@@ -29,6 +29,7 @@ type UseStoreProductoAgregadoVentaProps = {
   ) => void
   setTipoMoneda: (value: TipoMoneda) => void
   setValesAplicables: (vales: ValeCompra[]) => void
+  reset: () => void
 }
 
 export const useStoreProductoAgregadoVenta =
@@ -46,5 +47,12 @@ export const useStoreProductoAgregadoVenta =
         })),
       setTipoMoneda: (value) => set({ tipo_moneda: value }),
       setValesAplicables: (vales) => set({ valesAplicables: vales }),
+      reset: () =>
+        set({
+          productoAgregado: undefined,
+          productos: [],
+          tipo_moneda: TipoMoneda.SOLES,
+          valesAplicables: [],
+        }),
     }
   })
