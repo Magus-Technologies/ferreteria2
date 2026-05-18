@@ -123,7 +123,7 @@ export default function FormCrearPrestamo({
             <SelectBase
               propsForm={{
                 name: "tipo_entidad",
-                initialValue: TipoEntidad.CLIENTE,
+                initialValue: TipoEntidad.PROVEEDOR,
                 rules: [{ required: true }],
               }}
               className="!w-[150px]"

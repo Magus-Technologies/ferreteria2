@@ -23,6 +23,6 @@ export const useStoreProductoAgregadoPrestamo =
     setTipoMoneda: (tipo_moneda) => set({ tipo_moneda }),
     tipo_operacion: TipoOperacion.PRESTAR,
     setTipoOperacion: (tipo_operacion) => set({ tipo_operacion }),
-    tipo_entidad: TipoEntidad.CLIENTE,
+    tipo_entidad: TipoEntidad.PROVEEDOR,
     setTipoEntidad: (tipo_entidad) => set({ tipo_entidad }),
   }))
