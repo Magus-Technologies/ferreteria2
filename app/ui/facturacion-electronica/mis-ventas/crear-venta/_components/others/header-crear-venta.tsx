@@ -129,7 +129,8 @@ export default function HeaderCrearVenta({
       comision: 0,
       paquete_id: paquete.id,
       paquete_nombre: paquete.nombre,
-    });
+      tipo_precio: 'publico',
+    } as any);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 2. Agregar sub-productos
@@ -162,7 +163,17 @@ export default function HeaderCrearVenta({
           comision: 0,
           paquete_id: paquete.id,
           paquete_nombre: paquete.nombre,
-        });
+          tipo_precio: tipoPrecio,
+          // Guardar todos los precios y descuentos para que cambiar tipo de precio funcione
+          paq_precio_publico: Number(paqueteProducto.precio_publico || 0),
+          paq_precio_especial: Number(paqueteProducto.precio_especial || 0),
+          paq_precio_minimo: Number(paqueteProducto.precio_minimo || 0),
+          paq_precio_ultimo: Number(paqueteProducto.precio_ultimo || 0),
+          paq_descuento_publico: Number(paqueteProducto.descuento_publico || 0),
+          paq_descuento_especial: Number(paqueteProducto.descuento_especial || 0),
+          paq_descuento_minimo: Number(paqueteProducto.descuento_minimo || 0),
+          paq_descuento_ultimo: Number(paqueteProducto.descuento_ultimo || 0),
+        } as any);
 
         productosAgregados++;
         await new Promise((resolve) => setTimeout(resolve, 100));

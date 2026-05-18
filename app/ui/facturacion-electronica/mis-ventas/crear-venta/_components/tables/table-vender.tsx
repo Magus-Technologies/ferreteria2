@@ -70,14 +70,19 @@ export default function TableVender({
   }: {
     producto: ValuesCardAgregarProductoVenta
   }) {
+    const isPaqueteFila = producto._tipo_fila === 'paquete_cabecera' || producto._tipo_fila === 'paquete_producto'
     add({
       ...producto,
-      subtotal: Number(
-        (
-          (Number(producto.precio_venta) + Number(producto.recargo ?? 0)) *
-          Number(producto.cantidad)
-        ).toFixed(2)
-      ),
+      // Paquete rows already have subtotal = (precio - descuento) × qty calculated correctly.
+      // Normal rows: recalculate gross (discount handled separately in the right panel).
+      subtotal: isPaqueteFila
+        ? Number(producto.subtotal ?? 0)
+        : Number(
+            (
+              (Number(producto.precio_venta) + Number(producto.recargo ?? 0)) *
+              Number(producto.cantidad)
+            ).toFixed(2)
+          ),
     })
   }
 
