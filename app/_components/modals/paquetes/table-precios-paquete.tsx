@@ -70,14 +70,13 @@ export default function TablePreciosPaquete({
         cellRenderer: (params: any) => {
           if (!params.data) return null
           const precio = getPrecioPaquete(params.data, tipo)
-          const descuento = getDescuentoPaquete(params.data, tipo)
           return (
             <div className="flex items-center h-full">
               <InputNumber
                 size="small"
                 className="w-full"
                 prefix="S/."
-                value={Math.max(0, precio - descuento)}
+                value={precio}
                 precision={2}
                 controls={false}
                 readOnly

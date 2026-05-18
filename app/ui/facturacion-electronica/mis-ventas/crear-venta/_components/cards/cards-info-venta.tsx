@@ -152,7 +152,10 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         if (descuento_tipo === DescuentoTipo.PORCENTAJE) {
           return acc + ((precio_venta + recargo) * descuento * cantidad) / 100;
         } else {
-          return acc + descuento;
+          // Para sub-productos de paquete, descuento es por unidad → multiplicar por cantidad.
+          // Para productos normales, descuento es monto total fijo → sumar sin escalar.
+          const isPaqueteProducto = item?._tipo_fila === 'paquete_producto';
+          return acc + (isPaqueteProducto ? descuento * cantidad : descuento);
         }
       }, 0),
     [productosReales],

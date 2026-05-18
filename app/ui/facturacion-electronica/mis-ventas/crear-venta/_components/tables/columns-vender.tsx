@@ -87,13 +87,10 @@ export function useColumnsVender({
       updates[i] = {
         ...updates[i],
         cantidad: nuevaCantidad,
-        subtotal: calcularSubtotalVenta({
-          precio_venta: Number(updates[i].precio_venta || 0),
-          recargo: Number(updates[i].recargo || 0),
-          descuento_tipo: updates[i].descuento_tipo || DescuentoTipo.MONTO,
-          descuento: Number(updates[i].descuento || 0),
-          cantidad: nuevaCantidad,
-        }),
+        // Para sub-productos de paquete, descuento es POR UNIDAD (no total).
+        // Usar (precio - descuento) × cantidad en lugar de calcularSubtotalVenta
+        // que trata el descuento como total fijo.
+        subtotal: (Number(updates[i].precio_venta || 0) - Number(updates[i].descuento || 0)) * nuevaCantidad,
       }
     }
 
@@ -728,11 +725,9 @@ export function useColumnsVender({
             <Form.Item noStyle shouldUpdate>
               {() => {
                 const precio = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
-                const descuento = Number(form.getFieldValue(['productos', value, 'descuento']) || 0)
-                const neto = Math.max(0, precio - descuento)
                 return (
                   <div className='flex items-center h-full'>
-                    <span className='text-gray-600 text-xs'>{monedaPrefix} {neto.toFixed(2)}</span>
+                    <span className='text-gray-600 text-xs'>{monedaPrefix} {precio.toFixed(2)}</span>
                     <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
                   </div>
                 )
