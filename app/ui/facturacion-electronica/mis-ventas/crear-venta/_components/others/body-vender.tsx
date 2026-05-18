@@ -140,6 +140,8 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
   _omitir_entrega?: boolean
   // Toggle manual del usuario: si "no", fuerza no descontar stock (equivalente a omitir).
   descontar_stock?: 'si' | 'no'
+  // La cotización origen ya descontó stock (reservar_stock=true): no descontar de nuevo.
+  stock_ya_aplicado?: boolean
 }
 
 // Componente interno que se recrea completamente cuando cambia la key
