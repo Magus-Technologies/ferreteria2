@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useColumnsMisPrestamos } from './columns-mis-prestamos'
+import ModalDocPrestamo from '../modals/modal-doc-prestamo'
 import { create } from 'zustand'
 import { prestamoApi, type Prestamo } from '~/lib/api/prestamo'
 import { useQuery } from '@tanstack/react-query'
@@ -44,6 +45,15 @@ export default function TableMisPrestamos() {
     (state) => state.setPrestamo
   )
 
+  // Modal de PDF/Ticket del préstamo
+  const [docModalOpen, setDocModalOpen] = useState(false)
+  const [prestamoIdDoc, setPrestamoIdDoc] = useState<string | undefined>()
+
+  const handleVerPdf = (id: string) => {
+    setPrestamoIdDoc(id)
+    setDocModalOpen(true)
+  }
+
   // Seleccionar automáticamente el primer registro cuando se cargan los datos
   React.useEffect(() => {
     if (response && response.length > 0 && tableRef.current) {
@@ -64,7 +74,7 @@ export default function TableMisPrestamos() {
         id='mis-prestamos'
         title='N° DE CLIENTES/PROVEEDORES - Préstamos'
         loading={loading}
-        columnDefs={useColumnsMisPrestamos()}
+        columnDefs={useColumnsMisPrestamos(handleVerPdf)}
         rowData={response || []}
         tableRef={tableRef}
         selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
@@ -78,6 +88,12 @@ export default function TableMisPrestamos() {
         onRowDoubleClicked={({ data }) => {
           setPrestamoSeleccionada(data)
         }}
+      />
+
+      <ModalDocPrestamo
+        open={docModalOpen}
+        setOpen={setDocModalOpen}
+        prestamoId={prestamoIdDoc}
       />
     </div>
   )

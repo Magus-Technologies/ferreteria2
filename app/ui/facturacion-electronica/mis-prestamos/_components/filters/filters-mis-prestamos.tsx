@@ -45,8 +45,11 @@ export default function FiltersMisPrestamos() {
   const prestamoSeleccionado = UseStorePrestamoSeleccionada((state) => state.prestamo)
 
   useEffect(() => {
+    const hoy = dayjs().format('YYYY-MM-DD')
     const data = {
       almacen_id,
+      fecha_desde: hoy,
+      fecha_hasta: hoy,
     }
     setFiltros(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps

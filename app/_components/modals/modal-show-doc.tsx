@@ -75,6 +75,23 @@ interface ModalEntradaStockProps {
     /** Mensaje por defecto pre-llenado en el textarea. */
     mensajeDefault?: string
   }
+  /**
+   * Configuración para descargar / imprimir eligiendo columnas.
+   * Cuando se proporciona, al hacer click en Descargar o Imprimir se abre
+   * un selector de columnas antes de generar el PDF.
+   */
+  descargaConfig?: {
+    /** Columnas/campos que el usuario puede elegir incluir. */
+    columnas?: { label: string; value: string }[]
+    /** Columnas marcadas por defecto. Si no se pasa, se marcan todas. */
+    defaultColumnas?: string[]
+    /** Extras adicionales (subtotal, total, etc.). */
+    extras?: { label: string; value: string }[]
+    /** Extras marcados por defecto. */
+    defaultExtras?: string[]
+    /** Devuelve el blob del PDF generado con las columnas/extras elegidas. */
+    fetchBlob: (columnas: string[], extras: string[]) => Promise<Blob>
+  }
 }
 export default function ModalShowDoc({
   open,
@@ -94,6 +111,7 @@ export default function ModalShowDoc({
   pdfPublicUrl,
   whatsappConfig,
   emailConfig,
+  descargaConfig,
 }: ModalEntradaStockProps) {
   const title = `Documento Nro: ${nro_doc}`
   const [openConfigModal, setOpenConfigModal] = useState(false)
@@ -116,13 +134,39 @@ export default function ModalShowDoc({
     setOpenConfigModal(true)
   }
 
-  // QZ Tray - impresion directa
+  // Selector de columnas para Descargar / Imprimir
+  const [colSelOpen, setColSelOpen] = useState(false)
+  const [colSelMode, setColSelMode] = useState<'download' | 'print'>('download')
+  const [colSelColumnas, setColSelColumnas] = useState<string[]>([])
+  const [colSelExtras, setColSelExtras] = useState<string[]>([])
+  const [colSelLoading, setColSelLoading] = useState(false)
+  const [printBlobOverride, setPrintBlobOverride] = useState<Blob | undefined>(undefined)
+  const pendingPrintRef = useRef(false)
+
+  // QZ Tray - impresion directa (usa el blob filtrado por columnas si existe)
   const qz = useQzPrint({
     jsx: backendPdfUrl ? undefined : <>{children}</>,
+    pdfBlob: printBlobOverride,
     backendPdfUrl,
     name: nro_doc,
     formato,
   })
+
+  // Al setear el blob filtrado, lanzar la impresión con ese blob
+  useEffect(() => {
+    if (printBlobOverride && pendingPrintRef.current) {
+      pendingPrintRef.current = false
+      ;(async () => {
+        const ok = await qz.imprimirDefault()
+        if (!ok) {
+          setOpenImpresoraModal(true)
+          qz.listarImpresoras()
+        }
+        setPrintBlobOverride(undefined)
+      })()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [printBlobOverride])
 
   // Generar PDF blob y crear URL para el iframe
   const generarPdf = async () => {
@@ -183,7 +227,7 @@ export default function ModalShowDoc({
     return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryString}`
   }
 
-  // Descargar PDF
+  // Descargar PDF (sin selección de columnas)
   const handleDownload = async () => {
     const blob = await getPdfBlob()
     const url = URL.createObjectURL(blob)
@@ -192,6 +236,48 @@ export default function ModalShowDoc({
     link.download = `${nro_doc}.pdf`
     link.click()
     URL.revokeObjectURL(url)
+  }
+
+  // Abrir selector de columnas para descargar o imprimir
+  const handleOpenDescarga = (mode: 'download' | 'print') => {
+    if (!descargaConfig) {
+      // Sin config: comportamiento normal
+      if (mode === 'download') handleDownload()
+      else handlePrint()
+      return
+    }
+    const cols = descargaConfig.columnas
+    setColSelColumnas(descargaConfig.defaultColumnas ?? cols?.map(c => c.value) ?? [])
+    const extras = descargaConfig.extras
+    setColSelExtras(descargaConfig.defaultExtras ?? extras?.map(e => e.value) ?? [])
+    setColSelMode(mode)
+    setColSelOpen(true)
+  }
+
+  // Confirmar selección: genera el PDF con las columnas elegidas
+  const handleConfirmColSel = async () => {
+    if (!descargaConfig) return
+    setColSelLoading(true)
+    try {
+      const blob = await descargaConfig.fetchBlob(colSelColumnas, colSelExtras)
+      if (colSelMode === 'download') {
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${nro_doc}.pdf`
+        link.click()
+        URL.revokeObjectURL(url)
+      } else {
+        // Imprimir con el blob filtrado
+        pendingPrintRef.current = true
+        setPrintBlobOverride(blob)
+      }
+      setColSelOpen(false)
+    } catch (err: any) {
+      antdMessage.error(err?.message || 'Error al generar el PDF')
+    } finally {
+      setColSelLoading(false)
+    }
   }
 
   // WhatsApp
@@ -346,7 +432,7 @@ export default function ModalShowDoc({
             <div className='flex items-center gap-2 justify-end'>
               <Tooltip title='Descargar PDF'>
                 <ButtonBase
-                  onClick={handleDownload}
+                  onClick={() => descargaConfig ? handleOpenDescarga('download') : handleDownload()}
                   color='danger'
                   size='md'
                   className='!px-3'
@@ -386,9 +472,9 @@ export default function ModalShowDoc({
                   </ButtonBase>
                 </Tooltip>
               )}
-              <Tooltip title={qz.impresoraDefault ? `Impresora: ${qz.impresoraDefault}` : 'Seleccionar impresora'}>
+              <Tooltip title={descargaConfig ? 'Imprimir (elegir columnas)' : (qz.impresoraDefault ? `Impresora: ${qz.impresoraDefault}` : 'Seleccionar impresora')}>
                 <ButtonBase
-                  onClick={handleOpenImpresoraModal}
+                  onClick={() => descargaConfig ? handleOpenDescarga('print') : handleOpenImpresoraModal()}
                   color={qz.impresoraDefault ? 'info' : 'default'}
                   size='md'
                   className='!px-3'
@@ -410,7 +496,7 @@ export default function ModalShowDoc({
             ? `Imprimir (${qz.impresoraDefault.length > 20 ? qz.impresoraDefault.slice(0, 20) + '...' : qz.impresoraDefault})`
             : 'Imprimir'
         }
-        onOk={handlePrint}
+        onOk={() => descargaConfig ? handleOpenDescarga('print') : handlePrint()}
         confirmLoading={qz.imprimiendo}
         cancelText='Cerrar'
         cancelButtonProps={{ className: 'rounded-xl' }}
@@ -646,6 +732,67 @@ export default function ModalShowDoc({
           </div>
           <p className='text-[11px] text-gray-400'>
             Se abrirá WhatsApp con el mensaje y el enlace al documento PDF.
+          </p>
+        </div>
+      </Modal>
+
+      {/* Modal selector de columnas para Descargar / Imprimir */}
+      <Modal
+        title={
+          <div className='flex items-center gap-2'>
+            {colSelMode === 'download'
+              ? <FaDownload className='text-red-500' size={18} />
+              : <FaPrint className='text-blue-500' size={18} />}
+            <span className='text-lg font-semibold'>
+              {colSelMode === 'download' ? 'Descargar' : 'Imprimir'} — Seleccionar columnas
+            </span>
+          </div>
+        }
+        width={460}
+        open={colSelOpen}
+        onOk={handleConfirmColSel}
+        onCancel={() => setColSelOpen(false)}
+        okText={colSelMode === 'download' ? 'Descargar' : 'Imprimir'}
+        cancelText='Cancelar'
+        confirmLoading={colSelLoading}
+        okButtonProps={{ className: classOkButtonModal }}
+        cancelButtonProps={{ className: 'rounded-xl' }}
+      >
+        <div className='py-4 flex flex-col gap-4'>
+          {descargaConfig?.columnas && descargaConfig.columnas.length > 0 && (
+            <div>
+              <label className='block text-sm font-medium mb-2'>
+                Columnas a incluir:
+              </label>
+              <Checkbox.Group
+                value={colSelColumnas}
+                onChange={(vals) => setColSelColumnas(vals as string[])}
+              >
+                <div className='grid grid-cols-2 gap-2'>
+                  {descargaConfig.columnas.map(col => (
+                    <Checkbox key={col.value} value={col.value}>{col.label}</Checkbox>
+                  ))}
+                </div>
+              </Checkbox.Group>
+            </div>
+          )}
+          {descargaConfig?.extras && descargaConfig.extras.length > 0 && (
+            <div>
+              <label className='block text-sm font-medium mb-1'>Totales a incluir:</label>
+              <Checkbox.Group
+                value={colSelExtras}
+                onChange={(vals) => setColSelExtras(vals as string[])}
+              >
+                <div className='flex gap-4'>
+                  {descargaConfig.extras.map(ex => (
+                    <Checkbox key={ex.value} value={ex.value}>{ex.label}</Checkbox>
+                  ))}
+                </div>
+              </Checkbox.Group>
+            </div>
+          )}
+          <p className='text-[11px] text-gray-400'>
+            El documento se generará solo con las columnas seleccionadas.
           </p>
         </div>
       </Modal>

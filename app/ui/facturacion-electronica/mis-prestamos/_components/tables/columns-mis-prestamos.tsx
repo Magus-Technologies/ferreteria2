@@ -7,7 +7,9 @@ import { Prestamo, TipoOperacion, EstadoPrestamo } from "~/lib/api/prestamo";
 import ButtonBase from "~/components/buttons/button-base";
 import { formatFechaPeru } from "~/utils/fechas";
 
-export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
+export function useColumnsMisPrestamos(
+  onVerPdf: (id: string) => void
+): ColDef<Prestamo>[] {
   return [
     // {
     //   headerName: '#',
@@ -177,10 +179,7 @@ export function useColumnsMisPrestamos(): ColDef<Prestamo>[] {
             <ButtonBase
               color="danger"
               size="md"
-              onClick={async () => {
-                const { abrirPdf } = await import('~/lib/api/pdf')
-                abrirPdf('prestamo', params.data.id)
-              }}
+              onClick={() => onVerPdf(String(params.data.id))}
               className="flex items-center !px-3"
               title="Ver PDF"
             >
