@@ -43,11 +43,12 @@ export function useColumnsVender({
 
   const monedaPrefix = tipo_moneda === TipoMoneda.SOLES ? 'S/.' : '$.'
 
-  // Guardar los precios y descuentos en el Map cuando se agrega un paquete
+  // Guardar los precios y descuentos en el Map cada vez que cambian los
+  // productos del store (el store conserva el productoData completo con
+  // paq_precio_* / paq_descuento_*, a diferencia del form de Ant Design).
   useEffect(() => {
-    const allProductos = form.getFieldValue('productos') || []
-    for (const producto of allProductos) {
-      if (producto._tipo_fila === 'paquete_producto' && producto.paquete_id) {
+    for (const producto of productosVentaStore as any[]) {
+      if (producto?._tipo_fila === 'paquete_producto' && producto?.paquete_id) {
         const key = `${producto.paquete_id}_${producto.producto_id}`
         paqueteDiscountsRef.current.set(key, {
           paq_precio_publico: producto.paq_precio_publico,
@@ -61,7 +62,7 @@ export function useColumnsVender({
         })
       }
     }
-  }, [form])
+  }, [productosVentaStore])
 
   /** Recalcular sub-productos de un paquete cuando cambia cantidad_paquete */
   function recalcularSubProductosPaquete(paqueteId: number, nuevaCantidadPaquete: number) {
@@ -127,6 +128,9 @@ export function useColumnsVender({
   function cambiarTipoPrecioPaquete(paqueteId: number, nuevoTipo: string) {
     const allProductos = form.getFieldValue('productos') || []
     const updates = [...allProductos]
+    // Leer el store SIEMPRE fresco (evita closures obsoletas en los
+    // cellRenderers cacheados de AG Grid)
+    const storeProductos = useStoreProductoAgregadoVenta.getState().productos as any[]
     let precioPaqueteUnitario = 0
 
     for (let i = 0; i < updates.length; i++) {
@@ -135,10 +139,27 @@ export function useColumnsVender({
       if (updates[i]._tipo_fila === 'paquete_producto') {
         const key = `${paqueteId}_${updates[i].producto_id}`
         const discountData = paqueteDiscountsRef.current.get(key)
-        
-        // Leer los valores del Map o del objeto del producto
-        const precio = Number(discountData?.[`paq_precio_${nuevoTipo}`] || updates[i][`paq_precio_${nuevoTipo}`] || 0)
-        const descuento = Number(discountData?.[`paq_descuento_${nuevoTipo}`] || updates[i][`paq_descuento_${nuevoTipo}`] || 0)
+        // Fuente confiable: el store zustand guarda el productoData completo
+        // con paq_precio_* / paq_descuento_* sin pasar por el registro de Ant Form
+        const storeData = storeProductos.find(
+          (p: any) =>
+            p?.paquete_id === paqueteId &&
+            p?.producto_id === updates[i].producto_id
+        ) as any
+
+        // Leer los valores: store -> Map -> objeto del producto
+        const precio = Number(
+          storeData?.[`paq_precio_${nuevoTipo}`] ??
+          discountData?.[`paq_precio_${nuevoTipo}`] ??
+          updates[i][`paq_precio_${nuevoTipo}`] ??
+          0
+        )
+        const descuento = Number(
+          storeData?.[`paq_descuento_${nuevoTipo}`] ??
+          discountData?.[`paq_descuento_${nuevoTipo}`] ??
+          updates[i][`paq_descuento_${nuevoTipo}`] ??
+          0
+        )
         const cantidadBase = Number(updates[i].cantidad_base || 0)
         const cantidadPaquete = Number(
           allProductos.find((p: any) => p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_cabecera')?.cantidad_paquete || 1
@@ -295,6 +316,15 @@ export function useColumnsVender({
             <InputNumberBase propsForm={{ name: [value, 'cantidad_paquete'], hidden: true }} formWithMessage={false} />
             <InputNumberBase propsForm={{ name: [value, 'cantidad_base'], hidden: true }} formWithMessage={false} />
             <InputBase propsForm={{ name: [value, 'producto_name'], rules: tipoFila === 'paquete_cabecera' ? undefined : [{ required: true, message: '' }], hidden: true }} readOnly variant='borderless' formWithMessage={false} />
+            {/* Precios y descuentos por tipo del paquete (registrados para que Ant Form los preserve al cambiar tipo de precio) */}
+            <InputNumberBase propsForm={{ name: [value, 'paq_precio_publico'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_precio_especial'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_precio_minimo'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_precio_ultimo'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_publico'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_especial'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_minimo'], hidden: true }} formWithMessage={false} />
+            <InputNumberBase propsForm={{ name: [value, 'paq_descuento_ultimo'], hidden: true }} formWithMessage={false} />
           </>
         )
 
