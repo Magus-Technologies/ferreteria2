@@ -124,6 +124,18 @@ export function useColumnsVender({
     return total
   }
 
+  /** Obtener descuento total de sub-productos de un paquete (descuento × cantidad) */
+  function getPaqueteDescuentoTotal(paqueteId: number) {
+    const allProductos = form.getFieldValue('productos') || []
+    let total = 0
+    for (const p of allProductos) {
+      if (p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_producto') {
+        total += Number(p.descuento || 0) * Number(p.cantidad || 0)
+      }
+    }
+    return total
+  }
+
   /** Cambiar tipo de precio para todos los sub-productos de un paquete */
   function cambiarTipoPrecioPaquete(paqueteId: number, nuevoTipo: string) {
     const allProductos = form.getFieldValue('productos') || []
@@ -792,7 +804,7 @@ export function useColumnsVender({
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
 
-        if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
+        if (tipoFila === 'vale_promocional') {
           return (
             <div className='flex items-center h-full'>
               <span className='text-gray-300'>-</span>
@@ -804,6 +816,33 @@ export function useColumnsVender({
               />
               <InputNumberBase propsForm={{ name: [value, 'descuento'], hidden: true }} formWithMessage={false} />
             </div>
+          )
+        }
+
+        if (tipoFila === 'paquete_cabecera') {
+          return (
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
+                const descuentoTotal = getPaqueteDescuentoTotal(paqueteId)
+                return (
+                  <div className='flex items-center h-full'>
+                    <SelectDescuentoTipo
+                      tipoMoneda={tipo_moneda}
+                      formWithMessage={false}
+                      size='small'
+                      propsForm={{ name: [value, 'descuento_tipo'], hidden: true }}
+                    />
+                    <InputNumberBase propsForm={{ name: [value, 'descuento'], hidden: true }} formWithMessage={false} />
+                    {descuentoTotal > 0 ? (
+                      <span className='text-sm font-medium text-orange-600'>- {monedaPrefix} {descuentoTotal.toFixed(2)}</span>
+                    ) : (
+                      <span className='text-gray-300'>-</span>
+                    )}
+                  </div>
+                )
+              }}
+            </Form.Item>
           )
         }
 
