@@ -7,47 +7,61 @@ import { prestamoApi, type Prestamo, type ProductoAlmacenPrestamo } from '~/lib/
 // ============= CONFIG COLUMNAS =============
 
 const COLUMNAS_PRESTAMO = [
+  { label: 'Ubicación', value: 'ubicacion' },
   { label: 'Código', value: 'codigo' },
-  { label: 'Descripción', value: 'producto' },
-  { label: 'Marca', value: 'marca' },
-  { label: 'Unidad', value: 'unidad' },
   { label: 'Cantidad', value: 'cantidad' },
+  { label: 'Unidad', value: 'unidad' },
+  { label: 'Descripción', value: 'producto' },
+  { label: 'Costo Unit.', value: 'costo' },
+  { label: 'Importe', value: 'importe' },
 ]
 
 const EXTRAS_PRESTAMO = [
-  { label: 'Monto Total', value: 'total' },
+  { label: 'Monto Total', value: 'monto_total' },
+  { label: 'Monto Pagado', value: 'monto_pagado' },
+  { label: 'Saldo Pendiente', value: 'saldo_pendiente' },
 ]
 
 // Construye el bloque de detalle para el mensaje de WhatsApp
 function buildDetallePrestamo(
+  prestamo: Prestamo | null,
   productos: ProductoAlmacenPrestamo[],
-  montoTotal: number,
   columnas: string[],
   extras: string[]
 ): string {
   if (!productos.length || !columnas.length) return ''
 
+  const almacenNombre = prestamo?.almacen?.name || '—'
+
   const LABELS: Record<string, string> = {
+    ubicacion: 'Ubi',
     codigo: 'Cód',
-    producto: 'Desc',
-    marca: 'Marca',
-    unidad: 'Und',
     cantidad: 'Cant',
+    unidad: 'Und',
+    producto: 'Desc',
+    costo: 'Costo',
+    importe: 'Importe',
   }
 
   const lineas: string[] = []
   for (const pa of productos) {
     const prod = pa.productoAlmacen?.producto
+    const costo = Number(pa.costo ?? 0)
     const unidades = pa.unidadesDerivadas?.length
       ? pa.unidadesDerivadas
-      : [{ name: '—', cantidad: 0 } as any]
+      : [{ name: '—', cantidad: 0, factor: 1 } as any]
     for (const u of unidades) {
+      const cantidad = Number(u?.cantidad ?? 0)
+      const factor = Number(u?.factor ?? 1)
+      const importe = cantidad * factor * costo
       const valores: Record<string, string> = {
+        ubicacion: almacenNombre,
         codigo: prod?.cod_producto || '—',
-        producto: prod?.name || '—',
-        marca: prod?.marca?.name || '—',
+        cantidad: String(cantidad),
         unidad: u?.name || '—',
-        cantidad: String(u?.cantidad ?? '—'),
+        producto: prod?.name || '—',
+        costo: `S/ ${costo.toFixed(2)}`,
+        importe: `S/ ${importe.toFixed(2)}`,
       }
       const partes = columnas
         .filter((c) => valores[c] !== undefined)
@@ -57,8 +71,14 @@ function buildDetallePrestamo(
   }
 
   let texto = `DETALLE:\n${lineas.join('\n')}`
-  if (extras.includes('total')) {
-    texto += `\n\nMONTO TOTAL: S/ ${Number(montoTotal).toFixed(2)}`
+  if (extras.includes('monto_total')) {
+    texto += `\n\nMONTO TOTAL: S/ ${Number(prestamo?.monto_total ?? 0).toFixed(2)}`
+  }
+  if (extras.includes('monto_pagado')) {
+    texto += `\nMONTO PAGADO: S/ ${Number(prestamo?.monto_pagado ?? 0).toFixed(2)}`
+  }
+  if (extras.includes('saldo_pendiente')) {
+    texto += `\nSALDO PENDIENTE: S/ ${Number(prestamo?.monto_pendiente ?? 0).toFixed(2)}`
   }
   return texto
 }
@@ -151,7 +171,6 @@ export default function ModalDocPrestamo({
   const entidadEmail = prestamoData?.cliente?.email || prestamoData?.proveedor?.email || ''
   const entidadTelefono = prestamoData?.cliente?.telefono || prestamoData?.proveedor?.telefono || prestamoData?.telefono || ''
   const nroDoc = prestamoData?.numero ?? 'Préstamo'
-  const montoTotal = Number(prestamoData?.monto_total ?? 0)
   const productosPrestamo = prestamoData?.productosPorAlmacen ?? []
 
   const whatsappMensajeAuto = prestamoData
@@ -178,15 +197,22 @@ export default function ModalDocPrestamo({
         extras: EXTRAS_PRESTAMO,
         defaultExtras: ['total'],
         buildDetalle: (columnas, extras) =>
-          buildDetallePrestamo(productosPrestamo, montoTotal, columnas, extras),
+          buildDetallePrestamo(prestamoData, productosPrestamo, columnas, extras),
       }}
       emailConfig={{
         emailDefault: entidadEmail,
         columnas: [...COLUMNAS_PRESTAMO, ...EXTRAS_PRESTAMO],
         defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
-        onSend: async (email, _columnas, mensaje) => {
+        onSend: async (email, columnas, mensaje) => {
           if (!prestamoId) throw new Error('No hay préstamo seleccionado')
-          const res = await documentoEmailApi.enviarEmail({ tipo: 'prestamo', id: prestamoId, email, mensaje })
+          const res = await documentoEmailApi.enviarEmail({
+            tipo: 'prestamo',
+            id: prestamoId,
+            email,
+            mensaje,
+            formato: esTicket ? 'ticket' : 'a4',
+            columnas,
+          })
           if (res.error) throw new Error(res.error.message)
         },
       }}
