@@ -12,6 +12,8 @@ import { cotizacionesApi } from '~/lib/api/cotizaciones'
 import { ventaApi, TipoDocumento } from '~/lib/api/venta'
 import { unidadesDerivadas } from '~/lib/api/catalogos'
 import type { VentaConUnidadDerivadaNormal } from './_components/others/header-crear-venta'
+import { useEffect } from 'react'
+import { useStoreProductoAgregadoVenta } from './_store/store-producto-agregado-venta'
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -32,6 +34,15 @@ export default function CrearVenta() {
   // Se generan en BarConvertirNotas (mis-ventas).
   const notasParam = searchParams.get('notas')
   const notaIds = notasParam ? notasParam.split(',').filter(Boolean) : []
+
+  const resetStore = useStoreProductoAgregadoVenta((state) => state.reset)
+
+  // Limpiar el almacén de productos al desmontar la vista
+  useEffect(() => {
+    return () => {
+      resetStore()
+    }
+  }, [resetStore])
 
   // Cargar cotización si existe el parámetro
   const { data: cotizacionData, isLoading } = useQuery({

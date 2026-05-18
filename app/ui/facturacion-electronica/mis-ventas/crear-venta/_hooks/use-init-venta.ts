@@ -18,9 +18,12 @@ export default function useInitVenta({
 }) {
   const setAlmacenId = useStoreAlmacen((state) => state.setAlmacenId)
   const setProductos = useStoreProductoAgregadoVenta((state) => state.setProductos)
+  const setProductoAgregado = useStoreProductoAgregadoVenta((state) => state.setProductoAgregado)
 
   useEffect(() => {
     form.resetFields()
+    setProductoAgregado(undefined)
+    setProductos([])
     if (venta) {
       // Mapear datos de la primera entrega si existe
       const entrega = (venta as any).entregas_productos?.[0]

@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal, Form, message, InputNumber, Checkbox } from 'antd'
-import { useState, useMemo } from 'react'
+import { Modal, Form, message } from 'antd'
+import { useState, useMemo, useEffect, memo, useCallback } from 'react'
 import FormBase from '~/components/form/form-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
@@ -13,7 +13,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
 import { FaCalendar } from 'react-icons/fa6'
-import type { ProductoAlmacenPrestamo } from '~/lib/api/prestamo'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
 import { orangeColors } from '~/lib/colors'
@@ -26,15 +25,87 @@ interface ModalRegistrarDevolucionProps {
 
 interface ProductoDevolucion {
   producto_almacen_prestamo_id: number
-  cantidad: number
+  producto_name: string
+  producto_codigo: string
+  unidad_name: string
+  total: number
+  entregado: number
+  pendiente: number
+  devolver: number
   factor: number
-  selected: boolean
 }
 
 interface FormValues {
   fecha_devolucion: dayjs.Dayjs
   observaciones?: string
 }
+
+interface DevolverCellProps {
+  id: number
+  initialValue: number
+  max: number
+  onCommit: (id: number, value: number) => void
+}
+
+const DevolverCell = memo(function DevolverCell({
+  id,
+  initialValue,
+  max,
+  onCommit,
+}: DevolverCellProps) {
+  const [value, setValue] = useState<string>(initialValue === 0 ? '' : String(initialValue))
+
+  useEffect(() => {
+    setValue(initialValue === 0 ? '' : String(initialValue))
+  }, [initialValue])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Solo permitir números enteros (sin decimales ni signos negativos)
+    const raw = e.target.value.replace(/[^0-9]/g, '')
+    setValue(raw)
+  }
+
+  const handleBlur = () => {
+    let num = Number(value) || 0
+    if (num > max) num = max
+    if (num < 0) num = 0
+    setValue(num === 0 ? '' : String(num))
+    onCommit(id, num)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      let num = Number(value) || 0
+      if (num > max) num = max
+      if (num < 0) num = 0
+      setValue(num === 0 ? '' : String(num))
+      onCommit(id, num)
+    }
+  }
+
+  return (
+    <div className='flex justify-center items-center h-full w-full py-1 pr-2'>
+      <input
+        type='text'
+        inputMode='numeric'
+        value={value}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder='0'
+        style={{
+          width: '100%',
+          border: '1px solid #d9d9d9',
+          borderRadius: '4px',
+          padding: '2px 8px',
+          fontSize: '13px',
+          outline: 'none',
+          textAlign: 'right',
+        }}
+      />
+    </div>
+  )
+})
 
 export default function ModalRegistrarDevolucion({
   open,
@@ -48,34 +119,64 @@ export default function ModalRegistrarDevolucion({
 
   // Initialize productos when prestamo changes
   useMemo(() => {
-    if (prestamo?.productosPorAlmacen) {
-      const initialProductos = prestamo.productosPorAlmacen.map((pa: ProductoAlmacenPrestamo) => {
-        const unidad = pa.unidadesDerivadas?.[0]
+    const pAny = prestamo as any
+    const productosPorAlmacen = pAny?.productos_por_almacen ?? pAny?.productosPorAlmacen
+    const devoluciones = pAny?.devoluciones || []
+
+    const getReturnedQty = (id: number) => {
+      let sum = 0
+      devoluciones.forEach((d: any) => {
+        const pdList = d.productos_devueltos ?? d.productosDevueltos ?? []
+        pdList.forEach((pd: any) => {
+          if (Number(pd.producto_almacen_prestamo_id) === Number(id)) {
+            sum += Number(pd.cantidad || 0)
+          }
+        })
+      })
+      return sum
+    }
+
+    if (productosPorAlmacen) {
+      const initialProductos = productosPorAlmacen.map((pa: any) => {
+        const unidadesDerivadas = pa.unidades_derivadas ?? pa.unidadesDerivadas
+        const unidad = unidadesDerivadas?.[0]
+        const prodAlmacen = pa.producto_almacen ?? pa.productoAlmacen
+        const prod = prodAlmacen?.producto
+
+        const total = unidad ? Number(unidad.cantidad) : Number(prestamo?.monto_total || 0)
+        const entregado = getReturnedQty(pa.id)
+        const pendiente = Math.max(0, total - entregado)
+
         return {
           producto_almacen_prestamo_id: pa.id,
-          cantidad: unidad ? Number(unidad.cantidad) : Number(prestamo.monto_pendiente || 0),
+          producto_name: prod ? prod.name : 'N/A',
+          producto_codigo: prod ? prod.cod_producto : '',
+          unidad_name: unidad ? unidad.name : 'UNIDAD',
+          total,
+          entregado,
+          pendiente,
+          devolver: 0,
           factor: unidad ? Number(unidad.factor) : 1,
-          selected: true,
         }
       })
       setProductos(initialProductos)
     }
-  }, [prestamo?.productosPorAlmacen, prestamo?.monto_pendiente])
+  }, [prestamo])
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
       if (!prestamo) throw new Error('No hay préstamo seleccionado')
 
       const selectedProductos = productos
-        .filter(p => p.selected)
+        .filter(p => p.devolver > 0)
         .map(p => ({
           producto_almacen_prestamo_id: p.producto_almacen_prestamo_id,
-          cantidad: p.cantidad,
+          cantidad: p.devolver,
           factor: p.factor,
         }))
 
       if (selectedProductos.length === 0) {
-        throw new Error('Debe seleccionar al menos un producto')
+        throw new Error('Debe especificar cantidades a devolver mayores a 0')
       }
 
       const data = {
@@ -112,81 +213,81 @@ export default function ModalRegistrarDevolucion({
     setOpen(false)
   }
 
-  const handleProductoChange = (index: number, field: 'cantidad' | 'selected', value: number | boolean) => {
-    setProductos(prev => {
-      const updated = [...prev]
-      if (field === 'selected') {
-        updated[index] = { ...updated[index], selected: value as boolean }
-      } else {
-        updated[index] = { ...updated[index], cantidad: value as number }
-      }
-      return updated
-    })
-  }
+  const handleProductoChange = useCallback((id: number, value: number) => {
+    setProductos(prev =>
+      prev.map(p => {
+        if (p.producto_almacen_prestamo_id === id) {
+          return {
+            ...p,
+            devolver: value
+          }
+        }
+        return p
+      })
+    )
+  }, [])
 
   const columns: ColDef<ProductoDevolucion>[] = [
     {
-      headerName: '',
-      field: 'selected',
+      headerName: '#',
+      valueGetter: (params: any) => (params.node?.rowIndex ?? 0) + 1,
       width: 50,
-      cellRenderer: (params: any) => {
-        const index = params.rowIndex
-        return (
-          <div className='flex justify-center items-center h-full'>
-            <Checkbox
-              checked={productos[index]?.selected}
-              onChange={(e) => handleProductoChange(index, 'selected', e.target.checked)}
-            />
-          </div>
-        )
-      },
+      cellStyle: { textAlign: 'center' },
     },
     {
       headerName: 'Producto',
       valueGetter: (params: any) => {
-        const index = params.rowIndex
-        const pa = prestamo?.productosPorAlmacen?.[index]
-        const prod = pa?.productoAlmacen?.producto
-        return prod ? `${prod.name} (${prod.cod_producto})` : 'N/A'
+        const data = params.data as ProductoDevolucion
+        return data ? `${data.producto_name} (${data.producto_codigo})` : 'N/A'
       },
       flex: 1,
       minWidth: 200,
     },
     {
-      headerName: 'UND',
-      valueGetter: (params: any) => {
-        const index = params.rowIndex
-        const pa = prestamo?.productosPorAlmacen?.[index]
-        return pa?.unidadesDerivadas?.[0]?.name || 'UNIDAD'
-      },
-      width: 80,
+      headerName: 'Total',
+      field: 'total',
+      width: 100,
+      valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+      cellStyle: { fontWeight: 'bold' },
     },
     {
-      headerName: 'Cantidad',
-      field: 'cantidad',
-      width: 120,
+      headerName: 'Entregado',
+      field: 'entregado',
+      width: 110,
+      valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+      cellStyle: { color: '#059669', fontWeight: 'bold' },
+    },
+    {
+      headerName: 'Pendiente',
+      field: 'pendiente',
+      width: 110,
+      valueFormatter: (params) => Number(params.value || 0).toFixed(2),
+      cellStyle: { color: '#ef4444', fontWeight: 'bold' },
+    },
+    {
+      headerName: 'Devolver',
+      field: 'devolver',
+      width: 130,
       cellRenderer: (params: any) => {
-        const index = params.rowIndex
+        const data = params.data as ProductoDevolucion
+        if (!data) return null
         return (
-          <div className='flex justify-center items-center h-full w-full py-1 pr-2'>
-            <InputNumber
-              min={0}
-              max={productos[index]?.factor * 10000}
-              value={productos[index]?.cantidad || 0}
-              onChange={(value) => handleProductoChange(index, 'cantidad', value || 0)}
-              disabled={!productos[index]?.selected}
-              size='small'
-              style={{ width: '100%' }}
-            />
-          </div>
+          <DevolverCell
+            id={data.producto_almacen_prestamo_id}
+            initialValue={data.devolver}
+            max={data.pendiente}
+            onCommit={handleProductoChange}
+          />
         )
+      },
+      cellStyle: {
+        backgroundColor: '#f0fdf4',
       },
     },
   ]
 
   const totalSelected = productos
-    .filter(p => p.selected)
-    .reduce((sum, p) => sum + (p.cantidad * p.factor), 0)
+    .reduce((sum, p) => sum + (p.devolver * p.factor), 0)
 
   return (
     <Modal
