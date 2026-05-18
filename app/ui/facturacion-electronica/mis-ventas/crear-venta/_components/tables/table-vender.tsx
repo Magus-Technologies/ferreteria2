@@ -93,53 +93,63 @@ export default function TableVender({
       Object.keys(productoAgregadoVenta).length &&
       productoAgregadoVenta.producto_id
     ) {
-      // Sub-producto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
+      // Sub-produto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
+      // Usa path-based getFieldValue igual que getRowStyle, garantizado por Form.List
       if (productoAgregadoVenta._tipo_fila === 'paquete_produto') {
-        const allProductos = (form.getFieldValue('productos') || []) as FormCreateVenta['productos']
         const paqueteId = (productoAgregadoVenta as any).paquete_id
-        const alreadyExists = allProductos.some(
-          (p: any) =>
-            p._tipo_fila === 'paquete_produto' &&
-            p.paquete_id === paqueteId &&
-            p.producto_id === productoAgregadoVenta.producto_id
+        const alreadyExists = fields.some((f) =>
+          form.getFieldValue(['productos', f.name, '_tipo_fila']) === 'paquete_produto' &&
+          form.getFieldValue(['productos', f.name, 'paquete_id']) === paqueteId &&
+          form.getFieldValue(['productos', f.name, 'producto_id']) === productoAgregadoVenta.producto_id
         )
         if (alreadyExists) return
       }
 
       // Cabecera de paquete → si ya existe uno con el mismo paquete_id, incrementar cantidad
       if (productoAgregadoVenta._tipo_fila === 'paquete_cabecera') {
-        const allProductos = (form.getFieldValue('productos') || []) as FormCreateVenta['productos']
-        const existingIdx = allProductos.findIndex(
-          (p: any) => p._tipo_fila === 'paquete_cabecera' && p.paquete_id === (productoAgregadoVenta as any).paquete_id
+        const paqueteId = (productoAgregadoVenta as any).paquete_id
+        const existingField = fields.find((f) =>
+          form.getFieldValue(['productos', f.name, '_tipo_fila']) === 'paquete_cabecera' &&
+          form.getFieldValue(['productos', f.name, 'paquete_id']) === paqueteId
         )
 
-        if (existingIdx >= 0) {
-          const updates = [...allProductos] as any[]
-          const cab = updates[existingIdx]
-          const nuevaCantPaquete = Number(cab.cantidad_paquete || 1) + 1
-
-          // Usar getFieldValue por ruta (garantizado por getRowStyle) para detectar sub-productos
-          let precioPaqueteUnit = 0
-          let subEnd = existingIdx + 1
-          while (subEnd < allProductos.length) {
-            if (form.getFieldValue(['productos', subEnd, '_tipo_fila']) !== 'paquete_produto') break
-            precioPaqueteUnit +=
-              (Number(updates[subEnd].precio_venta || 0) - Number(updates[subEnd].descuento || 0)) *
-              Number(updates[subEnd].cantidad_base || 1)
-            subEnd++
+        if (existingField) {
+          const cabIdx = existingField.name
+          // Recoger sub-products consecutivos usando path-based lookup
+          const subFields: number[] = []
+          for (let i = cabIdx + 1; i < fields.length; i++) {
+            const fIdx = fields[i]?.name ?? i
+            if (form.getFieldValue(['productos', fIdx, '_tipo_fila']) !== 'paquete_produto') break
+            subFields.push(fIdx)
           }
 
-          for (let i = existingIdx + 1; i < subEnd; i++) {
-            const cantBase = Number(updates[i].cantidad_base || 1)
+          const allProductos = (form.getFieldValue('productos') || []) as any[]
+          const updates = [...allProductos]
+          const cab = updates[cabIdx]
+          const nuevaCantPaquete = Number(form.getFieldValue(['productos', cabIdx, 'cantidad_paquete']) || 1) + 1
+
+          let precioPaqueteUnit = 0
+          for (const si of subFields) {
+            precioPaqueteUnit +=
+              (Number(form.getFieldValue(['productos', si, 'precio_venta']) || 0) -
+               Number(form.getFieldValue(['productos', si, 'descuento']) || 0)) *
+              Number(form.getFieldValue(['productos', si, 'cantidad_base']) || 1)
+          }
+
+          for (const si of subFields) {
+            const cantBase = Number(form.getFieldValue(['productos', si, 'cantidad_base']) || 1)
             const nuevaCantSub = cantBase * nuevaCantPaquete
-            updates[i] = {
-              ...updates[i],
+            updates[si] = {
+              ...updates[si],
               cantidad: nuevaCantSub,
-              subtotal: (Number(updates[i].precio_venta || 0) - Number(updates[i].descuento || 0)) * nuevaCantSub,
+              subtotal:
+                (Number(form.getFieldValue(['productos', si, 'precio_venta']) || 0) -
+                 Number(form.getFieldValue(['productos', si, 'descuento']) || 0)) *
+                nuevaCantSub,
             }
           }
 
-          updates[existingIdx] = {
+          updates[cabIdx] = {
             ...cab,
             cantidad_paquete: nuevaCantPaquete,
             cantidad: nuevaCantPaquete,
