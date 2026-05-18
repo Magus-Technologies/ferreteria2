@@ -38,7 +38,6 @@ export function useValidaciones({
     (
       !slotDomicilio ||
       !direccionEntrega?.trim() ||
-      (tipoPedido === TipoPedido.INTERNO && !despachadorId) ||
       (tipoPedido === TipoPedido.EXTERNO && !cargoDestino)
     )
 
@@ -49,7 +48,6 @@ export function useValidaciones({
     (
       !slotResto ||
       !restoDireccionEntrega?.trim() ||
-      (tipoPedidoResto === TipoPedido.INTERNO && !restoDespachadorId) ||
       (tipoPedidoResto === TipoPedido.EXTERNO && !restoCargoDestino)
     )
 

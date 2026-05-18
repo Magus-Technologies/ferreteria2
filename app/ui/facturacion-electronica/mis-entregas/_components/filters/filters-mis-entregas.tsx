@@ -7,6 +7,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { useStoreFiltrosMisEntregas } from '../../_store/store-filtros-mis-entregas'
 import { useStoreEntregaSeleccionada } from '../tables/table-mis-entregas'
+import { getEntregaOperativa } from '../../_lib/entregas-parciales'
 import dayjs from 'dayjs'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
@@ -43,6 +44,7 @@ export default function FiltersMisEntregas() {
   const esDespachador = user?.rol_sistema === 'DESPACHADOR'
   const entregaSeleccionada = useStoreEntregaSeleccionada((s) => s.entrega)
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
+  const openUpdateModal = useStoreEntregaSeleccionada((s) => s.openUpdateModal)
 
   // Botón principal "Entregar/Despachar/Confirmar" — cambia según el estado
   // de la entrega seleccionada y el tipo de entrega. Cada tipo abre un modal
@@ -269,7 +271,26 @@ export default function FiltersMisEntregas() {
                 type="button"
                 disabled={!botonPrincipal}
                 className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
-                onClick={() => botonPrincipal && triggerAccion(botonPrincipal.accion)}
+                onClick={() => {
+                  if (!botonPrincipal || !entregaSeleccionada) return
+                  const entregaOperativa =
+                    getEntregaOperativa(entregaSeleccionada) || entregaSeleccionada
+
+                  if (
+                    botonPrincipal.accion === 'marcar' ||
+                    botonPrincipal.accion === 'parcial'
+                  ) {
+                    openUpdateModal(entregaOperativa as any, false)
+                    return
+                  }
+
+                  if (botonPrincipal.accion === 'restante') {
+                    openUpdateModal(entregaOperativa as any, true)
+                    return
+                  }
+
+                  triggerAccion(botonPrincipal.accion)
+                }}
               >
                 <FaTruck />
                 {botonPrincipal ? botonPrincipal.label : 'Entregar'}

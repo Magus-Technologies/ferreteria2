@@ -5,6 +5,10 @@ import { ColDef } from 'ag-grid-community'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 import { orangeColors } from '~/lib/colors'
+import {
+  getResumenProductosParcialAgrupado,
+  isEntregaParcialAgrupada,
+} from '../../_lib/entregas-parciales'
 
 type DetalleProductoEntrega = {
   producto: string
@@ -36,6 +40,7 @@ type ProductoHistorial = {
 
 export default function TableDetalleEntrega() {
   const entregaSeleccionada = useStoreEntregaSeleccionada((state) => state.entrega)
+  const esParcialAgrupada = isEntregaParcialAgrupada(entregaSeleccionada)
 
   const venta = entregaSeleccionada?.venta
   const cliente = venta?.cliente
@@ -132,6 +137,20 @@ export default function TableDetalleEntrega() {
   }
 
   const detalleProductos = useMemo<DetalleProductoEntrega[]>(() => {
+    if (esParcialAgrupada) {
+      return getResumenProductosParcialAgrupado(entregaSeleccionada).map((producto) => ({
+        producto: producto.producto,
+        codigo: producto.codigo,
+        marca: producto.marca,
+        unidad: producto.unidad,
+        total: producto.total,
+        recibido: 0,
+        programado: producto.programado,
+        entregado: producto.entregado,
+        pendiente: producto.pendiente,
+      }))
+    }
+
     if (!productosActuales.length) return []
 
     const actualesAgrupados = agruparProductos(productosActuales)
@@ -225,11 +244,18 @@ export default function TableDetalleEntrega() {
     }
 
     return filas
-  }, [entregaTieneEntregaFisica, mostrarRecibido, productosActuales, productosAnteriores])
+  }, [
+    entregaSeleccionada,
+    entregaTieneEntregaFisica,
+    esParcialAgrupada,
+    mostrarRecibido,
+    productosActuales,
+    productosAnteriores,
+  ])
 
   const columnDefs = useMemo<ColDef<DetalleProductoEntrega>[]>(() => {
     const mostrarProgramado =
-      !entregaTieneEntregaFisica &&
+      (!entregaTieneEntregaFisica || esParcialAgrupada) &&
       detalleProductos.some((p) => Number(p.programado || 0) > 0)
 
     const defs: ColDef<DetalleProductoEntrega>[] = [
@@ -289,7 +315,7 @@ export default function TableDetalleEntrega() {
     )
 
     return defs
-  }, [detalleProductos, entregaTieneEntregaFisica, mostrarRecibido])
+  }, [detalleProductos, entregaTieneEntregaFisica, esParcialAgrupada, mostrarRecibido])
 
   return (
     <div className="w-full">

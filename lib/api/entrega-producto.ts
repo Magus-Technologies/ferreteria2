@@ -45,6 +45,7 @@ export interface ProductoEntregadoRequest {
 
 export interface CreateEntregaProductoRequest {
   venta_id: string;
+  grupo_entrega_id?: number;
   tipo_entrega: TipoEntrega;
   tipo_despacho?: TipoDespacho;
   estado_entrega: EstadoEntrega;
@@ -68,6 +69,7 @@ export interface CreateEntregaProductoRequest {
 }
 
 export interface UpdateEntregaProductoRequest {
+  grupo_entrega_id?: number;
   tipo_entrega?: TipoEntrega;
   tipo_despacho?: TipoDespacho;
   estado_entrega?: EstadoEntrega;

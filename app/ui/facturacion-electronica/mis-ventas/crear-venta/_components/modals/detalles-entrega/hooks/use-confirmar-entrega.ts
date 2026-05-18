@@ -21,7 +21,9 @@ import type { TipoDespachoUI } from '../types'
  * registró la venta).
  */
 export interface EntregaOrigenResto {
+  entrega_id: number
   almacen_salida_id: number
+  grupo_entrega_id?: number | null
   user_id: string
 }
 
@@ -248,7 +250,8 @@ export function useConfirmarEntrega({
 
           const payload2: CreateEntregaProductoRequest = {
             venta_id: entregaOrig?.venta_id,
-            tipo_entrega: TipoEntrega.DESPACHO,
+            grupo_entrega_id: entregaOrig?.grupo_entrega_id || entregaOrig?.id,
+            tipo_entrega: TipoEntrega.PARCIAL,
             tipo_despacho: TipoDespacho.PROGRAMADO,
             estado_entrega: EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),
@@ -352,12 +355,22 @@ export function useConfirmarEntrega({
     const productosFiltrados = productosEntrega.filter((p) =>
       tipoDespacho === 'Domicilio' ? cantidadParaDomicilio(p) > 0 : p.entregar > 0,
     )
-    if (productosFiltrados.length === 0) {
+    const productosResto = productosEntrega.filter((p) => p.entregar_programado > 0)
+    const soloProgramaRestoParcial =
+      tipoDespacho === 'Parcial' &&
+      programarResto &&
+      productosFiltrados.length === 0 &&
+      productosResto.length > 0
+    if (productosFiltrados.length === 0 && !soloProgramaRestoParcial) {
       throw new Error('No hay productos a entregar — revisa las cantidades')
     }
 
     const payload1: CreateEntregaProductoRequest = {
       venta_id: mode.ventaId,
+      grupo_entrega_id:
+        tipoDespacho === 'Parcial'
+          ? mode.entregaOrigen.grupo_entrega_id || mode.entregaOrigen.entrega_id
+          : undefined,
       tipo_entrega: tipoEntrega,
       tipo_despacho: tipoDespachoApi,
       estado_entrega: estadoEntrega,
@@ -398,14 +411,23 @@ export function useConfirmarEntrega({
 
     setCreandoEntregaResto(true)
     try {
-      const r1 = await entregaProductoApi.create(payload1)
-      if (r1.error) {
-        throw new Error(r1.error.message || 'Error al crear entrega')
+      let grupoEntregaIdParcial =
+        mode.entregaOrigen.grupo_entrega_id || mode.entregaOrigen.entrega_id
+
+      if (!soloProgramaRestoParcial) {
+        const r1 = await entregaProductoApi.create(payload1)
+        if (r1.error) {
+          throw new Error(r1.error.message || 'Error al crear entrega')
+        }
+        const entregaCreada: any = r1.data?.data ?? r1.data
+        if (tipoDespacho === 'Parcial') {
+          grupoEntregaIdParcial =
+            entregaCreada?.grupo_entrega_id || entregaCreada?.id || grupoEntregaIdParcial
+        }
       }
 
       // ── Parcial + programar-resto: crear segunda entrega programada ──
       if (tipoDespacho === 'Parcial' && programarResto) {
-        const productosResto = productosEntrega.filter((p) => p.entregar_programado > 0)
         if (productosResto.length > 0) {
           const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
           const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
@@ -418,9 +440,10 @@ export function useConfirmarEntrega({
 
           const payload2: CreateEntregaProductoRequest = {
             venta_id: mode.ventaId,
+            grupo_entrega_id: grupoEntregaIdParcial,
             // El "resto programado" siempre se modela como Despacho — tiene
             // dirección, fecha y chofer, igual que un domicilio normal.
-            tipo_entrega: TipoEntrega.DESPACHO,
+            tipo_entrega: TipoEntrega.PARCIAL,
             tipo_despacho: TipoDespacho.PROGRAMADO,
             estado_entrega: EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),

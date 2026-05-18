@@ -29,7 +29,13 @@ export function useTotalesParcial(productos: ProductoEntrega[]) {
             0,
             // Descuenta también `entregado` (>0 solo en `crear-entrega-resto`,
             // donde representa lo entregado en entregas previas).
-            item.total - item.entregar - item.entregar_programado - (item.entregado || 0),
+            // `programado` representa cantidades ya reservadas en otro tramo
+            // parcial del mismo grupo; no deben reaparecer como "sin programar".
+            item.total -
+              item.entregar -
+              item.entregar_programado -
+              (item.entregado || 0) -
+              (item.programado || 0),
           ),
         0,
       ),

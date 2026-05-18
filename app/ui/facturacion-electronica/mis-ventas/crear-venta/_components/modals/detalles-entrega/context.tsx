@@ -85,9 +85,9 @@ export interface DetallesEntregaContextValue {
   /** Productos derivados de la venta con sus columnas de entrega/programar. */
   productosEntrega: ProductoEntrega[]
   setProductosEntrega: React.Dispatch<React.SetStateAction<ProductoEntrega[]>>
-  /** Quién entrega ahora en el caso parcial — almacén o chofer. */
-  quienEntregaParcial: 'almacen' | 'chofer'
-  setQuienEntregaParcial: (v: 'almacen' | 'chofer') => void
+  /** Quién entrega ahora en el caso parcial — almacén o vendedor. */
+  quienEntregaParcial: 'almacen' | 'vendedor'
+  setQuienEntregaParcial: (v: 'almacen' | 'vendedor') => void
 
   // ── Bloque SLOTS + Modal calendario ────────────────────────────────────
   /** Si el modal de calendario para Domicilio está abierto. */
@@ -140,7 +140,7 @@ export function DetallesEntregaProvider({
 
   // ── Bloque PARCIAL ─────────────────────────────────────────────────────
   const [productosEntrega, setProductosEntrega] = useState<ProductoEntrega[]>([])
-  const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'chofer'>('almacen')
+  const [quienEntregaParcial, setQuienEntregaParcial] = useState<'almacen' | 'vendedor'>('almacen')
 
   // ── Bloque SLOTS + Modal calendario ────────────────────────────────────
   const [modalCalendarioDomicilio, setModalCalendarioDomicilio] = useState(false)

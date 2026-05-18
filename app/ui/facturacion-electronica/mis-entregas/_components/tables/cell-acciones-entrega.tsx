@@ -24,6 +24,7 @@ import ModalConfirmarEntrega from '../modals/modal-confirmar-entrega'
 import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-completo'
 import ModalAnularEntrega from '../modals/modal-anular-entrega'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
+import { getEntregaOperativa } from '../../_lib/entregas-parciales'
 
 interface CellAccionesEntregaProps {
   entrega?: any
@@ -44,6 +45,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const accionTrigger = useStoreEntregaSeleccionada((s) => s.accionTrigger)
   const triggerAccion = useStoreEntregaSeleccionada((s) => s.triggerAccion)
   const openUpdateModal = useStoreEntregaSeleccionada((s) => s.openUpdateModal)
+  const entregaOperativa = getEntregaOperativa(entrega) || entrega
 
   // Escuchar el trigger del botón principal (filter) — solo la fila seleccionada
   // responde al trigger y abre el modal correspondiente.
@@ -55,11 +57,11 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   useEffect(() => {
     if (!accionTrigger || !entrega) return
     if (entregaSeleccionada?.id !== entrega.id) return
-    if (accionTrigger === 'marcar') openUpdateModal(entrega, false)
-    else if (accionTrigger === 'parcial') openUpdateModal(entrega, false)
+    if (accionTrigger === 'marcar') openUpdateModal(entregaOperativa, false)
+    else if (accionTrigger === 'parcial') openUpdateModal(entregaOperativa, false)
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
-    else if (accionTrigger === 'despachar') openUpdateModal(entrega, false)
-    else if (accionTrigger === 'restante') openUpdateModal(entrega, true)
+    else if (accionTrigger === 'despachar') openUpdateModal(entregaOperativa, false)
+    else if (accionTrigger === 'restante') openUpdateModal(entregaOperativa, true)
     triggerAccion(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accionTrigger])
@@ -67,15 +69,15 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   if (!entrega) return null
 
   // Verificar si todos los productos ya fueron completamente guiados
-  const todoGuiado = entrega.productos_entregados?.length > 0 &&
-    entrega.productos_entregados.every((p: any) => {
+  const todoGuiado = entregaOperativa.productos_entregados?.length > 0 &&
+    entregaOperativa.productos_entregados.every((p: any) => {
       const ud = p.unidad_derivada_venta
       if (!ud) return false
       return Number(ud.cantidad_guiada ?? 0) >= Number(ud.cantidad ?? 0)
     })
 
   const handleCrearGuia = () => {
-    if (!entrega.venta_id) {
+    if (!entregaOperativa.venta_id) {
       message.error('No se pudo identificar la venta')
       return
     }
@@ -84,17 +86,17 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     // misma transporta su mercadería) usa los datos SUNAT del USER:
     // numero_documento, name, licencia_conducir. La tabla externa `chofer`
     // se reserva para PÚBLICO o GRE-Transportista.
-    const params = new URLSearchParams({ venta_id: entrega.venta_id })
-    if (entrega.vehiculo?.placa) params.set('vehiculo_placa', String(entrega.vehiculo.placa))
-    if (entrega.chofer_id) params.set('user_chofer_id', String(entrega.chofer_id))
-    if (entrega.chofer?.name) params.set('user_chofer_nombre', String(entrega.chofer.name))
+    const params = new URLSearchParams({ venta_id: entregaOperativa.venta_id })
+    if (entregaOperativa.vehiculo?.placa) params.set('vehiculo_placa', String(entregaOperativa.vehiculo.placa))
+    if (entregaOperativa.chofer_id) params.set('user_chofer_id', String(entregaOperativa.chofer_id))
+    if (entregaOperativa.chofer?.name) params.set('user_chofer_nombre', String(entregaOperativa.chofer.name))
     router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?${params.toString()}`)
   }
 
   const handleEntregar = async () => {
     setLoading(true)
     try {
-      const response = await entregaProductoApi.update(entrega.id, {
+      const response = await entregaProductoApi.update(entregaOperativa.id, {
         estado_entrega: EstadoEntrega.ENTREGADO,
       })
 
@@ -118,7 +120,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const handleAceptar = async () => {
     setLoading(true)
     try {
-      const response = await entregaProductoApi.aceptar(entrega.id)
+      const response = await entregaProductoApi.aceptar(entregaOperativa.id)
 
       if (response.error) {
         if (response.error.message?.includes('ya fue aceptada')) {
@@ -143,9 +145,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   // Es un pedido externo sin aceptar?
   const esPedidoExternoDisponible =
-    entrega.tipo_pedido === 'externo' &&
-    !entrega.chofer_id &&
-    entrega.estado_entrega === 'pe'
+    entregaOperativa.tipo_pedido === 'externo' &&
+    !entregaOperativa.chofer_id &&
+    entregaOperativa.estado_entrega === 'pe'
 
   const onSuccess = () => {
     if (onRefetch) onRefetch()
@@ -153,11 +155,11 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
   // Texto del item PDF según estado: "Vale de Recojo" (pe) vs "Ticket de Entrega" (en).
   const pdfLabel =
-    entrega.estado_entrega === 'pe'
+    entregaOperativa.estado_entrega === 'pe'
       ? 'Imprimir Vale de Recojo'
-      : entrega.estado_entrega === 'ec'
+      : entregaOperativa.estado_entrega === 'ec'
       ? 'Imprimir Entrega en Camino'
-      : entrega.estado_entrega === 'ca'
+      : entregaOperativa.estado_entrega === 'ca'
       ? 'Imprimir Entrega Cancelada'
       : 'Imprimir Ticket de Entrega'
 
@@ -180,11 +182,11 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
           <FaFilePdf className="text-red-600" /> {pdfLabel}
         </span>
       ),
-      onClick: () => openPdfModal(entrega),
+      onClick: () => openPdfModal(entregaOperativa),
     },
     // Ver Mapa solo aplica para entregas a domicilio o parciales — en
     // recojo en tienda no hay dirección de entrega ni viaje del chofer.
-    ...(entrega.tipo_entrega !== 'rt'
+    ...(entregaOperativa.tipo_entrega !== 'rt'
       ? [
           {
             key: 'mapa',
@@ -193,7 +195,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
                 <FaMapMarkedAlt className="text-blue-600" /> Ver Mapa
               </span>
             ),
-            onClick: () => openPostDespacho(entrega),
+            onClick: () => openPostDespacho(entregaOperativa),
           } as const,
         ]
       : []),
@@ -226,7 +228,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     // Anular entrega — solo si está EN_CAMINO o ENTREGADA. Permite
     // deshacer un "marcar entregada" hecho por error. Vuelve a 'pe'
     // (pendiente) y registra el motivo. NO toca stock ni SUNAT.
-    ...(entrega.estado_entrega === 'en' || entrega.estado_entrega === 'ec'
+    ...(entregaOperativa.estado_entrega === 'en' || entregaOperativa.estado_entrega === 'ec'
       ? [
           { type: 'divider' as const },
           {
@@ -297,7 +299,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         open={modalConfirmarOpen}
         onClose={() => setModalConfirmarOpen(false)}
         onConfirmar={handleEntregar}
-        entrega={entrega}
+        entrega={entregaOperativa}
         loading={loading}
       />
 
@@ -305,7 +307,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       <ModalAnularEntrega
         open={modalAnularOpen}
         onClose={() => setModalAnularOpen(false)}
-        entrega={entrega}
+        entrega={entregaOperativa}
         onSuccess={onSuccess}
       />
 
