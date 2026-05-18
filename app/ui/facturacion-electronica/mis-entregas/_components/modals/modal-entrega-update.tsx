@@ -20,6 +20,9 @@ import type { ProductoEntrega } from '../../../mis-ventas/_hooks/use-productos-e
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ButtonBase from '~/components/buttons/button-base'
 
+const normalizarClaveProducto = (codigo: string, unidad: string) =>
+  `${codigo}`.trim().toLowerCase() + '|' + `${unidad}`.trim().toLowerCase()
+
 // Modal "Mapa de Entrega" cargado dinámicamente — incluye Mapbox con
 // geolocalización del usuario + dirección del cliente + navegación
 // (Google Maps / Waze). Se abre desde el botón en el header.
@@ -69,6 +72,15 @@ export default function ModalEntregaUpdate({
   const [modalSeleccionarTipoOpen, setModalSeleccionarTipoOpen] = useState(false)
   const [modalMapaEntregaOpen, setModalMapaEntregaOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
+
+  const { data: entregaDetalleResp } = useQuery({
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-restante', entrega?.id],
+    queryFn: () => entregaProductoApi.getById(entrega.id),
+    enabled: open && !!entrega?.id,
+    staleTime: 0,
+  })
+  const entregaDetalle = (entregaDetalleResp?.data?.data ?? entregaDetalleResp?.data) as any
+  const entregaFuente = entregaDetalle || entrega
 
   // Tipo "UI" actualmente activo. En modo update, se inicializa con el tipo
   // real de la entrega y se persiste en el backend al cambiarlo. En modo
@@ -270,16 +282,16 @@ export default function ModalEntregaUpdate({
   //         entrega (`detalle.cantidad_entregada`) como base de `entregar`,
   //         no el total de la venta.
   const productosIniciales: ProductoEntrega[] = useMemo(() => {
-    if (!entrega?.productos_entregados) return []
+    if (!entregaFuente?.productos_entregados) return []
 
     const entregaFueEntregadaAntes = Boolean(
-      (entrega as any)?.user_entregado_id ||
-      (entrega as any)?.userEntregado?.id,
+      (entregaFuente as any)?.user_entregado_id ||
+      (entregaFuente as any)?.userEntregado?.id,
     )
     const entregaTieneEntregaFisica =
-      entrega?.estado_entrega === 'en' || entregaFueEntregadaAntes
+      entregaFuente?.estado_entrega === 'en' || entregaFueEntregadaAntes
     const ultimaEdicion = entregaFueEntregadaAntes
-      ? (entrega.venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
+      ? (entregaFuente.venta as any)?.historial?.find?.((h: any) => h.accion === 'edicion')
       : undefined
 
     const productosAnteriores = new Map<string, {
@@ -302,19 +314,47 @@ export default function ModalEntregaUpdate({
     }
 
     if (restante) {
-      // En modo restante mostramos el total ORIGINAL de la venta (no solo el
-      // pendiente). Eso da contexto al usuario: "se vendieron 10, se entregaron
-      // 5, quedan 5". El campo `entregar` arranca con el pendiente sugerido,
-      // pero el usuario puede entregar solo una parte y programar el resto.
-      return entrega.productos_entregados
+      const grupoEntregaId =
+        entregaFuente?.grupo_entrega_id || entregaFuente?.id
+      const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
+        ? entregaFuente.venta.entregas_productos
+        : []
+      const esVentaParcial = entregaFuente?.venta?.tipo_despacho === 'pa' || entregaFuente?.tipo_entrega === 'pa'
+      const hijasGrupo = esVentaParcial
+        ? entregasRelacionadas.filter((hija: any) => {
+            if ((hija?.grupo_entrega_id || null) && grupoEntregaId) {
+              return Number(hija.grupo_entrega_id) === Number(grupoEntregaId)
+            }
+            return hija?.tipo_entrega === 'pa'
+          })
+        : []
+
+      return entregaFuente.productos_entregados
         .map((p: any, index: number) => {
           const ud = p.unidad_derivada_venta || {}
           const pav = ud.producto_almacen_venta || {}
           const prod = pav.producto_almacen?.producto || {}
           const totalOriginal = Number(ud.cantidad ?? 0)
-          const pendiente = Number(ud.cantidad_pendiente || 0)
+          const udvId = Number(ud.id ?? p.unidad_derivada_venta_id)
+          const entregadoYa = hijasGrupo.reduce((acc: number, hija: any) => {
+            if (hija?.estado_entrega !== 'en') return acc
+            const detalle = (hija?.productos_entregados || []).find(
+              (d: any) => Number(d?.unidad_derivada_venta_id) === udvId,
+            )
+            return acc + Number(detalle?.cantidad_entregada || 0)
+          }, 0)
+          const programadoYa = hijasGrupo.reduce((acc: number, hija: any) => {
+            const estaReservado = hija?.estado_entrega !== 'ca' && hija?.estado_entrega !== 'en'
+            if (!estaReservado) return acc
+            const detalle = (hija?.productos_entregados || []).find(
+              (d: any) => Number(d?.unidad_derivada_venta_id) === udvId,
+            )
+            return acc + Number(detalle?.cantidad_entregada || 0)
+          }, 0)
+          const pendiente = esVentaParcial
+            ? Math.max(0, totalOriginal - entregadoYa - programadoYa)
+            : Number(ud.cantidad_pendiente || 0)
           if (pendiente <= 0) return null
-          const entregadoYa = Math.max(0, totalOriginal - pendiente)
           return {
             id: index + 1,
             producto: prod.name || p.producto_name || '',
@@ -325,27 +365,59 @@ export default function ModalEntregaUpdate({
             pendiente,
             entregar: pendiente,
             entregar_programado: 0,
-            unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
+            unidad_derivada_venta_id: udvId,
           }
         })
         .filter(Boolean) as ProductoEntrega[]
     }
 
-    const productos = entrega.productos_entregados.map((p: any, index: number) => {
+    const productos = entregaFuente.productos_entregados.map((p: any, index: number) => {
       const ud = p.unidad_derivada_venta || {}
       const pav = ud.producto_almacen_venta || {}
       const pa = pav.producto_almacen || {}
       const prod = pa.producto || {}
       const totalVenta = Number(ud.cantidad ?? 0)
       const cantidadProgramadaEstaEntrega = Number(p.cantidad_entregada ?? 0)
+      const udvId = Number(ud.id ?? p.unidad_derivada_venta_id)
+      const grupoEntregaId = entregaFuente?.grupo_entrega_id || entregaFuente?.id
+      const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
+        ? entregaFuente.venta.entregas_productos
+        : []
+      const esParcialAgrupado = entregaFuente?.tipo_entrega === 'pa' && entregasRelacionadas.length > 0
       const codigo = prod.cod_producto || ''
       const unidad = ud.unidad_derivada_inmutable?.name || ''
-      const clave = `${codigo}|${unidad}`.trim().toLowerCase()
+      const clave = normalizarClaveProducto(codigo, unidad)
       const cantidadAnterior = Number(productosAnteriores.get(clave)?.cantidad || 0)
       const pendienteRaw = ud.cantidad_pendiente
       const pendienteVentaReal = pendienteRaw == null
         ? Math.max(0, totalVenta - cantidadProgramadaEstaEntrega)
         : Number(pendienteRaw)
+      const hijasGrupo = esParcialAgrupado
+        ? entregasRelacionadas.filter((hija: any) => {
+            if ((hija?.grupo_entrega_id || null) && grupoEntregaId) {
+              return Number(hija.grupo_entrega_id) === Number(grupoEntregaId)
+            }
+            return hija?.tipo_entrega === 'pa'
+          })
+        : []
+      const entregadoGrupo = hijasGrupo.reduce((acc: number, hija: any) => {
+        if (hija?.estado_entrega !== 'en') return acc
+        const detalle = (hija?.productos_entregados || []).find((d: any) => {
+          return Number(d?.unidad_derivada_venta_id) === udvId
+        })
+        return acc + Number(detalle?.cantidad_entregada || 0)
+      }, 0)
+      const programadoOtros = hijasGrupo.reduce((acc: number, hija: any) => {
+        const esProgramadoPendiente =
+          hija?.estado_entrega !== 'en' &&
+          hija?.estado_entrega !== 'ca' &&
+          Number(hija?.id) !== Number(entregaFuente?.id)
+        if (!esProgramadoPendiente) return acc
+        const detalle = (hija?.productos_entregados || []).find((d: any) => {
+          return Number(d?.unidad_derivada_venta_id) === udvId
+        })
+        return acc + Number(detalle?.cantidad_entregada || 0)
+      }, 0)
       const entregadoReal = entregaTieneEntregaFisica
         ? cantidadProgramadaEstaEntrega
         : 0
@@ -355,6 +427,21 @@ export default function ModalEntregaUpdate({
 
       if (!entregaTieneEntregaFisica) {
         const pendienteEstaEntrega = cantidadProgramadaEstaEntrega
+        if (esParcialAgrupado) {
+          return {
+            id: index + 1,
+            producto: prod.name || p.producto_name || '',
+            ubicacion: '',
+            total: totalVenta,
+            recibido: recibidoReal,
+            programado: programadoOtros,
+            entregado: entregadoGrupo,
+            pendiente: pendienteEstaEntrega,
+            entregar: pendienteEstaEntrega,
+            entregar_programado: 0,
+            unidad_derivada_venta_id: udvId,
+          }
+        }
         return {
           id: index + 1,
           producto: prod.name || p.producto_name || '',
@@ -366,7 +453,7 @@ export default function ModalEntregaUpdate({
           pendiente: pendienteVentaReal,
           entregar: pendienteEstaEntrega,
           entregar_programado: 0,
-          unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
+          unidad_derivada_venta_id: udvId,
         }
       }
 
@@ -380,12 +467,12 @@ export default function ModalEntregaUpdate({
         pendiente: pendienteVentaReal,
         entregar: pendienteVentaReal,
         entregar_programado: 0,
-        unidad_derivada_venta_id: ud.id ?? p.unidad_derivada_venta_id,
+        unidad_derivada_venta_id: udvId,
       }
     })
 
     for (const [clave, anterior] of productosAnteriores.entries()) {
-      const existeEnActuales = entrega.productos_entregados.some((p: any) => {
+      const existeEnActuales = entregaFuente.productos_entregados.some((p: any) => {
         const ud = p.unidad_derivada_venta || {}
         const prod = ud.producto_almacen_venta?.producto_almacen?.producto || {}
         const codigo = prod.cod_producto || ''
@@ -409,7 +496,7 @@ export default function ModalEntregaUpdate({
     }
 
     return productos
-  }, [entrega, restante])
+  }, [entregaFuente, restante])
 
   // entregaParaMapa debe estar ANTES del return null para no violar las reglas de hooks.
   const entregaParaMapa = useMemo(() => {
@@ -617,7 +704,9 @@ export default function ModalEntregaUpdate({
         kind: 'crear-entrega-resto' as const,
         ventaId: entrega.venta_id,
         entregaOrigen: {
+          entrega_id: entrega.id,
           almacen_salida_id: entrega.almacen_salida_id,
+          grupo_entrega_id: entrega.grupo_entrega_id,
           user_id: entrega.user_id,
         },
       } as const)

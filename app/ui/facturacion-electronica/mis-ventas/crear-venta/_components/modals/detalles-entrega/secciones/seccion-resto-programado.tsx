@@ -156,7 +156,7 @@ export function SeccionRestoProgramado({
   // Productos con resto disponible para programar — los que quedan
   // después de descontar `entregar` y `entregado`.
   const productosConResto = productosEntrega.filter(
-    (p) => p.total - p.entregar - (p.entregado || 0) > 0,
+    (p) => p.total - p.entregar - (p.entregado || 0) - (p.programado || 0) > 0,
   )
   const hayResto = productosConResto.length > 0
   // Mostramos la sección entera (mapa, dirección, fecha, chofer, tabla)
@@ -174,7 +174,15 @@ export function SeccionRestoProgramado({
         </span>
         {hayResto && (
           <span className="text-xs text-gray-500">
-            ({productosEntrega.reduce((acc, p) => acc + Math.max(0, p.total - p.entregar - (p.entregado || 0)), 0)} unidad(es) pendiente(s))
+            ({productosEntrega.reduce(
+              (acc, p) =>
+                acc +
+                Math.max(
+                  0,
+                  p.total - p.entregar - (p.entregado || 0) - (p.programado || 0),
+                ),
+              0,
+            )} unidad(es) pendiente(s))
           </span>
         )}
       </div>

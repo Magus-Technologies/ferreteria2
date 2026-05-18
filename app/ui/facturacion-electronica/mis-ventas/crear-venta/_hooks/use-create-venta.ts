@@ -511,6 +511,7 @@ export default function useCreateVenta({
         // DESPACHO PARCIAL: entregar solo las cantidades especificadas
         if (cantidades_parciales && cantidades_parciales.some(c => c.entregar > 0)) {
           try {
+            const parcialConAlmacenPendiente = quien_entrega === 'almacen'
             const productosVenta = ventaCreada.productos_por_almacen || []
             const unidadesDerivadas: any[] = []
 
@@ -538,7 +539,9 @@ export default function useCreateVenta({
                 venta_id: ventaCreada.id,
                 tipo_entrega: TipoEntrega.PARCIAL,
                 tipo_despacho: TipoDespacho.INMEDIATO,
-                estado_entrega: EstadoEntrega.ENTREGADO,
+                estado_entrega: parcialConAlmacenPendiente
+                  ? EstadoEntrega.PENDIENTE
+                  : EstadoEntrega.ENTREGADO,
                 fecha_entrega: dayjs().format('YYYY-MM-DD'),
                 almacen_salida_id: almacen_id,
                 quien_entrega: (quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN,
@@ -554,7 +557,15 @@ export default function useCreateVenta({
                   description: 'Puedes crearla manualmente desde "Mis Ventas".',
                 })
               } else {
-                message.success('Entrega parcial registrada exitosamente')
+                const entregaParcialCreada: any =
+                  entregaResponse.data?.data ?? entregaResponse.data
+                const grupoEntregaId = entregaParcialCreada?.grupo_entrega_id || entregaParcialCreada?.id
+
+                message.success(
+                  parcialConAlmacenPendiente
+                    ? 'Entrega parcial pendiente registrada exitosamente'
+                    : 'Entrega parcial registrada exitosamente'
+                )
 
                 // ✅ CREAR SEGUNDA ENTREGA PROGRAMADA para el resto (si se configuró)
                 // Usa `entregar_programado` (editable por el usuario) en lugar de `total - entregar`.
@@ -583,6 +594,7 @@ export default function useCreateVenta({
                   if (unidadesDerivadas2.length > 0) {
                     const entregaRestoData: CreateEntregaProductoRequest = {
                       venta_id: ventaCreada.id,
+                      grupo_entrega_id: grupoEntregaId,
                       tipo_entrega: TipoEntrega.PARCIAL,
                       tipo_despacho: TipoDespacho.PROGRAMADO,
                       estado_entrega: EstadoEntrega.PENDIENTE,

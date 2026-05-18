@@ -7,6 +7,7 @@ import {
   TIPO_ENTREGA_LABEL_CON_ICON,
   TIPO_DESPACHO_LABEL_CON_ICON,
 } from '~/app/_lib/entrega-labels'
+import { isEntregaParcialAgrupada } from '../../_lib/entregas-parciales'
 
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
@@ -126,10 +127,16 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       field: 'tipo_despacho',
       width: 130,
       valueFormatter: (params) => {
+        if (isEntregaParcialAgrupada(params.data) || params.data?.tipo_entrega === 'pa') {
+          return '🔀 PARCIAL'
+        }
         const tipo = params.value as string
         return TIPO_DESPACHO_LABEL_CON_ICON[tipo] || tipo || '—'
       },
       cellStyle: (params) => {
+        if (isEntregaParcialAgrupada(params.data) || params.data?.tipo_entrega === 'pa') {
+          return { color: '#9333ea', fontWeight: 'bold' }
+        }
         const tipo = params.value
         if (tipo === 'in') return { color: '#16a34a', fontWeight: 'bold' }
         if (tipo === 'pr') return { color: '#2563eb', fontWeight: 'bold' }
@@ -165,9 +172,11 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       width: 150,
       cellRenderer: (params: any) => {
         const estado = params.value
-        const tienePendiente = params.data?.productos_entregados?.some(
-          (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
-        )
+        const tienePendiente = isEntregaParcialAgrupada(params.data)
+          ? (params.data?.entregas_agrupadas || []).some((e: any) => e?.estado_entrega !== 'en')
+          : params.data?.productos_entregados?.some(
+              (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
+            )
         const config: Record<string, { label: string; bg: string; text: string }> = {
           'pe': { label: 'Pendiente',  bg: '#f1f5f9', text: '#475569' },
           'ec': { label: 'En Camino',  bg: '#dbeafe', text: '#2563eb' },

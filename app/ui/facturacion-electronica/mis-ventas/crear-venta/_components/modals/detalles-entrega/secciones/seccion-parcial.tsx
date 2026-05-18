@@ -29,7 +29,7 @@ interface SeccionParcialProps {
 
 /**
  * Sección "Despacho Parcial" — incluye:
- *  - Selector "¿Quién entrega ahora?" (almacén o chofer en tienda).
+ *  - Selector "¿Quién entrega ahora?" (almacén o vendedor).
  *  - Tabla AG Grid de productos donde se edita "entregar ahora".
  *  - Resumen con counters (A entregar / A programar / Pendientes sin programar).
  *  - Sub-sección `SeccionRestoProgramado` con el flujo de domicilio para el resto.
@@ -69,7 +69,7 @@ export function SeccionParcial({
             onChange={(value) => setQuienEntregaParcial(value)}
             options={[
               { value: 'almacen', label: 'Almacen' },
-              { value: 'chofer', label: 'Chofer en Tienda' },
+              { value: 'vendedor', label: 'Vendedor' },
             ]}
             className="w-60"
           />

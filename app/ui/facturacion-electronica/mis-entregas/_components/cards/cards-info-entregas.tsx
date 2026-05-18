@@ -43,19 +43,19 @@ export default function CardsInfoEntregas() {
 
   // Entregas pendientes
   const entregasPendientes = useMemo(
-    () => entregas.filter((e) => e.estado_entrega === 'PENDIENTE').length,
+    () => entregas.filter((e) => e.estado_entrega === 'pe').length,
     [entregas]
   )
 
   // Entregas en camino
   const entregasEnCamino = useMemo(
-    () => entregas.filter((e) => e.estado_entrega === 'EN_CAMINO').length,
+    () => entregas.filter((e) => e.estado_entrega === 'ec').length,
     [entregas]
   )
 
   // Entregas completadas
   const entregasCompletadas = useMemo(
-    () => entregas.filter((e) => e.estado_entrega === 'ENTREGADO').length,
+    () => entregas.filter((e) => e.estado_entrega === 'en').length,
     [entregas]
   )
 
