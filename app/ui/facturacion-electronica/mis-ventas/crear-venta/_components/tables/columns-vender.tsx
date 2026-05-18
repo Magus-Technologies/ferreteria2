@@ -64,80 +64,90 @@ export function useColumnsVender({
     }
   }, [productosVentaStore])
 
-  /** Recalcular sub-productos de un paquete cuando cambia cantidad_paquete */
-  function recalcularSubProductosPaquete(paqueteId: number, nuevaCantidadPaquete: number) {
+  /** Recalcular sub-productos de la instancia de paquete cuya cabecera está en cabecerIndex. */
+  function recalcularSubProductosPaquete(cabecerIndex: number, nuevaCantidadPaquete: number) {
     const allProductos = form.getFieldValue('productos') || []
     const updates = [...allProductos]
     let precioPaqueteUnitario = 0
 
-    // Primero calcular totales por unidad de paquete
-    for (let i = 0; i < updates.length; i++) {
-      if (updates[i]?.paquete_id === paqueteId && updates[i]?._tipo_fila === 'paquete_producto') {
-        const cantidadBase = Number(updates[i].cantidad_base || 0)
-        const precio = Number(updates[i].precio_venta || 0)
-        const descuento = Number(updates[i].descuento || 0)
-        precioPaqueteUnitario += (precio - descuento) * cantidadBase
+    // Calcular precio unitario iterando los sub-productos consecutivos
+    for (let i = cabecerIndex + 1; i < updates.length; i++) {
+      if (updates[i]?._tipo_fila !== 'paquete_producto') break
+      const cantidadBase = Number(updates[i].cantidad_base || 0)
+      const precio = Number(updates[i].precio_venta || 0)
+      const descuento = Number(updates[i].descuento || 0)
+      precioPaqueteUnitario += (precio - descuento) * cantidadBase
+    }
+
+    // Actualizar sub-productos consecutivos
+    for (let i = cabecerIndex + 1; i < updates.length; i++) {
+      if (updates[i]?._tipo_fila !== 'paquete_producto') break
+      const cantidadBase = Number(updates[i].cantidad_base || 0)
+      const nuevaCantidad = cantidadBase * nuevaCantidadPaquete
+      updates[i] = {
+        ...updates[i],
+        cantidad: nuevaCantidad,
+        subtotal: calcularSubtotalVenta({
+          precio_venta: Number(updates[i].precio_venta || 0),
+          recargo: Number(updates[i].recargo || 0),
+          descuento_tipo: updates[i].descuento_tipo || DescuentoTipo.MONTO,
+          descuento: Number(updates[i].descuento || 0),
+          cantidad: nuevaCantidad,
+        }),
       }
     }
 
-    // Actualizar sub-productos y cabecera
-    for (let i = 0; i < updates.length; i++) {
-      if (updates[i]?.paquete_id === paqueteId) {
-        if (updates[i]._tipo_fila === 'paquete_producto') {
-          const cantidadBase = Number(updates[i].cantidad_base || 0)
-          const nuevaCantidad = cantidadBase * nuevaCantidadPaquete
-          updates[i] = {
-            ...updates[i],
-            cantidad: nuevaCantidad,
-            subtotal: calcularSubtotalVenta({
-              precio_venta: Number(updates[i].precio_venta || 0),
-              recargo: Number(updates[i].recargo || 0),
-              descuento_tipo: updates[i].descuento_tipo || DescuentoTipo.MONTO,
-              descuento: Number(updates[i].descuento || 0),
-              cantidad: nuevaCantidad,
-            }),
-          }
-        } else if (updates[i]._tipo_fila === 'paquete_cabecera') {
-          updates[i] = {
-            ...updates[i],
-            cantidad_paquete: nuevaCantidadPaquete,
-            cantidad: nuevaCantidadPaquete,
-            precio_venta: precioPaqueteUnitario,
-            subtotal: precioPaqueteUnitario * nuevaCantidadPaquete,
-          }
-        }
-      }
+    // Actualizar cabecera
+    updates[cabecerIndex] = {
+      ...updates[cabecerIndex],
+      cantidad_paquete: nuevaCantidadPaquete,
+      cantidad: nuevaCantidadPaquete,
+      precio_venta: precioPaqueteUnitario,
+      subtotal: precioPaqueteUnitario * nuevaCantidadPaquete,
     }
 
     form.setFieldValue('productos', updates)
   }
 
-  /** Obtener totales de sub-productos de un paquete */
-  function getPaqueteSubtotales(paqueteId: number) {
+  /** Obtener subtotales de los sub-productos de la instancia de paquete en cabecerIndex. */
+  function getPaqueteSubtotales(cabecerIndex: number) {
     const allProductos = form.getFieldValue('productos') || []
     let total = 0
-    for (const p of allProductos) {
-      if (p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_producto') {
-        total += Number(p.subtotal || 0)
-      }
+    for (let i = cabecerIndex + 1; i < allProductos.length; i++) {
+      if (allProductos[i]?._tipo_fila !== 'paquete_producto') break
+      total += Number(allProductos[i].subtotal || 0)
     }
     return total
   }
 
-  /** Obtener descuento total de sub-productos de un paquete (descuento × cantidad) */
-  function getPaqueteDescuentoTotal(paqueteId: number) {
+  /**
+   * Itera desde cabecerIndex+1 mientras las filas sean paquete_producto.
+   * Esto distingue correctamente múltiples instancias del mismo paquete sin
+   * necesitar un ID de instancia adicional.
+   */
+  function getPaqueteDescuentoTotal(cabecerIndex: number) {
     const allProductos = form.getFieldValue('productos') || []
     let total = 0
-    for (const p of allProductos) {
-      if (p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_producto') {
-        total += Number(p.descuento || 0) * Number(p.cantidad || 0)
-      }
+    for (let i = cabecerIndex + 1; i < allProductos.length; i++) {
+      if (allProductos[i]?._tipo_fila !== 'paquete_producto') break
+      total += Number(allProductos[i].descuento || 0) * Number(allProductos[i].cantidad || 0)
     }
     return total
   }
 
-  /** Cambiar tipo de precio para todos los sub-productos de un paquete */
-  function cambiarTipoPrecioPaquete(paqueteId: number, nuevoTipo: string) {
+  /** Precio bruto (precio_venta × cantidad) de los sub-productos de esta instancia. */
+  function getPaquetePrecioBruto(cabecerIndex: number) {
+    const allProductos = form.getFieldValue('productos') || []
+    let total = 0
+    for (let i = cabecerIndex + 1; i < allProductos.length; i++) {
+      if (allProductos[i]?._tipo_fila !== 'paquete_producto') break
+      total += Number(allProductos[i].precio_venta || 0) * Number(allProductos[i].cantidad || 0)
+    }
+    return total
+  }
+
+  /** Cambiar tipo de precio para la instancia de paquete cuya cabecera está en cabecerIndex. */
+  function cambiarTipoPrecioPaquete(cabecerIndex: number, paqueteId: number, nuevoTipo: string) {
     const allProductos = form.getFieldValue('productos') || []
     const updates = [...allProductos]
     // Leer el store SIEMPRE fresco (evita closures obsoletas en los
@@ -145,71 +155,62 @@ export function useColumnsVender({
     const storeProductos = useStoreProductoAgregadoVenta.getState().productos as any[]
     let precioPaqueteUnitario = 0
 
-    for (let i = 0; i < updates.length; i++) {
-      if (updates[i]?.paquete_id !== paqueteId) continue
+    const cantidadPaquete = Number(updates[cabecerIndex]?.cantidad_paquete || 1)
 
-      if (updates[i]._tipo_fila === 'paquete_producto') {
-        const key = `${paqueteId}_${updates[i].producto_id}`
-        const discountData = paqueteDiscountsRef.current.get(key)
-        // Fuente confiable: el store zustand guarda el productoData completo
-        // con paq_precio_* / paq_descuento_* sin pasar por el registro de Ant Form
-        const storeData = storeProductos.find(
-          (p: any) =>
-            p?.paquete_id === paqueteId &&
-            p?.producto_id === updates[i].producto_id
-        ) as any
+    for (let i = cabecerIndex + 1; i < updates.length; i++) {
+      if (updates[i]?._tipo_fila !== 'paquete_producto') break
 
-        // Leer los valores: store -> Map -> objeto del producto
-        const precio = Number(
-          storeData?.[`paq_precio_${nuevoTipo}`] ??
-          discountData?.[`paq_precio_${nuevoTipo}`] ??
-          updates[i][`paq_precio_${nuevoTipo}`] ??
-          0
-        )
-        const descuento = Number(
-          storeData?.[`paq_descuento_${nuevoTipo}`] ??
-          discountData?.[`paq_descuento_${nuevoTipo}`] ??
-          updates[i][`paq_descuento_${nuevoTipo}`] ??
-          0
-        )
-        const cantidadBase = Number(updates[i].cantidad_base || 0)
-        const cantidadPaquete = Number(
-          allProductos.find((p: any) => p?.paquete_id === paqueteId && p?._tipo_fila === 'paquete_cabecera')?.cantidad_paquete || 1
-        )
-        const cantidad = cantidadBase * cantidadPaquete
-        
-        // IMPORTANTE: Preservar TODOS los campos paq_precio_* y paq_descuento_* para que no se pierdan
-        updates[i] = {
-          ...updates[i],
-          tipo_precio: nuevoTipo,
-          precio_venta: precio,
-          descuento: descuento,
-          cantidad,
-          subtotal: (precio - descuento) * cantidad,
-          // Preservar todos los precios y descuentos de todos los tipos
-          paq_precio_publico: updates[i].paq_precio_publico,
-          paq_precio_especial: updates[i].paq_precio_especial,
-          paq_precio_minimo: updates[i].paq_precio_minimo,
-          paq_precio_ultimo: updates[i].paq_precio_ultimo,
-          paq_descuento_publico: updates[i].paq_descuento_publico,
-          paq_descuento_especial: updates[i].paq_descuento_especial,
-          paq_descuento_minimo: updates[i].paq_descuento_minimo,
-          paq_descuento_ultimo: updates[i].paq_descuento_ultimo,
-        }
-        precioPaqueteUnitario += (precio - descuento) * cantidadBase
+      const key = `${paqueteId}_${updates[i].producto_id}`
+      const discountData = paqueteDiscountsRef.current.get(key)
+      // Fuente confiable: el store zustand guarda el productoData completo
+      // con paq_precio_* / paq_descuento_* sin pasar por el registro de Ant Form
+      const storeData = storeProductos.find(
+        (p: any) =>
+          p?.paquete_id === paqueteId &&
+          p?.producto_id === updates[i].producto_id
+      ) as any
+
+      // Leer los valores: store -> Map -> objeto del producto
+      const precio = Number(
+        storeData?.[`paq_precio_${nuevoTipo}`] ??
+        discountData?.[`paq_precio_${nuevoTipo}`] ??
+        updates[i][`paq_precio_${nuevoTipo}`] ??
+        0
+      )
+      const descuento = Number(
+        storeData?.[`paq_descuento_${nuevoTipo}`] ??
+        discountData?.[`paq_descuento_${nuevoTipo}`] ??
+        updates[i][`paq_descuento_${nuevoTipo}`] ??
+        0
+      )
+      const cantidadBase = Number(updates[i].cantidad_base || 0)
+      const cantidad = cantidadBase * cantidadPaquete
+
+      // IMPORTANTE: Preservar TODOS los campos paq_precio_* y paq_descuento_* para que no se pierdan
+      updates[i] = {
+        ...updates[i],
+        tipo_precio: nuevoTipo,
+        precio_venta: precio,
+        descuento: descuento,
+        cantidad,
+        subtotal: (precio - descuento) * cantidad,
+        paq_precio_publico: updates[i].paq_precio_publico,
+        paq_precio_especial: updates[i].paq_precio_especial,
+        paq_precio_minimo: updates[i].paq_precio_minimo,
+        paq_precio_ultimo: updates[i].paq_precio_ultimo,
+        paq_descuento_publico: updates[i].paq_descuento_publico,
+        paq_descuento_especial: updates[i].paq_descuento_especial,
+        paq_descuento_minimo: updates[i].paq_descuento_minimo,
+        paq_descuento_ultimo: updates[i].paq_descuento_ultimo,
       }
+      precioPaqueteUnitario += (precio - descuento) * cantidadBase
     }
 
-    for (let i = 0; i < updates.length; i++) {
-      if (updates[i]?.paquete_id === paqueteId && updates[i]._tipo_fila === 'paquete_cabecera') {
-        const cantidadPaquete = Number(updates[i].cantidad_paquete || 1)
-        updates[i] = {
-          ...updates[i],
-          tipo_precio: nuevoTipo,
-          precio_venta: precioPaqueteUnitario,
-          subtotal: precioPaqueteUnitario * cantidadPaquete,
-        }
-      }
+    updates[cabecerIndex] = {
+      ...updates[cabecerIndex],
+      tipo_precio: nuevoTipo,
+      precio_venta: precioPaqueteUnitario,
+      subtotal: precioPaqueteUnitario * cantidadPaquete,
     }
 
     form.setFieldValue('productos', updates)
@@ -571,10 +572,10 @@ export function useColumnsVender({
                 min={1}
                 formWithMessage={false}
                 onChange={(newVal) => {
-                  if (paqueteId && newVal) {
+                  if (newVal) {
                     if (recalcDebounceRef.current) clearTimeout(recalcDebounceRef.current)
                     recalcDebounceRef.current = setTimeout(() => {
-                      recalcularSubProductosPaquete(paqueteId, Number(newVal))
+                      recalcularSubProductosPaquete(value, Number(newVal))
                     }, 150)
                   }
                 }}
@@ -654,7 +655,7 @@ export function useColumnsVender({
                       className='w-full'
                       value={tipoPrecioActual}
                       options={TIPO_PRECIO_PAQUETE_OPTIONS}
-                      onChange={(nuevoTipo) => cambiarTipoPrecioPaquete(paqueteId, nuevoTipo as string)}
+                      onChange={(nuevoTipo) => cambiarTipoPrecioPaquete(value, paqueteId, nuevoTipo as string)}
                       prefix={<MdPriceChange size={14} className='text-amber-600' />}
                     />
                     <InputBase propsForm={{ name: [value, 'tipo_precio'], hidden: true }} formWithMessage={false} />
@@ -696,7 +697,6 @@ export function useColumnsVender({
       width: 110,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
-        const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
 
         if (tipoFila === 'vale_promocional') {
           return (
@@ -711,10 +711,10 @@ export function useColumnsVender({
           return (
             <Form.Item noStyle shouldUpdate>
               {() => {
-                const precioUnitario = Number(form.getFieldValue(['productos', value, 'precio_venta']) || 0)
+                const precioBruto = getPaquetePrecioBruto(value)
                 return (
                   <div className='flex items-center h-full'>
-                    <span className='text-sm font-medium text-amber-700'>{monedaPrefix} {precioUnitario.toFixed(2)}</span>
+                    <span className='text-sm font-medium text-amber-700'>{monedaPrefix} {precioBruto.toFixed(2)}</span>
                     <InputNumberBase propsForm={{ name: [value, 'precio_venta'], hidden: true }} formWithMessage={false} />
                   </div>
                 )
@@ -823,8 +823,7 @@ export function useColumnsVender({
           return (
             <Form.Item noStyle shouldUpdate>
               {() => {
-                const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
-                const descuentoTotal = getPaqueteDescuentoTotal(paqueteId)
+                const descuentoTotal = getPaqueteDescuentoTotal(value)
                 return (
                   <div className='flex items-center h-full'>
                     <SelectDescuentoTipo
@@ -939,7 +938,7 @@ export function useColumnsVender({
           return (
             <Form.Item noStyle shouldUpdate>
               {() => {
-                const subtotalPaquete = getPaqueteSubtotales(paqueteId!)
+                const subtotalPaquete = getPaqueteSubtotales(value)
                 return (
                   <div className='flex items-center h-full'>
                     <span className='text-sm font-bold text-amber-700'>{monedaPrefix} {subtotalPaquete.toFixed(2)}</span>

@@ -482,6 +482,9 @@ export default function CardAgregarProductoVenta({
             }
           }
 
+          // ID único por instancia: distingue dos paquetes del mismo tipo en la misma venta
+          const paqueteInstanceId = Date.now()
+
           // 1. Agregar fila cabecera del paquete
           setProductoAgregadoVenta({
             _tipo_fila: 'paquete_cabecera',
@@ -501,6 +504,7 @@ export default function CardAgregarProductoVenta({
             subtotal: precioPaqueteUnitario,
             comision: 0,
             paquete_id: paqueteParaAgregar.id,
+            paquete_instance_id: paqueteInstanceId,
             paquete_nombre: paqueteParaAgregar.nombre,
             tipo_precio: tipoPrecioPaquete,
           } as any)
@@ -533,6 +537,7 @@ export default function CardAgregarProductoVenta({
                 subtotal: (precio - descuento) * cantidadBase,
                 comision: 0,
                 paquete_id: paqueteParaAgregar.id,
+                paquete_instance_id: paqueteInstanceId,
                 paquete_nombre: paqueteParaAgregar.nombre,
                 tipo_precio: tipoPrecioPaquete,
                 // Guardar TODOS los precios y descuentos de todos los tipos

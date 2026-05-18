@@ -93,6 +93,66 @@ export default function TableVender({
       Object.keys(productoAgregadoVenta).length &&
       productoAgregadoVenta.producto_id
     ) {
+      // Sub-producto de paquete → saltar si ya existe en la tabla (evita duplicar al re-agregar el mismo paquete)
+      if (productoAgregadoVenta._tipo_fila === 'paquete_produto') {
+        const allProductos = (form.getFieldValue('productos') || []) as FormCreateVenta['productos']
+        const paqueteId = (productoAgregadoVenta as any).paquete_id
+        const alreadyExists = allProductos.some(
+          (p: any) =>
+            p._tipo_fila === 'paquete_produto' &&
+            p.paquete_id === paqueteId &&
+            p.producto_id === productoAgregadoVenta.producto_id
+        )
+        if (alreadyExists) return
+      }
+
+      // Cabecera de paquete → si ya existe uno con el mismo paquete_id, incrementar cantidad
+      if (productoAgregadoVenta._tipo_fila === 'paquete_cabecera') {
+        const allProductos = (form.getFieldValue('productos') || []) as FormCreateVenta['productos']
+        const existingIdx = allProductos.findIndex(
+          (p: any) => p._tipo_fila === 'paquete_cabecera' && p.paquete_id === (productoAgregadoVenta as any).paquete_id
+        )
+
+        if (existingIdx >= 0) {
+          const updates = [...allProductos] as any[]
+          const cab = updates[existingIdx]
+          const nuevaCantPaquete = Number(cab.cantidad_paquete || 1) + 1
+
+          // Usar getFieldValue por ruta (garantizado por getRowStyle) para detectar sub-productos
+          let precioPaqueteUnit = 0
+          let subEnd = existingIdx + 1
+          while (subEnd < allProductos.length) {
+            if (form.getFieldValue(['productos', subEnd, '_tipo_fila']) !== 'paquete_produto') break
+            precioPaqueteUnit +=
+              (Number(updates[subEnd].precio_venta || 0) - Number(updates[subEnd].descuento || 0)) *
+              Number(updates[subEnd].cantidad_base || 1)
+            subEnd++
+          }
+
+          for (let i = existingIdx + 1; i < subEnd; i++) {
+            const cantBase = Number(updates[i].cantidad_base || 1)
+            const nuevaCantSub = cantBase * nuevaCantPaquete
+            updates[i] = {
+              ...updates[i],
+              cantidad: nuevaCantSub,
+              subtotal: (Number(updates[i].precio_venta || 0) - Number(updates[i].descuento || 0)) * nuevaCantSub,
+            }
+          }
+
+          updates[existingIdx] = {
+            ...cab,
+            cantidad_paquete: nuevaCantPaquete,
+            cantidad: nuevaCantPaquete,
+            precio_venta: precioPaqueteUnit,
+            subtotal: precioPaqueteUnit * nuevaCantPaquete,
+          }
+
+          form.setFieldValue('productos', updates)
+          return
+        }
+        // Sin existente → agregar normalmente (continúa el flujo)
+      }
+
       // Los servicios siempre se agregan como filas nuevas (no se agrupan)
       if (productoAgregadoVenta._tipo === 'servicio') {
         agregarProducto({ producto: productoAgregadoVenta })
