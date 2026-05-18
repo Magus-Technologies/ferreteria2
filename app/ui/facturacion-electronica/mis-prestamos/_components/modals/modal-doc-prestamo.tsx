@@ -190,6 +190,25 @@ export default function ModalDocPrestamo({
           if (res.error) throw new Error(res.error.message)
         },
       }}
+      descargaConfig={{
+        columnas: COLUMNAS_PRESTAMO,
+        defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
+        extras: EXTRAS_PRESTAMO,
+        defaultExtras: ['total'],
+        fetchBlob: async (columnas, extras) => {
+          if (!prestamoId) throw new Error('No hay préstamo seleccionado')
+          const token = getAuthToken()
+          const API_URL = process.env.NEXT_PUBLIC_API_URL
+          const fmt = esTicket ? 'ticket' : 'a4'
+          const params = new URLSearchParams({ formato: fmt })
+          ;[...columnas, ...extras].forEach((c) => params.append('columnas[]', c))
+          const res = await fetch(`${API_URL}/pdf/prestamo/${prestamoId}?${params.toString()}`, {
+            headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' },
+          })
+          if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+          return await res.blob()
+        },
+      }}
     >
       <></>
     </ModalShowDoc>
