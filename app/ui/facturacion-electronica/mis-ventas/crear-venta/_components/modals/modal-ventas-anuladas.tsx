@@ -8,8 +8,9 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { useColumnsMisVentas } from '../../../_components/tables/columns-mis-ventas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ColDef } from 'ag-grid-community'
+import type { AgGridReact } from 'ag-grid-react'
 import dayjs, { Dayjs } from 'dayjs'
 import { FaSearch } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
@@ -29,6 +30,7 @@ export default function ModalVentasAnuladas({
   const [desde, setDesde] = useState<Dayjs | null>(dayjs().startOf('day'))
   const [hasta, setHasta] = useState<Dayjs | null>(dayjs().endOf('day'))
   const [search, setSearch] = useState('')
+  const tableRef = useRef<AgGridReact<getVentaResponseProps>>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.VENTAS, 'anuladas', almacen_id, desde?.toISOString(), hasta?.toISOString(), search],
@@ -61,6 +63,20 @@ export default function ModalVentasAnuladas({
     },
     enabled: open,
   })
+
+  // Seleccionar la primera fila por defecto cuando llegan los datos
+  useEffect(() => {
+    if (open && data && data.length > 0) {
+      const t = setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0)
+        if (firstNode) {
+          firstNode.setSelected(true)
+          setVentaSeleccionada(firstNode.data as getVentaResponseProps)
+        }
+      }, 100)
+      return () => clearTimeout(t)
+    }
+  }, [open, data])
 
   const allColumns = useColumnsMisVentas()
   const columns: ColDef<getVentaResponseProps>[] = allColumns.filter(
@@ -163,6 +179,7 @@ export default function ModalVentasAnuladas({
             loading={isLoading}
             columnDefs={columns}
             rowData={data || []}
+            tableRef={tableRef}
             selectionColor={orangeColors[10]}
             onRowClicked={event => {
               event.node.setSelected(true)

@@ -6,16 +6,19 @@ import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { prestamoApi, type Prestamo, EstadoPrestamo, TipoOperacion } from '~/lib/api/prestamo'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { useStoreFiltrosMisPrestamos } from '../../store/store-filtros-mis-prestamos'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function CardsInfoPrestamos() {
   const almacen_id = useStoreAlmacen((store) => store.almacen_id)
+  const filtros = useStoreFiltrosMisPrestamos((state) => state.filtros)
 
   const { data: response } = useQuery({
-    queryKey: [QueryKeys.PRESTAMOS, almacen_id ?? 0],
+    queryKey: [QueryKeys.PRESTAMOS, almacen_id ?? 0, filtros],
     queryFn: async () => {
       const result = await prestamoApi.getAll({
-        almacen_id: almacen_id ?? undefined
+        almacen_id: almacen_id ?? undefined,
+        ...filtros,
       })
       return result.data?.data || []
     },

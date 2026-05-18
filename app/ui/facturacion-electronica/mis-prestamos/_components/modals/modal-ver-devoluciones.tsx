@@ -63,6 +63,26 @@ export default function ModalVerDevoluciones({
         params.value ? dayjs(params.value).format('DD/MM/YYYY') : '',
     },
     {
+      headerName: 'Tipo de Operación',
+      width: 190,
+      cellRenderer: () => {
+        // PRESTAR  → yo presté, me devuelven
+        // PEDIR_PRESTADO → yo pedí prestado, yo devuelvo
+        const esPrestar = prestamo?.tipo_operacion === 'PRESTAR'
+        const texto = esPrestar ? 'Me están devolviendo' : 'Estoy devolviendo'
+        const cls = esPrestar
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'bg-orange-100 text-orange-700'
+        return (
+          <div className='flex items-center h-full'>
+            <span className={`px-2 py-0.5 rounded text-xs font-bold ${cls}`}>
+              {texto}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'Cantidad',
       field: 'monto',
       width: 100,

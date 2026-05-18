@@ -7,11 +7,13 @@ import { cotizacionesApi, type Cotizacion } from '~/lib/api/cotizaciones'
 import { useStoreAlmacen } from '~/store/store-almacen'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ColDef } from 'ag-grid-community'
+import type { AgGridReact } from 'ag-grid-react'
 import dayjs, { Dayjs } from 'dayjs'
 import { FaSearch } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
+import { orangeColors } from '~/lib/colors'
 
 export default function ModalCotizaciones({
   open,
@@ -27,6 +29,7 @@ export default function ModalCotizaciones({
   const [desde, setDesde] = useState<Dayjs | null>(dayjs().subtract(30, 'day'))
   const [hasta, setHasta] = useState<Dayjs | null>(dayjs())
   const [search, setSearch] = useState('')
+  const tableRef = useRef<AgGridReact<Cotizacion>>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.COTIZACIONES, 'modal-crear-venta', almacen_id, desde?.format('YYYY-MM-DD'), hasta?.format('YYYY-MM-DD'), search],
@@ -44,6 +47,20 @@ export default function ModalCotizaciones({
     },
     enabled: open,
   })
+
+  // Seleccionar la primera fila por defecto cuando llegan los datos
+  useEffect(() => {
+    if (open && data && data.length > 0) {
+      const t = setTimeout(() => {
+        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0)
+        if (firstNode) {
+          firstNode.setSelected(true)
+          setCotizacionSeleccionada(firstNode.data as Cotizacion)
+        }
+      }, 100)
+      return () => clearTimeout(t)
+    }
+  }, [open, data])
 
   // Columnas de cotizaciones (simplificadas sin acciones)
   const columns: ColDef<Cotizacion>[] = [
@@ -210,7 +227,8 @@ export default function ModalCotizaciones({
             loading={isLoading}
             columnDefs={columns}
             rowData={data || []}
-            selectionColor='#3b82f6'
+            tableRef={tableRef}
+            selectionColor={orangeColors[10]}
             onRowClicked={event => {
               event.node.setSelected(true)
             }}
@@ -229,7 +247,7 @@ export default function ModalCotizaciones({
             title='DETALLE DE COTIZACION'
             columnDefs={columnsDet}
             rowData={detalleProductos}
-            selectionColor='#3b82f6'
+            selectionColor={orangeColors[10]}
           />
         </div>
       </div>
