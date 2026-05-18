@@ -17,6 +17,7 @@ import SelectClientes from "~/app/_components/form/selects/select-clientes";
 import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-documento";
 import SelectUsuarios from "~/app/_components/form/selects/select-usuarios";
 import SelectEstadoDeVenta from "~/app/_components/form/selects/select-estado-de-venta";
+import SelectDespliegueDePago from "~/app/_components/form/selects/select-despliegue-de-pago";
 import { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect } from "react";
@@ -40,6 +41,7 @@ interface ValuesFiltersMisVentas {
   desde?: Dayjs;
   hasta?: Dayjs;
   forma_de_pago?: FormaDePago;
+  despliegue_de_pago_id?: string;
   tipo_documento?: TipoDocumento;
   user_id?: string;
   estado_de_venta?: EstadoDeVenta;
@@ -91,6 +93,7 @@ export default function FiltersMisVentas() {
     if (values.cliente_id) count++;
     if (values.tipo_documento) count++;
     if (values.forma_de_pago) count++;
+    if (values.despliegue_de_pago_id) count++;
     if (values.estado_de_venta) count++;
     if (values.user_id) count++;
     if (values.serie_numero) count++;
@@ -126,6 +129,7 @@ export default function FiltersMisVentas() {
           tipo_documento: venta.tipo_documento as TipoDocumento,
           cliente_id: venta.cliente_id,
           forma_de_pago: venta.forma_de_pago as FormaDePago,
+          despliegue_de_pago_id: undefined,
           estado_de_venta: venta.estado_de_venta as EstadoDeVenta,
           user_id: venta.user_id,
           desde: dayjs(venta.fecha),
@@ -358,7 +362,7 @@ export default function FiltersMisVentas() {
             </ConfigurableElement>
           </div>
 
-          {/* Fila 2: T.Documento + F.Pago + Estado + Entrega + Botones */}
+          {/* Fila 2: T.Documento + F.Pago + M.Pago + Estado + Entrega + Editada */}
           <div className="col-span-2 flex items-center gap-1">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               T.Doc:
@@ -385,6 +389,24 @@ export default function FiltersMisVentas() {
               <SelectFormaDePago
                 propsForm={{
                   name: "forma_de_pago",
+                  hasFeedback: false,
+                  className: "!w-full",
+                }}
+                className="w-full"
+                formWithMessage={false}
+                allowClear
+                placeholder="Todos"
+              />
+            </ConfigurableElement>
+          </div>
+          <div className="col-span-2 flex items-center gap-1">
+            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
+              M.Pago:
+            </label>
+            <ConfigurableElement componentId="field-metodo-pago" label="Campo Método de Pago">
+              <SelectDespliegueDePago
+                propsForm={{
+                  name: "despliegue_de_pago_id",
                   hasFeedback: false,
                   className: "!w-full",
                 }}
@@ -449,7 +471,9 @@ export default function FiltersMisVentas() {
               </Form.Item>
             </ConfigurableElement>
           </div>
-          <div className="col-span-1 flex items-center">
+
+          {/* Fila 3: Botones */}
+          <div className="col-span-2 flex items-center">
             <ConfigurableElement componentId="button-buscar" label="Botón Buscar">
               <ButtonBase
                 color="info"
@@ -588,6 +612,18 @@ export default function FiltersMisVentas() {
             </label>
             <SelectFormaDePago
               propsForm={{ name: "forma_de_pago", hasFeedback: false }}
+              className="w-full"
+              formWithMessage={false}
+              allowClear
+              placeholder="Todos"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-700 block mb-2">
+              Método de Pago:
+            </label>
+            <SelectDespliegueDePago
+              propsForm={{ name: "despliegue_de_pago_id", hasFeedback: false }}
               className="w-full"
               formWithMessage={false}
               allowClear
