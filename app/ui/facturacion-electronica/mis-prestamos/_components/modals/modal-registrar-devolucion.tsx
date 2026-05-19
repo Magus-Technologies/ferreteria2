@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal, Form, message } from 'antd'
-import { useState, useMemo, useEffect, memo, useCallback } from 'react'
+import { useState, useEffect, memo, useCallback } from 'react'
 import FormBase from '~/components/form/form-base'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import TextareaBase from '~/app/_components/form/inputs/textarea-base'
@@ -9,7 +9,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
 import { FaSave } from 'react-icons/fa'
 import { Prestamo, prestamoApi } from '~/lib/api/prestamo'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
 import { FaCalendar } from 'react-icons/fa6'
@@ -107,6 +107,18 @@ const DevolverCell = memo(function DevolverCell({
   )
 })
 
+const invalidateStockQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_BY_ALMACEN] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_TABLE_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX_INVENTARIO] })
+  queryClient.invalidateQueries({ queryKey: ['productos-search'] })
+  queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+  queryClient.invalidateQueries({ queryKey: ['vencimientos-proximos'] })
+}
+
 export default function ModalRegistrarDevolucion({
   open,
   setOpen,
@@ -117,15 +129,54 @@ export default function ModalRegistrarDevolucion({
   const [productos, setProductos] = useState<ProductoDevolucion[]>([])
   const queryClient = useQueryClient()
 
-  // Initialize productos when prestamo changes
-  useMemo(() => {
-    const pAny = prestamo as any
+  const { data: prestamoDetalle } = useQuery({
+    queryKey: [QueryKeys.PRESTAMOS, 'detalle-registrar-devolucion', prestamo?.id],
+    queryFn: async () => {
+      if (!prestamo) return null
+      const result = await prestamoApi.getById(prestamo.id)
+      return result.data?.data ?? null
+    },
+    enabled: open && !!prestamo?.id,
+  })
+
+  const prestamoActual = prestamoDetalle ?? prestamo
+
+  useEffect(() => {
+    if (!open || !prestamoActual) {
+      setProductos([])
+      return
+    }
+
+    const pAny = prestamoActual as any
     const productosPorAlmacen = pAny?.productos_por_almacen ?? pAny?.productosPorAlmacen
     const devoluciones = pAny?.devoluciones || []
+    const pagos = pAny?.pagos || []
+
+    const isFalse = (value: unknown) => value === false || value === 0 || value === '0'
+    const getNumeroDevolucionFromObs = (observaciones?: string | null) =>
+      observaciones?.match(/Devoluci[oó]n\s+(\S+?)[.\s]/i)?.[1]
+
+    const pagosPorNumeroDevolucion = new Map<string, any>()
+    pagos.forEach((pago: any) => {
+      const numero = getNumeroDevolucionFromObs(pago?.observaciones)
+      if (numero) pagosPorNumeroDevolucion.set(String(numero), pago)
+    })
+
+    const isDevolucionActiva = (devolucion: any) => {
+      const ingresoSalida = devolucion?.ingreso_salida ?? devolucion?.ingresoSalida
+      if (ingresoSalida && isFalse(ingresoSalida.estado)) return false
+
+      const numero = devolucion?.numero_devolucion
+      const pago = numero ? pagosPorNumeroDevolucion.get(String(numero)) : null
+      if (pago && isFalse(pago.estado)) return false
+
+      return true
+    }
 
     const getReturnedQty = (id: number) => {
       let sum = 0
       devoluciones.forEach((d: any) => {
+        if (!isDevolucionActiva(d)) return
         const pdList = d.productos_devueltos ?? d.productosDevueltos ?? []
         pdList.forEach((pd: any) => {
           if (Number(pd.producto_almacen_prestamo_id) === Number(id)) {
@@ -160,8 +211,10 @@ export default function ModalRegistrarDevolucion({
         }
       })
       setProductos(initialProductos)
+    } else {
+      setProductos([])
     }
-  }, [prestamo])
+  }, [open, prestamoActual])
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -190,6 +243,8 @@ export default function ModalRegistrarDevolucion({
     onSuccess: () => {
       message.success('Devolución registrada exitosamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'detalle-registrar-devolucion', prestamo?.id] })
+      invalidateStockQueries(queryClient)
       form.resetFields()
       setOpen(false)
     },
@@ -307,41 +362,41 @@ export default function ModalRegistrarDevolucion({
       width={800}
       destroyOnHidden
     >
-      {prestamo && (
+      {prestamoActual && (
         <div className='mb-6 mt-3 p-5 bg-gradient-to-r from-orange-50 to-amber-50/50 border border-orange-100 rounded-xl shadow-sm'>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>N° Préstamo:</span>
-              <span className='font-bold text-gray-800 bg-orange-100/60 px-2 py-0.5 rounded text-xs'>{prestamo.numero}</span>
+              <span className='font-bold text-gray-800 bg-orange-100/60 px-2 py-0.5 rounded text-xs'>{prestamoActual.numero}</span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Cliente/Proveedor:</span>
-              <span className='font-semibold text-gray-800 truncate max-w-[240px]' title={prestamo.cliente?.razon_social || `${prestamo.cliente?.nombres || ''} ${prestamo.cliente?.apellidos || ''}`.trim() || prestamo.proveedor?.razon_social}>
-                {prestamo.cliente?.razon_social ||
-                  `${prestamo.cliente?.nombres || ''} ${prestamo.cliente?.apellidos || ''}`.trim() ||
-                  prestamo.proveedor?.razon_social ||
+              <span className='font-semibold text-gray-800 truncate max-w-[240px]' title={prestamoActual.cliente?.razon_social || `${prestamoActual.cliente?.nombres || ''} ${prestamoActual.cliente?.apellidos || ''}`.trim() || prestamoActual.proveedor?.razon_social}>
+                {prestamoActual.cliente?.razon_social ||
+                  `${prestamoActual.cliente?.nombres || ''} ${prestamoActual.cliente?.apellidos || ''}`.trim() ||
+                  prestamoActual.proveedor?.razon_social ||
                   'N/A'}
               </span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Tipo:</span>
               <span className={`font-semibold px-2.5 py-0.5 rounded-full text-xs ${
-                prestamo.tipo_operacion === 'PRESTAR' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-purple-50 text-purple-700 border border-purple-100'
+                prestamoActual.tipo_operacion === 'PRESTAR' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-purple-50 text-purple-700 border border-purple-100'
               }`}>
-                {prestamo.tipo_operacion === 'PRESTAR' ? 'Préstamo' : 'Pedir Prestado'}
+                {prestamoActual.tipo_operacion === 'PRESTAR' ? 'Préstamo' : 'Pedir Prestado'}
               </span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Cantidad Total:</span>
-              <span className='font-semibold text-gray-800'>{Number(prestamo.monto_total).toFixed(0)} u.</span>
+              <span className='font-semibold text-gray-800'>{Number(prestamoActual.monto_total).toFixed(0)} u.</span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Devuelto:</span>
-              <span className='text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded'>{Number(prestamo.monto_pagado).toFixed(0)} u.</span>
+              <span className='text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded'>{Number(prestamoActual.monto_pagado).toFixed(0)} u.</span>
             </div>
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 font-medium'>Pendiente:</span>
-              <span className='text-rose-600 font-bold bg-rose-50 border border-rose-100 px-2 py-0.5 rounded'>{Number(prestamo.monto_pendiente).toFixed(0)} u.</span>
+              <span className='text-rose-600 font-bold bg-rose-50 border border-rose-100 px-2 py-0.5 rounded'>{Number(prestamoActual.monto_pendiente).toFixed(0)} u.</span>
             </div>
           </div>
         </div>

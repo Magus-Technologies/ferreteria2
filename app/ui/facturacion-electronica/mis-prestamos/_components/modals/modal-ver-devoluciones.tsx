@@ -1,12 +1,12 @@
   'use client'
 
-import { Modal, message, Popconfirm } from 'antd'
-import { FaClockRotateLeft, FaTrash } from 'react-icons/fa6'
+import { Modal, message, Input } from 'antd'
+import { FaClockRotateLeft, FaBan } from 'react-icons/fa6'
 import { Prestamo, prestamoApi, PagoPrestamo } from '~/lib/api/prestamo'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
@@ -24,6 +24,18 @@ interface ModalVerDevolucionesProps {
   open: boolean
   setOpen: (open: boolean) => void
   prestamo?: Prestamo
+}
+
+const invalidateStockQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_BY_ALMACEN] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_TABLE_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX_INVENTARIO] })
+  queryClient.invalidateQueries({ queryKey: ['productos-search'] })
+  queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+  queryClient.invalidateQueries({ queryKey: ['vencimientos-proximos'] })
 }
 
 export default function ModalVerDevoluciones({
@@ -58,11 +70,21 @@ export default function ModalVerDevoluciones({
 
   // Función autoejecutable (IIFE) para procesar y listar los productos devueltos de la devolución que fue seleccionada por el usuario
   const devoluciones = (prestamoFull as any)?.devoluciones ?? []
+  const getNumeroDevolucionFromObs = (observaciones?: string | null) =>
+    observaciones?.match(/Devoluci[oó]n\s+(\S+?)[.\s]/i)?.[1]
+  const pagosDevolucion = useMemo(
+    () =>
+      (pagos || []).filter(
+        (pago) =>
+          pago.metodo_pago === 'Devolución Física' ||
+          Boolean(getNumeroDevolucionFromObs(pago.observaciones))
+      ),
+    [pagos]
+  )
+
   const productosDevueltos: ProductoDevueltoRow[] = (() => {
     if (!pagoSeleccionado) return []
-    const obs = pagoSeleccionado.observaciones || ''
-    const match = obs.match(/Devoluci[oó]n\s+(\S+?)[.\s]/i)
-    const numeroDev = match?.[1]
+    const numeroDev = getNumeroDevolucionFromObs(pagoSeleccionado.observaciones)
     const dev = numeroDev
       ? devoluciones.find((d: any) => String(d.numero_devolucion) === String(numeroDev))
       : undefined
@@ -92,20 +114,47 @@ export default function ModalVerDevoluciones({
   ]
 
   // Hook Mutation para anular/eliminar una devolución registrada y refrescar los listados del préstamo
-  const deleteMutation = useMutation({
-    mutationFn: async (pagoId: string) => {
+  const [anularModalOpen, setAnularModalOpen] = useState(false)
+  const [pagoAAnular, setPagoAAnular] = useState<PagoPrestamo | null>(null)
+  const [motivoAnular, setMotivoAnular] = useState('')
+
+  const anularMutation = useMutation({
+    mutationFn: async ({ pagoId, motivo }: { pagoId: string; motivo: string }) => {
       if (!prestamo) throw new Error('No hay préstamo seleccionado')
-      return prestamoApi.eliminarPago(prestamo.id, pagoId)
+      const res = await prestamoApi.anularPago(prestamo.id, pagoId, motivo)
+      if (res.error) throw new Error(res.error.message)
+      return res.data
     },
     onSuccess: () => {
-      message.success('Devolución eliminada exitosamente')
+      message.success('Devolución anulada exitosamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'pagos', prestamo?.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'detalle-devoluciones', prestamo?.id] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'detalle-registrar-devolucion', prestamo?.id] })
+      invalidateStockQueries(queryClient)
+      setAnularModalOpen(false)
+      setPagoAAnular(null)
+      setMotivoAnular('')
     },
     onError: (error: any) => {
-      message.error(error?.response?.data?.message || 'Error al eliminar la devolución')
+      message.error(error?.message || 'Error al anular la devolución')
     },
   })
+
+  const abrirAnular = (pago: PagoPrestamo) => {
+    setPagoAAnular(pago)
+    setMotivoAnular('')
+    setAnularModalOpen(true)
+  }
+
+  const confirmarAnular = () => {
+    if (!pagoAAnular) return
+    if (!motivoAnular.trim() || motivoAnular.trim().length < 3) {
+      message.warning('Ingrese un motivo de anulación (mínimo 3 caracteres)')
+      return
+    }
+    anularMutation.mutate({ pagoId: pagoAAnular.id, motivo: motivoAnular.trim() })
+  }
 
   const columns: ColDef<PagoPrestamo>[] = [
     {
@@ -156,10 +205,30 @@ export default function ModalVerDevoluciones({
       width: 150,
     },
     {
+      headerName: 'Estado',
+      width: 110,
+      cellRenderer: (params: { data: PagoPrestamo }) => {
+        const anulado = params.data?.estado === false
+        return (
+          <div className='flex items-center h-full'>
+            <span className={`px-2 py-0.5 rounded text-xs font-bold ${anulado ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+              {anulado ? 'ANULADA' : 'ACTIVA'}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
       headerName: 'Observaciones',
       field: 'observaciones',
       flex: 1,
-      minWidth: 300,
+      minWidth: 260,
+      valueFormatter: (params) => params.value || '-',
+    },
+    {
+      headerName: 'Motivo Anulación',
+      field: 'motivo_anulacion',
+      width: 200,
       valueFormatter: (params) => params.value || '-',
     },
     {
@@ -167,6 +236,14 @@ export default function ModalVerDevoluciones({
       width: 100,
       pinned: 'right',
       cellRenderer: (params: { data: PagoPrestamo }) => {
+        const anulado = params.data?.estado === false
+        if (anulado) {
+          return (
+            <div className='flex items-center justify-center h-full text-gray-400 text-xs'>
+              —
+            </div>
+          )
+        }
         return (
           <div
             style={{
@@ -177,23 +254,15 @@ export default function ModalVerDevoluciones({
               alignItems: 'center',
             }}
           >
-            <Popconfirm
-              title='¿Eliminar devolución?'
-              description='Esta acción no se puede deshacer'
-              onConfirm={() => deleteMutation.mutate(params.data.id)}
-              okText='Sí, eliminar'
-              cancelText='Cancelar'
-              okButtonProps={{ danger: true }}
+            <ButtonBase
+              color='danger'
+              size='md'
+              className='flex items-center !px-3'
+              title='Anular devolución'
+              onClick={() => abrirAnular(params.data)}
             >
-              <ButtonBase
-                color='danger'
-                size='md'
-                className='flex items-center !px-3'
-                title='Eliminar'
-              >
-                <FaTrash />
-              </ButtonBase>
-            </Popconfirm>
+              <FaBan />
+            </ButtonBase>
           </div>
         )
       },
@@ -201,6 +270,7 @@ export default function ModalVerDevoluciones({
   ]
 
   return (
+    <>
     <Modal
       title={
         <div className='flex items-center gap-2'>
@@ -265,7 +335,7 @@ export default function ModalVerDevoluciones({
           title='Devoluciones Registradas (clic para ver productos)'
           selectionColor={orangeColors[10]}
           columnDefs={columns}
-          rowData={pagos || []}
+          rowData={pagosDevolucion}
           loading={isLoading}
           onRowClicked={(event) => {
             event.node.setSelected(true)
@@ -298,5 +368,42 @@ export default function ModalVerDevoluciones({
         </ButtonBase>
       </div>
     </Modal>
+
+    {/* Modal: motivo de anulación */}
+    <Modal
+      title={
+        <div className='flex items-center gap-2'>
+          <FaBan className='text-red-600' />
+          <span>Anular Devolución</span>
+        </div>
+      }
+      open={anularModalOpen}
+      onOk={confirmarAnular}
+      onCancel={() => setAnularModalOpen(false)}
+      okText='Anular'
+      cancelText='Cancelar'
+      okButtonProps={{ danger: true }}
+      confirmLoading={anularMutation.isPending}
+      destroyOnHidden
+    >
+      <div className='py-2 flex flex-col gap-3'>
+        <p className='text-sm text-gray-600'>
+          La devolución <b>{pagoAAnular?.numero_pago}</b> quedará registrada como
+          <b> ANULADA</b> y se revertirá el stock afectado. Esta acción requiere un motivo.
+        </p>
+        <div>
+          <label className='block text-sm font-medium mb-1'>Motivo de anulación:</label>
+          <Input.TextArea
+            rows={3}
+            value={motivoAnular}
+            onChange={(e) => setMotivoAnular(e.target.value)}
+            placeholder='Ingrese el motivo por el cual se anula esta devolución'
+            maxLength={500}
+            showCount
+          />
+        </div>
+      </div>
+    </Modal>
+    </>
   )
 }

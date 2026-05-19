@@ -93,6 +93,13 @@ export default function CardAgregarProductoPrestamo({
       unidad_derivada_id: values.unidad_derivada_id,
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name ?? '',
       unidad_derivada_factor: Number(unidad_derivada?.factor ?? 1),
+      unidades_disponibles: (unidades_derivadas ?? []).map((item) => ({
+        unidad_derivada: {
+          id: item.unidad_derivada.id,
+          name: item.unidad_derivada.name,
+        },
+        factor: Number(item.factor ?? 1),
+      })),
       cantidad: values.cantidad,
       // costo: values.costo, // Comentado: Solo se maneja por cantidad
       // subtotal: values.cantidad * values.costo, // Comentado: Solo se maneja por cantidad
