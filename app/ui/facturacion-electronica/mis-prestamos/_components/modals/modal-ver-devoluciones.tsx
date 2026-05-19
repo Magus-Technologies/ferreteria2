@@ -6,9 +6,10 @@ import { Prestamo, prestamoApi, PagoPrestamo } from '~/lib/api/prestamo'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
 import TableWithTitle from '~/components/tables/table-with-title'
+import { AgGridReact } from 'ag-grid-react'
 import { ColDef } from 'ag-grid-community'
 import { orangeColors } from '~/lib/colors'
 
@@ -45,6 +46,7 @@ export default function ModalVerDevoluciones({
 }: ModalVerDevolucionesProps) {
   const queryClient = useQueryClient()
   const [pagoSeleccionado, setPagoSeleccionado] = useState<PagoPrestamo | null>(null)
+  const tableRef = useRef<AgGridReact>(null)
 
   // Hook para consultar el historial de pagos / devoluciones del préstamo
   const { data: pagos, isLoading } = useQuery({
@@ -81,6 +83,25 @@ export default function ModalVerDevoluciones({
       ),
     [pagos]
   )
+
+  // Seleccionar automáticamente la primera fila de devoluciones cuando se cargan
+  useEffect(() => {
+    if (pagosDevolucion && pagosDevolucion.length > 0 && !pagoSeleccionado) {
+      const firstRow = pagosDevolucion[0]
+      setPagoSeleccionado(firstRow)
+      // Seleccionar visualmente la primera fila en la tabla
+      setTimeout(() => {
+        const api = tableRef.current?.api
+        if (api) {
+          api.forEachNode((node, index) => {
+            if (index === 0) {
+              node.setSelected(true)
+            }
+          })
+        }
+      }, 50)
+    }
+  }, [pagosDevolucion])
 
   const productosDevueltos: ProductoDevueltoRow[] = (() => {
     if (!pagoSeleccionado) return []
@@ -337,6 +358,7 @@ export default function ModalVerDevoluciones({
           columnDefs={columns}
           rowData={pagosDevolucion}
           loading={isLoading}
+          tableRef={tableRef}
           onRowClicked={(event) => {
             event.node.setSelected(true)
             setPagoSeleccionado(event.data as PagoPrestamo)
