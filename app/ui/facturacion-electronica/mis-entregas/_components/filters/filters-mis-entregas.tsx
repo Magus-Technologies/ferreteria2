@@ -56,8 +56,19 @@ export default function FiltersMisEntregas() {
     if (!entregaSeleccionada) return null
     const estado = entregaSeleccionada.estado_entrega
     const tipoEntrega = entregaSeleccionada.tipo_entrega
+    const entregasAgrupadas = Array.isArray((entregaSeleccionada as any)?.entregas_agrupadas)
+      ? (entregaSeleccionada as any).entregas_agrupadas
+      : []
+    const esParcialAgrupada = Boolean((entregaSeleccionada as any)?.__esParcialAgrupado)
+    const tieneTramoEntregado = entregasAgrupadas.some((h: any) => h?.estado_entrega === 'en')
+    const tieneTramoProgramadoPendiente = entregasAgrupadas.some(
+      (h: any) => h?.estado_entrega === 'pe' && h?.tipo_despacho === 'pr',
+    )
     if (estado === 'pe') {
       if (tipoEntrega === 'pa') {
+        if (esParcialAgrupada && tieneTramoEntregado && tieneTramoProgramadoPendiente) {
+          return { label: 'Confirmar Entrega', accion: 'parcial' as const }
+        }
         return { label: 'Entregar Parcial', accion: 'parcial' as const }
       }
       return {

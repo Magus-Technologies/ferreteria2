@@ -748,6 +748,10 @@ function ModalDetallesEntregaInner({
           >
             {creandoVenta
               ? 'Procesando...'
+              : resolvedMode.kind === 'actualizar-entrega' &&
+                tipoDespacho === 'Parcial' &&
+                forzarProgramarRestoOn
+              ? 'Confirmar Entrega'
               : resolvedMode.kind === 'crear-entrega-resto'
               ? 'Confirmar Entrega'
               : tipoDespacho === 'EnTienda'

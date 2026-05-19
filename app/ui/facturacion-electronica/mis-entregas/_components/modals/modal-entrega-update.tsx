@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Form } from 'antd'
+import { Form, Modal, Spin } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
@@ -81,6 +81,14 @@ export default function ModalEntregaUpdate({
   })
   const entregaDetalle = (entregaDetalleResp?.data?.data ?? entregaDetalleResp?.data) as any
   const entregaFuente = entregaDetalle || entrega
+  const requiereHidratacionCompletaParcial = Boolean(
+    open &&
+      entrega?.id &&
+      !entregaDetalle &&
+      (entrega?.tipo_entrega === 'pa' ||
+        entrega?.venta?.tipo_despacho === 'pa' ||
+        entrega?.__esParcialAgrupado),
+  )
 
   // Tipo "UI" actualmente activo. En modo update, se inicializa con el tipo
   // real de la entrega y se persiste en el backend al cambiarlo. En modo
@@ -505,25 +513,35 @@ export default function ModalEntregaUpdate({
   // y con productos pendientes.
   const tieneHermanaProgramadaConPendientes = useMemo(() => {
     if (restante) return false
-    if (entrega?.tipo_entrega !== 'pa') return false
-    const grupoId = entrega?.grupo_entrega_id
+    if (entregaFuente?.tipo_entrega !== 'pa') return false
+    const grupoId = entregaFuente?.grupo_entrega_id
     if (!grupoId) return false
-    const entregasRelacionadas = Array.isArray(entrega?.venta?.entregas_productos)
-      ? entrega.venta.entregas_productos
+    const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
+      ? entregaFuente.venta.entregas_productos
       : []
-    const hermanas = entregasRelacionadas.filter((h: any) => {
+    const hijasGrupo = entregasRelacionadas.filter((h: any) => {
       if (Number(h?.grupo_entrega_id) !== Number(grupoId)) return false
-      if (Number(h?.id) === Number(entrega?.id)) return false
-      return h?.tipo_despacho === 'pr' && h?.estado_entrega === 'pe'
+      return true
     })
-    if (hermanas.length === 0) return false
-    return hermanas.some((h: any) =>
-      (h?.productos_entregados || []).some((p: any) => {
-        const udv = p?.unidad_derivada_venta
-        return udv && Number(udv?.cantidad_pendiente || 0) > 0
-      }),
+    if (hijasGrupo.length === 0) return false
+
+    const hayEntregada = hijasGrupo.some(
+      (h: any) => Number(h?.id) !== Number(entregaFuente?.id) && h?.estado_entrega === 'en',
     )
-  }, [entrega, restante])
+    const esTramoProgramadoActual =
+      entregaFuente?.tipo_despacho === 'pr' && entregaFuente?.estado_entrega === 'pe'
+    const hayHermanaProgramadaPendiente = hijasGrupo.some(
+      (h: any) =>
+        Number(h?.id) !== Number(entregaFuente?.id) &&
+        h?.tipo_despacho === 'pr' &&
+        h?.estado_entrega === 'pe' &&
+        (h?.productos_entregados || []).some(
+          (p: any) => Number(p?.cantidad_entregada || 0) > 0,
+        ),
+    )
+
+    return (esTramoProgramadoActual && hayEntregada) || hayHermanaProgramadaPendiente
+  }, [entregaFuente, restante])
 
   // entregaParaMapa debe estar ANTES del return null para no violar las reglas de hooks.
   // También tiene early return interno que hace safe fallback cuando !entrega.
@@ -741,6 +759,25 @@ export default function ModalEntregaUpdate({
         },
       } as const)
     : ({ kind: 'actualizar-entrega' as const, entregaId: entrega.id } as const)
+
+  if (requiereHidratacionCompletaParcial) {
+    return (
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        title="CONFIGURAR ENTREGA"
+        width={1100}
+      >
+        <div className="flex min-h-[240px] items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-slate-600">
+            <Spin size="large" />
+            <span className="text-sm">Cargando detalle de la entrega...</span>
+          </div>
+        </div>
+      </Modal>
+    )
+  }
 
   return (
     <Form form={form} component={false}>
