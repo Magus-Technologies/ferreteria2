@@ -1,4 +1,4 @@
-'use client'
+  'use client'
 
 import { Modal, message, Popconfirm } from 'antd'
 import { FaClockRotateLeft, FaTrash } from 'react-icons/fa6'
@@ -6,10 +6,19 @@ import { Prestamo, prestamoApi, PagoPrestamo } from '~/lib/api/prestamo'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
+import { useState } from 'react'
 import ButtonBase from '~/components/buttons/button-base'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { ColDef } from 'ag-grid-community'
 import { orangeColors } from '~/lib/colors'
+
+interface ProductoDevueltoRow {
+  producto: string
+  codigo: string
+  unidad: string
+  cantidad: number
+  factor: number
+}
 
 interface ModalVerDevolucionesProps {
   open: boolean
@@ -23,6 +32,7 @@ export default function ModalVerDevoluciones({
   prestamo,
 }: ModalVerDevolucionesProps) {
   const queryClient = useQueryClient()
+  const [pagoSeleccionado, setPagoSeleccionado] = useState<PagoPrestamo | null>(null)
 
   const { data: pagos, isLoading } = useQuery({
     queryKey: [QueryKeys.PRESTAMOS, 'pagos', prestamo?.id],
@@ -33,6 +43,55 @@ export default function ModalVerDevoluciones({
     },
     enabled: open && !!prestamo,
   })
+
+  // Préstamo completo (incluye devoluciones con sus productos devueltos)
+  const { data: prestamoFull } = useQuery({
+    queryKey: [QueryKeys.PRESTAMOS, 'detalle-devoluciones', prestamo?.id],
+    queryFn: async () => {
+      if (!prestamo) return null
+      const result = await prestamoApi.getById(prestamo.id)
+      return result.data?.data ?? null
+    },
+    enabled: open && !!prestamo,
+  })
+
+  // Productos de la devolución correspondiente al pago seleccionado.
+  // El PagoPrestamo "legacy" guarda en observaciones: "Devolución {numero}. ..."
+  const devoluciones = (prestamoFull as any)?.devoluciones ?? []
+  const productosDevueltos: ProductoDevueltoRow[] = (() => {
+    if (!pagoSeleccionado) return []
+    const obs = pagoSeleccionado.observaciones || ''
+    const match = obs.match(/Devoluci[oó]n\s+(\S+?)[.\s]/i)
+    const numeroDev = match?.[1]
+    const dev = numeroDev
+      ? devoluciones.find((d: any) => String(d.numero_devolucion) === String(numeroDev))
+      : undefined
+    if (!dev) return []
+    const pdList = dev.productos_devueltos ?? dev.productosDevueltos ?? []
+    return pdList.map((pd: any) => {
+      const pap = pd.producto_almacen_prestamo ?? pd.productoAlmacenPrestamo
+      const prod = pap?.producto_almacen?.producto ?? pap?.productoAlmacen?.producto
+      const unidades = pap?.unidades_derivadas ?? pap?.unidadesDerivadas ?? []
+      return {
+        producto: prod?.name || 'N/A',
+        codigo: prod?.cod_producto || '',
+        unidad: unidades?.[0]?.name || 'UNIDAD',
+        cantidad: Number(pd.cantidad || 0),
+        factor: Number(pd.factor || 1),
+      }
+    })
+  })()
+
+  const columnsProductos: ColDef<ProductoDevueltoRow>[] = [
+    { headerName: 'Producto', colId: 'producto', flex: 1, minWidth: 220,
+      valueGetter: (p) => p.data ? `${p.data.producto} (${p.data.codigo})` : '' },
+    { headerName: 'Unidad', colId: 'unidad', field: 'unidad', width: 130 },
+    { headerName: 'Cantidad', colId: 'cantidad', field: 'cantidad', width: 120,
+      valueFormatter: (p) => Number(p.value || 0).toFixed(0),
+      cellStyle: { fontWeight: 'bold', color: '#059669' } },
+    { headerName: 'Factor', colId: 'factor', field: 'factor', width: 100,
+      valueFormatter: (p) => Number(p.value || 1).toFixed(2) },
+  ]
 
   const deleteMutation = useMutation({
     mutationFn: async (pagoId: string) => {
@@ -201,14 +260,36 @@ export default function ModalVerDevoluciones({
         </div>
       )}
 
-      <div className='w-full h-[400px]'>
+      <div className='w-full h-[280px]'>
         <TableWithTitle<PagoPrestamo>
           id='devoluciones-prestamo'
-          title='Devoluciones Registradas'
+          title='Devoluciones Registradas (clic para ver productos)'
           selectionColor={orangeColors[10]}
           columnDefs={columns}
           rowData={pagos || []}
           loading={isLoading}
+          onRowClicked={(event) => {
+            event.node.setSelected(true)
+            setPagoSeleccionado(event.data as PagoPrestamo)
+          }}
+          onSelectionChanged={({ selectedNodes }) =>
+            setPagoSeleccionado((selectedNodes?.[0]?.data as PagoPrestamo) ?? null)
+          }
+        />
+      </div>
+
+      <div className='w-full h-[220px] mt-4'>
+        <TableWithTitle<ProductoDevueltoRow>
+          id='productos-devueltos-prestamo'
+          title={
+            pagoSeleccionado
+              ? 'Productos Devueltos en esta Devolución'
+              : 'Productos Devueltos (seleccione una devolución arriba)'
+          }
+          selectionColor={orangeColors[10]}
+          columnDefs={columnsProductos}
+          rowData={productosDevueltos}
+          overlayNoRowsTemplate='<span class="text-gray-500">Seleccione una devolución para ver sus productos</span>'
         />
       </div>
 
