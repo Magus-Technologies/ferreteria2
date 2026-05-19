@@ -1,13 +1,120 @@
 "use client";
 
 import { ColDef, ICellRendererParams } from "ag-grid-community";
-import { FormListFieldData, Tooltip } from "antd";
+import { FormListFieldData, InputNumber, Select, Tooltip } from "antd";
 import { MdDelete } from "react-icons/md";
 import { FormInstance } from "antd";
+import { useEffect, useState } from "react";
+import type {
+  FormCreatePrestamo,
+  UnidadDisponiblePrestamo,
+} from "../../_types/prestamo.types";
+
+function CantidadCell({
+  form,
+  index,
+}: {
+  form: FormInstance<FormCreatePrestamo>;
+  index: number;
+}) {
+  const cantidadForm = Number(form.getFieldValue(["productos", index, "cantidad"]) ?? 0);
+  const [cantidad, setCantidad] = useState<number | null>(
+    Number.isFinite(cantidadForm) ? cantidadForm : 0
+  );
+
+  useEffect(() => {
+    setCantidad(Number.isFinite(cantidadForm) ? cantidadForm : 0);
+  }, [cantidadForm, index]);
+
+  return (
+    <div className="flex items-center h-full w-full pr-2">
+      <InputNumber
+        size="small"
+        min={0}
+        precision={2}
+        className="w-full"
+        value={cantidad}
+        onChange={(value) => {
+          const nextCantidad = Number(value ?? 0);
+          setCantidad(nextCantidad);
+          form.setFieldValue(["productos", index, "cantidad"], nextCantidad);
+        }}
+      />
+    </div>
+  );
+}
+
+function UnidadCell({
+  form,
+  index,
+}: {
+  form: FormInstance<FormCreatePrestamo>;
+  index: number;
+}) {
+  const unidades =
+    (form.getFieldValue([
+      "productos",
+      index,
+      "unidades_disponibles",
+    ]) as UnidadDisponiblePrestamo[] | undefined) ?? [];
+  const unidadDerivadaId = form.getFieldValue([
+    "productos",
+    index,
+    "unidad_derivada_id",
+  ]) as number | undefined;
+  const unidadDerivadaName = form.getFieldValue([
+    "productos",
+    index,
+    "unidad_derivada_name",
+  ]) as string | undefined;
+  const [value, setValue] = useState<number | undefined>(unidadDerivadaId);
+
+  useEffect(() => {
+    setValue(unidadDerivadaId);
+  }, [unidadDerivadaId, index]);
+
+  if (!unidades.length) {
+    return <div className="flex items-center h-full">{unidadDerivadaName || "-"}</div>;
+  }
+
+  return (
+    <div className="flex items-center h-full w-full pr-2">
+      <Select
+        size="small"
+        className="w-full"
+        value={value}
+        options={unidades.map((item) => ({
+          value: item.unidad_derivada.id,
+          label: item.unidad_derivada.name,
+        }))}
+        onChange={(nextUnidadId: number) => {
+          const unidad = unidades.find(
+            (item) => item.unidad_derivada.id === nextUnidadId
+          );
+          if (!unidad) return;
+
+          setValue(nextUnidadId);
+          form.setFieldValue(
+            ["productos", index, "unidad_derivada_id"],
+            unidad.unidad_derivada.id
+          );
+          form.setFieldValue(
+            ["productos", index, "unidad_derivada_name"],
+            unidad.unidad_derivada.name
+          );
+          form.setFieldValue(
+            ["productos", index, "unidad_derivada_factor"],
+            Number(unidad.factor ?? 1)
+          );
+        }}
+      />
+    </div>
+  );
+}
 
 export function useColumnsPrestamo(
   onEliminar: (index: number) => void,
-  form?: FormInstance
+  form?: FormInstance<FormCreatePrestamo>
 ): ColDef<FormListFieldData>[] {
   return [
     {
@@ -68,30 +175,20 @@ export function useColumnsPrestamo(
       colId: "unidad",
       headerName: "Unidad",
       field: "name",
-      width: 100,
+      width: 150,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         if (!form) return null;
-        const unidad = form.getFieldValue(['productos', value, 'unidad_derivada_name']);
-        return (
-          <div className="flex items-center h-full">
-            {unidad}
-          </div>
-        );
+        return <UnidadCell form={form} index={Number(value)} />;
       },
     },
     {
       colId: "cantidad",
       headerName: "Cantidad",
       field: "name",
-      width: 100,
+      width: 120,
       cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
         if (!form) return null;
-        const cantidad = form.getFieldValue(['productos', value, 'cantidad']);
-        return (
-          <div className="flex items-center h-full">
-            {cantidad?.toFixed(2) || "0.00"}
-          </div>
-        );
+        return <CantidadCell form={form} index={Number(value)} />;
       },
     },
     // Comentado: Solo se maneja por cantidad

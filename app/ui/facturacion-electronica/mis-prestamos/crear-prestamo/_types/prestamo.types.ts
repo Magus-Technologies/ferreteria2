@@ -7,6 +7,14 @@ import { TipoOperacion, TipoEntidad, TipoMoneda, TipoInteres } from "~/lib/api/p
 import type { TipoDireccion } from "~/lib/api/cliente";
 import type { ClienteDireccionFormFields } from "~/lib/utils/cliente-direcciones-form";
 
+export interface UnidadDisponiblePrestamo {
+  unidad_derivada: {
+    id: number;
+    name: string;
+  };
+  factor: number;
+}
+
 export interface ProductoPrestamo {
   producto_id: number;
   producto_name: string;
@@ -15,6 +23,7 @@ export interface ProductoPrestamo {
   unidad_derivada_id: number;
   unidad_derivada_name: string;
   unidad_derivada_factor: number;
+  unidades_disponibles?: UnidadDisponiblePrestamo[];
   cantidad: number;
   // costo: number; // Comentado: Solo se maneja por cantidad
   // subtotal: number; // Comentado: Solo se maneja por cantidad
