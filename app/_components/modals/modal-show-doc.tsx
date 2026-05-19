@@ -216,11 +216,16 @@ export default function ModalShowDoc({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, esTicket, backendPdfUrl, backendPdfLoading])
 
-  // Limpiar URL al cerrar
+  // Limpiar URL y cerrar modales anidados al cerrar el modal principal
   useEffect(() => {
-    if (!open && pdfUrl) {
-      URL.revokeObjectURL(pdfUrl)
-      setPdfUrl(null)
+    if (!open) {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl)
+        setPdfUrl(null)
+      }
+      setColSelOpen(false)
+      setEmailModalOpen(false)
+      setWhatsappModalOpen(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -561,6 +566,7 @@ export default function ModalShowDoc({
           </div>
         }
         width={500}
+        zIndex={2000}
         open={emailModalOpen}
         onOk={handleSendEmail}
         onCancel={() => {
@@ -660,6 +666,7 @@ export default function ModalShowDoc({
             <span className='text-lg font-semibold'>Enviar por WhatsApp</span>
           </div>
         }
+        zIndex={2000}
         open={whatsappModalOpen}
         onOk={handleSendWhatsapp}
         onCancel={() => setWhatsappModalOpen(false)}
@@ -778,6 +785,7 @@ export default function ModalShowDoc({
           </div>
         }
         width={460}
+        zIndex={2000}
         open={colSelOpen}
         onOk={handleConfirmColSel}
         onCancel={() => setColSelOpen(false)}

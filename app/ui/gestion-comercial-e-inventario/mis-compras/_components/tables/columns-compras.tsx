@@ -73,7 +73,8 @@ export function useColumnsCompras({
       message.success(data?.message || 'Recepción finalizada correctamente')
       setModalFinalizarOpen(false)
       setCompraAFinalizar(null)
-      router.push('/ui/gestion-comercial-e-inventario/mis-recepciones')
+      // No redirigir: el invalidateQueries ya refresca la lista de compras
+      // y el usuario se queda en mis-compras.
     },
     onError: (error: Error) => {
       message.error(error.message || 'Error al finalizar la recepción')
