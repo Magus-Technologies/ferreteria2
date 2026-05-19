@@ -11,7 +11,7 @@ export default function TituloModulos({
 }) {
   return (
     <div className='w-full flex flex-col sm:flex-row items-start sm:items-center justify-between
-                    gap-3 sm:gap-4 md:gap-6 lg:gap-10 xl:gap-16'>
+                    gap-3 sm:gap-4 md:gap-6 lg:gap-10 xl:gap-16 mb-4'>
       <div className='w-full sm:w-auto min-w-0
                       text-xl sm:text-2xl md:text-3xl lg:text-4xl
                       font-bold text-slate-700

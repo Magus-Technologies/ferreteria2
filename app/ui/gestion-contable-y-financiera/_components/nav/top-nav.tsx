@@ -14,6 +14,7 @@ import ModalCrearGastoExtra from '../../mis-gastos/_components/others/modal-crea
 import ModalMoverDineroSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-mover-dinero-subcajas'
 import ModalSolicitarEfectivo from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo'
 import ModalTrasladoBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda'
+import ModalAperturarCaja from '../../gestion-cajas/_components/modal-aperturar-caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { cajaApi } from '~/lib/api/caja'
 
@@ -25,6 +26,8 @@ export default function TopNav({ className }: { className?: string }) {
   const [openMoverDinero, setOpenMoverDinero] = useState(false)
   const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false)
   const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false)
+  const [openAperturarCaja, setOpenAperturarCaja] = useState(false)
+  const [openCerrarCaja, setOpenCerrarCaja] = useState(false)
 
   // Obtener caja activa (necesaria para Pedir Préstamo y Traslado a Bóveda)
   const { data: cajaActiva } = useQuery({
@@ -53,6 +56,23 @@ const itemsVentas: MenuProps['items'] = [
 ]
 
 const itemsCaja: MenuProps['items'] = [
+  {
+    key: 'aperturar-caja',
+    label: 'Aperturar Caja',
+    onClick: () => {
+      setOpenAperturarCaja(true)
+    }
+  },
+  {
+    key: 'cierre-caja',
+    label: 'Cierre de Caja',
+    onClick: () => {
+      router.push('/ui/gestion-contable-y-financiera/cierre-caja')
+    }
+  },
+  {
+    type: 'divider',
+  },
   {
     key: 'mover-dinero',
     label: 'Mover Dinero entre Sub-Cajas',
@@ -151,6 +171,12 @@ const itemsCaja: MenuProps['items'] = [
         onSuccess={() => setOpenTrasladoBoveda(false)}
         aperturaCierreId={cajaActiva?.id || ''}
         vendedorId={cajaActiva?.user?.id || cajaActiva?.user_id || (() => { try { return JSON.parse(localStorage.getItem('user') || '{}')?.id || '' } catch { return '' } })()}
+      />
+
+      <ModalAperturarCaja
+        open={openAperturarCaja}
+        setOpen={setOpenAperturarCaja}
+        onSuccess={() => setOpenAperturarCaja(false)}
       />
     </>
   )

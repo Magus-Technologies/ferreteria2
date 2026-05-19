@@ -60,25 +60,28 @@ export default function GestionContableYFinanciera() {
               maximumFractionDigits: 2,
             })}`}
             icon={<FaMoneyBills size={20} />}
+            href='/ui/gestion-contable-y-financiera/mis-ganancias'
           />
           <CardDashboard
             title='Compras por Pagar'
             value={250000}
             prefix='S/. '
             icon={<GiPayMoney size={20} />}
+            href='/ui/gestion-contable-y-financiera/compras-por-pagar'
           />
           <CardDashboard
             title='Ventas por Cobrar'
             value={50000}
             prefix='S/. '
             icon={<GiReceiveMoney size={20} />}
+            href='/ui/gestion-contable-y-financiera/ventas-por-cobrar'
           />
           <CardDashboard
-            title='Total de Ingresos | Total de Gastos'
-            value={250000}
+            title='Caja'
+            value={0}
             prefix='S/. '
-            suffix={` | 10000`}
             icon={<FaMoneyBills size={20} />}
+            href='/ui/gestion-contable-y-financiera/gestion-cajas'
           />
         </div>
 

@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 interface CardDashboardProps {
   title: string
   value: number
@@ -6,6 +8,7 @@ interface CardDashboardProps {
   icon?: React.ReactNode
   iconRight?: React.ReactNode
   decimal?: number
+  href?: string
 }
 
 export default function CardDashboard({
@@ -16,9 +19,10 @@ export default function CardDashboard({
   icon,
   iconRight,
   decimal = 2,
+  href,
 }: CardDashboardProps) {
-  return (
-    <div className='flex flex-col justify-between bg-white px-4 py-4 rounded-xl shadow-md h-full'>
+  const content = (
+    <div className='flex flex-col justify-between bg-white px-4 py-4 rounded-xl shadow-md h-full hover:shadow-lg transition-shadow'>
       {/* Header con título e icono */}
       <div className='flex items-start justify-between gap-2'>
         <div className='font-semibold text-lg leading-tight text-slate-600 flex-1'>
@@ -47,4 +51,10 @@ export default function CardDashboard({
       </div>
     </div>
   )
+
+  if (href) {
+    return <Link href={href}>{content}</Link>
+  }
+
+  return content
 }
