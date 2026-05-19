@@ -8,7 +8,7 @@ import FormBase from "~/components/form/form-base";
 import FormTablePrestamo from "../form/form-table-prestamo";
 import FormCrearPrestamo from "../form/form-crear-prestamo";
 import CardsInfoPrestamo from "../cards/cards-info-prestamo";
-import { prestamoApi, TipoMoneda, type CreatePrestamoRequest } from "~/lib/api/prestamo";
+import { prestamoApi, TipoMoneda, TipoOperacion, TipoEntidad, type CreatePrestamoRequest } from "~/lib/api/prestamo";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { useStoreProductoAgregadoPrestamo } from "../../_store/store-producto-agregado-prestamo";
 import { useStoreProveedorSeleccionado } from "~/app/ui/gestion-comercial-e-inventario/mis-proveedores/store/store-proveedor-seleccionado";
@@ -206,7 +206,15 @@ export default function BodyCrearPrestamo() {
       );
 
       if (isEdit) {
-        router.push("/ui/facturacion-electronica/mis-prestamos");
+        // Limpiar formulario y stores antes de navegar
+        form.resetFields();
+        setTipoOperacion(TipoOperacion.PRESTAR);
+        setTipoEntidad(TipoEntidad.CLIENTE);
+        setTipoMoneda(TipoMoneda.SOLES);
+        setProductosPrefill([]);
+        setProveedorSearchText('');
+        setClienteSearchText('');
+        router.push("/ui/facturacion-electronica/mis-prestamos/crear-prestamo");
         return;
       }
 

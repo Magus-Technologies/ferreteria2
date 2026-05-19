@@ -15,7 +15,7 @@ export default async function CierreCajaPage() {
   }
 
   return (
-    <ContenedorGeneral className='max-w-[1350px] pt-6'>
+    <ContenedorGeneral className='max-w-[1350px]'>
       <TituloModulos
         title='Cierre de Caja'
         icon={<FaCashRegister className='text-rose-600' />}
