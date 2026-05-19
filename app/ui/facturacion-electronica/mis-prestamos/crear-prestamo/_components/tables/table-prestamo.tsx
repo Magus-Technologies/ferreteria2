@@ -28,6 +28,21 @@ export default function TablePrestamo({
   const setProductoAgregado = useStoreProductoAgregadoPrestamo(
     (state) => state.setProductoAgregado
   );
+  const productosPrefill = useStoreProductoAgregadoPrestamo(
+    (state) => state.productosPrefill
+  );
+  const setProductosPrefill = useStoreProductoAgregadoPrestamo(
+    (state) => state.setProductosPrefill
+  );
+
+  // Precarga en lote (modo edición): poblar Form.List con add()
+  useEffect(() => {
+    if (productosPrefill && productosPrefill.length > 0) {
+      form.setFieldValue("productos", []);
+      productosPrefill.forEach((p) => add(p));
+      setProductosPrefill(undefined);
+    }
+  }, [productosPrefill, form, add, setProductosPrefill]);
 
   useEffect(() => {
     if (productoAgregado) {

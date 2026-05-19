@@ -23,8 +23,10 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 
 export default function FormCrearPrestamo({
   form,
+  isEdit = false,
 }: {
   form: FormInstance<FormCreatePrestamo>;
+  isEdit?: boolean;
 }) {
   const { user } = useAuth();
   const tipo_entidad = useStoreProductoAgregadoPrestamo(
@@ -40,15 +42,17 @@ export default function FormCrearPrestamo({
     (state) => state.setTipoOperacion
   );
 
-  // Autocompletar vendedor
+  // Autocompletar vendedor (no en edición: se conserva el del préstamo)
   useEffect(() => {
+    if (isEdit) return;
     if (user?.name) {
       form.setFieldValue("vendedor", user.name);
     }
-  }, [user, form]);
+  }, [user, form, isEdit]);
 
-  // Cargar siguiente número
+  // Cargar siguiente número (no en edición: se conserva el número existente)
   useEffect(() => {
+    if (isEdit) return;
     const cargarSiguienteNumero = async () => {
       const response = await prestamoApi.getSiguienteNumero();
       if (response.data?.numero) {
@@ -56,7 +60,7 @@ export default function FormCrearPrestamo({
       }
     };
     cargarSiguienteNumero();
-  }, [form]);
+  }, [form, isEdit]);
 
   // Sincronizar tipo_operacion y tipo_entidad con el store
   useEffect(() => {

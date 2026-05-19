@@ -1,19 +1,39 @@
 'use client'
 import { MdSpaceDashboard } from 'react-icons/md'
 import { FaClipboardList } from 'react-icons/fa'
-import { FaCartShopping } from 'react-icons/fa6'
+import { FaCartShopping, FaCashRegister } from 'react-icons/fa6'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { MenuProps } from 'antd'
 import BaseNav from '~/app/_components/nav/base-nav'
 import ButtonNav from '~/app/_components/nav/button-nav'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import ModalCrearIngresoExtra from '../../mis-ingresos/_components/others/modal-crear-ingreso-extra'
 import ModalCrearGastoExtra from '../../mis-gastos/_components/others/modal-crear-gasto-extra'
+import ModalMoverDineroSubCajas from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-mover-dinero-subcajas'
+import ModalSolicitarEfectivo from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-solicitar-efectivo'
+import ModalTrasladoBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import { cajaApi } from '~/lib/api/caja'
 
 
 export default function TopNav({ className }: { className?: string }) {
+  const router = useRouter()
   const [openIngresoExtra, setOpenIngresoExtra] = useState(false)
   const [openGastoExtra, setOpenGastoExtra] = useState(false)
+  const [openMoverDinero, setOpenMoverDinero] = useState(false)
+  const [openPedirPrestamo, setOpenPedirPrestamo] = useState(false)
+  const [openTrasladoBoveda, setOpenTrasladoBoveda] = useState(false)
+
+  // Obtener caja activa (necesaria para Pedir Préstamo y Traslado a Bóveda)
+  const { data: cajaActiva } = useQuery({
+    queryKey: [QueryKeys.CAJA_ACTIVA],
+    queryFn: async () => {
+      const response = await cajaApi.cajaActiva()
+      return response.data?.data || null
+    },
+  })
 
 const itemsVentas: MenuProps['items'] = [
   {
@@ -28,6 +48,47 @@ const itemsVentas: MenuProps['items'] = [
     label: 'Gastos',
     onClick: () => {
       setOpenGastoExtra(true)
+    }
+  },
+]
+
+const itemsCaja: MenuProps['items'] = [
+  {
+    key: 'mover-dinero',
+    label: 'Mover Dinero entre Sub-Cajas',
+    onClick: () => {
+      setOpenMoverDinero(true)
+    }
+  },
+  {
+    key: 'pedir-prestamo',
+    label: 'Pedir Préstamo',
+    onClick: () => {
+      setOpenPedirPrestamo(true)
+    }
+  },
+  {
+    key: 'traslado-boveda',
+    label: 'Traslado a Bóveda',
+    onClick: () => {
+      setOpenTrasladoBoveda(true)
+    }
+  },
+  {
+    type: 'divider',
+  },
+  {
+    key: 'gestion-cajas',
+    label: 'Gestión de Cajas',
+    onClick: () => {
+      router.push('/ui/gestion-contable-y-financiera/gestion-cajas')
+    }
+  },
+  {
+    key: 'metodos-pago',
+    label: 'Métodos de Pago',
+    onClick: () => {
+      router.push('/ui/gestion-contable-y-financiera/metodos-pago')
     }
   },
 ]
@@ -49,6 +110,14 @@ const itemsVentas: MenuProps['items'] = [
             Ventas
           </ButtonNav>
         </DropdownBase>
+
+        <DropdownBase menu={{ items: itemsCaja }}>
+          <ButtonNav withIcon={false} colorActive='text-rose-700'>
+            <FaCashRegister />
+            Caja
+          </ButtonNav>
+        </DropdownBase>
+
         <ButtonNav
           path='/ui/gestion-contable-y-financiera/kardex-finanzas'
           colorActive='text-rose-700'
@@ -65,6 +134,23 @@ const itemsVentas: MenuProps['items'] = [
       <ModalCrearGastoExtra
         open={openGastoExtra}
         onClose={() => setOpenGastoExtra(false)}
+      />
+
+      <ModalMoverDineroSubCajas
+        open={openMoverDinero}
+        setOpen={setOpenMoverDinero}
+      />
+      <ModalSolicitarEfectivo
+        open={openPedirPrestamo}
+        setOpen={setOpenPedirPrestamo}
+        aperturaId={cajaActiva?.id || ''}
+      />
+      <ModalTrasladoBoveda
+        open={openTrasladoBoveda}
+        onCancel={() => setOpenTrasladoBoveda(false)}
+        onSuccess={() => setOpenTrasladoBoveda(false)}
+        aperturaCierreId={cajaActiva?.id || ''}
+        vendedorId={cajaActiva?.user?.id || cajaActiva?.user_id || (() => { try { return JSON.parse(localStorage.getItem('user') || '{}')?.id || '' } catch { return '' } })()}
       />
     </>
   )

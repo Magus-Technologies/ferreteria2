@@ -7,6 +7,11 @@ type UseStoreProductoAgregadoPrestamo = {
   setProductoAgregado: (
     producto: FormCreatePrestamo['productos'][number] | undefined
   ) => void
+  // Precarga de productos en modo edición (lote)
+  productosPrefill?: FormCreatePrestamo['productos']
+  setProductosPrefill: (
+    productos: FormCreatePrestamo['productos'] | undefined
+  ) => void
   tipo_moneda: TipoMoneda
   setTipoMoneda: (tipo_moneda: TipoMoneda) => void
   tipo_operacion: TipoOperacion
@@ -19,6 +24,8 @@ export const useStoreProductoAgregadoPrestamo =
   create<UseStoreProductoAgregadoPrestamo>((set) => ({
     productoAgregado: undefined,
     setProductoAgregado: (producto) => set({ productoAgregado: producto }),
+    productosPrefill: undefined,
+    setProductosPrefill: (productos) => set({ productosPrefill: productos }),
     tipo_moneda: TipoMoneda.SOLES,
     setTipoMoneda: (tipo_moneda) => set({ tipo_moneda }),
     tipo_operacion: TipoOperacion.PRESTAR,

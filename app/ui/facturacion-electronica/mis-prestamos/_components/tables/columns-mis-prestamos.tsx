@@ -3,12 +3,16 @@
 import { ColDef } from "ag-grid-community";
 import dayjs from "dayjs";
 import { FaFilePdf } from "react-icons/fa6";
+import { MdEditSquare, MdBlock } from "react-icons/md";
+import { Tooltip } from "antd";
 import { Prestamo, TipoOperacion, EstadoPrestamo } from "~/lib/api/prestamo";
 import ButtonBase from "~/components/buttons/button-base";
 import { formatFechaPeru } from "~/utils/fechas";
 
 export function useColumnsMisPrestamos(
-  onVerPdf: (id: string) => void
+  onVerPdf: (id: string) => void,
+  onEditar: (prestamo: Prestamo) => void,
+  onAnular: (prestamo: Prestamo) => void
 ): ColDef<Prestamo>[] {
   return [
     // {
@@ -149,6 +153,7 @@ export function useColumnsMisPrestamos(
         if (estado === EstadoPrestamo.PAGADO_TOTAL) color = '#059669';
         if (estado === EstadoPrestamo.PAGADO_PARCIAL) color = '#ea580c';
         if (estado === EstadoPrestamo.VENCIDO) color = '#dc2626';
+        if (estado === EstadoPrestamo.ANULADO) color = '#9ca3af';
         return { color, fontWeight: 'bold' };
       },
       valueFormatter: (params) => {
@@ -157,15 +162,24 @@ export function useColumnsMisPrestamos(
         if (estado === EstadoPrestamo.PAGADO_PARCIAL) return 'DEVUELTO PARCIAL';
         if (estado === EstadoPrestamo.PAGADO_TOTAL) return 'DEVUELTO TOTAL';
         if (estado === EstadoPrestamo.VENCIDO) return 'VENCIDO';
+        if (estado === EstadoPrestamo.ANULADO) return 'ANULADO';
         return estado;
       }
     },
     {
       colId: "acciones",
       headerName: "Acciones",
-      width: 100,
+      width: 170,
       pinned: "right",
       cellRenderer: (params: { data: Prestamo }) => {
+        const data = params.data;
+        const isAnulado = data.estado_prestamo === EstadoPrestamo.ANULADO;
+        // "Pagado/devuelto": tiene monto pagado/devuelto o ya está pagado total
+        const tienePagosODevoluciones =
+          Number(data.monto_pagado) > 0 ||
+          data.estado_prestamo === EstadoPrestamo.PAGADO_TOTAL;
+        const editarDisabled = isAnulado || tienePagosODevoluciones;
+
         return (
           <div
             style={{
@@ -179,12 +193,50 @@ export function useColumnsMisPrestamos(
             <ButtonBase
               color="danger"
               size="md"
-              onClick={() => onVerPdf(String(params.data.id))}
+              onClick={() => onVerPdf(String(data.id))}
               className="flex items-center !px-3"
               title="Ver PDF"
             >
               <FaFilePdf />
             </ButtonBase>
+
+            <Tooltip
+              title={
+                isAnulado
+                  ? "Préstamo anulado"
+                  : tienePagosODevoluciones
+                    ? "No se puede editar: tiene pagos o devoluciones"
+                    : "Editar préstamo"
+              }
+            >
+              <span>
+                <ButtonBase
+                  color="warning"
+                  size="md"
+                  disabled={editarDisabled}
+                  onClick={() => !editarDisabled && onEditar(data)}
+                  className="flex items-center !px-3"
+                >
+                  <MdEditSquare />
+                </ButtonBase>
+              </span>
+            </Tooltip>
+
+            <Tooltip
+              title={isAnulado ? "Préstamo ya anulado" : "Anular préstamo"}
+            >
+              <span>
+                <ButtonBase
+                  color="danger"
+                  size="md"
+                  disabled={isAnulado}
+                  onClick={() => !isAnulado && onAnular(data)}
+                  className="flex items-center !px-3"
+                >
+                  <MdBlock />
+                </ButtonBase>
+              </span>
+            </Tooltip>
           </div>
         );
       },

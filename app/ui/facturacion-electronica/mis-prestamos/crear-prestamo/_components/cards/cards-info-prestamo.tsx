@@ -10,8 +10,10 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 
 export default function CardsInfoPrestamo({
   form,
+  isEdit = false,
 }: {
   form: FormInstance<FormCreatePrestamo>;
+  isEdit?: boolean;
 }) {
   const tipo_moneda = Form.useWatch("tipo_moneda", form);
   const productos = Form.useWatch("productos", form) as FormCreatePrestamo["productos"];
@@ -80,7 +82,7 @@ export default function CardsInfoPrestamo({
           className="flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance"
         >
           <MdAccountBalance className="min-w-fit" size={30} />
-          Crear Préstamo
+          {isEdit ? "Editar Préstamo" : "Crear Préstamo"}
         </ButtonBase>
       </ConfigurableElement>
     </div>

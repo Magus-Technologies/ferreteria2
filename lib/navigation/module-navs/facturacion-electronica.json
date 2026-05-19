@@ -83,40 +83,6 @@
             "label": "Cerrar Caja",
             "route": "/ui/facturacion-electronica/cierre-caja",
             "permission": "caja.update"
-          },
-          {
-            "key": "mover-dinero",
-            "label": "Mover Dinero entre Sub-Cajas",
-            "action": "openMoverDinero",
-            "permission": null
-          },
-          {
-            "key": "pedir-prestamo",
-            "label": "Pedir Préstamo",
-            "action": "openPedirPrestamo",
-            "permission": null
-          },
-          {
-            "key": "traslado-boveda",
-            "label": "Traslado a Bóveda",
-            "action": "openTrasladoBoveda",
-            "permission": null
-          },
-          {
-            "key": "divider",
-            "type": "divider"
-          },
-          {
-            "key": "gestion-cajas",
-            "label": "Gestión de Cajas",
-            "route": "/ui/facturacion-electronica/gestion-cajas",
-            "permission": null
-          },
-          {
-            "key": "metodos-pago",
-            "label": "Métodos de Pago",
-            "route": "/ui/facturacion-electronica/metodos-pago",
-            "permission": null
           }
         ]
       },

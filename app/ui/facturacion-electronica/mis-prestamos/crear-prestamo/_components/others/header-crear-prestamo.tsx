@@ -1,6 +1,7 @@
 'use client'
 
 import { MdAccountBalance } from 'react-icons/md'
+import { useSearchParams } from 'next/navigation'
 import SelectProductos from '~/app/_components/form/selects/select-productos'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import usePermissionHook from '~/hooks/use-permission'
@@ -8,10 +9,11 @@ import { permissions } from '~/lib/permissions'
 
 export default function HeaderCrearPrestamo() {
   const { can } = usePermissionHook()
+  const isEdit = !!useSearchParams().get('id')
 
   return (
     <TituloModulos
-      title='Crear Préstamo'
+      title={isEdit ? 'Editar Préstamo' : 'Crear Préstamo'}
       icon={<MdAccountBalance className='text-amber-600' />}
       extra={
         <div className='pl-0 lg:pl-8 flex items-center gap-2 lg:gap-4 w-full lg:w-auto'>

@@ -16,7 +16,8 @@ export enum EstadoPrestamo {
   PENDIENTE = 'pendiente',
   PAGADO_PARCIAL = 'pagado_parcial',
   PAGADO_TOTAL = 'pagado_total',
-  VENCIDO = 'vencido'
+  VENCIDO = 'vencido',
+  ANULADO = 'anulado'
 }
 
 export enum TipoInteres {
@@ -141,6 +142,8 @@ export interface Prestamo {
   dias_gracia?: number;
   garantia?: string;
   estado_prestamo: EstadoPrestamo;
+  motivo_anulacion?: string | null;
+  fecha_anulacion?: string | null;
   observaciones?: string;
   user_id: string;
   vendedor?: string;
@@ -296,6 +299,22 @@ export const prestamoApi = {
     return apiRequest<CreatePrestamoResponse>('/prestamos', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  // Actualizar préstamo (revierte y recrea el movimiento de inventario)
+  update: async (id: string, data: CreatePrestamoRequest): Promise<ApiResponse<CreatePrestamoResponse>> => {
+    return apiRequest<CreatePrestamoResponse>(`/prestamos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Anular préstamo (forzado total: revierte devoluciones, pagos e inventario)
+  anular: async (id: string, motivo: string): Promise<ApiResponse<{ message: string; data: Prestamo }>> => {
+    return apiRequest<{ message: string; data: Prestamo }>(`/prestamos/${id}/anular`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo }),
     });
   },
 
