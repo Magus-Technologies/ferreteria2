@@ -47,6 +47,11 @@ export default function CardsInfoPrestamos() {
     let emprestados = 0
 
     response.forEach((prestamo: Prestamo) => {
+      // Excluir prestados anulados
+      if (prestamo.estado_prestamo === EstadoPrestamo.ANULADO) {
+        return
+      }
+
       // Contar por estado
       switch (prestamo.estado_prestamo) {
         case EstadoPrestamo.PENDIENTE:
@@ -74,7 +79,7 @@ export default function CardsInfoPrestamos() {
       }
     })
 
-    const totalPrestamos = response.length
+    const totalPrestamos = response.filter((p: Prestamo) => p.estado_prestamo !== EstadoPrestamo.ANULADO).length
 
     return {
       totalPrestamos,
