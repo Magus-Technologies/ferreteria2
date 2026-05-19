@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FaBoxes, FaPiggyBank, FaPlusCircle } from 'react-icons/fa'
 import { FaMoneyBillTrendUp, FaWeightHanging, FaBoxOpen } from 'react-icons/fa6'
 import { useQuery } from '@tanstack/react-query'
@@ -12,7 +12,8 @@ import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e
 import ButtonBase from '~/components/buttons/button-base'
 import LabelBase from '~/components/form/label-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { App, Badge, Button, Modal, Radio } from 'antd'
+import { App, Badge, Button, Input, Modal, Radio } from 'antd'
+import type { InputRef } from 'antd'
 import type { TipoPrecio } from '~/lib/api/paquete'
 import { FormCreateVenta } from '../others/body-vender'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
@@ -20,6 +21,54 @@ import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import SelectPrecios from '~/app/_components/form/selects/select-precios'
 import { calcularSubtotalVenta } from '../tables/columns-vender'
+import { parseCantidadFraccion, formatCantidadFraccion, GetStock } from '~/app/_utils/get-stock'
+
+function InputCantidadFraccion({
+  value,
+  factor,
+  onChange,
+  onKeyUp,
+  inputRef,
+}: {
+  value: number | undefined
+  factor: number
+  onChange: (val: number | null) => void
+  onKeyUp?: React.KeyboardEventHandler<HTMLInputElement>
+  inputRef?: React.RefObject<InputRef | null>
+}) {
+  const [disp, setDisp] = useState(() =>
+    value != null ? formatCantidadFraccion(value, factor) : ''
+  )
+
+  useEffect(() => {
+    setDisp(value != null ? formatCantidadFraccion(value, factor) : '')
+  }, [value, factor])
+
+  const commit = (raw: string) => {
+    if (!raw.trim()) { onChange(null); return }
+    const parsed = parseCantidadFraccion(raw, factor)
+    if (parsed !== null && parsed > 0) {
+      onChange(parsed)
+    } else {
+      setDisp(value != null ? formatCantidadFraccion(value, factor) : '')
+    }
+  }
+
+  return (
+    <Input
+      ref={inputRef}
+      placeholder="Cantidad"
+      prefix={<FaBoxes size={15} className="text-rose-700 mx-1" />}
+      value={disp}
+      onChange={(e) => setDisp(e.target.value)}
+      onBlur={() => commit(disp)}
+      onKeyUp={(e) => {
+        if (e.key === 'Enter') commit(disp)
+        onKeyUp?.(e)
+      }}
+    />
+  )
+}
 
 export type ValuesCardAgregarProductoVenta = Partial<
   FormCreateVenta['productos'][number]
@@ -178,7 +227,7 @@ export default function CardAgregarProductoVenta({
     }
   }
 
-  const cantidadRef = useRef<HTMLInputElement>(null)
+  const cantidadRef = useRef<InputRef>(null)
   const unidad_derivadaRef = useRef<RefSelectBaseProps>(null)
   const precio_ventaRef = useRef<RefSelectBaseProps>(null)
   const buttom_masRef = useRef<HTMLButtonElement>(null)
@@ -247,35 +296,27 @@ export default function CardAgregarProductoVenta({
   return (
     <div className='flex flex-col gap-2'>
       <LabelBase label='Cantidad:' orientation='column'>
-        <InputNumberBase
-          ref={cantidadRef}
-          placeholder='Cantidad'
-          precision={2}
-          prefix={<FaBoxes size={15} className='text-rose-700 mx-1' />}
-          onChange={(value) => handleChange(value, 'cantidad')}
+        <InputCantidadFraccion
+          inputRef={cantidadRef}
           value={values.cantidad}
-          min={0}
-          nextInEnter={false}
-          controls={false}
-          keyboard={false}
+          factor={Number(unidad_derivada_seleccionada?.factor ?? 1)}
+          onChange={(val) => handleChange(val, 'cantidad')}
           onKeyUp={(e) => {
             if (e.key === 'Enter') precio_ventaRef.current?.focus()
           }}
         />
-        {/* Validación de stock */}
-        {values.cantidad && unidad_derivada_seleccionada && producto_en_almacen && (() => {
-          const cantidadEnFraccion = Number(values.cantidad) * Number(unidad_derivada_seleccionada.factor);
-          const stockDisponible = Number(producto_en_almacen.stock_fraccion);
-          const stockEnUnidad = stockDisponible / Number(unidad_derivada_seleccionada.factor);
-          
-          if (cantidadEnFraccion > stockDisponible) {
-            return (
-              <div className='text-red-600 text-xs mt-1 font-medium'>
-                ⚠️ Stock: {stockEnUnidad.toFixed(2)}
-              </div>
-            );
-          }
-          return null;
+        {/* Stock disponible — siempre visible cuando hay unidad seleccionada */}
+        {unidad_derivada_seleccionada && producto_en_almacen && (() => {
+          const factor = Number(unidad_derivada_seleccionada.factor)
+          const stockDisponible = Number(producto_en_almacen.stock_fraccion)
+          const cantidadEnFraccion = Number(values.cantidad ?? 0) * factor
+          const excede = !!values.cantidad && cantidadEnFraccion > stockDisponible
+          return (
+            <div className={`text-xs mt-1 font-medium flex items-center gap-1 ${excede ? 'text-red-600' : 'text-gray-400'}`}>
+              {excede ? '⚠️' : ''} Stock:{' '}
+              <GetStock stock_fraccion={stockDisponible} unidades_contenidas={factor} />
+            </div>
+          )
         })()}
       </LabelBase>
       <LabelBase label='Unidad Derivada:' orientation='column'>
