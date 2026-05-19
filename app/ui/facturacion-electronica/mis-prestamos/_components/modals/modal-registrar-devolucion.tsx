@@ -229,13 +229,8 @@ export default function ModalRegistrarDevolucion({
 
   const columns: ColDef<ProductoDevolucion>[] = [
     {
-      headerName: '#',
-      valueGetter: (params: any) => (params.node?.rowIndex ?? 0) + 1,
-      width: 50,
-      cellStyle: { textAlign: 'center' },
-    },
-    {
       headerName: 'Producto',
+      colId: 'producto',
       valueGetter: (params: any) => {
         const data = params.data as ProductoDevolucion
         return data ? `${data.producto_name} (${data.producto_codigo})` : 'N/A'
@@ -245,6 +240,7 @@ export default function ModalRegistrarDevolucion({
     },
     {
       headerName: 'Total',
+      colId: 'total',
       field: 'total',
       width: 100,
       valueFormatter: (params) => Number(params.value || 0).toFixed(2),
@@ -252,6 +248,7 @@ export default function ModalRegistrarDevolucion({
     },
     {
       headerName: 'Entregado',
+      colId: 'entregado',
       field: 'entregado',
       width: 110,
       valueFormatter: (params) => Number(params.value || 0).toFixed(2),
@@ -259,6 +256,7 @@ export default function ModalRegistrarDevolucion({
     },
     {
       headerName: 'Pendiente',
+      colId: 'pendiente',
       field: 'pendiente',
       width: 110,
       valueFormatter: (params) => Number(params.value || 0).toFixed(2),
@@ -266,6 +264,7 @@ export default function ModalRegistrarDevolucion({
     },
     {
       headerName: 'Devolver',
+      colId: 'devolver',
       field: 'devolver',
       width: 130,
       cellRenderer: (params: any) => {
