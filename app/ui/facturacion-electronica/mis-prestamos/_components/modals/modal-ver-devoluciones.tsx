@@ -84,11 +84,24 @@ export default function ModalVerDevoluciones({
     [pagos]
   )
 
-  // Seleccionar automáticamente la primera fila de devoluciones cuando se cargan
+  // Limpiar selección si el pago seleccionado fue anulado y re-seleccionar la primera fila
   useEffect(() => {
-    if (pagosDevolucion && pagosDevolucion.length > 0 && !pagoSeleccionado) {
-      const firstRow = pagosDevolucion[0]
-      setPagoSeleccionado(firstRow)
+    if (pagosDevolucion && pagosDevolucion.length > 0) {
+      if (pagoSeleccionado) {
+        const pagoAunExiste = pagosDevolucion.find((p) => p.id === pagoSeleccionado.id)
+        if (pagoAunExiste) {
+          // Actualizar el pago seleccionado con los datos más recientes
+          setPagoSeleccionado(pagoAunExiste)
+        } else {
+          // Si el pago no existe más en la lista filtrada, seleccionar el primero
+          const firstRow = pagosDevolucion[0]
+          setPagoSeleccionado(firstRow)
+        }
+      } else {
+        // Si no hay pago seleccionado, seleccionar el primero
+        const firstRow = pagosDevolucion[0]
+        setPagoSeleccionado(firstRow)
+      }
       // Seleccionar visualmente la primera fila en la tabla
       setTimeout(() => {
         const api = tableRef.current?.api
