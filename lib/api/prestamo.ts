@@ -110,6 +110,9 @@ export interface PagoPrestamo {
   metodo_pago: string;
   numero_operacion?: string;
   observaciones?: string;
+  estado?: boolean;
+  motivo_anulacion?: string | null;
+  fecha_anulacion?: string | null;
   user_id: string;
   user?: User;
   created_at: string;
@@ -327,6 +330,14 @@ export const prestamoApi = {
   eliminarPago: async (prestamoId: string, pagoId: string): Promise<ApiResponse<{ message: string; prestamo: Prestamo }>> => {
     return apiRequest<{ message: string; prestamo: Prestamo }>(`/prestamos/${prestamoId}/pagos/${pagoId}`, {
       method: 'DELETE',
+    });
+  },
+
+  // Anular pago/devolución (conserva el registro, revierte stock, requiere motivo)
+  anularPago: async (prestamoId: string, pagoId: string, motivo: string): Promise<ApiResponse<{ message: string; prestamo: Prestamo }>> => {
+    return apiRequest<{ message: string; prestamo: Prestamo }>(`/prestamos/${prestamoId}/pagos/${pagoId}/anular`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo }),
     });
   },
 
