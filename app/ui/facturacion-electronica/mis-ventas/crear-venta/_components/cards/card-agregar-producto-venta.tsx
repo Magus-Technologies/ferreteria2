@@ -558,7 +558,17 @@ export default function CardAgregarProductoVenta({
               const precio = Number((paqueteProducto as any)[precioKey] || 0)
               const descuento = Number((paqueteProducto as any)[descuentoKey] || 0)
               const cantidadBase = Number(paqueteProducto.cantidad)
-              
+
+              // Buscar stock y factor real del sub-producto para el almacén activo
+              const productoEnAlmacen = paqueteProducto.producto.producto_en_almacenes?.find(
+                (a: any) => a.almacen_id === almacen_id
+              )
+              const stockFraccion = Number(productoEnAlmacen?.stock_fraccion ?? 0)
+              const unidadDerivadaReal = productoEnAlmacen?.unidades_derivadas?.find(
+                (u: any) => (u.unidad_derivada_id ?? u.unidad_derivada?.id) === paqueteProducto.unidad_derivada_id
+              )
+              const factorReal = Number(unidadDerivadaReal?.factor ?? 1)
+
               // Crear objeto con todos los precios y descuentos de todos los tipos
               const productoData = {
                 _tipo_fila: 'paquete_producto',
@@ -568,7 +578,8 @@ export default function CardAgregarProductoVenta({
                 marca_name: paqueteProducto.producto.marca?.name || '',
                 unidad_derivada_id: paqueteProducto.unidad_derivada_id,
                 unidad_derivada_name: paqueteProducto.unidad_derivada.name,
-                unidad_derivada_factor: 1,
+                unidad_derivada_factor: factorReal,
+                stock_fraccion: stockFraccion,
                 cantidad: cantidadBase,
                 cantidad_base: cantidadBase,
                 precio_venta: precio,

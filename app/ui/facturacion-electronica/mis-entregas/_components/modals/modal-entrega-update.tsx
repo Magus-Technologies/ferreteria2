@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Form } from 'antd'
+import { Form, Modal, Spin } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
@@ -81,6 +81,14 @@ export default function ModalEntregaUpdate({
   })
   const entregaDetalle = (entregaDetalleResp?.data?.data ?? entregaDetalleResp?.data) as any
   const entregaFuente = entregaDetalle || entrega
+  const requiereHidratacionCompletaParcial = Boolean(
+    open &&
+      entrega?.id &&
+      !entregaDetalle &&
+      (entrega?.tipo_entrega === 'pa' ||
+        entrega?.venta?.tipo_despacho === 'pa' ||
+        entrega?.__esParcialAgrupado),
+  )
 
   // Tipo "UI" actualmente activo. En modo update, se inicializa con el tipo
   // real de la entrega y se persiste en el backend al cambiarlo. En modo
@@ -498,7 +506,45 @@ export default function ModalEntregaUpdate({
     return productos
   }, [entregaFuente, restante])
 
+  // Opción A: detectar programáticamente si hay que encender el toggle
+  // "Programar entrega del resto?" en modo actualizar-entrega.
+  // Se activa cuando la entrega es parcial agrupada y tiene hermanas
+  // programadas con estado pendiente (tipo_despacho='pr' y estado='pe')
+  // y con productos pendientes.
+  const tieneHermanaProgramadaConPendientes = useMemo(() => {
+    if (restante) return false
+    if (entregaFuente?.tipo_entrega !== 'pa') return false
+    const grupoId = entregaFuente?.grupo_entrega_id
+    if (!grupoId) return false
+    const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
+      ? entregaFuente.venta.entregas_productos
+      : []
+    const hijasGrupo = entregasRelacionadas.filter((h: any) => {
+      if (Number(h?.grupo_entrega_id) !== Number(grupoId)) return false
+      return true
+    })
+    if (hijasGrupo.length === 0) return false
+
+    const hayEntregada = hijasGrupo.some(
+      (h: any) => Number(h?.id) !== Number(entregaFuente?.id) && h?.estado_entrega === 'en',
+    )
+    const esTramoProgramadoActual =
+      entregaFuente?.tipo_despacho === 'pr' && entregaFuente?.estado_entrega === 'pe'
+    const hayHermanaProgramadaPendiente = hijasGrupo.some(
+      (h: any) =>
+        Number(h?.id) !== Number(entregaFuente?.id) &&
+        h?.tipo_despacho === 'pr' &&
+        h?.estado_entrega === 'pe' &&
+        (h?.productos_entregados || []).some(
+          (p: any) => Number(p?.cantidad_entregada || 0) > 0,
+        ),
+    )
+
+    return (esTramoProgramadoActual && hayEntregada) || hayHermanaProgramadaPendiente
+  }, [entregaFuente, restante])
+
   // entregaParaMapa debe estar ANTES del return null para no violar las reglas de hooks.
+  // También tiene early return interno que hace safe fallback cuando !entrega.
   const entregaParaMapa = useMemo(() => {
     if (!entrega) return null
     const direccionForm =
@@ -554,6 +600,8 @@ export default function ModalEntregaUpdate({
       : tipoLocal === 'Domicilio'
       ? [...ocultarBase]
       : [...ocultarBase] // Parcial: incluir programar-resto + mapa
+
+  if (!entrega) return null
 
   // Header del modal — distingue restante vs actualización normal.
   const tituloPorTipo: Record<TipoDespachoUI, string> = {
@@ -712,13 +760,25 @@ export default function ModalEntregaUpdate({
       } as const)
     : ({ kind: 'actualizar-entrega' as const, entregaId: entrega.id } as const)
 
-  // El `<Form>` provider es necesario porque los `Form.Item` que usa el modal
-  // de detalles-entrega (referencia, observaciones, dirección, etc.) consultan
-  // el FormContext via React. Sin envolverlos en `<Form>`, Ant Design 5
-  // imprime "Can not find FormContext" y `form.setFieldValue` no afecta los
-  // inputs aunque sí actualice el store interno del form.
-  // `component={false}` evita el render de un `<form>` HTML (no queremos el
-  // submit nativo, el onConfirmar lo maneja el botón del modal).
+  if (requiereHidratacionCompletaParcial) {
+    return (
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        title="CONFIGURAR ENTREGA"
+        width={1100}
+      >
+        <div className="flex min-h-[240px] items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-slate-600">
+            <Spin size="large" />
+            <span className="text-sm">Cargando detalle de la entrega...</span>
+          </div>
+        </div>
+      </Modal>
+    )
+  }
+
   return (
     <Form form={form} component={false}>
       <ModalDetallesEntrega
@@ -735,6 +795,7 @@ export default function ModalEntregaUpdate({
         clienteNombre={entrega.venta?.cliente?.razon_social || entrega.venta?.cliente?.nombres}
         clienteId={entrega.venta?.cliente_id ?? entrega.venta?.cliente?.id}
         direccion={entrega.direccion_entrega || ''}
+        forzarProgramarRestoOn={tieneHermanaProgramadaConPendientes}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })

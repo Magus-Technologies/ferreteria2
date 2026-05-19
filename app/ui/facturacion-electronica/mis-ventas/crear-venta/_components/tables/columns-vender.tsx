@@ -581,12 +581,22 @@ export function useColumnsVender({
           )
         }
 
-        // Sub-producto de paquete - cantidad solo lectura (calculada)
+        // Sub-producto de paquete - cantidad solo lectura + alerta de stock
         if (tipoFila === 'paquete_producto') {
           const cantidad = form.getFieldValue(['productos', value, 'cantidad'])
+          const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor'])
+          const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion'])
+          const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1)
+          const stockDisponible = Number(stock_fraccion || 0)
+          const stockInsuficiente = cantidadEnFraccion > stockDisponible
           return (
-            <div className='flex items-center h-full justify-center'>
-              <span className='text-gray-600 text-xs'>{Number(cantidad || 0).toFixed(2)}</span>
+            <div className='flex flex-col justify-center w-full py-1'>
+              <span className='text-gray-600 text-xs text-center'>{Number(cantidad || 0).toFixed(2)}</span>
+              {stockInsuficiente && cantidad && (
+                <div className='text-red-600 text-[11px] font-medium leading-tight text-center'>
+                  ⚠️ Stock: {(stockDisponible / Number(unidad_derivada_factor || 1)).toFixed(2)}
+                </div>
+              )}
               <InputNumberBase propsForm={{ name: [value, 'cantidad'], hidden: true }} formWithMessage={false} />
             </div>
           )

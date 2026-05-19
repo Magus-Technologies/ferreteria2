@@ -55,10 +55,27 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   // antiguo (con PDF embebido) ya no se usa para entregar — solo para casos
   // legacy si el filter envía 'despachar' explícito.
   useEffect(() => {
+// Use entrega (not entregaOperativa) for ID check since entregaOperativa
+    // is derived from entrega and the store also stores the raw entrega.
+    const entregaId = (entrega as any)?.id
+    const selectedId = (entregaSeleccionada as any)?.id
     if (!accionTrigger || !entrega) return
-    if (entregaSeleccionada?.id !== entrega.id) return
+    if (String(entregaId) !== String(selectedId)) return
     if (accionTrigger === 'marcar') openUpdateModal(entregaOperativa, false)
-    else if (accionTrigger === 'parcial') openUpdateModal(entregaOperativa, false)
+    // Si es grouped parcial con already entrega 'en', treat as restante
+    // (open crear-entrega-resto so the switch starts ON). Otherwise open
+    // actualizando-incrementar (parcial mode on the pe child).
+    const isGroupedParcial =
+      accionTrigger === 'parcial' &&
+      (entregaOperativa as any)?.__esParcialAgrupado &&
+      (entregaOperativa as any)?.entregas_agrupadas?.some(
+        (h: any) => h?.estado_entrega === 'en',
+      )
+    if (isGroupedParcial) {
+      openUpdateModal(entregaOperativa, true)
+    } else if (accionTrigger === 'parcial') {
+      openUpdateModal(entregaOperativa, false)
+    }
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
     else if (accionTrigger === 'despachar') openUpdateModal(entregaOperativa, false)
     else if (accionTrigger === 'restante') openUpdateModal(entregaOperativa, true)
