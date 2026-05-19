@@ -193,16 +193,16 @@ export default function ModalDocPrestamo({
       whatsappConfig={{
         pdfPublicUrl,
         columnas: COLUMNAS_PRESTAMO,
-        defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
+        defaultColumnas: ['ubicacion', 'codigo', 'cantidad', 'unidad', 'producto', 'costo', 'importe'],
         extras: EXTRAS_PRESTAMO,
-        defaultExtras: ['total'],
+        defaultExtras: ['monto_total', 'monto_pagado', 'saldo_pendiente'],
         buildDetalle: (columnas, extras) =>
           buildDetallePrestamo(prestamoData, productosPrestamo, columnas, extras),
       }}
       emailConfig={{
         emailDefault: entidadEmail,
         columnas: [...COLUMNAS_PRESTAMO, ...EXTRAS_PRESTAMO],
-        defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
+        defaultColumnas: ['ubicacion', 'codigo', 'cantidad', 'unidad', 'producto', 'costo', 'importe'],
         onSend: async (email, columnas, mensaje) => {
           if (!prestamoId) throw new Error('No hay préstamo seleccionado')
           const res = await documentoEmailApi.enviarEmail({
@@ -218,9 +218,9 @@ export default function ModalDocPrestamo({
       }}
       descargaConfig={{
         columnas: COLUMNAS_PRESTAMO,
-        defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
+        defaultColumnas: ['ubicacion', 'codigo', 'cantidad', 'unidad', 'producto', 'costo', 'importe'],
         extras: EXTRAS_PRESTAMO,
-        defaultExtras: ['total'],
+        defaultExtras: ['monto_total', 'monto_pagado', 'saldo_pendiente'],
         fetchBlob: async (columnas, extras) => {
           if (!prestamoId) throw new Error('No hay préstamo seleccionado')
           const token = getAuthToken()

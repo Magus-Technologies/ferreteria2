@@ -190,7 +190,7 @@ export const ordenCompraApi = {
     /**
      * Enviar orden de compra por correo
      */
-    enviarCorreo: async (id: number, data: { email: string; columnas: string[] }): Promise<ApiResponse<{success: boolean, message: string}>> => {
+    enviarCorreo: async (id: number, data: { email: string; columnas: string[]; formato?: 'a4' | 'ticket' }): Promise<ApiResponse<{success: boolean, message: string}>> => {
         return apiRequest<{success: boolean, message: string}>(`/ordenes-compra/${id}/enviar-correo`, {
             method: 'POST',
             body: JSON.stringify(data),

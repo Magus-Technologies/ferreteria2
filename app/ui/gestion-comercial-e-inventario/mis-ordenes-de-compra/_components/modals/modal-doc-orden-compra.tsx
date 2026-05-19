@@ -79,17 +79,19 @@ function buildDetalleOC(
 }
 
 export default function ModalDocOrdenCompra({ open, onClose, orden }: ModalDocOrdenCompraProps) {
-    const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+    const [esTicket, setEsTicket] = useState(false)
+    const [ticketPdfUrl, setTicketPdfUrl] = useState<string | null>(null)
+    const [a4PdfUrl, setA4PdfUrl] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const fetchedRef = useRef<number | null>(null)
     const { data: empresa } = useEmpresaPublica()
     // Productos cargados (pueden no venir en el objeto inicial de la tabla)
     const [productosLoaded, setProductosLoaded] = useState<OrdenCompraProducto[]>([])
 
-    const fetchPdf = useCallback(async (id: number) => {
+    const fetchPdf = useCallback(async (id: number, formato: 'ticket' | 'a4') => {
         const token = getAuthToken()
         const API_URL = process.env.NEXT_PUBLIC_API_URL
-        const res = await fetch(`${API_URL}/pdf/orden-compra/${id}`, {
+        const res = await fetch(`${API_URL}/pdf/orden-compra/${id}?formato=${formato}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 Accept: 'application/pdf',
@@ -104,11 +106,15 @@ export default function ModalDocOrdenCompra({ open, onClose, orden }: ModalDocOr
         if (open && orden?.id && fetchedRef.current !== orden.id) {
             fetchedRef.current = orden.id
             setLoading(true)
-            // Cargar PDF
-            fetchPdf(orden.id)
-                .then((url) => { setPdfUrl(url) })
-                .catch((err) => { console.error('Error cargando PDF de OC:', err) })
-                .finally(() => { setLoading(false) })
+
+            fetchPdf(orden.id, 'a4')
+                .then((url) => { setA4PdfUrl(url); setLoading(false) })
+                .catch((err) => { console.error('Error A4 PDF de OC:', err); setLoading(false) })
+
+            fetchPdf(orden.id, 'ticket')
+                .then((url) => setTicketPdfUrl(url))
+                .catch((err) => console.error('Error ticket PDF de OC:', err))
+
             // Cargar productos si no están disponibles
             if (!orden.productos || orden.productos.length === 0) {
                 ordenCompraApi.getById(orden.id).then((res) => {
@@ -122,14 +128,15 @@ export default function ModalDocOrdenCompra({ open, onClose, orden }: ModalDocOr
         }
 
         if (!open) {
-            setPdfUrl((prev) => {
-                if (prev) URL.revokeObjectURL(prev)
-                return null
-            })
+            setA4PdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
+            setTicketPdfUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
             fetchedRef.current = null
             setProductosLoaded([])
         }
     }, [open, orden?.id, fetchPdf, orden?.productos])
+
+    const currentPdfUrl = esTicket ? ticketPdfUrl : a4PdfUrl
+    const currentLoading = esTicket ? (loading || !ticketPdfUrl) : (loading || !a4PdfUrl)
 
     const whatsappMensajeAuto = (() => {
         if (!orden) return undefined
@@ -144,7 +151,7 @@ export default function ModalDocOrdenCompra({ open, onClose, orden }: ModalDocOr
 
     // URL pública del PDF (no requiere auth)
     const pdfPublicUrl = orden?.id
-        ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/orden-compra/${orden.id}`
+        ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/orden-compra/${orden.id}?formato=${esTicket ? 'ticket' : 'a4'}`
         : undefined
 
     const ordenTotal = Number(orden?.total ?? 0)
@@ -157,8 +164,10 @@ export default function ModalDocOrdenCompra({ open, onClose, orden }: ModalDocOr
             setOpen={(val) => !val && onClose()}
             nro_doc={nroDoc}
             tipoDocumento="compra"
-            backendPdfUrl={pdfUrl}
-            backendPdfLoading={loading && !pdfUrl}
+            setEsTicket={setEsTicket}
+            esTicket={esTicket}
+            backendPdfUrl={currentPdfUrl}
+            backendPdfLoading={currentLoading && !currentPdfUrl}
             clienteTelefonos={undefined}
             whatsappMensajeAuto={whatsappMensajeAuto}
             whatsappConfig={{
@@ -176,8 +185,31 @@ export default function ModalDocOrdenCompra({ open, onClose, orden }: ModalDocOr
                 defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
                 onSend: async (email, columnas) => {
                     if (!orden?.id) throw new Error('No hay orden seleccionada')
-                    const res = await ordenCompraApi.enviarCorreo(orden.id, { email, columnas })
+                    const res = await ordenCompraApi.enviarCorreo(orden.id, {
+                        email,
+                        columnas,
+                        formato: esTicket ? 'ticket' : 'a4',
+                    })
                     if (res.error) throw new Error(res.error.message)
+                },
+            }}
+            descargaConfig={{
+                columnas: COLUMNAS_OC,
+                defaultColumnas: ['codigo', 'producto', 'marca', 'unidad', 'cantidad'],
+                extras: EXTRAS_OC,
+                defaultExtras: ['total'],
+                fetchBlob: async (columnas, extras) => {
+                    if (!orden?.id) throw new Error('No hay orden seleccionada')
+                    const token = getAuthToken()
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL
+                    const fmt = esTicket ? 'ticket' : 'a4'
+                    const params = new URLSearchParams({ formato: fmt })
+                    ;[...columnas, ...extras].forEach((c) => params.append('columnas[]', c))
+                    const res = await fetch(`${API_URL}/pdf/orden-compra/${orden.id}?${params.toString()}`, {
+                        headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' },
+                    })
+                    if (!res.ok) throw new Error(`Error PDF: ${res.status}`)
+                    return await res.blob()
                 },
             }}
         >
