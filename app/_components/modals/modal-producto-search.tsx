@@ -43,6 +43,7 @@ type ModalProductoSearchProps = {
   selectionColor?: string; // Color para la fila seleccionada
   onAfterClose?: () => void;
   ignoreAlmacen?: boolean;
+  overrideAlmacenId?: number;
   showStockMaxWarning?: boolean;
   showFiltrosAvanzados?: boolean;
   stockFilterMode?: 'default' | 'venta';
@@ -73,6 +74,7 @@ export default function ModalProductoSearch({
   selectionColor, // Recibir el color de selección
   onAfterClose,
   ignoreAlmacen = false,
+  overrideAlmacenId,
   showStockMaxWarning = false,
   showFiltrosAvanzados = false,
   stockFilterMode = 'default',
@@ -266,6 +268,7 @@ export default function ModalProductoSearch({
                 marcaId={marcaId}
                 categoriaId={categoriaId}
                 ignoreAlmacen={ignoreAlmacen}
+                overrideAlmacenId={overrideAlmacenId}
                 showStockMaxWarning={showStockMaxWarning}
               />
             </div>

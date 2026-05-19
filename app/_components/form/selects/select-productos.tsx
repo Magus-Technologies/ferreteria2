@@ -198,7 +198,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
     queryFn: async () => {
       if (!debouncedText) return []
       if (!ignoreAlmacen && !almacen_id) return []
-      
+
       const response = await productosApiV2.getAllByAlmacen({
         almacen_id: ignoreAlmacen ? undefined : almacen_id,
         search: debouncedText,

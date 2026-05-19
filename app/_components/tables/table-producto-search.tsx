@@ -38,6 +38,7 @@ export default function TableProductoSearch({
   categoriaId,
   forceLoading = false, // Forzar loading externo (ej. debounce pendiente)
   ignoreAlmacen = false,
+  overrideAlmacenId,
   showStockMaxWarning = false,
 }: {
   value: string;
@@ -56,9 +57,11 @@ export default function TableProductoSearch({
   categoriaId?: number;
   forceLoading?: boolean;
   ignoreAlmacen?: boolean;
+  overrideAlmacenId?: number;
   showStockMaxWarning?: boolean;
 }) {
-  const almacen_id = useStoreAlmacen((store) => store.almacen_id);
+  const almacen_id_store = useStoreAlmacen((store) => store.almacen_id);
+  const almacen_id = overrideAlmacenId ?? almacen_id_store;
   const tableGridRef = useRef<any>(null);
 
   // Determinar el campo de búsqueda según el tipo

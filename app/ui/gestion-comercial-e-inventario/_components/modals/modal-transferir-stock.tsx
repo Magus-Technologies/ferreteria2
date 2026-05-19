@@ -491,6 +491,7 @@ export default function ModalTransferirStock({
             limpiarOnChange
             showCardAgregarProductoTransferencia
             almacenOrigenIdTransferencia={almacenOrigenId}
+            ignoreAlmacen
             showUltimasCompras={false}
           />
         </LabelBase>
