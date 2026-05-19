@@ -26,6 +26,18 @@ interface ModalVerDevolucionesProps {
   prestamo?: Prestamo
 }
 
+const invalidateStockQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_BY_ALMACEN] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_TABLE_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX_INVENTARIO] })
+  queryClient.invalidateQueries({ queryKey: ['productos-search'] })
+  queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+  queryClient.invalidateQueries({ queryKey: ['vencimientos-proximos'] })
+}
+
 export default function ModalVerDevoluciones({
   open,
   setOpen,
@@ -119,6 +131,7 @@ export default function ModalVerDevoluciones({
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'pagos', prestamo?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'detalle-devoluciones', prestamo?.id] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'detalle-registrar-devolucion', prestamo?.id] })
+      invalidateStockQueries(queryClient)
       setAnularModalOpen(false)
       setPagoAAnular(null)
       setMotivoAnular('')

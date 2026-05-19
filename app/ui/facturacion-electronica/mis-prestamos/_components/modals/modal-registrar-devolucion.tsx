@@ -107,6 +107,18 @@ const DevolverCell = memo(function DevolverCell({
   )
 })
 
+const invalidateStockQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_BY_ALMACEN] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.PRODUCTOS_TABLE_SEARCH] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX] })
+  queryClient.invalidateQueries({ queryKey: [QueryKeys.KARDEX_INVENTARIO] })
+  queryClient.invalidateQueries({ queryKey: ['productos-search'] })
+  queryClient.invalidateQueries({ queryKey: ['productos-infinite'] })
+  queryClient.invalidateQueries({ queryKey: ['vencimientos-proximos'] })
+}
+
 export default function ModalRegistrarDevolucion({
   open,
   setOpen,
@@ -232,6 +244,7 @@ export default function ModalRegistrarDevolucion({
       message.success('Devolución registrada exitosamente')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS] })
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PRESTAMOS, 'detalle-registrar-devolucion', prestamo?.id] })
+      invalidateStockQueries(queryClient)
       form.resetFields()
       setOpen(false)
     },
