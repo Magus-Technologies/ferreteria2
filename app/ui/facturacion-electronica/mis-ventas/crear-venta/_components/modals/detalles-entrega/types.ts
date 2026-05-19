@@ -112,10 +112,16 @@ export interface ModalDetallesEntregaProps {
    * etc.). Pensado para `mis-entregas` donde algunos datos son read-only.
    * Acepta ReactNode para incluir texto + acciones (botones) inline.
    */
-  infoExtra?: ReactNode
+infoExtra?: ReactNode
   /**
    * Acciones a mostrar al lado del título "CONFIGURAR ENTREGA". Pensado
    * para botones contextuales como "Cambiar tipo de entrega".
    */
   accionesHeader?: ReactNode
+  /**
+   * Fuerza el toggle "Programar entrega del resto?" a ON al abrir el modal
+   * en modo `actualizar-entrega`. Se usa cuando la entrega tiene hermanas
+   * programadas con productos pendientes (detección programática del flag).
+   */
+  forzarProgramarRestoOn?: boolean
 }

@@ -73,6 +73,7 @@ function ModalDetallesEntregaInner({
   tituloOverride,
   infoExtra,
   accionesHeader,
+  forzarProgramarRestoOn = false,
 }: ModalDetallesEntregaProps) {
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
   const ocultarSet = useMemo(() => new Set(ocultar), [ocultar])
@@ -110,17 +111,25 @@ function ModalDetallesEntregaInner({
   } = useDetallesEntrega()
 
   // El switch "¿Programar entrega del resto?" arranca:
-  //   - OFF en `crear-entrega-resto` y `actualizar-entrega` — lo natural en
-  //     mis-entregas es entregar todo lo pendiente ahora; si el usuario
-  //     quiere split, lo activa manualmente.
-  //   - ON en `crear-venta` — comportamiento histórico para que al crear
-  //     una venta nueva con tipo Parcial, todo el resto se programe por
-  //     defecto.
+  //   - OFF en `actualizar-entrega` — el usuario confirma la entrega existente
+  //     y decide manualmente si quiere split.
+  //   - ON en `crear-venta` y `crear-entrega-resto` — en ambos casos el usuario
+  //     tiene productos pendientes que necesita programar para después. En
+  //     `crear-entrega-resto` los campos `_resto_*` ya vienen pre-cargados
+  //     desde la entrega origen, así que tiene sentido que el switch esté ON
+  //     y el usuario solo confirme o ajuste.
+  //   - Excepción: si `forzarProgramarRestoOn` es true (entrega agrupada con
+  //     hermanas programadas con pendientes), se enciende el toggle para que
+  //     el usuario pueda ver/editar la programación existente.
   useEffect(() => {
     if (!open) return
-    setProgramarResto(resolvedMode.kind === 'crear-venta')
+    if (resolvedMode.kind === 'actualizar-entrega' && forzarProgramarRestoOn) {
+      setProgramarResto(true)
+    } else {
+      setProgramarResto(resolvedMode.kind !== 'actualizar-entrega')
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, resolvedMode.kind])
+  }, [open, resolvedMode.kind, forzarProgramarRestoOn])
 
   // En `crear-entrega-resto` (botón "Entregar Restante" en mis-entregas), al
   // PRENDER el switch "Programar resto" redistribuir automáticamente todo
@@ -739,6 +748,8 @@ function ModalDetallesEntregaInner({
           >
             {creandoVenta
               ? 'Procesando...'
+              : resolvedMode.kind === 'crear-entrega-resto'
+              ? 'Confirmar Entrega'
               : tipoDespacho === 'EnTienda'
               ? 'Entregar Ahora'
               : tipoDespacho === 'Parcial'

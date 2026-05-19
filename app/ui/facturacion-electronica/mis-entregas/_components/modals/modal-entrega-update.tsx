@@ -498,7 +498,35 @@ export default function ModalEntregaUpdate({
     return productos
   }, [entregaFuente, restante])
 
+  // Opción A: detectar programáticamente si hay que encender el toggle
+  // "Programar entrega del resto?" en modo actualizar-entrega.
+  // Se activa cuando la entrega es parcial agrupada y tiene hermanas
+  // programadas con estado pendiente (tipo_despacho='pr' y estado='pe')
+  // y con productos pendientes.
+  const tieneHermanaProgramadaConPendientes = useMemo(() => {
+    if (restante) return false
+    if (entrega?.tipo_entrega !== 'pa') return false
+    const grupoId = entrega?.grupo_entrega_id
+    if (!grupoId) return false
+    const entregasRelacionadas = Array.isArray(entrega?.venta?.entregas_productos)
+      ? entrega.venta.entregas_productos
+      : []
+    const hermanas = entregasRelacionadas.filter((h: any) => {
+      if (Number(h?.grupo_entrega_id) !== Number(grupoId)) return false
+      if (Number(h?.id) === Number(entrega?.id)) return false
+      return h?.tipo_despacho === 'pr' && h?.estado_entrega === 'pe'
+    })
+    if (hermanas.length === 0) return false
+    return hermanas.some((h: any) =>
+      (h?.productos_entregados || []).some((p: any) => {
+        const udv = p?.unidad_derivada_venta
+        return udv && Number(udv?.cantidad_pendiente || 0) > 0
+      }),
+    )
+  }, [entrega, restante])
+
   // entregaParaMapa debe estar ANTES del return null para no violar las reglas de hooks.
+  // También tiene early return interno que hace safe fallback cuando !entrega.
   const entregaParaMapa = useMemo(() => {
     if (!entrega) return null
     const direccionForm =
@@ -554,6 +582,8 @@ export default function ModalEntregaUpdate({
       : tipoLocal === 'Domicilio'
       ? [...ocultarBase]
       : [...ocultarBase] // Parcial: incluir programar-resto + mapa
+
+  if (!entrega) return null
 
   // Header del modal — distingue restante vs actualización normal.
   const tituloPorTipo: Record<TipoDespachoUI, string> = {
@@ -712,13 +742,6 @@ export default function ModalEntregaUpdate({
       } as const)
     : ({ kind: 'actualizar-entrega' as const, entregaId: entrega.id } as const)
 
-  // El `<Form>` provider es necesario porque los `Form.Item` que usa el modal
-  // de detalles-entrega (referencia, observaciones, dirección, etc.) consultan
-  // el FormContext via React. Sin envolverlos en `<Form>`, Ant Design 5
-  // imprime "Can not find FormContext" y `form.setFieldValue` no afecta los
-  // inputs aunque sí actualice el store interno del form.
-  // `component={false}` evita el render de un `<form>` HTML (no queremos el
-  // submit nativo, el onConfirmar lo maneja el botón del modal).
   return (
     <Form form={form} component={false}>
       <ModalDetallesEntrega
@@ -735,6 +758,7 @@ export default function ModalEntregaUpdate({
         clienteNombre={entrega.venta?.cliente?.razon_social || entrega.venta?.cliente?.nombres}
         clienteId={entrega.venta?.cliente_id ?? entrega.venta?.cliente?.id}
         direccion={entrega.direccion_entrega || ''}
+        forzarProgramarRestoOn={tieneHermanaProgramadaConPendientes}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
