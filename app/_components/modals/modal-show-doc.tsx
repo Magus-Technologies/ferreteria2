@@ -130,6 +130,26 @@ export default function ModalShowDoc({
   const childrenRef = useRef<React.ReactNode>(children)
   childrenRef.current = children
 
+  // Persistencia de columnas seleccionadas (por tipo de documento + acción)
+  const persistBase = `colsel:${tipoDocumento ?? 'doc'}`
+  const loadSel = (action: string, kind: 'cols' | 'extras', fallback: string[]): string[] => {
+    try {
+      const raw = localStorage.getItem(`${persistBase}:${action}:${kind}`)
+      if (!raw) return fallback
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed : fallback
+    } catch {
+      return fallback
+    }
+  }
+  const saveSel = (action: string, kind: 'cols' | 'extras', vals: string[]) => {
+    try {
+      localStorage.setItem(`${persistBase}:${action}:${kind}`, JSON.stringify(vals))
+    } catch {
+      /* ignore */
+    }
+  }
+
   const handleOpenConfig = () => {
     setOpenConfigModal(true)
   }
@@ -247,9 +267,9 @@ export default function ModalShowDoc({
       return
     }
     const cols = descargaConfig.columnas
-    setColSelColumnas(descargaConfig.defaultColumnas ?? cols?.map(c => c.value) ?? [])
+    setColSelColumnas(loadSel('descarga', 'cols', descargaConfig.defaultColumnas ?? cols?.map(c => c.value) ?? []))
     const extras = descargaConfig.extras
-    setColSelExtras(descargaConfig.defaultExtras ?? extras?.map(e => e.value) ?? [])
+    setColSelExtras(loadSel('descarga', 'extras', descargaConfig.defaultExtras ?? extras?.map(e => e.value) ?? []))
     setColSelMode(mode)
     setColSelOpen(true)
   }
@@ -315,9 +335,9 @@ export default function ModalShowDoc({
     setWhatsappTelefono(tel)
     // Pre-seleccionar columnas y extras
     const cols = whatsappConfig?.columnas
-    setWhatsappColumnasSelec(whatsappConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? [])
+    setWhatsappColumnasSelec(loadSel('whatsapp', 'cols', whatsappConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? []))
     const extras = whatsappConfig?.extras
-    setWhatsappExtrasSelec(whatsappConfig?.defaultExtras ?? extras?.map(e => e.value) ?? [])
+    setWhatsappExtrasSelec(loadSel('whatsapp', 'extras', whatsappConfig?.defaultExtras ?? extras?.map(e => e.value) ?? []))
     // Guardar mensaje base (cabecera sin detalle)
     const base = whatsappMensajeAuto || `Hola, le comparto su documento ${nro_doc}.`
     setWhatsappMensajeBase(base)
@@ -361,7 +381,7 @@ export default function ModalShowDoc({
     setEmailMensaje(emailConfig?.mensajeDefault ?? `Estimado cliente,\n\nAdjunto encontrará su documento ${nro_doc}.\n\nSaludos cordiales.`)
     const cols = emailConfig?.columnas
     const defaults = emailConfig?.defaultColumnas ?? cols?.map(c => c.value) ?? []
-    setEmailColumnasSelec(defaults)
+    setEmailColumnasSelec(loadSel('email', 'cols', defaults))
     setEmailModalOpen(true)
   }
 
@@ -591,7 +611,10 @@ export default function ModalShowDoc({
               </label>
               <Checkbox.Group
                 value={emailColumnasSelec}
-                onChange={(vals) => setEmailColumnasSelec(vals as string[])}
+                onChange={(vals) => {
+                  setEmailColumnasSelec(vals as string[])
+                  saveSel('email', 'cols', vals as string[])
+                }}
               >
                 <div className='grid grid-cols-2 gap-y-2 gap-x-4'>
                   {emailConfig.columnas.map(col => (
@@ -674,7 +697,10 @@ export default function ModalShowDoc({
               <label className='block text-sm font-medium mb-1'>Columnas a incluir en el mensaje:</label>
               <Checkbox.Group
                 value={whatsappColumnasSelec}
-                onChange={(vals) => setWhatsappColumnasSelec(vals as string[])}
+                onChange={(vals) => {
+                  setWhatsappColumnasSelec(vals as string[])
+                  saveSel('whatsapp', 'cols', vals as string[])
+                }}
               >
                 <div className='grid grid-cols-2 gap-y-1 gap-x-4'>
                   {whatsappConfig.columnas.map(col => (
@@ -691,7 +717,10 @@ export default function ModalShowDoc({
               <label className='block text-sm font-medium mb-1'>Totales a incluir:</label>
               <Checkbox.Group
                 value={whatsappExtrasSelec}
-                onChange={(vals) => setWhatsappExtrasSelec(vals as string[])}
+                onChange={(vals) => {
+                  setWhatsappExtrasSelec(vals as string[])
+                  saveSel('whatsapp', 'extras', vals as string[])
+                }}
               >
                 <div className='flex gap-4'>
                   {whatsappConfig.extras.map(ex => (
@@ -766,7 +795,10 @@ export default function ModalShowDoc({
               </label>
               <Checkbox.Group
                 value={colSelColumnas}
-                onChange={(vals) => setColSelColumnas(vals as string[])}
+                onChange={(vals) => {
+                  setColSelColumnas(vals as string[])
+                  saveSel('descarga', 'cols', vals as string[])
+                }}
               >
                 <div className='grid grid-cols-2 gap-2'>
                   {descargaConfig.columnas.map(col => (
@@ -781,7 +813,10 @@ export default function ModalShowDoc({
               <label className='block text-sm font-medium mb-1'>Totales a incluir:</label>
               <Checkbox.Group
                 value={colSelExtras}
-                onChange={(vals) => setColSelExtras(vals as string[])}
+                onChange={(vals) => {
+                  setColSelExtras(vals as string[])
+                  saveSel('descarga', 'extras', vals as string[])
+                }}
               >
                 <div className='flex gap-4'>
                   {descargaConfig.extras.map(ex => (

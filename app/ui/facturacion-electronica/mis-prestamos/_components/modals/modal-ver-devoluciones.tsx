@@ -34,6 +34,7 @@ export default function ModalVerDevoluciones({
   const queryClient = useQueryClient()
   const [pagoSeleccionado, setPagoSeleccionado] = useState<PagoPrestamo | null>(null)
 
+  // Hook para consultar el historial de pagos / devoluciones del préstamo
   const { data: pagos, isLoading } = useQuery({
     queryKey: [QueryKeys.PRESTAMOS, 'pagos', prestamo?.id],
     queryFn: async () => {
@@ -44,7 +45,7 @@ export default function ModalVerDevoluciones({
     enabled: open && !!prestamo,
   })
 
-  // Préstamo completo (incluye devoluciones con sus productos devueltos)
+  // Hook para consultar el detalle completo del préstamo, incluyendo las devoluciones con sus productos devueltos
   const { data: prestamoFull } = useQuery({
     queryKey: [QueryKeys.PRESTAMOS, 'detalle-devoluciones', prestamo?.id],
     queryFn: async () => {
@@ -55,8 +56,7 @@ export default function ModalVerDevoluciones({
     enabled: open && !!prestamo,
   })
 
-  // Productos de la devolución correspondiente al pago seleccionado.
-  // El PagoPrestamo "legacy" guarda en observaciones: "Devolución {numero}. ..."
+  // Función autoejecutable (IIFE) para procesar y listar los productos devueltos de la devolución que fue seleccionada por el usuario
   const devoluciones = (prestamoFull as any)?.devoluciones ?? []
   const productosDevueltos: ProductoDevueltoRow[] = (() => {
     if (!pagoSeleccionado) return []
@@ -89,10 +89,9 @@ export default function ModalVerDevoluciones({
     { headerName: 'Cantidad', colId: 'cantidad', field: 'cantidad', width: 120,
       valueFormatter: (p) => Number(p.value || 0).toFixed(0),
       cellStyle: { fontWeight: 'bold', color: '#059669' } },
-    { headerName: 'Factor', colId: 'factor', field: 'factor', width: 100,
-      valueFormatter: (p) => Number(p.value || 1).toFixed(2) },
   ]
 
+  // Hook Mutation para anular/eliminar una devolución registrada y refrescar los listados del préstamo
   const deleteMutation = useMutation({
     mutationFn: async (pagoId: string) => {
       if (!prestamo) throw new Error('No hay préstamo seleccionado')
