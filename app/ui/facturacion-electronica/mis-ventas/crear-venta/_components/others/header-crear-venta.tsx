@@ -16,6 +16,8 @@ import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agreg
 import ModalBuscarServicio from "~/app/_components/modals/modal-buscar-servicio";
 import { useStoreServicioSeleccionado } from "../../../store/store-servicio-seleccionado";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import { useStoreAlmacen } from "~/store/store-almacen";
+import { paqueteApi } from "~/lib/api/paquete";
 
 export type VentaConUnidadDerivadaNormal = Omit<
   getVentaResponseProps,
@@ -41,6 +43,7 @@ export default function HeaderCrearVenta({
   venta?: VentaConUnidadDerivadaNormal;
 }) {
   const { can } = usePermissionHook();
+  const almacen_id = useStoreAlmacen((store) => store.almacen_id);
 
   const selectProductosRef = useRef<RefSelectProductosProps>(null);
 
@@ -87,11 +90,19 @@ export default function HeaderCrearVenta({
    * Usa el tipo_precio individual de cada producto del paquete
    * Crea una fila cabecera + filas de sub-productos
    */
-  const handleAgregarPaquete = async (paquete: import('~/lib/api/paquete').Paquete) => {
-    if (!paquete) {
+  const handleAgregarPaquete = async (paqueteBase: import('~/lib/api/paquete').Paquete) => {
+    if (!paqueteBase) {
       message.warning("Selecciona un paquete");
       return;
     }
+
+    // Obtener los detalles completos del paquete con sus productos en almacenes
+    const response = await paqueteApi.getById(paqueteBase.id);
+    if (response.error || !response.data?.data) {
+      message.error("Error al obtener los detalles del paquete");
+      return;
+    }
+    const paquete = response.data.data;
 
     if (!paquete.productos || paquete.productos.length === 0) {
       message.warning("Este paquete no tiene productos");
@@ -108,6 +119,9 @@ export default function HeaderCrearVenta({
         precioPaqueteUnitario += (precio - descuento) * Number(pp.cantidad);
       }
     }
+
+    // ID único por instancia: distingue dos paquetes del mismo tipo en la misma venta
+    const paqueteInstanceId = Date.now();
 
     // 1. Agregar fila cabecera del paquete
     setProductoAgregado({
@@ -128,6 +142,7 @@ export default function HeaderCrearVenta({
       subtotal: precioPaqueteUnitario,
       comision: 0,
       paquete_id: paquete.id,
+      paquete_instance_id: paqueteInstanceId,
       paquete_nombre: paquete.nombre,
       tipo_precio: 'publico',
     } as any);
@@ -144,6 +159,17 @@ export default function HeaderCrearVenta({
         const precio = Number((paqueteProducto as any)[precioKey] || 0);
         const descuento = Number((paqueteProducto as any)[descuentoKey] || 0);
         const cantidadBase = Number(paqueteProducto.cantidad);
+
+        // Buscar stock y factor real del sub-producto para el almacén activo
+        const productoEnAlmacen = paqueteProducto.producto.producto_en_almacenes?.find(
+          (a: any) => a.almacen_id === almacen_id
+        );
+        const stockFraccion = Number(productoEnAlmacen?.stock_fraccion ?? 0);
+        const unidadDerivadaReal = productoEnAlmacen?.unidades_derivadas?.find(
+          (u: any) => (u.unidad_derivada_id ?? u.unidad_derivada?.id) === paqueteProducto.unidad_derivada_id
+        );
+        const factorReal = Number(unidadDerivadaReal?.factor ?? 1);
+
         setProductoAgregado({
           _tipo_fila: 'paquete_producto',
           producto_id: paqueteProducto.producto_id,
@@ -152,7 +178,8 @@ export default function HeaderCrearVenta({
           marca_name: paqueteProducto.producto.marca?.name || "",
           unidad_derivada_id: paqueteProducto.unidad_derivada_id,
           unidad_derivada_name: paqueteProducto.unidad_derivada.name,
-          unidad_derivada_factor: 1,
+          unidad_derivada_factor: factorReal,
+          stock_fraccion: stockFraccion,
           cantidad: cantidadBase,
           cantidad_base: cantidadBase,
           precio_venta: precio,
@@ -162,6 +189,7 @@ export default function HeaderCrearVenta({
           subtotal: (precio - descuento) * cantidadBase,
           comision: 0,
           paquete_id: paquete.id,
+          paquete_instance_id: paqueteInstanceId,
           paquete_nombre: paquete.nombre,
           tipo_precio: tipoPrecio,
           // Guardar todos los precios y descuentos para que cambiar tipo de precio funcione
@@ -186,6 +214,7 @@ export default function HeaderCrearVenta({
       }`,
     );
   };
+
 
   /**
    * Agregar un servicio a la venta
