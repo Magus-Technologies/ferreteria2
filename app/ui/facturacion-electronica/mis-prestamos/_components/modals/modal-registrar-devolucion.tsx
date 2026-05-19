@@ -155,7 +155,7 @@ export default function ModalRegistrarDevolucion({
           total,
           entregado,
           pendiente,
-          devolver: 0,
+          devolver: pendiente,
           factor: unidad ? Number(unidad.factor) : 1,
         }
       })

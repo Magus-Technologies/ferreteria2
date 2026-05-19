@@ -89,8 +89,6 @@ export default function ModalVerDevoluciones({
     { headerName: 'Cantidad', colId: 'cantidad', field: 'cantidad', width: 120,
       valueFormatter: (p) => Number(p.value || 0).toFixed(0),
       cellStyle: { fontWeight: 'bold', color: '#059669' } },
-    { headerName: 'Factor', colId: 'factor', field: 'factor', width: 100,
-      valueFormatter: (p) => Number(p.value || 1).toFixed(2) },
   ]
 
   const deleteMutation = useMutation({
