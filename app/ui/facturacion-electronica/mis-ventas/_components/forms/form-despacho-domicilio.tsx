@@ -10,6 +10,7 @@ import RadioDireccionCliente from '~/app/_components/form/radio-direccion-client
 import HiddenDireccionesFormItems from '~/app/_components/form/hidden-direcciones-form-items'
 import { useQuery } from '@tanstack/react-query'
 import { apiRequest } from '~/lib/api'
+import { useAuth } from '~/lib/auth-context'
 
 // Importar el mapa dinámicamente
 const MapaDireccion = dynamic(
@@ -32,12 +33,27 @@ export default function FormDespachoDomicilio({
 }: FormDespachoDomicilioProps) {
   const [mostrarMapa, setMostrarMapa] = useState(false)
   const [tipoPedido, setTipoPedido] = useState<'interno' | 'externo'>('interno')
+  const { user } = useAuth()
 
   const { data: cargos = [] } = useQuery({
-    queryKey: ['catalogos', 'cargos'],
+    queryKey: ['catalogos', 'cargos', user?.cargo],
     queryFn: async () => {
-      const result = await apiRequest<{ data: { codigo: string; descripcion: string }[] }>('/catalogos/cargos')
-      return result.data?.data || []
+      const result = await apiRequest<{ data: { codigo: string; descripcion: string; parent: string | null }[] }>('/catalogos/cargos')
+      const allCargos = result.data?.data || []
+      
+      // Encontrar el cargo del usuario para obtener su parent
+      const userCargo = user?.cargo || null
+      const userCargoObj = allCargos.find((c) => c.codigo === userCargo)
+      const userParent = userCargoObj?.parent || null
+
+      // Si el usuario no tiene padre (es root), mostrar todos los cargos
+      if (!userParent) {
+        return allCargos
+      }
+
+      // Si el usuario tiene padre, mostrar SOLO el cargo padre (un nivel arriba)
+      const parentCargoObj = allCargos.find((c) => c.codigo === userParent)
+      return parentCargoObj ? [parentCargoObj] : []
     },
   })
 

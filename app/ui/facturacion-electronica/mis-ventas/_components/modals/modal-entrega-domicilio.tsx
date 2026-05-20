@@ -79,12 +79,26 @@ export default function ModalEntregaDomicilio({
   const cargoDestino = Form.useWatch('cargo_destino', form) as string | undefined
   const direccionEntrega = Form.useWatch('direccion_entrega', form) as string | undefined
 
-  // Cargar cargos para pedido externo
+  // Cargar cargos para pedido externo (filtrados por jerarquía del usuario)
   const { data: cargos = [] } = useQuery({
-    queryKey: ['catalogos', 'cargos'],
+    queryKey: ['catalogos', 'cargos', user?.cargo],
     queryFn: async () => {
-      const result = await apiRequest<{ data: { codigo: string; descripcion: string }[] }>('/catalogos/cargos')
-      return result.data?.data || []
+      const result = await apiRequest<{ data: { codigo: string; descripcion: string; parent: string | null }[] }>('/catalogos/cargos')
+      const allCargos = result.data?.data || []
+      
+      // Encontrar el cargo del usuario para obtener su parent
+      const userCargo = user?.cargo || null
+      const userCargoObj = allCargos.find((c) => c.codigo === userCargo)
+      const userParent = userCargoObj?.parent || null
+
+      // Si el usuario no tiene padre (es root), mostrar todos los cargos
+      if (!userParent) {
+        return allCargos
+      }
+
+      // Si el usuario tiene padre, mostrar SOLO el cargo padre (un nivel arriba)
+      const parentCargoObj = allCargos.find((c) => c.codigo === userParent)
+      return parentCargoObj ? [parentCargoObj] : []
     },
   })
 

@@ -109,6 +109,8 @@ export default function StepGeneral({ form, setField, errors, areas, prioridades
                 </div>
             )}
 
+
+
             {/* Prioridad */}
             <div>
                 <label className="block text-sm font-medium mb-2">

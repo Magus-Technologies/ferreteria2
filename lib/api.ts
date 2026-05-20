@@ -38,6 +38,7 @@ export interface LoginResponse {
     empresa: Empresa | null;
     all_restrictions: string[];
     rol_sistema: string | null;
+    cargo: string | null;
     vehiculo_id?: number | null;
     vehiculo?: {
       id: number;

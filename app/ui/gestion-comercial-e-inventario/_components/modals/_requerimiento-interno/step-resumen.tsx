@@ -112,6 +112,33 @@ export default function StepResumen({
                 </div>
             </div>
 
+            {/* Información de Vehículo (solo para OS) */}
+            {form.tipoSolicitud === "OS" && form.vehiculoId && (
+                <div className="border border-amber-200 rounded-lg overflow-hidden bg-amber-50">
+                    <div className="bg-amber-100 px-4 py-3 border-b border-amber-200 flex items-center gap-2">
+                        <span className="text-base">🚗</span>
+                        <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">Configuración de Vehículo</span>
+                    </div>
+                    <div className="px-4 py-3 space-y-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium text-amber-900">Vehículo ID:</span>
+                            <span className="text-xs font-bold text-amber-700 bg-white px-2 py-1 rounded">{form.vehiculoId}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium text-amber-900">Afecta Calendario:</span>
+                            <Tag color={form.afectaCalendario ? "green" : "default"}>
+                                {form.afectaCalendario ? "✓ Sí" : "✗ No"}
+                            </Tag>
+                        </div>
+                        {form.afectaCalendario && (
+                            <p className="text-xs text-amber-700 italic mt-2 bg-white p-2 rounded border border-amber-200">
+                                Este servicio bloqueará el vehículo en el calendario de entregas durante la duración estimada.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Detalle del Requerimiento */}
             {form.tipoSolicitud === "OC" ? (
                 <TableWithTitle<ItemBuscado>

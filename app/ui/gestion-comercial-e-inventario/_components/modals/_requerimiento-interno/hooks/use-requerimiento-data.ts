@@ -2,7 +2,9 @@ import { useState, useEffect } from "react"
 import { productosApiV2 } from "~/lib/api/producto"
 import { proveedorApi } from "~/lib/api/proveedor"
 import { tipoServicioApi, type TipoServicio } from "~/lib/api/tipo-servicio"
-import { catalogosGeneralesApi } from "~/lib/api/catalogos-generales"
+import { cargosHierarchyApi } from "~/lib/api/cargos-hierarchy"
+import { vehiculosApi } from "~/lib/api/catalogos"
+import { useAuth } from "~/lib/auth-context"
 
 export interface ProductoDisponible {
     id: number
@@ -18,10 +20,14 @@ export interface ProductoDisponible {
 }
 
 export function useRequerimientoData(open: boolean) {
+    const { user } = useAuth()
+    const userCargo = user?.cargo || null
+
     const [fetchedProductos, setFetchedProductos] = useState<ProductoDisponible[]>([])
     const [fetchedProveedores, setFetchedProveedores] = useState<{ label: string; value: number }[]>([])
     const [tiposServicio, setTiposServicio] = useState<{ label: string; value: number }[]>([])
     const [cargos, setCargos] = useState<{ label: string; value: string }[]>([])
+    const [vehiculos, setVehiculos] = useState<{ label: string; value: string }[]>([])
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -66,11 +72,34 @@ export function useRequerimientoData(open: boolean) {
                 setTiposServicio(tiposData.map(t => ({ label: t.nombre, value: t.id })))
             }
 
-            // Cargar cargos
-            const resCargos = await catalogosGeneralesApi.getCargos()
-            if (resCargos.data?.data) {
-                setCargos(resCargos.data.data.map(c => ({ label: c.descripcion, value: c.descripcion })))
+            // Cargar vehículos
+            const resVehiculos = await vehiculosApi.getAll()
+            if (resVehiculos.data?.data) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const vehiculosData = resVehiculos.data.data.map((v: any) => ({
+                    label: `${v.name || v.placa || 'Vehículo'} (${v.tipo || 'N/A'})`,
+                    value: String(v.id)
+                }))
+                setVehiculos(vehiculosData)
             }
+
+            // Cargar cargos (filtrados por jerarquía del usuario)
+            const allCargosResult = await cargosHierarchyApi.getAllCargos()
+            const allCargos = allCargosResult.data?.data || []
+
+            // Encontrar el cargo del usuario para obtener su parent
+            const userCargoObj = allCargos.find((c) => c.codigo === userCargo)
+            const userParent = userCargoObj?.parent || null
+
+            let filteredCargos = allCargos
+
+            // Si el usuario tiene padre, mostrar SOLO el cargo padre (un nivel arriba)
+            if (userParent) {
+                const parentCargoObj = allCargos.find((c) => c.codigo === userParent)
+                filteredCargos = parentCargoObj ? [parentCargoObj] : []
+            }
+
+            setCargos(filteredCargos.map(c => ({ label: c.descripcion, value: c.descripcion })))
         } catch (error) {
             console.error("Error al cargar datos iniciales del modal:", error)
         } finally {
@@ -87,6 +116,7 @@ export function useRequerimientoData(open: boolean) {
         fetchedProveedores,
         tiposServicio,
         cargos,
+        vehiculos,
         loading,
         addTipoServicio,
     }

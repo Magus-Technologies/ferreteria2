@@ -48,6 +48,16 @@ export interface PaqueteProducto {
       };
       precio_publico?: number | null;
     }>;
+    // Stock por almacén
+    producto_en_almacenes?: Array<{
+      id: number;
+      almacen_id: number;
+      stock_fraccion: number;
+      unidades_derivadas?: Array<{
+        unidad_derivada_id: number;
+        factor: number;
+      }>;
+    }>;
   };
   unidad_derivada?: {
     id: number;

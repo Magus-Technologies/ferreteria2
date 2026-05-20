@@ -1,7 +1,7 @@
 'use client'
 
-import { Tag, Spin, Button, Modal, Tooltip } from 'antd'
-import { FilePdfOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { Tag, Spin, Button, Modal, Tooltip, message } from 'antd'
+import { FilePdfOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { FaShoppingCart, FaWrench, FaMapMarkerAlt, FaMoneyBillWave, FaRegBuilding, FaDownload, FaPrint } from 'react-icons/fa'
 import ModalForm from '~/components/modals/modal-form'
 import TitleForm from '~/components/form/title-form'
@@ -9,9 +9,13 @@ import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
 import { getAuthToken } from '~/lib/api'
 import type { RequerimientoInterno } from '~/lib/api/requerimiento-interno'
+import { requerimientoInternoApi } from '~/lib/api/requerimiento-interno'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import SelectBase from '~/app/_components/form/selects/select-base'
+import { cargosHierarchyApi } from '~/lib/api/cargos-hierarchy'
+import { useAuth } from '~/lib/auth-context'
 
 const PRIORIDAD_CONFIG: Record<string, { color: string; bg: string; text: string }> = {
   BAJA: { color: 'blue', bg: 'bg-blue-50', text: 'text-blue-700' },
@@ -40,9 +44,94 @@ export default function ModalDetalleRequerimiento({
   loading = false,
   onClose,
 }: ModalDetalleRequerimientoProps) {
+  const { user } = useAuth()
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
   const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
   const [docPdfLoading, setDocPdfLoading] = useState(false)
+  const [escalationModalOpen, setEscalationModalOpen] = useState(false)
+  const [selectedCargo, setSelectedCargo] = useState<number | null>(null)
+  const [cargosDisponibles, setCargosDisponibles] = useState<{ label: string; value: number }[]>([])
+  const [escalationLoading, setEscalationLoading] = useState(false)
+  const [approvalLoading, setApprovalLoading] = useState(false)
+
+  // Cargar cargos disponibles para escalación
+  useEffect(() => {
+    if (escalationModalOpen && requerimiento) {
+      loadCargosParaEscalacion()
+    }
+  }, [escalationModalOpen, requerimiento])
+
+  const loadCargosParaEscalacion = async () => {
+    try {
+      const result = await cargosHierarchyApi.getAllCargos()
+      const allCargos = result.data?.data || []
+      
+      // Encontrar el cargo del usuario para obtener su parent
+      const userCargoObj = allCargos.find((c) => c.codigo === user?.cargo)
+      const userParent = userCargoObj?.parent || null
+
+      let filteredCargos = allCargos
+
+      // Si el usuario tiene padre, mostrar SOLO el cargo padre (un nivel arriba)
+      if (userParent) {
+        const parentCargoObj = allCargos.find((c) => c.codigo === userParent)
+        filteredCargos = parentCargoObj ? [parentCargoObj] : []
+      }
+
+      setCargosDisponibles(
+        filteredCargos.map(c => ({ label: c.descripcion, value: c.id }))
+      )
+    } catch (error) {
+      message.error('Error al cargar cargos disponibles')
+      console.error(error)
+    }
+  }
+
+  const handleAprobar = async () => {
+    if (!requerimiento) return
+
+    setApprovalLoading(true)
+    try {
+      await requerimientoInternoApi.aprobar(requerimiento.id)
+      message.success('Requerimiento aprobado correctamente')
+      onClose()
+    } catch (error) {
+      message.error('Error al aprobar el requerimiento')
+      console.error(error)
+    } finally {
+      setApprovalLoading(false)
+    }
+  }
+
+  const handleEscalar = async () => {
+    if (!requerimiento || !selectedCargo) {
+      message.warning('Selecciona un cargo para escalar')
+      return
+    }
+
+    setEscalationLoading(true)
+    try {
+      await requerimientoInternoApi.pasarAprobacion(requerimiento.id, {
+        to_cargo_id: selectedCargo,
+        reason: 'Escalado para revisión'
+      })
+      message.success('Requerimiento escalado correctamente')
+      setEscalationModalOpen(false)
+      setSelectedCargo(null)
+      onClose()
+    } catch (error) {
+      message.error('Error al escalar el requerimiento')
+      console.error(error)
+    } finally {
+      setEscalationLoading(false)
+    }
+  }
+
+  // Verificar si el usuario actual puede aprobar
+  const canApprove = requerimiento && 
+    requerimiento.approval_state === 'en_revision' &&
+    requerimiento.assigned_cargo_id &&
+    user?.cargo === requerimiento.cargo
 
   if (!requerimiento) return null
 
@@ -89,6 +178,30 @@ export default function ModalDetalleRequerimiento({
                 <span>Actualizado: {formatFechaPeru(requerimiento.updated_at, 'DD/MM/YYYY HH:mm')}</span>
               </div>
               <div className="flex gap-2">
+                {canApprove && (
+                  <>
+                    <Tooltip title="Escalar a cargo superior para revisión">
+                      <Button
+                        icon={<QuestionCircleOutlined />}
+                        onClick={() => setEscalationModalOpen(true)}
+                        className="!rounded-lg !border-amber-600 !text-amber-600 hover:!border-amber-700 hover:!text-amber-700"
+                      >
+                        Escalar
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="Aprobar este requerimiento">
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        onClick={handleAprobar}
+                        loading={approvalLoading}
+                        className="!bg-emerald-600 hover:!bg-emerald-700 !border-none !rounded-lg"
+                      >
+                        Aprobar
+                      </Button>
+                    </Tooltip>
+                  </>
+                )}
                 <Button
                   icon={<FilePdfOutlined />}
                   onClick={() => setPdfModalOpen(true)}
@@ -363,6 +476,59 @@ export default function ModalDetalleRequerimiento({
         ) : (
           <div className="flex justify-center py-12 text-slate-400">No se pudo cargar el PDF</div>
         )}
+      </Modal>
+
+      <Modal
+        open={escalationModalOpen}
+        onCancel={() => {
+          setEscalationModalOpen(false)
+          setSelectedCargo(null)
+        }}
+        title="Escalar Requerimiento"
+        centered
+        width={500}
+        footer={[
+          <Button key="cancel" onClick={() => { setEscalationModalOpen(false); setSelectedCargo(null) }}>
+            Cancelar
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            loading={escalationLoading}
+            onClick={handleEscalar}
+            disabled={!selectedCargo}
+            className={classOkButtonModal}
+          >
+            Escalar
+          </Button>,
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+            <p className="text-sm text-amber-800">
+              <strong>⚠️ Nota:</strong> Al escalar este requerimiento, se enviará al cargo superior para su revisión y aprobación.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Seleccionar Cargo Superior <span className="text-red-500">*</span>
+            </label>
+            <SelectBase
+              placeholder="Selecciona un cargo..."
+              value={selectedCargo}
+              onChange={(value) => setSelectedCargo(value)}
+              options={cargosDisponibles}
+              className="w-full"
+            />
+          </div>
+
+          {selectedCargo && (
+            <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-sm text-emerald-800">
+              ✓ El requerimiento será escalado al cargo seleccionado
+            </div>
+          )}
+        </div>
       </Modal>
     </>
   )

@@ -40,6 +40,10 @@ export interface RequerimientoInterno {
     codigo: string;
     titulo: string;
     cargo: string;
+    assigned_cargo_id?: number | null;
+    approval_state?: 'en_revision' | 'aprobado' | 'rechazado' | null;
+    approved_by?: string | null;
+    approved_at?: string | null;
     fecha_requerida: string;
     prioridad: 'BAJA' | 'MEDIA' | 'ALTA' | 'URGENTE';
     tipo_solicitud: 'OC' | 'OS' | 'SOC';
@@ -48,6 +52,8 @@ export interface RequerimientoInterno {
     estado_solicitud: 'pendiente' | 'en_proceso' | 'aprobado';
     duracion_cantidad: number | null;
     duracion_unidad: string | null;
+    vehiculo_id?: number | null;
+    afecta_calendario?: boolean | number | null;
     proveedor_sugerido_id: number | null;
     user_id: string;
     created_at: string;
@@ -87,6 +93,8 @@ export interface CreateRequerimientoRequest {
     duracion_cantidad?: number;
     duracion_unidad?: string;
     proveedor_sugerido_id?: number;
+    vehiculo_id?: number;
+    afecta_calendario?: boolean;
     // Para OC
     productos?: CreateRequerimientoProductoRequest[];
     // Para OS
@@ -216,6 +224,26 @@ export const requerimientoInternoApi = {
      */
     enviarCorreo: async (id: number, data: { email: string; columnas?: string[] }): Promise<ApiResponse<{ success: boolean; message: string }>> => {
         return apiRequest<{ success: boolean; message: string }>(`/requerimientos-internos/${id}/enviar-correo`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Aprobar requerimiento (solo cargo asignado)
+     */
+    aprobar: async (id: number, data?: { reason?: string }): Promise<ApiResponse<RequerimientoResponse>> => {
+        return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/aprobar`, {
+            method: 'POST',
+            body: JSON.stringify(data || {}),
+        });
+    },
+
+    /**
+     * Escalar requerimiento a otro cargo
+     */
+    pasarAprobacion: async (id: number, data: { to_cargo_id: number; reason?: string }): Promise<ApiResponse<RequerimientoResponse>> => {
+        return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/pasar-aprobacion`, {
             method: 'POST',
             body: JSON.stringify(data),
         });
