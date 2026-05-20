@@ -404,7 +404,7 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
 
         {/* Texto intro */}
         <div style={{ ...bloqueACSS(b.obs_valor), marginBottom: 6 }}>
-          De nuestra consideracion: Por medio de la presente es grato saludarlos y a la vez cotizarle los siguientes productos:
+      
         </div>
 
         {/* Tabla productos */}
