@@ -14,9 +14,10 @@ import {
 
 interface Props {
   plantilla: PlantillaImpresion;
+  formato?: string;
 }
 
-export default function PreviewPlantillaImpresion({ plantilla }: Props) {
+export default function PreviewPlantillaImpresion({ plantilla, formato }: Props) {
   const { user } = useAuth();
   const empresaId = user?.empresa?.id;
 
@@ -44,69 +45,82 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
     lineHeight: 1.3,
   };
 
+  if (formato === "Ticket") {
+    return (
+      <div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+        <div style={{ width: 280, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 6 }}>
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", height: 60, objectFit: "contain" }} />
+            )}
+            <div style={bloqueACSS(b.empresa_razon)}>{razonSocial}</div>
+            <div style={bloqueACSS(b.caja_ruc)}>R.U.C. {ruc}</div>
+            <div style={bloqueACSS(b.empresa_direccion)}>{direccion}</div>
+          </div>
+
+          <div style={{ borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, margin: "6px 0" }} />
+
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>{m.leyenda_representacion || "BOLETA DE VENTA"}</div>
+            <div style={{ ...bloqueACSS(b.caja_numero), textAlign: "center" }}>{plantilla?.empresa_id ? "B001-00000325" : ""}</div>
+          </div>
+
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: Math.max(8, e.font_pt - 1), marginBottom: 4 }}>Descripción &nbsp;&nbsp; Cant. &nbsp; P.U. &nbsp; Subt.</div>
+            <div style={{ ...bloqueACSS(b.tabla_fila) }}>CINTA TEFLON 1/2" X 12 MTS - SWIFT 10 UNIDAD 2.00 20.00</div>
+            <div style={{ ...bloqueACSS(b.tabla_fila) }}>CINTA TEFLON 3/4" X 10 MTS - SWIFT 10 UNIDAD 2.50 25.00</div>
+            <div style={{ ...bloqueACSS(b.tabla_fila) }}>CINTA TEFLON AMARILLA GAS 1/2" - MAGNUM 10 UNIDAD 2.00 20.00</div>
+          </div>
+
+          <div style={{ textAlign: "right", marginBottom: 6 }}>
+            <div style={bloqueACSS(b.total_label)}>OP.GRAVADA</div>
+            <div style={bloqueACSS(b.total_valor)}>55.08</div>
+            <div style={bloqueACSS(b.total_label)}>IGV 18%</div>
+            <div style={bloqueACSS(b.total_valor)}>9.92</div>
+            <div style={{ ...bloqueACSS(b.total_label), fontWeight: "bold" }}>TOTAL</div>
+            <div style={{ ...bloqueACSS(b.total_valor), fontWeight: "bold" }}>65.00</div>
+          </div>
+
+          <div style={{ marginTop: 6 }}>
+            <div style={bloqueACSS(b.obs_label)}>{m.label_observaciones}</div>
+            <div style={bloqueACSS(b.obs_valor)}>{m.observaciones_default}</div>
+            <div style={{ marginTop: 6, textAlign: "center" }}>
+              <div style={bloqueACSS(b.consulta_leyenda)}>{m.leyenda_consulta}</div>
+              <div style={bloqueACSS(b.consulta_url)}>http://localhost:3000/consulta</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="bg-white p-4 border border-slate-200 rounded"
-      style={containerStyle}
-    >
+    <div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
       {/* Header */}
       <table className="w-full mb-2" style={{ borderCollapse: "collapse" }}>
         <tbody>
           <tr>
-            <td
-              style={{
-                width: "30%",
-                verticalAlign: "middle",
-                paddingRight: 4,
-              }}
-            >
+            <td style={{ width: "30%", verticalAlign: "middle", paddingRight: 4 }}>
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoUrl}
-                  alt="logo"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: 80,
-                    objectFit: "contain",
-                  }}
-                />
+                <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", maxHeight: 80, objectFit: "contain" }} />
               ) : (
                 <div style={{ height: 80 }} />
               )}
             </td>
             <td style={{ verticalAlign: "middle", lineHeight: 1.4 }}>
-              <div style={{ ...bloqueACSS(b.empresa_razon), marginBottom: 2 }}>
-                {razonSocial}
-              </div>
+              <div style={{ ...bloqueACSS(b.empresa_razon), marginBottom: 2 }}>{razonSocial}</div>
               <div style={bloqueACSS(b.empresa_direccion)}>
                 {direccion && <div>{direccion}</div>}
                 {email && <div>Email: {email}</div>}
               </div>
             </td>
             <td style={{ width: "30%", verticalAlign: "middle" }}>
-              <div
-                style={{
-                  border: `${e.border_px}px solid ${e.color_tema}`,
-                  borderRadius: 10,
-                  overflow: "hidden",
-                }}
-              >
-                <div style={{ ...bloqueACSS(b.caja_ruc), padding: 4 }}>
-                  R.U.C. {ruc}
-                </div>
-                <div
-                  style={{
-                    ...bloqueACSS(b.caja_tipo),
-                    background: e.color_tema,
-                    padding: 4,
-                  }}
-                >
-                  BOLETA DE VENTA
-                </div>
-                <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>
-                  B001-00000325
-                </div>
+              <div style={{ border: `${e.border_px}px solid ${e.color_tema}`, borderRadius: 10, overflow: "hidden" }}>
+                <div style={{ ...bloqueACSS(b.caja_ruc), padding: 4 }}>R.U.C. {ruc}</div>
+                <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>BOLETA DE VENTA</div>
+                <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>B001-00000325</div>
               </div>
             </td>
           </tr>
@@ -114,13 +128,7 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
       </table>
 
       {/* Info-grid */}
-      <table
-        className="w-full mb-2"
-        style={{
-          borderCollapse: "collapse",
-          border: `${e.border_thin_px}px solid ${e.color_borde}`,
-        }}
-      >
+      <table className="w-full mb-2" style={{ borderCollapse: "collapse", border: `${e.border_thin_px}px solid ${e.color_borde}` }}>
         <tbody>
           <Fila e={e} b={b} izq={["Cliente", "CLIENTE VARIOS"]} der={["F. Emision", "19/05/2026"]} />
           <Fila e={e} b={b} izq={["Direccion", ""]} der={["Hora", "16:30:04"]} />
@@ -132,13 +140,7 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
       </table>
 
       {/* Tabla productos */}
-      <table
-        className="w-full"
-        style={{
-          borderCollapse: "collapse",
-          border: `${e.border_px}px solid ${e.color_borde}`,
-        }}
-      >
+      <table className="w-full" style={{ borderCollapse: "collapse", border: `${e.border_px}px solid ${e.color_borde}` }}>
         <thead>
           <tr style={{ background: e.color_tema }}>
             {[
@@ -152,18 +154,7 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
               { label: "DESC.", w: "7%" },
               { label: "IMPORTE", w: "8%" },
             ].map((c, i, arr) => (
-              <th
-                key={c.label}
-                style={{
-                  ...bloqueACSS(b.tabla_header),
-                  padding: e.pad_px,
-                  width: c.w,
-                  borderRight:
-                    i === arr.length - 1
-                      ? "none"
-                      : `${e.border_thin_px}px solid ${e.color_borde}`,
-                }}
-              >
+              <th key={c.label} style={{ ...bloqueACSS(b.tabla_header), padding: e.pad_px, width: c.w, borderRight: i === arr.length - 1 ? "none" : `${e.border_thin_px}px solid ${e.color_borde}` }}>
                 {c.label}
               </th>
             ))}
@@ -173,42 +164,19 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
           <FilaProducto
             e={e}
             b={b}
-            cells={[
-              "1",
-              "A1",
-              "CT12M",
-              "10",
-              "UNIDAD",
-              'CINTA TEFLON 1/2" X 12 MTS - SWIFT',
-              "2.00",
-              "0.00",
-              "20.00",
-            ]}
+            cells={["1", "A1", "CT12M", "10", "UNIDAD", 'CINTA TEFLON 1/2" X 12 MTS - SWIFT', "2.00", "0.00", "20.00"]}
           />
           <tr>
-            <td
-              colSpan={9}
-              style={{ height: 180, borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }}
-            />
+            <td colSpan={9} style={{ height: 180, borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }} />
           </tr>
         </tbody>
       </table>
 
       {/* SON */}
-      <table
-        className="w-full"
-        style={{
-          borderCollapse: "collapse",
-          borderLeft: `${e.border_px}px solid ${e.color_borde}`,
-          borderRight: `${e.border_px}px solid ${e.color_borde}`,
-          borderBottom: `${e.border_px}px solid ${e.color_borde}`,
-        }}
-      >
+      <table className="w-full" style={{ borderCollapse: "collapse", borderLeft: `${e.border_px}px solid ${e.color_borde}`, borderRight: `${e.border_px}px solid ${e.color_borde}`, borderBottom: `${e.border_px}px solid ${e.color_borde}` }}>
         <tbody>
           <tr>
-            <td style={{ ...bloqueACSS(b.son), padding: e.pad_px + 2 }}>
-              SON: VEINTE CON 0/100 SOLES.
-            </td>
+            <td style={{ ...bloqueACSS(b.son), padding: e.pad_px + 2 }}>SON: VEINTE CON 0/100 SOLES.</td>
           </tr>
         </tbody>
       </table>
@@ -218,54 +186,18 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
         <tbody>
           <tr>
             <td style={{ width: "65%", padding: 8, verticalAlign: "middle" }}>
-              <div
-                style={{
-                  border: `${e.border_px}px solid ${e.color_borde}`,
-                  borderRadius: 6,
-                  padding: 6,
-                }}
-              >
-                <div style={{ ...bloqueACSS(b.obs_label), marginBottom: 4 }}>
-                  {m.label_observaciones}
-                </div>
-                <div style={bloqueACSS(b.obs_valor)}>
-                  {m.observaciones_default}
-                </div>
+              <div style={{ border: `${e.border_px}px solid ${e.color_borde}`, borderRadius: 6, padding: 6 }}>
+                <div style={{ ...bloqueACSS(b.obs_label), marginBottom: 4 }}>{m.label_observaciones}</div>
+                <div style={bloqueACSS(b.obs_valor)}>{m.observaciones_default}</div>
               </div>
             </td>
             <td style={{ width: "35%", verticalAlign: "top" }}>
               <table className="w-full" style={{ borderCollapse: "collapse" }}>
                 <tbody>
-                  {[
-                    ["SUBTOTAL", "16.95"],
-                    ["IGV (18%)", "3.05"],
-                    ["TOTAL", "20.00"],
-                  ].map(([label, valor]) => (
-                    <tr
-                      key={label}
-                      style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }}
-                    >
-                      <td
-                        style={{
-                          ...bloqueACSS(b.total_label),
-                          width: "60%",
-                          borderLeft: `${e.border_thin_px}px solid ${e.color_borde}`,
-                          borderRight: `${e.border_thin_px}px solid ${e.color_borde}`,
-                          padding: e.pad_px + 2,
-                        }}
-                      >
-                        {label}
-                      </td>
-                      <td
-                        style={{
-                          ...bloqueACSS(b.total_valor),
-                          width: "40%",
-                          borderRight: `${e.border_thin_px}px solid ${e.color_borde}`,
-                          padding: e.pad_px + 2,
-                        }}
-                      >
-                        {valor}
-                      </td>
+                  {[["SUBTOTAL", "16.95"], ["IGV (18%)", "3.05"], ["TOTAL", "20.00"]].map(([label, valor]) => (
+                    <tr key={label} style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }}>
+                      <td style={{ ...bloqueACSS(b.total_label), width: "60%", borderLeft: `${e.border_thin_px}px solid ${e.color_borde}`, borderRight: `${e.border_thin_px}px solid ${e.color_borde}`, padding: e.pad_px + 2 }}>{label}</td>
+                      <td style={{ ...bloqueACSS(b.total_valor), width: "40%", borderRight: `${e.border_thin_px}px solid ${e.color_borde}`, padding: e.pad_px + 2 }}>{valor}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -281,48 +213,21 @@ export default function PreviewPlantillaImpresion({ plantilla }: Props) {
           <tbody>
             <tr>
               <td style={{ verticalAlign: "middle", paddingRight: 12 }}>
-                <div
-                  style={{
-                    width: 60,
-                    height: 60,
-                    border: "1px solid #ccc",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 6,
-                    color: "#999",
-                  }}
-                >
+                <div style={{ width: 60, height: 60, border: "1px solid #ccc", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 6, color: "#999" }}>
                   QR
                 </div>
               </td>
               <td style={{ verticalAlign: "middle" }}>
-                <div
-                  style={{
-                    borderRadius: 10,
-                    padding: 10,
-                    maxWidth: 420,
-                    margin: "0 auto",
-                  }}
-                >
-                  <div style={{ ...bloqueACSS(b.consulta_leyenda), marginBottom: 4 }}>
-                    {m.leyenda_representacion}
-                  </div>
+                <div style={{ borderRadius: 10, padding: 10, maxWidth: 420, margin: "0 auto" }}>
+                  <div style={{ ...bloqueACSS(b.consulta_leyenda), marginBottom: 4 }}>{m.leyenda_representacion}</div>
                   {plantilla.despedida_activo && plantilla.mensaje_despedida ? (
-                    <div
-                      style={bloqueACSS(b.despedida_footer)}
-                      dangerouslySetInnerHTML={{ __html: plantilla.mensaje_despedida }}
-                    />
+                    <div style={bloqueACSS(b.despedida_footer)} dangerouslySetInnerHTML={{ __html: plantilla.mensaje_despedida }} />
                   ) : (
-                    <div style={bloqueACSS(b.despedida_footer)}>
-                      GRACIAS POR SU PREFERENCIA!
-                    </div>
+                    <div style={bloqueACSS(b.despedida_footer)}>GRACIAS POR SU PREFERENCIA!</div>
                   )}
                   <div style={{ marginTop: 12 }}>
                     <div style={bloqueACSS(b.consulta_leyenda)}>{m.leyenda_consulta}</div>
-                    <div style={bloqueACSS(b.consulta_url)}>
-                      http://localhost:3000/consulta
-                    </div>
+                    <div style={bloqueACSS(b.consulta_url)}>http://localhost:3000/consulta</div>
                   </div>
                 </div>
               </td>

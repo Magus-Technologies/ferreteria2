@@ -57,7 +57,7 @@ export default function PlantillaImpresionPage() {
           children: (
             <div className="pt-4">
               <EditorPlantillaImpresion
-                comprobante={comprobante.label}
+                comprobante={comprobante.key}
                 formato={formato}
               />
             </div>

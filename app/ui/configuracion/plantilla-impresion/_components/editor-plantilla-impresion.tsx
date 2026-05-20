@@ -114,8 +114,8 @@ export default function EditorPlantillaImpresion({
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: [QueryKeys.PLANTILLA_IMPRESION],
-    queryFn: () => plantillaImpresionApi.show(),
+    queryKey: [QueryKeys.PLANTILLA_IMPRESION, comprobante ?? '', formato ?? ''],
+    queryFn: () => plantillaImpresionApi.show({ comprobante, formato }),
   });
 
   const [despedida, setDespedida] = useState<SeccionEstado>({
@@ -156,7 +156,7 @@ export default function EditorPlantillaImpresion({
       if (response.data?.success) {
         message.success(response.data.message || "Plantilla guardada");
         queryClient.invalidateQueries({
-          queryKey: [QueryKeys.PLANTILLA_IMPRESION],
+          queryKey: [QueryKeys.PLANTILLA_IMPRESION, comprobante ?? '', formato ?? ''],
         });
       } else if (response.error) {
         message.error(response.error.message);
@@ -173,6 +173,8 @@ export default function EditorPlantillaImpresion({
       estilos,
       mensajes_extra: mensajesExtra,
       estilos_secciones: estilosSecciones,
+      comprobante: comprobante ?? undefined,
+      formato: formato ?? undefined,
     });
   };
 
@@ -273,7 +275,7 @@ export default function EditorPlantillaImpresion({
         </Card>
 
         <Card title="Vista previa" className="shadow-sm">
-          <PreviewPlantillaImpresion plantilla={previewPlantilla} />
+          <PreviewPlantillaImpresion plantilla={previewPlantilla} formato={formato} />
         </Card>
       </div>
     </div>

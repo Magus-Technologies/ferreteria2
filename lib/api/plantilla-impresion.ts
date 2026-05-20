@@ -137,7 +137,10 @@ export interface PlantillaImpresionUpdateResponse {
 
 export type PlantillaImpresionPayload = Partial<
   Omit<PlantillaImpresion, "empresa_id">
->;
+> & {
+  comprobante?: string;
+  formato?: string;
+};
 
 export interface EstiloBloqueResuelto {
   color: string;
@@ -324,10 +327,15 @@ export function bloqueACSS(b: EstiloBloqueResuelto): CSSProperties {
 }
 
 export const plantillaImpresionApi = {
-  show: async (): Promise<ApiResponse<PlantillaImpresionShowResponse>> => {
-    return apiRequest<PlantillaImpresionShowResponse>(
-      "/configuracion-impresion/plantilla"
-    );
+  show: async (params?: { comprobante?: string; formato?: string }): Promise<ApiResponse<PlantillaImpresionShowResponse>> => {
+    let url = "/configuracion-impresion/plantilla";
+    if (params && (params.comprobante || params.formato)) {
+      const qs = new URLSearchParams();
+      if (params.comprobante) qs.set('comprobante', params.comprobante);
+      if (params.formato) qs.set('formato', params.formato);
+      url += '?' + qs.toString();
+    }
+    return apiRequest<PlantillaImpresionShowResponse>(url);
   },
 
   update: async (
