@@ -58,7 +58,7 @@ export default function PlantillaImpresionPage() {
             <div className="pt-4">
               <EditorPlantillaImpresion
                 comprobante={comprobante.key}
-                formato={formato}
+                formato={formato as "A4" | "Ticket"}
               />
             </div>
           ),
