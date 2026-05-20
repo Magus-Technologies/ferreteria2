@@ -240,9 +240,11 @@ export default function BodyVender({
   // formCleaned=true fuerza undefined para que el form quede vacío inmediatamente
   // al cerrar el modal, sin esperar la navegación de Next.js (~500ms).
   const ventaData_ = formCleaned ? undefined : (venta || ventaFromCotizacion)
-  // Determinar si estamos editando una venta existente (NO una cotización convertida)
-  // Las notas de venta tienen IDs que empiezan con 'ven', las notasMerged son ventas reales
-  const isEditingVenta = !!(venta?.id && String(venta.id).startsWith('ven'))
+  // Si `venta` llega por prop, estamos editando una venta existente.
+  // No dependemos del prefijo del ID: hoy las ventas usan ULID (`01...`),
+  // por lo que el chequeo histórico `startsWith('ven')` rompía la edición
+  // y terminaba creando una venta nueva.
+  const isEditingVenta = !!venta?.id
   const { handleSubmit, loading: creandoVenta } = useCreateVenta({ 
     ventaId: isEditingVenta ? venta.id : undefined 
   })

@@ -679,19 +679,22 @@ export default function useCreateVenta({
           const productosVenta = ventaCreada.productos_por_almacen || []
           const unidadesDerivadas: any[] = []
 
-          // OMITIR / EnTienda+Almacén: crear entrega placeholder con cantidad_entregada=0.
-          // No descuenta stock ni cantidad_pendiente — el almacenero confirmará
-          // la entrega real luego desde Mis Entregas.
-          productosVenta.forEach((productoAlmacen: any) => {
-            if (productoAlmacen.unidades_derivadas) {
-              productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
-                unidadesDerivadas.push({
-                  unidad_derivada_venta_id: unidad.id,
-                  cantidad_entregada: 0,
-                  ubicacion: undefined,
+            // OMITIR: crear entrega placeholder con cantidad_entregada=0.
+            // EnTienda + Almacén: registrar la cantidad pendiente real en el
+            // detalle, pero diferir el consumo de stock/cantidad_pendiente hasta
+            // que almacén confirme la entrega desde Mis Entregas.
+            productosVenta.forEach((productoAlmacen: any) => {
+              if (productoAlmacen.unidades_derivadas) {
+                productoAlmacen.unidades_derivadas.forEach((unidad: any) => {
+                  unidadesDerivadas.push({
+                    unidad_derivada_venta_id: unidad.id,
+                    cantidad_entregada: esEnTiendaAlmacen
+                      ? Number(unidad.cantidad_pendiente ?? unidad.cantidad ?? 0)
+                      : 0,
+                    ubicacion: undefined,
+                  })
                 })
-              })
-            }
+              }
           })
 
           const entregaData: CreateEntregaProductoRequest = {

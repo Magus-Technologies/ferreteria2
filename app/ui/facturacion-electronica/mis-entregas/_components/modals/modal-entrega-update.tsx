@@ -291,6 +291,11 @@ export default function ModalEntregaUpdate({
   //         no el total de la venta.
   const productosIniciales: ProductoEntrega[] = useMemo(() => {
     if (!entregaFuente?.productos_entregados) return []
+    const esRecojoTiendaAlmacenPendiente =
+      entregaFuente?.tipo_entrega === 'rt' &&
+      entregaFuente?.tipo_despacho === 'in' &&
+      entregaFuente?.estado_entrega !== 'en' &&
+      entregaFuente?.quien_entrega === 'almacen'
 
     const entregaFueEntregadaAntes = Boolean(
       (entregaFuente as any)?.user_entregado_id ||
@@ -434,6 +439,20 @@ export default function ModalEntregaUpdate({
         : 0
 
       if (!entregaTieneEntregaFisica) {
+        if (esRecojoTiendaAlmacenPendiente) {
+          return {
+            id: index + 1,
+            producto: prod.name || p.producto_name || '',
+            ubicacion: '',
+            total: totalVenta,
+            recibido: recibidoReal,
+            entregado: 0,
+            pendiente: pendienteVentaReal,
+            entregar: pendienteVentaReal,
+            entregar_programado: 0,
+            unidad_derivada_venta_id: udvId,
+          }
+        }
         const pendienteEstaEntrega = cantidadProgramadaEstaEntrega
         if (esParcialAgrupado) {
           return {
@@ -612,6 +631,9 @@ export default function ModalEntregaUpdate({
   const tituloOverride = restante
     ? `Entregar Restante — ${tituloPorTipo[tipoLocal]}`
     : tituloPorTipo[tipoLocal]
+  const soloEntregarEnTienda =
+    tipoLocal === 'EnTienda' &&
+    entrega?.quien_entrega === 'almacen'
 
   // Etiqueta read-only de "quién entrega" — viene de la venta y se muestra
   // como info para el usuario (no se vuelve a preguntar).
@@ -796,6 +818,7 @@ export default function ModalEntregaUpdate({
         clienteId={entrega.venta?.cliente_id ?? entrega.venta?.cliente?.id}
         direccion={entrega.direccion_entrega || ''}
         forzarProgramarRestoOn={tieneHermanaProgramadaConPendientes}
+        soloEntregarEnTienda={soloEntregarEnTienda}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })

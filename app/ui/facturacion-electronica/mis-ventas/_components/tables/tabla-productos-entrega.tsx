@@ -14,8 +14,14 @@ interface TablaProductosEntregaProps {
    * Modo simple: oculta las columnas "Ubicación" y "Eliminar". Usado al
    * reusar la tabla en `mis-entregas` para actualizar una entrega existente
    * (los productos ya están fijados — no se eliminan ni se ubican).
-   */
+  */
   simple?: boolean
+  /**
+   * Si es false, editar "Entregar" NO redistribuye el resto a
+   * `entregar_programado`. Útil para Recojo en Tienda pendiente desde
+   * `mis-entregas`, donde solo existe el concepto de entregar ahora.
+   */
+  autoProgramarResto?: boolean
 }
 
 type EntregarCellProps = {
@@ -58,6 +64,7 @@ export default function TablaProductosEntrega({
   productos,
   onProductoChange,
   simple = false,
+  autoProgramarResto = true,
 }: TablaProductosEntregaProps) {
   const mostrarRecibido = productos.some((p) => Number(p.recibido || 0) > 0)
   const mostrarProgramado = productos.some((p) => Number(p.programado || 0) > 0)
@@ -82,6 +89,9 @@ export default function TablaProductosEntrega({
       // entregar+programado podría superar lo realmente disponible. En
       // `crear-venta` `entregado=0` y la fórmula se simplifica a
       // `total - newValue` igual que antes.
+      if (!autoProgramarResto) {
+        return { ...p, entregar: newValue, entregar_programado: 0 }
+      }
       const yaProgramado = Number(p.programado || 0)
       const restoAuto = Math.max(
         0,
@@ -90,7 +100,7 @@ export default function TablaProductosEntrega({
       return { ...p, entregar: newValue, entregar_programado: restoAuto }
     })
     onProductoChangeRef.current(updated)
-  }, [])
+  }, [autoProgramarResto])
 
   const handleDelete = useCallback((id: number) => {
     onProductoChangeRef.current(

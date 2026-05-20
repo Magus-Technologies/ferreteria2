@@ -25,6 +25,7 @@ interface SeccionParcialProps {
   ocultar?: Set<SeccionOcultable>
   /** Tabla simplificada (sin Ubicación / Eliminar) — modo actualizar-entrega. */
   tablaSimple?: boolean
+  soloEntregar?: boolean
 }
 
 /**
@@ -48,6 +49,7 @@ export function SeccionParcial({
   restoDireccionEntrega,
   ocultar,
   tablaSimple,
+  soloEntregar = false,
 }: SeccionParcialProps) {
   const {
     productosEntrega,
@@ -82,6 +84,7 @@ export function SeccionParcial({
           productos={productosEntrega}
           onProductoChange={setProductosEntrega}
           simple={tablaSimple}
+          autoProgramarResto={!soloEntregar}
         />
       )}
 
@@ -97,7 +100,7 @@ export function SeccionParcial({
       )}
 
       {/* Counters: A entregar / A programar / Pendientes sin programar */}
-      {productosEntrega.length > 0 &&
+      {!soloEntregar && productosEntrega.length > 0 &&
         (totalAEntregar > 0 || totalAProgramar > 0 || totalSinProgramar > 0) && (
           <div className="flex flex-wrap gap-2 justify-end text-xs">
             <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
@@ -122,7 +125,7 @@ export function SeccionParcial({
             </div>
           </div>
         )}
-      {totalSinProgramar > 0 && (
+      {!soloEntregar && totalSinProgramar > 0 && (
         <p className="text-xs text-gray-500 text-right italic">
           Las unidades sin programar quedarán como pendientes en la venta.
           Podrás programarlas luego desde <span className="font-semibold">Mis Ventas</span>.
@@ -130,17 +133,19 @@ export function SeccionParcial({
       )}
 
       {/* Sub-sección "Programar entrega del resto" */}
-      <SeccionRestoProgramado
-        form={form}
-        clienteNombre={clienteNombre}
-        onEditarCliente={onEditarCliente}
-        direcciones={direcciones}
-        cargandoDirecciones={cargandoDirecciones}
-        cargos={cargos}
-        columnDefsResto={columnDefsResto}
-        restoDireccionEntrega={restoDireccionEntrega}
-        ocultar={ocultar}
-      />
+      {!soloEntregar && (
+        <SeccionRestoProgramado
+          form={form}
+          clienteNombre={clienteNombre}
+          onEditarCliente={onEditarCliente}
+          direcciones={direcciones}
+          cargandoDirecciones={cargandoDirecciones}
+          cargos={cargos}
+          columnDefsResto={columnDefsResto}
+          restoDireccionEntrega={restoDireccionEntrega}
+          ocultar={ocultar}
+        />
+      )}
     </div>
   )
 }

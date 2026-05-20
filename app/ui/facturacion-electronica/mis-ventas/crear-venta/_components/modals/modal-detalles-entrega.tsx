@@ -74,6 +74,7 @@ function ModalDetallesEntregaInner({
   infoExtra,
   accionesHeader,
   forzarProgramarRestoOn = false,
+  soloEntregarEnTienda = false,
 }: ModalDetallesEntregaProps) {
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
   const ocultarSet = useMemo(() => new Set(ocultar), [ocultar])
@@ -740,6 +741,9 @@ function ModalDetallesEntregaInner({
             onClick={handleConfirmar}
             disabled={
               creandoVenta ||
+              ((tipoDespacho === 'EnTienda' || soloEntregarEnTienda) &&
+                resolvedMode.kind !== 'crear-venta' &&
+                totalAEntregar === 0) ||
               (tipoDespacho === 'Parcial' && totalAEntregar === 0 && totalAProgramar === 0) ||
               (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) ||
               domicilioInvalido ||
@@ -803,6 +807,7 @@ function ModalDetallesEntregaInner({
             restoDireccionEntrega={restoDireccionEntrega}
             ocultar={ocultarSet}
             tablaSimple={resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto'}
+            soloEntregar={soloEntregarEnTienda}
           />
         )}
       </div>

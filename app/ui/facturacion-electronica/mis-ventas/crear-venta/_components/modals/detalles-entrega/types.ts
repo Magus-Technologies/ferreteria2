@@ -124,4 +124,9 @@ infoExtra?: ReactNode
    * programadas con productos pendientes (detección programática del flag).
    */
   forzarProgramarRestoOn?: boolean
+  /**
+   * Recojo en tienda pendiente desde `mis-entregas`: reutiliza la UI de
+   * Parcial solo para la tabla, pero sin counters ni lógica de programar resto.
+   */
+  soloEntregarEnTienda?: boolean
 }
