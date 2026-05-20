@@ -275,7 +275,11 @@ export default function EditorPlantillaImpresion({
         </Card>
 
         <Card title="Vista previa" className="shadow-sm">
-          <PreviewPlantillaImpresion plantilla={previewPlantilla} formato={formato} />
+          <PreviewPlantillaImpresion
+            plantilla={previewPlantilla}
+            formato={formato}
+            comprobante={comprobante}
+          />
         </Card>
       </div>
     </div>
