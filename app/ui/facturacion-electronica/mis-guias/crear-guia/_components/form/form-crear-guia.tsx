@@ -36,12 +36,14 @@ export default function FormCrearGuia({
   form,
   guia,
   venta,
+  initialMotivoCodigo,
 }: {
   form: FormInstance
   guia?: any
   venta?: any
+  initialMotivoCodigo?: string
 }) {
-  const [codigoMotivo, setCodigoMotivo] = useState<string>('')
+  const [codigoMotivo, setCodigoMotivo] = useState<string>(initialMotivoCodigo || '')
 
   const requiereComprador = MOTIVOS_CON_COMPRADOR.includes(codigoMotivo)
   const esEntreEstablecimientos = codigoMotivo === MOTIVO_ENTRE_ESTABLECIMIENTOS

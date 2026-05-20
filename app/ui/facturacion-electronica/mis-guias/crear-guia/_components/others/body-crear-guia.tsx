@@ -2,6 +2,7 @@
 
 import { Form } from 'antd'
 import { Dayjs } from 'dayjs'
+import { useSearchParams } from 'next/navigation'
 import FormBase from '~/components/form/form-base'
 import useCreateGuia from '../../_hooks/use-create-guia'
 import useInitGuia from '../../_hooks/use-init-guia'
@@ -65,6 +66,8 @@ export default function BodyCrearGuia({
   guia,
 }: { guia?: any } = {}) {
   const [form] = Form.useForm<FormCreateGuia>()
+  const searchParams = useSearchParams()
+  const motivoCodigo = searchParams.get('motivo_codigo') || ''
 
   const { venta } = useInitGuia({ guia, form })
 
@@ -81,7 +84,7 @@ export default function BodyCrearGuia({
         <div className='flex-1 min-h-0'>
           <FormTableGuia form={form} guia={guia} />
         </div>
-        <FormCrearGuia form={form} guia={guia} venta={venta} />
+        <FormCrearGuia form={form} guia={guia} venta={venta} initialMotivoCodigo={motivoCodigo} />
       </div>
       <div className='w-full xl:w-auto'>
         <CardsInfoGuia form={form} guia={guia} />

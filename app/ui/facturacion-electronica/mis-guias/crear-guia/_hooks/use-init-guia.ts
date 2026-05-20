@@ -1,6 +1,6 @@
 import { FormInstance } from 'antd'
 import dayjs from 'dayjs'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { ventaApi, type VentaCompleta } from '~/lib/api/venta'
@@ -9,6 +9,10 @@ import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import { setDireccionesClienteToForm } from '~/lib/utils/cliente-direcciones-form'
 import { TipoDireccion } from '~/lib/api/cliente'
 import { buildSlotsDireccionEmpresa } from '~/lib/utils/empresa-direcciones-form'
+import { useStoreTransferenciaParaGuia } from '~/app/ui/facturacion-electronica/mis-guias/store/store-transferencia-para-guia'
+import { motivoTrasladoApi } from '~/lib/api/motivo-traslado'
+import { almacenesApi } from '~/lib/api/almacen'
+import type { Almacen } from '~/app/_types/almacen'
 
 export default function useInitGuia({
   guia,
@@ -25,7 +29,17 @@ export default function useInitGuia({
   // mapea aquí como chofer privado de la guía.
   const userChoferIdParam = searchParams.get('user_chofer_id')
   const userChoferNombreParam = searchParams.get('user_chofer_nombre')
+  // from_transferencia indica que el usuario navega desde Mis Transferencias
+  const fromTransferencia = searchParams.get('from_transferencia') === 'true'
   const { data: empresa } = useEmpresaPublica()
+
+  const transferenciaStore = useStoreTransferenciaParaGuia((s) => s.transferencia)
+  const clearTransferencia = useStoreTransferenciaParaGuia((s) => s.setTransferencia)
+  // Guard: solo inicializar una vez aunque el store cambie tras limpiarlo
+  const transferenciaInitializedRef = useRef(false)
+
+  // hasTransferencia se basa en el URL param (persiste aunque limpiemos el store)
+  const hasTransferencia = fromTransferencia && !guia && !ventaId
 
   // Obtener datos de la venta si viene el parámetro
   const { data: ventaResponse, isLoading } = useQuery({
@@ -39,6 +53,27 @@ export default function useInitGuia({
   })
 
   const venta = ventaResponse?.data as VentaCompleta | undefined
+
+  // Motivos de traslado — solo cuando viene de transferencia
+  const { data: motivosList, isLoading: isLoadingMotivos } = useQuery({
+    queryKey: [QueryKeys.MOTIVOS_TRASLADO],
+    queryFn: async () => {
+      const res = await motivoTrasladoApi.getAll({ activo: true })
+      return res.data?.data || []
+    },
+    enabled: hasTransferencia,
+  })
+
+  // Almacenes — solo cuando viene de transferencia (para obtener las direcciones)
+  const { data: almacenesData, isLoading: isLoadingAlmacenes } = useQuery({
+    queryKey: [QueryKeys.ALMACENES],
+    queryFn: async () => {
+      const res = await almacenesApi.getAll()
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data || []
+    },
+    enabled: hasTransferencia,
+  })
 
   useEffect(() => {
     if (guia) {
@@ -142,8 +177,58 @@ export default function useInitGuia({
           form.setFieldValue('cliente_id', cliente.id)
         }
       }, 100)
-    } else if (!venta && !guia) {
-      // Valores por defecto para nueva guía sin venta
+    } else if (
+      hasTransferencia &&
+      !transferenciaInitializedRef.current &&
+      transferenciaStore &&
+      !isLoadingMotivos &&
+      !isLoadingAlmacenes &&
+      motivosList &&
+      almacenesData
+    ) {
+      // Inicializar formulario desde una transferencia de stock
+      transferenciaInitializedRef.current = true
+
+      const motivo08 = motivosList.find((m: any) => m.codigo === '08')
+      const almacenOrigen = almacenesData.find((a: Almacen) => a.id === transferenciaStore.almacen_origen_id)
+      const almacenDestino = almacenesData.find((a: Almacen) => a.id === transferenciaStore.almacen_destino_id)
+      const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
+      const primerSlot = empresaSlots.find((s) => s.direccion)
+
+      form.setFieldsValue({
+        fecha_emision: dayjs(),
+        fecha_traslado: dayjs(),
+        afecta_stock: 'true',
+        validar_modalidad: true,
+        validar_costo: true,
+        tipo_guia: 'ELECTRONICA_REMITENTE',
+        modalidad_transporte: 'PRIVADO',
+        ...(motivo08 ? { motivo_traslado: motivo08.id } : {}),
+        almacen_origen_id: transferenciaStore.almacen_origen_id,
+        almacen_destino_id: transferenciaStore.almacen_destino_id,
+        punto_partida: almacenOrigen?.direccion || primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
+        punto_llegada: almacenDestino?.direccion || '',
+        referencia: `TS${String(transferenciaStore.serie).padStart(4, '0')}-${String(transferenciaStore.numero).padStart(8, '0')}`,
+        productos: transferenciaStore.productos.map((p) => ({
+          producto_id: p.producto_almacen_origen?.producto?.id || 0,
+          producto_name: p.producto_almacen_origen?.producto?.name || '',
+          producto_codigo: p.producto_almacen_origen?.producto?.cod_producto || '',
+          marca_name: '',
+          unidad_derivada_id: p.unidad_derivada_inmutable_id || p.unidad_derivada_id || 0,
+          unidad_derivada_name: p.unidad_derivada_inmutable?.name || '',
+          unidad_derivada_factor: Number(p.factor) || 1,
+          cantidad: Number(p.cantidad),
+          costo: Number(p.costo) || 0,
+          precio_venta: Number(p.costo) || 0,
+          peso_total: 0,
+        })),
+      })
+
+      // Liberar el store — los datos ya están en el form
+      clearTransferencia(null)
+    } else if (!venta && !guia && !hasTransferencia) {
+      // Valores por defecto para nueva guía sin venta ni transferencia
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
       const primerSlot = empresaSlots.find((s) => s.direccion)
       form.setFieldsValue({
@@ -158,7 +243,23 @@ export default function useInitGuia({
         productos: [],
       })
     }
-  }, [guia, venta, isLoading, form, empresa, vehiculoPlacaParam, userChoferIdParam, userChoferNombreParam])
+  }, [
+    guia,
+    venta,
+    isLoading,
+    form,
+    empresa,
+    vehiculoPlacaParam,
+    userChoferIdParam,
+    userChoferNombreParam,
+    hasTransferencia,
+    transferenciaStore,
+    isLoadingMotivos,
+    isLoadingAlmacenes,
+    motivosList,
+    almacenesData,
+    clearTransferencia,
+  ])
 
   return { venta, isLoading }
 }

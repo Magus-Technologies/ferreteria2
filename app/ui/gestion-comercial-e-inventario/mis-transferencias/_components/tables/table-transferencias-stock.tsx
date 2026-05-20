@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Tag, Popconfirm, message } from 'antd'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -15,9 +16,10 @@ import {
   type ProductoTransferenciaStock,
 } from '~/lib/api/transferencia-stock'
 import ButtonBase from '~/components/buttons/button-base'
-import { FaBan, FaFilePdf, FaEdit } from 'react-icons/fa'
+import { FaBan, FaFilePdf, FaEdit, FaTruck } from 'react-icons/fa'
 import ModalDocTransferenciaStock from '~/app/ui/gestion-comercial-e-inventario/_components/modals/modal-doc-transferencia-stock'
 import ModalEditTransferenciaStock from '~/app/ui/gestion-comercial-e-inventario/_components/modals/modal-edit-transferencia-stock'
+import { useStoreTransferenciaParaGuia } from '~/app/ui/facturacion-electronica/mis-guias/store/store-transferencia-para-guia'
 import type { TransferenciasFilters } from '../../page'
 
 function fmt(value: number | string): string {
@@ -193,8 +195,10 @@ export default function TableTransferenciasStock({
 }: {
   filters?: TransferenciasFilters
 }) {
+  const router = useRouter()
   const queryClient = useQueryClient()
   const tableRef = useRef<AgGridReact<TransferenciaStock>>(null)
+  const setTransferenciaParaGuia = useStoreTransferenciaParaGuia((s) => s.setTransferencia)
   const [openDoc, setOpenDoc] = useState(false)
   const [docData, setDocData] = useState<TransferenciaStock | undefined>()
   const [openEdit, setOpenEdit] = useState(false)
@@ -244,8 +248,8 @@ export default function TableTransferenciasStock({
   const accionesColumn: ColDef<TransferenciaStock> = {
     colId: 'acciones',
     headerName: 'Acciones',
-    width: 110,
-    minWidth: 90,
+    width: 145,
+    minWidth: 120,
     cellRenderer: (params: any) => {
       if (!params.data) return null
       return (
@@ -262,6 +266,20 @@ export default function TableTransferenciasStock({
               }}
             >
               <FaEdit size={12} />
+            </ButtonBase>
+          )}
+          {params.data.estado && (
+            <ButtonBase
+              color="success"
+              size="sm"
+              type="button"
+              title="Crear Guía de Remisión"
+              onClick={() => {
+                setTransferenciaParaGuia(params.data)
+                router.push('/ui/facturacion-electronica/mis-guias/crear-guia?from_transferencia=true&motivo_codigo=08')
+              }}
+            >
+              <FaTruck size={12} />
             </ButtonBase>
           )}
           <ButtonBase
@@ -329,7 +347,7 @@ export default function TableTransferenciasStock({
             label: 'Default',
             columns: [
               'Fecha', 'N°', 'Producto', 'Cantidad',
-              'Origen', 'Destino', 'Usuario', 'Estado', 'Observaciones', 'Acciones',
+              'Origen', 'Destino', 'Usuario', 'Estado', 'Acciones',
             ],
           },
         ]}
