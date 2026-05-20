@@ -193,14 +193,16 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   const [debouncedText, { flush }] = useDebounce(text, 300)
   const [manualSearch, setManualSearch] = useState(false)
 
+  const efectivoAlmacenId = almacenOrigenIdTransferencia || almacen_id
+
   const { data: responseData, refetch, isLoading: loading, isFetching } = useQuery({
-    queryKey: [QueryKeys.PRODUCTOS_SEARCH, debouncedText, tipoBusqueda, ignoreAlmacen ? null : almacen_id],
+    queryKey: [QueryKeys.PRODUCTOS_SEARCH, debouncedText, tipoBusqueda, ignoreAlmacen ? null : efectivoAlmacenId],
     queryFn: async () => {
       if (!debouncedText) return []
-      if (!ignoreAlmacen && !almacen_id) return []
+      if (!ignoreAlmacen && !efectivoAlmacenId) return []
 
       const response = await productosApiV2.getAllByAlmacen({
-        almacen_id: ignoreAlmacen ? undefined : almacen_id,
+        almacen_id: ignoreAlmacen ? undefined : efectivoAlmacenId,
         search: debouncedText,
         estado: 1,
         per_page: 30,
@@ -227,7 +229,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
       setManualSearch(true)
       try {
         const response = await productosApiV2.getAllByAlmacen({
-          almacen_id: ignoreAlmacen ? undefined : almacen_id,
+          almacen_id: ignoreAlmacen ? undefined : efectivoAlmacenId,
           search: text,
           estado: 1,
           per_page: 2,

@@ -136,13 +136,11 @@ export default function MisTransferenciasPage() {
         </div>
       </FormBase>
 
-      {/* Tabla */}
-      <div className="w-full mt-4">
-        <div className="h-[calc(100vh-320px)] min-h-[300px]">
-          <Suspense fallback={<ComponentLoading />}>
-            <TableTransferenciasStock filters={filters} />
-          </Suspense>
-        </div>
+      {/* Tablas */}
+      <div className="w-full mt-4 flex flex-col gap-4">
+        <Suspense fallback={<ComponentLoading />}>
+          <TableTransferenciasStock filters={filters} />
+        </Suspense>
       </div>
     </ContenedorGeneral>
   )
