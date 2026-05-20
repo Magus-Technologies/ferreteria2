@@ -223,6 +223,7 @@ export default function EditorPlantillaImpresion({
         children: (
           <BloquePdfEditor
             bloque={bloque}
+            comprobante={comprobante}
             despedida={despedida}
             mensajes={mensajesExtra}
             estilosSecciones={estilosSecciones}
@@ -239,7 +240,7 @@ export default function EditorPlantillaImpresion({
         ),
       })),
     ],
-    [despedida, estilos, mensajesExtra, estilosSecciones, globalResuelto]
+    [despedida, estilos, mensajesExtra, estilosSecciones, globalResuelto, comprobante]
   );
 
   if (isLoading) {
@@ -288,6 +289,7 @@ export default function EditorPlantillaImpresion({
 
 interface BloquePdfEditorProps {
   bloque: (typeof BLOQUES_PDF)[number];
+  comprobante?: string;
   despedida: SeccionEstado;
   mensajes: MensajesExtraPlantilla;
   estilosSecciones: EstilosSecciones;
@@ -300,6 +302,7 @@ interface BloquePdfEditorProps {
 
 function BloquePdfEditor({
   bloque,
+  comprobante,
   despedida,
   mensajes,
   estilosSecciones,
@@ -309,6 +312,7 @@ function BloquePdfEditor({
   onBloqueChange,
   onBloqueReset,
 }: BloquePdfEditorProps) {
+  const esCotizacion = comprobante === "cotizacion";
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
@@ -363,6 +367,28 @@ function BloquePdfEditor({
             onChange={onDespedidaChange}
             placeholder="GRACIAS POR SU PREFERENCIA!"
           />
+          {esCotizacion && (
+            <div className="rounded border border-amber-200 bg-amber-50 px-3 py-3 flex flex-col gap-3">
+              <div className="text-xs font-semibold text-amber-700">
+                Opciones específicas de cotización
+              </div>
+              <ToggleRow
+                label='Mostrar mensaje de despedida ("Sin otro particular... GRACIAS POR SU PREFERENCIA!")'
+                checked={!mensajes.ocultar_despedida}
+                onChange={(v) => onMensajesChange({ ocultar_despedida: !v })}
+              />
+              <ToggleRow
+                label='Mostrar línea "- CANJEAR POR BOLETA O FACTURA -"'
+                checked={!mensajes.ocultar_canjear}
+                onChange={(v) => onMensajesChange({ ocultar_canjear: !v })}
+              />
+              <ToggleRow
+                label="Mostrar tabla de cuentas bancarias"
+                checked={!mensajes.ocultar_cuentas_bancarias}
+                onChange={(v) => onMensajesChange({ ocultar_cuentas_bancarias: !v })}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -527,6 +553,27 @@ function ColorRow({
       {descripcion && (
         <span className="text-[10px] text-slate-400">{descripcion}</span>
       )}
+    </div>
+  );
+}
+
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs text-slate-700 flex-1">{label}</span>
+      <Switch
+        checked={checked}
+        onChange={onChange}
+        className={checked ? "!bg-emerald-500" : ""}
+      />
     </div>
   );
 }

@@ -180,16 +180,18 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
               </div>
             </div>
 
-            {sep}
+            {!m.ocultar_despedida && sep}
 
             {/* Despedida */}
-            <div style={{ textAlign: "center" }}>
-              {plantilla.despedida_activo && plantilla.mensaje_despedida ? (
-                <div style={bloqueACSS(b.despedida_footer)} dangerouslySetInnerHTML={{ __html: plantilla.mensaje_despedida }} />
-              ) : (
-                <div style={bloqueACSS(b.despedida_footer)}>GRACIAS POR SU PREFERENCIA!</div>
-              )}
-            </div>
+            {!m.ocultar_despedida && (
+              <div style={{ textAlign: "center" }}>
+                {plantilla.despedida_activo && plantilla.mensaje_despedida ? (
+                  <div style={bloqueACSS(b.despedida_footer)} dangerouslySetInnerHTML={{ __html: plantilla.mensaje_despedida }} />
+                ) : (
+                  <div style={bloqueACSS(b.despedida_footer)}>GRACIAS POR SU PREFERENCIA!</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -478,52 +480,59 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
         </table>
 
         {/* Despedida */}
-        <div className="mt-3" style={{ textAlign: "center" }}>
-          <div style={bloqueACSS(b.obs_valor)}>
-            Sin otro particular, esperando su pronta respuesta.{" "}
-            <span style={{ fontWeight: 700 }}>
-              {plantilla.despedida_activo && plantilla.mensaje_despedida ? (
-                <span dangerouslySetInnerHTML={{ __html: plantilla.mensaje_despedida }} />
-              ) : (
-                "GRACIAS POR SU PREFERENCIA! DIOS LES BENDIGA!"
-              )}
-            </span>
+        {(!m.ocultar_despedida || !m.ocultar_canjear) && (
+          <div className="mt-3" style={{ textAlign: "center" }}>
+            {!m.ocultar_despedida && (
+              <div style={bloqueACSS(b.despedida_footer)}>
+                Sin otro particular, esperando su pronta respuesta.{" "}
+                {plantilla.despedida_activo && plantilla.mensaje_despedida ? (
+                  <span dangerouslySetInnerHTML={{ __html: plantilla.mensaje_despedida }} />
+                ) : (
+                  "GRACIAS POR SU PREFERENCIA! DIOS LES BENDIGA!"
+                )}
+              </div>
+            )}
+            {!m.ocultar_canjear && (
+              <div style={{ ...bloqueACSS(b.despedida_footer), marginBottom: 10 }}>- CANJEAR POR BOLETA O FACTURA -</div>
+            )}
           </div>
-          <div style={{ ...bloqueACSS(b.obs_valor), marginBottom: 10 }}>- CANJEAR POR BOLETA O FACTURA -</div>
-        </div>
+        )}
 
         {/* Cuentas bancarias */}
-        <div style={{ textAlign: "right", marginTop: 10 }}>
-          <div style={{ fontSize: "9pt", fontWeight: 700, textAlign: "left", marginBottom: 5, width: "55%", display: "inline-block" }}>
-            CUENTAS:
-          </div>
-          <table style={{ width: "55%", marginLeft: "auto", border: `${e.border_px}px solid ${e.color_tema}`, borderCollapse: "collapse", fontSize: "7pt" }}>
-            <thead>
-              <tr style={{ fontWeight: 700, borderBottom: `${e.border_thin_px}px solid ${e.color_tema}`, background: e.color_tema }}>
-                <td style={{ padding: 2, textAlign: "center", borderRight: `${e.border_thin_px}px solid ${e.color_tema}` }}>ENTIDAD</td>
-                <td style={{ padding: 2, textAlign: "center", borderRight: `${e.border_thin_px}px solid ${e.color_tema}` }}>CUENTA</td>
-                <td style={{ padding: 2, textAlign: "center", borderRight: `${e.border_thin_px}px solid ${e.color_tema}` }}>NUMERO</td>
-                <td style={{ padding: 2, textAlign: "center" }}>CCI</td>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["BCP", "AHORROS", "57099829303065", "00257000998279306504"],
-                ["BBVA", "AHORROS", "57099829303065", "00257000998279306504"],
-                ["SCOTIABANK", "AHORROS", "7117529613", "00940830711752961369"],
-                ["INTERBANK", "AHORROS", "6003004488177", "00360000600344881774"],
-              ].map((fila, i) => (
-                <tr key={i} style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_tema}` }}>
-                  {fila.map((celda, j) => (
-                    <td key={j} style={{ padding: 2, textAlign: "center", borderRight: j === fila.length - 1 ? "none" : `${e.border_thin_px}px solid ${e.color_tema}` }}>
-                      {celda}
-                    </td>
+        {!m.ocultar_cuentas_bancarias && (
+          <div style={{ textAlign: "right", marginTop: 10 }}>
+            <div style={{ ...bloqueACSS(b.obs_label), textAlign: "left", marginBottom: 5, width: "55%", display: "inline-block" }}>
+              CUENTAS:
+            </div>
+            <table style={{ width: "55%", marginLeft: "auto", border: `${e.border_px}px solid ${e.color_tema}`, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_borde}`, background: e.color_tema }}>
+                  {["ENTIDAD", "CUENTA", "NUMERO", "CCI"].map((label, i, arr) => (
+                    <th key={label} style={{ ...bloqueACSS(b.tabla_header), padding: 2, borderRight: i === arr.length - 1 ? "none" : `${e.border_thin_px}px solid ${e.color_borde}` }}>
+                      {label}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {[
+                  ["BCP", "AHORROS", "57099829303065", "00257000998279306504"],
+                  ["BBVA", "AHORROS", "57099829303065", "00257000998279306504"],
+                  ["SCOTIABANK", "AHORROS", "7117529613", "00940830711752961369"],
+                  ["INTERBANK", "AHORROS", "6003004488177", "00360000600344881774"],
+                ].map((fila, i) => (
+                  <tr key={i} style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }}>
+                    {fila.map((celda, j, arr) => (
+                      <td key={j} style={{ ...bloqueACSS(b.tabla_fila), textAlign: "center", padding: 2, borderRight: j === arr.length - 1 ? "none" : `${e.border_thin_px}px solid ${e.color_borde}` }}>
+                        {celda}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }

@@ -18,6 +18,10 @@ export interface MensajesExtraPlantilla {
   observaciones_default: string;
   leyenda_consulta: string;
   leyenda_representacion: string;
+  // Flags específicos de cotización
+  ocultar_canjear?: boolean;
+  ocultar_despedida?: boolean;
+  ocultar_cuentas_bancarias?: boolean;
 }
 
 export type AlineacionBloque = "left" | "center" | "right";
@@ -79,6 +83,9 @@ export const MENSAJES_EXTRA_DEFAULT: MensajesExtraPlantilla = {
   observaciones_default: "- NINGUNA",
   leyenda_consulta: "Consulte su documento en:",
   leyenda_representacion: "Representacion impresa del comprobante electronico",
+  ocultar_canjear: false,
+  ocultar_despedida: false,
+  ocultar_cuentas_bancarias: false,
 };
 
 export const BLOQUE_VACIO: EstiloBloque = {
