@@ -296,13 +296,13 @@ export function resolverEstiloBloque(
 ): EstiloBloqueResuelto {
   const def = defaultsBloque(key, globalEst);
   return {
-    color: override?.color || def.color,
-    tamano: override?.tamano || def.tamano,
-    peso: override?.peso || def.peso,
-    alineacion: override?.alineacion || def.alineacion,
-    cursiva: override?.cursiva ?? def.cursiva,
-    subrayado: override?.subrayado ?? def.subrayado,
-    fuente: override?.fuente || def.fuente,
+    color: override?.color !== null && override?.color !== undefined ? override.color : def.color,
+    tamano: override?.tamano !== null && override?.tamano !== undefined ? override.tamano : def.tamano,
+    peso: override?.peso !== null && override?.peso !== undefined ? override.peso : def.peso,
+    alineacion: override?.alineacion !== null && override?.alineacion !== undefined ? override.alineacion : def.alineacion,
+    cursiva: override?.cursiva !== null && override?.cursiva !== undefined ? override.cursiva : def.cursiva,
+    subrayado: override?.subrayado !== null && override?.subrayado !== undefined ? override.subrayado : def.subrayado,
+    fuente: override?.fuente !== null && override?.fuente !== undefined ? override.fuente : def.fuente,
   };
 }
 

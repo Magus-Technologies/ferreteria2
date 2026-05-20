@@ -89,13 +89,13 @@ function BloqueEditor({
   onReset,
 }: BloqueEditorProps) {
   const valor: EstiloBloqueResuelto = {
-    color: override?.color || defaults.color,
-    tamano: override?.tamano || defaults.tamano,
-    peso: override?.peso || defaults.peso,
-    alineacion: override?.alineacion || defaults.alineacion,
-    cursiva: override?.cursiva ?? defaults.cursiva,
-    subrayado: override?.subrayado ?? defaults.subrayado,
-    fuente: override?.fuente || defaults.fuente,
+    color: override?.color !== null && override?.color !== undefined ? override.color : defaults.color,
+    tamano: override?.tamano !== null && override?.tamano !== undefined ? override.tamano : defaults.tamano,
+    peso: override?.peso !== null && override?.peso !== undefined ? override.peso : defaults.peso,
+    alineacion: override?.alineacion !== null && override?.alineacion !== undefined ? override.alineacion : defaults.alineacion,
+    cursiva: override?.cursiva !== null && override?.cursiva !== undefined ? override.cursiva : defaults.cursiva,
+    subrayado: override?.subrayado !== null && override?.subrayado !== undefined ? override.subrayado : defaults.subrayado,
+    fuente: override?.fuente !== null && override?.fuente !== undefined ? override.fuente : defaults.fuente,
   };
 
   return (
