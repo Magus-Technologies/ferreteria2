@@ -95,7 +95,7 @@
         "id": "impresion",
         "label": "Impresión",
         "icon": "FaPrint",
-        "route": null,
+        "route": "/ui/configuracion/plantilla-impresion",
         "permission": "configuracion.impresion.index"
       }
     ]

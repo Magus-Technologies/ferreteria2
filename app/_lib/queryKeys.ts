@@ -91,4 +91,5 @@ export enum QueryKeys {
   COMISIONES_POR_VENDEDOR = 'comisiones_por_vendedor',
   COMISIONES_DETALLE_VENDEDOR = 'comisiones_detalle_vendedor',
   COMISIONES_HISTORIAL_PAGOS = 'comisiones_historial_pagos',
+  PLANTILLA_IMPRESION = 'plantilla_impresion',
 }
