@@ -267,6 +267,25 @@ export default function CalendarioEntregasPage() {
         >
           {/* Calendario */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 overflow-hidden">
+            <div className="mb-4 flex flex-wrap items-center gap-5 text-xs border-b border-slate-100 pb-3">
+              <span className="font-semibold text-slate-700">Leyenda:</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded border border-gray-300 bg-amber-400" />
+                <span className="text-gray-600">Pendiente</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded border border-gray-300 bg-blue-500" />
+                <span className="text-gray-600">En Camino</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded border border-gray-300 bg-emerald-500" />
+                <span className="text-gray-600">Entregado</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded border border-gray-300 bg-red-500" />
+                <span className="text-gray-600">Cancelado</span>
+              </div>
+            </div>
             <Suspense fallback={<ComponentLoading />}>
               <CalendarProgramacionEntregas
                 onSelectEvent={(event) => {

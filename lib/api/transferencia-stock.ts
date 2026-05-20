@@ -29,6 +29,7 @@ export interface ProductoTransferenciaStock {
   producto_almacen_origen_id: number
   producto_almacen_destino_id: number
   unidad_derivada_inmutable_id: number
+  unidad_derivada_id: number | null
   factor: number
   cantidad: number
   costo: number
@@ -94,6 +95,16 @@ export const transferenciaStockApi = {
   ): Promise<ApiResponse<TransferenciaStock>> {
     return apiRequest<TransferenciaStock>(`/transferencias-stock`, {
       method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  async update(
+    id: number,
+    data: CreateTransferenciaStockParams,
+  ): Promise<ApiResponse<TransferenciaStock>> {
+    return apiRequest<TransferenciaStock>(`/transferencias-stock/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(data),
     })
   },

@@ -238,6 +238,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
               }}
               className="w-full"
               formWithMessage={false}
+              afecta_store={false}
               form={form}
             />
             <SelectEstado
@@ -399,6 +400,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
               }}
               className="w-full"
               formWithMessage={false}
+              afecta_store={false}
               form={form}
             />
           </LabelBase>

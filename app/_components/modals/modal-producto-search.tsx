@@ -268,7 +268,7 @@ export default function ModalProductoSearch({
                 marcaId={marcaId}
                 categoriaId={categoriaId}
                 ignoreAlmacen={ignoreAlmacen}
-                overrideAlmacenId={overrideAlmacenId}
+                overrideAlmacenId={almacenOrigenIdTransferencia ?? overrideAlmacenId}
                 showStockMaxWarning={showStockMaxWarning}
               />
             </div>

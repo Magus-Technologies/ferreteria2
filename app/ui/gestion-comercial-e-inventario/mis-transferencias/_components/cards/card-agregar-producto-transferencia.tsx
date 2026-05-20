@@ -58,7 +58,8 @@ export default function CardAgregarProductoTransferencia({
   const producto_en_almacen =
     productoSeleccionadoSearchStore?.producto_en_almacenes?.find(
       (item) => item.almacen_id === almacen_id
-    )
+    ) ?? productoSeleccionadoSearchStore?.producto_en_almacenes?.[0]
+
   const unidades_derivadas = producto_en_almacen?.unidades_derivadas
 
   function handleOk(closeModal?: boolean) {

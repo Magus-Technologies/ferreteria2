@@ -27,15 +27,12 @@ const localizer = dateFnsLocalizer({
   locales,
 })
 
-// Colores por chofer
-const CHOFER_COLORS = [
-  '#86efac',
-  '#fde047',
-  '#93c5fd',
-  '#fca5a5',
-  '#c4b5fd',
-  '#fdba74',
-]
+const ESTADO_EVENT_COLORS = {
+  pe: '#f59e0b',
+  ec: '#3b82f6',
+  en: '#22c55e',
+  ca: '#ef4444',
+} as const
 
 // ─── Toolbar personalizado ────────────────────────────────────────────────────
 interface CustomToolbarProps {
@@ -258,27 +255,15 @@ export default function CalendarProgramacionEntregas({
 
   // Transformar entregas a eventos del calendario
   const events: EntregaEvent[] = useMemo(() => {
-    const vehiculoColorMap = new Map<string, string>()
-    let colorIndex = 0
-
     const entregasEvents = entregas
       // Defensa extra: filtrar cualquier entrega sin fecha_programada o sin hora_inicio/fin
       // (el backend con solo_programadas=true ya filtra, pero evita duplicados si se reusa).
       .filter((e: any) => e.fecha_programada && e.hora_inicio && e.hora_fin)
       .map((entrega: any) => {
-      let color: string
-      if (entrega.estado_entrega === 'en') {
-        color = '#22c55e'
-      } else if (entrega.estado_entrega === 'ec') {
-        color = '#eab308'
-      } else {
-        const vehiculoKey = String(entrega.vehiculo_id || '__sin_unidad__')
-        if (!vehiculoColorMap.has(vehiculoKey)) {
-          vehiculoColorMap.set(vehiculoKey, CHOFER_COLORS[colorIndex % CHOFER_COLORS.length])
-          colorIndex++
-        }
-        color = vehiculoColorMap.get(vehiculoKey) || CHOFER_COLORS[0]
-      }
+      const color =
+        ESTADO_EVENT_COLORS[
+          (entrega.estado_entrega as keyof typeof ESTADO_EVENT_COLORS) || 'pe'
+        ] || ESTADO_EVENT_COLORS.pe
 
       // fecha_programada viene como ISO UTC (Laravel cast datetime). Convertir a Lima
       // antes de tomar YYYY-MM-DD para evitar corrimientos de día por tz del navegador.
