@@ -60,12 +60,9 @@ function TableProductosOptimized() {
     hasMore,
     fetchNextPage,
   } = useProductosInfiniteScroll({
-    filtros: {
-      ...filtros,
-      almacen_id: filtros?.almacen_id || almacen_id || 1,
-    },
+    filtros: { ...(filtros || {}) },
     enabled: !!filtros?.almacen_id,
-    perPage: 1000, // 1000 productos por página (cacheable, no causa error)
+    perPage: 1000,
   });
 
   // IMPORTANTE: getRowId permite que AG Grid identifique filas únicas
