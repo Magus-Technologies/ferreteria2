@@ -23,6 +23,7 @@ import FormBase from "~/components/form/form-base";
 import LabelBase from "~/components/form/label-base";
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { useStoreQuickFilter } from "../../_store/store-quick-filter";
+import { useStoreAlmacen } from "~/store/store-almacen";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import type { GetProductosParams } from "~/app/_types/producto";
 import { useQuery } from "@tanstack/react-query";
@@ -48,6 +49,7 @@ interface ValuesFiltersMiAlmacen {
 
 export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const [form] = Form.useForm<ValuesFiltersMiAlmacen>();
+  const almacenIdStore = useStoreAlmacen((s) => s.almacen_id);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchValue, setSearchValue] = useState<string>("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -70,6 +72,11 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const acerosArequipaId = useMemo(() => {
     return marcas?.find(m => m.name.toUpperCase() === 'ACEROS AREQUIPA')?.id;
   }, [marcas]);
+
+  // Re-buscar cuando cambia el almacén desde el navbar
+  useEffect(() => {
+    if (almacenIdStore) form.submit();
+  }, [almacenIdStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Inicializar: esperar a que las marcas carguen, setear marca_id y hacer submit una sola vez
   useEffect(() => {
@@ -127,7 +134,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
   const handleFinish = (values: ValuesFiltersMiAlmacen) => {
     const {
       cod_producto,
-      almacen_id,
+      almacen_id: almacen_id_form,
       estado,
       ubicacion_id,
       accion_tecnica,
@@ -143,6 +150,9 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
 
     // Validar que marca_id sea un ID real de las marcas cargadas
     const marcaValida = marca_id && marcas?.some(m => m.id === marca_id);
+
+    // Usar el almacen del store (navbar) — el select está oculto
+    const almacen_id = almacenIdStore ?? almacen_id_form ?? 1;
 
     // Los demás filtros van al backend
     const filtros: Partial<GetProductosParams> = {
@@ -229,7 +239,8 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
               formWithMessage={false}
               allowClear
             />
-            <SelectAlmacen
+            {/* SelectAlmacen comentado: ya está en el dropdown del navbar */}
+            {/* <SelectAlmacen
               propsForm={{
                 name: "almacen_id",
                 hasFeedback: false,
@@ -240,7 +251,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
               formWithMessage={false}
               afecta_store={false}
               form={form}
-            />
+            /> */}
             <SelectEstado
               size="large"
               propsForm={{
@@ -391,7 +402,8 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
             />
           </LabelBase>
 
-          <LabelBase label="Almacén:">
+          {/* SelectAlmacen comentado: ya está en el dropdown del navbar */}
+          {/* <LabelBase label="Almacén:">
             <SelectAlmacen
               propsForm={{
                 name: "almacen_id",
@@ -403,7 +415,7 @@ export default function FiltersMiAlmacen({}: FiltersMiAlmacenProps) {
               afecta_store={false}
               form={form}
             />
-          </LabelBase>
+          </LabelBase> */}
 
           <LabelBase label="Estado:">
             <SelectEstado
