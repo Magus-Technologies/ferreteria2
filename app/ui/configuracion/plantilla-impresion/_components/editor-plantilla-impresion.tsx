@@ -101,7 +101,15 @@ interface SeccionEstado {
   chars: number;
 }
 
-export default function EditorPlantillaImpresion() {
+interface EditorPlantillaImpresionProps {
+  comprobante?: string;
+  formato?: "A4" | "Ticket";
+}
+
+export default function EditorPlantillaImpresion({
+  comprobante,
+  formato,
+}: EditorPlantillaImpresionProps) {
   const { message } = App.useApp();
   const queryClient = useQueryClient();
 
@@ -241,25 +249,33 @@ export default function EditorPlantillaImpresion() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card title="Configuración" className="shadow-sm">
-        <Collapse items={collapseItems} defaultActiveKey={["base", "consulta", "pie"]} />
-
-        <div className="flex justify-end pt-6">
-          <Button
-            type="primary"
-            loading={updateMutation.isPending}
-            onClick={handleGuardar}
-            className="bg-cyan-600 hover:bg-cyan-700 px-8"
-          >
-            Guardar Cambios
-          </Button>
+    <div>
+      {(comprobante || formato) && (
+        <div className="mb-4 rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <span className="font-semibold">Comprobante:</span> {comprobante ?? "General"} ·{' '}
+          <span className="font-semibold">Formato:</span> {formato ?? "A4"}
         </div>
-      </Card>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card title="Configuración" className="shadow-sm">
+          <Collapse items={collapseItems} defaultActiveKey={["base", "consulta", "pie"]} />
 
-      <Card title="Vista previa" className="shadow-sm">
-        <PreviewPlantillaImpresion plantilla={previewPlantilla} />
-      </Card>
+          <div className="flex justify-end pt-6">
+            <Button
+              type="primary"
+              loading={updateMutation.isPending}
+              onClick={handleGuardar}
+              className="bg-cyan-600 hover:bg-cyan-700 px-8"
+            >
+              Guardar Cambios
+            </Button>
+          </div>
+        </Card>
+
+        <Card title="Vista previa" className="shadow-sm">
+          <PreviewPlantillaImpresion plantilla={previewPlantilla} />
+        </Card>
+      </div>
     </div>
   );
 }
