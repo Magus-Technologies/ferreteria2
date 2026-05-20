@@ -16,9 +16,11 @@ export function InitStore({
   const setFiltros = useStoreFiltrosProductos((state) => state.setFiltros);
 
   useEffect(() => {
-    // Inicializar almacen predeterminado de forma asíncrona
     if (almacen_predeterminado) {
-      setTimeout(() => setAlmacenId(almacen_predeterminado), 100);
+      const stored = localStorage.getItem('almacen-storage')
+      if (!stored) {
+        setAlmacenId(almacen_predeterminado)
+      }
     }
 
     // Inicializar filtros solo con datos básicos, sin queries complejas

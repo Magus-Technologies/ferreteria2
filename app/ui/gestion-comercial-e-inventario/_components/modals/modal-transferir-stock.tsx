@@ -307,14 +307,6 @@ export default function ModalTransferirStock({
         throw new Error('Debe agregar al menos un producto')
       }
 
-      // Validar stocks
-      for (const p of productos) {
-        const cantFraccion = p.cantidad * p.factor
-        if (cantFraccion > p.stock_fraccion) {
-          throw new Error(`Stock insuficiente para ${p.producto_name}`)
-        }
-      }
-
       const payload = {
         almacen_origen_id: values.almacen_origen_id,
         almacen_destino_id: values.almacen_destino_id,

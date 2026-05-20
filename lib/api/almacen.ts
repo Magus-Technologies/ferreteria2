@@ -70,4 +70,29 @@ export const almacenesApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Estado de replicación de cada almacén destino respecto al origen.
+   * GET /api/almacenes/{id}/estado-replicacion
+   */
+  async estadoReplicacion(id: number): Promise<ApiResponse<{
+    total_origen: number
+    almacenes: { id: number; name: string; total_productos: number; replicado: boolean }[]
+  }>> {
+    return apiRequest(`/almacenes/${id}/estado-replicacion`)
+  },
+
+  /**
+   * Replica productos del almacén origen a los destinos indicados (o a todos si no se especifica).
+   * POST /api/almacenes/{id}/replicar-a-todos
+   */
+  async replicarProductos(id: number, almacenesDestino?: number[]): Promise<ApiResponse<{
+    message: string
+    data: { creados: number; ya_existian: number; almacenes_actualizados: number }
+  }>> {
+    return apiRequest(`/almacenes/${id}/replicar-a-todos`, {
+      method: 'POST',
+      body: JSON.stringify({ almacenes_destino: almacenesDestino ?? [] }),
+    })
+  },
 };
