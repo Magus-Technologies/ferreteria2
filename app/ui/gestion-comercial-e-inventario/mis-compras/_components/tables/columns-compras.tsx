@@ -9,7 +9,7 @@ import ColumnAction from '~/components/tables/column-action'
 import { permissions } from '~/lib/permissions'
 import usePermissionHook from '~/hooks/use-permission'
 import { Popconfirm, Tooltip } from 'antd'
-import { FaTruckLoading } from 'react-icons/fa'
+import { FaTruckLoading, FaFilePdf } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import TagEstadoDeCompra from '../others/tag-estado-de-compra'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -20,6 +20,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import useApp from 'antd/es/app/useApp'
 import { useState } from 'react'
 import ModalFinalizarRecepcion from '../modals/modal-finalizar-recepcion'
+import ModalDocCompra from '../modals/modal-doc-compra'
 
 // Helper para formatear moneda: Siempre en Soles por requerimiento del usuario
 const formatCurrencySoles = (value: number) => {
@@ -44,6 +45,8 @@ export function useColumnsCompras({
   
   const [modalFinalizarOpen, setModalFinalizarOpen] = useState(false)
   const [compraAFinalizar, setCompraAFinalizar] = useState<string | null>(null)
+  const [modalPdfOpen, setModalPdfOpen] = useState(false)
+  const [compraPdfSeleccionada, setCompraPdfSeleccionada] = useState<Compra | undefined>()
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { estado_de_compra: string } }) => {
@@ -465,98 +468,124 @@ export function useColumnsCompras({
       },
       filter: true,
     },
-    ...((setCompraRecepcion && setOpenModal
-      ? [
-          {
-            colId: 'acciones',
-            headerName: 'Acciones',
-            field: 'id',
-            width: 95,
-            cellRenderer: (
-              params: ICellRendererParams<Compra>
-            ) => {
-              return (
-                <ColumnAction
-                  titleDelete='Anular'
-                  id={params.value}
-                  permiso={permissions.COMPRAS_BASE}
-                  showDelete={params.data?.estado_de_compra !== 'an'}
-                  propsDelete={{
-                    disabled: params.data?.estado_de_compra === 'pr',
-                    disabledTooltip:
-                      'No se puede anular: la compra ya tiene productos recepcionados en almacén',
-                    action: async ({ id }: { id: string }) => {
-                      const result = await compraApi.delete(id)
-                      if (result.error) {
-                        throw new Error(result.error.message)
-                      }
-                      return { data: 'ok' }
-                    },
-                    msgSuccess: 'Compra anulada correctamente',
-                    queryKey: [QueryKeys.COMPRAS],
-                  }}
-                  onEdit={() =>
-                    router.push(
-                      `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${params.value}`
-                    )
-                  }
-                >
-                  {can(permissions.RECEPCION_ALMACEN_CREATE) && (
-                    <Tooltip
-                      title={
-                        params.data?.estado_de_compra === 'cr'
-                          ? 'Recepcionar en Almacén'
-                          : params.data?.estado_de_compra === 'pr'
-                          ? 'Recepcionada en Almacén'
-                          : 'No se puede Recepcionar'
-                      }
-                    >
-                      <FaTruckLoading
-                        onClick={() => {
-                          if (params.data?.estado_de_compra === 'cr') {
-                            setCompraRecepcion(params.data)
-                            setOpenModal(true)
-                          }
-                        }}
-                        size={15}
-                        className={`cursor-pointer ${
-                          params.data?.estado_de_compra === 'cr'
-                            ? 'text-cyan-600'
-                            : 'text-gray-500'
-                        } hover:scale-105 transition-all active:scale-95 min-w-fit`}
-                      />
-                    </Tooltip>
-                  )}
-                  {can(permissions.RECEPCION_ALMACEN_FINALIZAR) &&
-                    params.data?.estado_de_compra === 'cr' && (
-                      <Tooltip title='Finalizar Recepción (marca como finalizados los productos no recibidos)'>
-                        <FaFlag
-                          onClick={() => handleFinalizarClick(params.value)}
-                          className='cursor-pointer text-green-600 hover:scale-105 transition-all active:scale-95 min-w-fit'
-                          size={15}
-                        />
-                      </Tooltip>
-                    )}
-                </ColumnAction>
+    {
+      colId: 'acciones',
+      headerName: 'Acciones',
+      field: 'id',
+      width: 120,
+      cellRenderer: (
+        params: ICellRendererParams<Compra>
+      ) => {
+        const pdfIcon = (
+          <Tooltip title='Ver PDF de Compra'>
+            <FaFilePdf
+              onClick={() => {
+                setCompraPdfSeleccionada(params.data)
+                setModalPdfOpen(true)
+              }}
+              size={15}
+              className='cursor-pointer text-red-600 hover:scale-110 transition-all active:scale-95 min-w-fit'
+            />
+          </Tooltip>
+        )
+
+        // Si no hay handlers de recepción, mostramos solo el PDF
+        if (!setCompraRecepcion || !setOpenModal) {
+          return (
+            <div className='flex items-center gap-2 h-full'>
+              {pdfIcon}
+            </div>
+          )
+        }
+
+        return (
+          <ColumnAction
+            titleDelete='Anular'
+            id={params.value}
+            permiso={permissions.COMPRAS_BASE}
+            showDelete={params.data?.estado_de_compra !== 'an'}
+            propsDelete={{
+              disabled: params.data?.estado_de_compra === 'pr',
+              disabledTooltip:
+                'No se puede anular: la compra ya tiene productos recepcionados en almacén',
+              action: async ({ id }: { id: string }) => {
+                const result = await compraApi.delete(id)
+                if (result.error) {
+                  throw new Error(result.error.message)
+                }
+                return { data: 'ok' }
+              },
+              msgSuccess: 'Compra anulada correctamente',
+              queryKey: [QueryKeys.COMPRAS],
+            }}
+            onEdit={() =>
+              router.push(
+                `/ui/gestion-comercial-e-inventario/mis-compras/editar-compra/${params.value}`
               )
-            },
-          },
-        ]
-      : []) as ColDef<Compra>[]),
+            }
+          >
+            {pdfIcon}
+            {can(permissions.RECEPCION_ALMACEN_CREATE) && (
+              <Tooltip
+                title={
+                  params.data?.estado_de_compra === 'cr'
+                    ? 'Recepcionar en Almacén'
+                    : params.data?.estado_de_compra === 'pr'
+                    ? 'Recepcionada en Almacén'
+                    : 'No se puede Recepcionar'
+                }
+              >
+                <FaTruckLoading
+                  onClick={() => {
+                    if (params.data?.estado_de_compra === 'cr') {
+                      setCompraRecepcion(params.data)
+                      setOpenModal(true)
+                    }
+                  }}
+                  size={15}
+                  className={`cursor-pointer ${
+                    params.data?.estado_de_compra === 'cr'
+                      ? 'text-cyan-600'
+                      : 'text-gray-500'
+                  } hover:scale-105 transition-all active:scale-95 min-w-fit`}
+                />
+              </Tooltip>
+            )}
+            {can(permissions.RECEPCION_ALMACEN_FINALIZAR) &&
+              params.data?.estado_de_compra === 'cr' && (
+                <Tooltip title='Finalizar Recepción (marca como finalizados los productos no recibidos)'>
+                  <FaFlag
+                    onClick={() => handleFinalizarClick(params.value)}
+                    className='cursor-pointer text-green-600 hover:scale-105 transition-all active:scale-95 min-w-fit'
+                    size={15}
+                  />
+                </Tooltip>
+              )}
+          </ColumnAction>
+        )
+      },
+    },
   ]
   
   return {
     columns,
     modalElement: (
-      <ModalFinalizarRecepcion
-        open={modalFinalizarOpen}
-        onCancel={() => {
-          setModalFinalizarOpen(false)
-          setCompraAFinalizar(null)
-        }}
-        onConfirm={handleFinalizarConfirm}
-        loading={finalizarRecepcionMutation.isPending}
-      />
+      <>
+        <ModalFinalizarRecepcion
+          open={modalFinalizarOpen}
+          onCancel={() => {
+            setModalFinalizarOpen(false)
+            setCompraAFinalizar(null)
+          }}
+          onConfirm={handleFinalizarConfirm}
+          loading={finalizarRecepcionMutation.isPending}
+        />
+        <ModalDocCompra
+          open={modalPdfOpen}
+          setOpen={setModalPdfOpen}
+          compra={compraPdfSeleccionada}
+        />
+      </>
     )
   }
 }
