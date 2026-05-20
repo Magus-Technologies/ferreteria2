@@ -30,6 +30,7 @@ export interface EstiloBloque {
   alineacion: AlineacionBloque | null;
   cursiva: boolean | null;
   subrayado: boolean | null;
+  fuente: string | null;
 }
 
 export type BloqueKey =
@@ -87,6 +88,7 @@ export const BLOQUE_VACIO: EstiloBloque = {
   alineacion: null,
   cursiva: null,
   subrayado: null,
+  fuente: null,
 };
 
 export const BLOQUES_CATALOGO: Array<{ key: BloqueKey; label: string }> = [
@@ -149,6 +151,7 @@ export interface EstiloBloqueResuelto {
   alineacion: AlineacionBloque;
   cursiva: boolean;
   subrayado: boolean;
+  fuente: string;
 }
 
 export type BloquesResueltos = Record<BloqueKey, EstiloBloqueResuelto>;
@@ -204,7 +207,7 @@ export function defaultsBloque(
   e: EstilosResueltos
 ): EstiloBloqueResuelto {
   const t = e.color_texto;
-  const base = { cursiva: false, subrayado: false };
+  const base = { cursiva: false, subrayado: false, fuente: e.fuente };
 
   switch (key) {
     case "empresa_razon":
@@ -299,6 +302,7 @@ export function resolverEstiloBloque(
     alineacion: override?.alineacion || def.alineacion,
     cursiva: override?.cursiva ?? def.cursiva,
     subrayado: override?.subrayado ?? def.subrayado,
+    fuente: override?.fuente || def.fuente,
   };
 }
 
@@ -323,6 +327,7 @@ export function bloqueACSS(b: EstiloBloqueResuelto): CSSProperties {
     textAlign: b.alineacion,
     fontStyle: b.cursiva ? "italic" : "normal",
     textDecoration: b.subrayado ? "underline" : "none",
+    fontFamily: `"${b.fuente}", Arial, sans-serif`,
   };
 }
 
