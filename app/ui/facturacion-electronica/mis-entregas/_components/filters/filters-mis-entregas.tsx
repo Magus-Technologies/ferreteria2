@@ -286,17 +286,21 @@ export default function FiltersMisEntregas() {
                   if (!botonPrincipal || !entregaSeleccionada) return
                   const entregaOperativa =
                     getEntregaOperativa(entregaSeleccionada) || entregaSeleccionada
+                  const entregaParaModal =
+                    (entregaSeleccionada as any)?.__esParcialAgrupado
+                      ? entregaSeleccionada
+                      : entregaOperativa
 
                   if (
                     botonPrincipal.accion === 'marcar' ||
                     botonPrincipal.accion === 'parcial'
                   ) {
-                    openUpdateModal(entregaOperativa as any, false)
+                    openUpdateModal(entregaParaModal as any, false)
                     return
                   }
 
                   if (botonPrincipal.accion === 'restante') {
-                    openUpdateModal(entregaOperativa as any, true)
+                    openUpdateModal(entregaParaModal as any, true)
                     return
                   }
 

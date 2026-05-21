@@ -72,13 +72,19 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         (h: any) => h?.estado_entrega === 'en',
       )
     if (isGroupedParcial) {
-      openUpdateModal(entregaOperativa, true)
+      openUpdateModal(entrega, true)
     } else if (accionTrigger === 'parcial') {
-      openUpdateModal(entregaOperativa, false)
+      openUpdateModal(
+        (entrega as any)?.__esParcialAgrupado ? entrega : entregaOperativa,
+        false,
+      )
     }
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
     else if (accionTrigger === 'despachar') openUpdateModal(entregaOperativa, false)
-    else if (accionTrigger === 'restante') openUpdateModal(entregaOperativa, true)
+    else if (accionTrigger === 'restante') openUpdateModal(
+      (entrega as any)?.__esParcialAgrupado ? entrega : entregaOperativa,
+      true,
+    )
     triggerAccion(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accionTrigger])
