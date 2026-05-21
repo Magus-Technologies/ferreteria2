@@ -13,7 +13,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
-import { toUTCBD } from '~/utils/fechas'
+
 import ModalTransferirStock from '../_components/modals/modal-transferir-stock'
 
 const TableTransferenciasStock = lazy(
@@ -44,8 +44,8 @@ export default function MisTransferenciasPage() {
   const [openTransferir, setOpenTransferir] = useState(false)
   const [filters, setFilters] = useState<TransferenciasFilters>({
     almacen_id: almacenId || undefined,
-    desde: toUTCBD({ date: dayjs().startOf('day') }),
-    hasta: toUTCBD({ date: dayjs().endOf('day') }),
+    desde: dayjs().format('YYYY-MM-DD'),
+    hasta: dayjs().format('YYYY-MM-DD'),
   })
 
   return (
@@ -57,15 +57,15 @@ export default function MisTransferenciasPage() {
         name="filtros-mis-transferencias"
         initialValues={{
           almacen_id: almacenId,
-          desde: dayjs().startOf('day'),
+          desde: dayjs(),
           hasta: dayjs(),
         }}
         className="w-full"
         onFinish={(values: FilterValues) => {
           setFilters({
             almacen_id: values.almacen_id || undefined,
-            desde: values.desde ? toUTCBD({ date: values.desde.startOf('day') }) : undefined,
-            hasta: values.hasta ? toUTCBD({ date: values.hasta.endOf('day') }) : undefined,
+            desde: values.desde ? values.desde.format('YYYY-MM-DD') : undefined,
+            hasta: values.hasta ? values.hasta.format('YYYY-MM-DD') : undefined,
           })
         }}
       >
