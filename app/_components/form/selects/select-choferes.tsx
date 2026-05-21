@@ -89,7 +89,11 @@ export default function SelectChoferes({
 
       // Si hay form y propsForm.name, actualizar directamente
       if (form && propsForm?.name) {
-        form.setFieldValue(propsForm.name as string, chofer.id);
+        form.setFieldValue(propsForm.name as string, chofer.id)
+        // Auto-rellenar placa del vehículo si el chofer la tiene
+        if (chofer.placa) {
+          form.setFieldValue('vehiculo_placa', chofer.placa)
+        }
       } else {
         iterarChangeValue({
           refObject: selectChoferesRef,
@@ -171,10 +175,14 @@ export default function SelectChoferes({
         onRowDoubleClicked={handleSelect}
         onSuccess={chofer => {
           setChoferCreado(chofer)
-          
+
           // Si hay form y propsForm.name, actualizar directamente
           if (form && propsForm?.name) {
-            form.setFieldValue(propsForm.name as string, chofer.id);
+            form.setFieldValue(propsForm.name as string, chofer.id)
+            // Auto-rellenar placa del vehículo si el chofer la tiene
+            if (chofer.placa) {
+              form.setFieldValue('vehiculo_placa', chofer.placa)
+            }
           } else {
             // Fallback al método anterior
             iterarChangeValue({

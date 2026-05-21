@@ -36,6 +36,7 @@ export default function ModalCreateChofer({
         nombres: values.nombres,
         apellidos: values.apellidos,
         licencia: values.licencia,
+        placa: values.placa || null,
         telefono: values.telefono || null,
         email: values.email || null,
         direccion: values.direccion || null,

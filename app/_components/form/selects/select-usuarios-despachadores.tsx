@@ -13,6 +13,14 @@ interface UsuarioOption {
   name: string
   cargo: string | null
   email: string
+  licencia_conducir: string | null
+  vehiculo_id: number | null
+  vehiculo?: {
+    id: number
+    name: string
+    tipo: string
+    placa: string | null
+  } | null
 }
 
 interface SelectUsuariosDespachadoresProps extends Omit<SelectBaseProps, 'onChange'> {

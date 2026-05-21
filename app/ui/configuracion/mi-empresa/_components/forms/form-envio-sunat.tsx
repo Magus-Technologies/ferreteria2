@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Card,
     Switch,
@@ -12,6 +12,9 @@ import {
     InputNumber,
     Input,
     Divider,
+    Upload,
+    Tag,
+    Modal,
 } from "antd";
 import {
     SaveOutlined,
@@ -21,6 +24,10 @@ import {
     UserOutlined,
     LockOutlined,
     CloudOutlined,
+    UploadOutlined,
+    FileOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { configuracionApi, type AutoSendConfig } from "~/lib/api/configuracion";
@@ -28,9 +35,10 @@ import { empresaApi, type UpdateEmpresaRequest } from "~/lib/api/empresa";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { type ApiResponse } from "~/lib/api";
 import LabelBase from "~/components/form/label-base";
-import InputBase from "~/app/_components/form/inputs/input-base";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
+
+const API_SUNAT_URL = 'http://api-sunat-laravel.test/api/v1'
 
 interface FormEnvioSunatProps {
     empresaId: number;
@@ -48,6 +56,9 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
     const [sunatClientId, setSunatClientId] = useState("");
     const [sunatSecretClient, setSunatSecretClient] = useState("");
     const [sunatModo, setSunatModo] = useState("beta");
+    const [empresaRuc, setEmpresaRuc] = useState("");
+    const [certificadoNombre, setCertificadoNombre] = useState("");
+    const [certificadoStatus, setCertificadoStatus] = useState<'none' | 'ok' | 'error'>('none');
 
     const { isLoading: loadingEmpresa, data: empresaData } = useQuery({
         queryKey: [QueryKeys.EMPRESAS, empresaId],
@@ -76,6 +87,7 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
             setSunatClientId(e.sunat_client_id || "");
             setSunatSecretClient(e.sunat_secret_client || "");
             setSunatModo(e.sunat_modo || "beta");
+            setEmpresaRuc(e.ruc || "");
         }
     }, [empresaData]);
 
@@ -113,6 +125,35 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
         },
     });
 
+    const uploadCertificadoMutation = useMutation({
+        mutationFn: async (file: File) => {
+            if (!empresaRuc) throw new Error("No hay RUC de empresa");
+            const formData = new FormData()
+            formData.append('certificado', file)
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`${API_SUNAT_URL}/guardar/certificado/${empresaRuc}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData,
+            })
+            return res.json()
+        },
+        onSuccess: (res: any) => {
+            if (res.estado) {
+                message.success("Certificado guardado correctamente en API-SUNAT")
+                setCertificadoStatus('ok')
+                setCertificadoNombre('')
+            } else {
+                message.error(res.mensaje || "Error al guardar certificado")
+                setCertificadoStatus('error')
+            }
+        },
+        onError: (e: any) => {
+            message.error(e.message || "Error al subir certificado")
+            setCertificadoStatus('error')
+        },
+    })
+
     const handleSave = (type: 'factura' | 'boleta') => {
         const config = type === 'factura' ? facturaConfig : boletaConfig;
         updateMutation.mutate({ type, config });
@@ -127,6 +168,23 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
             sunat_modo: sunatModo as 'beta' | 'produccion',
         });
     };
+
+    const handleUploadCertificado = (file: File) => {
+        const isPem = file.name.endsWith('.pem')
+        if (!isPem) {
+            message.error('Solo se aceptan archivos .pem')
+            return false
+        }
+        const isLt2M = file.size / 1024 / 1024 < 2
+        if (!isLt2M) {
+            message.error('El archivo debe ser menor a 2MB')
+            return false
+        }
+        setCertificadoNombre(file.name)
+        setCertificadoStatus('none')
+        uploadCertificadoMutation.mutate(file)
+        return false
+    }
 
     const isLoading = loadingEmpresa || loadingConfig;
 
@@ -203,6 +261,42 @@ export default function FormEnvioSunat({ empresaId }: FormEnvioSunatProps) {
                                         : "Usa RUC y credenciales reales de la empresa"}
                                 </span>
                             </div>
+                        </LabelBase>
+                    </div>
+                    <div>
+                        <LabelBase label="Certificado .pem:" orientation="column">
+                            <div className="flex items-center gap-2">
+                                <Upload
+                                    accept=".pem"
+                                    beforeUpload={handleUploadCertificado}
+                                    showUploadList={false}
+                                    disabled={!empresaRuc}
+                                >
+                                    <Button icon={<UploadOutlined />} loading={uploadCertificadoMutation.isPending}>
+                                        {certificadoStatus === 'none' ? 'Subir archivo' : 'Cambiar archivo'}
+                                    </Button>
+                                </Upload>
+                                {certificadoNombre && (
+                                    <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                                        {certificadoNombre}
+                                    </span>
+                                )}
+                            </div>
+                            {certificadoStatus === 'ok' && (
+                                <Tag color="green" icon={<CheckCircleOutlined />} className="mt-1">
+                                    Guardado correctamente
+                                </Tag>
+                            )}
+                            {certificadoStatus === 'error' && (
+                                <Tag color="red" icon={<CloseCircleOutlined />} className="mt-1">
+                                    Error al guardar
+                                </Tag>
+                            )}
+                            {!empresaRuc && (
+                                <span className="text-xs text-gray-400 mt-1 block">
+                                    Necesitas guardar primero la empresa para subir el certificado
+                                </span>
+                            )}
                         </LabelBase>
                     </div>
                 </div>

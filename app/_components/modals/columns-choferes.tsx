@@ -67,6 +67,15 @@ export function useColumnsChoferes({
       filter: true,
     },
     {
+      colId: 'placa',
+      headerName: 'Placa',
+      field: 'placa',
+      width: 110,
+      minWidth: 110,
+      valueFormatter: (params) => params.value || '-',
+      filter: true,
+    },
+    {
       colId: 'telefono',
       headerName: 'Teléfono',
       field: 'telefono',

@@ -88,7 +88,7 @@
         "id": "series",
         "label": "Series",
         "icon": "FaFileInvoice",
-        "route": null,
+        "route": "/ui/configuracion/series",
         "permission": "configuracion.series.index"
       },
       {

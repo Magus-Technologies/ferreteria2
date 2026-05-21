@@ -28,6 +28,7 @@ export enum QueryKeys {
   PROFESIONES = 'profesiones',
   CHOFERES = 'choferes',
   VEHICULOS = 'vehiculos',
+  SERIES_DOCUMENTOS = 'series_documentos',
   VENTAS = 'ventas',
   VENTAS_EN_ESPERA = 'ventas_en_espera',
   ENTREGAS_PRODUCTOS = 'entregas_productos',

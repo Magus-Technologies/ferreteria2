@@ -1,7 +1,7 @@
 'use client'
 
 import { Tabs } from 'antd'
-import { FaTags, FaIndustry, FaMapMarkerAlt, FaRuler, FaCubes, FaExchangeAlt, FaTools, FaTruck, FaWarehouse, FaProjectDiagram } from 'react-icons/fa'
+import { FaTags, FaIndustry, FaMapMarkerAlt, FaRuler, FaCubes, FaExchangeAlt, FaTools, FaTruck, FaWarehouse, FaProjectDiagram, FaFileInvoice } from 'react-icons/fa'
 import TabCategorias from './tabs/tab-categorias'
 import TabMarcas from './tabs/tab-marcas'
 import TabUbicaciones from './tabs/tab-ubicaciones'
@@ -12,6 +12,7 @@ import TabTiposServicio from './tabs/tab-tipos-servicio'
 import TabAlmacenes from './tabs/tab-almacenes'
 import TabVehiculos from './tabs/tab-vehiculos'
 import TabOrganigramo from './tabs/tab-organigramo'
+import TabSeries from './tabs/tab-series'
 
 export default function TabsRegistros() {
   const items = [
@@ -55,17 +56,22 @@ export default function TabsRegistros() {
       label: <span className='flex items-center gap-2'><FaWarehouse size={14} /> Almacenes</span>,
       children: <TabAlmacenes />,
     },
-    {
-      key: 'vehiculos',
-      label: <span className='flex items-center gap-2'><FaTruck size={14} /> Vehículos</span>,
-      children: <TabVehiculos />,
-    },
-    {
-      key: 'organigramo',
-      label: <span className='flex items-center gap-2'><FaProjectDiagram size={14} /> Organigrama</span>,
-      children: <TabOrganigramo />,
-    },
-  ]
+{
+        key: 'vehiculos',
+        label: <span className='flex items-center gap-2'><FaTruck size={14} /> Vehículos</span>,
+        children: <TabVehiculos />,
+      },
+      {
+        key: 'organigramo',
+        label: <span className='flex items-center gap-2'><FaProjectDiagram size={14} /> Organigrama</span>,
+        children: <TabOrganigramo />,
+      },
+      {
+        key: 'series',
+        label: <span className='flex items-center gap-2'><FaFileInvoice size={14} /> Series</span>,
+        children: <TabSeries />,
+      },
+    ]
 
   return (
     <Tabs
