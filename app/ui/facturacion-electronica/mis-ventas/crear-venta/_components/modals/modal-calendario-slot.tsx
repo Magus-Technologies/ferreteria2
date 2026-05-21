@@ -231,7 +231,6 @@ export default function ModalCalendarioSlot({
                           <FaExclamationTriangle size={14} className="text-white" />
                         </div>
                         <div>
-                          <div className="text-orange-100 text-[10px] uppercase tracking-wider font-semibold">Mantenimiento</div>
                           <div className="font-bold text-sm text-white truncate leading-tight">
                             {mantenimientoDetalle.tipo || 'Mantenimiento'}
                           </div>
