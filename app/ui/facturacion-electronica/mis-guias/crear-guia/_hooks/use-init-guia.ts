@@ -195,6 +195,16 @@ export default function useInitGuia({
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
       const primerSlot = empresaSlots.find((s) => s.direccion)
 
+      // Resuelve la dirección de un almacén: prioriza el slot de empresa asignado
+      const resolveAlmacenAddress = (almacen: Almacen | undefined) => {
+        if (!almacen) return ''
+        if (almacen.empresa_dir_slot) {
+          const slot = empresaSlots.find((s) => s.tipo === almacen.empresa_dir_slot)
+          if (slot?.direccion?.direccion) return slot.direccion.direccion
+        }
+        return almacen.direccion || ''
+      }
+
       form.setFieldsValue({
         fecha_emision: dayjs(),
         fecha_traslado: dayjs(),
@@ -206,9 +216,9 @@ export default function useInitGuia({
         ...(motivo08 ? { motivo_traslado: motivo08.id } : {}),
         almacen_origen_id: transferenciaStore.almacen_origen_id,
         almacen_destino_id: transferenciaStore.almacen_destino_id,
-        punto_partida: almacenOrigen?.direccion || primerSlot?.direccion?.direccion || '',
-        empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
-        punto_llegada: almacenDestino?.direccion || '',
+        punto_partida: resolveAlmacenAddress(almacenOrigen) || primerSlot?.direccion?.direccion || '',
+        empresa_direccion_seleccionada: almacenOrigen?.empresa_dir_slot || primerSlot?.tipo || 'D1',
+        punto_llegada: resolveAlmacenAddress(almacenDestino),
         referencia: `TS${String(transferenciaStore.serie).padStart(4, '0')}-${String(transferenciaStore.numero).padStart(8, '0')}`,
         productos: transferenciaStore.productos.map((p) => ({
           producto_id: p.producto_almacen_origen?.producto?.id || 0,

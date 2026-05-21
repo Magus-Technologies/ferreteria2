@@ -17,7 +17,7 @@ import {
   getDireccionFromForm,
 } from '~/lib/utils/cliente-direcciones-form'
 import { TipoDireccion } from '~/lib/api/cliente'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 import SelectUsuariosDespachadores from '~/app/_components/form/selects/select-usuarios-despachadores'
@@ -26,6 +26,8 @@ import { useQuery } from '@tanstack/react-query'
 import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import type { Almacen } from '~/app/_types/almacen'
+import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
+import { buildSlotsDireccionEmpresa } from '~/lib/utils/empresa-direcciones-form'
 
 // Motivos SUNAT que requieren Comprador (distinto al destinatario)
 const MOTIVOS_CON_COMPRADOR = ['03', '14']
@@ -89,6 +91,26 @@ export default function FormCrearGuia({
     enabled: esEntreEstablecimientos,
   })
 
+  // Slots de dirección de empresa (para auto-fill de puntos de partida/llegada)
+  const { data: empresa } = useEmpresaPublica()
+  const empresaSlots = useMemo(
+    () => buildSlotsDireccionEmpresa(empresa?.direcciones),
+    [empresa?.direcciones],
+  )
+
+  // Resuelve la dirección de un almacén: prioriza el slot de empresa asignado
+  const resolveAlmacenAddress = useCallback(
+    (almacen: Almacen | undefined) => {
+      if (!almacen) return ''
+      if (almacen.empresa_dir_slot) {
+        const slot = empresaSlots.find((s) => s.tipo === almacen.empresa_dir_slot)
+        if (slot?.direccion?.direccion) return slot.direccion.direccion
+      }
+      return almacen.direccion || ''
+    },
+    [empresaSlots],
+  )
+
   // Inicializar D1 al montar el componente
   useEffect(() => {
     if (!form.getFieldValue('direccion_seleccionada')) {
@@ -120,17 +142,16 @@ export default function FormCrearGuia({
 
   const handleAlmacenOrigenChange = useCallback((value: number) => {
     const almacen = almacenes?.find((a: Almacen) => a.id === value)
-    form.setFieldValue('punto_partida', almacen?.direccion || '')
-    // Si el almacén tiene slot asignado, auto-seleccionar en empresa_direccion_seleccionada
+    form.setFieldValue('punto_partida', resolveAlmacenAddress(almacen))
     if (almacen?.empresa_dir_slot) {
       form.setFieldValue('empresa_direccion_seleccionada', almacen.empresa_dir_slot)
     }
-  }, [almacenes, form])
+  }, [almacenes, form, resolveAlmacenAddress])
 
   const handleAlmacenDestinoChange = useCallback((value: number) => {
     const almacen = almacenes?.find((a: Almacen) => a.id === value)
-    form.setFieldValue('punto_llegada', almacen?.direccion || '')
-  }, [almacenes, form])
+    form.setFieldValue('punto_llegada', resolveAlmacenAddress(almacen))
+  }, [almacenes, form, resolveAlmacenAddress])
 
   // Watch almacén origen para saber si tiene slot fijo → bloquear radio
   const almacenOrigenId = Form.useWatch('almacen_origen_id', form) as number | undefined
