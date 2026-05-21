@@ -121,12 +121,24 @@ export default function FormCrearGuia({
   const handleAlmacenOrigenChange = useCallback((value: number) => {
     const almacen = almacenes?.find((a: Almacen) => a.id === value)
     form.setFieldValue('punto_partida', almacen?.direccion || '')
+    // Si el almacén tiene slot asignado, auto-seleccionar en empresa_direccion_seleccionada
+    if (almacen?.empresa_dir_slot) {
+      form.setFieldValue('empresa_direccion_seleccionada', almacen.empresa_dir_slot)
+    }
   }, [almacenes, form])
 
   const handleAlmacenDestinoChange = useCallback((value: number) => {
     const almacen = almacenes?.find((a: Almacen) => a.id === value)
     form.setFieldValue('punto_llegada', almacen?.direccion || '')
   }, [almacenes, form])
+
+  // Watch almacén origen para saber si tiene slot fijo → bloquear radio
+  const almacenOrigenId = Form.useWatch('almacen_origen_id', form) as number | undefined
+  const almacenOrigenTieneSlot = !!(
+    esEntreEstablecimientos &&
+    almacenOrigenId &&
+    almacenes?.find((a: Almacen) => a.id === almacenOrigenId)?.empresa_dir_slot
+  )
 
   return (
     <div className='flex flex-col gap-2'>
@@ -593,7 +605,11 @@ export default function FormCrearGuia({
           label={
             <div className='flex items-center justify-between gap-2 w-full'>
               <span>Punto de Partida:</span>
-              <RadioDireccionEmpresa form={form} fieldName='punto_partida' />
+              <RadioDireccionEmpresa
+                form={form}
+                fieldName='punto_partida'
+                disabled={almacenOrigenTieneSlot}
+              />
             </div>
           }
           classNames={{ labelParent: 'mb-2' }}
