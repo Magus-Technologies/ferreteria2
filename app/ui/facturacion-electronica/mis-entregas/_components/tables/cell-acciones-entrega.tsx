@@ -62,18 +62,12 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     if (!accionTrigger || !entrega) return
     if (String(entregaId) !== String(selectedId)) return
     if (accionTrigger === 'marcar') openUpdateModal(entregaOperativa, false)
-    // Si es grouped parcial con already entrega 'en', treat as restante
-    // (open crear-entrega-resto so the switch starts ON). Otherwise open
-    // actualizando-incrementar (parcial mode on the pe child).
-    const isGroupedParcial =
-      accionTrigger === 'parcial' &&
-      (entregaOperativa as any)?.__esParcialAgrupado &&
-      (entregaOperativa as any)?.entregas_agrupadas?.some(
-        (h: any) => h?.estado_entrega === 'en',
-      )
-    if (isGroupedParcial) {
-      openUpdateModal(entrega, true)
-    } else if (accionTrigger === 'parcial') {
+    // Parcial agrupado con un tramo ya entregado y otro programado pendiente:
+    // esto NO es "entregar restante". El usuario está confirmando la entrega
+    // programada existente, así que debemos abrir `actualizar-entrega` sobre
+    // la fila agrupada para que `modal-entrega-update` resuelva la hija
+    // operativa pendiente y actualice ESA entrega en lugar de crear otra.
+    if (accionTrigger === 'parcial') {
       openUpdateModal(
         (entrega as any)?.__esParcialAgrupado ? entrega : entregaOperativa,
         false,

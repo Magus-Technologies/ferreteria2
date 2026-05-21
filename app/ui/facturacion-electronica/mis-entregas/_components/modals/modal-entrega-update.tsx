@@ -98,6 +98,14 @@ export default function ModalEntregaUpdate({
     return {
       ...entregaDetalle,
       ...entrega,
+      id: entregaDetalle?.id ?? entrega?.id,
+      grupo_entrega_id: entregaDetalle?.grupo_entrega_id ?? entrega?.grupo_entrega_id,
+      tipo_despacho: entregaDetalle?.tipo_despacho ?? entrega?.tipo_despacho,
+      estado_entrega: entregaDetalle?.estado_entrega ?? entrega?.estado_entrega,
+      quien_entrega: entregaDetalle?.quien_entrega ?? entrega?.quien_entrega,
+      almacen_salida_id:
+        entregaDetalle?.almacen_salida_id ?? entrega?.almacen_salida_id,
+      user_id: entregaDetalle?.user_id ?? entrega?.user_id,
       venta: {
         ...(entregaDetalle?.venta || {}),
         ...(entrega?.venta || {}),
