@@ -22,6 +22,12 @@ interface TablaProductosEntregaProps {
    * `mis-entregas`, donde solo existe el concepto de entregar ahora.
    */
   autoProgramarResto?: boolean
+  /**
+   * Cuando es true, la columna "Entregar" queda bloqueada y solo muestra
+   * la cantidad calculada por negocio. Usado en Recojo en Tienda pendiente
+   * desde `mis-entregas`, donde el valor correcto es el pendiente completo.
+   */
+  readonlyEntregar?: boolean
 }
 
 type EntregarCellProps = {
@@ -29,6 +35,7 @@ type EntregarCellProps = {
   initialValue: number
   max: number
   onCommit: (id: number, value: number | null) => void
+  disabled?: boolean
 }
 
 const EntregarCell = memo(function EntregarCell({
@@ -36,6 +43,7 @@ const EntregarCell = memo(function EntregarCell({
   initialValue,
   max,
   onCommit,
+  disabled = false,
 }: EntregarCellProps) {
   const [value, setValue] = useState<number | null>(initialValue)
 
@@ -51,6 +59,8 @@ const EntregarCell = memo(function EntregarCell({
         min={0}
         max={max}
         precision={2}
+        disabled={disabled}
+        readOnly={disabled}
         onChange={setValue}
         onBlur={() => onCommit(id, value)}
         onPressEnter={() => onCommit(id, value)}
@@ -65,6 +75,7 @@ export default function TablaProductosEntrega({
   onProductoChange,
   simple = false,
   autoProgramarResto = true,
+  readonlyEntregar = false,
 }: TablaProductosEntregaProps) {
   const mostrarRecibido = productos.some((p) => Number(p.recibido || 0) > 0)
   const mostrarProgramado = productos.some((p) => Number(p.programado || 0) > 0)
@@ -166,11 +177,12 @@ export default function TablaProductosEntrega({
             initialValue={params.data.entregar}
             max={params.data.pendiente}
             onCommit={handleEntregarChange}
+            disabled={readonlyEntregar}
           />
         )
       },
       cellStyle: {
-        backgroundColor: '#f0fdf4',
+        backgroundColor: readonlyEntregar ? '#f8fafc' : '#f0fdf4',
       },
     },
     ...(simple

@@ -85,6 +85,7 @@ export function SeccionParcial({
           onProductoChange={setProductosEntrega}
           simple={tablaSimple}
           autoProgramarResto={!soloEntregar}
+          readonlyEntregar={soloEntregar}
         />
       )}
 
