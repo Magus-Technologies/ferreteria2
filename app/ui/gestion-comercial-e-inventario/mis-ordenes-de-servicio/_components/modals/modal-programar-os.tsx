@@ -185,7 +185,7 @@ export function ModalProgramarOS({
           </div>
         </div>
       }
-      styles={{ body: { padding: '16px', height: '560px', overflow: 'auto' } }}
+      styles={{ body: { padding: '16px', height: '750px', overflow: 'auto' } }}
     >
       <Suspense
         fallback={
@@ -290,7 +290,7 @@ export function ModalProgramarOS({
               {/* Calendario - Bloqueado inicialmente o si hay mantenimiento */}
               <div className="mt-3">
                 <p className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wider">Calendario de Disponibilidad</p>
-                <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-96">
+                <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-[650px]">
                   {calendarioDesbloqueado && (
                     <CalendarProgramacionEntregas
                       onSelectSlot={handleSelectSlot}

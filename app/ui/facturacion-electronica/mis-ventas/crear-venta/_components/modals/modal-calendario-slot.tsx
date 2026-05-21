@@ -246,7 +246,7 @@ export default function ModalCalendarioSlot({
           </div>
         </div>
       }
-      styles={{ body: { padding: '16px', height: '560px', overflow: 'auto' } }}
+      styles={{ body: { padding: '16px', height: '750px', overflow: 'auto' } }}
       >
       <Suspense
         fallback={
@@ -270,7 +270,7 @@ export default function ModalCalendarioSlot({
           )}
           {tieneVehiculo ? (
             <>
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-96">
+              <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-[650px]">
                 <CalendarProgramacionEntregas
                   onSelectSlot={handleSelectSlot}
                   onSelectEvent={setEventoSeleccionado}
