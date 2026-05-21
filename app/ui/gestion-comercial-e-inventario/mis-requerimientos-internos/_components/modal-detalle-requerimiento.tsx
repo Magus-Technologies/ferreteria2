@@ -50,39 +50,39 @@ export default function ModalDetalleRequerimiento({
   const [docPdfLoading, setDocPdfLoading] = useState(false)
   const [escalationModalOpen, setEscalationModalOpen] = useState(false)
   const [selectedCargo, setSelectedCargo] = useState<number | null>(null)
-  const [cargosDisponibles, setCargosDisponibles] = useState<{ label: string; value: number }[]>([])
+  const [parentCargoInfo, setParentCargoInfo] = useState<{ id: number; descripcion: string } | null>(null)
   const [escalationLoading, setEscalationLoading] = useState(false)
   const [approvalLoading, setApprovalLoading] = useState(false)
 
-  // Cargar cargos disponibles para escalación
+  // Cargar cargo padre del requerimiento para escalación
   useEffect(() => {
     if (escalationModalOpen && requerimiento) {
-      loadCargosParaEscalacion()
+      loadParentCargoForEscalation()
     }
   }, [escalationModalOpen, requerimiento])
 
-  const loadCargosParaEscalacion = async () => {
+  const loadParentCargoForEscalation = async () => {
     try {
       const result = await cargosHierarchyApi.getAllCargos()
       const allCargos = result.data?.data || []
       
-      // Encontrar el cargo del usuario para obtener su parent
-      const userCargoObj = allCargos.find((c) => c.codigo === user?.cargo)
-      const userParent = userCargoObj?.parent || null
+      // Encontrar el cargo del REQUERIMIENTO (no del usuario)
+      const reqCargoObj = allCargos.find((c) => c.descripcion?.toLowerCase() === requerimiento?.cargo?.toLowerCase())
+      const parentCode = reqCargoObj?.parent || null
 
-      let filteredCargos = allCargos
-
-      // Si el usuario tiene padre, mostrar SOLO el cargo padre (un nivel arriba)
-      if (userParent) {
-        const parentCargoObj = allCargos.find((c) => c.codigo === userParent)
-        filteredCargos = parentCargoObj ? [parentCargoObj] : []
+      if (parentCode) {
+        // Buscar el cargo padre por código
+        const parentCargoObj = allCargos.find((c) => c.codigo === parentCode)
+        if (parentCargoObj) {
+          setParentCargoInfo({
+            id: parentCargoObj.id,
+            descripcion: parentCargoObj.descripcion
+          })
+          setSelectedCargo(parentCargoObj.id)
+        }
       }
-
-      setCargosDisponibles(
-        filteredCargos.map(c => ({ label: c.descripcion, value: c.id }))
-      )
     } catch (error) {
-      message.error('Error al cargar cargos disponibles')
+      message.error('Error al cargar cargo superior')
       console.error(error)
     }
   }
@@ -483,12 +483,13 @@ export default function ModalDetalleRequerimiento({
         onCancel={() => {
           setEscalationModalOpen(false)
           setSelectedCargo(null)
+          setParentCargoInfo(null)
         }}
         title="Escalar Requerimiento"
         centered
         width={500}
         footer={[
-          <Button key="cancel" onClick={() => { setEscalationModalOpen(false); setSelectedCargo(null) }}>
+          <Button key="cancel" onClick={() => { setEscalationModalOpen(false); setSelectedCargo(null); setParentCargoInfo(null) }}>
             Cancelar
           </Button>,
           <Button
@@ -496,7 +497,7 @@ export default function ModalDetalleRequerimiento({
             type="primary"
             loading={escalationLoading}
             onClick={handleEscalar}
-            disabled={!selectedCargo}
+            disabled={!selectedCargo || !parentCargoInfo}
             className={classOkButtonModal}
           >
             Escalar
@@ -506,26 +507,37 @@ export default function ModalDetalleRequerimiento({
         <div className="space-y-4">
           <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
             <p className="text-sm text-amber-800">
-              <strong>⚠️ Nota:</strong> Al escalar este requerimiento, se enviará al cargo superior para su revisión y aprobación.
+              <strong>⚠️ Nota:</strong> Este requerimiento será escalado al cargo superior en la jerarquía para su revisión y aprobación.
             </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Seleccionar Cargo Superior <span className="text-red-500">*</span>
-            </label>
-            <SelectBase
-              placeholder="Selecciona un cargo..."
-              value={selectedCargo}
-              onChange={(value) => setSelectedCargo(value)}
-              options={cargosDisponibles}
-              className="w-full"
-            />
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Cargo Actual</label>
+              <div className="text-sm font-semibold text-slate-700">{requerimiento?.cargo || '—'}</div>
+            </div>
+
+            <div className="flex items-center justify-center py-2">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                ↑
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Escalado a</label>
+              {parentCargoInfo ? (
+                <div className="text-sm font-bold text-emerald-600 bg-emerald-50 p-3 rounded border border-emerald-200">
+                  {parentCargoInfo.descripcion}
+                </div>
+              ) : (
+                <div className="text-sm text-slate-400 italic">No hay cargo superior disponible</div>
+              )}
+            </div>
           </div>
 
-          {selectedCargo && (
+          {parentCargoInfo && (
             <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-sm text-emerald-800">
-              ✓ El requerimiento será escalado al cargo seleccionado
+              ✓ El requerimiento será enviado a <strong>{parentCargoInfo.descripcion}</strong> para su aprobación
             </div>
           )}
         </div>

@@ -2,7 +2,6 @@
 
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import { Spin, App, Tag, Modal, Button, Tooltip } from 'antd'
-import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
@@ -12,9 +11,11 @@ import { getAuthToken } from '~/lib/api'
 import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
 import { type RequerimientoInterno, type RequerimientoInternoServicio, requerimientoInternoApi } from '~/lib/api/requerimiento-interno'
+import { useAuth } from '~/lib/auth-context'
 import { useStoreFiltrosMisOS } from './_store/store-filtros-mis-os'
 import { useColumnsMisOS } from './_components/tables/columns-mis-os'
 import ModalRequerimientoInterno from '../_components/modals/modal-requerimiento-interno'
+import ModalEscalarSuperior from './_components/modals/modal-escalar-superior'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -33,6 +34,7 @@ export default function MisOrdenesDeServicio() {
   const { modal, message } = App.useApp()
   const queryClient = useQueryClient()
   const filtros = useStoreFiltrosMisOS(state => state.filtros)
+  const { user } = useAuth()
 
   const [seleccionado, setSeleccionado] = useState<RequerimientoInterno | null>(null)
   const [filaSeleccionada, setFilaSeleccionada] = useState<RequerimientoInterno | null>(null)
@@ -41,6 +43,10 @@ export default function MisOrdenesDeServicio() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
   const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
   const [docPdfLoading, setDocPdfLoading] = useState(false)
+  const [modalEscalarOpen, setModalEscalarOpen] = useState(false)
+
+  // Obtener el cargo del usuario actual desde el contexto de autenticación
+  const userCargo = user?.cargo || undefined
 
   const handleView = useCallback((row: RequerimientoInterno) => {
     setSeleccionado(row)
@@ -78,18 +84,30 @@ export default function MisOrdenesDeServicio() {
       cancelText: 'Cancelar',
       async onOk() {
         try {
-          await requerimientoInternoApi.updateEstado(row.id, { estado: 'aprobado' })
+          await requerimientoInternoApi.aprobar(row.id)
           message.success(`${row.codigo} aprobado correctamente`)
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
-        } catch (error) {
-          message.error('Error al aprobar la orden de servicio')
+        } catch (error: any) {
+          const errorMsg = error?.response?.data?.message || 'Error al aprobar la orden de servicio'
+          message.error(errorMsg)
           console.error(error)
         }
       },
     })
   }, [modal, message, queryClient])
 
-  const columns = useColumnsMisOS({ onView: handleView, onViewPdf: handleViewPdf, onAprobar: handleAprobar })
+  const handleEscalar = useCallback((row: RequerimientoInterno) => {
+    setSeleccionado(row)
+    setModalEscalarOpen(true)
+  }, [])
+
+  const columns = useColumnsMisOS({
+    onView: handleView,
+    onViewPdf: handleViewPdf,
+    onAprobar: handleAprobar,
+    onEscalar: handleEscalar,
+    userCargo,
+  })
 
   const servicioRowData = useMemo(() => {
     if (!filaSeleccionada?.servicios) return []
@@ -258,6 +276,15 @@ export default function MisOrdenesDeServicio() {
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
         }}
         defaultTipoSolicitud="OS"
+      />
+
+      <ModalEscalarSuperior
+        open={modalEscalarOpen}
+        requerimiento={seleccionado}
+        onClose={() => {
+          setModalEscalarOpen(false)
+          setSeleccionado(null)
+        }}
       />
 
       <Modal

@@ -248,4 +248,24 @@ export const requerimientoInternoApi = {
             body: JSON.stringify(data),
         });
     },
+
+    /**
+     * Escalar requerimiento al cargo superior jerárquico
+     */
+    escalarASuperior: async (id: number, data?: { reason?: string }): Promise<ApiResponse<RequerimientoResponse>> => {
+        return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/escalar-superior`, {
+            method: 'POST',
+            body: JSON.stringify(data || {}),
+        });
+    },
+
+    /**
+     * Rechazar requerimiento
+     */
+    rechazar: async (id: number, data: { reason: string }): Promise<ApiResponse<RequerimientoResponse>> => {
+        return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/rechazar`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
 };

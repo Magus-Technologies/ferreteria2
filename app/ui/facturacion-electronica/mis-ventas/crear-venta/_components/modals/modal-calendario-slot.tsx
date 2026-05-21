@@ -222,7 +222,7 @@ export default function ModalCalendarioSlot({
               {/* Popup de Mantenimiento - Interactivo como Entrega Programada */}
               {mantenimientoDetalle && (
                 <div 
-                  className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden"
+                  className="fixed top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden"
                 >
                   <div className="bg-gradient-to-r from-orange-500 via-red-500 to-rose-600 px-4 py-3.5">
                     <div className="flex items-center justify-between gap-3">
