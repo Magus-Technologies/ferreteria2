@@ -47,8 +47,8 @@ export default function MisOrdenesDeServicio() {
   const [modalEscalarOpen, setModalEscalarOpen] = useState(false)
   const [modalProgramarOSOpen, setModalProgramarOSOpen] = useState(false)
 
-  // Obtener el cargo del usuario actual desde el contexto de autenticación
-  const userCargo = user?.cargo || undefined
+  // Obtener el cargo_id del usuario actual desde el contexto de autenticación
+  const userCargoId = user?.cargo_id || undefined
 
   const handleView = useCallback((row: RequerimientoInterno) => {
     setSeleccionado(row)
@@ -89,13 +89,6 @@ export default function MisOrdenesDeServicio() {
           await requerimientoInternoApi.aprobar(row.id)
           message.success(`${row.codigo} aprobado correctamente`)
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
-          
-          // Recargar el requerimiento con la información actualizada
-          const response = await requerimientoInternoApi.getById(row.id)
-          if (response.data?.data) {
-            setSeleccionado(response.data.data)
-            setModalProgramarOSOpen(true)
-          }
         } catch (error: any) {
           const errorMsg = error?.response?.data?.message || 'Error al aprobar la orden de servicio'
           message.error(errorMsg)
@@ -115,7 +108,7 @@ export default function MisOrdenesDeServicio() {
     onViewPdf: handleViewPdf,
     onAprobar: handleAprobar,
     onEscalar: handleEscalar,
-    userCargo,
+    userCargoId,
   })
 
   const servicioRowData = useMemo(() => {
@@ -367,7 +360,7 @@ export default function MisOrdenesDeServicio() {
 
       <Suspense fallback={null}>
         <ModalProgramarOS
-          open={modalProgramarOSOpen}
+          open={modalProgramarOSOpen && seleccionado?.approval_state !== 'aprobado'}
           requerimiento={seleccionado}
           onClose={() => {
             setModalProgramarOSOpen(false)

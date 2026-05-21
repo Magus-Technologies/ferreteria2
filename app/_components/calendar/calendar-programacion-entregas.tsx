@@ -40,15 +40,33 @@ interface CustomToolbarProps {
   onNavigate: (action: 'PREV' | 'NEXT' | 'TODAY') => void
   onView: (view: View) => void
   view: View
+  date: Date
+  disabledRanges?: DisabledRange[]
 }
 
-function CustomToolbar({ label, onNavigate, onView, view }: CustomToolbarProps) {
+function CustomToolbar({ label, onNavigate, onView, view, date, disabledRanges }: CustomToolbarProps) {
   const viewOptions = [
     { value: 'day', label: 'Día' },
     { value: 'week', label: 'Semana' },
     { value: 'month', label: 'Mes' },
     { value: 'agenda', label: 'Agenda' },
   ]
+
+  // Check if PREV button should be disabled
+  const isPrevDisabled = useMemo(() => {
+    if (!disabledRanges || disabledRanges.length === 0) return false
+
+    // Calculate the date that would be shown if we click PREV
+    const prevDate = dayjs(date).subtract(1, 'day').startOf('day')
+
+    // Check if prevDate falls within any disabled range
+    return disabledRanges.some((range) => {
+      const disabledStart = dayjs(range.start).startOf('day')
+      const disabledEnd = dayjs(range.end).endOf('day')
+      return (prevDate.isAfter(disabledStart) || prevDate.isSame(disabledStart)) &&
+             (prevDate.isBefore(disabledEnd) || prevDate.isSame(disabledEnd))
+    })
+  }, [date, disabledRanges])
 
   return (
     <div className="flex items-center justify-between gap-3 mb-3 px-1">
@@ -62,7 +80,13 @@ function CustomToolbar({ label, onNavigate, onView, view }: CustomToolbarProps) 
         </button>
         <button
           onClick={() => onNavigate('PREV')}
-          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+          disabled={isPrevDisabled}
+          className={`p-1.5 rounded-lg border transition-colors ${
+            isPrevDisabled
+              ? 'border-slate-100 text-slate-300 cursor-not-allowed bg-slate-50'
+              : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+          }`}
+          title={isPrevDisabled ? 'No puedes retroceder a una fecha en mantenimiento' : ''}
         >
           <FaChevronLeft size={12} />
         </button>
@@ -508,7 +532,13 @@ export default function CalendarProgramacionEntregas({
         max={maxTime}
         components={{
           event: EventEntrega,
-          toolbar: CustomToolbar as any,
+          toolbar: (props: any) => (
+            <CustomToolbar
+              {...props}
+              date={date}
+              disabledRanges={disabledRanges}
+            />
+          ),
         }}
         eventPropGetter={(event: EntregaEvent) => ({
           style: {
