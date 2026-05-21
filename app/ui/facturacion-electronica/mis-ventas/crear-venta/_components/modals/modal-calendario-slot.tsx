@@ -219,7 +219,7 @@ export default function ModalCalendarioSlot({
                 vehiculo_id={vehiculo_id}
                 soloSeleccion
               />
-              {/* Popup de Mantenimiento - Posicionado donde se hizo clic */}
+              {/* Popup de Mantenimiento - Interactivo como Entrega Programada */}
               {mantenimientoDetalle && (
                 <div 
                   className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden"
@@ -231,6 +231,7 @@ export default function ModalCalendarioSlot({
                           <FaExclamationTriangle size={14} className="text-white" />
                         </div>
                         <div>
+                          <div className="text-orange-100 text-[10px] uppercase tracking-wider font-semibold">Programar horario de mantenimiento</div>
                           <div className="font-bold text-sm text-white truncate leading-tight">
                             {mantenimientoDetalle.tipo || 'Mantenimiento'}
                           </div>
@@ -247,31 +248,37 @@ export default function ModalCalendarioSlot({
                   </div>
 
                   <div className="p-4 space-y-3.5 text-sm bg-gradient-to-b from-slate-50 to-white">
-                    {/* Fechas de Mantenimiento */}
+                    {/* Fecha y Horario Seleccionado */}
                     <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
                       <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-5 h-5 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FaCalendarAlt size={10} className="text-orange-600" />
+                        <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FaCalendarAlt size={10} className="text-amber-600" />
                         </div>
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Período de Mantenimiento</span>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Fecha y Horario</span>
                       </div>
-                      <div className="text-slate-800 font-semibold text-sm pl-7 leading-tight">
-                        {dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('D [de] MMMM [de] YYYY')}
+                      <div className="text-slate-800 font-semibold text-sm capitalize pl-7 leading-tight">
+                        {slotPendiente ? dayjs(slotPendiente.start).format('dddd D [de] MMMM') : dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('dddd D [de] MMMM')}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1.5 pl-7">
                         <div className="px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-lg">
-                          <span className="text-orange-700 font-bold text-xs">{dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('HH:mm')}</span>
+                          <span className="text-orange-700 font-bold text-xs">
+                            {slotPendiente ? dayjs(slotPendiente.start).format('HH:mm') : dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('HH:mm')}
+                          </span>
                         </div>
                         <span className="text-slate-400 text-xs">—</span>
                         <div className="px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-lg">
-                          <span className="text-orange-700 font-bold text-xs">{dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').format('HH:mm')}</span>
+                          <span className="text-orange-700 font-bold text-xs">
+                            {slotPendiente ? dayjs(slotPendiente.end).format('HH:mm') : dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').format('HH:mm')}
+                          </span>
                         </div>
                       </div>
-                      {dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD') !== dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD') && (
-                        <div className="text-xs text-slate-500 mt-2 pl-7">
-                          Hasta: {dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').format('D [de] MMMM [de] YYYY')}
-                        </div>
-                      )}
+                    </div>
+
+                    {/* Instrucción */}
+                    <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+                      <p className="text-xs text-orange-700 leading-snug">
+                        Arrastra para ajustar el horario, luego haz clic en Aplicar.
+                      </p>
                     </div>
 
                     {/* Descripción del Mantenimiento */}
