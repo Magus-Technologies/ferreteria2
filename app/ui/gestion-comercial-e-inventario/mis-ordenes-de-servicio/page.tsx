@@ -23,6 +23,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 const FiltersMisOS = lazy(() => import('./_components/filters/filters-mis-os'))
 const TableMisOS = lazy(() => import('./_components/tables/table-mis-os'))
 const ModalDetalleRequerimiento = lazy(() => import('../mis-requerimientos-internos/_components/modal-detalle-requerimiento'))
+const ModalProgramarOS = lazy(() => import('./_components/modals/modal-programar-os').then(mod => ({ default: mod.ModalProgramarOS })))
 
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
@@ -44,6 +45,7 @@ export default function MisOrdenesDeServicio() {
   const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
   const [docPdfLoading, setDocPdfLoading] = useState(false)
   const [modalEscalarOpen, setModalEscalarOpen] = useState(false)
+  const [modalProgramarOSOpen, setModalProgramarOSOpen] = useState(false)
 
   // Obtener el cargo del usuario actual desde el contexto de autenticación
   const userCargo = user?.cargo || undefined
@@ -87,6 +89,13 @@ export default function MisOrdenesDeServicio() {
           await requerimientoInternoApi.aprobar(row.id)
           message.success(`${row.codigo} aprobado correctamente`)
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
+          
+          // Recargar el requerimiento con la información actualizada
+          const response = await requerimientoInternoApi.getById(row.id)
+          if (response.data?.data) {
+            setSeleccionado(response.data.data)
+            setModalProgramarOSOpen(true)
+          }
         } catch (error: any) {
           const errorMsg = error?.response?.data?.message || 'Error al aprobar la orden de servicio'
           message.error(errorMsg)
@@ -355,6 +364,31 @@ export default function MisOrdenesDeServicio() {
           <div className="flex justify-center py-12 text-slate-400">No se pudo cargar el PDF</div>
         )}
       </Modal>
+
+      <Suspense fallback={null}>
+        <ModalProgramarOS
+          open={modalProgramarOSOpen}
+          requerimiento={seleccionado}
+          onClose={() => {
+            setModalProgramarOSOpen(false)
+            setSeleccionado(null)
+          }}
+          onAplicar={async (fechaInicio: string) => {
+            try {
+              if (!seleccionado) return
+              // Aquí iría la lógica para actualizar la fecha de la OS
+              message.success('Fecha programada correctamente')
+              queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
+              setModalProgramarOSOpen(false)
+              setSeleccionado(null)
+            } catch (error: any) {
+              const errorMsg = error?.response?.data?.message || 'Error al programar la orden de servicio'
+              message.error(errorMsg)
+              console.error(error)
+            }
+          }}
+        />
+      </Suspense>
     </ContenedorGeneral>
   )
 }

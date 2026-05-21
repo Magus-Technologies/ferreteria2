@@ -53,6 +53,7 @@ export interface RequerimientoInterno {
     duracion_cantidad: number | null;
     duracion_unidad: string | null;
     vehiculo_id?: number | null;
+    vehiculo?: { id: number; name: string; tipo?: string | null; placa?: string | null } | null;
     afecta_calendario?: boolean | number | null;
     proveedor_sugerido_id: number | null;
     user_id: string;

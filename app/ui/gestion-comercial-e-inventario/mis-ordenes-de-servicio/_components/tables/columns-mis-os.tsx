@@ -152,7 +152,7 @@ export function useColumnsMisOS({
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
         // Verificar si el usuario tiene autoridad para aprobar (comparar en minúsculas)
         const canApprove = userCargo && data?.cargo?.toLowerCase() === userCargo.toLowerCase()
-        const isApprovalPending = !data?.approval_state || data?.approval_state === 'en_revision'
+        const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
 
         return (
           <div className="flex items-center gap-3 h-full">
@@ -183,10 +183,14 @@ export function useColumnsMisOS({
                     size={16}
                   />
                 </Tooltip>
-                <Tooltip title="Escalar a superior">
+                <Tooltip title={canApprove ? 'Escalar a superior' : 'No tienes autoridad para escalar'}>
                   <FaArrowUp
-                    onClick={() => data && onEscalar?.(data)}
-                    className="cursor-pointer hover:scale-110 transition-all text-orange-600"
+                    onClick={() => canApprove && data && onEscalar?.(data)}
+                    className={`transition-all ${
+                      canApprove
+                        ? 'cursor-pointer hover:scale-110 text-orange-600'
+                        : 'cursor-not-allowed text-gray-300'
+                    }`}
                     size={16}
                   />
                 </Tooltip>
