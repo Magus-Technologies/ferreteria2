@@ -110,7 +110,9 @@ export const transferenciaStockApi = {
   },
 
   async getById(id: number): Promise<ApiResponse<TransferenciaStock>> {
-    return apiRequest<TransferenciaStock>(`/transferencias-stock/${id}`)
+    const res = await apiRequest<{ data: TransferenciaStock }>(`/transferencias-stock/${id}`)
+    if (res.error) return { error: res.error }
+    return { data: res.data?.data }
   },
 
   async anular(id: number): Promise<ApiResponse<any>> {
