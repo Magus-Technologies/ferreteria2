@@ -1,17 +1,21 @@
 "use client";
 
-import { Form, App, Button } from "antd";
+import { Form, App, Button, Select } from "antd";
 import { useEffect, useState, useMemo } from "react";
-import { FaIdCard, FaBuilding, FaPhone, FaMapMarkerAlt, FaEnvelope } from "react-icons/fa";
+import { FaIdCard, FaBuilding, FaPhone, FaMapMarkerAlt, FaEnvelope, FaWarehouse } from "react-icons/fa";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import LabelBase from "~/components/form/label-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectBase from "~/app/_components/form/selects/select-base";
 import SelectUbigeo from "../select-ubigeo";
 import { empresaApi, UpdateEmpresaRequest, type DireccionEmpresa } from "~/lib/api/empresa";
+import { almacenesApi } from "~/lib/api/almacen";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { consultaReniec } from "~/app/_actions/consulta-reniec";
 import { ConsultaRuc } from "~/app/_types/consulta-ruc";
+import type { Almacen } from "~/app/_types/almacen";
+
+type SlotKey = 'D1' | 'D2' | 'D3' | 'D4';
 
 interface FormInformacionBasicaProps {
   empresaId: number;
@@ -34,6 +38,28 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
   }), [departamentoValue, provinciaValue, distritoValue]);
 
   const [adicionalesUbigeo, setAdicionalesUbigeo] = useState<Record<number, { departamento?: string; provincia?: string; distrito?: string }>>({});
+  // slot → almacen_id asignado
+  const [slotsAlmacen, setSlotsAlmacen] = useState<Record<SlotKey, number | null>>({ D1: null, D2: null, D3: null, D4: null });
+
+  const { data: almacenes = [] } = useQuery<Almacen[]>({
+    queryKey: [QueryKeys.ALMACENES],
+    queryFn: async () => {
+      const res = await almacenesApi.getAll();
+      return res.data?.data || [];
+    },
+  });
+
+  // Inicializar slots desde los almacenes cuando cargan
+  useEffect(() => {
+    if (!almacenes.length) return;
+    const slots: Record<SlotKey, number | null> = { D1: null, D2: null, D3: null, D4: null };
+    almacenes.forEach((a) => {
+      if (a.empresa_dir_slot) slots[a.empresa_dir_slot as SlotKey] = a.id;
+    });
+    setSlotsAlmacen(slots);
+  }, [almacenes]);
+
+  const almacenOptions = almacenes.map((a) => ({ value: a.id, label: a.name }));
 
   const { data: empresaData, isLoading } = useQuery({
     queryKey: [QueryKeys.EMPRESAS, empresaId],
@@ -142,6 +168,29 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
     }
 
     updateMutation.mutate({ ...values, direcciones: direcciones.length > 0 ? direcciones : undefined });
+
+    // Guardar slots de almacén: actualizar cada almacén con su nuevo slot
+    const slotPorAlmacen: Record<number, SlotKey | null> = {};
+    // primero marcar todos los almacenes sin slot
+    almacenes.forEach((a) => { slotPorAlmacen[a.id] = null; });
+    // luego asignar los slots configurados
+    (Object.entries(slotsAlmacen) as [SlotKey, number | null][]).forEach(([slot, almacenId]) => {
+      if (almacenId) slotPorAlmacen[almacenId] = slot;
+    });
+    // solo actualizar los que cambiaron
+    const promises = almacenes
+      .filter((a) => (a.empresa_dir_slot ?? null) !== slotPorAlmacen[a.id])
+      .map((a) =>
+        almacenesApi.update(a.id, {
+          name: a.name,
+          direccion: a.direccion,
+          empresa_dir_slot: slotPorAlmacen[a.id],
+        })
+      );
+    if (promises.length) {
+      await Promise.all(promises);
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ALMACENES] });
+    }
   };
 
   const loading = updateMutation.isPending || isLoading || consultando;
@@ -237,6 +286,19 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
               />
             </LabelBase>
           </div>
+          <div>
+            <LabelBase label="Almacén de esta dirección:" orientation="column">
+              <Select
+                value={slotsAlmacen.D1}
+                onChange={(val) => setSlotsAlmacen((prev) => ({ ...prev, D1: val ?? null }))}
+                options={[{ value: null, label: 'Sin asignar' }, ...almacenOptions]}
+                placeholder="Seleccionar almacén..."
+                className="w-full"
+                allowClear
+                suffixIcon={<FaWarehouse className="text-green-600" />}
+              />
+            </LabelBase>
+          </div>
         </div>
       </div>
 
@@ -246,31 +308,47 @@ export default function FormInformacionBasica({ empresaId }: FormInformacionBasi
       <Form.Item name="ubigeo_id" hidden><InputBase /></Form.Item>
 
       {/* Direcciones Adicionales */}
-      {direccionesAdicionales.map(({ index, title, aliasPlaceholder }) => (
-        <div key={index} className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-md font-semibold mb-3 text-gray-700">{title}</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div>
-              <LabelBase label="Alias:" orientation="column">
-                <InputBase propsForm={{ name: `alias_${index}` }} placeholder={aliasPlaceholder} />
-              </LabelBase>
-            </div>
-            <div className="lg:col-span-2">
-              <LabelBase label="Dirección:" orientation="column">
-                <InputBase propsForm={{ name: `direccion_${index}` }} placeholder="Ingrese la dirección" prefix={<FaMapMarkerAlt size={14} className="text-blue-600 mx-1" />} />
-              </LabelBase>
-            </div>
-            <div>
-              <LabelBase label="Ubicación:" orientation="column">
-                <SelectUbigeo
-                  value={adicionalesUbigeo[index]}
-                  onChange={(value) => handleUbigeoAdicional(index, value)}
-                />
-              </LabelBase>
+      {direccionesAdicionales.map(({ index, title, aliasPlaceholder }) => {
+        const slot = (['D2', 'D3', 'D4'] as SlotKey[])[index];
+        return (
+          <div key={index} className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-md font-semibold mb-3 text-gray-700">{title}</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              <div>
+                <LabelBase label="Alias:" orientation="column">
+                  <InputBase propsForm={{ name: `alias_${index}` }} placeholder={aliasPlaceholder} />
+                </LabelBase>
+              </div>
+              <div className="lg:col-span-2">
+                <LabelBase label="Dirección:" orientation="column">
+                  <InputBase propsForm={{ name: `direccion_${index}` }} placeholder="Ingrese la dirección" prefix={<FaMapMarkerAlt size={14} className="text-blue-600 mx-1" />} />
+                </LabelBase>
+              </div>
+              <div>
+                <LabelBase label="Ubicación:" orientation="column">
+                  <SelectUbigeo
+                    value={adicionalesUbigeo[index]}
+                    onChange={(value) => handleUbigeoAdicional(index, value)}
+                  />
+                </LabelBase>
+              </div>
+              <div>
+                <LabelBase label="Almacén de esta dirección:" orientation="column">
+                  <Select
+                    value={slotsAlmacen[slot]}
+                    onChange={(val) => setSlotsAlmacen((prev) => ({ ...prev, [slot]: val ?? null }))}
+                    options={[{ value: null, label: 'Sin asignar' }, ...almacenOptions]}
+                    placeholder="Seleccionar almacén..."
+                    className="w-full"
+                    allowClear
+                    suffixIcon={<FaWarehouse className="text-green-600" />}
+                  />
+                </LabelBase>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Fila: Correo, Régimen, Actividad Económica */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

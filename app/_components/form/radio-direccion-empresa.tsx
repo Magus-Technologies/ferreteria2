@@ -12,12 +12,15 @@ interface RadioDireccionEmpresaProps {
   form: FormInstance
   fieldName?: string
   selectionFieldName?: string
+  /** Cuando true, el radio queda bloqueado (el almacén tiene slot fijo) */
+  disabled?: boolean
 }
 
 export default function RadioDireccionEmpresa({
   form,
   fieldName = 'punto_partida',
   selectionFieldName = 'empresa_direccion_seleccionada',
+  disabled = false,
 }: RadioDireccionEmpresaProps) {
   const { data: empresa } = useEmpresaPublica()
   const seleccionActual = Form.useWatch(selectionFieldName, form) as
@@ -35,8 +38,9 @@ export default function RadioDireccionEmpresa({
   return (
     <Radio.Group
       value={seleccionActual ?? TIPOS_DIRECCION_EMPRESA[0]}
-      onChange={(e) => cambiarDireccion(e.target.value as TipoDireccionEmpresa)}
+      onChange={(e) => !disabled && cambiarDireccion(e.target.value as TipoDireccionEmpresa)}
       className="whitespace-nowrap flex items-center h-8"
+      disabled={disabled}
     >
       {slots.map((slot) => (
         <Radio key={slot.tipo} value={slot.tipo}>

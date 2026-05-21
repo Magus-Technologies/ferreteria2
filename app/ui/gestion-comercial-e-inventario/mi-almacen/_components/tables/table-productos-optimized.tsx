@@ -55,6 +55,7 @@ function TableProductosOptimized() {
     data: productos,
     loading,
     loadingMore,
+    isFetching,
     total,
     loaded,
     hasMore,
@@ -155,7 +156,7 @@ function TableProductosOptimized() {
         title="Productos"
         schema={ProductoCreateInputSchema}
         headersRequired={["Ubicación en Almacén"]}
-        loading={loading}
+        loading={loading || (isFetching && !loadingMore)}
         columnDefs={columns}
         rowData={productos}
         // CRÍTICO: getRowId permite que AG Grid mantenga el estado de filtros

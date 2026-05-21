@@ -19,6 +19,7 @@ import type {
 import type { ProductoEntrega } from '../../../mis-ventas/_hooks/use-productos-entrega'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ButtonBase from '~/components/buttons/button-base'
+import { getEntregaOperativa } from '../../_lib/entregas-parciales'
 
 const normalizarClaveProducto = (codigo: string, unidad: string) =>
   `${codigo}`.trim().toLowerCase() + '|' + `${unidad}`.trim().toLowerCase()
@@ -73,17 +74,63 @@ export default function ModalEntregaUpdate({
   const [modalMapaEntregaOpen, setModalMapaEntregaOpen] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
 
+  const entregaOperativa = useMemo(
+    () => getEntregaOperativa(entrega) || entrega,
+    [entrega],
+  )
+  const entregaIdDetalle = Number(
+    (entrega as any)?.__esParcialAgrupado
+      ? (entregaOperativa as any)?.id
+      : entrega?.id,
+  )
+
   const { data: entregaDetalleResp } = useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-restante', entrega?.id],
-    queryFn: () => entregaProductoApi.getById(entrega.id),
-    enabled: open && !!entrega?.id,
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-restante', entregaIdDetalle],
+    queryFn: () => entregaProductoApi.getById(entregaIdDetalle),
+    enabled: open && Number.isFinite(entregaIdDetalle) && entregaIdDetalle > 0,
     staleTime: 0,
   })
   const entregaDetalle = (entregaDetalleResp?.data?.data ?? entregaDetalleResp?.data) as any
-  const entregaFuente = entregaDetalle || entrega
+  const entregaFuente = useMemo(() => {
+    if (!entregaDetalle) return entrega
+    if (!(entrega as any)?.__esParcialAgrupado) return entregaDetalle
+
+    return {
+      ...entregaDetalle,
+      ...entrega,
+      venta: {
+        ...(entregaDetalle?.venta || {}),
+        ...(entrega?.venta || {}),
+        entregas_productos:
+          entregaDetalle?.venta?.entregas_productos ||
+          entrega?.venta?.entregas_productos ||
+          [],
+      },
+      productos_entregados:
+        entrega?.productos_entregados?.length > 0
+          ? entrega.productos_entregados
+          : entregaDetalle?.productos_entregados || [],
+      entregas_agrupadas:
+        entrega?.entregas_agrupadas || entregaDetalle?.entregas_agrupadas || [],
+      chofer_id: entrega?.chofer_id ?? entregaDetalle?.chofer_id,
+      despachador: entrega?.despachador ?? entregaDetalle?.despachador,
+      vehiculo_id: entrega?.vehiculo_id ?? entregaDetalle?.vehiculo_id,
+      vehiculo: entrega?.vehiculo ?? entregaDetalle?.vehiculo,
+      fecha_programada: entrega?.fecha_programada ?? entregaDetalle?.fecha_programada,
+      hora_inicio: entrega?.hora_inicio ?? entregaDetalle?.hora_inicio,
+      hora_fin: entrega?.hora_fin ?? entregaDetalle?.hora_fin,
+      direccion_entrega: entrega?.direccion_entrega ?? entregaDetalle?.direccion_entrega,
+      referencia_entrega: entrega?.referencia_entrega ?? entregaDetalle?.referencia_entrega,
+      latitud: entrega?.latitud ?? entregaDetalle?.latitud,
+      longitud: entrega?.longitud ?? entregaDetalle?.longitud,
+      observaciones: entrega?.observaciones ?? entregaDetalle?.observaciones,
+      tipo_pedido: entrega?.tipo_pedido ?? entregaDetalle?.tipo_pedido,
+      cargo_destino: entrega?.cargo_destino ?? entregaDetalle?.cargo_destino,
+    }
+  }, [entrega, entregaDetalle])
   const requiereHidratacionCompletaParcial = Boolean(
     open &&
-      entrega?.id &&
+      entregaIdDetalle &&
       !entregaDetalle &&
       (entrega?.tipo_entrega === 'pa' ||
         entrega?.venta?.tipo_despacho === 'pa' ||
@@ -95,11 +142,13 @@ export default function ModalEntregaUpdate({
   // restante (la entrega origen ya está cerrada), solo se cambia local —
   // el restante puede tener un tipo distinto al de la entrega origen.
   const tipoInicialUI: TipoDespachoUI = useMemo(() => {
-    const t = entrega?.tipo_entrega as 'rt' | 'de' | 'pa' | undefined
+    const t = entregaFuente?.tipo_entrega as 'rt' | 'de' | 'pa' | undefined
     if (t === 'de') return 'Domicilio'
     if (t === 'rt') return 'EnTienda'
     return 'Parcial'
-  }, [entrega?.tipo_entrega])
+  }, [entregaFuente?.tipo_entrega])
+  const direccionSeleccionadaVenta =
+    entregaFuente?.venta?.direccion_seleccionada || 'D1'
   const [tipoLocal, setTipoLocal] = useState<TipoDespachoUI>(tipoInicialUI)
   // Re-sincronizar solo cuando cambia el tipo real de la entrega (valor primitivo).
   // Antes dependía de `tipoInicialUI` que a su vez dependía del objeto `entrega`
@@ -107,7 +156,7 @@ export default function ModalEntregaUpdate({
   // innecesariamente, causando un re-render que cerraba el modal.
   useEffect(() => {
     setTipoLocal(tipoInicialUI)
-  }, [entrega?.id, entrega?.tipo_entrega])
+  }, [tipoInicialUI])
 
   const handleSelectTipoDespacho = async (
     tipo: 'EnTienda' | 'Domicilio' | 'Parcial',
@@ -136,9 +185,12 @@ export default function ModalEntregaUpdate({
     }
 
     try {
-      const response = await entregaProductoApi.update(entrega.id, {
+      const response = await entregaProductoApi.update(
+        Number(entregaOperativa?.id || entregaFuente?.id),
+        {
         tipo_entrega: nuevoTipo,
-      })
+        },
+      )
       if (response.error) {
         message.error(response.error.message || 'Error al cambiar tipo de entrega')
         return
@@ -171,7 +223,7 @@ export default function ModalEntregaUpdate({
   // el `resetFields()` se dispara repetidamente — borra los campos
   // `_resto_*` que ya pobló el modal de detalles (referencia, lat/lng, etc).
   useEffect(() => {
-    if (!open || !entrega) return
+    if (!open || !entregaFuente) return
     if (restante) {
       // En restante heredamos los datos de despacho de la entrega origen
       // (chofer, vehículo, fecha/hora, tipo_pedido) — la nueva entrega
@@ -182,39 +234,55 @@ export default function ModalEntregaUpdate({
       // los datos pre-cargados.
       form.resetFields()
       const heredados: Record<string, any> = {
-        direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
+        direccion_seleccionada: direccionSeleccionadaVenta,
       }
-      if (entrega.tipo_pedido) {
-        heredados.tipo_pedido = entrega.tipo_pedido
-        heredados._resto_tipo_pedido = entrega.tipo_pedido
+      if (entregaFuente.tipo_pedido) {
+        heredados.tipo_pedido = entregaFuente.tipo_pedido
+        heredados._resto_tipo_pedido = entregaFuente.tipo_pedido
       }
-      if (entrega.cargo_destino) {
-        heredados.cargo_destino = entrega.cargo_destino
-        heredados._resto_cargo_destino = entrega.cargo_destino
+      if (entregaFuente.cargo_destino) {
+        heredados.cargo_destino = entregaFuente.cargo_destino
+        heredados._resto_cargo_destino = entregaFuente.cargo_destino
       }
       form.setFieldsValue(heredados)
       return
     }
     form.setFieldsValue({
-      quien_entrega: entrega.quien_entrega || 'almacen',
-      observaciones: entrega.observaciones || '',
-      despachador_id: entrega.chofer_id || undefined,
-      tipo_pedido: entrega.tipo_pedido || 'interno',
-      cargo_destino: entrega.cargo_destino || undefined,
-      fecha_programada: entrega.fecha_programada
-        ? dayjs(entrega.fecha_programada).format('YYYY-MM-DD')
+      quien_entrega: entregaFuente.quien_entrega || 'almacen',
+      observaciones: entregaFuente.observaciones || '',
+      despachador_id: entregaFuente.chofer_id || undefined,
+      _resto_despachador_id: entregaFuente.chofer_id || undefined,
+      tipo_pedido: entregaFuente.tipo_pedido || 'interno',
+      _resto_tipo_pedido: entregaFuente.tipo_pedido || 'interno',
+      cargo_destino: entregaFuente.cargo_destino || undefined,
+      _resto_cargo_destino: entregaFuente.cargo_destino || undefined,
+      fecha_programada: entregaFuente.fecha_programada
+        ? dayjs(entregaFuente.fecha_programada).format('YYYY-MM-DD')
         : undefined,
-      hora_inicio: entrega.hora_inicio || undefined,
-      hora_fin: entrega.hora_fin || undefined,
-      direccion_entrega: entrega.direccion_entrega || '',
-      referencia_entrega: entrega.referencia_entrega || '',
-      latitud: entrega.latitud != null ? Number(entrega.latitud) : undefined,
-      longitud: entrega.longitud != null ? Number(entrega.longitud) : undefined,
-      vehiculo_id: entrega.vehiculo_id || undefined,
-      direccion_seleccionada: entrega.venta?.direccion_seleccionada || 'D1',
+      _resto_fecha_programada: entregaFuente.fecha_programada
+        ? dayjs(entregaFuente.fecha_programada).format('YYYY-MM-DD')
+        : undefined,
+      hora_inicio: entregaFuente.hora_inicio || undefined,
+      hora_fin: entregaFuente.hora_fin || undefined,
+      _resto_hora_inicio: entregaFuente.hora_inicio || undefined,
+      _resto_hora_fin: entregaFuente.hora_fin || undefined,
+      direccion_entrega: entregaFuente.direccion_entrega || '',
+      referencia_entrega: entregaFuente.referencia_entrega || '',
+      _resto_direccion_entrega: entregaFuente.direccion_entrega || '',
+      _resto_referencia_entrega: entregaFuente.referencia_entrega || '',
+      latitud:
+        entregaFuente.latitud != null ? Number(entregaFuente.latitud) : undefined,
+      longitud:
+        entregaFuente.longitud != null ? Number(entregaFuente.longitud) : undefined,
+      _resto_latitud:
+        entregaFuente.latitud != null ? Number(entregaFuente.latitud) : undefined,
+      _resto_longitud:
+        entregaFuente.longitud != null ? Number(entregaFuente.longitud) : undefined,
+      vehiculo_id: entregaFuente.vehiculo_id || undefined,
+      _resto_vehiculo_id: entregaFuente.vehiculo_id || undefined,
+      direccion_seleccionada: direccionSeleccionadaVenta,
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, entrega?.id, restante, form])
+  }, [open, entregaFuente, restante, form, direccionSeleccionadaVenta])
 
   // Pre-cargar campos `_resto_*` con la dirección del cliente en modo restante.
   //
@@ -224,18 +292,22 @@ export default function ModalEntregaUpdate({
   // el switch — los inputs `_resto_*` recién aparecen al activarlo, así que
   // cuando el componente TextareaBase se monta lee el valor ya seteado en
   // el form. Resuelve el bug donde la "Referencia" salía vacía.
-  const clienteIdDirecciones = entrega?.venta?.cliente_id ?? entrega?.venta?.cliente?.id
+  const clienteIdDirecciones =
+    entregaFuente?.venta?.cliente_id ?? entregaFuente?.venta?.cliente?.id
   const { data: direccionesResp } = useQuery({
     queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
     queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
     enabled: !!clienteIdDirecciones && open,
   })
-  const direccionesCliente = (direccionesResp?.data?.data as any[]) || []
+  const direccionesCliente = useMemo(
+    () => (direccionesResp?.data?.data as any[]) || [],
+    [direccionesResp],
+  )
 
   useEffect(() => {
     if (!open || !restante || direccionesCliente.length === 0) return
     const tipo = (form.getFieldValue('direccion_seleccionada') ||
-      entrega?.venta?.direccion_seleccionada ||
+      direccionSeleccionadaVenta ||
       'D1') as string
     const dir = direccionesCliente.find((d: any) => d.tipo === tipo) ||
       direccionesCliente[0]
@@ -246,7 +318,7 @@ export default function ModalEntregaUpdate({
       form.setFieldValue('_resto_latitud', Number(dir.latitud))
       form.setFieldValue('_resto_longitud', Number(dir.longitud))
     }
-  }, [open, restante, direccionesCliente, entrega?.id, form])
+  }, [open, restante, direccionesCliente, entregaFuente?.id, form, direccionSeleccionadaVenta])
 
   useEffect(() => {
     if (!open || restante || direccionesCliente.length === 0) return
@@ -258,7 +330,7 @@ export default function ModalEntregaUpdate({
     if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords) return
 
     const tipo = (form.getFieldValue('direccion_seleccionada') ||
-      entrega?.venta?.direccion_seleccionada ||
+      direccionSeleccionadaVenta ||
       'D1') as string
     const dir = direccionesCliente.find((d: any) => d.tipo === tipo) || direccionesCliente[0]
     if (!dir) return
@@ -273,7 +345,7 @@ export default function ModalEntregaUpdate({
       form.setFieldValue('latitud', Number(dir.latitud))
       form.setFieldValue('longitud', Number(dir.longitud))
     }
-  }, [open, restante, direccionesCliente, entrega?.id, form])
+  }, [open, restante, direccionesCliente, entregaFuente?.id, form, direccionSeleccionadaVenta])
 
   // Productos pre-cargados desde la entrega para llenar la tabla.
   // Shape del backend (snake_case):
@@ -772,15 +844,18 @@ export default function ModalEntregaUpdate({
   const mode = restante
     ? ({
         kind: 'crear-entrega-resto' as const,
-        ventaId: entrega.venta_id,
+        ventaId: entregaFuente.venta_id,
         entregaOrigen: {
-          entrega_id: entrega.id,
-          almacen_salida_id: entrega.almacen_salida_id,
-          grupo_entrega_id: entrega.grupo_entrega_id,
-          user_id: entrega.user_id,
+          entrega_id: Number(entregaOperativa?.id || entregaFuente.id),
+          almacen_salida_id: entregaFuente.almacen_salida_id,
+          grupo_entrega_id: entregaFuente.grupo_entrega_id,
+          user_id: entregaFuente.user_id,
         },
       } as const)
-    : ({ kind: 'actualizar-entrega' as const, entregaId: entrega.id } as const)
+    : ({
+        kind: 'actualizar-entrega' as const,
+        entregaId: Number(entregaOperativa?.id || entregaFuente.id),
+      } as const)
 
   if (requiereHidratacionCompletaParcial) {
     return (

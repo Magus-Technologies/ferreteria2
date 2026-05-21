@@ -101,6 +101,7 @@ function ModalDetallesEntregaInner({
     setUbicacionGpsResto,
     setMostrarMapaResto,
     vehiculoPreseleccionadoResto,
+    setVehiculoPreseleccionadoResto,
     // Parcial
     productosEntrega, setProductosEntrega,
     // Slots + calendario
@@ -202,19 +203,52 @@ function ModalDetallesEntregaInner({
   useEffect(() => {
     if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
     if (direcciones.length === 0) return
+    const restoDireccionGuardada = form.getFieldValue('_resto_direccion_entrega')
+    const restoReferenciaGuardada = form.getFieldValue('_resto_referencia_entrega')
+    const restoLatitudGuardada = form.getFieldValue('_resto_latitud')
+    const restoLongitudGuardada = form.getFieldValue('_resto_longitud')
+    const restoTieneCoords =
+      restoLatitudGuardada != null && restoLongitudGuardada != null
+
     // Guard "no sobrescribir si ya hay valores guardados en la entrega"
     // En `crear-entrega-resto` y `actualizar-entrega` los valores ya fueron
     // pre-cargados desde la entrega existente. En `crear-venta` normal, el
     // guard permite que el usuario edite manualmente antes de confirmar.
-    if (
-      resolvedMode.kind !== 'crear-entrega-resto' &&
-      form.getFieldValue('_resto_direccion_entrega')
-    ) return
+    if (resolvedMode.kind !== 'crear-venta' && restoDireccionGuardada) {
+      const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
+      const direccionObj =
+        direcciones.find((d) => d.direccion === restoDireccionGuardada) ||
+        direcciones.find((d) => d.tipo === direccionSeleccionadaForm) ||
+        direcciones[0]
+
+      if (direccionObj) {
+        setDireccionSeleccionadaResto(direccionObj.tipo as TipoDireccion)
+      }
+
+      if (restoReferenciaGuardada != null) {
+        form.setFieldValue('_resto_referencia_entrega', restoReferenciaGuardada)
+      }
+
+      if (restoTieneCoords) {
+        const coords = {
+          lat: Number(restoLatitudGuardada),
+          lng: Number(restoLongitudGuardada),
+        }
+        setCoordenadasResto(coords)
+        setMostrarMapaResto(true)
+        obtenerUbicacionGpsResto(coords.lat, coords.lng)
+      } else {
+        setCoordenadasResto(null)
+        setMostrarMapaResto(false)
+        setUbicacionGpsResto('')
+      }
+      return
+    }
     // Si estamos en modo update/resto y ya tenemos valores guardados (referencia,
     // lat/lng), no sobrescribir con datos del cliente (que podrían haber cambiado)
     if (
       resolvedMode.kind === 'crear-entrega-resto' &&
-      (form.getFieldValue('_resto_direccion_entrega') || form.getFieldValue('_resto_referencia_entrega'))
+      (restoDireccionGuardada || restoReferenciaGuardada)
     ) return
 
     const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
@@ -580,6 +614,57 @@ function ModalDetallesEntregaInner({
     resolvedMode.kind,
     resolvedMode.kind === 'actualizar-entrega' ? resolvedMode.entregaId : null,
     vehiculoPreseleccionadoDomicilio?.id,
+  ])
+
+  // Inicializar slotResto desde los campos `_resto_*` cuando el parcial ya
+  // viene programado desde mis-entregas. Sin esto, la UI muestra el switch
+  // activo pero pierde despachador/vehículo/horario aunque existan en BD.
+  useEffect(() => {
+    if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
+    const fecha = form.getFieldValue('_resto_fecha_programada')
+    const horaInicio = form.getFieldValue('_resto_hora_inicio') || form.getFieldValue('hora_inicio')
+    const horaFin = form.getFieldValue('_resto_hora_fin') || form.getFieldValue('hora_fin')
+
+    if (fecha && horaInicio && horaFin) {
+      const fechaStr = dayjs(fecha).format('YYYY-MM-DD')
+      const startDate = dayjs(`${fechaStr} ${horaInicio}`, 'YYYY-MM-DD HH:mm').toDate()
+      const endDate = dayjs(`${fechaStr} ${horaFin}`, 'YYYY-MM-DD HH:mm').toDate()
+      setSlotResto({ start: startDate, end: endDate })
+    }
+  }, [open, tipoDespacho, programarResto, form, setSlotResto])
+
+  // Inicializar vehículo preseleccionado del resto desde `_resto_vehiculo_id`.
+  useEffect(() => {
+    if (!open || tipoDespacho !== 'Parcial' || !programarResto) return
+
+    const timer = setTimeout(() => {
+      const vehiculoIdValue = form.getFieldValue('_resto_vehiculo_id')
+      if (
+        vehiculoIdValue &&
+        String(vehiculoPreseleccionadoResto?.id ?? '') !== String(vehiculoIdValue)
+      ) {
+        vehiculosApi.getById(vehiculoIdValue).then((response) => {
+          const vehiculoData = (response.data as any)?.data ?? response.data
+          if (vehiculoData) {
+            setVehiculoPreseleccionadoResto({
+              id: vehiculoData.id,
+              name: vehiculoData.name,
+              tipo: vehiculoData.tipo,
+              placa: vehiculoData.placa || null,
+            })
+          }
+        }).catch(console.error)
+      }
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [
+    open,
+    tipoDespacho,
+    programarResto,
+    form,
+    setVehiculoPreseleccionadoResto,
+    vehiculoPreseleccionadoResto?.id,
   ])
 
   // `ubicacionGps` (dirección obtenida por reverse geocoding) vive ahora en
