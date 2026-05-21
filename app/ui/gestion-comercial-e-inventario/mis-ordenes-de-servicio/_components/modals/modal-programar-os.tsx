@@ -36,6 +36,11 @@ interface MantenimientoDetalle {
   } | null
 }
 
+interface DisabledRange {
+  start: Date
+  end: Date
+}
+
 interface ModalProgramarOSProps {
   open: boolean
   onClose: () => void
@@ -54,17 +59,48 @@ export function ModalProgramarOS({
   const [razonNoDisponible, setRazonNoDisponible] = useState('')
   const [mantenimientoDetalle, setMantenimientoDetalle] = useState<MantenimientoDetalle | null>(null)
   const [calendarioDesbloqueado, setCalendarioDesbloqueado] = useState(false)
+  const [disabledRanges, setDisabledRanges] = useState<DisabledRange[]>([])
+  const [cargandoMantenimientos, setCargandoMantenimientos] = useState(false)
 
   const vehiculoId = requerimiento?.vehiculo_id
   const tieneVehiculo = !!vehiculoId
 
-  // Desbloquear calendario cuando el modal se abre
+  // Cargar mantenimientos cuando el modal se abre
   useEffect(() => {
     if (open && tieneVehiculo) {
+      setCargandoMantenimientos(true)
+      const cargarMantenimientos = async () => {
+        try {
+          const response = await apiRequest<{
+            data: Array<{
+              tipo: string
+              start: string
+              end: string
+              meta: any
+            }>
+          }>(`/vehiculos/${vehiculoId}/disponibilidad?fecha_desde=${dayjs().format('YYYY-MM-DD')}&fecha_hasta=${dayjs().add(30, 'days').format('YYYY-MM-DD')}`)
+
+          if (response.data?.data) {
+            const ranges = response.data.data
+              .filter((item: any) => item.tipo === 'mantenimiento')
+              .map((item: any) => ({
+                start: new Date(item.start),
+                end: new Date(item.end),
+              }))
+            setDisabledRanges(ranges)
+          }
+        } catch (error) {
+          console.error('Error cargando mantenimientos:', error)
+        } finally {
+          setCargandoMantenimientos(false)
+        }
+      }
+
+      cargarMantenimientos()
       setCalendarioDesbloqueado(false)
       setSlotPendiente(null)
     }
-  }, [open, tieneVehiculo])
+  }, [open, tieneVehiculo, vehiculoId])
 
   // Re-bloquear calendario cuando se detecta mantenimiento
   useEffect(() => {
@@ -291,7 +327,11 @@ export function ModalProgramarOS({
               <div className="mt-3">
                 <p className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wider">Calendario de Disponibilidad</p>
                 <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-[650px]">
-                  {calendarioDesbloqueado && (
+                  {cargandoMantenimientos ? (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/95">
+                      <Spin size="large" />
+                    </div>
+                  ) : calendarioDesbloqueado ? (
                     <CalendarProgramacionEntregas
                       onSelectSlot={handleSelectSlot}
                       onSelectEvent={() => {}}
@@ -299,9 +339,9 @@ export function ModalProgramarOS({
                       onSlotOpen={() => {}}
                       vehiculo_id={vehiculoId}
                       soloSeleccion
+                      disabledRanges={disabledRanges}
                     />
-                  )}
-                  {!calendarioDesbloqueado && (
+                  ) : (
                     <div 
                       onClick={() => setCalendarioDesbloqueado(true)}
                       className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-lg cursor-pointer"
