@@ -41,7 +41,7 @@ export interface RequerimientoInterno {
     titulo: string;
     cargo: string;
     assigned_cargo_id?: number | null;
-    approval_state?: 'en_revision' | 'aprobado' | 'rechazado' | null;
+    approval_state?: 'pendiente' | 'en_revision' | 'aprobado' | 'rechazado' | null;
     approved_by?: string | null;
     approved_at?: string | null;
     fecha_requerida: string;
