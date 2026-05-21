@@ -65,7 +65,66 @@ export default function ModalCalendarioSlot({
   const [vehiculoNoDisponible, setVehiculoNoDisponible] = useState(false)
   const [razonNoDisponible, setRazonNoDisponible] = useState('')
   const [mantenimientoDetalle, setMantenimientoDetalle] = useState<MantenimientoDetalle | null>(null)
+  const [calendarioDesbloqueado, setCalendarioDesbloqueado] = useState(false)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date())
   const tieneVehiculo = !!vehiculo_id
+
+  // Desbloquear calendario cuando el modal se abre
+  useEffect(() => {
+    if (open && tieneVehiculo) {
+      setCalendarioDesbloqueado(false)
+      setSlotPendiente(null)
+      setMantenimientoDetalle(null)
+      setVehiculoNoDisponible(false)
+      setRazonNoDisponible('')
+      setSelectedCalendarDate(new Date())
+    }
+  }, [open, tieneVehiculo])
+
+  // Verificar si el vehículo ya está en mantenimiento al abrir el modal
+  useEffect(() => {
+    if (!open || !tieneVehiculo || slotPendiente) {
+      return
+    }
+
+    const verificarMantenimientoInicial = async () => {
+      try {
+        const fecha = dayjs().format('YYYY-MM-DD')
+        const response = await apiRequest<{ disponible: boolean; razon?: string; mantenimiento?: MantenimientoDetalle }>(
+          `/vehiculos/${vehiculo_id}/disponibilidad?fecha=${fecha}`
+        )
+
+        if (!response.data?.disponible) {
+          setVehiculoNoDisponible(true)
+          setRazonNoDisponible(response.data?.razon || 'El vehículo no está disponible en esta fecha')
+          if (response.data?.mantenimiento) {
+            setMantenimientoDetalle(response.data.mantenimiento)
+          }
+        } else {
+          setVehiculoNoDisponible(false)
+          setRazonNoDisponible('')
+          setMantenimientoDetalle(null)
+        }
+      } catch (error) {
+        console.error('Error verificando disponibilidad inicial:', error)
+      }
+    }
+
+    verificarMantenimientoInicial()
+  }, [open, tieneVehiculo, vehiculo_id, slotPendiente])
+
+  // Re-bloquear calendario cuando se detecta mantenimiento
+  useEffect(() => {
+    if (vehiculoNoDisponible && mantenimientoDetalle) {
+      setCalendarioDesbloqueado(false)
+      const siguienteDia = dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm')
+        .add(1, 'day')
+        .startOf('day')
+        .toDate()
+      setSelectedCalendarDate(siguienteDia)
+      setSlotPendiente(null)
+    }
+  }, [vehiculoNoDisponible, mantenimientoDetalle])
 
   // Verificar disponibilidad del vehículo cuando se selecciona un slot
   useEffect(() => {
@@ -211,93 +270,49 @@ export default function ModalCalendarioSlot({
           )}
           {tieneVehiculo ? (
             <>
-              <CalendarProgramacionEntregas
-                onSelectSlot={handleSelectSlot}
-                onSelectEvent={setEventoSeleccionado}
-                onClearSlot={() => setSlotPendiente(null)}
-                onSlotOpen={() => setEventoSeleccionado(null)}
-                vehiculo_id={vehiculo_id}
-                soloSeleccion
-              />
+              <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-96">
+                <CalendarProgramacionEntregas
+                  onSelectSlot={handleSelectSlot}
+                  onSelectEvent={setEventoSeleccionado}
+                  onClearSlot={() => setSlotPendiente(null)}
+                  onSlotOpen={() => setEventoSeleccionado(null)}
+                  selectedDate={selectedCalendarDate}
+                  disabledRanges={
+                    mantenimientoDetalle
+                      ? [
+                          {
+                            start: dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').toDate(),
+                            end: dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').toDate(),
+                          },
+                        ]
+                      : []
+                  }
+                  vehiculo_id={vehiculo_id}
+                  soloSeleccion
+                />
+                {!calendarioDesbloqueado && (
+                  <div
+                    onClick={() => setCalendarioDesbloqueado(true)}
+                    className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-lg cursor-pointer"
+                  >
+                    <div className="max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 text-center">
+                      {mantenimientoDetalle
+                        ? `El vehículo está fuera de servicio. Haz clic para seleccionar una fecha alternativa.`
+                        : tieneVehiculo
+                          ? `Haz clic para desbloquear el calendario y ver las entregas programadas.`
+                          : `Selecciona primero un vehículo para ver sus entregas programadas.`}
+                    </div>
+                  </div>
+                )}
+              </div>
               {/* Popup de Mantenimiento - Interactivo como Entrega Programada */}
+              {/*
+              Este modal de mantenimiento se ha deshabilitado porque se muestra el alerta
+              de vehículo no disponible y se bloquea el calendario.
               {mantenimientoDetalle && (
-                <div 
-                  className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden"
-                >
-                  <div className="bg-gradient-to-r from-orange-500 via-red-500 to-rose-600 px-4 py-3.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
-                          <FaExclamationTriangle size={14} className="text-white" />
-                        </div>
-                        <div>
-                          <div className="text-orange-100 text-[10px] uppercase tracking-wider font-semibold">Programar horario de mantenimiento</div>
-                          <div className="font-bold text-sm text-white truncate leading-tight">
-                            {mantenimientoDetalle.tipo || 'Mantenimiento'}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setMantenimientoDetalle(null)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-orange-100 hover:text-white transition-all text-lg leading-none flex-shrink-0"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-4 space-y-3.5 text-sm bg-gradient-to-b from-slate-50 to-white">
-                    {/* Fecha y Horario Seleccionado */}
-                    <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FaCalendarAlt size={10} className="text-amber-600" />
-                        </div>
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Fecha y Horario</span>
-                      </div>
-                      <div className="text-slate-800 font-semibold text-sm capitalize pl-7 leading-tight">
-                        {slotPendiente ? dayjs(slotPendiente.start).format('dddd D [de] MMMM') : dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('dddd D [de] MMMM')}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1.5 pl-7">
-                        <div className="px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-lg">
-                          <span className="text-orange-700 font-bold text-xs">
-                            {slotPendiente ? dayjs(slotPendiente.start).format('HH:mm') : dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('HH:mm')}
-                          </span>
-                        </div>
-                        <span className="text-slate-400 text-xs">—</span>
-                        <div className="px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-lg">
-                          <span className="text-orange-700 font-bold text-xs">
-                            {slotPendiente ? dayjs(slotPendiente.end).format('HH:mm') : dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').format('HH:mm')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Instrucción */}
-                    <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
-                      <p className="text-xs text-orange-700 leading-snug">
-                        Arrastra para ajustar el horario, luego haz clic en Aplicar.
-                      </p>
-                    </div>
-
-                    {/* Descripción del Mantenimiento */}
-                    {mantenimientoDetalle.descripcion && (
-                      <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <div className="w-5 h-5 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-600 text-xs font-bold">ℹ</span>
-                          </div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Descripción</span>
-                        </div>
-                        <div className="text-slate-700 text-sm pl-7 leading-snug">
-                          {mantenimientoDetalle.descripcion}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                ...contenido original comentado...
               )}
+              */}
               {/* Popup de Entrega Programada */}
               {eventoSeleccionado && (
                 <div className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden">

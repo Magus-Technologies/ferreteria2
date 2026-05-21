@@ -203,6 +203,11 @@ function SlotPopup({ slot, position, onAplicar, onCerrar, soloSeleccion }: SlotP
 }
 
 // ─── Props del componente principal ──────────────────────────────────────────
+interface DisabledRange {
+  start: Date
+  end: Date
+}
+
 interface CalendarProgramacionEntregasProps {
   onSelectSlot?: (slotInfo: { start: Date; end: Date }) => void
   onSelectEvent?: (event: EntregaEvent) => void
@@ -211,6 +216,7 @@ interface CalendarProgramacionEntregasProps {
   /** Callback cuando se abre el popup de slot (para limpiar evento seleccionado) */
   onSlotOpen?: () => void
   selectedDate?: Date
+  disabledRanges?: DisabledRange[]
   chofer_id?: string
   vehiculo_id?: number
   /** Si es true, no carga entregas del backend (solo selección de slot) */
@@ -225,6 +231,7 @@ export default function CalendarProgramacionEntregas({
   onClearSlot,
   onSlotOpen,
   selectedDate,
+  disabledRanges,
   chofer_id,
   vehiculo_id,
   soloSeleccion = false,
@@ -235,6 +242,12 @@ export default function CalendarProgramacionEntregas({
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null)
   const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null)
+
+  useEffect(() => {
+    if (selectedDate) {
+      setDate(selectedDate)
+    }
+  }, [selectedDate])
 
   // Calcular rango de fechas para la consulta
   const { fecha_desde, fecha_hasta } = useMemo(() => {
@@ -421,6 +434,26 @@ export default function CalendarProgramacionEntregas({
     setPopupPos(null)
   }, [selectedSlot, onSelectSlot])
 
+  const handleSelecting = useCallback(
+    (slotInfo: { start: Date; end: Date }) => {
+      if (!disabledRanges || disabledRanges.length === 0) {
+        return true
+      }
+
+      const slotStart = dayjs(slotInfo.start)
+      const slotEnd = dayjs(slotInfo.end)
+
+      const overlaps = disabledRanges.some((range) => {
+        const disabledStart = dayjs(range.start).startOf('day')
+        const disabledEnd = dayjs(range.end).endOf('day')
+        return slotStart.isBefore(disabledEnd) && slotEnd.isAfter(disabledStart)
+      })
+
+      return !overlaps
+    },
+    [disabledRanges]
+  )
+
   const handleCerrarPopup = useCallback(() => {
     setSelectedSlot(null)
     setPopupPos(null)
@@ -465,8 +498,9 @@ export default function CalendarProgramacionEntregas({
         messages={messages}
         formats={formats}
         culture="es"
-        selectable={soloSeleccion}
+        selectable={soloSeleccion ? 'ignoreEvents' : false}
         onSelectSlot={handleSelectSlot}
+        onSelecting={soloSeleccion ? handleSelecting : undefined}
         onSelectEvent={handleSelectEvent}
         step={30}
         timeslots={2}

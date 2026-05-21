@@ -2,7 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tag, Tooltip } from 'antd'
-import { FaEye, FaCheck } from 'react-icons/fa'
+import { FaEye, FaCheck, FaArrowUp } from 'react-icons/fa'
 import { FilePdfFilled } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -26,10 +26,14 @@ export function useColumnsMisOS({
   onView,
   onViewPdf,
   onAprobar,
+  onEscalar,
+  userCargo,
 }: {
   onView: (row: RequerimientoInterno) => void
   onViewPdf: (row: RequerimientoInterno) => void
   onAprobar?: (row: RequerimientoInterno) => void
+  onEscalar?: (row: RequerimientoInterno) => void
+  userCargo?: string
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
@@ -94,6 +98,28 @@ export function useColumnsMisOS({
       ),
     },
     {
+      colId: 'approval_state',
+      headerName: 'Aprobación',
+      field: 'approval_state',
+      width: 120,
+      minWidth: 100,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
+        const stateColors: Record<string, string> = {
+          pendiente: 'warning',
+          en_revision: 'processing',
+          aprobado: 'success',
+          rechazado: 'error',
+        }
+        return (
+          <div className="flex items-center h-full">
+            <Tag color={stateColors[data?.approval_state || 'pendiente']}>
+              {data?.approval_state?.replace('_', ' ').toUpperCase() || 'PENDIENTE'}
+            </Tag>
+          </div>
+        )
+      },
+    },
+    {
       colId: 'created_at',
       headerName: 'Fecha Creación',
       field: 'created_at',
@@ -121,35 +147,58 @@ export function useColumnsMisOS({
       colId: 'acciones',
       headerName: 'Acciones',
       field: 'id',
-      width: 120,
-      minWidth: 120,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
-        <div className="flex items-center gap-3 h-full">
-          <Tooltip title="Ver detalles">
-            <FaEye
-              onClick={() => data && onView(data)}
-              className="cursor-pointer hover:scale-110 transition-all text-blue-600"
-              size={16}
-            />
-          </Tooltip>
-          <Tooltip title="Ver PDF">
-            <FilePdfFilled
-              onClick={() => data && onViewPdf(data)}
-              className="cursor-pointer hover:scale-110 transition-all"
-              style={{ fontSize: 16, color: '#dc2626' }}
-            />
-          </Tooltip>
-          {data?.estado === 'pendiente' && (
-            <Tooltip title="Aprobar">
-              <FaCheck
-                onClick={() => data && onAprobar?.(data)}
-                className="cursor-pointer hover:scale-110 transition-all text-green-600"
+      width: 150,
+      minWidth: 150,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
+        // Verificar si el usuario tiene autoridad para aprobar (comparar en minúsculas)
+        const canApprove = userCargo && data?.cargo?.toLowerCase() === userCargo.toLowerCase()
+        const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
+
+        return (
+          <div className="flex items-center gap-3 h-full">
+            <Tooltip title="Ver detalles">
+              <FaEye
+                onClick={() => data && onView(data)}
+                className="cursor-pointer hover:scale-110 transition-all text-blue-600"
                 size={16}
               />
             </Tooltip>
-          )}
-        </div>
-      ),
+            <Tooltip title="Ver PDF">
+              <FilePdfFilled
+                onClick={() => data && onViewPdf(data)}
+                className="cursor-pointer hover:scale-110 transition-all"
+                style={{ fontSize: 16, color: '#dc2626' }}
+              />
+            </Tooltip>
+            {isApprovalPending && (
+              <>
+                <Tooltip title={canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar'}>
+                  <FaCheck
+                    onClick={() => canApprove && data && onAprobar?.(data)}
+                    className={`transition-all ${
+                      canApprove
+                        ? 'cursor-pointer hover:scale-110 text-green-600'
+                        : 'cursor-not-allowed text-gray-300'
+                    }`}
+                    size={16}
+                  />
+                </Tooltip>
+                <Tooltip title={canApprove ? 'Escalar a superior' : 'No tienes autoridad para escalar'}>
+                  <FaArrowUp
+                    onClick={() => canApprove && data && onEscalar?.(data)}
+                    className={`transition-all ${
+                      canApprove
+                        ? 'cursor-pointer hover:scale-110 text-orange-600'
+                        : 'cursor-not-allowed text-gray-300'
+                    }`}
+                    size={16}
+                  />
+                </Tooltip>
+              </>
+            )}
+          </div>
+        )
+      },
     },
   ]
 
