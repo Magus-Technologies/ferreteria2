@@ -1,4 +1,4 @@
-import { FaAddressCard, FaUser } from 'react-icons/fa'
+import { FaAddressCard, FaUser, FaTruck } from 'react-icons/fa'
 import { MdEmail } from 'react-icons/md'
 import LabelBase from '~/components/form/label-base'
 import { FormInstance } from 'antd/lib'
@@ -70,19 +70,31 @@ export default function FormCreateChofer({
         </LabelBase>
       </div>
 
-      <LabelBase label='Licencia:' classNames={{ labelParent: 'mb-6' }}>
-        <InputBase
-          prefix={<FaAddressCard className='text-rose-700 mx-1' />}
-          propsForm={{
-            name: 'licencia',
-            rules: [
-              { required: true, message: 'La licencia es requerida' },
-            ],
-          }}
-          placeholder='Licencia'
-          uppercase
-        />
-      </LabelBase>
+      <div className='flex gap-4 items-center justify-center'>
+        <LabelBase label='Licencia:' className='w-full' classNames={{ labelParent: 'mb-6' }}>
+          <InputBase
+            prefix={<FaAddressCard className='text-rose-700 mx-1' />}
+            propsForm={{
+              name: 'licencia',
+              rules: [
+                { required: true, message: 'La licencia es requerida' },
+              ],
+            }}
+            placeholder='Licencia'
+            uppercase
+          />
+        </LabelBase>
+        <LabelBase label='Placa del Vehículo:' className='w-full' classNames={{ labelParent: 'mb-6' }}>
+          <InputBase
+            prefix={<FaTruck className='text-cyan-700 mx-1' />}
+            propsForm={{
+              name: 'placa',
+            }}
+            placeholder='ABC-123'
+            uppercase
+          />
+        </LabelBase>
+      </div>
 
       <div className='flex gap-4 items-center justify-center'>
         <LabelBase label='Nombres:' className='w-full' orientation='column'>

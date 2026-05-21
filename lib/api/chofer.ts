@@ -6,6 +6,7 @@ export type Chofer = {
   nombres: string
   apellidos: string
   licencia: string
+  placa?: string | null
   telefono?: string | null
   email?: string | null
   direccion?: string | null

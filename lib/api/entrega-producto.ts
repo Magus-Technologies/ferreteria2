@@ -88,6 +88,7 @@ export interface UpdateEntregaProductoRequest {
   vehiculo_id?: number;
   tipo_pedido?: TipoPedido;
   cargo_destino?: string;
+  productos_entregados?: ProductoEntregadoRequest[];
 }
 
 export interface EntregaProductoFilters {

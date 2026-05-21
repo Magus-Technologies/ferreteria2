@@ -21,6 +21,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 import SelectUsuariosDespachadores from '~/app/_components/form/selects/select-usuarios-despachadores'
+import SelectVehiculos from '~/app/_components/form/selects/select-vehiculos'
+import type { Vehiculo } from '~/lib/api/catalogos'
 import type { MotivoTraslado } from '~/lib/api/motivo-traslado'
 import { useQuery } from '@tanstack/react-query'
 import { almacenesApi } from '~/lib/api/almacen'
@@ -59,6 +61,15 @@ export default function FormCrearGuia({
   // GRE-Transportista, se usa la tabla externa `chofer` con MTC.
   const modalidad = Form.useWatch('modalidad_transporte', form) as string | undefined
   const choferEsInterno = modalidad === 'PRIVADO' && !esTransportista
+  // Sin modalidad seleccionada, los campos de vehículo y chofer se bloquean
+  // para evitar inconsistencias (no sabemos si el chofer debe ser interno o externo).
+  const sinModalidad = !modalidad
+
+  // Vehículo asignado al despachador (para preseleccionar en SelectVehiculos)
+  // y licencia del despachador (para mostrarla como info al usuario).
+  // Ambos se llenan en el onChange de SelectUsuariosDespachadores.
+  const [vehiculoDelDespachador, setVehiculoDelDespachador] = useState<Vehiculo | null>(null)
+  const [licenciaDelDespachador, setLicenciaDelDespachador] = useState<string | null>(null)
 
   // Limpiar remitente_id cuando se cambia de Transportista a otro tipo.
   useEffect(() => {
@@ -568,14 +579,32 @@ export default function FormCrearGuia({
           label='Campo Vehículo'
         >
           <LabelBase label='Vehículo (Placa):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>
-            <InputBase
-              propsForm={{
-                name: 'vehiculo_placa',
-              }}
-              placeholder='ABC-123'
-              prefix={<FaTruck className='text-cyan-700 mx-1' />}
-              className='w-full sm:!w-[140px] sm:!min-w-[140px]'
-            />
+            {choferEsInterno ? (
+              // PRIVADO: lupa que abre modal de vehículos. Se preselecciona el
+              // vehículo asignado al despachador (campo `vehiculo_id` del user).
+              // El usuario puede cambiarlo manualmente eligiendo otro.
+              <SelectVehiculos
+                propsForm={{ name: 'vehiculo_id_interno' }}
+                vehiculoPreseleccionado={vehiculoDelDespachador}
+                onChange={(_id, v) => {
+                  form.setFieldValue('vehiculo_placa', v?.placa ?? '')
+                }}
+                allowClear
+                showCreate={false}
+                placeholder='Seleccionar vehículo...'
+                className='w-full sm:!w-[260px] sm:!min-w-[220px]'
+              />
+            ) : (
+              <InputBase
+                disabled={sinModalidad}
+                propsForm={{
+                  name: 'vehiculo_placa',
+                }}
+                placeholder={sinModalidad ? 'Seleccione modalidad' : 'ABC-123'}
+                prefix={<FaTruck className='text-cyan-700 mx-1' />}
+                className='w-full sm:!w-[140px] sm:!min-w-[140px]'
+              />
+            )}
           </LabelBase>
         </ConfigurableElement>
         <ConfigurableElement
@@ -593,25 +622,47 @@ export default function FormCrearGuia({
             >
               <SelectUsuariosDespachadores
                 form={form}
+                disabled={sinModalidad}
                 propsForm={{
                   name: 'user_chofer_id',
                   hasFeedback: false,
                   className: 'w-full',
                 }}
-                placeholder='Seleccionar despachador...'
+                placeholder={sinModalidad ? 'Seleccione modalidad primero' : 'Seleccionar despachador...'}
                 classNameIcon='text-cyan-600 mx-1'
+                onChange={(_id, usuario) => {
+                  // Auto-rellenar placa con el vehículo asignado al despachador
+                  // (el usuario puede cambiarlo desde la lupa de Vehículo).
+                  if (usuario?.vehiculo) {
+                    setVehiculoDelDespachador(usuario.vehiculo as Vehiculo)
+                    form.setFieldValue('vehiculo_placa', usuario.vehiculo.placa ?? '')
+                  } else {
+                    setVehiculoDelDespachador(null)
+                  }
+                  // Mostrar licencia del despachador (el backend la lee del modelo
+                  // user al guardar; este display es solo informativo).
+                  setLicenciaDelDespachador(usuario?.licencia_conducir ?? null)
+                }}
               />
+              {licenciaDelDespachador && (
+                <span className='text-xs text-gray-500 mt-1 block'>
+                  Licencia: <span className='font-semibold text-gray-700'>{licenciaDelDespachador}</span>
+                </span>
+              )}
             </LabelBase>
           ) : (
             // Transporte PÚBLICO o GRE-Transportista: chofer EXTERNO con
             // MTC + DNI + licencia (tabla `chofer`).
             <LabelBase label='Chofer:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
               <SelectChoferes
+                form={form}
+                disabled={sinModalidad}
                 propsForm={{
                   name: 'chofer_id',
                   hasFeedback: false,
                   className: 'w-full',
                 }}
+                placeholder={sinModalidad ? 'Seleccione modalidad primero' : 'Buscar Chofer'}
                 className='w-full'
                 classNameIcon='text-cyan-600 mx-1'
               />

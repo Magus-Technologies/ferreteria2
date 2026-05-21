@@ -59,6 +59,7 @@ export default function TableChoferesBusqueda({
               'Nombres',
               'Apellidos',
               'Licencia',
+              'Placa',
               'Teléfono',
               'Email',
               'Acciones',

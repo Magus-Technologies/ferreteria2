@@ -358,7 +358,7 @@ export default function TableTransferenciasStock({
         <TableWithTitle<ProductoTransferenciaStock>
           id="transferencias-stock.detalle"
           title={detalleTitle}
-          selectionColor={blueColors[10]}
+          selectionColor={greenColors[10]}
           columnDefs={detalleColumns}
           rowData={selectedTransferencia?.productos || []}
           loading={false}

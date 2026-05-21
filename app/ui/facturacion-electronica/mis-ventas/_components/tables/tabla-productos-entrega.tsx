@@ -92,11 +92,7 @@ export default function TablaProductosEntrega({
       if (!autoProgramarResto) {
         return { ...p, entregar: newValue, entregar_programado: 0 }
       }
-      const yaProgramado = Number(p.programado || 0)
-      const restoAuto = Math.max(
-        0,
-        p.total - newValue - (p.entregado || 0) - yaProgramado,
-      )
+      const restoAuto = Math.max(0, p.pendiente - newValue)
       return { ...p, entregar: newValue, entregar_programado: restoAuto }
     })
     onProductoChangeRef.current(updated)
