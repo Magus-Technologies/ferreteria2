@@ -71,6 +71,14 @@ export function ModalProgramarOS({
       setCargandoMantenimientos(true)
       const cargarMantenimientos = async () => {
         try {
+          const desde = dayjs().format('YYYY-MM-DD')
+          const hasta = dayjs().add(30, 'days').format('YYYY-MM-DD')
+          console.log('📅 Frontend - Cargando mantenimientos', {
+            vehiculo_id: vehiculoId,
+            desde,
+            hasta,
+          })
+
           const response = await apiRequest<{
             data: Array<{
               tipo: string
@@ -78,19 +86,32 @@ export function ModalProgramarOS({
               end: string
               meta: any
             }>
-          }>(`/vehiculos/${vehiculoId}/disponibilidad?fecha_desde=${dayjs().format('YYYY-MM-DD')}&fecha_hasta=${dayjs().add(30, 'days').format('YYYY-MM-DD')}`)
+          }>(`/vehiculos/${vehiculoId}/disponibilidad?fecha_desde=${desde}&fecha_hasta=${hasta}`)
+
+          console.log('📅 Frontend - Respuesta del backend', {
+            data: response.data?.data,
+          })
 
           if (response.data?.data) {
             const ranges = response.data.data
               .filter((item: any) => item.tipo === 'mantenimiento')
-              .map((item: any) => ({
-                start: new Date(item.start),
-                end: new Date(item.end),
-              }))
+              .map((item: any) => {
+                const start = new Date(item.start)
+                const end = new Date(item.end)
+                console.log('📅 Frontend - Rango de mantenimiento', {
+                  tipo: item.tipo,
+                  start_string: item.start,
+                  end_string: item.end,
+                  start_parsed: start.toISOString(),
+                  end_parsed: end.toISOString(),
+                })
+                return { start, end }
+              })
+            console.log('📅 Frontend - Rangos finales para el calendario', ranges)
             setDisabledRanges(ranges)
           }
         } catch (error) {
-          console.error('Error cargando mantenimientos:', error)
+          console.error('❌ Frontend - Error cargando mantenimientos:', error)
         } finally {
           setCargandoMantenimientos(false)
         }
