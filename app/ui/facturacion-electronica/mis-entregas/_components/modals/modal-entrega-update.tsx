@@ -136,6 +136,37 @@ export default function ModalEntregaUpdate({
       cargo_destino: entrega?.cargo_destino ?? entregaDetalle?.cargo_destino,
     }
   }, [entrega, entregaDetalle])
+  const entregaProgramadaGrupo = useMemo(() => {
+    const esParcialAgrupado = Boolean((entrega as any)?.__esParcialAgrupado)
+    const esParcial =
+      esParcialAgrupado ||
+      entregaFuente?.tipo_entrega === 'pa' ||
+      entregaFuente?.venta?.tipo_despacho === 'pa'
+    if (!esParcial) return undefined
+
+    const grupoId =
+      entregaFuente?.grupo_entrega_id ??
+      entregaDetalle?.grupo_entrega_id ??
+      (entrega as any)?.grupo_entrega_id
+    const entregaActualId = Number(entregaFuente?.id ?? entregaDetalle?.id ?? entrega?.id)
+    const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
+      ? entregaFuente.venta.entregas_productos
+      : Array.isArray(entregaDetalle?.venta?.entregas_productos)
+      ? entregaDetalle.venta.entregas_productos
+      : []
+
+    const candidatas = entregasRelacionadas.filter((item: any) => {
+      if (Number(item?.id) === entregaActualId) return false
+      if (grupoId && Number(item?.grupo_entrega_id) !== Number(grupoId)) return false
+      return item?.tipo_despacho === 'pr'
+    })
+
+    return (
+      candidatas.find((item: any) => item?.estado_entrega === 'pe') ||
+      candidatas.find((item: any) => item?.estado_entrega === 'ec') ||
+      candidatas[0]
+    )
+  }, [entrega, entregaDetalle, entregaFuente])
   const requiereHidratacionCompletaParcial = Boolean(
     open &&
       entregaIdDetalle &&
@@ -255,42 +286,45 @@ export default function ModalEntregaUpdate({
       form.setFieldsValue(heredados)
       return
     }
+    const fuenteProgramada = entregaProgramadaGrupo || entregaFuente
     form.setFieldsValue({
       quien_entrega: entregaFuente.quien_entrega || 'almacen',
       observaciones: entregaFuente.observaciones || '',
       despachador_id: entregaFuente.chofer_id || undefined,
-      _resto_despachador_id: entregaFuente.chofer_id || undefined,
+      _resto_despachador_id: fuenteProgramada?.chofer_id || undefined,
       tipo_pedido: entregaFuente.tipo_pedido || 'interno',
-      _resto_tipo_pedido: entregaFuente.tipo_pedido || 'interno',
+      _resto_tipo_pedido: fuenteProgramada?.tipo_pedido || entregaFuente.tipo_pedido || 'interno',
       cargo_destino: entregaFuente.cargo_destino || undefined,
-      _resto_cargo_destino: entregaFuente.cargo_destino || undefined,
+      _resto_cargo_destino: fuenteProgramada?.cargo_destino || entregaFuente.cargo_destino || undefined,
       fecha_programada: entregaFuente.fecha_programada
         ? dayjs(entregaFuente.fecha_programada).format('YYYY-MM-DD')
         : undefined,
-      _resto_fecha_programada: entregaFuente.fecha_programada
-        ? dayjs(entregaFuente.fecha_programada).format('YYYY-MM-DD')
+      _resto_fecha_programada: fuenteProgramada?.fecha_programada
+        ? dayjs(fuenteProgramada.fecha_programada).format('YYYY-MM-DD')
         : undefined,
       hora_inicio: entregaFuente.hora_inicio || undefined,
       hora_fin: entregaFuente.hora_fin || undefined,
-      _resto_hora_inicio: entregaFuente.hora_inicio || undefined,
-      _resto_hora_fin: entregaFuente.hora_fin || undefined,
+      _resto_hora_inicio: fuenteProgramada?.hora_inicio || undefined,
+      _resto_hora_fin: fuenteProgramada?.hora_fin || undefined,
       direccion_entrega: entregaFuente.direccion_entrega || '',
       referencia_entrega: entregaFuente.referencia_entrega || '',
-      _resto_direccion_entrega: entregaFuente.direccion_entrega || '',
-      _resto_referencia_entrega: entregaFuente.referencia_entrega || '',
+      _resto_direccion_entrega:
+        fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega || '',
+      _resto_referencia_entrega:
+        fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega || '',
       latitud:
         entregaFuente.latitud != null ? Number(entregaFuente.latitud) : undefined,
       longitud:
         entregaFuente.longitud != null ? Number(entregaFuente.longitud) : undefined,
       _resto_latitud:
-        entregaFuente.latitud != null ? Number(entregaFuente.latitud) : undefined,
+        fuenteProgramada?.latitud != null ? Number(fuenteProgramada.latitud) : undefined,
       _resto_longitud:
-        entregaFuente.longitud != null ? Number(entregaFuente.longitud) : undefined,
+        fuenteProgramada?.longitud != null ? Number(fuenteProgramada.longitud) : undefined,
       vehiculo_id: entregaFuente.vehiculo_id || undefined,
-      _resto_vehiculo_id: entregaFuente.vehiculo_id || undefined,
+      _resto_vehiculo_id: fuenteProgramada?.vehiculo_id || undefined,
       direccion_seleccionada: direccionSeleccionadaVenta,
     })
-  }, [open, entregaFuente, restante, form, direccionSeleccionadaVenta])
+  }, [open, entregaFuente, entregaProgramadaGrupo, restante, form, direccionSeleccionadaVenta])
 
   // Pre-cargar campos `_resto_*` con la dirección del cliente en modo restante.
   //
