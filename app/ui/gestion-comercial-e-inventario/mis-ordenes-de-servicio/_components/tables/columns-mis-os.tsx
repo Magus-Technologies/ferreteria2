@@ -151,8 +151,8 @@ export function useColumnsMisOS({
       minWidth: 150,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
         // Verificar si el usuario tiene autoridad para aprobar
-        // El usuario puede aprobar si su cargo coincide exactamente con el cargo requerido en la OS
-        const canApprove = userCargoId && data?.cargo && userCargoId === data.cargo
+        // El usuario puede aprobar si su cargo coincide con el cargo requerido en la OS (case-insensitive)
+        const canApprove = userCargoId && data?.cargo && userCargoId.toLowerCase() === data.cargo.toLowerCase()
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
 
         return (
