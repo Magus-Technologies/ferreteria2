@@ -213,6 +213,10 @@ export function useConfirmarEntrega({
       // (lo programado se gestiona aparte como entrega futura).
       payload.estado_entrega = EstadoEntrega.ENTREGADO
       payload.quien_entrega = (quienEntregaParcial as QuienEntrega) || QuienEntrega.ALMACEN
+      payload.productos_entregados = productosEntrega.map((p) => ({
+        unidad_derivada_venta_id: p.unidad_derivada_venta_id,
+        cantidad_entregada: p.entregar,
+      }))
       if (v.observaciones) payload.observaciones = v.observaciones
     }
 
