@@ -39,6 +39,7 @@ export interface LoginResponse {
     all_restrictions: string[];
     rol_sistema: string | null;
     cargo: string | null;
+    cargo_id?: number | null;
     vehiculo_id?: number | null;
     vehiculo?: {
       id: number;

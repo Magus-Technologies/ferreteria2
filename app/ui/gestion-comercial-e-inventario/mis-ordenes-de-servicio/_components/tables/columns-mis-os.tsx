@@ -27,13 +27,13 @@ export function useColumnsMisOS({
   onViewPdf,
   onAprobar,
   onEscalar,
-  userCargo,
+  userCargoId,
 }: {
   onView: (row: RequerimientoInterno) => void
   onViewPdf: (row: RequerimientoInterno) => void
   onAprobar?: (row: RequerimientoInterno) => void
   onEscalar?: (row: RequerimientoInterno) => void
-  userCargo?: string
+  userCargoId?: number
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
@@ -150,8 +150,8 @@ export function useColumnsMisOS({
       width: 150,
       minWidth: 150,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
-        // Verificar si el usuario tiene autoridad para aprobar (comparar en minúsculas)
-        const canApprove = userCargo && data?.cargo?.toLowerCase() === userCargo.toLowerCase()
+        // Verificar si el usuario tiene autoridad para aprobar (comparar assigned_cargo_id)
+        const canApprove = userCargoId && data?.assigned_cargo_id === userCargoId
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
 
         return (
