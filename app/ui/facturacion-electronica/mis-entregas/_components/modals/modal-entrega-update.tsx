@@ -78,15 +78,16 @@ export default function ModalEntregaUpdate({
     () => getEntregaOperativa(entrega) || entrega,
     [entrega],
   )
-  const entregaIdDetalle =
+  const entregaIdDetalle = Number(
     (entrega as any)?.__esParcialAgrupado
       ? (entregaOperativa as any)?.id
-      : entrega?.id
+      : entrega?.id,
+  )
 
   const { data: entregaDetalleResp } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-restante', entregaIdDetalle],
-    queryFn: () => entregaProductoApi.getById(String(entregaIdDetalle)),
-    enabled: open && !!entregaIdDetalle,
+    queryFn: () => entregaProductoApi.getById(entregaIdDetalle),
+    enabled: open && Number.isFinite(entregaIdDetalle) && entregaIdDetalle > 0,
     staleTime: 0,
   })
   const entregaDetalle = (entregaDetalleResp?.data?.data ?? entregaDetalleResp?.data) as any
@@ -185,7 +186,7 @@ export default function ModalEntregaUpdate({
 
     try {
       const response = await entregaProductoApi.update(
-        String(entregaOperativa?.id || entregaFuente?.id),
+        Number(entregaOperativa?.id || entregaFuente?.id),
         {
         tipo_entrega: nuevoTipo,
         },
