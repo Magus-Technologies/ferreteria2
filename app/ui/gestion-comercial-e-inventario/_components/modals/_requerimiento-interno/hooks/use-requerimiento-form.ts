@@ -10,6 +10,8 @@ export interface RequerimientoFormData {
     proveedorSugerido: string
     duracionCantidad: string
     duracionUnidad: string
+    vehiculoId?: string | null
+    afectaCalendario?: boolean
 }
 
 export interface ItemBuscado {
@@ -44,13 +46,15 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
         proveedorSugerido: "",
         duracionCantidad: "",
         duracionUnidad: "dias",
+        vehiculoId: null,
+        afectaCalendario: true,
     })
 
     const [productosSeleccionados, setProductosSeleccionados] = useState<ItemBuscado[]>([])
     const [serviciosSeleccionados, setServiciosSeleccionados] = useState<ServicioItem[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
 
-    const setField = (key: string, value: string | number | boolean) => {
+    const setField = (key: string, value: string | number | boolean | null | undefined) => {
         setForm(prev => ({ ...prev, [key]: value }))
         if (errors[key]) {
             setErrors(prev => ({ ...prev, [key]: "" }))
@@ -92,6 +96,8 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
             proveedorSugerido: "",
             duracionCantidad: "",
             duracionUnidad: "dias",
+            vehiculoId: null,
+            afectaCalendario: true,
         })
         setProductosSeleccionados([])
         setServiciosSeleccionados([])

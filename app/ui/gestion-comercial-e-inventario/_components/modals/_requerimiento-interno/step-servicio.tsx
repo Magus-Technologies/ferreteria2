@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { DatePicker, Button, Table, Space, Popconfirm, Card, Tag } from "antd"
+import { useState, useEffect } from "react"
+import { DatePicker, Button, Table, Space, Popconfirm, Card, Tag, Checkbox } from "antd"
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import SelectBase from "~/app/_components/form/selects/select-base"
 import InputBase from "~/app/_components/form/inputs/input-base"
 import TextareaBase from "~/app/_components/form/inputs/textarea-base"
 import InputNumberBase from "~/app/_components/form/inputs/input-number-base"
+import { useAuth } from "~/lib/auth-context"
 import type { ServicioItem } from "./hooks/use-requerimiento-form"
 
 interface StepServicioProps {
@@ -17,6 +18,11 @@ interface StepServicioProps {
     errors: Record<string, string>
     tiposServicio: { label: string; value: number }[]
     onAbrirModalTipoServicio: () => void
+    vehiculos: { label: string; value: string }[]
+    vehiculoId?: string | null
+    setVehiculoId?: (id: string | null) => void
+    afectaCalendario?: boolean
+    setAfectaCalendario?: (value: boolean) => void
 }
 
 export default function StepServicio({
@@ -26,7 +32,13 @@ export default function StepServicio({
     errors,
     tiposServicio,
     onAbrirModalTipoServicio,
+    vehiculos,
+    vehiculoId,
+    setVehiculoId,
+    afectaCalendario,
+    setAfectaCalendario,
 }: StepServicioProps) {
+    const { user } = useAuth()
     const [newItem, setNewItem] = useState<Partial<ServicioItem>>({
         tipoServicio: "",
         descripcionServicio: "",
@@ -35,6 +47,13 @@ export default function StepServicio({
         presupuestoReferencial: "",
         detalles: "",
     })
+
+    // Auto-rellenar vehículo del usuario si tiene uno asignado
+    useEffect(() => {
+        if (user?.vehiculo_id && !vehiculoId) {
+            setVehiculoId?.(String(user.vehiculo_id))
+        }
+    }, [user?.vehiculo_id, vehiculoId, setVehiculoId])
 
     const handleAdd = () => {
         if (!newItem.tipoServicio || !newItem.descripcionServicio) {
@@ -115,6 +134,45 @@ export default function StepServicio({
 
     return (
         <div className="space-y-6">
+            {/* Sección de Vehículo y Afecta Calendario */}
+            <Card size="small" title={<span className="text-sm font-semibold">Configuración de Vehículo</span>} className="bg-amber-50 border-amber-200">
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            Vehículo Relacionado <span className="text-gray-400 text-xs">(opcional)</span>
+                        </label>
+                        <SelectBase
+                            placeholder="Seleccionar vehículo..."
+                            value={vehiculoId || undefined}
+                            onChange={(value) => setVehiculoId?.(value || null)}
+                            options={vehiculos}
+                            allowClear
+                            className="w-full"
+                        />
+                        {user?.vehiculo_id && vehiculoId === String(user.vehiculo_id) && (
+                            <p className="text-xs text-amber-600 mt-1 italic">✓ Auto-rellenado con tu vehículo asignado</p>
+                        )}
+                    </div>
+
+                    {vehiculoId && (
+                        <div className="bg-white p-3 rounded border border-amber-200">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <Checkbox
+                                    checked={afectaCalendario ?? true}
+                                    onChange={(e) => setAfectaCalendario?.(e.target.checked)}
+                                />
+                                <span className="text-sm font-medium text-slate-700">
+                                    Afecta Calendario de Entregas
+                                </span>
+                            </label>
+                            <p className="text-xs text-slate-500 mt-2 ml-6">
+                                Si está marcado, este servicio bloqueará el vehículo en el calendario de entregas durante la duración estimada.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </Card>
+
             {/* Formulario de Adición */}
             <Card size="small" title={<span className="text-sm font-semibold">Configurar Nuevo Servicio</span>} className="bg-slate-50">
                 <div className="space-y-4">
@@ -124,7 +182,7 @@ export default function StepServicio({
                             <div className="flex gap-1">
                                 <SelectBase
                                     placeholder="Seleccionar..."
-                                    value={newItem.tipoServicio ? Number(newItem.tipoServicio) : undefined}
+                                    value={newItem.tipoServicio ? String(newItem.tipoServicio) : undefined}
                                     onChange={(value) => setNewItem(prev => ({ ...prev, tipoServicio: String(value) }))}
                                     options={tiposServicio}
                                     className="flex-1"

@@ -1,13 +1,14 @@
 'use client'
 
-import { Modal } from 'antd'
-import { useState, Suspense, lazy } from 'react'
+import { Modal, Alert } from 'antd'
+import { useState, Suspense, lazy, useEffect } from 'react'
 import { Spin } from 'antd'
 import ButtonBase from '~/components/buttons/button-base'
-import { FaCalendar, FaCheck, FaBox, FaCalendarAlt, FaTruck, FaUser, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaCalendar, FaCheck, FaBox, FaCalendarAlt, FaTruck, FaUser, FaMapMarkerAlt, FaExclamationTriangle } from 'react-icons/fa'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import type { EntregaEvent } from '~/app/_components/calendar/event-entrega'
+import { apiRequest } from '~/lib/api'
 
 dayjs.locale('es')
 
@@ -25,6 +26,22 @@ interface VehiculoVisible {
   name: string
   tipo?: string | null
   placa?: string | null
+}
+
+interface MantenimientoDetalle {
+  id: number
+  tipo: string
+  descripcion: string
+  fecha_inicio: string
+  fecha_fin: string
+  estado: string
+  requerimiento?: {
+    id: number
+    codigo: string
+    titulo: string
+    observaciones: string
+    prioridad: string
+  } | null
 }
 
 interface ModalCalendarioSlotProps {
@@ -45,15 +62,57 @@ export default function ModalCalendarioSlot({
   const [slotPendiente, setSlotPendiente] = useState<SlotSeleccionado | null>(null)
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
   const [productosExpandidos, setProductosExpandidos] = useState(false)
+  const [vehiculoNoDisponible, setVehiculoNoDisponible] = useState(false)
+  const [razonNoDisponible, setRazonNoDisponible] = useState('')
+  const [mantenimientoDetalle, setMantenimientoDetalle] = useState<MantenimientoDetalle | null>(null)
   const tieneVehiculo = !!vehiculo_id
 
-  // onSelectSlot se dispara desde el popup del calendario al dar "Aplicar"
-  // → aplicamos directamente y cerramos el modal (1 solo clic)
+  // Verificar disponibilidad del vehículo cuando se selecciona un slot
+  useEffect(() => {
+    if (!slotPendiente || !vehiculo_id) {
+      setVehiculoNoDisponible(false)
+      setRazonNoDisponible('')
+      setMantenimientoDetalle(null)
+      return
+    }
+
+    const verificarDisponibilidad = async () => {
+      try {
+        const fecha = dayjs(slotPendiente.start).format('YYYY-MM-DD')
+        const response = await apiRequest<{
+          disponible: boolean
+          razon?: string
+          mantenimiento?: MantenimientoDetalle
+        }>(`/vehiculos/${vehiculo_id}/disponibilidad?fecha=${fecha}`)
+
+        if (!response.data?.disponible) {
+          setVehiculoNoDisponible(true)
+          setRazonNoDisponible(response.data?.razon || 'El vehículo no está disponible en esta fecha')
+          if (response.data?.mantenimiento) {
+            setMantenimientoDetalle(response.data.mantenimiento)
+          }
+        } else {
+          setVehiculoNoDisponible(false)
+          setRazonNoDisponible('')
+          setMantenimientoDetalle(null)
+        }
+      } catch (error) {
+        console.error('Error verificando disponibilidad:', error)
+        setVehiculoNoDisponible(false)
+        setMantenimientoDetalle(null)
+      }
+    }
+
+    verificarDisponibilidad()
+  }, [slotPendiente, vehiculo_id])
+
+  // onSelectSlot se dispara desde el popup del calendario
+  // → Solo establecemos el slot, NO aplicamos aún
+  // El usuario debe hacer clic en "Aplicar" después de ver el popup de mantenimiento
   const handleSelectSlot = (slotInfo: { start: Date; end: Date }) => {
     const slot = { start: slotInfo.start, end: slotInfo.end }
     setSlotPendiente(slot)
-    onAplicar(slot)
-    onClose()
+    // NO llamar a onAplicar() aquí - dejar que el useEffect verifique disponibilidad primero
   }
 
   const handleAplicar = () => {
@@ -66,6 +125,7 @@ export default function ModalCalendarioSlot({
     setSlotPendiente(null)
     setEventoSeleccionado(null)
     setProductosExpandidos(false)
+    setMantenimientoDetalle(null)
     onClose()
   }
 
@@ -120,14 +180,14 @@ export default function ModalCalendarioSlot({
               color="success"
               size="md"
               onClick={handleAplicar}
-              disabled={!slotPendiente}
+              disabled={!slotPendiente || vehiculoNoDisponible}
             >
               Aplicar
             </ButtonBase>
           </div>
         </div>
       }
-      styles={{ body: { padding: '16px', height: '560px', overflow: 'hidden' } }}
+      styles={{ body: { padding: '16px', height: '560px', overflow: 'auto' } }}
       >
       <Suspense
         fallback={
@@ -137,6 +197,18 @@ export default function ModalCalendarioSlot({
         }
       >
         <div className="relative h-full">
+          {vehiculoNoDisponible && (
+            <div className="mb-3 z-50">
+              <Alert
+                message="⚠️ Vehículo no disponible"
+                description={razonNoDisponible || 'El vehículo está fuera de servicio en esta fecha'}
+                type="warning"
+                showIcon
+                icon={<FaExclamationTriangle />}
+                closable
+              />
+            </div>
+          )}
           {tieneVehiculo ? (
             <>
               <CalendarProgramacionEntregas
@@ -147,6 +219,86 @@ export default function ModalCalendarioSlot({
                 vehiculo_id={vehiculo_id}
                 soloSeleccion
               />
+              {/* Popup de Mantenimiento - Interactivo como Entrega Programada */}
+              {mantenimientoDetalle && (
+                <div 
+                  className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden"
+                >
+                  <div className="bg-gradient-to-r from-orange-500 via-red-500 to-rose-600 px-4 py-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
+                          <FaExclamationTriangle size={14} className="text-white" />
+                        </div>
+                        <div>
+                          <div className="text-orange-100 text-[10px] uppercase tracking-wider font-semibold">Programar horario de mantenimiento</div>
+                          <div className="font-bold text-sm text-white truncate leading-tight">
+                            {mantenimientoDetalle.tipo || 'Mantenimiento'}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setMantenimientoDetalle(null)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-orange-100 hover:text-white transition-all text-lg leading-none flex-shrink-0"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 space-y-3.5 text-sm bg-gradient-to-b from-slate-50 to-white">
+                    {/* Fecha y Horario Seleccionado */}
+                    <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-5 h-5 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FaCalendarAlt size={10} className="text-amber-600" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Fecha y Horario</span>
+                      </div>
+                      <div className="text-slate-800 font-semibold text-sm capitalize pl-7 leading-tight">
+                        {slotPendiente ? dayjs(slotPendiente.start).format('dddd D [de] MMMM') : dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('dddd D [de] MMMM')}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1.5 pl-7">
+                        <div className="px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-lg">
+                          <span className="text-orange-700 font-bold text-xs">
+                            {slotPendiente ? dayjs(slotPendiente.start).format('HH:mm') : dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').format('HH:mm')}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-xs">—</span>
+                        <div className="px-2 py-0.5 bg-orange-50 border border-orange-100 rounded-lg">
+                          <span className="text-orange-700 font-bold text-xs">
+                            {slotPendiente ? dayjs(slotPendiente.end).format('HH:mm') : dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').format('HH:mm')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Instrucción */}
+                    <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+                      <p className="text-xs text-orange-700 leading-snug">
+                        Arrastra para ajustar el horario, luego haz clic en Aplicar.
+                      </p>
+                    </div>
+
+                    {/* Descripción del Mantenimiento */}
+                    {mantenimientoDetalle.descripcion && (
+                      <div className="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className="w-5 h-5 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span className="text-blue-600 text-xs font-bold">ℹ</span>
+                          </div>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Descripción</span>
+                        </div>
+                        <div className="text-slate-700 text-sm pl-7 leading-snug">
+                          {mantenimientoDetalle.descripcion}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Popup de Entrega Programada */}
               {eventoSeleccionado && (
                 <div className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden">
                   <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 px-4 py-3.5">

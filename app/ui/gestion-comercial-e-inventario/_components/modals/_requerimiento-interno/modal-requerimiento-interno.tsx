@@ -222,6 +222,11 @@ export default function ModalRequerimientoInterno({
                                     errors={formHook.errors}
                                     tiposServicio={dataHook.tiposServicio}
                                     onAbrirModalTipoServicio={() => setOpenModalTipoServicio(true)}
+                                    vehiculos={dataHook.vehiculos}
+                                    vehiculoId={formHook.form.vehiculoId}
+                                    setVehiculoId={(id) => formHook.setField('vehiculoId', id)}
+                                    afectaCalendario={formHook.form.afectaCalendario}
+                                    setAfectaCalendario={(value) => formHook.setField('afectaCalendario', value)}
                                 />
                             )}
 

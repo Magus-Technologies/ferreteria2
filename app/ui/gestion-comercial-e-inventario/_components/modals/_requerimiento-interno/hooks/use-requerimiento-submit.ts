@@ -1,6 +1,5 @@
 import { useState } from "react"
-import dayjs from "dayjs"
-import { requerimientoInternoApi, type CreateRequerimientoRequest, type CreateRequerimientoProductoRequest, type RequerimientoInterno } from "~/lib/api/requerimiento-interno"
+import { requerimientoInternoApi, type CreateRequerimientoRequest, type RequerimientoInterno } from "~/lib/api/requerimiento-interno"
 import type { RequerimientoFormData, ItemBuscado, ServicioItem } from "./use-requerimiento-form"
 
 export function useRequerimientoSubmit() {
@@ -25,6 +24,8 @@ export function useRequerimientoSubmit() {
                 duracion_cantidad: form.duracionCantidad ? Number(form.duracionCantidad) : undefined,
                 duracion_unidad: form.duracionUnidad || undefined,
                 proveedor_sugerido_id: form.proveedorSugerido ? Number(form.proveedorSugerido) : undefined,
+                vehiculo_id: form.vehiculoId ? Number(form.vehiculoId) : undefined,
+                afecta_calendario: form.afectaCalendario ?? true,
             }
 
             if (form.tipoSolicitud === 'OC') {

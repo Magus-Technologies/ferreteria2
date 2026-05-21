@@ -445,3 +445,44 @@ export const vehiculosApi = {
     });
   },
 };
+
+// ============= CARGOS API =============
+
+export interface Cargo {
+  codigo: string;
+  descripcion: string;
+  parent?: string | null;
+  highlight?: boolean;
+  staff?: boolean;
+}
+
+export const cargosApi = {
+  async list(): Promise<Cargo[]> {
+    const response = await apiRequest<CatalogResponse<Cargo>>(`/catalogos/cargos`);
+    return response.data?.data || [];
+  },
+
+  async getById(codigo: string): Promise<ApiResponse<Cargo>> {
+    return apiRequest<Cargo>(`/catalogos/cargos/${codigo}`);
+  },
+
+  async create(data: Cargo): Promise<ApiResponse<Cargo>> {
+    return apiRequest<Cargo>("/catalogos/cargos", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(codigo: string, data: Partial<Cargo>): Promise<ApiResponse<Cargo>> {
+    return apiRequest<Cargo>(`/catalogos/cargos/${codigo}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async delete(codigo: string): Promise<ApiResponse<void>> {
+    return apiRequest<void>(`/catalogos/cargos/${codigo}`, {
+      method: "DELETE",
+    });
+  },
+};
