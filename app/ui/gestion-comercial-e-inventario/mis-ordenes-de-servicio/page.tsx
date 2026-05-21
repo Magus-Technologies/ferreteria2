@@ -360,7 +360,7 @@ export default function MisOrdenesDeServicio() {
 
       <Suspense fallback={null}>
         <ModalProgramarOS
-          open={modalProgramarOSOpen}
+          open={modalProgramarOSOpen && seleccionado?.approval_state !== 'aprobado'}
           requerimiento={seleccionado}
           onClose={() => {
             setModalProgramarOSOpen(false)
