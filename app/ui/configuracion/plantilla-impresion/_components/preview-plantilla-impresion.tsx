@@ -11,14 +11,28 @@ import {
   type PlantillaImpresion,
   type BloquesResueltos,
 } from "~/lib/api/plantilla-impresion";
+import type { FuentePersonalizada } from "~/lib/api/fuentes";
 
 interface Props {
   plantilla: PlantillaImpresion;
   formato?: string;
   comprobante?: string;
+  fuentesPersonalizadas?: FuentePersonalizada[];
 }
 
-export default function PreviewPlantillaImpresion({ plantilla, formato, comprobante }: Props) {
+function generarFontFaceCss(fuentes: FuentePersonalizada[]): string {
+  return fuentes.map((f) => {
+    const ext = f.archivo_url.split('.').pop()?.toLowerCase() || 'ttf'
+    const format = ext === 'woff2' ? 'woff2' : ext === 'woff' ? 'woff' : ext === 'otf' ? 'opentype' : 'truetype'
+    // normal + bold weight variants for both normal and italic
+    return `@font-face { font-family: '${f.nombre}'; src: url('${f.archivo_url}') format('${format}'); font-weight: normal; font-style: normal; }
+@font-face { font-family: '${f.nombre}'; src: url('${f.archivo_url}') format('${format}'); font-weight: bold; font-style: normal; }
+@font-face { font-family: '${f.nombre}'; src: url('${f.archivo_url}') format('${format}'); font-weight: normal; font-style: italic; }`
+  }).join('\n')
+}
+
+export default function PreviewPlantillaImpresion({ plantilla, formato, comprobante, fuentesPersonalizadas = [] }: Props) {
+  const fontFaceCss = generarFontFaceCss(fuentesPersonalizadas)
   const { user } = useAuth();
   const empresaId = user?.empresa?.id;
 
@@ -71,7 +85,7 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
 
     if (comprobante === "cotizacion") {
       return (
-        <div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+        <>{fontFaceCss && <style>{fontFaceCss}</style>}<div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
           <div style={{ width: 280, margin: "0 auto" }}>
             {/* Empresa */}
             <div style={{ textAlign: "center", marginBottom: 6 }}>
@@ -194,11 +208,11 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
             )}
           </div>
         </div>
-      );
+      </>);
     }
 
     return (
-      <div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+      <>{fontFaceCss && <style>{fontFaceCss}</style>}<div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
         <div style={{ width: 280, margin: "0 auto" }}>
           {/* Empresa */}
           <div style={{ textAlign: "center", marginBottom: 6 }}>
@@ -353,12 +367,12 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
           </div>
         </div>
       </div>
-    );
+    </>);
   }
 
   if (comprobante === "cotizacion") {
     return (
-      <div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+      <>{fontFaceCss && <style>{fontFaceCss}</style>}<div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
         {/* Header */}
         <table className="w-full mb-2" style={{ borderCollapse: "collapse" }}>
           <tbody>
@@ -534,11 +548,11 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
           </div>
         )}
       </div>
-    );
+    </>);
   }
 
   return (
-    <div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+    <>{fontFaceCss && <style>{fontFaceCss}</style>}<div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
       {/* Header */}
       <table className="w-full mb-2" style={{ borderCollapse: "collapse" }}>
         <tbody>
@@ -678,7 +692,7 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
         </table>
       </div>
     </div>
-  );
+  </>);
 }
 
 type Est = ReturnType<typeof resolverEstilos>;

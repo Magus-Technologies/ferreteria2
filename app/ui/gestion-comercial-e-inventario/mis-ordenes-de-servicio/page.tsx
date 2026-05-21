@@ -47,8 +47,9 @@ export default function MisOrdenesDeServicio() {
   const [modalEscalarOpen, setModalEscalarOpen] = useState(false)
   const [modalProgramarOSOpen, setModalProgramarOSOpen] = useState(false)
 
-  // Obtener el cargo_id del usuario actual desde el contexto de autenticación
-  const userCargoId = user?.cargo_id || undefined
+  // Obtener el cargo del usuario actual desde el contexto de autenticación
+  // Usamos el nombre del cargo (string) para comparar con el cargo requerido en la OS
+  const userCargoId = user?.cargo || undefined
 
   const handleView = useCallback((row: RequerimientoInterno) => {
     setSeleccionado(row)

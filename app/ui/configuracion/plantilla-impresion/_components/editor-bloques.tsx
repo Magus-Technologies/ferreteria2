@@ -3,7 +3,6 @@
 import { Button, ColorPicker, Collapse, Input, Select, Slider, Switch } from "antd";
 import {
   BLOQUES_CATALOGO,
-  FUENTES_DISPONIBLES,
   type BloqueKey,
   type EstiloBloque,
   type EstiloBloqueResuelto,
@@ -16,6 +15,7 @@ interface Props {
   secciones: EstilosSecciones;
   globalEst: EstilosResueltos;
   keys?: BloqueKey[];
+  fuentes: string[];
   onChange: (key: BloqueKey, patch: Partial<EstiloBloque>) => void;
   onReset: (key: BloqueKey) => void;
 }
@@ -24,6 +24,7 @@ export default function EditorBloques({
   secciones,
   globalEst,
   keys,
+  fuentes,
   onChange,
   onReset,
 }: Props) {
@@ -52,6 +53,7 @@ export default function EditorBloques({
             keyBloque={b.key}
             override={secciones[b.key]}
             defaults={defaultsBloque(b.key, globalEst)}
+            fuentes={fuentes}
             onChange={(patch) => onChange(b.key, patch)}
             onReset={() => onReset(b.key)}
           />
@@ -78,6 +80,7 @@ interface BloqueEditorProps {
   keyBloque: BloqueKey;
   override: EstiloBloque | undefined;
   defaults: EstiloBloqueResuelto;
+  fuentes: string[];
   onChange: (patch: Partial<EstiloBloque>) => void;
   onReset: () => void;
 }
@@ -85,6 +88,7 @@ interface BloqueEditorProps {
 function BloqueEditor({
   override,
   defaults,
+  fuentes,
   onChange,
   onReset,
 }: BloqueEditorProps) {
@@ -164,7 +168,8 @@ function BloqueEditor({
           <Select
             value={valor.fuente}
             onChange={(v) => onChange({ fuente: v })}
-            options={FUENTES_DISPONIBLES.map((f) => ({ label: f, value: f }))}
+            options={fuentes.map((f) => ({ label: f, value: f }))}
+            showSearch
           />
         </div>
 

@@ -95,18 +95,30 @@ export async function apiRequest<T = unknown>(
 ): Promise<ApiResponse<T>> {
   const token = getAuthToken();
 
-  const headers = {
-    "Content-Type": "application/json",
+  const headers: Record<string, string> = {
     Accept: "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
   };
 
   // Procesar data para convertirlo en body
-  const { data, params, ...fetchOptions } = options;
+  const { data, params, headers: customHeaders, ...fetchOptions } = options;
   
   if (data) {
-    fetchOptions.body = JSON.stringify(data);
+    // Si data es FormData, no establecer Content-Type (el navegador lo hará automáticamente)
+    if (data instanceof FormData) {
+      (fetchOptions as any).body = data;
+      // No establecer Content-Type para FormData
+    } else {
+      headers["Content-Type"] = "application/json";
+      (fetchOptions as any).body = JSON.stringify(data);
+    }
+  } else {
+    headers["Content-Type"] = "application/json";
+  }
+
+  // Merge custom headers
+  if (customHeaders) {
+    Object.assign(headers, customHeaders);
   }
 
   // Agregar parámetros de query string si existen

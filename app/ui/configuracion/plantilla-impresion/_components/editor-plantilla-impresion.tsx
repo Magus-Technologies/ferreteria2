@@ -32,9 +32,11 @@ import {
   FUENTES_DISPONIBLES,
   resolverEstilos,
 } from "~/lib/api/plantilla-impresion";
+import { fuentesApi, type FuentePersonalizada } from "~/lib/api/fuentes";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import PreviewPlantillaImpresion from "./preview-plantilla-impresion";
 import EditorBloques from "./editor-bloques";
+import GestorFuentes from "./gestor-fuentes";
 
 const MAX_CHARS = 2000;
 
@@ -131,6 +133,19 @@ export default function EditorPlantillaImpresion({
     ESTILOS_SECCIONES_DEFAULT
   );
   const [logosNotaVenta, setLogosNotaVenta] = useState<number[]>([]);
+  const [fuentesPersonalizadas, setFuentesPersonalizadas] = useState<FuentePersonalizada[]>([]);
+  const [gestorFuentesOpen, setGestorFuentesOpen] = useState(false);
+
+  useEffect(() => {
+    fuentesApi.list().then((res) => {
+      if (res.data?.data) setFuentesPersonalizadas(res.data.data)
+    }).catch(() => {})
+  }, [])
+
+  const fuentesDisponibles = useMemo(() => [
+    ...FUENTES_DISPONIBLES,
+    ...fuentesPersonalizadas.map((f) => f.nombre),
+  ], [fuentesPersonalizadas])
 
   useEffect(() => {
     const remote = data?.data?.data;
@@ -211,10 +226,18 @@ export default function EditorPlantillaImpresion({
           </span>
         ),
         children: (
-          <EstilosGlobalesEditor
-            estilos={estilos}
-            onChange={(patch) => setEstilos((s) => ({ ...s, ...patch }))}
-          />
+          <>
+            <div className="flex justify-end mb-2">
+              <Button size="small" type="dashed" onClick={() => setGestorFuentesOpen(true)}>
+                Gestionar fuentes
+              </Button>
+            </div>
+            <EstilosGlobalesEditor
+              estilos={estilos}
+              onChange={(patch) => setEstilos((s) => ({ ...s, ...patch }))}
+              fuentes={fuentesDisponibles}
+            />
+          </>
         ),
       },
       ...BLOQUES_PDF.map((bloque) => ({
@@ -228,6 +251,7 @@ export default function EditorPlantillaImpresion({
             mensajes={mensajesExtra}
             estilosSecciones={estilosSecciones}
             globalEst={globalResuelto}
+            fuentes={fuentesDisponibles}
             onDespedidaChange={(patch) =>
               setDespedida((s) => ({ ...s, ...patch }))
             }
@@ -280,9 +304,20 @@ export default function EditorPlantillaImpresion({
             plantilla={previewPlantilla}
             formato={formato}
             comprobante={comprobante}
+            fuentesPersonalizadas={fuentesPersonalizadas}
           />
         </Card>
       </div>
+
+      <GestorFuentes
+        open={gestorFuentesOpen}
+        onClose={() => setGestorFuentesOpen(false)}
+        onFuentesChange={() => {
+          fuentesApi.list().then((res) => {
+            if (res.data?.data) setFuentesPersonalizadas(res.data.data)
+          }).catch(() => {})
+        }}
+      />
     </div>
   );
 }
@@ -294,6 +329,7 @@ interface BloquePdfEditorProps {
   mensajes: MensajesExtraPlantilla;
   estilosSecciones: EstilosSecciones;
   globalEst: ReturnType<typeof resolverEstilos>;
+  fuentes: string[];
   onDespedidaChange: (patch: Partial<SeccionEstado>) => void;
   onMensajesChange: (patch: Partial<MensajesExtraPlantilla>) => void;
   onBloqueChange: (key: BloqueKey, patch: Partial<EstiloBloque>) => void;
@@ -307,6 +343,7 @@ function BloquePdfEditor({
   mensajes,
   estilosSecciones,
   globalEst,
+  fuentes,
   onDespedidaChange,
   onMensajesChange,
   onBloqueChange,
@@ -396,6 +433,7 @@ function BloquePdfEditor({
         keys={bloque.estilos}
         secciones={estilosSecciones}
         globalEst={globalEst}
+        fuentes={fuentes}
         onChange={onBloqueChange}
         onReset={onBloqueReset}
       />
@@ -442,11 +480,13 @@ function SeccionEditor({ estado, onChange, placeholder }: SeccionEditorProps) {
 interface EstilosGlobalesEditorProps {
   estilos: EstilosPlantilla;
   onChange: (patch: Partial<EstilosPlantilla>) => void;
+  fuentes: string[];
 }
 
 function EstilosGlobalesEditor({
   estilos,
   onChange,
+  fuentes,
 }: EstilosGlobalesEditorProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -476,7 +516,8 @@ function EstilosGlobalesEditor({
         <Select
           value={estilos.fuente}
           onChange={(v) => onChange({ fuente: v })}
-          options={FUENTES_DISPONIBLES.map((f) => ({ label: f, value: f }))}
+          options={fuentes.map((f) => ({ label: f, value: f }))}
+          showSearch
         />
       </div>
 

@@ -33,7 +33,7 @@ export function useColumnsMisOS({
   onViewPdf: (row: RequerimientoInterno) => void
   onAprobar?: (row: RequerimientoInterno) => void
   onEscalar?: (row: RequerimientoInterno) => void
-  userCargoId?: number
+  userCargoId?: string
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
@@ -150,8 +150,9 @@ export function useColumnsMisOS({
       width: 150,
       minWidth: 150,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
-        // Verificar si el usuario tiene autoridad para aprobar (comparar assigned_cargo_id)
-        const canApprove = userCargoId && data?.assigned_cargo_id === userCargoId
+        // Verificar si el usuario tiene autoridad para aprobar
+        // El usuario puede aprobar si su cargo coincide exactamente con el cargo requerido en la OS
+        const canApprove = userCargoId && data?.cargo && userCargoId === data.cargo
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
 
         return (
