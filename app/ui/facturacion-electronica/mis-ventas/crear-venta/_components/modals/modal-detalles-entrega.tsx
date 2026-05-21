@@ -1,6 +1,7 @@
 'use client'
 
 import { Modal, Form } from 'antd'
+import useApp from 'antd/es/app/useApp'
 import { useEffect, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ButtonBase from '~/components/buttons/button-base'
@@ -76,6 +77,7 @@ function ModalDetallesEntregaInner({
   forzarProgramarRestoOn = false,
   soloEntregarEnTienda = false,
 }: ModalDetallesEntregaProps) {
+  const { message } = useApp()
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
   const ocultarSet = useMemo(() => new Set(ocultar), [ocultar])
   // Si no se pasa `mode`, se asume modo histórico `crear-venta` con el `ventaId` recibido.
@@ -778,6 +780,18 @@ function ModalDetallesEntregaInner({
     }
   }
 
+  const handleConfirmarConFeedback = useCallback(async () => {
+    try {
+      await handleConfirmar()
+    } catch (error) {
+      message.error(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo confirmar la entrega',
+      )
+    }
+  }, [handleConfirmar, message])
+
   return (
     <Modal
       title={
@@ -823,7 +837,7 @@ function ModalDetallesEntregaInner({
           <ButtonBase
             color="success"
             size="md"
-            onClick={handleConfirmar}
+            onClick={handleConfirmarConFeedback}
             disabled={
               creandoVenta ||
               ((tipoDespacho === 'EnTienda' || soloEntregarEnTienda) &&
