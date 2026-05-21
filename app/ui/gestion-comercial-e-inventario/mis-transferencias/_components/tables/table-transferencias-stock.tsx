@@ -276,7 +276,7 @@ export default function TableTransferenciasStock({
               title="Crear Guía de Remisión"
               onClick={() => {
                 setTransferenciaParaGuia(params.data)
-                router.push('/ui/facturacion-electronica/mis-guias/crear-guia?from_transferencia=true&motivo_codigo=08')
+                router.push(`/ui/facturacion-electronica/mis-guias/crear-guia?from_transferencia=true&motivo_codigo=08&transferencia_id=${params.data.id}`)
               }}
             >
               <FaTruck size={12} />

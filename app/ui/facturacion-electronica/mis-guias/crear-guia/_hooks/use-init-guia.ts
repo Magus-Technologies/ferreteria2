@@ -13,6 +13,7 @@ import { useStoreTransferenciaParaGuia } from '~/app/ui/facturacion-electronica/
 import { motivoTrasladoApi } from '~/lib/api/motivo-traslado'
 import { almacenesApi } from '~/lib/api/almacen'
 import type { Almacen } from '~/app/_types/almacen'
+import { transferenciaStockApi, type TransferenciaStock } from '~/lib/api/transferencia-stock'
 
 export default function useInitGuia({
   guia,
@@ -23,6 +24,7 @@ export default function useInitGuia({
 }) {
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
+  const transferenciaIdParam = searchParams.get('transferencia_id')
   const vehiculoPlacaParam = searchParams.get('vehiculo_placa')
   // user_chofer_id viene cuando se "convierte a guía" desde mis-entregas:
   // el `entrega.chofer_id` apunta al USER (despachador interno) y se
@@ -40,6 +42,17 @@ export default function useInitGuia({
 
   // hasTransferencia se basa en el URL param (persiste aunque limpiemos el store)
   const hasTransferencia = fromTransferencia && !guia && !ventaId
+
+  // Fetch de la transferencia por ID cuando el store está vacío (ej. al refrescar)
+  const { data: transferenciaApiData, isLoading: isLoadingTransferenciaApi } = useQuery({
+    queryKey: [QueryKeys.TRANSFERENCIAS_STOCK, transferenciaIdParam],
+    queryFn: async () => {
+      const res = await transferenciaStockApi.getById(Number(transferenciaIdParam))
+      if (res.error) throw new Error(res.error.message)
+      return res.data as TransferenciaStock
+    },
+    enabled: hasTransferencia && !!transferenciaIdParam && !transferenciaStore,
+  })
 
   // Obtener datos de la venta si viene el parámetro
   const { data: ventaResponse, isLoading } = useQuery({
@@ -180,18 +193,20 @@ export default function useInitGuia({
     } else if (
       hasTransferencia &&
       !transferenciaInitializedRef.current &&
-      transferenciaStore &&
       !isLoadingMotivos &&
       !isLoadingAlmacenes &&
       motivosList &&
-      almacenesData
+      almacenesData &&
+      (transferenciaStore || (!isLoadingTransferenciaApi && transferenciaApiData))
     ) {
       // Inicializar formulario desde una transferencia de stock
+      // Prioriza el store (navegación normal); usa la API como fallback (refresh)
       transferenciaInitializedRef.current = true
 
+      const transferencia = transferenciaStore ?? transferenciaApiData!
       const motivo08 = motivosList.find((m: any) => m.codigo === '08')
-      const almacenOrigen = almacenesData.find((a: Almacen) => a.id === transferenciaStore.almacen_origen_id)
-      const almacenDestino = almacenesData.find((a: Almacen) => a.id === transferenciaStore.almacen_destino_id)
+      const almacenOrigen = almacenesData.find((a: Almacen) => a.id === transferencia.almacen_origen_id)
+      const almacenDestino = almacenesData.find((a: Almacen) => a.id === transferencia.almacen_destino_id)
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
       const primerSlot = empresaSlots.find((s) => s.direccion)
 
@@ -214,13 +229,13 @@ export default function useInitGuia({
         tipo_guia: 'ELECTRONICA_REMITENTE',
         modalidad_transporte: 'PRIVADO',
         ...(motivo08 ? { motivo_traslado: motivo08.id } : {}),
-        almacen_origen_id: transferenciaStore.almacen_origen_id,
-        almacen_destino_id: transferenciaStore.almacen_destino_id,
+        almacen_origen_id: transferencia.almacen_origen_id,
+        almacen_destino_id: transferencia.almacen_destino_id,
         punto_partida: resolveAlmacenAddress(almacenOrigen) || primerSlot?.direccion?.direccion || '',
         empresa_direccion_seleccionada: almacenOrigen?.empresa_dir_slot || primerSlot?.tipo || 'D1',
         punto_llegada: resolveAlmacenAddress(almacenDestino),
-        referencia: `TS${String(transferenciaStore.serie).padStart(4, '0')}-${String(transferenciaStore.numero).padStart(8, '0')}`,
-        productos: transferenciaStore.productos.map((p) => ({
+        referencia: `TS${String(transferencia.serie).padStart(4, '0')}-${String(transferencia.numero).padStart(8, '0')}`,
+        productos: transferencia.productos.map((p) => ({
           producto_id: p.producto_almacen_origen?.producto?.id || 0,
           producto_name: p.producto_almacen_origen?.producto?.name || '',
           producto_codigo: p.producto_almacen_origen?.producto?.cod_producto || '',
@@ -235,8 +250,8 @@ export default function useInitGuia({
         })),
       })
 
-      // Liberar el store — los datos ya están en el form
-      clearTransferencia(null)
+      // Liberar el store solo si venía de él (no aplica en refresh desde API)
+      if (transferenciaStore) clearTransferencia(null)
     } else if (!venta && !guia && !hasTransferencia) {
       // Valores por defecto para nueva guía sin venta ni transferencia
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
@@ -264,6 +279,8 @@ export default function useInitGuia({
     userChoferNombreParam,
     hasTransferencia,
     transferenciaStore,
+    transferenciaApiData,
+    isLoadingTransferenciaApi,
     isLoadingMotivos,
     isLoadingAlmacenes,
     motivosList,

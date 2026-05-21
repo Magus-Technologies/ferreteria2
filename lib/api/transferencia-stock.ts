@@ -109,6 +109,10 @@ export const transferenciaStockApi = {
     })
   },
 
+  async getById(id: number): Promise<ApiResponse<TransferenciaStock>> {
+    return apiRequest<TransferenciaStock>(`/transferencias-stock/${id}`)
+  },
+
   async anular(id: number): Promise<ApiResponse<any>> {
     return apiRequest<any>(`/transferencias-stock/${id}`, {
       method: 'DELETE',
