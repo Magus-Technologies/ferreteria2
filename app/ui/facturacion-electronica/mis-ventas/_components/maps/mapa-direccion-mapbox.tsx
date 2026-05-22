@@ -169,12 +169,25 @@ export default function MapaDireccionMapbox({
     const inicializarMapa = (centro: [number, number]) => {
       if (!mapContainer.current) return
 
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: centro,
-        zoom: 15,
-      })
+      if (!mapboxgl.supported()) {
+        setError('El navegador no soporta WebGL. Activa la aceleracion por hardware para ver el mapa.')
+        setCargando(false)
+        return
+      }
+
+      try {
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: centro,
+          zoom: 15,
+        })
+      } catch (err) {
+        console.error('Error inicializando Mapbox:', err)
+        setError('No se pudo cargar el mapa. Verifica WebGL o la aceleracion por hardware del navegador.')
+        setCargando(false)
+        return
+      }
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
       const geolocateControl = new mapboxgl.GeolocateControl({

@@ -184,8 +184,9 @@ export default function ModalEntregaUpdate({
     const t = entregaFuente?.tipo_entrega as 'rt' | 'de' | 'pa' | undefined
     if (t === 'de') return 'Domicilio'
     if (t === 'rt') return 'EnTienda'
+    if (t === 'pa' && entregaFuente?.tipo_despacho === 'pr') return 'Domicilio'
     return 'Parcial'
-  }, [entregaFuente?.tipo_entrega])
+  }, [entregaFuente?.tipo_despacho, entregaFuente?.tipo_entrega])
   const direccionSeleccionadaVenta =
     entregaFuente?.venta?.direccion_seleccionada || 'D1'
   const [tipoLocal, setTipoLocal] = useState<TipoDespachoUI>(tipoInicialUI)
@@ -714,6 +715,10 @@ export default function ModalEntregaUpdate({
   // - 'Parcial' → UI Parcial con counters.
   const tipoDespachoUI: TipoDespachoUI =
     tipoLocal === 'Domicilio' ? 'Domicilio' : 'Parcial'
+  const esParcialProgramadoDomicilio =
+    entregaFuente?.tipo_entrega === 'pa' && entregaFuente?.tipo_despacho === 'pr'
+  const tipoDespachoConfirmacion: TipoDespachoUI =
+    esParcialProgramadoDomicilio ? 'Parcial' : tipoDespachoUI
 
   // Qué secciones se ocultan según el tipo. Comunes a todos: 'omitir' (no
   // aplica al actualizar/crear-resto), 'quien-entrega' (ya fijado en la venta),
@@ -726,7 +731,12 @@ export default function ModalEntregaUpdate({
   //     en update (entrega Parcial pendiente que el usuario reabre para
   //     entregar parte y dejar el resto programado).
   //   - EnTienda: nunca tiene resto programable (recojo en tienda).
-  const ocultarBase: SeccionOcultable[] = ['omitir', 'quien-entrega', 'tipo-pedido']
+  const ocultarBase: SeccionOcultable[] = [
+    'omitir',
+    'quien-entrega',
+    'tipo-pedido',
+    ...(!restante ? (['programar-resto'] as SeccionOcultable[]) : []),
+  ]
   const ocultar: SeccionOcultable[] =
     tipoLocal === 'EnTienda'
       ? [...ocultarBase, 'programar-resto']
@@ -925,6 +935,7 @@ export default function ModalEntregaUpdate({
         setOpen={setOpen}
         form={form}
         tipoDespacho={tipoDespachoUI}
+        tipoDespachoConfirmacion={tipoDespachoConfirmacion}
         mode={mode}
         ocultar={ocultar}
         productosIniciales={productosIniciales}

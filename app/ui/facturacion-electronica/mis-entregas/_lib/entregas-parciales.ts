@@ -168,6 +168,106 @@ export function agruparEntregasParciales(entregas: EntregaLike[]): EntregaLike[]
   })
 }
 
+export function obtenerTramosParciales(entrega?: EntregaLike): EntregaLike[] {
+  if (!entrega?.venta?.entregas_productos?.length) return entrega ? [entrega] : []
+
+  const esParcial =
+    entrega?.tipo_entrega === 'pa' || entrega?.venta?.tipo_despacho === 'pa'
+  if (!esParcial) return [entrega]
+
+  const grupoId = entrega?.grupo_entrega_id
+  const ventaId = entrega?.venta_id
+
+  return ordenarEntregas(
+    entrega.venta.entregas_productos.filter((item: EntregaLike) => {
+      if (grupoId && item?.grupo_entrega_id) {
+        return Number(item.grupo_entrega_id) === Number(grupoId)
+      }
+      return item?.venta_id === ventaId && item?.tipo_entrega === 'pa'
+    }),
+  )
+}
+
+export function getEtiquetaTramoParcial(
+  entrega?: EntregaLike,
+  tramosGrupo?: EntregaLike[],
+): string {
+  if (!entrega || entrega?.tipo_entrega !== 'pa') return ''
+
+  const tramos = tramosGrupo?.length ? ordenarEntregas(tramosGrupo) : obtenerTramosParciales(entrega)
+  const indice = tramos.findIndex((item) => Number(item?.id) === Number(entrega?.id))
+  const posicion = indice >= 0 ? indice + 1 : 1
+  const total = Math.max(tramos.length, 1)
+
+  const destino =
+    entrega?.tipo_despacho === 'pr'
+      ? 'Domicilio'
+      : entrega?.quien_entrega === 'chofer'
+      ? 'Chofer'
+      : entrega?.quien_entrega === 'vendedor'
+      ? 'Vendedor'
+      : 'Almacen'
+
+  return `Entrega ${posicion}/${total} - ${destino}`
+}
+
+export function listarEntregasSinAgruparParcial(entregas: EntregaLike[]): EntregaLike[] {
+  const parcialesPorGrupo = new Map<string, EntregaLike[]>()
+
+  for (const entrega of entregas || []) {
+    const esParcial =
+      entrega?.tipo_entrega === 'pa' || entrega?.venta?.tipo_despacho === 'pa'
+    if (!esParcial || !entrega?.venta_id) continue
+
+    const claveGrupo = entrega?.grupo_entrega_id
+      ? `g:${entrega.grupo_entrega_id}`
+      : `v:${entrega.venta_id}`
+    const actual = parcialesPorGrupo.get(claveGrupo) || []
+    actual.push(entrega)
+    parcialesPorGrupo.set(claveGrupo, actual)
+  }
+
+  return [...(entregas || [])]
+    .map((entrega) => {
+      if (entrega?.tipo_entrega !== 'pa' && entrega?.venta?.tipo_despacho !== 'pa') {
+        return entrega
+      }
+
+      const claveGrupo = entrega?.grupo_entrega_id
+        ? `g:${entrega.grupo_entrega_id}`
+        : `v:${entrega.venta_id}`
+      const tramosGrupo = parcialesPorGrupo.get(claveGrupo) || [entrega]
+      const tramosOrdenados = ordenarEntregas(tramosGrupo)
+      const indiceTramo = tramosOrdenados.findIndex(
+        (item) => Number(item?.id) === Number(entrega?.id),
+      )
+      const fechaGrupo = tramosOrdenados.reduce((max, item) => {
+        const fecha = new Date(item?.created_at || 0).getTime()
+        return Math.max(max, fecha)
+      }, 0)
+
+      return {
+        ...entrega,
+        __tramoParcialLabel: getEtiquetaTramoParcial(entrega, tramosOrdenados),
+        __tramoParcialOrden: indiceTramo >= 0 ? indiceTramo + 1 : 1,
+        __grupoParcialOrden: fechaGrupo,
+      }
+    })
+    .sort((a, b) => {
+      const grupoA = Number(a?.__grupoParcialOrden || 0)
+      const grupoB = Number(b?.__grupoParcialOrden || 0)
+      if (grupoA || grupoB) {
+        if (grupoA !== grupoB) return grupoB - grupoA
+        return Number(a?.__tramoParcialOrden || 1) - Number(b?.__tramoParcialOrden || 1)
+      }
+
+      const fechaA = new Date(a?.created_at || 0).getTime()
+      const fechaB = new Date(b?.created_at || 0).getTime()
+      if (fechaA !== fechaB) return fechaB - fechaA
+      return String(b?.id || '').localeCompare(String(a?.id || ''))
+    })
+}
+
 export function getResumenProductosParcialAgrupado(
   entrega?: EntregaLike,
 ): ResumenProductoParcial[] {
