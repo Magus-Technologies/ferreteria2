@@ -70,12 +70,16 @@ export default function StepResumen({
                 {/* Tipo de Solicitud */}
                 <div className="border border-slate-200 rounded-lg overflow-hidden h-fit">
                     <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
-                        <span className="text-base">{form.tipoSolicitud === "OC" ? "🛒" : "🔧"}</span>
+                        <span className="text-base">{form.tipoSolicitud === "OS" ? "🔧" : "🛒"}</span>
                         <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tipo de solicitud</span>
                     </div>
                     <div className="px-4 py-3">
                         <div className="font-bold text-sm text-slate-900 mb-2">
-                            {form.tipoSolicitud === "OC" ? "Orden de Compra" : "Orden de Servicio"}
+                            {form.tipoSolicitud === "OS"
+                                ? "Orden de Servicio"
+                                : form.tipoSolicitud === "SOC"
+                                    ? "Solicitud de Orden de Compra"
+                                    : "Orden de Compra"}
                         </div>
                         <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${prio?.color}`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -137,7 +141,7 @@ export default function StepResumen({
             )}
 
             {/* Detalle del Requerimiento */}
-            {form.tipoSolicitud === "OC" ? (
+            {form.tipoSolicitud === "OC" || form.tipoSolicitud === "SOC" ? (
                 <TableWithTitle<ItemBuscado>
                     tableRef={tableGridRef}
                     id="requerimiento-interno.table-productos-resumen"

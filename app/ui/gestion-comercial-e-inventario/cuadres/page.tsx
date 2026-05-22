@@ -5,13 +5,25 @@ import { Suspense, lazy } from "react";
 import { Spin } from "antd";
 import { FaCalculator } from "react-icons/fa6";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
-import { CuadresProvider } from "./_contexts/cuadres-context";
+import { CuadresProvider, useCuadresContext } from "./_contexts/cuadres-context";
+import ModalDocIngresoSalida from "../mi-almacen/_components/modals/modal-doc-ingreso-salida";
 
 // Lazy loading de componentes
 const FiltersCuadres = lazy(() => import("./_components/filters/filters-cuadres"));
 const TableIngresosCuadres = lazy(() => import("./_components/tables/table-ingresos-cuadres"));
 const TableSalidasCuadres = lazy(() => import("./_components/tables/table-salidas-cuadres"));
 const CardsInfoCuadres = lazy(() => import("./_components/others/cards-info-cuadres"));
+
+function PdfModalCuadres() {
+    const { pdfOpen, setPdfOpen, pdfData } = useCuadresContext();
+    return (
+        <ModalDocIngresoSalida
+            open={pdfOpen}
+            setOpen={setPdfOpen}
+            data={pdfData ? (pdfData as any) : undefined}
+        />
+    );
+}
 
 const ComponentLoading = () => (
     <div className="flex items-center justify-center h-40">
@@ -74,6 +86,9 @@ export default function CuadresPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Modal PDF compartido para Ingresos y Salidas */}
+                <PdfModalCuadres />
             </CuadresProvider>
         </ContenedorGeneral>
     );

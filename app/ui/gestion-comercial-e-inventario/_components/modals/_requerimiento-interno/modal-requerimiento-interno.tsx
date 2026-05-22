@@ -155,7 +155,7 @@ export default function ModalRequerimientoInterno({
                             <div className="w-18 h-18 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-full flex items-center justify-center text-4xl mb-5 shadow-lg shadow-emerald-600/30">✓</div>
                             <h3 className="text-2xl font-bold text-slate-900 mb-2">Requerimiento Enviado</h3>
                             <p className="text-sm text-slate-600 max-w-sm leading-relaxed mb-4">
-                                El requerimiento ha sido enviado al área de supervisión. Se generará la {formHook.form.tipoSolicitud === "OC" ? "Orden de Compra" : "Orden de Servicio"} correspondiente una vez aprobado.
+                                El requerimiento ha sido enviado al área de supervisión. Se generará la {formHook.form.tipoSolicitud === "OS" ? "Orden de Servicio" : "Orden de Compra"} correspondiente una vez aprobado.
                             </p>
                             {submitHook.requerimientoCreado && (
                                 <div className="bg-slate-50 border border-slate-200 rounded px-4 py-2 font-mono text-sm font-semibold text-emerald-600">
@@ -177,7 +177,7 @@ export default function ModalRequerimientoInterno({
                                 />
                             )}
 
-                            {currentStep === 1 && formHook.form.tipoSolicitud === "OC" && (
+                            {currentStep === 1 && (formHook.form.tipoSolicitud === "OC" || formHook.form.tipoSolicitud === "SOC") && (
                                 <StepProductos
                                     form={formHook.form}
                                     setField={formHook.setField}

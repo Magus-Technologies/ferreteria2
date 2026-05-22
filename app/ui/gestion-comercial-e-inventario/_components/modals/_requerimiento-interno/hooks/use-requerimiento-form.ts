@@ -70,7 +70,7 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
             if (!form.fechaRequerida) e.fechaRequerida = "Requerido"
         }
         
-        if (currentStep === 1 && form.tipoSolicitud === "OC") {
+        if (currentStep === 1 && (form.tipoSolicitud === "OC" || form.tipoSolicitud === "SOC")) {
             if (productosSeleccionados.length === 0) e.productos = "Agregue al menos un producto"
         }
         

@@ -26,7 +26,7 @@ export function useRequerimientoSubmit() {
                 afecta_calendario: form.afectaCalendario ?? true,
             }
 
-            if (form.tipoSolicitud === 'OC') {
+            if (form.tipoSolicitud === 'OC' || form.tipoSolicitud === 'SOC') {
                 requestData.productos = productosSeleccionados.map(p => {
                     const prod: any = {
                         cantidad: p.cantidad,

@@ -3,8 +3,9 @@
 import TableWithTitle from "~/components/tables/table-with-title";
 import { ColDef } from "ag-grid-community";
 import { useMemo } from "react";
-import { Button, Checkbox, Popconfirm, message, Tag } from "antd";
+import { Button, Checkbox, Popconfirm, message, Tag, Tooltip } from "antd";
 import { FaBan } from "react-icons/fa6";
+import { FilePdfFilled } from "@ant-design/icons";
 import { formatFechaPeru } from "~/utils/fechas";
 import { greenColors } from '~/lib/colors'
 
@@ -12,7 +13,7 @@ import { greenColors } from '~/lib/colors'
 import { useCuadresContext } from "../../_contexts/cuadres-context";
 
 export default function TableIngresosCuadres() {
-    const { ingresos, loading, anular } = useCuadresContext();
+    const { ingresos, loading, anular, openPdf } = useCuadresContext();
 
     const handleAnular = async (headerId: number) => {
         try {
@@ -79,12 +80,19 @@ export default function TableIngresosCuadres() {
         {
             headerName: "Acciones",
             field: "headerId",
-            width: 100,
+            width: 110,
             pinned: "right",
             cellRenderer: (p: any) => {
                 const isAnulado = p.data.anulado;
                 return (
-                    <div className="flex items-center justify-center h-full">
+                    <div className="flex items-center justify-center gap-2 h-full">
+                        <Tooltip title="Ver PDF">
+                            <FilePdfFilled
+                                onClick={() => openPdf(p.data)}
+                                className="cursor-pointer hover:scale-110 transition-all"
+                                style={{ fontSize: 16, color: '#dc2626' }}
+                            />
+                        </Tooltip>
                         <Popconfirm
                             title="¿Estás seguro de anular este documento?"
                             onConfirm={() => handleAnular(p.value)}
@@ -105,7 +113,7 @@ export default function TableIngresosCuadres() {
                 );
             }
         },
-    ], [anular]);
+    ], [anular, openPdf]);
 
     return (
         <TableWithTitle

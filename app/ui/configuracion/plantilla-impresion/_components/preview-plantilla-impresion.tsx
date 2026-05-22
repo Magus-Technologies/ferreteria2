@@ -31,10 +31,39 @@ function generarFontFaceCss(fuentes: FuentePersonalizada[]): string {
   }).join('\n')
 }
 
+// Mapeo de tipo de comprobante a título visible en el preview
+function tituloComprobante(comprobante?: string): { titulo: string; numero: string } {
+  switch (comprobante) {
+    case 'cotizacion':       return { titulo: 'PROFORMA ELECTRÓNICA', numero: 'COT-00000123' }
+    case 'compra':           return { titulo: 'COMPRA', numero: 'COM-00000045' }
+    case 'guia':             return { titulo: 'GUÍA DE REMISIÓN REMITENTE\nELECTRÓNICA', numero: 'T001-00000087' }
+    case 'orden-compra':     return { titulo: 'ORDEN DE COMPRA', numero: 'OC-00000056' }
+    case 'entrega':          return { titulo: 'ENTREGA DE PRODUCTOS', numero: 'EN-00000128' }
+    case 'ingreso-salida':   return { titulo: 'INGRESO / SALIDA', numero: 'IS-00000034' }
+    case 'nota-credito':     return { titulo: 'NOTA DE CRÉDITO', numero: 'BC01-00000012' }
+    case 'nota-debito':      return { titulo: 'NOTA DE DÉBITO', numero: 'BD01-00000007' }
+    case 'prestamo':         return { titulo: 'PRÉSTAMO', numero: 'PR-00000019' }
+    case 'recepcion-almacen':return { titulo: 'RECEPCIÓN DE ALMACÉN', numero: 'RA-00000022' }
+    case 'transferencia-stock':return { titulo: 'TRANSFERENCIA DE STOCK', numero: 'TS-00000041' }
+    case 'requerimiento-interno':return { titulo: 'REQUERIMIENTO INTERNO', numero: 'REQ-2026-014' }
+    case 'cierre-caja':      return { titulo: 'CIERRE DE CAJA', numero: 'CC-00000003' }
+    case 'apertura-caja':    return { titulo: 'APERTURA DE CAJA', numero: 'AC-00000003' }
+    case 'cobro-venta':      return { titulo: 'COBRO DE VENTA', numero: 'CV-00000118' }
+    case 'cobro-venta-masivo':return { titulo: 'COBRO DE VENTA MASIVO', numero: 'CVM-00000005' }
+    case 'pago-compra':      return { titulo: 'PAGO DE COMPRA', numero: 'PG-00000014' }
+    case 'vale-compra':      return { titulo: 'VALE DE COMPRA', numero: 'VC-00000027' }
+    case 'vale-generado':    return { titulo: 'VALE GENERADO', numero: 'VG-00000027' }
+    case 'ventas-por-cobrar':return { titulo: 'VENTAS POR COBRAR', numero: '—' }
+    case 'venta':
+    default:                 return { titulo: 'BOLETA DE VENTA', numero: 'B001-00000327' }
+  }
+}
+
 export default function PreviewPlantillaImpresion({ plantilla, formato, comprobante, fuentesPersonalizadas = [] }: Props) {
   const fontFaceCss = generarFontFaceCss(fuentesPersonalizadas)
   const { user } = useAuth();
   const empresaId = user?.empresa?.id;
+  const { titulo: tituloDocumento, numero: numeroDocumento } = tituloComprobante(comprobante);
 
   const { data } = useQuery({
     queryKey: [QueryKeys.EMPRESAS, empresaId],
@@ -65,6 +94,124 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
     const sep = (
       <div style={{ borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, margin: "6px 0" }} />
     );
+
+    // Ticket de Entrega (estructura específica)
+    if (comprobante === "entrega") {
+      return (
+        <>{fontFaceCss && <style>{fontFaceCss}</style>}<div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+          <div style={{ width: 280, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 6 }}>
+              {logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", height: 60, objectFit: "contain" }} />
+              )}
+              <div style={bloqueACSS(b.empresa_razon)}>{razonSocial}</div>
+              <div style={bloqueACSS(b.caja_ruc)}>R.U.C. {ruc}</div>
+              <div style={bloqueACSS(b.empresa_direccion)}>{direccion}</div>
+              {celular && <div style={bloqueACSS(b.empresa_direccion)}><span style={{ fontWeight: 700 }}>Cel:</span> {celular}</div>}
+              {email && <div style={bloqueACSS(b.empresa_direccion)}><span style={{ fontWeight: 700 }}>Email:</span> {email}</div>}
+            </div>
+
+            {sep}
+
+            <div style={{ marginBottom: 6 }}>
+              <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>VALE DE RECOJO</div>
+              <div style={{ ...bloqueACSS(b.caja_numero), textAlign: "center" }}>Venta: B001-00000327</div>
+            </div>
+
+            {sep}
+
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 4 }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: "50%", verticalAlign: "top", paddingRight: 4 }}>
+                    <div style={bloqueACSS(b.info_label)}>FECHA ENTREGA:</div>
+                    <div style={bloqueACSS(b.info_valor)}>19/05/2026</div>
+                    <div style={{ height: 4 }} />
+                    <div style={bloqueACSS(b.info_label)}>TIPO ENTREGA:</div>
+                    <div style={bloqueACSS(b.info_valor)}>Despacho a Domicilio</div>
+                    <div style={{ height: 4 }} />
+                    <div style={bloqueACSS(b.info_label)}>DESPACHADOR:</div>
+                    <div style={bloqueACSS(b.info_valor)}>BRYZA CARRION</div>
+                  </td>
+                  <td style={{ width: "50%", verticalAlign: "top", paddingLeft: 4 }}>
+                    <div style={bloqueACSS(b.info_label)}>FECHA PROGRAMADA:</div>
+                    <div style={bloqueACSS(b.info_valor)}>20/05/2026</div>
+                    <div style={{ height: 4 }} />
+                    <div style={bloqueACSS(b.info_label)}>TIPO DESPACHO:</div>
+                    <div style={bloqueACSS(b.info_valor)}>Programado</div>
+                    <div style={{ height: 4 }} />
+                    <div style={bloqueACSS(b.info_label)}>HORARIO:</div>
+                    <div style={bloqueACSS(b.info_valor)}>08:00 - 12:00</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ ...bloqueACSS(b.obs_label), textAlign: "center", borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, paddingTop: 4, marginBottom: 2 }}>DATOS DEL CLIENTE</div>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 4 }}>
+              <tbody>
+                <tr><td style={{ ...bloqueACSS(b.info_label), width: "25%" }}>CLIENTE:</td><td style={bloqueACSS(b.info_valor)}>EFRAIN CASTILLO</td></tr>
+                <tr><td style={bloqueACSS(b.info_label)}>DOCUMENTO:</td><td style={bloqueACSS(b.info_valor)}>74568367</td></tr>
+                <tr><td style={bloqueACSS(b.info_label)}>TELÉFONO:</td><td style={bloqueACSS(b.info_valor)}>987654321</td></tr>
+                <tr><td style={bloqueACSS(b.info_label)}>DIRECCIÓN:</td><td style={bloqueACSS(b.info_valor)}>AV. EJEMPLO 123</td></tr>
+              </tbody>
+            </table>
+
+            <div style={{ ...bloqueACSS(b.obs_label), textAlign: "center", borderTop: `${e.border_thin_px}px dashed ${e.color_borde}`, paddingTop: 4, marginBottom: 2 }}>PRODUCTOS</div>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 4 }}>
+              <thead>
+                <tr style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }}>
+                  <th style={{ ...bloqueACSS(b.tabla_header), textAlign: "left" }}>Cód.</th>
+                  <th style={{ ...bloqueACSS(b.tabla_header), textAlign: "left" }}>Producto</th>
+                  <th style={bloqueACSS(b.tabla_header)}>Unidad</th>
+                  <th style={bloqueACSS(b.tabla_header)}>Entreg.</th>
+                  <th style={bloqueACSS(b.tabla_header)}>Pend.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={bloqueACSS(b.tabla_fila)}>CT12M</td>
+                  <td style={bloqueACSS(b.tabla_fila)}>CINTA TEFLON</td>
+                  <td style={{ ...bloqueACSS(b.tabla_fila), textAlign: "center" }}>UNIDAD</td>
+                  <td style={{ ...bloqueACSS(b.tabla_fila), textAlign: "center" }}>10</td>
+                  <td style={{ ...bloqueACSS(b.tabla_fila), textAlign: "center" }}>0</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4, background: "#f0f0f0" }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...bloqueACSS(b.total_label), padding: 4 }}>TOTAL ITEMS</td>
+                  <td style={{ ...bloqueACSS(b.total_valor), padding: 4 }}>1</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ marginTop: 4 }}>
+              <div style={bloqueACSS(b.obs_label)}>{m.label_observaciones}</div>
+              <div style={bloqueACSS(b.obs_valor)}>- NINGUNA</div>
+            </div>
+
+            {/* Firmas */}
+            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 20 }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: "45%", textAlign: "center", paddingTop: 18, borderTop: `1px solid ${e.color_texto}`, ...bloqueACSS(b.consulta_leyenda) }}>
+                    Firma del Despachador
+                  </td>
+                  <td style={{ width: "10%" }}></td>
+                  <td style={{ width: "45%", textAlign: "center", paddingTop: 18, borderTop: `1px solid ${e.color_texto}`, ...bloqueACSS(b.consulta_leyenda) }}>
+                    Firma del Cliente
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div></>
+      );
+    }
 
     const labelStyle: React.CSSProperties = {
       ...bloqueACSS(b.info_label),
@@ -229,8 +376,8 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
 
           {/* Tipo y número de comprobante */}
           <div style={{ marginBottom: 6 }}>
-            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center" }}>BOLETA DE VENTA</div>
-            <div style={{ ...bloqueACSS(b.caja_numero), textAlign: "center" }}>B001-00000327</div>
+            <div style={{ ...bloqueACSS(b.caja_tipo), textAlign: "center", whiteSpace: "pre-line" }}>{tituloDocumento}</div>
+            <div style={{ ...bloqueACSS(b.caja_numero), textAlign: "center" }}>{numeroDocumento}</div>
           </div>
 
           {sep}
@@ -368,6 +515,102 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
         </div>
       </div>
     </>);
+  }
+
+  // A4 de Entrega (estructura específica: header + info-grid con datos de entrega
+  // + tabla de productos sin precios)
+  if (comprobante === "entrega") {
+    return (
+      <>{fontFaceCss && <style>{fontFaceCss}</style>}<div className="bg-white p-4 border border-slate-200 rounded" style={containerStyle}>
+        {/* Header */}
+        <table className="w-full mb-2" style={{ borderCollapse: "collapse" }}>
+          <tbody>
+            <tr>
+              <td style={{ width: "30%", verticalAlign: "middle", paddingRight: 4 }}>
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="logo" style={{ maxWidth: "100%", maxHeight: 80, objectFit: "contain" }} />
+                ) : (
+                  <div style={{ height: 80 }} />
+                )}
+              </td>
+              <td style={{ verticalAlign: "middle", lineHeight: 1.4 }}>
+                <div style={{ ...bloqueACSS(b.empresa_razon), marginBottom: 2 }}>{razonSocial}</div>
+                <div style={bloqueACSS(b.empresa_direccion)}>
+                  {direccion && <div>{direccion}</div>}
+                  {celular && <div>Cel: {celular}</div>}
+                  {email && <div>Email: {email}</div>}
+                </div>
+              </td>
+              <td style={{ width: "30%", verticalAlign: "middle" }}>
+                <div style={{ border: `${e.border_px}px solid ${e.color_tema}`, borderRadius: 10, overflow: "hidden" }}>
+                  <div style={{ ...bloqueACSS(b.caja_ruc), padding: 4 }}>R.U.C. {ruc}</div>
+                  <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>VALE DE RECOJO</div>
+                  <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>B001-00000327</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Info-grid del cliente y la entrega */}
+        <table className="w-full mb-2" style={{ borderCollapse: "collapse", border: `${e.border_thin_px}px solid ${e.color_borde}` }}>
+          <tbody>
+            <Fila e={e} b={b} izq={["CLIENTE", "EFRAIN CASTILLO"]} der={["DOC", "74568367"]} />
+            <Fila e={e} b={b} izq={["TELEFONO", "987654321"]} der={["DIRECCION", "AV. EJEMPLO 123"]} />
+            <Fila e={e} b={b} izq={["F. ENTREGA", "19/05/2026 16:30"]} der={["ALMACEN", "ALMACEN PRINCIPAL"]} />
+            <Fila e={e} b={b} izq={["TIPO ENTREGA", "Despacho a Domicilio"]} der={["DESPACHADOR", "BRYZA CARRION"]} />
+            <Fila e={e} b={b} izq={["TIPO DESPACHO", "Programado"]} der={["ESTADO", "PENDIENTE"]} />
+          </tbody>
+        </table>
+
+        {/* Tabla productos (sin precios) */}
+        <table className="w-full" style={{ borderCollapse: "collapse", border: `${e.border_px}px solid ${e.color_borde}` }}>
+          <thead>
+            <tr style={{ background: e.color_tema }}>
+              <th style={{ ...bloqueACSS(b.tabla_header), padding: e.pad_px, width: "10%" }}>CODIGO</th>
+              <th style={{ ...bloqueACSS(b.tabla_header), padding: e.pad_px, width: "45%" }}>DESCRIPCION</th>
+              <th style={{ ...bloqueACSS(b.tabla_header), padding: e.pad_px, width: "15%" }}>UNIDAD</th>
+              <th style={{ ...bloqueACSS(b.tabla_header), padding: e.pad_px, width: "15%" }}>ENTREGADO</th>
+              <th style={{ ...bloqueACSS(b.tabla_header), padding: e.pad_px, width: "15%" }}>PENDIENTE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: `${e.border_thin_px}px solid ${e.color_borde}` }}>
+              <td style={{ ...bloqueACSS(b.tabla_fila), padding: e.pad_px, textAlign: "center" }}>CT12M</td>
+              <td style={{ ...bloqueACSS(b.tabla_fila), padding: e.pad_px }}>CINTA TEFLON 1/2" X 12 MTS - SWIFT</td>
+              <td style={{ ...bloqueACSS(b.tabla_fila), padding: e.pad_px, textAlign: "center" }}>UNIDAD</td>
+              <td style={{ ...bloqueACSS(b.tabla_fila), padding: e.pad_px, textAlign: "center" }}>10</td>
+              <td style={{ ...bloqueACSS(b.tabla_fila), padding: e.pad_px, textAlign: "center" }}>0</td>
+            </tr>
+            <tr>
+              <td colSpan={5} style={{ height: 120 }} />
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Observaciones */}
+        <div style={{ marginTop: 8, border: `${e.border_thin_px}px solid ${e.color_borde}`, borderRadius: 6, padding: 6 }}>
+          <div style={{ ...bloqueACSS(b.obs_label), marginBottom: 4 }}>{m.label_observaciones}</div>
+          <div style={bloqueACSS(b.obs_valor)}>- NINGUNA</div>
+        </div>
+
+        {/* Firmas */}
+        <table className="w-full mt-3" style={{ borderCollapse: "collapse" }}>
+          <tbody>
+            <tr>
+              <td style={{ width: "45%", textAlign: "center", paddingTop: 30, borderTop: `${e.border_thin_px}px solid ${e.color_borde}`, ...bloqueACSS(b.consulta_leyenda) }}>
+                Firma del Despachador
+              </td>
+              <td style={{ width: "10%" }}></td>
+              <td style={{ width: "45%", textAlign: "center", paddingTop: 30, borderTop: `${e.border_thin_px}px solid ${e.color_borde}`, ...bloqueACSS(b.consulta_leyenda) }}>
+                Firma del Cliente
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div></>
+    );
   }
 
   if (comprobante === "cotizacion") {
@@ -575,8 +818,8 @@ export default function PreviewPlantillaImpresion({ plantilla, formato, comproba
             <td style={{ width: "30%", verticalAlign: "middle" }}>
               <div style={{ border: `${e.border_px}px solid ${e.color_tema}`, borderRadius: 10, overflow: "hidden" }}>
                 <div style={{ ...bloqueACSS(b.caja_ruc), padding: 4 }}>R.U.C. {ruc}</div>
-                <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4 }}>BOLETA DE VENTA</div>
-                <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>B001-00000325</div>
+                <div style={{ ...bloqueACSS(b.caja_tipo), background: e.color_tema, padding: 4, whiteSpace: "pre-line" }}>{tituloDocumento}</div>
+                <div style={{ ...bloqueACSS(b.caja_numero), padding: 4 }}>{numeroDocumento}</div>
               </div>
             </td>
           </tr>

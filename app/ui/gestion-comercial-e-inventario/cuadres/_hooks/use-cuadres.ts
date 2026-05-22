@@ -22,6 +22,10 @@ export interface MovimientoCuadre {
     tipo_ingreso: string;
     total: number;
     headerId: number;
+    // Datos crudos del header para abrir el PDF del documento
+    serie: number;
+    numeroRaw: number;
+    tipo_documento: 'in' | 'sa';
 }
 
 export function useCuadres() {
@@ -89,8 +93,10 @@ export function useCuadres() {
                         tipo_ingreso,
                         total,
                         headerId,
-                        tipo_documento: header.tipo_documento // Agregamos temporalmente para filtrar
-                    } as any);
+                        serie: Number(header.serie ?? 0),
+                        numeroRaw: Number(header.numero ?? 0),
+                        tipo_documento: header.tipo_documento, // 'in' o 'sa'
+                    });
                 });
             });
         });
