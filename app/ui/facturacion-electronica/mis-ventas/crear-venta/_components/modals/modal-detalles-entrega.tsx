@@ -19,7 +19,10 @@ import ModalCalendarioSlot from './modal-calendario-slot'
 dayjs.locale('es')
 
 // Tipos viven en `./detalles-entrega/types.ts` (Fase A del refactor).
-import type { ModalDetallesEntregaProps } from './detalles-entrega/types'
+import type {
+  ModalDetallesEntregaProps,
+  TipoDespachoUI,
+} from './detalles-entrega/types'
 // Provider + hook para el state del modal (Fase A.3 — migración progresiva).
 import {
   DetallesEntregaProvider,
@@ -171,10 +174,13 @@ function ModalDetallesEntregaInner({
   // Submit del modal — extraído a hook (Fase E).
   // El modo `crear-venta` mantiene el comportamiento histórico. El modo
   // `actualizar-entrega` se usa al reusar este modal desde `mis-entregas`.
+  const tipoDespachoConfirmacion: TipoDespachoUI = soloEntregarEnTienda
+    ? 'EnTienda'
+    : tipoDespacho
   const { handleConfirmar, handleOmitir, loading: creandoVenta } = useConfirmarEntrega({
     mode: resolvedMode,
     form,
-    tipoDespacho,
+    tipoDespacho: tipoDespachoConfirmacion,
     onSuccess: () => {
       setOpen(false)
       onConfirmar()
