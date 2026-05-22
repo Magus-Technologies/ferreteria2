@@ -3,7 +3,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreFiltrosMisEntregas } from '../_store/store-filtros-mis-entregas'
 import { useAuth } from '~/lib/auth-context'
 import { entregaProductoApi } from '~/lib/api/entrega-producto'
-import { agruparEntregasParciales } from '../_lib/entregas-parciales'
+import { listarEntregasSinAgruparParcial } from '../_lib/entregas-parciales'
 
 export default function useGetEntregas() {
   const { filtros } = useStoreFiltrosMisEntregas()
@@ -30,7 +30,7 @@ export default function useGetEntregas() {
         chofer_id: esDespachador ? user?.id : undefined,
       })
 
-      return agruparEntregasParciales(response.data?.data || [])
+      return listarEntregasSinAgruparParcial(response.data?.data || [])
     },
     enabled: !!user?.id,
   })

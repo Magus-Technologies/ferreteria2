@@ -7,7 +7,10 @@ import {
   TIPO_ENTREGA_LABEL_CON_ICON,
   TIPO_DESPACHO_LABEL_CON_ICON,
 } from '~/app/_lib/entrega-labels'
-import { isEntregaParcialAgrupada } from '../../_lib/entregas-parciales'
+import {
+  getEtiquetaTramoParcial,
+  isEntregaParcialAgrupada,
+} from '../../_lib/entregas-parciales'
 
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
@@ -46,6 +49,19 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         const numero = venta.numero || ''
         return serie && numero ? `${serie}-${numero}` : '-'
       },
+    },
+    {
+      headerName: 'Tramo',
+      colId: 'tramo_parcial',
+      width: 170,
+      valueGetter: (params) =>
+        params.data?.tipo_entrega === 'pa'
+          ? params.data?.__tramoParcialLabel || getEtiquetaTramoParcial(params.data)
+          : '-',
+      cellStyle: (params) =>
+        params.data?.tipo_entrega === 'pa'
+          ? { color: '#9333ea', fontWeight: 'bold' }
+          : { color: '#94a3b8', fontWeight: 'normal' },
     },
     {
       headerName: 'Cliente',
@@ -127,6 +143,11 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       field: 'tipo_despacho',
       width: 130,
       valueFormatter: (params) => {
+        if (params.data?.tipo_entrega === 'pa' && !isEntregaParcialAgrupada(params.data)) {
+          if (params.value === 'pr') return 'Domicilio'
+          if (params.value === 'in') return 'Inmediata'
+          return 'Parcial'
+        }
         if (isEntregaParcialAgrupada(params.data) || params.data?.tipo_entrega === 'pa') {
           return '🔀 PARCIAL'
         }
@@ -134,6 +155,11 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         return TIPO_DESPACHO_LABEL_CON_ICON[tipo] || tipo || '—'
       },
       cellStyle: (params) => {
+        if (params.data?.tipo_entrega === 'pa' && !isEntregaParcialAgrupada(params.data)) {
+          if (params.value === 'pr') return { color: '#2563eb', fontWeight: 'bold' }
+          if (params.value === 'in') return { color: '#16a34a', fontWeight: 'bold' }
+          return { color: '#9333ea', fontWeight: 'bold' }
+        }
         if (isEntregaParcialAgrupada(params.data) || params.data?.tipo_entrega === 'pa') {
           return { color: '#9333ea', fontWeight: 'bold' }
         }

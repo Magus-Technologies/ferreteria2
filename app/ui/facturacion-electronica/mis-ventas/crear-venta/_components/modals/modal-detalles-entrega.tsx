@@ -79,6 +79,7 @@ function ModalDetallesEntregaInner({
   accionesHeader,
   forzarProgramarRestoOn = false,
   soloEntregarEnTienda = false,
+  tipoDespachoConfirmacion: tipoDespachoConfirmacionOverride,
 }: ModalDetallesEntregaProps) {
   const { message } = useApp()
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
@@ -176,7 +177,7 @@ function ModalDetallesEntregaInner({
   // `actualizar-entrega` se usa al reusar este modal desde `mis-entregas`.
   const tipoDespachoConfirmacion: TipoDespachoUI = soloEntregarEnTienda
     ? 'EnTienda'
-    : tipoDespacho
+    : tipoDespachoConfirmacionOverride ?? tipoDespacho
   const { handleConfirmar, handleOmitir, loading: creandoVenta } = useConfirmarEntrega({
     mode: resolvedMode,
     form,
@@ -310,6 +311,32 @@ function ModalDetallesEntregaInner({
       const yaTieneHorario = !!form.getFieldValue('hora_inicio') || !!form.getFieldValue('hora_fin')
       
       // Si ya tiene TODOS los campos críticos, no hacer nada
+      // Si la entrega existente ya trae GPS desde BD, sincronizarlo con el
+      // estado visual del mapa antes de salir por los guards de precarga.
+      if (yaTieneCoords) {
+        const coords = {
+          lat: Number(form.getFieldValue('latitud')),
+          lng: Number(form.getFieldValue('longitud')),
+        }
+
+        if (Number.isFinite(coords.lat) && Number.isFinite(coords.lng)) {
+          const direccionActual = form.getFieldValue('direccion_entrega')
+          const direccionSeleccionadaForm = form.getFieldValue('direccion_seleccionada') || 'D1'
+          const direccionObj =
+            direcciones.find(d => d.direccion === direccionActual) ||
+            direcciones.find(d => d.tipo === direccionSeleccionadaForm)
+
+          if (direccionObj) {
+            setDireccionSeleccionada(direccionObj.tipo as TipoDireccion)
+            form.setFieldValue('direccion_seleccionada', direccionObj.tipo)
+          }
+
+          setCoordenadas(coords)
+          obtenerUbicacionGps(coords.lat, coords.lng)
+          setMostrarMapa(true)
+        }
+      }
+
       if (yaTieneDireccion && yaTieneReferencia && yaTieneCoords && 
           yaTieneDespachador && yaTieneVehiculo && yaTieneFecha && yaTieneHorario) return
       
@@ -862,6 +889,9 @@ function ModalDetallesEntregaInner({
                 forzarProgramarRestoOn
               ? 'Confirmar Entrega'
               : resolvedMode.kind === 'crear-entrega-resto'
+              ? 'Confirmar Entrega'
+              : resolvedMode.kind === 'actualizar-entrega' &&
+                tipoDespachoConfirmacionOverride === 'Parcial'
               ? 'Confirmar Entrega'
               : tipoDespacho === 'EnTienda'
               ? 'Entregar Ahora'
