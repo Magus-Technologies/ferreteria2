@@ -70,6 +70,17 @@ export function useColumnsMisOS({
       minWidth: 150,
     },
     {
+      colId: 'vehiculo',
+      headerName: 'Vehículo',
+      width: 180,
+      minWidth: 140,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
+        <div className="flex items-center h-full text-xs">
+          {data?.vehiculo ? `${data.vehiculo.name}${data.vehiculo.placa ? ` (${data.vehiculo.placa})` : ''}` : '—'}
+        </div>
+      ),
+    },
+    {
       colId: 'prioridad',
       headerName: 'Prioridad',
       field: 'prioridad',

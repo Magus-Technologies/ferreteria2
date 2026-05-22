@@ -182,7 +182,7 @@ export default function StepServicio({
                             <div className="flex gap-1">
                                 <SelectBase
                                     placeholder="Seleccionar..."
-                                    value={newItem.tipoServicio ? String(newItem.tipoServicio) : undefined}
+                                    value={newItem.tipoServicio ? Number(newItem.tipoServicio) : undefined}
                                     onChange={(value) => setNewItem(prev => ({ ...prev, tipoServicio: String(value) }))}
                                     options={tiposServicio}
                                     className="flex-1"

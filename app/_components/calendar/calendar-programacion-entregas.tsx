@@ -400,10 +400,28 @@ export default function CalendarProgramacionEntregas({
   const minTime = useMemo(() => new Date(1970, 1, 1, 7, 0, 0), [])
   const maxTime = useMemo(() => new Date(1970, 1, 1, 19, 0, 0), [])
 
+  // Comprobar si un slot cae dentro de rangos deshabilitados
+  const slotEnRangoDeshabilitado = useCallback(
+    (start: Date, end: Date) => {
+      if (!disabledRanges || disabledRanges.length === 0) return false
+      const slotStart = dayjs(start)
+      const slotEnd = dayjs(end)
+      return disabledRanges.some((range) => {
+        const disabledStart = dayjs(range.start).startOf('day')
+        const disabledEnd = dayjs(range.end).endOf('day')
+        return slotStart.isBefore(disabledEnd) && slotEnd.isAfter(disabledStart)
+      })
+    },
+    [disabledRanges]
+  )
+
   // Selección de slot — guarda posición para el popup
   const handleSelectSlot = useCallback(
     (slotInfo: { start: Date; end: Date; action: string; bounds?: any; box?: any }) => {
       if (slotInfo.action !== 'select' && slotInfo.action !== 'click') return
+
+      // No permitir selección si el slot cae en rango deshabilitado
+      if (slotEnRangoDeshabilitado(slotInfo.start, slotInfo.end)) return
 
       // En modo vista (no soloSeleccion), solo notificar al padre sin popup
       if (!soloSeleccion) {
@@ -428,7 +446,7 @@ export default function CalendarProgramacionEntregas({
       // Notificar al padre que se abrió el popup de slot (limpiar evento seleccionado)
       onSlotOpen?.()
     },
-    [soloSeleccion, onSelectSlot, onSlotOpen]
+    [soloSeleccion, onSelectSlot, onSlotOpen, slotEnRangoDeshabilitado]
   )
 
   const handleAplicarSlot = useCallback(() => {
@@ -440,22 +458,9 @@ export default function CalendarProgramacionEntregas({
 
   const handleSelecting = useCallback(
     (slotInfo: { start: Date; end: Date }) => {
-      if (!disabledRanges || disabledRanges.length === 0) {
-        return true
-      }
-
-      const slotStart = dayjs(slotInfo.start)
-      const slotEnd = dayjs(slotInfo.end)
-
-      const overlaps = disabledRanges.some((range) => {
-        const disabledStart = dayjs(range.start).startOf('day')
-        const disabledEnd = dayjs(range.end).endOf('day')
-        return slotStart.isBefore(disabledEnd) && slotEnd.isAfter(disabledStart)
-      })
-
-      return !overlaps
+      return !slotEnRangoDeshabilitado(slotInfo.start, slotInfo.end)
     },
-    [disabledRanges]
+    [slotEnRangoDeshabilitado]
   )
 
   const handleCerrarPopup = useCallback(() => {
