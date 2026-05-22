@@ -219,7 +219,7 @@ export default function GestorFuentes({ open, onClose, onFuentesChange }: Gestor
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".ttf,.otf,.woff,.woff2"
+                    accept=".ttf,.otf"
                     onChange={handleFileSelect}
                     style={{ display: 'none' }}
                   />
@@ -232,7 +232,7 @@ export default function GestorFuentes({ open, onClose, onFuentesChange }: Gestor
                     {uploadFile ? uploadFile.name : 'Seleccionar archivo'}
                   </Button>
                   <Text type="secondary" className="text-xs">
-                    Formatos: TTF, OTF, WOFF, WOFF2 (máx 5MB)
+                    Formatos: TTF, OTF (máx 5MB). WOFF/WOFF2 no son compatibles con el PDF.
                   </Text>
                 </div>
 
@@ -281,7 +281,7 @@ export default function GestorFuentes({ open, onClose, onFuentesChange }: Gestor
                     prefix={<FaLink className="text-slate-400" />}
                   />
                   <Text type="secondary" className="text-xs">
-                    Enlace directo al archivo .ttf, .otf, .woff o .woff2
+                    Enlace directo al archivo .ttf u .otf
                   </Text>
                 </div>
                 <Button
