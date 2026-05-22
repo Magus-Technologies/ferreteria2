@@ -64,7 +64,7 @@ export default function ModalCalendarioSlot({
   const [productosExpandidos, setProductosExpandidos] = useState(false)
   const [vehiculoNoDisponible, setVehiculoNoDisponible] = useState(false)
   const [razonNoDisponible, setRazonNoDisponible] = useState('')
-  const [mantenimientoDetalle, setMantenimientoDetalle] = useState<MantenimientoDetalle | null>(null)
+  const [mantenimientosDetalle, setMantenimientosDetalle] = useState<MantenimientoDetalle[]>([])
   const [calendarioDesbloqueado, setCalendarioDesbloqueado] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date())
   const [disabledRanges, setDisabledRanges] = useState<{ start: Date; end: Date }[]>([])
@@ -75,7 +75,7 @@ export default function ModalCalendarioSlot({
     if (open && tieneVehiculo) {
       setCalendarioDesbloqueado(false)
       setSlotPendiente(null)
-      setMantenimientoDetalle(null)
+      setMantenimientosDetalle([])
       setVehiculoNoDisponible(false)
       setRazonNoDisponible('')
       setDisabledRanges([])
@@ -109,18 +109,21 @@ export default function ModalCalendarioSlot({
             end: dayjs(m.end).toDate(),
           }))
           setDisabledRanges(ranges)
-          setMantenimientoDetalle({
-            id: mantenimientos[0].meta?.id ?? 0,
-            tipo: 'mantenimiento',
-            descripcion: mantenimientos[0].meta?.descripcion ?? '',
-            fecha_inicio: dayjs(mantenimientos[0].start).format('DD/MM/YYYY HH:mm'),
-            fecha_fin: dayjs(mantenimientos[0].end).format('DD/MM/YYYY HH:mm'),
-            estado: 'aprobado',
-          })
+          setMantenimientosDetalle(
+            mantenimientos.map((m: any) => ({
+              id: m.meta?.id ?? 0,
+              tipo: 'mantenimiento',
+              descripcion: m.meta?.descripcion ?? m.meta?.observaciones ?? '',
+              fecha_inicio: dayjs(m.start).format('DD/MM/YYYY HH:mm'),
+              fecha_fin: dayjs(m.end).format('DD/MM/YYYY HH:mm'),
+              estado: 'aprobado',
+              requerimiento: m.meta?.requerimiento ?? null,
+            }))
+          )
         } else {
           setVehiculoNoDisponible(false)
           setRazonNoDisponible('')
-          setMantenimientoDetalle(null)
+          setMantenimientosDetalle([])
           setDisabledRanges([])
         }
       } catch (error) {
@@ -144,7 +147,6 @@ export default function ModalCalendarioSlot({
     if (!slotPendiente || !vehiculo_id) {
       setVehiculoNoDisponible(false)
       setRazonNoDisponible('')
-      setMantenimientoDetalle(null)
       return
     }
 
@@ -160,18 +162,13 @@ export default function ModalCalendarioSlot({
         if (!response.data?.disponible) {
           setVehiculoNoDisponible(true)
           setRazonNoDisponible(response.data?.razon || 'El vehículo no está disponible en esta fecha')
-          if (response.data?.mantenimiento) {
-            setMantenimientoDetalle(response.data.mantenimiento)
-          }
         } else {
           setVehiculoNoDisponible(false)
           setRazonNoDisponible('')
-          setMantenimientoDetalle(null)
         }
       } catch (error) {
         console.error('Error verificando disponibilidad:', error)
         setVehiculoNoDisponible(false)
-        setMantenimientoDetalle(null)
       }
     }
 
@@ -197,7 +194,7 @@ export default function ModalCalendarioSlot({
     setSlotPendiente(null)
     setEventoSeleccionado(null)
     setProductosExpandidos(false)
-    setMantenimientoDetalle(null)
+    setMantenimientosDetalle([])
     onClose()
   }
 
@@ -273,7 +270,21 @@ export default function ModalCalendarioSlot({
             <div className="mb-3 z-50">
               <Alert
                 message="⚠️ Vehículo no disponible"
-                description={razonNoDisponible || 'El vehículo está fuera de servicio en esta fecha'}
+                description={
+                  <div className="space-y-1">
+                    <p>{razonNoDisponible || 'El vehículo está fuera de servicio en esta fecha'}</p>
+                    {mantenimientosDetalle.length > 0 && (
+                      <ul className="list-disc ml-4 text-xs space-y-0.5">
+                        {mantenimientosDetalle.map((m, i) => (
+                          <li key={i}>
+                            <span className="font-medium">{m.requerimiento?.codigo ? `${m.requerimiento.codigo}: ` : ''}</span>
+                            {m.fecha_inicio} → {m.fecha_fin}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                }
                 type="warning"
                 showIcon
                 icon={<FaExclamationTriangle />}
@@ -300,8 +311,21 @@ export default function ModalCalendarioSlot({
                     className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-lg cursor-pointer"
                   >
                     <div className="max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 text-center">
-                      {mantenimientoDetalle
-                        ? `El vehículo está fuera de servicio. Haz clic para seleccionar una fecha alternativa.`
+                      {mantenimientosDetalle.length > 0
+                        ? (
+                          <div className="space-y-2">
+                            <p className="font-semibold">Vehículo fuera de servicio</p>
+                            <div className="space-y-1">
+                              {mantenimientosDetalle.map((m, i) => (
+                                <p key={i} className="text-xs">
+                                  {m.requerimiento?.codigo && <span className="font-medium">{m.requerimiento.codigo}: </span>}
+                                  {m.fecha_inicio} → {m.fecha_fin}
+                                </p>
+                              ))}
+                            </div>
+                            <p className="text-xs text-amber-600 pt-1">Haz clic para seleccionar una fecha alternativa</p>
+                          </div>
+                        )
                         : tieneVehiculo
                           ? `Haz clic para desbloquear el calendario y ver las entregas programadas.`
                           : `Selecciona primero un vehículo para ver sus entregas programadas.`}
@@ -309,14 +333,7 @@ export default function ModalCalendarioSlot({
                   </div>
                 )}
               </div>
-              {/* Popup de Mantenimiento - Interactivo como Entrega Programada */}
-              {/*
-              Este modal de mantenimiento se ha deshabilitado porque se muestra el alerta
-              de vehículo no disponible y se bloquea el calendario.
-              {mantenimientoDetalle && (
-                ...contenido original comentado...
-              )}
-              */}
+              {/* Popup de Mantenimiento - Deshabilitado (se muestra alerta + overlay) */}
               {/* Popup de Entrega Programada */}
               {eventoSeleccionado && (
                 <div className="absolute top-4 right-4 z-[1000] w-[290px] max-w-[calc(100%-2rem)] rounded-2xl border border-slate-200/60 bg-white shadow-[0_8px_30px_-10px_rgba(0,0,0,0.2)] overflow-hidden">
