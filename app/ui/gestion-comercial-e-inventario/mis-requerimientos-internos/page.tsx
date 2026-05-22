@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 import { Card, Button, Space, Tag, Input, Select, DatePicker, message, Tooltip, Empty, Spin, Modal } from 'antd'
 import { SearchOutlined, PlusOutlined, FilePdfOutlined, EyeOutlined } from '@ant-design/icons'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
@@ -43,9 +44,22 @@ export default function MisRequerimientosInternos() {
   const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
   const [docPdfLoading, setDocPdfLoading] = useState(false)
 
+  // Ref para acceder al último fetchRequerimientos desde el listener de realtime
+  const fetchRef = useRef<() => void>(() => {})
+
   useEffect(() => {
     fetchRequerimientos()
   }, [searchText, filtroEstado, filtroTipo, filtroPrioridad, filtroDesde, filtroHasta, pagination.page])
+
+  // Realtime: refrescar cuando llega un evento WebSocket del módulo requerimientos-internos
+  useEffect(() => {
+    const off = subscribeModelChanged((e) => {
+      if (e.module === 'requerimientos-internos') {
+        fetchRef.current()
+      }
+    })
+    return off
+  }, [])
 
   const fetchRequerimientos = async () => {
     setLoading(true)
@@ -75,6 +89,8 @@ export default function MisRequerimientosInternos() {
       setLoading(false)
     }
   }
+
+  fetchRef.current = fetchRequerimientos
 
   const colDefs: ColDef[] = [
     {

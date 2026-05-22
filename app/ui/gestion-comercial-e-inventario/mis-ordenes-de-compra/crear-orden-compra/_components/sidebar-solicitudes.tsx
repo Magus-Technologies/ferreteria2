@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Tag, Input, Spin, Empty, Tooltip, App } from 'antd'
 import { FaSearch, FaChevronRight, FaPlus } from 'react-icons/fa'
 import { requerimientoInternoApi, type RequerimientoInterno, type RequerimientoInternoProducto } from '~/lib/api/requerimiento-interno'
 import dayjs, { Dayjs } from 'dayjs'
 import { useDebounce } from 'use-debounce'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 
 export interface ProductoSidebarSelection {
     id: number
@@ -51,9 +52,22 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [selectedReqId, setSelectedReqId] = useState<number | null>(null)
 
+    // Ref para acceder al último fetchRequerimientos desde el listener de realtime
+    const fetchRef = useRef<() => void>(() => {})
+
     useEffect(() => {
         fetchRequerimientos()
     }, [fechaDesde, fechaHasta, debouncedSearch])
+
+    // Realtime: refrescar cuando llega un evento WebSocket del módulo requerimientos-internos
+    useEffect(() => {
+        const off = subscribeModelChanged((e) => {
+            if (e.module === 'requerimientos-internos') {
+                fetchRef.current()
+            }
+        })
+        return off
+    }, [])
 
     const fetchRequerimientos = async () => {
         setLoading(true)
@@ -78,6 +92,8 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
             setLoading(false)
         }
     }
+
+    fetchRef.current = fetchRequerimientos
 
     const toggleExpand = (req: RequerimientoInterno) => {
         const id = req.id

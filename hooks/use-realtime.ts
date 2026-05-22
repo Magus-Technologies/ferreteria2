@@ -163,7 +163,13 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
   'facturacion-electronica': [QueryKeys.VENTAS, QueryKeys.CONFIGURACION, 'sunat-alertas-pendientes'],
   autorizaciones: ['autorizaciones'],
   'prestamos-vendedores': ['solicitudes-efectivo-pendientes'],
-  'requerimientos-internos': ['requerimientos-internos-pendientes'],
+  'requerimientos-internos': [
+    QueryKeys.ORDENES_DE_SERVICIO,
+    QueryKeys.SOLICITUD_ORDEN_COMPRA,
+    'requerimientos-internos',
+    'requerimientos-internos-pendientes',
+    QueryKeys.VEHICULOS,
+  ],
 }
 
 interface ModelChangedEvent {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal, Alert } from 'antd'
-import { useState, Suspense, lazy, useEffect } from 'react'
+import { useState, Suspense, lazy, useEffect, useCallback } from 'react'
 import { Spin } from 'antd'
 import ButtonBase from '~/components/buttons/button-base'
 import { FaCalendar, FaCheck, FaBox, FaCalendarAlt, FaTruck, FaUser, FaMapMarkerAlt, FaExclamationTriangle } from 'react-icons/fa'
@@ -9,6 +9,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import type { EntregaEvent } from '~/app/_components/calendar/event-entrega'
 import { apiRequest } from '~/lib/api'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 
 dayjs.locale('es')
 
@@ -84,53 +85,61 @@ export default function ModalCalendarioSlot({
   }, [open, tieneVehiculo])
 
   // Obtener TODOS los bloqueos del vehículo en el rango visible
+  const fetchBloqueos = useCallback(async () => {
+    if (!vehiculo_id) return
+    try {
+      const hoy = dayjs().format('YYYY-MM-DD')
+      const fin = dayjs().add(60, 'day').format('YYYY-MM-DD')
+      const response = await apiRequest<{
+        data: { tipo: string; start: string; end: string; meta: any }[]
+      }>(`/vehiculos/${vehiculo_id}/disponibilidad?fecha_desde=${hoy}&fecha_hasta=${fin}`)
+
+      const mantenimientos = response.data?.data?.filter((b) => b.tipo === 'mantenimiento') || []
+
+      if (mantenimientos.length > 0) {
+        const ranges = mantenimientos.map((m) => ({
+          start: dayjs(m.start).toDate(),
+          end: dayjs(m.end).toDate(),
+        }))
+        setDisabledRanges(ranges)
+        setMantenimientosDetalle(
+          mantenimientos.map((m: any) => ({
+            id: m.meta?.id ?? 0,
+            tipo: 'mantenimiento',
+            descripcion: m.meta?.descripcion ?? m.meta?.observaciones ?? '',
+            fecha_inicio: dayjs(m.start).format('DD/MM/YYYY HH:mm'),
+            fecha_fin: dayjs(m.end).format('DD/MM/YYYY HH:mm'),
+            estado: 'aprobado',
+            requerimiento: m.meta?.requerimiento ?? null,
+          }))
+        )
+      } else {
+        setMantenimientosDetalle([])
+        setDisabledRanges([])
+      }
+    } catch (error) {
+      console.error('Error obteniendo bloqueos:', error)
+    }
+  }, [vehiculo_id])
+
+  // Fetch inicial al abrir el modal (y al limpiar el slot pendiente)
   useEffect(() => {
     if (!open || !tieneVehiculo || slotPendiente) {
       return
     }
-
-    const fetchBloqueos = async () => {
-      try {
-        const hoy = dayjs().format('YYYY-MM-DD')
-        const fin = dayjs().add(60, 'day').format('YYYY-MM-DD')
-        const response = await apiRequest<{
-          data: { tipo: string; start: string; end: string; meta: any }[]
-        }>(`/vehiculos/${vehiculo_id}/disponibilidad?fecha_desde=${hoy}&fecha_hasta=${fin}`)
-
-        const mantenimientos = response.data?.data?.filter((b) => b.tipo === 'mantenimiento') || []
-
-        if (mantenimientos.length > 0) {
-          const ranges = mantenimientos.map((m) => ({
-            start: dayjs(m.start).toDate(),
-            end: dayjs(m.end).toDate(),
-          }))
-          setDisabledRanges(ranges)
-          setMantenimientosDetalle(
-            mantenimientos.map((m: any) => ({
-              id: m.meta?.id ?? 0,
-              tipo: 'mantenimiento',
-              descripcion: m.meta?.descripcion ?? m.meta?.observaciones ?? '',
-              fecha_inicio: dayjs(m.start).format('DD/MM/YYYY HH:mm'),
-              fecha_fin: dayjs(m.end).format('DD/MM/YYYY HH:mm'),
-              estado: 'aprobado',
-              requerimiento: m.meta?.requerimiento ?? null,
-            }))
-          )
-        } else {
-          setMantenimientosDetalle([])
-          setDisabledRanges([])
-        }
-        // Importante: la bandera vehiculoNoDisponible se decide después,
-        // según si el slot que el usuario elija intersecta con algún bloqueo.
-        setVehiculoNoDisponible(false)
-        setRazonNoDisponible('')
-      } catch (error) {
-        console.error('Error obteniendo bloqueos:', error)
-      }
-    }
-
     fetchBloqueos()
-  }, [open, tieneVehiculo, vehiculo_id, slotPendiente])
+  }, [open, tieneVehiculo, slotPendiente, fetchBloqueos])
+
+  // Realtime: refrescar bloqueos si llega evento WebSocket de requerimientos-internos
+  useEffect(() => {
+    if (!open || !tieneVehiculo) return
+    const off = subscribeModelChanged((e) => {
+      if (e.module === 'requerimientos-internos') {
+        fetchBloqueos()
+      }
+    })
+    return off
+  }, [open, tieneVehiculo, fetchBloqueos])
 
   // Verificar localmente si el slot seleccionado intersecta con algún bloqueo (por hora)
   useEffect(() => {
