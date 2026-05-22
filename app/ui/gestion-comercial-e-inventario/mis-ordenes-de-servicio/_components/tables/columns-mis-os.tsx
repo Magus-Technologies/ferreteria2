@@ -2,7 +2,7 @@
 
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Tag, Tooltip } from 'antd'
-import { FaEye, FaCheck, FaArrowUp } from 'react-icons/fa'
+import { FaEye, FaCheck, FaArrowUp, FaExchangeAlt } from 'react-icons/fa'
 import { FilePdfFilled } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { formatFechaPeru } from '~/utils/fechas'
@@ -27,13 +27,17 @@ export function useColumnsMisOS({
   onViewPdf,
   onAprobar,
   onEscalar,
+  onReasignar,
   userCargoId,
+  esRootCargo = false,
 }: {
   onView: (row: RequerimientoInterno) => void
   onViewPdf: (row: RequerimientoInterno) => void
   onAprobar?: (row: RequerimientoInterno) => void
   onEscalar?: (row: RequerimientoInterno) => void
+  onReasignar?: (row: RequerimientoInterno) => void
   userCargoId?: string
+  esRootCargo?: boolean
 }) {
   const columns: ColDef<RequerimientoInterno>[] = [
     {
@@ -163,7 +167,7 @@ export function useColumnsMisOS({
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
         // Verificar si el usuario tiene autoridad para aprobar
         // El usuario puede aprobar si su cargo coincide con el cargo requerido en la OS (case-insensitive)
-        const canApprove = userCargoId && data?.cargo && userCargoId.toLowerCase() === data.cargo.toLowerCase()
+        const canApprove = esRootCargo || (userCargoId && data?.cargo && userCargoId.toLowerCase() === data.cargo.toLowerCase())
         const isApprovalPending = data?.approval_state === 'pendiente' || data?.approval_state === 'en_revision'
 
         return (
@@ -206,6 +210,15 @@ export function useColumnsMisOS({
                     size={16}
                   />
                 </Tooltip>
+                {esRootCargo && (
+                  <Tooltip title="Reasignar a otro cargo">
+                    <FaExchangeAlt
+                      onClick={() => data && onReasignar?.(data)}
+                      className="cursor-pointer hover:scale-110 transition-all text-indigo-600"
+                      size={16}
+                    />
+                  </Tooltip>
+                )}
               </>
             )}
           </div>

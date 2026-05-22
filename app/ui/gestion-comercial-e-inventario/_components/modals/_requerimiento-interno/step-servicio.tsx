@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { DatePicker, Button, Table, Space, Popconfirm, Card, Tag, Checkbox } from "antd"
+import { DatePicker, Button, Table, Space, Popconfirm, Card, Tag, Checkbox, TimePicker } from "antd"
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import SelectBase from "~/app/_components/form/selects/select-base"
@@ -44,6 +44,10 @@ export default function StepServicio({
         descripcionServicio: "",
         lugarEjecucion: "",
         fechaInicioEstimada: "",
+        unidadDuracion: "horas",
+        horaInicio: "",
+        horaFin: "",
+        cantidadDias: "",
         presupuestoReferencial: "",
         detalles: "",
     })
@@ -60,25 +64,38 @@ export default function StepServicio({
             return
         }
 
+        const unidad = newItem.unidadDuracion || 'horas'
+        const fecha = fechaRequerida || dayjs().format('YYYY-MM-DD')
+        const hora = unidad === 'horas' ? (newItem.horaInicio || '08:00') : '00:00'
+        const fechaHora = `${fecha} ${hora}`
+
         const item: ServicioItem = {
             id: Math.random().toString(36).substr(2, 9),
             tipoServicio: newItem.tipoServicio!,
             descripcionServicio: newItem.descripcionServicio!,
             lugarEjecucion: newItem.lugarEjecucion || "",
-            fechaInicioEstimada: fechaRequerida || dayjs().format('YYYY-MM-DD HH:mm'),
+            fechaInicioEstimada: fechaHora,
+            unidadDuracion: unidad,
+            horaInicio: unidad === 'horas' ? hora : "",
+            horaFin: unidad === 'horas' ? (newItem.horaFin || "") : "",
+            cantidadDias: unidad === 'dias' ? (newItem.cantidadDias || "") : "",
             presupuestoReferencial: newItem.presupuestoReferencial || "",
             detalles: newItem.detalles || "",
         }
 
-        setServiciosSeleccionados([...serviciosSeleccionados, { 
-            ...item, 
-            id: Date.now().toString() 
+        setServiciosSeleccionados([...serviciosSeleccionados, {
+            ...item,
+            id: Date.now().toString()
         }])
         setNewItem({
             tipoServicio: "",
             descripcionServicio: "",
             lugarEjecucion: "",
             fechaInicioEstimada: "",
+            unidadDuracion: "horas",
+            horaInicio: "",
+            horaFin: "",
+            cantidadDias: "",
             presupuestoReferencial: "",
             detalles: "",
         })
@@ -112,6 +129,20 @@ export default function StepServicio({
             dataIndex: "lugarEjecucion",
             key: "lugarEjecucion",
             className: "text-xs"
+        },
+        {
+            title: "Horario / Duración",
+            key: "horario",
+            className: "text-xs",
+            render: (_: any, record: ServicioItem) => {
+                if (record.unidadDuracion === 'dias') {
+                    return record.cantidadDias ? `${record.cantidadDias} día(s)` : "-"
+                }
+                if (record.horaInicio && record.horaFin) {
+                    return `${record.horaInicio} — ${record.horaFin}`
+                }
+                return record.horaInicio || "-"
+            },
         },
         {
             title: "Presupuesto",
@@ -220,6 +251,70 @@ export default function StepServicio({
                                 className="w-full"
                             />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-xs font-medium mb-1">Unidad de Tiempo</label>
+                            <SelectBase
+                                value={newItem.unidadDuracion}
+                                onChange={(value) => setNewItem(prev => ({
+                                    ...prev,
+                                    unidadDuracion: value as 'horas' | 'dias',
+                                    horaInicio: "",
+                                    horaFin: "",
+                                    cantidadDias: "",
+                                }))}
+                                options={[
+                                    { label: 'Horas', value: 'horas' },
+                                    { label: 'Días', value: 'dias' },
+                                ]}
+                                className="w-full"
+                            />
+                        </div>
+
+                        {newItem.unidadDuracion === 'horas' ? (
+                            <>
+                                <div>
+                                    <label className="block text-xs font-medium mb-1">Hora de Inicio</label>
+                                    <TimePicker
+                                        format="HH:mm"
+                                        minuteStep={5}
+                                        placeholder="Seleccionar hora"
+                                        value={newItem.horaInicio ? dayjs(newItem.horaInicio, 'HH:mm') : null}
+                                        onChange={(time) => setNewItem(prev => ({ ...prev, horaInicio: time ? time.format('HH:mm') : '' }))}
+                                        className="w-full"
+                                        size="middle"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium mb-1">Hora de Fin</label>
+                                    <TimePicker
+                                        format="HH:mm"
+                                        minuteStep={5}
+                                        placeholder="Seleccionar hora"
+                                        value={newItem.horaFin ? dayjs(newItem.horaFin, 'HH:mm') : null}
+                                        onChange={(time) => setNewItem(prev => ({ ...prev, horaFin: time ? time.format('HH:mm') : '' }))}
+                                        className="w-full"
+                                        size="middle"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="col-span-2">
+                                <label className="block text-xs font-medium mb-1">Cantidad de Días</label>
+                                <InputNumberBase
+                                    placeholder="Ej: 3"
+                                    value={newItem.cantidadDias ? Number(newItem.cantidadDias) : undefined}
+                                    onChange={(value) => setNewItem(prev => ({ ...prev, cantidadDias: value?.toString() ?? "" }))}
+                                    min={1}
+                                    className="w-full"
+                                />
+                                <p className="text-[11px] text-slate-500 mt-1 italic">
+                                    Se contará desde la Fecha Requerida (ej: fecha 23 + 3 días → del 23 al 25).
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     <div>

@@ -8,8 +8,6 @@ export interface RequerimientoFormData {
     tipoSolicitud: 'OC' | 'OS' | 'SOC'
     observaciones: string
     proveedorSugerido: string
-    duracionCantidad: string
-    duracionUnidad: string
     vehiculoId?: string | null
     afectaCalendario?: boolean
 }
@@ -31,6 +29,10 @@ export interface ServicioItem {
     descripcionServicio: string
     lugarEjecucion: string
     fechaInicioEstimada: string
+    unidadDuracion: 'horas' | 'dias'
+    horaInicio: string
+    horaFin: string
+    cantidadDias: string
     presupuestoReferencial: string
     detalles: string
 }
@@ -44,8 +46,6 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
         tipoSolicitud: defaultTipoSolicitud,
         observaciones: "",
         proveedorSugerido: "",
-        duracionCantidad: "",
-        duracionUnidad: "dias",
         vehiculoId: null,
         afectaCalendario: true,
     })
@@ -68,9 +68,6 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
             if (!form.titulo.trim()) e.titulo = "Requerido"
             if (!form.cargo) e.cargo = "Requerido"
             if (!form.fechaRequerida) e.fechaRequerida = "Requerido"
-            if (form.tipoSolicitud === 'OS') {
-                if (!form.duracionCantidad) e.duracionCantidad = "Requerido"
-            }
         }
         
         if (currentStep === 1 && form.tipoSolicitud === "OC") {
@@ -94,8 +91,6 @@ export function useRequerimientoForm(defaultTipoSolicitud: 'OC' | 'OS' | 'SOC' =
             tipoSolicitud: defaultTipoSolicitud,
             observaciones: "",
             proveedorSugerido: "",
-            duracionCantidad: "",
-            duracionUnidad: "dias",
             vehiculoId: null,
             afectaCalendario: true,
         })

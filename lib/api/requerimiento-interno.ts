@@ -82,6 +82,8 @@ export interface CreateRequerimientoServicioRequest {
     fecha_inicio_estimada?: string;
     presupuesto_referencial?: number;
     detalles?: string;
+    duracion_cantidad?: number;
+    duracion_unidad?: string;
 }
 
 export interface CreateRequerimientoRequest {
@@ -265,6 +267,16 @@ export const requerimientoInternoApi = {
      */
     rechazar: async (id: number, data: { reason: string }): Promise<ApiResponse<RequerimientoResponse>> => {
         return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/rechazar`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Reasignar a cualquier cargo (solo cargo raíz)
+     */
+    reasignar: async (id: number, data: { to_cargo_id: number; reason?: string }): Promise<ApiResponse<RequerimientoResponse>> => {
+        return apiRequest<RequerimientoResponse>(`/requerimientos-internos/${id}/reasignar`, {
             method: 'POST',
             body: JSON.stringify(data),
         });

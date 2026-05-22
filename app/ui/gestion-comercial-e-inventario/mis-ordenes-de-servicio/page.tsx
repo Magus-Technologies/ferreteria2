@@ -16,6 +16,7 @@ import { useStoreFiltrosMisOS } from './_store/store-filtros-mis-os'
 import { useColumnsMisOS } from './_components/tables/columns-mis-os'
 import ModalRequerimientoInterno from '../_components/modals/modal-requerimiento-interno'
 import ModalEscalarSuperior from './_components/modals/modal-escalar-superior'
+import ModalReasignarCargo from './_components/modals/modal-reasignar-cargo'
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -45,6 +46,7 @@ export default function MisOrdenesDeServicio() {
   const [docPdfUrl, setDocPdfUrl] = useState<string | null>(null)
   const [docPdfLoading, setDocPdfLoading] = useState(false)
   const [modalEscalarOpen, setModalEscalarOpen] = useState(false)
+  const [modalReasignarOpen, setModalReasignarOpen] = useState(false)
   const [modalProgramarOSOpen, setModalProgramarOSOpen] = useState(false)
 
   // Obtener el cargo del usuario actual desde el contexto de autenticación
@@ -104,12 +106,20 @@ export default function MisOrdenesDeServicio() {
     setModalEscalarOpen(true)
   }, [])
 
+  const handleReasignar = useCallback((row: RequerimientoInterno) => {
+    setSeleccionado(row)
+    setModalReasignarOpen(true)
+  }, [])
+
+  const esRootCargo = user?.es_root_cargo ?? false
   const columns = useColumnsMisOS({
     onView: handleView,
     onViewPdf: handleViewPdf,
     onAprobar: handleAprobar,
     onEscalar: handleEscalar,
+    onReasignar: handleReasignar,
     userCargoId,
+    esRootCargo,
   })
 
   const servicioRowData = useMemo(() => {
@@ -286,6 +296,15 @@ export default function MisOrdenesDeServicio() {
         requerimiento={seleccionado}
         onClose={() => {
           setModalEscalarOpen(false)
+          setSeleccionado(null)
+        }}
+      />
+
+      <ModalReasignarCargo
+        open={modalReasignarOpen}
+        requerimiento={seleccionado}
+        onClose={() => {
+          setModalReasignarOpen(false)
           setSeleccionado(null)
         }}
       />

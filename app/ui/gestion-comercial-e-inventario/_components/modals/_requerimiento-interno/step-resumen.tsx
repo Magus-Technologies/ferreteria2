@@ -95,9 +95,6 @@ export default function StepResumen({
                             ["Cargo / Ocupación", form.cargo || "—"],
                             ["Fecha requerida", form.fechaRequerida || "—"],
                             ["Observaciones", form.observaciones || "—"],
-                            ...(form.tipoSolicitud === 'OS' ? [
-                                ["Duración Estimada", `${form.duracionCantidad} ${form.duracionUnidad}`]
-                            ] : [])
                         ].map(([k, v]) => (
                             <div key={k} className="px-3 py-2">
                                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -167,25 +164,35 @@ export default function StepResumen({
                                 No hay servicios agregados
                             </div>
                         ) : (
-                            serviciosSeleccionados.map((s, idx) => (
-                                <div key={s.id || idx} className="p-4 hover:bg-slate-50 transition-colors">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <div className="text-sm font-bold text-slate-900">{s.descripcionServicio}</div>
-                                            <div className="text-xs text-slate-500 italic mt-0.5">Lugar: {s.lugarEjecucion || "—"}</div>
+                            serviciosSeleccionados.map((s, idx) => {
+                                const horarioTxt = s.unidadDuracion === 'dias'
+                                    ? (s.cantidadDias ? `${s.cantidadDias} día(s)` : null)
+                                    : (s.horaInicio && s.horaFin ? `${s.horaInicio} — ${s.horaFin}` : null)
+                                return (
+                                    <div key={s.id || idx} className="p-4 hover:bg-slate-50 transition-colors">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-900">{s.descripcionServicio}</div>
+                                                <div className="text-xs text-slate-500 italic mt-0.5">Lugar: {s.lugarEjecucion || "—"}</div>
+                                                {horarioTxt && (
+                                                    <div className="text-xs text-slate-600 mt-1">
+                                                        {s.unidadDuracion === 'dias' ? 'Duración' : 'Horario'}: <strong>{horarioTxt}</strong>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs font-bold text-emerald-600">{s.presupuestoReferencial ? `S/ ${Number(s.presupuestoReferencial).toFixed(2)}` : "Sin presupuesto"}</div>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-xs font-bold text-emerald-600">{s.presupuestoReferencial ? `S/ ${Number(s.presupuestoReferencial).toFixed(2)}` : "Sin presupuesto"}</div>
-                                        </div>
+                                        {s.detalles && (
+                                            <div className="mt-2 bg-slate-100 p-2 rounded text-xs text-slate-600 border-l-2 border-slate-300">
+                                                <div className="font-bold mb-1 text-[10px] uppercase text-slate-500">Detalles y Tareas:</div>
+                                                {s.detalles}
+                                            </div>
+                                        )}
                                     </div>
-                                    {s.detalles && (
-                                        <div className="mt-2 bg-slate-100 p-2 rounded text-xs text-slate-600 border-l-2 border-slate-300">
-                                            <div className="font-bold mb-1 text-[10px] uppercase text-slate-500">Detalles y Tareas:</div>
-                                            {s.detalles}
-                                        </div>
-                                    )}
-                                </div>
-                            ))
+                                )
+                            })
                         )}
                     </div>
                 </div>

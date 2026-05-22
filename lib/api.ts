@@ -40,6 +40,7 @@ export interface LoginResponse {
     rol_sistema: string | null;
     cargo: string | null;
     cargo_id?: number | null;
+    es_root_cargo?: boolean;
     vehiculo_id?: number | null;
     vehiculo?: {
       id: number;

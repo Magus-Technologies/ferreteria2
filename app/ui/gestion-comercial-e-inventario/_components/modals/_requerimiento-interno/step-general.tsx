@@ -72,45 +72,6 @@ export default function StepGeneral({ form, setField, errors, areas, prioridades
                 </div>
             </div>
 
-            {/* Duración (Solo para OS) */}
-            {form.tipoSolicitud === 'OS' && (
-                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                    <label className="block text-sm font-semibold text-blue-800 mb-2">
-                        Duración Estimada del Servicio
-                    </label>
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <label className="block text-xs text-blue-600 mb-1 font-medium">Cantidad <span className="text-red-500">*</span></label>
-                            <InputBase
-                                type="number"
-                                placeholder="Ej: 3"
-                                value={form.duracionCantidad}
-                                onChange={(e) => setField("duracionCantidad", e.target.value)}
-                                status={errors.duracionCantidad ? "error" : undefined}
-                            />
-                        </div>
-                        <div className="w-1/3">
-                            <label className="block text-xs text-blue-600 mb-1 font-medium">Unidad</label>
-                            <SelectBase
-                                value={form.duracionUnidad}
-                                onChange={(val) => setField("duracionUnidad", val)}
-                                options={[
-                                    { label: 'Horas', value: 'horas' },
-                                    { label: 'Días', value: 'dias' },
-                                    { label: 'Semanas', value: 'semanas' },
-                                ]}
-                            />
-                        </div>
-                    </div>
-                    {errors.duracionCantidad && <p className="text-xs text-red-600 mt-1">{errors.duracionCantidad}</p>}
-                    <p className="text-[11px] text-blue-500 mt-2 italic">
-                        * El tiempo se contabilizará a partir de la Fecha Requerida.
-                    </p>
-                </div>
-            )}
-
-
-
             {/* Prioridad */}
             <div>
                 <label className="block text-sm font-medium mb-2">

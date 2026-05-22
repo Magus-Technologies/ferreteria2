@@ -400,15 +400,15 @@ export default function CalendarProgramacionEntregas({
   const minTime = useMemo(() => new Date(1970, 1, 1, 7, 0, 0), [])
   const maxTime = useMemo(() => new Date(1970, 1, 1, 19, 0, 0), [])
 
-  // Comprobar si un slot cae dentro de rangos deshabilitados
+  // Comprobar si un slot cae dentro de rangos deshabilitados (comparando hora exacta)
   const slotEnRangoDeshabilitado = useCallback(
     (start: Date, end: Date) => {
       if (!disabledRanges || disabledRanges.length === 0) return false
       const slotStart = dayjs(start)
       const slotEnd = dayjs(end)
       return disabledRanges.some((range) => {
-        const disabledStart = dayjs(range.start).startOf('day')
-        const disabledEnd = dayjs(range.end).endOf('day')
+        const disabledStart = dayjs(range.start)
+        const disabledEnd = dayjs(range.end)
         return slotStart.isBefore(disabledEnd) && slotEnd.isAfter(disabledStart)
       })
     },
@@ -484,18 +484,17 @@ export default function CalendarProgramacionEntregas({
     [onSelectEvent, popupPos, onClearSlot]
   )
 
+  // Pinta el slot horario (vistas día/semana) sólo si la hora exacta intersecta el bloqueo
   const slotPropGetter = useCallback(
     (date: Date) => {
       if (!disabledRanges || disabledRanges.length === 0) return {}
 
-      const slotDay = dayjs(date).startOf('day')
+      const slotStart = dayjs(date)
+      const slotEnd = slotStart.add(30, 'minute')
       const dentroRango = disabledRanges.some((range) => {
-        const disabledStart = dayjs(range.start).startOf('day')
-        const disabledEnd = dayjs(range.end).endOf('day')
-        return (
-          (slotDay.isAfter(disabledStart) || slotDay.isSame(disabledStart, 'day')) &&
-          (slotDay.isBefore(disabledEnd) || slotDay.isSame(disabledEnd, 'day'))
-        )
+        const disabledStart = dayjs(range.start)
+        const disabledEnd = dayjs(range.end)
+        return slotStart.isBefore(disabledEnd) && slotEnd.isAfter(disabledStart)
       })
 
       if (dentroRango) {
@@ -511,8 +510,12 @@ export default function CalendarProgramacionEntregas({
     [disabledRanges]
   )
 
+  // Sólo aplica en vista de mes: marca sutilmente el día que contiene algún bloqueo.
+  // En vista de día/semana NO se aplica para no teñir la columna entera; ahí los slots
+  // horarios bloqueados ya se pintan en slotPropGetter con su hora exacta.
   const dayPropGetter = useCallback(
     (date: Date) => {
+      if (view !== 'month') return {}
       if (!disabledRanges || disabledRanges.length === 0) return {}
 
       const slotDay = dayjs(date).startOf('day')
@@ -535,7 +538,7 @@ export default function CalendarProgramacionEntregas({
       }
       return {}
     },
-    [disabledRanges]
+    [disabledRanges, view]
   )
 
   if (isLoading) {

@@ -100,10 +100,6 @@ export default function ModalCalendarioSlot({
         const mantenimientos = response.data?.data?.filter((b) => b.tipo === 'mantenimiento') || []
 
         if (mantenimientos.length > 0) {
-          setVehiculoNoDisponible(true)
-          setRazonNoDisponible(
-            `El vehículo tiene ${mantenimientos.length} bloqueo(s) de mantenimiento en los próximos días`
-          )
           const ranges = mantenimientos.map((m) => ({
             start: dayjs(m.start).toDate(),
             end: dayjs(m.end).toDate(),
@@ -121,11 +117,13 @@ export default function ModalCalendarioSlot({
             }))
           )
         } else {
-          setVehiculoNoDisponible(false)
-          setRazonNoDisponible('')
           setMantenimientosDetalle([])
           setDisabledRanges([])
         }
+        // Importante: la bandera vehiculoNoDisponible se decide después,
+        // según si el slot que el usuario elija intersecta con algún bloqueo.
+        setVehiculoNoDisponible(false)
+        setRazonNoDisponible('')
       } catch (error) {
         console.error('Error obteniendo bloqueos:', error)
       }
@@ -134,15 +132,7 @@ export default function ModalCalendarioSlot({
     fetchBloqueos()
   }, [open, tieneVehiculo, vehiculo_id, slotPendiente])
 
-  // Re-bloquear calendario cuando se detecta mantenimiento (sin cambiar la fecha)
-  useEffect(() => {
-    if (vehiculoNoDisponible && disabledRanges.length > 0) {
-      setCalendarioDesbloqueado(false)
-      setSlotPendiente(null)
-    }
-  }, [vehiculoNoDisponible, disabledRanges])
-
-  // Verificar disponibilidad del vehículo cuando se selecciona un slot
+  // Verificar localmente si el slot seleccionado intersecta con algún bloqueo (por hora)
   useEffect(() => {
     if (!slotPendiente || !vehiculo_id) {
       setVehiculoNoDisponible(false)
@@ -150,30 +140,27 @@ export default function ModalCalendarioSlot({
       return
     }
 
-    const verificarDisponibilidad = async () => {
-      try {
-        const fecha = dayjs(slotPendiente.start).format('YYYY-MM-DD')
-        const response = await apiRequest<{
-          disponible: boolean
-          razon?: string
-          mantenimiento?: MantenimientoDetalle
-        }>(`/vehiculos/${vehiculo_id}/disponibilidad?fecha=${fecha}`)
+    const slotStart = dayjs(slotPendiente.start)
+    const slotEnd = dayjs(slotPendiente.end)
+    const rangoIdx = disabledRanges.findIndex((range) => {
+      const rangeStart = dayjs(range.start)
+      const rangeEnd = dayjs(range.end)
+      return slotStart.isBefore(rangeEnd) && slotEnd.isAfter(rangeStart)
+    })
 
-        if (!response.data?.disponible) {
-          setVehiculoNoDisponible(true)
-          setRazonNoDisponible(response.data?.razon || 'El vehículo no está disponible en esta fecha')
-        } else {
-          setVehiculoNoDisponible(false)
-          setRazonNoDisponible('')
-        }
-      } catch (error) {
-        console.error('Error verificando disponibilidad:', error)
-        setVehiculoNoDisponible(false)
-      }
+    if (rangoIdx >= 0) {
+      const detalle = mantenimientosDetalle[rangoIdx]
+      setVehiculoNoDisponible(true)
+      setRazonNoDisponible(
+        detalle
+          ? `El vehículo está fuera de servicio entre ${detalle.fecha_inicio} y ${detalle.fecha_fin}`
+          : 'El vehículo no está disponible en el horario seleccionado'
+      )
+    } else {
+      setVehiculoNoDisponible(false)
+      setRazonNoDisponible('')
     }
-
-    verificarDisponibilidad()
-  }, [slotPendiente, vehiculo_id])
+  }, [slotPendiente, vehiculo_id, disabledRanges, mantenimientosDetalle])
 
   // onSelectSlot se dispara desde el popup del calendario
   // → Solo establecemos el slot, NO aplicamos aún
@@ -266,13 +253,17 @@ export default function ModalCalendarioSlot({
         }
       >
         <div className="relative h-full">
-          {vehiculoNoDisponible && (
+          {(vehiculoNoDisponible || mantenimientosDetalle.length > 0) && (
             <div className="mb-3 z-50">
               <Alert
-                message="⚠️ Vehículo no disponible"
+                message={vehiculoNoDisponible ? '⚠️ Vehículo no disponible' : 'ℹ️ Vehículo con bloqueos programados'}
                 description={
                   <div className="space-y-1">
-                    <p>{razonNoDisponible || 'El vehículo está fuera de servicio en esta fecha'}</p>
+                    <p>
+                      {vehiculoNoDisponible
+                        ? (razonNoDisponible || 'El vehículo está fuera de servicio en esta fecha')
+                        : `El vehículo tiene ${mantenimientosDetalle.length} bloqueo(s) de mantenimiento en los próximos días. Selecciona un horario libre.`}
+                    </p>
                     {mantenimientosDetalle.length > 0 && (
                       <ul className="list-disc ml-4 text-xs space-y-0.5">
                         {mantenimientosDetalle.map((m, i) => (
@@ -285,7 +276,7 @@ export default function ModalCalendarioSlot({
                     )}
                   </div>
                 }
-                type="warning"
+                type={vehiculoNoDisponible ? 'warning' : 'info'}
                 showIcon
                 icon={<FaExclamationTriangle />}
                 closable
@@ -305,30 +296,15 @@ export default function ModalCalendarioSlot({
                   vehiculo_id={vehiculo_id}
                   soloSeleccion
                 />
-                {!calendarioDesbloqueado && (
+                {!calendarioDesbloqueado && mantenimientosDetalle.length === 0 && (
                   <div
                     onClick={() => setCalendarioDesbloqueado(true)}
                     className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-lg cursor-pointer"
                   >
                     <div className="max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 text-center">
-                      {mantenimientosDetalle.length > 0
-                        ? (
-                          <div className="space-y-2">
-                            <p className="font-semibold">Vehículo fuera de servicio</p>
-                            <div className="space-y-1">
-                              {mantenimientosDetalle.map((m, i) => (
-                                <p key={i} className="text-xs">
-                                  {m.requerimiento?.codigo && <span className="font-medium">{m.requerimiento.codigo}: </span>}
-                                  {m.fecha_inicio} → {m.fecha_fin}
-                                </p>
-                              ))}
-                            </div>
-                            <p className="text-xs text-amber-600 pt-1">Haz clic para seleccionar una fecha alternativa</p>
-                          </div>
-                        )
-                        : tieneVehiculo
-                          ? `Haz clic para desbloquear el calendario y ver las entregas programadas.`
-                          : `Selecciona primero un vehículo para ver sus entregas programadas.`}
+                      {tieneVehiculo
+                        ? `Haz clic para desbloquear el calendario y ver las entregas programadas.`
+                        : `Selecciona primero un vehículo para ver sus entregas programadas.`}
                     </div>
                   </div>
                 )}
