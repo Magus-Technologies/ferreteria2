@@ -67,6 +67,7 @@ export default function ModalCalendarioSlot({
   const [mantenimientoDetalle, setMantenimientoDetalle] = useState<MantenimientoDetalle | null>(null)
   const [calendarioDesbloqueado, setCalendarioDesbloqueado] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date())
+  const [disabledRanges, setDisabledRanges] = useState<{ start: Date; end: Date }[]>([])
   const tieneVehiculo = !!vehiculo_id
 
   // Desbloquear calendario cuando el modal se abre
@@ -77,54 +78,66 @@ export default function ModalCalendarioSlot({
       setMantenimientoDetalle(null)
       setVehiculoNoDisponible(false)
       setRazonNoDisponible('')
+      setDisabledRanges([])
       setSelectedCalendarDate(new Date())
     }
   }, [open, tieneVehiculo])
 
-  // Verificar si el vehículo ya está en mantenimiento al abrir el modal
+  // Obtener TODOS los bloqueos del vehículo en el rango visible
   useEffect(() => {
     if (!open || !tieneVehiculo || slotPendiente) {
       return
     }
 
-    const verificarMantenimientoInicial = async () => {
+    const fetchBloqueos = async () => {
       try {
-        const fecha = dayjs().format('YYYY-MM-DD')
-        const response = await apiRequest<{ disponible: boolean; razon?: string; mantenimiento?: MantenimientoDetalle }>(
-          `/vehiculos/${vehiculo_id}/disponibilidad?fecha=${fecha}`
-        )
+        const hoy = dayjs().format('YYYY-MM-DD')
+        const fin = dayjs().add(60, 'day').format('YYYY-MM-DD')
+        const response = await apiRequest<{
+          data: { tipo: string; start: string; end: string; meta: any }[]
+        }>(`/vehiculos/${vehiculo_id}/disponibilidad?fecha_desde=${hoy}&fecha_hasta=${fin}`)
 
-        if (!response.data?.disponible) {
+        const mantenimientos = response.data?.data?.filter((b) => b.tipo === 'mantenimiento') || []
+
+        if (mantenimientos.length > 0) {
           setVehiculoNoDisponible(true)
-          setRazonNoDisponible(response.data?.razon || 'El vehículo no está disponible en esta fecha')
-          if (response.data?.mantenimiento) {
-            setMantenimientoDetalle(response.data.mantenimiento)
-          }
+          setRazonNoDisponible(
+            `El vehículo tiene ${mantenimientos.length} bloqueo(s) de mantenimiento en los próximos días`
+          )
+          const ranges = mantenimientos.map((m) => ({
+            start: dayjs(m.start).toDate(),
+            end: dayjs(m.end).toDate(),
+          }))
+          setDisabledRanges(ranges)
+          setMantenimientoDetalle({
+            id: mantenimientos[0].meta?.id ?? 0,
+            tipo: 'mantenimiento',
+            descripcion: mantenimientos[0].meta?.descripcion ?? '',
+            fecha_inicio: dayjs(mantenimientos[0].start).format('DD/MM/YYYY HH:mm'),
+            fecha_fin: dayjs(mantenimientos[0].end).format('DD/MM/YYYY HH:mm'),
+            estado: 'aprobado',
+          })
         } else {
           setVehiculoNoDisponible(false)
           setRazonNoDisponible('')
           setMantenimientoDetalle(null)
+          setDisabledRanges([])
         }
       } catch (error) {
-        console.error('Error verificando disponibilidad inicial:', error)
+        console.error('Error obteniendo bloqueos:', error)
       }
     }
 
-    verificarMantenimientoInicial()
+    fetchBloqueos()
   }, [open, tieneVehiculo, vehiculo_id, slotPendiente])
 
-  // Re-bloquear calendario cuando se detecta mantenimiento
+  // Re-bloquear calendario cuando se detecta mantenimiento (sin cambiar la fecha)
   useEffect(() => {
-    if (vehiculoNoDisponible && mantenimientoDetalle) {
+    if (vehiculoNoDisponible && disabledRanges.length > 0) {
       setCalendarioDesbloqueado(false)
-      const siguienteDia = dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm')
-        .add(1, 'day')
-        .startOf('day')
-        .toDate()
-      setSelectedCalendarDate(siguienteDia)
       setSlotPendiente(null)
     }
-  }, [vehiculoNoDisponible, mantenimientoDetalle])
+  }, [vehiculoNoDisponible, disabledRanges])
 
   // Verificar disponibilidad del vehículo cuando se selecciona un slot
   useEffect(() => {
@@ -277,16 +290,7 @@ export default function ModalCalendarioSlot({
                   onClearSlot={() => setSlotPendiente(null)}
                   onSlotOpen={() => setEventoSeleccionado(null)}
                   selectedDate={selectedCalendarDate}
-                  disabledRanges={
-                    mantenimientoDetalle
-                      ? [
-                          {
-                            start: dayjs(mantenimientoDetalle.fecha_inicio, 'DD/MM/YYYY HH:mm').toDate(),
-                            end: dayjs(mantenimientoDetalle.fecha_fin, 'DD/MM/YYYY HH:mm').toDate(),
-                          },
-                        ]
-                      : []
-                  }
+                  disabledRanges={disabledRanges}
                   vehiculo_id={vehiculo_id}
                   soloSeleccion
                 />

@@ -52,21 +52,7 @@ function CustomToolbar({ label, onNavigate, onView, view, date, disabledRanges }
     { value: 'agenda', label: 'Agenda' },
   ]
 
-  // Check if PREV button should be disabled
-  const isPrevDisabled = useMemo(() => {
-    if (!disabledRanges || disabledRanges.length === 0) return false
-
-    // Calculate the date that would be shown if we click PREV
-    const prevDate = dayjs(date).subtract(1, 'day').startOf('day')
-
-    // Check if prevDate falls within any disabled range
-    return disabledRanges.some((range) => {
-      const disabledStart = dayjs(range.start).startOf('day')
-      const disabledEnd = dayjs(range.end).endOf('day')
-      return (prevDate.isAfter(disabledStart) || prevDate.isSame(disabledStart)) &&
-             (prevDate.isBefore(disabledEnd) || prevDate.isSame(disabledEnd))
-    })
-  }, [date, disabledRanges])
+  // La navegación siempre está habilitada (el bloqueo se maneja al seleccionar)
 
   return (
     <div className="flex items-center justify-between gap-3 mb-3 px-1">
@@ -80,13 +66,7 @@ function CustomToolbar({ label, onNavigate, onView, view, date, disabledRanges }
         </button>
         <button
           onClick={() => onNavigate('PREV')}
-          disabled={isPrevDisabled}
-          className={`p-1.5 rounded-lg border transition-colors ${
-            isPrevDisabled
-              ? 'border-slate-100 text-slate-300 cursor-not-allowed bg-slate-50'
-              : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-          }`}
-          title={isPrevDisabled ? 'No puedes retroceder a una fecha en mantenimiento' : ''}
+          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
         >
           <FaChevronLeft size={12} />
         </button>
@@ -499,6 +479,60 @@ export default function CalendarProgramacionEntregas({
     [onSelectEvent, popupPos, onClearSlot]
   )
 
+  const slotPropGetter = useCallback(
+    (date: Date) => {
+      if (!disabledRanges || disabledRanges.length === 0) return {}
+
+      const slotDay = dayjs(date).startOf('day')
+      const dentroRango = disabledRanges.some((range) => {
+        const disabledStart = dayjs(range.start).startOf('day')
+        const disabledEnd = dayjs(range.end).endOf('day')
+        return (
+          (slotDay.isAfter(disabledStart) || slotDay.isSame(disabledStart, 'day')) &&
+          (slotDay.isBefore(disabledEnd) || slotDay.isSame(disabledEnd, 'day'))
+        )
+      })
+
+      if (dentroRango) {
+        return {
+          style: {
+            backgroundColor: '#fef2f2',
+            borderBottom: '1px solid #fecaca',
+          },
+        }
+      }
+      return {}
+    },
+    [disabledRanges]
+  )
+
+  const dayPropGetter = useCallback(
+    (date: Date) => {
+      if (!disabledRanges || disabledRanges.length === 0) return {}
+
+      const slotDay = dayjs(date).startOf('day')
+      const dentroRango = disabledRanges.some((range) => {
+        const disabledStart = dayjs(range.start).startOf('day')
+        const disabledEnd = dayjs(range.end).endOf('day')
+        return (
+          (slotDay.isAfter(disabledStart) || slotDay.isSame(disabledStart, 'day')) &&
+          (slotDay.isBefore(disabledEnd) || slotDay.isSame(disabledEnd, 'day'))
+        )
+      })
+
+      if (dentroRango) {
+        return {
+          style: {
+            backgroundColor: '#fef2f2',
+            color: '#dc2626',
+          },
+        }
+      }
+      return {}
+    },
+    [disabledRanges]
+  )
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[500px] bg-gray-50 rounded-lg">
@@ -530,6 +564,8 @@ export default function CalendarProgramacionEntregas({
         timeslots={2}
         min={minTime}
         max={maxTime}
+        slotPropGetter={slotPropGetter}
+        dayPropGetter={dayPropGetter}
         components={{
           event: EventEntrega,
           toolbar: (props: any) => (
