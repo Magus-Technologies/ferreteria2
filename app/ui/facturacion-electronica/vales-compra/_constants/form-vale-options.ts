@@ -9,7 +9,7 @@ export const TIPO_PROMOCION_FORM_OPTIONS: { label: string; value: TipoPromocion 
 ];
 
 export const MODALIDAD_FORM_OPTIONS: { label: string; value: Modalidad }[] = [
-  { label: "📊 Solamente por Cantidad Mínima", value: "CANTIDAD_MINIMA" },
+  { label: "💵 Solamente por Precio Mínimo", value: "CANTIDAD_MINIMA" },
   { label: "📁 Por Tipo de Familia (Categoría)", value: "POR_CATEGORIA" },
   { label: "🏷️ Por Productos Específicos", value: "POR_PRODUCTOS" },
   { label: "🔀 Mixto (Familia + Productos)", value: "MIXTO" },

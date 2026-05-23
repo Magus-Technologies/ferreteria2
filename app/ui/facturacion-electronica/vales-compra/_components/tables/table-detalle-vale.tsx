@@ -33,7 +33,12 @@ export default function TableDetalleVale() {
       { headerName: 'Tipo', field: 'tipo', width: 180 },
       { headerName: 'Modalidad', field: 'modalidad', width: 150 },
       { headerName: 'Beneficio', field: 'beneficio', width: 180 },
-      { headerName: 'Cant. Mín', field: 'cantidad_minima', width: 100 },
+      {
+        headerName: 'Precio Mín.',
+        field: 'cantidad_minima',
+        width: 110,
+        valueFormatter: (params) => params.value ? `S/ ${Number(params.value).toFixed(2)}` : '-',
+      },
       { headerName: 'Inicio', field: 'fecha_inicio', width: 110 },
       { headerName: 'Fin', field: 'fecha_fin', width: 110 },
       { headerName: 'Estado', field: 'estado', width: 100 },
@@ -80,7 +85,7 @@ export default function TableDetalleVale() {
       beneficioTexto = `${valeSeleccionado.cantidad_producto_gratis} ${valeSeleccionado.producto_gratis?.name || 'prod.'} GRATIS`
     } else if (valeSeleccionado.tipo_promocion === 'DOS_POR_UNO') {
       const extra = valeSeleccionado.cantidad_producto_gratis || 1
-      beneficioTexto = `Compra ${valeSeleccionado.cantidad_minima}, lleva ${valeSeleccionado.cantidad_minima + extra}`
+      beneficioTexto = `Compra desde S/ ${Number(valeSeleccionado.cantidad_minima).toFixed(2)}, lleva ${extra} extra`
     } else if (valeSeleccionado.tipo_promocion === 'SORTEO') {
       beneficioTexto = 'Sorteo'
     }
@@ -92,7 +97,7 @@ export default function TableDetalleVale() {
       tipo: tipoPromocionLabel,
       modalidad: modalidadLabel,
       beneficio: beneficioTexto,
-      cantidad_minima: `${valeSeleccionado.cantidad_minima} und`,
+      cantidad_minima: `S/ ${Number(valeSeleccionado.cantidad_minima).toFixed(2)}`,
       fecha_inicio: new Date(valeSeleccionado.fecha_inicio).toLocaleDateString('es-ES'),
       fecha_fin: valeSeleccionado.fecha_fin ? new Date(valeSeleccionado.fecha_fin).toLocaleDateString('es-ES') : 'Sin límite',
       estado: valeSeleccionado.estado,
