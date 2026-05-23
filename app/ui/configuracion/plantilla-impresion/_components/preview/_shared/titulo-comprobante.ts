@@ -15,7 +15,8 @@ export function tituloComprobante(comprobante?: string): { titulo: string; numer
     case "prestamo":               return { titulo: "PRÉSTAMO", numero: "PR-00000019" }
     case "recepcion-almacen":      return { titulo: "RECEPCIÓN DE ALMACÉN", numero: "RA-00000022" }
     case "transferencia-stock":    return { titulo: "TRANSFERENCIA DE STOCK", numero: "TS-00000041" }
-    case "requerimiento-interno":  return { titulo: "REQUERIMIENTO INTERNO", numero: "REQ-2026-014" }
+    case "requerimiento-compra":   return { titulo: "ORDEN DE COMPRA", numero: "REQ-2026-014" }
+    case "requerimiento-servicio": return { titulo: "ORDEN DE SERVICIO", numero: "REQ-2026-015" }
     case "cierre-caja":            return { titulo: "CIERRE DE CAJA", numero: "CC-00000003" }
     case "apertura-caja":          return { titulo: "APERTURA DE CAJA", numero: "AC-00000003" }
     case "cobro-venta":            return { titulo: "COBRO DE VENTA", numero: "CV-00000118" }
