@@ -4,11 +4,13 @@ import { usePreviewContext } from "./preview/_shared/use-preview-context"
 import TicketCotizacion from "./preview/_ticket/ticket-cotizacion"
 import TicketEntrega from "./preview/_ticket/ticket-entrega"
 import TicketGuia from "./preview/_ticket/ticket-guia"
+import TicketIngresoSalida from "./preview/_ticket/ticket-ingreso-salida"
 import TicketOrdenCompra from "./preview/_ticket/ticket-orden-compra"
 import TicketVenta from "./preview/_ticket/ticket-venta"
 import A4Cotizacion from "./preview/_a4/a4-cotizacion"
 import A4Entrega from "./preview/_a4/a4-entrega"
 import A4Guia from "./preview/_a4/a4-guia"
+import A4IngresoSalida from "./preview/_a4/a4-ingreso-salida"
 import A4OrdenCompra from "./preview/_a4/a4-orden-compra"
 import A4Venta from "./preview/_a4/a4-venta"
 import type { PreviewProps } from "./preview/_shared/types"
@@ -31,6 +33,7 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
     if (props.comprobante === "entrega") return <TicketEntrega ctx={ctx} />
     if (props.comprobante === "guia") return <TicketGuia ctx={ctx} />
     if (props.comprobante === "orden-compra") return <TicketOrdenCompra ctx={ctx} />
+    if (props.comprobante === "ingreso-salida") return <TicketIngresoSalida ctx={ctx} />
     return <TicketVenta ctx={ctx} />
   }
 
@@ -38,5 +41,6 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
   if (props.comprobante === "entrega") return <A4Entrega ctx={ctx} />
   if (props.comprobante === "guia") return <A4Guia ctx={ctx} />
   if (props.comprobante === "orden-compra") return <A4OrdenCompra ctx={ctx} />
+  if (props.comprobante === "ingreso-salida") return <A4IngresoSalida ctx={ctx} />
   return <A4Venta ctx={ctx} />
 }

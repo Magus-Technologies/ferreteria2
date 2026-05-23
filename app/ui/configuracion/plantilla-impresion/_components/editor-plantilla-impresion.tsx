@@ -98,6 +98,28 @@ const BLOQUES_PDF: Array<{
 ];
 
 /**
+ * Bloques EXTRA específicos por comprobante. Se añaden a los bloques visibles
+ * cuando el editor está en el comprobante correspondiente. Permiten estilar
+ * secciones que solo existen en ese tipo de PDF (ej. "Datos de la entrega"
+ * para Entrega, separado de "Datos del cliente").
+ */
+const BLOQUES_EXTRA_POR_COMPROBANTE: Record<string, Array<{
+  key: string;
+  label: string;
+  ejemplo: string;
+  estilos: BloqueKey[];
+}>> = {
+  entrega: [
+    {
+      key: "entrega_info",
+      label: "Bloque - Datos de la entrega",
+      ejemplo: "F. ENTREGA, TIPO ENTREGA, DESPACHADOR, TIPO DESPACHO, HORARIO, ESTADO",
+      estilos: ["entrega_info_label", "entrega_info_valor"],
+    },
+  ],
+};
+
+/**
  * Mapeo de bloques visibles por comprobante y formato.
  * Cada PDF real solo usa algunos bloques; mostrar solo los que aplican evita
  * que el usuario edite cosas que no se reflejan en su PDF.
@@ -137,12 +159,17 @@ const BLOQUES_POR_COMPROBANTE: Record<string, { A4: string[]; Ticket: string[] }
 };
 
 function bloquesVisibles(comprobante?: string, formato?: "A4" | "Ticket"): typeof BLOQUES_PDF {
-  if (!comprobante) return BLOQUES_PDF;
+  const extra = comprobante ? BLOQUES_EXTRA_POR_COMPROBANTE[comprobante] ?? [] : [];
+
+  if (!comprobante) return [...BLOQUES_PDF, ...extra];
+
   const config = BLOQUES_POR_COMPROBANTE[comprobante];
-  if (!config) return BLOQUES_PDF;
+  if (!config) return [...BLOQUES_PDF, ...extra];
+
   const fmt = formato === "Ticket" ? "Ticket" : "A4";
   const keysPermitidos = new Set(config[fmt]);
-  return BLOQUES_PDF.filter((b) => keysPermitidos.has(b.key));
+  const base = BLOQUES_PDF.filter((b) => keysPermitidos.has(b.key));
+  return [...base, ...extra];
 }
 
 interface SeccionEstado {

@@ -46,24 +46,24 @@ export default function TicketEntrega({ ctx }: { ctx: PreviewContext }) {
             <tbody>
               <tr>
                 <td style={{ width: "50%", verticalAlign: "top", paddingRight: 4 }}>
-                  <div style={bloqueACSS(b.info_label)}>FECHA ENTREGA:</div>
-                  <div style={bloqueACSS(b.info_valor)}>19/05/2026</div>
+                  <div style={bloqueACSS(b.entrega_info_label)}>FECHA ENTREGA:</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>19/05/2026</div>
                   <div style={{ height: 4 }} />
-                  <div style={bloqueACSS(b.info_label)}>TIPO ENTREGA:</div>
-                  <div style={bloqueACSS(b.info_valor)}>Despacho a Domicilio</div>
+                  <div style={bloqueACSS(b.entrega_info_label)}>TIPO ENTREGA:</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>Despacho a Domicilio</div>
                   <div style={{ height: 4 }} />
-                  <div style={bloqueACSS(b.info_label)}>DESPACHADOR:</div>
-                  <div style={bloqueACSS(b.info_valor)}>BRYZA CARRION</div>
+                  <div style={bloqueACSS(b.entrega_info_label)}>DESPACHADOR:</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>BRYZA CARRION</div>
                 </td>
                 <td style={{ width: "50%", verticalAlign: "top", paddingLeft: 4 }}>
-                  <div style={bloqueACSS(b.info_label)}>FECHA PROGRAMADA:</div>
-                  <div style={bloqueACSS(b.info_valor)}>20/05/2026</div>
+                  <div style={bloqueACSS(b.entrega_info_label)}>FECHA PROGRAMADA:</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>20/05/2026</div>
                   <div style={{ height: 4 }} />
-                  <div style={bloqueACSS(b.info_label)}>TIPO DESPACHO:</div>
-                  <div style={bloqueACSS(b.info_valor)}>Programado</div>
+                  <div style={bloqueACSS(b.entrega_info_label)}>TIPO DESPACHO:</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>Programado</div>
                   <div style={{ height: 4 }} />
-                  <div style={bloqueACSS(b.info_label)}>HORARIO:</div>
-                  <div style={bloqueACSS(b.info_valor)}>08:00 - 12:00</div>
+                  <div style={bloqueACSS(b.entrega_info_label)}>HORARIO:</div>
+                  <div style={bloqueACSS(b.entrega_info_valor)}>08:00 - 12:00</div>
                 </td>
               </tr>
             </tbody>

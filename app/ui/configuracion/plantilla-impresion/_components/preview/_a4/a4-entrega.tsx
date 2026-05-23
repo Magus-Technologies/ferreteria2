@@ -1,8 +1,41 @@
 "use client"
 
-import { bloqueACSS } from "~/lib/api/plantilla-impresion"
+import { bloqueACSS, type BloquesResueltos } from "~/lib/api/plantilla-impresion"
 import Fila from "../_shared/fila"
-import type { PreviewContext } from "../_shared/types"
+import type { EstiloResuelto, PreviewContext } from "../_shared/types"
+
+// Fila para "Datos de la entrega" — usa entrega_info_label / entrega_info_valor
+// para poder estilarse independientemente del cliente.
+function FilaEntrega({
+  e,
+  b,
+  izq,
+  der,
+}: {
+  e: EstiloResuelto
+  b: BloquesResueltos
+  izq: [string, string]
+  der: [string, string]
+}) {
+  const labelStyle = (first: boolean): React.CSSProperties => ({
+    ...bloqueACSS(b.entrega_info_label),
+    width: first ? "12%" : "15%",
+    padding: e.pad_px,
+  })
+  const valorStyle = (first: boolean): React.CSSProperties => ({
+    ...bloqueACSS(b.entrega_info_valor),
+    width: first ? "38%" : "35%",
+    padding: e.pad_px,
+  })
+  return (
+    <tr>
+      <td style={labelStyle(true)}>{izq[0]}</td>
+      <td style={valorStyle(true)}>: {izq[1]}</td>
+      <td style={labelStyle(false)}>{der[0]}</td>
+      <td style={valorStyle(false)}>: {der[1]}</td>
+    </tr>
+  )
+}
 
 export default function A4Entrega({ ctx }: { ctx: PreviewContext }) {
   const { e, m, b, razonSocial, direccion, email, ruc, celular, logoUrl, fontFaceCss, containerStyle } = ctx
@@ -42,14 +75,20 @@ export default function A4Entrega({ ctx }: { ctx: PreviewContext }) {
           </tbody>
         </table>
 
-        {/* Info-grid del cliente y la entrega */}
-        <table className="w-full mb-2" style={{ borderCollapse: "collapse", border: `${e.border_thin_px}px solid ${e.color_borde}` }}>
+        {/* Datos del cliente (info_label / info_valor) */}
+        <table className="w-full" style={{ borderCollapse: "collapse", border: `${e.border_thin_px}px solid ${e.color_borde}` }}>
           <tbody>
             <Fila e={e} b={b} izq={["CLIENTE", "EFRAIN CASTILLO"]} der={["DOC", "74568367"]} />
             <Fila e={e} b={b} izq={["TELEFONO", "987654321"]} der={["DIRECCION", "AV. EJEMPLO 123"]} />
-            <Fila e={e} b={b} izq={["F. ENTREGA", "19/05/2026 16:30"]} der={["ALMACEN", "ALMACEN PRINCIPAL"]} />
-            <Fila e={e} b={b} izq={["TIPO ENTREGA", "Despacho a Domicilio"]} der={["DESPACHADOR", "BRYZA CARRION"]} />
-            <Fila e={e} b={b} izq={["TIPO DESPACHO", "Programado"]} der={["ESTADO", "PENDIENTE"]} />
+          </tbody>
+        </table>
+
+        {/* Datos de la entrega (entrega_info_label / entrega_info_valor) */}
+        <table className="w-full mb-2" style={{ borderCollapse: "collapse", border: `${e.border_thin_px}px solid ${e.color_borde}`, borderTop: "0" }}>
+          <tbody>
+            <FilaEntrega e={e} b={b} izq={["F. ENTREGA", "19/05/2026 16:30"]} der={["ALMACEN", "ALMACEN PRINCIPAL"]} />
+            <FilaEntrega e={e} b={b} izq={["TIPO ENTREGA", "Despacho a Domicilio"]} der={["DESPACHADOR", "BRYZA CARRION"]} />
+            <FilaEntrega e={e} b={b} izq={["TIPO DESPACHO", "Programado"]} der={["ESTADO", "PENDIENTE"]} />
           </tbody>
         </table>
 

@@ -54,7 +54,12 @@ export type BloqueKey =
   | "total_valor"
   | "despedida_footer"
   | "consulta_leyenda"
-  | "consulta_url";
+  | "consulta_url"
+  // Específicos del comprobante Entrega: permiten estilar la sección
+  // "Datos de la entrega" (FECHA ENTREGA / TIPO / DESPACHADOR / etc.)
+  // independientemente de "Datos del cliente".
+  | "entrega_info_label"
+  | "entrega_info_valor";
 
 export type EstilosSecciones = Record<BloqueKey, EstiloBloque>;
 
@@ -116,6 +121,9 @@ export const BLOQUES_CATALOGO: Array<{ key: BloqueKey; label: string }> = [
   { key: "despedida_footer", label: "Mensaje del pie (GRACIAS POR SU PREFERENCIA!)" },
   { key: "consulta_leyenda", label: 'Leyenda "Consulte su documento en:"' },
   { key: "consulta_url", label: "URL del enlace de consulta" },
+  // Específicos del comprobante Entrega
+  { key: "entrega_info_label", label: "Entrega — etiquetas datos de entrega" },
+  { key: "entrega_info_valor", label: "Entrega — valores datos de entrega" },
 ];
 
 export const ESTILOS_SECCIONES_DEFAULT: EstilosSecciones =
@@ -293,6 +301,10 @@ export function defaultsBloque(
         alineacion: "center",
         ...base,
       };
+    case "entrega_info_label":
+      return { color: t, tamano: e.font_sm_pt, peso: "bold", alineacion: "left", ...base };
+    case "entrega_info_valor":
+      return { color: t, tamano: e.font_sm_pt, peso: "normal", alineacion: "left", ...base };
   }
 }
 
