@@ -18,7 +18,6 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Fecha Operativa',
       colId: 'fecha_operativa',
       width: 170,
-      sort: 'desc',
       valueGetter: (params) => params.data?.fecha_programada || params.data?.fecha_entrega,
       tooltipValueGetter: (params) => {
         const fechaOperativa = params.data?.fecha_programada || params.data?.fecha_entrega
@@ -34,6 +33,12 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       colId: 'created_at',
       field: 'created_at',
       width: 170,
+      sort: 'desc',
+      comparator: (valueA, valueB) => {
+        const fechaA = new Date(valueA || 0).getTime()
+        const fechaB = new Date(valueB || 0).getTime()
+        return fechaA - fechaB
+      },
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
     },
@@ -104,7 +109,6 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       headerName: 'Fecha Programada',
       field: 'fecha_programada',
       width: 150,
-      hide: true,
       valueFormatter: (params) =>
         params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY') : '-',
     },
@@ -198,13 +202,16 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       width: 150,
       cellRenderer: (params: any) => {
         const estado = params.value
+        const estaProgramada = estado === 'pe' && params.data?.tipo_despacho === 'pr'
         const tienePendiente = isEntregaParcialAgrupada(params.data)
           ? (params.data?.entregas_agrupadas || []).some((e: any) => e?.estado_entrega !== 'en')
           : params.data?.productos_entregados?.some(
               (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
             )
         const config: Record<string, { label: string; bg: string; text: string }> = {
-          'pe': { label: 'Pendiente',  bg: '#f1f5f9', text: '#475569' },
+          'pe': estaProgramada
+            ? { label: 'Programado', bg: '#dbeafe', text: '#2563eb' }
+            : { label: 'Pendiente',  bg: '#f1f5f9', text: '#475569' },
           'ec': { label: 'En Camino',  bg: '#dbeafe', text: '#2563eb' },
           'en': { label: tienePendiente ? 'Entregado Parcial' : 'Entregado',  bg: tienePendiente ? '#fef3c7' : '#dcfce7', text: tienePendiente ? '#d97706' : '#16a34a' },
           'ca': { label: 'Cancelado',  bg: '#fee2e2', text: '#dc2626' },

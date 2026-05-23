@@ -568,7 +568,9 @@ export default function ModalEntregaUpdate({
             unidad_derivada_venta_id: udvId,
           }
         }
-        const pendienteEstaEntrega = cantidadProgramadaEstaEntrega
+        const pendienteEstaEntrega = cantidadProgramadaEstaEntrega > 0
+          ? cantidadProgramadaEstaEntrega
+          : pendienteVentaReal
         if (esParcialAgrupado) {
           return {
             id: index + 1,
@@ -592,7 +594,7 @@ export default function ModalEntregaUpdate({
           recibido: recibidoReal,
           programado: cantidadProgramadaEstaEntrega,
           entregado: 0,
-          pendiente: pendienteVentaReal,
+          pendiente: pendienteEstaEntrega,
           entregar: pendienteEstaEntrega,
           entregar_programado: 0,
           unidad_derivada_venta_id: udvId,

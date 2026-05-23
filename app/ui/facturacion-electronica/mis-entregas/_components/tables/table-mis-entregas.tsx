@@ -118,6 +118,59 @@ export default function TableMisEntregas() {
     (state) => state.setEntrega
   )
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const migrationKey = 'mis-entregas-fecha-programada-column-v2'
+    const fechaProgramadaHeader = 'Fecha Programada'
+    if (window.localStorage.getItem(migrationKey)) return
+
+    const selectedColumnsKey = 'table-columns-mis-entregas'
+    const selectedColumnsRaw = window.localStorage.getItem(selectedColumnsKey)
+
+    if (selectedColumnsRaw) {
+      try {
+        const selectedColumns = JSON.parse(selectedColumnsRaw)
+        if (Array.isArray(selectedColumns) && !selectedColumns.includes(fechaProgramadaHeader)) {
+          window.localStorage.setItem(
+            selectedColumnsKey,
+            JSON.stringify([...selectedColumns, fechaProgramadaHeader])
+          )
+        }
+      } catch {
+        window.localStorage.removeItem(selectedColumnsKey)
+      }
+    }
+
+    const gridStateKey = 'ag-grid-state-mis-entregas'
+    const gridStateRaw = window.localStorage.getItem(gridStateKey)
+
+    if (gridStateRaw) {
+      try {
+        const gridState = JSON.parse(gridStateRaw)
+        if (Array.isArray(gridState)) {
+          let changed = false
+          const nextGridState = gridState.map((columnState) => {
+            if (columnState?.colId !== 'fecha_programada' || columnState.hide !== true) {
+              return columnState
+            }
+
+            changed = true
+            return { ...columnState, hide: false }
+          })
+
+          if (changed) {
+            window.localStorage.setItem(gridStateKey, JSON.stringify(nextGridState))
+          }
+        }
+      } catch {
+        window.localStorage.removeItem(gridStateKey)
+      }
+    }
+
+    window.localStorage.setItem(migrationKey, '1')
+  }, [])
+
   // Seleccionar automáticamente el primer registro cuando se cargan los datos
   React.useEffect(() => {
     if (entregas && entregas.length > 0 && tableRef.current) {

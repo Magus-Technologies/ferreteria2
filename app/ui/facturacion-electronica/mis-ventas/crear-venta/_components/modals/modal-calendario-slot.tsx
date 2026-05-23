@@ -66,15 +66,11 @@ export default function ModalCalendarioSlot({
   const [vehiculoNoDisponible, setVehiculoNoDisponible] = useState(false)
   const [razonNoDisponible, setRazonNoDisponible] = useState('')
   const [mantenimientosDetalle, setMantenimientosDetalle] = useState<MantenimientoDetalle[]>([])
-  const [calendarioDesbloqueado, setCalendarioDesbloqueado] = useState(false)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date())
   const [disabledRanges, setDisabledRanges] = useState<{ start: Date; end: Date }[]>([])
   const tieneVehiculo = !!vehiculo_id
-
-  // Desbloquear calendario cuando el modal se abre
   useEffect(() => {
     if (open && tieneVehiculo) {
-      setCalendarioDesbloqueado(false)
       setSlotPendiente(null)
       setMantenimientosDetalle([])
       setVehiculoNoDisponible(false)
@@ -305,18 +301,6 @@ export default function ModalCalendarioSlot({
                   vehiculo_id={vehiculo_id}
                   soloSeleccion
                 />
-                {!calendarioDesbloqueado && mantenimientosDetalle.length === 0 && (
-                  <div
-                    onClick={() => setCalendarioDesbloqueado(true)}
-                    className="absolute inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-lg cursor-pointer"
-                  >
-                    <div className="max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 text-center">
-                      {tieneVehiculo
-                        ? `Haz clic para desbloquear el calendario y ver las entregas programadas.`
-                        : `Selecciona primero un vehículo para ver sus entregas programadas.`}
-                    </div>
-                  </div>
-                )}
               </div>
               {/* Popup de Mantenimiento - Deshabilitado (se muestra alerta + overlay) */}
               {/* Popup de Entrega Programada */}
