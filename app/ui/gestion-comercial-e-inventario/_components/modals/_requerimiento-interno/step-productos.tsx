@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Button, Alert } from "antd"
-import { PlusOutlined } from "@ant-design/icons"
+import { Button, Alert, InputNumber, Select, Tooltip } from "antd"
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons"
 import { ColDef } from "ag-grid-community"
 import ModalProductoSearch from "~/app/_components/modals/modal-producto-search"
 import { TipoBusquedaProducto } from "~/app/_components/form/selects/select-tipo-busqueda-producto"
@@ -19,6 +19,7 @@ interface ItemBuscado {
     unidad: string
     stock?: number
     marca?: string
+    unidadesDerivadas?: { value: string; label: string }[]
 }
 
 interface ProductoDisponible {
@@ -33,6 +34,24 @@ interface ProductoDisponible {
     unidad?: string
     marca?: { id: number; name: string }
 }
+
+const UNIDADES_OPTIONS = [
+    { value: "UND", label: "UND" },
+    { value: "KG", label: "KG" },
+    { value: "GR", label: "GR" },
+    { value: "LT", label: "LT" },
+    { value: "ML", label: "ML" },
+    { value: "M", label: "M" },
+    { value: "CM", label: "CM" },
+    { value: "M2", label: "M2" },
+    { value: "M3", label: "M3" },
+    { value: "CJ", label: "CJ" },
+    { value: "PAQ", label: "PAQ" },
+    { value: "GAL", label: "GAL" },
+    { value: "DOC", label: "DOC" },
+    { value: "ROL", label: "ROL" },
+    { value: "JGO", label: "JGO" },
+]
 
 interface StepProductosProps {
     form: any
@@ -65,33 +84,28 @@ export default function StepProductos({
         cantidad: 1,
     })
 
-    const handleProductoSeleccionado = ({ data }: { data: Producto | undefined }) => {
-        if (!data) return
-        
-        const item: ItemBuscado = {
+    const buildItemFromProducto = (data: Producto): ItemBuscado => {
+        const derivadas = data.producto_en_almacenes?.[0]?.unidades_derivadas
+            ?.map(ud => ({ value: ud.unidad_derivada.name, label: ud.unidad_derivada.name }))
+            ?.filter((ud, idx, arr) => arr.findIndex(x => x.value === ud.value) === idx) ?? []
+
+        const unidadBase = data.unidad_medida?.name || "UND"
+        const unidadDefault = derivadas[0]?.value || unidadBase
+
+        return {
             id: data.id,
             codigo: data.cod_producto || "",
             nombre: data.name || "",
             cantidad: 1,
-            unidad: data.unidad_medida?.name || "UND",
+            unidad: unidadDefault,
             stock: data.producto_en_almacenes?.[0]?.stock_fraccion || 0,
             marca: data.marca?.name || "",
+            unidadesDerivadas: derivadas.length > 0 ? derivadas : undefined,
         }
-        onAgregarProducto(item)
-        setOpenModalProducto(false)
     }
 
     const handleProductoCreado = (producto: Producto) => {
-        const item: ItemBuscado = {
-            id: producto.id,
-            codigo: producto.cod_producto || "",
-            nombre: producto.name || "",
-            cantidad: 1,
-            unidad: producto.unidad_medida?.name || "UND",
-            stock: producto.producto_en_almacenes?.[0]?.stock_fraccion || 0,
-            marca: producto.marca?.name || "",
-        }
-        onAgregarProducto(item)
+        onAgregarProducto(buildItemFromProducto(producto))
     }
 
     const handleAgregarManual = () => {
@@ -134,7 +148,7 @@ export default function StepProductos({
             cellRenderer: (params: any) => {
                 if (!params.data) return null
                 return (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 h-full">
                         <span>{params.data.codigo}</span>
                         {!params.data.id && (
                             <span className="text-xs bg-amber-100 text-amber-700 px-1 rounded">Manual</span>
@@ -158,49 +172,60 @@ export default function StepProductos({
             headerName: "Cantidad",
             field: "cantidad",
             width: 120,
-            editable: true,
-            cellEditor: "agNumberCellEditor",
-            cellEditorParams: { min: 1 },
-            onCellValueChanged: (params) => {
-                if (params.node && params.data) {
-                    const uniqueId = getUniqueId(params.data, params.node.rowIndex ?? 0)
-                    onCambiarCantidad(uniqueId, params.newValue)
-                }
-            },
-            cellStyle: { textAlign: "right", fontWeight: "bold" },
-        },
-        {
-            headerName: "Unidad",
-            field: "unidad",
-            width: 100,
-            editable: (params) => !params.data?.id,
-            onCellValueChanged: (params) => {
-                if (params.node && params.data) {
-                    const uniqueId = getUniqueId(params.data, params.node.rowIndex ?? 0)
-                    onCambiarUnidad(uniqueId, params.newValue)
-                }
-            },
-            cellStyle: (params) => ({
-                textAlign: "center",
-                fontWeight: "600",
-                backgroundColor: params.data?.id ? "" : "#fef3c7",
-            }),
-        },
-        {
-            headerName: "Acciones",
-            width: 100,
             cellRenderer: (params: any) => {
                 if (!params.node || !params.data) return null
                 const uniqueId = getUniqueId(params.data, params.node.rowIndex ?? 0)
                 return (
-                    <Button
-                        type="text"
-                        danger
-                        size="small"
-                        onClick={() => onQuitarProducto(uniqueId)}
-                    >
-                        Eliminar
-                    </Button>
+                    <div className="flex items-center h-full">
+                        <InputNumber
+                            min={1}
+                            value={params.data.cantidad}
+                            onChange={(val) => onCambiarCantidad(uniqueId, val ?? 1)}
+                            className="!w-full"
+                            size="small"
+                        />
+                    </div>
+                )
+            },
+        },
+        {
+            headerName: "Unidad",
+            field: "unidad",
+            width: 120,
+            cellRenderer: (params: any) => {
+                if (!params.node || !params.data) return null
+                const uniqueId = getUniqueId(params.data, params.node.rowIndex ?? 0)
+                const opciones = params.data.unidadesDerivadas?.length
+                    ? params.data.unidadesDerivadas
+                    : UNIDADES_OPTIONS
+                return (
+                    <div className="flex items-center h-full">
+                        <Select
+                            value={params.data.unidad}
+                            onChange={(val) => onCambiarUnidad(uniqueId, val)}
+                            options={opciones}
+                            className="!w-full"
+                            size="small"
+                        />
+                    </div>
+                )
+            },
+        },
+        {
+            headerName: "",
+            width: 60,
+            cellRenderer: (params: any) => {
+                if (!params.node || !params.data) return null
+                const uniqueId = getUniqueId(params.data, params.node.rowIndex ?? 0)
+                return (
+                    <div className="flex items-center justify-center h-full">
+                        <Tooltip title="Eliminar">
+                            <DeleteOutlined
+                                onClick={() => onQuitarProducto(uniqueId)}
+                                className="text-red-500 hover:text-red-700 cursor-pointer text-base"
+                            />
+                        </Tooltip>
+                    </div>
                 )
             },
         },
@@ -315,8 +340,20 @@ export default function StepProductos({
                 setTextDefault={setTextDefault}
                 tipoBusqueda={tipoBusqueda}
                 setTipoBusqueda={setTipoBusqueda}
-                onRowDoubleClicked={handleProductoSeleccionado}
                 showUltimasCompras={false}
+                showCardAgregarProductoRequerimiento
+                onAgregarProductoRequerimiento={(item) => {
+                    onAgregarProducto({
+                        id: item.producto_id,
+                        codigo: item.codigo,
+                        nombre: item.nombre,
+                        cantidad: item.cantidad,
+                        unidad: item.unidad,
+                        stock: item.stock,
+                        marca: item.marca,
+                        unidadesDerivadas: item.unidadesDerivadas,
+                    })
+                }}
             />
         </div>
     )

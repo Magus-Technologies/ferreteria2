@@ -5,13 +5,14 @@ import { getTopNavItems, getModuleNav } from "~/lib/navigation";
 import usePermissionHook from "~/hooks/use-permission";
 import { MdSpaceDashboard } from "react-icons/md";
 import { FaBoxOpen, FaClipboardList } from "react-icons/fa";
-import { FaCartShopping } from "react-icons/fa6";
+import { FaCartShopping, FaWrench } from "react-icons/fa6";
 import { IoMdContact } from "react-icons/io";
 import DropdownBase from "~/components/dropdown/dropdown-base";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
 import { useRouter } from "next/navigation";
-import ModalRequerimientoInterno from "../modals/modal-requerimiento-interno";
+import ModalRequerimientoCompra from "../modals/modal-requerimiento-compra";
+import ModalRequerimientoServicio from "../modals/modal-requerimiento-servicio";
 import ModalTransferirStock from "../modals/modal-transferir-stock";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -25,11 +26,14 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 export default function TopNav({ className }: { className?: string }) {
   const router = useRouter();
   const { can } = usePermissionHook();
-  const [openReqModal, setOpenReqModal] = useState(false);
+  const [openCompraModal, setOpenCompraModal] = useState(false);
+  const [openServicioModal, setOpenServicioModal] = useState(false);
   const [openTransferirStock, setOpenTransferirStock] = useState(false);
 
   const actionHandlers: Record<string, () => void> = {
     openTransferirStock: () => setOpenTransferirStock(true),
+    openNuevaCompra: () => setOpenCompraModal(true),
+    openNuevoServicio: () => setOpenServicioModal(true),
   };
 
   const moduleId = "gestion-comercial-e-inventario";
@@ -72,14 +76,36 @@ export default function TopNav({ className }: { className?: string }) {
 
           if (item.id === "requerimientos-internos") {
             return (
-              <ButtonNav
+              <DropdownBase
                 key={item.id}
-                onClick={() => setOpenReqModal(true)}
-                colorActive={nav.topNav.activeColor}
+                menu={{
+                  items: [
+                    {
+                      key: "compra",
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <FaCartShopping className="text-blue-600" /> Nueva Orden de Compra
+                        </div>
+                      ),
+                      onClick: () => setOpenCompraModal(true),
+                    },
+                    {
+                      key: "servicio",
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <FaWrench className="text-emerald-600" /> Nueva Orden de Servicio
+                        </div>
+                      ),
+                      onClick: () => setOpenServicioModal(true),
+                    },
+                  ],
+                }}
               >
-                {Icon && <Icon />}
-                {item.label}
-              </ButtonNav>
+                <ButtonNav colorActive={nav.topNav.activeColor}>
+                  {Icon && <Icon />}
+                  {item.label}
+                </ButtonNav>
+              </DropdownBase>
             );
           }
 
@@ -96,7 +122,8 @@ export default function TopNav({ className }: { className?: string }) {
         })}
       </BaseNav>
 
-      <ModalRequerimientoInterno open={openReqModal} onClose={() => setOpenReqModal(false)} />
+      <ModalRequerimientoCompra open={openCompraModal} onClose={() => setOpenCompraModal(false)} />
+      <ModalRequerimientoServicio open={openServicioModal} onClose={() => setOpenServicioModal(false)} />
       <ModalTransferirStock open={openTransferirStock} setOpen={setOpenTransferirStock} />
     </>
   );

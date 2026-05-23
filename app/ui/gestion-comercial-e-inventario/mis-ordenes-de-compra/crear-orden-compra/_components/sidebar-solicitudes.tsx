@@ -76,7 +76,7 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
                 desde: fechaDesde?.format('YYYY-MM-DD'),
                 hasta: fechaHasta?.format('YYYY-MM-DD'),
                 search: debouncedSearch,
-                tipo_solicitud: 'OC',
+                tipo_solicitud: 'SOC',
                 per_page: 100
             })
             if (response.data?.data) {

@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { DatePicker, Button, Table, Space, Popconfirm, Card, Tag, Checkbox, TimePicker } from "antd"
+import { useState, useEffect, useRef } from "react"
+import { Button, Popconfirm, Card, Tag, Checkbox, TimePicker, Tooltip } from "antd"
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons"
+import { ColDef, ICellRendererParams } from "ag-grid-community"
 import dayjs from "dayjs"
 import SelectBase from "~/app/_components/form/selects/select-base"
 import InputBase from "~/app/_components/form/inputs/input-base"
 import TextareaBase from "~/app/_components/form/inputs/textarea-base"
 import InputNumberBase from "~/app/_components/form/inputs/input-number-base"
+import TableWithTitle from "~/components/tables/table-with-title"
 import { useAuth } from "~/lib/auth-context"
 import type { ServicioItem } from "./hooks/use-requerimiento-form"
 
@@ -39,6 +41,7 @@ export default function StepServicio({
     setAfectaCalendario,
 }: StepServicioProps) {
     const { user } = useAuth()
+    const tableGridRef = useRef<any>(null)
     const [newItem, setNewItem] = useState<Partial<ServicioItem>>({
         tipoServicio: "",
         descripcionServicio: "",
@@ -105,62 +108,83 @@ export default function StepServicio({
         setServiciosSeleccionados(serviciosSeleccionados.filter(s => s.id !== id))
     }
 
-    const columns = [
+    const columnDefs: ColDef<ServicioItem>[] = [
         {
-            title: "Servicio / Descripción",
-            key: "servicio",
-            render: (_: any, record: ServicioItem) => (
-                <div>
-                    <div className="font-bold text-slate-800">
-                        {tiposServicio.find(t => String(t.value) === String(record.tipoServicio))?.label || "Servicio"}
+            headerName: "Servicio / Descripción",
+            field: "tipoServicio",
+            flex: 1,
+            minWidth: 240,
+            autoHeight: true,
+            cellRenderer: ({ data }: ICellRendererParams<ServicioItem>) => {
+                if (!data) return null
+                const tipoLabel = tiposServicio.find(t => String(t.value) === String(data.tipoServicio))?.label || "Servicio"
+                return (
+                    <div className="py-1.5 leading-tight">
+                        <div className="font-bold text-slate-800 text-xs">{tipoLabel}</div>
+                        <div className="text-[11px] text-slate-500 italic line-clamp-1">{data.descripcionServicio}</div>
+                        {data.detalles && (
+                            <div className="mt-1 flex items-center gap-1">
+                                <Tag color="green" className="!text-[10px] !leading-tight !m-0">Detalles</Tag>
+                                <Tooltip title={data.detalles}>
+                                    <span className="text-[10px] text-slate-600 truncate max-w-[200px]">{data.detalles}</span>
+                                </Tooltip>
+                            </div>
+                        )}
                     </div>
-                    <div className="text-xs text-slate-500 italic">{record.descripcionServicio}</div>
-                    {record.detalles && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                             <Tag color="blue" className="text-[10px]">Detalles:</Tag>
-                             <span className="text-[10px] text-slate-600 truncate max-w-[200px]">{record.detalles}</span>
-                        </div>
-                    )}
-                </div>
-            )
-        },
-        {
-            title: "Lugar",
-            dataIndex: "lugarEjecucion",
-            key: "lugarEjecucion",
-            className: "text-xs"
-        },
-        {
-            title: "Horario / Duración",
-            key: "horario",
-            className: "text-xs",
-            render: (_: any, record: ServicioItem) => {
-                if (record.unidadDuracion === 'dias') {
-                    return record.cantidadDias ? `${record.cantidadDias} día(s)` : "-"
-                }
-                if (record.horaInicio && record.horaFin) {
-                    return `${record.horaInicio} — ${record.horaFin}`
-                }
-                return record.horaInicio || "-"
+                )
             },
         },
         {
-            title: "Presupuesto",
-            dataIndex: "presupuestoReferencial",
-            key: "presupuesto",
-            render: (val: string) => val ? `S/ ${Number(val).toFixed(2)}` : "-",
-            className: "text-xs"
+            headerName: "Lugar",
+            field: "lugarEjecucion",
+            width: 140,
+            cellRenderer: ({ data }: ICellRendererParams<ServicioItem>) => (
+                <div className="flex items-center h-full text-xs text-slate-700">{data?.lugarEjecucion || "—"}</div>
+            ),
         },
         {
-            title: "Acciones",
-            key: "acciones",
-            width: 80,
-            render: (_: any, record: ServicioItem) => (
-                <Popconfirm title="¿Quitar servicio?" onConfirm={() => handleRemove(record.id!)}>
-                    <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-                </Popconfirm>
-            )
-        }
+            headerName: "Horario / Duración",
+            field: "horaInicio",
+            width: 150,
+            cellRenderer: ({ data }: ICellRendererParams<ServicioItem>) => {
+                if (!data) return null
+                let txt = "—"
+                if (data.unidadDuracion === 'dias') {
+                    txt = data.cantidadDias ? `${data.cantidadDias} día(s)` : "—"
+                } else if (data.horaInicio && data.horaFin) {
+                    txt = `${data.horaInicio} — ${data.horaFin}`
+                } else if (data.horaInicio) {
+                    txt = data.horaInicio
+                }
+                return <div className="flex items-center h-full text-xs font-semibold text-emerald-700">{txt}</div>
+            },
+        },
+        {
+            headerName: "Presupuesto",
+            field: "presupuestoReferencial",
+            width: 120,
+            cellRenderer: ({ data }: ICellRendererParams<ServicioItem>) => (
+                <div className="flex items-center h-full text-xs font-bold text-emerald-700">
+                    {data?.presupuestoReferencial ? `S/ ${Number(data.presupuestoReferencial).toFixed(2)}` : "—"}
+                </div>
+            ),
+        },
+        {
+            headerName: "",
+            width: 60,
+            cellRenderer: ({ data }: ICellRendererParams<ServicioItem>) => {
+                if (!data?.id) return null
+                return (
+                    <div className="flex items-center justify-center h-full">
+                        <Popconfirm title="¿Quitar servicio?" onConfirm={() => handleRemove(data.id!)}>
+                            <Tooltip title="Eliminar">
+                                <DeleteOutlined className="text-red-500 hover:text-red-700 cursor-pointer text-base" />
+                            </Tooltip>
+                        </Popconfirm>
+                    </div>
+                )
+            },
+        },
     ]
 
     return (
@@ -346,18 +370,25 @@ export default function StepServicio({
 
             {/* Tabla de Servicios */}
             <div>
-                <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-bold text-slate-800">Servicios Solicitados</h4>
-                    <span className="text-xs text-slate-500">{serviciosSeleccionados.length} servicios</span>
-                </div>
-                <Table
-                    dataSource={serviciosSeleccionados}
-                    columns={columns}
-                    rowKey="id"
+                <TableWithTitle<ServicioItem>
+                    tableRef={tableGridRef}
+                    id="requerimiento-interno.table-servicios"
+                    title="Servicios Solicitados"
+                    extraTitle={
+                        <Tag color="green" className="!rounded-full !text-[10px] !font-bold !border-none">
+                            {serviciosSeleccionados.length} {serviciosSeleccionados.length === 1 ? 'servicio' : 'servicios'}
+                        </Tag>
+                    }
+                    columnDefs={columnDefs}
+                    rowData={serviciosSeleccionados}
+                    loading={false}
+                    rowSelection={false}
                     pagination={false}
-                    size="small"
-                    className="border rounded-md overflow-hidden shadow-sm"
-                    locale={{ emptyText: "No hay servicios agregados" }}
+                    domLayout="autoHeight"
+                    exportExcel={false}
+                    exportPdf={false}
+                    selectColumns={false}
+                    selectionColor="#dcfce7"
                 />
                 {errors.servicios && <p className="text-xs text-red-600 mt-2">{errors.servicios}</p>}
             </div>
