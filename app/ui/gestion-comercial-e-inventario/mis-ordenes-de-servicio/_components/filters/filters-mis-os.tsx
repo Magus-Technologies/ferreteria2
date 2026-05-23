@@ -66,7 +66,7 @@ export default function FiltersMisOS({
       initialValues={{
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
-        approval_state: 'pendiente',
+        approval_state: '',
         prioridad: '',
       }}
       className="w-full"

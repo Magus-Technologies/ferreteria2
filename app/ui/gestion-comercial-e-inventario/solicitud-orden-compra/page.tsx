@@ -12,7 +12,7 @@ import { classOkButtonModal } from '~/lib/clases'
 import { type RequerimientoInterno, type RequerimientoInternoProducto, requerimientoInternoApi } from '~/lib/api/requerimiento-interno'
 import { useStoreFiltrosSolicitudOC } from './_store/store-filtros-solicitud-oc'
 import { useColumnsSolicitudOC } from './_components/tables/columns-solicitud-oc'
-import ModalRequerimientoInterno from '../_components/modals/modal-requerimiento-interno'
+import ModalRequerimientoCompra from '../_components/modals/modal-requerimiento-compra'
 import ModalDocSolicitudOC from './_components/modals/modal-doc-solicitud-oc'
 import TableProductosSolicitudOC from './_components/tables/table-productos-solicitud-oc'
 import { useQueryClient } from '@tanstack/react-query'
@@ -138,13 +138,13 @@ export default function SolicitudOrdenCompra() {
         />
       </Suspense>
 
-      <ModalRequerimientoInterno
+      <ModalRequerimientoCompra
         open={modalNuevoOpen}
         onClose={() => {
           setModalNuevoOpen(false)
           queryClient.invalidateQueries({ queryKey: [QueryKeys.SOLICITUD_ORDEN_COMPRA] })
         }}
-        defaultTipoSolicitud="SOC"
+        tipoSolicitud="SOC"
       />
 
       <ModalDocSolicitudOC

@@ -14,20 +14,11 @@ import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import dayjs, { Dayjs } from 'dayjs'
 
 interface ValuesFiltersSolicitudOC {
-  estado?: string
   prioridad?: string
   search?: string
   desde?: Dayjs
   hasta?: Dayjs
 }
-
-const ESTADO_OPTIONS = [
-  { label: 'Todos', value: '' },
-  { label: 'Pendiente', value: 'pendiente' },
-  { label: 'Aprobado', value: 'aprobado' },
-  { label: 'Rechazado', value: 'rechazado' },
-  { label: 'Anulado', value: 'anulado' },
-]
 
 const PRIORIDAD_OPTIONS = [
   { label: 'Todas', value: '' },
@@ -51,7 +42,6 @@ export default function FiltersSolicitudOC({
   const activeFiltersCount = useMemo(() => {
     const values = form.getFieldsValue()
     let count = 0
-    if (values.estado) count++
     if (values.prioridad) count++
     if (values.search) count++
     if (values.desde) count++
@@ -63,7 +53,6 @@ export default function FiltersSolicitudOC({
   useEffect(() => {
     const today = dayjs().format('YYYY-MM-DD')
     const initialFilters: RequerimientoFilters = {
-      estado: 'pendiente',
       desde: today,
       hasta: today,
     }
@@ -71,20 +60,16 @@ export default function FiltersSolicitudOC({
     form.setFieldsValue({
       desde: dayjs(),
       hasta: dayjs(),
-      estado: 'pendiente',
       prioridad: '',
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleFinish = (values: ValuesFiltersSolicitudOC) => {
-    const { desde, hasta, ...rest } = values
     const filtros: RequerimientoFilters = {
-      ...rest,
-      estado: values.estado || undefined,
       prioridad: values.prioridad || undefined,
-      desde: desde ? desde.format('YYYY-MM-DD') : undefined,
-      hasta: hasta ? hasta.format('YYYY-MM-DD') : undefined,
+      desde: values.desde ? values.desde.format('YYYY-MM-DD') : undefined,
+      hasta: values.hasta ? values.hasta.format('YYYY-MM-DD') : undefined,
       search: values.search || undefined,
       // Fuerza una nueva consulta al backend en cada clic de Buscar,
       // aunque los filtros no hayan cambiado (para detectar nuevas órdenes)
@@ -153,18 +138,6 @@ export default function FiltersSolicitudOC({
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] font-medium text-slate-500">Estado:</span>
-              <Form.Item name="estado" className="!mb-0">
-                <Select
-                  placeholder="Todos"
-                  allowClear
-                  options={ESTADO_OPTIONS}
-                  className="!w-[120px]"
-                />
-              </Form.Item>
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0">
               <span className="text-[11px] font-medium text-slate-500">Prioridad:</span>
               <Form.Item name="prioridad" className="!mb-0">
                 <Select
@@ -225,11 +198,6 @@ export default function FiltersSolicitudOC({
               placeholder="Fecha Hasta"
               className="w-full"
             />
-          </LabelBase>
-          <LabelBase label="Estado:">
-            <Form.Item name="estado" className="!mb-0 w-full">
-              <Select placeholder="Todos" allowClear options={ESTADO_OPTIONS} className="w-full" />
-            </Form.Item>
           </LabelBase>
           <LabelBase label="Prioridad:">
             <Form.Item name="prioridad" className="!mb-0 w-full">

@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { ColDef, RowSelectedEvent } from 'ag-grid-community'
+import { ColDef, FirstDataRenderedEvent, RowSelectedEvent } from 'ag-grid-community'
 import { useQuery } from '@tanstack/react-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
@@ -45,6 +45,13 @@ const TableSolicitudOC = memo(function TableSolicitudOC({ id, columns, filtros, 
   const total = data?.meta?.total ?? data?.total ?? 0
   const rowData = data?.data ?? []
 
+  const onFirstDataRendered = useCallback((event: FirstDataRenderedEvent<RequerimientoInterno>) => {
+    const firstNode = event.api.getDisplayedRowAtIndex(0)
+    if (firstNode) {
+      firstNode.setSelected(true)
+    }
+  }, [])
+
   const nextPage = useCallback(() => {
     if (page < totalPages) setPage(p => p + 1)
   }, [page, totalPages])
@@ -66,6 +73,7 @@ const TableSolicitudOC = memo(function TableSolicitudOC({ id, columns, filtros, 
       selectColumns
       selectionColor={selectionColor}
       onRowSelected={onRowSelected}
+      onFirstDataRendered={onFirstDataRendered}
       optionsSelectColumns={[
         {
           label: 'Default',

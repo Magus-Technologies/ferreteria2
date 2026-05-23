@@ -20,6 +20,7 @@ import CardAgregarProductoCotizacion from "~/app/ui/facturacion-electronica/mis-
 import CardAgregarProductoPrestamo from "~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/_components/cards/card-agregar-producto-prestamo";
 import CardAgregarProductoGuia from "~/app/ui/facturacion-electronica/mis-guias/crear-guia/_components/cards/card-agregar-producto-guia";
 import CardAgregarProductoTransferencia from "~/app/ui/gestion-comercial-e-inventario/mis-transferencias/_components/cards/card-agregar-producto-transferencia";
+import CardAgregarProductoRequerimiento, { type ProductoRequerimientoAgregado } from "~/app/ui/gestion-comercial-e-inventario/_components/modals/_requerimiento-interno/cards/card-agregar-producto-requerimiento";
 import { marcasApi, categoriasApi } from "~/lib/api/catalogos";
 import { useQuery } from "@tanstack/react-query";
 
@@ -38,6 +39,8 @@ type ModalProductoSearchProps = {
   showCardAgregarProductoPrestamo?: boolean;
   showCardAgregarProductoGuia?: boolean;
   showCardAgregarProductoTransferencia?: boolean;
+  showCardAgregarProductoRequerimiento?: boolean;
+  onAgregarProductoRequerimiento?: (item: ProductoRequerimientoAgregado) => void;
   almacenOrigenIdTransferencia?: number;
   showUltimasCompras?: boolean;
   selectionColor?: string; // Color para la fila seleccionada
@@ -69,6 +72,8 @@ export default function ModalProductoSearch({
   showCardAgregarProductoPrestamo = false,
   showCardAgregarProductoGuia = false,
   showCardAgregarProductoTransferencia = false,
+  showCardAgregarProductoRequerimiento = false,
+  onAgregarProductoRequerimiento,
   almacenOrigenIdTransferencia,
   showUltimasCompras = true,
   selectionColor, // Recibir el color de selección
@@ -330,6 +335,14 @@ export default function ModalProductoSearch({
             <CardAgregarProductoTransferencia
               setOpen={setOpen}
               almacenOrigenId={almacenOrigenIdTransferencia}
+            />
+          </div>
+        )}
+        {showCardAgregarProductoRequerimiento && onAgregarProductoRequerimiento && (
+          <div className="w-full xl:w-[300px] xl:flex-shrink-0 mt-4">
+            <CardAgregarProductoRequerimiento
+              setOpen={setOpen}
+              onAgregar={onAgregarProductoRequerimiento}
             />
           </div>
         )}

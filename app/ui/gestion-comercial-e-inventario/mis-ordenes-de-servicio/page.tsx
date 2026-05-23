@@ -14,7 +14,7 @@ import { type RequerimientoInterno, type RequerimientoInternoServicio, requerimi
 import { useAuth } from '~/lib/auth-context'
 import { useStoreFiltrosMisOS } from './_store/store-filtros-mis-os'
 import { useColumnsMisOS } from './_components/tables/columns-mis-os'
-import ModalRequerimientoInterno from '../_components/modals/modal-requerimiento-interno'
+import ModalRequerimientoServicio from '../_components/modals/modal-requerimiento-servicio'
 import ModalEscalarSuperior from './_components/modals/modal-escalar-superior'
 import ModalReasignarCargo from './_components/modals/modal-reasignar-cargo'
 import TableWithTitle from '~/components/tables/table-with-title'
@@ -282,13 +282,12 @@ export default function MisOrdenesDeServicio() {
         />
       </Suspense>
 
-      <ModalRequerimientoInterno
+      <ModalRequerimientoServicio
         open={modalNuevoOpen}
         onClose={() => {
           setModalNuevoOpen(false)
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ORDENES_DE_SERVICIO] })
         }}
-        defaultTipoSolicitud="OS"
       />
 
       <ModalEscalarSuperior
