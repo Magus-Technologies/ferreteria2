@@ -149,7 +149,10 @@ export interface CreateValeCompraRequest {
 export interface UpdateValeCompraRequest extends Partial<CreateValeCompraRequest> {}
 
 export interface ValesAplicablesRequest {
-  cantidad_total: number;
+  // Monto total de la venta (suma de precio_venta * cantidad por línea).
+  // El backend compara este valor contra `vale.cantidad_minima`, que ahora
+  // representa el precio mínimo en S/ para que el vale sea aplicable.
+  precio_total: number;
   categoria_ids?: number[];
   producto_ids?: number[];
   cliente_id?: number;

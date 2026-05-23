@@ -88,18 +88,19 @@ function SeccionCondiciones({ form, modalidad }: SeccionCondicionesProps) {
 
         <Form.Item
           name="cantidad_minima"
-          label="Cantidad Mínima de Productos"
+          label="Precio Mínimo (S/)"
           rules={[
-            { required: true, message: "La cantidad mínima es requerida" },
-            { type: "number", min: 0.001, message: "Debe ser mayor a 0" },
+            { required: true, message: "El precio mínimo es requerido" },
+            { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
           ]}
         >
           <InputNumber
             className="w-full"
-            placeholder="Ej: 55"
-            min={0.001}
-            step={1}
-            prefix={<FaBoxOpen className="text-blue-600" />}
+            placeholder="Ej: 100.00"
+            min={0.01}
+            step={0.01}
+            precision={2}
+            prefix={<FaDollarSign className="text-blue-600" />}
           />
         </Form.Item>
       </div>

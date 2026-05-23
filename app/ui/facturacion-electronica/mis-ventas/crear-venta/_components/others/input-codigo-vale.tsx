@@ -30,11 +30,15 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
       .filter((id): id is number => !!id)
   }, [productosVenta])
 
-  const cantidadTotal = useMemo(() => {
+  // Suma del MONTO TOTAL de la venta (precio_venta * cantidad por línea).
+  // Se compara contra `vale.cantidad_minima` (que ahora representa el precio
+  // mínimo en S/, no la cantidad de unidades). El nombre interno del campo
+  // se mantiene como `cantidad_minima` para evitar migración de BD.
+  const precioTotal = useMemo(() => {
     return productosVenta.reduce((sum, p) => {
       const cantidad = Number(p.cantidad ?? 0)
-      const factor = Number(p.unidad_derivada_factor ?? 1)
-      return sum + (cantidad * factor)
+      const precio = Number(p.precio_venta ?? 0)
+      return sum + (cantidad * precio)
     }, 0)
   }, [productosVenta])
 
@@ -52,10 +56,10 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
 
   // Consultar vales aplicables automáticos (por productos en carrito)
   const consultarVales = useCallback(async () => {
-    if (productoIds.length === 0 || cantidadTotal <= 0) return
+    if (productoIds.length === 0 || precioTotal <= 0) return
     try {
       const res = await getValesAplicables({
-        cantidad_total: cantidadTotal,
+        precio_total: precioTotal,
         producto_ids: productoIds,
         cliente_id: clienteId || undefined,
       })
@@ -80,7 +84,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     } catch {
       // Silencioso
     }
-  }, [productoIds, cantidadTotal, clienteId, getBeneficio, notification, setValesAplicables])
+  }, [productoIds, precioTotal, clienteId, getBeneficio, notification, setValesAplicables])
 
   useEffect(() => {
     const timer = setTimeout(consultarVales, 500)

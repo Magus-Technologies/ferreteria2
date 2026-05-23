@@ -70,13 +70,13 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
           </div>
         )}
 
-        {/* Cantidad Mínima */}
+        {/* Precio Mínimo (S/) */}
         {cantidadMinima && (
           <div>
             <p className='text-xs text-gray-500 uppercase mb-1 flex items-center gap-1'>
-              <FaHashtag className='text-blue-600' /> Cantidad Mínima
+              <FaDollarSign className='text-blue-600' /> Precio Mínimo
             </p>
-            <p className='text-2xl font-bold text-blue-600'>{cantidadMinima}</p>
+            <p className='text-2xl font-bold text-blue-600'>S/ {Number(cantidadMinima).toFixed(2)}</p>
           </div>
         )}
 
