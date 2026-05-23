@@ -20,7 +20,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 
 const FiltersSolicitudOC = lazy(() => import('./_components/filters/filters-solicitud-oc'))
 const TableSolicitudOC = lazy(() => import('./_components/tables/table-solicitud-oc'))
-const ModalDetalleRequerimiento = lazy(() => import('../mis-requerimientos-internos/_components/modal-detalle-requerimiento'))
+const ModalDetalleSolicitudOC = lazy(() => import('./_components/modals/_detalle-solicitud-oc/modal-detalle-solicitud-oc'))
 
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
@@ -104,11 +104,12 @@ export default function SolicitudOrdenCompra() {
                   const rowId = event.data.id
                   requerimientoInternoApi.getById(rowId).then(res => {
                     if (res.data?.data) {
-                      const stillSelected = event.api.getSelectedRows().some(r => r.id === rowId)
+                      const selectedRows = event.api?.getSelectedRows?.() ?? []
+                      const stillSelected = selectedRows.some(r => r.id === rowId)
                       if (stillSelected) setFilaSeleccionada(res.data.data)
                     }
                   })
-                } else if (event.api.getSelectedRows().length === 0) {
+                } else if ((event.api?.getSelectedRows?.() ?? []).length === 0) {
                   setFilaSeleccionada(null)
                 }
               }}
@@ -128,7 +129,7 @@ export default function SolicitudOrdenCompra() {
       </div>
 
       <Suspense fallback={null}>
-        <ModalDetalleRequerimiento
+        <ModalDetalleSolicitudOC
           open={modalDetalleOpen}
           requerimiento={seleccionado}
           onClose={() => {
