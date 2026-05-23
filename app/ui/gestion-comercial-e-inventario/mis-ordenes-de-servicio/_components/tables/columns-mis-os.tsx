@@ -187,41 +187,51 @@ export function useColumnsMisOS({
                 style={{ fontSize: 16, color: '#dc2626' }}
               />
             </Tooltip>
-            {isApprovalPending && (
-              <>
-                <Tooltip title={canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar'}>
-                  <FaCheck
-                    onClick={() => canApprove && data && onAprobar?.(data)}
-                    className={`transition-all ${
-                      canApprove
-                        ? 'cursor-pointer hover:scale-110 text-green-600'
-                        : 'cursor-not-allowed text-gray-300'
-                    }`}
-                    size={16}
-                  />
-                </Tooltip>
-                <Tooltip title={canApprove ? 'Escalar a superior' : 'No tienes autoridad para escalar'}>
-                  <FaArrowUp
-                    onClick={() => canApprove && data && onEscalar?.(data)}
-                    className={`transition-all ${
-                      canApprove
-                        ? 'cursor-pointer hover:scale-110 text-orange-600'
-                        : 'cursor-not-allowed text-gray-300'
-                    }`}
-                    size={16}
-                  />
-                </Tooltip>
-                {esRootCargo && (
-                  <Tooltip title="Reasignar a otro cargo">
-                    <FaExchangeAlt
-                      onClick={() => data && onReasignar?.(data)}
-                      className="cursor-pointer hover:scale-110 transition-all text-indigo-600"
-                      size={16}
-                    />
-                  </Tooltip>
-                )}
-              </>
-            )}
+            <Tooltip title={
+              isApprovalPending
+                ? (canApprove ? 'Aprobar' : 'No tienes autoridad para aprobar')
+                : 'La OS ya fue aprobada o rechazada'
+            }>
+              <FaCheck
+                onClick={() => isApprovalPending && canApprove && data && onAprobar?.(data)}
+                className={`transition-all ${
+                  isApprovalPending && canApprove
+                    ? 'cursor-pointer hover:scale-110 text-green-600'
+                    : 'cursor-not-allowed text-gray-300'
+                }`}
+                size={16}
+              />
+            </Tooltip>
+            <Tooltip title={
+              isApprovalPending
+                ? (canApprove ? 'Escalar a superior' : 'No tienes autoridad para escalar')
+                : 'La OS ya fue aprobada o rechazada'
+            }>
+              <FaArrowUp
+                onClick={() => isApprovalPending && canApprove && data && onEscalar?.(data)}
+                className={`transition-all ${
+                  isApprovalPending && canApprove
+                    ? 'cursor-pointer hover:scale-110 text-orange-600'
+                    : 'cursor-not-allowed text-gray-300'
+                }`}
+                size={16}
+              />
+            </Tooltip>
+            <Tooltip title={
+              isApprovalPending
+                ? 'Reasignar a otro cargo'
+                : 'La OS ya fue aprobada o rechazada'
+            }>
+              <FaExchangeAlt
+                onClick={() => isApprovalPending && esRootCargo && data && onReasignar?.(data)}
+                className={`transition-all ${
+                  isApprovalPending && esRootCargo
+                    ? 'cursor-pointer hover:scale-110 text-indigo-600'
+                    : 'cursor-not-allowed text-gray-300'
+                }`}
+                size={16}
+              />
+            </Tooltip>
           </div>
         )
       },
