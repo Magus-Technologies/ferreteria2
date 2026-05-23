@@ -2,17 +2,25 @@
 
 import { Form, Select } from "antd";
 import { FaSearch, FaGift } from "react-icons/fa";
-import { FaCalendar } from "react-icons/fa6";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import ButtonBase from "~/components/buttons/button-base";
 import FormBase from "~/components/form/form-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
-import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
-import { useStoreFiltrosVales, type FiltrosVales } from "../../_store/store-filtros-vales";
+import {
+  useStoreFiltrosVales,
+  type FiltrosVales,
+} from "../../_store/store-filtros-vales";
+import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import dayjs, { type Dayjs } from "dayjs";
 import { toUTCBD } from "~/utils/fechas";
+import { useEffect } from "react";
+import {
+  ESTADO_VALE_OPTIONS,
+  TIPO_PROMOCION_OPTIONS,
+  MODALIDAD_OPTIONS,
+} from "../../_constants/filtros-vale-options";
 
-interface FormValues extends Omit<FiltrosVales, 'desde' | 'hasta'> {
+interface FormValues extends Omit<FiltrosVales, "desde" | "hasta"> {
   desde?: Dayjs;
   hasta?: Dayjs;
 }
@@ -21,12 +29,21 @@ export default function FiltersValesCompra() {
   const [form] = Form.useForm<FormValues>();
   const setFiltros = useStoreFiltrosVales((s) => s.setFiltros);
 
+  useEffect(() => {
+    setFiltros({
+      estado: "ACTIVO",
+      desde: dayjs().format("YYYY-MM-DD"),
+      hasta: dayjs().format("YYYY-MM-DD"),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSearch = (values: FormValues) => {
     const { desde, hasta, ...rest } = values;
     setFiltros({
       ...rest,
-      desde: desde ? toUTCBD({ date: desde.startOf('day') }) : undefined,
-      hasta: hasta ? toUTCBD({ date: hasta.endOf('day') }) : undefined,
+      desde: desde ? toUTCBD({ date: desde.startOf("day") }) : undefined,
+      hasta: hasta ? toUTCBD({ date: hasta.endOf("day") }) : undefined,
     });
   };
 
@@ -35,9 +52,9 @@ export default function FiltersValesCompra() {
       form={form}
       name="filtros-vales-compra"
       initialValues={{
-        estado: 'ACTIVO',
-        desde: dayjs().startOf('day'),
-        hasta: dayjs().endOf('day'),
+        estado: "ACTIVO",
+        desde: dayjs().startOf("day"),
+        hasta: dayjs().endOf("day"),
       }}
       className="w-full"
       onFinish={handleSearch}
@@ -51,25 +68,13 @@ export default function FiltersValesCompra() {
       <div className="mt-4">
         <div className="grid grid-cols-12 gap-x-3 gap-y-2.5">
           {/* Fila 1: Desde | Hasta | Buscar | Estado | Buscar btn | Limpiar btn */}
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Desde:
-            </label>
-            <DatePickerBase
-              propsForm={{ name: "desde", hasFeedback: false }}
-              className="!w-full"
-              prefix={<FaCalendar size={13} className="text-emerald-600 mx-0.5" />}
-            />
-          </div>
-
-          <div className="col-span-2 flex items-center gap-1">
-            <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Hasta:
-            </label>
-            <DatePickerBase
-              propsForm={{ name: "hasta", hasFeedback: false }}
-              className="!w-full"
-              prefix={<FaCalendar size={13} className="text-emerald-600 mx-0.5" />}
+          <div className="col-span-4 grid grid-cols-2 gap-3">
+            <FilterDateRangeFields
+              fromName="desde"
+              toName="hasta"
+              fromLabel="Desde:"
+              itemClassName="flex items-center gap-1"
+              fromPlaceholder="Fecha"
             />
           </div>
 
@@ -88,7 +93,7 @@ export default function FiltersValesCompra() {
             />
           </div>
 
-          <div className="col-span-2 flex items-center gap-2">
+<div className="col-span-2 flex items-center gap-2">
             <label className="text-xs font-semibold text-gray-700 whitespace-nowrap">
               Estado:
             </label>
@@ -96,11 +101,7 @@ export default function FiltersValesCompra() {
               <Select
                 className="!w-full"
                 placeholder="Estado"
-                options={[
-                  { label: 'Activo', value: 'ACTIVO' },
-                  { label: 'Pausado', value: 'PAUSADO' },
-                  { label: 'Finalizado', value: 'FINALIZADO' },
-                ]}
+                options={ESTADO_VALE_OPTIONS}
                 allowClear
               />
             </Form.Item>
@@ -114,12 +115,7 @@ export default function FiltersValesCompra() {
               <Select
                 className="!w-full"
                 placeholder="Tipo promoción"
-                options={[
-                  { label: 'Sorteo', value: 'SORTEO' },
-                  { label: 'Desc. Misma Compra', value: 'DESCUENTO_MISMA_COMPRA' },
-                  { label: 'Desc. Próxima Compra', value: 'DESCUENTO_PROXIMA_COMPRA' },
-                  { label: 'Producto Gratis', value: 'PRODUCTO_GRATIS' },
-                ]}
+                options={TIPO_PROMOCION_OPTIONS}
                 allowClear
               />
             </Form.Item>
@@ -133,6 +129,7 @@ export default function FiltersValesCompra() {
               className="flex items-center gap-2 w-full justify-center"
             >
               <FaSearch />
+              Buscar
             </ButtonBase>
           </div>
 
@@ -145,30 +142,10 @@ export default function FiltersValesCompra() {
               <Select
                 className="!w-full"
                 placeholder="Modalidad"
-                options={[
-                  { label: 'Por Cantidad', value: 'CANTIDAD_MINIMA' },
-                  { label: 'Por Categoría', value: 'POR_CATEGORIA' },
-                  { label: 'Por Productos', value: 'POR_PRODUCTOS' },
-                  { label: 'Mixto', value: 'MIXTO' },
-                ]}
+                options={MODALIDAD_OPTIONS}
                 allowClear
               />
             </Form.Item>
-          </div>
-
-          <div className="col-span-1 flex items-center gap-2">
-            <ButtonBase
-              color="default"
-              size="md"
-              type="button"
-              onClick={() => {
-                form.resetFields();
-                form.submit();
-              }}
-              className="w-full justify-center text-xs"
-            >
-              Limpiar
-            </ButtonBase>
           </div>
         </div>
       </div>
