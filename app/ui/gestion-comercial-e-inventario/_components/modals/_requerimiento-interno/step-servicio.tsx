@@ -26,6 +26,7 @@ interface StepServicioProps {
     afectaCalendario?: boolean
     setAfectaCalendario?: (value: boolean) => void
 }
+/*sawdwadw*/
 
 export default function StepServicio({
     serviciosSeleccionados,
