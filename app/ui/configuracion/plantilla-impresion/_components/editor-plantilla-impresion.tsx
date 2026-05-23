@@ -171,6 +171,18 @@ const BLOQUES_POR_COMPROBANTE: Record<string, { A4: string[]; Ticket: string[] }
     A4: ["empresa", "documento", "cliente", "productos", "observaciones"],
     Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
   },
+  "nota-credito": {
+    // Nota de crédito: documento interno de ajuste.
+    // Sin consulta (no es electrónico), sin pie (cierra con firmas).
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+  "nota-debito": {
+    // Nota de débito: documento interno de ajuste.
+    // Sin consulta (no es electrónico), sin pie (cierra con firmas).
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
 };
 
 function bloquesVisibles(comprobante?: string, formato?: "A4" | "Ticket"): typeof BLOQUES_PDF {

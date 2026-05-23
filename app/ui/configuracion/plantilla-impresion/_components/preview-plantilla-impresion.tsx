@@ -5,6 +5,8 @@ import TicketCotizacion from "./preview/_ticket/ticket-cotizacion"
 import TicketEntrega from "./preview/_ticket/ticket-entrega"
 import TicketGuia from "./preview/_ticket/ticket-guia"
 import TicketIngresoSalida from "./preview/_ticket/ticket-ingreso-salida"
+import TicketNotaCredito from "./preview/_ticket/ticket-nota-credito"
+import TicketNotaDebito from "./preview/_ticket/ticket-nota-debito"
 import TicketOrdenCompra from "./preview/_ticket/ticket-orden-compra"
 import TicketRequerimientoCompra from "./preview/_ticket/ticket-requerimiento-compra"
 import TicketRequerimientoServicio from "./preview/_ticket/ticket-requerimiento-servicio"
@@ -13,6 +15,8 @@ import A4Cotizacion from "./preview/_a4/a4-cotizacion"
 import A4Entrega from "./preview/_a4/a4-entrega"
 import A4Guia from "./preview/_a4/a4-guia"
 import A4IngresoSalida from "./preview/_a4/a4-ingreso-salida"
+import A4NotaCredito from "./preview/_a4/a4-nota-credito"
+import A4NotaDebito from "./preview/_a4/a4-nota-debito"
 import A4OrdenCompra from "./preview/_a4/a4-orden-compra"
 import A4RequerimientoCompra from "./preview/_a4/a4-requerimiento-compra"
 import A4RequerimientoServicio from "./preview/_a4/a4-requerimiento-servicio"
@@ -36,6 +40,8 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
     if (props.comprobante === "cotizacion") return <TicketCotizacion ctx={ctx} />
     if (props.comprobante === "entrega") return <TicketEntrega ctx={ctx} />
     if (props.comprobante === "guia") return <TicketGuia ctx={ctx} />
+    if (props.comprobante === "nota-credito") return <TicketNotaCredito ctx={ctx} />
+    if (props.comprobante === "nota-debito") return <TicketNotaDebito ctx={ctx} />
     if (props.comprobante === "orden-compra") return <TicketOrdenCompra ctx={ctx} />
     if (props.comprobante === "ingreso-salida") return <TicketIngresoSalida ctx={ctx} />
     if (props.comprobante === "requerimiento-compra") return <TicketRequerimientoCompra ctx={ctx} />
@@ -46,6 +52,8 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
   if (props.comprobante === "cotizacion") return <A4Cotizacion ctx={ctx} />
   if (props.comprobante === "entrega") return <A4Entrega ctx={ctx} />
   if (props.comprobante === "guia") return <A4Guia ctx={ctx} />
+  if (props.comprobante === "nota-credito") return <A4NotaCredito ctx={ctx} />
+  if (props.comprobante === "nota-debito") return <A4NotaDebito ctx={ctx} />
   if (props.comprobante === "orden-compra") return <A4OrdenCompra ctx={ctx} />
   if (props.comprobante === "ingreso-salida") return <A4IngresoSalida ctx={ctx} />
   if (props.comprobante === "requerimiento-compra") return <A4RequerimientoCompra ctx={ctx} />
