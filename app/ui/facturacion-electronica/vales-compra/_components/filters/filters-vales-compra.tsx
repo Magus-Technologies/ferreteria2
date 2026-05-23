@@ -13,7 +13,7 @@ import {
 import FilterDateRangeFields from "~/app/_components/filters/filter-date-range-fields";
 import dayjs, { type Dayjs } from "dayjs";
 import { toUTCBD } from "~/utils/fechas";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ESTADO_VALE_OPTIONS,
   TIPO_PROMOCION_OPTIONS,
@@ -28,23 +28,37 @@ interface FormValues extends Omit<FiltrosVales, "desde" | "hasta"> {
 export default function FiltersValesCompra() {
   const [form] = Form.useForm<FormValues>();
   const setFiltros = useStoreFiltrosVales((s) => s.setFiltros);
+  const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
+    form.setFieldsValue({
+      estado: "ACTIVO",
+      desde: dayjs().startOf("day"),
+      hasta: dayjs().endOf("day"),
+    });
+
     setFiltros({
       estado: "ACTIVO",
       desde: dayjs().format("YYYY-MM-DD"),
       hasta: dayjs().format("YYYY-MM-DD"),
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setSearchValue("");
+  }, [form, setFiltros]);
 
   const handleSearch = (values: FormValues) => {
     const { desde, hasta, ...rest } = values;
     setFiltros({
       ...rest,
+      search: searchValue.trim() || undefined,
       desde: desde ? toUTCBD({ date: desde.startOf("day") }) : undefined,
       hasta: hasta ? toUTCBD({ date: hasta.endOf("day") }) : undefined,
     });
+  };
+
+  const handleManualSearch = (event?: React.MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    handleSearch(form.getFieldsValue());
   };
 
   return (
@@ -83,11 +97,8 @@ export default function FiltersValesCompra() {
               Buscar:
             </label>
             <InputBase
-              propsForm={{
-                name: "search",
-                hasFeedback: false,
-                className: "!w-full",
-              }}
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
               placeholder="Código o nombre del vale..."
               formWithMessage={false}
             />
@@ -125,7 +136,8 @@ export default function FiltersValesCompra() {
             <ButtonBase
               color="info"
               size="md"
-              type="submit"
+              type="button"
+              onClick={handleManualSearch}
               className="flex items-center gap-2 w-full justify-center"
             >
               <FaSearch />

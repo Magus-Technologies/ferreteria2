@@ -207,6 +207,8 @@ export async function getValeCompra(id: number): Promise<ApiResponse<ValeCompra>
   });
 }
 
+export const getValeCompraById = getValeCompra;
+
 /**
  * Crear un nuevo vale de compra
  */

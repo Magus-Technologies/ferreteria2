@@ -19,6 +19,8 @@ export default function CardsInfoVales() {
         estado: filtros.estado || undefined,
         tipo_promocion: filtros.tipo_promocion || undefined,
         modalidad: filtros.modalidad || undefined,
+        desde: filtros.desde || undefined,
+        hasta: filtros.hasta || undefined,
       })
       return result.data?.data || []
     },
