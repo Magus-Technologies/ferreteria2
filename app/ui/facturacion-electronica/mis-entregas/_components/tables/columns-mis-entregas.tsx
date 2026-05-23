@@ -144,8 +144,8 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       width: 130,
       valueFormatter: (params) => {
         if (params.data?.tipo_entrega === 'pa' && !isEntregaParcialAgrupada(params.data)) {
-          if (params.value === 'pr') return 'Domicilio'
-          if (params.value === 'in') return 'Inmediata'
+          if (params.value === 'pr') return TIPO_DESPACHO_LABEL_CON_ICON.pr || 'Programado'
+          if (params.value === 'in') return TIPO_DESPACHO_LABEL_CON_ICON.in || 'Inmediata'
           return 'Parcial'
         }
         if (isEntregaParcialAgrupada(params.data) || params.data?.tipo_entrega === 'pa') {

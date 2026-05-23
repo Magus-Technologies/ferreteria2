@@ -254,16 +254,21 @@ export function listarEntregasSinAgruparParcial(entregas: EntregaLike[]): Entreg
       }
     })
     .sort((a, b) => {
+      const ordenA =
+        Number(a?.__grupoParcialOrden || 0) ||
+        new Date(a?.created_at || 0).getTime()
+      const ordenB =
+        Number(b?.__grupoParcialOrden || 0) ||
+        new Date(b?.created_at || 0).getTime()
+
+      if (ordenA !== ordenB) return ordenB - ordenA
+
       const grupoA = Number(a?.__grupoParcialOrden || 0)
       const grupoB = Number(b?.__grupoParcialOrden || 0)
-      if (grupoA || grupoB) {
-        if (grupoA !== grupoB) return grupoB - grupoA
+      if (grupoA && grupoB) {
         return Number(a?.__tramoParcialOrden || 1) - Number(b?.__tramoParcialOrden || 1)
       }
 
-      const fechaA = new Date(a?.created_at || 0).getTime()
-      const fechaB = new Date(b?.created_at || 0).getTime()
-      if (fechaA !== fechaB) return fechaB - fechaA
       return String(b?.id || '').localeCompare(String(a?.id || ''))
     })
 }
