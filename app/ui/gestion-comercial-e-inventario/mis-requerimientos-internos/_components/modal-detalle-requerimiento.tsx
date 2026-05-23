@@ -91,6 +91,8 @@ export default function ModalDetalleRequerimiento({
   const [parentCargoInfo, setParentCargoInfo] = useState<{ id: number; descripcion: string } | null>(null)
   const [escalationLoading, setEscalationLoading] = useState(false)
   const [approvalLoading, setApprovalLoading] = useState(false)
+  const [servicioModalOpen, setServicioModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('general')
 
   // Cargar cargo padre del requerimiento para escalación
   useEffect(() => {
@@ -98,6 +100,18 @@ export default function ModalDetalleRequerimiento({
       loadParentCargoForEscalation()
     }
   }, [escalationModalOpen, requerimiento])
+
+  useEffect(() => {
+    if (!loading && requerimiento) {
+      const esOS = requerimiento.tipo_solicitud?.toLowerCase() === 'os'
+      const tieneProductos = requerimiento.productos && requerimiento.productos.length > 0
+      if (!esOS && tieneProductos) {
+        setActiveTab('productos')
+      } else {
+        setActiveTab('general')
+      }
+    }
+  }, [loading, requerimiento])
 
   const loadParentCargoForEscalation = async () => {
     try {
@@ -299,72 +313,10 @@ export default function ModalDetalleRequerimiento({
           <Tabs
             type="card"
             size="small"
-            defaultActiveKey="general"
+            activeKey={activeTab}
+            onChange={setActiveTab}
             className="!-mt-1"
             items={[
-              ...(esOS ? [{
-                key: 'servicios',
-                label: <span className="flex items-center gap-1.5 text-xs"><FaWrench size={12} /> Servicios</span>,
-                children: (
-                  <div className="space-y-4">
-                    {requerimiento.servicios && requerimiento.servicios.length > 0 ? (
-                      requerimiento.servicios.map((srv, idx) => {
-                        const inicioDayjs = srv.fecha_inicio_estimada ? dayjs(srv.fecha_inicio_estimada) : null
-                        const finDayjs = calcularFinServicio(srv.fecha_inicio_estimada ?? null, srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)
-                        return (
-                        <div key={idx} className="bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100 space-y-4">
-                          <div className="flex gap-8 flex-wrap">
-                            {srv.tipo_servicio && (
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Categoría</span>
-                                <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">{srv.tipo_servicio}</Tag>
-                              </div>
-                            )}
-                            {srv.lugar_ejecucion && (
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaMapMarkerAlt size={10} /> Lugar</span>
-                                <span className="font-semibold text-slate-700 text-sm">{srv.lugar_ejecucion}</span>
-                              </div>
-                            )}
-                            {srv.presupuesto_referencial && (
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaMoneyBillWave size={10} /> Presupuesto</span>
-                                <span className="font-bold text-emerald-600 text-sm">S/ {Number(srv.presupuesto_referencial).toFixed(2)}</span>
-                              </div>
-                            )}
-                          </div>
-                          {(inicioDayjs || srv.duracion_cantidad) && (
-                            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-emerald-100/50">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><CalendarOutlined /> Inicio</span>
-                                <span className="font-semibold text-slate-700 text-sm">{inicioDayjs ? inicioDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
-                              </div>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaCalendarTimes size={10} /> Fin estimado</span>
-                                <span className="font-semibold text-slate-700 text-sm">{finDayjs ? finDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
-                              </div>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaHourglassHalf size={10} /> Duración</span>
-                                <span className="font-bold text-emerald-600 text-sm">{formatDuracion(srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)}</span>
-                              </div>
-                            </div>
-                          )}
-                          <div className="pt-3 border-t border-emerald-100/50">
-                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Descripción / Tareas</span>
-                            <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">{srv.descripcion_servicio}</p>
-                            {srv.detalles && (
-                              <div className="mt-2 p-3 bg-white/60 rounded-lg border border-emerald-100/50 text-[11px] text-slate-500 italic">{srv.detalles}</div>
-                            )}
-                          </div>
-                        </div>
-                        )
-                      })
-                    ) : (
-                      <div className="text-center text-slate-400 py-8 text-sm">No hay servicios registrados</div>
-                    )}
-                  </div>
-                ),
-              }] : []),
               ...(!esOS && requerimiento.productos && requerimiento.productos.length > 0 ? [{
                 key: 'productos',
                 label: <span className="flex items-center gap-1.5 text-xs"><FaShoppingCart size={12} /> Productos</span>,
@@ -410,6 +362,16 @@ export default function ModalDetalleRequerimiento({
                             <Tag color={prioridadConfig.color} className="!rounded-full !px-3 !font-bold !text-[10px] !border-none !m-0">
                               {requerimiento.prioridad}
                             </Tag>
+                            {esOS && requerimiento.servicios && requerimiento.servicios.length > 0 && (
+                              <Button
+                                size="small"
+                                icon={<FaWrench size={10} />}
+                                onClick={() => setServicioModalOpen(true)}
+                                className="!rounded-full !text-[10px] !h-6 !px-2 !border-emerald-400 !text-emerald-700 hover:!border-emerald-600"
+                              >
+                                {requerimiento.servicios.length} Servicio(s)
+                              </Button>
+                            )}
                           </div>
                           <h2 className="text-lg font-bold text-slate-800 mt-2 leading-tight">{requerimiento.titulo}</h2>
                           <p className="text-xs text-slate-500 mt-1 font-mono">{requerimiento.codigo}</p>
@@ -632,6 +594,73 @@ export default function ModalDetalleRequerimiento({
             <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-sm text-emerald-800">
               ✓ El requerimiento será enviado a <strong>{parentCargoInfo.descripcion}</strong> para su aprobación
             </div>
+          )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={servicioModalOpen}
+        onCancel={() => setServicioModalOpen(false)}
+        title={`Servicios - ${requerimiento.codigo}`}
+        width={700}
+        centered
+        footer={<Button onClick={() => setServicioModalOpen(false)} type="primary">Cerrar</Button>}
+      >
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+          {requerimiento.servicios && requerimiento.servicios.length > 0 ? (
+            requerimiento.servicios.map((srv, idx) => {
+              const inicioDayjs = srv.fecha_inicio_estimada ? dayjs(srv.fecha_inicio_estimada) : null
+              const finDayjs = calcularFinServicio(srv.fecha_inicio_estimada ?? null, srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)
+              return (
+              <div key={idx} className="bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100 space-y-4">
+                <div className="flex gap-8 flex-wrap">
+                  {srv.tipo_servicio && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Categoría</span>
+                      <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">{srv.tipo_servicio}</Tag>
+                    </div>
+                  )}
+                  {srv.lugar_ejecucion && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaMapMarkerAlt size={10} /> Lugar</span>
+                      <span className="font-semibold text-slate-700 text-sm">{srv.lugar_ejecucion}</span>
+                    </div>
+                  )}
+                  {srv.presupuesto_referencial && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaMoneyBillWave size={10} /> Presupuesto</span>
+                      <span className="font-bold text-emerald-600 text-sm">S/ {Number(srv.presupuesto_referencial).toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+                {(inicioDayjs || srv.duracion_cantidad) && (
+                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-emerald-100/50">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><CalendarOutlined /> Inicio</span>
+                      <span className="font-semibold text-slate-700 text-sm">{inicioDayjs ? inicioDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaCalendarTimes size={10} /> Fin estimado</span>
+                      <span className="font-semibold text-slate-700 text-sm">{finDayjs ? finDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaHourglassHalf size={10} /> Duración</span>
+                      <span className="font-bold text-emerald-600 text-sm">{formatDuracion(srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="pt-3 border-t border-emerald-100/50">
+                  <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Descripción / Tareas</span>
+                  <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">{srv.descripcion_servicio}</p>
+                  {srv.detalles && (
+                    <div className="mt-2 p-3 bg-white/60 rounded-lg border border-emerald-100/50 text-[11px] text-slate-500 italic">{srv.detalles}</div>
+                  )}
+                </div>
+              </div>
+              )
+            })
+          ) : (
+            <div className="text-center text-slate-400 py-8 text-sm">No hay servicios registrados</div>
           )}
         </div>
       </Modal>

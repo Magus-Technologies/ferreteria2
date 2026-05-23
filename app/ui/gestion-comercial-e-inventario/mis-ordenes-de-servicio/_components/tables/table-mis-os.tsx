@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import { ColDef, SelectionChangedEvent } from 'ag-grid-community'
+import { ColDef, FirstDataRenderedEvent, SelectionChangedEvent } from 'ag-grid-community'
 import { useQuery } from '@tanstack/react-query'
 import TableWithTitle from '~/components/tables/table-with-title'
 import PaginationControls from '~/app/_components/tables/pagination-controls'
@@ -42,6 +42,13 @@ const TableMisOS = memo(function TableMisOS({ id, columns, filtros, selectionCol
   const total = data?.total ?? 0
   const rowData = data?.data ?? []
 
+  const onFirstDataRendered = useCallback((event: FirstDataRenderedEvent<RequerimientoInterno>) => {
+    const firstNode = event.api.getDisplayedRowAtIndex(0)
+    if (firstNode) {
+      firstNode.setSelected(true)
+    }
+  }, [])
+
   const nextPage = useCallback(() => {
     if (page < totalPages) setPage(p => p + 1)
   }, [page, totalPages])
@@ -58,6 +65,7 @@ const TableMisOS = memo(function TableMisOS({ id, columns, filtros, selectionCol
       loading={isLoading}
       columnDefs={columns}
       rowData={rowData}
+      onFirstDataRendered={onFirstDataRendered}
       exportExcel
       exportPdf
       selectColumns

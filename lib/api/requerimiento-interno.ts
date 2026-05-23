@@ -112,6 +112,7 @@ export interface UpdateEstadoRequest {
 
 export interface RequerimientoFilters {
     estado?: string;
+    approval_state?: string;
     tipo_solicitud?: string;
     cargo?: string;
     prioridad?: string;

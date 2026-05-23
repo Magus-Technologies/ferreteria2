@@ -16,17 +16,15 @@ import dayjs, { type Dayjs } from 'dayjs'
 interface ValuesFiltersMisOS {
   desde?: Dayjs
   hasta?: Dayjs
-  estado?: string
+  approval_state?: string
   prioridad?: string
   search?: string
 }
 
-const ESTADO_OPTIONS = [
+const APPROVAL_OPTIONS = [
   { label: 'Todos', value: '' },
   { label: 'Pendiente', value: 'pendiente' },
   { label: 'Aprobado', value: 'aprobado' },
-  { label: 'Rechazado', value: 'rechazado' },
-  { label: 'Anulado', value: 'anulado' },
 ]
 
 const PRIORIDAD_OPTIONS = [
@@ -50,7 +48,7 @@ export default function FiltersMisOS({
   const handleFinish = (values: ValuesFiltersMisOS) => {
     const filtros: RequerimientoFilters = {
       tipo_solicitud: 'OS',
-      estado: values.estado || undefined,
+      approval_state: values.approval_state || undefined,
       prioridad: values.prioridad || undefined,
       search: values.search,
       desde: values.desde ? values.desde.format('YYYY-MM-DD') : undefined,
@@ -68,7 +66,7 @@ export default function FiltersMisOS({
       initialValues={{
         desde: dayjs().startOf('day'),
         hasta: dayjs().endOf('day'),
-        estado: 'pendiente',
+        approval_state: 'pendiente',
         prioridad: '',
       }}
       className="w-full"
@@ -113,12 +111,12 @@ export default function FiltersMisOS({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Estado:</span>
-            <Form.Item name="estado" className="!mb-0">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Aprobación:</span>
+            <Form.Item name="approval_state" className="!mb-0">
               <Select
                 placeholder="Todos"
                 allowClear
-                options={ESTADO_OPTIONS}
+                options={APPROVAL_OPTIONS}
                 className="!w-[130px]"
               />
             </Form.Item>
@@ -201,9 +199,9 @@ export default function FiltersMisOS({
               />
             </Form.Item>
           </LabelBase>
-          <LabelBase label="Estado:">
-            <Form.Item name="estado" className="!mb-0 w-full">
-              <Select placeholder="Todos" allowClear options={ESTADO_OPTIONS} className="w-full" />
+          <LabelBase label="Aprobación:">
+            <Form.Item name="approval_state" className="!mb-0 w-full">
+              <Select placeholder="Todos" allowClear options={APPROVAL_OPTIONS} className="w-full" />
             </Form.Item>
           </LabelBase>
           <LabelBase label="Prioridad:">
