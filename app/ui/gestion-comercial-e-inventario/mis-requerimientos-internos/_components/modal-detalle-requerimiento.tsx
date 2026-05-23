@@ -1,8 +1,8 @@
 'use client'
 
-import { Tag, Spin, Button, Modal, Tooltip, message } from 'antd'
+import { Tag, Spin, Button, Modal, Tooltip, message, Tabs } from 'antd'
 import { FilePdfOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined, CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
-import { FaShoppingCart, FaWrench, FaMapMarkerAlt, FaMoneyBillWave, FaRegBuilding, FaDownload, FaPrint } from 'react-icons/fa'
+import { FaShoppingCart, FaWrench, FaMapMarkerAlt, FaMoneyBillWave, FaRegBuilding, FaDownload, FaPrint, FaCar, FaCalendarTimes, FaHourglassHalf } from 'react-icons/fa'
 import ModalForm from '~/components/modals/modal-form'
 import TitleForm from '~/components/form/title-form'
 import ButtonBase from '~/components/buttons/button-base'
@@ -16,6 +16,44 @@ import { useState, useEffect } from 'react'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { cargosHierarchyApi } from '~/lib/api/cargos-hierarchy'
 import { useAuth } from '~/lib/auth-context'
+
+/**
+ * Calcula el fin de un servicio según su inicio + duración (igual lógica que
+ * el backend en BloqueMantenimientoCalculator).
+ */
+function calcularFinServicio(inicioStr: string | null | undefined, cantidad: number | null | undefined, unidad: string | null | undefined): dayjs.Dayjs | null {
+  if (!inicioStr) return null
+  const start = dayjs(inicioStr)
+  if (!cantidad || !unidad) return start.add(2, 'hour')
+  const cant = Number(cantidad)
+  const uni = String(unidad).toLowerCase()
+  if (uni === 'dias' || uni === 'día' || uni === 'dia') {
+    return start.add(Math.max(cant - 1, 0), 'day').endOf('day')
+  }
+  if (uni === 'horas' || uni === 'hora') return start.add(cant, 'hour')
+  if (uni === 'minutos' || uni === 'minuto') return start.add(cant, 'minute')
+  return start.add(2, 'hour')
+}
+
+/**
+ * Formatea una duración (cantidad + unidad) en texto legible:
+ *  120 minutos → "2h 0m"
+ *  3 dias      → "3 días"
+ */
+function formatDuracion(cantidad: number | null | undefined, unidad: string | null | undefined): string {
+  if (!cantidad || !unidad) return '—'
+  const cant = Number(cantidad)
+  const uni = String(unidad).toLowerCase()
+  if (uni === 'minutos' || uni === 'minuto') {
+    if (cant < 60) return `${cant} min`
+    const h = Math.floor(cant / 60)
+    const m = cant % 60
+    return m === 0 ? `${h}h` : `${h}h ${m}m`
+  }
+  if (uni === 'horas' || uni === 'hora') return `${cant}h`
+  if (uni === 'dias' || uni === 'día' || uni === 'dia') return `${cant} día${cant === 1 ? '' : 's'}`
+  return `${cant} ${unidad}`
+}
 
 const PRIORIDAD_CONFIG: Record<string, { color: string; bg: string; text: string }> = {
   BAJA: { color: 'blue', bg: 'bg-blue-50', text: 'text-blue-700' },
@@ -141,13 +179,44 @@ export default function ModalDetalleRequerimiento({
 
   const esHoras = requerimiento.duracion_unidad === 'horas'
   const esSemanas = requerimiento.duracion_unidad === 'semanas'
-  
+
   const fechaFin = requerimiento.duracion_cantidad && requerimiento.fecha_requerida
     ? dayjs(requerimiento.fecha_requerida).add(
-        Number(requerimiento.duracion_cantidad), 
+        Number(requerimiento.duracion_cantidad),
         esHoras ? 'hour' : esSemanas ? 'week' : 'day'
       ).format('DD/MM/YYYY')
     : null
+
+  // ─────────────────────────────────────────────────────────────────
+  // Cálculo del bloque de calendario derivado de los servicios.
+  // Toma el inicio más temprano y el fin más tardío de todos los servicios
+  // (misma lógica que BloqueMantenimientoCalculator del backend).
+  // ─────────────────────────────────────────────────────────────────
+  const tieneVehiculoBloqueo = esOS && Boolean(requerimiento.vehiculo_id) && Boolean(requerimiento.afecta_calendario)
+  const serviciosLista = requerimiento.servicios ?? []
+
+  const bloqueRangos = serviciosLista
+    .map((srv) => {
+      const inicio = srv.fecha_inicio_estimada ? dayjs(srv.fecha_inicio_estimada) : null
+      const fin = calcularFinServicio(srv.fecha_inicio_estimada ?? null, srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)
+      return inicio && fin ? { inicio, fin } : null
+    })
+    .filter((r): r is { inicio: dayjs.Dayjs; fin: dayjs.Dayjs } => r !== null)
+
+  const bloqueInicio = bloqueRangos.length > 0 ? bloqueRangos.reduce((min, r) => (r.inicio.isBefore(min) ? r.inicio : min), bloqueRangos[0].inicio) : null
+  const bloqueFin = bloqueRangos.length > 0 ? bloqueRangos.reduce((max, r) => (r.fin.isAfter(max) ? r.fin : max), bloqueRangos[0].fin) : null
+  const bloqueDuracionMin = bloqueInicio && bloqueFin ? bloqueFin.diff(bloqueInicio, 'minute') : 0
+  const bloqueDuracionTexto = (() => {
+    if (!bloqueDuracionMin) return '—'
+    const dias = Math.floor(bloqueDuracionMin / (60 * 24))
+    const horas = Math.floor((bloqueDuracionMin % (60 * 24)) / 60)
+    const mins = bloqueDuracionMin % 60
+    const partes: string[] = []
+    if (dias > 0) partes.push(`${dias} día${dias === 1 ? '' : 's'}`)
+    if (horas > 0) partes.push(`${horas}h`)
+    if (mins > 0 && dias === 0) partes.push(`${mins}m`)
+    return partes.join(' ') || `${bloqueDuracionMin}m`
+  })()
 
   return (
     <>
@@ -227,186 +296,210 @@ export default function ModalDetalleRequerimiento({
             <span className="text-slate-400 text-sm">Cargando información...</span>
           </div>
         ) : (
-          <div className="space-y-5 py-2">
-
-            {/* ═══════ HERO HEADER ═══════ */}
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 p-5 rounded-2xl border border-emerald-100">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
-                  {esOS ? <FaWrench size={20} /> : <FaShoppingCart size={20} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Tag color={esOS ? 'green' : 'blue'} className="!rounded-full !px-3 !font-bold !text-[10px] !border-none !m-0">
-                      {esOS ? 'ORDEN DE SERVICIO' : 'ORDEN DE COMPRA'}
-                    </Tag>
-                    <Tag color={prioridadConfig.color} className="!rounded-full !px-3 !font-bold !text-[10px] !border-none !m-0">
-                      {requerimiento.prioridad}
-                    </Tag>
-                  </div>
-                  <h2 className="text-lg font-bold text-slate-800 mt-2 leading-tight">{requerimiento.titulo}</h2>
-                  <p className="text-xs text-slate-500 mt-1 font-mono">{requerimiento.codigo}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* ═══════ INFO GRID ═══════ */}
-            <div className={`grid ${esOS ? 'grid-cols-3' : 'grid-cols-3'} gap-3`}>
-              <InfoCard
-                icon={<FaRegBuilding className="text-emerald-600" size={14} />}
-                label="Cargo"
-                value={requerimiento.cargo}
-              />
-              <InfoCard
-                icon={<CalendarOutlined className="text-emerald-600" />}
-                label={esOS ? "Fecha Inicio" : "Fecha Requerida"}
-                value={dayjs(requerimiento.fecha_requerida).format('DD/MM/YYYY')}
-              />
-              {esOS && fechaFin ? (
-                <InfoCard
-                  icon={<CalendarOutlined className="text-emerald-600" />}
-                  label="Fecha Término"
-                  value={fechaFin}
-                />
-              ) : (
-                <InfoCard
-                  icon={<UserOutlined className="text-emerald-600" />}
-                  label="Solicitante"
-                  value={requerimiento.user?.name || '—'}
-                />
-              )}
-              {!esOS && (
-                <InfoCard
-                  icon={<UserOutlined className="text-emerald-600" />}
-                  label="Solicitante"
-                  value={requerimiento.user?.name || '—'}
-                />
-              )}
-            </div>
-
-            {/* ═══════ OBSERVACIONES ═══════ */}
-            {requerimiento.observaciones && (
-              <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-100">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Observaciones</p>
-                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed italic border-l-3 border-emerald-400 pl-3">
-                  {requerimiento.observaciones}
-                </p>
-              </div>
-            )}
-
-            {/* ═══════ DETALLE OS (SERVICIO) ═══════ */}
-            {esOS && requerimiento.servicios && requerimiento.servicios.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <SectionTitle className="!mb-0">Servicios Solicitados</SectionTitle>
-                  {requerimiento.duracion_cantidad && (
-                    <Tag color="emerald" className="!rounded-full !px-3 !font-bold !border-none">
-                      Duración: {requerimiento.duracion_cantidad} {requerimiento.duracion_unidad}
-                    </Tag>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {requerimiento.servicios.map((srv, idx) => (
-                    <div key={idx} className="bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100 space-y-4">
-                      {/* Row 1: Tipo + Lugar + Inicio */}
-                      <div className="flex gap-8 flex-wrap">
-                        {srv.tipo_servicio && (
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Categoría</span>
-                            <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">{srv.tipo_servicio}</Tag>
+          <Tabs
+            type="card"
+            size="small"
+            defaultActiveKey="general"
+            className="!-mt-1"
+            items={[
+              ...(esOS ? [{
+                key: 'servicios',
+                label: <span className="flex items-center gap-1.5 text-xs"><FaWrench size={12} /> Servicios</span>,
+                children: (
+                  <div className="space-y-4">
+                    {requerimiento.servicios && requerimiento.servicios.length > 0 ? (
+                      requerimiento.servicios.map((srv, idx) => {
+                        const inicioDayjs = srv.fecha_inicio_estimada ? dayjs(srv.fecha_inicio_estimada) : null
+                        const finDayjs = calcularFinServicio(srv.fecha_inicio_estimada ?? null, srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)
+                        return (
+                        <div key={idx} className="bg-emerald-50/30 p-5 rounded-2xl border border-emerald-100 space-y-4">
+                          <div className="flex gap-8 flex-wrap">
+                            {srv.tipo_servicio && (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Categoría</span>
+                                <Tag color="emerald" className="!rounded-md !border-none !font-bold !m-0 !w-fit">{srv.tipo_servicio}</Tag>
+                              </div>
+                            )}
+                            {srv.lugar_ejecucion && (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaMapMarkerAlt size={10} /> Lugar</span>
+                                <span className="font-semibold text-slate-700 text-sm">{srv.lugar_ejecucion}</span>
+                              </div>
+                            )}
+                            {srv.presupuesto_referencial && (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaMoneyBillWave size={10} /> Presupuesto</span>
+                                <span className="font-bold text-emerald-600 text-sm">S/ {Number(srv.presupuesto_referencial).toFixed(2)}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {srv.lugar_ejecucion && (
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
-                              <FaMapMarkerAlt size={10} /> Lugar
-                            </span>
-                            <span className="font-semibold text-slate-700 text-sm">{srv.lugar_ejecucion}</span>
+                          {(inicioDayjs || srv.duracion_cantidad) && (
+                            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-emerald-100/50">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><CalendarOutlined /> Inicio</span>
+                                <span className="font-semibold text-slate-700 text-sm">{inicioDayjs ? inicioDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaCalendarTimes size={10} /> Fin estimado</span>
+                                <span className="font-semibold text-slate-700 text-sm">{finDayjs ? finDayjs.format('DD/MM/YYYY HH:mm') : '—'}</span>
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1"><FaHourglassHalf size={10} /> Duración</span>
+                                <span className="font-bold text-emerald-600 text-sm">{formatDuracion(srv.duracion_cantidad ?? null, srv.duracion_unidad ?? null)}</span>
+                              </div>
+                            </div>
+                          )}
+                          <div className="pt-3 border-t border-emerald-100/50">
+                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Descripción / Tareas</span>
+                            <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">{srv.descripcion_servicio}</p>
+                            {srv.detalles && (
+                              <div className="mt-2 p-3 bg-white/60 rounded-lg border border-emerald-100/50 text-[11px] text-slate-500 italic">{srv.detalles}</div>
+                            )}
                           </div>
-                        )}
-                        {srv.presupuesto_referencial && (
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1">
-                              <FaMoneyBillWave size={10} /> Presupuesto
-                            </span>
-                            <span className="font-bold text-emerald-600 text-sm">S/ {Number(srv.presupuesto_referencial).toFixed(2)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Descripción */}
-                      <div className="pt-3 border-t border-emerald-100/50">
-                        <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Descripción / Tareas</span>
-                        <p className="text-sm text-slate-800 font-medium mt-1 leading-relaxed">
-                          {srv.descripcion_servicio}
-                        </p>
-                        {srv.detalles && (
-                           <div className="mt-2 p-3 bg-white/60 rounded-lg border border-emerald-100/50 text-[11px] text-slate-500 italic">
-                             {srv.detalles}
-                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ═══════ DETALLE OC (PRODUCTOS) ═══════ */}
-            {!esOS && requerimiento.productos && requerimiento.productos.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <SectionTitle className="!mb-0">Productos Solicitados</SectionTitle>
-                  <Tag color="emerald" className="!rounded-full !px-3 !font-bold !border-none">
-                    {requerimiento.productos.length} {requerimiento.productos.length === 1 ? 'Item' : 'Items'}
-                  </Tag>
-                </div>
-                <div className="space-y-2">
-                  {requerimiento.productos.map((prod, idx) => (
-                    <div key={idx} className="bg-slate-50/80 hover:bg-slate-100/80 transition-colors p-4 rounded-xl border border-slate-100 flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-800 text-sm truncate">{prod.producto?.name || '—'}</p>
-                        <p className="text-[10px] text-slate-400 font-mono tracking-tighter">{prod.producto?.cod_producto || '—'}</p>
-                      </div>
-                      {prod.producto?.marca?.name && (
-                        <div className="text-right">
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">Marca</p>
-                          <p className="text-xs text-slate-600 font-medium">{prod.producto.marca.name}</p>
                         </div>
-                      )}
-                      <div className="text-right min-w-[100px]">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Cantidad</p>
-                        <p className="font-bold text-emerald-600">
-                          {prod.cantidad} <span className="text-[10px] text-slate-400 uppercase">{prod.unidad || prod.producto?.unidad_medida?.name || 'UND'}</span>
-                        </p>
+                        )
+                      })
+                    ) : (
+                      <div className="text-center text-slate-400 py-8 text-sm">No hay servicios registrados</div>
+                    )}
+                  </div>
+                ),
+              }] : []),
+              ...(!esOS && requerimiento.productos && requerimiento.productos.length > 0 ? [{
+                key: 'productos',
+                label: <span className="flex items-center gap-1.5 text-xs"><FaShoppingCart size={12} /> Productos</span>,
+                children: (
+                  <div className="space-y-2">
+                    {requerimiento.productos.map((prod, idx) => (
+                      <div key={idx} className="bg-slate-50/80 hover:bg-slate-100/80 transition-colors p-4 rounded-xl border border-slate-100 flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs flex-shrink-0">{idx + 1}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-800 text-sm truncate">{prod.producto?.name || '—'}</p>
+                          <p className="text-[10px] text-slate-400 font-mono tracking-tighter">{prod.producto?.cod_producto || '—'}</p>
+                        </div>
+                        {prod.producto?.marca?.name && (
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">Marca</p>
+                            <p className="text-xs text-slate-600 font-medium">{prod.producto.marca.name}</p>
+                          </div>
+                        )}
+                        <div className="text-right min-w-[100px]">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Cantidad</p>
+                          <p className="font-bold text-emerald-600">{prod.cantidad} <span className="text-[10px] text-slate-400 uppercase">{prod.unidad || prod.producto?.unidad_medida?.name || 'UND'}</span></p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              }] : []),
+              {
+                key: 'general',
+                label: <span className="flex items-center gap-1.5 text-xs"><UserOutlined /> General</span>,
+                children: (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/30 p-5 rounded-2xl border border-emerald-100">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
+                          {esOS ? <FaWrench size={20} /> : <FaShoppingCart size={20} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Tag color={esOS ? 'green' : 'blue'} className="!rounded-full !px-3 !font-bold !text-[10px] !border-none !m-0">
+                              {esOS ? 'ORDEN DE SERVICIO' : 'ORDEN DE COMPRA'}
+                            </Tag>
+                            <Tag color={prioridadConfig.color} className="!rounded-full !px-3 !font-bold !text-[10px] !border-none !m-0">
+                              {requerimiento.prioridad}
+                            </Tag>
+                          </div>
+                          <h2 className="text-lg font-bold text-slate-800 mt-2 leading-tight">{requerimiento.titulo}</h2>
+                          <p className="text-xs text-slate-500 mt-1 font-mono">{requerimiento.codigo}</p>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* ═══════ PROVEEDOR SUGERIDO ═══════ */}
-            {requerimiento.proveedor_sugerido && (
-              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                  <FaRegBuilding size={16} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Proveedor Sugerido</p>
-                  <p className="font-bold text-slate-800 text-sm">{requerimiento.proveedor_sugerido.razon_social}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-blue-500 font-bold uppercase">RUC</p>
-                  <p className="text-sm text-slate-700 font-mono">{requerimiento.proveedor_sugerido.ruc}</p>
-                </div>
-              </div>
-            )}
+                    <div className="grid grid-cols-3 gap-3">
+                      <InfoCard icon={<FaRegBuilding className="text-emerald-600" size={14} />} label="Cargo" value={requerimiento.cargo} />
+                      <InfoCard icon={<CalendarOutlined className="text-emerald-600" />} label={esOS ? "Fecha Inicio" : "Fecha Requerida"} value={dayjs(requerimiento.fecha_requerida).format('DD/MM/YYYY')} />
+                      {esOS && fechaFin ? (
+                        <InfoCard icon={<CalendarOutlined className="text-emerald-600" />} label="Fecha Término" value={fechaFin} />
+                      ) : (
+                        <InfoCard icon={<UserOutlined className="text-emerald-600" />} label="Solicitante" value={requerimiento.user?.name || '—'} />
+                      )}
+                      {!esOS && (
+                        <InfoCard icon={<UserOutlined className="text-emerald-600" />} label="Solicitante" value={requerimiento.user?.name || '—'} />
+                      )}
+                    </div>
 
-          </div>
+                    {tieneVehiculoBloqueo && (
+                      <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-200 space-y-4">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <SectionTitle className="!mb-0 !text-amber-800"><FaCar className="text-amber-600 inline mr-1" size={14} /> Vehículo y Bloqueo de Calendario</SectionTitle>
+                          {requerimiento.approval_state === 'aprobado' ? (
+                            <Tag color="error" className="!font-bold !rounded-full !px-3 !border-none">VEHÍCULO BLOQUEADO</Tag>
+                          ) : (
+                            <Tag color="warning" className="!font-bold !rounded-full !px-3 !border-none">BLOQUEO PROGRAMADO (no aprobado)</Tag>
+                          )}
+                        </div>
+                        {requerimiento.vehiculo && (
+                          <div className="grid grid-cols-3 gap-3">
+                            <InfoCard icon={<FaCar className="text-amber-600" size={14} />} label="Vehículo" value={requerimiento.vehiculo.name || '—'} />
+                            <InfoCard icon={<FaRegBuilding className="text-amber-600" size={14} />} label="Placa" value={requerimiento.vehiculo.placa || '—'} />
+                            <InfoCard icon={<FaWrench className="text-amber-600" size={14} />} label="Tipo" value={requerimiento.vehiculo.tipo || '—'} />
+                          </div>
+                        )}
+                        {bloqueInicio && bloqueFin ? (
+                          <div className="grid grid-cols-3 gap-3 bg-white/70 p-3 rounded-xl border border-amber-100">
+                            <div className="flex flex-col gap-1 items-center text-center">
+                              <FaCalendarTimes className="text-amber-600" size={16} />
+                              <span className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Fuera de servicio desde</span>
+                              <span className="font-bold text-slate-800 text-sm">{bloqueInicio.format('DD/MM/YYYY')}</span>
+                              <span className="text-xs text-slate-500 font-mono">{bloqueInicio.format('HH:mm')}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 items-center text-center">
+                              <FaCalendarTimes className="text-rose-600" size={16} />
+                              <span className="text-[10px] text-rose-700 font-bold uppercase tracking-wider">Fuera de servicio hasta</span>
+                              <span className="font-bold text-slate-800 text-sm">{bloqueFin.format('DD/MM/YYYY')}</span>
+                              <span className="text-xs text-slate-500 font-mono">{bloqueFin.format('HH:mm')}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 items-center text-center">
+                              <FaHourglassHalf className="text-emerald-600" size={16} />
+                              <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Duración total</span>
+                              <span className="font-bold text-emerald-700 text-base">{bloqueDuracionTexto}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-white/70 p-3 rounded-xl border border-amber-100 text-xs text-amber-700 italic text-center">
+                            No se podrá calcular el bloqueo hasta que cada servicio tenga fecha de inicio y duración definidas.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {requerimiento.observaciones && (
+                      <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-100">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Observaciones</p>
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed italic border-l-3 border-emerald-400 pl-3">{requerimiento.observaciones}</p>
+                      </div>
+                    )}
+
+                    {requerimiento.proveedor_sugerido && (
+                      <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><FaRegBuilding size={16} /></div>
+                        <div className="flex-1">
+                          <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Proveedor Sugerido</p>
+                          <p className="font-bold text-slate-800 text-sm">{requerimiento.proveedor_sugerido.razon_social}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-blue-500 font-bold uppercase">RUC</p>
+                          <p className="text-sm text-slate-700 font-mono">{requerimiento.proveedor_sugerido.ruc}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
         )}
       </ModalForm>
 

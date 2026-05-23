@@ -104,6 +104,7 @@ export function useColumnsMisOS({
       field: 'estado',
       width: 110,
       minWidth: 90,
+      hide: true,
       cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
         <div className="flex items-center h-full">
           <Tag color={ESTADO_COLORS[data?.estado || 'pendiente']}>

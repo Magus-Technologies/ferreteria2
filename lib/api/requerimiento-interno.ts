@@ -33,6 +33,8 @@ export interface RequerimientoInternoServicio {
     fecha_inicio_estimada: string | null;
     presupuesto_referencial: number | null;
     detalles: string | null;
+    duracion_cantidad?: number | null;
+    duracion_unidad?: string | null;
 }
 
 export interface RequerimientoInterno {
