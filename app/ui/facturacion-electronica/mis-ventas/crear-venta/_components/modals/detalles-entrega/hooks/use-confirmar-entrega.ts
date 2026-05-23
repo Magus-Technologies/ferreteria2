@@ -208,6 +208,17 @@ export function useConfirmarEntrega({
       if (v.longitud != null) payload.longitud = Number(v.longitud)
       if (v.observaciones) payload.observaciones = v.observaciones
       if (v.vehiculo_id) payload.vehiculo_id = v.vehiculo_id
+      // Incluir cantidades editadas en la tabla "Entregar" para que el backend
+      // actualice `cantidad_entregada` y libere el pendiente cuando se reduce
+      // la cantidad (ej: programado 10 → editado 5 → libera 5 a pendiente).
+      // Sin esto, la DB conservaba el valor viejo y el modal de Confirmar
+      // Entrega mostraba la cantidad programada original, no la editada.
+      if (productosEntrega.length > 0) {
+        payload.productos_entregados = productosEntrega.map((p) => ({
+          unidad_derivada_venta_id: p.unidad_derivada_venta_id,
+          cantidad_entregada: p.entregar,
+        }))
+      }
     } else if (tipoDespacho === 'Parcial') {
       // Despacho parcial — al confirmar marcamos lo de "ahora" como ENTREGADO
       // (lo programado se gestiona aparte como entrega futura).

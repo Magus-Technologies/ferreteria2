@@ -483,13 +483,19 @@ export default function ModalEntregaUpdate({
             ? Math.max(0, totalOriginal - entregadoYa - programadoYa)
             : Number(ud.cantidad_pendiente || 0)
           if (pendiente <= 0) return null
+          // Para venta NO parcial (Domicilio/RT) el `entregadoYa` calculado
+          // arriba siempre da 0 porque `hijasGrupo` está vacío. La fuente real
+          // de verdad es la unidad de venta: total − pendiente = ya entregado.
+          const entregadoFinal = esVentaParcial
+            ? entregadoYa
+            : Math.max(0, totalOriginal - pendiente)
           return {
             id: index + 1,
             producto: prod.name || p.producto_name || '',
             ubicacion: '',
             total: totalOriginal,
             recibido: 0,
-            entregado: entregadoYa,
+            entregado: entregadoFinal,
             pendiente,
             entregar: pendiente,
             entregar_programado: 0,
