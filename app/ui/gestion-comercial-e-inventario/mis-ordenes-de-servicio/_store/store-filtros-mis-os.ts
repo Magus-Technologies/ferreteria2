@@ -18,7 +18,6 @@ const hoyLocal = dayjs().format('YYYY-MM-DD')
 export const useStoreFiltrosMisOS = create<UseStoreFiltrosMisOSProps>(set => ({
   filtros: {
     tipo_solicitud: 'OS',
-    approval_state: 'pendiente',
     desde: hoyLocal,
     hasta: hoyLocal,
   },

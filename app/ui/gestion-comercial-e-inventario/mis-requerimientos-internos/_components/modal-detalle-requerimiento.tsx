@@ -362,12 +362,11 @@ export default function ModalDetalleRequerimiento({
                             <Tag color={prioridadConfig.color} className="!rounded-full !px-3 !font-bold !text-[10px] !border-none !m-0">
                               {requerimiento.prioridad}
                             </Tag>
-                            {esOS && requerimiento.servicios && requerimiento.servicios.length > 0 && (
+{esOS && requerimiento.servicios && requerimiento.servicios.length > 0 && (
                               <Button
-                                size="small"
-                                icon={<FaWrench size={10} />}
+                                icon={<FaWrench size={14} />}
                                 onClick={() => setServicioModalOpen(true)}
-                                className="!rounded-full !text-[10px] !h-6 !px-2 !border-emerald-400 !text-emerald-700 hover:!border-emerald-600"
+                                className="!rounded-lg !text-sm !h-9 !px-5 !bg-emerald-600 !border-emerald-600 !text-white hover:!bg-emerald-700 hover:!border-emerald-700 !font-semibold"
                               >
                                 {requerimiento.servicios.length} Servicio(s)
                               </Button>
