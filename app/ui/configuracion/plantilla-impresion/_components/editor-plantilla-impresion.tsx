@@ -97,6 +97,54 @@ const BLOQUES_PDF: Array<{
   },
 ];
 
+/**
+ * Mapeo de bloques visibles por comprobante y formato.
+ * Cada PDF real solo usa algunos bloques; mostrar solo los que aplican evita
+ * que el usuario edite cosas que no se reflejan en su PDF.
+ * Si un comprobante no está listado, se muestran TODOS los bloques (fallback
+ * seguro para comprobantes aún no integrados con plantilla).
+ */
+const BLOQUES_POR_COMPROBANTE: Record<string, { A4: string[]; Ticket: string[] }> = {
+  venta: {
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales", "pie", "consulta"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales", "pie", "consulta"],
+  },
+  cotizacion: {
+    // Cotización: sin consulta (no es electrónica con QR)
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales", "pie"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales", "pie"],
+  },
+  "orden-compra": {
+    // Orden de compra: sin pie ni consulta (es interno)
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+  guia: {
+    // Guía: sin totales (tiene peso, no IGV) ni pie. Consulta solo en A4.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "consulta"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
+  },
+  entrega: {
+    // Entrega: sin totales (no hay precios), sin pie ni consulta.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
+  },
+  "ingreso-salida": {
+    // Ingreso/Salida: sin pie ni consulta (es interno).
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+};
+
+function bloquesVisibles(comprobante?: string, formato?: "A4" | "Ticket"): typeof BLOQUES_PDF {
+  if (!comprobante) return BLOQUES_PDF;
+  const config = BLOQUES_POR_COMPROBANTE[comprobante];
+  if (!config) return BLOQUES_PDF;
+  const fmt = formato === "Ticket" ? "Ticket" : "A4";
+  const keysPermitidos = new Set(config[fmt]);
+  return BLOQUES_PDF.filter((b) => keysPermitidos.has(b.key));
+}
+
 interface SeccionEstado {
   html: string;
   activo: boolean;
@@ -240,7 +288,7 @@ export default function EditorPlantillaImpresion({
           </>
         ),
       },
-      ...BLOQUES_PDF.map((bloque) => ({
+      ...bloquesVisibles(comprobante, formato).map((bloque) => ({
         key: bloque.key,
         label: <span className="font-semibold">{bloque.label}</span>,
         children: (
@@ -264,7 +312,7 @@ export default function EditorPlantillaImpresion({
         ),
       })),
     ],
-    [despedida, estilos, mensajesExtra, estilosSecciones, globalResuelto, comprobante]
+    [despedida, estilos, mensajesExtra, estilosSecciones, globalResuelto, comprobante, formato, fuentesDisponibles]
   );
 
   if (isLoading) {
