@@ -5,9 +5,10 @@ import dayjs from "dayjs";
 import { formatFechaPeru } from "~/utils/fechas";
 import { ValeCompra, cambiarEstadoVale, valesCompraKeys } from "~/lib/api/vales-compra";
 import { Tag, Tooltip, Popconfirm, message } from "antd";
-import { FaFilePdf, FaPause, FaPlay, FaStop } from "react-icons/fa6";
+import { FaFilePdf, FaPause, FaPlay, FaStop, FaEdit } from "react-icons/fa";
 import ButtonBase from "~/components/buttons/button-base";
 import { useStoreModalPdfVale } from "../../_store/store-modal-pdf-vale";
+import { useRouter } from 'next/navigation';
 import { useQueryClient } from "@tanstack/react-query";
 
 // Cell Renderer para Estado
@@ -95,10 +96,16 @@ function CellStock({ data }: { data: ValeCompra }) {
 function CellAcciones({ data }: { data: ValeCompra }) {
   const openModal = useStoreModalPdfVale((state) => state.openModal);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const handleVerPDF = (e: React.MouseEvent) => {
     e.stopPropagation();
     openModal(data.id);
+  };
+
+  const handleEditar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/ui/facturacion-electronica/vales-compra/editar-vale/${data.id}`);
   };
 
   const handleCambiarEstado = async (nuevoEstado: 'ACTIVO' | 'PAUSADO' | 'FINALIZADO') => {
@@ -125,6 +132,17 @@ function CellAcciones({ data }: { data: ValeCompra }) {
           className="!px-2"
         >
           <FaFilePdf size={12} />
+        </ButtonBase>
+      </Tooltip>
+
+      <Tooltip title="Editar">
+        <ButtonBase
+          color="info"
+          size="sm"
+          onClick={handleEditar}
+          className="!px-2"
+        >
+          <FaEdit size={12} />
         </ButtonBase>
       </Tooltip>
 
