@@ -252,6 +252,20 @@ export default function ModalEntregaUpdate({
     }
   }
 
+  // Direcciones del cliente — se declara aquí (antes de los efectos) para
+  // poder usarlo como dep en el primer useEffect sin TDZ.
+  const clienteIdDirecciones =
+    entregaFuente?.venta?.cliente_id ?? entregaFuente?.venta?.cliente?.id
+  const { data: direccionesResp } = useQuery({
+    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
+    queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
+    enabled: !!clienteIdDirecciones && open,
+  })
+  const direccionesCliente = useMemo(
+    () => (direccionesResp?.data?.data as any[]) || [],
+    [direccionesResp],
+  )
+
   // Pre-llenar el form con los valores actuales de la entrega cuando se
   // abre el modal o cambia la entrega seleccionada.
   // En modo restante NO pre-llenamos los datos de despacho del origen
@@ -284,6 +298,27 @@ export default function ModalEntregaUpdate({
         heredados.cargo_destino = entregaFuente.cargo_destino
         heredados._resto_cargo_destino = entregaFuente.cargo_destino
       }
+      // Si las direcciones del cliente ya cargaron, rellenar aquí mismo para
+      // sobrevivir al re-run de este efecto cuando show() llega y cambia
+      // entregaFuente (el resetFields() borraría lo que llenó Effect 2).
+      // Se setean AMBAS variantes: sin prefijo (Domicilio puro) y _resto_*
+      // (Parcial / programar-resto) para cubrir cualquier tipo elegido.
+      if (direccionesCliente.length > 0) {
+        const tipo = (direccionSeleccionadaVenta || 'D1') as string
+        const dir = direccionesCliente.find((d: any) => d.tipo === tipo) ?? direccionesCliente[0]
+        if (dir) {
+          heredados.direccion_entrega = dir.direccion || ''
+          heredados.referencia_entrega = dir.referencia || ''
+          heredados._resto_direccion_entrega = dir.direccion || ''
+          heredados._resto_referencia_entrega = dir.referencia || ''
+          if (dir.latitud != null && dir.longitud != null) {
+            heredados.latitud = Number(dir.latitud)
+            heredados.longitud = Number(dir.longitud)
+            heredados._resto_latitud = Number(dir.latitud)
+            heredados._resto_longitud = Number(dir.longitud)
+          }
+        }
+      }
       form.setFieldsValue(heredados)
       return
     }
@@ -307,12 +342,20 @@ export default function ModalEntregaUpdate({
       hora_fin: entregaFuente.hora_fin || undefined,
       _resto_hora_inicio: fuenteProgramada?.hora_inicio || undefined,
       _resto_hora_fin: fuenteProgramada?.hora_fin || undefined,
-      direccion_entrega: entregaFuente.direccion_entrega || '',
-      referencia_entrega: entregaFuente.referencia_entrega || '',
-      _resto_direccion_entrega:
-        fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega || '',
-      _resto_referencia_entrega:
-        fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega || '',
+      // Omit address keys entirely when empty so Ant Design's setFieldsValue
+      // does not override Effect 2's client-address auto-fill when show() loads.
+      ...(entregaFuente.direccion_entrega
+        ? { direccion_entrega: entregaFuente.direccion_entrega }
+        : {}),
+      ...(entregaFuente.referencia_entrega
+        ? { referencia_entrega: entregaFuente.referencia_entrega }
+        : {}),
+      ...((fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega)
+        ? { _resto_direccion_entrega: fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega }
+        : {}),
+      ...((fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega)
+        ? { _resto_referencia_entrega: fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega }
+        : {}),
       latitud:
         entregaFuente.latitud != null ? Number(entregaFuente.latitud) : undefined,
       longitud:
@@ -325,7 +368,7 @@ export default function ModalEntregaUpdate({
       _resto_vehiculo_id: fuenteProgramada?.vehiculo_id || undefined,
       direccion_seleccionada: direccionSeleccionadaVenta,
     })
-  }, [open, entregaFuente, entregaProgramadaGrupo, restante, form, direccionSeleccionadaVenta])
+  }, [open, entregaFuente, entregaProgramadaGrupo, restante, form, direccionSeleccionadaVenta, direccionesCliente])
 
   // Pre-cargar campos `_resto_*` con la dirección del cliente en modo restante.
   //
@@ -335,18 +378,6 @@ export default function ModalEntregaUpdate({
   // el switch — los inputs `_resto_*` recién aparecen al activarlo, así que
   // cuando el componente TextareaBase se monta lee el valor ya seteado en
   // el form. Resuelve el bug donde la "Referencia" salía vacía.
-  const clienteIdDirecciones =
-    entregaFuente?.venta?.cliente_id ?? entregaFuente?.venta?.cliente?.id
-  const { data: direccionesResp } = useQuery({
-    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
-    queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
-    enabled: !!clienteIdDirecciones && open,
-  })
-  const direccionesCliente = useMemo(
-    () => (direccionesResp?.data?.data as any[]) || [],
-    [direccionesResp],
-  )
-
   useEffect(() => {
     if (!open || !restante || direccionesCliente.length === 0) return
     const tipo = (form.getFieldValue('direccion_seleccionada') ||
@@ -500,6 +531,7 @@ export default function ModalEntregaUpdate({
             entregar: pendiente,
             entregar_programado: 0,
             unidad_derivada_venta_id: udvId,
+            detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
           }
         })
         .filter(Boolean) as ProductoEntrega[]
@@ -572,6 +604,7 @@ export default function ModalEntregaUpdate({
             entregar: pendienteVentaReal,
             entregar_programado: 0,
             unidad_derivada_venta_id: udvId,
+            detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
           }
         }
         const pendienteEstaEntrega = cantidadProgramadaEstaEntrega > 0
@@ -590,6 +623,7 @@ export default function ModalEntregaUpdate({
             entregar: pendienteEstaEntrega,
             entregar_programado: 0,
             unidad_derivada_venta_id: udvId,
+            detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
           }
         }
         return {
@@ -604,6 +638,7 @@ export default function ModalEntregaUpdate({
           entregar: pendienteEstaEntrega,
           entregar_programado: 0,
           unidad_derivada_venta_id: udvId,
+          detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
         }
       }
 
@@ -618,6 +653,7 @@ export default function ModalEntregaUpdate({
         entregar: pendienteVentaReal,
         entregar_programado: 0,
         unidad_derivada_venta_id: udvId,
+        detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
       }
     })
 

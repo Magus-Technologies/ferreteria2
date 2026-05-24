@@ -24,6 +24,13 @@ export enum EstadoEntrega {
   CANCELADO = 'ca',   // Cancelado
 }
 
+export enum EstadoEventoEntrega {
+  PROGRAMADO = 'pr',
+  EN_CAMINO = 'ec',
+  ENTREGADO = 'en',
+  ANULADO = 'an',
+}
+
 export enum QuienEntrega {
   VENDEDOR = 'vendedor',
   ALMACEN = 'almacen',
@@ -109,6 +116,50 @@ export interface EntregaProductoFilters {
   solo_programadas?: boolean;
 }
 
+export interface DetalleEntregaEventoRequest {
+  detalle_entrega_producto_id: number;
+  cantidad: number;
+  ubicacion?: string;
+}
+
+export interface CreateEntregaEventoRequest {
+  estado: EstadoEventoEntrega;
+  fecha_programada?: string;
+  fecha_ejecutada?: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  chofer_id?: string;
+  vehiculo_id?: number;
+  quien_entrega?: QuienEntrega;
+  tipo_pedido?: TipoPedido;
+  cargo_destino?: string;
+  direccion_entrega?: string;
+  referencia_entrega?: string;
+  latitud?: number;
+  longitud?: number;
+  observaciones?: string;
+  detalles: DetalleEntregaEventoRequest[];
+}
+
+export interface UpdateEntregaEventoRequest {
+  estado?: EstadoEventoEntrega;
+  fecha_programada?: string;
+  fecha_ejecutada?: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  chofer_id?: string;
+  vehiculo_id?: number;
+  quien_entrega?: QuienEntrega;
+  tipo_pedido?: TipoPedido;
+  cargo_destino?: string;
+  direccion_entrega?: string;
+  referencia_entrega?: string;
+  latitud?: number;
+  longitud?: number;
+  observaciones?: string;
+  detalles?: DetalleEntregaEventoRequest[];
+}
+
 // ============= RESPONSE TYPES =============
 
 export interface EntregaProductoResponse {
@@ -122,6 +173,15 @@ export interface EntregasProductoListResponse {
   current_page?: number;
   per_page?: number;
   last_page?: number;
+}
+
+export interface EntregaEventoResponse {
+  data: any;
+  message?: string;
+}
+
+export interface EntregaEventoListResponse {
+  data: any[];
 }
 
 // ============= API METHODS =============
@@ -196,6 +256,51 @@ export const entregaProductoApi = {
     return apiRequest<EntregaProductoResponse>(`/entregas-productos/${id}/anular`, {
       method: 'POST',
       body: JSON.stringify({ motivo }),
+    });
+  },
+
+  async listEventos(entregaId: number): Promise<ApiResponse<EntregaEventoListResponse>> {
+    return apiRequest<EntregaEventoListResponse>(`/entregas-productos/${entregaId}/eventos`);
+  },
+
+  async createEvento(
+    entregaId: number,
+    data: CreateEntregaEventoRequest,
+  ): Promise<ApiResponse<EntregaEventoResponse>> {
+    return apiRequest<EntregaEventoResponse>(`/entregas-productos/${entregaId}/eventos`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateEvento(
+    entregaId: number,
+    eventoId: number,
+    data: UpdateEntregaEventoRequest,
+  ): Promise<ApiResponse<EntregaEventoResponse>> {
+    return apiRequest<EntregaEventoResponse>(`/entregas-productos/${entregaId}/eventos/${eventoId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async anularEvento(
+    entregaId: number,
+    eventoId: number,
+    motivo: string,
+  ): Promise<ApiResponse<EntregaEventoResponse>> {
+    return apiRequest<EntregaEventoResponse>(`/entregas-productos/${entregaId}/eventos/${eventoId}/anular`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo }),
+    });
+  },
+
+  async deleteEvento(
+    entregaId: number,
+    eventoId: number,
+  ): Promise<ApiResponse<{ data: 'ok'; message?: string }>> {
+    return apiRequest<{ data: 'ok'; message?: string }>(`/entregas-productos/${entregaId}/eventos/${eventoId}`, {
+      method: 'DELETE',
     });
   },
 };

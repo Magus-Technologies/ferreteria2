@@ -17,6 +17,7 @@ type DetalleProductoEntrega = {
   unidad: string
   total: number
   recibido: number
+  estaEntrega: number
   programado: number
   entregado: number
   pendiente: number
@@ -136,6 +137,40 @@ export default function TableDetalleEntrega() {
     return mapa
   }
 
+  // Build a lookup: unidad_derivada_venta_id -> { entregado: number, programado: number }
+  // aggregated from ALL sibling entregas of the same venta.
+  const acumuladosPorUdv = useMemo(() => {
+    const hermanas: any[] = (entregaSeleccionada as any)?.venta?.entregas_productos || []
+    const selectedId = (entregaSeleccionada as any)?.id
+
+    const mapa = new Map<string, { entregado: number; programado: number }>()
+
+    for (const hermana of hermanas) {
+      const estado = hermana.estado_entrega
+      const esEntregada = estado === 'en'
+      const esProgramada = estado === 'pe' || estado === 'ec'
+      const esEstaEntrega = hermana.id === selectedId
+
+      for (const detalle of hermana.productos_entregados || []) {
+        const udvId: string = detalle.unidad_derivada_venta_id
+        if (!udvId) continue
+        const cantidad = Number(detalle.cantidad_entregada ?? 0)
+        const entrada = mapa.get(udvId) ?? { entregado: 0, programado: 0 }
+
+        if (esEntregada) {
+          entrada.entregado += cantidad
+        } else if (esProgramada && !esEstaEntrega) {
+          // Only count OTHER pending/in-progress deliveries as "programado"
+          entrada.programado += cantidad
+        }
+
+        mapa.set(udvId, entrada)
+      }
+    }
+
+    return mapa
+  }, [entregaSeleccionada])
+
   const detalleProductos = useMemo<DetalleProductoEntrega[]>(() => {
     if (esParcialAgrupada) {
       return getResumenProductosParcialAgrupado(entregaSeleccionada).map((producto) => ({
@@ -145,6 +180,7 @@ export default function TableDetalleEntrega() {
         unidad: producto.unidad,
         total: producto.total,
         recibido: 0,
+        estaEntrega: 0,
         programado: producto.programado,
         entregado: producto.entregado,
         pendiente: producto.pendiente,
@@ -162,31 +198,22 @@ export default function TableDetalleEntrega() {
           0,
           Number((producto as ProductoFila).cantidadPendiente ?? 0),
         )
-        const cantidadEstaEntrega = Number(
-          (entregaSeleccionada?.productos_entregados || []).find((detalle: any) => {
-            const ud = detalle.unidad_derivada_venta || {}
-            const prod = ud.producto_almacen_venta?.producto_almacen?.producto || {}
-            const codigo = prod.cod_producto || ''
-            const unidad = ud.unidad_derivada_inmutable?.name || ''
-            return normalizarClave(codigo, unidad) === normalizarClave(producto.codigo, producto.unidad)
-          })?.cantidad_entregada ?? 0,
-        )
 
-        if (entregaTieneEntregaFisica) {
-          return {
-            producto: producto.producto,
-            codigo: producto.codigo,
-            marca: producto.marca || '—',
-            unidad: producto.unidad,
-            total,
-            recibido: 0,
-            programado: 0,
-            entregado: cantidadEstaEntrega,
-            pendiente: pendientePersistido,
-          }
-        }
+        // Find the UDV id for this product row to look up cumulative totals
+        const detalleActual = (entregaSeleccionada?.productos_entregados || []).find((detalle: any) => {
+          const ud = detalle.unidad_derivada_venta || {}
+          const prod = ud.producto_almacen_venta?.producto_almacen?.producto || {}
+          const codigo = prod.cod_producto || ''
+          const unidad = ud.unidad_derivada_inmutable?.name || ''
+          return normalizarClave(codigo, unidad) === normalizarClave(producto.codigo, producto.unidad)
+        })
 
-        const programado = Math.max(0, total - pendientePersistido)
+        const udvId: string = detalleActual?.unidad_derivada_venta_id ?? ''
+        const acumulado = acumuladosPorUdv.get(udvId)
+        const entregadoAcumulado = acumulado?.entregado ?? 0
+        const programadoAcumulado = acumulado?.programado ?? 0
+        const estaEntrega = Number(detalleActual?.cantidad_entregada ?? 0)
+
         return {
           producto: producto.producto,
           codigo: producto.codigo,
@@ -194,8 +221,9 @@ export default function TableDetalleEntrega() {
           unidad: producto.unidad,
           total,
           recibido: 0,
-          programado,
-          entregado: 0,
+          estaEntrega,
+          programado: programadoAcumulado,
+          entregado: entregadoAcumulado,
           pendiente: pendientePersistido,
         }
       })
@@ -222,6 +250,7 @@ export default function TableDetalleEntrega() {
         unidad: actual.unidad,
         total: cantidadActual,
         recibido: Math.max(cantidadAnterior - cantidadActual, 0),
+        estaEntrega: 0,
         programado: 0,
         entregado: 0,
         pendiente: Math.max(cantidadActual - cantidadAnterior, 0),
@@ -237,6 +266,7 @@ export default function TableDetalleEntrega() {
         unidad: anterior.unidad,
         total: Number(anterior.cantidad ?? 0),
         recibido: Number(anterior.cantidad ?? 0),
+        estaEntrega: 0,
         programado: 0,
         entregado: 0,
         pendiente: 0,
@@ -245,8 +275,8 @@ export default function TableDetalleEntrega() {
 
     return filas
   }, [
+    acumuladosPorUdv,
     entregaSeleccionada,
-    entregaTieneEntregaFisica,
     esParcialAgrupada,
     mostrarRecibido,
     productosActuales,
@@ -254,9 +284,9 @@ export default function TableDetalleEntrega() {
   ])
 
   const columnDefs = useMemo<ColDef<DetalleProductoEntrega>[]>(() => {
-    const mostrarProgramado =
-      (!entregaTieneEntregaFisica || esParcialAgrupada) &&
-      detalleProductos.some((p) => Number(p.programado || 0) > 0)
+    const mostrarProgramado = detalleProductos.some((p) => Number(p.programado || 0) > 0)
+    // Mostrar "Esta entrega" solo en el modo normal (no parcial agrupado, no recibido)
+    const mostrarEstaEntrega = !esParcialAgrupada && !mostrarRecibido
 
     const defs: ColDef<DetalleProductoEntrega>[] = [
       { headerName: 'Codigo', field: 'codigo', width: 120 },
@@ -281,6 +311,28 @@ export default function TableDetalleEntrega() {
       })
     }
 
+    // Columna "Esta entrega": cantidad que lleva/llevó esta entrega específica
+    if (mostrarEstaEntrega) {
+      defs.push({
+        headerName: 'Esta entrega',
+        field: 'estaEntrega',
+        width: 120,
+        valueFormatter: (params) => Number(params.value || 0).toFixed(0),
+        cellStyle: { color: '#7c3aed', fontWeight: 'bold' },
+        headerTooltip: 'Cantidad de esta entrega específica',
+      })
+    }
+
+    // Entregado acumulado de TODAS las entregas confirmadas de esta venta
+    defs.push({
+      headerName: esParcialAgrupada ? 'Entregado' : 'Entregado total',
+      field: 'entregado',
+      width: 130,
+      valueFormatter: (params) => Number(params.value).toFixed(0),
+      cellStyle: { color: '#16a34a', fontWeight: 'bold' },
+      headerTooltip: 'Total entregado en todas las entregas de esta venta',
+    })
+
     if (mostrarProgramado) {
       defs.push({
         headerName: 'Programado',
@@ -291,31 +343,24 @@ export default function TableDetalleEntrega() {
           Number(params.value) > 0
             ? { color: '#2563eb', fontWeight: 'bold' }
             : { color: '#94a3b8', fontWeight: 'normal' },
+        headerTooltip: 'Otras entregas pendientes/en camino para esta venta',
       })
     }
 
-    defs.push(
-      {
-        headerName: 'Entregado',
-        field: 'entregado',
-        width: 110,
-        valueFormatter: (params) => Number(params.value).toFixed(0),
-        cellStyle: { color: '#16a34a', fontWeight: 'bold' },
-      },
-      {
-        headerName: 'Pendiente',
-        field: 'pendiente',
-        width: 110,
-        valueFormatter: (params) => Number(params.value).toFixed(0),
-        cellStyle: (params) =>
-          Number(params.value) > 0
-            ? { color: '#d97706', fontWeight: 'bold' }
-            : { color: '#94a3b8', fontWeight: 'normal' },
-      },
-    )
+    defs.push({
+      headerName: 'Pendiente',
+      field: 'pendiente',
+      width: 110,
+      valueFormatter: (params) => Number(params.value).toFixed(0),
+      cellStyle: (params) =>
+        Number(params.value) > 0
+          ? { color: '#d97706', fontWeight: 'bold' }
+          : { color: '#94a3b8', fontWeight: 'normal' },
+      headerTooltip: 'Cantidad aún sin programar para esta venta',
+    })
 
     return defs
-  }, [detalleProductos, entregaTieneEntregaFisica, esParcialAgrupada, mostrarRecibido])
+  }, [detalleProductos, esParcialAgrupada, mostrarRecibido])
 
   return (
     <div className="w-full">

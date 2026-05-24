@@ -4,10 +4,12 @@ import dayjs from 'dayjs'
 import {
   entregaProductoApi,
   EstadoEntrega,
+  EstadoEventoEntrega,
   QuienEntrega,
   TipoEntrega,
   TipoDespacho,
   TipoPedido,
+  type CreateEntregaEventoRequest,
   type CreateEntregaProductoRequest,
   type UpdateEntregaProductoRequest,
 } from '~/lib/api/entrega-producto'
@@ -343,161 +345,139 @@ export function useConfirmarEntrega({
   const [creandoEntregaResto, setCreandoEntregaResto] = useState(false)
   const handleConfirmarCrearEntregaResto = useCallback(async () => {
     if (mode.kind !== 'crear-entrega-resto') return
+
     const v = form.getFieldsValue()
-
-    const tipoEntrega: TipoEntrega =
-      tipoDespacho === 'EnTienda'
-        ? TipoEntrega.RECOJO_EN_TIENDA
-        : tipoDespacho === 'Domicilio'
-        ? TipoEntrega.DESPACHO
-        : TipoEntrega.PARCIAL
-
-    // EnTienda y Parcial (la parte "ahora") se entregan al confirmar
-    // (INMEDIATO + ENTREGADO). Domicilio sale a ruta (PROGRAMADO + EN_CAMINO).
-    const tipoDespachoApi: TipoDespacho =
-      tipoDespacho === 'Domicilio' ? TipoDespacho.PROGRAMADO : TipoDespacho.INMEDIATO
-    const estadoEntrega: EstadoEntrega =
-      tipoDespacho === 'Domicilio' ? EstadoEntrega.EN_CAMINO : EstadoEntrega.ENTREGADO
-
-    // Productos a incluir según el tipo:
-    //   - Domicilio: aceptamos AMBAS columnas. La tabla NORMAL de Domicilio
-    //     escribe en `entregar_programado`; la tabla SIMPLE (restante /
-    //     actualizar-entrega) escribe en `entregar`. Tomamos el valor que
-    //     tenga data para no perder lo que el usuario tipeó.
-    //   - EnTienda/Parcial: lo de "entregar" (entrega física al cliente).
     const cantidadParaDomicilio = (p: typeof productosEntrega[number]) =>
       p.entregar_programado > 0 ? p.entregar_programado : p.entregar
-    const productosFiltrados = productosEntrega.filter((p) =>
+
+    const productosAhora = productosEntrega.filter((p) =>
       tipoDespacho === 'Domicilio' ? cantidadParaDomicilio(p) > 0 : p.entregar > 0,
     )
     const productosResto = productosEntrega.filter((p) => p.entregar_programado > 0)
     const soloProgramaRestoParcial =
       tipoDespacho === 'Parcial' &&
       programarResto &&
-      productosFiltrados.length === 0 &&
+      productosAhora.length === 0 &&
       productosResto.length > 0
-    if (productosFiltrados.length === 0 && !soloProgramaRestoParcial) {
+
+    if (productosAhora.length === 0 && !soloProgramaRestoParcial) {
       throw new Error('No hay productos a entregar — revisa las cantidades')
     }
 
-    const payload1: CreateEntregaProductoRequest = {
-      venta_id: mode.ventaId,
-      grupo_entrega_id:
-        tipoDespacho === 'Parcial'
-          ? mode.entregaOrigen.grupo_entrega_id || mode.entregaOrigen.entrega_id
-          : undefined,
-      tipo_entrega: tipoEntrega,
-      tipo_despacho: tipoDespachoApi,
-      estado_entrega: estadoEntrega,
-      fecha_entrega: dayjs().format('YYYY-MM-DD'),
-      almacen_salida_id: mode.entregaOrigen.almacen_salida_id,
-      user_id: mode.entregaOrigen.user_id,
-      productos_entregados: productosFiltrados.map((p) => ({
-        unidad_derivada_venta_id: p.unidad_derivada_venta_id,
-        cantidad_entregada:
-          tipoDespacho === 'Domicilio' ? cantidadParaDomicilio(p) : p.entregar,
-      })),
-    }
+    const buildDetalles = (
+      items: typeof productosEntrega,
+      cantidadSelector: (p: (typeof productosEntrega)[number]) => number,
+    ) =>
+      items.map((p) => {
+        const detalleId = Number((p as any).detalle_entrega_producto_id || 0)
+        if (!detalleId) {
+          throw new Error(
+            `No se encontró detalle de entrega para ${p.producto}. Cierra y vuelve a abrir el modal.`,
+          )
+        }
 
-    if (tipoDespacho === 'EnTienda') {
-      payload1.quien_entrega = (v.quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN
-      if (v.observaciones) payload1.observaciones = v.observaciones
-    } else if (tipoDespacho === 'Domicilio') {
-      payload1.quien_entrega = QuienEntrega.CHOFER
-      if (v.despachador_id) payload1.chofer_id = v.despachador_id
-      if (v.tipo_pedido) payload1.tipo_pedido = v.tipo_pedido as TipoPedido
-      if (v.cargo_destino) payload1.cargo_destino = v.cargo_destino
-      if (v.fecha_programada) {
-        payload1.fecha_programada = dayjs(v.fecha_programada).format('YYYY-MM-DD')
-      }
-      if (v.hora_inicio) payload1.hora_inicio = v.hora_inicio
-      if (v.hora_fin) payload1.hora_fin = v.hora_fin
-      if (v.direccion_entrega) payload1.direccion_entrega = v.direccion_entrega
-      if (v.referencia_entrega) payload1.referencia_entrega = v.referencia_entrega
-      if (v.latitud != null) payload1.latitud = Number(v.latitud)
-      if (v.longitud != null) payload1.longitud = Number(v.longitud)
-      if (v.observaciones) payload1.observaciones = v.observaciones
-      if (v.vehiculo_id) payload1.vehiculo_id = v.vehiculo_id
-    } else if (tipoDespacho === 'Parcial') {
-      payload1.quien_entrega =
-        (quienEntregaParcial as QuienEntrega) || QuienEntrega.ALMACEN
-      if (v.observaciones) payload1.observaciones = v.observaciones
-    }
+        return {
+          detalle_entrega_producto_id: detalleId,
+          cantidad: Number(cantidadSelector(p)),
+          ubicacion: p.ubicacion || undefined,
+        }
+      })
 
     setCreandoEntregaResto(true)
     try {
-      let grupoEntregaIdParcial =
-        mode.entregaOrigen.grupo_entrega_id || mode.entregaOrigen.entrega_id
-
+      // Evento "ahora" sobre la MISMA entrega lógica (sin crear nuevas filas)
       if (!soloProgramaRestoParcial) {
-        const r1 = await entregaProductoApi.create(payload1)
-        if (r1.error) {
-          throw new Error(r1.error.message || 'Error al crear entrega')
+        const payloadAhora: CreateEntregaEventoRequest = {
+          estado:
+            tipoDespacho === 'Domicilio'
+              ? EstadoEventoEntrega.EN_CAMINO
+              : EstadoEventoEntrega.ENTREGADO,
+          detalles: buildDetalles(productosAhora, (p) =>
+            tipoDespacho === 'Domicilio' ? cantidadParaDomicilio(p) : p.entregar,
+          ),
         }
-        const entregaCreada: any = r1.data?.data ?? r1.data
-        if (tipoDespacho === 'Parcial') {
-          grupoEntregaIdParcial =
-            entregaCreada?.grupo_entrega_id || entregaCreada?.id || grupoEntregaIdParcial
+
+        if (tipoDespacho === 'EnTienda') {
+          payloadAhora.quien_entrega =
+            (v.quien_entrega as QuienEntrega) || QuienEntrega.ALMACEN
+          if (v.observaciones) payloadAhora.observaciones = v.observaciones
+        } else if (tipoDespacho === 'Domicilio') {
+          payloadAhora.quien_entrega = QuienEntrega.CHOFER
+          if (v.despachador_id) payloadAhora.chofer_id = v.despachador_id
+          if (v.tipo_pedido) payloadAhora.tipo_pedido = v.tipo_pedido as TipoPedido
+          if (v.cargo_destino) payloadAhora.cargo_destino = v.cargo_destino
+          if (v.fecha_programada) {
+            payloadAhora.fecha_programada = dayjs(v.fecha_programada).format('YYYY-MM-DD')
+          }
+          if (v.hora_inicio) payloadAhora.hora_inicio = v.hora_inicio
+          if (v.hora_fin) payloadAhora.hora_fin = v.hora_fin
+          if (v.direccion_entrega) payloadAhora.direccion_entrega = v.direccion_entrega
+          if (v.referencia_entrega) payloadAhora.referencia_entrega = v.referencia_entrega
+          if (v.latitud != null) payloadAhora.latitud = Number(v.latitud)
+          if (v.longitud != null) payloadAhora.longitud = Number(v.longitud)
+          if (v.observaciones) payloadAhora.observaciones = v.observaciones
+          if (v.vehiculo_id) payloadAhora.vehiculo_id = v.vehiculo_id
+        } else if (tipoDespacho === 'Parcial') {
+          payloadAhora.quien_entrega =
+            (quienEntregaParcial as QuienEntrega) || QuienEntrega.ALMACEN
+          if (v.observaciones) payloadAhora.observaciones = v.observaciones
+        }
+
+        const r1 = await entregaProductoApi.createEvento(
+          mode.entregaOrigen.entrega_id,
+          payloadAhora,
+        )
+        if (r1.error) {
+          throw new Error(r1.error.message || 'Error al registrar el evento de entrega')
         }
       }
 
-      // ── Parcial + programar-resto: crear segunda entrega programada ──
-      if (tipoDespacho === 'Parcial' && programarResto) {
-        if (productosResto.length > 0) {
-          const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
-          const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
-          const restoReferencia = form.getFieldValue('_resto_referencia_entrega')
-          const restoLatitud = form.getFieldValue('_resto_latitud')
-          const restoLongitud = form.getFieldValue('_resto_longitud')
-          const restoDespachadorId = form.getFieldValue('_resto_despachador_id')
-          const restoVehiculoId = form.getFieldValue('_resto_vehiculo_id')
-          const restoCargo = form.getFieldValue('_resto_cargo_destino')
+      // Parcial + programar-resto: segundo evento PROGRAMADO sobre la misma entrega
+      if (tipoDespacho === 'Parcial' && programarResto && productosResto.length > 0) {
+        const restoFechaProgramada = form.getFieldValue('_resto_fecha_programada')
+        const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
+        const restoReferencia = form.getFieldValue('_resto_referencia_entrega')
+        const restoLatitud = form.getFieldValue('_resto_latitud')
+        const restoLongitud = form.getFieldValue('_resto_longitud')
+        const restoDespachadorId = form.getFieldValue('_resto_despachador_id')
+        const restoVehiculoId = form.getFieldValue('_resto_vehiculo_id')
+        const restoCargo = form.getFieldValue('_resto_cargo_destino')
 
-          const payload2: CreateEntregaProductoRequest = {
-            venta_id: mode.ventaId,
-            grupo_entrega_id: grupoEntregaIdParcial,
-            // El "resto programado" siempre se modela como Despacho — tiene
-            // dirección, fecha y chofer, igual que un domicilio normal.
-            tipo_entrega: TipoEntrega.PARCIAL,
-            tipo_despacho: TipoDespacho.PROGRAMADO,
-            estado_entrega: EstadoEntrega.PENDIENTE,
-            fecha_entrega: dayjs().format('YYYY-MM-DD'),
-            almacen_salida_id: mode.entregaOrigen.almacen_salida_id,
-            user_id: mode.entregaOrigen.user_id,
-            quien_entrega: QuienEntrega.CHOFER,
-            tipo_pedido: tipoPedidoResto,
-            productos_entregados: productosResto.map((p) => ({
-              unidad_derivada_venta_id: p.unidad_derivada_venta_id,
-              cantidad_entregada: p.entregar_programado,
-            })),
-          }
+        const payloadResto: CreateEntregaEventoRequest = {
+          estado: EstadoEventoEntrega.PROGRAMADO,
+          quien_entrega: QuienEntrega.CHOFER,
+          tipo_pedido: tipoPedidoResto,
+          detalles: buildDetalles(productosResto, (p) => p.entregar_programado),
+        }
 
-          if (tipoPedidoResto === TipoPedido.INTERNO && restoDespachadorId) {
-            payload2.chofer_id = restoDespachadorId
-          }
-          if (tipoPedidoResto === TipoPedido.EXTERNO && restoCargo) {
-            payload2.cargo_destino = restoCargo
-          }
-          if (restoFechaProgramada) {
-            payload2.fecha_programada = dayjs(restoFechaProgramada).format('YYYY-MM-DD')
-          }
-          if (horaInicioResto) payload2.hora_inicio = horaInicioResto
-          if (horaFinResto) payload2.hora_fin = horaFinResto
-          if (restoDireccion) payload2.direccion_entrega = restoDireccion
-          if (restoReferencia) payload2.referencia_entrega = restoReferencia
-          if (restoLatitud != null) payload2.latitud = Number(restoLatitud)
-          if (restoLongitud != null) payload2.longitud = Number(restoLongitud)
-          if (observacionesResto) payload2.observaciones = observacionesResto
-          if (restoVehiculoId) payload2.vehiculo_id = restoVehiculoId
+        if (tipoPedidoResto === TipoPedido.INTERNO && restoDespachadorId) {
+          payloadResto.chofer_id = restoDespachadorId
+        }
+        if (tipoPedidoResto === TipoPedido.EXTERNO && restoCargo) {
+          payloadResto.cargo_destino = restoCargo
+        }
+        if (restoFechaProgramada) {
+          payloadResto.fecha_programada = dayjs(restoFechaProgramada).format('YYYY-MM-DD')
+        }
+        if (horaInicioResto) payloadResto.hora_inicio = horaInicioResto
+        if (horaFinResto) payloadResto.hora_fin = horaFinResto
+        if (restoDireccion) payloadResto.direccion_entrega = restoDireccion
+        if (restoReferencia) payloadResto.referencia_entrega = restoReferencia
+        if (restoLatitud != null) payloadResto.latitud = Number(restoLatitud)
+        if (restoLongitud != null) payloadResto.longitud = Number(restoLongitud)
+        if (observacionesResto) payloadResto.observaciones = observacionesResto
+        if (restoVehiculoId) payloadResto.vehiculo_id = restoVehiculoId
 
-          const r2 = await entregaProductoApi.create(payload2)
-          if (r2.error) {
-            throw new Error(
-              `Entrega de "ahora" creada, pero falló al programar resto: ${
-                r2.error.message || 'error desconocido'
-              }`,
-            )
-          }
+        const r2 = await entregaProductoApi.createEvento(
+          mode.entregaOrigen.entrega_id,
+          payloadResto,
+        )
+        if (r2.error) {
+          throw new Error(
+            `Evento de entrega creado, pero falló al programar el resto: ${
+              r2.error.message || 'error desconocido'
+            }`,
+          )
         }
       }
 
