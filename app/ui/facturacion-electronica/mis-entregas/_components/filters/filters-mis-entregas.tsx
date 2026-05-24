@@ -68,13 +68,27 @@ export default function FiltersMisEntregas() {
         accion: 'marcar' as const,
       }
     }
+    // ✅ Usar `cantidad_pendiente_detalle` (accessor en DetalleEntregaProducto)
+    // que ya descuenta entregado + en_camino + programado para ESTA orden lógica.
+    // Antes usaba `unidad_derivada_venta.cantidad_pendiente` (nivel UDV global de la
+    // venta) que solo cambia cuando un evento pasa a 'en' — quedaba inflado y el
+    // botón se atascaba en "Configurar Entrega" aunque ya no quedara nada por
+    // asignar, o al revés mostraba "Confirmar" cuando aún faltaba programar.
+    const tienePendiente = entregaSeleccionada.productos_entregados?.some(
+      (p: any) => Number(p.cantidad_pendiente_detalle ?? p.unidad_derivada_venta?.cantidad_pendiente ?? 0) > 0,
+    )
+
+    // Si está en camino pero aún queda pendiente, no forzar "Confirmar":
+    // debe permitir reconfigurar/entregar restante (ej: 10→5, luego 3, luego 2).
     if (estado === 'ec') {
+      if (tienePendiente) {
+        return { label: 'Configurar Entrega', accion: 'restante' as const }
+      }
       return { label: 'Confirmar', accion: 'confirmar' as const }
     }
-    // Entregado Parcial: si aún hay productos pendientes, mostrar botón
-    if (estado === 'en' && entregaSeleccionada.productos_entregados?.some(
-      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
-    )) {
+
+    // Entregado parcial: si aún hay pendiente, permitir seguir despachando restante.
+    if (estado === 'en' && tienePendiente) {
       return { label: 'Entregar Restante', accion: 'restante' as const }
     }
     return null

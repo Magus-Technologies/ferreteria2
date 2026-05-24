@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Input, Form, FormInstance } from 'antd'
+// Form.useWatch nos permite reaccionar a cambios del valor del field
+// directamente en el form — sin depender del ciclo de render del padre.
 import { FaSearch, FaTruck } from 'react-icons/fa'
 import { IoClose } from 'react-icons/io5'
 import { useDebounce } from 'use-debounce'
@@ -77,30 +79,31 @@ export default function SelectDespachadores({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [despachadores])
 
-  // Inicializar desde el form si ya tiene un valor (precarga desde mis-entregas)
-  // Usa timeout para asegurar que el form ya se actualizó después de setFieldsValue
+  // Sincronizar UI con el valor del form usando Form.useWatch.
+  //
+  // Antes el useEffect dependía solo de [form, propsForm?.name] — referencias
+  // estables — así que cuando el modal cambiaba el valor con setFieldValue (ej:
+  // al cerrar y reabrir, o cuando el usuario eligió "Omitir") el efecto NO
+  // volvía a correr y quedaba un despachador "fantasma" pintado en pantalla
+  // aunque el form ya estuviera vacío. useWatch SÍ se re-ejecuta cuando cambia
+  // el valor del field y mantiene la UI sincronizada.
+  const watchedValue = Form.useWatch(propsForm?.name, form)
   useEffect(() => {
-    if (form && propsForm?.name) {
-      const value = form.getFieldValue(propsForm.name)
-      if (value && typeof value === 'string' && value.length > 0) {
-        // Solo buscar si no hay despachador seleccionado o si el valor cambió
-        if (!despachadorSeleccionado || despachadorSeleccionado.id !== value) {
-          usuariosApi.getById(value).then((response) => {
-            // response.data = { data: Usuario, message: string } según ApiResponse
-            if (response.data?.data) {
-              setDespachadorSeleccionado(response.data.data as Usuario)
-            }
-          }).catch(() => {
-            // Si no se encuentra, solo guardar el ID en el form
-          })
-        }
-      } else if (!value && despachadorSeleccionado) {
-        // Si el form se limpió, limpiar también la selección
-        setDespachadorSeleccionado(undefined)
+    if (!form || !propsForm?.name) return
+    const value = watchedValue
+    if (value && typeof value === 'string' && value.length > 0) {
+      if (!despachadorSeleccionado || despachadorSeleccionado.id !== value) {
+        usuariosApi.getById(value).then((response) => {
+          if (response.data?.data) {
+            setDespachadorSeleccionado(response.data.data as Usuario)
+          }
+        }).catch(() => {})
       }
+    } else if (!value && despachadorSeleccionado) {
+      setDespachadorSeleccionado(undefined)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, propsForm?.name])
+  }, [watchedValue, form, propsForm?.name])
 
   function handleSelect(despachador?: Usuario) {
     if (despachador) {

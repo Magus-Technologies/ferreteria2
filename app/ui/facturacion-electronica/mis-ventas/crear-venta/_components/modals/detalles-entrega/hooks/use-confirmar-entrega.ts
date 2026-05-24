@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import type { FormInstance } from 'antd'
 import dayjs from 'dayjs'
+import { useQueryClient } from '@tanstack/react-query'
+import { QueryKeys } from '~/app/_lib/queryKeys'
 import {
   entregaProductoApi,
   EstadoEntrega,
@@ -73,6 +75,11 @@ export function useConfirmarEntrega({
   // En `actualizar-entrega` `ventaId` queda undefined y este hook no se usa.
   const ventaId = mode.kind === 'crear-venta' ? mode.ventaId : undefined
   const { handleSubmit: crearVenta, loading: creandoVenta } = useCreateVenta({ ventaId })
+  // Invalidación explícita post-evento para que el botón principal y la tabla
+  // de mis-entregas refresquen `cantidad_pendiente_detalle` y `estado_entrega`
+  // recalculados por el backend. Sin esto, el snapshot cacheado seguía
+  // mostrando "Configurar Entrega" aunque ya no quedara nada por programar.
+  const queryClient = useQueryClient()
 
   // State del Provider — necesario para construir el payload del split parcial/domicilio.
   const {
@@ -308,6 +315,7 @@ export function useConfirmarEntrega({
         }
       }
 
+      await queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       onSuccess()
     } finally {
       setActualizandoEntrega(false)
@@ -324,6 +332,7 @@ export function useConfirmarEntrega({
     observacionesResto,
     tipoPedidoResto,
     onSuccess,
+    queryClient,
   ])
 
   // ───────────────────────────────────────────────────────────────────────
@@ -481,6 +490,9 @@ export function useConfirmarEntrega({
         }
       }
 
+      // Refrescar cache de entregas para que el botón principal y la tabla
+      // reflejen el nuevo estado_entrega y cantidad_pendiente_detalle.
+      await queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       onSuccess()
     } finally {
       setCreandoEntregaResto(false)
@@ -497,6 +509,7 @@ export function useConfirmarEntrega({
     observacionesResto,
     tipoPedidoResto,
     onSuccess,
+    queryClient,
   ])
 
   // ───────────────────────────────────────────────────────────────────────
