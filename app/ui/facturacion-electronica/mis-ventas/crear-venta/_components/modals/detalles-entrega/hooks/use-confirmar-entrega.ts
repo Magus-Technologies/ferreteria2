@@ -394,13 +394,24 @@ export function useConfirmarEntrega({
 
     setCreandoEntregaResto(true)
     try {
-      // Evento "ahora" sobre la MISMA entrega lógica (sin crear nuevas filas)
+      // Evento "ahora" sobre la MISMA entrega lógica (sin crear nuevas filas).
+      //
+      // El estado del evento depende de si el usuario está SACANDO mercadería
+      // a la calle ahora o si la entrega ocurre FÍSICAMENTE en este momento:
+      //   - 'en' (Entregado) — caso normal cuando el usuario confirma que ya
+      //     se llevó/entregó la mercancía. Decrementa stock y cuenta como
+      //     entregado. Aplica para EnTienda, Parcial y Domicilio confirmado.
+      //   - 'ec' (En Camino) — solo si quien confirma quiere dejar el evento
+      //     "en tránsito" pendiente de confirmar después. No se usa en el
+      //     flujo restante porque deja la entrega atascada esperando un
+      //     "Confirmar" adicional que no existía claramente en la UI.
+      //
+      // Antes Domicilio creaba 'ec' siempre — eso causaba el loop infinito:
+      // el botón quedaba en "Configurar Entrega" porque `cantidad_entregada`
+      // (suma de eventos 'en') seguía en 0 aunque hubiera eventos físicos.
       if (!soloProgramaRestoParcial) {
         const payloadAhora: CreateEntregaEventoRequest = {
-          estado:
-            tipoDespacho === 'Domicilio'
-              ? EstadoEventoEntrega.EN_CAMINO
-              : EstadoEventoEntrega.ENTREGADO,
+          estado: EstadoEventoEntrega.ENTREGADO,
           detalles: buildDetalles(productosAhora, (p) =>
             tipoDespacho === 'Domicilio' ? cantidadParaDomicilio(p) : p.entregar,
           ),

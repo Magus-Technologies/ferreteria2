@@ -473,60 +473,41 @@ export default function ModalEntregaUpdate({
     }
 
     if (restante) {
-      const grupoEntregaId =
-        entregaFuente?.grupo_entrega_id || entregaFuente?.id
-      const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
-        ? entregaFuente.venta.entregas_productos
-        : []
-      const esVentaParcial = entregaFuente?.venta?.tipo_despacho === 'pa' || entregaFuente?.tipo_entrega === 'pa'
-      const hijasGrupo = esVentaParcial
-        ? entregasRelacionadas.filter((hija: any) => {
-            if ((hija?.grupo_entrega_id || null) && grupoEntregaId) {
-              return Number(hija.grupo_entrega_id) === Number(grupoEntregaId)
-            }
-            return hija?.tipo_entrega === 'pa'
-          })
-        : []
-
+      // Modelo "1 orden + N eventos": entregado/programado/en_camino se
+      // calculan desde los eventos colgando de ESTA misma entrega lógica.
+      // El backend ya expone los accessors `cantidad_entregada`,
+      // `cantidad_en_camino`, `cantidad_programada` y
+      // `cantidad_pendiente_detalle` por línea (`DetalleEntregaProducto`).
+      //
+      // Antes este bloque calculaba todo desde `hijasGrupo` (entregas
+      // hermanas) — patrón viejo. Con eventos no hay hijas: siempre daba
+      // entregadoYa=0 y pendiente=total, dejando al usuario en un loop
+      // donde el modal mostraba 10 entregar aunque ya hubiera 5 entregados.
       return entregaFuente.productos_entregados
         .map((p: any, index: number) => {
           const ud = p.unidad_derivada_venta || {}
           const pav = ud.producto_almacen_venta || {}
           const prod = pav.producto_almacen?.producto || {}
-          const totalOriginal = Number(ud.cantidad ?? 0)
+          const totalLinea = Number(p.cantidad_solicitada ?? ud.cantidad ?? 0)
           const udvId = Number(ud.id ?? p.unidad_derivada_venta_id)
-          const entregadoYa = hijasGrupo.reduce((acc: number, hija: any) => {
-            if (hija?.estado_entrega !== 'en') return acc
-            const detalle = (hija?.productos_entregados || []).find(
-              (d: any) => Number(d?.unidad_derivada_venta_id) === udvId,
-            )
-            return acc + Number(detalle?.cantidad_entregada || 0)
-          }, 0)
-          const programadoYa = hijasGrupo.reduce((acc: number, hija: any) => {
-            const estaReservado = hija?.estado_entrega !== 'ca' && hija?.estado_entrega !== 'en'
-            if (!estaReservado) return acc
-            const detalle = (hija?.productos_entregados || []).find(
-              (d: any) => Number(d?.unidad_derivada_venta_id) === udvId,
-            )
-            return acc + Number(detalle?.cantidad_entregada || 0)
-          }, 0)
-          const pendiente = esVentaParcial
-            ? Math.max(0, totalOriginal - entregadoYa - programadoYa)
-            : Number(ud.cantidad_pendiente || 0)
+          const entregadoYa = Number(p.cantidad_entregada ?? 0)
+          const enCamino = Number(p.cantidad_en_camino ?? 0)
+          const programado = Number(p.cantidad_programada ?? 0)
+          // `cantidad_pendiente_detalle` viene del backend ya restando los
+          // tres componentes. Fallback manual por si la respuesta es vieja.
+          const pendiente = p.cantidad_pendiente_detalle != null
+            ? Number(p.cantidad_pendiente_detalle)
+            : Math.max(0, totalLinea - entregadoYa - enCamino - programado)
           if (pendiente <= 0) return null
-          // Para venta NO parcial (Domicilio/RT) el `entregadoYa` calculado
-          // arriba siempre da 0 porque `hijasGrupo` está vacío. La fuente real
-          // de verdad es la unidad de venta: total − pendiente = ya entregado.
-          const entregadoFinal = esVentaParcial
-            ? entregadoYa
-            : Math.max(0, totalOriginal - pendiente)
+
           return {
             id: index + 1,
             producto: prod.name || p.producto_name || '',
             ubicacion: '',
-            total: totalOriginal,
+            total: totalLinea,
             recibido: 0,
-            entregado: entregadoFinal,
+            entregado: entregadoYa,
+            programado: programado + enCamino, // ya reservado en eventos futuros
             pendiente,
             entregar: pendiente,
             entregar_programado: 0,
