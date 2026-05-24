@@ -156,6 +156,45 @@ const BLOQUES_POR_COMPROBANTE: Record<string, { A4: string[]; Ticket: string[] }
     A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
     Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
   },
+  "requerimiento-compra": {
+    // Requerimiento de compra (OC/SOC): documento interno.
+    // Sin totales (no hay precios/IGV), sin consulta (no es electrónico),
+    // sin pie (cierra con firmas y aprobaciones, no con despedida).
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
+  },
+  "requerimiento-servicio": {
+    // Requerimiento de servicio (OS): la tabla de "productos" estiliza
+    // la tabla de servicios (mismas claves tabla_header / tabla_fila).
+    // Sin totales (solo presupuesto referencial dentro de la tabla),
+    // sin consulta y sin pie.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones"],
+  },
+  "nota-credito": {
+    // Nota de crédito: documento interno de ajuste.
+    // Sin consulta (no es electrónico), sin pie (cierra con firmas).
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+  "nota-debito": {
+    // Nota de débito: documento interno de ajuste.
+    // Sin consulta (no es electrónico), sin pie (cierra con firmas).
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+  "recepcion-almacen": {
+    // Recepción de almacén: documento interno.
+    // Sin pie ni consulta.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+  "transferencia-stock": {
+    // Transferencia de stock: documento interno.
+    // Sin pie ni consulta.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
 };
 
 function bloquesVisibles(comprobante?: string, formato?: "A4" | "Ticket"): typeof BLOQUES_PDF {

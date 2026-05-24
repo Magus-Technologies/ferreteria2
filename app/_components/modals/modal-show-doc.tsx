@@ -2,8 +2,7 @@ import { Modal, Tooltip, Input, Spin, message as antdMessage, Select, Checkbox }
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { FaDownload, FaPrint } from 'react-icons/fa6'
 import { FaWhatsapp } from 'react-icons/fa'
-import { HiClipboardDocument } from 'react-icons/hi2'
-import { MdEmail } from 'react-icons/md'
+import { MdEmail, MdDescription, MdReceiptLong } from 'react-icons/md'
 import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
 import { TipoDocumento } from '~/store/store-configuracion-impresion'
@@ -486,14 +485,14 @@ export default function ModalShowDoc({
                 </ButtonBase>
               </Tooltip>
               {setEsTicket && (
-                <Tooltip title='Cambiar modelo'>
+                <Tooltip title={esTicket ? 'Ver en A4' : 'Ver en Ticket'}>
                   <ButtonBase
                     onClick={() => setEsTicket(prev => !prev)}
                     color='warning'
                     size='md'
                     className='!px-3'
                   >
-                    <HiClipboardDocument />
+                    {esTicket ? <MdDescription /> : <MdReceiptLong />}
                   </ButtonBase>
                 </Tooltip>
               )}

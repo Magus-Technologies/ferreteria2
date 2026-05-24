@@ -14,12 +14,13 @@ const COMPROBANTES = [
   { key: "orden-compra", label: "Orden de compra", formats: ["A4", "Ticket"] },
   { key: "entrega", label: "Entrega", formats: ["A4", "Ticket"] },
   { key: "ingreso-salida", label: "Ingreso / Salida", formats: ["A4", "Ticket"] },
-  { key: "nota-credito", label: "Nota de crédito", formats: ["A4"] },
-  { key: "nota-debito", label: "Nota de débito", formats: ["A4"] },
+  { key: "nota-credito", label: "Nota de crédito", formats: ["A4", "Ticket"] },
+  { key: "nota-debito", label: "Nota de débito", formats: ["A4", "Ticket"] },
   { key: "prestamo", label: "Préstamo", formats: ["A4", "Ticket"] },
   { key: "recepcion-almacen", label: "Recepción de almacén", formats: ["A4", "Ticket"] },
   { key: "transferencia-stock", label: "Transferencia de stock", formats: ["A4", "Ticket"] },
-  { key: "requerimiento-interno", label: "Requerimiento interno", formats: ["A4"] },
+  { key: "requerimiento-compra", label: "Requerimiento de compra", formats: ["A4", "Ticket"] },
+  { key: "requerimiento-servicio", label: "Requerimiento de servicio", formats: ["A4", "Ticket"] },
   { key: "ventas-por-cobrar", label: "Ventas por cobrar", formats: ["A4"] },
   { key: "cierre-caja", label: "Cierre de caja", formats: ["A4", "Ticket"] },
   { key: "apertura-caja", label: "Apertura de caja", formats: ["Ticket"] },
@@ -71,7 +72,14 @@ export default function PlantillaImpresionPage() {
     <ContenedorGeneral>
       <div className="w-full">
         <h1 className="text-2xl font-bold mb-6">Plantilla de Impresión</h1>
-        <Tabs defaultActiveKey="venta" items={tabsItems} type="card" />
+        <Tabs
+          defaultActiveKey="venta"
+          items={tabsItems}
+          tabPosition="left"
+          type="line"
+          moreIcon={null}
+          className="[&_.ant-tabs-nav]:!w-56 [&_.ant-tabs-nav]:!max-h-[calc(100vh-180px)] [&_.ant-tabs-nav-list]:!overflow-y-auto [&_.ant-tabs-tab]:!justify-start [&_.ant-tabs-nav-more]:!hidden [&_.ant-tabs-nav-operations]:!hidden"
+        />
       </div>
     </ContenedorGeneral>
   );
