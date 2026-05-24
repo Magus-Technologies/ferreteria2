@@ -770,6 +770,13 @@ export default function ModalEntregaUpdate({
     tipoLocal === 'EnTienda' &&
     entrega?.quien_entrega === 'almacen'
 
+  // Para parcial inmediato la cantidad está fijada por la orden — el usuario
+  // no debe poder editarla. Solo aplica al actualizar (no al crear restante).
+  const readonlyEntregarParcial =
+    !restante &&
+    entregaFuente?.tipo_entrega === 'pa' &&
+    entregaFuente?.tipo_despacho === 'in'
+
   // Etiqueta read-only de "quién entrega" — viene de la venta y se muestra
   // como info para el usuario (no se vuelve a preguntar).
   const quienEntregaLabel: Record<string, string> = {
@@ -958,6 +965,7 @@ export default function ModalEntregaUpdate({
         direccion={entrega.direccion_entrega || ''}
         forzarProgramarRestoOn={tieneHermanaProgramadaConPendientes}
         soloEntregarEnTienda={soloEntregarEnTienda}
+        readonlyEntregarParcial={readonlyEntregarParcial}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
