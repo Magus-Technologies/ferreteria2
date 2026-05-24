@@ -3,6 +3,7 @@
 import { Badge, Dropdown, Empty, Spin, Tag, Tabs, message } from 'antd'
 import { FaBell, FaBirthdayCake, FaCalendarAlt } from 'react-icons/fa'
 import { MdSecurity } from 'react-icons/md'
+import { DollarOutlined, WarningOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { consultaTipoDeCambio } from '~/app/_actions/consulta-tipo-de-cambio'
 import { autorizacionesApi, autorizacionesKeys, type SolicitudAutorizacion } from '~/lib/api/autorizaciones'
@@ -10,13 +11,18 @@ import { cumpleanosApi, type CumpleanosUsuario } from '~/lib/api/cumpleanos'
 import { configuracionNotificacionesApi } from '~/lib/api/configuracion-notificaciones'
 import { ventaApi } from '~/lib/api/venta'
 import { compraApi } from '~/lib/api/compra'
+import { prestamoVendedorApi, type SolicitudEfectivo } from '~/lib/api/prestamo-vendedor'
+import { facturacionElectronicaApi, type ComprobanteElectronico } from '~/lib/api/facturacion-electronica'
+import { requerimientoInternoApi, type RequerimientoInterno } from '~/lib/api/requerimiento-interno'
 import { useStoreAutorizaciones } from '~/store/store-autorizaciones'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/es'
+import { formatFechaPeru } from '~/utils/fechas'
 import ModalAprobar from '~/app/ui/solicitudes-autorizacion/_components/modal-aprobar'
+import ModalAprobarSolicitudEfectivo from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-aprobar-solicitud-efectivo'
 
 dayjs.extend(relativeTime)
 dayjs.locale('es')
@@ -89,6 +95,8 @@ export default function CampanitaAutorizaciones() {
   const [solicitudSeleccionada, setSolicitudSeleccionada] = useState<SolicitudAutorizacion | null>(null)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('autorizaciones')
+  const [openAprobarPrestamo, setOpenAprobarPrestamo] = useState(false)
+  const [selectedPrestamo, setSelectedPrestamo] = useState<SolicitudEfectivo | null>(null)
 
   // === TIPO DE CAMBIO ===
   const { data: tipoDeCambio } = useQuery({
@@ -242,8 +250,61 @@ export default function CampanitaAutorizaciones() {
   const vencimientosItems = vencimientosData || []
   const vencimientosCount = vencimientosItems.length
 
+  // === PRÉSTAMOS / SOLICITUDES DE EFECTIVO ===
+  const { data: prestamosData, refetch: refetchPrestamos } = useQuery({
+    queryKey: ['solicitudes-efectivo-pendientes'],
+    queryFn: async () => await prestamoVendedorApi.solicitudesPendientes(),
+  })
+
+  const solicitudesPrestamo = useMemo(
+    () => (Array.isArray((prestamosData?.data as any)?.data) ? (prestamosData?.data as any).data : []) as SolicitudEfectivo[],
+    [prestamosData]
+  )
+  const prestamosCount = solicitudesPrestamo.length
+
+  // === ALERTAS SUNAT ===
+  const { data: sunatData } = useQuery({
+    queryKey: ['sunat-alertas-pendientes'],
+    queryFn: async () => await facturacionElectronicaApi.getPendientesAlerta(),
+  })
+
+  const alertasSunat = useMemo(
+    () => (Array.isArray((sunatData?.data as any)?.data) ? (sunatData?.data as any).data : []) as ComprobanteElectronico[],
+    [sunatData]
+  )
+  const sunatCount = alertasSunat.length
+
+  // === REQUERIMIENTOS INTERNOS ===
+  const { data: reqData } = useQuery({
+    queryKey: ['requerimientos-internos-pendientes'],
+    queryFn: async () => await requerimientoInternoApi.getAll({ estado: 'pendiente', per_page: 20 }),
+  })
+
+  const requerimientos = useMemo(
+    () => (Array.isArray(reqData?.data?.data) ? reqData.data.data : []) as RequerimientoInterno[],
+    [reqData]
+  )
+  const requerimientosCount = requerimientos.length
+
   // === TOTAL ===
-  const totalCount = autorizacionesCount + cumpleCount + vencimientosCount
+  const totalCount =
+    autorizacionesCount +
+    cumpleCount +
+    vencimientosCount +
+    prestamosCount +
+    sunatCount +
+    requerimientosCount
+
+  // === HANDLERS PRÉSTAMOS ===
+  const handleAprobarPrestamo = (solicitud: SolicitudEfectivo) => {
+    setSelectedPrestamo(solicitud)
+    setOpenAprobarPrestamo(true)
+  }
+
+  const handleRechazarPrestamo = async (solicitudId: string) => {
+    await prestamoVendedorApi.rechazarSolicitud(solicitudId)
+    refetchPrestamos()
+  }
 
   // === HANDLERS ===
   const handleClickSolicitud = (s: SolicitudAutorizacion) => {
@@ -302,6 +363,146 @@ export default function CampanitaAutorizaciones() {
   }
 
   // === RENDER TABS ===
+  const tabPrestamos = (
+    <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
+      {solicitudesPrestamo.length === 0 ? (
+        <div className="py-6">
+          <Empty description="No hay solicitudes hoy" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        </div>
+      ) : (
+        solicitudesPrestamo.map((solicitud) => (
+          <div
+            key={solicitud.id}
+            className="border rounded-lg p-3 space-y-2 hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{solicitud.vendedor_solicitante.name}</p>
+                <p className="text-xs text-slate-500">Solicita efectivo</p>
+              </div>
+              <p className="text-sm font-bold text-emerald-600">
+                S/ {solicitud.monto_solicitado.toFixed(2)}
+              </p>
+            </div>
+            {solicitud.motivo && (
+              <p className="text-xs text-gray-600 italic">"{solicitud.motivo}"</p>
+            )}
+            <div className="text-xs text-gray-400">
+              {formatFechaPeru(solicitud.created_at, 'DD MMM, HH:mm')}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => handleAprobarPrestamo(solicitud)}
+                className="flex-1 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+              >
+                Aprobar
+              </button>
+              <button
+                onClick={() => handleRechazarPrestamo(solicitud.id)}
+                className="flex-1 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+              >
+                Rechazar
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
+
+  const tabRequerimientos = (
+    <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
+      {requerimientos.length === 0 ? (
+        <div className="py-6">
+          <Empty description="Sin requerimientos pendientes" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        </div>
+      ) : (
+        requerimientos.map((req) => (
+          <div
+            key={req.id}
+            className="border border-blue-50 rounded-lg p-3 hover:bg-blue-50 transition-colors cursor-pointer"
+            onClick={() => {
+              setDropdownOpen(false)
+              router.push('/ui/gestion-comercial-e-inventario/mis-ordenes-de-servicio')
+            }}
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-0.5">
+                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">
+                  {req.codigo}
+                </p>
+                <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+                  {req.titulo}
+                </p>
+              </div>
+              <Tag
+                color={req.prioridad === 'URGENTE' || req.prioridad === 'ALTA' ? 'red' : 'blue'}
+                className="text-[9px] uppercase m-0 leading-3"
+              >
+                {req.prioridad}
+              </Tag>
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[10px] text-slate-500 font-medium">Cargo: {req.cargo}</p>
+              <p className="text-[10px] text-slate-400 italic">{dayjs(req.created_at).fromNow()}</p>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
+
+  const tabSunat = (
+    <div className="max-h-[280px] overflow-y-auto p-2 space-y-2">
+      <div className="bg-amber-50 border border-amber-200 p-2 rounded text-xs text-amber-800">
+        Documentos próximos a vencer que deben enviarse pronto.
+      </div>
+      {alertasSunat.length === 0 ? (
+        <div className="py-6">
+          <Empty description="Todo al día con SUNAT" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        </div>
+      ) : (
+        alertasSunat.map((doc) => (
+          <div
+            key={doc.id}
+            className="border border-red-100 rounded-lg p-3 space-y-1 hover:bg-red-50 transition-colors cursor-pointer"
+            onClick={() => {
+              setDropdownOpen(false)
+              router.push('/ui/facturacion-electronica/mis-ventas')
+            }}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-bold text-red-600">
+                  {doc.tipo_comprobante === '01' ? 'Factura' : 'Boleta'} {doc.serie}-{doc.correlativo}
+                </p>
+                <p className="text-xs text-gray-700">
+                  {doc.cliente_razon_social || doc.cliente?.nombre}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold">S/ {Number(doc.total).toFixed(2)}</p>
+                {(() => {
+                  const limit = doc.tipo_comprobante === '01' ? 3 : 7
+                  const diff = dayjs().startOf('day').diff(dayjs(doc.fecha_emision).startOf('day'), 'day')
+                  const remaining = limit - diff
+                  let text = ''
+                  if (remaining <= 0) text = 'Vence Hoy'
+                  else if (remaining === 1) text = 'Vence Mañana'
+                  else text = `Vence en ${remaining} días`
+                  return <p className="text-[10px] text-red-500 font-bold uppercase">{text}</p>
+                })()}
+              </div>
+            </div>
+            <div className="text-[10px] text-gray-400">
+              Emitido: {dayjs(doc.fecha_emision).format('DD/MM/YYYY')}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
+
   const tabAutorizaciones = (
     <div className="max-h-[280px] overflow-y-auto">
       {isLoadingAuth ? (
@@ -428,7 +629,7 @@ export default function CampanitaAutorizaciones() {
   )
 
   const dropdownContent = (
-    <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-[360px] max-h-[420px] overflow-hidden">
+    <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-[420px] max-h-[480px] overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm text-gray-800">Notificaciones</span>
@@ -488,6 +689,45 @@ export default function CampanitaAutorizaciones() {
             ),
             children: tabVencimientos,
           },
+          {
+            key: 'prestamos',
+            label: (
+              <span className="flex items-center gap-1.5 text-xs">
+                <DollarOutlined className="text-sm" />
+                Préstamos
+                {prestamosCount > 0 && (
+                  <Badge count={prestamosCount} size="small" className="ml-1" style={{ backgroundColor: '#10b981' }} />
+                )}
+              </span>
+            ),
+            children: tabPrestamos,
+          },
+          {
+            key: 'requerimientos',
+            label: (
+              <span className="flex items-center gap-1.5 text-xs">
+                <FileTextOutlined className="text-sm" />
+                Requerimientos
+                {requerimientosCount > 0 && (
+                  <Badge count={requerimientosCount} size="small" className="ml-1" style={{ backgroundColor: '#3b82f6' }} />
+                )}
+              </span>
+            ),
+            children: tabRequerimientos,
+          },
+          {
+            key: 'sunat',
+            label: (
+              <span className="flex items-center gap-1.5 text-xs">
+                <WarningOutlined className="text-sm" />
+                SUNAT
+                {sunatCount > 0 && (
+                  <Badge count={sunatCount} size="small" className="ml-1" status="error" />
+                )}
+              </span>
+            ),
+            children: tabSunat,
+          },
         ]}
       />
     </div>
@@ -528,6 +768,17 @@ export default function CampanitaAutorizaciones() {
             : undefined
         }
       />
+
+      {selectedPrestamo && (
+        <ModalAprobarSolicitudEfectivo
+          solicitudId={selectedPrestamo.id}
+          open={openAprobarPrestamo}
+          setOpen={setOpenAprobarPrestamo}
+          montoSolicitado={selectedPrestamo.monto_solicitado}
+          solicitanteNombre={selectedPrestamo.vendedor_solicitante.name}
+          onSuccess={() => refetchPrestamos()}
+        />
+      )}
     </>
   )
 }

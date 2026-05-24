@@ -15,7 +15,6 @@ import ModalAperturarCaja from "../modals/modal-aperturar-caja";
 import ModalMoverDineroSubCajas from "../../gestion-cajas/_components/modal-mover-dinero-subcajas";
 import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solicitar-efectivo";
 import ModalTrasladoBoveda from "../../mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
-import { NotificacionPrestamosPendientes } from "../../gestion-cajas/_components/notificacion-prestamos-pendientes";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
 import { cajaApi } from "~/lib/api/caja";
@@ -114,11 +113,6 @@ export default function TopNav({ className }: { className?: string }) {
           </ButtonNav>
         );
       })}
-
-      {/* Notificaciones de préstamos pendientes */}
-      <div className="ml-auto">
-        <NotificacionPrestamosPendientes />
-      </div>
 
       {/* Modales */}
       <ModalAperturarCaja
