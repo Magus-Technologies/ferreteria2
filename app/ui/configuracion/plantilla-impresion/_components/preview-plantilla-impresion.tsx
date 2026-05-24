@@ -10,6 +10,8 @@ import TicketNotaDebito from "./preview/_ticket/ticket-nota-debito"
 import TicketOrdenCompra from "./preview/_ticket/ticket-orden-compra"
 import TicketRequerimientoCompra from "./preview/_ticket/ticket-requerimiento-compra"
 import TicketRequerimientoServicio from "./preview/_ticket/ticket-requerimiento-servicio"
+import TicketRecepcionAlmacen from "./preview/_ticket/ticket-recepcion-almacen"
+import TicketTransferenciaStock from "./preview/_ticket/ticket-transferencia-stock"
 import TicketVenta from "./preview/_ticket/ticket-venta"
 import A4Cotizacion from "./preview/_a4/a4-cotizacion"
 import A4Entrega from "./preview/_a4/a4-entrega"
@@ -20,6 +22,8 @@ import A4NotaDebito from "./preview/_a4/a4-nota-debito"
 import A4OrdenCompra from "./preview/_a4/a4-orden-compra"
 import A4RequerimientoCompra from "./preview/_a4/a4-requerimiento-compra"
 import A4RequerimientoServicio from "./preview/_a4/a4-requerimiento-servicio"
+import A4RecepcionAlmacen from "./preview/_a4/a4-recepcion-almacen"
+import A4TransferenciaStock from "./preview/_a4/a4-transferencia-stock"
 import A4Venta from "./preview/_a4/a4-venta"
 import type { PreviewProps } from "./preview/_shared/types"
 
@@ -46,6 +50,8 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
     if (props.comprobante === "ingreso-salida") return <TicketIngresoSalida ctx={ctx} />
     if (props.comprobante === "requerimiento-compra") return <TicketRequerimientoCompra ctx={ctx} />
     if (props.comprobante === "requerimiento-servicio") return <TicketRequerimientoServicio ctx={ctx} />
+    if (props.comprobante === "recepcion-almacen") return <TicketRecepcionAlmacen ctx={ctx} />
+    if (props.comprobante === "transferencia-stock") return <TicketTransferenciaStock ctx={ctx} />
     return <TicketVenta ctx={ctx} />
   }
 
@@ -58,5 +64,7 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
   if (props.comprobante === "ingreso-salida") return <A4IngresoSalida ctx={ctx} />
   if (props.comprobante === "requerimiento-compra") return <A4RequerimientoCompra ctx={ctx} />
   if (props.comprobante === "requerimiento-servicio") return <A4RequerimientoServicio ctx={ctx} />
+  if (props.comprobante === "recepcion-almacen") return <A4RecepcionAlmacen ctx={ctx} />
+  if (props.comprobante === "transferencia-stock") return <A4TransferenciaStock ctx={ctx} />
   return <A4Venta ctx={ctx} />
 }

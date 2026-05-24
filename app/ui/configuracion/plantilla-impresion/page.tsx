@@ -72,7 +72,14 @@ export default function PlantillaImpresionPage() {
     <ContenedorGeneral>
       <div className="w-full">
         <h1 className="text-2xl font-bold mb-6">Plantilla de Impresión</h1>
-        <Tabs defaultActiveKey="venta" items={tabsItems} type="card" />
+        <Tabs
+          defaultActiveKey="venta"
+          items={tabsItems}
+          tabPosition="left"
+          type="line"
+          moreIcon={null}
+          className="[&_.ant-tabs-nav]:!w-56 [&_.ant-tabs-nav]:!max-h-[calc(100vh-180px)] [&_.ant-tabs-nav-list]:!overflow-y-auto [&_.ant-tabs-tab]:!justify-start [&_.ant-tabs-nav-more]:!hidden [&_.ant-tabs-nav-operations]:!hidden"
+        />
       </div>
     </ContenedorGeneral>
   );

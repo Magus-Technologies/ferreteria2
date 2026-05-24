@@ -183,6 +183,18 @@ const BLOQUES_POR_COMPROBANTE: Record<string, { A4: string[]; Ticket: string[] }
     A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
     Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
   },
+  "recepcion-almacen": {
+    // Recepción de almacén: documento interno.
+    // Sin pie ni consulta.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
+  "transferencia-stock": {
+    // Transferencia de stock: documento interno.
+    // Sin pie ni consulta.
+    A4: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+    Ticket: ["empresa", "documento", "cliente", "productos", "observaciones", "totales"],
+  },
 };
 
 function bloquesVisibles(comprobante?: string, formato?: "A4" | "Ticket"): typeof BLOQUES_PDF {
