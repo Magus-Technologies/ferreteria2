@@ -56,41 +56,47 @@ export default function FiltersMisEntregas() {
     if (!entregaSeleccionada) return null
     const estado = entregaSeleccionada.estado_entrega
     const tipoEntrega = entregaSeleccionada.tipo_entrega
+
     if (estado === 'pe') {
       if (tipoEntrega === 'pa') {
-        if (entregaSeleccionada.tipo_despacho === 'pr') {
-          return { label: 'Confirmar Entrega', accion: 'parcial' as const }
-        }
-        return { label: 'Entregar Parcial', accion: 'parcial' as const }
+        return entregaSeleccionada.tipo_despacho === 'pr'
+          ? { label: 'Confirmar Entrega', accion: 'parcial' as const }
+          : { label: 'Entregar Parcial', accion: 'parcial' as const }
       }
-      return {
-        label: tipoEntrega === 'rt' ? 'Entregar' : 'Despachar',
-        accion: 'marcar' as const,
+      if (tipoEntrega === 'rt') {
+        // Recojo en tienda: actualiza la entrega directamente (sin crear hija)
+        return { label: 'Entregar', accion: 'marcar' as const }
       }
+      // Despacho (de): siempre crea una hija vía el modal restante
+      return { label: 'Despachar', accion: 'restante' as const }
     }
-    // ✅ Usar `cantidad_pendiente_detalle` (accessor en DetalleEntregaProducto)
-    // que ya descuenta entregado + en_camino + programado para ESTA orden lógica.
-    // Antes usaba `unidad_derivada_venta.cantidad_pendiente` (nivel UDV global de la
-    // venta) que solo cambia cuando un evento pasa a 'en' — quedaba inflado y el
-    // botón se atascaba en "Configurar Entrega" aunque ya no quedara nada por
-    // asignar, o al revés mostraba "Confirmar" cuando aún faltaba programar.
-    const tienePendiente = entregaSeleccionada.productos_entregados?.some(
-      (p: any) => Number(p.cantidad_pendiente_detalle ?? p.unidad_derivada_venta?.cantidad_pendiente ?? 0) > 0,
+
+    // Para 'ec' y 'en': detectar UDV pendiente real (nivel hija ya descontado)
+    const detalles = entregaSeleccionada.productos_entregados || []
+    const tienePendiente = detalles.some(
+      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente ?? 0) > 0,
     )
+    // Detectar si esta fila es una HIJA (tiene grupo_entrega_id diferente a su id)
+    const grupoId = (entregaSeleccionada as any).grupo_entrega_id
+    const esHija = grupoId && Number(grupoId) !== Number((entregaSeleccionada as any).id)
 
-    // Si está en camino pero aún queda pendiente, no forzar "Confirmar":
-    // debe permitir reconfigurar/entregar restante (ej: 10→5, luego 3, luego 2).
     if (estado === 'ec') {
-      if (tienePendiente) {
-        return { label: 'Configurar Entrega', accion: 'restante' as const }
+      if (esHija) {
+        // Hija en camino → el chofer o admin confirma la entrega
+        return { label: 'Confirmar Entrega', accion: 'confirmar' as const }
       }
-      return { label: 'Confirmar', accion: 'confirmar' as const }
+      // Madre con actividad parcial → programar el siguiente despacho
+      return tienePendiente
+        ? { label: 'Despachar Restante', accion: 'restante' as const }
+        : null
     }
 
-    // Entregado parcial: si aún hay pendiente, permitir seguir despachando restante.
-    if (estado === 'en' && tienePendiente) {
-      return { label: 'Entregar Restante', accion: 'restante' as const }
+    if (estado === 'en') {
+      // Hija: ya cumplió su porción; el UDV pendiente pertenece a la madre.
+      if (esHija) return null
+      if (tienePendiente) return { label: 'Despachar Restante', accion: 'restante' as const }
     }
+
     return null
   })()
 

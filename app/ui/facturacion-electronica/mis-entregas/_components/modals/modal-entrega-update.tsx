@@ -473,31 +473,17 @@ export default function ModalEntregaUpdate({
     }
 
     if (restante) {
-      // Modelo "1 orden + N eventos": entregado/programado/en_camino se
-      // calculan desde los eventos colgando de ESTA misma entrega lógica.
-      // El backend ya expone los accessors `cantidad_entregada`,
-      // `cantidad_en_camino`, `cantidad_programada` y
-      // `cantidad_pendiente_detalle` por línea (`DetalleEntregaProducto`).
-      //
-      // Antes este bloque calculaba todo desde `hijasGrupo` (entregas
-      // hermanas) — patrón viejo. Con eventos no hay hijas: siempre daba
-      // entregadoYa=0 y pendiente=total, dejando al usuario en un loop
-      // donde el modal mostraba 10 entregar aunque ya hubiera 5 entregados.
+      // Modelo N-hijas (Opción A): el pendiente real lo tiene UDV.cantidad_pendiente.
+      // El backend decrementa este valor al crear cada hija (store()), por lo que
+      // siempre refleja lo que aún no está asignado a ningún despacho.
       return entregaFuente.productos_entregados
         .map((p: any, index: number) => {
           const ud = p.unidad_derivada_venta || {}
           const pav = ud.producto_almacen_venta || {}
           const prod = pav.producto_almacen?.producto || {}
-          const totalLinea = Number(p.cantidad_solicitada ?? ud.cantidad ?? 0)
+          const totalLinea = Number(ud.cantidad ?? 0)
           const udvId = Number(ud.id ?? p.unidad_derivada_venta_id)
-          const entregadoYa = Number(p.cantidad_entregada ?? 0)
-          const enCamino = Number(p.cantidad_en_camino ?? 0)
-          const programado = Number(p.cantidad_programada ?? 0)
-          // `cantidad_pendiente_detalle` viene del backend ya restando los
-          // tres componentes. Fallback manual por si la respuesta es vieja.
-          const pendiente = p.cantidad_pendiente_detalle != null
-            ? Number(p.cantidad_pendiente_detalle)
-            : Math.max(0, totalLinea - entregadoYa - enCamino - programado)
+          const pendiente = Number(ud.cantidad_pendiente ?? 0)
           if (pendiente <= 0) return null
 
           return {
@@ -506,8 +492,8 @@ export default function ModalEntregaUpdate({
             ubicacion: '',
             total: totalLinea,
             recibido: 0,
-            entregado: entregadoYa,
-            programado: programado + enCamino, // ya reservado en eventos futuros
+            entregado: Math.max(0, totalLinea - pendiente),
+            programado: 0,
             pendiente,
             entregar: pendiente,
             entregar_programado: 0,

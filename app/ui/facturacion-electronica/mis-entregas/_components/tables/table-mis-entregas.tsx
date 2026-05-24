@@ -37,7 +37,17 @@ interface EntregaDB {
   productos_entregados?: any[]
 }
 
-type AccionEntrega = 'despachar' | 'marcar' | 'parcial' | 'confirmar' | 'restante' | null
+type AccionEntrega =
+  | 'despachar'
+  | 'marcar'
+  | 'parcial'
+  | 'confirmar'
+  // Confirma eventos 'ec' (En Camino) → 'en' (Entregado) sin abrir modal.
+  // Usado en el flujo de 2 etapas para Domicilio: el chofer salió, vuelve
+  // y se confirma la entrega física para descontar stock.
+  | 'confirmar-ec'
+  | 'restante'
+  | null
 
 type UseStoreEntregaSeleccionada = {
   entrega?: EntregaDB
@@ -83,26 +93,39 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
 // `cantidad_pendiente > 0` (entregado parcial — se entregaron 5 de 10).
 // En ese caso pintamos la fila NARANJA en vez de verde, porque sigue habiendo
 // trabajo pendiente y el usuario tiene que poder verlo de un vistazo.
-function calcularColorEntrega(entrega: EntregaDB): string {
+//
+// Además, el borde izquierdo diferencia:
+//   - ORDEN  (madre): borde violeta (#7c3aed) — igual que la badge "📋 ORDEN"
+//   - DESPACHO (hija): borde azul (#1d4ed8) — igual que la badge "🚚 DESPACHO"
+function calcularColorEntrega(entrega: EntregaDB): RowStyle {
   const estado = entrega.estado_entrega
+  const grupoId = (entrega as any).grupo_entrega_id
+  const esHijaColor = grupoId && Number(grupoId) !== Number(entrega.id)
 
+  let background: string
   if (estado === 'en') {
-    const tienePendiente = entrega.productos_entregados?.some(
+    // Las hijas ya entregaron su porción — el UDV.cantidad_pendiente refleja
+    // el total del pedido, no solo lo de esta hija. Si miramos el UDV en la
+    // hija, siempre va a parecer "parcial" aunque haya cumplido su misión.
+    // Solo la MADRE (o una entrega sin grupo) debe mirar el UDV para naranja.
+    const tienePendiente = !esHijaColor && entrega.productos_entregados?.some(
       (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0,
     )
-    return tienePendiente ? orangeColors[2] : greenColors[2]
+    background = tienePendiente ? orangeColors[2] : greenColors[2]
+  } else {
+    switch (estado) {
+      case 'pe': // Pendiente — naranja para que destaque que requiere acción
+        background = orangeColors[2]; break
+      case 'ec': // En Camino — azul para indicar que está en proceso
+        background = blueColors[2]; break
+      case 'ca': // Cancelado — rojo para distinguir
+        background = redColors[2]; break
+      default:
+        background = 'transparent'
+    }
   }
 
-  switch (estado) {
-    case 'pe': // Pendiente — naranja para que destaque que requiere acción
-      return orangeColors[2]
-    case 'ec': // En Camino — azul para indicar que está en proceso
-      return blueColors[2]
-    case 'ca': // Cancelado — rojo para distinguir
-      return redColors[2]
-    default:
-      return 'transparent'
-  }
+  return { background }
 }
 
 export default function TableMisEntregas() {
@@ -171,6 +194,54 @@ export default function TableMisEntregas() {
     window.localStorage.setItem(migrationKey, '1')
   }, [])
 
+  // Migración: mostrar columna "Rol" (agregada después del release inicial).
+  // El localStorage guarda qué columnas son visibles por headerName; si el
+  // usuario ya tenía preferencias guardadas, "Rol" no estará en la lista.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+    const migrationKey = 'mis-entregas-rol-column-v1'
+    if (window.localStorage.getItem(migrationKey)) return
+
+    const selectedColumnsKey = 'table-columns-mis-entregas'
+    const selectedColumnsRaw = window.localStorage.getItem(selectedColumnsKey)
+    if (selectedColumnsRaw) {
+      try {
+        const selectedColumns = JSON.parse(selectedColumnsRaw)
+        if (Array.isArray(selectedColumns) && !selectedColumns.includes('Rol')) {
+          window.localStorage.setItem(
+            selectedColumnsKey,
+            JSON.stringify([...selectedColumns, 'Rol'])
+          )
+        }
+      } catch {
+        window.localStorage.removeItem(selectedColumnsKey)
+      }
+    }
+
+    const gridStateKey = 'ag-grid-state-mis-entregas'
+    const gridStateRaw = window.localStorage.getItem(gridStateKey)
+    if (gridStateRaw) {
+      try {
+        const gridState = JSON.parse(gridStateRaw)
+        if (Array.isArray(gridState)) {
+          let changed = false
+          const nextGridState = gridState.map((columnState: any) => {
+            if (columnState?.colId !== 'rol_entrega' || columnState.hide !== true) return columnState
+            changed = true
+            return { ...columnState, hide: false }
+          })
+          if (changed) {
+            window.localStorage.setItem(gridStateKey, JSON.stringify(nextGridState))
+          }
+        }
+      } catch {
+        window.localStorage.removeItem(gridStateKey)
+      }
+    }
+
+    window.localStorage.setItem(migrationKey, '1')
+  }, [])
+
   // Seleccionar automáticamente el primer registro cuando se cargan los datos
   React.useEffect(() => {
     if (entregas && entregas.length > 0 && tableRef.current) {
@@ -187,12 +258,7 @@ export default function TableMisEntregas() {
   // Función para aplicar estilos a las filas
   const getRowStyle = (params: { data?: EntregaDB }): RowStyle | undefined => {
     if (!params.data) return undefined
-    
-    const color = calcularColorEntrega(params.data)
-    
-    return {
-      background: color,
-    }
+    return calcularColorEntrega(params.data)
   }
 
   return (

@@ -303,4 +303,18 @@ export const entregaProductoApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Confirma TODOS los eventos en estado 'ec' (En Camino) de una entrega
+   * lógica, promoviéndolos a 'en' (Entregado). Aplica stock real, marca al
+   * usuario que confirmó y recalcula `estado_entrega`. Usado por el botón
+   * "Confirmar Entrega" cuando el chofer regresa.
+   */
+  async confirmarEventosEnCamino(
+    entregaId: number,
+  ): Promise<ApiResponse<{ data: { eventos_confirmados: number; entrega_estado: string }; message?: string }>> {
+    return apiRequest(`/entregas-productos/${entregaId}/eventos/confirmar-en-camino`, {
+      method: 'POST',
+    });
+  },
 };

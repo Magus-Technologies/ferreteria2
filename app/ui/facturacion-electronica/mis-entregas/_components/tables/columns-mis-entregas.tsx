@@ -15,6 +15,34 @@ import {
 export function useColumnsMisEntregas(onRefetch?: () => void) {
   const columnDefs: ColDef<any>[] = [
     {
+      // Indicador visual de rol: barra de color fija en el extremo izquierdo.
+      // No usa boxShadow ni borderLeft (AG Grid los tapa con el bg de celda).
+      // Purple = ORDEN (madre), Blue = DESPACHO (hija).
+      headerName: '',
+      colId: 'rol_indicator',
+      width: 5,
+      minWidth: 5,
+      maxWidth: 5,
+      resizable: false,
+      sortable: false,
+      filter: false,
+      suppressMovable: true,
+      suppressSizeToFit: true,
+      suppressHeaderMenuButton: true,
+      pinned: 'left' as const,
+      cellStyle: (params: any) => {
+        const grupoId = params.data?.grupo_entrega_id
+        const propio = params.data?.id
+        const esHija = grupoId && Number(grupoId) !== Number(propio)
+        return {
+          padding: 0,
+          backgroundColor: esHija ? '#1d4ed8' : '#7c3aed',
+          border: 'none',
+        }
+      },
+      cellRenderer: () => '',
+    },
+    {
       headerName: 'Fecha Operativa',
       colId: 'fecha_operativa',
       width: 170,
@@ -53,6 +81,46 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         const serie = venta.serie || ''
         const numero = venta.numero || ''
         return serie && numero ? `${serie}-${numero}` : '-'
+      },
+    },
+    {
+      headerName: 'Rol',
+      colId: 'rol_entrega',
+      width: 120,
+      cellRenderer: (params: any) => {
+        const grupoId = params.data?.grupo_entrega_id
+        const propio = params.data?.id
+        const esMadre = !grupoId || Number(grupoId) === Number(propio)
+        if (esMadre) {
+          return (
+            <span style={{
+              background: '#f3e8ff',
+              color: '#7c3aed',
+              fontWeight: 'bold',
+              fontSize: '10px',
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              border: '1px solid #c4b5fd',
+              whiteSpace: 'nowrap',
+            }}>
+              📋 ORDEN
+            </span>
+          )
+        }
+        return (
+          <span style={{
+            background: '#dbeafe',
+            color: '#1d4ed8',
+            fontWeight: 'bold',
+            fontSize: '10px',
+            padding: '2px 8px',
+            borderRadius: '9999px',
+            border: '1px solid #93c5fd',
+            whiteSpace: 'nowrap',
+          }}>
+            🚚 DESPACHO
+          </span>
+        )
       },
     },
     {
@@ -203,9 +271,16 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       cellRenderer: (params: any) => {
         const estado = params.value
         const estaProgramada = estado === 'pe' && params.data?.tipo_despacho === 'pr'
+        const grupoId = params.data?.grupo_entrega_id
+        const propio = params.data?.id
+        const esHija = grupoId && Number(grupoId) !== Number(propio)
+        // Las hijas comparten el UDV con la madre: cantidad_pendiente refleja
+        // el total del pedido, no la porción de esta hija. Mirar el UDV en
+        // una hija ya entregada siempre daría "parcial" aunque haya cumplido.
+        // Solo la madre (o entrega sin grupo) usa el UDV para el cálculo.
         const tienePendiente = isEntregaParcialAgrupada(params.data)
           ? (params.data?.entregas_agrupadas || []).some((e: any) => e?.estado_entrega !== 'en')
-          : params.data?.productos_entregados?.some(
+          : !esHija && params.data?.productos_entregados?.some(
               (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
             )
         const config: Record<string, { label: string; bg: string; text: string }> = {
