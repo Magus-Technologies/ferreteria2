@@ -13,10 +13,10 @@ import dayjs from 'dayjs'
 // Cell renderer: mini-pills de estado
 function CellResumenMini({ data }: { data: ResumenVenta }) {
   const pills = [
-    { count: data.completadas, color: 'bg-green-500', label: 'En' },
-    { count: data.en_camino,   color: 'bg-blue-500',  label: 'Ec' },
-    { count: data.pendientes,  color: 'bg-amber-500', label: 'Pe' },
-    { count: data.canceladas,  color: 'bg-red-400',   label: 'Ca' },
+    { count: data.completadas, color: 'bg-green-500', label: 'Entregado' },
+    { count: data.en_camino,   color: 'bg-blue-500',  label: 'En camino' },
+    { count: data.pendientes,  color: 'bg-amber-500', label: 'Pendiente' },
+    { count: data.canceladas,  color: 'bg-red-400',   label: 'Cancelado' },
   ].filter(p => p.count > 0)
 
   return (
