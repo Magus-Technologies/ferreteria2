@@ -298,6 +298,30 @@ export default function ModalEntregaUpdate({
         heredados.cargo_destino = entregaFuente.cargo_destino
         heredados._resto_cargo_destino = entregaFuente.cargo_destino
       }
+      // Heredar despachador, vehículo y fecha/hora de la entrega origen.
+      // El comentario del useEffect decía que se heredaban, pero el código
+      // nunca los seteaba — por eso salían vacíos en el modal restante.
+      if (entregaFuente.chofer_id) {
+        heredados.despachador_id = entregaFuente.chofer_id
+        heredados._resto_despachador_id = entregaFuente.chofer_id
+      }
+      if (entregaFuente.vehiculo_id) {
+        heredados.vehiculo_id = entregaFuente.vehiculo_id
+        heredados._resto_vehiculo_id = entregaFuente.vehiculo_id
+      }
+      if (entregaFuente.fecha_programada) {
+        const fechaFmt = dayjs(entregaFuente.fecha_programada).format('YYYY-MM-DD')
+        heredados.fecha_programada = fechaFmt
+        heredados._resto_fecha_programada = fechaFmt
+      }
+      if (entregaFuente.hora_inicio) {
+        heredados.hora_inicio = entregaFuente.hora_inicio
+        heredados._resto_hora_inicio = entregaFuente.hora_inicio
+      }
+      if (entregaFuente.hora_fin) {
+        heredados.hora_fin = entregaFuente.hora_fin
+        heredados._resto_hora_fin = entregaFuente.hora_fin
+      }
       // Si las direcciones del cliente ya cargaron, rellenar aquí mismo para
       // sobrevivir al re-run de este efecto cuando show() llega y cambia
       // entregaFuente (el resetFields() borraría lo que llenó Effect 2).
