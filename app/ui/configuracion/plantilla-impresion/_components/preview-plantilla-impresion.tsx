@@ -11,11 +11,14 @@ import TicketIngresoSalida from "./preview/_ticket/ticket-ingreso-salida"
 import TicketNotaCredito from "./preview/_ticket/ticket-nota-credito"
 import TicketNotaDebito from "./preview/_ticket/ticket-nota-debito"
 import TicketOrdenCompra from "./preview/_ticket/ticket-orden-compra"
+import TicketPagoCompra from "./preview/_ticket/ticket-pago-compra"
 import TicketPrestamo from "./preview/_ticket/ticket-prestamo"
 import TicketRequerimientoCompra from "./preview/_ticket/ticket-requerimiento-compra"
 import TicketRequerimientoServicio from "./preview/_ticket/ticket-requerimiento-servicio"
 import TicketRecepcionAlmacen from "./preview/_ticket/ticket-recepcion-almacen"
 import TicketTransferenciaStock from "./preview/_ticket/ticket-transferencia-stock"
+import TicketValeCompra from "./preview/_ticket/ticket-vale-compra"
+import TicketValeGenerado from "./preview/_ticket/ticket-vale-generado"
 import TicketVenta from "./preview/_ticket/ticket-venta"
 import A4Cotizacion from "./preview/_a4/a4-cotizacion"
 import A4Entrega from "./preview/_a4/a4-entrega"
@@ -55,7 +58,10 @@ export default function PreviewPlantillaImpresion(props: PreviewProps) {
     if (props.comprobante === "nota-credito") return <TicketNotaCredito ctx={ctx} />
     if (props.comprobante === "nota-debito") return <TicketNotaDebito ctx={ctx} />
     if (props.comprobante === "orden-compra") return <TicketOrdenCompra ctx={ctx} />
+    if (props.comprobante === "pago-compra") return <TicketPagoCompra ctx={ctx} />
     if (props.comprobante === "prestamo") return <TicketPrestamo ctx={ctx} />
+    if (props.comprobante === "vale-compra") return <TicketValeCompra ctx={ctx} />
+    if (props.comprobante === "vale-generado") return <TicketValeGenerado ctx={ctx} />
     if (props.comprobante === "ingreso-salida") return <TicketIngresoSalida ctx={ctx} />
     if (props.comprobante === "requerimiento-compra") return <TicketRequerimientoCompra ctx={ctx} />
     if (props.comprobante === "requerimiento-servicio") return <TicketRequerimientoServicio ctx={ctx} />
