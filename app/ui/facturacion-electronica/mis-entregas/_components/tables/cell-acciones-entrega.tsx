@@ -74,6 +74,31 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       )
     }
     else if (accionTrigger === 'confirmar') setModalConfirmarOpen(true)
+    else if (accionTrigger === 'confirmar-ec') {
+      // Confirmar TODOS los eventos 'ec' (En Camino) de la entrega.
+      // No abre modal — ejecuta directo y refresca.
+      ;(async () => {
+        try {
+          const r = await entregaProductoApi.confirmarEventosEnCamino(
+            Number(entregaOperativa.id),
+          )
+          if (r.error) {
+            message.error(r.error.message || 'Error al confirmar entregas en camino')
+            return
+          }
+          const respuesta = r.data?.data
+          message.success(
+            respuesta
+              ? `${respuesta.eventos_confirmados} entrega(s) confirmada(s)`
+              : 'Entregas confirmadas',
+          )
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+          if (onRefetch) onRefetch()
+        } catch (err: any) {
+          message.error(err?.message || 'Error al confirmar entregas en camino')
+        }
+      })()
+    }
     else if (accionTrigger === 'despachar') openUpdateModal(entregaOperativa, false)
     else if (accionTrigger === 'restante') openUpdateModal(
       (entrega as any)?.__esParcialAgrupado ? entrega : entregaOperativa,

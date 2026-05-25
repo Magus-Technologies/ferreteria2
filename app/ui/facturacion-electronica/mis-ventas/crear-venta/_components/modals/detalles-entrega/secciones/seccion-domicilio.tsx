@@ -1,7 +1,7 @@
 'use client'
 
 import { Form, Input, Segmented, Select, type FormInstance } from 'antd'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { FaCalendarAlt, FaCheck, FaMapMarkedAlt, FaTruck, FaUserEdit } from 'react-icons/fa'
 import dayjs from 'dayjs'
@@ -89,6 +89,24 @@ export function SeccionDomicilio({
     setSlotDomicilio,
     setModalCalendarioDomicilio,
   } = useDetallesEntrega()
+
+  // Cuando el modal se pre-rellena con datos de una entrega existente
+  // (modo restante o actualizar), el form ya tiene fecha_programada/hora_*
+  // pero slotDomicilio arranca null — el botón mostraría "Elegir en Calendario"
+  // aunque el dato esté en el form. Este efecto reconstruye el slot a partir
+  // de los valores del form para que el botón muestre la fecha asignada.
+  const fechaProgramadaWatch = Form.useWatch('fecha_programada', form)
+  const horaInicioWatch = Form.useWatch('hora_inicio', form)
+  const horaFinWatch = Form.useWatch('hora_fin', form)
+
+  useEffect(() => {
+    if (slotDomicilio || !fechaProgramadaWatch) return
+    const horaI = horaInicioWatch || '00:00'
+    const horaF = horaFinWatch || horaI
+    const start = dayjs(`${fechaProgramadaWatch} ${horaI}`).toDate()
+    const end = dayjs(`${fechaProgramadaWatch} ${horaF}`).toDate()
+    setSlotDomicilio({ start, end })
+  }, [fechaProgramadaWatch, horaInicioWatch, horaFinWatch, slotDomicilio, setSlotDomicilio])
 
   // Reverse geocoding propio para esta sección — apunta al setter del context.
   const obtenerUbicacionGps = useReverseGeocoding(setUbicacionGps)

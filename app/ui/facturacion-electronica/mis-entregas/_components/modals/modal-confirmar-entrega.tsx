@@ -46,16 +46,23 @@ export default function ModalConfirmarEntrega({
       const producto = ud.producto_almacen_venta?.producto_almacen?.producto || {}
       const total = Number(ud.cantidad ?? 0)
       const pendienteVenta = Math.max(0, Number(ud.cantidad_pendiente ?? 0))
+      const cantidadSolicitada = Math.max(0, Number(p.cantidad_solicitada ?? 0))
       const cantidadEstaEntrega = Math.max(0, Number(p.cantidad_entregada ?? 0))
 
+      // Para entregas EN CAMINO ('ec') o PENDIENTE ('pe'), la cantidad a
+      // confirmar es la solicitada al crear la hija. `cantidad_entregada`
+      // es 0 hasta que se confirma, y `cantidad_pendiente` ya fue decrementada
+      // al crear el despacho, por lo que no refleja lo de esta entrega.
       const cantidadAConfirmar =
         entrega.estado_entrega === 'en'
           ? cantidadEstaEntrega || Math.max(total - pendienteVenta, 0)
-          : cantidadEstaEntrega > 0
-            ? cantidadEstaEntrega
-            : pendienteVenta > 0
-              ? pendienteVenta
-              : total
+          : cantidadSolicitada > 0
+            ? cantidadSolicitada
+            : cantidadEstaEntrega > 0
+              ? cantidadEstaEntrega
+              : pendienteVenta > 0
+                ? pendienteVenta
+                : total
 
       return {
         id: p.id || index,

@@ -130,4 +130,11 @@ infoExtra?: ReactNode
    */
   soloEntregarEnTienda?: boolean
   tipoDespachoConfirmacion?: TipoDespachoUI
+  /**
+   * Cuando es `true`, la columna "Entregar" de la tabla Parcial queda
+   * bloqueada (read-only). Se activa para `tipo_despacho === 'in'`
+   * (inmediato): la cantidad ya está fijada por la orden y el usuario
+   * no debe poder cambiarla.
+   */
+  readonlyEntregarParcial?: boolean
 }

@@ -56,27 +56,47 @@ export default function FiltersMisEntregas() {
     if (!entregaSeleccionada) return null
     const estado = entregaSeleccionada.estado_entrega
     const tipoEntrega = entregaSeleccionada.tipo_entrega
+
     if (estado === 'pe') {
       if (tipoEntrega === 'pa') {
-        if (entregaSeleccionada.tipo_despacho === 'pr') {
-          return { label: 'Confirmar Entrega', accion: 'parcial' as const }
-        }
-        return { label: 'Entregar Parcial', accion: 'parcial' as const }
+        return entregaSeleccionada.tipo_despacho === 'pr'
+          ? { label: 'Confirmar Entrega', accion: 'parcial' as const }
+          : { label: 'Entregar Parcial', accion: 'parcial' as const }
       }
-      return {
-        label: tipoEntrega === 'rt' ? 'Entregar' : 'Despachar',
-        accion: 'marcar' as const,
+      if (tipoEntrega === 'rt') {
+        // Recojo en tienda: actualiza la entrega directamente (sin crear hija)
+        return { label: 'Entregar', accion: 'marcar' as const }
       }
+      // Despacho (de): siempre crea una hija vía el modal restante
+      return { label: 'Despachar', accion: 'restante' as const }
     }
+
+    // Para 'ec' y 'en': detectar UDV pendiente real (nivel hija ya descontado)
+    const detalles = entregaSeleccionada.productos_entregados || []
+    const tienePendiente = detalles.some(
+      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente ?? 0) > 0,
+    )
+    // Detectar si esta fila es una HIJA (tiene grupo_entrega_id diferente a su id)
+    const grupoId = (entregaSeleccionada as any).grupo_entrega_id
+    const esHija = grupoId && Number(grupoId) !== Number((entregaSeleccionada as any).id)
+
     if (estado === 'ec') {
-      return { label: 'Confirmar', accion: 'confirmar' as const }
+      if (esHija) {
+        // Hija en camino → el chofer o admin confirma la entrega
+        return { label: 'Confirmar Entrega', accion: 'confirmar' as const }
+      }
+      // Madre con actividad parcial → programar el siguiente despacho
+      return tienePendiente
+        ? { label: 'Despachar Restante', accion: 'restante' as const }
+        : null
     }
-    // Entregado Parcial: si aún hay productos pendientes, mostrar botón
-    if (estado === 'en' && entregaSeleccionada.productos_entregados?.some(
-      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
-    )) {
-      return { label: 'Entregar Restante', accion: 'restante' as const }
+
+    if (estado === 'en') {
+      // Hija: ya cumplió su porción; el UDV pendiente pertenece a la madre.
+      if (esHija) return null
+      if (tienePendiente) return { label: 'Despachar Restante', accion: 'restante' as const }
     }
+
     return null
   })()
 

@@ -80,6 +80,7 @@ function ModalDetallesEntregaInner({
   forzarProgramarRestoOn = false,
   soloEntregarEnTienda = false,
   tipoDespachoConfirmacion: tipoDespachoConfirmacionOverride,
+  readonlyEntregarParcial = false,
 }: ModalDetallesEntregaProps) {
   const { message } = useApp()
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
@@ -943,6 +944,7 @@ function ModalDetallesEntregaInner({
             ocultar={ocultarSet}
             tablaSimple={resolvedMode.kind === 'actualizar-entrega' || resolvedMode.kind === 'crear-entrega-resto'}
             soloEntregar={soloEntregarEnTienda}
+            readonlyEntregar={readonlyEntregarParcial}
           />
         )}
       </div>

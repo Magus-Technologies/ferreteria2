@@ -252,6 +252,20 @@ export default function ModalEntregaUpdate({
     }
   }
 
+  // Direcciones del cliente — se declara aquí (antes de los efectos) para
+  // poder usarlo como dep en el primer useEffect sin TDZ.
+  const clienteIdDirecciones =
+    entregaFuente?.venta?.cliente_id ?? entregaFuente?.venta?.cliente?.id
+  const { data: direccionesResp } = useQuery({
+    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
+    queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
+    enabled: !!clienteIdDirecciones && open,
+  })
+  const direccionesCliente = useMemo(
+    () => (direccionesResp?.data?.data as any[]) || [],
+    [direccionesResp],
+  )
+
   // Pre-llenar el form con los valores actuales de la entrega cuando se
   // abre el modal o cambia la entrega seleccionada.
   // En modo restante NO pre-llenamos los datos de despacho del origen
@@ -284,6 +298,51 @@ export default function ModalEntregaUpdate({
         heredados.cargo_destino = entregaFuente.cargo_destino
         heredados._resto_cargo_destino = entregaFuente.cargo_destino
       }
+      // Heredar despachador, vehículo y fecha/hora de la entrega origen.
+      // El comentario del useEffect decía que se heredaban, pero el código
+      // nunca los seteaba — por eso salían vacíos en el modal restante.
+      if (entregaFuente.chofer_id) {
+        heredados.despachador_id = entregaFuente.chofer_id
+        heredados._resto_despachador_id = entregaFuente.chofer_id
+      }
+      if (entregaFuente.vehiculo_id) {
+        heredados.vehiculo_id = entregaFuente.vehiculo_id
+        heredados._resto_vehiculo_id = entregaFuente.vehiculo_id
+      }
+      if (entregaFuente.fecha_programada) {
+        const fechaFmt = dayjs(entregaFuente.fecha_programada).format('YYYY-MM-DD')
+        heredados.fecha_programada = fechaFmt
+        heredados._resto_fecha_programada = fechaFmt
+      }
+      if (entregaFuente.hora_inicio) {
+        heredados.hora_inicio = entregaFuente.hora_inicio
+        heredados._resto_hora_inicio = entregaFuente.hora_inicio
+      }
+      if (entregaFuente.hora_fin) {
+        heredados.hora_fin = entregaFuente.hora_fin
+        heredados._resto_hora_fin = entregaFuente.hora_fin
+      }
+      // Si las direcciones del cliente ya cargaron, rellenar aquí mismo para
+      // sobrevivir al re-run de este efecto cuando show() llega y cambia
+      // entregaFuente (el resetFields() borraría lo que llenó Effect 2).
+      // Se setean AMBAS variantes: sin prefijo (Domicilio puro) y _resto_*
+      // (Parcial / programar-resto) para cubrir cualquier tipo elegido.
+      if (direccionesCliente.length > 0) {
+        const tipo = (direccionSeleccionadaVenta || 'D1') as string
+        const dir = direccionesCliente.find((d: any) => d.tipo === tipo) ?? direccionesCliente[0]
+        if (dir) {
+          heredados.direccion_entrega = dir.direccion || ''
+          heredados.referencia_entrega = dir.referencia || ''
+          heredados._resto_direccion_entrega = dir.direccion || ''
+          heredados._resto_referencia_entrega = dir.referencia || ''
+          if (dir.latitud != null && dir.longitud != null) {
+            heredados.latitud = Number(dir.latitud)
+            heredados.longitud = Number(dir.longitud)
+            heredados._resto_latitud = Number(dir.latitud)
+            heredados._resto_longitud = Number(dir.longitud)
+          }
+        }
+      }
       form.setFieldsValue(heredados)
       return
     }
@@ -307,12 +366,20 @@ export default function ModalEntregaUpdate({
       hora_fin: entregaFuente.hora_fin || undefined,
       _resto_hora_inicio: fuenteProgramada?.hora_inicio || undefined,
       _resto_hora_fin: fuenteProgramada?.hora_fin || undefined,
-      direccion_entrega: entregaFuente.direccion_entrega || '',
-      referencia_entrega: entregaFuente.referencia_entrega || '',
-      _resto_direccion_entrega:
-        fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega || '',
-      _resto_referencia_entrega:
-        fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega || '',
+      // Omit address keys entirely when empty so Ant Design's setFieldsValue
+      // does not override Effect 2's client-address auto-fill when show() loads.
+      ...(entregaFuente.direccion_entrega
+        ? { direccion_entrega: entregaFuente.direccion_entrega }
+        : {}),
+      ...(entregaFuente.referencia_entrega
+        ? { referencia_entrega: entregaFuente.referencia_entrega }
+        : {}),
+      ...((fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega)
+        ? { _resto_direccion_entrega: fuenteProgramada?.direccion_entrega || entregaFuente.direccion_entrega }
+        : {}),
+      ...((fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega)
+        ? { _resto_referencia_entrega: fuenteProgramada?.referencia_entrega || entregaFuente.referencia_entrega }
+        : {}),
       latitud:
         entregaFuente.latitud != null ? Number(entregaFuente.latitud) : undefined,
       longitud:
@@ -325,7 +392,7 @@ export default function ModalEntregaUpdate({
       _resto_vehiculo_id: fuenteProgramada?.vehiculo_id || undefined,
       direccion_seleccionada: direccionSeleccionadaVenta,
     })
-  }, [open, entregaFuente, entregaProgramadaGrupo, restante, form, direccionSeleccionadaVenta])
+  }, [open, entregaFuente, entregaProgramadaGrupo, restante, form, direccionSeleccionadaVenta, direccionesCliente])
 
   // Pre-cargar campos `_resto_*` con la dirección del cliente en modo restante.
   //
@@ -335,18 +402,6 @@ export default function ModalEntregaUpdate({
   // el switch — los inputs `_resto_*` recién aparecen al activarlo, así que
   // cuando el componente TextareaBase se monta lee el valor ya seteado en
   // el form. Resuelve el bug donde la "Referencia" salía vacía.
-  const clienteIdDirecciones =
-    entregaFuente?.venta?.cliente_id ?? entregaFuente?.venta?.cliente?.id
-  const { data: direccionesResp } = useQuery({
-    queryKey: [QueryKeys.DIRECCIONES_CLIENTE, clienteIdDirecciones],
-    queryFn: () => clienteApi.listarDirecciones(clienteIdDirecciones!),
-    enabled: !!clienteIdDirecciones && open,
-  })
-  const direccionesCliente = useMemo(
-    () => (direccionesResp?.data?.data as any[]) || [],
-    [direccionesResp],
-  )
-
   useEffect(() => {
     if (!open || !restante || direccionesCliente.length === 0) return
     const tipo = (form.getFieldValue('direccion_seleccionada') ||
@@ -442,64 +497,32 @@ export default function ModalEntregaUpdate({
     }
 
     if (restante) {
-      const grupoEntregaId =
-        entregaFuente?.grupo_entrega_id || entregaFuente?.id
-      const entregasRelacionadas = Array.isArray(entregaFuente?.venta?.entregas_productos)
-        ? entregaFuente.venta.entregas_productos
-        : []
-      const esVentaParcial = entregaFuente?.venta?.tipo_despacho === 'pa' || entregaFuente?.tipo_entrega === 'pa'
-      const hijasGrupo = esVentaParcial
-        ? entregasRelacionadas.filter((hija: any) => {
-            if ((hija?.grupo_entrega_id || null) && grupoEntregaId) {
-              return Number(hija.grupo_entrega_id) === Number(grupoEntregaId)
-            }
-            return hija?.tipo_entrega === 'pa'
-          })
-        : []
-
+      // Modelo N-hijas (Opción A): el pendiente real lo tiene UDV.cantidad_pendiente.
+      // El backend decrementa este valor al crear cada hija (store()), por lo que
+      // siempre refleja lo que aún no está asignado a ningún despacho.
       return entregaFuente.productos_entregados
         .map((p: any, index: number) => {
           const ud = p.unidad_derivada_venta || {}
           const pav = ud.producto_almacen_venta || {}
           const prod = pav.producto_almacen?.producto || {}
-          const totalOriginal = Number(ud.cantidad ?? 0)
+          const totalLinea = Number(ud.cantidad ?? 0)
           const udvId = Number(ud.id ?? p.unidad_derivada_venta_id)
-          const entregadoYa = hijasGrupo.reduce((acc: number, hija: any) => {
-            if (hija?.estado_entrega !== 'en') return acc
-            const detalle = (hija?.productos_entregados || []).find(
-              (d: any) => Number(d?.unidad_derivada_venta_id) === udvId,
-            )
-            return acc + Number(detalle?.cantidad_entregada || 0)
-          }, 0)
-          const programadoYa = hijasGrupo.reduce((acc: number, hija: any) => {
-            const estaReservado = hija?.estado_entrega !== 'ca' && hija?.estado_entrega !== 'en'
-            if (!estaReservado) return acc
-            const detalle = (hija?.productos_entregados || []).find(
-              (d: any) => Number(d?.unidad_derivada_venta_id) === udvId,
-            )
-            return acc + Number(detalle?.cantidad_entregada || 0)
-          }, 0)
-          const pendiente = esVentaParcial
-            ? Math.max(0, totalOriginal - entregadoYa - programadoYa)
-            : Number(ud.cantidad_pendiente || 0)
+          const pendiente = Number(ud.cantidad_pendiente ?? 0)
           if (pendiente <= 0) return null
-          // Para venta NO parcial (Domicilio/RT) el `entregadoYa` calculado
-          // arriba siempre da 0 porque `hijasGrupo` está vacío. La fuente real
-          // de verdad es la unidad de venta: total − pendiente = ya entregado.
-          const entregadoFinal = esVentaParcial
-            ? entregadoYa
-            : Math.max(0, totalOriginal - pendiente)
+
           return {
             id: index + 1,
             producto: prod.name || p.producto_name || '',
             ubicacion: '',
-            total: totalOriginal,
+            total: totalLinea,
             recibido: 0,
-            entregado: entregadoFinal,
+            entregado: Math.max(0, totalLinea - pendiente),
+            programado: 0,
             pendiente,
             entregar: pendiente,
             entregar_programado: 0,
             unidad_derivada_venta_id: udvId,
+            detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
           }
         })
         .filter(Boolean) as ProductoEntrega[]
@@ -572,6 +595,7 @@ export default function ModalEntregaUpdate({
             entregar: pendienteVentaReal,
             entregar_programado: 0,
             unidad_derivada_venta_id: udvId,
+            detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
           }
         }
         const pendienteEstaEntrega = cantidadProgramadaEstaEntrega > 0
@@ -590,6 +614,7 @@ export default function ModalEntregaUpdate({
             entregar: pendienteEstaEntrega,
             entregar_programado: 0,
             unidad_derivada_venta_id: udvId,
+            detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
           }
         }
         return {
@@ -604,6 +629,7 @@ export default function ModalEntregaUpdate({
           entregar: pendienteEstaEntrega,
           entregar_programado: 0,
           unidad_derivada_venta_id: udvId,
+          detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
         }
       }
 
@@ -618,6 +644,7 @@ export default function ModalEntregaUpdate({
         entregar: pendienteVentaReal,
         entregar_programado: 0,
         unidad_derivada_venta_id: udvId,
+        detalle_entrega_producto_id: Number(p?.id || 0) || undefined,
       }
     })
 
@@ -766,6 +793,13 @@ export default function ModalEntregaUpdate({
   const soloEntregarEnTienda =
     tipoLocal === 'EnTienda' &&
     entrega?.quien_entrega === 'almacen'
+
+  // Para parcial inmediato la cantidad está fijada por la orden — el usuario
+  // no debe poder editarla. Solo aplica al actualizar (no al crear restante).
+  const readonlyEntregarParcial =
+    !restante &&
+    entregaFuente?.tipo_entrega === 'pa' &&
+    entregaFuente?.tipo_despacho === 'in'
 
   // Etiqueta read-only de "quién entrega" — viene de la venta y se muestra
   // como info para el usuario (no se vuelve a preguntar).
@@ -955,6 +989,7 @@ export default function ModalEntregaUpdate({
         direccion={entrega.direccion_entrega || ''}
         forzarProgramarRestoOn={tieneHermanaProgramadaConPendientes}
         soloEntregarEnTienda={soloEntregarEnTienda}
+        readonlyEntregarParcial={readonlyEntregarParcial}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })

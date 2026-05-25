@@ -26,6 +26,12 @@ interface SeccionParcialProps {
   /** Tabla simplificada (sin Ubicación / Eliminar) — modo actualizar-entrega. */
   tablaSimple?: boolean
   soloEntregar?: boolean
+  /**
+   * Bloquea solo la columna "Entregar" sin afectar counters ni la sección
+   * "Programar resto". Usado cuando `tipo_despacho === 'in'` (inmediato):
+   * la cantidad está fijada por la orden y no debe ser editable.
+   */
+  readonlyEntregar?: boolean
 }
 
 /**
@@ -50,6 +56,7 @@ export function SeccionParcial({
   ocultar,
   tablaSimple,
   soloEntregar = false,
+  readonlyEntregar = false,
 }: SeccionParcialProps) {
   const {
     productosEntrega,
@@ -85,7 +92,7 @@ export function SeccionParcial({
           onProductoChange={setProductosEntrega}
           simple={tablaSimple}
           autoProgramarResto={!soloEntregar}
-          readonlyEntregar={soloEntregar}
+          readonlyEntregar={soloEntregar || readonlyEntregar}
         />
       )}
 

@@ -13,6 +13,7 @@ export type ProductoEntrega = {
   entregar: number
   entregar_programado: number
   unidad_derivada_venta_id: number
+  detalle_entrega_producto_id?: number
 }
 
 export function useProductosEntrega(venta?: getVentaResponseProps, open?: boolean) {
