@@ -157,3 +157,130 @@ export const entregasApi = {
     })
   },
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NUEVO MÓDULO — endpoints reestructurados (nuevas tablas: entrega, entrega_detalle)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ResumenVenta {
+  venta_id: string
+  serie: string
+  numero: number
+  venta_numero: string
+  fecha: string
+  cliente_nombre: string
+  cliente_numero_documento: string | null
+  cliente_telefono: string | null
+  total_entregas: number
+  completadas: number
+  en_camino: number
+  pendientes: number
+  canceladas: number
+  proxima_fecha_programada: string | null
+  ultima_fecha_ejecutada: string | null
+}
+
+export interface EntregaDetalleProd {
+  id: number
+  unidad_derivada_venta_id: number
+  cantidad: number
+  ubicacion: string | null
+  unidad: string | null
+  factor: number | null
+  cantidad_pendiente: number | null
+  producto: { id: number; name: string; cod_producto: string } | null
+}
+
+export interface EntregaNueva {
+  id: number
+  venta_id: string
+  venta_entrega_secuencia: number
+  stock_aplicado: boolean
+  tipo_entrega_codigo: 'rt' | 'de' | 'pa' | null
+  tipo_entrega_nombre: string | null
+  tipo_entrega_icono: string | null
+  tipo_entrega_color: string | null
+  tipo_despacho_codigo: 'in' | 'pr' | null
+  tipo_despacho_nombre: string | null
+  estado_entrega_codigo: 'pe' | 'ec' | 'en' | 'ca' | null
+  estado_entrega_nombre: string | null
+  estado_entrega_color: string | null
+  es_final: boolean
+  quien_entrega_codigo: 'almacen' | 'vendedor' | 'chofer' | null
+  quien_entrega_nombre: string | null
+  chofer_id: string | null
+  chofer_name: string | null
+  vehiculo_id: number | null
+  vehiculo_placa: string | null
+  vehiculo_name: string | null
+  tipo_pedido: 'interno' | 'externo'
+  cargo_destino: string | null
+  fecha_creacion: string | null
+  fecha_programada: string | null
+  fecha_ejecutada: string | null
+  hora_inicio: string | null
+  hora_fin: string | null
+  direccion_entrega: string | null
+  referencia_entrega: string | null
+  observaciones: string | null
+  motivo_anulacion: string | null
+  detalles: EntregaDetalleProd[]
+}
+
+export interface PaginatedResult<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+export interface FiltrosResumenVentas {
+  fecha_desde?: string
+  fecha_hasta?: string
+  search?: string
+  solo_con_pendientes?: boolean
+  chofer_id?: string
+  per_page?: number
+  page?: number
+}
+
+export const entregasNuevasApi = {
+  resumenVentas: (filtros: FiltrosResumenVentas = {}): Promise<ApiResponse<PaginatedResult<ResumenVenta>>> => {
+    const p = new URLSearchParams()
+    if (filtros.fecha_desde) p.set('fecha_desde', filtros.fecha_desde)
+    if (filtros.fecha_hasta) p.set('fecha_hasta', filtros.fecha_hasta)
+    if (filtros.search) p.set('search', filtros.search)
+    if (filtros.solo_con_pendientes) p.set('solo_con_pendientes', '1')
+    if (filtros.chofer_id) p.set('chofer_id', filtros.chofer_id)
+    if (filtros.per_page) p.set('per_page', String(filtros.per_page))
+    if (filtros.page) p.set('page', String(filtros.page))
+    const qs = p.toString()
+    return apiRequest(`/entregas/resumen-ventas${qs ? `?${qs}` : ''}`, { method: 'GET' })
+  },
+
+  porVenta: (ventaId: string): Promise<ApiResponse<EntregaNueva[]>> =>
+    apiRequest(`/entregas/por-venta/${ventaId}`, { method: 'GET' }),
+
+  confirmar: (id: number): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest(`/entregas/${id}/confirmar`, { method: 'POST' }),
+
+  enCamino: (id: number): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest(`/entregas/${id}/en-camino`, { method: 'POST' }),
+
+  anular: (id: number, motivo: string): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest(`/entregas/${id}/anular`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo }),
+    }),
+
+  reasignarChofer: (
+    id: number,
+    choferId: string,
+    vehiculoId?: number | null
+  ): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest(`/entregas/${id}/reasignar-chofer`, {
+      method: 'POST',
+      body: JSON.stringify({ chofer_id: choferId, vehiculo_id: vehiculoId }),
+    }),
+}
