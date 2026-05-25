@@ -3,7 +3,7 @@
 import { MenuProps } from 'antd'
 import { useRouter } from 'next/navigation'
 import { BiSolidReport } from 'react-icons/bi'
-import { FaBell, FaCalculator, FaCheck, FaPlus, FaSignOutAlt, FaWarehouse } from 'react-icons/fa'
+import { FaBell, FaCalculator, FaCheck, FaPlus, FaSignOutAlt, FaWarehouse, FaBuilding } from 'react-icons/fa'
 import { IoDocumentText, IoSettingsSharp } from 'react-icons/io5'
 import { MdOutlineMenuOpen } from 'react-icons/md'
 import { PiWarehouseFill } from 'react-icons/pi'
@@ -12,6 +12,8 @@ import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
 import ModalConfiguraciones from '~/app/_components/modals/modal-configuraciones'
 import ModalGestionarAlmacenes from '~/app/ui/_components/modals/modal-gestionar-almacenes'
+import { getAllModules } from '~/lib/navigation'
+import usePermissionHook from '~/hooks/use-permission'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { almacenesApi } from '~/lib/api/almacen'
@@ -25,6 +27,18 @@ export default function DropdownUser() {
   const almacen_id = useStoreAlmacen(s => s.almacen_id)
   const setAlmacenId = useStoreAlmacen(s => s.setAlmacenId)
   const [openGestionAlmacenes, setOpenGestionAlmacenes] = useState(false)
+  const { can } = usePermissionHook()
+
+  // Obtener módulos filtrados por permisos
+  const modules = getAllModules().filter(m => can(m.permission))
+
+  // Mapa de iconos dinámico
+  const iconMap: Record<string, any> = {
+    FaWarehouse,
+    IoDocumentText,
+    FaCalculator,
+    BiSolidReport
+  }
 
   const { data: almacenes } = useQuery({
     queryKey: [QueryKeys.ALMACENES],
@@ -69,38 +83,23 @@ export default function DropdownUser() {
     {
       type: 'divider',
     },
-    {
-      key: '1-1',
-      label: 'Gestión Comercial e Inventario',
-      extra: <FaWarehouse className='text-emerald-600' size={15} />,
-      onClick: () => router.push('/ui/gestion-comercial-e-inventario'),
-    },
-    {
-      key: '1-2',
-      label: 'Facturación Electrónica',
-      extra: <IoDocumentText className='text-amber-600' size={15} />,
-      onClick: () => router.push('/ui/facturacion-electronica'),
-    },
-    {
-      key: '1-3',
-      label: 'Gestión Contable y Financiera',
-      extra: <FaCalculator className='text-rose-700' size={15} />,
-      onClick: () => router.push('/ui/gestion-contable-y-financiera'),
-    },
-    {
-      key: '1-4',
-      label: 'Reportes',
-      extra: <BiSolidReport className='text-cyan-600' size={15} />,
-      onClick: () => router.push('/ui/reportes'),
-    },
+    ...modules.map((m) => {
+      const Icon = iconMap[m.icon]
+      return {
+        key: m.id,
+        label: m.name,
+        extra: Icon ? <Icon className={`text-${m.color === 'success' ? 'emerald-600' : m.color === 'warning' ? 'amber-600' : m.color === 'danger' ? 'rose-700' : 'cyan-600'}`} size={15} /> : undefined,
+        onClick: () => router.push(m.route),
+      }
+    }),
     {
       type: 'divider',
     },
     {
-      key: '2',
-      label: 'Configuraciones',
-      extra: <IoSettingsSharp className='text-slate-500' size={15} />,
-      onClick: () => openConfiguraciones(),
+      key: 'mi-empresa',
+      label: 'Mi Empresa Configuraciones ',
+      extra: <FaBuilding className='text-slate-500' size={14} />,
+      onClick: () => router.push('/ui/configuracion/mi-empresa'),
     },
     {
       key: '3',

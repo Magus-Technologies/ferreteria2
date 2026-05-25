@@ -1,6 +1,6 @@
 import { apiRequest } from '~/lib/api'
 
-export type TipoNotificacion = 'cumpleanos' | 'entrega' | 'pago' | 'vale' | 'caja' | 'vencimiento'
+export type TipoNotificacion = 'cumpleanos' | 'entrega' | 'pago' | 'vale' | 'caja' | 'vencimiento' | 'cotizacion_vence' | 'prestamo_vence' | 'promocion_termina' | 'requerimiento_vence'
 
 export interface ConfiguracionNotificacion {
   id: string | null
