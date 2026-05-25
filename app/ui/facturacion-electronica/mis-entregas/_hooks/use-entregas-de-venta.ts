@@ -7,7 +7,7 @@ export default function useEntregasDeVenta(ventaId: string | undefined) {
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaId],
     queryFn: () => entregasNuevasApi.porVenta(ventaId!),
     enabled: !!ventaId,
-    select: (res) => res.data ?? [],
+    select: (res) => (res.data as any)?.data ?? [],
   })
 
   return {
