@@ -6,7 +6,6 @@ import { FaCheck } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
-import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-proveedores-desactivados'
 import dynamic from 'next/dynamic'
 
 const ModalProveedoresDesactivados = dynamic(() => import('~/app/_components/modals/modal-proveedores-desactivados'), { ssr: false })
@@ -26,7 +25,6 @@ import { IoDocumentText } from 'react-icons/io5'
 export default function TopNavUI({ className }: { className?: string }) {
   const { logout, user } = useAuth()
   const router = useRouter()
-  const { openModal } = useModalProveedoresDesactivados()
   const almacen_id = useStoreAlmacen(s => s.almacen_id)
   const setAlmacenId = useStoreAlmacen(s => s.setAlmacenId)
   const [openGestionAlmacenes, setOpenGestionAlmacenes] = useState(false)
@@ -89,42 +87,6 @@ export default function TopNavUI({ className }: { className?: string }) {
       label: 'Mi Empresa Configuraciones ',
       extra: <FaBuilding className='text-slate-500' size={14} />,
       onClick: () => router.push('/ui/configuracion/mi-empresa'),
-    },
-    {
-      key: '3',
-      label: 'Registros',
-      children: [
-        {
-          key: '3-1',
-          label: 'Registrar Usuario',
-          onClick: () => {
-            router.push('/ui/configuracion/usuarios')
-          },
-        },
-        {
-          key: '3-2',
-          label: 'Registrar Producto',
-        },
-        {
-          key: '3-3',
-          label: 'Registrar Cliente',
-        },
-        {
-          key: '3-4',
-          label: 'Proveedores Desactivados',
-          onClick: () => {
-            openModal()
-          },
-        },
-        { type: 'divider' as const, key: '3-divider' },
-        {
-          key: '3-5',
-          label: 'Gestionar Catálogos',
-          onClick: () => {
-            router.push('/ui/configuracion/registros')
-          },
-        },
-      ],
     },
     {
       key: '5',
