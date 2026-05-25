@@ -1,13 +1,12 @@
 'use client'
 
 import { MenuProps } from 'antd/lib'
-import { FaSignOutAlt, FaBell, FaPlus } from 'react-icons/fa'
+import { FaSignOutAlt, FaPlus } from 'react-icons/fa'
 import { FaCheck } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
 import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-proveedores-desactivados'
-import { useModalConfiguraciones } from '~/app/_stores/store-modal-configuraciones'
 import dynamic from 'next/dynamic'
 
 const ModalProveedoresDesactivados = dynamic(() => import('~/app/_components/modals/modal-proveedores-desactivados'), { ssr: false })
@@ -23,7 +22,6 @@ export default function TopNavUI({ className }: { className?: string }) {
   const { logout, user } = useAuth()
   const router = useRouter()
   const { openModal } = useModalProveedoresDesactivados()
-  const { openModal: openConfiguraciones } = useModalConfiguraciones()
   const almacen_id = useStoreAlmacen(s => s.almacen_id)
   const setAlmacenId = useStoreAlmacen(s => s.setAlmacenId)
   const [openGestionAlmacenes, setOpenGestionAlmacenes] = useState(false)
@@ -41,7 +39,7 @@ export default function TopNavUI({ className }: { className?: string }) {
   const items: MenuProps['items'] = [
     {
       key: '1',
-      label: 'Mi Empresa',
+      label: 'Mi Empresa Configuraciones',
       onClick: () => {
         router.push('/ui/configuracion/mi-empresa')
       }
@@ -100,15 +98,6 @@ export default function TopNavUI({ className }: { className?: string }) {
           },
         },
       ],
-    },
-   
-    {
-      key: '4',
-      label: 'Configuraciones',
-      extra: <FaBell className='text-slate-500' />,
-      onClick: () => {
-        openConfiguraciones()
-      },
     },
     {
       key: '5',

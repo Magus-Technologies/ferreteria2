@@ -56,20 +56,6 @@
         "permission": null
       },
       {
-        "id": "almacenes",
-        "label": "Almacenes",
-        "icon": "FaWarehouse",
-        "route": null,
-        "permission": "configuracion.almacenes.index"
-      },
-      {
-        "id": "cajas",
-        "label": "Cajas",
-        "icon": "FaCashRegister",
-        "route": null,
-        "permission": "configuracion.cajas.index"
-      },
-      {
         "id": "series",
         "label": "Series",
         "icon": "FaFileInvoice",
