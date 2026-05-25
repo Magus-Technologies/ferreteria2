@@ -38,6 +38,8 @@ export default function ModalMetodosPagoVenta({
   tipo_moneda,
   tipo_documento,
   baseAmount,
+  descuentoVale = 0,
+  valesInfo = [],
   onSurchargeChange,
   onContinuar,
 }: {
@@ -48,6 +50,8 @@ export default function ModalMetodosPagoVenta({
   tipo_moneda: TipoMoneda
   tipo_documento?: string
   baseAmount: number
+  descuentoVale?: number
+  valesInfo?: Array<{ nombre: string; tipo: string | null; valor: number }>
   onSurchargeChange: (surcharge: number) => void
   onContinuar?: () => void
 }) {
@@ -78,18 +82,33 @@ export default function ModalMetodosPagoVenta({
   // Watch del campo "Monto Recibe" para recalcular sobrecargo dinámicamente
   const recibe_efectivo = Form.useWatch('recibe_efectivo', modalForm)
 
-  // Sobrecargo calculado dinámicamente según lo que escribe el usuario en "Monto Recibe"
+  // Saldo BASE: lo que queda por cubrir del baseAmount (sin sobrecargo)
+  // Se calcula primero porque sobrecargoActual lo necesita para capear el principal.
+  const saldoBase = useMemo(() => {
+    const pagadoPrincipal = metodosPago.reduce((sum, m) => sum + m.monto, 0)
+    return roundMoney(Math.max(0, baseAmount - pagadoPrincipal))
+  }, [baseAmount, metodosPago])
+
+  // Sobrecargo calculado dinámicamente.
+  // "recibe_efectivo" representa el TOTAL que entrega el cliente (principal + sobrecargo).
+  // Para porcentaje: si recibe cubre el saldo entero, sobrecargo = saldoBase * %. Si pago parcial,
+  // sobrecargo = recibe * % / (100 + %) (resolviendo recibe = principal + principal*%).
   const sobrecargoActual = useMemo(() => {
-    const montoBase = Number(recibe_efectivo) || 0
+    const recibe = Number(recibe_efectivo) || 0
     if (sobrecargoCfg.tipo === 'porcentaje' && sobrecargoCfg.valor > 0) {
-      const monto = roundMoney(montoBase * sobrecargoCfg.valor / 100)
+      const pct = sobrecargoCfg.valor / 100
+      const sobrecargoTopeBase = saldoBase * pct
+      const totalTope = saldoBase + sobrecargoTopeBase
+      const monto = recibe >= totalTope
+        ? roundMoney(sobrecargoTopeBase)
+        : roundMoney((recibe * pct) / (1 + pct))
       return { tipo: 'porcentaje', valor: sobrecargoCfg.valor, monto }
     }
     if (sobrecargoCfg.tipo === 'monto_fijo' && sobrecargoCfg.valor > 0) {
       return { tipo: 'monto_fijo', valor: sobrecargoCfg.valor, monto: sobrecargoCfg.valor }
     }
     return { tipo: 'ninguno', valor: 0, monto: 0 }
-  }, [sobrecargoCfg, recibe_efectivo])
+  }, [sobrecargoCfg, recibe_efectivo, saldoBase])
 
   // Calcular total pagado (suma de principal + sobrecargo de métodos confirmados)
   const totalPagado = useMemo(() => {
@@ -104,11 +123,12 @@ export default function ModalMetodosPagoVenta({
     return roundMoney(agregado + sobrecargoActual.monto)
   }, [metodosPago, sobrecargoActual])
 
-  // Saldo pendiente basado en baseAmount vs suma de principales confirmados (sin sobrecargos)
+  // Saldo PENDIENTE mostrado al usuario: incluye el sobrecargo total (confirmado + en formulario)
+  // = (baseAmount + totalSobrecargo) - totalPagado
   const saldoPendiente = useMemo(() => {
-    const pagadoPrincipal = metodosPago.reduce((sum, m) => sum + m.monto, 0)
-    return roundMoney(Math.max(0, baseAmount - pagadoPrincipal))
-  }, [baseAmount, metodosPago])
+    const totalDebido = baseAmount + totalSobrecargo
+    return roundMoney(Math.max(0, totalDebido - totalPagado))
+  }, [baseAmount, totalSobrecargo, totalPagado])
 
   // Calcular vuelto total de todos los métodos agregados
   const vueltoTotal = useMemo(() => {
@@ -146,11 +166,12 @@ export default function ModalMetodosPagoVenta({
     )
   }, [metodoPagoSeleccionado])
 
-  // Vuelto del formulario actual (antes de confirmar agregar)
+  // Vuelto del formulario actual (antes de confirmar agregar) — usa saldoBase porque
+  // el sobrecargo se suma aparte; recibe_efectivo cubre el principal.
   const vuelto = useMemo(() => {
     if (!isEfectivo) return 0
-    return Math.max(0, (Number(recibe_efectivo) || 0) - (saldoPendiente + sobrecargoActual.monto))
-  }, [isEfectivo, recibe_efectivo, saldoPendiente, sobrecargoActual.monto])
+    return Math.max(0, (Number(recibe_efectivo) || 0) - (saldoBase + sobrecargoActual.monto))
+  }, [isEfectivo, recibe_efectivo, saldoBase, sobrecargoActual.monto])
 
   // Resetear formulario SOLO al abrir el modal (transición false → true).
   // No reaccionar a cambios de totalCobrado ni baseAmount para evitar reseteos en cascada.
@@ -185,15 +206,29 @@ export default function ModalMetodosPagoVenta({
     }
   }, [open, isFetched, desplieguesFiltradosPorTipo, selectedDespliegueValue])
 
-  // Actualizar "Monto Recibe" cuando cambia el saldo pendiente (después de confirmar un método)
+  // Helper para calcular el monto total a recibir (base + sobrecargo) según la config actual
+  const calcularTotalARecibir = (base: number) => {
+    if (sobrecargoCfg.tipo === 'porcentaje' && sobrecargoCfg.valor > 0) {
+      return roundMoney(base * (1 + sobrecargoCfg.valor / 100))
+    }
+    if (sobrecargoCfg.tipo === 'monto_fijo' && sobrecargoCfg.valor > 0) {
+      return roundMoney(base + sobrecargoCfg.valor)
+    }
+    return roundMoney(base)
+  }
+
+  // Actualizar "Monto Recibe" cuando cambia el saldo base (después de confirmar un método).
+  // "Monto Recibe" representa el TOTAL que entrega el cliente, así que incluye el sobrecargo.
   useEffect(() => {
-    if (!open || saldoPendiente <= 0) return
-    modalForm.setFieldValue('monto', roundMoney(saldoPendiente))
+    if (!open || saldoBase <= 0) return
+    const totalRecibir = calcularTotalARecibir(saldoBase)
+    modalForm.setFieldValue('monto', totalRecibir)
     const current = modalForm.getFieldValue('recibe_efectivo')
     if (current === undefined || current === null || Number(current) === 0) {
-      modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
+      modalForm.setFieldValue('recibe_efectivo', totalRecibir)
     }
-  }, [saldoPendiente, open, modalForm])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saldoBase, open, modalForm, sobrecargoCfg.tipo, sobrecargoCfg.valor])
 
   const handleAgregarMetodo = async () => {
     try {
@@ -206,7 +241,10 @@ export default function ModalMetodosPagoVenta({
       }
 
       const montoRecibido = roundMoney(Number(values.recibe_efectivo) || 0)
-      const montoFinal = roundMoney(Math.min(montoRecibido, saldoPendiente))
+      // "Monto Recibe" = total entregado por el cliente (principal + sobrecargo).
+      // El principal real que cubre el baseAmount = recibe − sobrecargo, tope: saldoBase.
+      const principalCalculado = montoRecibido - sobrecargoActual.monto
+      const montoFinal = roundMoney(Math.min(principalCalculado, saldoBase))
 
       if (montoFinal <= 0) {
         message.error('El monto debe ser mayor a 0')
@@ -301,14 +339,39 @@ export default function ModalMetodosPagoVenta({
       destroyOnHidden
     >
       <div className='mt-4'>
+        {/* Aviso de promoción aplicada */}
+        {descuentoVale > 0 && valesInfo.length > 0 && (
+          <div className='mb-4 p-3 bg-fuchsia-50 border-2 border-fuchsia-300 rounded-lg'>
+            <div className='text-xs font-bold text-fuchsia-700 uppercase mb-1'>
+              Promoción aplicada
+            </div>
+            {valesInfo.map((v, i) => (
+              <div key={i} className='text-sm text-slate-700 flex items-center justify-between'>
+                <span>{v.nombre}</span>
+                <span className='font-bold text-fuchsia-700'>
+                  {v.tipo === 'PORCENTAJE' ? `-${v.valor}%` : `-${monedaSymbol} ${v.valor.toFixed(2)}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Cards resumen */}
-        <div className='grid grid-cols-4 gap-4 mb-6'>
+        <div className={`grid ${descuentoVale > 0 ? 'grid-cols-5' : 'grid-cols-4'} gap-4 mb-6`}>
           <div className='p-4 bg-blue-50 rounded-lg border-2 border-blue-300'>
             <div className='text-sm font-medium text-slate-600'>Total a Cobrar</div>
             <div className='text-2xl font-bold text-blue-600'>
               {monedaSymbol} {baseAmount.toFixed(2)}
             </div>
           </div>
+          {descuentoVale > 0 && (
+            <div className='p-4 bg-fuchsia-50 rounded-lg border-2 border-fuchsia-300'>
+              <div className='text-sm font-medium text-slate-600'>Descuento Promoción</div>
+              <div className='text-2xl font-bold text-fuchsia-600'>
+                -{monedaSymbol} {descuentoVale.toFixed(2)}
+              </div>
+            </div>
+          )}
           <div className={`p-4 rounded-lg border-2 ${totalSobrecargo > 0 ? 'bg-amber-50 border-amber-400' : 'bg-slate-50 border-slate-200'}`}>
             <div className='text-sm font-medium text-slate-600'>Sobrecargo</div>
             <div className={`text-2xl font-bold ${totalSobrecargo > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
@@ -399,8 +462,8 @@ export default function ModalMetodosPagoVenta({
           </div>
         )}
 
-        {/* Formulario para agregar método */}
-        {saldoPendiente > 0 && (
+        {/* Formulario para agregar método — visible mientras quede base por cubrir */}
+        {saldoBase > 0 && (
           <Form form={modalForm} className='border-t pt-4'>
             <div className='text-sm font-semibold text-slate-700 mb-3'>Agregar Método de Pago</div>
 
@@ -445,8 +508,14 @@ export default function ModalMetodosPagoVenta({
                       modalForm.setFieldValue('referencia', undefined)
                     }
 
-                    // Pre-llenar solo con el saldo pendiente; el sobrecargo se verá en el badge
-                    modalForm.setFieldValue('recibe_efectivo', roundMoney(saldoPendiente))
+                    // Pre-llenar con el total a recibir (base + sobrecargo de este método)
+                    let totalInicial = saldoBase
+                    if (despliegueData?.tipo_sobrecargo === 'porcentaje' && Number(despliegueData.sobrecargo_porcentaje) > 0) {
+                      totalInicial = saldoBase * (1 + Number(despliegueData.sobrecargo_porcentaje) / 100)
+                    } else if (despliegueData?.tipo_sobrecargo === 'monto_fijo' && Number(despliegueData.adicional) > 0) {
+                      totalInicial = saldoBase + Number(despliegueData.adicional)
+                    }
+                    modalForm.setFieldValue('recibe_efectivo', roundMoney(totalInicial))
                   }}
                 />
                 {!selectedDespliegueValue && (
@@ -486,7 +555,7 @@ export default function ModalMetodosPagoVenta({
                   prefix={<span className='text-rose-700 font-bold text-xs'>{monedaSymbol}</span>}
                   placeholder='0.00'
                   min={0}
-                  max={!isEfectivo ? roundMoney(saldoPendiente + sobrecargoActual.monto) : undefined}
+                  max={!isEfectivo ? calcularTotalARecibir(saldoBase) : undefined}
                   precision={2}
                   propsForm={{
                     name: 'recibe_efectivo',
@@ -498,7 +567,7 @@ export default function ModalMetodosPagoVenta({
                           if (!value || value <= 0) {
                             return Promise.reject('Debe ser > 0')
                           }
-                          const maxPermitido = saldoPendiente + sobrecargoActual.monto
+                          const maxPermitido = calcularTotalARecibir(saldoBase)
                           if (!isEfectivo && value > maxPermitido) {
                             return Promise.reject(`Máx: ${maxPermitido.toFixed(2)}`)
                           }
