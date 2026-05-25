@@ -63,8 +63,8 @@ export default function ModalDocSolicitudOC({ open, onClose, requerimiento }: Mo
 
     const fetchPdf = useCallback(async (id: number, formato: 'a4' | 'ticket') => {
         const token = getAuthToken()
-        const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-        const res = await fetch(`${API_URL}/api/pdf/requerimiento-interno/${id}?formato=${formato}`, {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL
+        const res = await fetch(`${API_URL}/pdf/requerimiento-interno/${id}?formato=${formato}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 Accept: 'application/pdf',
@@ -131,7 +131,7 @@ export default function ModalDocSolicitudOC({ open, onClose, requerimiento }: Mo
 
     // URL pública del PDF (no requiere auth) — incluye el formato actual
     const pdfPublicUrl = requerimiento?.id
-        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/requerimiento-interno/${requerimiento.id}?formato=${esTicket ? 'ticket' : 'a4'}`
+        ? `${process.env.NEXT_PUBLIC_API_URL}/pdf/requerimiento-interno/${requerimiento.id}?formato=${esTicket ? 'ticket' : 'a4'}`
         : undefined
 
     const nroDoc = requerimiento?.codigo ?? 'Requerimiento Interno'
