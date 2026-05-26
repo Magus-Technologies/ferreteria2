@@ -70,7 +70,8 @@ export default function AccionConfigurarEntrega() {
           ?? `${venta?.cliente?.nombres ?? ''} ${venta?.cliente?.apellidos ?? ''}`.trim()
           ?? undefined
         }
-        onProgramar={handleProgramar}
+        onAbrirConfiguracion={handleProgramar}
+        onSuccess={() => setOpenResumen(false)}
       />
 
       {/* Paso 2: configuración completa de la entrega */}
