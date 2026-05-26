@@ -1,12 +1,11 @@
 'use client'
 
 import { MenuProps } from 'antd/lib'
-import { FaSignOutAlt, FaPlus } from 'react-icons/fa'
+import { FaSignOutAlt, FaPlus, FaBuilding } from 'react-icons/fa'
 import { FaCheck } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
 import DropdownBase from '~/components/dropdown/dropdown-base'
 import { useAuth } from '~/lib/auth-context'
-import { useModalProveedoresDesactivados } from '~/app/_stores/store-modal-proveedores-desactivados'
 import dynamic from 'next/dynamic'
 
 const ModalProveedoresDesactivados = dynamic(() => import('~/app/_components/modals/modal-proveedores-desactivados'), { ssr: false })
@@ -17,14 +16,30 @@ import { useState } from 'react'
 import { almacenesApi } from '~/lib/api/almacen'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import { getAllModules } from '~/lib/navigation'
+import usePermissionHook from '~/hooks/use-permission'
+import { BiSolidReport } from 'react-icons/bi'
+import { FaCalculator, FaWarehouse } from 'react-icons/fa6'
+import { IoDocumentText } from 'react-icons/io5'
 
 export default function TopNavUI({ className }: { className?: string }) {
   const { logout, user } = useAuth()
   const router = useRouter()
-  const { openModal } = useModalProveedoresDesactivados()
   const almacen_id = useStoreAlmacen(s => s.almacen_id)
   const setAlmacenId = useStoreAlmacen(s => s.setAlmacenId)
   const [openGestionAlmacenes, setOpenGestionAlmacenes] = useState(false)
+  const { can } = usePermissionHook()
+
+  // Obtener módulos filtrados por permisos
+  const modules = getAllModules().filter(m => can(m.permission))
+
+  // Mapa de iconos dinámico para los módulos
+  const iconMap: Record<string, any> = {
+    FaWarehouse,
+    IoDocumentText,
+    FaCalculator,
+    BiSolidReport
+  }
 
   const { data: almacenes } = useQuery({
     queryKey: [QueryKeys.ALMACENES],
@@ -37,13 +52,6 @@ export default function TopNavUI({ className }: { className?: string }) {
   })
 
   const items: MenuProps['items'] = [
-    {
-      key: '1',
-      label: 'Mi Empresa Configuraciones',
-      onClick: () => {
-        router.push('/ui/configuracion/mi-empresa')
-      }
-    },
     {
       key: '2',
       label: 'Sucursales',
@@ -63,41 +71,22 @@ export default function TopNavUI({ className }: { className?: string }) {
         },
       ],
     },
+    { type: 'divider' as const, key: 'mod-divider-1' },
+    ...modules.map((m) => {
+      const Icon = iconMap[m.icon]
+      return {
+        key: m.id,
+        label: m.name,
+        extra: Icon ? <Icon className={`text-${m.color === 'success' ? 'emerald-600' : m.color === 'warning' ? 'amber-600' : m.color === 'danger' ? 'rose-700' : 'cyan-600'}`} size={15} /> : undefined,
+        onClick: () => router.push(m.route),
+      }
+    }),
+    { type: 'divider' as const, key: 'mod-divider-2' },
     {
-      key: '3',
-      label: 'Registros',
-      children: [
-        {
-          key: '3-1',
-          label: 'Registrar Usuario',
-          onClick: () => {
-            router.push('/ui/configuracion/usuarios')
-          },
-        },
-        {
-          key: '3-2',
-          label: 'Registrar Producto',
-        },
-        {
-          key: '3-3',
-          label: 'Registrar Cliente',
-        },
-        {
-          key: '3-4',
-          label: 'Proveedores Desactivados',
-          onClick: () => {
-            openModal()
-          },
-        },
-        { type: 'divider' as const, key: '3-divider' },
-        {
-          key: '3-5',
-          label: 'Gestionar Catálogos',
-          onClick: () => {
-            router.push('/ui/configuracion/registros')
-          },
-        },
-      ],
+      key: 'mi-empresa',
+      label: 'Mi Empresa Configuraciones ',
+      extra: <FaBuilding className='text-slate-500' size={14} />,
+      onClick: () => router.push('/ui/configuracion/mi-empresa'),
     },
     {
       key: '5',

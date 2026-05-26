@@ -10,10 +10,10 @@ import {
   TipoNotificacion,
 } from '~/lib/api/configuracion-notificaciones'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { FaBell, FaBirthdayCake, FaCalendarAlt } from 'react-icons/fa'
-import { MdPayment, MdLocalShipping } from 'react-icons/md'
+import { FaBell, FaBirthdayCake, FaCalendarAlt, FaChevronDown, FaChevronUp, FaTasks } from 'react-icons/fa'
+import { MdPayment, MdLocalShipping, MdOutlinePriceChange, MdLocalOffer } from 'react-icons/md'
 import { BsTicketDetailedFill } from 'react-icons/bs'
-import { AiFillBank } from 'react-icons/ai'
+import { AiFillBank, AiOutlineFileDone } from 'react-icons/ai'
 import { IoSettingsSharp } from 'react-icons/io5'
 
 // ─── Metadatos de cada tipo de notificación ───────────────────────────────────
@@ -76,6 +76,38 @@ const TIPOS_INFO: Record<
     bg: 'bg-amber-50',
     badge: 'bg-amber-100 text-amber-700',
   },
+  cotizacion_vence: {
+    label: 'Cotizaciones',
+    descripcion: 'Cotizaciones próximas a vencer sin respuesta',
+    icon: <AiOutlineFileDone size={16} />,
+    color: 'text-cyan-600',
+    bg: 'bg-cyan-50',
+    badge: 'bg-cyan-100 text-cyan-700',
+  },
+  prestamo_vence: {
+    label: 'Préstamos',
+    descripcion: 'Préstamos próximos a vencer',
+    icon: <MdOutlinePriceChange size={17} />,
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-50',
+    badge: 'bg-indigo-100 text-indigo-700',
+  },
+  promocion_termina: {
+    label: 'Promociones',
+    descripcion: 'Promociones/vales próximos a terminar',
+    icon: <MdLocalOffer size={16} />,
+    color: 'text-fuchsia-600',
+    bg: 'bg-fuchsia-50',
+    badge: 'bg-fuchsia-100 text-fuchsia-700',
+  },
+  requerimiento_vence: {
+    label: 'Requerimientos',
+    descripcion: 'Requerimientos internos con fecha límite',
+    icon: <FaTasks size={14} />,
+    color: 'text-sky-600',
+    bg: 'bg-sky-50',
+    badge: 'bg-sky-100 text-sky-700',
+  },
 }
 
 // ─── Fila de una notificación ─────────────────────────────────────────────────
@@ -95,6 +127,8 @@ function FilaNotificacion({
   const info = TIPOS_INFO[config.tipo as TipoNotificacion]
   const isPending = loadingTipo === config.tipo
   const habilitado = config.habilitado
+  const hasAnticipacion = ['cumpleanos', 'cotizacion_vence', 'prestamo_vence', 'promocion_termina', 'requerimiento_vence'].includes(config.tipo)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <div
@@ -150,50 +184,59 @@ function FilaNotificacion({
             />
           </div>
 
-          {/* Slider de días (solo cumpleaños y habilitado) */}
-          {config.tipo === 'cumpleanos' && habilitado && (
+          {/* Sección desplegable de días de anticipación */}
+          {hasAnticipacion && habilitado && (
             <div className='mt-3 pt-3 border-t border-slate-100'>
-              <div className='flex items-center justify-between mb-2'>
-                <span className='text-xs font-semibold text-slate-500'>
+              <div 
+                className='flex items-center justify-between cursor-pointer group'
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                <span className='text-xs font-semibold text-slate-500 group-hover:text-slate-700 transition-colors'>
                   Avisar con anticipación
                 </span>
-                <Tooltip
-                  title={
-                    config.dias_anticipacion === 0
-                      ? 'Solo el día del cumpleaños'
-                      : `${config.dias_anticipacion} día${config.dias_anticipacion > 1 ? 's' : ''} antes del cumpleaños`
-                  }
-                >
-                  <span
-                    className={`text-xs font-bold px-2.5 py-1 rounded-lg cursor-help ${info.badge}`}
+                <div className='flex items-center gap-2'>
+                  <Tooltip
+                    title={
+                      config.dias_anticipacion === 0
+                        ? 'El mismo día'
+                        : `${config.dias_anticipacion} día${config.dias_anticipacion > 1 ? 's' : ''} antes`
+                    }
                   >
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded-lg ${info.badge}`}
+                    >
+                      {config.dias_anticipacion === 0
+                        ? 'Solo el día'
+                        : `${config.dias_anticipacion} día${config.dias_anticipacion > 1 ? 's' : ''} antes`}
+                    </span>
+                  </Tooltip>
+                  <div className='text-slate-400'>
+                    {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                  </div>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className='mt-4 px-1 animate-in slide-in-from-top-2 fade-in duration-200'>
+                  <Slider
+                    min={0}
+                    max={30}
+                    value={config.dias_anticipacion}
+                    onChange={(val) => onDiasChange(config.tipo as TipoNotificacion, val)}
+                    onChangeComplete={(val) => onDiasChangeComplete(config.tipo as TipoNotificacion, val)}
+                    marks={{ 0: '0', 7: '7', 14: '14', 30: '30' }}
+                    tooltip={{
+                      formatter: (val) =>
+                        val === 0 ? 'Solo el día' : `${val} días antes`,
+                    }}
+                  />
+                  <p className='text-xs text-slate-400 mt-2 leading-relaxed'>
                     {config.dias_anticipacion === 0
-                      ? 'Solo el día'
-                      : `${config.dias_anticipacion} día${config.dias_anticipacion > 1 ? 's' : ''} antes`}
-                  </span>
-                </Tooltip>
-              </div>
-
-              <div className='px-1'>
-                <Slider
-                  min={0}
-                  max={30}
-                  value={config.dias_anticipacion}
-                  onChange={(val) => onDiasChange(config.tipo as TipoNotificacion, val)}
-                  onChangeComplete={(val) => onDiasChangeComplete(config.tipo as TipoNotificacion, val)}
-                  marks={{ 0: '0', 7: '7', 14: '14', 30: '30' }}
-                  tooltip={{
-                    formatter: (val) =>
-                      val === 0 ? 'Solo el día' : `${val} días antes`,
-                  }}
-                />
-              </div>
-
-              <p className='text-xs text-slate-400 mt-2 leading-relaxed'>
-                {config.dias_anticipacion === 0
-                  ? 'Solo recibirás aviso el mismo día del cumpleaños.'
-                  : `Recibirás un aviso cada día desde ${config.dias_anticipacion} días antes hasta el cumpleaños.`}
-              </p>
+                      ? 'Solo recibirás aviso el día exacto.'
+                      : `Recibirás un aviso cada día desde ${config.dias_anticipacion} días antes.`}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -231,7 +274,9 @@ export default function ModalConfiguraciones() {
     queryKey: [QueryKeys.CONFIGURACION_NOTIFICACIONES],
     queryFn: async () => {
       const res = await configuracionNotificacionesApi.getAll()
-      return res.data?.data ?? []
+      const all = res.data?.data ?? []
+      // 'caja' (apertura/cierre) no se muestra en el panel de notificaciones.
+      return all.filter((c) => c.tipo !== 'caja')
     },
     enabled: isOpen,
   })

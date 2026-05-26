@@ -1,7 +1,41 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { Button, Alert, InputNumber, Select, Tooltip } from "antd"
+import { useEffect, useState, useRef } from "react"
+import { Button, Alert, Input, Select, Tooltip } from "antd"
+
+// Celda de cantidad con estado local: evita que AG Grid pierda el foco al re-renderizar
+function CantidadCell({
+    initialValue,
+    onCommit,
+}: {
+    initialValue: number
+    onCommit: (cantidad: number) => void
+}) {
+    const [local, setLocal] = useState<string>(String(initialValue ?? 1))
+    // Sincronizar si el valor desde fuera cambia (ej: al agregar el mismo producto)
+    useEffect(() => {
+        setLocal(String(initialValue ?? 1))
+    }, [initialValue])
+
+    return (
+        <div className="flex items-center h-full">
+            <Input
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={local}
+                onChange={(e) => setLocal(e.target.value.replace(/[^0-9]/g, ''))}
+                onBlur={() => {
+                    const n = Number(local)
+                    const finalVal = n > 0 ? n : 1
+                    setLocal(String(finalVal))
+                    onCommit(finalVal)
+                }}
+                className="!w-full"
+                size="small"
+            />
+        </div>
+    )
+}
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons"
 import { ColDef } from "ag-grid-community"
 import ModalProductoSearch from "~/app/_components/modals/modal-producto-search"
@@ -176,15 +210,10 @@ export default function StepProductos({
                 if (!params.node || !params.data) return null
                 const uniqueId = getUniqueId(params.data, params.node.rowIndex ?? 0)
                 return (
-                    <div className="flex items-center h-full">
-                        <InputNumber
-                            min={1}
-                            value={params.data.cantidad}
-                            onChange={(val) => onCambiarCantidad(uniqueId, val ?? 1)}
-                            className="!w-full"
-                            size="small"
-                        />
-                    </div>
+                    <CantidadCell
+                        initialValue={params.data.cantidad}
+                        onCommit={(val) => onCambiarCantidad(uniqueId, val)}
+                    />
                 )
             },
         },

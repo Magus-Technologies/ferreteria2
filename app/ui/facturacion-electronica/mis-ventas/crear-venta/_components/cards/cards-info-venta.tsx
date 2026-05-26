@@ -27,6 +27,7 @@ import {
 import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
 import { BankOutlined } from "@ant-design/icons";
 import { QueryKeys } from "~/app/_lib/queryKeys";
+import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
 
 // Modales pesados cargados bajo demanda
 const ModalMetodosPagoVenta = dynamic(() => import("../modals/modal-metodos-pago-venta"), { ssr: false });
@@ -162,10 +163,31 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     [productosReales],
   );
 
-  // Calcular Total Cobrado (incluye surcharge de métodos de pago)
+  // Vales aplicables (solo se considera el descuento inmediato de MISMA_COMPRA)
+  const valesAplicables = useStoreProductoAgregadoVenta((s) => s.valesAplicables);
+
+  // Calcular descuento total de vales (solo DESCUENTO_MISMA_COMPRA)
+  const baseSinVale = useMemo(() => subTotal - totalDescuento, [subTotal, totalDescuento]);
+  const descuentoVale = useMemo(() => {
+    if (!valesAplicables || valesAplicables.length === 0) return 0;
+    return valesAplicables.reduce((acc, v) => {
+      if (v.tipo_promocion !== 'DESCUENTO_MISMA_COMPRA') return acc;
+      const valor = Number(v.descuento_valor ?? 0);
+      if (!valor) return acc;
+      if (v.descuento_tipo === 'PORCENTAJE') {
+        return acc + (baseSinVale * valor) / 100;
+      }
+      if (v.descuento_tipo === 'MONTO_FIJO') {
+        return acc + valor;
+      }
+      return acc;
+    }, 0);
+  }, [valesAplicables, baseSinVale]);
+
+  // Calcular Total Cobrado (incluye surcharge de métodos de pago y resta descuento de vale)
   const totalCobrado = useMemo(
-    () => subTotal - totalDescuento + surchargeTotal,
-    [subTotal, totalDescuento, surchargeTotal],
+    () => subTotal - totalDescuento - descuentoVale + surchargeTotal,
+    [subTotal, totalDescuento, descuentoVale, surchargeTotal],
   );
 
   // Total Comisión
@@ -395,7 +417,15 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
-        baseAmount={subTotal - totalDescuento}
+        baseAmount={subTotal - totalDescuento - descuentoVale}
+        descuentoVale={descuentoVale}
+        valesInfo={valesAplicables
+          .filter(v => v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' && Number(v.descuento_valor ?? 0) > 0)
+          .map(v => ({
+            nombre: v.nombre,
+            tipo: v.descuento_tipo,
+            valor: Number(v.descuento_valor ?? 0),
+          }))}
         onSurchargeChange={setSurchargeTotal}
         onContinuar={() => {
           setModalOpen(false);
