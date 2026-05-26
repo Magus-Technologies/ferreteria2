@@ -469,8 +469,21 @@ export default function FiltersMisVentas() {
               </Form.Item>
             </ConfigurableElement>
           </div>
-
-          
+          {/* Fila 3: Botones */}
+          <div className="col-span-2 flex items-center">
+            <ConfigurableElement componentId="button-buscar" label="Botón Buscar">
+              <ButtonBase
+                color="info"
+                size="md"
+                type="submit"
+                className="flex items-center gap-2 w-full justify-center"
+              >
+                <FaSearch />
+                Buscar
+              </ButtonBase>
+            </ConfigurableElement>
+          </div>
+                
 
           {/* Fila 3 - Leyenda de colores */}
           <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">
