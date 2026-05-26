@@ -140,7 +140,7 @@ export default function ModalResumenEntregaVenta({
   }, [])
 
   // Columnas Tabla 1 — cellRenderer con InputNumber (patrón ProgramarCell)
-  const columnDefsT1 = useMemo<ColDef<FilaProducto>[]>(() => [
+  const columnDefsT1 = useMemo(() => [
     {
       field: 'nombre',
       headerName: 'Producto',
@@ -191,10 +191,10 @@ export default function ModalResumenEntregaVenta({
         />
       ),
     },
-  ], [handleCommit])
+  ] as ColDef<FilaProducto>[], [handleCommit])
 
   // Columnas Tabla 2 — read-only, mismo estilo que Tabla 1
-  const columnDefsT2 = useMemo<ColDef<FilaProducto>[]>(() => [
+  const columnDefsT2 = useMemo(() => [
     {
       field: 'nombre',
       headerName: 'Producto',
@@ -240,7 +240,7 @@ export default function ModalResumenEntregaVenta({
         <span className="text-base font-bold text-blue-700">{data.cantAProgramar}</span>
       ),
     },
-  ], [])
+  ] as ColDef<FilaProducto>[], [])
 
   // Derivado: lo que se va a programar (cantAProgramar > 0)
   const filasParaProgramar = filas.filter(f => f.cantAProgramar > 0)
