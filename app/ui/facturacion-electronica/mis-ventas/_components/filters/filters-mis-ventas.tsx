@@ -2,7 +2,7 @@
 
 import { Form, Drawer, Badge, Select, Switch, App } from "antd";
 import { FaSearch, FaFilter, FaPlus } from "react-icons/fa";
-import { FaCartShopping, FaTruckFast } from "react-icons/fa6";
+import { FaCartShopping, FaTruck } from "react-icons/fa6";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
@@ -55,14 +55,12 @@ export default function FiltersMisVentas() {
   const router = useRouter();
   const { message } = App.useApp();
   const [form] = Form.useForm<ValuesFiltersMisVentas>();
-  const [modalVerEntregasOpen, setModalVerEntregasOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
   const [serieNumeroInput, setSerieNumeroInput] = useState("");
   const queryClient = useQueryClient();
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
-  const ventaSeleccionada = useStoreVentaSeleccionada((state) => state.venta);
 
   const [debouncedClienteSearch] = useDebounce(clienteSearchText, 500);
   const [debouncedSerieNumero] = useDebounce(serieNumeroInput, 500);
@@ -472,37 +470,7 @@ export default function FiltersMisVentas() {
             </ConfigurableElement>
           </div>
 
-          {/* Fila 3: Botones */}
-          <div className="col-span-2 flex items-center">
-            <ConfigurableElement componentId="button-buscar" label="Botón Buscar">
-              <ButtonBase
-                color="info"
-                size="md"
-                type="submit"
-                className="flex items-center gap-2 w-full justify-center"
-              >
-                <FaSearch />
-                Buscar
-              </ButtonBase>
-            </ConfigurableElement>
-          </div>
-          <div className="col-span-3 flex items-center gap-2">
-            <ConfigurableElement componentId="button-ver-entregas" label="Botón Ver Entregas">
-              <ButtonBase
-                color="info"
-                size="md"
-                type="button"
-                className="flex items-center gap-2 whitespace-nowrap w-full justify-center"
-                onClick={() =>
-                  ventaSeleccionada && setModalVerEntregasOpen(true)
-                }
-                disabled={!ventaSeleccionada}
-              >
-                <FaTruckFast />
-                Ver Entregas
-              </ButtonBase>
-            </ConfigurableElement>
-          </div>
+          
 
           {/* Fila 3 - Leyenda de colores */}
           <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">
@@ -695,12 +663,6 @@ export default function FiltersMisVentas() {
           </div>
         </div>
       </Drawer>
-
-      <ModalVerEntregas
-        open={modalVerEntregasOpen}
-        setOpen={setModalVerEntregasOpen}
-        venta={ventaSeleccionada}
-      />
 
     </FormBase>
   );

@@ -47,6 +47,8 @@ interface ModalEntregaUpdateProps {
    * y cantidades igual que al crear la venta.
    */
   restante?: boolean
+  /** Ocultar la tabla de productos (ya configurada en un paso anterior). */
+  ocultarTablaProductos?: boolean
 }
 
 /**
@@ -66,6 +68,7 @@ export default function ModalEntregaUpdate({
   entrega,
   onSuccess,
   restante = false,
+  ocultarTablaProductos = false,
 }: ModalEntregaUpdateProps) {
   const [form] = Form.useForm()
   const { message } = useApp()
@@ -341,6 +344,23 @@ export default function ModalEntregaUpdate({
             heredados._resto_latitud = Number(dir.latitud)
             heredados._resto_longitud = Number(dir.longitud)
           }
+        }
+      } else {
+        // Fallback inmediato: la fakeEntrega ya trae la D1 pre-populada desde
+        // ventaDetalle.cliente.direcciones para no depender de la query async.
+        if (entregaFuente.direccion_entrega) {
+          heredados.direccion_entrega = entregaFuente.direccion_entrega
+          heredados._resto_direccion_entrega = entregaFuente.direccion_entrega
+        }
+        if (entregaFuente.referencia_entrega) {
+          heredados.referencia_entrega = entregaFuente.referencia_entrega
+          heredados._resto_referencia_entrega = entregaFuente.referencia_entrega
+        }
+        if (entregaFuente.latitud != null && entregaFuente.longitud != null) {
+          heredados.latitud = Number(entregaFuente.latitud)
+          heredados.longitud = Number(entregaFuente.longitud)
+          heredados._resto_latitud = Number(entregaFuente.latitud)
+          heredados._resto_longitud = Number(entregaFuente.longitud)
         }
       }
       form.setFieldsValue(heredados)
@@ -771,6 +791,7 @@ export default function ModalEntregaUpdate({
     'quien-entrega',
     'tipo-pedido',
     ...(!restante ? (['programar-resto'] as SeccionOcultable[]) : []),
+    ...(ocultarTablaProductos ? (['tabla-productos'] as SeccionOcultable[]) : []),
   ]
   const ocultar: SeccionOcultable[] =
     tipoLocal === 'EnTienda'

@@ -1,7 +1,7 @@
 "use client";
 
 import { ICellRendererParams } from "ag-grid-community";
-import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan } from "react-icons/fa";
+import { FaFilePdf, FaFileCode, FaPaperPlane, FaDownload, FaEdit, FaHistory, FaBan, FaTruck } from "react-icons/fa";
 import { MoreOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { Dropdown, message } from "antd";
@@ -14,6 +14,7 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 import ModalHistorialVenta from "../modals/modal-historial-venta";
 import ModalEntregarVenta from "../modals/modal-entregar-venta";
+import ModalVerEntregas from "../modals/modal-ver-entregas";
 import { FaPlusCircle } from "react-icons/fa";
 
 export default function CellAccionesVentaDropdown(
@@ -27,6 +28,7 @@ export default function CellAccionesVentaDropdown(
   const [loading, setLoading] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
   const [entregarRestanteOpen, setEntregarRestanteOpen] = useState(false);
+  const [verEntregasOpen, setVerEntregasOpen] = useState(false);
 
   if (!ventaId) return null;
 
@@ -273,6 +275,11 @@ export default function CellAccionesVentaDropdown(
       onClick: () => setHistorialOpen(true),
     },
     {
+      key: 'ver-entregas',
+      label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Ver Entregas</span>,
+      onClick: () => setVerEntregasOpen(true),
+    },
+    {
       key: 'pdf',
       label: <span className="flex items-center gap-2"><FaFilePdf className="text-red-600" /> Ver PDF</span>,
       onClick: handleVerPDF,
@@ -352,6 +359,12 @@ export default function CellAccionesVentaDropdown(
       <ModalEntregarVenta
         open={entregarRestanteOpen}
         setOpen={setEntregarRestanteOpen}
+        venta={venta}
+      />
+
+      <ModalVerEntregas
+        open={verEntregasOpen}
+        setOpen={setVerEntregasOpen}
         venta={venta}
       />
     </div>

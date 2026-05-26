@@ -366,8 +366,10 @@ export function useConfirmarEntrega({
       throw new Error('No hay productos a entregar — revisa las cantidades')
     }
 
-    // grupo_entrega_id: hereda de la madre o la usa directamente como raíz
-    const grupoId = mode.entregaOrigen.grupo_entrega_id || mode.entregaOrigen.entrega_id
+    // grupo_entrega_id: hereda de la madre o la usa directamente como raíz.
+    // Si ninguno es positivo (primera entrega de la venta), se omite el campo
+    // para que el backend use el id de la nueva entrega como grupo raíz.
+    const grupoId = mode.entregaOrigen.grupo_entrega_id || mode.entregaOrigen.entrega_id || 0
 
     // Estado y logística de la hija
     const quienEntregaAhora: QuienEntrega =
@@ -396,7 +398,8 @@ export function useConfirmarEntrega({
 
     const payload: CreateEntregaProductoRequest = {
       venta_id: mode.ventaId,
-      grupo_entrega_id: grupoId,
+      // Omitir grupo_entrega_id si no es positivo (primera entrega de la venta)
+      ...(grupoId > 0 ? { grupo_entrega_id: grupoId } : {}),
       almacen_salida_id: mode.entregaOrigen.almacen_salida_id,
       user_id: mode.entregaOrigen.user_id,
       tipo_entrega: tipoEntregaHija,

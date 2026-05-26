@@ -99,7 +99,7 @@ export default function TableDetalleVenta() {
       )}
 
       {/* Tabla de detalle de venta */}
-      <div className='w-full min-h-[230px] h-[calc(100vh-600px)] max-h-[600px]'>
+      <div className='w-full min-h-[230px] h-[calc(100vh-600px)] max-h-[300px]'>
         <TableWithTitle<DetalleProducto>
           id='detalle-venta'
           title='Detalle de Venta'

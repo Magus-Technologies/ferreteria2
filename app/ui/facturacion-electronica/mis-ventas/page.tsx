@@ -16,6 +16,7 @@ const TableMisVentas = lazy(() => import('./_components/tables/table-mis-ventas'
 const TableDetalleVenta = lazy(() => import('./_components/tables/table-detalle-venta'))
 const CardsInfoVentas = lazy(() => import('./_components/others/cards-info-ventas'))
 const BarConvertirNotas = lazy(() => import('./_components/others/bar-convertir-notas'))
+const AccionConfigurarEntrega = lazy(() => import('./_components/others/accion-configurar-entrega'))
 
 // Componente de loading optimizado
 const ComponentLoading = () => (
@@ -58,10 +59,13 @@ export default function MisVentas() {
               </div>
             </div>
 
-            {/* Columna lateral - Cards (Solo Desktop) */}
-            <div className='hidden lg:flex flex-col items-start gap-4 flex-nowrap min-w-[140px]'>
+            {/* Columna lateral - Cards + Acciones (Solo Desktop) */}
+            <div className='hidden lg:flex flex-col items-start gap-1.5 flex-nowrap min-w-[160px]'>
               <Suspense fallback={<Spin />}>
                 <CardsInfoVentas />
+              </Suspense>
+              <Suspense fallback={null}>
+                <AccionConfigurarEntrega />
               </Suspense>
             </div>
           </div>

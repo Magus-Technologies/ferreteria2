@@ -45,5 +45,12 @@ export default function useAccionesEntrega(ventaId: string | undefined) {
     onError: (e: any) => message.error(e?.message ?? 'Error al reasignar'),
   })
 
-  return { confirmar, enCamino, anular, reasignar }
+  const crear = useMutation({
+    mutationFn: (data: Parameters<typeof entregasNuevasApi.crear>[0]) =>
+      entregasNuevasApi.crear(data),
+    onSuccess: () => { message.success('Entrega creada'); invalidar() },
+    onError: (e: any) => message.error(e?.message ?? 'Error al crear entrega'),
+  })
+
+  return { confirmar, enCamino, anular, reasignar, crear }
 }

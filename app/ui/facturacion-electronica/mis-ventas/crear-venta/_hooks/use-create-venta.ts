@@ -190,7 +190,9 @@ export default function useCreateVenta({
     // (se llevó algo previamente, consumo interno, etc). En ese caso SÍ se
     // crea la entrega pero como YA ENTREGADA, sin tocar stock. El backend
     // distingue ambos casos vía `descontar_stock` en el payload.
-    const _omitir_entrega = _omitir_entrega_form
+    // Cuando el usuario elige "Omitir Entrega" en el selector de tipo de
+    // despacho, se trata igual que presionar "Omitir" en el modal de entrega.
+    const _omitir_entrega = _omitir_entrega_form || tipo_despacho === 'Omitir'
 
 
 

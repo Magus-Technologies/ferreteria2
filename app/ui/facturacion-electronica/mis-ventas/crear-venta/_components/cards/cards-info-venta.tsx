@@ -42,7 +42,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   const tipo_despacho = Form.useWatch("tipo_despacho", form) as
     | "EnTienda"
     | "Domicilio"
-    | "Parcial";
+    | "Parcial"
+    | "Omitir";
   const productos = Form.useWatch(
     "productos",
     form,
@@ -397,9 +398,13 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         baseAmount={subTotal - totalDescuento}
         onSurchargeChange={setSurchargeTotal}
         onContinuar={() => {
-          // Cerrar modal de pago y abrir modal de detalles de entrega para todos los tipos
           setModalOpen(false);
-          setModalDetallesEntregaOpen(true);
+          if (tipo_despacho === 'Omitir') {
+            // Omitir entrega: no necesita configurar despacho, enviar directo
+            form.submit();
+          } else {
+            setModalDetallesEntregaOpen(true);
+          }
         }}
       />
 

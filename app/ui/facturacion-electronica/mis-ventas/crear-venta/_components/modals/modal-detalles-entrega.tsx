@@ -857,7 +857,7 @@ function ModalDetallesEntregaInner({
           >
             Cancelar
           </ButtonBase>
-          {(tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') &&
+          {/* {(tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') &&
             !ocultarSet.has('omitir') && (
               <ButtonBase
                 color="warning"
@@ -867,7 +867,7 @@ function ModalDetallesEntregaInner({
               >
                 {creandoVenta ? 'Procesando...' : 'Omitir'}
               </ButtonBase>
-            )}
+            )} */}
           <ButtonBase
             color="success"
             size="md"

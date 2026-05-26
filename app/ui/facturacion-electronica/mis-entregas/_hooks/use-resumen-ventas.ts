@@ -7,9 +7,10 @@ export default function useResumenVentas() {
   const { filtros } = useStoreFiltrosMisEntregas()
 
   const apiParams = {
-    fecha_desde: filtros.fecha_desde?.format('YYYY-MM-DD'),
-    fecha_hasta: filtros.fecha_hasta?.format('YYYY-MM-DD'),
-    search: filtros.search,
+    fecha_desde:       filtros.fecha_desde?.format('YYYY-MM-DD'),
+    fecha_hasta:       filtros.fecha_hasta?.format('YYYY-MM-DD'),
+    search:            filtros.search,
+    solo_sin_entregas: filtros.solo_sin_entregas || undefined,
   }
 
   const { data, isFetching, error, refetch } = useQuery({

@@ -16,6 +16,8 @@ export interface FiltrosMisEntregas {
   tipo_despacho?: TipoDespacho
   tipo_entrega?: TipoEntrega
   search?: string
+  /** true: solo ventas sin ninguna entrega asignada (domicilio omitidas, etc.) */
+  solo_sin_entregas?: boolean
 }
 
 interface StoreFiltrosMisEntregas {

@@ -1,6 +1,6 @@
 'use client'
 
-import { Form } from 'antd'
+import { Form, Switch } from 'antd'
 import { FaSearch, FaTruck } from 'react-icons/fa'
 import FilterDateRangeFields from '~/app/_components/filters/filter-date-range-fields'
 import InputBase from '~/app/_components/form/inputs/input-base'
@@ -35,6 +35,7 @@ interface ValuesFiltersMisEntregas {
   tipo_despacho?: TipoDespacho
   tipo_entrega?: TipoEntrega
   search?: string
+  solo_sin_entregas?: boolean
 }
 
 export default function FiltersMisEntregas() {
@@ -121,9 +122,10 @@ export default function FiltersMisEntregas() {
       fecha_desde: values.fecha_desde || undefined,
       fecha_hasta: values.fecha_hasta || undefined,
       estado_entrega: estadoFinal,
-      tipo_despacho: values.tipo_despacho || undefined,
-      tipo_entrega: values.tipo_entrega || undefined,
-      search: values.search || undefined,
+      tipo_despacho:     values.tipo_despacho || undefined,
+      tipo_entrega:      values.tipo_entrega || undefined,
+      search:            values.search || undefined,
+      solo_sin_entregas: values.solo_sin_entregas || undefined,
     })
 
     // Forzar refetch aunque los filtros no hayan cambiado, para que se vea
@@ -280,6 +282,7 @@ export default function FiltersMisEntregas() {
               </ButtonBase>
             </div>
           </ConfigurableElement>
+
 
           {/* Botón principal "Entregar/Despachar/Confirmar" — actúa sobre la
               entrega seleccionada en la tabla. Cambia su texto según estado. */}

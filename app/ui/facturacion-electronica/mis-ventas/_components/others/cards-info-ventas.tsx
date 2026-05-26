@@ -101,7 +101,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Vía Contado' 
           value={totales.viaContado} 
-          className='h-full'
+          className='w-full'
           valueColor='text-green-600'
         />
       </ConfigurableElement>
@@ -110,7 +110,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Anulados' 
           value={totales.anulados} 
-          className='h-full'
+          className='w-full'
           valueColor='text-red-600'
         />
       </ConfigurableElement>
@@ -119,7 +119,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Vía Crédito' 
           value={totales.viaCredito} 
-          className='h-full'
+          className='w-full'
           valueColor='text-orange-600'
         />
       </ConfigurableElement>
@@ -128,7 +128,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Crédito (Total Paga)' 
           value={totales.creditoPagado} 
-          className='h-full'
+          className='w-full'
           valueColor='text-blue-600'
         />
       </ConfigurableElement>
@@ -137,7 +137,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Crédito (Deuda)' 
           value={totales.creditoDeuda} 
-          className='h-full'
+          className='w-full'
           valueColor='text-red-500'
         />
       </ConfigurableElement>
@@ -146,7 +146,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Total ICBPER' 
           value={totales.totalICBPER} 
-          className='h-full'
+          className='w-full'
         />
       </ConfigurableElement>
 
@@ -154,7 +154,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Total Ventas' 
           value={totales.totalVentas} 
-          className='h-full'
+          className='w-full'
           valueColor='text-blue-700'
         />
       </ConfigurableElement>
@@ -163,7 +163,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Venta Promedio' 
           value={totales.ventaPromedio} 
-          className='h-full'
+          className='w-full'
         />
       </ConfigurableElement>
 
@@ -171,7 +171,7 @@ export default function CardsInfoVentas() {
         <CardMiniInfo 
           title='Comisión' 
           value={totales.comision} 
-          className='h-full'
+          className='w-full'
           valueColor='text-purple-600'
         />
       </ConfigurableElement>

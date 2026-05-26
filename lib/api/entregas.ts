@@ -178,6 +178,8 @@ export interface ResumenVenta {
   canceladas: number
   proxima_fecha_programada: string | null
   ultima_fecha_ejecutada: string | null
+  /** true si la venta no tiene ningún registro en `entrega` (ej: domicilio omitida) */
+  sin_entregas: boolean
 }
 
 export interface EntregaDetalleProd {
@@ -240,6 +242,7 @@ export interface FiltrosResumenVentas {
   fecha_hasta?: string
   search?: string
   solo_con_pendientes?: boolean
+  solo_sin_entregas?: boolean
   chofer_id?: string
   per_page?: number
   page?: number
@@ -252,6 +255,7 @@ export const entregasNuevasApi = {
     if (filtros.fecha_hasta) p.set('fecha_hasta', filtros.fecha_hasta)
     if (filtros.search) p.set('search', filtros.search)
     if (filtros.solo_con_pendientes) p.set('solo_con_pendientes', '1')
+    if (filtros.solo_sin_entregas) p.set('solo_sin_entregas', '1')
     if (filtros.chofer_id) p.set('chofer_id', filtros.chofer_id)
     if (filtros.per_page) p.set('per_page', String(filtros.per_page))
     if (filtros.page) p.set('page', String(filtros.page))
@@ -283,4 +287,24 @@ export const entregasNuevasApi = {
       method: 'POST',
       body: JSON.stringify({ chofer_id: choferId, vehiculo_id: vehiculoId }),
     }),
+
+  crear: (data: {
+    venta_id: string
+    tipo_entrega: string
+    tipo_despacho: string
+    quien_entrega: string
+    almacen_salida_id: number
+    chofer_id?: string | null
+    vehiculo_id?: number | null
+    tipo_pedido: string
+    fecha_programada?: string | null
+    hora_inicio?: string | null
+    hora_fin?: string | null
+    direccion_entrega?: string | null
+    referencia_entrega?: string | null
+    observaciones?: string | null
+    productos: Array<{ unidad_derivada_venta_id: number; cantidad: number }>
+    user_creador_id: string
+  }): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest('/entregas', { method: 'POST', data }),
 }

@@ -29,18 +29,9 @@ export default function ModalConfirmarEntrega({
 }: ModalConfirmarEntregaProps) {
   const [confirmando, setConfirmando] = useState(false)
 
-  if (!entrega) return null
-
-  const venta = entrega.venta
-  const cliente = venta?.cliente
-  const clienteNombre = cliente?.razon_social ||
-    `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() || 'SIN CLIENTE'
-  const ventaNumero = venta?.serie && venta?.numero
-    ? `${venta.serie}-${venta.numero}` : 'S/N'
-  const direccion = entrega.direccion_entrega || 'No especificada'
-  const telefono = cliente?.telefono || ''
-
+  // useMemo SIEMPRE antes del early return — rules of hooks
   const productos = useMemo<ProductoConfirmacion[]>(() => {
+    if (!entrega) return []
     return (entrega.productos_entregados || []).map((p: any, index: number) => {
       const ud = p.unidad_derivada_venta || {}
       const producto = ud.producto_almacen_venta?.producto_almacen?.producto || {}
@@ -72,7 +63,18 @@ export default function ModalConfirmarEntrega({
         cantidad: cantidadAConfirmar,
       }
     })
-  }, [entrega.estado_entrega, entrega.productos_entregados])
+  }, [entrega])
+
+  if (!entrega) return null
+
+  const venta = entrega.venta
+  const cliente = venta?.cliente
+  const clienteNombre = cliente?.razon_social ||
+    `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() || 'SIN CLIENTE'
+  const ventaNumero = venta?.serie && venta?.numero
+    ? `${venta.serie}-${venta.numero}` : 'S/N'
+  const direccion = entrega.direccion_entrega || 'No especificada'
+  const telefono = cliente?.telefono || ''
 
   const handleConfirmar = async () => {
     setConfirmando(true)
