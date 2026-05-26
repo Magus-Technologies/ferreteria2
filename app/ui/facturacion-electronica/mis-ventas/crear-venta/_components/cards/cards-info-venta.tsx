@@ -396,7 +396,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         setOpen={setModalDetallesEntregaOpen}
         form={form}
         ventaId={ventaId}
-        tipoDespacho={tipo_despacho || "EnTienda"}
+        tipoDespacho={(!tipo_despacho || tipo_despacho === 'Omitir') ? 'EnTienda' : tipo_despacho}
         onConfirmar={() => {
           // El tipo de despacho ya está guardado en el formulario
           console.log("Entrega configurada");
