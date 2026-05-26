@@ -12,7 +12,6 @@ export const MODALIDAD_FORM_OPTIONS: { label: string; value: Modalidad }[] = [
   { label: "💵 Solamente por Precio Mínimo", value: "CANTIDAD_MINIMA" },
   { label: "📁 Por Tipo de Familia (Categoría)", value: "POR_CATEGORIA" },
   { label: "🏷️ Por Productos Específicos", value: "POR_PRODUCTOS" },
-  { label: "🔀 Mixto (Familia + Productos)", value: "MIXTO" },
 ];
 
 export const DESCUENTO_TIPO_OPTIONS = [

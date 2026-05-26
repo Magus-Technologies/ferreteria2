@@ -71,7 +71,7 @@ export default function TableVender({
     producto: ValuesCardAgregarProductoVenta
   }) {
     const isPaqueteFila = producto._tipo_fila === 'paquete_cabecera' || producto._tipo_fila === 'paquete_producto'
-    add({
+    const nuevoItem = {
       ...producto,
       // Paquete rows already have subtotal = (precio - descuento) × qty calculated correctly.
       // Normal rows: recalculate gross (discount handled separately in the right panel).
@@ -83,7 +83,20 @@ export default function TableVender({
               Number(producto.cantidad)
             ).toFixed(2)
           ),
-    })
+    }
+
+    // Si ya hay filas de vale promocional, insertar este producto ANTES de la primera vale
+    // para que las filas de vales siempre queden al final (aplican a toda la compra).
+    if (producto._tipo_fila !== 'vale_promocional') {
+      const productosActuales = (form.getFieldValue('productos') || []) as any[]
+      const primerValeIdx = productosActuales.findIndex(p => p?._tipo_fila === 'vale_promocional')
+      if (primerValeIdx >= 0) {
+        add(nuevoItem, primerValeIdx)
+        return
+      }
+    }
+
+    add(nuevoItem)
   }
 
   useEffect(() => {
