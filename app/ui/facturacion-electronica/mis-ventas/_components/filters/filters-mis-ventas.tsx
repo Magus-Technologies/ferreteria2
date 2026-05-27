@@ -3,7 +3,7 @@
 import { Form, Drawer, Badge, Select, Switch, App } from "antd";
 import { FaSearch, FaFilter, FaPlus } from "react-icons/fa";
 import { FaCartShopping, FaTruck } from "react-icons/fa6";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import SelectAlmacen from "~/app/_components/form/selects/select-almacen";
@@ -58,6 +58,7 @@ export default function FiltersMisVentas() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clienteSearchText, setClienteSearchText] = useState<string>("");
   const [serieNumeroInput, setSerieNumeroInput] = useState("");
+  const skipInitialSubmitRef = useRef(true);
   const queryClient = useQueryClient();
 
   const almacen_id = useStoreAlmacen((state) => state.almacen_id);
@@ -81,6 +82,10 @@ export default function FiltersMisVentas() {
 
   // Trigger real-time search when debounced values change
   useEffect(() => {
+    if (skipInitialSubmitRef.current) {
+      skipInitialSubmitRef.current = false;
+      return;
+    }
     form.submit();
   }, [debouncedClienteSearch, debouncedSerieNumero, form]);
 

@@ -2,14 +2,19 @@
 
 import { useMemo, useState } from 'react'
 import { Modal, Button } from 'antd'
-import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice } from 'react-icons/fa'
+import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf, FaTruck } from 'react-icons/fa'
+import type { ColDef } from 'ag-grid-community'
+import TableBase from '~/components/tables/table-base'
+import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 
 interface ModalConfirmarEntregaProps {
   open: boolean
   onClose: () => void
   onConfirmar: () => Promise<void>
+  onMarcarEnCamino?: () => Promise<void>
   entrega?: any
   loading?: boolean
+  loadingEnCamino?: boolean
 }
 
 type ProductoConfirmacion = {
@@ -24,10 +29,14 @@ export default function ModalConfirmarEntrega({
   open,
   onClose,
   onConfirmar,
+  onMarcarEnCamino,
   entrega,
   loading = false,
+  loadingEnCamino = false,
 }: ModalConfirmarEntregaProps) {
   const [confirmando, setConfirmando] = useState(false)
+  const [marcandoEnCamino, setMarcandoEnCamino] = useState(false)
+  const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
 
   // useMemo SIEMPRE antes del early return — rules of hooks
   const productos = useMemo<ProductoConfirmacion[]>(() => {
@@ -65,7 +74,25 @@ export default function ModalConfirmarEntrega({
     })
   }, [entrega])
 
+  const colDefs = useMemo<ColDef<ProductoConfirmacion>[]>(() => [
+    { headerName: 'Código',   field: 'codigo',   width: 110 },
+    { headerName: 'Producto', field: 'producto', flex: 1, minWidth: 200 },
+    { headerName: 'Unidad',   field: 'unidad',   width: 100 },
+    {
+      headerName: 'Cant.',
+      field: 'cantidad',
+      width: 90,
+      valueFormatter: ({ value }) => Number(value).toFixed(0),
+      cellStyle: { textAlign: 'right', fontWeight: 600, color: '#047857' },
+    },
+  ], [])
+
   if (!entrega) return null
+
+  const pdfLabel = entrega?.estado_entrega === 'pe' ? 'Vale de Recojo'
+    : entrega?.estado_entrega === 'ec' ? 'Entrega en Camino'
+    : entrega?.estado_entrega === 'ca' ? 'Entrega Cancelada'
+    : 'Ticket de Entrega'
 
   const venta = entrega.venta
   const cliente = venta?.cliente
@@ -75,6 +102,7 @@ export default function ModalConfirmarEntrega({
     ? `${venta.serie}-${venta.numero}` : 'S/N'
   const direccion = entrega.direccion_entrega || 'No especificada'
   const telefono = cliente?.telefono || ''
+  const esDomicilioPendiente = entrega.tipo_entrega === 'de' && entrega.estado_entrega === 'pe'
 
   const handleConfirmar = async () => {
     setConfirmando(true)
@@ -82,6 +110,16 @@ export default function ModalConfirmarEntrega({
       await onConfirmar()
     } finally {
       setConfirmando(false)
+    }
+  }
+
+  const handleMarcarEnCamino = async () => {
+    if (!onMarcarEnCamino) return
+    setMarcandoEnCamino(true)
+    try {
+      await onMarcarEnCamino()
+    } finally {
+      setMarcandoEnCamino(false)
     }
   }
 
@@ -100,26 +138,45 @@ export default function ModalConfirmarEntrega({
       }
       open={open}
       onCancel={onClose}
-      width={600}
+      width={720}
       centered
       destroyOnHidden
       footer={
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <Button
             onClick={onClose}
             className="!rounded-lg !h-10 !px-5 !font-semibold"
           >
             Cancelar
           </Button>
-          <Button
-            type="primary"
-            icon={<FaCheck />}
-            onClick={handleConfirmar}
-            loading={confirmando || loading}
-            className="!rounded-lg !h-10 !px-6 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30"
-          >
-            Confirmar Entrega
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              icon={<FaFilePdf />}
+              onClick={() => openPdfModal(entrega)}
+              className="!rounded-lg !h-10 !px-3 !font-semibold !text-red-600 !border-red-300 hover:!bg-red-50"
+            >
+              {pdfLabel}
+            </Button>
+            {esDomicilioPendiente && onMarcarEnCamino && (
+              <Button
+                icon={<FaTruck />}
+                onClick={handleMarcarEnCamino}
+                loading={marcandoEnCamino || loadingEnCamino}
+                className="!rounded-lg !h-10 !px-3 !font-bold !text-blue-700 !border-blue-300 hover:!bg-blue-50"
+              >
+                Marcar en Camino
+              </Button>
+            )}
+            <Button
+              type="primary"
+              icon={<FaCheck />}
+              onClick={handleConfirmar}
+              loading={confirmando || loading}
+              className="!rounded-lg !h-10 !px-4 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30"
+            >
+              {esDomicilioPendiente ? 'Entregar Directo' : 'Confirmar Entrega'}
+            </Button>
+          </div>
         </div>
       }
     >
@@ -173,29 +230,17 @@ export default function ModalConfirmarEntrega({
             <div className="bg-gray-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
               Productos a entregar ({productos.length})
             </div>
-            <div className="max-h-[220px] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Código</th>
-                    <th className="px-4 py-2 text-left font-semibold">Producto</th>
-                    <th className="px-4 py-2 text-left font-semibold">Unidad</th>
-                    <th className="px-4 py-2 text-right font-semibold">Entregar</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {productos.map((p: ProductoConfirmacion) => (
-                    <tr key={p.id} className="bg-white">
-                      <td className="px-4 py-2.5 text-slate-700 whitespace-nowrap">{p.codigo}</td>
-                      <td className="px-4 py-2.5 text-slate-700">{p.producto}</td>
-                      <td className="px-4 py-2.5 text-slate-700 whitespace-nowrap">{p.unidad}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-emerald-700 whitespace-nowrap">
-                        {Number(p.cantidad).toFixed(0)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ height: 240 }}>
+              <TableBase<ProductoConfirmacion>
+                rowData={productos}
+                columnDefs={colDefs}
+                getRowId={({ data }) => String(data.id)}
+                withNumberColumn={false}
+                rowSelection={false}
+                persistColumnState={false}
+                isVisible={open}
+                rowHeight={38}
+              />
             </div>
           </div>
         )}

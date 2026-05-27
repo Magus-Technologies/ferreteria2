@@ -18,6 +18,19 @@ import ModalCalendarioSlot from './modal-calendario-slot'
 
 dayjs.locale('es')
 
+function esProductoEntregable(producto: FormCreateVenta['productos'][number]) {
+  const tipoFila = producto?._tipo_fila
+  if (tipoFila === 'vale_promocional' || tipoFila === 'paquete_cabecera') {
+    return false
+  }
+
+  return (
+    Number(producto?.producto_id) > 0 &&
+    Number(producto?.unidad_derivada_id) > 0 &&
+    Number(producto?.cantidad) > 0
+  )
+}
+
 // Tipos viven en `./detalles-entrega/types.ts` (Fase A del refactor).
 import type {
   ModalDetallesEntregaProps,
@@ -518,8 +531,10 @@ function ModalDetallesEntregaInner({
       return
     }
     // Modo `crear-venta`: derivar productos del form de la venta.
-    if ((tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && productos && productos.length > 0) {
-      const items: ProductoEntrega[] = productos.map((p, index) => {
+    const productosEntregables = productos?.filter(esProductoEntregable) ?? []
+
+    if ((tipoDespacho === 'Parcial' || tipoDespacho === 'Domicilio') && productosEntregables.length > 0) {
+      const items: ProductoEntrega[] = productosEntregables.map((p, index) => {
         const total = Number(p.cantidad)
         // Si la venta YA existe en BD (modo editar), descontar lo entregado
         // en entregas previas. `entregadoYa = cantidadBd − pendienteBd`.

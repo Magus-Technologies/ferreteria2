@@ -16,6 +16,7 @@ import ModalConfirmarEntrega from './_components/modals/modal-confirmar-entrega'
 import ModalAnularEntregaV2 from './_components/modals/modal-anular-entrega-v2'
 import ModalDetallesEntregaCompleto from './_components/modals/modal-detalles-entrega-completo'
 import ModalMapaEntrega from './_components/modals/mapbox/modal-mapa-entrega'
+import ModalPdfEntregaWrapper from './_components/modals/modal-pdf-entrega-wrapper'
 
 import useAccionesEntrega from './_hooks/use-acciones-entrega'
 import { useQuery } from '@tanstack/react-query'
@@ -36,6 +37,11 @@ export default function MisEntregasPage() {
 
   const handleConfirmar = async () => {
     await acciones.confirmar.mutateAsync(entrega!.id)
+    setOpenConfirmar(false)
+  }
+
+  const handleMarcarEnCamino = async () => {
+    await acciones.enCamino.mutateAsync(entrega!.id)
     setOpenConfirmar(false)
   }
 
@@ -69,6 +75,8 @@ export default function MisEntregasPage() {
       referencia_entrega: (entrega as any).referencia_entrega,
       observaciones:      (entrega as any).observaciones,
       estado_entrega:     entrega.estado_entrega,
+      latitud:            (entrega as any).latitud,
+      longitud:           (entrega as any).longitud,
       venta: {
         serie:   venta?.serie,
         numero:  venta?.numero,
@@ -145,12 +153,16 @@ export default function MisEntregasPage() {
       </div>
 
       {/* ─── Modales ──────────────────────────────────────────────── */}
+      <ModalPdfEntregaWrapper />
+
       <ModalConfirmarEntrega
         open={openConfirmar}
         onClose={() => setOpenConfirmar(false)}
         onConfirmar={handleConfirmar}
+        onMarcarEnCamino={handleMarcarEnCamino}
         entrega={entrega as any}
         loading={acciones.confirmar.isPending}
+        loadingEnCamino={acciones.enCamino.isPending}
       />
 
       <ModalAnularEntregaV2
@@ -170,7 +182,7 @@ export default function MisEntregasPage() {
         open={openDetalles}
         onClose={() => setOpenDetalles(false)}
         entrega={entrega ? {
-          id: null,
+          id: entrega.id,
           estado_entrega:    entrega.estado_entrega,
           tipo_entrega:      entrega.tipo_entrega,
           tipo_despacho:     entrega.tipo_despacho,

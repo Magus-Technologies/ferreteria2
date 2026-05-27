@@ -541,7 +541,7 @@ export default function useCreateVenta({
             if (unidadesDerivadas.length > 0) {
               const entregaData: CreateEntregaProductoRequest = {
                 venta_id: ventaCreada.id,
-                tipo_entrega: TipoEntrega.PARCIAL,
+                tipo_entrega: TipoEntrega.RECOJO_EN_TIENDA,
                 tipo_despacho: TipoDespacho.INMEDIATO,
                 estado_entrega: parcialConAlmacenPendiente
                   ? EstadoEntrega.PENDIENTE
@@ -599,7 +599,7 @@ export default function useCreateVenta({
                     const entregaRestoData: CreateEntregaProductoRequest = {
                       venta_id: ventaCreada.id,
                       grupo_entrega_id: grupoEntregaId,
-                      tipo_entrega: TipoEntrega.PARCIAL,
+                      tipo_entrega: TipoEntrega.DESPACHO,
                       tipo_despacho: TipoDespacho.PROGRAMADO,
                       estado_entrega: EstadoEntrega.PENDIENTE,
                       fecha_entrega: dayjs().format('YYYY-MM-DD'),
@@ -694,10 +694,9 @@ export default function useCreateVenta({
 
           const entregaData: CreateEntregaProductoRequest = {
             venta_id: ventaCreada.id,
-            tipo_entrega:
-              tipo_despacho === 'Parcial'
-                ? TipoEntrega.PARCIAL
-                : TipoEntrega.DESPACHO,
+            tipo_entrega: TipoEntrega.DESPACHO,
+                // ? TipoEntrega.PARCIAL
+                // : TipoEntrega.DESPACHO,
             tipo_despacho: TipoDespacho.PROGRAMADO,
             estado_entrega: EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),

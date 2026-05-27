@@ -1,12 +1,13 @@
 'use client'
 
-import { Modal, Tag } from 'antd'
+import { Modal, Tag, Button } from 'antd'
 import { useQuery } from '@tanstack/react-query'
 import {
   FaCalendarAlt,
   FaClock,
   FaCommentDots,
   FaFileInvoice,
+  FaFilePdf,
   FaLayerGroup,
   FaMapMarkerAlt,
   FaPhone,
@@ -15,6 +16,7 @@ import {
   FaUserTie,
   FaWarehouse,
 } from 'react-icons/fa'
+import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import dayjs from 'dayjs'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregaProductoApi } from '~/lib/api/entrega-producto'
@@ -29,6 +31,8 @@ import {
   getResumenProductosParcialAgrupado,
   isEntregaParcialAgrupada,
 } from '../../_lib/entregas-parciales'
+import TableBase from '~/components/tables/table-base'
+import type { ColDef } from 'ag-grid-community'
 
 interface ModalDetallesEntregaCompletoProps {
   open: boolean
@@ -48,8 +52,11 @@ export default function ModalDetallesEntregaCompleto({
   onClose,
   entrega,
 }: ModalDetallesEntregaCompletoProps) {
+  const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
   const esParcialAgrupada = isEntregaParcialAgrupada(entrega)
 
+  // NOTE: old entregaProductoApi.getById is disabled — the new delivery system
+  // already provides full data via the entrega prop from entregasNuevasApi.listar.
   const { data: entregaCompleta } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-completo', entrega?.id],
     queryFn: async () => {
@@ -57,7 +64,7 @@ export default function ModalDetallesEntregaCompleto({
       if (res.error) throw new Error(res.error.message)
       return res.data?.data ?? res.data
     },
-    enabled: open && !!entrega?.id && !esParcialAgrupada,
+    enabled: false,
     staleTime: 0,
   })
 
@@ -108,6 +115,58 @@ export default function ModalDetallesEntregaCompleto({
       )
     : 1
 
+  // ── AG Grid productos ────────────────────────────────────────────────────
+  type ProdRow = {
+    codigo: string
+    nombre: string
+    unidad: string
+    pedida: number
+    programada: number
+    entregada: number
+    pendiente: number
+  }
+
+  const productosColDefs: ColDef<ProdRow>[] = [
+    { field: 'codigo', headerName: 'Código', width: 80 },
+    { field: 'nombre', headerName: 'Producto', flex: 1, minWidth: 140 },
+    { field: 'unidad', headerName: 'Unidad', width: 90 },
+    { field: 'pedida', headerName: 'Pedida', width: 78 },
+    { field: 'programada', headerName: 'Programado', width: 105 },
+    { field: 'entregada', headerName: 'Entregado', width: 98 },
+    { field: 'pendiente', headerName: 'Pendiente', width: 95 },
+  ]
+
+  const productosRowData: ProdRow[] = esParcialAgrupada
+    ? productosParcialAgrupado.map(r => ({
+        codigo: (r as any).codigo || '',
+        nombre: (r as any).producto,
+        unidad: (r as any).unidad,
+        pedida: (r as any).total,
+        programada: (r as any).programado,
+        entregada: (r as any).entregado,
+        pendiente: (r as any).pendiente,
+      }))
+    : productos.map((p: any) => {
+        const udv = p.unidad_derivada_venta
+        const prod = udv?.producto_almacen_venta?.producto_almacen?.producto
+        const cantidadTotal = Number(udv?.cantidad || 0)
+        const cantidadEntregadaPersistida = Number(p.cantidad_entregada || 0)
+        const cantidadPendientePersistida = Number(udv?.cantidad_pendiente || 0)
+        const cantidadProgramada = entregaTieneEntregaFisica
+          ? 0
+          : Math.max(0, cantidadTotal - cantidadPendientePersistida)
+        const cantidadEntregada = entregaTieneEntregaFisica ? cantidadEntregadaPersistida : 0
+        return {
+          codigo: prod?.cod_producto || '',
+          nombre: prod?.name || 'Producto',
+          unidad: udv?.unidad_derivada_inmutable?.name || '',
+          pedida: cantidadTotal,
+          programada: cantidadProgramada,
+          entregada: cantidadEntregada,
+          pendiente: cantidadPendientePersistida,
+        }
+      })
+
   return (
     <Modal
       title={
@@ -130,7 +189,17 @@ export default function ModalDetallesEntregaCompleto({
       width={780}
       centered
       destroyOnHidden
-      footer={null}
+      footer={
+        <div className="flex justify-end pt-1">
+          <Button
+            icon={<FaFilePdf />}
+            onClick={() => entrega && openPdfModal(entrega)}
+            className="!rounded-lg !h-9 !px-4 !font-semibold !text-red-600 !border-red-300 hover:!bg-red-50"
+          >
+            Imprimir Ticket
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -307,120 +376,20 @@ export default function ModalDetallesEntregaCompleto({
           )}
         </div>
 
-        {(esParcialAgrupada ? productosParcialAgrupado.length > 0 : productos.length > 0) && (
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <div className="bg-slate-100 px-4 py-2 text-xs font-bold uppercase text-slate-600 tracking-wide flex items-center justify-between">
-              <span>Productos</span>
-              <span className="text-slate-500 font-normal normal-case">
-                Pedida / Programado / Entregado / Pendiente venta
-              </span>
+        {productosRowData.length > 0 && (
+          <div>
+            <div className="text-xs font-bold uppercase text-slate-500 tracking-wide mb-2">
+              Productos
             </div>
-            <div className="divide-y divide-slate-100 max-h-[280px] overflow-y-auto">
-              {esParcialAgrupada
-                ? productosParcialAgrupado.map((resumen, i) => (
-                    <div
-                      key={`${resumen.codigo}-${resumen.unidad}-${i}`}
-                      className="px-4 py-2.5 flex items-center justify-between gap-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-slate-800 truncate">
-                          {resumen.producto}
-                        </div>
-                        {resumen.codigo && (
-                          <div className="text-xs text-slate-500">{resumen.codigo}</div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                        <span className="text-slate-500">
-                          {resumen.total} {resumen.unidad}
-                        </span>
-                        <span className="text-slate-300">/</span>
-                        <span
-                          className={
-                            resumen.programado > 0
-                              ? 'font-bold text-blue-700'
-                              : 'text-slate-400'
-                          }
-                        >
-                          {resumen.programado} {resumen.unidad}
-                        </span>
-                        <span className="text-slate-300">/</span>
-                        <span className="font-bold text-green-700">
-                          {resumen.entregado} {resumen.unidad}
-                        </span>
-                        <span className="text-slate-300">/</span>
-                        <span
-                          className={
-                            resumen.pendiente > 0
-                              ? 'text-orange-600 font-semibold'
-                              : 'text-slate-400'
-                          }
-                        >
-                          {resumen.pendiente} {resumen.unidad}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                : productos.map((p: any, i: number) => {
-                    const udv = p.unidad_derivada_venta
-                    const prod = udv?.producto_almacen_venta?.producto_almacen?.producto
-                    const nombre = prod?.name || 'Producto'
-                    const codigo = prod?.cod_producto
-                    const unidad = udv?.unidad_derivada_inmutable?.name || ''
-                    const cantidadTotal = Number(udv?.cantidad || 0)
-                    const cantidadEntregadaPersistida = Number(p.cantidad_entregada || 0)
-                    const cantidadPendientePersistida = Number(udv?.cantidad_pendiente || 0)
-                    const cantidadProgramada = entregaTieneEntregaFisica
-                      ? 0
-                      : Math.max(0, cantidadTotal - cantidadPendientePersistida)
-                    const cantidadEntregada = entregaTieneEntregaFisica ? cantidadEntregadaPersistida : 0
-                    const cantidadPendiente = cantidadPendientePersistida
-
-                    return (
-                      <div
-                        key={p.id || i}
-                        className="px-4 py-2.5 flex items-center justify-between gap-3"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-slate-800 truncate">
-                            {nombre}
-                          </div>
-                          {codigo && (
-                            <div className="text-xs text-slate-500">{codigo}</div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                          <span className="text-slate-500">
-                            {cantidadTotal} {unidad}
-                          </span>
-                          <span className="text-slate-300">/</span>
-                          <span
-                            className={
-                              cantidadProgramada > 0
-                                ? 'font-bold text-blue-700'
-                                : 'text-slate-400'
-                            }
-                          >
-                            {cantidadProgramada} {unidad}
-                          </span>
-                          <span className="text-slate-300">/</span>
-                          <span className="font-bold text-green-700">
-                            {cantidadEntregada} {unidad}
-                          </span>
-                          <span className="text-slate-300">/</span>
-                          <span
-                            className={
-                              cantidadPendiente > 0
-                                ? 'text-orange-600 font-semibold'
-                                : 'text-slate-400'
-                            }
-                          >
-                            {cantidadPendiente} {unidad}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
+            <div className="h-[240px]">
+              <TableBase
+                rowData={productosRowData}
+                columnDefs={productosColDefs}
+                rowSelection={false}
+                persistColumnState={false}
+                withNumberColumn={false}
+                isVisible={open}
+              />
             </div>
           </div>
         )}

@@ -83,6 +83,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         return serie && numero ? `${serie}-${numero}` : '-'
       },
     },
+    /*
     {
       headerName: 'Rol',
       colId: 'rol_entrega',
@@ -123,6 +124,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         )
       },
     },
+    */
     {
       headerName: 'Tramo',
       colId: 'tramo_parcial',
@@ -271,24 +273,17 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       cellRenderer: (params: any) => {
         const estado = params.value
         const estaProgramada = estado === 'pe' && params.data?.tipo_despacho === 'pr'
-        const grupoId = params.data?.grupo_entrega_id
-        const propio = params.data?.id
-        const esHija = grupoId && Number(grupoId) !== Number(propio)
-        // Las hijas comparten el UDV con la madre: cantidad_pendiente refleja
-        // el total del pedido, no la porción de esta hija. Mirar el UDV en
-        // una hija ya entregada siempre daría "parcial" aunque haya cumplido.
-        // Solo la madre (o entrega sin grupo) usa el UDV para el cálculo.
-        const tienePendiente = isEntregaParcialAgrupada(params.data)
+        // En filas individuales, "en" significa que esa entrega ya termino.
+        // El pendiente global de la venta se muestra en el detalle.
+        const tienePendienteAgrupado = isEntregaParcialAgrupada(params.data)
           ? (params.data?.entregas_agrupadas || []).some((e: any) => e?.estado_entrega !== 'en')
-          : !esHija && params.data?.productos_entregados?.some(
-              (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0
-            )
+          : false
         const config: Record<string, { label: string; bg: string; text: string }> = {
           'pe': estaProgramada
             ? { label: 'Programado', bg: '#dbeafe', text: '#2563eb' }
             : { label: 'Pendiente',  bg: '#f1f5f9', text: '#475569' },
           'ec': { label: 'En Camino',  bg: '#dbeafe', text: '#2563eb' },
-          'en': { label: tienePendiente ? 'Entregado Parcial' : 'Entregado',  bg: tienePendiente ? '#fef3c7' : '#dcfce7', text: tienePendiente ? '#d97706' : '#16a34a' },
+          'en': { label: tienePendienteAgrupado ? 'Entregado Parcial' : 'Entregado',  bg: tienePendienteAgrupado ? '#fef3c7' : '#dcfce7', text: tienePendienteAgrupado ? '#d97706' : '#16a34a' },
           'ca': { label: 'Cancelado',  bg: '#fee2e2', text: '#dc2626' },
         }
         const { label, bg, text } = config[estado] ?? { label: estado || '', bg: '#f1f5f9', text: '#475569' }
