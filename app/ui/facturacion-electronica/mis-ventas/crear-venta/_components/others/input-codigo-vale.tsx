@@ -31,15 +31,19 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   }, [productosVenta])
 
   // Suma del MONTO TOTAL de la venta (precio_venta * cantidad por línea).
-  // Se compara contra `vale.cantidad_minima` (que ahora representa el precio
-  // mínimo en S/, no la cantidad de unidades). El nombre interno del campo
-  // se mantiene como `cantidad_minima` para evitar migración de BD.
+  // Se usa cuando el vale tiene umbral por PRECIO (S/).
   const precioTotal = useMemo(() => {
     return productosVenta.reduce((sum, p) => {
       const cantidad = Number(p.cantidad ?? 0)
       const precio = Number(p.precio_venta ?? 0)
       return sum + (cantidad * precio)
     }, 0)
+  }, [productosVenta])
+
+  // Suma de UNIDADES de la venta. Se usa cuando el vale tiene umbral por UNIDADES
+  // (PRODUCTO_GRATIS, DOS_POR_UNO, o modalidad POR_PRODUCTOS / MIXTO).
+  const cantidadTotal = useMemo(() => {
+    return productosVenta.reduce((sum, p) => sum + Number(p.cantidad ?? 0), 0)
   }, [productosVenta])
 
   const getBeneficio = useCallback((vale: ValeCompra) => {
@@ -60,6 +64,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     try {
       const res = await getValesAplicables({
         precio_total: precioTotal,
+        cantidad_total: cantidadTotal,
         producto_ids: productoIds,
         cliente_id: clienteId || undefined,
       })
@@ -84,7 +89,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     } catch {
       // Silencioso
     }
-  }, [productoIds, precioTotal, clienteId, getBeneficio, notification, setValesAplicables])
+  }, [productoIds, precioTotal, cantidadTotal, clienteId, getBeneficio, notification, setValesAplicables])
 
   useEffect(() => {
     const timer = setTimeout(consultarVales, 500)

@@ -10,7 +10,7 @@ import {
   TipoNotificacion,
 } from '~/lib/api/configuracion-notificaciones'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { FaBell, FaBirthdayCake, FaCalendarAlt, FaChevronDown, FaChevronUp, FaTasks } from 'react-icons/fa'
+import { FaBirthdayCake, FaCalendarAlt, FaChevronDown, FaChevronUp, FaTasks } from 'react-icons/fa'
 import { MdPayment, MdLocalShipping, MdOutlinePriceChange, MdLocalOffer } from 'react-icons/md'
 import { BsTicketDetailedFill } from 'react-icons/bs'
 import { AiFillBank, AiOutlineFileDone } from 'react-icons/ai'
@@ -127,7 +127,17 @@ function FilaNotificacion({
   const info = TIPOS_INFO[config.tipo as TipoNotificacion]
   const isPending = loadingTipo === config.tipo
   const habilitado = config.habilitado
-  const hasAnticipacion = ['cumpleanos', 'cotizacion_vence', 'prestamo_vence', 'promocion_termina', 'requerimiento_vence'].includes(config.tipo)
+  const hasAnticipacion = [
+    'cumpleanos',
+    'entrega',
+    'pago',
+    'vale',
+    'vencimiento',
+    'cotizacion_vence',
+    'prestamo_vence',
+    'promocion_termina',
+    'requerimiento_vence',
+  ].includes(config.tipo)
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (

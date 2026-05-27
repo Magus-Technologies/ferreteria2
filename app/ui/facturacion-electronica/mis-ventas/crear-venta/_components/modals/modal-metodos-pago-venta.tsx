@@ -82,12 +82,19 @@ export default function ModalMetodosPagoVenta({
   // Watch del campo "Monto Recibe" para recalcular sobrecargo dinámicamente
   const recibe_efectivo = Form.useWatch('recibe_efectivo', modalForm)
 
-  // Saldo BASE: lo que queda por cubrir del baseAmount (sin sobrecargo)
+  // Total NETO a pagar = base (bruto) − descuento de promoción (vale).
+  // baseAmount llega como subtotal bruto; descuentoVale se aplica acá para no confundir
+  // al usuario en el card "Total a Cobrar" (que sigue mostrando baseAmount bruto).
+  const baseNeto = useMemo(() => {
+    return roundMoney(Math.max(0, baseAmount - descuentoVale))
+  }, [baseAmount, descuentoVale])
+
+  // Saldo BASE: lo que queda por cubrir del baseNeto (sin sobrecargo).
   // Se calcula primero porque sobrecargoActual lo necesita para capear el principal.
   const saldoBase = useMemo(() => {
     const pagadoPrincipal = metodosPago.reduce((sum, m) => sum + m.monto, 0)
-    return roundMoney(Math.max(0, baseAmount - pagadoPrincipal))
-  }, [baseAmount, metodosPago])
+    return roundMoney(Math.max(0, baseNeto - pagadoPrincipal))
+  }, [baseNeto, metodosPago])
 
   // Sobrecargo calculado dinámicamente.
   // "recibe_efectivo" representa el TOTAL que entrega el cliente (principal + sobrecargo).
@@ -124,11 +131,11 @@ export default function ModalMetodosPagoVenta({
   }, [metodosPago, sobrecargoActual])
 
   // Saldo PENDIENTE mostrado al usuario: incluye el sobrecargo total (confirmado + en formulario)
-  // = (baseAmount + totalSobrecargo) - totalPagado
+  // = (baseNeto + totalSobrecargo) - totalPagado
   const saldoPendiente = useMemo(() => {
-    const totalDebido = baseAmount + totalSobrecargo
+    const totalDebido = baseNeto + totalSobrecargo
     return roundMoney(Math.max(0, totalDebido - totalPagado))
-  }, [baseAmount, totalSobrecargo, totalPagado])
+  }, [baseNeto, totalSobrecargo, totalPagado])
 
   // Calcular vuelto total de todos los métodos agregados
   const vueltoTotal = useMemo(() => {

@@ -417,7 +417,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         totalCobrado={totalCobrado}
         tipo_moneda={tipo_moneda}
         tipo_documento={tipo_documento}
-        baseAmount={subTotal - totalDescuento - descuentoVale}
+        baseAmount={subTotal - totalDescuento}
         descuentoVale={descuentoVale}
         valesInfo={valesAplicables
           .filter(v => v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' && Number(v.descuento_valor ?? 0) > 0)

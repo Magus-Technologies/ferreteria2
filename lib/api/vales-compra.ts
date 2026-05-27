@@ -150,9 +150,12 @@ export interface UpdateValeCompraRequest extends Partial<CreateValeCompraRequest
 
 export interface ValesAplicablesRequest {
   // Monto total de la venta (suma de precio_venta * cantidad por línea).
-  // El backend compara este valor contra `vale.cantidad_minima`, que ahora
-  // representa el precio mínimo en S/ para que el vale sea aplicable.
+  // El backend usa esto cuando el vale tiene umbral por PRECIO.
   precio_total: number;
+  // Suma de unidades de la venta. El backend usa esto cuando el vale tiene
+  // umbral por UNIDADES (PRODUCTO_GRATIS, DOS_POR_UNO, o modalidad
+  // POR_PRODUCTOS / MIXTO).
+  cantidad_total?: number;
   categoria_ids?: number[];
   producto_ids?: number[];
   cliente_id?: number;
@@ -275,6 +278,22 @@ export async function getValesAplicables(
     {
       method: 'POST',
       data,
+    }
+  );
+}
+
+/**
+ * Obtener precios públicos máximos de productos (por id). Usado por el form
+ * de crear vale para validar que el "Precio Mínimo" sea mayor que el precio público.
+ */
+export async function getPreciosProductos(
+  producto_ids: number[]
+): Promise<ApiResponse<{ data: Record<number, number> }>> {
+  return apiRequest<{ data: Record<number, number> }>(
+    '/vales-compra/precios-productos',
+    {
+      method: 'POST',
+      data: { producto_ids },
     }
   );
 }

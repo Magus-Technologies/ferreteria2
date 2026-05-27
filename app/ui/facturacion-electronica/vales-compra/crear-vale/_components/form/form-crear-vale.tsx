@@ -1,6 +1,7 @@
 "use client";
 
 import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch } from "antd";
+import { useEffect, useState } from "react";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import {
   FaGift,
@@ -19,6 +20,7 @@ import {
   MODALIDAD_FORM_OPTIONS,
   DESCUENTO_TIPO_OPTIONS,
 } from "../../../_constants/form-vale-options";
+import { getPreciosProductos } from "~/lib/api/vales-compra";
 
 const { TextArea } = Input;
 
@@ -67,9 +69,59 @@ function SeccionBasica({ form }: SeccionBasicaProps) {
 interface SeccionCondicionesProps {
   form: FormInstance<FormCreateVale>;
   modalidad: string;
+  tipoPromocion: string;
 }
 
-function SeccionCondiciones({ form, modalidad }: SeccionCondicionesProps) {
+function SeccionCondiciones({ form, modalidad, tipoPromocion }: SeccionCondicionesProps) {
+  // El umbral del vale puede ser por UNIDADES (cantidad de productos) o por PRECIO (S/).
+  // - Por unidades: cuando el tipo es PRODUCTO_GRATIS o DOS_POR_UNO (siempre se mide en unidades)
+  //   o cuando la modalidad selecciona productos específicos (POR_PRODUCTOS / MIXTO), donde
+  //   tiene más sentido pedir "10 productos de X" que "S/ 1000 en X".
+  // - Por precio: el resto (CANTIDAD_MINIMA, POR_CATEGORIA con DESCUENTO/SORTEO).
+  const esUmbralPorUnidades =
+    tipoPromocion === "PRODUCTO_GRATIS" ||
+    tipoPromocion === "DOS_POR_UNO" ||
+    modalidad === "POR_PRODUCTOS" ||
+    modalidad === "MIXTO";
+  const labelMinimo = esUmbralPorUnidades ? "Cantidad Mínima de Productos" : "Precio Mínimo (S/)";
+  const placeholderMinimo = esUmbralPorUnidades ? "Ej: 10" : "Ej: 100.00";
+  const tooltipMinimo = esUmbralPorUnidades
+    ? "Cantidad de unidades que el cliente debe comprar para activar la promoción (ej: 10 productos = 1 gratis)"
+    : "Monto mínimo en soles que la venta debe alcanzar para activar la promoción";
+  const stepMinimo = esUmbralPorUnidades ? 1 : 0.01;
+  const precisionMinimo = esUmbralPorUnidades ? 0 : 2;
+  const iconMinimo = esUmbralPorUnidades
+    ? <FaHashtag className="text-blue-600" />
+    : <FaDollarSign className="text-blue-600" />;
+
+  // Validación: cuando el umbral es POR PRECIO y se seleccionaron productos específicos,
+  // el "Precio Mínimo" debe ser mayor al precio público del producto seleccionado.
+  // (Si fuera <= al precio público, el vale se activaría con sólo 1 unidad, lo que rara
+  // vez es la intención del usuario al ponerle un umbral.)
+  const productoIds = Form.useWatch("producto_ids", form) as number[] | undefined;
+  const [preciosPublicos, setPreciosPublicos] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    const debeValidar = !esUmbralPorUnidades && (modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO");
+    if (!debeValidar || !productoIds || productoIds.length === 0) {
+      setPreciosPublicos({});
+      return;
+    }
+    let cancelled = false;
+    getPreciosProductos(productoIds)
+      .then((res) => {
+        if (cancelled) return;
+        setPreciosPublicos(res.data?.data ?? {});
+      })
+      .catch(() => {
+        if (!cancelled) setPreciosPublicos({});
+      });
+    return () => { cancelled = true; };
+  }, [productoIds, modalidad, esUmbralPorUnidades]);
+
+  const precioPublicoMax = Object.values(preciosPublicos).reduce((max, p) => Math.max(max, p), 0);
+  const debeValidarPrecio = !esUmbralPorUnidades && (modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && precioPublicoMax > 0;
+
   return (
     <div className="border-l-4 border-blue-500 pl-3">
       <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -88,19 +140,36 @@ function SeccionCondiciones({ form, modalidad }: SeccionCondicionesProps) {
 
         <Form.Item
           name="cantidad_minima"
-          label="Precio Mínimo (S/)"
+          label={labelMinimo}
+          tooltip={tooltipMinimo}
+          extra={debeValidarPrecio && precioPublicoMax > 0 ? (
+            <span className="text-xs text-amber-600">
+              Precio público del producto: S/. {precioPublicoMax.toFixed(2)}. El precio mínimo debe ser mayor.
+            </span>
+          ) : undefined}
           rules={[
-            { required: true, message: "El precio mínimo es requerido" },
-            { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
+            { required: true, message: "El valor mínimo es requerido" },
+            { type: "number", min: esUmbralPorUnidades ? 1 : 0.01, message: esUmbralPorUnidades ? "Debe ser al menos 1" : "Debe ser mayor a 0" },
+            {
+              validator: (_, value) => {
+                if (value == null) return Promise.resolve();
+                if (debeValidarPrecio && Number(value) <= precioPublicoMax) {
+                  return Promise.reject(
+                    new Error(`El precio mínimo debe ser mayor a S/. ${precioPublicoMax.toFixed(2)} (precio público del producto)`)
+                  );
+                }
+                return Promise.resolve();
+              },
+            },
           ]}
         >
           <InputNumber
             className="w-full"
-            placeholder="Ej: 100.00"
-            min={0.01}
-            step={0.01}
-            precision={2}
-            prefix={<FaDollarSign className="text-blue-600" />}
+            placeholder={placeholderMinimo}
+            min={esUmbralPorUnidades ? 1 : 0.01}
+            step={stepMinimo}
+            precision={precisionMinimo}
+            prefix={iconMinimo}
           />
         </Form.Item>
       </div>
@@ -365,7 +434,7 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   return (
     <div className="space-y-4">
       <SeccionBasica form={form} />
-      <SeccionCondiciones form={form} modalidad={modalidad} />
+      <SeccionCondiciones form={form} modalidad={modalidad} tipoPromocion={tipoPromocion} />
       <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} />
       <SeccionVigencia form={form} />
       <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} />
