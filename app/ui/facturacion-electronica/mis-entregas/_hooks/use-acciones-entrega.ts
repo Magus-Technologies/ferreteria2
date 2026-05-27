@@ -8,8 +8,8 @@ export default function useAccionesEntrega(ventaId: string | undefined) {
   const qc = useQueryClient()
 
   const invalidar = () => {
-    qc.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaId] })
-    qc.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'resumen-ventas'] })
+    // Invalidate all ENTREGAS_PRODUCTOS queries (covers both old and new table architectures)
+    qc.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
   }
 
   const confirmar = useMutation({

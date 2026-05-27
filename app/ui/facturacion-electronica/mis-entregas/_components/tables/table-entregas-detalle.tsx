@@ -74,15 +74,38 @@ function CellChofer({ data }: { data: EntregaNueva }) {
 }
 
 function CellFecha({ data }: { data: EntregaNueva }) {
+  if (data.fecha_ejecutada) {
+    return (
+      <div className="flex flex-col justify-center h-full leading-tight">
+        <span className="text-[10px] text-green-600 font-semibold">✅ Entregado</span>
+        <span className="text-xs text-slate-600">{dayjs(data.fecha_ejecutada).format('DD/MM/YY HH:mm')}</span>
+      </div>
+    )
+  }
   const fecha = data.fecha_programada ?? data.fecha_creacion
   if (!fecha) return <span className="text-slate-400">—</span>
-  const es_programada = !!data.fecha_programada
   return (
     <div className="flex flex-col justify-center h-full leading-tight">
-      <span className="text-sm">{dayjs(fecha).format('DD/MM/YY')}</span>
-      {es_programada && data.hora_inicio && (
-        <span className="text-[10px] text-slate-500">{data.hora_inicio}</span>
-      )}
+      <span className="text-[10px] text-amber-600 font-semibold">{data.fecha_programada ? '📅 Programado' : '🕐 Creado'}</span>
+      <span className="text-xs text-slate-600">
+        {dayjs(fecha).format('DD/MM/YY')}
+        {data.fecha_programada && data.hora_inicio ? ` ${data.hora_inicio}` : ''}
+      </span>
+    </div>
+  )
+}
+
+function CellCantidades({ data }: { data: EntregaNueva }) {
+  const detalles = data.detalles ?? []
+  const programada = detalles.reduce((s, d) => s + Number(d.cantidad ?? 0), 0)
+  const pendiente  = detalles.reduce((s, d) => s + Number(d.cantidad_pendiente ?? 0), 0)
+  const entregado  = programada - pendiente
+  if (programada === 0) return <span className="text-slate-300 text-xs">—</span>
+  return (
+    <div className="flex flex-col justify-center h-full leading-tight text-[11px]">
+      <span className="text-slate-500">Prog: <span className="font-semibold text-slate-700">{programada}</span></span>
+      <span className="text-green-600">Entg: <span className="font-semibold">{entregado}</span></span>
+      {pendiente > 0 && <span className="text-amber-600">Pend: <span className="font-semibold">{pendiente}</span></span>}
     </div>
   )
 }
@@ -111,31 +134,30 @@ const columnDefs: ColDef<EntregaNueva>[] = [
   },
   {
     headerName: 'Fecha',
-    width: 110,
+    width: 140,
     cellRenderer: CellFecha,
-    valueFormatter: ({ value }) => value ? dayjs(value).format('DD/MM/YY') : '—',
-    
+  },
+  {
+    headerName: 'Cantidades',
+    width: 120,
+    cellRenderer: CellCantidades,
   },
   {
     headerName: 'Dirección',
     field: 'direccion_entrega',
     flex: 1,
-    minWidth: 150,
+    minWidth: 120,
     valueFormatter: ({ value }) => value ?? '—',
     cellStyle: { fontSize: '12px', color: '#475569' },
   },
   {
     headerName: 'Productos',
-    width: 110,
+    width: 100,
     cellRenderer: ({ data }: { data: EntregaNueva }) => {
       const items = data?.detalles?.length ?? 0
-      const uds   = (data?.detalles ?? []).reduce((s, d) => s + Number(d.cantidad ?? 0), 0)
       if (items === 0) return <span className="text-slate-400 text-xs">—</span>
       return (
-        <div className="flex flex-col justify-center h-full leading-tight">
-          <span className="text-sm font-semibold text-slate-700">{items} ítem{items !== 1 ? 's' : ''}</span>
-          <span className="text-[10px] text-slate-500">{uds} und.</span>
-        </div>
+        <span className="text-sm font-semibold text-slate-700">{items} ítem{items !== 1 ? 's' : ''}</span>
       )
     },
   },
