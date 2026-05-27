@@ -237,6 +237,15 @@ export interface PaginatedResult<T> {
   total: number
 }
 
+export interface FiltrosListarEntregas {
+  fecha_desde?: string
+  fecha_hasta?: string
+  estado?: string | string[]
+  tipo_entrega?: string
+  chofer_id?: string
+  search?: string
+}
+
 export interface FiltrosResumenVentas {
   fecha_desde?: string
   fecha_hasta?: string
@@ -249,6 +258,21 @@ export interface FiltrosResumenVentas {
 }
 
 export const entregasNuevasApi = {
+  listar: (filtros: FiltrosListarEntregas = {}): Promise<ApiResponse<EntregaNueva[]>> => {
+    const p = new URLSearchParams()
+    if (filtros.fecha_desde) p.set('fecha_desde', filtros.fecha_desde)
+    if (filtros.fecha_hasta) p.set('fecha_hasta', filtros.fecha_hasta)
+    if (filtros.estado) {
+      const estados = Array.isArray(filtros.estado) ? filtros.estado : [filtros.estado]
+      estados.forEach(e => p.append('estado[]', e))
+    }
+    if (filtros.tipo_entrega) p.set('tipo_entrega', filtros.tipo_entrega)
+    if (filtros.chofer_id)    p.set('chofer_id', filtros.chofer_id)
+    if (filtros.search)       p.set('search', filtros.search)
+    const qs = p.toString()
+    return apiRequest(`/entregas${qs ? `?${qs}` : ''}`, { method: 'GET' })
+  },
+
   resumenVentas: (filtros: FiltrosResumenVentas = {}): Promise<ApiResponse<PaginatedResult<ResumenVenta>>> => {
     const p = new URLSearchParams()
     if (filtros.fecha_desde) p.set('fecha_desde', filtros.fecha_desde)
