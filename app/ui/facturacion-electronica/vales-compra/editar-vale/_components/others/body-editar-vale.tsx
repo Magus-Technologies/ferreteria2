@@ -11,6 +11,7 @@ import FormBase from '~/components/form/form-base'
 import { FaSave, FaList } from 'react-icons/fa'
 import { updateValeCompra, type ValeCompra } from '~/lib/api/vales-compra'
 import dayjs from 'dayjs'
+import { descomponerTipoPromocion } from '~/app/ui/facturacion-electronica/vales-compra/_constants/form-vale-options'
 
 export type FormEditVale = FormCreateVale
 
@@ -33,10 +34,17 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
 
   const getInitialValues = () => {
     if (!vale) return {}
+    // Para el beneficio derivamos del tipo_promocion del vale.
+    // Para el momento: si el backend ya tiene la columna momento_aplicacion
+    // la usamos directamente; sino caemos al derivado por compatibilidad.
+    const { momento: momentoDerivado, beneficio } = descomponerTipoPromocion(vale.tipo_promocion)
+    const momento = vale.momento_aplicacion ?? momentoDerivado
     return {
       nombre: vale.nombre,
       descripcion: vale.descripcion || undefined,
       tipo_promocion: vale.tipo_promocion,
+      momento_aplicacion: momento,
+      tipo_beneficio: beneficio,
       modalidad: vale.modalidad,
       cantidad_minima: vale.cantidad_minima,
       descuento_tipo: vale.descuento_tipo || undefined,
@@ -63,8 +71,11 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
     if (!vale) return
     setLoading(true)
     try {
+      // Solo descartamos `tipo_beneficio` (UI-only para derivar tipo_promocion).
+      // `momento_aplicacion` se envía al backend para que actualice su columna.
+      const { tipo_beneficio: _tb, ...rest } = values
       const payload = {
-        ...values,
+        ...rest,
         fecha_inicio: values.fecha_inicio ? dayjs(values.fecha_inicio).format('YYYY-MM-DD') : undefined,
         fecha_fin: values.fecha_fin ? dayjs(values.fecha_fin).format('YYYY-MM-DD') : undefined,
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,

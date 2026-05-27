@@ -138,6 +138,9 @@ export interface CreateVentaRequest {
   stock_ya_aplicado?: boolean;
   ingreso_dinero_id?: string;
   codigo_vale?: string;
+  // IDs de vales auto-aplicables que el vendedor descartó manualmente desde la UI.
+  // El backend los excluirá al aplicar vales automáticamente.
+  vales_excluidos?: number[];
 }
 
 export interface UpdateVentaRequest extends Partial<CreateVentaRequest> {}

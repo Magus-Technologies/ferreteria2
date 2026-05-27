@@ -8,6 +8,8 @@ import dayjs from 'dayjs'
 export default function CardResumenVale({ form }: { form: FormInstance<FormCreateVale> }) {
   const nombre = Form.useWatch('nombre', form)
   const tipoPromocion = Form.useWatch('tipo_promocion', form)
+  const momentoAplicacion = Form.useWatch('momento_aplicacion', form) as string | undefined
+  const tipoBeneficio = Form.useWatch('tipo_beneficio', form) as string | undefined
   const modalidad = Form.useWatch('modalidad', form)
   const cantidadMinima = Form.useWatch('cantidad_minima', form)
   const descuentoTipo = Form.useWatch('descuento_tipo', form)
@@ -19,6 +21,16 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
 
   const cantidadProductoGratis = Form.useWatch('cantidad_producto_gratis', form)
 
+  const momentoLabels: Record<string, string> = {
+    MISMA_COMPRA: 'Esta misma compra',
+    PROXIMA_COMPRA: 'Próxima compra (vale futuro)',
+  }
+  const beneficioLabels: Record<string, string> = {
+    DESCUENTO: 'Descuento',
+    PRODUCTO_GRATIS: 'Producto Gratis',
+    DOS_POR_UNO: '2x1 (Mismo Producto)',
+    SORTEO: 'Sorteo',
+  }
   const tipoPromocionLabels: Record<string, string> = {
     SORTEO: 'Sorteo',
     DESCUENTO_MISMA_COMPRA: 'Descuento Misma Compra',
@@ -50,8 +62,28 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
           </div>
         )}
 
-        {/* Tipo de Promoción */}
-        {tipoPromocion && (
+        {/* Momento de aplicación */}
+        {momentoAplicacion && (
+          <div>
+            <p className='text-xs text-gray-500 uppercase mb-1'>¿Cuándo se aplica?</p>
+            <Tag color='gold' className='text-sm'>
+              {momentoLabels[momentoAplicacion] ?? momentoAplicacion}
+            </Tag>
+          </div>
+        )}
+
+        {/* Beneficio */}
+        {tipoBeneficio && (
+          <div>
+            <p className='text-xs text-gray-500 uppercase mb-1'>¿Qué obtiene?</p>
+            <Tag color='green' className='text-sm'>
+              {beneficioLabels[tipoBeneficio] ?? tipoBeneficio}
+            </Tag>
+          </div>
+        )}
+
+        {/* Tipo derivado (solo si no hay las nuevas pistas) */}
+        {!momentoAplicacion && tipoPromocion && (
           <div>
             <p className='text-xs text-gray-500 uppercase mb-1'>Tipo</p>
             <Tag color='blue' className='text-sm'>
@@ -70,11 +102,11 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
           </div>
         )}
 
-        {/* Precio Mínimo (S/) */}
+        {/* Compra Mínima (S/) */}
         {cantidadMinima && (
           <div>
             <p className='text-xs text-gray-500 uppercase mb-1 flex items-center gap-1'>
-              <FaDollarSign className='text-blue-600' /> Precio Mínimo
+              <FaDollarSign className='text-blue-600' /> Compra Mínima
             </p>
             <p className='text-2xl font-bold text-blue-600'>S/ {Number(cantidadMinima).toFixed(2)}</p>
           </div>

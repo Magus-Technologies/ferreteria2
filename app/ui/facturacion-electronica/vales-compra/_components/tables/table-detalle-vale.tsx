@@ -34,10 +34,18 @@ export default function TableDetalleVale() {
       { headerName: 'Modalidad', field: 'modalidad', width: 150 },
       { headerName: 'Beneficio', field: 'beneficio', width: 180 },
       {
-        headerName: 'Precio Mín.',
+        headerName: valeSeleccionado?.tipo_promocion === 'PRODUCTO_GRATIS' || valeSeleccionado?.modalidad === 'POR_PRODUCTOS' || valeSeleccionado?.modalidad === 'MIXTO'
+          ? 'Cant. Mín.'
+          : 'Precio Mín.',
         field: 'cantidad_minima',
         width: 110,
-        valueFormatter: (params) => params.value ? `S/ ${Number(params.value).toFixed(2)}` : '-',
+        valueFormatter: (params) => {
+          if (!params.value) return '-'
+          if (valeSeleccionado?.tipo_promocion === 'PRODUCTO_GRATIS' || valeSeleccionado?.modalidad === 'POR_PRODUCTOS' || valeSeleccionado?.modalidad === 'MIXTO') {
+            return `${Number(params.value)} und.`
+          }
+          return `S/ ${Number(params.value).toFixed(2)}`
+        },
       },
       { headerName: 'Inicio', field: 'fecha_inicio', width: 110 },
       { headerName: 'Fin', field: 'fecha_fin', width: 110 },
@@ -85,7 +93,7 @@ export default function TableDetalleVale() {
       beneficioTexto = `${valeSeleccionado.cantidad_producto_gratis} ${valeSeleccionado.producto_gratis?.name || 'prod.'} GRATIS`
     } else if (valeSeleccionado.tipo_promocion === 'DOS_POR_UNO') {
       const extra = valeSeleccionado.cantidad_producto_gratis || 1
-      beneficioTexto = `Compra desde S/ ${Number(valeSeleccionado.cantidad_minima).toFixed(2)}, lleva ${extra} extra`
+      beneficioTexto = `Compra ${Number(valeSeleccionado.cantidad_minima)} und., lleva ${extra} extra`
     } else if (valeSeleccionado.tipo_promocion === 'SORTEO') {
       beneficioTexto = 'Sorteo'
     }
@@ -97,7 +105,7 @@ export default function TableDetalleVale() {
       tipo: tipoPromocionLabel,
       modalidad: modalidadLabel,
       beneficio: beneficioTexto,
-      cantidad_minima: `S/ ${Number(valeSeleccionado.cantidad_minima).toFixed(2)}`,
+      cantidad_minima: String(valeSeleccionado.cantidad_minima),
       fecha_inicio: new Date(valeSeleccionado.fecha_inicio).toLocaleDateString('es-ES'),
       fecha_fin: valeSeleccionado.fecha_fin ? new Date(valeSeleccionado.fecha_fin).toLocaleDateString('es-ES') : 'Sin límite',
       estado: valeSeleccionado.estado,

@@ -26,6 +26,8 @@ export type TipoPromocion =
   | 'PRODUCTO_GRATIS'
   | 'DOS_POR_UNO';
 
+export type MomentoAplicacionDb = 'MISMA_COMPRA' | 'PROXIMA_COMPRA';
+
 export type Modalidad =
   | 'CANTIDAD_MINIMA'
   | 'POR_CATEGORIA'
@@ -42,6 +44,7 @@ export interface ValeCompra {
   nombre: string;
   descripcion: string | null;
   tipo_promocion: TipoPromocion;
+  momento_aplicacion: MomentoAplicacionDb;
   modalidad: Modalidad;
   cantidad_minima: number;
   descuento_tipo: DescuentoTipo | null;
@@ -125,6 +128,7 @@ export interface CreateValeCompraRequest {
   nombre: string;
   descripcion?: string | null;
   tipo_promocion: TipoPromocion;
+  momento_aplicacion?: MomentoAplicacionDb;
   modalidad: Modalidad;
   cantidad_minima: number;
   descuento_tipo?: DescuentoTipo | null;
@@ -142,6 +146,7 @@ export interface CreateValeCompraRequest {
   aplica_precio_especial?: boolean;
   aplica_precio_minimo?: boolean;
   aplica_precio_ultimo?: boolean;
+  sorteo_incluye_producto?: boolean;
   categoria_ids?: number[];
   producto_ids?: number[];
 }
@@ -370,9 +375,13 @@ export interface ValeCompraVerificado {
     cantidad_minima: number;
     fecha_inicio: string;
     fecha_fin: string | null;
+    producto_gratis?: { id: number; nombre: string } | null;
+    cantidad_producto_gratis?: number | null;
     productos?: Array<{ id: number; nombre: string }>;
     categorias?: Array<{ id: number; nombre: string }>;
   };
+  es_vale_generado?: boolean;
+  es_sorteo?: boolean;
 }
 
 /**

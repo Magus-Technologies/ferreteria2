@@ -165,12 +165,19 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
 
   // Vales aplicables (solo se considera el descuento inmediato de MISMA_COMPRA)
   const valesAplicables = useStoreProductoAgregadoVenta((s) => s.valesAplicables);
+  const valesExcluidos = useStoreProductoAgregadoVenta((s) => s.valesExcluidos);
+
+  // Filtrar vales excluidos
+  const valesActivos = useMemo(
+    () => (valesAplicables || []).filter((v) => !valesExcluidos.includes(v.id)),
+    [valesAplicables, valesExcluidos],
+  );
 
   // Calcular descuento total de vales (solo DESCUENTO_MISMA_COMPRA)
   const baseSinVale = useMemo(() => subTotal - totalDescuento, [subTotal, totalDescuento]);
   const descuentoVale = useMemo(() => {
-    if (!valesAplicables || valesAplicables.length === 0) return 0;
-    return valesAplicables.reduce((acc, v) => {
+    if (!valesActivos || valesActivos.length === 0) return 0;
+    return valesActivos.reduce((acc, v) => {
       if (v.tipo_promocion !== 'DESCUENTO_MISMA_COMPRA') return acc;
       const valor = Number(v.descuento_valor ?? 0);
       if (!valor) return acc;
@@ -182,7 +189,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
       }
       return acc;
     }, 0);
-  }, [valesAplicables, baseSinVale]);
+  }, [valesActivos, baseSinVale]);
 
   // Calcular Total Cobrado (incluye surcharge de métodos de pago y resta descuento de vale)
   const totalCobrado = useMemo(
@@ -419,7 +426,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         tipo_documento={tipo_documento}
         baseAmount={subTotal - totalDescuento}
         descuentoVale={descuentoVale}
-        valesInfo={valesAplicables
+        valesInfo={valesActivos
           .filter(v => v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' && Number(v.descuento_valor ?? 0) > 0)
           .map(v => ({
             nombre: v.nombre,

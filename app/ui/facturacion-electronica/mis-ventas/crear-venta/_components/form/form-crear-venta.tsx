@@ -23,6 +23,7 @@ import {
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
 import InputCodigoVale from "../others/input-codigo-vale";
+import BotonCanjearVale from "../others/boton-canjear-vale";
 import { useUltimaCalificacionCliente } from "../../_hooks/use-ultima-calificacion-cliente";
 import FloatingCalificacionCliente from "../alerts/floating-calificacion-cliente";
 
@@ -228,8 +229,12 @@ export default function FormCrearVenta({
           </LabelBase>
         </ConfigurableElement>
 
-        {/* InputCodigoVale: ya no muestra UI, solo detecta vales automáticamente */}
+        {/* InputCodigoVale: detecta automáticamente vales aplicables y vales pendientes del cliente.
+            BotonCanjearVale: permite canjear manualmente un código (sorteo o próxima compra). */}
         <InputCodigoVale form={form} />
+        <div className="mb-6 flex items-end">
+          <BotonCanjearVale form={form} />
+        </div>
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}

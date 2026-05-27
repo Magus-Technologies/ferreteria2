@@ -1,6 +1,6 @@
 "use client";
 
-import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch } from "antd";
+import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Radio } from "antd";
 import { useEffect, useState } from "react";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import {
@@ -9,16 +9,21 @@ import {
   FaHashtag,
   FaPercentage,
   FaDollarSign,
-  FaBoxOpen,
   FaUsers,
+  FaClock,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectCategorias from "~/app/_components/form/selects/select-categorias";
 import {
-  TIPO_PROMOCION_FORM_OPTIONS,
+  MOMENTO_APLICACION_OPTIONS,
+  TIPO_BENEFICIO_OPTIONS,
   MODALIDAD_FORM_OPTIONS,
   DESCUENTO_TIPO_OPTIONS,
+  derivarTipoPromocion,
+  beneficiosValidosParaMomento,
+  type MomentoAplicacion,
+  type TipoBeneficio,
 } from "../../../_constants/form-vale-options";
 import { getPreciosProductos } from "~/lib/api/vales-compra";
 
@@ -31,32 +36,114 @@ interface SeccionBasicaProps {
 }
 
 function SeccionBasica({ form }: SeccionBasicaProps) {
+  const momento = (Form.useWatch("momento_aplicacion", form) as MomentoAplicacion | undefined)
+    ?? "MISMA_COMPRA";
+  const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
+
+  // Cada vez que cambia momento o beneficio, derivamos el tipo_promocion del backend.
+  useEffect(() => {
+    if (!beneficio) return;
+    const tipoDerivado = derivarTipoPromocion(momento, beneficio);
+    if (form.getFieldValue("tipo_promocion") !== tipoDerivado) {
+      form.setFieldValue("tipo_promocion", tipoDerivado);
+    }
+  }, [momento, beneficio, form]);
+
+  // Todos los beneficios están permitidos para ambos momentos. La distinción
+  // "ahora vs futuro" se guarda en la columna `momento_aplicacion` del backend.
+  const beneficiosPermitidos = beneficiosValidosParaMomento(momento);
+  const opcionesBeneficio = TIPO_BENEFICIO_OPTIONS.map((opt) => ({
+    ...opt,
+    disabled: !beneficiosPermitidos.includes(opt.value),
+  }));
+
   return (
-    <div className="border-l-4 border-amber-500 pl-3">
-      <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+    <div className="border-l-4 border-amber-500 pl-3 space-y-4">
+      <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
         <FaGift className="text-amber-600" />
         Información Básica
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Form.Item
-          name="nombre"
-          label="Nombre de la Promoción"
-          rules={[{ required: true, message: "El nombre es requerido" }]}
-        >
-          <Input
-            placeholder="Ej: Descuento 10% por 55 unidades"
-            prefix={<FaGift className="text-amber-600 mr-1" />}
-          />
-        </Form.Item>
+      <Form.Item
+        name="nombre"
+        label="Nombre de la Promoción"
+        rules={[{ required: true, message: "El nombre es requerido" }]}
+      >
+        <Input
+          placeholder="Ej: Descuento 10% por compras mayores a S/ 500"
+          prefix={<FaGift className="text-amber-600 mr-1" />}
+        />
+      </Form.Item>
 
+      {/* Campo oculto: tipo_promocion derivado (se envía al backend) */}
+      <Form.Item name="tipo_promocion" hidden rules={[{ required: true }]}>
+        <Input type="hidden" />
+      </Form.Item>
+
+      {/* PASO 1 — ¿CUÁNDO SE APLICA? */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-amber-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 1</span>
+          <span className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+            <FaClock className="text-amber-600" /> ¿Cuándo se aplica el beneficio?
+          </span>
+        </div>
         <Form.Item
-          name="tipo_promocion"
-          label="Tipo de Promoción"
-          rules={[{ required: true, message: "Seleccione el tipo" }]}
+          name="momento_aplicacion"
+          rules={[{ required: true, message: "Seleccione cuándo se aplica" }]}
+          className="!mb-0"
         >
-          <Select options={TIPO_PROMOCION_FORM_OPTIONS} />
+          <Radio.Group className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {MOMENTO_APLICACION_OPTIONS.map((opt) => (
+                <Radio.Button key={opt.value} value={opt.value} className="!h-auto !whitespace-normal !text-left !py-2">
+                  <div>
+                    <div className="font-semibold">{opt.label}</div>
+                    <div className="text-xs text-gray-500">{opt.description}</div>
+                  </div>
+                </Radio.Button>
+              ))}
+            </div>
+          </Radio.Group>
         </Form.Item>
+      </div>
+
+      {/* PASO 2 — ¿QUÉ OBTIENE EL CLIENTE? */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-green-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 2</span>
+          <span className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+            <FaGift className="text-green-600" /> ¿Qué obtiene el cliente?
+          </span>
+        </div>
+        <Form.Item
+          name="tipo_beneficio"
+          rules={[{ required: true, message: "Seleccione el beneficio" }]}
+          className="!mb-0"
+        >
+          <Radio.Group className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {opcionesBeneficio.map((opt) => (
+                <Radio.Button
+                  key={opt.value}
+                  value={opt.value}
+                  disabled={opt.disabled}
+                  className="!h-auto !whitespace-normal !text-left !py-2"
+                >
+                  <div>
+                    <div className="font-semibold">{opt.label}</div>
+                    <div className="text-xs text-gray-500">{opt.description}</div>
+                  </div>
+                </Radio.Button>
+              ))}
+            </div>
+          </Radio.Group>
+        </Form.Item>
+        {momento === "PROXIMA_COMPRA" && (
+          <div className="text-xs text-blue-700 mt-2">
+            ℹ️ Se generará un código que el cliente canjeará en una venta posterior.
+          </div>
+        )}
       </div>
 
       <Form.Item name="descripcion" label="Descripción (opcional)">
@@ -208,6 +295,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo }: SeccionBenefic
   const isProductoGratis = tipoPromocion === "PRODUCTO_GRATIS";
   const isDosPorUno = tipoPromocion === "DOS_POR_UNO";
   const isSorteo = tipoPromocion === "SORTEO";
+  const incluyeProductoSorteo = Form.useWatch("sorteo_incluye_producto", form) || false;
 
   return (
     <div className="border-l-4 border-green-500 pl-3">
@@ -227,40 +315,33 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo }: SeccionBenefic
             <Select options={DESCUENTO_TIPO_OPTIONS} />
           </Form.Item>
 
-          <Form.Item
-            name="descuento_valor"
-            label={descuentoTipo === "PORCENTAJE" ? "Porcentaje (%)" : "Monto (S/)"}
-            rules={[
-              { required: true, message: "El valor es requerido" },
-              { type: "number", min: 0, message: "Debe ser mayor o igual a 0" },
-            ]}
-          >
+        <Form.Item
+          name="descuento_valor"
+          label={descuentoTipo === "PORCENTAJE" ? "Porcentaje (%)" : "Monto (S/)"}
+          rules={[
+            { required: true, message: "El valor de descuento es requerido" },
+            { type: "number", min: 0, message: "Debe ser mayor o igual a 0" },
+            {
+              validator: (_, value) => {
+                if (value == null) return Promise.resolve();
+                if (descuentoTipo === "PORCENTAJE" && value > 100) {
+                  return Promise.reject(new Error("El porcentaje no puede ser mayor a 100%"));
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
             <InputNumber
               className="w-full"
               placeholder={descuentoTipo === "PORCENTAJE" ? "Ej: 10" : "Ej: 50.00"}
               min={0}
+              max={descuentoTipo === "PORCENTAJE" ? 100 : undefined}
               step={descuentoTipo === "PORCENTAJE" ? 1 : 0.01}
               prefix={descuentoTipo === "PORCENTAJE" ? <FaPercentage className="text-green-600" /> : <FaDollarSign className="text-green-600" />}
             />
-          </Form.Item>
-        </div>
-      )}
-
-      {/* DESCUENTO_PROXIMA_COMPRA — fecha validez */}
-      {tipoPromocion === "DESCUENTO_PROXIMA_COMPRA" && (
-        <Form.Item
-          name="fecha_validez_vale"
-          label="Válido hasta"
-          rules={[{ required: true, message: "La fecha de validez es requerida" }]}
-        >
-          <DatePicker
-            className="w-full"
-            placeholder="Seleccione fecha límite"
-            format="DD/MM/YYYY"
-            disabledDate={(current) => current && current < dayjs().endOf("day")}
-            prefix={<FaCalendar className="text-green-600" />}
-          />
         </Form.Item>
+        </div>
       )}
 
       {/* PRODUCTO_GRATIS */}
@@ -304,10 +385,44 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo }: SeccionBenefic
 
       {/* SORTEO */}
       {isSorteo && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-700">
-            Para sorteos, la descripción debe incluir los detalles del premio y las condiciones de participación.
-          </p>
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-700">
+              <strong>📢 Sorteo:</strong> Los clientes que cumplan las condiciones participan automáticamente. 
+              Opcionalmente, puede incluir un producto como premio.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-gray-700">¿Incluir Producto Específico como Premio?</label>
+              <Form.Item name="sorteo_incluye_producto" valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            </div>
+            <p className="text-xs text-gray-600">
+              Si activa esto, especifique el producto y cantidad a regalar si gana el sorteo.
+            </p>
+          </div>
+
+          {incluyeProductoSorteo && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Form.Item
+                name="producto_gratis_id"
+                label="Producto del Sorteo"
+                rules={[{ required: true, message: "Seleccione el producto" }]}
+              >
+                <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch withTipoBusqueda />
+              </Form.Item>
+
+              <Form.Item
+                name="cantidad_producto_gratis"
+                label="Cantidad a Regalar (si gana)"
+              >
+                <InputNumber className="w-full" placeholder="1" min={0.001} step={1} defaultValue={1} />
+              </Form.Item>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -319,6 +434,8 @@ interface SeccionVigenciaProps {
 }
 
 function SeccionVigencia({ form }: SeccionVigenciaProps) {
+  const momento = Form.useWatch("momento_aplicacion", form) as string | undefined;
+  const esFuturo = momento === "PROXIMA_COMPRA";
   return (
     <div className="border-l-4 border-purple-500 pl-3">
       <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -335,11 +452,18 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
           <DatePicker className="w-full" format="DD/MM/YYYY" disabledDate={(current) => current && current < dayjs().startOf("day")} />
         </Form.Item>
 
-        <Form.Item name="fecha_fin" label="Fecha de Fin (opcional)">
+        <Form.Item
+          name="fecha_fin"
+          label={esFuturo ? "Fecha de Fin (también caduca el código)" : "Fecha de Fin (opcional)"}
+          tooltip={esFuturo
+            ? "Define hasta cuándo el cliente puede canjear el código generado en la próxima compra."
+            : undefined}
+          rules={esFuturo ? [{ required: true, message: "Para vales de próxima compra la fecha de fin define la caducidad del código" }] : undefined}
+        >
           <DatePicker
             className="w-full"
             format="DD/MM/YYYY"
-            placeholder="Sin fecha de fin"
+            placeholder={esFuturo ? "Caducidad del código" : "Sin fecha de fin"}
             disabledDate={(current) => {
               const fechaInicio = form.getFieldValue("fecha_inicio");
               return current && fechaInicio && current < fechaInicio;
@@ -347,6 +471,11 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
           />
         </Form.Item>
       </div>
+      {esFuturo && (
+        <div className="text-xs text-purple-700 mt-2">
+          ℹ️ La fecha de fin se usa también como la caducidad del código que se entrega al cliente.
+        </div>
+      )}
     </div>
   );
 }
