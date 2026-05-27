@@ -1,20 +1,23 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Modal, Input, App, Tag, Divider } from 'antd'
-import { FaTicketAlt, FaCheckCircle, FaTimesCircle, FaGift, FaDollarSign, FaPercentage, FaTrophy } from 'react-icons/fa'
+import { Modal, Input, App, Tag, Divider, Form, FormInstance } from 'antd'
+import { FaTicketAlt, FaCheckCircle, FaTimesCircle, FaGift, FaDollarSign, FaPercentage, FaTrophy, FaExclamationTriangle } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import { verificarCodigoVale, type ValeCompraVerificado } from '~/lib/api/vales-compra'
+import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 
 interface ModalCanjearValeProps {
+  form: FormInstance
   open: boolean
   setOpen: (open: boolean) => void
   codigoActual?: string
   onAplicar: (codigo: string, info: ValeCompraVerificado) => void
-  onQuitar: () => void
+  onQuitar: (codigo: string) => void
 }
 
 export default function ModalCanjearVale({
+  form,
   open,
   setOpen,
   codigoActual,
@@ -27,6 +30,9 @@ export default function ModalCanjearVale({
   const [resultado, setResultado] = useState<ValeCompraVerificado | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const productosVenta = useStoreProductoAgregadoVenta((s) => s.productos)
+  const clienteId = Form.useWatch('cliente_id', form)
+
   useEffect(() => {
     if (open) {
       setCodigo(codigoActual ?? '')
@@ -34,6 +40,25 @@ export default function ModalCanjearVale({
       setError(null)
     }
   }, [open, codigoActual])
+
+  // Computar contexto de la venta para validar condiciones del vale
+  const getSaleContext = () => {
+    const productoIds = productosVenta
+      .map((p) => p.producto_id)
+      .filter((id): id is number => !!id)
+    const precioTotal = productosVenta.reduce(
+      (sum, p) => sum + Number(p.precio_venta ?? 0) * Number(p.cantidad ?? 0), 0
+    )
+    const cantidadTotal = productosVenta.reduce(
+      (sum, p) => sum + Number(p.cantidad ?? 0), 0
+    )
+    return {
+      precio_total: precioTotal,
+      cantidad_total: cantidadTotal,
+      producto_ids: productoIds.length > 0 ? productoIds : undefined,
+      cliente_id: clienteId || undefined,
+    }
+  }
 
   const handleVerificar = async () => {
     const codigoLimpio = codigo.trim()
@@ -47,7 +72,7 @@ export default function ModalCanjearVale({
     setResultado(null)
 
     try {
-      const res = await verificarCodigoVale(codigoLimpio)
+      const res = await verificarCodigoVale(codigoLimpio, getSaleContext())
       if (res.data?.valido && res.data.data) {
         setResultado(res.data.data)
       } else {
@@ -72,7 +97,7 @@ export default function ModalCanjearVale({
   }
 
   const handleQuitar = () => {
-    onQuitar()
+    onQuitar(codigo.trim())
     notification.info({
       message: 'Código removido',
       description: 'El código de vale fue retirado de la venta.',
@@ -97,8 +122,8 @@ export default function ModalCanjearVale({
     >
       <div className='space-y-4 pt-2'>
         <div className='text-sm text-gray-600'>
-          Ingresa el código de un vale entregado en una compra anterior (DESCUENTO PRÓXIMA COMPRA o SORTEO).
-          Cada código solo puede usarse una vez.
+          Ingresa el código de un vale (ej: VC-0005) o código generado (ej: VCC-...).
+          Se validará si la venta actual cumple las condiciones del vale.
         </div>
 
         <div className='flex gap-2'>
@@ -147,7 +172,7 @@ export default function ModalCanjearVale({
             </ButtonBase>
             <ButtonBase
               onClick={handleAplicar}
-              disabled={!resultado}
+              disabled={!resultado || (resultado.condiciones && !resultado.condiciones.cumple)}
               color='success'
               size='sm'
             >
@@ -163,6 +188,9 @@ export default function ModalCanjearVale({
 function ResultadoVale({ resultado }: { resultado: ValeCompraVerificado }) {
   const vale = resultado.vale_compra
   const esSorteo = resultado.es_sorteo || vale.tipo_promocion === 'SORTEO'
+  const condiciones = resultado.condiciones
+  const condicionesNoCumplidas = condiciones && !condiciones.cumple
+  const esUmbralUnidades = vale.tipo_promocion === 'PRODUCTO_GRATIS' || vale.tipo_promocion === 'DOS_POR_UNO' || vale.modalidad === 'POR_PRODUCTOS' || vale.modalidad === 'MIXTO'
 
   let beneficio: React.ReactNode = null
   if (esSorteo) {
@@ -204,21 +232,35 @@ function ResultadoVale({ resultado }: { resultado: ValeCompraVerificado }) {
     )
   }
 
+  const bgColor = condicionesNoCumplidas ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'
+  const iconColor = condicionesNoCumplidas ? 'text-amber-600' : 'text-green-700'
+  const titulo = condicionesNoCumplidas ? 'La venta no cumple las condiciones del vale' : 'Vale válido'
+
   return (
-    <div className='bg-green-50 border border-green-200 rounded-lg p-4 space-y-2'>
-      <div className='flex items-center gap-2 text-green-700 font-semibold'>
-        <FaCheckCircle />
-        Vale válido
+    <div className={`${bgColor} border rounded-lg p-4 space-y-2`}>
+      <div className={`flex items-center gap-2 ${iconColor} font-semibold`}>
+        {condicionesNoCumplidas ? <FaExclamationTriangle /> : <FaCheckCircle />}
+        {titulo}
       </div>
       <div className='text-base font-medium text-gray-800'>{vale.nombre}</div>
       <div className='flex flex-wrap gap-2 items-center'>
         <Tag color={esSorteo ? 'blue' : 'green'}>{vale.tipo_promocion}</Tag>
+        {vale.momento_aplicacion && <Tag color='purple'>{vale.momento_aplicacion === 'PROXIMA_COMPRA' ? 'Próxima compra' : 'Misma compra'}</Tag>}
         {vale.fecha_fin && <Tag color='orange'>Vence: {vale.fecha_fin}</Tag>}
       </div>
       {beneficio && <div className='text-sm text-gray-700 pt-1'>{beneficio}</div>}
       {esSorteo && (
         <div className='text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-1 mt-2'>
           Este código solo registra el canje del sorteo. No aplica descuento a la venta actual.
+        </div>
+      )}
+      {condiciones && (
+        <div className='text-xs space-y-1 pt-1'>
+          {!condiciones.umbral && <div className='text-red-600'>✗ No alcanza la compra mínima de {esUmbralUnidades ? `${Number(vale.cantidad_minima)} und.` : `S/ ${Number(vale.cantidad_minima).toFixed(2)}`}</div>}
+          {!condiciones.vigente && <div className='text-red-600'>✗ El vale no está vigente</div>}
+          {!condiciones.stock && <div className='text-red-600'>✗ El vale no tiene stock disponible</div>}
+          {!condiciones.cliente && <div className='text-red-600'>✗ El cliente ya usó este vale</div>}
+          {condiciones.modalidad === false && <div className='text-red-600'>✗ Los productos de la venta no cumplen la modalidad del vale</div>}
         </div>
       )}
     </div>

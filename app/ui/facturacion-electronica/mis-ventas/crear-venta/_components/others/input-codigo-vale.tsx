@@ -71,9 +71,20 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
       if (res.data?.data) {
         const valesUnicos = res.data.data.filter(
           (vale, idx, arr) => arr.findIndex(v => v.id === vale.id) === idx
-        )
-        // Guardar vales en el store para mostrarlos en la tabla
-        setValesAplicables(valesUnicos)
+        ).filter(v => v.momento_aplicacion !== 'PROXIMA_COMPRA')
+        // Preservar vales aplicados manualmente (tienen codigo_vale en el form)
+        const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
+        const valesActuales = useStoreProductoAgregadoVenta.getState().valesAplicables
+        const valesManuales = codigoManual
+          ? valesActuales.filter(v => v.codigo === codigoManual)
+          : []
+        // Fusionar: auto-detectados + manuales (sin duplicados)
+        const idsAuto = new Set(valesUnicos.map(v => v.id))
+        const fusionados = [
+          ...valesUnicos,
+          ...valesManuales.filter(v => !idsAuto.has(v.id)),
+        ]
+        setValesAplicables(fusionados)
         for (const vale of valesUnicos) {
           if (!valesNotificados.current.has(vale.id)) {
             valesNotificados.current.add(vale.id)
@@ -99,9 +110,13 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   useEffect(() => {
     if (productosVenta.length === 0) {
       valesNotificados.current.clear()
-      setValesAplicables([])
+      // Preservar vales manuales si hay código aplicado
+      const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
+      if (!codigoManual) {
+        setValesAplicables([])
+      }
     }
-  }, [productosVenta.length, setValesAplicables])
+  }, [productosVenta.length, form, setValesAplicables])
 
   // --- Detección automática de vales pendientes del cliente (DESCUENTO_PROXIMA_COMPRA) ---
   // Solo auto-setea si NO hay un código ingresado manualmente vía el modal de canje.

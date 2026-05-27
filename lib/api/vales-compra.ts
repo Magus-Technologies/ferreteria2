@@ -369,6 +369,7 @@ export interface ValeCompraVerificado {
     codigo: string;
     nombre: string;
     tipo_promocion: TipoPromocion;
+    momento_aplicacion?: string;
     descuento_tipo: DescuentoTipo | null;
     descuento_valor: number | null;
     modalidad: Modalidad;
@@ -382,19 +383,35 @@ export interface ValeCompraVerificado {
   };
   es_vale_generado?: boolean;
   es_sorteo?: boolean;
+  condiciones?: {
+    cumple: boolean;
+    umbral: boolean;
+    stock: boolean;
+    vigente: boolean;
+    cliente: boolean;
+    modalidad?: boolean;
+  };
 }
 
 /**
- * Verificar si un código de vale es válido
+ * Verificar si un código de vale es válido.
+ * Opcionalmente se pueden pasar datos de la venta para validar condiciones.
  */
 export async function verificarCodigoVale(
-  codigo: string
+  codigo: string,
+  saleContext?: {
+    precio_total?: number;
+    cantidad_total?: number;
+    producto_ids?: number[];
+    cliente_id?: number;
+    tipos_precio?: string[];
+  }
 ): Promise<ApiResponse<{ valido: boolean; data?: ValeCompraVerificado; message: string }>> {
   return apiRequest<{ valido: boolean; data?: ValeCompraVerificado; message: string }>(
     '/vales-compra/verificar-codigo',
     {
       method: 'POST',
-      body: JSON.stringify({ codigo }),
+      body: JSON.stringify({ codigo, ...saleContext }),
     }
   );
 }
