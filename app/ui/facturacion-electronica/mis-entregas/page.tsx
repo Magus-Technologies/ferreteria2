@@ -16,6 +16,7 @@ import ModalConfirmarEntrega from './_components/modals/modal-confirmar-entrega'
 import ModalAnularEntregaV2 from './_components/modals/modal-anular-entrega-v2'
 import ModalDetallesEntregaCompleto from './_components/modals/modal-detalles-entrega-completo'
 import ModalMapaEntrega from './_components/modals/mapbox/modal-mapa-entrega'
+import ModalPdfEntregaWrapper from './_components/modals/modal-pdf-entrega-wrapper'
 
 import useAccionesEntrega from './_hooks/use-acciones-entrega'
 import { useQuery } from '@tanstack/react-query'
@@ -145,6 +146,8 @@ export default function MisEntregasPage() {
       </div>
 
       {/* ─── Modales ──────────────────────────────────────────────── */}
+      <ModalPdfEntregaWrapper />
+
       <ModalConfirmarEntrega
         open={openConfirmar}
         onClose={() => setOpenConfirmar(false)}
@@ -170,7 +173,7 @@ export default function MisEntregasPage() {
         open={openDetalles}
         onClose={() => setOpenDetalles(false)}
         entrega={entrega ? {
-          id: null,
+          id: entrega.id,
           estado_entrega:    entrega.estado_entrega,
           tipo_entrega:      entrega.tipo_entrega,
           tipo_despacho:     entrega.tipo_despacho,

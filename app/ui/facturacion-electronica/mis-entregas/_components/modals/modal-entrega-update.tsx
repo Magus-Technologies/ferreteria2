@@ -87,10 +87,14 @@ export default function ModalEntregaUpdate({
       : entrega?.id,
   )
 
+  // NOTE: old `entregaProductoApi.getById` is disabled — the new delivery
+  // system serves full data via `entregasNuevasApi.listar`, so the entrega
+  // prop already has everything needed. Querying the old endpoint with new
+  // `entrega` table IDs would cause `EntregaProducto::findOrFail` 404s.
   const { data: entregaDetalleResp } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle-restante', entregaIdDetalle],
     queryFn: () => entregaProductoApi.getById(entregaIdDetalle),
-    enabled: open && Number.isFinite(entregaIdDetalle) && entregaIdDetalle > 0,
+    enabled: false,
     staleTime: 0,
   })
   const entregaDetalle = (entregaDetalleResp?.data?.data ?? entregaDetalleResp?.data) as any

@@ -273,7 +273,7 @@ export function useConfirmarEntrega({
           const payload2: CreateEntregaProductoRequest = {
             venta_id: entregaOrig?.venta_id,
             grupo_entrega_id: entregaOrig?.grupo_entrega_id || entregaOrig?.id,
-            tipo_entrega: TipoEntrega.PARCIAL,
+            tipo_entrega: TipoEntrega.DESPACHO, // el despacho se programa a domicilio aunque el parcial original haya sido EnTienda
             tipo_despacho: TipoDespacho.PROGRAMADO,
             estado_entrega: EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),
@@ -384,12 +384,9 @@ export function useConfirmarEntrega({
         ? EstadoEntrega.EN_CAMINO   // chofer sale — confirma después
         : EstadoEntrega.ENTREGADO   // entrega en tienda — cierra ahora
 
-    const tipoEntregaHija: TipoEntrega =
-      tipoDespacho === 'EnTienda'
-        ? TipoEntrega.RECOJO_EN_TIENDA
-        : tipoDespacho === 'Domicilio'
-        ? TipoEntrega.DESPACHO
-        : TipoEntrega.PARCIAL
+  const tipoEntregaHija: TipoEntrega =
+  tipoDespacho === 'EnTienda' ? TipoEntrega.RECOJO_EN_TIENDA
+  : TipoEntrega.DESPACHO   // Domicilio o Parcial → la hija "ahora" en parcial va a tienda solo si el usuario lo indica explícitamente
 
     const tipoDespachoHija: TipoDespacho =
       quienEntregaAhora === QuienEntrega.CHOFER

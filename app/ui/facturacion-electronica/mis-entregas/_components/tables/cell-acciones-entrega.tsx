@@ -15,6 +15,7 @@ import type { MenuProps } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
+import { entregasNuevasApi } from '~/lib/api/entregas'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonBase from '~/components/buttons/button-base'
@@ -79,23 +80,16 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
       // No abre modal — ejecuta directo y refresca.
       ;(async () => {
         try {
-          const r = await entregaProductoApi.confirmarEventosEnCamino(
-            Number(entregaOperativa.id),
-          )
+          const r = await entregasNuevasApi.enCamino(Number(entregaOperativa.id))
           if (r.error) {
-            message.error(r.error.message || 'Error al confirmar entregas en camino')
+            message.error(r.error.message || 'Error al marcar en camino')
             return
           }
-          const respuesta = r.data?.data
-          message.success(
-            respuesta
-              ? `${respuesta.eventos_confirmados} entrega(s) confirmada(s)`
-              : 'Entregas confirmadas',
-          )
+          message.success('Entrega marcada en camino')
           queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
           if (onRefetch) onRefetch()
         } catch (err: any) {
-          message.error(err?.message || 'Error al confirmar entregas en camino')
+          message.error(err?.message || 'Error al marcar en camino')
         }
       })()
     }
@@ -138,9 +132,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const handleEntregar = async () => {
     setLoading(true)
     try {
-      const response = await entregaProductoApi.update(entregaOperativa.id, {
-        estado_entrega: EstadoEntrega.ENTREGADO,
-      })
+      const response = await entregasNuevasApi.confirmar(Number(entregaOperativa.id))
 
       if (response.error) {
         message.error(response.error.message || 'Error al completar entrega')
@@ -162,7 +154,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
   const handleAceptar = async () => {
     setLoading(true)
     try {
-      const response = await entregaProductoApi.aceptar(entregaOperativa.id)
+      const response = await entregasNuevasApi.aceptarPedido(Number(entregaOperativa.id))
 
       if (response.error) {
         if (response.error.message?.includes('ya fue aceptada')) {

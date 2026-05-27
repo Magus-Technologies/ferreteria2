@@ -302,6 +302,9 @@ export const entregasNuevasApi = {
       body: JSON.stringify({ motivo }),
     }),
 
+  aceptarPedido: (id: number): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest(`/entregas/${id}/aceptar-pedido`, { method: 'POST' }),
+
   reasignarChofer: (
     id: number,
     choferId: string,

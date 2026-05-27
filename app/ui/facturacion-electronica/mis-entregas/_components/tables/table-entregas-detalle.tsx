@@ -3,9 +3,12 @@
 import { useRef, memo, useCallback, useEffect } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import { ColDef, SelectionChangedEvent } from 'ag-grid-community'
+import { Button } from 'antd'
+import { FaFilePdf } from 'react-icons/fa'
 import TableWithTitle from '~/components/tables/table-with-title'
 import useEntregasDeVenta from '../../_hooks/use-entregas-de-venta'
 import { useStoreEntregaSeleccionada } from '../../_store/store-entrega-seleccionada'
+import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import type { EntregaNueva } from '~/lib/api/entregas'
 import dayjs from 'dayjs'
 import { orangeColors } from '~/lib/colors'
@@ -110,59 +113,6 @@ function CellCantidades({ data }: { data: EntregaNueva }) {
   )
 }
 
-const columnDefs: ColDef<EntregaNueva>[] = [
-  {
-    headerName: '#',
-    field: 'venta_entrega_secuencia',
-    width: 55,
-    cellStyle: { textAlign: 'center', fontWeight: 700, color: '#64748b' },
-  },
-  {
-    headerName: 'Estado',
-    width: 120,
-    cellRenderer: CellEstado,
-  },
-  {
-    headerName: 'Tipo',
-    width: 210,
-    cellRenderer: CellTipoEntrega,
-  },
-  {
-    headerName: 'Chofer / Vehículo',
-    width: 160,
-    cellRenderer: CellChofer,
-  },
-  {
-    headerName: 'Fecha',
-    width: 140,
-    cellRenderer: CellFecha,
-  },
-  {
-    headerName: 'Cantidades',
-    width: 120,
-    cellRenderer: CellCantidades,
-  },
-  {
-    headerName: 'Dirección',
-    field: 'direccion_entrega',
-    flex: 1,
-    minWidth: 120,
-    valueFormatter: ({ value }) => value ?? '—',
-    cellStyle: { fontSize: '12px', color: '#475569' },
-  },
-  {
-    headerName: 'Productos',
-    width: 100,
-    cellRenderer: ({ data }: { data: EntregaNueva }) => {
-      const items = data?.detalles?.length ?? 0
-      if (items === 0) return <span className="text-slate-400 text-xs">—</span>
-      return (
-        <span className="text-sm font-semibold text-slate-700">{items} ítem{items !== 1 ? 's' : ''}</span>
-      )
-    },
-  },
-]
-
 interface Props {
   ventaId: string | undefined
 }
@@ -171,6 +121,78 @@ const TableEntregasDetalle = memo(function TableEntregasDetalle({ ventaId }: Pro
   const gridRef = useRef<AgGridReact<EntregaNueva>>(null)
   const { entregas, loading } = useEntregasDeVenta(ventaId)
   const setEntrega = useStoreEntregaSeleccionada(s => s.setEntrega)
+  const openPdfModal = useStoreModalPdfEntrega(s => s.openModal)
+
+  const columnDefs: ColDef<EntregaNueva>[] = [
+    {
+      headerName: '#',
+      field: 'venta_entrega_secuencia',
+      width: 55,
+      cellStyle: { textAlign: 'center', fontWeight: 700, color: '#64748b' },
+    },
+    {
+      headerName: 'Estado',
+      width: 120,
+      cellRenderer: CellEstado,
+    },
+    {
+      headerName: 'Tipo',
+      width: 210,
+      cellRenderer: CellTipoEntrega,
+    },
+    {
+      headerName: 'Chofer / Vehículo',
+      width: 160,
+      cellRenderer: CellChofer,
+    },
+    {
+      headerName: 'Fecha',
+      width: 140,
+      cellRenderer: CellFecha,
+    },
+    {
+      headerName: 'Cantidades',
+      width: 120,
+      cellRenderer: CellCantidades,
+    },
+    {
+      headerName: 'Dirección',
+      field: 'direccion_entrega',
+      flex: 1,
+      minWidth: 120,
+      valueFormatter: ({ value }) => value ?? '—',
+      cellStyle: { fontSize: '12px', color: '#475569' },
+    },
+    {
+      headerName: 'Productos',
+      width: 100,
+      cellRenderer: ({ data }: { data: EntregaNueva }) => {
+        const items = data?.detalles?.length ?? 0
+        if (items === 0) return <span className="text-slate-400 text-xs">—</span>
+        return (
+          <span className="text-sm font-semibold text-slate-700">{items} ítem{items !== 1 ? 's' : ''}</span>
+        )
+      },
+    },
+    {
+      headerName: 'PDF',
+      width: 80,
+      sortable: false,
+      filter: false,
+      suppressMovable: true,
+      cellRenderer: ({ data }: { data: EntregaNueva }) => (
+        <div className="flex items-center justify-center h-full">
+          <Button
+            size="small"
+            type="text"
+            icon={<FaFilePdf className="text-red-500" />}
+            onClick={(e) => { e.stopPropagation(); openPdfModal(data) }}
+            title="Imprimir ticket"
+          />
+        </div>
+      ),
+    },
+  ]
 
   const onSelectionChanged = useCallback((e: SelectionChangedEvent<EntregaNueva>) => {
     const selected = e.api.getSelectedRows()
