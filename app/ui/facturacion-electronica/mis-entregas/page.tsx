@@ -40,6 +40,11 @@ export default function MisEntregasPage() {
     setOpenConfirmar(false)
   }
 
+  const handleMarcarEnCamino = async () => {
+    await acciones.enCamino.mutateAsync(entrega!.id)
+    setOpenConfirmar(false)
+  }
+
   const handleAnular = async (motivo: string) => {
     await acciones.anular.mutateAsync({ id: entrega!.id, motivo })
     setOpenAnular(false)
@@ -152,8 +157,10 @@ export default function MisEntregasPage() {
         open={openConfirmar}
         onClose={() => setOpenConfirmar(false)}
         onConfirmar={handleConfirmar}
+        onMarcarEnCamino={handleMarcarEnCamino}
         entrega={entrega as any}
         loading={acciones.confirmar.isPending}
+        loadingEnCamino={acciones.enCamino.isPending}
       />
 
       <ModalAnularEntregaV2

@@ -99,19 +99,10 @@ export const useStoreEntregaSeleccionada = create<UseStoreEntregaSeleccionada>(
 //   - DESPACHO (hija): borde azul (#1d4ed8) — igual que la badge "🚚 DESPACHO"
 function calcularColorEntrega(entrega: EntregaDB): RowStyle {
   const estado = entrega.estado_entrega
-  const grupoId = (entrega as any).grupo_entrega_id
-  const esHijaColor = grupoId && Number(grupoId) !== Number(entrega.id)
 
   let background: string
   if (estado === 'en') {
-    // Las hijas ya entregaron su porción — el UDV.cantidad_pendiente refleja
-    // el total del pedido, no solo lo de esta hija. Si miramos el UDV en la
-    // hija, siempre va a parecer "parcial" aunque haya cumplido su misión.
-    // Solo la MADRE (o una entrega sin grupo) debe mirar el UDV para naranja.
-    const tienePendiente = !esHijaColor && entrega.productos_entregados?.some(
-      (p: any) => Number(p.unidad_derivada_venta?.cantidad_pendiente || 0) > 0,
-    )
-    background = tienePendiente ? orangeColors[2] : greenColors[2]
+    background = greenColors[2]
   } else {
     switch (estado) {
       case 'pe': // Pendiente — naranja para que destaque que requiere acción

@@ -14,7 +14,6 @@ import { Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
-import { entregaProductoApi, EstadoEntrega } from '~/lib/api/entrega-producto'
 import { entregasNuevasApi } from '~/lib/api/entregas'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -146,6 +145,28 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     } catch (error) {
       console.error('Error al completar entrega:', error)
       message.error('Error al completar entrega')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleMarcarEnCamino = async () => {
+    setLoading(true)
+    try {
+      const response = await entregasNuevasApi.enCamino(Number(entregaOperativa.id))
+
+      if (response.error) {
+        message.error(response.error.message || 'Error al marcar en camino')
+        return
+      }
+
+      message.success('Entrega marcada en camino')
+      setModalConfirmarOpen(false)
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      if (onRefetch) onRefetch()
+    } catch (error) {
+      console.error('Error al marcar en camino:', error)
+      message.error('Error al marcar en camino')
     } finally {
       setLoading(false)
     }
@@ -333,8 +354,10 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         open={modalConfirmarOpen}
         onClose={() => setModalConfirmarOpen(false)}
         onConfirmar={handleEntregar}
+        onMarcarEnCamino={handleMarcarEnCamino}
         entrega={entregaOperativa}
         loading={loading}
+        loadingEnCamino={loading}
       />
 
       {/* Modal para anular una entrega marcada como entregada por error */}

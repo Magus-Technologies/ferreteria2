@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Modal, Button } from 'antd'
-import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf } from 'react-icons/fa'
+import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf, FaTruck } from 'react-icons/fa'
 import type { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
@@ -11,8 +11,10 @@ interface ModalConfirmarEntregaProps {
   open: boolean
   onClose: () => void
   onConfirmar: () => Promise<void>
+  onMarcarEnCamino?: () => Promise<void>
   entrega?: any
   loading?: boolean
+  loadingEnCamino?: boolean
 }
 
 type ProductoConfirmacion = {
@@ -27,10 +29,13 @@ export default function ModalConfirmarEntrega({
   open,
   onClose,
   onConfirmar,
+  onMarcarEnCamino,
   entrega,
   loading = false,
+  loadingEnCamino = false,
 }: ModalConfirmarEntregaProps) {
   const [confirmando, setConfirmando] = useState(false)
+  const [marcandoEnCamino, setMarcandoEnCamino] = useState(false)
   const openPdfModal = useStoreModalPdfEntrega((s) => s.openModal)
 
   // useMemo SIEMPRE antes del early return — rules of hooks
@@ -97,6 +102,7 @@ export default function ModalConfirmarEntrega({
     ? `${venta.serie}-${venta.numero}` : 'S/N'
   const direccion = entrega.direccion_entrega || 'No especificada'
   const telefono = cliente?.telefono || ''
+  const esDomicilioPendiente = entrega.tipo_entrega === 'de' && entrega.estado_entrega === 'pe'
 
   const handleConfirmar = async () => {
     setConfirmando(true)
@@ -104,6 +110,16 @@ export default function ModalConfirmarEntrega({
       await onConfirmar()
     } finally {
       setConfirmando(false)
+    }
+  }
+
+  const handleMarcarEnCamino = async () => {
+    if (!onMarcarEnCamino) return
+    setMarcandoEnCamino(true)
+    try {
+      await onMarcarEnCamino()
+    } finally {
+      setMarcandoEnCamino(false)
     }
   }
 
@@ -141,6 +157,16 @@ export default function ModalConfirmarEntrega({
             >
               {pdfLabel}
             </Button>
+            {esDomicilioPendiente && onMarcarEnCamino && (
+              <Button
+                icon={<FaTruck />}
+                onClick={handleMarcarEnCamino}
+                loading={marcandoEnCamino || loadingEnCamino}
+                className="!rounded-lg !h-10 !px-4 !font-bold !text-blue-700 !border-blue-300 hover:!bg-blue-50"
+              >
+                Marcar en Camino
+              </Button>
+            )}
             <Button
               type="primary"
               icon={<FaCheck />}
@@ -148,7 +174,7 @@ export default function ModalConfirmarEntrega({
               loading={confirmando || loading}
               className="!rounded-lg !h-10 !px-6 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30"
             >
-              Confirmar Entrega
+              {esDomicilioPendiente ? 'Entregar Directo' : 'Confirmar Entrega'}
             </Button>
           </div>
         </div>
