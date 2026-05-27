@@ -245,7 +245,12 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
       headerName: "Precio Mín.",
       field: "cantidad_minima",
       width: 110,
-      valueFormatter: (params) => params.value ? `S/ ${Number(params.value).toFixed(2)}` : '-',
+      valueFormatter: (params) => {
+        if (!params.value) return '-'
+        const data = params.data as any
+        const esUnidad = data?.tipo_promocion === 'PRODUCTO_GRATIS' || data?.modalidad === 'POR_PRODUCTOS' || data?.modalidad === 'MIXTO'
+        return esUnidad ? `${Number(params.value)} und.` : `S/ ${Number(params.value).toFixed(2)}`
+      },
       cellStyle: { textAlign: 'center' },
     },
     {

@@ -29,9 +29,10 @@ import {
 import { fcmApi } from '~/lib/api/fcm'
 import type { TipoDireccion } from '~/lib/api/cliente'
 import dayjs from 'dayjs'
-import { cajaApi } from '~/lib/api/caja'
+ import { cajaApi } from '~/lib/api/caja'
 import { fechaSubmit } from '~/utils/fechas'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { useStoreProductoAgregadoVenta } from '../_store/store-producto-agregado-venta'
 
 type ProductoAgrupado = Pick<
   FormCreateVenta['productos'][number],
@@ -109,6 +110,7 @@ export default function useCreateVenta({
       return notification.error({ message: 'No hay un almacen seleccionado' })
 
     const esEnEspera = values.estado_de_venta === EstadoDeVenta.EN_ESPERA
+    const valesExcluidos = useStoreProductoAgregadoVenta.getState().valesExcluidos
 
     // Validar apertura de caja solo para ventas finalizadas (no para "en espera")
     if (!esEnEspera) {
@@ -344,6 +346,8 @@ export default function useCreateVenta({
         : undefined,
       // Vale de compra (código de vale generado para canjear)
       codigo_vale: codigo_vale || undefined,
+      // Vales excluidos por el vendedor
+      vales_excluidos: valesExcluidos.length > 0 ? valesExcluidos : undefined,
     }
 
     setLoading(true)

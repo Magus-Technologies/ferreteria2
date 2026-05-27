@@ -12,8 +12,15 @@ import { createValeCompra, type CreateValeCompraRequest, type ValeCompra } from 
 import { message } from 'antd'
 import dayjs from 'dayjs'
 import { getAuthToken } from '~/lib/api'
+import type { MomentoAplicacion, TipoBeneficio } from '../../../_constants/form-vale-options'
 
-export interface FormCreateVale extends CreateValeCompraRequest {}
+export interface FormCreateVale extends CreateValeCompraRequest {
+  // Campos UI-only que se descomponen al enviar al backend.
+  // El backend solo conoce `tipo_promocion`; estos campos lo derivan
+  // a través de derivarTipoPromocion(momento, beneficio).
+  momento_aplicacion?: MomentoAplicacion
+  tipo_beneficio?: TipoBeneficio
+}
 
 export default function BodyCrearVale() {
   const [form] = Form.useForm<FormCreateVale>()
@@ -33,14 +40,32 @@ export default function BodyCrearVale() {
         return [val as number]
       }
 
-      // Convertir fechas de dayjs a string
-      const payload = {
-        ...values,
+      // Descartamos el campo UI-only `tipo_beneficio` que solo sirve para
+      // derivar `tipo_promocion` dentro del formulario.
+      // `momento_aplicacion` SÍ se envía: el backend lo persiste en su
+      // propia columna para distinguir vales que generan código futuro.
+      const { tipo_beneficio: _tb, ...rest } = values
+      let payload = {
+        ...rest,
         fecha_inicio: values.fecha_inicio ? dayjs(values.fecha_inicio).format('YYYY-MM-DD') : undefined,
         fecha_fin: values.fecha_fin ? dayjs(values.fecha_fin).format('YYYY-MM-DD') : undefined,
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,
         producto_ids: toArray(values.producto_ids),
         categoria_ids: toArray(values.categoria_ids),
+      }
+
+      // Para SORTEO: limpiar descuentos
+      if (values.tipo_promocion === 'SORTEO') {
+        payload = {
+          ...payload,
+          descuento_tipo: null,
+          descuento_valor: null,
+          // Si no incluye producto, limpiar producto_gratis
+          ...(!(values as any).sorteo_incluye_producto && {
+            producto_gratis_id: null,
+            cantidad_producto_gratis: null,
+          }),
+        } as typeof payload
       }
 
       console.log('📦 Payload a enviar:', payload)
@@ -105,6 +130,10 @@ export default function BodyCrearVale() {
       className='flex flex-col xl:flex-row gap-4 xl:gap-6 w-full h-full'
       onFinish={handleSubmit}
       initialValues={{
+        // UI-only: arranca por defecto en "Esta misma compra" + "Descuento".
+        // El campo `tipo_promocion` se deriva automáticamente.
+        momento_aplicacion: 'MISMA_COMPRA',
+        tipo_beneficio: 'DESCUENTO',
         tipo_promocion: 'DESCUENTO_MISMA_COMPRA',
         modalidad: 'CANTIDAD_MINIMA',
         descuento_tipo: 'PORCENTAJE',

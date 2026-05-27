@@ -16,6 +16,7 @@ type UseStoreProductoAgregadoVentaProps = {
   productos: ValuesCardAgregarProductoVenta[]
   tipo_moneda: TipoMoneda
   valesAplicables: ValeCompra[]
+  valesExcluidos: number[]
   setProductoAgregado: (
     value: ValuesCardAgregarProductoVenta | undefined
   ) => void
@@ -29,6 +30,7 @@ type UseStoreProductoAgregadoVentaProps = {
   ) => void
   setTipoMoneda: (value: TipoMoneda) => void
   setValesAplicables: (vales: ValeCompra[]) => void
+  excluirVale: (valeId: number) => void
   reset: () => void
 }
 
@@ -39,6 +41,7 @@ export const useStoreProductoAgregadoVenta =
       productos: [],
       tipo_moneda: TipoMoneda.SOLES,
       valesAplicables: [],
+      valesExcluidos: [],
       setProductoAgregado: (value) => set({ productoAgregado: value }),
       setProductos: (value) =>
         set((state) => ({
@@ -47,12 +50,19 @@ export const useStoreProductoAgregadoVenta =
         })),
       setTipoMoneda: (value) => set({ tipo_moneda: value }),
       setValesAplicables: (vales) => set({ valesAplicables: vales }),
+      excluirVale: (valeId) =>
+        set((state) => ({
+          valesExcluidos: state.valesExcluidos.includes(valeId)
+            ? state.valesExcluidos
+            : [...state.valesExcluidos, valeId],
+        })),
       reset: () =>
         set({
           productoAgregado: undefined,
           productos: [],
           tipo_moneda: TipoMoneda.SOLES,
           valesAplicables: [],
+          valesExcluidos: [],
         }),
     }
   })

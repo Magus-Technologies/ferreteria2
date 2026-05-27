@@ -1000,9 +1000,32 @@ export function useColumnsVender({
         const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
         const paqueteId = form.getFieldValue(['productos', value, 'paquete_id'])
 
-        // Sub-productos de paquete y vales no tienen botón de eliminar
-        if (tipoFila === 'paquete_producto' || tipoFila === 'vale_promocional') {
+        // Sub-productos de paquete no tienen botón de eliminar
+        if (tipoFila === 'paquete_producto') {
           return <div className='flex items-center h-full' />
+        }
+
+        // Vale promocional - botón de eliminar que excluye el vale
+        if (tipoFila === 'vale_promocional') {
+          const handleExcluirVale = () => {
+            const productoId = form.getFieldValue(['productos', value, 'producto_id'])
+            const valeId = Math.abs(Number(productoId))
+            if (valeId) {
+              useStoreProductoAgregadoVenta.getState().excluirVale(valeId)
+            }
+            remove(value!)
+          }
+          return (
+            <div className='flex items-center h-full'>
+              <Tooltip title='Excluir vale promocional'>
+                <MdDelete
+                  onClick={handleExcluirVale}
+                  size={15}
+                  className='cursor-pointer text-green-600 hover:text-rose-700 hover:scale-105 transition-all active:scale-95'
+                />
+              </Tooltip>
+            </div>
+          )
         }
 
         const handleEliminar = () => {
