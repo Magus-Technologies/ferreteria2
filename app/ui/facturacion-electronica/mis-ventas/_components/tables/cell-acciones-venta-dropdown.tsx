@@ -13,8 +13,8 @@ import { useStoreModalPdfVenta } from "../../_store/store-modal-pdf-venta";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { facturacionElectronicaApi } from "~/lib/api/facturacion-electronica";
 import ModalHistorialVenta from "../modals/modal-historial-venta";
-import ModalEntregarVenta from "../modals/modal-entregar-venta";
 import ModalVerEntregas from "../modals/modal-ver-entregas";
+import ModalEntregarVenta from "../modals/modal-entregar-venta";
 import { FaPlusCircle } from "react-icons/fa";
 
 export default function CellAccionesVentaDropdown(
@@ -27,8 +27,8 @@ export default function CellAccionesVentaDropdown(
   const { modal } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [historialOpen, setHistorialOpen] = useState(false);
-  const [entregarRestanteOpen, setEntregarRestanteOpen] = useState(false);
   const [verEntregasOpen, setVerEntregasOpen] = useState(false);
+  const [entregarVentaOpen, setEntregarVentaOpen] = useState(false);
 
   if (!ventaId) return null;
 
@@ -279,20 +279,18 @@ export default function CellAccionesVentaDropdown(
       label: <span className="flex items-center gap-2"><FaTruck className="text-blue-600" /> Ver Entregas</span>,
       onClick: () => setVerEntregasOpen(true),
     },
+    ...(tieneRestante
+      ? [{
+          key: 'entregar',
+          label: <span className="flex items-center gap-2"><FaPlusCircle className="text-purple-600" /> Entregar</span>,
+          onClick: () => setEntregarVentaOpen(true),
+        } as const]
+      : []),
     {
       key: 'pdf',
       label: <span className="flex items-center gap-2"><FaFilePdf className="text-red-600" /> Ver PDF</span>,
       onClick: handleVerPDF,
     },
-    ...(tieneRestante
-      ? [
-          {
-            key: 'entregar-restante',
-            label: <span className="flex items-center gap-2"><FaPlusCircle className="text-purple-600" /> Entregar Restante</span>,
-            onClick: () => setEntregarRestanteOpen(true),
-          } as const,
-        ]
-      : []),
     {
       type: 'divider',
     },
@@ -356,15 +354,15 @@ export default function CellAccionesVentaDropdown(
         ventaNumero={venta?.numero}
       />
 
-      <ModalEntregarVenta
-        open={entregarRestanteOpen}
-        setOpen={setEntregarRestanteOpen}
-        venta={venta}
-      />
-
       <ModalVerEntregas
         open={verEntregasOpen}
         setOpen={setVerEntregasOpen}
+        venta={venta}
+      />
+
+      <ModalEntregarVenta
+        open={entregarVentaOpen}
+        setOpen={setEntregarVentaOpen}
         venta={venta}
       />
     </div>

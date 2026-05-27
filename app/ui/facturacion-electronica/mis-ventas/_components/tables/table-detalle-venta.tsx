@@ -12,6 +12,8 @@ type DetalleProducto = {
   cantidad: number
   precio: number
   subtotal: number
+  entregado: number
+  pendiente: number
 }
 
 export default function TableDetalleVenta() {
@@ -29,6 +31,8 @@ export default function TableDetalleVenta() {
           Number(unidad.cantidad) *
           Number(unidad.factor) *
           Number(unidad.precio),
+        entregado: Number(unidad.cantidad) - Number(unidad.cantidad_pendiente || 0),
+        pendiente: Number(unidad.cantidad_pendiente || 0),
       }))
     ) || []
 
@@ -71,6 +75,26 @@ export default function TableDetalleVenta() {
       field: 'subtotal',
       width: 120,
       valueFormatter: params => `S/. ${Number(params.value).toFixed(2)}`,
+    },
+    {
+      headerName: 'Entregado',
+      field: 'entregado',
+      width: 100,
+      valueFormatter: params => Number(params.value).toFixed(2),
+      cellStyle: params => ({
+        color: Number(params.value) > 0 ? '#16a34a' : '#9ca3af',
+        fontWeight: Number(params.value) > 0 ? '600' : '400',
+      } as Record<string, string>),
+    },
+    {
+      headerName: 'Pendiente',
+      field: 'pendiente',
+      width: 100,
+      valueFormatter: params => Number(params.value).toFixed(2),
+      cellStyle: params => ({
+        color: Number(params.value) > 0 ? '#ea580c' : '#16a34a',
+        fontWeight: Number(params.value) > 0 ? '700' : '400',
+      } as Record<string, string>),
     },
   ]
 

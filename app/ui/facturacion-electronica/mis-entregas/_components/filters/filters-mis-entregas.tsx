@@ -286,7 +286,7 @@ export default function FiltersMisEntregas() {
 
           {/* Botón principal "Entregar/Despachar/Confirmar" — actúa sobre la
               entrega seleccionada en la tabla. Cambia su texto según estado. */}
-          <ConfigurableElement
+          {/* <ConfigurableElement
             componentId="mis-entregas.boton-entregar-principal"
             label="Botón Entregar Principal"
           >
@@ -326,7 +326,7 @@ export default function FiltersMisEntregas() {
                 {botonPrincipal ? botonPrincipal.label : 'Entregar'}
               </ButtonBase>
             </div>
-          </ConfigurableElement>
+          </ConfigurableElement> */}
 
           {/* Leyenda de colores (al estilo mis-ventas) */}
           <div className="col-span-12 flex items-center gap-5 text-xs border-t border-gray-100 pt-2">

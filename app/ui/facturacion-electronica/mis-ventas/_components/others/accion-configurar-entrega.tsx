@@ -1,15 +1,37 @@
 'use client'
 
-import { useState } from 'react'
-import { FaPlus } from 'react-icons/fa'
+import { useState, useMemo } from 'react'
+import { FaPlus, FaHistory } from 'react-icons/fa'
+import { Spin } from 'antd'
 import ButtonBase from '~/components/buttons/button-base'
 import { useStoreVentaSeleccionada } from '../tables/table-mis-ventas'
 import ModalResumenEntregaVenta, { type TipoEntregaCodigo, type CantidadOverride } from '../modals/modal-resumen-entrega-venta'
 import ModalNuevaEntregaVenta from '~/app/ui/facturacion-electronica/mis-entregas/_components/modals/modal-nueva-entrega-venta'
+import useEntregasDeVenta from '~/app/ui/facturacion-electronica/mis-entregas/_hooks/use-entregas-de-venta'
 import type { ResumenVenta } from '~/lib/api/entregas'
 
 export default function AccionConfigurarEntrega() {
   const venta = useStoreVentaSeleccionada(s => s.venta)
+
+  const { entregas: historial, loading: loadingHistorial } = useEntregasDeVenta(venta?.id)
+
+  const hasPendiente = useMemo(() => {
+    if (!venta) return false
+    const covered: Record<string, number> = {}
+    for (const entrega of historial) {
+      if (entrega.estado_entrega_codigo === 'ca') continue
+      if (entrega.estado_entrega_codigo === 'pe') continue
+      for (const d of entrega.detalles ?? []) {
+        const id = String(d.unidad_derivada_venta_id)
+        covered[id] = (covered[id] ?? 0) + (d.cantidad ?? 0)
+      }
+    }
+    return (venta.productos_por_almacen ?? []).some((prod: any) =>
+      (prod.unidades_derivadas ?? []).some((udv: any) =>
+        Number(udv.cantidad ?? 0) - (covered[String(udv.id)] ?? 0) > 0
+      )
+    )
+  }, [venta, historial])
 
   const [openResumen,      setOpenResumen]      = useState(false)
   const [openProgramar,    setOpenProgramar]    = useState(false)
@@ -51,12 +73,21 @@ export default function AccionConfigurarEntrega() {
   return (
     <>
       <ButtonBase
-        className="w-full h-10 flex items-center justify-center gap-2 border-blue-500 !text-blue-700 font-semibold hover:bg-blue-50"
-        disabled={!venta}
+        className={`w-full h-10 flex items-center justify-center gap-2 font-semibold ${
+          !hasPendiente && historial.length > 0
+            ? 'border-green-500 !text-green-700 hover:bg-green-50'
+            : 'border-blue-500 !text-blue-700 hover:bg-blue-50'
+        }`}
+        disabled={!venta || loadingHistorial}
         onClick={() => setOpenResumen(true)}
       >
-        <FaPlus size={14} />
-        Configurar Entrega
+        {loadingHistorial ? (
+          <Spin size="small" />
+        ) : !hasPendiente && historial.length > 0 ? (
+          <><FaHistory size={13} /> Ver Historial</>
+        ) : (
+          <><FaPlus size={14} /> Configurar Entrega</>
+        )}
       </ButtonBase>
 
       {/* Paso 1: resumen de productos + selector de tipo */}

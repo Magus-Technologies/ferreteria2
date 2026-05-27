@@ -40,7 +40,7 @@ export default function ModalPdfEntrega({
     const token = getAuthToken()
     const API_URL = process.env.NEXT_PUBLIC_API_URL
     const res = await fetch(
-      `${API_URL}/pdf/entrega-producto/${id}?formato=${formato}`,
+      `${API_URL}/pdf/entrega/${id}?formato=${formato}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
