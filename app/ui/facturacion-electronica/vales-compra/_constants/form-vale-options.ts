@@ -29,10 +29,9 @@ export const TIPO_BENEFICIO_OPTIONS: { label: string; value: TipoBeneficio; desc
   { label: "🎁 Sorteo", value: "SORTEO", description: "Genera un código de participación para un sorteo." },
 ];
 
-export const MODALIDAD_FORM_OPTIONS: { label: string; value: Modalidad }[] = [
-  { label: "💵 Solamente por Precio Mínimo", value: "CANTIDAD_MINIMA" },
-  { label: "📁 Por Tipo de Familia (Categoría)", value: "POR_CATEGORIA" },
-  { label: "🏷️ Por Productos Específicos", value: "POR_PRODUCTOS" },
+export const MODALIDAD_FORM_OPTIONS: { label: string; value: Modalidad; description?: string }[] = [
+  { label: "📁 Por Categoría", value: "POR_CATEGORIA", description: "Aplica solo a productos de categorías específicas" },
+  { label: "🏷️ Por Producto", value: "POR_PRODUCTOS", description: "Aplica solo a productos específicos seleccionados" },
 ];
 
 export const DESCUENTO_TIPO_OPTIONS = [

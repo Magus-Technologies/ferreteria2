@@ -11,6 +11,8 @@ import {
   FaDollarSign,
   FaUsers,
   FaClock,
+  FaFilter,
+  FaTrophy,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
@@ -22,10 +24,8 @@ import {
   DESCUENTO_TIPO_OPTIONS,
   derivarTipoPromocion,
   beneficiosValidosParaMomento,
-  type MomentoAplicacion,
   type TipoBeneficio,
 } from "../../../_constants/form-vale-options";
-import { getPreciosProductos } from "~/lib/api/vales-compra";
 
 const { TextArea } = Input;
 
@@ -36,27 +36,6 @@ interface SeccionBasicaProps {
 }
 
 function SeccionBasica({ form }: SeccionBasicaProps) {
-  const momento = (Form.useWatch("momento_aplicacion", form) as MomentoAplicacion | undefined)
-    ?? "MISMA_COMPRA";
-  const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
-
-  // Cada vez que cambia momento o beneficio, derivamos el tipo_promocion del backend.
-  useEffect(() => {
-    if (!beneficio) return;
-    const tipoDerivado = derivarTipoPromocion(momento, beneficio);
-    if (form.getFieldValue("tipo_promocion") !== tipoDerivado) {
-      form.setFieldValue("tipo_promocion", tipoDerivado);
-    }
-  }, [momento, beneficio, form]);
-
-  // Todos los beneficios están permitidos para ambos momentos. La distinción
-  // "ahora vs futuro" se guarda en la columna `momento_aplicacion` del backend.
-  const beneficiosPermitidos = beneficiosValidosParaMomento(momento);
-  const opcionesBeneficio = TIPO_BENEFICIO_OPTIONS.map((opt) => ({
-    ...opt,
-    disabled: !beneficiosPermitidos.includes(opt.value),
-  }));
-
   return (
     <div className="border-l-4 border-amber-500 pl-3 space-y-4">
       <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
@@ -108,10 +87,195 @@ function SeccionBasica({ form }: SeccionBasicaProps) {
         </Form.Item>
       </div>
 
-      {/* PASO 2 — ¿QUÉ OBTIENE EL CLIENTE? */}
+      <Form.Item name="descripcion" label="Descripción (opcional)">
+        <TextArea rows={3} placeholder="Describe los detalles de la promoción..." maxLength={500} showCount />
+      </Form.Item>
+    </div>
+  );
+}
+
+type TipoUmbral = 'MONTO' | 'CANTIDAD';
+
+interface SeccionUmbralProps {
+  form: FormInstance<FormCreateVale>;
+  momento: string;
+  tipoUmbral: TipoUmbral | null;
+  setTipoUmbral: (t: TipoUmbral | null) => void;
+}
+
+function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral }: SeccionUmbralProps) {
+
+  const esMonto = tipoUmbral === 'MONTO';
+  const esCantidad = tipoUmbral === 'CANTIDAD';
+
+  return (
+    <div className="border-l-4 border-blue-500 pl-3">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-blue-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 2</span>
+          <span className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+            <FaHashtag className="text-blue-600" /> ¿Cuál es el umbral de activación?
+          </span>
+        </div>
+        <div className="text-xs text-gray-600 mb-3">
+          Define la compra mínima que el cliente debe alcanzar para activar la promoción.
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div
+            onClick={() => setTipoUmbral('MONTO')}
+            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+              esMonto ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FaDollarSign className={`text-xl ${esMonto ? 'text-blue-600' : 'text-gray-400'}`} />
+              <div>
+                <div className="font-semibold">Monto Mínimo (S/)</div>
+                <div className="text-xs text-gray-500">La venta debe superar un monto en soles</div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setTipoUmbral('CANTIDAD')}
+            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+              esCantidad ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FaHashtag className={`text-xl ${esCantidad ? 'text-blue-600' : 'text-gray-400'}`} />
+              <div>
+                <div className="font-semibold">Cantidad Mínima (und.)</div>
+                <div className="text-xs text-gray-500">La venta debe incluir una cantidad de productos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {esMonto && (
+          <Form.Item
+            name="cantidad_minima"
+            label="Monto Mínimo (S/)"
+            rules={[
+              { required: true, message: "El monto mínimo es requerido" },
+              { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
+            ]}
+          >
+            <InputNumber
+              className="w-full"
+              placeholder="Ej: 100.00"
+              min={0.01}
+              step={0.01}
+              precision={2}
+              prefix={<FaDollarSign className="text-blue-600" />}
+            />
+          </Form.Item>
+        )}
+
+        {esCantidad && (
+          <Form.Item
+            name="cantidad_minima"
+            label="Cantidad Mínima (und.)"
+            rules={[
+              { required: true, message: "La cantidad mínima es requerida" },
+              { type: "number", min: 1, message: "Debe ser al menos 1" },
+            ]}
+          >
+            <InputNumber
+              className="w-full"
+              placeholder="Ej: 10"
+              min={1}
+              step={1}
+              precision={0}
+              prefix={<FaHashtag className="text-blue-600" />}
+            />
+          </Form.Item>
+        )}
+
+        {!tipoUmbral && (
+          <p className="text-xs text-amber-600">Selecciona una opción para definir el valor</p>
+        )}
+
+        {momento === "PROXIMA_COMPRA" && (
+          <div className="text-xs text-blue-700 mt-2">
+            ℹ️ Se generará un código que el cliente canjeará en una venta posterior.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface SeccionModalidadProps {
+  form: FormInstance<FormCreateVale>;
+  modalidad: string;
+  tipoUmbral: TipoUmbral | null;
+}
+
+function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps) {
+  return (
+    <div className="border-l-4 border-purple-500 pl-3">
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-purple-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 3</span>
+          <span className="text-sm font-semibold text-gray-800 flex items-center gap-1">
+            <FaFilter className="text-purple-600" /> ¿Sobre qué productos aplica?
+          </span>
+        </div>
+        <Form.Item name="modalidad" label="Modalidad" rules={[{ required: true, message: "Seleccione la modalidad" }]} className="!mb-0">
+          <Select options={MODALIDAD_FORM_OPTIONS} placeholder="Seleccione..." />
+        </Form.Item>
+        {(modalidad === "POR_CATEGORIA" || modalidad === "MIXTO") && (
+          <Form.Item name="categoria_ids" label="Categorías Aplicables" rules={[{ required: true, message: "Seleccione al menos una categoría" }]} className="mt-3 !mb-0">
+            <SelectCategorias mode="multiple" placeholder="Seleccione las categorías..." showButtonCreate />
+          </Form.Item>
+        )}
+        {(modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && (
+          <Form.Item name="producto_ids" label="Productos Aplicables" rules={[{ required: true, message: "Seleccione al menos un producto" }]} className="mt-3 !mb-0">
+            <SelectProductos mode="multiple" placeholder="Busque y seleccione productos..." className="w-full" withSearch withTipoBusqueda />
+          </Form.Item>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface SeccionBeneficioProps {
+  form: FormInstance<FormCreateVale>;
+  tipoPromocion: string;
+  descuentoTipo: string;
+  momento: string;
+}
+
+function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento }: SeccionBeneficioProps) {
+  const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
+
+  useEffect(() => {
+    if (!beneficio) return;
+    const tipoDerivado = derivarTipoPromocion(momento, beneficio);
+    if (form.getFieldValue("tipo_promocion") !== tipoDerivado) {
+      form.setFieldValue("tipo_promocion", tipoDerivado);
+    }
+  }, [momento, beneficio, form]);
+
+  const beneficiosPermitidos = beneficiosValidosParaMomento(momento);
+  const opcionesBeneficio = TIPO_BENEFICIO_OPTIONS.map((opt) => ({
+    ...opt,
+    disabled: !beneficiosPermitidos.includes(opt.value),
+  }));
+
+  const isDescuento = tipoPromocion === "DESCUENTO_MISMA_COMPRA" || tipoPromocion === "DESCUENTO_PROXIMA_COMPRA";
+  const isProductoGratis = tipoPromocion === "PRODUCTO_GRATIS";
+  const isDosPorUno = tipoPromocion === "DOS_POR_UNO";
+  const isSorteo = tipoPromocion === "SORTEO";
+  const incluyeProductoSorteo = Form.useWatch("sorteo_incluye_producto", form) || false;
+
+  return (
+    <div className="border-l-4 border-green-500 pl-3">
       <div className="bg-green-50 border border-green-200 rounded-lg p-3">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-green-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 2</span>
+          <span className="bg-green-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 4</span>
           <span className="text-sm font-semibold text-gray-800 flex items-center gap-1">
             <FaGift className="text-green-600" /> ¿Qué obtiene el cliente?
           </span>
@@ -139,292 +303,126 @@ function SeccionBasica({ form }: SeccionBasicaProps) {
             </div>
           </Radio.Group>
         </Form.Item>
-        {momento === "PROXIMA_COMPRA" && (
-          <div className="text-xs text-blue-700 mt-2">
-            ℹ️ Se generará un código que el cliente canjeará en una venta posterior.
-          </div>
-        )}
       </div>
 
-      <Form.Item name="descripcion" label="Descripción (opcional)">
-        <TextArea rows={3} placeholder="Describe los detalles de la promoción..." maxLength={500} showCount />
-      </Form.Item>
-    </div>
-  );
-}
-
-interface SeccionCondicionesProps {
-  form: FormInstance<FormCreateVale>;
-  modalidad: string;
-  tipoPromocion: string;
-}
-
-function SeccionCondiciones({ form, modalidad, tipoPromocion }: SeccionCondicionesProps) {
-  // El umbral del vale puede ser por UNIDADES (cantidad de productos) o por PRECIO (S/).
-  // - Por unidades: cuando el tipo es PRODUCTO_GRATIS o DOS_POR_UNO (siempre se mide en unidades)
-  //   o cuando la modalidad selecciona productos específicos (POR_PRODUCTOS / MIXTO), donde
-  //   tiene más sentido pedir "10 productos de X" que "S/ 1000 en X".
-  // - Por precio: el resto (CANTIDAD_MINIMA, POR_CATEGORIA con DESCUENTO/SORTEO).
-  const esUmbralPorUnidades =
-    tipoPromocion === "PRODUCTO_GRATIS" ||
-    tipoPromocion === "DOS_POR_UNO" ||
-    modalidad === "POR_PRODUCTOS" ||
-    modalidad === "MIXTO";
-  const labelMinimo = esUmbralPorUnidades ? "Cantidad Mínima de Productos" : "Precio Mínimo (S/)";
-  const placeholderMinimo = esUmbralPorUnidades ? "Ej: 10" : "Ej: 100.00";
-  const tooltipMinimo = esUmbralPorUnidades
-    ? "Cantidad de unidades que el cliente debe comprar para activar la promoción (ej: 10 productos = 1 gratis)"
-    : "Monto mínimo en soles que la venta debe alcanzar para activar la promoción";
-  const stepMinimo = esUmbralPorUnidades ? 1 : 0.01;
-  const precisionMinimo = esUmbralPorUnidades ? 0 : 2;
-  const iconMinimo = esUmbralPorUnidades
-    ? <FaHashtag className="text-blue-600" />
-    : <FaDollarSign className="text-blue-600" />;
-
-  // Validación: cuando el umbral es POR PRECIO y se seleccionaron productos específicos,
-  // el "Precio Mínimo" debe ser mayor al precio público del producto seleccionado.
-  // (Si fuera <= al precio público, el vale se activaría con sólo 1 unidad, lo que rara
-  // vez es la intención del usuario al ponerle un umbral.)
-  const productoIds = Form.useWatch("producto_ids", form) as number[] | undefined;
-  const [preciosPublicos, setPreciosPublicos] = useState<Record<number, number>>({});
-
-  useEffect(() => {
-    const debeValidar = !esUmbralPorUnidades && (modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO");
-    if (!debeValidar || !productoIds || productoIds.length === 0) {
-      setPreciosPublicos({});
-      return;
-    }
-    let cancelled = false;
-    getPreciosProductos(productoIds)
-      .then((res) => {
-        if (cancelled) return;
-        setPreciosPublicos(res.data?.data ?? {});
-      })
-      .catch(() => {
-        if (!cancelled) setPreciosPublicos({});
-      });
-    return () => { cancelled = true; };
-  }, [productoIds, modalidad, esUmbralPorUnidades]);
-
-  const precioPublicoMax = Object.values(preciosPublicos).reduce((max, p) => Math.max(max, p), 0);
-  const debeValidarPrecio = !esUmbralPorUnidades && (modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && precioPublicoMax > 0;
-
-  return (
-    <div className="border-l-4 border-blue-500 pl-3">
-      <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-        <FaHashtag className="text-blue-600" />
-        Condiciones de Activación
-      </h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Form.Item
-          name="modalidad"
-          label="Modalidad"
-          rules={[{ required: true, message: "Seleccione la modalidad" }]}
-        >
-          <Select options={MODALIDAD_FORM_OPTIONS} />
-        </Form.Item>
-
-        <Form.Item
-          name="cantidad_minima"
-          label={labelMinimo}
-          tooltip={tooltipMinimo}
-          extra={debeValidarPrecio && precioPublicoMax > 0 ? (
-            <span className="text-xs text-amber-600">
-              Precio público del producto: S/. {precioPublicoMax.toFixed(2)}. El precio mínimo debe ser mayor.
-            </span>
-          ) : undefined}
-          rules={[
-            { required: true, message: "El valor mínimo es requerido" },
-            { type: "number", min: esUmbralPorUnidades ? 1 : 0.01, message: esUmbralPorUnidades ? "Debe ser al menos 1" : "Debe ser mayor a 0" },
-            {
-              validator: (_, value) => {
-                if (value == null) return Promise.resolve();
-                if (debeValidarPrecio && Number(value) <= precioPublicoMax) {
-                  return Promise.reject(
-                    new Error(`El precio mínimo debe ser mayor a S/. ${precioPublicoMax.toFixed(2)} (precio público del producto)`)
-                  );
-                }
-                return Promise.resolve();
-              },
-            },
-          ]}
-        >
-          <InputNumber
-            className="w-full"
-            placeholder={placeholderMinimo}
-            min={esUmbralPorUnidades ? 1 : 0.01}
-            step={stepMinimo}
-            precision={precisionMinimo}
-            prefix={iconMinimo}
-          />
-        </Form.Item>
-      </div>
-
-      {(modalidad === "POR_CATEGORIA" || modalidad === "MIXTO") && (
-        <Form.Item
-          name="categoria_ids"
-          label="Categorías Aplicables"
-          rules={[{ required: true, message: "Seleccione al menos una categoría" }]}
-        >
-          <SelectCategorias mode="multiple" placeholder="Seleccione las categorías..." showButtonCreate />
-        </Form.Item>
-      )}
-
-      {(modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && (
-        <Form.Item
-          name="producto_ids"
-          label="Productos Aplicables"
-          rules={[{ required: true, message: "Seleccione al menos un producto" }]}
-        >
-          <SelectProductos mode="multiple" placeholder="Busque y seleccione productos..." className="w-full" withSearch withTipoBusqueda />
-        </Form.Item>
-      )}
-    </div>
-  );
-}
-
-interface SeccionBeneficioProps {
-  form: FormInstance<FormCreateVale>;
-  tipoPromocion: string;
-  descuentoTipo: string;
-}
-
-function SeccionBeneficio({ form, tipoPromocion, descuentoTipo }: SeccionBeneficioProps) {
-  const isDescuento = tipoPromocion === "DESCUENTO_MISMA_COMPRA" || tipoPromocion === "DESCUENTO_PROXIMA_COMPRA";
-  const isProductoGratis = tipoPromocion === "PRODUCTO_GRATIS";
-  const isDosPorUno = tipoPromocion === "DOS_POR_UNO";
-  const isSorteo = tipoPromocion === "SORTEO";
-  const incluyeProductoSorteo = Form.useWatch("sorteo_incluye_producto", form) || false;
-
-  return (
-    <div className="border-l-4 border-green-500 pl-3">
-      <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-        <FaGift className="text-green-600" />
-        Beneficio de la Promoción
-      </h3>
-
-      {/* DESCUENTO_MISMA_COMPRA | DESCUENTO_PROXIMA_COMPRA */}
-      {isDescuento && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Form.Item
-            name="descuento_tipo"
-            label="Tipo de Descuento"
-            rules={[{ required: true, message: "Seleccione el tipo" }]}
-          >
-            <Select options={DESCUENTO_TIPO_OPTIONS} />
-          </Form.Item>
-
-        <Form.Item
-          name="descuento_valor"
-          label={descuentoTipo === "PORCENTAJE" ? "Porcentaje (%)" : "Monto (S/)"}
-          rules={[
-            { required: true, message: "El valor de descuento es requerido" },
-            { type: "number", min: 0, message: "Debe ser mayor o igual a 0" },
-            {
-              validator: (_, value) => {
-                if (value == null) return Promise.resolve();
-                if (descuentoTipo === "PORCENTAJE" && value > 100) {
-                  return Promise.reject(new Error("El porcentaje no puede ser mayor a 100%"));
-                }
-                return Promise.resolve();
-              },
-            },
-          ]}
-        >
-            <InputNumber
-              className="w-full"
-              placeholder={descuentoTipo === "PORCENTAJE" ? "Ej: 10" : "Ej: 50.00"}
-              min={0}
-              max={descuentoTipo === "PORCENTAJE" ? 100 : undefined}
-              step={descuentoTipo === "PORCENTAJE" ? 1 : 0.01}
-              prefix={descuentoTipo === "PORCENTAJE" ? <FaPercentage className="text-green-600" /> : <FaDollarSign className="text-green-600" />}
-            />
-        </Form.Item>
-        </div>
-      )}
-
-      {/* PRODUCTO_GRATIS */}
-      {isProductoGratis && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Form.Item
-            name="producto_gratis_id"
-            label="Producto a Regalar"
-            rules={[{ required: true, message: "Seleccione el producto" }]}
-          >
-            <SelectProductos placeholder="Busque el producto a regalar..." className="w-full" withSearch withTipoBusqueda />
-          </Form.Item>
-
-          <Form.Item
-            name="cantidad_producto_gratis"
-            label="Cantidad a Regalar"
-          >
-            <InputNumber className="w-full" placeholder="1" min={0.001} step={1} />
-          </Form.Item>
-        </div>
-      )}
-
-      {/* DOS_POR_UNO */}
-      {isDosPorUno && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-sm text-green-700">
-            <strong>2x1:</strong> El cliente compra 1 unidad del producto y se lleva 2 (paga 1, lleva 2).
-            Define la modalidad y productos/categorías en la sección de condiciones.
-          </p>
-          <div className="mt-3">
+      {/* Detalles según beneficio */}
+      <div className="mt-3 pl-3 border-l-2 border-green-300 space-y-4">
+        {/* DESCUENTO (% o S/) */}
+        {isDescuento && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Form.Item
-              name="cantidad_producto_gratis"
-              label="Cantidad extra gratis"
-              tooltip="1 = compra 1 lleva 2, 2 = compra 1 lleva 3"
+              name="descuento_tipo"
+              label="Tipo de Descuento"
+              rules={[{ required: true, message: "Seleccione el tipo" }]}
             >
-              <InputNumber className="w-full" placeholder="1" min={1} step={1} defaultValue={1} />
+              <Select options={DESCUENTO_TIPO_OPTIONS} />
+            </Form.Item>
+
+            <Form.Item
+              name="descuento_valor"
+              label={descuentoTipo === "PORCENTAJE" ? "Porcentaje (%)" : "Monto (S/)"}
+              rules={[
+                { required: true, message: "El valor de descuento es requerido" },
+                { type: "number", min: 0, message: "Debe ser mayor o igual a 0" },
+                {
+                  validator: (_, value) => {
+                    if (value == null) return Promise.resolve();
+                    if (descuentoTipo === "PORCENTAJE" && value > 100) {
+                      return Promise.reject(new Error("El porcentaje no puede ser mayor a 100%"));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber
+                className="w-full"
+                placeholder={descuentoTipo === "PORCENTAJE" ? "Ej: 10" : "Ej: 50.00"}
+                min={0}
+                max={descuentoTipo === "PORCENTAJE" ? 100 : undefined}
+                step={descuentoTipo === "PORCENTAJE" ? 1 : 0.01}
+                prefix={descuentoTipo === "PORCENTAJE" ? <FaPercentage className="text-green-600" /> : <FaDollarSign className="text-green-600" />}
+              />
             </Form.Item>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* SORTEO */}
-      {isSorteo && (
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-700">
-              <strong>📢 Sorteo:</strong> Los clientes que cumplan las condiciones participan automáticamente. 
-              Opcionalmente, puede incluir un producto como premio.
-            </p>
+        {/* PRODUCTO GRATIS */}
+        {isProductoGratis && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Form.Item
+              name="producto_gratis_id"
+              label="Producto a Regalar"
+              rules={[{ required: true, message: "Seleccione el producto" }]}
+            >
+              <SelectProductos placeholder="Busque el producto a regalar..." className="w-full" withSearch withTipoBusqueda />
+            </Form.Item>
+
+            <Form.Item
+              name="cantidad_producto_gratis"
+              label="Cantidad a Regalar"
+            >
+              <InputNumber className="w-full" placeholder="1" min={0.001} step={1} />
+            </Form.Item>
           </div>
+        )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">¿Incluir Producto Específico como Premio?</label>
+        {/* 2x1 */}
+        {isDosPorUno && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <p className="text-sm text-indigo-700">
+              <strong>2x1:</strong> Al comprar la cantidad definida, el cliente recibe unidades extra gratis.
+            </p>
+            <div className="mt-3">
+              <Form.Item
+                name="cantidad_producto_gratis"
+                label="Cantidad extra gratis"
+                tooltip="1 = lleva 1 extra, 2 = lleva 2 extra"
+              >
+                <InputNumber className="w-full" placeholder="1" min={1} step={1} defaultValue={1} />
+              </Form.Item>
+            </div>
+          </div>
+        )}
+
+        {/* SORTEO */}
+        {isSorteo && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <FaTrophy className="text-amber-500 text-lg" />
+              <p className="text-sm text-amber-700">
+                Los clientes que cumplan las condiciones participan automáticamente en el sorteo.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">¿Incluir producto como premio?</label>
               <Form.Item name="sorteo_incluye_producto" valuePropName="checked" noStyle>
                 <Switch />
               </Form.Item>
             </div>
-            <p className="text-xs text-gray-600">
-              Si activa esto, especifique el producto y cantidad a regalar si gana el sorteo.
-            </p>
+
+            {incluyeProductoSorteo && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Form.Item
+                  name="producto_gratis_id"
+                  label="Producto del Sorteo"
+                  rules={[{ required: true, message: "Seleccione el producto" }]}
+                >
+                  <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch withTipoBusqueda />
+                </Form.Item>
+
+                <Form.Item
+                  name="cantidad_producto_gratis"
+                  label="Cantidad a Regalar (si gana)"
+                >
+                  <InputNumber className="w-full" placeholder="1" min={0.001} step={1} defaultValue={1} />
+                </Form.Item>
+              </div>
+            )}
           </div>
-
-          {incluyeProductoSorteo && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Form.Item
-                name="producto_gratis_id"
-                label="Producto del Sorteo"
-                rules={[{ required: true, message: "Seleccione el producto" }]}
-              >
-                <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch withTipoBusqueda />
-              </Form.Item>
-
-              <Form.Item
-                name="cantidad_producto_gratis"
-                label="Cantidad a Regalar (si gana)"
-              >
-                <InputNumber className="w-full" placeholder="1" min={0.001} step={1} defaultValue={1} />
-              </Form.Item>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -438,10 +436,12 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
   const esFuturo = momento === "PROXIMA_COMPRA";
   return (
     <div className="border-l-4 border-purple-500 pl-3">
-      <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-        <FaCalendar className="text-purple-600" />
-        Vigencia
-      </h3>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="bg-purple-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 5</span>
+        <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <FaCalendar className="text-purple-600" /> Vigencia
+        </h3>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Form.Item
@@ -488,10 +488,12 @@ interface SeccionRestriccionesProps {
 function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock }: SeccionRestriccionesProps) {
   return (
     <div className="border-l-4 border-orange-500 pl-3">
-      <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
-        <FaUsers className="text-orange-600" />
-        Restricciones (opcional)
-      </h3>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="bg-orange-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 6</span>
+        <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <FaUsers className="text-orange-600" /> Restricciones (opcional)
+        </h3>
+      </div>
 
       <div className="space-y-4">
         {/* Límite por cliente */}
@@ -531,7 +533,10 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock }: SeccionRestr
 function SeccionPrecios() {
   return (
     <div className="border-l-4 border-indigo-500 pl-3">
-      <h3 className="text-base font-semibold text-gray-800 mb-3">Aplicable a Precios</h3>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="bg-indigo-600 text-white text-xs font-bold rounded-full px-2 py-0.5">PASO 7</span>
+        <h3 className="text-base font-semibold text-gray-800">Aplicable a Precios</h3>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { name: "aplica_precio_publico", label: "Precio Público" },
@@ -554,17 +559,20 @@ function SeccionPrecios() {
 // ============= MAIN COMPONENT =============
 
 export default function FormCrearVale({ form }: { form: FormInstance<FormCreateVale> }) {
+  const momento = (Form.useWatch("momento_aplicacion", form) as string | undefined) ?? "MISMA_COMPRA";
   const tipoPromocion = Form.useWatch("tipo_promocion", form) || "DESCUENTO_MISMA_COMPRA";
   const modalidad = Form.useWatch("modalidad", form) || "CANTIDAD_MINIMA";
   const descuentoTipo = Form.useWatch("descuento_tipo", form) || "PORCENTAJE";
   const usaLimiteCliente = Form.useWatch("usa_limite_por_cliente", form) || false;
   const usaLimiteStock = Form.useWatch("usa_limite_stock", form) || false;
+  const [tipoUmbral, setTipoUmbral] = useState<TipoUmbral | null>(null);
 
   return (
     <div className="space-y-4">
       <SeccionBasica form={form} />
-      <SeccionCondiciones form={form} modalidad={modalidad} tipoPromocion={tipoPromocion} />
-      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} />
+      <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} />
+      <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
+      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} />
       <SeccionVigencia form={form} />
       <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} />
       <SeccionPrecios />
