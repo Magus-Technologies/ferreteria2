@@ -30,7 +30,11 @@ export default function ModalMapaEntrega({ open, onClose, entrega }: ModalMapaEn
 
     const venta = entrega.venta
     const cliente = venta?.cliente
-    const direccion = entrega.direccion_entrega || cliente?.direccion || ''
+    const clienteDirecciones: any[] = cliente?.direcciones ?? []
+    const direccion = entrega.direccion_entrega
+      || clienteDirecciones.find((d: any) => d.latitud)?.direccion
+      || clienteDirecciones[0]?.direccion
+      || ''
     
     const clienteNombre = cliente?.razon_social || 
       `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() || 

@@ -31,10 +31,12 @@ const CantCell = memo(function CantCell({ rowKey, init, max, onCommit }: {
 
 export function useColsProductosPendientes({
   onCommit,
+  includeAProgramar = true,
 }: {
   onCommit: (key: string, value: number) => void
+  includeAProgramar?: boolean
 }): ColDef<FilaProducto>[] {
-  return [
+  const baseCols: ColDef<FilaProducto>[] = [
     {
       colId: 'nombre', field: 'nombre', headerName: 'Producto', flex: 1, minWidth: 140,
       cellRenderer: ({ data: d }: { data: FilaProducto }) => (
@@ -49,6 +51,9 @@ export function useColsProductosPendientes({
     { colId: 'total',     field: 'total',     headerName: 'Total',     width: 60, cellStyle: { textAlign: 'center', color: '#64748b', fontWeight: '600' } },
     { colId: 'entregado', field: 'entregado', headerName: 'Entregado', width: 88, cellStyle: { textAlign: 'center', color: '#16a34a', fontWeight: '700' } },
     { colId: 'pendiente', field: 'pendiente', headerName: 'Pendiente', width: 88, cellStyle: { textAlign: 'center', color: '#ea580c', fontWeight: '700' } },
+  ]
+
+  const aProgramarCol: ColDef<FilaProducto>[] = includeAProgramar ? [
     {
       colId: 'cant_programar', field: 'cantAProgramar', headerName: 'A programar', width: 128,
       cellStyle: { backgroundColor: '#f0fdf4' },
@@ -56,5 +61,7 @@ export function useColsProductosPendientes({
         <CantCell rowKey={d.key} init={d.cantAProgramar} max={d.pendiente} onCommit={onCommit} />
       ),
     },
-  ]
+  ] : []
+
+  return [...baseCols, ...aProgramarCol]
 }

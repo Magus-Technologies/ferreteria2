@@ -10,7 +10,6 @@ import type { TipoEntregaCodigo } from '../modals/modal-resumen-entrega-venta'
 const TIPOS: { value: TipoEntregaCodigo; emoji: string; label: string }[] = [
   { value: 'rt', emoji: TIPO_ENTREGA_ICON.rt, label: TIPO_ENTREGA_LABEL.rt },
   { value: 'de', emoji: TIPO_ENTREGA_ICON.de, label: TIPO_ENTREGA_LABEL.de },
-  { value: 'pa', emoji: TIPO_ENTREGA_ICON.pa, label: TIPO_ENTREGA_LABEL.pa },
 ]
 
 interface Props {

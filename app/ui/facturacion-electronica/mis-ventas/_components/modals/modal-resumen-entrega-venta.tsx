@@ -48,28 +48,52 @@ export default function ModalResumenEntregaVenta({
 
   const { entregas: historial, loading: loadingHistorial, refetch: refetchHistorial } = useEntregasDeVenta(open ? ventaId : undefined)
 
+  // Cobertura acumulada desde el historial — TODOS los no-cancelados (pe+ec+en)
+  // Se usa para mostrar pendiente/entregado correctos sin depender de cantidad_pendiente del DB
+  const coveredMap = useMemo(() => {
+    const covered: Record<string, number> = {}
+    for (const entrega of historial) {
+      if (entrega.estado_entrega_codigo === 'ca') continue
+      for (const d of entrega.detalles ?? []) {
+        const id = String(d.unidad_derivada_venta_id)
+        covered[id] = (covered[id] ?? 0) + (d.cantidad ?? 0)
+      }
+    }
+    return covered
+  }, [historial])
+
   useEffect(() => {
     if (!vd) return
     setFilas((vd.productos_por_almacen ?? []).flatMap((prod: any, pi: number) =>
       (prod.unidades_derivadas ?? []).map((udv: any, ui: number) => {
-        const total = Number(udv.cantidad ?? 0), pendiente = Number(udv.cantidad_pendiente ?? 0)
+        const total    = Number(udv.cantidad ?? 0)
+        const entregado = coveredMap[String(udv.id)] ?? 0
+        const pendiente = Math.max(0, total - entregado)
         return {
           key: `${pi}-${ui}`, udvId: String(udv.id),
           nombre:   prod.producto_almacen?.producto?.name ?? 'Producto',
           codigo:   prod.producto_almacen?.producto?.cod_producto ?? '—',
           marca:    prod.producto_almacen?.producto?.marca?.name ?? '—',
           unidad:   udv.unidad_derivada_inmutable?.name ?? '—',
-          total, entregado: total - pendiente, pendiente, cantAProgramar: pendiente,
+          total, entregado, pendiente, cantAProgramar: pendiente,
         }
       })
     ))
-  }, [vd])
+  }, [vd, coveredMap])
+
+  // Cuando se cambia a "En Tienda", poner toda la cantidad pendiente a programar
+  useEffect(() => {
+    if (tipo === 'rt') {
+      setFilas(prev => prev.map(f => ({ ...f, cantAProgramar: f.pendiente })))
+    }
+  }, [tipo])
 
   const onCommit = useCallback((key: string, value: number) => {
     setFilas(prev => prev.map(f => f.key === key ? { ...f, cantAProgramar: value } : f))
   }, [])
 
-  const colsProductos = useColsProductosPendientes({ onCommit })
+  // "A Programar" solo visible cuando el tipo es Domicilio
+  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: tipo === 'de' })
   const colsHistorial = useColsHistorialEntrega({ onRefetch: refetchHistorial, entregas: historial })
 
   const hasPendiente = useMemo(() => {
@@ -166,7 +190,7 @@ export default function ModalResumenEntregaVenta({
             {/* Productos — 55% del alto */}
             <div style={{ flex: 3 }} className="min-h-0">
               <TableWithTitle<FilaProducto>
-                id="entrega-productos-v2"
+                id={tipo === 'de' ? 'entrega-productos-de-v1' : 'entrega-productos-rt-v1'}
                 title="Productos de la venta"
                 rowData={filas} columnDefs={colsProductos}
                 rowSelection={false} withNumberColumn={false} pagination={false}
