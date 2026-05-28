@@ -105,7 +105,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
       return;
     }
     form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
-    setModalDetallesEntregaOpen(true);
+    if (tipo_despacho === 'Omitir') {
+      form.submit();
+    } else {
+      setModalDetallesEntregaOpen(true);
+    }
   };
 
   // Crédito requiere N° de días — sin días no se puede saber el vencimiento.

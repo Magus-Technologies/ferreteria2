@@ -31,7 +31,7 @@ export default function ModalCanjearVale({
   const [error, setError] = useState<string | null>(null)
 
   const productosVenta = useStoreProductoAgregadoVenta((s) => s.productos)
-  const clienteId = form ? Form.useWatch('cliente_id', form) : undefined
+  const clienteId = Form.useWatch('cliente_id', form ?? undefined)
 
   useEffect(() => {
     if (open) {
