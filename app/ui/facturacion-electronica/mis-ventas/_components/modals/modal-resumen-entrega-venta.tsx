@@ -114,8 +114,6 @@ export default function ModalResumenEntregaVenta({
     setFilas(prev => prev.map(f => f.key === key ? { ...f, cantAProgramar: value } : f))
   }, [])
 
-  // "A Programar" solo visible cuando el tipo es Domicilio y hay pendiente
-  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: tipo === 'de' && hasPendiente })
   const colsHistorial = useColsHistorialEntrega({ onRefetch: refetchHistorial, entregas: historial })
 
   const hasPendiente = useMemo(() => {
@@ -135,6 +133,9 @@ export default function ModalResumenEntregaVenta({
       )
     )
   }, [vd, historial])
+
+  // "A Programar" solo visible cuando el tipo es Domicilio y hay pendiente
+  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: tipo === 'de' && hasPendiente })
 
   const aProg    = filas.filter(f => f.cantAProgramar > 0)
   const totUnd   = aProg.reduce((s, f) => s + f.cantAProgramar, 0)
