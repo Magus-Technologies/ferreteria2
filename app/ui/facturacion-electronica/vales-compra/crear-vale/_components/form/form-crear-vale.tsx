@@ -520,7 +520,8 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
             placeholder={esFuturo ? "Caducidad del código" : "Sin fecha de fin"}
             disabledDate={(current) => {
               const fechaInicio = form.getFieldValue("fecha_inicio");
-              return current && fechaInicio && current < fechaInicio;
+              if (!fechaInicio) return false;
+              return current && current.isBefore(dayjs(fechaInicio).startOf("day"));
             }}
           />
         </Form.Item>

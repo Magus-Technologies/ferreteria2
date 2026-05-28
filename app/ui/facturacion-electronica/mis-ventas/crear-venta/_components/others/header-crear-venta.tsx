@@ -18,6 +18,7 @@ import { useStoreServicioSeleccionado } from "../../../store/store-servicio-sele
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { paqueteApi } from "~/lib/api/paquete";
+import BotonCanjearValeHeader from "./boton-canjear-vale-header";
 
 export type VentaConUnidadDerivadaNormal = Omit<
   getVentaResponseProps,
@@ -347,6 +348,13 @@ export default function HeaderCrearVenta({
               }}
               onOpenModal={() => setOpenModalBuscarServicio(true)}
             />
+          </ConfigurableElement>
+
+          <ConfigurableElement
+            componentId="crear-venta.canjear-vale"
+            label="Canjear Vale"
+          >
+            <BotonCanjearValeHeader />
           </ConfigurableElement>
         </div>
       }
