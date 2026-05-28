@@ -25,6 +25,7 @@ import {
   derivarTipoPromocion,
   beneficiosValidosParaMomento,
   type TipoBeneficio,
+  type MomentoAplicacion,
 } from "../../../_constants/form-vale-options";
 
 const { TextArea } = Input;
@@ -271,7 +272,7 @@ interface SeccionBeneficioProps {
   form: FormInstance<FormCreateVale>;
   tipoPromocion: string;
   descuentoTipo: string;
-  momento: string;
+  momento: MomentoAplicacion;
   esDosPorUno?: boolean;
 }
 
@@ -612,7 +613,7 @@ function SeccionPrecios() {
 // ============= MAIN COMPONENT =============
 
 export default function FormCrearVale({ form }: { form: FormInstance<FormCreateVale> }) {
-  const momento = (Form.useWatch("momento_aplicacion", form) as string | undefined) ?? "MISMA_COMPRA";
+  const momento = (Form.useWatch("momento_aplicacion", form) as MomentoAplicacion | undefined) ?? "MISMA_COMPRA";
   const tipoBeneficio = Form.useWatch("tipo_beneficio", form) as string | undefined;
   const tipoPromocion = Form.useWatch("tipo_promocion", form) || "DESCUENTO_MISMA_COMPRA";
   const modalidad = Form.useWatch("modalidad", form) || "CANTIDAD_MINIMA";

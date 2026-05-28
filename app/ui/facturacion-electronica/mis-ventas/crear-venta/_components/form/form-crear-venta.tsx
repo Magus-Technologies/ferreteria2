@@ -23,9 +23,10 @@ import {
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
 import InputCodigoVale from "../others/input-codigo-vale";
-import BotonCanjearVale from "../others/boton-canjear-vale";
+
 import { useUltimaCalificacionCliente } from "../../_hooks/use-ultima-calificacion-cliente";
 import FloatingCalificacionCliente from "../alerts/floating-calificacion-cliente";
+import { useStoreValeForm } from "../../_store/store-vale-form";
 
 export default function FormCrearVenta({
   form,
@@ -58,6 +59,12 @@ export default function FormCrearVenta({
     }
   }, [form]);
 
+  // Guardar form en store para que el header pueda acceder
+  const setValeForm = useStoreValeForm((s) => s.setForm);
+  useEffect(() => {
+    setValeForm(form);
+  }, [form, setValeForm]);
+
   return (
     <div className="flex flex-col gap-4">
       <FloatingCalificacionCliente
@@ -65,6 +72,9 @@ export default function FormCrearVenta({
         loading={loadingCalificacion}
         clienteId={clienteIdParaCalificacion}
       />
+
+      <InputCodigoVale form={form} />
+
       {/* Campos ocultos para que Form.useWatch funcione */}
       <Form.Item name="stock_ya_aplicado" hidden>
         <input type="hidden" />
@@ -228,13 +238,6 @@ export default function FormCrearVenta({
             />
           </LabelBase>
         </ConfigurableElement>
-
-        {/* InputCodigoVale: detecta automáticamente vales aplicables y vales pendientes del cliente.
-            BotonCanjearVale: permite canjear manualmente un código (sorteo o próxima compra). */}
-        <InputCodigoVale form={form} />
-        <div className="mb-6 flex items-end">
-          <BotonCanjearVale form={form} />
-        </div>
       </div>
 
       {/* 3ra fila: DNI/RUC (con lupa), Cliente (nombre más grande) y direccion*/}
