@@ -69,9 +69,12 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         cliente_id: clienteId || undefined,
       })
       if (res.data?.data) {
+        const valesExcluidos = useStoreProductoAgregadoVenta.getState().valesExcluidos
         const valesUnicos = res.data.data.filter(
           (vale, idx, arr) => arr.findIndex(v => v.id === vale.id) === idx
-        ).filter(v => v.momento_aplicacion !== 'PROXIMA_COMPRA')
+        )
+          .filter(v => v.momento_aplicacion !== 'PROXIMA_COMPRA')
+          .filter(v => !valesExcluidos.includes(v.id))
         // Preservar vales aplicados manualmente (tienen codigo_vale en el form)
         const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
         const valesActuales = useStoreProductoAgregadoVenta.getState().valesAplicables

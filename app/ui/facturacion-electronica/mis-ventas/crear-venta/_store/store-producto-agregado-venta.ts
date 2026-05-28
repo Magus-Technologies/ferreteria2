@@ -55,6 +55,7 @@ export const useStoreProductoAgregadoVenta =
           valesExcluidos: state.valesExcluidos.includes(valeId)
             ? state.valesExcluidos
             : [...state.valesExcluidos, valeId],
+          valesAplicables: state.valesAplicables.filter((v) => v.id !== valeId),
         })),
       reset: () =>
         set({
