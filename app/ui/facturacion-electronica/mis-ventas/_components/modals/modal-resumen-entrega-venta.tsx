@@ -114,8 +114,8 @@ export default function ModalResumenEntregaVenta({
     setFilas(prev => prev.map(f => f.key === key ? { ...f, cantAProgramar: value } : f))
   }, [])
 
-  // "A Programar" solo visible cuando el tipo es Domicilio
-  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: tipo === 'de' })
+  // "A Programar" solo visible cuando el tipo es Domicilio y hay pendiente
+  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: tipo === 'de' && hasPendiente })
   const colsHistorial = useColsHistorialEntrega({ onRefetch: refetchHistorial, entregas: historial })
 
   const hasPendiente = useMemo(() => {
@@ -180,29 +180,6 @@ export default function ModalResumenEntregaVenta({
     >
       {isFetching || loadingHistorial ? (
         <div className="flex items-center justify-center flex-1"><Spin size="large" /></div>
-      ) : !hasPendiente ? (
-        <div className="flex flex-col flex-1 min-h-0 gap-3">
-          <div className="flex-1 min-h-0">
-            <TableWithTitle<EntregaNueva>
-              id="entrega-historial-v4"
-              title="Historial de entregas"
-              extraTitle={historial.length > 0
-                ? <span className="text-xs text-slate-400 font-normal">· {historial.length} registro{historial.length !== 1 ? 's' : ''}</span>
-                : undefined}
-              rowData={historial} columnDefs={colsHistorial}
-              rowSelection={false} withNumberColumn={false} pagination={false}
-              persistColumnState={true} domLayout="normal" rowHeight={48} headerHeight={HH}
-              isVisible={open} exportExcel={false} exportPdf={false}
-              noRowsOverlayComponent={() => <div className="text-gray-400 text-sm">Sin entregas registradas</div>}
-            />
-          </div>
-          <div className="flex justify-end border-t border-slate-100 pt-2.5">
-            <button type="button" onClick={onClose}
-              className="text-sm text-slate-500 hover:text-slate-700 px-4 py-1.5 rounded transition-colors cursor-pointer">
-              Cerrar
-            </button>
-          </div>
-        </div>
       ) : (
         <div className="flex gap-5 flex-1 min-h-0">
 
@@ -250,6 +227,7 @@ export default function ModalResumenEntregaVenta({
             onMapa={abrirConfig}
             onProgramar={() => registrar()}
             onCancelar={onClose}
+            completada={!hasPendiente}
           />
         </div>
       )}
