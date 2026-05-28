@@ -2,7 +2,7 @@
 
 import { DatePicker } from 'antd'
 import type { Dayjs } from 'dayjs'
-import { FaMapMarkerAlt, FaCheck } from 'react-icons/fa'
+import { FaMapMarkerAlt, FaCheck, FaCheckCircle } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import { TIPO_ENTREGA_LABEL, TIPO_ENTREGA_ICON } from '~/app/_lib/entrega-labels'
 import type { TipoEntregaCodigo } from '../modals/modal-resumen-entrega-venta'
@@ -23,12 +23,14 @@ interface Props {
   onMapa: () => void
   onProgramar: () => void
   onCancelar: () => void
+  completada?: boolean
 }
 
 export default function CardControlesEntrega({
   tipo, onTipo, fecha, onFecha,
   itemCount, unidadCount,
   registrando, onMapa, onProgramar, onCancelar,
+  completada = false,
 }: Props) {
   const hasItems = itemCount > 0
 
@@ -42,15 +44,24 @@ export default function CardControlesEntrega({
           {TIPOS.map(opt => {
             const sel = tipo === opt.value
             return (
-              <button key={opt.value} type="button" onClick={() => onTipo(opt.value)}
-                className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-left transition-all cursor-pointer ${
-                  sel
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
-                }`}>
+              <button
+                key={opt.value}
+                type="button"
+                onClick={completada ? undefined : () => onTipo(opt.value)}
+                disabled={completada}
+                className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-left transition-all ${
+                  completada
+                    ? sel
+                      ? 'border-slate-300 bg-slate-100 text-slate-500 cursor-default'
+                      : 'border-slate-200 bg-white text-slate-300 cursor-default'
+                    : sel
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 cursor-pointer'
+                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 cursor-pointer'
+                }`}
+              >
                 <span className="text-base leading-none">{opt.emoji}</span>
                 <span className="text-[11px] leading-tight font-medium flex-1">{opt.label}</span>
-                <FaCheck size={9} className={`flex-shrink-0 transition-opacity ${sel ? 'text-blue-500 opacity-100' : 'opacity-0'}`} />
+                <FaCheck size={9} className={`flex-shrink-0 transition-opacity ${sel ? 'opacity-60' : 'opacity-0'}`} />
               </button>
             )
           })}
@@ -60,12 +71,22 @@ export default function CardControlesEntrega({
       {/* Fecha */}
       <div>
         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Fecha programada</p>
-        <DatePicker value={fecha} onChange={onFecha} size="small" placeholder="Sin fecha"
-          format="DD/MM/YYYY" allowClear style={{ width: '100%' }} />
+        <DatePicker
+          value={fecha} onChange={completada ? undefined : onFecha}
+          size="small" placeholder="Sin fecha" format="DD/MM/YYYY"
+          allowClear={!completada} disabled={completada}
+          style={{ width: '100%' }}
+        />
       </div>
 
-      {/* Resumen */}
-      {hasItems ? (
+      {/* Resumen / Banner completada */}
+      {completada ? (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-3 text-center flex flex-col items-center gap-1.5">
+          <FaCheckCircle size={22} className="text-green-500" />
+          <p className="text-[12px] font-bold text-green-700 leading-snug">Entrega completada</p>
+          <p className="text-[10px] text-green-500">Todos los productos fueron entregados</p>
+        </div>
+      ) : hasItems ? (
         <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400 mb-2">Esta entrega</p>
           <div className="flex items-end gap-3">
@@ -90,22 +111,31 @@ export default function CardControlesEntrega({
 
       {/* Acciones */}
       <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-100">
-        <ButtonBase
-          disabled={tipo !== 'de' || !hasItems} onClick={onMapa}
-          className="w-full flex items-center justify-center gap-1.5 border-blue-400 !text-blue-700 hover:bg-blue-50 text-xs !h-8">
-          <FaMapMarkerAlt size={11} /> Mapa / Dirección
-        </ButtonBase>
-        <ButtonBase
-          color="success" size="md"
-          disabled={!hasItems || registrando}
-          onClick={onProgramar}
-          className="w-full flex items-center justify-center gap-1.5 text-xs !h-9">
-          <FaCheck size={11} /> {registrando ? 'Registrando...' : 'Programar Entrega'}
-        </ButtonBase>
-        <button type="button" onClick={onCancelar}
-          className="w-full text-[11px] text-slate-400 hover:text-slate-600 py-1 transition-colors cursor-pointer">
-          Cancelar
-        </button>
+        {completada ? (
+          <button type="button" onClick={onCancelar}
+            className="w-full text-[11px] text-slate-400 hover:text-slate-600 py-1 transition-colors cursor-pointer">
+            Cerrar
+          </button>
+        ) : (
+          <>
+            <ButtonBase
+              disabled={tipo !== 'de' || !hasItems} onClick={onMapa}
+              className="w-full flex items-center justify-center gap-1.5 border-blue-400 !text-blue-700 hover:bg-blue-50 text-xs !h-8">
+              <FaMapMarkerAlt size={11} /> Mapa / Dirección
+            </ButtonBase>
+            <ButtonBase
+              color="success" size="md"
+              disabled={!hasItems || registrando}
+              onClick={onProgramar}
+              className="w-full flex items-center justify-center gap-1.5 text-xs !h-9">
+              <FaCheck size={11} /> {registrando ? 'Registrando...' : 'Programar Entrega'}
+            </ButtonBase>
+            <button type="button" onClick={onCancelar}
+              className="w-full text-[11px] text-slate-400 hover:text-slate-600 py-1 transition-colors cursor-pointer">
+              Cancelar
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

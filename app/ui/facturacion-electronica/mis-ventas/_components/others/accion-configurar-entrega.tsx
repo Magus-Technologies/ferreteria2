@@ -85,6 +85,8 @@ export default function AccionConfigurarEntrega() {
           <Spin size="small" />
         ) : !hasPendiente && historial.length > 0 ? (
           <><FaHistory size={13} /> Ver Historial</>
+        ) : hasPendiente && historial.length > 0 ? (
+          <><FaPlus size={14} /> Configurar Entrega e Historial</>
         ) : (
           <><FaPlus size={14} /> Configurar Entrega</>
         )}
