@@ -117,7 +117,7 @@ export default function ModalCanjearVale({
         </div>
       }
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       width={520}
     >
       <div className='space-y-4 pt-2'>
