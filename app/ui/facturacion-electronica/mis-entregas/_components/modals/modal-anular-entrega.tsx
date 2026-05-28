@@ -6,7 +6,7 @@ import useApp from 'antd/es/app/useApp'
 import { useQueryClient } from '@tanstack/react-query'
 import { FaExclamationTriangle } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
-import { entregaProductoApi } from '~/lib/api/entrega-producto'
+import { entregasNuevasApi } from '~/lib/api/entregas'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 
 interface ModalAnularEntregaProps {
@@ -51,7 +51,7 @@ export default function ModalAnularEntrega({
     try {
       const values = await form.validateFields()
       setLoading(true)
-      const response = await entregaProductoApi.anular(entrega.id, values.motivo.trim())
+      const response = await entregasNuevasApi.anular(Number(entrega.id), values.motivo.trim())
       if (response.error) {
         message.error(response.error.message || 'Error al anular la entrega')
         return
