@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Form, FormInstance, Tooltip, Badge, Tag } from 'antd'
+import { Form, Tooltip, Badge, Tag } from 'antd'
 import { FaTicketAlt } from 'react-icons/fa'
 import dynamic from 'next/dynamic'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import { useStoreValeForm } from '../../_store/store-vale-form'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 
 const ModalCanjearVale = dynamic(
@@ -13,15 +14,13 @@ const ModalCanjearVale = dynamic(
 )
 
 /**
- * Botón con icono que abre un modal para ingresar manualmente el código
- * de un vale (DESCUENTO_PROXIMA_COMPRA, SORTEO o código regular VC-...).
- * Cada código solo puede usarse una vez.
- * Si ya hay un código aplicado se muestra como tag al lado.
- * Requiere form como prop (usado dentro del formulario de crear venta).
+ * Versión para el header que lee el form desde el store.
+ * Siempre llama los hooks en el mismo orden (no hay form como prop).
  */
-export default function BotonCanjearVale({ form }: { form: FormInstance }) {
+export default function BotonCanjearValeHeader() {
   const [open, setOpen] = useState(false)
-  const codigoActual = Form.useWatch('codigo_vale', form) as string | undefined
+  const storeForm = useStoreValeForm((s) => s.form)
+  const codigoActual = Form.useWatch('codigo_vale', storeForm ?? undefined)
   const setValesAplicables = useStoreProductoAgregadoVenta((s) => s.setValesAplicables)
   const valesActuales = useStoreProductoAgregadoVenta((s) => s.valesAplicables)
 
@@ -47,12 +46,12 @@ export default function BotonCanjearVale({ form }: { form: FormInstance }) {
       )}
 
       <ModalCanjearVale
-        form={form}
+        form={storeForm}
         open={open}
         setOpen={setOpen}
         codigoActual={codigoActual}
         onAplicar={(codigo, info) => {
-          form.setFieldValue('codigo_vale', codigo)
+          if (storeForm) storeForm.setFieldValue('codigo_vale', codigo)
           if (info?.vale_compra && !valesActuales.some(v => v.id === info.vale_compra.id)) {
             const v = info.vale_compra
             const valeParaStore: ValeCompra = {
@@ -92,7 +91,7 @@ export default function BotonCanjearVale({ form }: { form: FormInstance }) {
           }
         }}
         onQuitar={(codigo) => {
-          form.setFieldValue('codigo_vale', undefined)
+          if (storeForm) storeForm.setFieldValue('codigo_vale', undefined)
           const codigoQuitar = codigo || codigoActual
           if (codigoQuitar) {
             const removido = valesActuales.filter(v => v.codigo !== codigoQuitar)

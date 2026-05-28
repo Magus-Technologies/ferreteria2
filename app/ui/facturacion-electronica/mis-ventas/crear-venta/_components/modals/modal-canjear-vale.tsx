@@ -8,7 +8,7 @@ import { verificarCodigoVale, type ValeCompraVerificado } from '~/lib/api/vales-
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 
 interface ModalCanjearValeProps {
-  form: FormInstance
+  form?: FormInstance | null
   open: boolean
   setOpen: (open: boolean) => void
   codigoActual?: string
@@ -31,7 +31,7 @@ export default function ModalCanjearVale({
   const [error, setError] = useState<string | null>(null)
 
   const productosVenta = useStoreProductoAgregadoVenta((s) => s.productos)
-  const clienteId = Form.useWatch('cliente_id', form)
+  const clienteId = form ? Form.useWatch('cliente_id', form) : undefined
 
   useEffect(() => {
     if (open) {

@@ -25,6 +25,7 @@ import {
   derivarTipoPromocion,
   beneficiosValidosParaMomento,
   type TipoBeneficio,
+  type MomentoAplicacion,
 } from "../../../_constants/form-vale-options";
 
 const { TextArea } = Input;
@@ -103,10 +104,13 @@ interface SeccionUmbralProps {
   setTipoUmbral: (t: TipoUmbral | null) => void;
 }
 
-function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral }: SeccionUmbralProps) {
+function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }: SeccionUmbralProps & { esDosPorUno?: boolean }) {
 
   const esMonto = tipoUmbral === 'MONTO';
   const esCantidad = tipoUmbral === 'CANTIDAD';
+
+  // Para 2x1 solo tiene sentido el umbral por cantidad (unidades)
+  const mostrarSoloCantidad = esDosPorUno;
 
   return (
     <div className="border-l-4 border-blue-500 pl-3">
@@ -119,82 +123,105 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral }: SeccionUmbr
         </div>
         <div className="text-xs text-gray-600 mb-3">
           Define la compra mínima que el cliente debe alcanzar para activar la promoción.
+          {esDosPorUno && <strong> Para 2x1, ingresa las unidades que debe comprar.</strong>}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-          <div
-            onClick={() => setTipoUmbral('MONTO')}
-            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-              esMonto ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <FaDollarSign className={`text-xl ${esMonto ? 'text-blue-600' : 'text-gray-400'}`} />
-              <div>
-                <div className="font-semibold">Monto Mínimo (S/)</div>
-                <div className="text-xs text-gray-500">La venta debe superar un monto en soles</div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            onClick={() => setTipoUmbral('CANTIDAD')}
-            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-              esCantidad ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <FaHashtag className={`text-xl ${esCantidad ? 'text-blue-600' : 'text-gray-400'}`} />
-              <div>
-                <div className="font-semibold">Cantidad Mínima (und.)</div>
-                <div className="text-xs text-gray-500">La venta debe incluir una cantidad de productos</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {esMonto && (
+        {mostrarSoloCantidad ? (
           <Form.Item
             name="cantidad_minima"
-            label="Monto Mínimo (S/)"
+            label="Unidades que debe comprar"
             rules={[
-              { required: true, message: "El monto mínimo es requerido" },
-              { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
-            ]}
-          >
-            <InputNumber
-              className="w-full"
-              placeholder="Ej: 100.00"
-              min={0.01}
-              step={0.01}
-              precision={2}
-              prefix={<FaDollarSign className="text-blue-600" />}
-            />
-          </Form.Item>
-        )}
-
-        {esCantidad && (
-          <Form.Item
-            name="cantidad_minima"
-            label="Cantidad Mínima (und.)"
-            rules={[
-              { required: true, message: "La cantidad mínima es requerida" },
+              { required: true, message: "La cantidad es requerida" },
               { type: "number", min: 1, message: "Debe ser al menos 1" },
             ]}
           >
             <InputNumber
               className="w-full"
-              placeholder="Ej: 10"
+              placeholder="Ej: 2"
               min={1}
               step={1}
               precision={0}
               prefix={<FaHashtag className="text-blue-600" />}
             />
           </Form.Item>
-        )}
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <div
+                onClick={() => setTipoUmbral('MONTO')}
+                className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                  esMonto ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FaDollarSign className={`text-xl ${esMonto ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <div>
+                    <div className="font-semibold">Monto Mínimo (S/)</div>
+                    <div className="text-xs text-gray-500">La venta debe superar un monto en soles</div>
+                  </div>
+                </div>
+              </div>
 
-        {!tipoUmbral && (
-          <p className="text-xs text-amber-600">Selecciona una opción para definir el valor</p>
+              <div
+                onClick={() => setTipoUmbral('CANTIDAD')}
+                className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                  esCantidad ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FaHashtag className={`text-xl ${esCantidad ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <div>
+                    <div className="font-semibold">Cantidad Mínima (und.)</div>
+                    <div className="text-xs text-gray-500">La venta debe incluir una cantidad de productos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {esMonto && (
+              <Form.Item
+                name="cantidad_minima"
+                label="Monto Mínimo (S/)"
+                rules={[
+                  { required: true, message: "El monto mínimo es requerido" },
+                  { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
+                ]}
+              >
+                <InputNumber
+                  className="w-full"
+                  placeholder="Ej: 100.00"
+                  min={0.01}
+                  step={0.01}
+                  precision={2}
+                  prefix={<FaDollarSign className="text-blue-600" />}
+                />
+              </Form.Item>
+            )}
+
+            {esCantidad && !mostrarSoloCantidad && (
+              <Form.Item
+                name="cantidad_minima"
+                label="Cantidad Mínima (und.)"
+                rules={[
+                  { required: true, message: "La cantidad mínima es requerida" },
+                  { type: "number", min: 1, message: "Debe ser al menos 1" },
+                ]}
+              >
+                <InputNumber
+                  className="w-full"
+                  placeholder="Ej: 10"
+                  min={1}
+                  step={1}
+                  precision={0}
+                  prefix={<FaHashtag className="text-blue-600" />}
+                />
+              </Form.Item>
+            )}
+
+            {!tipoUmbral && !mostrarSoloCantidad && (
+              <p className="text-xs text-amber-600">Selecciona una opción para definir el valor</p>
+            )}
+          </>
         )}
 
         {momento === "PROXIMA_COMPRA" && (
@@ -245,10 +272,11 @@ interface SeccionBeneficioProps {
   form: FormInstance<FormCreateVale>;
   tipoPromocion: string;
   descuentoTipo: string;
-  momento: string;
+  momento: MomentoAplicacion;
+  esDosPorUno?: boolean;
 }
 
-function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento }: SeccionBeneficioProps) {
+function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPorUno }: SeccionBeneficioProps) {
   const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
 
   useEffect(() => {
@@ -370,18 +398,44 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento }: Secci
         {/* 2x1 */}
         {isDosPorUno && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <p className="text-sm text-indigo-700">
-              <strong>2x1:</strong> Al comprar la cantidad definida, el cliente recibe unidades extra gratis.
+            <p className="text-sm text-indigo-700 mb-3">
+              <strong>2x1 / 3x1 / 5x1:</strong> Define cuántas unidades debe comprar y cuántas extra recibe gratis.
             </p>
-            <div className="mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Form.Item
+                name="cantidad_minima"
+                label="Unidades que debe comprar"
+                tooltip="Cantidad de unidades que el cliente debe comprar"
+                rules={[{ required: true, message: "Requerido" }]}
+              >
+                <InputNumber
+                  className="w-full"
+                  placeholder="Ej: 2"
+                  min={1}
+                  step={1}
+                  precision={0}
+                  prefix={<FaHashtag className="text-indigo-600" />}
+                />
+              </Form.Item>
               <Form.Item
                 name="cantidad_producto_gratis"
-                label="Cantidad extra gratis"
-                tooltip="1 = lleva 1 extra, 2 = lleva 2 extra"
+                label="Unidades extra gratis"
+                tooltip="Cantidad de unidades extra que recibe gratis"
+                rules={[{ required: true, message: "Requerido" }]}
               >
-                <InputNumber className="w-full" placeholder="1" min={1} step={1} defaultValue={1} />
+                <InputNumber
+                  className="w-full"
+                  placeholder="Ej: 1"
+                  min={1}
+                  step={1}
+                  precision={0}
+                  prefix={<FaHashtag className="text-indigo-600" />}
+                />
               </Form.Item>
             </div>
+            <p className="text-xs text-indigo-600 mt-2">
+              <strong>Ejemplos:</strong> Comprar 1 + 1 gratis = 2x1. Comprar 2 + 1 gratis = 3x1. Comprar 2 + 3 gratis = 5x1.
+            </p>
           </div>
         )}
 
@@ -559,7 +613,8 @@ function SeccionPrecios() {
 // ============= MAIN COMPONENT =============
 
 export default function FormCrearVale({ form }: { form: FormInstance<FormCreateVale> }) {
-  const momento = (Form.useWatch("momento_aplicacion", form) as string | undefined) ?? "MISMA_COMPRA";
+  const momento = (Form.useWatch("momento_aplicacion", form) as MomentoAplicacion | undefined) ?? "MISMA_COMPRA";
+  const tipoBeneficio = Form.useWatch("tipo_beneficio", form) as string | undefined;
   const tipoPromocion = Form.useWatch("tipo_promocion", form) || "DESCUENTO_MISMA_COMPRA";
   const modalidad = Form.useWatch("modalidad", form) || "CANTIDAD_MINIMA";
   const descuentoTipo = Form.useWatch("descuento_tipo", form) || "PORCENTAJE";
@@ -567,12 +622,15 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const usaLimiteStock = Form.useWatch("usa_limite_stock", form) || false;
   const [tipoUmbral, setTipoUmbral] = useState<TipoUmbral | null>(null);
 
+  // Para 2x1 se oculta el PASO 2 y toda la config está en PASO 4
+  const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
+
   return (
     <div className="space-y-4">
       <SeccionBasica form={form} />
-      <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} />
+      {!esDosPorUno && <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno} />}
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
-      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} />
+      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} />
       <SeccionVigencia form={form} />
       <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} />
       <SeccionPrecios />
