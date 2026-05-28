@@ -42,7 +42,6 @@ export default function MisEntregasPage() {
 
   const handleMarcarEnCamino = async () => {
     await acciones.enCamino.mutateAsync(entrega!.id)
-    setOpenConfirmar(false)
   }
 
   const handleAnular = async (motivo: string) => {

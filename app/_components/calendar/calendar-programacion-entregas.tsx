@@ -400,9 +400,15 @@ export default function CalendarProgramacionEntregas({
   const minTime = useMemo(() => new Date(1970, 1, 1, 7, 0, 0), [])
   const maxTime = useMemo(() => new Date(1970, 1, 1, 19, 0, 0), [])
 
+  // Comprobar si un slot es pasado (antes del momento actual)
+  const slotEsPassado = useCallback((start: Date) => {
+    return dayjs(start).isBefore(dayjs())
+  }, [])
+
   // Comprobar si un slot cae dentro de rangos deshabilitados (comparando hora exacta)
   const slotEnRangoDeshabilitado = useCallback(
     (start: Date, end: Date) => {
+      if (slotEsPassado(start)) return true
       if (!disabledRanges || disabledRanges.length === 0) return false
       const slotStart = dayjs(start)
       const slotEnd = dayjs(end)
@@ -412,7 +418,7 @@ export default function CalendarProgramacionEntregas({
         return slotStart.isBefore(disabledEnd) && slotEnd.isAfter(disabledStart)
       })
     },
-    [disabledRanges]
+    [disabledRanges, slotEsPassado]
   )
 
   // Selección de slot — guarda posición para el popup
@@ -487,6 +493,17 @@ export default function CalendarProgramacionEntregas({
   // Pinta el slot horario (vistas día/semana) sólo si la hora exacta intersecta el bloqueo
   const slotPropGetter = useCallback(
     (date: Date) => {
+      // Slots pasados: gris con cursor bloqueado
+      if (slotEsPassado(date)) {
+        return {
+          style: {
+            backgroundColor: '#f1f5f9',
+            borderBottom: '1px solid #e2e8f0',
+            cursor: 'not-allowed',
+          },
+        }
+      }
+
       if (!disabledRanges || disabledRanges.length === 0) return {}
 
       const slotStart = dayjs(date)
@@ -507,7 +524,7 @@ export default function CalendarProgramacionEntregas({
       }
       return {}
     },
-    [disabledRanges]
+    [disabledRanges, slotEsPassado]
   )
 
   // Sólo aplica en vista de mes: marca sutilmente el día que contiene algún bloqueo.

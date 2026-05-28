@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Modal, Button } from 'antd'
+import { Modal, Button, Tooltip } from 'antd'
 import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf, FaTruck } from 'react-icons/fa'
 import type { ColDef } from 'ag-grid-community'
 import TableBase from '~/components/tables/table-base'
@@ -83,13 +83,16 @@ export default function ModalConfirmarEntrega({
       field: 'cantidad',
       width: 90,
       valueFormatter: ({ value }) => Number(value).toFixed(0),
-      cellStyle: { textAlign: 'right', fontWeight: 600, color: '#047857' },
+      cellStyle: { textAlign: 'center', fontWeight: 600, color: '#047857' },
     },
   ], [])
 
   if (!entrega) return null
 
-  const pdfLabel = entrega?.estado_entrega === 'pe' ? 'Vale de Recojo'
+  const pdfLabel = entrega?.estado_entrega === 'pe'
+    ? entrega?.tipo_entrega === 'de' ? 'Vale de Despacho'
+      : entrega?.tipo_entrega === 'pa' ? 'Vale de Entrega Parcial'
+      : 'Vale de Recojo'
     : entrega?.estado_entrega === 'ec' ? 'Entrega en Camino'
     : entrega?.estado_entrega === 'ca' ? 'Entrega Cancelada'
     : 'Ticket de Entrega'
@@ -102,7 +105,9 @@ export default function ModalConfirmarEntrega({
     ? `${venta.serie}-${venta.numero}` : 'S/N'
   const direccion = entrega.direccion_entrega || 'No especificada'
   const telefono = cliente?.telefono || ''
-  const esDomicilioPendiente = entrega.tipo_entrega === 'de' && entrega.estado_entrega === 'pe'
+  const esDomicilio          = entrega.tipo_entrega === 'de'
+  const esDomicilioPendiente = esDomicilio && entrega.estado_entrega === 'pe'
+  const esDomicilioEnCamino  = esDomicilio && entrega.estado_entrega === 'ec'
 
   const handleConfirmar = async () => {
     setConfirmando(true)
@@ -150,32 +155,49 @@ export default function ModalConfirmarEntrega({
             Cancelar
           </Button>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              icon={<FaFilePdf />}
-              onClick={() => openPdfModal(entrega)}
-              className="!rounded-lg !h-10 !px-3 !font-semibold !text-red-600 !border-red-300 hover:!bg-red-50"
+            <Tooltip
+              title={esDomicilioPendiente ? 'El vale se habilita al marcar en camino' : undefined}
+              placement="top"
             >
-              {pdfLabel}
-            </Button>
-            {esDomicilioPendiente && onMarcarEnCamino && (
               <Button
-                icon={<FaTruck />}
-                onClick={handleMarcarEnCamino}
-                loading={marcandoEnCamino || loadingEnCamino}
-                className="!rounded-lg !h-10 !px-3 !font-bold !text-blue-700 !border-blue-300 hover:!bg-blue-50"
+                icon={<FaFilePdf />}
+                onClick={esDomicilioPendiente ? undefined : () => openPdfModal(entrega)}
+                disabled={esDomicilioPendiente}
+                className="!rounded-lg !h-10 !px-3 !font-semibold !text-red-600 !border-red-300 hover:!bg-red-50 disabled:!opacity-40"
               >
-                Marcar en Camino
+                {pdfLabel}
+              </Button>
+            </Tooltip>
+            {(esDomicilioPendiente || esDomicilioEnCamino) && onMarcarEnCamino && (
+              <Button
+                icon={esDomicilioEnCamino ? <FaCheck /> : <FaTruck />}
+                onClick={esDomicilioPendiente ? handleMarcarEnCamino : undefined}
+                disabled={esDomicilioEnCamino}
+                loading={esDomicilioPendiente && (marcandoEnCamino || loadingEnCamino)}
+                className={
+                  esDomicilioEnCamino
+                    ? '!rounded-lg !h-10 !px-3 !font-bold !text-green-700 !border-green-300 !bg-green-50'
+                    : '!rounded-lg !h-10 !px-3 !font-bold !text-blue-700 !border-blue-300 hover:!bg-blue-50'
+                }
+              >
+                {esDomicilioEnCamino ? 'En Camino' : 'Marcar en Camino'}
               </Button>
             )}
-            <Button
-              type="primary"
-              icon={<FaCheck />}
-              onClick={handleConfirmar}
-              loading={confirmando || loading}
-              className="!rounded-lg !h-10 !px-4 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30"
+            <Tooltip
+              title={esDomicilioPendiente ? 'Primero marcá la entrega en camino' : undefined}
+              placement="top"
             >
-              {esDomicilioPendiente ? 'Entregar Directo' : 'Confirmar Entrega'}
-            </Button>
+              <Button
+                type="primary"
+                icon={<FaCheck />}
+                onClick={handleConfirmar}
+                loading={confirmando || loading}
+                disabled={esDomicilioPendiente}
+                className="!rounded-lg !h-10 !px-4 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30 disabled:!opacity-40"
+              >
+                Confirmar Entrega
+              </Button>
+            </Tooltip>
           </div>
         </div>
       }

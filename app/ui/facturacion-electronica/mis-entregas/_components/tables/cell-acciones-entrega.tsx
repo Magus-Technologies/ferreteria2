@@ -208,10 +208,14 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     if (onRefetch) onRefetch()
   }
 
-  // Texto del item PDF según estado: "Vale de Recojo" (pe) vs "Ticket de Entrega" (en).
+  // Texto del item PDF según tipo + estado.
   const pdfLabel =
     entregaOperativa.estado_entrega === 'pe'
-      ? 'Imprimir Vale de Recojo'
+      ? entregaOperativa.tipo_entrega === 'de'
+        ? 'Imprimir Vale de Despacho'
+        : entregaOperativa.tipo_entrega === 'pa'
+        ? 'Imprimir Vale de Entrega Parcial'
+        : 'Imprimir Vale de Recojo'
       : entregaOperativa.estado_entrega === 'ec'
       ? 'Imprimir Entrega en Camino'
       : entregaOperativa.estado_entrega === 'ca'
