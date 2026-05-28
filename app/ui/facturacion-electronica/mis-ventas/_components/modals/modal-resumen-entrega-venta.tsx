@@ -28,6 +28,26 @@ interface Props {
 
 const HH = 36
 
+function filasIguales(a: FilaProducto[], b: FilaProducto[]) {
+  if (a.length !== b.length) return false
+
+  return a.every((actual, index) => {
+    const siguiente = b[index]
+    return (
+      actual.key === siguiente.key &&
+      actual.udvId === siguiente.udvId &&
+      actual.nombre === siguiente.nombre &&
+      actual.codigo === siguiente.codigo &&
+      actual.marca === siguiente.marca &&
+      actual.unidad === siguiente.unidad &&
+      actual.total === siguiente.total &&
+      actual.entregado === siguiente.entregado &&
+      actual.pendiente === siguiente.pendiente &&
+      actual.cantAProgramar === siguiente.cantAProgramar
+    )
+  })
+}
+
 export default function ModalResumenEntregaVenta({
   open, onClose, ventaId, ventaNumero, clienteNombre, onAbrirConfiguracion, onSuccess,
 }: Props) {
@@ -64,7 +84,7 @@ export default function ModalResumenEntregaVenta({
 
   useEffect(() => {
     if (!vd) return
-    setFilas((vd.productos_por_almacen ?? []).flatMap((prod: any, pi: number) =>
+    const siguientesFilas = (vd.productos_por_almacen ?? []).flatMap((prod: any, pi: number) =>
       (prod.unidades_derivadas ?? []).map((udv: any, ui: number) => {
         const total    = Number(udv.cantidad ?? 0)
         const entregado = coveredMap[String(udv.id)] ?? 0
@@ -78,7 +98,9 @@ export default function ModalResumenEntregaVenta({
           total, entregado, pendiente, cantAProgramar: pendiente,
         }
       })
-    ))
+    )
+
+    setFilas((prev) => filasIguales(prev, siguientesFilas) ? prev : siguientesFilas)
   }, [vd, coveredMap])
 
   // Cuando se cambia a "En Tienda", poner toda la cantidad pendiente a programar

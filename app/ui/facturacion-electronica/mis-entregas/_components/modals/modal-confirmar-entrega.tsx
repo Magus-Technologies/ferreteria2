@@ -138,22 +138,22 @@ export default function ModalConfirmarEntrega({
       }
       open={open}
       onCancel={onClose}
-      width={600}
+      width={720}
       centered
       destroyOnHidden
       footer={
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <Button
             onClick={onClose}
             className="!rounded-lg !h-10 !px-5 !font-semibold"
           >
             Cancelar
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               icon={<FaFilePdf />}
               onClick={() => openPdfModal(entrega)}
-              className="!rounded-lg !h-10 !px-4 !font-semibold !text-red-600 !border-red-300 hover:!bg-red-50"
+              className="!rounded-lg !h-10 !px-3 !font-semibold !text-red-600 !border-red-300 hover:!bg-red-50"
             >
               {pdfLabel}
             </Button>
@@ -162,7 +162,7 @@ export default function ModalConfirmarEntrega({
                 icon={<FaTruck />}
                 onClick={handleMarcarEnCamino}
                 loading={marcandoEnCamino || loadingEnCamino}
-                className="!rounded-lg !h-10 !px-4 !font-bold !text-blue-700 !border-blue-300 hover:!bg-blue-50"
+                className="!rounded-lg !h-10 !px-3 !font-bold !text-blue-700 !border-blue-300 hover:!bg-blue-50"
               >
                 Marcar en Camino
               </Button>
@@ -172,7 +172,7 @@ export default function ModalConfirmarEntrega({
               icon={<FaCheck />}
               onClick={handleConfirmar}
               loading={confirmando || loading}
-              className="!rounded-lg !h-10 !px-6 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30"
+              className="!rounded-lg !h-10 !px-4 !font-bold !bg-green-600 hover:!bg-green-700 !border-none !shadow-lg !shadow-green-600/30"
             >
               {esDomicilioPendiente ? 'Entregar Directo' : 'Confirmar Entrega'}
             </Button>

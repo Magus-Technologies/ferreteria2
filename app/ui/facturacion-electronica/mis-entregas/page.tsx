@@ -75,6 +75,8 @@ export default function MisEntregasPage() {
       referencia_entrega: (entrega as any).referencia_entrega,
       observaciones:      (entrega as any).observaciones,
       estado_entrega:     entrega.estado_entrega,
+      latitud:            (entrega as any).latitud,
+      longitud:           (entrega as any).longitud,
       venta: {
         serie:   venta?.serie,
         numero:  venta?.numero,

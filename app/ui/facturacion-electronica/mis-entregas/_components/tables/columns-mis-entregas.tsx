@@ -83,6 +83,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         return serie && numero ? `${serie}-${numero}` : '-'
       },
     },
+    /*
     {
       headerName: 'Rol',
       colId: 'rol_entrega',
@@ -123,6 +124,7 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
         )
       },
     },
+    */
     {
       headerName: 'Tramo',
       colId: 'tramo_parcial',

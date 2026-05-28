@@ -132,6 +132,7 @@ export default function TableMisEntregas() {
     (state) => state.setEntrega
   )
 
+  /*
   React.useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -184,6 +185,7 @@ export default function TableMisEntregas() {
 
     window.localStorage.setItem(migrationKey, '1')
   }, [])
+  */
 
   // Migración: mostrar columna "Rol" (agregada después del release inicial).
   // El localStorage guarda qué columnas son visibles por headerName; si el

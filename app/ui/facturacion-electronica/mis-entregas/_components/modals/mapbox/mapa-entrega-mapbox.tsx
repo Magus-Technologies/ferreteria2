@@ -26,13 +26,31 @@ export default function MapaEntregaMapbox({
   const map = useRef<mapboxgl.Map | null>(null)
   const marker = useRef<mapboxgl.Marker | null>(null)
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    latitud && longitud ? { lat: latitud, lng: longitud } : null
+    latitud != null && longitud != null ? { lat: latitud, lng: longitud } : null
   )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Coordenadas por defecto (Trujillo, Perú)
   const DEFAULT_COORDS = { lat: -8.1116, lng: -79.0287 }
+  const tieneCoordenadas = latitud != null && longitud != null
+
+  const forzarResize = () => {
+    const currentMap = map.current
+    if (!currentMap) return
+
+    requestAnimationFrame(() => {
+      try {
+        currentMap.resize()
+      } catch {}
+    })
+
+    setTimeout(() => {
+      try {
+        currentMap.resize()
+      } catch {}
+    }, 250)
+  }
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_ACCESS_TOKEN) {
@@ -64,11 +82,14 @@ export default function MapaEntregaMapbox({
 
     map.current.on('load', () => {
       setLoading(false)
+      forzarResize()
 
       // Si ya tenemos coordenadas guardadas, usarlas directamente
-      if (latitud && longitud) {
-        addMarker(longitud, latitud)
-        setCoords({ lat: latitud, lng: longitud })
+      if (tieneCoordenadas) {
+        const lat = Number(latitud)
+        const lng = Number(longitud)
+        addMarker(lng, lat)
+        setCoords({ lat, lng })
       } else if (direccion) {
         // Si no, geocodificar la dirección
         geocodificarDireccion(direccion)
@@ -103,6 +124,7 @@ export default function MapaEntregaMapbox({
     }
 
     map.current.flyTo({ center: [lng, lat], zoom: 17 })
+    forzarResize()
   }
 
   const geocodificarDireccion = async (dir: string) => {
@@ -125,6 +147,19 @@ export default function MapaEntregaMapbox({
       setError('Error al buscar dirección')
     }
   }
+
+  useEffect(() => {
+    if (!map.current || !tieneCoordenadas) return
+
+    const lat = Number(latitud)
+    const lng = Number(longitud)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+
+    addMarker(lng, lat)
+    setCoords((prev) => (prev?.lat === lat && prev?.lng === lng ? prev : { lat, lng }))
+    setError(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latitud, longitud, direccion, clienteNombre, tieneCoordenadas])
 
   const abrirGoogleMaps = () => {
     if (coords) {

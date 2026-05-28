@@ -32,6 +32,11 @@ export default function useInitVenta({
         de: 'Domicilio',
         pa: 'Parcial',
       }
+      const tipoDespachoVentaMap: Record<string, 'EnTienda' | 'Domicilio' | 'Parcial'> = {
+        et: 'EnTienda',
+        do: 'Domicilio',
+        pa: 'Parcial',
+      }
       const tipoPedidoMap: Record<string, string> = {
         interno: 'INTERNO',
         externo: 'EXTERNO',
@@ -57,8 +62,11 @@ export default function useInitVenta({
         direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
         email: (venta as any).cliente?.email || undefined,
         direccion_seleccionada: (venta as any).direccion_seleccionada || TipoDireccion.D1,
-        // Campos de entrega mapeados desde la primera entrega_producto
-        tipo_despacho: entrega ? tipoEntregaMap[entrega.tipo_entrega] : 'EnTienda',
+        // Tipo de despacho pertenece a la venta; las entregas hijas pueden ser rt/de
+        // en ventas parciales, así que no deben sobreescribir este valor.
+        tipo_despacho:
+          tipoDespachoVentaMap[venta.tipo_despacho ?? ''] ??
+          (entrega ? tipoEntregaMap[entrega.tipo_entrega] : 'EnTienda'),
         despachador_id: entrega?.chofer_id || undefined,
         fecha_programada: entrega?.fecha_programada ? dayjs(entrega.fecha_programada) : undefined,
         hora_inicio: entrega?.hora_inicio || undefined,
