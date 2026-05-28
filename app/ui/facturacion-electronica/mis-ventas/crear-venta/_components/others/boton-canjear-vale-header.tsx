@@ -20,7 +20,7 @@ const ModalCanjearVale = dynamic(
 export default function BotonCanjearValeHeader() {
   const [open, setOpen] = useState(false)
   const storeForm = useStoreValeForm((s) => s.form)
-  const codigoActual = Form.useWatch('codigo_vale', storeForm ?? undefined)
+  const codigoActual = storeForm ? Form.useWatch('codigo_vale', storeForm) : undefined
   const setValesAplicables = useStoreProductoAgregadoVenta((s) => s.setValesAplicables)
   const valesActuales = useStoreProductoAgregadoVenta((s) => s.valesAplicables)
 
