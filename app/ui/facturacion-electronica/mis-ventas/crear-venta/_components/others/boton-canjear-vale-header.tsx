@@ -63,6 +63,7 @@ export default function BotonCanjearValeHeader() {
               momento_aplicacion: (v.momento_aplicacion ?? 'MISMA_COMPRA') as any,
               modalidad: v.modalidad as any,
               cantidad_minima: v.cantidad_minima,
+              tipo_umbral: ((v as any).tipo_umbral ?? null) as any,
               descuento_tipo: (v.descuento_tipo ?? null) as any,
               descuento_valor: v.descuento_valor ?? null,
               producto_gratis_id: (v as any).producto_gratis?.id ?? null,
