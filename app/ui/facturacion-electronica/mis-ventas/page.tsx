@@ -60,7 +60,7 @@ export default function MisVentas() {
             </div>
 
             {/* Columna lateral - Cards + Acciones (Solo Desktop) */}
-            <div className='hidden lg:flex flex-col items-start gap-1.5 flex-nowrap min-w-[160px]'>
+            <div className='hidden lg:flex flex-col items-start gap-1.5 flex-nowrap w-[190px] flex-shrink-0'>
               <Suspense fallback={<Spin />}>
                 <CardsInfoVentas />
               </Suspense>

@@ -73,7 +73,7 @@ export default function AccionConfigurarEntrega() {
   return (
     <>
       <ButtonBase
-        className={`w-full h-10 flex items-center justify-center gap-2 font-semibold ${
+        className={`w-full min-h-10 flex items-center justify-center gap-2 font-semibold !text-sm text-center leading-tight !px-2 !py-1.5 ${
           !hasPendiente && historial.length > 0
             ? 'border-green-500 !text-green-700 hover:bg-green-50'
             : 'border-blue-500 !text-blue-700 hover:bg-blue-50'
@@ -104,7 +104,8 @@ export default function AccionConfigurarEntrega() {
           ?? undefined
         }
         onAbrirConfiguracion={handleProgramar}
-        onSuccess={() => setOpenResumen(false)}
+        // El modal NO se cierra al programar — el usuario lo cierra manualmente.
+        // El refresco de la tabla de ventas lo hace invalidateQueries(VENTAS).
       />
 
       {/* Paso 2: configuración completa de la entrega */}
