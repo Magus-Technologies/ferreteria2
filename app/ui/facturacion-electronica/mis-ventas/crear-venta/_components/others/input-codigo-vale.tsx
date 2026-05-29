@@ -19,32 +19,44 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
 
   // --- Detección automática de vales por productos ---
   const valesNotificados = useRef<Set<number>>(new Set())
-  const productosVenta = useStoreProductoAgregadoVenta(store => store.productos)
   const setValesAplicables = useStoreProductoAgregadoVenta(store => store.setValesAplicables)
 
   const clienteId = Form.useWatch('cliente_id', form)
 
+  // Fuente de verdad = el campo `productos` del formulario (la tabla de venta).
+  // Así la detección reacciona a agregar, quitar y EDITAR la cantidad en la celda,
+  // a diferencia del store que solo se llenaba al agregar un producto nuevo.
+  const formProductos = (Form.useWatch('productos', form) || []) as any[]
+
+  // Excluir filas que no son productos vendibles: filas de vale y cabecera de paquete.
+  const productosReales = useMemo(
+    () => formProductos.filter(
+      (p) => p?._tipo_fila !== 'vale_promocional' && p?._tipo_fila !== 'paquete_cabecera'
+    ),
+    [formProductos]
+  )
+
   const productoIds = useMemo(() => {
-    return productosVenta
-      .map(p => p.producto_id)
+    return productosReales
+      .map(p => p?.producto_id)
       .filter((id): id is number => !!id)
-  }, [productosVenta])
+  }, [productosReales])
 
   // Suma del MONTO TOTAL de la venta (precio_venta * cantidad por línea).
   // Se usa cuando el vale tiene umbral por PRECIO (S/).
   const precioTotal = useMemo(() => {
-    return productosVenta.reduce((sum, p) => {
-      const cantidad = Number(p.cantidad ?? 0)
-      const precio = Number(p.precio_venta ?? 0)
+    return productosReales.reduce((sum, p) => {
+      const cantidad = Number(p?.cantidad ?? 0)
+      const precio = Number(p?.precio_venta ?? 0)
       return sum + (cantidad * precio)
     }, 0)
-  }, [productosVenta])
+  }, [productosReales])
 
   // Suma de UNIDADES de la venta. Se usa cuando el vale tiene umbral por UNIDADES
   // (PRODUCTO_GRATIS, DOS_POR_UNO, o modalidad POR_PRODUCTOS / MIXTO).
   const cantidadTotal = useMemo(() => {
-    return productosVenta.reduce((sum, p) => sum + Number(p.cantidad ?? 0), 0)
-  }, [productosVenta])
+    return productosReales.reduce((sum, p) => sum + Number(p?.cantidad ?? 0), 0)
+  }, [productosReales])
 
   const getBeneficio = useCallback((vale: ValeCompra) => {
     if (vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor) {
@@ -116,7 +128,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   }, [consultarVales])
 
   useEffect(() => {
-    if (productosVenta.length === 0) {
+    if (productosReales.length === 0) {
       valesNotificados.current.clear()
       // Preservar vales manuales si hay código aplicado
       const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
@@ -124,7 +136,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         setValesAplicables([])
       }
     }
-  }, [productosVenta.length, form, setValesAplicables])
+  }, [productosReales.length, form, setValesAplicables])
 
   // --- Detección automática de vales pendientes del cliente (DESCUENTO_PROXIMA_COMPRA) ---
   // Solo auto-setea si NO hay un código ingresado manualmente vía el modal de canje.
