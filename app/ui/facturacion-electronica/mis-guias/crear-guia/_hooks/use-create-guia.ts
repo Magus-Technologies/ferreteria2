@@ -25,10 +25,17 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
     onSuccess: (data) => {
       
       message.success('Guía de remisión creada exitosamente')
-      
+
       // Invalidar caché de guías
       queryClient.invalidateQueries({ queryKey: [QueryKeys.GUIAS_REMISION] })
-      
+      // Invalidar la venta y las entregas: crear una guía incrementa
+      // `cantidad_guiada` en la línea de venta. Sin esto, el staleTime global
+      // (5 min) devuelve la venta cacheada con la cantidad vieja, y al volver a
+      // crear guía aparece la cantidad total en vez de la pendiente por guiar.
+      // También refresca el bloqueo del dropdown "Crear Guía" en mis-entregas.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+
       // Redirigir a Mis Guías
       router.push('/ui/facturacion-electronica/mis-guias')
     },
