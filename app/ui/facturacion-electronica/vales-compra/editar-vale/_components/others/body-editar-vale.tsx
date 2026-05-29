@@ -1,7 +1,7 @@
 'use client'
 
 import { Form, Modal, message } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import FormCrearVale from '~/app/ui/facturacion-electronica/vales-compra/crear-vale/_components/form/form-crear-vale'
 import CardResumenVale from '~/app/ui/facturacion-electronica/vales-compra/crear-vale/_components/cards/card-resumen-vale'
@@ -67,6 +67,17 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       categoria_ids: vale.categorias?.map((categoria) => categoria.id) || undefined,
     }
   }
+
+  // Hidratar el form activamente cuando llega el vale. `initialValues` no basta:
+  // los campos condicionales (ej. límite por cliente / stock) dependen de
+  // Form.useWatch, que en esta versión de antd no refleja initialValues de forma
+  // confiable. setFieldsValue sí dispara el watch y renderiza esos campos.
+  useEffect(() => {
+    if (vale) {
+      form.setFieldsValue(getInitialValues())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vale])
 
   const handleSubmit = async (values: FormEditVale) => {
     if (!vale) return
