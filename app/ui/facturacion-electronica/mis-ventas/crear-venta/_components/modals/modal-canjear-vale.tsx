@@ -190,7 +190,8 @@ function ResultadoVale({ resultado }: { resultado: ValeCompraVerificado }) {
   const esSorteo = resultado.es_sorteo || vale.tipo_promocion === 'SORTEO'
   const condiciones = resultado.condiciones
   const condicionesNoCumplidas = condiciones && !condiciones.cumple
-  const esUmbralUnidades = vale.tipo_promocion === 'PRODUCTO_GRATIS' || vale.tipo_promocion === 'DOS_POR_UNO' || vale.modalidad === 'POR_PRODUCTOS' || vale.modalidad === 'MIXTO'
+  const esUmbralUnidades = vale.tipo_promocion === 'PRODUCTO_GRATIS' || vale.tipo_promocion === 'DOS_POR_UNO'
+    || ((vale as any).tipo_umbral ? (vale as any).tipo_umbral === 'CANTIDAD' : vale.modalidad === 'POR_PRODUCTOS' || vale.modalidad === 'MIXTO')
 
   let beneficio: React.ReactNode = null
   if (esSorteo) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Radio } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import {
   FaGift,
@@ -632,13 +632,19 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const descuentoTipo = Form.useWatch("descuento_tipo", form) || "PORCENTAJE";
   const usaLimiteCliente = Form.useWatch("usa_limite_por_cliente", form) || false;
   const usaLimiteStock = Form.useWatch("usa_limite_stock", form) || false;
-  const [tipoUmbral, setTipoUmbral] = useState<TipoUmbral | null>(null);
+  // El umbral (MONTO/CANTIDAD) vive en un campo del form para que se envíe en el
+  // payload y se hidrate al editar. El setter solo escribe el campo.
+  const tipoUmbral = (Form.useWatch("tipo_umbral", form) as TipoUmbral | undefined) ?? null;
+  const setTipoUmbral = (t: TipoUmbral | null) => form.setFieldValue("tipo_umbral", t);
 
   // Para 2x1 se oculta el PASO 2 y toda la config está en PASO 4
   const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
 
   return (
     <div className="space-y-4">
+      <Form.Item name="tipo_umbral" hidden>
+        <input type="hidden" />
+      </Form.Item>
       <SeccionBasica form={form} />
       {!esDosPorUno && <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno} />}
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />

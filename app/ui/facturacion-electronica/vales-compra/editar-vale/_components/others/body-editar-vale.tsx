@@ -47,6 +47,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       tipo_beneficio: beneficio,
       modalidad: vale.modalidad,
       cantidad_minima: vale.cantidad_minima,
+      tipo_umbral: vale.tipo_umbral || undefined,
       descuento_tipo: vale.descuento_tipo || undefined,
       descuento_valor: vale.descuento_valor || undefined,
       producto_gratis_id: vale.producto_gratis_id || undefined,
