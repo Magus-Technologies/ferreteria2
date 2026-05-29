@@ -31,6 +31,7 @@ type UseStoreProductoAgregadoVentaProps = {
   setTipoMoneda: (value: TipoMoneda) => void
   setValesAplicables: (vales: ValeCompra[]) => void
   excluirVale: (valeId: number) => void
+  limpiarValesExcluidos: () => void
   reset: () => void
 }
 
@@ -57,6 +58,7 @@ export const useStoreProductoAgregadoVenta =
             : [...state.valesExcluidos, valeId],
           valesAplicables: state.valesAplicables.filter((v) => v.id !== valeId),
         })),
+      limpiarValesExcluidos: () => set({ valesExcluidos: [] }),
       reset: () =>
         set({
           productoAgregado: undefined,

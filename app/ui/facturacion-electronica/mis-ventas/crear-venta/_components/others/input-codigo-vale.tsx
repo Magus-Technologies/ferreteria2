@@ -80,6 +80,14 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         producto_ids: productoIds,
         cliente_id: clienteId || undefined,
       })
+      // Guard anti-carrera: si el carrito se vació (o quedó sin productos reales)
+      // MIENTRAS la consulta estaba en vuelo, no aplicar ni notificar. Evita que el
+      // vale reaparezca "solo" tras borrar el producto.
+      const productosActuales = (form.getFieldValue('productos') || []) as any[]
+      const hayProductosReales = productosActuales.some(
+        (p) => p?._tipo_fila !== 'vale_promocional' && p?._tipo_fila !== 'paquete_cabecera' && p?.producto_id
+      )
+      if (!hayProductosReales) return
       if (res.data?.data) {
         const valesExcluidos = useStoreProductoAgregadoVenta.getState().valesExcluidos
         const valesUnicos = res.data.data.filter(
@@ -130,6 +138,9 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   useEffect(() => {
     if (productosReales.length === 0) {
       valesNotificados.current.clear()
+      // Carrito vacío = empezar de cero: olvidar los vales que el vendedor excluyó,
+      // para que al volver a agregar el producto el vale pueda reaparecer.
+      useStoreProductoAgregadoVenta.getState().limpiarValesExcluidos()
       // Preservar vales manuales si hay código aplicado
       const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
       if (!codigoManual) {
