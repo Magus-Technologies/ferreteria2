@@ -15,11 +15,13 @@ import { ventaApi } from '~/lib/api/venta'
 import ModalEntregaUpdate from './modal-entrega-update'
 import type { ResumenVenta } from '~/lib/api/entregas'
 import type { CantidadOverride } from '~/app/ui/facturacion-electronica/mis-ventas/_components/modals/modal-resumen-entrega-venta'
+import type { RecolectarEntregaConfig } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_components/modals/detalles-entrega/types'
 
 interface Props {
   open: boolean
   onClose: () => void
-  venta: ResumenVenta | undefined
+  /** Solo se usa `venta_id`; acepta un `ResumenVenta` completo o el mínimo. */
+  venta: Pick<ResumenVenta, 'venta_id'> | undefined
   onSuccess?: () => void
   /** Tipo de entrega a pre-seleccionar. Default: 'de' (domicilio) */
   tipoEntrega?: 'rt' | 'de' | 'pa'
@@ -27,9 +29,15 @@ interface Props {
   cantidadesOverride?: CantidadOverride[]
   /** Fecha programada elegida en Step 1. Formato 'YYYY-MM-DD'. */
   fechaProgramada?: string | null
+  /**
+   * Modo "solo recolectar": en vez de crear la entrega, el modal devuelve los
+   * datos de despacho (dirección + GPS + fecha + chofer) al padre, que los
+   * usará al crear todo junto. Oculta automáticamente la tabla de productos.
+   */
+  onRecolectar?: (config: RecolectarEntregaConfig) => void
 }
 
-export default function ModalNuevaEntregaVenta({ open, onClose, venta, onSuccess, tipoEntrega = 'de', cantidadesOverride, fechaProgramada }: Props) {
+export default function ModalNuevaEntregaVenta({ open, onClose, venta, onSuccess, tipoEntrega = 'de', cantidadesOverride, fechaProgramada, onRecolectar }: Props) {
   const { data: ventaResp, isFetching } = useQuery({
     queryKey: [QueryKeys.VENTAS, 'detalle-nueva-entrega', venta?.venta_id],
     queryFn: () => ventaApi.getById(venta!.venta_id),
@@ -125,7 +133,7 @@ export default function ModalNuevaEntregaVenta({ open, onClose, venta, onSuccess
         open={open}
         onCancel={onClose}
         footer={null}
-        title="CONFIGURAR ENTREGA"
+        title="Agregar Entrega a Domicilio"
         width={1100}
         centered
       >
@@ -145,6 +153,9 @@ export default function ModalNuevaEntregaVenta({ open, onClose, venta, onSuccess
       entrega={fakeEntrega}
       restante={true}
       ocultarTablaProductos={true}
+      titulo="Agregar Entrega a Domicilio"
+      labelConfirmar="Agregar Entrega"
+      onRecolectar={onRecolectar}
       onSuccess={() => {
         onSuccess?.()
         onClose()

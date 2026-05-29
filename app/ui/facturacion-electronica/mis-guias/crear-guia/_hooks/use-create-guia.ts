@@ -39,7 +39,11 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
   })
 
   const handleSubmit = async (values: FormCreateGuia) => {
-    
+    // Guard anti doble-submit: si ya hay una creación en curso, ignorar
+    // clicks adicionales. Sin esto, clicks rápidos disparaban varias
+    // mutaciones y se creaban guías duplicadas.
+    if (mutation.isPending) return
+
     // Obtener user_id del localStorage o contexto
     const userId = localStorage.getItem('user_id') || 'cmj8o0pf70001uk0o4d3tbyyx'
     

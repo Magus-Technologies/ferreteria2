@@ -49,6 +49,16 @@ interface ModalEntregaUpdateProps {
   restante?: boolean
   /** Ocultar la tabla de productos (ya configurada en un paso anterior). */
   ocultarTablaProductos?: boolean
+  /** Sobrescribe el título del modal (default: "CONFIGURAR ENTREGA"). */
+  titulo?: string
+  /** Sobrescribe el label del botón principal de confirmación. */
+  labelConfirmar?: string
+  /**
+   * Modo "solo recolectar": el modal no crea la entrega, solo devuelve los
+   * datos de despacho (dirección, GPS, fecha, chofer) al padre. Ver
+   * `ModalDetallesEntrega.onRecolectar`.
+   */
+  onRecolectar?: (config: import('../../../mis-ventas/crear-venta/_components/modals/detalles-entrega/types').RecolectarEntregaConfig) => void
 }
 
 /**
@@ -69,6 +79,9 @@ export default function ModalEntregaUpdate({
   onSuccess,
   restante = false,
   ocultarTablaProductos = false,
+  titulo,
+  labelConfirmar,
+  onRecolectar,
 }: ModalEntregaUpdateProps) {
   const [form] = Form.useForm()
   const { message } = useApp()
@@ -982,7 +995,7 @@ export default function ModalEntregaUpdate({
         open={open}
         onCancel={() => setOpen(false)}
         footer={null}
-        title="CONFIGURAR ENTREGA"
+        title={titulo ?? 'CONFIGURAR ENTREGA'}
         width={1100}
       >
         <div className="flex min-h-[240px] items-center justify-center">
@@ -1007,6 +1020,9 @@ export default function ModalEntregaUpdate({
         ocultar={ocultar}
         productosIniciales={productosIniciales}
         tituloOverride={tituloOverride}
+        tituloModal={titulo}
+        labelConfirmar={labelConfirmar}
+        onRecolectar={onRecolectar}
         infoExtra={quienEntregaInfo}
         accionesHeader={accionesHeader}
         clienteNombre={entrega.venta?.cliente?.razon_social || entrega.venta?.cliente?.nombres}

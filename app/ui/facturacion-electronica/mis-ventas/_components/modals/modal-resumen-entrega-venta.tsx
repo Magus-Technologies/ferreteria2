@@ -12,9 +12,11 @@ import { entregasNuevasApi, type EntregaNueva } from '~/lib/api/entregas'
 import TableWithTitle from '~/components/tables/table-with-title'
 import useEntregasDeVenta from '~/app/ui/facturacion-electronica/mis-entregas/_hooks/use-entregas-de-venta'
 import ModalPdfEntregaWrapper from '~/app/ui/facturacion-electronica/mis-entregas/_components/modals/modal-pdf-entrega-wrapper'
+import ModalNuevaEntregaVenta from '~/app/ui/facturacion-electronica/mis-entregas/_components/modals/modal-nueva-entrega-venta'
 import { FilaProducto, useColsProductosPendientes } from '../tables/columns-productos-pendientes'
 import { useColsHistorialEntrega } from '../tables/columns-historial-entrega'
 import CardControlesEntrega from '../cards/card-controles-entrega'
+import type { RecolectarEntregaConfig } from '../../crear-venta/_components/modals/detalles-entrega/types'
 
 export type TipoEntregaCodigo = 'rt' | 'de' | 'pa'
 export interface CantidadOverride { udvId: string; cantidad: number }
@@ -54,19 +56,31 @@ export default function ModalResumenEntregaVenta({
   const { message } = App.useApp()
   const queryClient = useQueryClient()
 
-  const [tipo,  setTipo]  = useState<TipoEntregaCodigo>('de')
-  const [fecha, setFecha] = useState<Dayjs | null>(dayjs())
-  const [filas, setFilas] = useState<FilaProducto[]>([])
+  const [tipo,          setTipo]          = useState<TipoEntregaCodigo>('de')
+  const [fecha,         setFecha]         = useState<Dayjs | null>(dayjs())
+  const [filas,         setFilas]         = useState<FilaProducto[]>([])
+  const [quienEntrega,  setQuienEntrega]  = useState<'almacen' | 'vendedor'>('almacen')
 
-  const { data: ventaResp, isFetching } = useQuery({
+  // Config de despacho a domicilio (dirección + GPS + fecha + chofer).
+  // Se llena desde el modal rico "Agregar Entrega a Domicilio" en modo
+  // recolectar — NO se crea la entrega hasta "Programar Entrega".
+  const [domicilioConfig, setDomicilioConfig] = useState<RecolectarEntregaConfig | null>(null)
+  const [openModalDomicilio, setOpenModalDomicilio] = useState(false)
+
+  // Resetear dirección cuando cambia de tipo
+  useEffect(() => {
+    if (tipo !== 'de') setDomicilioConfig(null)
+  }, [tipo])
+
+  const { data: ventaResp, isLoading: isLoadingVenta } = useQuery({
     queryKey: [QueryKeys.VENTAS, 'resumen-entrega', ventaId],
     queryFn:  () => ventaApi.getById(ventaId!),
     enabled:  open && !!ventaId,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,  // 2 min — refetches en background sin bloquear la UI
   })
   const vd = (ventaResp?.data?.data ?? ventaResp?.data) as any
 
-  const { entregas: historial, loading: loadingHistorial, refetch: refetchHistorial } = useEntregasDeVenta(open ? ventaId : undefined)
+  const { entregas: historial, isLoadingFirst: isLoadingHistorial, refetch: refetchHistorial } = useEntregasDeVenta(open ? ventaId : undefined)
 
   // Cobertura acumulada desde el historial — TODOS los no-cancelados (pe+ec+en)
   // Se usa para mostrar pendiente/entregado correctos sin depender de cantidad_pendiente del DB
@@ -134,18 +148,36 @@ export default function ModalResumenEntregaVenta({
     )
   }, [vd, historial])
 
-  // "A Programar" solo visible cuando el tipo es Domicilio y hay pendiente
-  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: tipo === 'de' && hasPendiente })
+  // "A Programar" siempre visible cuando hay pendiente (rt y de por igual)
+  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: hasPendiente })
 
   const aProg    = filas.filter(f => f.cantAProgramar > 0)
   const totUnd   = aProg.reduce((s, f) => s + f.cantAProgramar, 0)
 
   const { mutate: registrar, isPending: registrando } = useMutation({
     mutationFn: () => entregasNuevasApi.crear({
-      venta_id: ventaId!, tipo_entrega: tipo, tipo_despacho: 'in', tipo_pedido: 'interno',
-      quien_entrega:     vd?.quien_entrega ?? 'almacen',
+      venta_id:          ventaId!,
+      tipo_entrega:      tipo,
+      tipo_despacho:     tipo === 'de' ? 'pr' : 'in',
+      // Domicilio lo entrega un chofer; recojo en tienda lo decide el selector.
+      tipo_pedido:       tipo === 'de' ? (domicilioConfig?.tipo_pedido ?? 'interno') : 'interno',
+      quien_entrega:     tipo === 'de' ? 'chofer' : quienEntrega,
       almacen_salida_id: Number(vd?.almacen_id ?? vd?.almacen?.id ?? 0),
-      fecha_programada:  fecha ? fecha.format('YYYY-MM-DD') : null,
+      // Para domicilio la fecha/hora vienen del modal de configuración; para
+      // recojo en tienda, del DatePicker del propio resumen.
+      fecha_programada:  tipo === 'de'
+        ? (domicilioConfig?.fecha_programada ?? (fecha ? fecha.format('YYYY-MM-DD') : null))
+        : (fecha ? fecha.format('YYYY-MM-DD') : null),
+      hora_inicio:       tipo === 'de' ? domicilioConfig?.hora_inicio ?? null : null,
+      hora_fin:          tipo === 'de' ? domicilioConfig?.hora_fin ?? null : null,
+      chofer_id:         tipo === 'de' ? domicilioConfig?.chofer_id ?? null : null,
+      vehiculo_id:       tipo === 'de' ? domicilioConfig?.vehiculo_id ?? null : null,
+      cargo_destino:     tipo === 'de' ? domicilioConfig?.cargo_destino ?? null : null,
+      direccion_entrega: tipo === 'de' ? domicilioConfig?.direccion_entrega ?? null : null,
+      referencia_entrega: tipo === 'de' ? domicilioConfig?.referencia_entrega ?? null : null,
+      latitud:           tipo === 'de' ? domicilioConfig?.latitud ?? null : null,
+      longitud:          tipo === 'de' ? domicilioConfig?.longitud ?? null : null,
+      observaciones:     tipo === 'de' ? domicilioConfig?.observaciones ?? null : null,
       productos:         aProg.map(f => ({ unidad_derivada_venta_id: parseInt(f.udvId), cantidad: f.cantAProgramar })),
       user_creador_id:   vd?.user?.id ?? vd?.user_id ?? '',
     }),
@@ -159,8 +191,12 @@ export default function ModalResumenEntregaVenta({
   })
 
   const abrirConfig = () => {
-    if (!aProg.length) return
-    onAbrirConfiguracion(tipo, aProg.map(f => ({ udvId: f.udvId, cantidad: f.cantAProgramar })), fecha?.format('YYYY-MM-DD') ?? null)
+    if (tipo === 'de') {
+      setOpenModalDomicilio(true)
+    } else {
+      if (!aProg.length) return
+      onAbrirConfiguracion(tipo, aProg.map(f => ({ udvId: f.udvId, cantidad: f.cantAProgramar })), fecha?.format('YYYY-MM-DD') ?? null)
+    }
   }
 
   return (
@@ -179,7 +215,7 @@ export default function ModalResumenEntregaVenta({
         </div>
       }
     >
-      {isFetching || loadingHistorial ? (
+      {isLoadingVenta || isLoadingHistorial ? (
         <div className="flex items-center justify-center flex-1"><Spin size="large" /></div>
       ) : (
         <div className="flex gap-5 flex-1 min-h-0">
@@ -223,18 +259,42 @@ export default function ModalResumenEntregaVenta({
           <CardControlesEntrega
             tipo={tipo} onTipo={setTipo}
             fecha={fecha} onFecha={setFecha}
+            quienEntrega={quienEntrega} onQuienEntrega={setQuienEntrega}
             itemCount={aProg.length} unidadCount={totUnd}
             registrando={registrando}
             onMapa={abrirConfig}
             onProgramar={() => registrar()}
             onCancelar={onClose}
             completada={!hasPendiente}
+            domicilioConfigurado={domicilioConfig !== null}
+            domicilioDireccion={domicilioConfig?.direccion_entrega ?? undefined}
           />
         </div>
       )}
     </Modal>
 
     <ModalPdfEntregaWrapper />
+
+    {/* ── Modal rico "Agregar Entrega a Domicilio" (solo recolectar) ──────
+        Reusa el modal de siempre (mapa + calendario + chofer) pero en modo
+        recolectar: NO crea la entrega, solo devuelve la config para que
+        "Programar Entrega" la cree junto con las cantidades. La tabla de
+        productos va oculta — las cantidades ya se eligieron en este resumen. */}
+    {ventaId && (
+      <ModalNuevaEntregaVenta
+        open={openModalDomicilio}
+        onClose={() => setOpenModalDomicilio(false)}
+        venta={{ venta_id: ventaId }}
+        tipoEntrega="de"
+        // Sin fecha pre-cargada: el slot (fecha + hora) se elige en el calendario
+        // del modal. Pre-cargar solo la fecha armaba un slot fantasma "00:00 — 00:00".
+        fechaProgramada={null}
+        onRecolectar={(cfg) => {
+          setDomicilioConfig(cfg)
+          setOpenModalDomicilio(false)
+        }}
+      />
+    )}
     </>
   )
 }

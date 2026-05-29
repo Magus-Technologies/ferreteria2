@@ -71,7 +71,7 @@ export default function BodyCrearGuia({
 
   const { venta } = useInitGuia({ guia, form })
 
-  const { handleSubmit } = useCreateGuia(form)
+  const { handleSubmit, isCreating } = useCreateGuia(form)
 
   return (
     <FormBase<FormCreateGuia>
@@ -87,7 +87,7 @@ export default function BodyCrearGuia({
         <FormCrearGuia form={form} guia={guia} venta={venta} initialMotivoCodigo={motivoCodigo} />
       </div>
       <div className='w-full xl:w-auto'>
-        <CardsInfoGuia form={form} guia={guia} />
+        <CardsInfoGuia form={form} guia={guia} isCreating={isCreating} />
       </div>
     </FormBase>
   )

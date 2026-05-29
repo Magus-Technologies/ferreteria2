@@ -12,9 +12,11 @@ import CheckboxBase from '~/app/_components/form/checkbox/checkbox-base'
 export default function CardsInfoGuia({
   form,
   guia,
+  isCreating = false,
 }: {
   form: FormInstance
   guia?: any
+  isCreating?: boolean
 }) {
   const productos = Form.useWatch(
     'productos',
@@ -95,6 +97,7 @@ export default function CardsInfoGuia({
           onClick={() => {
             form.submit()
           }}
+          loading={isCreating}
           color={guia ? 'info' : 'success'}
           className='flex items-center justify-center gap-4 !rounded-md w-full h-full max-h-16 text-balance'
         >
@@ -103,7 +106,9 @@ export default function CardsInfoGuia({
           ) : (
             <TbTruckDelivery className='min-w-fit' size={30} />
           )}{' '}
-          {guia ? 'Editar' : 'Crear'} Guía
+          {isCreating
+            ? guia ? 'Editando...' : 'Creando...'
+            : `${guia ? 'Editar' : 'Crear'} Guía`}
         </ButtonBase>
       </div>
     </>

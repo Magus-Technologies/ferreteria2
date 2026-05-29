@@ -29,6 +29,28 @@ export interface Coordenadas {
 export type TipoDespachoUI = 'EnTienda' | 'Domicilio' | 'Parcial'
 
 /**
+ * Config recolectada en modo "solo recolectar" (sin crear).
+ *
+ * Se usa cuando el modal se abre únicamente para que el usuario configure los
+ * datos del despacho a domicilio (dirección + GPS + fecha + chofer) y se los
+ * devuelva al modal padre vía `onRecolectar`. El padre crea la entrega después.
+ */
+export interface RecolectarEntregaConfig {
+  direccion_entrega: string | null
+  referencia_entrega: string | null
+  latitud: number | null
+  longitud: number | null
+  fecha_programada: string | null
+  hora_inicio: string | null
+  hora_fin: string | null
+  chofer_id: string | null
+  vehiculo_id: number | null
+  tipo_pedido: string | null
+  cargo_destino: string | null
+  observaciones: string | null
+}
+
+/**
  * Snapshot del vehículo asignado al usuario logueado — usado para precargar
  * el campo "vehículo" en las secciones de Domicilio y Resto Parcial.
  *
@@ -137,4 +159,16 @@ infoExtra?: ReactNode
    * no debe poder cambiarla.
    */
   readonlyEntregarParcial?: boolean
+  /** Sobrescribe el texto principal del header (default: "CONFIGURAR ENTREGA"). */
+  tituloModal?: string
+  /** Sobrescribe el label del botón de confirmación. */
+  labelConfirmar?: string
+  /**
+   * Modo "solo recolectar". Cuando se pasa, el botón de confirmación NO crea
+   * ni actualiza ninguna entrega: lee los datos del despacho del formulario y
+   * los devuelve por este callback, luego cierra el modal. El modal padre se
+   * encarga de crear la entrega más tarde (ej: botón "Programar Entrega" del
+   * resumen de venta). Pensado para Domicilio con la tabla de productos oculta.
+   */
+  onRecolectar?: (config: RecolectarEntregaConfig) => void
 }

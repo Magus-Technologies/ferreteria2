@@ -94,6 +94,9 @@ function ModalDetallesEntregaInner({
   soloEntregarEnTienda = false,
   tipoDespachoConfirmacion: tipoDespachoConfirmacionOverride,
   readonlyEntregarParcial = false,
+  tituloModal,
+  labelConfirmar,
+  onRecolectar,
 }: ModalDetallesEntregaProps) {
   const { message } = useApp()
   // Set de claves "a ocultar" — fácil de pasar a las secciones y consultar O(1).
@@ -829,7 +832,36 @@ function ModalDetallesEntregaInner({
     }
   }
 
+  // Modo "solo recolectar": en vez de crear/actualizar la entrega, lee los
+  // datos del despacho del form y los devuelve al padre. No toca el backend.
+  const handleRecolectar = useCallback(() => {
+    if (!onRecolectar) return
+    const v = form.getFieldsValue()
+    onRecolectar({
+      direccion_entrega: v.direccion_entrega || null,
+      referencia_entrega: v.referencia_entrega || null,
+      latitud: v.latitud != null ? Number(v.latitud) : null,
+      longitud: v.longitud != null ? Number(v.longitud) : null,
+      fecha_programada: v.fecha_programada
+        ? dayjs(v.fecha_programada).format('YYYY-MM-DD')
+        : null,
+      hora_inicio: v.hora_inicio || null,
+      hora_fin: v.hora_fin || null,
+      chofer_id: v.despachador_id || null,
+      vehiculo_id: v.vehiculo_id != null ? Number(v.vehiculo_id) : null,
+      tipo_pedido: v.tipo_pedido || null,
+      cargo_destino: v.cargo_destino || null,
+      observaciones: v.observaciones || null,
+    })
+    setOpen(false)
+  }, [onRecolectar, form, setOpen])
+
   const handleConfirmarConFeedback = useCallback(async () => {
+    // Si el modal está en modo recolectar, no creamos nada — devolvemos la config.
+    if (onRecolectar) {
+      handleRecolectar()
+      return
+    }
     try {
       await handleConfirmar()
     } catch (error) {
@@ -839,14 +871,14 @@ function ModalDetallesEntregaInner({
           : 'No se pudo confirmar la entrega',
       )
     }
-  }, [handleConfirmar, message])
+  }, [onRecolectar, handleRecolectar, handleConfirmar, message])
 
   return (
     <Modal
       title={
         <TitleForm className="!pb-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <span>CONFIGURAR ENTREGA</span>
+            <span>{tituloModal ?? 'CONFIGURAR ENTREGA'}</span>
             {accionesHeader}
           </div>
           <div className="text-sm font-normal text-gray-600 mt-1">
@@ -888,18 +920,24 @@ function ModalDetallesEntregaInner({
             size="md"
             onClick={handleConfirmarConFeedback}
             disabled={
-              creandoVenta ||
-              ((tipoDespacho === 'EnTienda' || soloEntregarEnTienda) &&
-                resolvedMode.kind !== 'crear-venta' &&
-                totalAEntregar === 0) ||
-              (tipoDespacho === 'Parcial' && totalAEntregar === 0 && totalAProgramar === 0) ||
-              (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) ||
-              domicilioInvalido ||
-              restoInvalido
+              onRecolectar
+                ? // Modo recolectar: solo exigimos que el domicilio sea válido
+                  // (dirección/GPS). Las cantidades ya las fijó el modal padre.
+                  domicilioInvalido
+                : creandoVenta ||
+                  ((tipoDespacho === 'EnTienda' || soloEntregarEnTienda) &&
+                    resolvedMode.kind !== 'crear-venta' &&
+                    totalAEntregar === 0) ||
+                  (tipoDespacho === 'Parcial' && totalAEntregar === 0 && totalAProgramar === 0) ||
+                  (tipoDespacho === 'Domicilio' && productosEntrega.length > 0 && totalAProgramar === 0 && totalAEntregar === 0) ||
+                  domicilioInvalido ||
+                  restoInvalido
             }
           >
             {creandoVenta
               ? 'Procesando...'
+              : labelConfirmar
+              ? labelConfirmar
               : resolvedMode.kind === 'actualizar-entrega' &&
                 tipoDespacho === 'Parcial' &&
                 forzarProgramarRestoOn

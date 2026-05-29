@@ -82,22 +82,43 @@ export default function TableMisVentas() {
   const filtros = useStoreFiltrosMisVentas((state) => state.filtros);
   const { response, loading } = useGetVentas({ where: filtros });
 
-  const setVentaSeleccionada = useStoreVentaSeleccionada(
-    (state) => state.setVenta
-  );
+  const setVentaSeleccionada = useStoreVentaSeleccionada((state) => state.setVenta);
+  const ventaActual         = useStoreVentaSeleccionada((state) => state.venta);
 
-  // Seleccionar automáticamente el primer registro cuando se cargan los datos
+  // Al refrescar datos: re-seleccionar la venta previa por ID.
+  // Si ya no existe en los nuevos datos (fue borrada o filtrada), seleccionar la primera.
+  // Esto evita que un WebSocket refresh pise la selección mientras el usuario tiene un modal abierto.
   React.useEffect(() => {
-    if (response && response.length > 0 && tableRef.current) {
-      setTimeout(() => {
-        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0);
-        if (firstNode) {
-          firstNode.setSelected(true);
-          setVentaSeleccionada(firstNode.data);
+    if (!response || response.length === 0 || !tableRef.current) return;
+    setTimeout(() => {
+      const api = tableRef.current?.api;
+      if (!api) return;
+
+      // Intentar re-seleccionar la venta que estaba seleccionada antes del refresh
+      const idPrevio = ventaActual?.id;
+      let nodoTarget: any = null;
+
+      if (idPrevio) {
+        api.forEachNode((node) => {
+          if (node.data?.id === idPrevio) nodoTarget = node;
+        });
+      }
+
+      // Si no se encontró la anterior (o no había ninguna), seleccionar la primera fila
+      if (!nodoTarget) {
+        nodoTarget = api.getDisplayedRowAtIndex(0);
+      }
+
+      if (nodoTarget) {
+        nodoTarget.setSelected(true);
+        // Solo actualizar el store si cambia la venta (evita re-renders innecesarios)
+        if (!idPrevio || nodoTarget.data?.id !== idPrevio) {
+          setVentaSeleccionada(nodoTarget.data);
         }
-      }, 100);
-    }
-  }, [response, setVentaSeleccionada]);
+      }
+    }, 100);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [response]);
 
   // Función para aplicar estilos a las filas
   const getRowStyle = (params: { data?: getVentaResponseProps }): RowStyle | undefined => {
@@ -145,6 +166,7 @@ export default function TableMisVentas() {
         tableRef={tableRef}
         selectionColor="overlay"
         getRowStyle={getRowStyle}
+        getRowId={({ data }) => String(data.id)}
         onRowClicked={(event) => {
           event.node.setSelected(true);
         }}

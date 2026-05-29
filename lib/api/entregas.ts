@@ -324,11 +324,14 @@ export const entregasNuevasApi = {
     chofer_id?: string | null
     vehiculo_id?: number | null
     tipo_pedido: string
+    cargo_destino?: string | null
     fecha_programada?: string | null
     hora_inicio?: string | null
     hora_fin?: string | null
     direccion_entrega?: string | null
     referencia_entrega?: string | null
+    latitud?: number | null
+    longitud?: number | null
     observaciones?: string | null
     productos: Array<{ unidad_derivada_venta_id: number; cantidad: number }>
     user_creador_id: string

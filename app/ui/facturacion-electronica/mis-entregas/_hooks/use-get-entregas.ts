@@ -33,6 +33,8 @@ function mapToEntregaDB(e: EntregaNueva): any {
     // Location
     direccion_entrega:  (e as any).direccion_entrega,
     referencia_entrega: (e as any).referencia_entrega,
+    latitud:            (e as any).latitud ?? null,
+    longitud:           (e as any).longitud ?? null,
     observaciones:      (e as any).observaciones,
 
     // Venta nested (needed by columns-mis-entregas.tsx)
@@ -47,6 +49,7 @@ function mapToEntregaDB(e: EntregaNueva): any {
         numero_documento:  venta.cliente.numero_documento,
         nombres:           venta.cliente.nombres,
         apellidos:         venta.cliente.apellidos,
+        direccion:         venta.cliente.direccion,
       } : null,
     } : null,
 

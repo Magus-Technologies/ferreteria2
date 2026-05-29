@@ -4,6 +4,9 @@ import { useMemo, useState } from 'react'
 import { Modal, Button, Tooltip } from 'antd'
 import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf, FaTruck } from 'react-icons/fa'
 import type { ColDef } from 'ag-grid-community'
+import { useQuery } from '@tanstack/react-query'
+import { QueryKeys } from '~/app/_lib/queryKeys'
+import { ventaApi } from '~/lib/api/venta'
 import TableBase from '~/components/tables/table-base'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 
@@ -87,6 +90,19 @@ export default function ModalConfirmarEntrega({
     },
   ], [])
 
+  // Carga datos del cliente (con sus direcciones) cuando la entrega es domicilio
+  // y no tiene dirección propia — para mostrar la dirección principal del cliente.
+  const esDomicilioSinDir = !!entrega && entrega.tipo_entrega === 'de' && !entrega.direccion_entrega
+  const { data: ventaResp } = useQuery({
+    queryKey: [QueryKeys.VENTAS, 'confirmar-entrega', entrega?.venta_id],
+    queryFn:  () => ventaApi.getById(entrega!.venta_id),
+    enabled:  open && esDomicilioSinDir && !!entrega?.venta_id,
+    staleTime: 5 * 60 * 1000,
+  })
+  const ventaDetalle  = (ventaResp?.data?.data ?? ventaResp?.data) as any
+  const clienteDirs   = ventaDetalle?.cliente?.direcciones as any[] | undefined
+  const dirPrincipal  = clienteDirs?.find((d: any) => d.es_principal) ?? clienteDirs?.[0] ?? null
+
   if (!entrega) return null
 
   const pdfLabel = entrega?.estado_entrega === 'pe'
@@ -103,7 +119,14 @@ export default function ModalConfirmarEntrega({
     `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim() || 'SIN CLIENTE'
   const ventaNumero = venta?.serie && venta?.numero
     ? `${venta.serie}-${venta.numero}` : 'S/N'
-  const direccion = entrega.direccion_entrega || 'No especificada'
+  const direccion = entrega.direccion_entrega
+    || dirPrincipal?.direccion
+    || 'No especificada'
+  const latitud  = entrega.latitud  ?? dirPrincipal?.latitud  ?? null
+  const longitud = entrega.longitud ?? dirPrincipal?.longitud ?? null
+  const gpsUrl   = latitud && longitud
+    ? `https://www.google.com/maps?q=${latitud},${longitud}`
+    : null
   const telefono = cliente?.telefono || ''
   const esDomicilio          = entrega.tipo_entrega === 'de'
   const esDomicilioPendiente = esDomicilio && entrega.estado_entrega === 'pe'
@@ -228,9 +251,20 @@ export default function ModalConfirmarEntrega({
             </div>
           )}
           <div className="flex items-start gap-2 text-sm">
-            <FaMapMarkerAlt className="text-slate-400 text-xs mt-0.5" />
-            <span className="font-semibold text-slate-600">Dirección:</span>
-            <span className="text-slate-800">{direccion}</span>
+            <FaMapMarkerAlt className="text-slate-400 text-xs mt-0.5 flex-shrink-0" />
+            <span className="font-semibold text-slate-600 flex-shrink-0">Dirección:</span>
+            <span className="text-slate-800 flex-1">{direccion}</span>
+            {gpsUrl && (
+              <a
+                href={gpsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-semibold border border-blue-200 rounded-lg px-2 py-0.5 hover:bg-blue-50 transition-colors"
+                title="Abrir en Google Maps"
+              >
+                <FaMapMarkerAlt size={9} /> GPS
+              </a>
+            )}
           </div>
           {entrega.referencia_entrega && (
             <div className="flex items-start gap-2 text-sm">

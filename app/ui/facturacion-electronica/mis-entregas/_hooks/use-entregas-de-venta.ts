@@ -3,7 +3,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregasNuevasApi } from '~/lib/api/entregas'
 
 export default function useEntregasDeVenta(ventaId: string | undefined) {
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaId],
     queryFn: () => entregasNuevasApi.porVenta(ventaId!),
     enabled: !!ventaId,
@@ -11,8 +11,9 @@ export default function useEntregasDeVenta(ventaId: string | undefined) {
   })
 
   return {
-    entregas: data ?? [],
-    loading: isFetching,
+    entregas:        data ?? [],
+    loading:         isFetching,   // compatibilidad con usos actuales
+    isLoadingFirst:  isLoading,    // solo true en la carga inicial (sin datos previos)
     error,
     refetch,
   }

@@ -66,7 +66,7 @@ export default function AccionConfigurarEntrega() {
     setTipoEntrega(tipo)
     setCantidades(newCantidades)
     setFechaProgramada(fecha)
-    setOpenResumen(false)
+    // No cerramos el Step 1 — queda abierto detrás del Step 2
     setOpenProgramar(true)
   }
 
@@ -110,10 +110,7 @@ export default function AccionConfigurarEntrega() {
       {/* Paso 2: configuración completa de la entrega */}
       <ModalNuevaEntregaVenta
         open={openProgramar}
-        onClose={() => {
-          setOpenProgramar(false)
-          setOpenResumen(true)   // volver a Step 1 si el usuario cierra Step 2
-        }}
+        onClose={() => setOpenProgramar(false)}
         venta={ventaAdaptada}
         tipoEntrega={tipoEntrega}
         cantidadesOverride={cantidades}
