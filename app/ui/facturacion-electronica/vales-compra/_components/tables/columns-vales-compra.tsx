@@ -242,7 +242,8 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
     },
     {
       colId: 'cantidad_minima',
-      headerName: "Precio Mín.",
+      headerName: "Mínimo",
+      headerTooltip: "Umbral mínimo para activar el vale: en unidades (Producto Gratis, Por Productos o Mixto) o en soles (resto de casos).",
       field: "cantidad_minima",
       width: 110,
       valueFormatter: (params) => {
