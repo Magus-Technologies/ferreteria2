@@ -45,6 +45,8 @@ export interface DetalleGuiaRequest {
 
 export interface CreateGuiaRemisionRequest {
   venta_id?: string;
+  /** Entrega de origen — trackea cantidad_guiada por entrega (no solo por venta). */
+  entrega_id?: number;
   tipo_guia: TipoGuia;
   serie?: string;
   numero?: number;

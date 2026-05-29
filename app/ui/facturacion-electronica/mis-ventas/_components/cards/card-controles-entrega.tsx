@@ -186,7 +186,7 @@ export default function CardControlesEntrega({
               onClick={onProgramar}
               title={tipo === 'de' && !domicilioConfigurado ? 'Primero seleccioná la dirección con "Mapa / Dirección"' : undefined}
               className="w-full flex items-center justify-center gap-1.5 text-xs !h-9 disabled:opacity-40">
-              <FaCheck size={11} /> {registrando ? 'Registrando...' : 'Programar Entrega'}
+              <FaCheck size={11} /> {registrando ? 'Registrando...' : tipo === 'rt' ? 'Registrar Entrega' : 'Programar Entrega'}
             </ButtonBase>
             <button type="button" onClick={onCancelar}
               className="w-full text-[11px] text-slate-400 hover:text-slate-600 py-1 transition-colors cursor-pointer">

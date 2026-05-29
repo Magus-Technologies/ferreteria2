@@ -1,7 +1,7 @@
 import { FaCalendar, FaTruck, FaUserTag, FaWarehouse } from 'react-icons/fa6'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import LabelBase from '~/components/form/label-base'
-import { Form, FormInstance, Tag } from 'antd'
+import { Form, FormInstance, Tag, Input } from 'antd'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
@@ -176,7 +176,9 @@ export default function FormCrearGuia({
     <div className='flex flex-col gap-2'>
       {/* Campos ocultos para direcciones del cliente */}
       <Form.Item name='direccion_seleccionada' hidden>
-        <input type='hidden' />
+        {/* Input de Ant (controlado: normaliza undefined → '') para evitar el
+            warning uncontrolled→controlled cuando use-init-guia setea 'D1'. */}
+        <Input type='hidden' />
       </Form.Item>
       <HiddenDireccionesFormItems />
 
@@ -703,7 +705,7 @@ export default function FormCrearGuia({
         </LabelBase>
         {/* Campo oculto para guardar la selección D1..D4 de la empresa. */}
         <Form.Item name='empresa_direccion_seleccionada' hidden initialValue='D1'>
-          <input type='hidden' />
+          <Input type='hidden' />
         </Form.Item>
         <LabelBase label='Punto de Llegada:' classNames={{ labelParent: 'mb-2' }} className='w-full sm:flex-1'>
           <InputBase

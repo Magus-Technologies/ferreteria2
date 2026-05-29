@@ -1,6 +1,6 @@
 'use client'
 
-import { Form } from 'antd'
+import { Form, Input } from 'antd'
 import {
   TIPOS_DIRECCION_LIST,
   type TipoDireccion,
@@ -26,7 +26,9 @@ export default function HiddenDireccionesFormItems() {
           name={LEGACY_CLIENTE_DIRECCION_FIELDS[tipo]}
           hidden
         >
-          <input type="hidden" />
+          {/* Ant Input (controlado) en vez de <input> nativo para evitar el
+              warning uncontrolled→controlled al precargar las direcciones. */}
+          <Input type="hidden" />
         </Form.Item>
       ))}
     </>
