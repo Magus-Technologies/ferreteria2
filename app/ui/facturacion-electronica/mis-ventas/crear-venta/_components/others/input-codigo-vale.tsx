@@ -19,32 +19,44 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
 
   // --- Detección automática de vales por productos ---
   const valesNotificados = useRef<Set<number>>(new Set())
-  const productosVenta = useStoreProductoAgregadoVenta(store => store.productos)
   const setValesAplicables = useStoreProductoAgregadoVenta(store => store.setValesAplicables)
 
   const clienteId = Form.useWatch('cliente_id', form)
 
+  // Fuente de verdad = el campo `productos` del formulario (la tabla de venta).
+  // Así la detección reacciona a agregar, quitar y EDITAR la cantidad en la celda,
+  // a diferencia del store que solo se llenaba al agregar un producto nuevo.
+  const formProductos = (Form.useWatch('productos', form) || []) as any[]
+
+  // Excluir filas que no son productos vendibles: filas de vale y cabecera de paquete.
+  const productosReales = useMemo(
+    () => formProductos.filter(
+      (p) => p?._tipo_fila !== 'vale_promocional' && p?._tipo_fila !== 'paquete_cabecera'
+    ),
+    [formProductos]
+  )
+
   const productoIds = useMemo(() => {
-    return productosVenta
-      .map(p => p.producto_id)
+    return productosReales
+      .map(p => p?.producto_id)
       .filter((id): id is number => !!id)
-  }, [productosVenta])
+  }, [productosReales])
 
   // Suma del MONTO TOTAL de la venta (precio_venta * cantidad por línea).
   // Se usa cuando el vale tiene umbral por PRECIO (S/).
   const precioTotal = useMemo(() => {
-    return productosVenta.reduce((sum, p) => {
-      const cantidad = Number(p.cantidad ?? 0)
-      const precio = Number(p.precio_venta ?? 0)
+    return productosReales.reduce((sum, p) => {
+      const cantidad = Number(p?.cantidad ?? 0)
+      const precio = Number(p?.precio_venta ?? 0)
       return sum + (cantidad * precio)
     }, 0)
-  }, [productosVenta])
+  }, [productosReales])
 
   // Suma de UNIDADES de la venta. Se usa cuando el vale tiene umbral por UNIDADES
   // (PRODUCTO_GRATIS, DOS_POR_UNO, o modalidad POR_PRODUCTOS / MIXTO).
   const cantidadTotal = useMemo(() => {
-    return productosVenta.reduce((sum, p) => sum + Number(p.cantidad ?? 0), 0)
-  }, [productosVenta])
+    return productosReales.reduce((sum, p) => sum + Number(p?.cantidad ?? 0), 0)
+  }, [productosReales])
 
   const getBeneficio = useCallback((vale: ValeCompra) => {
     if (vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor) {
@@ -68,6 +80,14 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         producto_ids: productoIds,
         cliente_id: clienteId || undefined,
       })
+      // Guard anti-carrera: si el carrito se vació (o quedó sin productos reales)
+      // MIENTRAS la consulta estaba en vuelo, no aplicar ni notificar. Evita que el
+      // vale reaparezca "solo" tras borrar el producto.
+      const productosActuales = (form.getFieldValue('productos') || []) as any[]
+      const hayProductosReales = productosActuales.some(
+        (p) => p?._tipo_fila !== 'vale_promocional' && p?._tipo_fila !== 'paquete_cabecera' && p?.producto_id
+      )
+      if (!hayProductosReales) return
       if (res.data?.data) {
         const valesExcluidos = useStoreProductoAgregadoVenta.getState().valesExcluidos
         const valesUnicos = res.data.data.filter(
@@ -75,12 +95,17 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         )
           .filter(v => v.momento_aplicacion !== 'PROXIMA_COMPRA')
           .filter(v => !valesExcluidos.includes(v.id))
-        // Preservar vales aplicados manualmente (tienen codigo_vale en el form)
+        // Preservar vales aplicados manualmente. Dos casos:
+        // 1) Código regular tecleado (VC-...): coincide con codigo_vale del form.
+        // 2) Código de próxima compra canjeado (VCC-...): el form guarda el código
+        //    generado, pero el vale en el store tiene su código original (VC-...), así
+        //    que no coinciden. Estos vales son siempre PROXIMA_COMPRA (la auto-detección
+        //    nunca los devuelve), por lo que se preservan por su momento_aplicacion.
         const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
         const valesActuales = useStoreProductoAgregadoVenta.getState().valesAplicables
-        const valesManuales = codigoManual
-          ? valesActuales.filter(v => v.codigo === codigoManual)
-          : []
+        const valesManuales = valesActuales.filter(
+          v => (codigoManual && v.codigo === codigoManual) || v.momento_aplicacion === 'PROXIMA_COMPRA'
+        )
         // Fusionar: auto-detectados + manuales (sin duplicados)
         const idsAuto = new Set(valesUnicos.map(v => v.id))
         const fusionados = [
@@ -111,15 +136,18 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   }, [consultarVales])
 
   useEffect(() => {
-    if (productosVenta.length === 0) {
+    if (productosReales.length === 0) {
       valesNotificados.current.clear()
+      // Carrito vacío = empezar de cero: olvidar los vales que el vendedor excluyó,
+      // para que al volver a agregar el producto el vale pueda reaparecer.
+      useStoreProductoAgregadoVenta.getState().limpiarValesExcluidos()
       // Preservar vales manuales si hay código aplicado
       const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
       if (!codigoManual) {
         setValesAplicables([])
       }
     }
-  }, [productosVenta.length, form, setValesAplicables])
+  }, [productosReales.length, form, setValesAplicables])
 
   // --- Detección automática de vales pendientes del cliente (DESCUENTO_PROXIMA_COMPRA) ---
   // Solo auto-setea si NO hay un código ingresado manualmente vía el modal de canje.

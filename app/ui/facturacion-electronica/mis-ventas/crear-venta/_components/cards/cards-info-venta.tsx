@@ -193,7 +193,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         return { vale: v, monto: 0, tipo: v.descuento_tipo, valor };
       }
 
-      if (v.tipo_promocion === 'DOS_POR_UNO' && v.momento_aplicacion !== 'PROXIMA_COMPRA') {
+      if (v.tipo_promocion === 'DOS_POR_UNO') {
         const productoIdsVale = (v.productos ?? []).map((p) => p.id);
         if (productoIdsVale.length === 0) return { vale: v, monto: 0, tipo: null, valor: 0 };
         const lineasCoincidentes = productosReales.filter(
@@ -205,12 +205,17 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
           .filter((n) => n > 0);
         if (preciosValidos.length === 0) return { vale: v, monto: 0, tipo: null, valor: 0 };
         const precioMin = Math.min(...preciosValidos);
-        const extras = Number(v.cantidad_producto_gratis ?? 1) || 1;
-        const monto = precioMin * extras;
+        // Escalar: por cada `cantidad_minima` compradas, `cantidad_producto_gratis` gratis.
+        // Ej.: 2x1 (mínimo 2, 1 gratis), compra 10 → grupos = floor(10/2)=5 → 5 gratis.
+        const cantidadComprada = lineasCoincidentes.reduce((s, p) => s + Number(p?.cantidad ?? 0), 0);
+        const tamGrupo = Number(v.cantidad_minima ?? 1) || 1;
+        const gratisPorGrupo = Number(v.cantidad_producto_gratis ?? 1) || 1;
+        const unidadesGratis = Math.floor(cantidadComprada / tamGrupo) * gratisPorGrupo;
+        const monto = precioMin * unidadesGratis;
         return { vale: v, monto, tipo: null, valor: monto };
       }
 
-      if (v.tipo_promocion === 'PRODUCTO_GRATIS' && v.momento_aplicacion !== 'PROXIMA_COMPRA') {
+      if (v.tipo_promocion === 'PRODUCTO_GRATIS') {
         const productoGratisId = v.producto_gratis_id ?? v.producto_gratis?.id ?? null;
         const cantidadGratis = Number(v.cantidad_producto_gratis ?? 1) || 1;
         let monto = 0;

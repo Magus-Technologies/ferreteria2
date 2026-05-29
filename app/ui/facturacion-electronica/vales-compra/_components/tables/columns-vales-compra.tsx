@@ -249,7 +249,14 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
       valueFormatter: (params) => {
         if (!params.value) return '-'
         const data = params.data as any
-        const esUnidad = data?.tipo_promocion === 'PRODUCTO_GRATIS' || data?.modalidad === 'POR_PRODUCTOS' || data?.modalidad === 'MIXTO'
+        // PRODUCTO_GRATIS / DOS_POR_UNO siempre por unidades; si no, respetar tipo_umbral;
+        // y para vales viejos sin tipo_umbral, inferir por modalidad.
+        const esUnidad =
+          data?.tipo_promocion === 'PRODUCTO_GRATIS' ||
+          data?.tipo_promocion === 'DOS_POR_UNO' ||
+          (data?.tipo_umbral
+            ? data.tipo_umbral === 'CANTIDAD'
+            : data?.modalidad === 'POR_PRODUCTOS' || data?.modalidad === 'MIXTO')
         return esUnidad ? `${Number(params.value)} und.` : `S/ ${Number(params.value).toFixed(2)}`
       },
       cellStyle: { textAlign: 'center' },

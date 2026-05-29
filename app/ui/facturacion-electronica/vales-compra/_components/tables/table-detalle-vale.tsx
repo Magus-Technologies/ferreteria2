@@ -34,14 +34,14 @@ export default function TableDetalleVale() {
       { headerName: 'Modalidad', field: 'modalidad', width: 150 },
       { headerName: 'Beneficio', field: 'beneficio', width: 180 },
       {
-        headerName: valeSeleccionado?.tipo_promocion === 'PRODUCTO_GRATIS' || valeSeleccionado?.modalidad === 'POR_PRODUCTOS' || valeSeleccionado?.modalidad === 'MIXTO'
+        headerName: valeSeleccionado?.tipo_promocion === 'PRODUCTO_GRATIS' || valeSeleccionado?.tipo_promocion === 'DOS_POR_UNO' || (valeSeleccionado?.tipo_umbral ? valeSeleccionado.tipo_umbral === 'CANTIDAD' : valeSeleccionado?.modalidad === 'POR_PRODUCTOS' || valeSeleccionado?.modalidad === 'MIXTO')
           ? 'Cant. Mín.'
           : 'Precio Mín.',
         field: 'cantidad_minima',
         width: 110,
         valueFormatter: (params) => {
           if (!params.value) return '-'
-          if (valeSeleccionado?.tipo_promocion === 'PRODUCTO_GRATIS' || valeSeleccionado?.modalidad === 'POR_PRODUCTOS' || valeSeleccionado?.modalidad === 'MIXTO') {
+          if (valeSeleccionado?.tipo_promocion === 'PRODUCTO_GRATIS' || valeSeleccionado?.tipo_promocion === 'DOS_POR_UNO' || (valeSeleccionado?.tipo_umbral ? valeSeleccionado.tipo_umbral === 'CANTIDAD' : valeSeleccionado?.modalidad === 'POR_PRODUCTOS' || valeSeleccionado?.modalidad === 'MIXTO')) {
             return `${Number(params.value)} und.`
           }
           return `S/ ${Number(params.value).toFixed(2)}`
@@ -92,8 +92,9 @@ export default function TableDetalleVale() {
     } else if (valeSeleccionado.tipo_promocion === 'PRODUCTO_GRATIS') {
       beneficioTexto = `${valeSeleccionado.cantidad_producto_gratis} ${valeSeleccionado.producto_gratis?.name || 'prod.'} GRATIS`
     } else if (valeSeleccionado.tipo_promocion === 'DOS_POR_UNO') {
-      const extra = valeSeleccionado.cantidad_producto_gratis || 1
-      beneficioTexto = `Compra ${Number(valeSeleccionado.cantidad_minima)} und., lleva ${extra} extra`
+      const min = Number(valeSeleccionado.cantidad_minima)
+      const gratis = Number(valeSeleccionado.cantidad_producto_gratis || 1)
+      beneficioTexto = `Compra ${min} und., paga ${Math.max(min - gratis, 0)} (${gratis} gratis)`
     } else if (valeSeleccionado.tipo_promocion === 'SORTEO') {
       beneficioTexto = 'Sorteo'
     }

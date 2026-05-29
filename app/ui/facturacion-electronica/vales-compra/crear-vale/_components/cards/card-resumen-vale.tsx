@@ -130,7 +130,10 @@ export default function CardResumenVale({ form }: { form: FormInstance<FormCreat
           <div className='bg-green-100 rounded-lg p-2 border-2 border-green-300'>
             <p className='text-xs text-green-700 uppercase mb-0.5'>2x1</p>
             <p className='text-2xl font-bold text-green-700'>
-              Compra {cantidadMinima || 1}, lleva {(cantidadMinima || 1) + (cantidadProductoGratis || 1)}
+              Compra {cantidadMinima || 1}, paga {Math.max((cantidadMinima || 1) - (cantidadProductoGratis || 1), 0)}
+            </p>
+            <p className='text-xs text-green-700 mt-0.5'>
+              {cantidadProductoGratis || 1} und. gratis (la más barata)
             </p>
           </div>
         )}

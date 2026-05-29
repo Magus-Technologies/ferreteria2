@@ -1,7 +1,7 @@
 "use client";
 
 import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Radio } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import {
   FaGift,
@@ -251,7 +251,18 @@ function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps
           </span>
         </div>
         <Form.Item name="modalidad" label="Modalidad" rules={[{ required: true, message: "Seleccione la modalidad" }]} className="!mb-0">
-          <Select options={MODALIDAD_FORM_OPTIONS} placeholder="Seleccione..." />
+          <Radio.Group className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {MODALIDAD_FORM_OPTIONS.map((opt) => (
+                <Radio.Button key={opt.value} value={opt.value} className="!h-auto !whitespace-normal !text-left !py-2">
+                  <div>
+                    <div className="font-semibold">{opt.label}</div>
+                    {opt.description && <div className="text-xs text-gray-500">{opt.description}</div>}
+                  </div>
+                </Radio.Button>
+              ))}
+            </div>
+          </Radio.Group>
         </Form.Item>
         {(modalidad === "POR_CATEGORIA" || modalidad === "MIXTO") && (
           <Form.Item name="categoria_ids" label="Categorías Aplicables" rules={[{ required: true, message: "Seleccione al menos una categoría" }]} className="mt-3 !mb-0">
@@ -399,7 +410,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
         {isDosPorUno && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <p className="text-sm text-indigo-700 mb-3">
-              <strong>2x1 / 3x1 / 5x1:</strong> Define cuántas unidades debe comprar y cuántas extra recibe gratis.
+              <strong>2x1 / 3x1:</strong> Define cuántas unidades debe comprar y cuántas de esas salen gratis (se descuenta la más barata). El cliente paga la diferencia.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
@@ -419,8 +430,8 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
               </Form.Item>
               <Form.Item
                 name="cantidad_producto_gratis"
-                label="Unidades extra gratis"
-                tooltip="Cantidad de unidades extra que recibe gratis"
+                label="Unidades gratis (de las compradas)"
+                tooltip="De las unidades compradas, cuántas salen gratis (se descuentan)"
                 rules={[{ required: true, message: "Requerido" }]}
               >
                 <InputNumber
@@ -434,7 +445,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
               </Form.Item>
             </div>
             <p className="text-xs text-indigo-600 mt-2">
-              <strong>Ejemplos:</strong> Comprar 1 + 1 gratis = 2x1. Comprar 2 + 1 gratis = 3x1. Comprar 2 + 3 gratis = 5x1.
+              <strong>Ejemplos:</strong> Compra 2, 1 gratis → paga 1 (2x1). Compra 4, 1 gratis → paga 3. Compra 3, 2 gratis → paga 1 (3x1).
             </p>
           </div>
         )}
@@ -621,13 +632,19 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const descuentoTipo = Form.useWatch("descuento_tipo", form) || "PORCENTAJE";
   const usaLimiteCliente = Form.useWatch("usa_limite_por_cliente", form) || false;
   const usaLimiteStock = Form.useWatch("usa_limite_stock", form) || false;
-  const [tipoUmbral, setTipoUmbral] = useState<TipoUmbral | null>(null);
+  // El umbral (MONTO/CANTIDAD) vive en un campo del form para que se envíe en el
+  // payload y se hidrate al editar. El setter solo escribe el campo.
+  const tipoUmbral = (Form.useWatch("tipo_umbral", form) as TipoUmbral | undefined) ?? null;
+  const setTipoUmbral = (t: TipoUmbral | null) => form.setFieldValue("tipo_umbral", t);
 
   // Para 2x1 se oculta el PASO 2 y toda la config está en PASO 4
   const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
 
   return (
     <div className="space-y-4">
+      <Form.Item name="tipo_umbral" hidden>
+        <input type="hidden" />
+      </Form.Item>
       <SeccionBasica form={form} />
       {!esDosPorUno && <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno} />}
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />

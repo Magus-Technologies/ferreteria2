@@ -36,6 +36,8 @@ export type Modalidad =
 
 export type DescuentoTipo = 'PORCENTAJE' | 'MONTO_FIJO';
 
+export type TipoUmbral = 'MONTO' | 'CANTIDAD';
+
 export type EstadoVale = 'ACTIVO' | 'PAUSADO' | 'FINALIZADO';
 
 export interface ValeCompra {
@@ -47,6 +49,7 @@ export interface ValeCompra {
   momento_aplicacion: MomentoAplicacionDb;
   modalidad: Modalidad;
   cantidad_minima: number;
+  tipo_umbral: TipoUmbral | null;
   descuento_tipo: DescuentoTipo | null;
   descuento_valor: number | null;
   producto_gratis_id: number | null;
@@ -131,6 +134,7 @@ export interface CreateValeCompraRequest {
   momento_aplicacion?: MomentoAplicacionDb;
   modalidad: Modalidad;
   cantidad_minima: number;
+  tipo_umbral?: TipoUmbral | null;
   descuento_tipo?: DescuentoTipo | null;
   descuento_valor?: number | null;
   producto_gratis_id?: number | null;
@@ -374,6 +378,7 @@ export interface ValeCompraVerificado {
     descuento_valor: number | null;
     modalidad: Modalidad;
     cantidad_minima: number;
+    tipo_umbral?: TipoUmbral | null;
     fecha_inicio: string;
     fecha_fin: string | null;
     producto_gratis?: { id: number; nombre: string } | null;
