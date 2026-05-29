@@ -185,7 +185,12 @@ export default function ModalResumenEntregaVenta({
       message.success('Entrega registrada')
       queryClient.invalidateQueries({ queryKey: [QueryKeys.VENTAS] })
       refetchHistorial()
-      onSuccess?.(); onClose()
+      // Reseteamos la config de domicilio: el historial ya refleja la entrega
+      // recién creada y el botón vuelve a "deshabilitado" para evitar re-crear
+      // la misma config de un doble-click. El modal NO se cierra — queda abierto
+      // hasta que el usuario lo cierre manualmente.
+      setDomicilioConfig(null)
+      onSuccess?.()
     },
     onError: (err: any) => message.error(err?.response?.data?.message ?? 'Error al registrar'),
   })

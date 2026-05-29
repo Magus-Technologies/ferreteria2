@@ -99,6 +99,11 @@ export function SeccionDomicilio({
   const horaInicioWatch = Form.useWatch('hora_inicio', form)
   const horaFinWatch = Form.useWatch('hora_fin', form)
 
+  // Watchers para mostrar el mensaje "requerido" debajo de cada campo
+  // obligatorio mientras esté vacío (despachador interno y vehículo).
+  const despachadorIdWatch = Form.useWatch('despachador_id', form) as string | undefined
+  const vehiculoIdWatch = Form.useWatch('vehiculo_id', form) as number | undefined
+
   useEffect(() => {
     if (slotDomicilio || !fechaProgramadaWatch) return
     const horaI = horaInicioWatch || '00:00'
@@ -258,7 +263,7 @@ export function SeccionDomicilio({
               <SelectDespachadores
                 form={form}
                 propsForm={{ name: 'despachador_id' }}
-                placeholder="Sin asignar (todos los despachadores lo verán)"
+                placeholder="Seleccionar despachador"
                 className="w-full"
                 allowClear
                 onChange={(_id, despachador) => {
@@ -276,6 +281,9 @@ export function SeccionDomicilio({
                   form.setFieldValue('hora_fin', undefined)
                 }}
               />
+              {!despachadorIdWatch && (
+                <p className="text-xs text-red-500 mt-1">Este campo es requerido</p>
+              )}
             </>
           ) : (
             <>
@@ -326,6 +334,9 @@ export function SeccionDomicilio({
               Elegir en Calendario
             </ButtonBase>
           )}
+          {!slotDomicilio && (
+            <p className="text-xs text-red-500 mt-1">Este campo es requerido</p>
+          )}
           {/* Campos ocultos del slot — registrados para que getFieldsValue() los incluya */}
           <div style={{ display: 'none' }}>
             <Form.Item name="fecha_programada"><Input /></Form.Item>
@@ -339,12 +350,12 @@ export function SeccionDomicilio({
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           <FaTruck className="inline mr-1 text-orange-500" size={13} />
-          Vehículo: <span className="text-gray-400 text-xs">(opcional)</span>
+          Vehículo: <span className="text-red-500">*</span>
         </label>
         <SelectVehiculos
           form={form}
           propsForm={{ name: 'vehiculo_id' }}
-          placeholder="Sin vehículo asignado"
+          placeholder="Seleccionar vehículo"
           className="w-full"
           allowClear
           vehiculoPreseleccionado={vehiculoPreseleccionadoDomicilio}
@@ -365,6 +376,9 @@ export function SeccionDomicilio({
             form.setFieldValue('hora_fin', undefined)
           }}
         />
+        {!vehiculoIdWatch && (
+          <p className="text-xs text-red-500 mt-1">Este campo es requerido</p>
+        )}
         <div style={{ display: 'none' }}>
           <Form.Item name="vehiculo_id"><Input /></Form.Item>
         </div>

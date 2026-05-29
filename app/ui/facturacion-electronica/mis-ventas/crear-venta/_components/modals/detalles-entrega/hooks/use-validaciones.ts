@@ -7,7 +7,7 @@ import type { TipoDespachoUI } from '../types'
  * Validaciones derivadas del estado del modal — usadas para deshabilitar el
  * botón "Confirmar" cuando faltan campos obligatorios.
  *
- * - `domicilioInvalido`: en Domicilio falta slot, dirección o
+ * - `domicilioInvalido`: en Domicilio falta slot, dirección, vehículo o
  *   (despachador interno | cargo externo).
  * - `restoInvalido`: en Parcial con switch "programar resto" activo y algo
  *   que programar, faltan los mismos datos pero de la sección Resto.
@@ -38,6 +38,8 @@ export function useValidaciones({
     (
       !slotDomicilio ||
       !direccionEntrega?.trim() ||
+      !vehiculoId ||
+      (tipoPedido === TipoPedido.INTERNO && !despachadorId) ||
       (tipoPedido === TipoPedido.EXTERNO && !cargoDestino)
     )
 
