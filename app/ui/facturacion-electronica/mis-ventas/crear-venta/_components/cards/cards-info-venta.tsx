@@ -28,6 +28,7 @@ import { useCheckAperturaDiaria } from "../../_hooks/use-check-apertura-diaria";
 import { BankOutlined } from "@ant-design/icons";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useStoreProductoAgregadoVenta } from "../../_store/store-producto-agregado-venta";
+import type { ValeCompra } from "~/lib/api/vales-compra";
 
 // Modales pesados cargados bajo demanda
 const ModalMetodosPagoVenta = dynamic(() => import("../modals/modal-metodos-pago-venta"), { ssr: false });
@@ -177,23 +178,62 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     [valesAplicables, valesExcluidos],
   );
 
-  // Calcular descuento total de vales (solo DESCUENTO_MISMA_COMPRA)
+  // Calcular descuento por vale (DESCUENTO_MISMA_COMPRA, DOS_POR_UNO, PRODUCTO_GRATIS).
+  // Espeja la lógica de ValeCompraService::aplicarValeAVenta para que el resumen
+  // mostrado al usuario cuadre con lo que el backend persistirá al crear la venta.
   const baseSinVale = useMemo(() => subTotal - totalDescuento, [subTotal, totalDescuento]);
-  const descuentoVale = useMemo(() => {
-    if (!valesActivos || valesActivos.length === 0) return 0;
-    return valesActivos.reduce((acc, v) => {
-      if (v.tipo_promocion !== 'DESCUENTO_MISMA_COMPRA') return acc;
-      const valor = Number(v.descuento_valor ?? 0);
-      if (!valor) return acc;
-      if (v.descuento_tipo === 'PORCENTAJE') {
-        return acc + (baseSinVale * valor) / 100;
+  const valesConDescuento = useMemo(() => {
+    if (!valesActivos || valesActivos.length === 0) return [] as Array<{ vale: ValeCompra; monto: number; tipo: 'PORCENTAJE' | 'MONTO_FIJO' | null; valor: number }>;
+    return valesActivos.map((v) => {
+      if (v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA') {
+        const valor = Number(v.descuento_valor ?? 0);
+        if (!valor) return { vale: v, monto: 0, tipo: v.descuento_tipo, valor };
+        if (v.descuento_tipo === 'PORCENTAJE') return { vale: v, monto: (baseSinVale * valor) / 100, tipo: v.descuento_tipo, valor };
+        if (v.descuento_tipo === 'MONTO_FIJO') return { vale: v, monto: valor, tipo: v.descuento_tipo, valor };
+        return { vale: v, monto: 0, tipo: v.descuento_tipo, valor };
       }
-      if (v.descuento_tipo === 'MONTO_FIJO') {
-        return acc + valor;
+
+      if (v.tipo_promocion === 'DOS_POR_UNO' && v.momento_aplicacion !== 'PROXIMA_COMPRA') {
+        const productoIdsVale = (v.productos ?? []).map((p) => p.id);
+        if (productoIdsVale.length === 0) return { vale: v, monto: 0, tipo: null, valor: 0 };
+        const lineasCoincidentes = productosReales.filter(
+          (p) => p?.producto_id != null && productoIdsVale.includes(Number(p.producto_id)),
+        );
+        if (lineasCoincidentes.length === 0) return { vale: v, monto: 0, tipo: null, valor: 0 };
+        const preciosValidos = lineasCoincidentes
+          .map((p) => Number(p?.precio_venta ?? 0))
+          .filter((n) => n > 0);
+        if (preciosValidos.length === 0) return { vale: v, monto: 0, tipo: null, valor: 0 };
+        const precioMin = Math.min(...preciosValidos);
+        const extras = Number(v.cantidad_producto_gratis ?? 1) || 1;
+        const monto = precioMin * extras;
+        return { vale: v, monto, tipo: null, valor: monto };
       }
-      return acc;
-    }, 0);
-  }, [valesActivos, baseSinVale]);
+
+      if (v.tipo_promocion === 'PRODUCTO_GRATIS' && v.momento_aplicacion !== 'PROXIMA_COMPRA') {
+        const productoGratisId = v.producto_gratis_id ?? v.producto_gratis?.id ?? null;
+        const cantidadGratis = Number(v.cantidad_producto_gratis ?? 1) || 1;
+        let monto = 0;
+        if (productoGratisId != null) {
+          const linea = productosReales.find((p) => Number(p?.producto_id) === Number(productoGratisId));
+          const precio = Number(linea?.precio_venta ?? 0);
+          if (precio > 0) monto = precio * cantidadGratis;
+        }
+        if (monto === 0) {
+          const fallback = Number(v.descuento_valor ?? 0);
+          monto = fallback > 0 ? fallback : 0;
+        }
+        return { vale: v, monto, tipo: null, valor: monto };
+      }
+
+      return { vale: v, monto: 0, tipo: null, valor: 0 };
+    });
+  }, [valesActivos, baseSinVale, productosReales]);
+
+  const descuentoVale = useMemo(
+    () => valesConDescuento.reduce((acc, x) => acc + x.monto, 0),
+    [valesConDescuento],
+  );
 
   // Calcular Total Cobrado (incluye surcharge de métodos de pago y resta descuento de vale)
   const totalCobrado = useMemo(
@@ -297,6 +337,20 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
             moneda={tipo_moneda}
           />
         </ConfigurableElement>
+
+        {descuentoVale > 0 && (
+          <ConfigurableElement
+            componentId="crear-venta.card-descuento-vale"
+            label="Card Dscto Promoción"
+          >
+            <CardInfoVenta
+              title="Dscto Promoción"
+              value={descuentoVale}
+              moneda={tipo_moneda}
+              className="border-fuchsia-500 border-2"
+            />
+          </ConfigurableElement>
+        )}
 
         <ConfigurableElement
           componentId="crear-venta.card-total-cobrado"
@@ -430,12 +484,12 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         tipo_documento={tipo_documento}
         baseAmount={subTotal - totalDescuento}
         descuentoVale={descuentoVale}
-        valesInfo={valesActivos
-          .filter(v => v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' && Number(v.descuento_valor ?? 0) > 0)
-          .map(v => ({
-            nombre: v.nombre,
-            tipo: v.descuento_tipo,
-            valor: Number(v.descuento_valor ?? 0),
+        valesInfo={valesConDescuento
+          .filter(x => x.monto > 0)
+          .map(x => ({
+            nombre: x.vale.nombre,
+            tipo: x.tipo,
+            valor: x.valor,
           }))}
         onSurchargeChange={setSurchargeTotal}
         onContinuar={() => {
