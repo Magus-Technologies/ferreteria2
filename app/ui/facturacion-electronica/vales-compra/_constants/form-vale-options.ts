@@ -25,7 +25,7 @@ export const MOMENTO_APLICACION_OPTIONS: { label: string; value: MomentoAplicaci
 export const TIPO_BENEFICIO_OPTIONS: { label: string; value: TipoBeneficio; description: string }[] = [
   { label: "💰 Descuento (% o S/)", value: "DESCUENTO", description: "Reduce el total de la venta en porcentaje o monto fijo." },
   { label: "🎉 Producto Gratis", value: "PRODUCTO_GRATIS", description: "Regalar un producto específico al cumplirse las condiciones." },
-  { label: "🔄 2x1 (Mismo Producto)", value: "DOS_POR_UNO", description: "Llevar unidades extra gratis del mismo producto al comprar X." },
+  { label: "🔄 2x1 (Mismo Producto)", value: "DOS_POR_UNO", description: "Al comprar X unidades, algunas salen gratis (se descuenta la más barata)." },
   { label: "🎁 Sorteo", value: "SORTEO", description: "Genera un código de participación para un sorteo." },
 ];
 

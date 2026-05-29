@@ -193,7 +193,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         return { vale: v, monto: 0, tipo: v.descuento_tipo, valor };
       }
 
-      if (v.tipo_promocion === 'DOS_POR_UNO' && v.momento_aplicacion !== 'PROXIMA_COMPRA') {
+      if (v.tipo_promocion === 'DOS_POR_UNO') {
         const productoIdsVale = (v.productos ?? []).map((p) => p.id);
         if (productoIdsVale.length === 0) return { vale: v, monto: 0, tipo: null, valor: 0 };
         const lineasCoincidentes = productosReales.filter(
@@ -210,7 +210,7 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         return { vale: v, monto, tipo: null, valor: monto };
       }
 
-      if (v.tipo_promocion === 'PRODUCTO_GRATIS' && v.momento_aplicacion !== 'PROXIMA_COMPRA') {
+      if (v.tipo_promocion === 'PRODUCTO_GRATIS') {
         const productoGratisId = v.producto_gratis_id ?? v.producto_gratis?.id ?? null;
         const cantidadGratis = Number(v.cantidad_producto_gratis ?? 1) || 1;
         let monto = 0;

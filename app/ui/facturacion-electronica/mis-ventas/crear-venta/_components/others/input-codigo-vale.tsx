@@ -75,12 +75,17 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         )
           .filter(v => v.momento_aplicacion !== 'PROXIMA_COMPRA')
           .filter(v => !valesExcluidos.includes(v.id))
-        // Preservar vales aplicados manualmente (tienen codigo_vale en el form)
+        // Preservar vales aplicados manualmente. Dos casos:
+        // 1) Código regular tecleado (VC-...): coincide con codigo_vale del form.
+        // 2) Código de próxima compra canjeado (VCC-...): el form guarda el código
+        //    generado, pero el vale en el store tiene su código original (VC-...), así
+        //    que no coinciden. Estos vales son siempre PROXIMA_COMPRA (la auto-detección
+        //    nunca los devuelve), por lo que se preservan por su momento_aplicacion.
         const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
         const valesActuales = useStoreProductoAgregadoVenta.getState().valesAplicables
-        const valesManuales = codigoManual
-          ? valesActuales.filter(v => v.codigo === codigoManual)
-          : []
+        const valesManuales = valesActuales.filter(
+          v => (codigoManual && v.codigo === codigoManual) || v.momento_aplicacion === 'PROXIMA_COMPRA'
+        )
         // Fusionar: auto-detectados + manuales (sin duplicados)
         const idsAuto = new Set(valesUnicos.map(v => v.id))
         const fusionados = [
