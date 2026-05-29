@@ -288,7 +288,13 @@ export default function ModalCalendarioSlot({
               />
             </div>
           )}
-          {tieneVehiculo ? (
+          {!tieneVehiculo && (
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+              Podés elegir el horario igual. Seleccioná un vehículo para ver sus
+              bloqueos de mantenimiento y las entregas ya programadas de esa unidad.
+            </div>
+          )}
+          {(
             <>
               <div className="border border-slate-200 rounded-lg overflow-hidden bg-white relative h-[650px]">
                 <CalendarProgramacionEntregas
@@ -441,12 +447,6 @@ export default function ModalCalendarioSlot({
                 </div>
               )}
             </>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Selecciona primero un vehículo para ver sus entregas programadas.
-              </div>
-            </div>
           )}
         </div>
       </Suspense>

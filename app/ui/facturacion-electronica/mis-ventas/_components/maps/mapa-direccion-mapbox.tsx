@@ -252,8 +252,12 @@ export default function MapaDireccionMapbox({
   const geocodificarDireccion = async (dir: string) => {
     try {
       const query = encodeURIComponent(`${dir}, Peru`)
+      // `proximity` sesga el geocoding hacia la zona de la tienda (Trujillo - El
+      // Milagro). Sin esto, una dirección vaga/ambigua con `limit=1` resolvía a
+      // cualquier punto de Perú (típicamente Puno). Mismas coords que el fallback.
+      const proximity = '-79.063692,-8.033405'
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1&country=PE`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1&country=PE&proximity=${proximity}`
       )
       const data = await response.json()
 
