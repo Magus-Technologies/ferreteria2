@@ -14,6 +14,7 @@ import { motivoTrasladoApi } from '~/lib/api/motivo-traslado'
 import { almacenesApi } from '~/lib/api/almacen'
 import type { Almacen } from '~/app/_types/almacen'
 import { transferenciaStockApi, type TransferenciaStock } from '~/lib/api/transferencia-stock'
+import { entregasNuevasApi } from '~/lib/api/entregas'
 
 export default function useInitGuia({
   guia,
@@ -24,6 +25,9 @@ export default function useInitGuia({
 }) {
   const searchParams = useSearchParams()
   const ventaId = searchParams.get('venta_id')
+  // entrega_id: cuando se crea la guía desde una entrega puntual de mis-entregas,
+  // las cantidades deben salir de ESA entrega, no del total de la venta.
+  const entregaIdParam = searchParams.get('entrega_id')
   const transferenciaIdParam = searchParams.get('transferencia_id')
   const vehiculoPlacaParam = searchParams.get('vehiculo_placa')
   // user_chofer_id viene cuando se "convierte a guía" desde mis-entregas:
@@ -67,6 +71,16 @@ export default function useInitGuia({
 
   const venta = ventaResponse?.data as VentaCompleta | undefined
 
+  // Entregas de la venta — solo cuando se crea la guía desde una entrega puntual.
+  // Reusa el mismo query key que useEntregasDeVenta (cache compartido).
+  const { data: entregasVentaList, isLoading: isLoadingEntregasVenta } = useQuery({
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaId],
+    queryFn: () => entregasNuevasApi.porVenta(ventaId!),
+    enabled: !!ventaId && !!entregaIdParam && !guia,
+    // La respuesta es { data: { data: [...] } } — mismo select que useEntregasDeVenta.
+    select: (res) => ((res.data as any)?.data ?? []) as any[],
+  })
+
   // Motivos de traslado — solo cuando viene de transferencia
   const { data: motivosList, isLoading: isLoadingMotivos } = useQuery({
     queryKey: [QueryKeys.MOTIVOS_TRASLADO],
@@ -96,16 +110,39 @@ export default function useInitGuia({
         fecha_emision: dayjs(guia.fecha_emision),
         fecha_traslado: dayjs(guia.fecha_traslado),
       })
-    } else if (venta && !isLoading) {
+    } else if (venta && !isLoading && (!entregaIdParam || !isLoadingEntregasVenta)) {
       // Inicializar formulario con datos de la venta
       const cliente = venta.cliente
 
+      // Si venimos de una entrega puntual, armar un mapa
+      // unidad_derivada_venta_id → RESTANTE por guiar de ESA entrega
+      // (cantidad de la entrega − lo ya guiado de esa entrega). Así, si se guió
+      // 1 de 2, la próxima vez sale 1.
+      let entregaDetalleMap: Map<number, number> | null = null
+      if (entregaIdParam) {
+        const entregasList = (entregasVentaList ?? []) as any[]
+        const entregaSel = entregasList.find((e) => String(e.id) === String(entregaIdParam))
+        if (entregaSel) {
+          entregaDetalleMap = new Map<number, number>()
+          for (const d of entregaSel.detalles ?? []) {
+            const cant = Number(d.cantidad) || 0
+            const guiada = Number(d.cantidad_guiada) || 0
+            entregaDetalleMap.set(Number(d.unidad_derivada_venta_id), Math.max(0, cant - guiada))
+          }
+        }
+      }
+
       // Preparar productos desde la venta
-      const productos = venta.productos_por_almacen?.flatMap((almacen: any) =>
+      const productosTodos = venta.productos_por_almacen?.flatMap((almacen: any) =>
         almacen.unidades_derivadas?.map((unidad: any) => {
           const cantidadTotal = Number(unidad.cantidad) || 0
           const cantidadGuiada = Number(unidad.cantidad_guiada) || 0
-          const cantidad = Math.max(0, cantidadTotal - cantidadGuiada)
+          const restanteGuiar = Math.max(0, cantidadTotal - cantidadGuiada)
+          // Desde una entrega: cantidad = la de la entrega, tope lo que falta guiar.
+          // Sin entrega: el restante por guiar de toda la venta (comportamiento previo).
+          const cantidad = entregaDetalleMap
+            ? Math.min(entregaDetalleMap.get(Number(unidad.id)) ?? 0, restanteGuiar)
+            : restanteGuiar
           // Buscar la unidad derivada actual del producto (configuración vigente)
           // para obtener el peso. La unidad de la venta es "inmutable" (snapshot
           // del nombre al momento de vender), pero el peso vive en la config
@@ -133,6 +170,13 @@ export default function useInitGuia({
         })
       ) || []
 
+      // Desde una entrega puntual: solo las líneas de esa entrega con cantidad > 0.
+      // Sin entrega: todas las líneas de la venta.
+      const productos = entregaDetalleMap
+        ? productosTodos.filter(
+            (p: any) => entregaDetalleMap!.has(Number(p.unidad_derivada_venta_id)) && p.cantidad > 0,
+          )
+        : productosTodos
 
       // Dirección del cliente — el modelo Cliente ya no tiene `direccion` /
       // `direccion_2` / `direccion_3` / `direccion_4` planos: usa
@@ -272,6 +316,9 @@ export default function useInitGuia({
     guia,
     venta,
     isLoading,
+    entregaIdParam,
+    entregasVentaList,
+    isLoadingEntregasVenta,
     form,
     empresa,
     vehiculoPlacaParam,

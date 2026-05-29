@@ -32,9 +32,11 @@ const CantCell = memo(function CantCell({ rowKey, init, max, onCommit }: {
 export function useColsProductosPendientes({
   onCommit,
   includeAProgramar = true,
+  aProgramarLabel = 'A programar',
 }: {
   onCommit: (key: string, value: number) => void
   includeAProgramar?: boolean
+  aProgramarLabel?: string
 }): ColDef<FilaProducto>[] {
   const baseCols: ColDef<FilaProducto>[] = [
     {
@@ -55,7 +57,7 @@ export function useColsProductosPendientes({
 
   const aProgramarCol: ColDef<FilaProducto>[] = includeAProgramar ? [
     {
-      colId: 'cant_programar', field: 'cantAProgramar', headerName: 'A programar', width: 128,
+      colId: 'cant_programar', field: 'cantAProgramar', headerName: aProgramarLabel, width: 128,
       cellStyle: { backgroundColor: '#f0fdf4' },
       cellRenderer: ({ data: d }: { data: FilaProducto }) => (
         <CantCell rowKey={d.key} init={d.cantAProgramar} max={d.pendiente} onCommit={onCommit} />

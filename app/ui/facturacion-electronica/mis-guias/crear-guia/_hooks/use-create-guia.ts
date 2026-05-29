@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { App, FormInstance } from 'antd'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { guiaRemisionApi, type CreateGuiaRemisionRequest, type GuiaRemisionResponse } from '~/lib/api/guia-remision'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { fechaSubmit } from '~/utils/fechas'
@@ -10,6 +10,11 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
   const { message } = App.useApp()
   const queryClient = useQueryClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // entrega_id: para trackear cuánto se guió de ESA entrega (no solo de la venta).
+  const entregaIdParam = searchParams.get('entrega_id')
+  // venta_id de la URL: el form no lo setea, así la guía quedaba con venta_id=NULL.
+  const ventaIdParam = searchParams.get('venta_id')
 
   const mutation = useMutation({
     mutationFn: async (data: CreateGuiaRemisionRequest) => {
@@ -56,7 +61,8 @@ export default function useCreateGuia(form: FormInstance<FormCreateGuia>) {
     
     // Transformar los datos del formulario al formato de la API
     const data: CreateGuiaRemisionRequest = {
-      venta_id: values.venta_id,
+      venta_id: values.venta_id ?? ventaIdParam ?? undefined,
+      entrega_id: entregaIdParam ? Number(entregaIdParam) : undefined,
       fecha_emision: values.fecha_emision ? fechaSubmit(values.fecha_emision) : '',
       fecha_traslado: values.fecha_traslado?.format('YYYY-MM-DD') || '',
       serie: values.serie,

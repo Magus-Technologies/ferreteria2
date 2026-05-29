@@ -50,6 +50,9 @@ function mapToEntregaDB(e: EntregaNueva): any {
         nombres:           venta.cliente.nombres,
         apellidos:         venta.cliente.apellidos,
         direccion:         venta.cliente.direccion,
+        // Direcciones con GPS — el modal Mapa de Entrega las usa para centrar
+        // el mapa sin geocodificar cuando la entrega no tiene coords propias.
+        direcciones:       venta.cliente.direcciones ?? [],
       } : null,
     } : null,
 
@@ -66,6 +69,10 @@ function mapToEntregaDB(e: EntregaNueva): any {
       cantidad_entregada:       d.cantidad,
       unidad_derivada_venta: {
         cantidad:          d.cantidad,
+        // cantidad_guiada POR ENTREGA (no de la línea de venta) — lo usa
+        // `todoGuiado` en cell-acciones-entrega para bloquear "Crear Guía"
+        // cuando ya se guió toda la cantidad de ESTA entrega.
+        cantidad_guiada:   d.cantidad_guiada ?? 0,
         cantidad_pendiente: d.cantidad_pendiente ?? 0,
         factor:            d.factor ?? 1,
         unidad_derivada_inmutable: { name: d.unidad ?? '' },

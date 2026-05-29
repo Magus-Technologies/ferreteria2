@@ -122,6 +122,9 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
     // numero_documento, name, licencia_conducir. La tabla externa `chofer`
     // se reserva para PÚBLICO o GRE-Transportista.
     const params = new URLSearchParams({ venta_id: entregaOperativa.venta_id })
+    // entrega_id: para que crear-guia pre-cargue las cantidades de ESTA entrega
+    // (no el total de la venta). Sin esto cargaba la venta completa.
+    if (entregaOperativa.id) params.set('entrega_id', String(entregaOperativa.id))
     if (entregaOperativa.vehiculo?.placa) params.set('vehiculo_placa', String(entregaOperativa.vehiculo.placa))
     if (entregaOperativa.chofer_id) params.set('user_chofer_id', String(entregaOperativa.chofer_id))
     if (entregaOperativa.chofer?.name) params.set('user_chofer_nombre', String(entregaOperativa.chofer.name))

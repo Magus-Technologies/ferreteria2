@@ -149,7 +149,13 @@ export default function ModalResumenEntregaVenta({
   }, [vd, historial])
 
   // "A Programar" siempre visible cuando hay pendiente (rt y de por igual)
-  const colsProductos = useColsProductosPendientes({ onCommit, includeAProgramar: hasPendiente })
+  // En recojo en tienda la entrega es inmediata → "A entregar"; en domicilio se
+  // agenda para una fecha → "A programar".
+  const colsProductos = useColsProductosPendientes({
+    onCommit,
+    includeAProgramar: hasPendiente,
+    aProgramarLabel: tipo === 'rt' ? 'A entregar' : 'A programar',
+  })
 
   const aProg    = filas.filter(f => f.cantAProgramar > 0)
   const totUnd   = aProg.reduce((s, f) => s + f.cantAProgramar, 0)
