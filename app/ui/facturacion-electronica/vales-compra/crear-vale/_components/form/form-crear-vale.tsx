@@ -226,7 +226,7 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
 
         {momento === "PROXIMA_COMPRA" && (
           <div className="text-xs text-blue-700 mt-2">
-            ℹ️ Se generará un código que el cliente canjeará en una venta posterior.
+            ℹ️ Al cumplirse estas condiciones se generará un código para canjear en una compra posterior (la duración se define en el PASO 5 · Vigencia).
           </div>
         )}
       </div>
@@ -289,20 +289,29 @@ interface SeccionBeneficioProps {
 
 function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPorUno }: SeccionBeneficioProps) {
   const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
+  const descuentoAlcance = Form.useWatch("descuento_alcance", form) as string | undefined;
+
+  const beneficiosPermitidos = beneficiosValidosParaMomento(momento);
 
   useEffect(() => {
     if (!beneficio) return;
+    // Si el beneficio actual ya no es válido para el momento (ej. SORTEO al pasar a
+    // PROXIMA_COMPRA), limpiarlo para que el usuario elija uno permitido.
+    if (!beneficiosPermitidos.includes(beneficio)) {
+      form.setFieldValue("tipo_beneficio", undefined);
+      form.setFieldValue("tipo_promocion", undefined);
+      return;
+    }
     const tipoDerivado = derivarTipoPromocion(momento, beneficio);
     if (form.getFieldValue("tipo_promocion") !== tipoDerivado) {
       form.setFieldValue("tipo_promocion", tipoDerivado);
     }
-  }, [momento, beneficio, form]);
+  }, [momento, beneficio, form, beneficiosPermitidos]);
 
-  const beneficiosPermitidos = beneficiosValidosParaMomento(momento);
-  const opcionesBeneficio = TIPO_BENEFICIO_OPTIONS.map((opt) => ({
-    ...opt,
-    disabled: !beneficiosPermitidos.includes(opt.value),
-  }));
+  // Para PROXIMA_COMPRA se OCULTA SORTEO (no solo se deshabilita).
+  const opcionesBeneficio = TIPO_BENEFICIO_OPTIONS.filter((opt) =>
+    beneficiosPermitidos.includes(opt.value),
+  );
 
   const isDescuento = tipoPromocion === "DESCUENTO_MISMA_COMPRA" || tipoPromocion === "DESCUENTO_PROXIMA_COMPRA";
   const isProductoGratis = tipoPromocion === "PRODUCTO_GRATIS";
@@ -330,7 +339,6 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                 <Radio.Button
                   key={opt.value}
                   value={opt.value}
-                  disabled={opt.disabled}
                   className="!h-auto !whitespace-normal !text-left !py-2"
                 >
                   <div>
@@ -348,6 +356,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
       <div className="mt-3 pl-3 border-l-2 border-green-300 space-y-4">
         {/* DESCUENTO (% o S/) */}
         {isDescuento && (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Form.Item
               name="descuento_tipo"
@@ -384,6 +393,54 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
               />
             </Form.Item>
           </div>
+
+          {/* DESTINO del descuento (a qué cae el % o S/), independiente de la condición del PASO 3 */}
+          <Form.Item
+            name="descuento_alcance"
+            label="¿A qué se le aplica el descuento?"
+            rules={[{ required: true, message: "Elige a qué aplica el descuento" }]}
+            className="!mb-2"
+          >
+            <Radio.Group className="w-full">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <Radio.Button value="VENTA" className="!h-auto !whitespace-normal !text-left !py-2">
+                  <div className="font-semibold">🛒 Toda la venta</div>
+                  <div className="text-xs text-gray-500">Reduce el total completo</div>
+                </Radio.Button>
+                <Radio.Button value="PRODUCTOS" className="!h-auto !whitespace-normal !text-left !py-2">
+                  <div className="font-semibold">🏷️ Productos</div>
+                  <div className="text-xs text-gray-500">Solo ciertos productos</div>
+                </Radio.Button>
+                <Radio.Button value="CATEGORIAS" className="!h-auto !whitespace-normal !text-left !py-2">
+                  <div className="font-semibold">📁 Categoría</div>
+                  <div className="text-xs text-gray-500">Solo ciertas categorías</div>
+                </Radio.Button>
+              </div>
+            </Radio.Group>
+          </Form.Item>
+
+          {descuentoAlcance === "PRODUCTOS" && (
+            <Form.Item
+              name="descuento_producto_ids"
+              label="Productos a los que cae el descuento"
+              rules={[{ required: true, message: "Selecciona al menos un producto" }]}
+              className="!mb-0"
+            >
+              <SelectProductos mode="multiple" placeholder="Busca y selecciona productos..." className="w-full" withSearch />
+            </Form.Item>
+          )}
+
+          {descuentoAlcance === "CATEGORIAS" && (
+            <Form.Item
+              name="descuento_categoria_ids"
+              label="Categorías a las que cae el descuento"
+              rules={[{ required: true, message: "Selecciona al menos una categoría" }]}
+              className="!mb-0"
+            >
+              <SelectCategorias mode="multiple" placeholder="Selecciona las categorías..." />
+            </Form.Item>
+          )}
+          </>
         )}
 
         {/* PRODUCTO GRATIS */}
@@ -508,10 +565,19 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
         </h3>
       </div>
 
+      {esFuturo && (
+        <div className="text-xs text-purple-800 mb-3 bg-purple-50 border border-purple-200 rounded-lg p-2 leading-relaxed">
+          Para vales de próxima compra hay <b>dos tiempos distintos</b>:
+          <br />① <b>Vigencia de la promoción</b>: período en que las compras generan códigos.
+          <br />② <b>Duración del código</b>: cuántos días vale cada código que el cliente se gana.
+        </div>
+      )}
+
+      {/* ① Vigencia de la promoción (cuándo el vale genera/aplica) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Form.Item
           name="fecha_inicio"
-          label="Fecha de Inicio"
+          label={esFuturo ? "① Vigencia — desde" : "Fecha de Inicio"}
           rules={[{ required: true, message: "La fecha de inicio es requerida" }]}
         >
           <DatePicker className="w-full" format="DD/MM/YYYY" disabledDate={(current) => current && current < dayjs().startOf("day")} />
@@ -519,16 +585,15 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
 
         <Form.Item
           name="fecha_fin"
-          label={esFuturo ? "Fecha de Fin (también caduca el código)" : "Fecha de Fin (opcional)"}
+          label={esFuturo ? "① Vigencia — hasta (opcional)" : "Fecha de Fin (opcional)"}
           tooltip={esFuturo
-            ? "Define hasta cuándo el cliente puede canjear el código generado en la próxima compra."
+            ? "Hasta cuándo la promoción sigue generando códigos. Vacío = sin límite."
             : undefined}
-          rules={esFuturo ? [{ required: true, message: "Para vales de próxima compra la fecha de fin define la caducidad del código" }] : undefined}
         >
           <DatePicker
             className="w-full"
             format="DD/MM/YYYY"
-            placeholder={esFuturo ? "Caducidad del código" : "Sin fecha de fin"}
+            placeholder="Sin fecha de fin"
             disabledDate={(current) => {
               const fechaInicio = form.getFieldValue("fecha_inicio");
               if (!fechaInicio) return false;
@@ -537,10 +602,28 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
           />
         </Form.Item>
       </div>
+
+      {/* ② Duración del código entregado al cliente (solo próxima compra) */}
       {esFuturo && (
-        <div className="text-xs text-purple-700 mt-2">
-          ℹ️ La fecha de fin se usa también como la caducidad del código que se entrega al cliente.
-        </div>
+        <Form.Item
+          name="dias_validez_vale"
+          label="② Duración del código entregado al cliente (días)"
+          tooltip="Cuántos días vale cada código desde que el cliente lo gana (se cuenta desde la fecha de su compra)."
+          rules={[
+            { required: true, message: "Indica los días de validez del código" },
+            { type: "number", min: 1, message: "Debe ser al menos 1 día" },
+          ]}
+          className="mt-3 !mb-0"
+        >
+          <InputNumber
+            className="w-full"
+            placeholder="Ej: 30 (el código vale 30 días)"
+            min={1}
+            step={1}
+            precision={0}
+            prefix={<FaClock className="text-purple-600" />}
+          />
+        </Form.Item>
       )}
     </div>
   );

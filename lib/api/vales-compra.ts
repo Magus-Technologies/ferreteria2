@@ -36,6 +36,9 @@ export type Modalidad =
 
 export type DescuentoTipo = 'PORCENTAJE' | 'MONTO_FIJO';
 
+// Destino del descuento (recompensa): a qué cae el % o S/.
+export type DescuentoAlcance = 'VENTA' | 'PRODUCTOS' | 'CATEGORIAS';
+
 export type TipoUmbral = 'MONTO' | 'CANTIDAD';
 
 export type EstadoVale = 'ACTIVO' | 'PAUSADO' | 'FINALIZADO';
@@ -53,11 +56,15 @@ export interface ValeCompra {
   max_vales_por_venta: number | null;
   descuento_tipo: DescuentoTipo | null;
   descuento_valor: number | null;
+  descuento_alcance: DescuentoAlcance | null;
+  descuento_producto_ids: number[] | null;
+  descuento_categoria_ids: number[] | null;
   producto_gratis_id: number | null;
   cantidad_producto_gratis: number;
   fecha_inicio: string;
   fecha_fin: string | null;
   fecha_validez_vale: string | null;
+  dias_validez_vale: number | null;
   usa_limite_por_cliente: boolean;
   limite_usos_cliente: number | null;
   usa_limite_stock: boolean;
@@ -139,11 +146,15 @@ export interface CreateValeCompraRequest {
   max_vales_por_venta?: number | null;
   descuento_tipo?: DescuentoTipo | null;
   descuento_valor?: number | null;
+  descuento_alcance?: DescuentoAlcance | null;
+  descuento_producto_ids?: number[] | null;
+  descuento_categoria_ids?: number[] | null;
   producto_gratis_id?: number | null;
   cantidad_producto_gratis?: number;
   fecha_inicio: string;
   fecha_fin?: string | null;
   fecha_validez_vale?: string | null;
+  dias_validez_vale?: number | null;
   usa_limite_por_cliente?: boolean;
   limite_usos_cliente?: number | null;
   usa_limite_stock?: boolean;

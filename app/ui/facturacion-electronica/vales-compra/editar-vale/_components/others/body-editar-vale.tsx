@@ -52,11 +52,15 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       max_vales_por_venta: vale.max_vales_por_venta || undefined,
       descuento_tipo: vale.descuento_tipo || undefined,
       descuento_valor: vale.descuento_valor || undefined,
+      descuento_alcance: vale.descuento_alcance || 'VENTA',
+      descuento_producto_ids: vale.descuento_producto_ids || undefined,
+      descuento_categoria_ids: vale.descuento_categoria_ids || undefined,
       producto_gratis_id: vale.producto_gratis_id || undefined,
       cantidad_producto_gratis: vale.cantidad_producto_gratis || 1,
       fecha_inicio: vale.fecha_inicio ? dayjs(vale.fecha_inicio) : dayjs(),
       fecha_fin: vale.fecha_fin ? dayjs(vale.fecha_fin) : undefined,
       fecha_validez_vale: vale.fecha_validez_vale ? dayjs(vale.fecha_validez_vale) : undefined,
+      dias_validez_vale: vale.dias_validez_vale || undefined,
       usa_limite_por_cliente: Boolean(vale.usa_limite_por_cliente),
       limite_usos_cliente: vale.limite_usos_cliente || undefined,
       usa_limite_stock: Boolean(vale.usa_limite_stock),
@@ -98,6 +102,9 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
         max_vales_por_venta: values.usa_limite_por_venta ? values.max_vales_por_venta : null,
         limite_usos_cliente: values.usa_limite_por_cliente ? values.limite_usos_cliente : null,
         stock_disponible: values.usa_limite_stock ? values.stock_disponible : null,
+        descuento_alcance: values.tipo_beneficio === 'DESCUENTO' ? (values.descuento_alcance ?? 'VENTA') : null,
+        descuento_producto_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'PRODUCTOS' ? toArray(values.descuento_producto_ids) : null,
+        descuento_categoria_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_categoria_ids) : null,
       }
 
       const response = await updateValeCompra(vale.id, payload as any)

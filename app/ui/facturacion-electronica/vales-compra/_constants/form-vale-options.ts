@@ -23,13 +23,14 @@ export const MOMENTO_APLICACION_OPTIONS: { label: string; value: MomentoAplicaci
 ];
 
 export const TIPO_BENEFICIO_OPTIONS: { label: string; value: TipoBeneficio; description: string }[] = [
-  { label: "💰 Descuento (% o S/)", value: "DESCUENTO", description: "Reduce el total de la venta en porcentaje o monto fijo." },
+  { label: "💰 Descuento (% o S/)", value: "DESCUENTO", description: "Reduce en % o S/ según el PASO 3: toda la venta, solo ciertos productos o una categoría." },
   { label: "🎉 Producto Gratis", value: "PRODUCTO_GRATIS", description: "Regalar un producto específico al cumplirse las condiciones." },
   { label: "🔄 2x1 (Mismo Producto)", value: "DOS_POR_UNO", description: "Al comprar X unidades, algunas salen gratis (se descuenta la más barata)." },
   { label: "🎁 Sorteo", value: "SORTEO", description: "Genera un código de participación para un sorteo." },
 ];
 
 export const MODALIDAD_FORM_OPTIONS: { label: string; value: Modalidad; description?: string }[] = [
+  { label: "🛒 Todos los productos", value: "CANTIDAD_MINIMA", description: "Aplica a cualquier producto de la venta que cumpla el umbral" },
   { label: "📁 Por Categoría", value: "POR_CATEGORIA", description: "Aplica solo a productos de categorías específicas" },
   { label: "🏷️ Por Producto", value: "POR_PRODUCTOS", description: "Aplica solo a productos específicos seleccionados" },
 ];
@@ -81,10 +82,14 @@ export function descomponerTipoPromocion(
 
 /**
  * Beneficios válidos para un momento dado.
- * Ambos momentos (MISMA_COMPRA y PROXIMA_COMPRA) admiten los 4 beneficios.
- * Para PROXIMA_COMPRA el backend genera un código que se canjea después
- * (ver columna `momento_aplicacion` en vales_compra).
+ * - MISMA_COMPRA: admite los 4 beneficios.
+ * - PROXIMA_COMPRA: NO admite SORTEO. El vale de próxima compra ya identifica al
+ *   cliente que lo ganó y genera un código (VCC-) que se canjea después; el sorteo
+ *   (código de participación genérico) no aplica a este flujo.
  */
-export function beneficiosValidosParaMomento(_momento: MomentoAplicacion): TipoBeneficio[] {
+export function beneficiosValidosParaMomento(momento: MomentoAplicacion): TipoBeneficio[] {
+  if (momento === "PROXIMA_COMPRA") {
+    return ["DESCUENTO", "PRODUCTO_GRATIS", "DOS_POR_UNO"];
+  }
   return ["DESCUENTO", "PRODUCTO_GRATIS", "DOS_POR_UNO", "SORTEO"];
 }

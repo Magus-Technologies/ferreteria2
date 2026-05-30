@@ -178,18 +178,40 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
     [valesAplicables, valesExcluidos],
   );
 
-  // Calcular descuento por vale (DESCUENTO_MISMA_COMPRA, DOS_POR_UNO, PRODUCTO_GRATIS).
+  // Calcular descuento por vale (DESCUENTO misma/próxima compra, DOS_POR_UNO, PRODUCTO_GRATIS).
   // Espeja la lógica de ValeCompraService::aplicarValeAVenta para que el resumen
   // mostrado al usuario cuadre con lo que el backend persistirá al crear la venta.
   const baseSinVale = useMemo(() => subTotal - totalDescuento, [subTotal, totalDescuento]);
   const valesConDescuento = useMemo(() => {
     if (!valesActivos || valesActivos.length === 0) return [] as Array<{ vale: ValeCompra; monto: number; tipo: 'PORCENTAJE' | 'MONTO_FIJO' | null; valor: number }>;
     return valesActivos.map((v) => {
-      if (v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA') {
+      if (v.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' || v.tipo_promocion === 'DESCUENTO_PROXIMA_COMPRA') {
         const valor = Number(v.descuento_valor ?? 0);
         if (!valor) return { vale: v, monto: 0, tipo: v.descuento_tipo, valor };
-        if (v.descuento_tipo === 'PORCENTAJE') return { vale: v, monto: (baseSinVale * valor) / 100, tipo: v.descuento_tipo, valor };
-        if (v.descuento_tipo === 'MONTO_FIJO') return { vale: v, monto: valor, tipo: v.descuento_tipo, valor };
+
+        // El descuento se aplica sobre su DESTINO (recompensa, PASO 4), independiente
+        // de la condición del PASO 3:
+        //  - VENTA (o legacy null): toda la venta.
+        //  - PRODUCTOS: subtotal de los productos en descuento_producto_ids.
+        //  - CATEGORIAS: subtotal de los productos de descuento_categoria_ids.
+        const alcance = v.descuento_alcance ?? 'VENTA';
+        let baseScope = baseSinVale;
+        if (alcance !== 'VENTA') {
+          const prodIds = (v.descuento_producto_ids ?? []).map(Number);
+          const catIds = (v.descuento_categoria_ids ?? []).map(Number);
+          const lineas = productosReales.filter((p) => {
+            if (alcance === 'PRODUCTOS') return p?.producto_id != null && prodIds.includes(Number(p.producto_id));
+            return p?.categoria_id != null && catIds.includes(Number(p.categoria_id));
+          });
+          baseScope = lineas.reduce(
+            (s, p) => s + Number(p?.precio_venta ?? 0) * Number(p?.cantidad ?? 0),
+            0,
+          );
+        }
+
+        if (v.descuento_tipo === 'PORCENTAJE') return { vale: v, monto: (baseScope * valor) / 100, tipo: v.descuento_tipo, valor };
+        // Monto fijo: topado al subtotal del scope (no descuenta más de lo que califica).
+        if (v.descuento_tipo === 'MONTO_FIJO') return { vale: v, monto: Math.min(valor, baseScope), tipo: v.descuento_tipo, valor };
         return { vale: v, monto: 0, tipo: v.descuento_tipo, valor };
       }
 

@@ -56,6 +56,11 @@ export default function BodyCrearVale() {
         max_vales_por_venta: values.usa_limite_por_venta ? values.max_vales_por_venta : null,
         limite_usos_cliente: values.usa_limite_por_cliente ? values.limite_usos_cliente : null,
         stock_disponible: values.usa_limite_stock ? values.stock_disponible : null,
+        // Destino del descuento: solo aplica al beneficio DESCUENTO; limpiar listas
+        // según el alcance elegido para no mandar datos stale.
+        descuento_alcance: values.tipo_beneficio === 'DESCUENTO' ? (values.descuento_alcance ?? 'VENTA') : null,
+        descuento_producto_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'PRODUCTOS' ? toArray(values.descuento_producto_ids) : null,
+        descuento_categoria_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_categoria_ids) : null,
       }
 
       // Para SORTEO: limpiar descuentos
@@ -141,6 +146,7 @@ export default function BodyCrearVale() {
         tipo_promocion: 'DESCUENTO_MISMA_COMPRA',
         modalidad: 'CANTIDAD_MINIMA',
         descuento_tipo: 'PORCENTAJE',
+        descuento_alcance: 'VENTA',
         fecha_inicio: dayjs(),
         aplica_precio_publico: true,
         aplica_precio_especial: true,

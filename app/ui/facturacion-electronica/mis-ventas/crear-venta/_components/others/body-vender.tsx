@@ -39,6 +39,8 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
     producto_name: string
     producto_codigo: string
     marca_name: string
+    // Categoría del producto, para descuentos de vale scopeados "Por Categoría".
+    categoria_id?: number
     unidad_derivada_id: number
     unidad_derivada_name: string
     unidad_derivada_factor: number
