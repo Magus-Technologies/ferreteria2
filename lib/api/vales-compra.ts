@@ -50,6 +50,7 @@ export interface ValeCompra {
   modalidad: Modalidad;
   cantidad_minima: number;
   tipo_umbral: TipoUmbral | null;
+  max_vales_por_venta: number | null;
   descuento_tipo: DescuentoTipo | null;
   descuento_valor: number | null;
   producto_gratis_id: number | null;
@@ -135,6 +136,7 @@ export interface CreateValeCompraRequest {
   modalidad: Modalidad;
   cantidad_minima: number;
   tipo_umbral?: TipoUmbral | null;
+  max_vales_por_venta?: number | null;
   descuento_tipo?: DescuentoTipo | null;
   descuento_valor?: number | null;
   producto_gratis_id?: number | null;

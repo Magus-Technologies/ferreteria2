@@ -227,9 +227,6 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   const productos = responseData
 
   const handleSearch = async () => {
-    // Si searchOnEnterOnly está activo, exigir al menos 2 caracteres antes de buscar.
-    if (searchOnEnterOnly && text.length < 2) return
-
     setTextDefault(text)
     setProductoCreado(undefined)
 
@@ -378,8 +375,6 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
             e.preventDefault()
             e.stopPropagation()
             if (withSearch) {
-              // searchOnEnterOnly: solo busca si hay ≥2 caracteres
-              if (searchOnEnterOnly && text.length < 2) return
               handleSearch()
             } else {
               // Si withSearch está desactivado, seleccionar el primer resultado
@@ -392,7 +387,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
             }
           }
         }}
-        open={false}
+        open={props.mode === 'multiple' ? undefined : false}
         {...props}
       />
       {withSearch && (

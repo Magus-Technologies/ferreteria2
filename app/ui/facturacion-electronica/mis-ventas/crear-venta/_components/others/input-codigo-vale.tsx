@@ -72,6 +72,8 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
 
   // Consultar vales aplicables automáticos (por productos en carrito)
   const consultarVales = useCallback(async () => {
+    // Requerir cliente seleccionado (DNI/RUC) para mostrar vales automáticos.
+    if (!clienteId) return
     if (productoIds.length === 0 || precioTotal <= 0) return
     try {
       const res = await getValesAplicables({
@@ -134,6 +136,16 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     const timer = setTimeout(consultarVales, 500)
     return () => clearTimeout(timer)
   }, [consultarVales])
+
+  // Limpiar vales auto-detectados si se quita el cliente
+  useEffect(() => {
+    if (!clienteId) {
+      valesNotificados.current.clear()
+      useStoreProductoAgregadoVenta.getState().limpiarValesExcluidos()
+      const codigoManual = form.getFieldValue('codigo_vale') as string | undefined
+      if (!codigoManual) setValesAplicables([])
+    }
+  }, [clienteId, form, setValesAplicables])
 
   useEffect(() => {
     if (productosReales.length === 0) {
