@@ -271,7 +271,7 @@ function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps
         )}
         {(modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && (
           <Form.Item name="producto_ids" label="Productos Aplicables" rules={[{ required: true, message: "Seleccione al menos un producto" }]} className="mt-3 !mb-0">
-            <SelectProductos mode="multiple" placeholder="Busque y seleccione productos..." className="w-full" withSearch withTipoBusqueda />
+            <SelectProductos mode="multiple" placeholder="Busque y seleccione productos..." className="w-full" withSearch />
           </Form.Item>
         )}
       </div>
@@ -394,7 +394,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
               label="Producto a Regalar"
               rules={[{ required: true, message: "Seleccione el producto" }]}
             >
-              <SelectProductos placeholder="Busque el producto a regalar..." className="w-full" withSearch searchOnEnterOnly withTipoBusqueda />
+              <SelectProductos placeholder="Busque el producto a regalar..." className="w-full" withSearch searchOnEnterOnly />
             </Form.Item>
 
             <Form.Item
@@ -474,7 +474,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                   label="Producto del Sorteo"
                   rules={[{ required: true, message: "Seleccione el producto" }]}
                 >
-                  <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch searchOnEnterOnly withTipoBusqueda />
+                  <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch searchOnEnterOnly />
                 </Form.Item>
 
                 <Form.Item
