@@ -9,7 +9,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import { useRouter } from 'next/navigation'
 import { EntregaEvent } from '~/app/_components/calendar/event-entrega'
 import { useQuery } from '@tanstack/react-query'
-import { entregaProductoApi } from '~/lib/api/entrega-producto'
+import { entregasNuevasApi } from '~/lib/api/entregas'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
 
@@ -35,19 +35,27 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
   const { data, isLoading, isError } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'detalle', entregaId],
     queryFn: async () => {
-      const res = await entregaProductoApi.getById(entregaId)
+      const res = await entregasNuevasApi.obtener(entregaId)
   
       if (res.error) throw new Error(res.error.message)
-      // backend devuelve { data: entrega }, apiRequest wrappea a { data: { data: entrega } }
-      // res.data = { data: entrega }  →  res.data?.data = entrega
-      const entrega = res.data?.data ?? res.data
+      const payload = res.data as any
+      const entrega = payload?.data ?? payload
       return entrega
     },
     enabled: !!entregaId,
     staleTime: 0,
   })
 
-  const estado = ESTADO_INFO[data?.estado_entrega ?? 'pe']
+  const estadoCodigo = data?.estado_entrega_codigo ?? data?.estado_entrega?.codigo ?? data?.estado_entrega ?? 'pe'
+  const estado = ESTADO_INFO[estadoCodigo]
+  const vehiculo = data?.vehiculo ?? (data?.vehiculo_id ? {
+    name: data?.vehiculo_name,
+    placa: data?.vehiculo_placa,
+  } : null)
+  const despachador = data?.despachador ?? data?.chofer ?? (data?.chofer_id ? {
+    name: data?.chofer_name,
+  } : null)
+  const productos = data?.productos_entregados ?? data?.productosEntregados ?? data?.detalles ?? []
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto">
@@ -92,23 +100,23 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
             <div className="flex items-center gap-2 text-slate-700">
               <FaTruck size={13} className="text-amber-500 flex-shrink-0" />
               <span className="text-sm font-medium">
-                {data?.vehiculo
-                  ? `${data.vehiculo.name}${data.vehiculo.placa ? ` (${data.vehiculo.placa})` : ''}`
+                {vehiculo
+                  ? `${vehiculo.name}${vehiculo.placa ? ` (${vehiculo.placa})` : ''}`
                   : evento.resource.vehiculo_nombre || 'Sin asignar'}
               </span>
             </div>
-            {data?.vehiculo?.tipo && (
+            {vehiculo?.tipo && (
               <div className="flex items-center gap-2 ml-5">
                 <FaTruck size={10} className="text-slate-400" />
                 <span className="text-xs text-slate-500">
-                  {data.vehiculo.tipo}
+                  {vehiculo.tipo}
                 </span>
               </div>
             )}
-            {data?.vehiculo?.placa && (
+            {vehiculo?.placa && (
               <div className="flex items-center gap-2 ml-5">
                 <FaIdCard size={10} className="text-slate-400" />
-                <span className="text-xs text-slate-500">{data.vehiculo.placa}</span>
+                <span className="text-xs text-slate-500">{vehiculo.placa}</span>
               </div>
             )}
           </div>
@@ -119,21 +127,21 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
             <div className="flex items-center gap-2 text-slate-700">
               <FaUser size={13} className="text-amber-500 flex-shrink-0" />
               <span className="text-sm font-medium">
-                {data?.despachador?.name || evento.resource.chofer_nombre || 'Sin asignar'}
+                {despachador?.name || evento.resource.chofer_nombre || 'Sin asignar'}
               </span>
             </div>
-            {(data?.despachador?.telefono || data?.despachador?.celular) && (
+            {(despachador?.telefono || despachador?.celular) && (
               <div className="flex items-center gap-2 ml-5">
                 <FaPhone size={10} className="text-slate-400" />
                 <span className="text-xs text-slate-500">
-                  {data.despachador.celular || data.despachador.telefono}
+                  {despachador.celular || despachador.telefono}
                 </span>
               </div>
             )}
-            {data?.despachador?.email && (
+            {despachador?.email && (
               <div className="flex items-center gap-2 ml-5">
                 <FaEnvelope size={10} className="text-slate-400" />
-                <span className="text-xs text-slate-500">{data.despachador.email}</span>
+                <span className="text-xs text-slate-500">{despachador.email}</span>
               </div>
             )}
           </div>
@@ -188,11 +196,12 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
               Productos a Entregar
             </span>
             <div className="flex flex-col gap-1.5">
-              {(data?.productos_entregados ?? data?.productosEntregados)?.length > 0 ? (
-                (data?.productos_entregados ?? data?.productosEntregados ?? []).map((p: any, i: number) => {
+              {productos.length > 0 ? (
+                productos.map((p: any, i: number) => {
                   const unidadDV = p.unidad_derivada_venta ?? p.unidadDerivadaVenta
                   const producto = unidadDV?.producto_almacen_venta?.producto_almacen?.producto
                     ?? unidadDV?.productoAlmacenVenta?.productoAlmacen?.producto
+                    ?? p.producto
                   const unidad = unidadDV?.unidad_derivada_inmutable ?? unidadDV?.unidadDerivadaInmutable
                   return (
                     <div
@@ -208,7 +217,7 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
                         </span>
                       </div>
                       <Badge
-                        count={`x${p.cantidad_entregada}`}
+                        count={`x${p.cantidad_entregada ?? p.cantidad ?? 0}`}
                         style={{ backgroundColor: '#f59e0b', fontSize: 11, fontWeight: 700 }}
                       />
                     </div>

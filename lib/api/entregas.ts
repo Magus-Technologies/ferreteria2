@@ -243,6 +243,8 @@ export interface FiltrosListarEntregas {
   estado?: string | string[]
   tipo_entrega?: string
   chofer_id?: string
+  vehiculo_id?: number
+  solo_programadas?: boolean
   search?: string
 }
 
@@ -268,6 +270,8 @@ export const entregasNuevasApi = {
     }
     if (filtros.tipo_entrega) p.set('tipo_entrega', filtros.tipo_entrega)
     if (filtros.chofer_id)    p.set('chofer_id', filtros.chofer_id)
+    if (filtros.vehiculo_id)  p.set('vehiculo_id', String(filtros.vehiculo_id))
+    if (filtros.solo_programadas !== undefined) p.set('solo_programadas', filtros.solo_programadas ? '1' : '0')
     if (filtros.search)       p.set('search', filtros.search)
     const qs = p.toString()
     return apiRequest(`/entregas${qs ? `?${qs}` : ''}`, { method: 'GET' })
@@ -289,6 +293,9 @@ export const entregasNuevasApi = {
 
   porVenta: (ventaId: string): Promise<ApiResponse<EntregaNueva[]>> =>
     apiRequest(`/entregas/por-venta/${ventaId}`, { method: 'GET' }),
+
+  obtener: (id: number): Promise<ApiResponse<EntregaNueva>> =>
+    apiRequest(`/entregas/${id}`, { method: 'GET' }),
 
   confirmar: (id: number): Promise<ApiResponse<EntregaNueva>> =>
     apiRequest(`/entregas/${id}/confirmar`, { method: 'POST' }),
