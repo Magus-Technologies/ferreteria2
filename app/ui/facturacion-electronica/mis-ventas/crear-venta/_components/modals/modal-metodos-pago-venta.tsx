@@ -189,11 +189,11 @@ export default function ModalMetodosPagoVenta({
       setMetodoPagoSeleccionado(null)
       setSelectedDespliegueValue(null)
       setSobrecargoCfg({ tipo: 'ninguno', valor: 0 })
-      modalForm.setFieldValue('monto', roundMoney(baseAmount))
-      modalForm.setFieldValue('recibe_efectivo', roundMoney(baseAmount))
+      modalForm.setFieldValue('monto', roundMoney(totalCobrado))
+      modalForm.setFieldValue('recibe_efectivo', roundMoney(totalCobrado))
     }
     wasOpenRef.current = open
-  }, [open, modalForm, baseAmount])
+  }, [open, modalForm, totalCobrado])
 
   // Setear Efectivo por defecto SOLO si no hay selección activa
   useEffect(() => {

@@ -89,11 +89,11 @@ export default function ModalProductoSearch({
     setText(textDefault);
   }, [textDefault]);
 
-  // value: solo se actualiza al presionar Enter (o click en lupa) → dispara fetch.
-  // text: lo que el user escribe, no genera petición automática.
-  const [value, setValue] = useState(textDefault);
+  // value: solo se actualiza al presionar Enter → dispara el fetch de la tabla.
+  // Requiere mínimo 2 caracteres para buscar; con menos el modal abre vacío.
+  const [value, setValue] = useState(textDefault.length >= 2 ? textDefault : '');
   useEffect(() => {
-    setValue(textDefault);
+    setValue(textDefault.length >= 2 ? textDefault : '');
   }, [textDefault]);
 
   const setProductoSeleccionadoStore = useStoreProductoSeleccionadoSearch(
@@ -136,13 +136,10 @@ export default function ModalProductoSearch({
     useState<CostoUnidadDerivadaSearch>(null);
 
   const handleSearchEnter = () => {
-    // Si el texto es igual al valor actual, forzar un refetch
+    if (text.length < 2) return;
     if (text === value) {
-      if (tableRef.current) {
-        tableRef.current.handleRefetch();
-      }
+      tableRef.current?.handleRefetch();
     } else {
-      // Si es diferente, actualizar value para que React Query dispare la búsqueda
       setValue(text);
       setTextDefault(text);
     }

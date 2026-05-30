@@ -76,7 +76,7 @@ export default function TableProductoSearch({
     }
   };
 
-  const shouldFetch = true // Siempre cargar datos, incluso sin búsqueda
+  const shouldFetch = value.length >= 2 // Solo buscar con al menos 2 caracteres
 
   // Mapear filtro de stock a parámetro del backend cuando sea posible
   const getBackendStockFilterValue = (filtro: FiltroStock) => {
