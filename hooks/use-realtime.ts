@@ -31,6 +31,9 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     'productos-search', // queryKey real del modal buscar producto
     'productos-infinite',
     'vencimientos-proximos',
+    // Una venta puede aplicar vales y descontar su stock → refrescar la lista de vales.
+    'vales-compra',
+    'vale-compra',
   ],
   compras: [
     QueryKeys.COMPRAS,
