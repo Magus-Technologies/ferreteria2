@@ -76,18 +76,18 @@ function CellDescuento({ data }: { data: ValeCompra }) {
   );
 }
 
-// Cell Renderer para Stock
+// Cell Renderer para usos disponibles (antes "Stock")
 function CellStock({ data }: { data: ValeCompra }) {
   if (!data.usa_limite_stock) {
     return <div className="flex items-center justify-center h-full">Ilimitado</div>;
   }
 
-  const stock = data.stock_disponible || 0;
-  const color = stock > 10 ? 'text-green-600' : stock > 0 ? 'text-orange-600' : 'text-red-600';
+  const usos = data.stock_disponible || 0;
+  const color = usos > 10 ? 'text-green-600' : usos > 0 ? 'text-orange-600' : 'text-red-600';
 
   return (
     <div className={`flex items-center justify-center h-full font-semibold ${color} keep-text-color`}>
-      {stock}
+      {usos} usos
     </div>
   );
 }
@@ -270,7 +270,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
     },
     {
       colId: 'stock',
-      headerName: "Stock",
+      headerName: "Usos disp.",
       width: 100,
       cellRenderer: CellStock,
       cellRendererParams: (params: any) => ({ data: params.data }),

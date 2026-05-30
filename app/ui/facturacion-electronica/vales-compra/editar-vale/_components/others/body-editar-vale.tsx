@@ -48,6 +48,8 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       modalidad: vale.modalidad,
       cantidad_minima: vale.cantidad_minima,
       tipo_umbral: vale.tipo_umbral || undefined,
+      usa_limite_por_venta: !!vale.max_vales_por_venta,
+      max_vales_por_venta: vale.max_vales_por_venta || undefined,
       descuento_tipo: vale.descuento_tipo || undefined,
       descuento_valor: vale.descuento_valor || undefined,
       producto_gratis_id: vale.producto_gratis_id || undefined,

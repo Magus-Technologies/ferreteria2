@@ -549,9 +549,10 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
 interface SeccionRestriccionesProps {
   usaLimiteCliente: boolean;
   usaLimiteStock: boolean;
+  usaLimiteVenta: boolean;
 }
 
-function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock }: SeccionRestriccionesProps) {
+function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta }: SeccionRestriccionesProps) {
   return (
     <div className="border-l-4 border-orange-500 pl-3">
       <div className="flex items-center gap-2 mb-3">
@@ -577,17 +578,44 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock }: SeccionRestr
           )}
         </div>
 
-        {/* Límite de stock */}
+        {/* Límite de vales distintos por venta */}
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Limitar stock de promociones</label>
+            <label className="text-sm font-medium text-gray-700">Limitar vales por venta</label>
+            <Form.Item name="usa_limite_por_venta" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          {usaLimiteVenta && (
+            <Form.Item
+              name="max_vales_por_venta"
+              label="Máximo de vales distintos en una venta"
+              tooltip="Si una venta califica para varios vales, solo se aplican los primeros N. Ej: 1 = solo 1 vale por venta aunque califique para más."
+              rules={[{ required: true, message: "Ingrese el límite" }]}
+              className="mb-0"
+            >
+              <InputNumber className="w-full" placeholder="Ej: 1" min={1} max={10} precision={0} />
+            </Form.Item>
+          )}
+        </div>
+
+        {/* Límite de usos totales */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700">Limitar usos totales de la promoción</label>
             <Form.Item name="usa_limite_stock" valuePropName="checked" noStyle>
               <Switch />
             </Form.Item>
           </div>
           {usaLimiteStock && (
-            <Form.Item name="stock_disponible" rules={[{ required: true, message: "Ingrese el stock" }]} className="mb-0">
-              <InputNumber className="w-full" placeholder="Cantidad de promociones disponibles" min={1} />
+            <Form.Item
+              name="stock_disponible"
+              label="Máximo de ventas en que puede aplicarse"
+              tooltip="La promoción se desactiva automáticamente cuando se alcance este número de ventas en que fue aplicada."
+              rules={[{ required: true, message: "Ingrese el límite de usos" }]}
+              className="mb-0"
+            >
+              <InputNumber className="w-full" placeholder="Ej: 50 (se aplica en máximo 50 ventas)" min={1} />
             </Form.Item>
           )}
         </div>
@@ -632,6 +660,7 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const descuentoTipo = Form.useWatch("descuento_tipo", form) || "PORCENTAJE";
   const usaLimiteCliente = Form.useWatch("usa_limite_por_cliente", form) || false;
   const usaLimiteStock = Form.useWatch("usa_limite_stock", form) || false;
+  const usaLimiteVenta = Form.useWatch("usa_limite_por_venta", form) || false;
   // El umbral (MONTO/CANTIDAD) vive en un campo del form para que se envíe en el
   // payload y se hidrate al editar. El setter solo escribe el campo.
   const tipoUmbral = (Form.useWatch("tipo_umbral", form) as TipoUmbral | undefined) ?? null;
@@ -650,7 +679,7 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
       <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} />
       <SeccionVigencia form={form} />
-      <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} />
+      <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} />
       <SeccionPrecios />
     </div>
   );
