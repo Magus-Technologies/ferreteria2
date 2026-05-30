@@ -16,10 +16,10 @@ import type { MomentoAplicacion, TipoBeneficio } from '../../../_constants/form-
 
 export interface FormCreateVale extends CreateValeCompraRequest {
   // Campos UI-only que se descomponen al enviar al backend.
-  // El backend solo conoce `tipo_promocion`; estos campos lo derivan
-  // a través de derivarTipoPromocion(momento, beneficio).
   momento_aplicacion?: MomentoAplicacion
   tipo_beneficio?: TipoBeneficio
+  // Switches que controlan visibilidad de campos; no se envían al backend.
+  usa_limite_por_venta?: boolean
 }
 
 export default function BodyCrearVale() {
@@ -44,7 +44,7 @@ export default function BodyCrearVale() {
       // derivar `tipo_promocion` dentro del formulario.
       // `momento_aplicacion` SÍ se envía: el backend lo persiste en su
       // propia columna para distinguir vales que generan código futuro.
-      const { tipo_beneficio: _tb, ...rest } = values
+      const { tipo_beneficio: _tb, usa_limite_por_venta: _ulv, ...rest } = values
       let payload = {
         ...rest,
         fecha_inicio: values.fecha_inicio ? dayjs(values.fecha_inicio).format('YYYY-MM-DD') : undefined,
@@ -52,6 +52,10 @@ export default function BodyCrearVale() {
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,
         producto_ids: toArray(values.producto_ids),
         categoria_ids: toArray(values.categoria_ids),
+        // Si el switch está OFF, nullear el valor para que el backend lo limpie.
+        max_vales_por_venta: values.usa_limite_por_venta ? values.max_vales_por_venta : null,
+        limite_usos_cliente: values.usa_limite_por_cliente ? values.limite_usos_cliente : null,
+        stock_disponible: values.usa_limite_stock ? values.stock_disponible : null,
       }
 
       // Para SORTEO: limpiar descuentos

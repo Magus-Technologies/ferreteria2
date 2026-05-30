@@ -87,7 +87,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
     try {
       // Solo descartamos `tipo_beneficio` (UI-only para derivar tipo_promocion).
       // `momento_aplicacion` se envía al backend para que actualice su columna.
-      const { tipo_beneficio: _tb, ...rest } = values
+      const { tipo_beneficio: _tb, usa_limite_por_venta: _ulv, ...rest } = values
       const payload = {
         ...rest,
         fecha_inicio: values.fecha_inicio ? dayjs(values.fecha_inicio).format('YYYY-MM-DD') : undefined,
@@ -95,6 +95,9 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,
         producto_ids: toArray(values.producto_ids),
         categoria_ids: toArray(values.categoria_ids),
+        max_vales_por_venta: values.usa_limite_por_venta ? values.max_vales_por_venta : null,
+        limite_usos_cliente: values.usa_limite_por_cliente ? values.limite_usos_cliente : null,
+        stock_disponible: values.usa_limite_stock ? values.stock_disponible : null,
       }
 
       const response = await updateValeCompra(vale.id, payload as any)
