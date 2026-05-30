@@ -243,7 +243,12 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
         const results = response.data?.data || []
         
         if (results.length === 1) {
-          handleOnlyOneResult?.(results[0])
+          // En múltiple, un único resultado se agrega directo a la lista.
+          if (props.mode === 'multiple') {
+            handleSelect({ data: results[0] })
+          } else {
+            handleOnlyOneResult?.(results[0])
+          }
         } else {
           setOpenModalProductoSearch(true)
         }
@@ -263,22 +268,39 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
 
   function handleSelect({ data }: { data?: Producto } = {}) {
     const producto = data || productoSeleccionadoSearchStore
-    if (producto) {
+    if (!producto) return
+
+    // Modo múltiple: AGREGAR a la lista existente (no reemplazar). Es el único
+    // camino de selección cuando el desplegable inline está desactivado (open={false}).
+    if (props.mode === 'multiple') {
+      const actuales = Array.isArray(props.value) ? (props.value as number[]) : []
+      if (!actuales.includes(producto.id)) {
+        // En múltiple, el onChange de Form.Item espera el array completo
+        // (el tipo declarado es para el caso single, por eso el cast).
+        onChange?.([...actuales, producto.id] as unknown as number, producto)
+      }
       setProductoSeleccionado(producto)
-      iterarChangeValue({
-        refObject: selectProductoRef,
-        value: producto.id,
-      })
       setProductoSeleccionadoSearchStore(undefined)
       setOpenModalProductoSearch(false)
-      onChange?.(producto.id, producto)
-      if (limpiarOnChange) {
-        setText('')
-        setTextDefault('')
-        iterarChangeValue({ refObject: selectProductoRef, value: undefined })
-        setProductoSeleccionado(undefined)
-        setProductoCreado(undefined)
-      }
+      setText('')
+      setTextDefault('')
+      return
+    }
+
+    setProductoSeleccionado(producto)
+    iterarChangeValue({
+      refObject: selectProductoRef,
+      value: producto.id,
+    })
+    setProductoSeleccionadoSearchStore(undefined)
+    setOpenModalProductoSearch(false)
+    onChange?.(producto.id, producto)
+    if (limpiarOnChange) {
+      setText('')
+      setTextDefault('')
+      iterarChangeValue({ refObject: selectProductoRef, value: undefined })
+      setProductoSeleccionado(undefined)
+      setProductoCreado(undefined)
     }
   }
 
