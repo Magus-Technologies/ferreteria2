@@ -227,6 +227,20 @@ export interface EntregaNueva {
   observaciones: string | null
   motivo_anulacion: string | null
   detalles: EntregaDetalleProd[]
+  venta?: {
+    id: string
+    serie: string
+    numero: string
+    tipo_documento: string
+    cliente?: {
+      id: number
+      razon_social?: string | null
+      nombres?: string | null
+      apellidos?: string | null
+      telefono?: string | null
+      numero_documento?: string | null
+    } | null
+  }
 }
 
 export interface PaginatedResult<T> {

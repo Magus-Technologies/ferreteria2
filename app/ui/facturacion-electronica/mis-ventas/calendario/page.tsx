@@ -173,7 +173,7 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
             )}
             {data?.venta?.serie && (
               <span className="text-xs text-slate-400 ml-5">
-                Venta: {data.venta.serie}-{String(data.venta.numero).padStart(8, '0')}
+                {data.venta.tipo_documento === '01' ? 'Factura' : data.venta.tipo_documento === '03' ? 'Boleta' : data.venta.tipo_documento === 'nv' ? 'Nota de Venta' : 'Venta'}: {data.venta.serie}-{String(data.venta.numero).padStart(8, '0')}
               </span>
             )}
           </div>

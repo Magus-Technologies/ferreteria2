@@ -95,24 +95,21 @@ export default function EventEntrega({ event }: EventEntregaProps) {
           : '0 2px 8px rgba(0,0,0,0.15)',
       }}
     >
-      <div className="font-bold truncate text-[12px] leading-tight mb-0.5 flex items-center gap-1">
-        <span className="text-white/90">{event.resource.vehiculo_nombre}</span>
+      <div className="font-bold truncate text-[12px] leading-tight mb-0.5">
+        {event.resource.venta_nro || event.resource.vehiculo_nombre}
+      </div>
+      <div className="truncate text-[11px] leading-tight mb-0.5 text-white/95">
+        {event.resource.cliente_nombre}
+      </div>
+      <div className="text-[10px] leading-tight truncate text-white/85 flex items-center gap-1">
+        <span>{event.resource.vehiculo_nombre}</span>
         {isEntregado && <span className="text-[10px] ml-auto">✓</span>}
         {isEnCamino && <span className="text-[10px] ml-auto">🚚</span>}
         {isPendiente && <span className="text-[10px] ml-auto">⏳</span>}
         {isCancelado && <span className="text-[10px] ml-auto">✕</span>}
       </div>
-      <div className="truncate text-[11px] leading-tight mb-0.5 text-white/95">
-        {event.resource.cliente_nombre}
-      </div>
-      {event.resource.venta_nro && (
-        <div className="text-[10px] leading-tight truncate mb-0.5 text-white/80 font-medium">
-          🧾 {event.resource.venta_nro}
-        </div>
-      )}
-      <div className="text-[10px] leading-tight truncate text-white/85 flex items-center gap-1">
-        <span>📦</span>
-        <span>{event.resource.productos_count} prod.</span>
+      <div className="text-[10px] leading-tight truncate text-white/85">
+        📦 {event.resource.productos_count} prod.
       </div>
     </div>
   )
