@@ -210,7 +210,13 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         const cantidadComprada = lineasCoincidentes.reduce((s, p) => s + Number(p?.cantidad ?? 0), 0);
         const tamGrupo = Number(v.cantidad_minima ?? 1) || 1;
         const gratisPorGrupo = Number(v.cantidad_producto_gratis ?? 1) || 1;
-        const unidadesGratis = Math.floor(cantidadComprada / tamGrupo) * gratisPorGrupo;
+        // Respetar el límite de aplicaciones por venta (espeja ValeCompraService::calcularDescuentoBeneficio).
+        // Ej.: max_vales_por_venta=2 con 2x1 y 10 unidades → solo 2 grupos → 2 gratis.
+        let grupos = Math.floor(cantidadComprada / tamGrupo);
+        if (v.max_vales_por_venta != null) {
+          grupos = Math.min(grupos, Number(v.max_vales_por_venta));
+        }
+        const unidadesGratis = grupos * gratisPorGrupo;
         const monto = precioMin * unidadesGratis;
         return { vale: v, monto, tipo: null, valor: monto };
       }
