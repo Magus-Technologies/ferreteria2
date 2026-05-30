@@ -108,8 +108,13 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     'productos-infinite',
   ],
   // Las entregas modifican stock (cuando estado=ENTREGADO) → invalidar productos.
+  // También cambian la cobertura/estado de la venta → invalidar VENTAS para que
+  // mis-ventas refresque la columna de estado (sin esto el staleTime sirve data vieja).
   'entregas-productos': [
     QueryKeys.ENTREGAS_PRODUCTOS,
+    QueryKeys.VENTAS,
+    QueryKeys.VENTA_HISTORIAL,
+    QueryKeys.VENTAS_HISTORIAL_GENERAL,
     QueryKeys.PRODUCTOS,
     QueryKeys.PRODUCTOS_BY_ALMACEN,
     QueryKeys.PRODUCTOS_SEARCH,

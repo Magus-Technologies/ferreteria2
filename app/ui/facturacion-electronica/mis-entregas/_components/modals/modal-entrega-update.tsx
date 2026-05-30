@@ -20,6 +20,7 @@ import type { ProductoEntrega } from '../../../mis-ventas/_hooks/use-productos-e
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import ButtonBase from '~/components/buttons/button-base'
 import { getEntregaOperativa } from '../../_lib/entregas-parciales'
+import { invalidarEntregaYVenta } from '../../_lib/invalidar-entrega-venta'
 
 const normalizarClaveProducto = (codigo: string, unidad: string) =>
   `${codigo}`.trim().toLowerCase() + '|' + `${unidad}`.trim().toLowerCase()
@@ -1033,7 +1034,7 @@ export default function ModalEntregaUpdate({
         readonlyEntregarParcial={readonlyEntregarParcial}
         onConfirmar={() => {
           message.success(restante ? 'Restante entregado' : 'Entrega actualizada')
-          queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+          invalidarEntregaYVenta(queryClient)
           onSuccess?.()
         }}
         onEditarCliente={() => {

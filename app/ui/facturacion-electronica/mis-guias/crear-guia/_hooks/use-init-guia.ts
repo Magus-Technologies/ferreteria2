@@ -119,12 +119,13 @@ export default function useInitGuia({
       // (cantidad de la entrega − lo ya guiado de esa entrega). Así, si se guió
       // 1 de 2, la próxima vez sale 1.
       let entregaDetalleMap: Map<number, number> | null = null
+      let entregaSeleccionada: any = null
       if (entregaIdParam) {
         const entregasList = (entregasVentaList ?? []) as any[]
-        const entregaSel = entregasList.find((e) => String(e.id) === String(entregaIdParam))
-        if (entregaSel) {
+        entregaSeleccionada = entregasList.find((e) => String(e.id) === String(entregaIdParam))
+        if (entregaSeleccionada) {
           entregaDetalleMap = new Map<number, number>()
-          for (const d of entregaSel.detalles ?? []) {
+          for (const d of entregaSeleccionada.detalles ?? []) {
             const cant = Number(d.cantidad) || 0
             const guiada = Number(d.cantidad_guiada) || 0
             entregaDetalleMap.set(Number(d.unidad_derivada_venta_id), Math.max(0, cant - guiada))
@@ -183,6 +184,14 @@ export default function useInitGuia({
       // `direcciones[]` con tipo D1/D2/D3/D4. La D1 (principal) se toma
       // como punto de llegada por defecto.
       const direccionD1 = cliente?.direcciones?.find((d: any) => d.tipo === TipoDireccion.D1)?.direccion || ''
+      const puntoLlegada = entregaSeleccionada?.direccion_entrega || direccionD1
+      const direccionSeleccionada = cliente?.direcciones?.find(
+        (d: any) => d.direccion === entregaSeleccionada?.direccion_entrega,
+      )?.tipo || 'D1'
+      const choferId = entregaSeleccionada?.chofer_id || userChoferIdParam
+      const choferNombre = entregaSeleccionada?.chofer_name || userChoferNombreParam || ''
+      const vehiculoId = entregaSeleccionada?.vehiculo_id
+      const vehiculoPlaca = entregaSeleccionada?.vehiculo_placa || vehiculoPlacaParam
 
       const empresaSlots = buildSlotsDireccionEmpresa(empresa?.direcciones)
       const primerSlot = empresaSlots.find((s) => s.direccion)
@@ -201,8 +210,8 @@ export default function useInitGuia({
         cliente_nombre: cliente?.razon_social || `${cliente?.nombres || ''} ${cliente?.apellidos || ''}`.trim(),
         punto_partida: primerSlot?.direccion?.direccion || '',
         empresa_direccion_seleccionada: primerSlot?.tipo || 'D1',
-        punto_llegada: direccionD1,
-        direccion_seleccionada: 'D1',
+        punto_llegada: puntoLlegada,
+        direccion_seleccionada: direccionSeleccionada,
         // Referencia a la venta — mostrar número de comprobante electrónico si existe
         referencia: (() => {
           const comp = (venta as any).comprobante_electronico
@@ -213,12 +222,13 @@ export default function useInitGuia({
           return `Venta ${venta.serie}-${venta.numero}`
         })(),
         // Pre-llenar placa si viene por URL (desde mis-entregas)
-        ...(vehiculoPlacaParam ? { vehiculo_placa: vehiculoPlacaParam } : {}),
+        ...(vehiculoId ? { vehiculo_id_interno: vehiculoId } : {}),
+        ...(vehiculoPlaca ? { vehiculo_placa: vehiculoPlaca } : {}),
         // Pre-llenar user_chofer_id (despachador interno) si viene de mis-entregas.
         // En transporte PRIVADO los datos del chofer salen de la tabla `user`.
-        ...(userChoferIdParam ? {
-          user_chofer_id: userChoferIdParam,
-          user_chofer_nombre: userChoferNombreParam || '',
+        ...(choferId ? {
+          user_chofer_id: choferId,
+          user_chofer_nombre: choferNombre,
         } : {}),
         // Productos
         productos,

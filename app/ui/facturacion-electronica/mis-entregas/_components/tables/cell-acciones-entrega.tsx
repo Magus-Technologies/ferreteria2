@@ -16,7 +16,6 @@ import useApp from 'antd/es/app/useApp'
 import { useRouter } from 'next/navigation'
 import { entregasNuevasApi } from '~/lib/api/entregas'
 import { useQueryClient } from '@tanstack/react-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import ButtonBase from '~/components/buttons/button-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
@@ -25,6 +24,7 @@ import ModalDetallesEntregaCompleto from '../modals/modal-detalles-entrega-compl
 import ModalAnularEntrega from '../modals/modal-anular-entrega'
 import { useStoreEntregaSeleccionada } from './table-mis-entregas'
 import { getEntregaOperativa } from '../../_lib/entregas-parciales'
+import { invalidarEntregaYVenta } from '../../_lib/invalidar-entrega-venta'
 
 interface CellAccionesEntregaProps {
   entrega?: any
@@ -85,7 +85,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
             return
           }
           message.success('Entrega marcada en camino')
-          queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+          invalidarEntregaYVenta(queryClient)
           if (onRefetch) onRefetch()
         } catch (err: any) {
           message.error(err?.message || 'Error al marcar en camino')
@@ -143,7 +143,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
       message.success('Entrega completada exitosamente')
       setModalConfirmarOpen(false)
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      invalidarEntregaYVenta(queryClient)
       if (onRefetch) onRefetch()
     } catch (error) {
       console.error('Error al completar entrega:', error)
@@ -165,7 +165,7 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
 
       message.success('Entrega marcada en camino')
       setModalConfirmarOpen(false)
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      invalidarEntregaYVenta(queryClient)
       if (onRefetch) onRefetch()
     } catch (error) {
       console.error('Error al marcar en camino:', error)
@@ -186,12 +186,12 @@ export default function CellAccionesEntrega({ entrega, onRefetch }: CellAcciones
         } else {
           message.error(response.error.message || 'Error al aceptar entrega')
         }
-        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+        invalidarEntregaYVenta(queryClient)
         return
       }
 
       message.success('Pedido aceptado exitosamente')
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      invalidarEntregaYVenta(queryClient)
       if (onRefetch) onRefetch()
     } catch (error) {
       console.error('Error al aceptar entrega:', error)

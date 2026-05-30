@@ -1,16 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { App } from 'antd'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import { entregasNuevasApi } from '~/lib/api/entregas'
+import { invalidarEntregaYVenta } from '../_lib/invalidar-entrega-venta'
 
 export default function useAccionesEntrega(ventaId: string | undefined) {
   const { message } = App.useApp()
   const qc = useQueryClient()
 
-  const invalidar = () => {
-    // Invalidate all ENTREGAS_PRODUCTOS queries (covers both old and new table architectures)
-    qc.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
-  }
+  // Invalida entregas + ventas (la entrega cambia la cobertura de la venta).
+  // Ver invalidarEntregaYVenta para el porqué del staleTime.
+  const invalidar = () => invalidarEntregaYVenta(qc)
 
   const confirmar = useMutation({
     mutationFn: (id: number) => entregasNuevasApi.confirmar(id),
