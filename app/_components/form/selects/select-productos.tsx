@@ -66,6 +66,7 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   classNameTipoBusqueda?: string
   classIconPlus?: string
   withSearch?: boolean
+  searchOnEnterOnly?: boolean
   withTipoBusqueda?: boolean
   handleOnlyOneResult?: (producto: Producto) => void
   showCardAgregarProducto?: boolean
@@ -102,6 +103,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   classNameTipoBusqueda = '!min-w-[180px] !w-[180px] !max-w-[180px]',
   classIconPlus = '',
   withSearch = false,
+  searchOnEnterOnly = false,
   withTipoBusqueda = false,
   handleOnlyOneResult,
   showCardAgregarProducto = false,
@@ -190,7 +192,10 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   const [productoSeleccionado, setProductoSeleccionado] =
     useState<Producto>()
 
-  const [debouncedText, { flush }] = useDebounce(text, 300)
+  // Si searchOnEnterOnly está activo, el debounce NO dispara la query automática:
+  // el texto se acumula en el input pero la búsqueda solo ocurre al presionar Enter
+  // o al hacer click en el ícono de lupa.
+  const [debouncedText, { flush }] = useDebounce(searchOnEnterOnly ? '' : text, 300)
   const [manualSearch, setManualSearch] = useState(false)
 
   const efectivoAlmacenId = almacenOrigenIdTransferencia || almacen_id
@@ -222,6 +227,9 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   const productos = responseData
 
   const handleSearch = async () => {
+    // Si searchOnEnterOnly está activo, exigir al menos 2 caracteres antes de buscar.
+    if (searchOnEnterOnly && text.length < 2) return
+
     setTextDefault(text)
     setProductoCreado(undefined)
 
@@ -370,6 +378,8 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
             e.preventDefault()
             e.stopPropagation()
             if (withSearch) {
+              // searchOnEnterOnly: solo busca si hay ≥2 caracteres
+              if (searchOnEnterOnly && text.length < 2) return
               handleSearch()
             } else {
               // Si withSearch está desactivado, seleccionar el primer resultado

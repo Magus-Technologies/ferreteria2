@@ -74,7 +74,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
   // confiable. setFieldsValue sí dispara el watch y renderiza esos campos.
   useEffect(() => {
     if (vale) {
-      form.setFieldsValue(getInitialValues())
+      form.setFieldsValue(getInitialValues() as any)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vale])
