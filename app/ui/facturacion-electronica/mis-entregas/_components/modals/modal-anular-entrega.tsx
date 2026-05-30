@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { FaExclamationTriangle } from 'react-icons/fa'
 import ButtonBase from '~/components/buttons/button-base'
 import { entregasNuevasApi } from '~/lib/api/entregas'
-import { QueryKeys } from '~/app/_lib/queryKeys'
+import { invalidarEntregaYVenta } from '../../_lib/invalidar-entrega-venta'
 
 interface ModalAnularEntregaProps {
   open: boolean
@@ -57,7 +57,7 @@ export default function ModalAnularEntrega({
         return
       }
       message.success('Entrega anulada — vuelve a Pendiente')
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      invalidarEntregaYVenta(queryClient)
       form.resetFields()
       onSuccess?.()
       onClose()
