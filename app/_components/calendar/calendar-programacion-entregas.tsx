@@ -298,9 +298,9 @@ export default function CalendarProgramacionEntregas({
         ? `${entrega.vehiculo.name}${entrega.vehiculo.placa ? ` (${entrega.vehiculo.placa})` : ''}`
         : 'Sin unidad'
 
-      // Armar número de venta con tipo de documento
+      // Armar número de venta con tipo de documento descriptivo
       const tipoDoc = entrega.venta?.tipo_documento
-      const tipoLabel = tipoDoc === '01' ? 'F' : tipoDoc === '03' ? 'B' : tipoDoc === 'nv' ? 'NV' : ''
+      const tipoLabel = tipoDoc === '01' ? 'Factura' : tipoDoc === '03' ? 'Boleta' : tipoDoc === 'nv' ? 'Nota de Venta' : ''
       const ventaNro = entrega.venta?.serie && entrega.venta?.numero
         ? `${tipoLabel ? tipoLabel + ' ' : ''}${entrega.venta.serie}-${entrega.venta.numero}`
         : ''
