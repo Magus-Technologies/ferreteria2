@@ -271,7 +271,7 @@ function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps
         )}
         {(modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && (
           <Form.Item name="producto_ids" label="Productos Aplicables" rules={[{ required: true, message: "Seleccione al menos un producto" }]} className="mt-3 !mb-0">
-            <SelectProductos mode="multiple" placeholder="Busque y seleccione productos..." className="w-full" withSearch searchOnEnterOnly withTipoBusqueda />
+            <SelectProductos mode="multiple" placeholder="Busque y seleccione productos..." className="w-full" withSearch withTipoBusqueda />
           </Form.Item>
         )}
       </div>

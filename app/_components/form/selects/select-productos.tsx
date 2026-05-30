@@ -392,7 +392,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
             }
           }
         }}
-        open={false}
+        open={props.mode === 'multiple' ? undefined : false}
         {...props}
       />
       {withSearch && (
