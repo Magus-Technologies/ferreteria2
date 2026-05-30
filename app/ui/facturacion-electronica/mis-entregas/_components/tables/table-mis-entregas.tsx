@@ -131,6 +131,7 @@ export default function TableMisEntregas() {
   const setEntregaSeleccionada = useStoreEntregaSeleccionada(
     (state) => state.setEntrega
   )
+  const entregaSeleccionadaId = useStoreEntregaSeleccionada((s) => s.entrega?.id)
 
   /*
   React.useEffect(() => {
@@ -235,18 +236,63 @@ export default function TableMisEntregas() {
     window.localStorage.setItem(migrationKey, '1')
   }, [])
 
-  // Seleccionar automáticamente el primer registro cuando se cargan los datos
+  // Mantener la selección ESTABLE a través de los refetches (realtime +
+  // mutaciones), en lugar de re-seleccionar siempre la fila 0.
+  //
+  // ANTES este efecto forzaba la fila 0 en CADA cambio de `entregas`. Eso le
+  // robaba la selección al usuario cada vez que la lista se refrescaba:
+  //   - al "marcar en camino" la mutación invalida ENTREGAS_PRODUCTOS → refetch
+  //     → el modal abierto saltaba a otra entrega (parecía cerrarse/reabrirse).
+  //   - si otro usuario registraba una venta, la entrega nueva entraba en la
+  //     fila 0 (orden created_at desc) y el modal abierto pasaba a mostrar ESA
+  //     entrega en vez de la que el usuario tenía abierta.
+  //
+  // AHORA:
+  //   - Carga inicial (nada seleccionado): seleccionar la fila 0 una vez.
+  //   - Refetches posteriores: re-sincronizar los DATOS de la MISMA entrega
+  //     seleccionada (por id) para que el modal vea la transición pe→ec, sin
+  //     cambiar de fila.
+  //   - Si la entrega seleccionada desapareció del set (p.ej. tras filtrar),
+  //     recién ahí caer a la fila 0.
+  const seleccionarPrimeraFila = React.useCallback(() => {
+    const id = setTimeout(() => {
+      const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0)
+      if (firstNode) {
+        firstNode.setSelected(true)
+        setEntregaSeleccionada(firstNode.data)
+      }
+    }, 100)
+    return () => clearTimeout(id)
+  }, [setEntregaSeleccionada])
+
   React.useEffect(() => {
-    if (entregas && entregas.length > 0 && tableRef.current) {
-      setTimeout(() => {
-        const firstNode = tableRef.current?.api?.getDisplayedRowAtIndex(0)
-        if (firstNode) {
-          firstNode.setSelected(true)
-          setEntregaSeleccionada(firstNode.data)
-        }
-      }, 100)
+    if (!entregas || entregas.length === 0) return
+
+    if (entregaSeleccionadaId == null) {
+      return seleccionarPrimeraFila()
     }
-  }, [entregas, setEntregaSeleccionada])
+
+    const fresh = entregas.find(
+      (e) => String(e.id) === String(entregaSeleccionadaId),
+    )
+    if (fresh) {
+      // Refrescar los datos de la selección actual sin moverla de fila.
+      setEntregaSeleccionada(fresh)
+      // AG Grid limpia la selección visual al reemplazar rowData (no usamos
+      // getRowId), así que re-aplicamos el highlight de la MISMA fila por id.
+      const t = setTimeout(() => {
+        tableRef.current?.api?.forEachNode((node) => {
+          const mismaFila =
+            node.data && String(node.data.id) === String(entregaSeleccionadaId)
+          if (mismaFila && !node.isSelected()) node.setSelected(true)
+        })
+      }, 100)
+      return () => clearTimeout(t)
+    }
+
+    // La entrega seleccionada ya no está en la lista → fila 0.
+    return seleccionarPrimeraFila()
+  }, [entregas, entregaSeleccionadaId, seleccionarPrimeraFila, setEntregaSeleccionada])
 
   // Función para aplicar estilos a las filas
   const getRowStyle = (params: { data?: EntregaDB }): RowStyle | undefined => {
@@ -274,8 +320,12 @@ export default function TableMisEntregas() {
               event.node.setSelected(true)
             }}
             onSelectionChanged={({ selectedNodes }) => {
-              const selectedEntrega = selectedNodes?.[0]?.data as EntregaDB
-              setEntregaSeleccionada(selectedEntrega)
+              // Ignorar el evento de "selección vacía" que dispara AG Grid al
+              // reemplazar rowData en cada refetch — si pasáramos undefined al
+              // store, perderíamos la entrega que el usuario tiene abierta en un
+              // modal y el efecto de arriba caería de nuevo en la fila 0.
+              const selectedEntrega = selectedNodes?.[0]?.data as EntregaDB | undefined
+              if (selectedEntrega) setEntregaSeleccionada(selectedEntrega)
             }}
             onRowDoubleClicked={({ data }) => {
               setEntregaSeleccionada(data)
