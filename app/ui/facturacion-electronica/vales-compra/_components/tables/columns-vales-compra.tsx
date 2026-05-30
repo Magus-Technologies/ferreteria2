@@ -270,7 +270,7 @@ export function useColumnsValesCompra(): ColDef<ValeCompra>[] {
     },
     {
       colId: 'stock',
-      headerName: "Usos disp.",
+      headerName: "Stock",
       width: 100,
       cellRenderer: CellStock,
       cellRendererParams: (params: any) => ({ data: params.data }),

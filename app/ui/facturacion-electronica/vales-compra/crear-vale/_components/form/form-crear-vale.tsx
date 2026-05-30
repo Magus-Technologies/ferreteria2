@@ -566,14 +566,23 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
         {/* Límite por cliente */}
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Limitar usos por cliente</label>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block">Limitar usos por cliente</label>
+              <p className="text-xs text-gray-500 mt-0.5">Cada cliente solo puede beneficiarse de esta promoción un máximo de N veces en total (sumando todas sus compras).</p>
+            </div>
             <Form.Item name="usa_limite_por_cliente" valuePropName="checked" noStyle>
               <Switch />
             </Form.Item>
           </div>
           {usaLimiteCliente && (
-            <Form.Item name="limite_usos_cliente" rules={[{ required: true, message: "Ingrese el límite" }]} className="mb-0">
-              <InputNumber className="w-full" placeholder="Máximo de usos por cliente" min={1} />
+            <Form.Item
+              name="limite_usos_cliente"
+              label="Máximo de usos por cliente"
+              tooltip="Cada cliente puede beneficiarse de esta promoción un máximo de N veces en total, sumando todas sus compras. Ej: 2 = el cliente puede usarla en 2 ventas distintas, a la 3ra ya no aplica."
+              rules={[{ required: true, message: "Ingrese el límite" }]}
+              className="mb-0"
+            >
+              <InputNumber className="w-full" placeholder="Ej: 2 (cada cliente puede usarla 2 veces en total)" min={1} />
             </Form.Item>
           )}
         </div>
@@ -581,7 +590,10 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
         {/* Límite de vales distintos por venta */}
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Limitar vales por venta</label>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block">Limitar vales por venta</label>
+              <p className="text-xs text-gray-500 mt-0.5">Máximo de promociones distintas que pueden aplicarse en una misma venta. Si califica para más, solo se aplican las primeras N.</p>
+            </div>
             <Form.Item name="usa_limite_por_venta" valuePropName="checked" noStyle>
               <Switch />
             </Form.Item>
@@ -589,20 +601,23 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
           {usaLimiteVenta && (
             <Form.Item
               name="max_vales_por_venta"
-              label="Máximo de vales distintos en una venta"
-              tooltip="Si una venta califica para varios vales, solo se aplican los primeros N. Ej: 1 = solo 1 vale por venta aunque califique para más."
+              label="Máximo de promociones por venta"
+              tooltip="Limita cuántas promociones distintas puede acumular una sola venta. Ej: 1 = solo 1 promoción aplica por venta aunque califiquen varias."
               rules={[{ required: true, message: "Ingrese el límite" }]}
               className="mb-0"
             >
-              <InputNumber className="w-full" placeholder="Ej: 1" min={1} max={10} precision={0} />
+              <InputNumber className="w-full" placeholder="Ej: 1 (máximo 1 promoción por venta)" min={1} max={10} precision={0} />
             </Form.Item>
           )}
         </div>
 
-        {/* Límite de usos totales */}
+        {/* Límite por stock */}
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Limitar usos totales de la promoción</label>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block">Limitar por stock</label>
+              <p className="text-xs text-gray-500 mt-0.5">Cantidad total de veces que puede aplicarse entre todos los clientes. Al agotarse, la promoción se desactiva automáticamente.</p>
+            </div>
             <Form.Item name="usa_limite_stock" valuePropName="checked" noStyle>
               <Switch />
             </Form.Item>
@@ -610,12 +625,12 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
           {usaLimiteStock && (
             <Form.Item
               name="stock_disponible"
-              label="Máximo de ventas en que puede aplicarse"
-              tooltip="La promoción se desactiva automáticamente cuando se alcance este número de ventas en que fue aplicada."
-              rules={[{ required: true, message: "Ingrese el límite de usos" }]}
+              label="Stock de la promoción"
+              tooltip="Cada vez que el vale se aplica en una venta, se descuenta 1. Cuando llega a 0 la promoción se desactiva. Ej: 50 = la promoción puede usarse en 50 ventas en total."
+              rules={[{ required: true, message: "Ingrese el stock" }]}
               className="mb-0"
             >
-              <InputNumber className="w-full" placeholder="Ej: 50 (se aplica en máximo 50 ventas)" min={1} />
+              <InputNumber className="w-full" placeholder="Ej: 50" min={1} />
             </Form.Item>
           )}
         </div>
