@@ -5,6 +5,7 @@ import { App, Form, FormInstance } from 'antd'
 import { getValesAplicables, getValesPendientesCliente } from '~/lib/api/vales-compra'
 import type { ValeCompra } from '~/lib/api/vales-compra'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
 
 /**
  * Componente invisible que:
@@ -135,6 +136,21 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
   useEffect(() => {
     const timer = setTimeout(consultarVales, 500)
     return () => clearTimeout(timer)
+  }, [consultarVales])
+
+  // Realtime: si otro usuario crea/edita/elimina o cambia el estado de un vale,
+  // volver a consultar los vales aplicables para reflejar el cambio en vivo.
+  // (Esta pantalla usa Zustand + POST manual, no React Query, así que la
+  //  invalidación de queries de use-realtime no la cubre.)
+  useEffect(() => {
+    const unsubscribe = subscribeModelChanged((event) => {
+      if (event.module !== 'vales-compra') return
+      // Olvidar las notificaciones ya mostradas para que un vale nuevo o
+      // reactivado vuelva a anunciarse tras el refresco.
+      valesNotificados.current.clear()
+      consultarVales()
+    })
+    return unsubscribe
   }, [consultarVales])
 
   // Limpiar vales auto-detectados si se quita el cliente

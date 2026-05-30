@@ -62,6 +62,11 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     'productos-infinite',
   ],
   cotizaciones: [QueryKeys.COTIZACIONES],
+  // Vales de compra (promociones). 'vales-compra' = listas (valesCompraKeys.all),
+  // 'vale-compra' = detalle usado por editar-vale y el modal PDF.
+  // La pantalla crear-venta NO usa React Query para los vales (Zustand + POST manual),
+  // por eso input-codigo-vale.tsx se suscribe aparte vía subscribeModelChanged.
+  'vales-compra': ['vales-compra', 'vale-compra'],
   clientes: [
     QueryKeys.CLIENTES,
     QueryKeys.CLIENTES_SEARCH,
