@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { BiSolidReport } from 'react-icons/bi'
-import { FaDollarSign, FaBoxOpen, FaUsers, FaBuilding, FaChevronRight, FaFileInvoice } from 'react-icons/fa'
+import { FaDollarSign, FaBoxOpen, FaUsers, FaBuilding, FaChevronRight, FaFileInvoice, FaTruck } from 'react-icons/fa'
 import { FaCartShopping } from 'react-icons/fa6'
+import { MdLocalShipping } from 'react-icons/md'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import NoAutorizado from '~/components/others/no-autorizado'
@@ -67,6 +68,22 @@ const categorias: CategoriaReporte[] = [
     color: 'bg-emerald-600',
     ruta: '/ui/reportes/contables',
     permission: permissions.REPORTES_FINANCIEROS_INDEX,
+  },
+  {
+    id: 'entregas',
+    titulo: 'Entregas',
+    icono: <FaTruck size={32} />,
+    color: 'bg-indigo-500',
+    ruta: '/ui/reportes/entregas',
+    permission: permissions.REPORTES_INDEX,
+  },
+  {
+    id: 'guias',
+    titulo: 'Guías de Remisión',
+    icono: <MdLocalShipping size={32} />,
+    color: 'bg-cyan-600',
+    ruta: '/ui/reportes/guias',
+    permission: permissions.REPORTES_INDEX,
   },
 ]
 

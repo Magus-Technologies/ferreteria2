@@ -2,7 +2,8 @@
 
 import { getBottomNavItems, getModuleNav } from "~/lib/navigation";
 import usePermissionHook from "~/hooks/use-permission";
-import { FaDollarSign, FaBoxOpen, FaUsers, FaBuilding, FaFileInvoice } from "react-icons/fa";
+import { FaDollarSign, FaBoxOpen, FaUsers, FaBuilding, FaFileInvoice, FaTruck } from "react-icons/fa";
+import { MdLocalShipping } from "react-icons/md";
 import { FaCartShopping } from "react-icons/fa6";
 import BaseNav from "~/app/_components/nav/base-nav";
 import ButtonNav from "~/app/_components/nav/button-nav";
@@ -14,6 +15,8 @@ const iconMap: Record<string, any> = {
   FaUsers,
   FaBuilding,
   FaFileInvoice,
+  FaTruck,
+  MdLocalShipping,
 };
 
 export default function BottomNav({ className }: { className?: string }) {

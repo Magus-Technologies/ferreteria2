@@ -308,6 +308,17 @@ export const entregasNuevasApi = {
   porVenta: (ventaId: string): Promise<ApiResponse<EntregaNueva[]>> =>
     apiRequest(`/entregas/por-venta/${ventaId}`, { method: 'GET' }),
 
+  reporte: (filtros: { fecha_desde?: string; fecha_hasta?: string; estado?: string; tipo_entrega?: string; per_page?: number } = {}) => {
+    const p = new URLSearchParams()
+    if (filtros.fecha_desde) p.set('fecha_desde', filtros.fecha_desde)
+    if (filtros.fecha_hasta) p.set('fecha_hasta', filtros.fecha_hasta)
+    if (filtros.estado) p.set('estado', filtros.estado)
+    if (filtros.tipo_entrega) p.set('tipo_entrega', filtros.tipo_entrega)
+    if (filtros.per_page) p.set('per_page', String(filtros.per_page))
+    const qs = p.toString()
+    return apiRequest<{ data: any[]; resumen: any; total: number }>(`/entregas/reporte${qs ? `?${qs}` : ''}`)
+  },
+
   obtener: (id: number): Promise<ApiResponse<EntregaNueva>> =>
     apiRequest(`/entregas/${id}`, { method: 'GET' }),
 
