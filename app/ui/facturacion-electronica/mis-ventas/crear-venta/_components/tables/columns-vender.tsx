@@ -3,7 +3,7 @@
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Form, FormInstance, FormListFieldData, Tooltip, Popover } from 'antd'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import { VentaConUnidadDerivadaNormal } from '../others/header-crear-venta'
@@ -16,6 +16,50 @@ import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { PiWarehouseFill } from 'react-icons/pi'
 import { GetStock } from '~/app/_utils/get-stock'
+import { paqueteApi, type Paquete } from '~/lib/api/paquete'
+import ModalBuscarPaquete from '~/app/_components/modals/modal-buscar-paquete'
+import { useStorePaqueteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-paquete-seleccionado'
+
+function PaquetesBadgeVenta({ productoId, count }: { productoId: number; count: number }) {
+  const [open, setOpen] = useState(false)
+  const [paquetes, setPaquetes] = useState<Paquete[]>([])
+  const [loading, setLoading] = useState(false)
+  const paqueteSeleccionado = useStorePaqueteSeleccionado(s => s.paquete)
+
+  const handleClick = async () => {
+    if (paquetes.length === 0) {
+      setLoading(true)
+      try {
+        const res = await paqueteApi.getByProducto(productoId)
+        setPaquetes((res.data as any)?.data ?? [])
+      } finally {
+        setLoading(false)
+      }
+    }
+    setOpen(true)
+  }
+
+  return (
+    <>
+      <button
+        type='button'
+        onClick={handleClick}
+        disabled={loading}
+        className='flex items-center gap-1 text-[10px] text-amber-600 font-medium hover:text-amber-800 cursor-pointer bg-transparent border-none p-0'
+      >
+        🎁 {loading ? 'Cargando...' : `Disponible en ${count} paquete${count > 1 ? 's' : ''}`}
+      </button>
+      <ModalBuscarPaquete
+        open={open}
+        setOpen={setOpen}
+        textDefault=''
+        rowDataOverride={paquetes}
+        onOk={() => setOpen(false)}
+        onRowDoubleClicked={() => setOpen(false)}
+      />
+    </>
+  )
+}
 
 const TIPO_PRECIO_PAQUETE_OPTIONS = [
   { value: 'publico', label: 'Público' },
@@ -380,6 +424,8 @@ export function useColumnsVender({
         }
 
         // Producto normal o servicio
+        const paquetesCount = form.getFieldValue(['productos', value, 'paquetes_count']) as number | undefined
+
         return (
           <div className='flex flex-col h-full justify-center gap-1'>
             {hiddenFields}
@@ -397,6 +443,12 @@ export function useColumnsVender({
               <div className='text-xs text-gray-400 italic overflow-hidden text-ellipsis whitespace-nowrap'>
                 {servicioReferencia}
               </div>
+            )}
+            {!!paquetesCount && paquetesCount > 0 && (
+              <PaquetesBadgeVenta
+                productoId={form.getFieldValue(['productos', value, 'producto_id'])}
+                count={paquetesCount}
+              />
             )}
           </div>
         )

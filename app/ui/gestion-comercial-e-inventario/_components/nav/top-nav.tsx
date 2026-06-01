@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import ModalRequerimientoCompra from "../modals/modal-requerimiento-compra";
 import ModalRequerimientoServicio from "../modals/modal-requerimiento-servicio";
 import ModalTransferirStock from "../modals/modal-transferir-stock";
+import ModalCreateProducto from "../../mi-almacen/_components/modals/modal-create-producto";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   MdSpaceDashboard,
@@ -29,11 +30,13 @@ export default function TopNav({ className }: { className?: string }) {
   const [openCompraModal, setOpenCompraModal] = useState(false);
   const [openServicioModal, setOpenServicioModal] = useState(false);
   const [openTransferirStock, setOpenTransferirStock] = useState(false);
+  const [openCrearProducto, setOpenCrearProducto] = useState(false);
 
   const actionHandlers: Record<string, () => void> = {
     openTransferirStock: () => setOpenTransferirStock(true),
     openNuevaCompra: () => setOpenCompraModal(true),
     openNuevoServicio: () => setOpenServicioModal(true),
+    openCrearProducto: () => setOpenCrearProducto(true),
   };
 
   const moduleId = "gestion-comercial-e-inventario";
@@ -56,10 +59,10 @@ export default function TopNav({ className }: { className?: string }) {
               return {
                 key: sub.key,
                 label: sub.label,
-                onClick: sub.route
-                  ? () => router.push(sub.route as string)
-                  : sub.action && actionHandlers[sub.action]
-                    ? actionHandlers[sub.action]
+                onClick: sub.action && actionHandlers[sub.action]
+                  ? actionHandlers[sub.action]
+                  : sub.route
+                    ? () => router.push(sub.route as string)
                     : undefined,
               };
             });
@@ -125,6 +128,7 @@ export default function TopNav({ className }: { className?: string }) {
       <ModalRequerimientoCompra open={openCompraModal} onClose={() => setOpenCompraModal(false)} />
       <ModalRequerimientoServicio open={openServicioModal} onClose={() => setOpenServicioModal(false)} />
       <ModalTransferirStock open={openTransferirStock} setOpen={setOpenTransferirStock} />
+      <ModalCreateProducto open={openCrearProducto} setOpen={setOpenCrearProducto} />
     </>
   );
 }

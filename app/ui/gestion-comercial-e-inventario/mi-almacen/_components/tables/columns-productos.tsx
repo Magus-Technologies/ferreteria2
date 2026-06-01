@@ -324,7 +324,7 @@ export function useColumnsProductos({ almacen_id, showStockMaxWarning }: UseColu
                 content={
                   <div className="flex flex-col items-center justify-center gap-6 px-4 py-2">
                     {value && value.length > 0 ? (
-                      value.map((item, index) => {
+                      value.filter(item => item.almacen_id !== almacen_id).map((item, index) => {
                         // Validar que existan unidades derivadas
                         if (
                           !item?.unidades_derivadas ||

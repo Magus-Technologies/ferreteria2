@@ -214,6 +214,7 @@ export default function CardAgregarProductoVenta({
       costo: Number(producto_en_almacen?.costo ?? 0),
       unidades_derivadas_disponibles: unidades_derivadas,
       producto_en_almacenes: productoSeleccionadoSearchStore?.producto_en_almacenes,
+      paquetes_count: paquetes.length,
     }
 
     // Si se proporciona onOk, solo llamarlo (usado por cotizaciones)
