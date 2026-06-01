@@ -57,5 +57,5 @@ const data = [
 ]
 
 export default function DemandaPorCategoriaDeProductos() {
-  return <ChartPie data={data} />
+  return <ChartPie data={data} className='!h-full min-h-0' />
 }

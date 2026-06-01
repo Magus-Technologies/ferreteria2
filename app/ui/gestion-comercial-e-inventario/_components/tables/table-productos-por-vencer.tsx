@@ -208,12 +208,6 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     })
   }, [filteredData, selectedResumen])
 
-  const getTitle = () => {
-    if (dias === 0) return 'Productos Vencidos'
-    if (dias === -1) return 'Todos los Vencimientos'
-    return `Productos por vencer (${dias} días)`
-  }
-
   if (isLoading) {
     return (
       <div className='flex flex-col items-center justify-center p-10 gap-3'>
@@ -227,7 +221,7 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
     <div className="flex flex-col gap-4 h-full overflow-hidden">
       <TableWithTitle
         id='g-c-e-i.dashboard.productos-por-vencer-v2.resumen'
-        title={`${getTitle()} - Resumen`}
+        title='Vencimientos - Resumen'
         extraTitle={
           <span className='text-xs text-slate-400 font-normal'>
             ({resumenData.length} {resumenData.length === 1 ? 'producto' : 'productos'})
@@ -239,12 +233,12 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
         onRowClicked={({ data }) => {
           if (data?.groupKey) setSelectedGroupKey(data.groupKey)
         }}
-        style={{ height: '250px' }}
+        style={{ height: 'calc((100% - 1rem) / 2)', minHeight: 0 }}
       />
 
       <TableWithTitle
         id='g-c-e-i.dashboard.productos-por-vencer-v2.detalle'
-        title={`${getTitle()} - Detalle por lote`}
+        title='Vencimientos - Detalle por lote'
         extraTitle={
           <span className='text-xs text-slate-400 font-normal'>
             ({detalleFiltrado.length} {detalleFiltrado.length === 1 ? 'registro' : 'registros'})
@@ -253,7 +247,7 @@ export default function TableProductosPorVencer({ dias = -1, busqueda = '' }: Ta
         selectionColor={greenColors[10]}
         columnDefs={useColumnsProductosPorVencer()}
         rowData={detalleFiltrado}
-        style={{ height: '280px' }}
+        style={{ height: 'calc((100% - 1rem) / 2)', minHeight: 0 }}
       />
     </div>
   )

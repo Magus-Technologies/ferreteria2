@@ -15,7 +15,7 @@ const chartData = [
 export default function PrestamosPrestes() {
   return (
     <ChartBar
-      className='max-h-[24dvh]'
+      className='!h-full min-h-0'
       data={chartData}
       fills={{ Desktop: colors[0], Mobile: colors[5] }}
     />

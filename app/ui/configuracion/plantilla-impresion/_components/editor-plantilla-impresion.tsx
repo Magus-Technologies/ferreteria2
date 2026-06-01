@@ -92,7 +92,7 @@ const BLOQUES_PDF: Array<{
   {
     key: "consulta",
     label: "Bloque 1 - Consulta",
-    ejemplo: "Consulte su documento en: / http://localhost:3000/consulta",
+    ejemplo: "Consulte su documento en: / https://ferreteriamiredentor.com/consulta",
     estilos: ["consulta_leyenda", "consulta_url"],
   },
 ];

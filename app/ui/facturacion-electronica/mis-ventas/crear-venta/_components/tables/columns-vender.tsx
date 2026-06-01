@@ -12,6 +12,7 @@ import { MdDelete } from 'react-icons/md'
 import SelectUnidadDerivadaVenta from '../form/select-unidad-derivada-venta'
 import SelectTipoPrecioVenta from '../form/select-tipo-precio-venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
+import { useStoreAlmacen } from '~/store/store-almacen'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
 import { PiWarehouseFill } from 'react-icons/pi'
@@ -80,6 +81,7 @@ export function useColumnsVender({
   venta?: VentaConUnidadDerivadaNormal
 }) {
   const tipo_moneda = Form.useWatch('tipo_moneda', form)
+  const almacen_id = useStoreAlmacen(store => store.almacen_id)
   const recalcDebounceRef = useRef<ReturnType<typeof setTimeout>>(null)
   const productosVentaStore = useStoreProductoAgregadoVenta((store) => store.productos)
   
@@ -671,7 +673,7 @@ export function useColumnsVender({
 
         const almacenesContent = otrosAlmacenes && otrosAlmacenes.length > 0 ? (
           <div className='flex flex-col gap-3 py-1 max-h-72 overflow-y-auto'>
-            {otrosAlmacenes.map((pa: any, i: number) => {
+            {otrosAlmacenes.filter((pa: any) => pa.almacen_id !== almacen_id).map((pa: any, i: number) => {
               const ud = pa.unidades_derivadas?.find((u: any) => u.unidad_derivada_id === unidad_derivada_id)
                 ?? pa.unidades_derivadas?.[0]
               return (

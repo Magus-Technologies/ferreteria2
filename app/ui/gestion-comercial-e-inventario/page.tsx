@@ -30,7 +30,7 @@ export default function GestionComercialEInventario() {
   if (!canAccess) return <NoAutorizado />
 
   return (
-    <ContenedorGeneral>
+    <ContenedorGeneral className='min-h-full items-stretch'>
       <TituloModulos title='Dashboard' icon={<MdSpaceDashboard className='text-cyan-600' />}>
         <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 md:gap-6 lg:gap-8 items-stretch sm:items-center w-full sm:w-auto'>
           <ConfigurableElement
@@ -49,9 +49,9 @@ export default function GestionComercialEInventario() {
         </div>
       </TituloModulos>
 
-      <div className='flex flex-col gap-3 w-full'>
+      <div className='flex flex-col gap-3 w-full flex-1 min-h-0'>
         {/* 4 Cards superiores */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0'>
           <ConfigurableElement componentId='gestion-comercial.dashboard.card-costo-inventario' label='Card Costo Total de Inventario'>
             <CardDashboard title='Costo Total de Inventario' value={250000000} prefix='S/. ' icon={<FaMoneyBills size={16} />} />
           </ConfigurableElement>
@@ -67,9 +67,9 @@ export default function GestionComercialEInventario() {
         </div>
 
         {/* Grid de 4 columnas */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 flex-1 min-h-0 xl:h-[clamp(540px,calc(100dvh-330px),820px)]'>
           {/* Columna 1: Cards verticales + Demanda */}
-          <div className='flex flex-col gap-3'>
+          <div className='flex flex-col gap-3 min-h-0'>
             <ConfigurableElement componentId='gestion-comercial.dashboard.card-inventario-inicial' label='Card Inventario Inicial por Año'>
               <CardDashboard title='Inventario Inicial por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillTrendUp size={14} />} iconRight={<YearPicker />} />
             </ConfigurableElement>
@@ -77,7 +77,7 @@ export default function GestionComercialEInventario() {
               <CardDashboard title='Inventario Final por Año' value={250000000} prefix='S/. ' icon={<FaMoneyBillWave size={14} />} iconRight={<YearPicker />} />
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.chart-demanda' label='Gráfico Demanda por Categoría'>
-              <div className='flex flex-col h-[220px]'>
+              <div className='flex flex-col h-[clamp(220px,28dvh,360px)] xl:flex-1 xl:min-h-[220px]'>
                 <div className='font-semibold text-slate-700 text-sm mb-0.5'>Demanda por Categoría de Productos</div>
                 <div className='flex-1'><Suspense fallback={<ComponentLoading />}><DemandaPorCategoriaDeProductos /></Suspense></div>
               </div>
@@ -85,18 +85,18 @@ export default function GestionComercialEInventario() {
           </div>
 
           {/* Columnas 2-4: Contenedor de tablas (ocupa 3 columnas) */}
-          <div className='lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-3'>
+          <div className='xl:col-span-3 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 min-h-0 xl:grid-rows-2'>
             <ConfigurableElement componentId='gestion-comercial.dashboard.table-productos-vencer' label='Tabla Productos por Vencer'>
-              <div className='h-[220px]'><Suspense fallback={<ComponentLoading />}><TableProductosPorVencer /></Suspense></div>
+              <div className='h-[520px] xl:h-full xl:row-span-2 min-h-0'><Suspense fallback={<ComponentLoading />}><TableProductosPorVencer /></Suspense></div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.table-productos-sin-rotar' label='Tabla Productos sin Rotar'>
-              <div className='h-[220px] lg:col-span-2'><Suspense fallback={<ComponentLoading />}><TableProductosSinRotar /></Suspense></div>
+              <div className='h-[clamp(240px,28dvh,380px)] xl:h-full xl:col-span-2 min-h-0'><Suspense fallback={<ComponentLoading />}><TableProductosSinRotar /></Suspense></div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.table-productos-urgente' label='Tabla Productos Urgente Stock'>
-              <div className='h-[220px]'><Suspense fallback={<ComponentLoading />}><TableProductosUrgenteStock /></Suspense></div>
+              <div className='h-[clamp(240px,28dvh,380px)] xl:h-full min-h-0'><Suspense fallback={<ComponentLoading />}><TableProductosUrgenteStock /></Suspense></div>
             </ConfigurableElement>
             <ConfigurableElement componentId='gestion-comercial.dashboard.chart-prestamos' label='Gráfico Préstamos y Prestés'>
-              <div className='flex flex-col h-[220px] lg:col-span-2'>
+              <div className='flex flex-col h-[clamp(240px,28dvh,380px)] xl:h-full min-h-0'>
                 <div className='font-semibold text-slate-700 text-sm mb-0.5'>Préstamos y Prestés</div>
                 <div className='flex-1'><Suspense fallback={<ComponentLoading />}><PrestamosPrestes /></Suspense></div>
               </div>
