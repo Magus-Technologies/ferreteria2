@@ -1,4 +1,3 @@
-import { FaMoneyBills } from 'react-icons/fa6'
 import { PiWarehouseFill } from 'react-icons/pi'
 import { GetStock } from '~/app/_utils/get-stock'
 import type { ProductoAlmacenUnidadDerivada } from '~/app/_types/producto'
@@ -16,50 +15,31 @@ export default function ProductoOtrosAlmacenes({
   producto_almacen_unidad_derivada,
   almacen,
 }: ProductoOtrosAlmacenesProps) {
-  const precios = [
-    { key: 'precio_publico', name: 'Precio Público' },
-    { key: 'precio_especial', name: 'Precio Ferretería' },
-    { key: 'precio_minimo', name: 'Precio Especial' },
-    { key: 'precio_ultimo', name: 'Precio Final' },
-  ]
   return (
-    <div>
-      <div className='font-bold text-lg text-nowrap border-b text-center flex items-center justify-center gap-3'>
-        <PiWarehouseFill size={18} className='text-cyan-600' />
+    <div className='min-w-[170px]'>
+      <div className='font-bold text-sm text-nowrap border-b pb-1 mb-2 flex items-center justify-center gap-2'>
+        <PiWarehouseFill size={15} className='text-cyan-600' />
         {almacen}
       </div>
-      <div className='flex items-center justify-between gap-4'>
-        <div>Stock:</div>
-        <div className='font-bold text-nowrap'>
+      <div className='flex items-center justify-between gap-4 text-sm'>
+        <span className='text-slate-500'>Stock:</span>
+        <span className='font-bold text-nowrap'>
           <GetStock
             stock_fraccion={stock_fraccion}
             unidades_contenidas={unidades_contenidas}
           />
-        </div>
+        </span>
       </div>
-      <div className='font-bold text-nowrap flex items-center justify-center gap-2'>
-        <FaMoneyBills size={16} className='text-emerald-600' />
-        Precios ({producto_almacen_unidad_derivada.unidad_derivada.name})
+      <div className='flex items-center justify-between gap-4 text-sm mt-1'>
+        <span className='text-slate-500'>Precio Público:</span>
+        <span className='font-bold text-emerald-700 text-nowrap'>
+          S/.{' '}
+          {Number(producto_almacen_unidad_derivada.precio_publico ?? 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </span>
       </div>
-      {precios.map(precio => (
-        <div
-          className='flex items-center justify-between gap-4'
-          key={precio.key}
-        >
-          <div className=''>{precio.name}:</div>
-          <div className='font-bold text-nowrap'>
-            S/.{' '}
-            {Number(
-              producto_almacen_unidad_derivada[
-                precio.key as keyof ProductoAlmacenUnidadDerivada
-              ] ?? '0'
-            ).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </div>
-        </div>
-      ))}
     </div>
   )
 }

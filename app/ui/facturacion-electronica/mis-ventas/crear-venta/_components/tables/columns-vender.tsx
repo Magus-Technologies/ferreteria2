@@ -2,7 +2,7 @@
 
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import { Form, FormInstance, FormListFieldData, Tooltip } from 'antd'
+import { Form, FormInstance, FormListFieldData, Tooltip, Popover } from 'antd'
 import { useRef, useEffect } from 'react'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
@@ -14,6 +14,8 @@ import SelectTipoPrecioVenta from '../form/select-tipo-precio-venta'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import { MdPriceChange } from 'react-icons/md'
+import { PiWarehouseFill } from 'react-icons/pi'
+import { GetStock } from '~/app/_utils/get-stock'
 
 const TIPO_PRECIO_PAQUETE_OPTIONS = [
   { value: 'publico', label: 'Público' },
@@ -607,11 +609,42 @@ export function useColumnsVender({
         const unidad_derivada_factor = form.getFieldValue(['productos', value, 'unidad_derivada_factor'])
         const stock_fraccion = form.getFieldValue(['productos', value, 'stock_fraccion'])
         const tipo = form.getFieldValue(['productos', value, '_tipo'])
+        const unidad_derivada_id = form.getFieldValue(['productos', value, 'unidad_derivada_id'])
+        const otrosAlmacenes = form.getFieldValue(['productos', value, 'producto_en_almacenes']) as any[] | undefined
 
         const cantidadEnFraccion = Number(cantidad || 0) * Number(unidad_derivada_factor || 1)
         const stockDisponible = Number(stock_fraccion || 0)
         const stockEnUnidad = stockDisponible / Number(unidad_derivada_factor || 1)
         const stockInsuficiente = tipo !== 'servicio' && cantidadEnFraccion > stockDisponible
+
+        const almacenesContent = otrosAlmacenes && otrosAlmacenes.length > 0 ? (
+          <div className='flex flex-col gap-3 py-1 max-h-72 overflow-y-auto'>
+            {otrosAlmacenes.map((pa: any, i: number) => {
+              const ud = pa.unidades_derivadas?.find((u: any) => u.unidad_derivada_id === unidad_derivada_id)
+                ?? pa.unidades_derivadas?.[0]
+              return (
+                <div key={i} className='min-w-[170px]'>
+                  <div className='font-semibold text-sm flex items-center gap-1 border-b pb-1 mb-1'>
+                    <PiWarehouseFill size={13} className='text-cyan-600' />
+                    {pa.almacen?.name || '—'}
+                  </div>
+                  <div className='flex justify-between text-xs gap-3'>
+                    <span className='text-slate-500'>Stock:</span>
+                    <span className='font-bold'>
+                      <GetStock stock_fraccion={Number(pa.stock_fraccion ?? 0)} unidades_contenidas={Number(unidad_derivada_factor || 1)} />
+                    </span>
+                  </div>
+                  <div className='flex justify-between text-xs gap-3'>
+                    <span className='text-slate-500'>Precio Público:</span>
+                    <span className='font-bold text-emerald-700'>
+                      S/. {Number(ud?.precio_publico ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : null
 
         return (
           <div className='flex flex-col justify-center w-full py-2'>
@@ -633,6 +666,14 @@ export function useColumnsVender({
               <div className='text-red-600 text-[11px] mt-1 font-medium leading-tight'>
                 ⚠️ Stock: {stockEnUnidad.toFixed(2)}
               </div>
+            )}
+            {almacenesContent && (
+              <Popover content={almacenesContent} trigger='click' placement='right' title='Stock en sucursales'>
+                <div className='flex items-center gap-1 text-[10px] text-cyan-600 cursor-pointer mt-1 hover:text-cyan-800 w-fit'>
+                  <PiWarehouseFill size={11} />
+                  <span>Ver sucursales</span>
+                </div>
+              </Popover>
             )}
           </div>
         )
