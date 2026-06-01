@@ -6,6 +6,43 @@ import { formatFechaPeru } from "~/utils/fechas";
 import CellAccionesVentaDropdown from "./cell-acciones-venta-dropdown";
 import CellSeleccionarNota from "./cell-seleccionar-nota";
 
+export function calcularTotalesVentaConVales(data: any) {
+  const productos = data?.productos_por_almacen || [];
+  let totalLineas = 0;
+  let descuentoProductos = 0;
+
+  for (const producto of productos) {
+    for (const unidad of producto.unidades_derivadas || []) {
+      const cantidad = Number(unidad.cantidad || 0);
+      const precio = Number(unidad.precio || 0);
+      const recargo = Number(unidad.recargo || 0);
+      const descuento = Number(unidad.descuento || 0);
+      const subtotalConRecargo = precio * cantidad + recargo;
+      const montoDescuento =
+        unidad.descuento_tipo === "%"
+          ? (subtotalConRecargo * descuento) / 100
+          : descuento;
+
+      descuentoProductos += montoDescuento;
+      totalLineas += subtotalConRecargo - montoDescuento;
+    }
+  }
+
+  const vales = data?.vales_aplicados ?? data?.valesAplicados ?? [];
+  const descuentoVales = vales.reduce(
+    (sum: number, vale: any) => sum + Number(vale.descuento_aplicado || 0),
+    0
+  );
+  const total = Math.max(0, totalLineas - descuentoVales);
+
+  return {
+    total,
+    subtotal: total / 1.18,
+    igv: total - total / 1.18,
+    descuentoTotal: descuentoProductos + descuentoVales,
+  };
+}
+
 export function useColumnsMisVentas() {
   const columnDefs: ColDef<getVentaResponseProps>[] = [
     // Checkbox solo visible en filas con tipo_documento = 'nv' (Nota de Venta).
@@ -82,7 +119,8 @@ export function useColumnsMisVentas() {
       field: "productos_por_almacen",
       width: 120,
       valueGetter: (params) => {
-        const productos = params.data?.productos_por_almacen || [];
+        if (params.data) return calcularTotalesVentaConVales(params.data).subtotal;
+        const productos = (params.data as any)?.productos_por_almacen || [];
         const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
             (pSum: number, unidad: any) => {
@@ -121,7 +159,8 @@ export function useColumnsMisVentas() {
       field: "productos_por_almacen",
       width: 100,
       valueGetter: (params) => {
-        const productos = params.data?.productos_por_almacen || [];
+        if (params.data) return calcularTotalesVentaConVales(params.data).igv;
+        const productos = (params.data as any)?.productos_por_almacen || [];
         const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
             (pSum: number, unidad: any) => {
@@ -158,7 +197,8 @@ export function useColumnsMisVentas() {
       field: "productos_por_almacen",
       width: 120,
       valueGetter: (params) => {
-        const productos = params.data?.productos_por_almacen || [];
+        if (params.data) return calcularTotalesVentaConVales(params.data).total;
+        const productos = (params.data as any)?.productos_por_almacen || [];
         const total = productos.reduce((sum: number, producto: any) => {
           const productoTotal = producto.unidades_derivadas.reduce(
             (pSum: number, unidad: any) => {
@@ -202,6 +242,7 @@ export function useColumnsMisVentas() {
       field: "productos_por_almacen",
       width: 120,
       valueGetter: (params) => {
+        if (params.data) return calcularTotalesVentaConVales(params.data).descuentoTotal;
         const data = params.data as any;
         const productos = data?.productos_por_almacen || [];
 
