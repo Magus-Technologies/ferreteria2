@@ -363,6 +363,9 @@ export interface ValePendienteCliente {
     tipo_promocion: TipoPromocion;
     descuento_tipo: DescuentoTipo | null;
     descuento_valor: number | null;
+    descuento_alcance?: DescuentoAlcance | null;
+    descuento_producto_ids?: number[] | null;
+    descuento_categoria_ids?: number[] | null;
   } | null;
 }
 

@@ -218,6 +218,56 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
             form.setFieldValue('codigo_vale', valePendiente.codigo_vale_generado)
             codigoAutoAplicado.current = valePendiente.codigo_vale_generado
 
+            // Agregar el vale al store para que se vea en la tabla de venta y el
+            // preview calcule el descuento (scopeado por su destino). El backend lo
+            // canjea con el codigo_vale; esto es solo la vista previa.
+            const vc = valePendiente.vale_compra
+            if (vc) {
+              const actuales = useStoreProductoAgregadoVenta.getState().valesAplicables
+              if (!actuales.some(v => v.id === vc.id)) {
+                const valeParaStore = {
+                  id: vc.id,
+                  codigo: vc.codigo,
+                  nombre: vc.nombre,
+                  descripcion: null,
+                  tipo_promocion: vc.tipo_promocion,
+                  momento_aplicacion: 'PROXIMA_COMPRA',
+                  modalidad: 'CANTIDAD_MINIMA',
+                  cantidad_minima: 0,
+                  tipo_umbral: null,
+                  max_vales_por_venta: null,
+                  descuento_tipo: vc.descuento_tipo ?? null,
+                  descuento_valor: vc.descuento_valor ?? null,
+                  descuento_alcance: vc.descuento_alcance ?? null,
+                  descuento_producto_ids: vc.descuento_producto_ids ?? null,
+                  descuento_categoria_ids: vc.descuento_categoria_ids ?? null,
+                  producto_gratis_id: null,
+                  cantidad_producto_gratis: 0,
+                  fecha_inicio: '',
+                  fecha_fin: null,
+                  fecha_validez_vale: null,
+                  dias_validez_vale: null,
+                  usa_limite_por_cliente: false,
+                  limite_usos_cliente: null,
+                  usa_limite_stock: false,
+                  stock_disponible: null,
+                  aplica_precio_publico: true,
+                  aplica_precio_especial: true,
+                  aplica_precio_minimo: true,
+                  aplica_precio_ultimo: true,
+                  estado: 'ACTIVO',
+                  created_by: null,
+                  updated_by: null,
+                  created_at: '',
+                  updated_at: '',
+                  producto_gratis: null,
+                  categorias: [],
+                  productos: [],
+                } as unknown as ValeCompra
+                setValesAplicables([...actuales, valeParaStore])
+              }
+            }
+
             // Notificar solo una vez por vale
             if (valePendienteNotificado.current !== valePendiente.id) {
               valePendienteNotificado.current = valePendiente.id
