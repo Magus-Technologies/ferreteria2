@@ -4,7 +4,7 @@ import TableWithTitle, {
   TableWithTitleProps,
 } from '~/components/tables/table-with-title'
 import type { Paquete } from '~/lib/api/paquete'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { usePaquetes } from '~/hooks/use-paquetes'
 import { useDebounce } from 'use-debounce'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
@@ -27,25 +27,52 @@ interface TablePaquetesBusquedaProps
     data: Paquete | undefined
   }) => void
   onPaqueteSeleccionado?: (paquete: Paquete | undefined) => void
+  rowDataOverride?: Paquete[]
 }
 
 export default function TablePaquetesBusqueda({
   value,
   onRowDoubleClicked,
   onPaqueteSeleccionado,
+  rowDataOverride,
   ...props
 }: TablePaquetesBusquedaProps) {
   const [debouncedValue] = useDebounce(value, 500)
 
   // Siempre buscar, incluso con string vacío
-  const { data, isLoading } = usePaquetes({
-    search: debouncedValue || undefined, // undefined para que no filtre
-    activo: true,
-    per_page: 50,
-  })
+  const { data, isLoading } = usePaquetes(
+    { search: debouncedValue || undefined, activo: true, per_page: 50 },
+    { enabled: !rowDataOverride },
+  )
 
   const [openModalEditar, setOpenModalEditar] = useState(false)
   const [paqueteParaEditar, setPaqueteParaEditar] = useState<Paquete>()
+  const tableGridRef = useRef<any>(null)
+
+  const rowData = rowDataOverride ?? data?.data ?? []
+
+  useEffect(() => {
+    if (!rowData || rowData.length === 0) return
+    let cancelled = false
+    let attempts = 0
+    const trySelect = () => {
+      if (cancelled) return
+      const api = tableGridRef.current?.api
+      const firstNode = api?.getDisplayedRowAtIndex(0)
+      if (firstNode) {
+        const alreadySelected = (api?.getSelectedNodes()?.length ?? 0) > 0
+        if (!alreadySelected) {
+          firstNode.setSelected(true)
+          onPaqueteSeleccionado?.(firstNode.data as Paquete)
+        }
+        return
+      }
+      if (++attempts < 20) requestAnimationFrame(trySelect)
+    }
+    requestAnimationFrame(trySelect)
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowData.length])
 
   const columnDefs: ColDef<Paquete>[] = [
     {
@@ -130,12 +157,13 @@ export default function TablePaquetesBusqueda({
       
       <TableWithTitle<Paquete>
         {...props}
+        tableRef={tableGridRef}
         id='mis-ventas.paquetes'
         title='Paquetes'
-        selectionColor={orangeColors[10]} // Color naranja para facturación electrónica
-        loading={isLoading}
+        selectionColor={orangeColors[10]}
+        loading={!rowDataOverride && isLoading}
         columnDefs={columnDefs}
-        rowData={data?.data || []}
+        rowData={rowData}
         onSelectionChanged={({ selectedNodes }) => {
           const paquete = selectedNodes?.[0]?.data as Paquete
           onPaqueteSeleccionado?.(paquete)

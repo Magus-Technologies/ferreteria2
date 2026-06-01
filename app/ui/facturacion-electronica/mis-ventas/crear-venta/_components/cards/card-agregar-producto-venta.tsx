@@ -15,6 +15,8 @@ import { useStoreAlmacen } from '~/store/store-almacen'
 import { App, Badge, Button, Input, Modal, Radio } from 'antd'
 import type { InputRef } from 'antd'
 import type { TipoPrecio } from '~/lib/api/paquete'
+import ModalBuscarPaquete from '~/app/_components/modals/modal-buscar-paquete'
+import { useStorePaqueteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-paquete-seleccionado'
 import { FormCreateVenta } from '../others/body-vender'
 import { useStoreProductoAgregadoVenta } from '../../_store/store-producto-agregado-venta'
 import SelectDescuentoTipo from '~/app/_components/form/selects/select-descuento-tipo'
@@ -101,7 +103,7 @@ export default function CardAgregarProductoVenta({
   const [values, setValues] =
     useState<ValuesCardAgregarProductoVenta>(valuesDefault)
 
-  const [openModalPaquetes, setOpenModalPaquetes] = useState(false)
+  const [openModalBuscarPaquete, setOpenModalBuscarPaquete] = useState(false)
   const [openModalTipoPrecioPaquete, setOpenModalTipoPrecioPaquete] = useState(false)
   const [tipoPrecioPaquete, setTipoPrecioPaquete] = useState<TipoPrecio>('publico')
   const [paqueteParaAgregar, setPaqueteParaAgregar] = useState<any>(null)
@@ -109,6 +111,16 @@ export default function CardAgregarProductoVenta({
   const setProductoAgregadoVenta = useStoreProductoAgregadoVenta(
     (store) => store.setProductoAgregado
   )
+
+  const paqueteSeleccionadoStore = useStorePaqueteSeleccionado(s => s.paquete)
+
+  const handleSeleccionarPaquete = async () => {
+    if (!paqueteSeleccionadoStore) return
+    setOpenModalBuscarPaquete(false)
+    const response = await paqueteApi.getById(paqueteSeleccionadoStore.id)
+    setPaqueteParaAgregar(response.data?.data ?? paqueteSeleccionadoStore)
+    setOpenModalTipoPrecioPaquete(true)
+  }
 
   const tipo_moneda = useStoreProductoAgregadoVenta(
     (store) => store.tipo_moneda
@@ -442,7 +454,7 @@ export default function CardAgregarProductoVenta({
           <Button
             type="dashed"
             icon={<FaBoxOpen />}
-            onClick={() => setOpenModalPaquetes(true)}
+            onClick={() => setOpenModalBuscarPaquete(true)}
             className='w-full'
             style={{ overflow: 'hidden' }}
           >
@@ -453,51 +465,21 @@ export default function CardAgregarProductoVenta({
         </div>
       )}
 
-      {/* Modal para seleccionar paquete */}
-      <Modal
-        title={
-          <div className="flex items-center gap-2">
-            <FaBoxOpen className="text-cyan-600" />
-            <span>Paquetes disponibles</span>
-          </div>
-        }
-        open={openModalPaquetes}
-        onCancel={() => setOpenModalPaquetes(false)}
-        footer={null}
-        width={600}
-      >
-        <div className="space-y-2">
-          <p className="text-gray-600 mb-4">
-            Este producto está incluido en los siguientes paquetes. Selecciona uno para agregar todos sus productos a la venta:
-          </p>
-          {paquetes.map((paquete) => (
-            <div
-              key={paquete.id}
-              className="border border-gray-200 rounded-lg p-3 hover:border-cyan-400 hover:shadow-md transition-all cursor-pointer"
-              onClick={async () => {
-                const response = await paqueteApi.getById(paquete.id)
-                setPaqueteParaAgregar(response.data?.data ?? paquete)
-                setOpenModalTipoPrecioPaquete(true)
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-800">{paquete.nombre}</h4>
-                  {paquete.descripcion && (
-                    <p className="text-sm text-gray-500">{paquete.descripcion}</p>
-                  )}
-                </div>
-                <Badge
-                  count={paquete.productos_count || paquete.productos?.length || 0}
-                  showZero
-                  style={{ backgroundColor: '#52c41a' }}
-                  title="Cantidad de productos"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Modal>
+      {/* Modal completo de búsqueda de paquetes */}
+      <ModalBuscarPaquete
+        open={openModalBuscarPaquete}
+        setOpen={setOpenModalBuscarPaquete}
+        textDefault={''}
+        rowDataOverride={paquetes}
+        onOk={handleSeleccionarPaquete}
+        onRowDoubleClicked={async ({ data }) => {
+          if (!data) return
+          setOpenModalBuscarPaquete(false)
+          const response = await paqueteApi.getById(data.id)
+          setPaqueteParaAgregar(response.data?.data ?? data)
+          setOpenModalTipoPrecioPaquete(true)
+        }}
+      />
 
       <Modal
         open={openModalTipoPrecioPaquete}
@@ -617,7 +599,7 @@ export default function CardAgregarProductoVenta({
           })
 
           setOpenModalTipoPrecioPaquete(false)
-          setOpenModalPaquetes(false)
+          setOpenModalBuscarPaquete(false)
           setOpen(false)
         }}
         width={350}

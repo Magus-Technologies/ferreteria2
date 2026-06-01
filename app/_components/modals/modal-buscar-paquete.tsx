@@ -94,6 +94,7 @@ type ModalBuscarPaqueteProps = {
   }: {
     data: Paquete | undefined
   }) => void
+  rowDataOverride?: Paquete[]
 }
 
 export default function ModalBuscarPaquete({
@@ -102,6 +103,7 @@ export default function ModalBuscarPaquete({
   onOk,
   textDefault,
   onRowDoubleClicked,
+  rowDataOverride,
 }: ModalBuscarPaqueteProps) {
   const [text, setText] = useState(textDefault)
   const [paqueteDetalle, setPaqueteDetalle] = useState<Paquete | undefined>(undefined)
@@ -160,6 +162,7 @@ export default function ModalBuscarPaquete({
           <TablePaquetesBusqueda
             value={value}
             onRowDoubleClicked={onRowDoubleClicked}
+            rowDataOverride={rowDataOverride}
             onPaqueteSeleccionado={(paquete) => {
               setPaqueteSeleccionadoStore(paquete)
               setPaqueteDetalle(paquete)

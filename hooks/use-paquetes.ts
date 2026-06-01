@@ -22,7 +22,7 @@ import { message } from 'antd';
  * const { data, isLoading } = usePaquetes({ search: 'kit', activo: true });
  * ```
  */
-export function usePaquetes(filters?: PaqueteFilters) {
+export function usePaquetes(filters?: PaqueteFilters, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [QueryKeys.PAQUETES, 'list', filters],
     queryFn: async () => {
@@ -32,6 +32,7 @@ export function usePaquetes(filters?: PaqueteFilters) {
       }
       return response.data;
     },
+    enabled: options?.enabled ?? true,
   });
 }
 
