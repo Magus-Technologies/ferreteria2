@@ -59,6 +59,20 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     return productosReales.reduce((sum, p) => sum + Number(p?.cantidad ?? 0), 0)
   }, [productosReales])
 
+  // Detalle por línea: deja que el backend mida el umbral SOLO sobre los productos/
+  // categoría del vale. Sin esto, comprar 5 cables + 5 de otra cosa activaría un vale
+  // "10 de categoría CABLE" (la suma daría 10, pero solo 5 son del scope).
+  const detalles = useMemo(() => {
+    return productosReales
+      .filter((p) => p?.producto_id)
+      .map((p) => ({
+        producto_id: Number(p.producto_id),
+        categoria_id: p?.categoria_id != null ? Number(p.categoria_id) : null,
+        cantidad: Number(p?.cantidad ?? 0),
+        precio_total: Number(p?.cantidad ?? 0) * Number(p?.precio_venta ?? 0),
+      }))
+  }, [productosReales])
+
   const getBeneficio = useCallback((vale: ValeCompra) => {
     if (vale.descuento_tipo === 'PORCENTAJE' && vale.descuento_valor) {
       return `${vale.descuento_valor}% DSCTO`
@@ -82,6 +96,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
         cantidad_total: cantidadTotal,
         producto_ids: productoIds,
         cliente_id: clienteId || undefined,
+        detalles,
       })
       // Guard anti-carrera: si el carrito se vació (o quedó sin productos reales)
       // MIENTRAS la consulta estaba en vuelo, no aplicar ni notificar. Evita que el
@@ -131,7 +146,7 @@ export default function InputCodigoVale({ form }: { form: FormInstance }) {
     } catch {
       // Silencioso
     }
-  }, [productoIds, precioTotal, cantidadTotal, clienteId, getBeneficio, notification, setValesAplicables])
+  }, [productoIds, precioTotal, cantidadTotal, detalles, clienteId, getBeneficio, notification, setValesAplicables])
 
   useEffect(() => {
     const timer = setTimeout(consultarVales, 500)

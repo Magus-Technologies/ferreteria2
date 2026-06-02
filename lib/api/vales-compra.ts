@@ -183,6 +183,14 @@ export interface ValesAplicablesRequest {
   categoria_ids?: number[];
   producto_ids?: number[];
   cliente_id?: number;
+  // Detalle por línea: permite que el backend mida el umbral solo sobre los
+  // productos/categoría del vale (POR_PRODUCTOS / POR_CATEGORIA / MIXTO).
+  detalles?: Array<{
+    producto_id?: number | null;
+    categoria_id?: number | null;
+    cantidad?: number;
+    precio_total?: number;
+  }>;
 }
 
 export interface CambiarEstadoRequest {
@@ -444,6 +452,12 @@ export async function verificarCodigoVale(
     producto_ids?: number[];
     cliente_id?: number;
     tipos_precio?: string[];
+    detalles?: Array<{
+      producto_id?: number | null;
+      categoria_id?: number | null;
+      cantidad?: number;
+      precio_total?: number;
+    }>;
   }
 ): Promise<ApiResponse<{ valido: boolean; data?: ValeCompraVerificado; message: string }>> {
   return apiRequest<{ valido: boolean; data?: ValeCompraVerificado; message: string }>(

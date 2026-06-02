@@ -113,16 +113,13 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
   const esCantidad = tipoUmbral === 'CANTIDAD';
   const esNinguno = tipoUmbral === 'NINGUNO';
 
-  // En 2x1 de MISMA compra (la prop `esDosPorUno` ya viene filtrada a ese caso) el
-  // umbral queda FIJADO en "Ninguno": las unidades del 2x1 se definen en el PASO 4,
-  // no aquí. Mostramos las 3 tarjetas pero solo "Ninguno" queda activa.
-  const esDosPorUnoMisma = !!esDosPorUno;
-
+  // En 2x1 (misma compra) se deja "Ninguno" como valor por DEFECTO, solo si aún no se
+  // eligió nada. No se fuerza ni se bloquea: las 3 tarjetas siguen normales y clicables.
   useEffect(() => {
-    if (esDosPorUnoMisma && tipoUmbral !== 'NINGUNO') {
+    if (esDosPorUno && !tipoUmbral) {
       setTipoUmbral('NINGUNO');
     }
-  }, [esDosPorUnoMisma, tipoUmbral, setTipoUmbral]);
+  }, [esDosPorUno, tipoUmbral, setTipoUmbral]);
 
   return (
     <div className="border-l-4 border-blue-500 pl-3">
@@ -139,16 +136,13 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div
-            onClick={() => { if (!esDosPorUnoMisma) setTipoUmbral('MONTO'); }}
-            aria-disabled={esDosPorUnoMisma}
-            className={`rounded-lg border-2 p-4 transition-all ${
-              esDosPorUnoMisma
-                ? 'border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed'
-                : esMonto ? 'border-blue-500 bg-blue-100 cursor-pointer' : 'border-gray-200 bg-white hover:border-blue-300 cursor-pointer'
+            onClick={() => setTipoUmbral('MONTO')}
+            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+              esMonto ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
             }`}
           >
             <div className="flex items-center gap-2">
-              <FaDollarSign className={`text-xl ${esMonto && !esDosPorUnoMisma ? 'text-blue-600' : 'text-gray-400'}`} />
+              <FaDollarSign className={`text-xl ${esMonto ? 'text-blue-600' : 'text-gray-400'}`} />
               <div>
                 <div className="font-semibold">Monto Mínimo (S/)</div>
                 <div className="text-xs text-gray-500">La venta debe superar un monto en soles</div>
@@ -157,16 +151,13 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
           </div>
 
           <div
-            onClick={() => { if (!esDosPorUnoMisma) setTipoUmbral('CANTIDAD'); }}
-            aria-disabled={esDosPorUnoMisma}
-            className={`rounded-lg border-2 p-4 transition-all ${
-              esDosPorUnoMisma
-                ? 'border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed'
-                : esCantidad ? 'border-blue-500 bg-blue-100 cursor-pointer' : 'border-gray-200 bg-white hover:border-blue-300 cursor-pointer'
+            onClick={() => setTipoUmbral('CANTIDAD')}
+            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+              esCantidad ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
             }`}
           >
             <div className="flex items-center gap-2">
-              <FaHashtag className={`text-xl ${esCantidad && !esDosPorUnoMisma ? 'text-blue-600' : 'text-gray-400'}`} />
+              <FaHashtag className={`text-xl ${esCantidad ? 'text-blue-600' : 'text-gray-400'}`} />
               <div>
                 <div className="font-semibold">Cantidad Mínima (und.)</div>
                 <div className="text-xs text-gray-500">La venta debe incluir una cantidad de productos</div>
@@ -190,7 +181,7 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
           </div>
         </div>
 
-        {esMonto && !esDosPorUnoMisma && (
+        {esMonto && (
           <Form.Item
             name="cantidad_minima"
             label="Monto Mínimo (S/)"
@@ -210,7 +201,7 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
           </Form.Item>
         )}
 
-        {esCantidad && !esDosPorUnoMisma && (
+        {esCantidad && (
           <Form.Item
             name="cantidad_minima"
             label="Cantidad Mínima (und.)"
@@ -232,13 +223,11 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
 
         {esNinguno && (
           <p className="text-xs text-gray-600">
-            {esDosPorUnoMisma
-              ? 'El 2x1 no usa umbral de activación: las unidades que debe comprar se definen en el Paso 4.'
-              : 'Sin compra mínima: la promoción se activa siempre que se cumpla la condición del Paso 3.'}
+            Sin compra mínima: la promoción se activa siempre que se cumpla la condición del Paso 3.
           </p>
         )}
 
-        {!tipoUmbral && !esDosPorUnoMisma && (
+        {!tipoUmbral && (
           <p className="text-xs text-amber-600">Selecciona una opción para definir el valor</p>
         )}
 
@@ -820,8 +809,8 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const setTipoUmbral = (t: TipoUmbral | null) => form.setFieldValue("tipo_umbral", t);
 
   // El PASO 2 siempre se muestra. En 2x1 de MISMA compra el umbral queda fijado en
-  // "Ninguno" (las unidades van en el PASO 4); en PRÓXIMA compra es la CONDICIÓN para
-  // ganar el vale y se elige libremente.
+  // "Ninguno" automáticamente (las unidades van en el PASO 4), sin pedir ni validar
+  // nada; en PRÓXIMA compra es la CONDICIÓN para ganar el vale y se elige libremente.
   const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
   const esFuturo = momento === "PROXIMA_COMPRA";
   const esDescuento = tipoPromocion === "DESCUENTO_MISMA_COMPRA" || tipoPromocion === "DESCUENTO_PROXIMA_COMPRA";
