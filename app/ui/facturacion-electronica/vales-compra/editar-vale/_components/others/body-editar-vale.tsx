@@ -57,6 +57,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       descuento_categoria_ids: vale.descuento_categoria_ids || undefined,
       producto_gratis_id: vale.producto_gratis_id || undefined,
       cantidad_producto_gratis: vale.cantidad_producto_gratis || 1,
+      dos_por_uno_cantidad_compra: vale.dos_por_uno_cantidad_compra || undefined,
       fecha_inicio: vale.fecha_inicio ? dayjs(vale.fecha_inicio) : dayjs(),
       fecha_fin: vale.fecha_fin ? dayjs(vale.fecha_fin) : undefined,
       fecha_validez_vale: vale.fecha_validez_vale ? dayjs(vale.fecha_validez_vale) : undefined,

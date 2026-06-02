@@ -230,7 +230,8 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         // Escalar: por cada `cantidad_minima` compradas, `cantidad_producto_gratis` gratis.
         // Ej.: 2x1 (mínimo 2, 1 gratis), compra 10 → grupos = floor(10/2)=5 → 5 gratis.
         const cantidadComprada = lineasCoincidentes.reduce((s, p) => s + Number(p?.cantidad ?? 0), 0);
-        const tamGrupo = Number(v.cantidad_minima ?? 1) || 1;
+        // Tamaño del grupo: campo propio del 2x1 (próxima compra) o cantidad_minima (legacy/misma).
+        const tamGrupo = Number((v as any).dos_por_uno_cantidad_compra ?? v.cantidad_minima ?? 1) || 1;
         const gratisPorGrupo = Number(v.cantidad_producto_gratis ?? 1) || 1;
         // Respetar el límite de aplicaciones por venta (espeja ValeCompraService::calcularDescuentoBeneficio).
         // Ej.: max_vales_por_venta=2 con 2x1 y 10 unidades → solo 2 grupos → 2 gratis.

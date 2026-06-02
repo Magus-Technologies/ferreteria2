@@ -61,6 +61,7 @@ export interface ValeCompra {
   descuento_categoria_ids: number[] | null;
   producto_gratis_id: number | null;
   cantidad_producto_gratis: number;
+  dos_por_uno_cantidad_compra: number | null;
   fecha_inicio: string;
   fecha_fin: string | null;
   fecha_validez_vale: string | null;
@@ -151,6 +152,7 @@ export interface CreateValeCompraRequest {
   descuento_categoria_ids?: number[] | null;
   producto_gratis_id?: number | null;
   cantidad_producto_gratis?: number;
+  dos_por_uno_cantidad_compra?: number | null;
   fecha_inicio: string;
   fecha_fin?: string | null;
   fecha_validez_vale?: string | null;

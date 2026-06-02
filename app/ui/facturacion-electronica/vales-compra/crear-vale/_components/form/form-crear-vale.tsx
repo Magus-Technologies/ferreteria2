@@ -471,9 +471,11 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Form.Item
-                name="cantidad_minima"
+                // En próxima compra el 2x1 es la RECOMPENSA, así que sus unidades van en
+                // un campo aparte; cantidad_minima queda para la condición del PASO 2.
+                name={momento === "PROXIMA_COMPRA" ? "dos_por_uno_cantidad_compra" : "cantidad_minima"}
                 label="Unidades que debe comprar"
-                tooltip="Cantidad de unidades que el cliente debe comprar"
+                tooltip="Cantidad de unidades que el cliente debe comprar para el 2x1"
                 rules={[{ required: true, message: "Requerido" }]}
               >
                 <InputNumber
@@ -569,7 +571,7 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
         <div className="text-xs text-purple-800 mb-3 bg-purple-50 border border-purple-200 rounded-lg p-2 leading-relaxed">
           Para vales de próxima compra hay <b>dos tiempos distintos</b>:
           <br />① <b>Vigencia de la promoción</b>: período en que las compras generan códigos.
-          <br />② <b>Duración del código</b>: cuántos días vale cada código que el cliente se gana.
+          <br />② <b>Fecha límite del código</b>: hasta qué fecha el cliente puede canjear el código que se ganó.
         </div>
       )}
 
@@ -603,25 +605,37 @@ function SeccionVigencia({ form }: SeccionVigenciaProps) {
         </Form.Item>
       </div>
 
-      {/* ② Duración del código entregado al cliente (solo próxima compra) */}
+      {/* ② Fecha límite del código entregado al cliente (solo próxima compra) */}
       {esFuturo && (
         <Form.Item
-          name="dias_validez_vale"
-          label="② Duración del código entregado al cliente (días)"
-          tooltip="Cuántos días vale cada código desde que el cliente lo gana (se cuenta desde la fecha de su compra)."
+          name="fecha_validez_vale"
+          label="② Fecha límite del código entregado al cliente"
+          tooltip="Hasta qué fecha el cliente puede canjear el código. Debe ser posterior a la vigencia de la promoción (①)."
           rules={[
-            { required: true, message: "Indica los días de validez del código" },
-            { type: "number", min: 1, message: "Debe ser al menos 1 día" },
+            { required: true, message: "Indica la fecha límite del código" },
+            {
+              validator: (_, value) => {
+                if (!value) return Promise.resolve();
+                const limite = form.getFieldValue("fecha_fin") || form.getFieldValue("fecha_inicio");
+                if (limite && !dayjs(value).isAfter(dayjs(limite).startOf("day"))) {
+                  return Promise.reject(new Error("Debe ser posterior a la Vigencia — hasta (①)"));
+                }
+                return Promise.resolve();
+              },
+            },
           ]}
           className="mt-3 !mb-0"
         >
-          <InputNumber
+          <DatePicker
             className="w-full"
-            placeholder="Ej: 30 (el código vale 30 días)"
-            min={1}
-            step={1}
-            precision={0}
-            prefix={<FaClock className="text-purple-600" />}
+            format="DD/MM/YYYY"
+            placeholder="Fecha de caducidad del código"
+            disabledDate={(current) => {
+              // Solo se puede escoger DESPUÉS de la vigencia (① hasta, o inicio si no hay fin).
+              const limite = form.getFieldValue("fecha_fin") || form.getFieldValue("fecha_inicio");
+              if (!limite) return false;
+              return current && !current.isAfter(dayjs(limite).startOf("day"));
+            }}
           />
         </Form.Item>
       )}
@@ -764,8 +778,10 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const tipoUmbral = (Form.useWatch("tipo_umbral", form) as TipoUmbral | undefined) ?? null;
   const setTipoUmbral = (t: TipoUmbral | null) => form.setFieldValue("tipo_umbral", t);
 
-  // Para 2x1 se oculta el PASO 2 y toda la config está en PASO 4
+  // Para 2x1 de MISMA compra se oculta el PASO 2 (la config está en PASO 4).
+  // Pero en PRÓXIMA compra el PASO 2 es la CONDICIÓN para ganar el vale → siempre se muestra.
   const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
+  const esFuturo = momento === "PROXIMA_COMPRA";
 
   return (
     <div className="space-y-4">
@@ -773,7 +789,7 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
         <input type="hidden" />
       </Form.Item>
       <SeccionBasica form={form} />
-      {!esDosPorUno && <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno} />}
+      {(!esDosPorUno || esFuturo) && <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno && !esFuturo} />}
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
       <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} />
       <SeccionVigencia form={form} />
