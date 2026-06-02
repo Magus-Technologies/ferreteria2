@@ -101,6 +101,13 @@ export default function BodyCrearVale() {
         } as typeof payload
       }
 
+      // "Ninguno" = sin umbral de activación → cantidad_minima 0 (el backend acepta min:0).
+      // Excepción: en 2x1 de MISMA compra, cantidad_minima guarda las unidades del 2x1
+      // (definidas en el PASO 4), aunque el umbral quede fijado en "Ninguno".
+      const esDosPorUnoMisma = values.tipo_promocion === 'DOS_POR_UNO' && values.momento_aplicacion === 'MISMA_COMPRA'
+      if (values.tipo_umbral === 'NINGUNO' && !esDosPorUnoMisma) {
+        payload = { ...payload, cantidad_minima: 0 } as typeof payload
+      }
 
       console.log('📦 Payload a enviar:', payload)
 

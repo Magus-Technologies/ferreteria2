@@ -39,7 +39,7 @@ export type DescuentoTipo = 'PORCENTAJE' | 'MONTO_FIJO';
 // Destino del descuento (recompensa): a qué cae el % o S/.
 export type DescuentoAlcance = 'VENTA' | 'PRODUCTOS' | 'CATEGORIAS';
 
-export type TipoUmbral = 'MONTO' | 'CANTIDAD';
+export type TipoUmbral = 'MONTO' | 'CANTIDAD' | 'NINGUNO';
 
 export type EstadoVale = 'ACTIVO' | 'PAUSADO' | 'FINALIZADO';
 

@@ -98,7 +98,7 @@ function SeccionBasica({ form }: SeccionBasicaProps) {
   );
 }
 
-type TipoUmbral = 'MONTO' | 'CANTIDAD';
+type TipoUmbral = 'MONTO' | 'CANTIDAD' | 'NINGUNO';
 
 interface SeccionUmbralProps {
   form: FormInstance<FormCreateVale>;
@@ -111,9 +111,18 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
 
   const esMonto = tipoUmbral === 'MONTO';
   const esCantidad = tipoUmbral === 'CANTIDAD';
+  const esNinguno = tipoUmbral === 'NINGUNO';
 
-  // Para 2x1 solo tiene sentido el umbral por cantidad (unidades)
-  const mostrarSoloCantidad = esDosPorUno;
+  // En 2x1 de MISMA compra (la prop `esDosPorUno` ya viene filtrada a ese caso) el
+  // umbral queda FIJADO en "Ninguno": las unidades del 2x1 se definen en el PASO 4,
+  // no aquí. Mostramos las 3 tarjetas pero solo "Ninguno" queda activa.
+  const esDosPorUnoMisma = !!esDosPorUno;
+
+  useEffect(() => {
+    if (esDosPorUnoMisma && tipoUmbral !== 'NINGUNO') {
+      setTipoUmbral('NINGUNO');
+    }
+  }, [esDosPorUnoMisma, tipoUmbral, setTipoUmbral]);
 
   return (
     <div className="border-l-4 border-blue-500 pl-3">
@@ -126,105 +135,111 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
         </div>
         <div className="text-xs text-gray-600 mb-3">
           Define la compra mínima que el cliente debe alcanzar para activar la promoción.
-          {esDosPorUno && <strong> Para 2x1, ingresa las unidades que debe comprar.</strong>}
         </div>
 
-        {mostrarSoloCantidad ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div
+            onClick={() => { if (!esDosPorUnoMisma) setTipoUmbral('MONTO'); }}
+            aria-disabled={esDosPorUnoMisma}
+            className={`rounded-lg border-2 p-4 transition-all ${
+              esDosPorUnoMisma
+                ? 'border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed'
+                : esMonto ? 'border-blue-500 bg-blue-100 cursor-pointer' : 'border-gray-200 bg-white hover:border-blue-300 cursor-pointer'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FaDollarSign className={`text-xl ${esMonto && !esDosPorUnoMisma ? 'text-blue-600' : 'text-gray-400'}`} />
+              <div>
+                <div className="font-semibold">Monto Mínimo (S/)</div>
+                <div className="text-xs text-gray-500">La venta debe superar un monto en soles</div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => { if (!esDosPorUnoMisma) setTipoUmbral('CANTIDAD'); }}
+            aria-disabled={esDosPorUnoMisma}
+            className={`rounded-lg border-2 p-4 transition-all ${
+              esDosPorUnoMisma
+                ? 'border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed'
+                : esCantidad ? 'border-blue-500 bg-blue-100 cursor-pointer' : 'border-gray-200 bg-white hover:border-blue-300 cursor-pointer'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FaHashtag className={`text-xl ${esCantidad && !esDosPorUnoMisma ? 'text-blue-600' : 'text-gray-400'}`} />
+              <div>
+                <div className="font-semibold">Cantidad Mínima (und.)</div>
+                <div className="text-xs text-gray-500">La venta debe incluir una cantidad de productos</div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setTipoUmbral('NINGUNO')}
+            className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+              esNinguno ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FaFilter className={`text-xl ${esNinguno ? 'text-blue-600' : 'text-gray-400'}`} />
+              <div>
+                <div className="font-semibold">Ninguno</div>
+                <div className="text-xs text-gray-500">Sin compra mínima: se activa siempre</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {esMonto && !esDosPorUnoMisma && (
           <Form.Item
             name="cantidad_minima"
-            label="Unidades que debe comprar"
+            label="Monto Mínimo (S/)"
             rules={[
-              { required: true, message: "La cantidad es requerida" },
+              { required: true, message: "El monto mínimo es requerido" },
+              { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
+            ]}
+          >
+            <InputNumber
+              className="w-full"
+              placeholder="Ej: 100.00"
+              min={0.01}
+              step={0.01}
+              precision={2}
+              prefix={<FaDollarSign className="text-blue-600" />}
+            />
+          </Form.Item>
+        )}
+
+        {esCantidad && !esDosPorUnoMisma && (
+          <Form.Item
+            name="cantidad_minima"
+            label="Cantidad Mínima (und.)"
+            rules={[
+              { required: true, message: "La cantidad mínima es requerida" },
               { type: "number", min: 1, message: "Debe ser al menos 1" },
             ]}
           >
             <InputNumber
               className="w-full"
-              placeholder="Ej: 2"
+              placeholder="Ej: 10"
               min={1}
               step={1}
               precision={0}
               prefix={<FaHashtag className="text-blue-600" />}
             />
           </Form.Item>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              <div
-                onClick={() => setTipoUmbral('MONTO')}
-                className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                  esMonto ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <FaDollarSign className={`text-xl ${esMonto ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <div>
-                    <div className="font-semibold">Monto Mínimo (S/)</div>
-                    <div className="text-xs text-gray-500">La venta debe superar un monto en soles</div>
-                  </div>
-                </div>
-              </div>
+        )}
 
-              <div
-                onClick={() => setTipoUmbral('CANTIDAD')}
-                className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                  esCantidad ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:border-blue-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <FaHashtag className={`text-xl ${esCantidad ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <div>
-                    <div className="font-semibold">Cantidad Mínima (und.)</div>
-                    <div className="text-xs text-gray-500">La venta debe incluir una cantidad de productos</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {esNinguno && (
+          <p className="text-xs text-gray-600">
+            {esDosPorUnoMisma
+              ? 'El 2x1 no usa umbral de activación: las unidades que debe comprar se definen en el Paso 4.'
+              : 'Sin compra mínima: la promoción se activa siempre que se cumpla la condición del Paso 3.'}
+          </p>
+        )}
 
-            {esMonto && (
-              <Form.Item
-                name="cantidad_minima"
-                label="Monto Mínimo (S/)"
-                rules={[
-                  { required: true, message: "El monto mínimo es requerido" },
-                  { type: "number", min: 0.01, message: "Debe ser mayor a 0" },
-                ]}
-              >
-                <InputNumber
-                  className="w-full"
-                  placeholder="Ej: 100.00"
-                  min={0.01}
-                  step={0.01}
-                  precision={2}
-                  prefix={<FaDollarSign className="text-blue-600" />}
-                />
-              </Form.Item>
-            )}
-
-            {esCantidad && !mostrarSoloCantidad && (
-              <Form.Item
-                name="cantidad_minima"
-                label="Cantidad Mínima (und.)"
-                rules={[
-                  { required: true, message: "La cantidad mínima es requerida" },
-                  { type: "number", min: 1, message: "Debe ser al menos 1" },
-                ]}
-              >
-                <InputNumber
-                  className="w-full"
-                  placeholder="Ej: 10"
-                  min={1}
-                  step={1}
-                  precision={0}
-                  prefix={<FaHashtag className="text-blue-600" />}
-                />
-              </Form.Item>
-            )}
-
-            {!tipoUmbral && !mostrarSoloCantidad && (
-              <p className="text-xs text-amber-600">Selecciona una opción para definir el valor</p>
-            )}
-          </>
+        {!tipoUmbral && !esDosPorUnoMisma && (
+          <p className="text-xs text-amber-600">Selecciona una opción para definir el valor</p>
         )}
 
         {momento === "PROXIMA_COMPRA" && (
@@ -804,8 +819,9 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   const tipoUmbral = (Form.useWatch("tipo_umbral", form) as TipoUmbral | undefined) ?? null;
   const setTipoUmbral = (t: TipoUmbral | null) => form.setFieldValue("tipo_umbral", t);
 
-  // Para 2x1 de MISMA compra se oculta el PASO 2 (la config está en PASO 4).
-  // Pero en PRÓXIMA compra el PASO 2 es la CONDICIÓN para ganar el vale → siempre se muestra.
+  // El PASO 2 siempre se muestra. En 2x1 de MISMA compra el umbral queda fijado en
+  // "Ninguno" (las unidades van en el PASO 4); en PRÓXIMA compra es la CONDICIÓN para
+  // ganar el vale y se elige libremente.
   const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
   const esFuturo = momento === "PROXIMA_COMPRA";
   const esDescuento = tipoPromocion === "DESCUENTO_MISMA_COMPRA" || tipoPromocion === "DESCUENTO_PROXIMA_COMPRA";
@@ -838,7 +854,7 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
         <input type="hidden" />
       </Form.Item>
       <SeccionBasica form={form} />
-      {(!esDosPorUno || esFuturo) && <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno && !esFuturo} />}
+      <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno && !esFuturo} />
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
       <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} />
       <SeccionVigencia form={form} />
