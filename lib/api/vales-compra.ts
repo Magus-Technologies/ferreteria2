@@ -323,6 +323,22 @@ export async function getPreciosProductos(
 }
 
 /**
+ * Obtener el stock total (todos los almacenes) de productos por id.
+ * Solo informativo para el form de vales: muestra el stock del producto a regalar.
+ */
+export async function getStockProductos(
+  producto_ids: number[]
+): Promise<ApiResponse<{ data: Record<number, number> }>> {
+  return apiRequest<{ data: Record<number, number> }>(
+    '/vales-compra/stock-productos',
+    {
+      method: 'POST',
+      data: { producto_ids },
+    }
+  );
+}
+
+/**
  * Obtener historial de aplicaciones de un vale
  */
 export async function getHistorialAplicaciones(

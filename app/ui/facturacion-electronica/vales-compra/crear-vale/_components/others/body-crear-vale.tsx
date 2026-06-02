@@ -63,7 +63,7 @@ export default function BodyCrearVale() {
         descuento_categoria_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_categoria_ids) : null,
       }
 
-      // Para SORTEO: limpiar descuentos
+      // Limpieza de campos según tipo de promoción
       if (values.tipo_promocion === 'SORTEO') {
         payload = {
           ...payload,
@@ -72,10 +72,35 @@ export default function BodyCrearVale() {
           // Si no incluye producto, limpiar producto_gratis
           ...(!(values as any).sorteo_incluye_producto && {
             producto_gratis_id: null,
-            cantidad_producto_gratis: null,
+            cantidad_producto_gratis: undefined,
+          }),
+        } as typeof payload
+      } else if (values.tipo_promocion === 'DESCUENTO_MISMA_COMPRA' || values.tipo_promocion === 'DESCUENTO_PROXIMA_COMPRA') {
+        payload = {
+          ...payload,
+          producto_gratis_id: null,
+          cantidad_producto_gratis: undefined,
+          dos_por_uno_cantidad_compra: null,
+        } as typeof payload
+      } else if (values.tipo_promocion === 'PRODUCTO_GRATIS') {
+        payload = {
+          ...payload,
+          descuento_tipo: null,
+          descuento_valor: null,
+          dos_por_uno_cantidad_compra: null,
+        } as typeof payload
+      } else if (values.tipo_promocion === 'DOS_POR_UNO') {
+        payload = {
+          ...payload,
+          descuento_tipo: null,
+          descuento_valor: null,
+          // Si es MISMA COMPRA, limpiar producto_gratis_id para que no interfiera
+          ...(values.momento_aplicacion === 'MISMA_COMPRA' && {
+            producto_gratis_id: null,
           }),
         } as typeof payload
       }
+
 
       console.log('📦 Payload a enviar:', payload)
 

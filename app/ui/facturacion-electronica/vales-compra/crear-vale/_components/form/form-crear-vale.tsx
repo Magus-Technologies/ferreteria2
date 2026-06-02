@@ -2,6 +2,8 @@
 
 import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Radio } from "antd";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getStockProductos } from "~/lib/api/vales-compra";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import {
   FaGift,
@@ -13,6 +15,7 @@ import {
   FaClock,
   FaFilter,
   FaTrophy,
+  FaBoxOpen,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
@@ -503,6 +506,17 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                 />
               </Form.Item>
             </div>
+            {momento === "PROXIMA_COMPRA" && (
+              <div className="mt-4">
+                <Form.Item
+                  name="producto_gratis_id"
+                  label="Producto para el 2x1 (en la próxima compra)"
+                  rules={[{ required: true, message: "Seleccione el producto al que aplicará el 2x1" }]}
+                >
+                  <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly />
+                </Form.Item>
+              </div>
+            )}
             <p className="text-xs text-indigo-600 mt-2">
               <strong>Ejemplos:</strong> Compra 2, 1 gratis → paga 1 (2x1). Compra 4, 1 gratis → paga 3. Compra 3, 2 gratis → paga 1 (3x1).
             </p>
@@ -647,9 +661,11 @@ interface SeccionRestriccionesProps {
   usaLimiteCliente: boolean;
   usaLimiteStock: boolean;
   usaLimiteVenta: boolean;
+  esDescuento: boolean;
+  stockProductoGratis: number | null;
 }
 
-function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta }: SeccionRestriccionesProps) {
+function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta, esDescuento, stockProductoGratis }: SeccionRestriccionesProps) {
   return (
     <div className="border-l-4 border-orange-500 pl-3">
       <div className="flex items-center gap-2 mb-3">
@@ -685,17 +701,20 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
         </div>
 
         {/* Límite de vales distintos por venta */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className={`bg-gray-50 rounded-lg p-4 ${esDescuento ? "opacity-60" : ""}`}>
           <div className="flex items-center justify-between mb-2">
             <div>
               <label className="text-sm font-medium text-gray-700 block">Limitar vales por venta</label>
               <p className="text-xs text-gray-500 mt-0.5">Máximo de promociones distintas que pueden aplicarse en una misma venta. Si califica para más, solo se aplican las primeras N.</p>
+              {esDescuento && (
+                <p className="text-xs text-orange-600 mt-1">No aplica para promociones de Descuento.</p>
+              )}
             </div>
             <Form.Item name="usa_limite_por_venta" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch disabled={esDescuento} />
             </Form.Item>
           </div>
-          {usaLimiteVenta && (
+          {usaLimiteVenta && !esDescuento && (
             <Form.Item
               name="max_vales_por_venta"
               label="Máximo de promociones por venta"
@@ -719,6 +738,13 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
               <Switch />
             </Form.Item>
           </div>
+          {stockProductoGratis !== null && (
+            <p className="text-xs text-blue-600 mb-2 flex items-center gap-1">
+              <FaBoxOpen className="text-blue-500" />
+              Stock actual del producto a regalar: <strong>{stockProductoGratis}</strong>
+              <span className="text-gray-400">(solo informativo)</span>
+            </p>
+          )}
           {usaLimiteStock && (
             <Form.Item
               name="stock_disponible"
@@ -782,6 +808,29 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
   // Pero en PRÓXIMA compra el PASO 2 es la CONDICIÓN para ganar el vale → siempre se muestra.
   const esDosPorUno = tipoPromocion === "DOS_POR_UNO";
   const esFuturo = momento === "PROXIMA_COMPRA";
+  const esDescuento = tipoPromocion === "DESCUENTO_MISMA_COMPRA" || tipoPromocion === "DESCUENTO_PROXIMA_COMPRA";
+
+  // El límite de vales por venta no aplica a promociones de Descuento: si el usuario
+  // lo había activado y luego cambia a Descuento, lo apagamos para no enviar un valor obsoleto.
+  useEffect(() => {
+    if (esDescuento && usaLimiteVenta) {
+      form.setFieldsValue({ usa_limite_por_venta: false, max_vales_por_venta: null });
+    }
+  }, [esDescuento, usaLimiteVenta, form]);
+
+  // Stock del producto que se regalará (producto_gratis_id). Solo informativo: se
+  // muestra en el PASO 6 para que el usuario sepa cuánto hay del producto premiado.
+  const productoGratisId = Form.useWatch("producto_gratis_id", form) as number | undefined;
+  const { data: stockProductoGratis } = useQuery({
+    queryKey: ["vale-stock-producto-gratis", productoGratisId],
+    queryFn: async () => {
+      if (!productoGratisId) return null;
+      const res = await getStockProductos([productoGratisId]);
+      if (res.error) return null;
+      return res.data?.data?.[productoGratisId] ?? null;
+    },
+    enabled: !!productoGratisId,
+  });
 
   return (
     <div className="space-y-4">
@@ -793,7 +842,7 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
       <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
       <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} />
       <SeccionVigencia form={form} />
-      <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} />
+      <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} esDescuento={esDescuento} stockProductoGratis={stockProductoGratis ?? null} />
       <SeccionPrecios />
     </div>
   );
