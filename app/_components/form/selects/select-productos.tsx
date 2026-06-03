@@ -246,8 +246,13 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           // En múltiple, un único resultado se agrega directo a la lista.
           if (props.mode === 'multiple') {
             handleSelect({ data: results[0] })
+          } else if (handleOnlyOneResult) {
+            handleOnlyOneResult(results[0])
           } else {
-            handleOnlyOneResult?.(results[0])
+            // Sin manejador de "único resultado" (ej. páginas que agregan
+            // desde el modal de búsqueda): abrir el modal para que el usuario
+            // seleccione el producto desde la tabla / card.
+            setOpenModalProductoSearch(true)
           }
         } else {
           setOpenModalProductoSearch(true)
