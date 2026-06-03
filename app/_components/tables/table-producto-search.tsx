@@ -10,6 +10,8 @@ import { useStoreProductoAgregadoCompra } from "~/app/_stores/store-producto-agr
 import { useProductosListadoCompleto } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_hooks/useProductosListadoCompleto";
 import { usePathname } from "next/navigation";
 import { orangeColors, greenColors } from "~/lib/colors";
+import { useQuery } from "@tanstack/react-query";
+import { productosApiV2 } from "~/lib/api/producto";
 
 export enum FiltroStock {
   TODOS = 'todos',
@@ -62,6 +64,8 @@ export default function TableProductoSearch({
   const almacen_id_store = useStoreAlmacen((store) => store.almacen_id);
   const almacen_id = overrideAlmacenId ?? almacen_id_store;
   const tableGridRef = useRef<any>(null);
+  const searchTerm = value?.trim();
+  const isActiveSearch = searchTerm.length >= 2;
 
   /**
    * Carga TODOS los productos del almacén en un solo request (shape LIGERO
@@ -78,6 +82,44 @@ export default function TableProductoSearch({
     isFetching,
     refetch,
   } = useProductosListadoCompleto(ignoreAlmacen ? undefined : almacen_id);
+
+  const {
+    data: productosBusquedaRemota = [],
+    isLoading: loadingBusquedaRemota,
+    isFetching: fetchingBusquedaRemota,
+    refetch: refetchBusquedaRemota,
+  } = useQuery({
+    queryKey: [
+      "productos-modal-search",
+      almacen_id,
+      searchTerm,
+      tipoBusqueda,
+      marcaId,
+      categoriaId,
+      filtroStock,
+      ignoreAlmacen,
+    ],
+    queryFn: async () => {
+      const response = await productosApiV2.getAllByAlmacen({
+        ...(!ignoreAlmacen && almacen_id ? { almacen_id } : {}),
+        search: searchTerm,
+        estado: 1,
+        per_page: 30,
+        ...(marcaId ? { marca_id: marcaId } : {}),
+        ...(categoriaId ? { categoria_id: categoriaId } : {}),
+      } as any);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      return response.data?.data ?? [];
+    },
+    enabled: isActiveSearch && (ignoreAlmacen || !!almacen_id),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   const setProductoSeleccionadoSearchStore = useStoreProductoSeleccionadoSearch(
     (store) => store.setProducto
@@ -107,7 +149,7 @@ export default function TableProductoSearch({
    * `quickFilterValue` (que es el filtro en vivo de AG Grid).
    */
   const productosFiltrados = useMemo(() => {
-    let productos = productosCompletos;
+    let productos = isActiveSearch ? productosBusquedaRemota : productosCompletos;
 
     // 1) Excluir productos ya agregados
     if (productosCompra.length > 0) {
@@ -177,6 +219,8 @@ export default function TableProductoSearch({
 
     return productos;
   }, [
+    isActiveSearch,
+    productosBusquedaRemota,
     productosCompletos,
     productosCompra,
     filtroStock,
@@ -190,6 +234,9 @@ export default function TableProductoSearch({
   function handleRefetch() {
     setProductosCompra([]);
     refetch();
+    if (isActiveSearch) {
+      refetchBusquedaRemota();
+    }
   }
 
   useImperativeHandle(ref, () => ({
@@ -265,7 +312,7 @@ export default function TableProductoSearch({
       title="Productos"
       schema={ProductoCreateInputSchema}
       headersRequired={["Ubicación en Almacén"]}
-      loading={loading || forceLoading}
+      loading={(isActiveSearch ? loadingBusquedaRemota : loading) || forceLoading}
       columnDefs={useColumnsProductos({
         almacen_id,
         showStockMaxWarning
@@ -294,7 +341,7 @@ export default function TableProductoSearch({
         },
       ]}
     >
-      {isFetching && !loading && (
+      {(isActiveSearch ? fetchingBusquedaRemota : isFetching) && !(isActiveSearch ? loadingBusquedaRemota : loading) && (
         <div className="text-center py-1 text-[10px] font-medium text-slate-400">
           Sincronizando con el servidor...
         </div>
