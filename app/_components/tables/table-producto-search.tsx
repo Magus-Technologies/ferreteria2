@@ -76,12 +76,18 @@ export default function TableProductoSearch({
    * El cliente no quiere paginación, así que cargamos todo de una y filtramos
    * en el cliente. AG Grid con virtualización ya soporta 10k+ filas sin lag.
    */
+  // El listado del catálogo SIEMPRE se carga por un almacén de referencia
+  // (el endpoint es por almacén). Con `ignoreAlmacen` no queremos filtrar por
+  // disponibilidad de stock, pero igual necesitamos un almacén para traer la
+  // lista; usamos el almacén actual del store o, en su defecto, el principal (1).
+  const almacenIdListado = ignoreAlmacen ? (almacen_id ?? 1) : almacen_id;
+
   const {
     data: productosCompletos = [],
     isLoading: loading,
     isFetching,
     refetch,
-  } = useProductosListadoCompleto(ignoreAlmacen ? undefined : almacen_id);
+  } = useProductosListadoCompleto(almacenIdListado);
 
   const {
     data: productosBusquedaRemota = [],
