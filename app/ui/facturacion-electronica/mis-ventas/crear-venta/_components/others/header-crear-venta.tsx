@@ -19,6 +19,7 @@ import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_compo
 import { useStoreAlmacen } from "~/store/store-almacen";
 import { paqueteApi } from "~/lib/api/paquete";
 import BotonCanjearValeHeader from "./boton-canjear-vale-header";
+import { useProductosListadoCompleto } from "~/app/ui/gestion-comercial-e-inventario/mi-almacen/_hooks/useProductosListadoCompleto";
 
 export type VentaConUnidadDerivadaNormal = Omit<
   getVentaResponseProps,
@@ -45,6 +46,12 @@ export default function HeaderCrearVenta({
 }) {
   const { can } = usePermissionHook();
   const almacen_id = useStoreAlmacen((store) => store.almacen_id);
+
+  // Prefetch del listado completo de productos del almacén en background.
+  // Cuando el usuario abra el modal de búsqueda (ModalProductoSearch), los datos
+  // ya estarán en cache de TanStack Query (staleTime 10min) y el modal abrirá
+  // instantáneo en lugar de descargar 5+ MB en ese momento.
+  useProductosListadoCompleto(almacen_id);
 
   const selectProductosRef = useRef<RefSelectProductosProps>(null);
 

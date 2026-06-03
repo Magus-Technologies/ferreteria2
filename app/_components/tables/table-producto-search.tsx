@@ -165,6 +165,14 @@ export default function TableProductoSearch({
             );
         }
       });
+    } else {
+      // Sin búsqueda activa: capar a 200 filas para que el mount de AG Grid
+      // sea instantáneo. El usuario casi siempre va a buscar por texto;
+      // mostrar las 5000+ filas de un almacén grande hace que el modal
+      // tarde varios segundos en abrir aunque AG Grid virtualice el scroll
+      // (el mount inicial + cellRenderers + Popovers en cada fila es caro).
+      // En cuanto escribe 2+ caracteres, el filtro entra y se ve toda la data.
+      productos = productos.slice(0, 200);
     }
 
     return productos;
