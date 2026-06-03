@@ -52,11 +52,22 @@ export default function ModalCanjearVale({
     const cantidadTotal = productosVenta.reduce(
       (sum, p) => sum + Number(p.cantidad ?? 0), 0
     )
+    // Detalle por línea para que el umbral se mida solo sobre los productos/categoría
+    // del vale (no toda la venta).
+    const detalles = productosVenta
+      .filter((p) => p.producto_id)
+      .map((p) => ({
+        producto_id: Number(p.producto_id),
+        categoria_id: (p as any)?.categoria_id != null ? Number((p as any).categoria_id) : null,
+        cantidad: Number(p.cantidad ?? 0),
+        precio_total: Number(p.cantidad ?? 0) * Number(p.precio_venta ?? 0),
+      }))
     return {
       precio_total: precioTotal,
       cantidad_total: cantidadTotal,
       producto_ids: productoIds.length > 0 ? productoIds : undefined,
       cliente_id: clienteId || undefined,
+      detalles: detalles.length > 0 ? detalles : undefined,
     }
   }
 

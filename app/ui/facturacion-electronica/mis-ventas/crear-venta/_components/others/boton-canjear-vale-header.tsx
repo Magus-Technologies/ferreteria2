@@ -72,6 +72,7 @@ export default function BotonCanjearValeHeader() {
               descuento_categoria_ids: (v as any).descuento_categoria_ids ?? null,
               producto_gratis_id: (v as any).producto_gratis?.id ?? null,
               cantidad_producto_gratis: (v as any).cantidad_producto_gratis ?? 0,
+              dos_por_uno_cantidad_compra: (v as any).dos_por_uno_cantidad_compra ?? null,
               fecha_inicio: v.fecha_inicio,
               fecha_fin: v.fecha_fin ?? null,
               fecha_validez_vale: null,

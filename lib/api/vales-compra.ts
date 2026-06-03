@@ -39,7 +39,7 @@ export type DescuentoTipo = 'PORCENTAJE' | 'MONTO_FIJO';
 // Destino del descuento (recompensa): a qué cae el % o S/.
 export type DescuentoAlcance = 'VENTA' | 'PRODUCTOS' | 'CATEGORIAS';
 
-export type TipoUmbral = 'MONTO' | 'CANTIDAD';
+export type TipoUmbral = 'MONTO' | 'CANTIDAD' | 'NINGUNO';
 
 export type EstadoVale = 'ACTIVO' | 'PAUSADO' | 'FINALIZADO';
 
@@ -61,6 +61,7 @@ export interface ValeCompra {
   descuento_categoria_ids: number[] | null;
   producto_gratis_id: number | null;
   cantidad_producto_gratis: number;
+  dos_por_uno_cantidad_compra: number | null;
   fecha_inicio: string;
   fecha_fin: string | null;
   fecha_validez_vale: string | null;
@@ -151,6 +152,7 @@ export interface CreateValeCompraRequest {
   descuento_categoria_ids?: number[] | null;
   producto_gratis_id?: number | null;
   cantidad_producto_gratis?: number;
+  dos_por_uno_cantidad_compra?: number | null;
   fecha_inicio: string;
   fecha_fin?: string | null;
   fecha_validez_vale?: string | null;
@@ -181,6 +183,14 @@ export interface ValesAplicablesRequest {
   categoria_ids?: number[];
   producto_ids?: number[];
   cliente_id?: number;
+  // Detalle por línea: permite que el backend mida el umbral solo sobre los
+  // productos/categoría del vale (POR_PRODUCTOS / POR_CATEGORIA / MIXTO).
+  detalles?: Array<{
+    producto_id?: number | null;
+    categoria_id?: number | null;
+    cantidad?: number;
+    precio_total?: number;
+  }>;
 }
 
 export interface CambiarEstadoRequest {
@@ -321,6 +331,22 @@ export async function getPreciosProductos(
 }
 
 /**
+ * Obtener el stock total (todos los almacenes) de productos por id.
+ * Solo informativo para el form de vales: muestra el stock del producto a regalar.
+ */
+export async function getStockProductos(
+  producto_ids: number[]
+): Promise<ApiResponse<{ data: Record<number, number> }>> {
+  return apiRequest<{ data: Record<number, number> }>(
+    '/vales-compra/stock-productos',
+    {
+      method: 'POST',
+      data: { producto_ids },
+    }
+  );
+}
+
+/**
  * Obtener historial de aplicaciones de un vale
  */
 export async function getHistorialAplicaciones(
@@ -426,6 +452,12 @@ export async function verificarCodigoVale(
     producto_ids?: number[];
     cliente_id?: number;
     tipos_precio?: string[];
+    detalles?: Array<{
+      producto_id?: number | null;
+      categoria_id?: number | null;
+      cantidad?: number;
+      precio_total?: number;
+    }>;
   }
 ): Promise<ApiResponse<{ valido: boolean; data?: ValeCompraVerificado; message: string }>> {
   return apiRequest<{ valido: boolean; data?: ValeCompraVerificado; message: string }>(
