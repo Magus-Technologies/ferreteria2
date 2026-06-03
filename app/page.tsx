@@ -7,6 +7,7 @@ import { FaAngleRight, FaSpinner, FaUserTie } from 'react-icons/fa'
 import { RiLockPasswordFill } from 'react-icons/ri'
 import { RainbowButton } from '~/components/magicui/rainbow-button'
 import { useAuth } from '~/lib/auth-context'
+import { useStoreAuth } from '~/store/store-auth'
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -23,15 +24,19 @@ export default function Home() {
   const [form] = Form.useForm()
   const { message } = App.useApp()
   const { login, user, loading: authLoading } = useAuth()
+  const cachedUser = useStoreAuth((s) => s.user)
+  const hasHydrated = useStoreAuth((s) => s.hasHydrated)
   const [loading, setLoading] = useState(false)
   const [modalRecuperarOpen, setModalRecuperarOpen] = useState(false)
 
-  // Redirigir si ya está autenticado (useEffect para evitar setState durante render)
+  // Redirigir si ya está autenticado: usamos el cache hidratado para
+  // que el redirect sea instantáneo (sin esperar al provider).
   useEffect(() => {
-    if (user && !authLoading) {
+    if (!hasHydrated) return
+    if (user || cachedUser) {
       router.push('/ui')
     }
-  }, [user, authLoading, router])
+  }, [user, cachedUser, hasHydrated, router])
 
   const handleLogin = async (values: LoginValues) => {
     setLoading(true)

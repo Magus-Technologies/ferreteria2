@@ -5,13 +5,14 @@ import esES from 'antd/locale/es_ES'
 import './globals.css'
 import { Ubuntu } from 'next/font/google'
 import Script from 'next/script'
-import { Providers } from './providers'
+import { RootProviders } from './providers'
 import { AuthProvider } from '~/lib/auth-context'
 
 const ubuntu = Ubuntu({
   weight: ['400', '500', '700'],
   subsets: ['latin'],
   display: 'swap',
+  variable: '--font-ubuntu',
 })
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='es' className='overflow-y-hidden'>
+    <html lang='es' className={`overflow-y-hidden ${ubuntu.variable}`}>
       {process.env.NODE_ENV !== 'production' && (
         <head>
           <Script
@@ -55,7 +56,7 @@ export default function RootLayout({
               locale={esES}
             >
               <App>
-                <Providers>{children}</Providers>
+                <RootProviders>{children}</RootProviders>
               </App>
             </ConfigProvider>
           </AntdRegistry>

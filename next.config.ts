@@ -43,7 +43,10 @@ const nextConfig: NextConfig = {
       'antd/locale',
       'ag-grid-react',
       '@tanstack/react-query',
-      'react-icons',
+      // Sub-paths específicos de react-icons. NO incluir 'react-icons' a secas
+      // porque fuerza a Next a pre-bundlear los 100+ paquetes de íconos
+      // (phosphor, game-icons, tabler, simple-icons, bootstrap, etc.) que
+      // no se usan → +50MB de chunks.
       'react-icons/fa',
       'react-icons/fa6',
       'react-icons/ri',
@@ -69,7 +72,7 @@ const nextConfig: NextConfig = {
     },
   },
 
-  serverExternalPackages: ['@prisma/client'],
+  serverExternalPackages: [],
 
   images: {
     formats: ['image/avif', 'image/webp'],

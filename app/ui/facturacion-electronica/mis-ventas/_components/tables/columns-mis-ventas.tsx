@@ -10,6 +10,7 @@ export function calcularTotalesVentaConVales(data: any) {
   const productos = data?.productos_por_almacen || [];
   let totalLineas = 0;
   let descuentoProductos = 0;
+  let baseProductos = 0; // Σ precio×cantidad (CON IGV, sin descuentos) — base para vales de %
 
   for (const producto of productos) {
     for (const unidad of producto.unidades_derivadas || []) {
@@ -25,14 +26,24 @@ export function calcularTotalesVentaConVales(data: any) {
 
       descuentoProductos += montoDescuento;
       totalLineas += subtotalConRecargo - montoDescuento;
+      baseProductos += precio * cantidad;
     }
   }
 
+  // Vales: `descuento_aplicado` viene como TASA (10 = 10%) para PORCENTAJE,
+  // como MONTO (10 = S/10) para monto fijo / producto gratis / 2x1.
+  // Antes: se sumaba como monto, lo que rompía los vales de % (una venta
+  // pequeña quedaba con total=0 porque se "descontaban" 10 soles de un vale
+  // que en realidad era 10%).
   const vales = data?.vales_aplicados ?? data?.valesAplicados ?? [];
-  const descuentoVales = vales.reduce(
-    (sum: number, vale: any) => sum + Number(vale.descuento_aplicado || 0),
-    0
-  );
+  let descuentoVales = 0;
+  for (const vale of vales) {
+    const valor = Number(vale.descuento_aplicado || 0);
+    descuentoVales +=
+      vale.descuento_tipo === "PORCENTAJE"
+        ? (baseProductos * valor) / 100
+        : valor;
+  }
   const total = Math.max(0, totalLineas - descuentoVales);
 
   return {

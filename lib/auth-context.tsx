@@ -1,9 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { authApi, getAuthToken, removeAuthToken, LoginResponse } from './api';
 import { useRouter } from 'next/navigation';
 import { clearLogoCache } from '~/hooks/use-empresa-publica';
+import { useStoreAuth } from '~/store/store-auth';
 
 export type User = LoginResponse['user'] | null;
 
@@ -18,92 +19,113 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User>(null);
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const router = useRouter();
+  const cachedUser = useStoreAuth((s) => s.user);
+  const setCachedUser = useStoreAuth((s) => s.setUser);
+  const hasHydrated = useStoreAuth((s) => s.hasHydrated);
 
-  // Cargar el usuario al montar el componente
+  // `loading` ahora representa "todavía no terminamos de hidratar el cache".
+  // Si ya hidrató (lectura síncrona del localStorage), NO mostramos splash.
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Refrescar el user en background cuando:
+  //  1) hay token, 2) ya hidratamos el cache, 3) todavía no estamos refrescando.
+  // Esto se hace UNA VEZ por mount del provider, no en cada navegación.
   useEffect(() => {
-    // Evitar doble llamada en Strict Mode
-    if (initialized) return;
-    setInitialized(true);
-    loadUser();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadUser = async () => {
+    if (!hasHydrated) return;
     const token = getAuthToken();
-
     if (!token) {
-      setLoading(false);
+      setCachedUser(null);
       return;
     }
+    // Si ya tenemos user del cache, igual refrescamos para tener datos frescos,
+    // pero sin bloquear la UI: la promesa se resuelve en background.
+    let cancelled = false;
+    setRefreshing(true);
+    authApi
+      .getUser()
+      .then((response) => {
+        if (cancelled) return;
+        if (response.data) {
+          setCachedUser(response.data);
+        } else {
+          removeAuthToken();
+          setCachedUser(null);
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Error al refrescar usuario:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setRefreshing(false);
+      });
 
-    try {
-      const response = await authApi.getUser();
+    return () => {
+      cancelled = true;
+    };
+    // Solo cuando el cache termina de hidratar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasHydrated]);
 
-      if (response.data) {
-        setUser(response.data);
-      } else {
-        // Si hay error al obtener el usuario, eliminar el token
-        removeAuthToken();
-        setUser(null);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      try {
+        const response = await authApi.login(email, password);
+        if (response.data) {
+          // Cachear el user inmediatamente para que la próxima mount
+          // del layout no muestre splash.
+          setCachedUser(response.data.user);
+          return { success: true };
+        }
+        return {
+          success: false,
+          error: response.error?.message || 'Error al iniciar sesión',
+        };
+      } catch (error) {
+        console.error('Error durante login:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Error al iniciar sesión',
+        };
       }
-    } catch (error) {
-      console.error('Error al cargar usuario:', error);
-      removeAuthToken();
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [setCachedUser]
+  );
 
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await authApi.login(email, password);
-
-      if (response.data) {
-        // ✅ SOLUCIÓN: Establecer el usuario directamente desde la respuesta del login
-        // NO llamar a loadUser() porque causa el error 401
-        setUser(response.data.user);
-        setLoading(false); // Importante: marcar como cargado
-        return { success: true };
-      }
-
-      return {
-        success: false,
-        error: response.error?.message || 'Error al iniciar sesión',
-      };
-    } catch (error) {
-      console.error('Error durante login:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Error al iniciar sesión',
-      };
-    }
-  };
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authApi.logout();
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
-      // Limpiar keys de birthday alert para que se muestre al volver a iniciar sesión
       Object.keys(sessionStorage)
-        .filter(key => key.startsWith('birthday_alert_shown_'))
-        .forEach(key => sessionStorage.removeItem(key));
+        .filter((key) => key.startsWith('birthday_alert_shown_'))
+        .forEach((key) => sessionStorage.removeItem(key));
       clearLogoCache();
-      setUser(null);
+      setCachedUser(null);
       removeAuthToken();
     }
-  };
+  }, [setCachedUser]);
 
-  const refreshUser = async () => {
-    await loadUser();
-  };
+  const refreshUser = useCallback(async () => {
+    const response = await authApi.getUser();
+    if (response.data) {
+      setCachedUser(response.data);
+    } else {
+      removeAuthToken();
+      setCachedUser(null);
+    }
+  }, [setCachedUser]);
+
+  // `loading=true` solo si todavía no hidratamos el cache.
+  // Eso evita el flash de "splash" en cada navegación cliente.
+  const loading = !hasHydrated;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user: cachedUser, loading, login, logout, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -117,16 +139,20 @@ export function useAuth() {
   return context;
 }
 
-// Hook para verificar si el usuario está autenticado
+// Hook para verificar si el usuario está autenticado.
+// Lee el cache de zustand persist; solo dispara redirect si NO hay user
+// (y ya hidrató el cache).
 export function useRequireAuth() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const hasHydrated = useStoreAuth((s) => s.hasHydrated);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!hasHydrated) return;
+    if (!user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, hasHydrated, router]);
 
   return { user, loading };
 }

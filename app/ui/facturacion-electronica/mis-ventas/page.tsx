@@ -4,21 +4,42 @@ import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import NoAutorizado from '~/components/others/no-autorizado'
 import { permissions } from '~/lib/permissions'
 import { usePermission } from '~/hooks/use-permission'
-import { Suspense, lazy } from 'react'
+import { Suspense } from 'react'
 import { Spin } from 'antd'
 import dynamic from 'next/dynamic'
 
-const ModalPdfVentaWrapper = dynamic(() => import('./_components/modals/modal-pdf-venta-wrapper'), { ssr: false })
+const ModalPdfVentaWrapper = dynamic(
+  () => import('./_components/modals/modal-pdf-venta-wrapper'),
+  { ssr: false }
+)
 
-// Lazy loading de componentes pesados
-const FiltersMisVentas = lazy(() => import('./_components/filters/filters-mis-ventas'))
-const TableMisVentas = lazy(() => import('./_components/tables/table-mis-ventas'))
-const TableDetalleVenta = lazy(() => import('./_components/tables/table-detalle-venta'))
-const CardsInfoVentas = lazy(() => import('./_components/others/cards-info-ventas'))
-const BarConvertirNotas = lazy(() => import('./_components/others/bar-convertir-notas'))
-const AccionConfigurarEntrega = lazy(() => import('./_components/others/accion-configurar-entrega'))
+// Lazy loading de componentes pesados — next/dynamic con ssr:false separa
+// cada uno en su propio chunk y evita que se incluya en el bundle inicial.
+const FiltersMisVentas = dynamic(
+  () => import('./_components/filters/filters-mis-ventas'),
+  { ssr: false, loading: () => <ComponentLoading /> }
+)
+const TableMisVentas = dynamic(
+  () => import('./_components/tables/table-mis-ventas'),
+  { ssr: false, loading: () => <ComponentLoading /> }
+)
+const TableDetalleVenta = dynamic(
+  () => import('./_components/tables/table-detalle-venta'),
+  { ssr: false, loading: () => <ComponentLoading /> }
+)
+const CardsInfoVentas = dynamic(
+  () => import('./_components/others/cards-info-ventas'),
+  { ssr: false, loading: () => <ComponentLoading /> }
+)
+const BarConvertirNotas = dynamic(
+  () => import('./_components/others/bar-convertir-notas'),
+  { ssr: false }
+)
+const AccionConfigurarEntrega = dynamic(
+  () => import('./_components/others/accion-configurar-entrega'),
+  { ssr: false }
+)
 
-// Componente de loading optimizado
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
     <Spin size="large" />

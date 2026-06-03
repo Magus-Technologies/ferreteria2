@@ -132,6 +132,20 @@ export const productosApiV2 = {
   },
 
   /**
+   * Listado LIGERO de TODOS los productos de un almacén, en un solo request.
+   * Diseñado para que el cliente NO pagine y vea todos los productos
+   * de una en el modal de búsqueda. Shape mínimo (sin compras, sin
+   * productoComplementario, sin tiene_ingresos). Cache 10 min en el back.
+   *
+   * GET /api/productos/listado-modal?almacen_id={id}
+   */
+  async getListadoLigeroPorAlmacen(almacenId: number): Promise<ApiResponse<{ data: Producto[] }>> {
+    return apiRequest<{ data: Producto[] }>(
+      `/productos/listado-modal?almacen_id=${almacenId}`
+    );
+  },
+
+  /**
    * Obtener detalle de precios de un producto en un almacén específico
    * GET /api/productos/{id}/detalle-precios?almacen_id={id}
    */
