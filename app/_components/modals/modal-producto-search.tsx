@@ -136,12 +136,15 @@ export default function ModalProductoSearch({
     useState<CostoUnidadDerivadaSearch>(null);
 
   const handleSearchEnter = () => {
-    if (text.length < 2) return;
-    if (text === value) {
+    const term = text.trim();
+    // 1 carácter es muy corto: no busca. Vacío SÍ se permite: limpia el filtro
+    // y muestra todos los productos (cae al listado completo en la tabla).
+    if (term.length === 1) return;
+    if (term === value) {
       tableRef.current?.handleRefetch();
     } else {
-      setValue(text);
-      setTextDefault(text);
+      setValue(term);
+      setTextDefault(term);
     }
   };
 
