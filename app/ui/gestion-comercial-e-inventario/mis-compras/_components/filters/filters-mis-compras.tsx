@@ -31,7 +31,6 @@ import SelectEstadoDeCompra, {
 } from '~/app/_components/form/selects/select-estado-de-compra'
 import SelectPendienteDeRecepcionAlmacen from '~/app/_components/form/selects/select-pendiente-de-recepcion-almacen'
 import { redColors, orangeColors, greenColors } from '~/lib/colors'
-import { useDebounce } from 'use-debounce'
 
 interface ValuesFiltersMisCompras {
   almacen_id: number
@@ -51,7 +50,6 @@ export default function FiltersMisCompras() {
   const [form] = Form.useForm<ValuesFiltersMisCompras>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  const [debouncedSearchValue] = useDebounce(searchValue, 500)
 
   const almacen_id = useStoreAlmacen(state => state.almacen_id)
 
@@ -87,11 +85,6 @@ export default function FiltersMisCompras() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Trigger submit when debounced search value changes
-  useEffect(() => {
-    form.submit()
-  }, [debouncedSearchValue, form])
-
   return (
     <FormBase
       form={form}
@@ -102,9 +95,6 @@ export default function FiltersMisCompras() {
         estado_de_compra: EstadoDeCompraSelect.Creados,
       }}
       className='w-full'
-      onValuesChange={() => {
-        form.submit()
-      }}
       onFinish={values => {
         const {
           desde,
