@@ -257,20 +257,10 @@ export interface FiltrosListarEntregas {
   estado?: string | string[]
   tipo_entrega?: string
   chofer_id?: string
-  vehiculo_id?: number
+  vehiculo_id?: number | number[]
+  vehiculo_ids?: number[]
   solo_programadas?: boolean
   search?: string
-}
-
-export interface FiltrosResumenVentas {
-  fecha_desde?: string
-  fecha_hasta?: string
-  search?: string
-  solo_con_pendientes?: boolean
-  solo_sin_entregas?: boolean
-  chofer_id?: string
-  per_page?: number
-  page?: number
 }
 
 export const entregasNuevasApi = {
@@ -284,7 +274,15 @@ export const entregasNuevasApi = {
     }
     if (filtros.tipo_entrega) p.set('tipo_entrega', filtros.tipo_entrega)
     if (filtros.chofer_id)    p.set('chofer_id', filtros.chofer_id)
-    if (filtros.vehiculo_id)  p.set('vehiculo_id', String(filtros.vehiculo_id))
+    // Soporta tanto un único ID como múltiples.
+    // El front nuevo usa `vehiculo_ids` (plural, array) para el multi-select
+    // del calendario. Mantenemos `vehiculo_id` por compat.
+    const vehiculos = filtros.vehiculo_ids
+      ?? (filtros.vehiculo_id !== undefined ? filtros.vehiculo_id : null)
+    if (vehiculos !== null && vehiculos !== undefined) {
+      const arr = Array.isArray(vehiculos) ? vehiculos : [vehiculos]
+      arr.filter((v): v is number => v !== null && v !== undefined).forEach(v => p.append('vehiculo_id[]', String(v)))
+    }
     if (filtros.solo_programadas !== undefined) p.set('solo_programadas', filtros.solo_programadas ? '1' : '0')
     if (filtros.search)       p.set('search', filtros.search)
     const qs = p.toString()

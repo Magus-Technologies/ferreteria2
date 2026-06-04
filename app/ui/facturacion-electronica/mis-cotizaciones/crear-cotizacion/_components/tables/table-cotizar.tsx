@@ -169,7 +169,7 @@ export default function TableCotizar({
     <>
       <CellFocusWithoutStyle />
       <TableWithTitle
-        id="crear-cotizacion-productos"
+        id="crear-cotizacion-productos-v2"
         title="Productos de Cotización"
         tableRef={agGridRef}
         className='h-full'

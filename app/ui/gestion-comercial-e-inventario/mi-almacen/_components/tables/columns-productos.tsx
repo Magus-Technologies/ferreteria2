@@ -5,7 +5,7 @@ import {
   ICellRendererParams,
   ValueFormatterParams,
 } from "ag-grid-community";
-import { Popover, Tooltip } from "antd";
+import { Image, Popover, Tooltip } from "antd";
 import { FaImage } from "react-icons/fa";
 import { IoIosCopy } from "react-icons/io";
 import { PiWarehouseFill } from "react-icons/pi";
@@ -24,14 +24,78 @@ import {
 } from "../../_store/store-edit-or-copy-producto";
 import { productosApiV2 } from "~/lib/api/producto";
 import { QueryKeys } from "~/app/_lib/queryKeys";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface UseColumnsProductosProps {
   almacen_id?: number;
   showStockMaxWarning?: boolean;
 }
 
-export function useColumnsProductos({ almacen_id, showStockMaxWarning }: UseColumnsProductosProps) {
+/**
+ * CellRenderer de la columna "Producto".
+ *
+ * Muestra el icono FaImage a la derecha (cyan si hay imagen, gris si no).
+ * Al hacer click en el icono se abre el modal de preview grande de antd
+ * (con zoom, rotar, descargar), igual que en mis entregas. Se logra con
+ * un Image de antd oculto y `preview` controlado por estado.
+ *
+ * Requiere ser un componente (no función) para poder usar useState.
+ */
+function ProductNameCellRenderer({
+  value,
+  data,
+}: ICellRendererParams<Producto>) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const imgUrl = getStorageUrl(data?.img);
+
+  return (
+    <div className="flex items-center gap-2 pr-5 min-w-0">
+      {!data?.permitido && (
+        <Tooltip
+          classNames={{ body: "text-center!" }}
+          title="Este producto aún no tiene Unidades Derivadas Importadas, no podrá usarse para venta, compra, o alguna otra acción"
+        >
+          <GoAlertFill className="text-rose-700 cursor-pointer flex-shrink-0" />
+        </Tooltip>
+      )}
+      <Tooltip classNames={{ body: "text-center!" }} title={value}>
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap flex-1 min-w-0">
+          {value}
+        </div>
+      </Tooltip>
+      {/* Icono galería: click → abre preview grande de antd. Cyan si hay imagen, gris si no. */}
+      {imgUrl ? (
+        <FaImage
+          size={15}
+          className="cursor-pointer flex-shrink-0 text-cyan-600"
+          onClick={() => setPreviewOpen(true)}
+        />
+      ) : (
+        <FaImage
+          size={15}
+          className="cursor-pointer flex-shrink-0 text-gray-400"
+        />
+      )}
+      {/* Image invisible: provee el modal de preview (zoom/rotar/descargar) controlado por previewOpen. */}
+      {imgUrl ? (
+        <Image
+          style={{ display: "none" }}
+          src={imgUrl}
+          alt={value || "Producto"}
+          preview={{
+            visible: previewOpen,
+            onVisibleChange: (v) => setPreviewOpen(v),
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+export function useColumnsProductos({
+  almacen_id,
+  showStockMaxWarning,
+}: UseColumnsProductosProps) {
   const { can } = usePermissionHook();
   const setOpen = useStoreEditOrCopyProducto((state) => state.setOpenModal);
   const setProducto = useStoreEditOrCopyProducto((state) => state.setProducto);
@@ -53,45 +117,7 @@ export function useColumnsProductos({ almacen_id, showStockMaxWarning }: UseColu
         width: 350,
         minWidth: 200,
         filter: true,
-        cellRenderer: ({ value, data }: ICellRendererParams<Producto>) => {
-          return (
-            <div className="flex items-center gap-2 pr-5">
-              {!data?.permitido && (
-                <Tooltip
-                  classNames={{ body: "text-center!" }}
-                  title="Este producto aún no tiene Unidades Derivadas Importadas, no podrá usarse para venta, compra, o alguna otra acción"
-                >
-                  <GoAlertFill className="text-rose-700 cursor-pointer" />
-                </Tooltip>
-              )}
-              <Tooltip classNames={{ body: "text-center!" }} title={value}>
-                <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-                  {value}
-                </div>
-              </Tooltip>
-              <Popover
-                content={
-                  data?.img ? (
-                    <img
-                      src={getStorageUrl(data.img) || ""}
-                      alt="Imagen del producto"
-                      className="max-w-72 max-h-72"
-                    />
-                  ) : (
-                    "No hay Imagen"
-                  )
-                }
-              >
-                <FaImage
-                  size={15}
-                  className={`cursor-pointer min-w-fit absolute right-0 ${
-                    data?.img ? "text-cyan-600" : "text-gray-400"
-                  }`}
-                />
-              </Popover>
-            </div>
-          );
-        },
+        cellRenderer: ProductNameCellRenderer,
         flex: 1,
       },
       {
