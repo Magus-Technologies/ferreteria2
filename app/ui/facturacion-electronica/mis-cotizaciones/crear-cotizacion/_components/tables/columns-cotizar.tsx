@@ -1,6 +1,6 @@
 'use client'
 
-import { Form, FormInstance, Tooltip } from 'antd'
+import { Form, FormInstance, Tooltip, FormListFieldData, Image } from 'antd'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import type { FormCreateCotizacion, DescuentoTipo } from '../../_types/cotizacion.types'
 import { FaTrash } from 'react-icons/fa'
@@ -9,6 +9,7 @@ import InputBase from '~/app/_components/form/inputs/input-base'
 import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectUnidadDerivadaCotizacion from '../form/select-unidad-derivada-cotizacion'
 import SelectTipoPrecioCotizacion from '../form/select-tipo-precio-cotizacion'
+import {getStorageUrl} from '~/utils/upload'
 
 export function calcularSubtotalCotizacion({
   precio_venta,
@@ -145,6 +146,60 @@ export function useColumnsCotizar({
         </div>
       ),
     },
+      {
+          headerName: 'Imagen',
+          field: 'name',
+          colId: 'imagen',
+          width: 56,
+          minWidth: 56,
+          suppressNavigable: true,
+          sortable: false,
+          cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+            const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+            const tipo = form.getFieldValue(['productos', value, '_tipo'])
+    
+            // Paquete cabecera y vale promocional: sin imagen
+            if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
+              return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
+            }
+    
+            // Servicio: sin imagen
+            if (tipo === 'servicio') {
+              return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
+            }
+    
+            const imgPath = form.getFieldValue(['productos', value, 'img']) as string | null | undefined
+            const src = getStorageUrl(imgPath)
+            const isPaqueteProducto = tipoFila === 'paquete_producto'
+    
+            return (
+              <div className="flex items-center h-full justify-center">
+                {src ? (
+                  <Image
+                    src={src}
+                    alt={form.getFieldValue(['productos', value, 'producto_name']) || 'Producto'}
+                    width={isPaqueteProducto ? 22 : 32}
+                    height={isPaqueteProducto ? 22 : 32}
+                    className={
+                      (isPaqueteProducto ? 'h-[22px] w-[22px]' : 'h-8 w-8') +
+                      ' rounded border border-slate-200 object-cover flex-shrink-0'
+                    }
+                    preview={{ mask: 'Ver' }}
+                  />
+                ) : (
+                  <div
+                    className={
+                      (isPaqueteProducto ? 'h-[22px] w-[22px] text-[8px]' : 'h-8 w-8 text-[10px]') +
+                      ' flex items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 font-semibold text-slate-400'
+                    }
+                  >
+                    S/I
+                  </div>
+                )}
+              </div>
+            )
+          },
+        },
     {
       colId: 'marca',
       headerName: 'Marca',

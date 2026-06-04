@@ -30,6 +30,12 @@ export interface ProductoCotizacion {
   tipo_precio?: TipoPrecio;
   comision?: number;
   stock_fraccion?: number;
+  /** Imagen del producto (thumbnail). Seteado por el card compartido con ventas. */
+  img?: string | null;
+  /** Discriminador de fila: 'paquete_cabecera' | 'paquete_producto' | 'vale_promocional' | undefined. */
+  _tipo_fila?: string;
+  /** Tipo de ítem: 'servicio' | 'producto' | undefined. */
+  _tipo?: string;
 }
 
 export interface FormCreateCotizacion extends ClienteDireccionFormFields {
