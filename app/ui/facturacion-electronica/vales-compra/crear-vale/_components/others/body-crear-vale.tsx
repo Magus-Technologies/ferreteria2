@@ -90,14 +90,13 @@ export default function BodyCrearVale() {
           dos_por_uno_cantidad_compra: null,
         } as typeof payload
       } else if (values.tipo_promocion === 'DOS_POR_UNO') {
+        // El 2x1 (misma o próxima compra) se aplica al producto elegido
+        // (producto_gratis_id). El backend lo usa para acotar el 2x1 a ese
+        // producto; ver ValeCompraService::calcular... (producto_gratis_id ? [id] : productos).
         payload = {
           ...payload,
           descuento_tipo: null,
           descuento_valor: null,
-          // Si es MISMA COMPRA, limpiar producto_gratis_id para que no interfiera
-          ...(values.momento_aplicacion === 'MISMA_COMPRA' && {
-            producto_gratis_id: null,
-          }),
         } as typeof payload
       }
 

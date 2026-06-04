@@ -512,17 +512,19 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                 />
               </Form.Item>
             </div>
-            {momento === "PROXIMA_COMPRA" && (
-              <div className="mt-4">
-                <Form.Item
-                  name="producto_gratis_id"
-                  label="Producto para el 2x1 (en la próxima compra)"
-                  rules={[{ required: true, message: "Seleccione el producto al que aplicará el 2x1" }]}
-                >
-                  <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly />
-                </Form.Item>
-              </div>
-            )}
+            <div className="mt-4">
+              <Form.Item
+                name="producto_gratis_id"
+                label={
+                  momento === "PROXIMA_COMPRA"
+                    ? "Producto para el 2x1 (en la próxima compra)"
+                    : "Producto al que aplica el 2x1"
+                }
+                rules={[{ required: true, message: "Seleccione el producto al que aplicará el 2x1" }]}
+              >
+                <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly />
+              </Form.Item>
+            </div>
             <p className="text-xs text-indigo-600 mt-2">
               <strong>Ejemplos:</strong> Compra 2, 1 gratis → paga 1 (2x1). Compra 4, 1 gratis → paga 3. Compra 3, 2 gratis → paga 1 (3x1).
             </p>
