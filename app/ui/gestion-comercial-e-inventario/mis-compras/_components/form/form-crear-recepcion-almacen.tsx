@@ -1,7 +1,8 @@
-import { FormInstance } from 'antd'
+import { FormInstance, Modal, Form as AntForm, Input, Tooltip, message } from 'antd'
 import { useState, useEffect, useCallback } from 'react'
 import { BsFillPostcardFill } from 'react-icons/bs'
 import { FaAddressCard, FaIdCardAlt } from 'react-icons/fa'
+import { FaPlus } from 'react-icons/fa6'
 import { MdFactory } from 'react-icons/md'
 import type { Proveedor } from '~/lib/api/proveedor'
 import { proveedorApi } from '~/lib/api/proveedor'
@@ -85,6 +86,88 @@ export default function FormCrearRecepcionAlmacen({
     )
   }, [compra, ordenCompra, cargarProveedorCompleto])
 
+  // ── Crear vehículo / chofer del proveedor desde el botón "+" ──
+  const [openCarroModal, setOpenCarroModal] = useState(false)
+  const [openChoferModal, setOpenChoferModal] = useState(false)
+  const [savingCarro, setSavingCarro] = useState(false)
+  const [savingChofer, setSavingChofer] = useState(false)
+  const [carroForm] = AntForm.useForm<{ placa: string }>()
+  const [choferForm] = AntForm.useForm<{ dni: string; name: string; licencia: string }>()
+
+  const handleCrearCarro = async (values: { placa: string }) => {
+    if (!proveedor?.id) return
+    setSavingCarro(true)
+    try {
+      const res = await proveedorApi.addCarro(proveedor.id, { placa: values.placa })
+      if (res.error) throw new Error(res.error.message)
+      const nuevo = res.data?.data
+      if (nuevo) {
+        setProveedor(prev =>
+          prev ? { ...prev, carros: [...(prev.carros ?? []), nuevo] } : prev
+        )
+        setCarroId(nuevo.id)
+        form.setFieldValue('transportista_placa', nuevo.placa)
+      }
+      message.success('Vehículo agregado correctamente')
+      carroForm.resetFields()
+      setOpenCarroModal(false)
+    } catch (e) {
+      message.error((e as Error)?.message || 'Error al agregar el vehículo')
+    } finally {
+      setSavingCarro(false)
+    }
+  }
+
+  const handleCrearChofer = async (values: {
+    dni: string
+    name: string
+    licencia: string
+  }) => {
+    if (!proveedor?.id) return
+    setSavingChofer(true)
+    try {
+      const res = await proveedorApi.addChofer(proveedor.id, values)
+      if (res.error) throw new Error(res.error.message)
+      const nuevo = res.data?.data
+      if (nuevo) {
+        setProveedor(prev =>
+          prev ? { ...prev, choferes: [...(prev.choferes ?? []), nuevo] } : prev
+        )
+        setChoferId(nuevo.id)
+        form.setFieldValue('transportista_name', nuevo.name)
+        form.setFieldValue('transportista_licencia', nuevo.licencia)
+        form.setFieldValue('transportista_dni', nuevo.dni)
+      }
+      message.success('Chofer agregado correctamente')
+      choferForm.resetFields()
+      setOpenChoferModal(false)
+    } catch (e) {
+      message.error((e as Error)?.message || 'Error al agregar el chofer')
+    } finally {
+      setSavingChofer(false)
+    }
+  }
+
+  // Botón "+" reutilizable para crear vehículo / chofer del proveedor.
+  const BotonAgregar = ({
+    onClick,
+    title,
+  }: {
+    onClick: () => void
+    title: string
+  }) => (
+    <Tooltip title={proveedor ? title : 'Selecciona un proveedor primero'}>
+      <button
+        type='button'
+        disabled={!proveedor}
+        onClick={onClick}
+        className='flex items-center justify-center w-8 h-8 shrink-0 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
+      >
+        <FaPlus size={13} />
+      </button>
+    </Tooltip>
+  )
+
   return (
     <>
       <div className='mt-6 flex flex-col gap-4'>
@@ -117,33 +200,45 @@ export default function FormCrearRecepcionAlmacen({
           </LabelBase>
 
           <LabelBase label='Vehículo:' orientation='column'>
-            <SelectProveedorCarros
-              allowClear
-              className='w-[220px] max-w-[220px]'
-              classNameIcon='text-cyan-600 mx-1'
-              value={carroId}
-              onChange={(value, carro) => {
-                setCarroId(value)
-                form.setFieldValue('transportista_placa', carro?.placa)
-              }}
-              proveedor={proveedor}
-            />
+            <div className='flex items-center gap-1'>
+              <SelectProveedorCarros
+                allowClear
+                className='w-[220px] max-w-[220px]'
+                classNameIcon='text-cyan-600 mx-1'
+                value={carroId}
+                onChange={(value, carro) => {
+                  setCarroId(value)
+                  form.setFieldValue('transportista_placa', carro?.placa)
+                }}
+                proveedor={proveedor}
+              />
+              <BotonAgregar
+                title='Agregar vehículo'
+                onClick={() => setOpenCarroModal(true)}
+              />
+            </div>
           </LabelBase>
 
           <LabelBase label='Chofer:' orientation='column'>
-            <SelectProveedorChoferes
-              allowClear
-              className='w-[320px] max-w-[320px]'
-              classNameIcon='text-cyan-600 mx-1'
-              value={choferId}
-              onChange={(value, chofer) => {
-                setChoferId(value)
-                form.setFieldValue('transportista_name', chofer?.name)
-                form.setFieldValue('transportista_licencia', chofer?.licencia)
-                form.setFieldValue('transportista_dni', chofer?.dni)
-              }}
-              proveedor={proveedor}
-            />
+            <div className='flex items-center gap-1'>
+              <SelectProveedorChoferes
+                allowClear
+                className='w-[320px] max-w-[320px]'
+                classNameIcon='text-cyan-600 mx-1'
+                value={choferId}
+                onChange={(value, chofer) => {
+                  setChoferId(value)
+                  form.setFieldValue('transportista_name', chofer?.name)
+                  form.setFieldValue('transportista_licencia', chofer?.licencia)
+                  form.setFieldValue('transportista_dni', chofer?.dni)
+                }}
+                proveedor={proveedor}
+              />
+              <BotonAgregar
+                title='Agregar chofer'
+                onClick={() => setOpenChoferModal(true)}
+              />
+            </div>
           </LabelBase>
         </div>
 
@@ -263,6 +358,65 @@ export default function FormCrearRecepcionAlmacen({
           }}
         />
       </LabelBase>
+
+      {/* Modal: crear vehículo del proveedor */}
+      <Modal
+        title='Agregar Vehículo'
+        open={openCarroModal}
+        onCancel={() => setOpenCarroModal(false)}
+        onOk={() => carroForm.submit()}
+        okText='Agregar'
+        confirmLoading={savingCarro}
+        destroyOnHidden
+      >
+        <AntForm form={carroForm} layout='vertical' onFinish={handleCrearCarro}>
+          <AntForm.Item
+            name='placa'
+            label='Placa'
+            rules={[{ required: true, message: 'Ingresa la placa' }]}
+          >
+            <Input placeholder='Placa' />
+          </AntForm.Item>
+        </AntForm>
+      </Modal>
+
+      {/* Modal: crear chofer del proveedor */}
+      <Modal
+        title='Agregar Chofer'
+        open={openChoferModal}
+        onCancel={() => setOpenChoferModal(false)}
+        onOk={() => choferForm.submit()}
+        okText='Agregar'
+        confirmLoading={savingChofer}
+        destroyOnHidden
+      >
+        <AntForm form={choferForm} layout='vertical' onFinish={handleCrearChofer}>
+          <AntForm.Item
+            name='dni'
+            label='DNI'
+            rules={[
+              { required: true, message: 'Ingresa el DNI' },
+              { len: 8, message: 'El DNI debe tener 8 dígitos' },
+            ]}
+          >
+            <Input placeholder='DNI' maxLength={8} />
+          </AntForm.Item>
+          <AntForm.Item
+            name='name'
+            label='Nombres y Apellidos'
+            rules={[{ required: true, message: 'Ingresa los nombres y apellidos' }]}
+          >
+            <Input placeholder='Nombres y Apellidos' />
+          </AntForm.Item>
+          <AntForm.Item
+            name='licencia'
+            label='Licencia'
+            rules={[{ required: true, message: 'Ingresa la licencia' }]}
+          >
+            <Input placeholder='Licencia' />
+          </AntForm.Item>
+        </AntForm>
+      </Modal>
     </>
   )
 }
