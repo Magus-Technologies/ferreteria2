@@ -180,7 +180,22 @@ export default function TableComprar({
   const refreshCellsDebounced = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      agGridRef.current?.api?.refreshCells({ force: true })
+      // Refrescar SOLO las columnas calculadas/de solo-lectura. Forzar el
+      // refresh de las columnas con <input> editable (cantidad, flete, lote,
+      // vencimiento, bonificación) remonta el input y le roba el foco al
+      // usuario tras el primer carácter.
+      agGridRef.current?.api?.refreshCells({
+        force: true,
+        columns: [
+          'total',
+          'entregado',
+          'pendiente',
+          'subtotal_conversion',
+          'subtotal',
+          'precio',
+          'precio_conversion',
+        ],
+      })
     }, 400)
   }, [])
 
