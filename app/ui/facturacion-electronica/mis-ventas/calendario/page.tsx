@@ -248,7 +248,7 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
 export default function CalendarioEntregasPage() {
   const router = useRouter()
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
-  const [vehiculoId, setVehiculoId] = useState<number | undefined>()
+  const [vehiculoIds, setVehiculoIds] = useState<number[]>([])
   const { data: vehiculos = [], isLoading: cargandoVehiculos } = useQuery({
     queryKey: [QueryKeys.VEHICULOS, 'calendario-filtro'],
     queryFn: async () => {
@@ -308,19 +308,21 @@ export default function CalendarioEntregasPage() {
                 </div>
               </div>
               <Select
+                mode="multiple"
                 allowClear
                 showSearch
                 loading={cargandoVehiculos}
-                value={vehiculoId}
-                placeholder="Filtrar por vehículo"
+                value={vehiculoIds}
+                placeholder="Filtrar por vehículo(s)"
                 className="w-full lg:w-[280px]"
                 optionFilterProp="label"
+                maxTagCount="responsive"
                 options={vehiculos.map((vehiculo) => ({
                   value: vehiculo.id,
                   label: `${vehiculo.name}${vehiculo.placa ? ` (${vehiculo.placa})` : ''}`,
                 }))}
                 onChange={(value) => {
-                  setVehiculoId(value)
+                  setVehiculoIds(Array.isArray(value) ? value : [])
                   setEventoSeleccionado(null)
                 }}
               />
@@ -333,7 +335,7 @@ export default function CalendarioEntregasPage() {
                 }}
                 onSelectSlot={() => setEventoSeleccionado(null)}
                 soloProgramadasActivas={false}
-                vehiculo_id={vehiculoId}
+                vehiculo_ids={vehiculoIds}
               />
             </Suspense>
           </div>

@@ -217,6 +217,10 @@ export default function BodyVender({
   const productosFromCotizacion = cotizacion?.productosPorAlmacen ?? cotizacion?.productos_por_almacen;
   const ventaFromCotizacion = cotizacion ? {
     ...cotizacion,
+    // La cotización guarda los días de crédito en `vigencia_dias`, pero el form de
+    // venta (y useInitVenta) leen `numero_dias`. Traducir aquí para no perder los
+    // días al cargar una cotización a crédito.
+    numero_dias: cotizacion.vigencia_dias,
     productos_por_almacen: productosFromCotizacion?.map((ppa: any) => ({
       ...ppa,
       unidades_derivadas: ppa.unidades_derivadas?.map((ud: any) => {

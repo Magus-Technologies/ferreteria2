@@ -223,6 +223,8 @@ interface CalendarProgramacionEntregasProps {
   disabledRanges?: DisabledRange[]
   chofer_id?: string
   vehiculo_id?: number
+  /** Múltiples vehículos — filtro multi-select del calendario. */
+  vehiculo_ids?: number[]
   /** Si es true, no carga entregas del backend (solo selección de slot) */
   soloSeleccion?: boolean
   /** true: oculta entregadas/canceladas. false: muestra histórico programado también. */
@@ -238,6 +240,7 @@ export default function CalendarProgramacionEntregas({
   disabledRanges,
   chofer_id,
   vehiculo_id,
+  vehiculo_ids,
   soloSeleccion = false,
   soloProgramadasActivas = true,
 }: CalendarProgramacionEntregasProps) {
@@ -266,6 +269,7 @@ export default function CalendarProgramacionEntregas({
     fecha_hasta,
     chofer_id,
     vehiculo_id,
+    vehiculo_ids,
     solo_programadas: soloProgramadasActivas,
     enabled: true,
   })

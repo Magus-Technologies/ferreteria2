@@ -105,13 +105,20 @@ export function SeccionDomicilio({
   const vehiculoIdWatch = Form.useWatch('vehiculo_id', form) as number | undefined
 
   useEffect(() => {
-    if (slotDomicilio || !fechaProgramadaWatch) return
-    const horaI = horaInicioWatch || '00:00'
-    const horaF = horaFinWatch || horaI
-    const start = dayjs(`${fechaProgramadaWatch} ${horaI}`).toDate()
-    const end = dayjs(`${fechaProgramadaWatch} ${horaF}`).toDate()
+    if (slotDomicilio) return
+    // Leer el valor AUTORITATIVO del form (no el watch): Form.useWatch va un tick
+    // por detrás de form.setFieldValue. Al limpiar el slot por cambio de vehículo,
+    // el watch todavía tenía la fecha vieja y reconstruía el slot recién borrado.
+    // getFieldValue ya devuelve el valor limpio, así que la reconstrucción solo
+    // ocurre en hidratación real (prefill), no tras un cambio de vehículo.
+    const fecha = form.getFieldValue('fecha_programada')
+    if (!fecha) return
+    const horaI = form.getFieldValue('hora_inicio') || '00:00'
+    const horaF = form.getFieldValue('hora_fin') || horaI
+    const start = dayjs(`${fecha} ${horaI}`).toDate()
+    const end = dayjs(`${fecha} ${horaF}`).toDate()
     setSlotDomicilio({ start, end })
-  }, [fechaProgramadaWatch, horaInicioWatch, horaFinWatch, slotDomicilio, setSlotDomicilio])
+  }, [fechaProgramadaWatch, horaInicioWatch, horaFinWatch, slotDomicilio, setSlotDomicilio, form])
 
   // Reverse geocoding propio para esta sección — apunta al setter del context.
   const obtenerUbicacionGps = useReverseGeocoding(setUbicacionGps)

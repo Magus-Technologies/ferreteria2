@@ -1,11 +1,12 @@
 'use client'
 
-import { FormInstance, Tooltip } from 'antd'
+import { Form, FormInstance, Tooltip } from 'antd'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
 import type { FormCreateCotizacion, DescuentoTipo } from '../../_types/cotizacion.types'
 import { FaTrash } from 'react-icons/fa'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import InputBase from '~/app/_components/form/inputs/input-base'
+import SelectBase from '~/app/_components/form/selects/select-base'
 import SelectUnidadDerivadaCotizacion from '../form/select-unidad-derivada-cotizacion'
 import SelectTipoPrecioCotizacion from '../form/select-tipo-precio-cotizacion'
 
@@ -304,6 +305,85 @@ export function useColumnsCotizar({
             readOnly
             variant='borderless'
           />
+        </div>
+      ),
+    },
+    {
+      colId: 'recargo',
+      headerName: 'Recargo',
+      field: 'name',
+      width: 110,
+      cellRenderer: ({ value }: ICellRendererParams) => (
+        <div className='flex items-center h-full'>
+          <InputNumberBase
+            prefix='S/. '
+            size='small'
+            propsForm={{
+              name: [value, 'recargo'],
+            }}
+            precision={4}
+            min={0}
+            formWithMessage={false}
+            onChange={() => calcularSubtotalForm({ form, value })}
+          />
+        </div>
+      ),
+    },
+    {
+      colId: 'descuento',
+      headerName: 'Descuento',
+      field: 'name',
+      width: 160,
+      cellRenderer: ({ value }: ICellRendererParams) => (
+        <div className='flex items-center h-full gap-1'>
+          <SelectBase
+            size='small'
+            formWithMessage={false}
+            className='w-[60px]! min-w-[60px]! max-w-[60px]!'
+            defaultValue={'Monto' as DescuentoTipo}
+            options={[
+              { value: 'Monto', label: 'S/.' },
+              { value: 'Porcentaje', label: '%' },
+            ]}
+            propsForm={{
+              name: [value, 'descuento_tipo'],
+              hasFeedback: false,
+            }}
+            onChange={() => calcularSubtotalForm({ form, value })}
+          />
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, curr) =>
+              prev.productos?.[value]?.descuento_tipo !==
+              curr.productos?.[value]?.descuento_tipo
+            }
+          >
+            {() => {
+              const descuento_tipo = form.getFieldValue([
+                'productos',
+                value,
+                'descuento_tipo',
+              ])
+              const isPorcentaje = descuento_tipo === 'Porcentaje'
+
+              return (
+                <InputNumberBase
+                  prefix={isPorcentaje ? undefined : 'S/. '}
+                  suffix={isPorcentaje ? '%' : undefined}
+                  size='small'
+                  className='w-full'
+                  propsForm={{
+                    name: [value, 'descuento'],
+                  }}
+                  precision={isPorcentaje ? 2 : 4}
+                  min={0}
+                  max={isPorcentaje ? 100 : undefined}
+                  formWithMessage={false}
+                  onChange={() => calcularSubtotalForm({ form, value })}
+                />
+              )
+            }}
+          </Form.Item>
         </div>
       ),
     },

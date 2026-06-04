@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { FaCheckCircle, FaBan, FaInfoCircle, FaMapMarkerAlt } from 'react-icons/fa'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import NoAutorizado from '~/components/others/no-autorizado'
@@ -12,11 +13,31 @@ import FiltersMisEntregas from './_components/filters/filters-mis-entregas'
 import TableMisEntregas, { useStoreEntregaSeleccionada } from './_components/tables/table-mis-entregas'
 import TableDetalleEntrega from './_components/tables/table-detalle-entrega'
 import CardsInfoEntregas from './_components/cards/cards-info-entregas'
-import ModalConfirmarEntrega from './_components/modals/modal-confirmar-entrega'
-import ModalAnularEntregaV2 from './_components/modals/modal-anular-entrega-v2'
-import ModalDetallesEntregaCompleto from './_components/modals/modal-detalles-entrega-completo'
-import ModalMapaEntrega from './_components/modals/mapbox/modal-mapa-entrega'
-import ModalPdfEntregaWrapper from './_components/modals/modal-pdf-entrega-wrapper'
+
+// Modales con dependencias pesadas → dynamic import (ssr:false).
+// ModalMapaEntrega arrastra mapbox-gl (~2.8 MB). El resto arrastra AntD forms
+// grandes + @react-pdf/renderer. Cargarlos solo al abrir el modal reduce el
+// bundle inicial de mis-entregas en ~500 KB - 1 MB.
+const ModalConfirmarEntrega = dynamic(
+  () => import('./_components/modals/modal-confirmar-entrega'),
+  { ssr: false }
+)
+const ModalAnularEntregaV2 = dynamic(
+  () => import('./_components/modals/modal-anular-entrega-v2'),
+  { ssr: false }
+)
+const ModalDetallesEntregaCompleto = dynamic(
+  () => import('./_components/modals/modal-detalles-entrega-completo'),
+  { ssr: false }
+)
+const ModalMapaEntrega = dynamic(
+  () => import('./_components/modals/mapbox/modal-mapa-entrega'),
+  { ssr: false }
+)
+const ModalPdfEntregaWrapper = dynamic(
+  () => import('./_components/modals/modal-pdf-entrega-wrapper'),
+  { ssr: false }
+)
 
 import useAccionesEntrega from './_hooks/use-acciones-entrega'
 import { useQuery } from '@tanstack/react-query'

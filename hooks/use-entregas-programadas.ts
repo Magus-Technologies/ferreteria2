@@ -7,6 +7,8 @@ interface UseEntregasProgramadasParams {
   fecha_hasta?: string
   chofer_id?: string
   vehiculo_id?: number
+  /** Múltiples vehículos — usado por el filtro multi-select del calendario. */
+  vehiculo_ids?: number[]
   solo_programadas?: boolean
   enabled?: boolean
 }
@@ -58,17 +60,24 @@ export function useEntregasProgramadas({
   fecha_hasta,
   chofer_id,
   vehiculo_id,
+  vehiculo_ids,
   solo_programadas = true,
   enabled = true,
 }: UseEntregasProgramadasParams = {}) {
   return useQuery({
-    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas', fecha_desde, fecha_hasta, chofer_id, vehiculo_id, solo_programadas],
+    queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas', fecha_desde, fecha_hasta, chofer_id, vehiculo_id, vehiculo_ids, solo_programadas],
     queryFn: async () => {
+      // Preferencia: si vienen varios IDs, mandamos el array. Si no, fallback
+      // al `vehiculo_id` singular para compat.
+      const filtroVehiculo = vehiculo_ids && vehiculo_ids.length > 0
+        ? { vehiculo_ids }
+        : (vehiculo_id !== undefined ? { vehiculo_id } : {})
+
       const response = await entregasNuevasApi.listar({
         fecha_desde,
         fecha_hasta,
         chofer_id,
-        vehiculo_id,
+        ...filtroVehiculo,
         solo_programadas,
       })
 
