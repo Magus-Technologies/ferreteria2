@@ -1,4 +1,5 @@
 import { Form } from 'antd'
+import { useEffect } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { FaCalendar } from 'react-icons/fa6'
 import ButtonBase from '~/components/buttons/button-base'
@@ -24,6 +25,17 @@ export default function FiltersRecuperarOrdenCompra({
   setFiltros,
 }: FiltersRecuperarOrdenCompraProps) {
   const [form] = Form.useForm<ValuesFiltersRecuperarOrdenCompra>()
+
+  // Aplicar el filtro por defecto (hoy) al montarse, para que la tabla liste
+  // solo las órdenes de hoy y coincida con lo que muestran los date pickers.
+  useEffect(() => {
+    setFiltros({
+      desde: dayjs().format('YYYY-MM-DD'),
+      hasta: dayjs().format('YYYY-MM-DD'),
+      estado: 'pendiente',
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <FormBase
@@ -55,6 +67,7 @@ export default function FiltersRecuperarOrdenCompra({
             }}
             size='large'
             className='w-full'
+            classNameIcon='text-emerald-600 mx-1'
             classIconSearch='!mb-0'
             formWithMessage={false}
             allowClear
@@ -71,7 +84,7 @@ export default function FiltersRecuperarOrdenCompra({
             }}
             placeholder='Desde'
             formWithMessage={false}
-            prefix={<FaCalendar size={15} className='text-orange-600 mx-1' />}
+            prefix={<FaCalendar size={15} className='text-emerald-600 mx-1' />}
             allowClear
           />
         </LabelBase>
@@ -85,13 +98,13 @@ export default function FiltersRecuperarOrdenCompra({
             }}
             placeholder='Hasta'
             formWithMessage={false}
-            prefix={<FaCalendar size={15} className='text-orange-600 mx-1' />}
+            prefix={<FaCalendar size={15} className='text-emerald-600 mx-1' />}
             allowClear
           />
         </LabelBase>
 
         <ButtonBase
-          color='warning'
+          color='success'
           size='md'
           type='submit'
           className='flex items-center gap-2 mt-6'
