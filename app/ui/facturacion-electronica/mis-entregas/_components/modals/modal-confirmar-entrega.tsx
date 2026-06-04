@@ -7,7 +7,7 @@ import type { ColDef } from 'ag-grid-community'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi } from '~/lib/api/venta'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
 import { getStorageUrl } from '~/utils/upload'
 
@@ -314,12 +314,10 @@ export default function ModalConfirmarEntrega({
 
         {/* Resumen de productos */}
         {productos.length > 0 && (
-          <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
-              Productos a entregar ({productos.length})
-            </div>
-            <div style={{ height: 240 }}>
-              <TableBase<ProductoConfirmacion>
+          <div className="h-[290px] rounded-xl border border-gray-200 p-3">
+              <TableWithTitle<ProductoConfirmacion>
+                id="mis-entregas-confirmar-productos"
+                title={`Productos a entregar (${productos.length})`}
                 rowData={productos}
                 columnDefs={colDefs}
                 getRowId={({ data }) => String(data.id)}
@@ -329,7 +327,6 @@ export default function ModalConfirmarEntrega({
                 isVisible={open}
                 rowHeight={48}
               />
-            </div>
           </div>
         )}
       </div>
