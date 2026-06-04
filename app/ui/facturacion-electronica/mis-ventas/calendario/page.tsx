@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, lazy, useState } from 'react'
-import { Spin, Badge } from 'antd'
+import { Spin, Badge, Select } from 'antd'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import { FaCalendar, FaArrowLeft, FaTruck, FaUser, FaMapMarkerAlt, FaBox, FaPhone, FaEnvelope, FaIdCard } from 'react-icons/fa'
@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { entregasNuevasApi } from '~/lib/api/entregas'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
+import { vehiculosApi } from '~/lib/api/catalogos'
 
 const CalendarProgramacionEntregas = lazy(
   () => import('~/app/_components/calendar/calendar-programacion-entregas')
@@ -247,6 +248,16 @@ function PanelDetalleEntrega({ entregaId, evento }: { entregaId: number; evento:
 export default function CalendarioEntregasPage() {
   const router = useRouter()
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EntregaEvent | null>(null)
+  const [vehiculoId, setVehiculoId] = useState<number | undefined>()
+  const { data: vehiculos = [], isLoading: cargandoVehiculos } = useQuery({
+    queryKey: [QueryKeys.VEHICULOS, 'calendario-filtro'],
+    queryFn: async () => {
+      const res = await vehiculosApi.getAll({ estado: true })
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? []
+    },
+    staleTime: 10 * 60 * 1000,
+  })
 
   return (
     <ContenedorGeneral>
@@ -276,24 +287,43 @@ export default function CalendarioEntregasPage() {
         >
           {/* Calendario */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 overflow-hidden">
-            <div className="mb-4 flex flex-wrap items-center gap-5 text-xs border-b border-slate-100 pb-3">
-              <span className="font-semibold text-slate-700">Leyenda:</span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded border border-gray-300 bg-amber-400" />
-                <span className="text-gray-600">Pendiente</span>
+            <div className="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-5 text-xs">
+                <span className="font-semibold text-slate-700">Leyenda:</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded border border-gray-300 bg-amber-400" />
+                  <span className="text-gray-600">Pendiente</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded border border-gray-300 bg-blue-500" />
+                  <span className="text-gray-600">En Camino</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded border border-gray-300 bg-emerald-500" />
+                  <span className="text-gray-600">Entregado</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded border border-gray-300 bg-red-500" />
+                  <span className="text-gray-600">Cancelado</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded border border-gray-300 bg-blue-500" />
-                <span className="text-gray-600">En Camino</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded border border-gray-300 bg-emerald-500" />
-                <span className="text-gray-600">Entregado</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded border border-gray-300 bg-red-500" />
-                <span className="text-gray-600">Cancelado</span>
-              </div>
+              <Select
+                allowClear
+                showSearch
+                loading={cargandoVehiculos}
+                value={vehiculoId}
+                placeholder="Filtrar por vehículo"
+                className="w-full lg:w-[280px]"
+                optionFilterProp="label"
+                options={vehiculos.map((vehiculo) => ({
+                  value: vehiculo.id,
+                  label: `${vehiculo.name}${vehiculo.placa ? ` (${vehiculo.placa})` : ''}`,
+                }))}
+                onChange={(value) => {
+                  setVehiculoId(value)
+                  setEventoSeleccionado(null)
+                }}
+              />
             </div>
             <Suspense fallback={<ComponentLoading />}>
               <CalendarProgramacionEntregas
@@ -303,6 +333,7 @@ export default function CalendarioEntregasPage() {
                 }}
                 onSelectSlot={() => setEventoSeleccionado(null)}
                 soloProgramadasActivas={false}
+                vehiculo_id={vehiculoId}
               />
             </Suspense>
           </div>
