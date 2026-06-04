@@ -266,7 +266,17 @@ export default function TableMisEntregas() {
   }, [setEntregaSeleccionada])
 
   React.useEffect(() => {
-    if (!entregas || entregas.length === 0) return
+    if (!entregas || entregas.length === 0) {
+      // Lista vacía tras un filtro sin resultados: limpiar la selección para que
+      // el "Detalle de Entrega" no siga mostrando la entrega seleccionada antes.
+      // Solo cuando el query ya NO está cargando: al cambiar de filtro React Query
+      // deja rowData transitoriamente vacío, y limpiar ahí parpadearía cuando sí
+      // habrá resultados.
+      if (!loading && entregaSeleccionadaId != null) {
+        setEntregaSeleccionada(undefined)
+      }
+      return
+    }
 
     if (entregaSeleccionadaId == null) {
       return seleccionarPrimeraFila()
@@ -292,7 +302,7 @@ export default function TableMisEntregas() {
 
     // La entrega seleccionada ya no está en la lista → fila 0.
     return seleccionarPrimeraFila()
-  }, [entregas, entregaSeleccionadaId, seleccionarPrimeraFila, setEntregaSeleccionada])
+  }, [entregas, entregaSeleccionadaId, loading, seleccionarPrimeraFila, setEntregaSeleccionada])
 
   // Función para aplicar estilos a las filas
   const getRowStyle = (params: { data?: EntregaDB }): RowStyle | undefined => {
