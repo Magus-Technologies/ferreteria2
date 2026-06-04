@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { focusNext } from '~/app/_utils/autofocus'
 import { TipoMoneda } from '~/types'
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community'
@@ -35,7 +35,11 @@ export function useColumnsComprar({
   // Captura el valor soles mientras el usuario escribe sin disparar re-renders
   const precioSolesRefs = useRef<Map<number, number>>(new Map())
 
-  const columns: ColDef<FormListFieldData>[] = [
+  // Memoizado por referencia: mientras el usuario escribe en cantidad/flete/lote
+  // (que NO cambian tipo_moneda/tipo_de_cambio), se devuelve el MISMO array de
+  // columnDefs. Así ag-grid no recibe columnas nuevas y no remonta la celda
+  // editable, conservando el foco del input.
+  const columns = useMemo<ColDef<FormListFieldData>[]>(() => [
     {
       colId: 'codigo',
       headerName: 'Código',
@@ -701,7 +705,7 @@ export function useColumnsComprar({
         )
       },
     },
-  ]
+  ], [form, remove, incluye_precios, cantidad_pendiente, tipo_moneda, tipo_de_cambio])
 
   return columns
 }
