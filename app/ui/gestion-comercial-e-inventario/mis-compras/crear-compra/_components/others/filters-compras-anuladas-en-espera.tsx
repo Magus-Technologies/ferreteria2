@@ -89,6 +89,7 @@ export default function FiltersComprasAnuladasEnEspera({
             className: '!min-w-[400px] !w-[400px] !max-w-[400px]',
           }}
           className='w-full'
+          classNameIcon='text-emerald-600 mx-1'
           classIconSearch='!mb-0'
           formWithMessage={false}
           allowClear
@@ -103,7 +104,7 @@ export default function FiltersComprasAnuladasEnEspera({
             }}
             placeholder='Fecha Compra'
             formWithMessage={false}
-            prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
+            prefix={<FaCalendar size={15} className='text-emerald-600 mx-1' />}
             allowClear
           />
         </LabelBase>
@@ -116,7 +117,7 @@ export default function FiltersComprasAnuladasEnEspera({
             }}
             placeholder='Hasta'
             formWithMessage={false}
-            prefix={<FaCalendar size={15} className='text-cyan-600 mx-1' />}
+            prefix={<FaCalendar size={15} className='text-emerald-600 mx-1' />}
             allowClear
           />
         </LabelBase>
@@ -128,6 +129,7 @@ export default function FiltersComprasAnuladasEnEspera({
               className: '!min-w-[150px] !w-[150px] !max-w-[150px]',
             }}
             className='w-full'
+            classNameIcon='text-emerald-600 mx-1'
             formWithMessage={false}
             allowClear
           />
@@ -139,7 +141,7 @@ export default function FiltersComprasAnuladasEnEspera({
           }}
         />
         <ButtonBase
-          color='info'
+          color='success'
           size='md'
           type='submit'
           className='flex items-center gap-2 w-fit'

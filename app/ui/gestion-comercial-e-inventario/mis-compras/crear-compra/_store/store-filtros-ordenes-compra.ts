@@ -11,7 +11,7 @@ export const useStoreFiltrosOrdenesCompra = create<StoreFiltrosOrdenesCompra>(
   set => ({
     filtros: {
       estado: 'pendiente', // Solo pendientes por defecto
-      desde: dayjs().subtract(30, 'days').format('YYYY-MM-DD'),
+      desde: dayjs().format('YYYY-MM-DD'), // Hoy por defecto (coincide con el filtro)
       hasta: dayjs().format('YYYY-MM-DD'),
     },
     setFiltros: filtros => set({ filtros }),
