@@ -330,8 +330,11 @@ export default function useCreateVenta({
             referencia: s.servicio_referencia || null,
           }))
         : undefined,
-      // Agregar métodos de pago si existen, extrayendo correctamente los IDs
-      despliegue_de_pago_ventas: metodos_de_pago && metodos_de_pago.length > 0
+      // Agregar métodos de pago si existen, extrayendo correctamente los IDs.
+      // En ventas a CRÉDITO el dinero no ingresa al crear (queda como cuenta por
+      // cobrar), así que nunca se envían métodos de pago aunque el form los
+      // arrastre de una edición previa al contado — el backend los rechazaría.
+      despliegue_de_pago_ventas: restValues.forma_de_pago !== FormaDePago.CREDITO && metodos_de_pago && metodos_de_pago.length > 0
         ? metodos_de_pago
             .map(mp => {
               const id = extractDesplieguePagoId(mp.despliegue_de_pago_id)

@@ -215,6 +215,7 @@ export default function CardAgregarProductoVenta({
       unidades_derivadas_disponibles: unidades_derivadas,
       producto_en_almacenes: productoSeleccionadoSearchStore?.producto_en_almacenes,
       paquetes_count: paquetes.length,
+      img: productoSeleccionadoSearchStore?.img ?? null,
     }
 
     // Si se proporciona onOk, solo llamarlo (usado por cotizaciones)
@@ -576,6 +577,7 @@ export default function CardAgregarProductoVenta({
                 paquete_instance_id: paqueteInstanceId,
                 paquete_nombre: paqueteParaAgregar.nombre,
                 tipo_precio: tipoPrecioPaquete,
+                img: paqueteProducto.producto.img ?? null,
                 // Guardar TODOS los precios y descuentos de todos los tipos
                 // Estos se usan cuando el usuario cambia el tipo de precio
                 paq_precio_publico: Number(paqueteProducto.precio_publico || 0),
