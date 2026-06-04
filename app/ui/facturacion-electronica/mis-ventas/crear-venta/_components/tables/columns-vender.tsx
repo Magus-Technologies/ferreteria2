@@ -2,7 +2,7 @@
 
 import { DescuentoTipo, TipoMoneda } from '~/lib/api/venta'
 import { ColDef, ICellRendererParams } from 'ag-grid-community'
-import { Form, FormInstance, FormListFieldData, Tooltip, Popover } from 'antd'
+import { Form, FormInstance, FormListFieldData, Image, Tooltip, Popover } from 'antd'
 import { useRef, useEffect, useState } from 'react'
 import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
@@ -20,6 +20,7 @@ import { GetStock } from '~/app/_utils/get-stock'
 import { paqueteApi, type Paquete } from '~/lib/api/paquete'
 import ModalBuscarPaquete from '~/app/_components/modals/modal-buscar-paquete'
 import { useStorePaqueteSeleccionado } from '~/app/ui/facturacion-electronica/mis-ventas/store/store-paquete-seleccionado'
+import { getStorageUrl } from '~/utils/upload'
 
 function PaquetesBadgeVenta({ productoId, count }: { productoId: number; count: number }) {
   const [open, setOpen] = useState(false)
@@ -300,6 +301,60 @@ export function useColumnsVender({
         )
       },
       type: 'numberColumn',
+    },
+    {
+      headerName: 'Imagen',
+      field: 'name',
+      colId: 'imagen',
+      width: 56,
+      minWidth: 56,
+      suppressNavigable: true,
+      sortable: false,
+      cellRenderer: ({ value }: ICellRendererParams<FormListFieldData>) => {
+        const tipoFila = form.getFieldValue(['productos', value, '_tipo_fila'])
+        const tipo = form.getFieldValue(['productos', value, '_tipo'])
+
+        // Paquete cabecera y vale promocional: sin imagen
+        if (tipoFila === 'paquete_cabecera' || tipoFila === 'vale_promocional') {
+          return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
+        }
+
+        // Servicio: sin imagen
+        if (tipo === 'servicio') {
+          return <div className="flex items-center h-full justify-center text-slate-300 text-xs">—</div>
+        }
+
+        const imgPath = form.getFieldValue(['productos', value, 'img']) as string | null | undefined
+        const src = getStorageUrl(imgPath)
+        const isPaqueteProducto = tipoFila === 'paquete_producto'
+
+        return (
+          <div className="flex items-center h-full justify-center">
+            {src ? (
+              <Image
+                src={src}
+                alt={form.getFieldValue(['productos', value, 'producto_name']) || 'Producto'}
+                width={isPaqueteProducto ? 22 : 32}
+                height={isPaqueteProducto ? 22 : 32}
+                className={
+                  (isPaqueteProducto ? 'h-[22px] w-[22px]' : 'h-8 w-8') +
+                  ' rounded border border-slate-200 object-cover flex-shrink-0'
+                }
+                preview={{ mask: 'Ver' }}
+              />
+            ) : (
+              <div
+                className={
+                  (isPaqueteProducto ? 'h-[22px] w-[22px] text-[8px]' : 'h-8 w-8 text-[10px]') +
+                  ' flex items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 font-semibold text-slate-400'
+                }
+              >
+                S/I
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       headerName: 'Código',

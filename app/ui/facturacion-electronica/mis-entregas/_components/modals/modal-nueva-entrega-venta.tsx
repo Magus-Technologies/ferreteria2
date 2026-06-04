@@ -10,7 +10,6 @@
 import { useMemo } from 'react'
 import { Modal, Spin } from 'antd'
 import { useQuery } from '@tanstack/react-query'
-import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi } from '~/lib/api/venta'
 import ModalEntregaUpdate from './modal-entrega-update'
 import type { ResumenVenta } from '~/lib/api/entregas'
@@ -38,11 +37,19 @@ interface Props {
 }
 
 export default function ModalNuevaEntregaVenta({ open, onClose, venta, onSuccess, tipoEntrega = 'de', cantidadesOverride, fechaProgramada, onRecolectar }: Props) {
-  const { data: ventaResp, isFetching } = useQuery({
-    queryKey: [QueryKeys.VENTAS, 'detalle-nueva-entrega', venta?.venta_id],
+  const { data: ventaResp, isLoading } = useQuery({
+    // Clave dedicada (NO bajo QueryKeys.VENTAS) a propósito: este modal de
+    // configuración debe quedarse quieto mientras está abierto. Si la clave
+    // empezara con [VENTAS], cualquier invalidateQueries([VENTAS]) —p.ej. otro
+    // usuario registrando una venta por realtime— matchearía por prefijo y
+    // forzaría un refetch que recalcula la entrega y resetea lo que el usuario
+    // estaba configurando. Además, staleTime + refetchOnWindowFocus:false evitan
+    // refetches espontáneos mientras el modal sigue abierto.
+    queryKey: ['venta-detalle-nueva-entrega', venta?.venta_id],
     queryFn: () => ventaApi.getById(venta!.venta_id),
     enabled: open && !!venta?.venta_id,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   })
 
   const ventaDetalle = (ventaResp?.data?.data ?? ventaResp?.data) as any
@@ -126,8 +133,10 @@ export default function ModalNuevaEntregaVenta({ open, onClose, venta, onSuccess
     }
   }, [ventaDetalle, cantidadesOverride, tipoEntrega, fechaProgramada])
 
-  // Mientras carga la venta: mostrar spinner dentro de un modal base
-  if (open && (isFetching || !fakeEntrega)) {
+  // Mientras carga la venta POR PRIMERA VEZ: mostrar spinner dentro de un modal
+  // base. Usamos isLoading (no isFetching) para que un refetch en segundo plano
+  // no desmonte el modal rico y borre lo que el usuario está configurando.
+  if (open && (isLoading || !fakeEntrega)) {
     return (
       <Modal
         open={open}

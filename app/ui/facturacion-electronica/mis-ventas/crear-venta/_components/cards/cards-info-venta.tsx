@@ -2,7 +2,7 @@
 
 import { DescuentoTipo, EstadoDeVenta } from "~/lib/api/venta";
 import { Form, FormInstance } from "antd";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { clienteApi } from "~/lib/api/cliente";
 import useApp from "antd/es/app/useApp";
@@ -115,6 +115,18 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
 
   // Crédito requiere N° de días — sin días no se puede saber el vencimiento.
   const creditoSinDias = forma_de_pago === "cr" && !Number(numero_dias);
+
+  // Al pasar a CRÉDITO, descartar los métodos de pago que pudieran haber quedado
+  // de una edición previa al contado: en crédito el dinero no ingresa al crear,
+  // así que no corresponde registrarlos (el backend los rechaza). Mantiene la UI
+  // consistente con el envío (ver use-create-venta).
+  useEffect(() => {
+    if (forma_de_pago !== "cr") return;
+    const metodos = form.getFieldValue("metodos_de_pago");
+    if (metodos && metodos.length > 0) {
+      form.setFieldValue("metodos_de_pago", undefined);
+    }
+  }, [forma_de_pago, form]);
 
   // Filtrar cabeceras de paquete para cálculos (son resumen, no productos reales)
   const productosReales = useMemo(
