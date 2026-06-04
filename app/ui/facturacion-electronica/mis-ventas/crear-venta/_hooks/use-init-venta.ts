@@ -108,6 +108,7 @@ export default function useInitVenta({
               unidad_derivada_factor: Number(ud.factor),
               producto_id: ppa.producto_almacen.producto_id,
               stock_fraccion: Number((ppa.producto_almacen as any).stock_fraccion ?? 0),
+              img: ppa.producto_almacen.producto.img ?? null,
             }))
           ),
           // Servicios de la venta
@@ -146,6 +147,7 @@ export default function useInitVenta({
           storeInmediato.push({
             producto_id: ppa.producto_almacen.producto_id,
             producto_name: ppa.producto_almacen.producto.name,
+            img: ppa.producto_almacen.producto.img ?? null,
             unidades_derivadas_disponibles: udsDispo,
           })
         }
@@ -200,6 +202,7 @@ export default function useInitVenta({
                 storeProductos.push({
                   producto_id: prod.producto_id,
                   producto_name: prod.producto_name,
+                  img: productoBackend.img ?? null,
                   unidades_derivadas_disponibles: productoEnAlmacen.unidades_derivadas,
                 })
               }
