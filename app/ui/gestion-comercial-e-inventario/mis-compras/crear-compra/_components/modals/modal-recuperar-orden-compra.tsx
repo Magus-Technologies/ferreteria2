@@ -5,6 +5,7 @@ import FiltersRecuperarOrdenCompra from '../others/filters-recuperar-orden-compr
 import TableOrdenesCompra from '../tables/table-ordenes-compra'
 import TableDetalleOrdenCompra from '../tables/table-detalle-orden-compra'
 import { useStoreOrdenCompraSeleccionada } from '../../_store/store-orden-compra-seleccionada'
+import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 import { loadCompraIntoForm } from '../../_utils/load-compra-into-form'
 import { useState } from 'react'
 
@@ -29,6 +30,9 @@ export default function ModalRecuperarOrdenCompra({
   const setCompraSeleccionada = useStoreOrdenCompraSeleccionada(
     state => state.setCompra
   )
+  const setProductosCompra = useStoreProductoAgregadoCompra(
+    store => store.setProductos
+  )
   const [loading, setLoading] = useState(false)
 
   const cargarOrden = async (orden: OrdenCompra) => {
@@ -36,7 +40,7 @@ export default function ModalRecuperarOrdenCompra({
 
     try {
       onOrdenLoaded?.(orden)
-      const result = await loadCompraIntoForm(orden, form)
+      const result = await loadCompraIntoForm(orden, form, setProductosCompra)
 
       if (result.success) {
         message.success('Orden de compra cargada correctamente')

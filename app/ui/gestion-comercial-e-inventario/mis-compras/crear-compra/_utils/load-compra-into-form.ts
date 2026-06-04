@@ -5,9 +5,12 @@ import dayjs from 'dayjs'
 import { productosApiV2 } from '~/lib/api/producto'
 import { useStoreAlmacen } from '~/store/store-almacen'
 
+type SetProductosFunction = (productos: any[] | ((prev: any[]) => any[])) => void
+
 export const loadCompraIntoForm = async (
   ordenCompra: OrdenCompra,
-  form: FormInstance
+  form: FormInstance,
+  setProductosCompra?: SetProductosFunction
 ): Promise<{ success: boolean; message?: string }> => {
   try {
     // Validar que la orden de compra tenga datos
@@ -101,6 +104,7 @@ export const loadCompraIntoForm = async (
           lote: producto.lote || '',
           vencimiento: producto.vencimiento ? dayjs(producto.vencimiento) : null,
           subtotal: producto.subtotal,
+          unidades_derivadas_disponibles: unidadesDerivadas,
         }
       })
       .filter(Boolean) // Remove null entries
@@ -115,7 +119,10 @@ export const loadCompraIntoForm = async (
     // Cargar productos en el formulario
     form.setFieldValue('productos', productos)
 
-    // Limpiar campos que no deben copiarse
+    // Actualizar store para que SelectUnidadDerivadaCompra funcione
+    if (setProductosCompra) {
+      setProductosCompra(productos)
+    }
     form.setFieldValue('serie', ordenCompra.serie || undefined)
     form.setFieldValue('numero', ordenCompra.numero || undefined)
     form.setFieldValue('guia', ordenCompra.guia || undefined)
