@@ -338,6 +338,7 @@ export function useColumnsCotizar({
       cellRenderer: ({ value }: ICellRendererParams) => {
         return (
           <button
+            type='button'
             onClick={() => {
               const productos = (form.getFieldValue('productos') || []) as FormCreateCotizacion['productos']
               const newProductos = productos.filter(

@@ -192,3 +192,14 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.ant-image-preview-operations .ant-image-preview-close {
+  top: 24px;
+  right: calc(50vw - min(44vw, 520px));
+}
+
+@media (max-width: 768px) {
+  .ant-image-preview-operations .ant-image-preview-close {
+    right: 16px;
+  }
+}

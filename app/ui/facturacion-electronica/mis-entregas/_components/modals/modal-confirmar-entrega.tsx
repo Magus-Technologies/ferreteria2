@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Modal, Button, Tooltip } from 'antd'
+import { Modal, Button, Tooltip, Image } from 'antd'
 import { FaCheck, FaBoxOpen, FaUser, FaMapMarkerAlt, FaFileInvoice, FaFilePdf, FaTruck } from 'react-icons/fa'
 import type { ColDef } from 'ag-grid-community'
 import { useQuery } from '@tanstack/react-query'
@@ -9,6 +9,7 @@ import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi } from '~/lib/api/venta'
 import TableBase from '~/components/tables/table-base'
 import { useStoreModalPdfEntrega } from '../../_store/store-modal-pdf-entrega'
+import { getStorageUrl } from '~/utils/upload'
 
 interface ModalConfirmarEntregaProps {
   open: boolean
@@ -22,8 +23,10 @@ interface ModalConfirmarEntregaProps {
 
 type ProductoConfirmacion = {
   id: string | number
+  foto?: string | null
   codigo: string
   producto: string
+  ubicacion: string
   unidad: string
   cantidad: number
 }
@@ -69,8 +72,10 @@ export default function ModalConfirmarEntrega({
 
       return {
         id: p.id || index,
+        foto: producto.img || null,
         codigo: producto.cod_producto || '—',
         producto: producto.name || 'Producto',
+        ubicacion: producto.ubicacion_almacen || '—',
         unidad: ud.unidad_derivada_inmutable?.name || '—',
         cantidad: cantidadAConfirmar,
       }
@@ -78,8 +83,35 @@ export default function ModalConfirmarEntrega({
   }, [entrega])
 
   const colDefs = useMemo<ColDef<ProductoConfirmacion>[]>(() => [
+    {
+      headerName: 'Foto',
+      field: 'foto',
+      width: 72,
+      cellRenderer: ({ value }: { value?: string | null }) => {
+        const src = getStorageUrl(value)
+        return (
+          <div className="flex h-full items-center justify-center">
+            {src ? (
+              <Image
+                src={src}
+                alt="Producto"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-md border border-slate-200 object-cover"
+                preview={{ mask: 'Ver' }}
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-[10px] font-semibold text-slate-400">
+                S/I
+              </div>
+            )}
+          </div>
+        )
+      },
+    },
     { headerName: 'Código',   field: 'codigo',   width: 110 },
     { headerName: 'Producto', field: 'producto', flex: 1, minWidth: 200 },
+    { headerName: 'Ubicación', field: 'ubicacion', width: 130 },
     { headerName: 'Unidad',   field: 'unidad',   width: 100 },
     {
       headerName: 'Cant.',
@@ -166,7 +198,7 @@ export default function ModalConfirmarEntrega({
       }
       open={open}
       onCancel={onClose}
-      width={720}
+      width={900}
       centered
       destroyOnHidden
       footer={
@@ -295,7 +327,7 @@ export default function ModalConfirmarEntrega({
                 rowSelection={false}
                 persistColumnState={false}
                 isVisible={open}
-                rowHeight={38}
+                rowHeight={48}
               />
             </div>
           </div>

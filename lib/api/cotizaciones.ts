@@ -42,6 +42,7 @@ export interface ProductoAlmacen {
   id: number;
   producto_id: number;
   almacen_id: number;
+  stock_fraccion?: number;
   producto: Producto;
   // Unidades derivadas disponibles del producto en el almacén (con todos los
   // precios/comisiones). Se incluye solo en GET /cotizaciones/{id} para

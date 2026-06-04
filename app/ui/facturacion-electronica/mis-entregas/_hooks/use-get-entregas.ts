@@ -82,6 +82,8 @@ function mapToEntregaDB(e: EntregaNueva): any {
             producto: d.producto ? {
               name:         d.producto.name,
               cod_producto: d.producto.cod_producto,
+              img:          d.producto.img,
+              ubicacion_almacen: d.producto.ubicacion_almacen,
               marca:        { name: '—' },
             } : { name: '—', cod_producto: '—', marca: { name: '—' } },
           },
