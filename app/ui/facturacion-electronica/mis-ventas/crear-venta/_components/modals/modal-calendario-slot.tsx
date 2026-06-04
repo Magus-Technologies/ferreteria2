@@ -69,6 +69,9 @@ export default function ModalCalendarioSlot({
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date())
   const [disabledRanges, setDisabledRanges] = useState<{ start: Date; end: Date }[]>([])
   const tieneVehiculo = !!vehiculo_id
+  // Reset cuando se abre el modal O cuando cambia el vehículo específico.
+  // Sin `vehiculo_id` como dep, pasar de A → B (ambos con id) dejaba el slot
+  // y los bloqueos de mantenimiento del vehículo A pegados en la grilla.
   useEffect(() => {
     if (open && tieneVehiculo) {
       setSlotPendiente(null)
@@ -78,7 +81,7 @@ export default function ModalCalendarioSlot({
       setDisabledRanges([])
       setSelectedCalendarDate(new Date())
     }
-  }, [open, tieneVehiculo])
+  }, [open, tieneVehiculo, vehiculo_id])
 
   // Obtener TODOS los bloqueos del vehículo en el rango visible
   const fetchBloqueos = useCallback(async () => {
@@ -198,6 +201,11 @@ export default function ModalCalendarioSlot({
     <Modal
       open={open}
       onCancel={handleCancel}
+      // CRÍTICO: destruye el contenido al cerrar para que `CalendarProgramacionEntregas`
+      // (lazy) se re-monte limpio en cada apertura. Sin esto, su `selectedSlot` interno
+      // (que renderiza el evento temporal con id: -1 en la grilla) persiste entre
+      // aperturas y muestra el slot viejo cuando el usuario cambia de vehículo.
+      destroyOnHidden
       title={
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
