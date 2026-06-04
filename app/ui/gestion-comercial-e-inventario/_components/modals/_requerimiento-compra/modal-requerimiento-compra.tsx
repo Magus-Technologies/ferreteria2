@@ -181,7 +181,9 @@ export default function ModalRequerimientoCompra({
                                             : formHook.productosSeleccionados.find(s => s.nombre === p.nombre && s.id === null)
 
                                         if (!exists) {
-                                            formHook.setProductosSeleccionados([...formHook.productosSeleccionados, { ...p, cantidad: 1 }])
+                                            // Respetar la cantidad ingresada en el card "Agregar Producto"
+                                            // (antes se forzaba a 1, ignorando lo que el usuario escribió).
+                                            formHook.setProductosSeleccionados([...formHook.productosSeleccionados, { ...p, cantidad: p.cantidad ?? 1 }])
                                         }
                                     }}
                                     onQuitarProducto={(id) => {

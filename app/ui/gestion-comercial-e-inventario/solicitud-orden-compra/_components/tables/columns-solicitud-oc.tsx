@@ -14,11 +14,12 @@ const PRIORIDAD_COLORS: Record<string, string> = {
   URGENTE: 'volcano',
 }
 
-const ESTADO_COLORS: Record<string, string> = {
-  pendiente: 'processing',
-  aprobado: 'success',
-  rechazado: 'error',
-  anulado: 'default',
+// Estado de atención de la solicitud (avance de lo ordenado de sus productos).
+// Viene del backend en `estado_solicitud`: pendiente | en_proceso | aprobado.
+const ESTADO_SOLICITUD_META: Record<string, { label: string; color: string }> = {
+  pendiente: { label: 'Pendiente', color: 'orange' },
+  en_proceso: { label: 'Parcial', color: 'processing' },
+  aprobado: { label: 'Completado', color: 'success' },
 }
 
 export function useColumnsSolicitudOC({
@@ -107,17 +108,19 @@ export function useColumnsSolicitudOC({
     {
       colId: 'estado',
       headerName: 'Estado',
-      field: 'estado',
-      width: 110,
-      minWidth: 90,
-      hide: true,
-      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => (
-        <div className="flex items-center h-full">
-          <Tag color={ESTADO_COLORS[data?.estado || 'pendiente']}>
-            {data?.estado?.toUpperCase()}
-          </Tag>
-        </div>
-      ),
+      field: 'estado_solicitud',
+      width: 120,
+      minWidth: 100,
+      cellRenderer: ({ data }: ICellRendererParams<RequerimientoInterno>) => {
+        const meta =
+          ESTADO_SOLICITUD_META[data?.estado_solicitud || 'pendiente'] ??
+          ESTADO_SOLICITUD_META.pendiente
+        return (
+          <div className="flex items-center h-full">
+            <Tag color={meta.color}>{meta.label}</Tag>
+          </div>
+        )
+      },
     },
     {
       colId: 'fecha_requerida',

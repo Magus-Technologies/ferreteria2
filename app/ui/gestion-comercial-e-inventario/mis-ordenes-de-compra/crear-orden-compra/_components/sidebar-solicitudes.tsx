@@ -81,7 +81,9 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
             })
             if (response.data?.data) {
                 const filtered = response.data.data.filter(req =>
-                    (req.productos || []).some(p => (p.cantidad_restante ?? p.cantidad_pendiente ?? p.cantidad) > 0)
+                    (req.productos || []).some(
+                        p => Number(p.cantidad ?? 0) - Number(p.cantidad_ordenada ?? 0) > 0
+                    )
                 )
                 setRequerimientos(filtered)
             }
@@ -109,9 +111,12 @@ export default function SidebarSolicitudes({ onAddProduct, onAddAll, productosAg
     }
 
     const getRemaining = (p: RequerimientoInternoProducto): number => {
-        // Solo mostrar la cantidad original del requerimiento
-        // No restar lo ya agregado, porque queremos permitir agregar múltiples veces
-        return Number(p.cantidad)
+        // Pendiente real = cantidad solicitada - lo ya ordenado en OCs previas
+        // (cantidad_ordenada). No se resta lo agregado en ESTA sesión, porque eso
+        // se permite agregar varias veces; solo se descuenta lo ya comprometido.
+        const cantidad = Number(p.cantidad ?? 0)
+        const ordenada = Number(p.cantidad_ordenada ?? 0)
+        return Math.max(0, cantidad - ordenada)
     }
 
     const mapToSelection = (p: RequerimientoInternoProducto, req: RequerimientoInterno): ProductoSidebarSelection => {
