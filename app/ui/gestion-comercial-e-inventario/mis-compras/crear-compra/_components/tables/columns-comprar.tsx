@@ -595,20 +595,22 @@ export function useColumnsComprar({
               precision={2}
               min={0}
               formWithMessage={false}
-              onChange={val => {
+              onChange={() => {
+                // El flete NO forma parte del subtotal (cantidad * precio).
+                // Se suma aparte en el total. Recalculamos el subtotal solo con
+                // cantidad * precio para evitar contar el flete dos veces.
                 form.setFieldValue(
                   ['productos', value, 'subtotal'],
-                  Number(val ?? 0) +
+                  Number(
+                    form.getFieldValue(['productos', value, 'cantidad']) ?? 0
+                  ) *
                     Number(
-                      form.getFieldValue(['productos', value, 'cantidad']) ?? 0
-                    ) *
-                      Number(
-                        form.getFieldValue([
-                          'productos',
-                          value,
-                          'precio_compra',
-                        ]) ?? 0
-                      )
+                      form.getFieldValue([
+                        'productos',
+                        value,
+                        'precio_compra',
+                      ]) ?? 0
+                    )
                 )
               }}
             />
