@@ -16,6 +16,7 @@ export default function FormFormaDePagoCompra({
   form: FormInstance
 }) {
   const formaDePago = Form.useWatch('forma_de_pago', form)
+  const fechaDocumento = Form.useWatch('fecha', form)
 
   // Usar useCallback para estabilizar la función
   const limpiarCampos = useCallback(() => {
@@ -78,11 +79,13 @@ export default function FormFormaDePagoCompra({
           disabled={formaDePago === FormaDePago.Contado}
           onChange={val => {
             if (!val) form.setFieldValue('fecha_vencimiento', undefined)
-            else
+            else {
+              const fechaBase = fechaDocumento ? dayjs(fechaDocumento) : dayjs()
               form.setFieldValue(
                 'fecha_vencimiento',
-                dayjs().add(Number(val), 'days')
+                fechaBase.add(Number(val), 'days')
               )
+            }
           }}
         />
       </LabelBase>
