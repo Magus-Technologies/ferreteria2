@@ -13,6 +13,9 @@ import { FaCalendar } from 'react-icons/fa'
 import useCreateRecepcionAlmacen from '../../_hooks/use-create-recepcion-almacen'
 import FormCrearRecepcionAlmacen from '../form/form-crear-recepcion-almacen'
 import { getNroDocCompra } from '~/app/_utils/get-nro-doc'
+import { productosApiV2 } from '~/lib/api/producto'
+import { useStoreAlmacen } from '~/store/store-almacen'
+import { useStoreProductoAgregadoCompra } from '~/app/_stores/store-producto-agregado-compra'
 
 export type FormCreateRecepcionAlmacen = Pick<
   FormCreateCompra,
@@ -45,6 +48,7 @@ export default function ModalCrearRecepcionAlmacen({
   setOrdenCompra?: (orden: OrdenCompra | undefined) => void
 }) {
   const [form] = Form.useForm<FormCreateRecepcionAlmacen>()
+  const setProductosCompra = useStoreProductoAgregadoCompra(s => s.setProductos)
 
   const nro_doc = compra ? getNroDocCompra({ compra }) : (ordenCompra?.codigo ?? '')
 
@@ -61,18 +65,61 @@ export default function ModalCrearRecepcionAlmacen({
   })
 
   useEffect(() => {
-    form.resetFields()
-    if (compra && compra.productos_por_almacen) {
-      const productos_formateados = compra.productos_por_almacen.flatMap(
-        producto_por_almacen =>
-          (producto_por_almacen.unidades_derivadas || []).map(unidad_derivada => ({
-            producto: producto_por_almacen,
-            unidad_derivada: unidad_derivada,
-          }))
+    let cancelled = false
+
+    // Enriquecer cada producto con las unidades derivadas disponibles del catálogo
+    // (consultando por almacén) para que el select de unidad de la tabla muestre
+    // la lista de unidades, igual que en Crear Compra. El backend de recepción
+    // guarda por `unidad_derivada_name` + `factor`, así que cambiar de unidad es
+    // seguro; el `unidad_derivada_id` solo sirve para preseleccionar en el select.
+    const enrichUnidades = async (productos: any[]) => {
+      const almacen_id = useStoreAlmacen.getState().almacen_id
+      if (!almacen_id) return productos
+
+      const ids = [
+        ...new Set(productos.map(p => p.producto_id).filter(Boolean)),
+      ] as number[]
+
+      const detalles = await Promise.all(
+        ids.map(id => productosApiV2.getDetallePrecios(id, { almacen_id }))
       )
-      form.setFieldValue(
-        'productos',
-        productos_formateados
+
+      const mapUd = new Map<number, any[]>()
+      ids.forEach((id, i) => mapUd.set(id, detalles[i]?.data?.unidades_derivadas ?? []))
+
+      return productos.map(p => {
+        const uds = mapUd.get(p.producto_id) ?? []
+        if (uds.length === 0) return { ...p, unidades_derivadas_disponibles: [] }
+
+        const nombre = String(p.unidad_derivada_name ?? '').trim().toLowerCase()
+        const match =
+          uds.find((ud: any) => ud.unidad_derivada?.name?.trim().toLowerCase() === nombre) ??
+          uds.find((ud: any) => Number(ud.factor) === 1) ??
+          uds[0]
+
+        return {
+          ...p,
+          unidad_derivada_id: match?.unidad_derivada?.id ?? p.unidad_derivada_id,
+          unidad_derivada_name: match?.unidad_derivada?.name ?? p.unidad_derivada_name,
+          unidades_derivadas_disponibles: uds,
+        }
+      })
+    }
+
+    const load = async () => {
+      form.resetFields()
+
+      let productos: any[] = []
+
+      if (compra && compra.productos_por_almacen) {
+        const productos_formateados = compra.productos_por_almacen.flatMap(
+          producto_por_almacen =>
+            (producto_por_almacen.unidades_derivadas || []).map(unidad_derivada => ({
+              producto: producto_por_almacen,
+              unidad_derivada: unidad_derivada,
+            }))
+        )
+        productos = productos_formateados
           .filter(p => {
             const unidad = p.unidad_derivada
             const cantidad_pendiente = unidad.cantidad_pendiente ?? unidad.cantidad ?? 0
@@ -96,6 +143,8 @@ export default function ModalCrearRecepcionAlmacen({
                 unidad_derivada.unidad_derivada_inmutable?.name ?? '',
               unidad_derivada_id: unidad_derivada.unidad_derivada_inmutable?.id ?? 0,
               unidad_derivada_factor: unidad_derivada.factor,
+              // Costo base por unidad (sin factor) para recalcular al cambiar de unidad
+              costo_actual: Number(p.producto.costo),
               cantidad: cantidad_pendiente_num,
               cantidad_recepcionada:
                 Math.max(0, Number(unidad_derivada.cantidad ?? 0) - cantidad_pendiente_num),
@@ -113,12 +162,9 @@ export default function ModalCrearRecepcionAlmacen({
               lote: unidad_derivada.lote,
             }
           })
-          .filter(Boolean)
-      )
-    } else if (ordenCompra && ordenCompra.productos) {
-      form.setFieldValue(
-        'productos',
-        ordenCompra.productos
+          .filter(Boolean) as any[]
+      } else if (ordenCompra && ordenCompra.productos) {
+        productos = ordenCompra.productos
           .filter((p: any) => Number(p.cantidad_pendiente ?? p.cantidad) > 0)
           .map((p: any) => {
             const cant_pend = Number(p.cantidad_pendiente ?? p.cantidad)
@@ -131,6 +177,7 @@ export default function ModalCrearRecepcionAlmacen({
               unidad_derivada_name: p.unidad ?? '',
               unidad_derivada_id: 0,
               unidad_derivada_factor: 1, // Orden de compra simplificada usa factor 1
+              costo_actual: Number(p.precio),
               cantidad: cant_pend,
               cantidad_recepcionada: Math.max(0, Number(p.cantidad) - cant_pend),
               cantidad_pendiente: cant_pend,
@@ -141,22 +188,38 @@ export default function ModalCrearRecepcionAlmacen({
               lote: p.lote,
             }
           })
-      )
-    }
-    
-    // Establecer el proveedor por defecto
-    const proveedor_id = compra?.proveedor_id ?? ordenCompra?.proveedor_id
-    if (proveedor_id) {
-      form.setFieldValue('proveedor_id', proveedor_id)
+      }
+
+      // Traer las unidades del catálogo para habilitar el select de unidad
+      productos = await enrichUnidades(productos)
+      if (cancelled) return
+
+      form.setFieldValue('productos', productos)
+      // Poblar el store para que SelectUnidadDerivadaCompra encuentre las unidades
+      setProductosCompra(productos)
+
+      // Establecer el proveedor por defecto
+      const proveedor_id = compra?.proveedor_id ?? ordenCompra?.proveedor_id
+      if (proveedor_id) {
+        form.setFieldValue('proveedor_id', proveedor_id)
+      }
+
+      form.setFieldValue('fecha', dayjs())
     }
 
-    form.setFieldValue('fecha', dayjs())
+    load()
+
+    return () => {
+      cancelled = true
+    }
   }, [compra, ordenCompra])
 
   useEffect(() => {
     if (!open) {
       setCompra(undefined)
       setOrdenCompra?.(undefined)
+      // Limpiar el store al cerrar para no filtrar productos a otras vistas
+      setProductosCompra([])
     }
   }, [open])
 
