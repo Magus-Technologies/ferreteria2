@@ -49,7 +49,9 @@ export default function FiltersComprasAnuladasEnEspera({
     const data = {
       almacen_id,
       fecha: {
-        gte: toUTCBD({ date: dayjs().subtract(30, 'days').startOf('day') }),
+        // Por defecto solo HOY, coincidiendo con lo que muestran los date pickers
+        // (antes arrancaba en los últimos 30 días y no respetaba el filtro mostrado).
+        gte: toUTCBD({ date: dayjs().startOf('day') }),
         lte: toUTCBD({ date: dayjs().endOf('day') }),
       },
       estado_de_compra,

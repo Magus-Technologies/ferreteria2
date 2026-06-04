@@ -33,10 +33,10 @@ export const useColumnsOrdenesCompra = (): ColDef<OrdenCompra>[] => {
         colId: 'fecha',
         headerName: 'Fecha',
         field: 'fecha',
-        width: 120,
+        width: 180,
         valueFormatter: params =>
           params.value
-            ? toLocalString({ date: dayjs(params.value), format: 'DD/MM/YYYY' })
+            ? toLocalString({ date: dayjs(params.value), format: 'DD/MM/YYYY HH:mm:ss' })
             : '',
         cellStyle: { textAlign: 'center' },
       },
