@@ -391,16 +391,32 @@ export default function FormCrearRecepcionAlmacen({
         destroyOnHidden
       >
         <AntForm form={choferForm} layout='vertical' onFinish={handleCrearChofer}>
-          <AntForm.Item
-            name='dni'
-            label='DNI'
-            rules={[
-              { required: true, message: 'Ingresa el DNI' },
-              { len: 8, message: 'El DNI debe tener 8 dígitos' },
-            ]}
-          >
-            <Input placeholder='DNI' maxLength={8} />
-          </AntForm.Item>
+          <InputConsultaRuc
+            form={choferForm}
+            nameWatch='dni'
+            maxLength={8}
+            prefix={<FaAddressCard className='text-cyan-600 mx-1' />}
+            placeholder='DNI (se consulta automáticamente)'
+            propsForm={{
+              name: 'dni',
+              label: 'DNI',
+              rules: [
+                { required: true, message: 'Ingresa el DNI' },
+                { len: 8, message: 'El DNI debe tener 8 dígitos' },
+              ],
+            }}
+            onSuccess={res => {
+              const dniData = (res as ConsultaDni)?.dni
+                ? (res as ConsultaDni)
+                : undefined
+              if (dniData) {
+                choferForm.setFieldValue(
+                  'name',
+                  `${dniData.nombres} ${dniData.apellidoPaterno} ${dniData.apellidoMaterno}`
+                )
+              }
+            }}
+          />
           <AntForm.Item
             name='name'
             label='Nombres y Apellidos'
