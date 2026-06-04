@@ -4,6 +4,8 @@ import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Rad
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getStockProductos } from "~/lib/api/vales-compra";
+import { productosApiV2 } from "~/lib/api/producto";
+import { GetStock } from "~/app/_utils/get-stock";
 import type { FormCreateVale } from "../others/body-crear-vale";
 import {
   FaGift,
@@ -510,17 +512,19 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                 />
               </Form.Item>
             </div>
-            {momento === "PROXIMA_COMPRA" && (
-              <div className="mt-4">
-                <Form.Item
-                  name="producto_gratis_id"
-                  label="Producto para el 2x1 (en la próxima compra)"
-                  rules={[{ required: true, message: "Seleccione el producto al que aplicará el 2x1" }]}
-                >
-                  <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly />
-                </Form.Item>
-              </div>
-            )}
+            <div className="mt-4">
+              <Form.Item
+                name="producto_gratis_id"
+                label={
+                  momento === "PROXIMA_COMPRA"
+                    ? "Producto para el 2x1 (en la próxima compra)"
+                    : "Producto al que aplica el 2x1"
+                }
+                rules={[{ required: true, message: "Seleccione el producto al que aplicará el 2x1" }]}
+              >
+                <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly />
+              </Form.Item>
+            </div>
             <p className="text-xs text-indigo-600 mt-2">
               <strong>Ejemplos:</strong> Compra 2, 1 gratis → paga 1 (2x1). Compra 4, 1 gratis → paga 3. Compra 3, 2 gratis → paga 1 (3x1).
             </p>
@@ -666,7 +670,7 @@ interface SeccionRestriccionesProps {
   usaLimiteStock: boolean;
   usaLimiteVenta: boolean;
   esDescuento: boolean;
-  stockProductoGratis: number | null;
+  stockProductoGratis: { stock: number; unidades_contenidas: number } | null;
 }
 
 function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta, esDescuento, stockProductoGratis }: SeccionRestriccionesProps) {
@@ -745,7 +749,13 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
           {stockProductoGratis !== null && (
             <p className="text-xs text-blue-600 mb-2 flex items-center gap-1">
               <FaBoxOpen className="text-blue-500" />
-              Stock actual del producto a regalar: <strong>{stockProductoGratis}</strong>
+              Stock actual del producto a regalar:{" "}
+              <strong>
+                <GetStock
+                  stock_fraccion={stockProductoGratis.stock}
+                  unidades_contenidas={stockProductoGratis.unidades_contenidas}
+                />
+              </strong>
               <span className="text-gray-400">(solo informativo)</span>
             </p>
           )}
@@ -830,9 +840,16 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
     queryKey: ["vale-stock-producto-gratis", productoGratisId],
     queryFn: async () => {
       if (!productoGratisId) return null;
-      const res = await getStockProductos([productoGratisId]);
-      if (res.error) return null;
-      return res.data?.data?.[productoGratisId] ?? null;
+      // Stock total (todos los almacenes) + unidades_contenidas para mostrarlo
+      // con el mismo formato "XFY" del modal de buscar producto.
+      const [stockRes, prodRes] = await Promise.all([
+        getStockProductos([productoGratisId]),
+        productosApiV2.getById(productoGratisId),
+      ]);
+      if (stockRes.error) return null;
+      const stock = stockRes.data?.data?.[productoGratisId] ?? 0;
+      const unidades_contenidas = Number(prodRes.data?.unidades_contenidas) || 1;
+      return { stock, unidades_contenidas };
     },
     enabled: !!productoGratisId,
   });

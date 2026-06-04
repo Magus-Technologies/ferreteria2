@@ -7,11 +7,11 @@ import ButtonBase from '~/components/buttons/button-base'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import { useStoreCompraSeleccionada } from '../../_store/store-compra-seleccionada'
 import { useStoreProductoSeleccionado } from '../../_store/store-producto-seleccionado'
-import ModalRegistrarPagoCompra from '../modals/modal-registrar-pago-compra'
 import ModalVerDetallesPagos from '../modals/modal-ver-detalles-pagos'
 import ModalModificarLotesVencimientos from '../modals/modal-modificar-lotes-vencimientos'
 import ModalDocCompra from '../modals/modal-doc-compra'
 import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
+import ModalRegistrarPagoFinanzas from '~/app/ui/gestion-contable-y-financiera/compras-por-pagar/_components/modals/modal-registrar-pago'
 import { useCheckAperturaDiaria } from '~/app/ui/facturacion-electronica/mis-ventas/crear-venta/_hooks/use-check-apertura-diaria'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
@@ -80,7 +80,7 @@ export default function BotonesAccionesCompra() {
         }}
       />
 
-      <ModalRegistrarPagoCompra
+      <ModalRegistrarPagoFinanzas
         open={openModalPago}
         setOpen={setOpenModalPago}
         compra={compraSeleccionada}
@@ -150,7 +150,7 @@ export default function BotonesAccionesCompra() {
             className='flex items-center gap-2'
           >
             <FaMoneyBillWave />
-            Registrar Pagos
+            Registrar Pago de Compra y detalle
           </ButtonBase>
         </ConfigurableElement>
 
@@ -158,17 +158,19 @@ export default function BotonesAccionesCompra() {
           componentId='gestion-comercial.mis-compras.boton-ver-detalles-pagos'
           label='Botón Ver Detalles de Pagos'
         >
-          <ButtonBase
-            color='default'
-            size='sm'
-            type='button'
-            onClick={handleVerDetallesPagos}
-            disabled={!compraSeleccionada}
-            className='flex items-center gap-2'
-          >
-            <FaFileInvoiceDollar />
-            Ver Detalles de Pagos
-          </ButtonBase>
+          <div className='hidden'>
+            <ButtonBase
+              color='default'
+              size='sm'
+              type='button'
+              onClick={handleVerDetallesPagos}
+              disabled={!compraSeleccionada}
+              className='flex items-center gap-2'
+            >
+              <FaFileInvoiceDollar />
+              Ver Detalles de Pagos
+            </ButtonBase>
+          </div>
         </ConfigurableElement>
       </div>
     </>

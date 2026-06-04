@@ -168,6 +168,29 @@ export const proveedorApi = {
   },
 
   /**
+   * Agregar un carro (vehículo) a un proveedor
+   */
+  addCarro: async (id: number, data: { placa: string }): Promise<ApiResponse<{ data: Carro; message: string }>> => {
+    return apiRequest<{ data: Carro; message: string }>(`/proveedores/${id}/carros`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Agregar un chofer a un proveedor
+   */
+  addChofer: async (
+    id: number,
+    data: { dni: string; name: string; licencia: string }
+  ): Promise<ApiResponse<{ data: Chofer; message: string }>> => {
+    return apiRequest<{ data: Chofer; message: string }>(`/proveedores/${id}/choferes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
    * Eliminar proveedor
    */
   delete: async (id: number): Promise<ApiResponse<{ message: string }>> => {

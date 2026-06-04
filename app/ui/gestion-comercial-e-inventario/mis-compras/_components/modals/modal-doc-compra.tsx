@@ -5,6 +5,10 @@ import ModalShowDoc from '~/app/_components/modals/modal-show-doc'
 import { getAuthToken } from '~/lib/api'
 import { type Compra } from '~/lib/api/compra'
 
+// Misma base que usa apiRequest (NEXT_PUBLIC_API_URL ya incluye el prefijo
+// /api del backend). El resto de PDF usan este patrón `${API_URL}/pdf/...`.
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
+
 interface ModalDocCompraProps {
   open: boolean
   setOpen: (open: boolean) => void
@@ -23,7 +27,7 @@ export default function ModalDocCompra({
     if (open && compra) {
       setBackendPdfLoading(true)
       const token = getAuthToken()
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/compra/${compra.id}`, {
+      fetch(`${API_URL}/pdf/compra/${compra.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => {
