@@ -8,7 +8,7 @@ import { FaPlus, FaExchangeAlt, FaWarehouse, FaBoxes } from 'react-icons/fa'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import type { CajaPrincipal, SubCaja } from '~/lib/api/caja-principal'
 import { cajaPrincipalApi } from '~/lib/api/caja-principal'
-import { cajaApi } from '~/lib/api/caja'
+import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import ModalCrearSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-crear-sub-caja'
 import ModalEditarSubCaja from '~/app/ui/facturacion-electronica/gestion-cajas/_components/modal-editar-sub-caja'
@@ -111,10 +111,10 @@ export default function ModalVerSubCajas({
     // Obtener caja activa para sacar su ID (ULID)
     const { data: cajaActiva } = useQuery({
         queryKey: [QueryKeys.CAJA_ACTIVA],
-        queryFn: async () => {
-            const response = await cajaApi.cajaActiva()
-            return response.data?.data || null
-        },
+        queryFn: () => fetchCajaActivaOrNull(),
+        staleTime: 30000,
+        gcTime: 60000,
+        retry: 1,
         enabled: open,
     })
 

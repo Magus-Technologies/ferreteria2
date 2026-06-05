@@ -10,6 +10,8 @@ export interface ApiResponse<T = unknown> {
   error?: {
     message: string;
     errors?: Record<string, string[]>;
+    /** Código de estado HTTP de la respuesta (undefined si fue error de red). */
+    status?: number;
   };
 }
 
@@ -171,6 +173,7 @@ export async function apiRequest<T = unknown>(
           error: {
             message: firstError || msg || "Error de validación",
             errors: errors,
+            status: response.status,
           },
         };
       }
@@ -181,6 +184,7 @@ export async function apiRequest<T = unknown>(
         return {
           error: {
             message: data.message || "No autenticado",
+            status: response.status,
           },
         };
       }
@@ -191,6 +195,7 @@ export async function apiRequest<T = unknown>(
             (typeof data.error === 'string' ? data.error : data.error?.message) ||
             data.message ||
             "Error en la petición",
+          status: response.status,
         },
       };
     }
