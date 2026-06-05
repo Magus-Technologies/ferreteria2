@@ -91,7 +91,7 @@ export default function BodyComprar({
   const [form] = Form.useForm<FormCreateCompra>()
   useCheckAperturaDiaria()
 
-  useInitCompra({ compra, form })
+  useInitCompra({ compra, form, isRecuperacion })
 
   const setProductosCompra = useStoreProductoAgregadoCompra(
     store => store.setProductos
