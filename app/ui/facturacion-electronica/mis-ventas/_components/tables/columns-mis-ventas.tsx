@@ -407,14 +407,19 @@ export function useColumnsMisVentas() {
         
         if (totalCantidad === 0) return 'Sin productos';
         
-        // Verificar el estado real de las entregas físicas
-        const entregas = params.data?.entregas_productos || params.data?.entregasProductos || [];
-        
+        // Verificar el estado real de las entregas físicas (tabla nueva `entregas`,
+        // con fallback a la legacy `entregas_productos` durante la migración).
+        const entregas = (params.data as any)?.entregas || params.data?.entregas_productos || (params.data as any)?.entregasProductos || [];
+
+        // El estado puede venir como objeto { codigo } (tabla nueva, vía FK al
+        // catálogo) o como string plano (legacy).
+        const codigoEstado = (e: any) => e?.estado_entrega?.codigo ?? e?.estado_entrega;
+
         if (entregas.length > 0) {
-          // Verificar estados de entregas: pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
-          const hayEntregasPendientes = entregas.some((e: any) => e.estado_entrega === 'pe');
-          const hayEntregasEnCamino = entregas.some((e: any) => e.estado_entrega === 'ec');
-          const todasEntregadas = entregas.every((e: any) => e.estado_entrega === 'en');
+          // Estados: pe=Pendiente, ec=En Camino, en=Entregado, ca=Cancelado
+          const hayEntregasPendientes = entregas.some((e: any) => codigoEstado(e) === 'pe');
+          const hayEntregasEnCamino = entregas.some((e: any) => codigoEstado(e) === 'ec');
+          const todasEntregadas = entregas.every((e: any) => codigoEstado(e) === 'en');
           
           // Solo mostrar "Completa" si todas las entregas están físicamente entregadas
           if (todasEntregadas && totalPendiente === 0) return 'Completa';

@@ -75,6 +75,8 @@ export default function FiltersMisVentas() {
       almacen_id,
       desde: dayjs().format("YYYY-MM-DD"),
       hasta: dayjs().format("YYYY-MM-DD"),
+      // Por defecto mostrar solo ventas en estado Creado.
+      estado_de_venta: EstadoDeVenta.CREADO,
     };
     setFiltros(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,6 +222,8 @@ export default function FiltersMisVentas() {
       initialValues={{
         desde: dayjs().startOf("day"),
         hasta: dayjs().endOf("day"),
+        // El select de Estado arranca en "Creado" (coincide con el filtro inicial).
+        estado_de_venta: EstadoDeVenta.CREADO,
       }}
       className="w-full"
       onFinish={handleFinish}

@@ -29,7 +29,7 @@ interface EntregaDB {
   chofer_id?: string
   quien_entrega?: string
   user_id: string
-  created_at: string
+  fecha_creacion: string
   updated_at: string
   venta?: any
   chofer?: any

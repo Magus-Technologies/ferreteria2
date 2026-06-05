@@ -260,8 +260,8 @@ export default function CalendarioEntregasPage() {
   })
 
   return (
-    <ContenedorGeneral>
-      <div className="w-full flex flex-col gap-4">
+    <ContenedorGeneral className="h-full">
+      <div className="w-full flex flex-col gap-4 flex-1 min-h-0">
         <TituloModulos
           title="Calendario de Entregas Programadas"
           icon={<FaCalendar className="text-amber-600" />}
@@ -278,11 +278,9 @@ export default function CalendarioEntregasPage() {
         </TituloModulos>
 
         <div
-          className="grid gap-4"
+          className="grid gap-4 flex-1 min-h-0"
           style={{
             gridTemplateColumns: eventoSeleccionado ? '1fr 300px' : '1fr',
-            height: 'calc(100vh - 180px)',
-            minHeight: '600px',
           }}
         >
           {/* Calendario */}
