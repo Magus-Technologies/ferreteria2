@@ -101,8 +101,8 @@ export default function ModalDetallesEntregaCompleto({
       : []
 
   entregasRelacionadas.sort((a: any, b: any) => {
-    const fechaA = dayjs(a.created_at || 0).valueOf()
-    const fechaB = dayjs(b.created_at || 0).valueOf()
+    const fechaA = dayjs(a.fecha_creacion || 0).valueOf()
+    const fechaB = dayjs(b.fecha_creacion || 0).valueOf()
     if (fechaA !== fechaB) return fechaA - fechaB
     return Number(a.id || 0) - Number(b.id || 0)
   })

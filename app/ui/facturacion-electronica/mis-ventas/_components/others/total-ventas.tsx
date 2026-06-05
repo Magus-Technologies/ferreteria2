@@ -7,7 +7,9 @@ export default function TotalVentas() {
   const filtros = useStoreFiltrosMisVentas(state => state.filtros)
   const { response } = useGetVentas({ where: filtros })
 
-  const total = response?.reduce((acc: number, venta: any) => {
+  const total = response
+    ?.filter((venta: any) => venta.estado_de_venta !== 'an' && venta.estado_de_venta !== 'ee')
+    .reduce((acc: number, venta: any) => {
     const subtotal = venta.productos_por_almacen.reduce((sum: number, producto: any) => {
       const productoTotal = producto.unidades_derivadas.reduce(
         (pSum: number, unidad: any) => {

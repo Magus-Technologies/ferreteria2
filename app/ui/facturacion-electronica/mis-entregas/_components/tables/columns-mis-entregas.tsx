@@ -58,8 +58,8 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
     },
     {
       headerName: 'Fecha Registro',
-      colId: 'created_at',
-      field: 'created_at',
+      colId: 'fecha_creacion',
+      field: 'fecha_creacion',
       width: 170,
       sort: 'desc',
       comparator: (valueA, valueB) => {

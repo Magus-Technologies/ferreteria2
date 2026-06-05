@@ -110,7 +110,7 @@ export default function TableProductoSearch({
         ...(!ignoreAlmacen && almacen_id ? { almacen_id } : {}),
         search: searchTerm,
         estado: 1,
-        per_page: 30,
+        per_page: 5000,
         ...(marcaId ? { marca_id: marcaId } : {}),
         ...(categoriaId ? { categoria_id: categoriaId } : {}),
       } as any);
@@ -207,21 +207,18 @@ export default function TableProductoSearch({
           default:
             return (
               p.name.toLowerCase().includes(searchTerm) ||
+
               p.cod_producto.toLowerCase().includes(searchTerm) ||
               (p.cod_barra ?? '').toLowerCase().includes(searchTerm) ||
               (p.name_ticket ?? '').toLowerCase().includes(searchTerm)
             );
         }
       });
-    } else {
-      // Sin búsqueda activa: capar a 200 filas para que el mount de AG Grid
-      // sea instantáneo. El usuario casi siempre va a buscar por texto;
-      // mostrar las 5000+ filas de un almacén grande hace que el modal
-      // tarde varios segundos en abrir aunque AG Grid virtualice el scroll
-      // (el mount inicial + cellRenderers + Popovers en cada fila es caro).
-      // En cuanto escribe 2+ caracteres, el filtro entra y se ve toda la data.
-      productos = productos.slice(0, 200);
     }
+    // Sin búsqueda activa: mostrar TODO el set cacheado (5167 productos).
+    // AG Grid virtualiza el scroll, así que solo renderiza las filas visibles.
+    // El cap anterior (200) era demasiado restrictivo y obligaba al usuario
+    // a tipear para ver más — ahora ve el catálogo completo desde el inicio.
 
     return productos;
   }, [
