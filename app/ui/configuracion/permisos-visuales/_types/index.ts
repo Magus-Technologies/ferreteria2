@@ -12,6 +12,7 @@ export interface NavItem {
 
 export interface Role {
   id: number;
+  name: string;
   descripcion: string;
   restrictions: { name: string }[];
 }

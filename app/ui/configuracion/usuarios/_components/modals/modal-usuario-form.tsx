@@ -12,7 +12,8 @@ import {
   FaCalendar,
   FaTruck,
 } from "react-icons/fa";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { catalogosGeneralesApi } from "~/lib/api/catalogos-generales";
 import ModalForm from "~/components/modals/modal-form";
 import TitleForm from "~/components/form/title-form";
 import LabelBase from "~/components/form/label-base";
@@ -139,6 +140,38 @@ export default function ModalUsuarioForm({
       form.resetFields();
     }
   }, [open, usuarioEdit, form, user]);
+
+  // Cargos (con su role_id) para autocompletar el rol al elegir el cargo.
+  const { data: cargos } = useQuery({
+    queryKey: ["catalogos", "cargos"],
+    queryFn: async () => {
+      const response = await catalogosGeneralesApi.getCargos();
+      if (response.error) throw new Error(response.error.message);
+      return response.data?.data || [];
+    },
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // Autocompletado bidireccional cargo <-> rol del sistema. Solo se dispara con
+  // interacción del usuario: onValuesChange NO se dispara con setFieldsValue/setFieldValue,
+  // así que no pisa la edición al cargar ni genera bucles entre los dos campos.
+  const handleValuesChange = (changed: Partial<UsuarioFormValues>) => {
+    // cargo -> rol: un cargo tiene un solo rol, autocompletado directo.
+    if ("cargo" in changed) {
+      const cargo = cargos?.find((c) => c.codigo === changed.cargo);
+      if (cargo?.role_id) {
+        form.setFieldValue("role_id", cargo.role_id);
+      }
+    }
+    // rol -> cargo: un rol puede tener varios cargos; solo autocompleto si hay
+    // exactamente uno (si hay varios o ninguno, dejo el cargo como esté).
+    if ("role_id" in changed) {
+      const relacionados = cargos?.filter((c) => c.role_id === changed.role_id) ?? [];
+      if (relacionados.length === 1) {
+        form.setFieldValue("cargo", relacionados[0].codigo);
+      }
+    }
+  };
 
   const handleSubmit = async (values: any) => {
     // Convertir fechas a formato YYYY-MM-DD si existen
@@ -885,6 +918,7 @@ export default function ModalUsuarioForm({
       formProps={{
         form,
         onFinish: handleSubmit,
+        onValuesChange: handleValuesChange,
         layout: "vertical",
         autoComplete: "off",
       }}

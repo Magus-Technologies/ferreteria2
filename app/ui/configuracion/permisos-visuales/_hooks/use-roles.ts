@@ -3,6 +3,7 @@ import { permissionsApi } from '~/lib/api/permissions';
 
 interface Role {
   id: number;
+  name: string;
   descripcion: string;
   restrictions: { name: string }[];
 }

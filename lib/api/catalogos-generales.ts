@@ -37,6 +37,7 @@ export interface RolSistema {
 export interface Cargo {
   codigo: string;
   descripcion: string;
+  role_id?: number | null;
 }
 
 // ============= RESPONSES =============
