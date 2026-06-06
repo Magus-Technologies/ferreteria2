@@ -469,6 +469,17 @@ export function useColumnsMisVentas() {
       },
     },
     {
+      headerName: "D. Stock",
+      colId: "desc_stock",
+      width: 100,
+      valueGetter: (params) =>
+        params.data?.stock_aplicado === false ? "No" : "Sí",
+      cellStyle: (params) =>
+        params.value === "No"
+          ? ({ color: "#dc2626", fontWeight: "bold" } as Record<string, string>)
+          : ({ color: "#16a34a" } as Record<string, string>),
+    },
+    {
       headerName: "Acciones",
       field: "id",
       width: 110,
