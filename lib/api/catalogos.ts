@@ -454,12 +454,28 @@ export interface Cargo {
   parent?: string | null;
   highlight?: boolean;
   staff?: boolean;
+  estado?: boolean;
+  users_count?: number;
 }
 
 export const cargosApi = {
   async list(): Promise<Cargo[]> {
     const response = await apiRequest<CatalogResponse<Cargo>>(`/catalogos/cargos`);
     return response.data?.data || [];
+  },
+
+  /** Listado para gestión: incluye inactivos, estado y users_count. */
+  async listGestion(): Promise<Cargo[]> {
+    const response = await apiRequest<CatalogResponse<Cargo>>(`/catalogos/cargos-gestion`);
+    return response.data?.data || [];
+  },
+
+  /** Activar / desactivar un cargo. */
+  async toggleEstado(codigo: string, estado: boolean): Promise<ApiResponse<Cargo>> {
+    return apiRequest<Cargo>(`/catalogos/cargos/${encodeURIComponent(codigo)}/estado`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado }),
+    });
   },
 
   async getById(codigo: string): Promise<ApiResponse<Cargo>> {

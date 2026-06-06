@@ -2,13 +2,20 @@ import { apiRequest } from '~/lib/api'
 
 // Types
 
+export type TipoAutorizador = 'usuario' | 'cargo' | 'jerarquia'
+
+/** 'acceso' = autorización a nivel de vista/elemento (no una acción CRUD) */
+export type AccionAutorizacion = 'crear' | 'editar' | 'eliminar' | 'acceso'
+
 export interface AutorizacionConfig {
   id: number
   role_id: number
   modulo: string
-  accion: 'crear' | 'editar' | 'eliminar'
+  accion: AccionAutorizacion
   requiere_autorizacion: boolean
+  tipo_autorizador: TipoAutorizador
   autorizador_id: string | null
+  cargo_autorizador: string | null
   autorizador?: { id: string; name: string } | null
   role?: { id: number; name: string } | null
   created_by: string
@@ -20,13 +27,14 @@ export interface SolicitudAutorizacion {
   id: string
   solicitante_id: string
   autorizador_id: string | null
+  cargo_autorizador: string | null
   role_id: number
   modulo: string
-  accion: 'crear' | 'editar' | 'eliminar'
+  accion: AccionAutorizacion
   descripcion: string
   metadata: Record<string, any> | null
   estado: 'pendiente' | 'aprobada' | 'rechazada'
-  tipo_aprobacion: 'temporal' | 'permanente' | null
+  tipo_aprobacion: 'temporal' | 'permanente' | 'una_vez' | null
   duracion_horas: number | null
   respondido_por: string | null
   respondido_at: string | null
@@ -45,8 +53,8 @@ export interface AutorizacionOtorgada {
   user_id: string
   role_id: number
   modulo: string
-  accion: 'crear' | 'editar' | 'eliminar'
-  tipo: 'temporal' | 'permanente'
+  accion: AccionAutorizacion
+  tipo: 'temporal' | 'permanente' | 'una_vez'
   fecha_expiracion: string | null
   otorgada_por: string
   solicitud_id: string | null
@@ -75,16 +83,18 @@ export const autorizacionesApi = {
   saveConfig: (data: {
     role_id: number
     modulo: string
-    accion: 'crear' | 'editar' | 'eliminar'
+    accion: AccionAutorizacion
     requiere_autorizacion: boolean
+    tipo_autorizador?: TipoAutorizador
     autorizador_id?: string | null
+    cargo_autorizador?: string | null
   }) => apiRequest<AutorizacionConfig>('/autorizaciones/config', { method: 'POST', data: data }),
 
   deleteConfig: (id: number) =>
     apiRequest('/autorizaciones/config/' + id, { method: 'DELETE' }),
 
   // Verificación
-  verificar: (modulo: string, accion: 'crear' | 'editar' | 'eliminar') =>
+  verificar: (modulo: string, accion: AccionAutorizacion) =>
     apiRequest<VerificarResponse>('/autorizaciones/verificar', {
       method: 'POST',
       data: { modulo, accion },
@@ -93,7 +103,7 @@ export const autorizacionesApi = {
   // Solicitudes
   solicitar: (data: {
     modulo: string
-    accion: 'crear' | 'editar' | 'eliminar'
+    accion: AccionAutorizacion
     descripcion: string
     metadata?: Record<string, any>
   }) => apiRequest<SolicitudAutorizacion>('/autorizaciones/solicitar', { method: 'POST', data: data }),
@@ -108,13 +118,20 @@ export const autorizacionesApi = {
     apiRequest<{ count: number }>('/autorizaciones/pendientes/count'),
 
   aprobar: (id: string, data: {
-    tipo_aprobacion: 'temporal' | 'permanente'
+    tipo_aprobacion: 'temporal' | 'permanente' | 'una_vez'
     duracion_horas?: number
     comentario?: string
   }) => apiRequest<SolicitudAutorizacion>(`/autorizaciones/solicitudes/${id}/aprobar`, {
     method: 'POST',
     data: data,
   }),
+
+  /** Consumir una autorización de uso único tras usarla (no-op si no es una_vez). */
+  consumir: (data: { modulo: string; accion: AccionAutorizacion }) =>
+    apiRequest<{ consumido: boolean }>('/autorizaciones/consumir', {
+      method: 'POST',
+      data: data,
+    }),
 
   rechazar: (id: string, data?: { comentario?: string }) =>
     apiRequest<SolicitudAutorizacion>(`/autorizaciones/solicitudes/${id}/rechazar`, {

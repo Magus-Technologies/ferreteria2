@@ -59,6 +59,7 @@ export interface Usuario {
   // Relaciones
   empresa?: Empresa;
   vehiculo?: { id: number; name: string; tipo: string; placa: string | null } | null;
+  roles?: { id: number; name: string; descripcion: string }[];
 }
 
 export interface CreateUsuarioRequest {
@@ -94,6 +95,8 @@ export interface CreateUsuarioRequest {
   vacaciones_dias?: number;
   sueldo_boleta?: number;
   rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
+  /** Rol de la tabla `role` (preferido sobre rol_sistema) */
+  role_id?: number;
 
   // Otros
   efectivo?: number;
@@ -135,6 +138,8 @@ export interface UpdateUsuarioRequest {
   vacaciones_dias?: number;
   sueldo_boleta?: number;
   rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
+  /** Rol de la tabla `role` (preferido sobre rol_sistema) */
+  role_id?: number;
   
   // Otros
   efectivo?: number;

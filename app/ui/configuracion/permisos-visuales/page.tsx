@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Divider, Alert, Spin, Button } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { lazy, Suspense } from 'react';
@@ -16,6 +16,7 @@ import NoAutorizado from '~/components/others/no-autorizado';
 import { ConfigModeProvider } from './_components/config-mode-context';
 import { FaUsers } from 'react-icons/fa';
 import { permissionsApi } from '~/lib/api/permissions';
+import { autorizacionesApi, autorizacionesKeys } from '~/lib/api/autorizaciones';
 import { MODULE_LABELS } from './_constants';
 import { COMPONENT_MAP } from './_constants/component-map';
 
@@ -45,7 +46,7 @@ export default function PermisosVisualesPage() {
   const queryClient = useQueryClient();
 
   const { roles, loading: loadingRoles, rolData, restriccionesActivas } = useRoles(rolId);
-  const { authConfigs, users, isRequiereAuth, getAutorizadorId } = useAuthConfigs(rolId);
+  const { authConfigs, users, isRequiereAuth, getAutorizadorId, getTipoAutorizador, getCargoAutorizador } = useAuthConfigs(rolId);
 
   const [vistaActiva, setVistaActiva] = useState<{
     label: string;
@@ -55,8 +56,19 @@ export default function PermisosVisualesPage() {
   const [expandedPermission, setExpandedPermission] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [itemSeleccionado, setItemSeleccionado] = useState<{ label: string; permission: string } | null>(null);
+  // Solo las vistas de navegación pueden requerir autorización de acceso.
+  const [esNavSeleccionado, setEsNavSeleccionado] = useState(false);
 
   const rolNombre = rolData?.descripcion || 'Sin seleccionar';
+
+  // Config de autorización de ACCESO (accion='acceso') del elemento seleccionado.
+  const accesoConfig = useMemo(
+    () =>
+      authConfigs.find(
+        (c) => c.modulo === itemSeleccionado?.permission && c.accion === 'acceso'
+      ),
+    [authConfigs, itemSeleccionado]
+  );
 
   const toggleMutation = useMutation({
     mutationFn: async ({ mostrar }: { mostrar: boolean }) => {
@@ -74,6 +86,29 @@ export default function PermisosVisualesPage() {
     },
     onError: (error: any) => {
       console.error(error?.message || 'Error al guardar');
+    },
+  });
+
+  const saveAccesoMutation = useMutation({
+    mutationFn: async (data: {
+      requiere_autorizacion: boolean;
+      tipo_autorizador: 'usuario' | 'cargo' | 'jerarquia';
+      autorizador_id: string | null;
+      cargo_autorizador: string | null;
+    }) => {
+      if (!rolId || !itemSeleccionado) throw new Error('Datos incompletos');
+      return autorizacionesApi.saveConfig({
+        role_id: rolId,
+        modulo: itemSeleccionado.permission,
+        accion: 'acceso',
+        ...data,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: autorizacionesKeys.configs(rolId ?? undefined) });
+    },
+    onError: (error: any) => {
+      console.error(error?.message || 'Error al guardar autorización');
     },
   });
 
@@ -194,7 +229,7 @@ export default function PermisosVisualesPage() {
             </div>
           </div>
 
-          <ConfigModeProvider enabled={true} onTogglePermiso={(id, label) => { setItemSeleccionado({ label, permission: id }); setModalVisible(true); }} permisosActivos={restriccionesActivas}>
+          <ConfigModeProvider enabled={true} onTogglePermiso={(id, label) => { setItemSeleccionado({ label, permission: id }); setEsNavSeleccionado(false); setModalVisible(true); }} permisosActivos={restriccionesActivas}>
             <div className="h-[calc(100vh-250px)] overflow-hidden">
               <Suspense fallback={<Spin size="large" tip="Cargando vista real..." />}>
                 <vistaActiva.component />
@@ -216,10 +251,13 @@ export default function PermisosVisualesPage() {
                   isExpanded={expandedPermission === item.permission}
                   onToggleExpand={() => setExpandedPermission(expandedPermission === item.permission ? null : item.permission!)}
                   onConfigurar={() => handleModuloClick(item.label || '', item.permission!, true)}
-                  onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setModalVisible(true); }}
+                  onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setEsNavSeleccionado(true); setModalVisible(true); }}
                   visible={estaVisible(item.permission!)}
                   isRequiereAuth={isRequiereAuth}
                   getAutorizadorId={getAutorizadorId}
+                  getTipoAutorizador={getTipoAutorizador}
+                  getCargoAutorizador={getCargoAutorizador}
+                  rolId={rolId}
                   users={users}
                   authConfigs={authConfigs as any}
                 />
@@ -241,10 +279,13 @@ export default function PermisosVisualesPage() {
                   isExpanded={expandedPermission === item.permission}
                   onToggleExpand={() => setExpandedPermission(expandedPermission === item.permission ? null : item.permission!)}
                   onConfigurar={() => handleModuloClick(item.label || '', item.permission!, true)}
-                  onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setModalVisible(true); }}
+                  onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setEsNavSeleccionado(true); setModalVisible(true); }}
                   visible={estaVisible(item.permission!)}
                   isRequiereAuth={isRequiereAuth}
                   getAutorizadorId={getAutorizadorId}
+                  getTipoAutorizador={getTipoAutorizador}
+                  getCargoAutorizador={getCargoAutorizador}
+                  rolId={rolId}
                   users={users}
                   authConfigs={authConfigs as any}
                 />
@@ -269,6 +310,14 @@ export default function PermisosVisualesPage() {
         onMostrar={() => toggleMutation.mutate({ mostrar: true })}
         onOcultar={() => toggleMutation.mutate({ mostrar: false })}
         onCancel={() => { setModalVisible(false); setItemSeleccionado(null); }}
+        permitirAcceso={esNavSeleccionado}
+        requiereAcceso={!!accesoConfig?.requiere_autorizacion}
+        tipoAutorizador={accesoConfig?.tipo_autorizador ?? 'jerarquia'}
+        cargoAutorizador={accesoConfig?.cargo_autorizador ?? null}
+        autorizadorId={accesoConfig?.autorizador_id ?? null}
+        users={users}
+        savingAcceso={saveAccesoMutation.isPending}
+        onGuardarAcceso={(data) => saveAccesoMutation.mutate(data)}
       />
     </ContenedorGeneral>
   );

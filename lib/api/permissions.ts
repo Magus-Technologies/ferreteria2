@@ -32,6 +32,8 @@ export interface Role {
   id: number;
   name: string;
   descripcion: string;
+  estado?: boolean;
+  users_count?: number;
   permissions?: Permission[];
   restrictions?: Restriction[];
 }
@@ -93,6 +95,27 @@ export const permissionsApi = {
   },
 
   /**
+   * Listar roles para gestión (incluye estado y users_count).
+   * GET /permissions/roles → { data: Role[] }
+   */
+  getRolesGestion: async (): Promise<ApiResponse<{ data: Role[] }>> => {
+    return apiRequest<{ data: Role[] }>("/permissions/roles", { method: "GET" });
+  },
+
+  /**
+   * Activar / desactivar un rol.
+   */
+  toggleRoleEstado: async (
+    roleId: number,
+    estado: boolean,
+  ): Promise<ApiResponse<{ data: Role; message: string }>> => {
+    return apiRequest(`/permissions/roles/${roleId}/estado`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado }),
+    });
+  },
+
+  /**
    * Obtener un rol específico con sus restricciones
    */
   getRole: async (roleId: number): Promise<ApiResponse<Role>> => {
@@ -105,8 +128,9 @@ export const permissionsApi = {
   createRole: async (data: {
     name: string;
     descripcion: string;
+    estado?: boolean;
   }): Promise<ApiResponse<Role>> => {
-    return apiRequest<Role>("/restrictions/roles", {
+    return apiRequest<Role>("/permissions/roles", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -120,21 +144,22 @@ export const permissionsApi = {
     data: {
       name: string;
       descripcion: string;
+      estado?: boolean;
     },
   ): Promise<ApiResponse<Role>> => {
-    return apiRequest<Role>(`/restrictions/roles/${roleId}`, {
+    return apiRequest<Role>(`/permissions/roles/${roleId}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   },
 
   /**
-   * Eliminar un rol
+   * Eliminar un rol (solo si ningún usuario lo usa).
    */
   deleteRole: async (
     roleId: number,
   ): Promise<ApiResponse<{ message: string }>> => {
-    return apiRequest<{ message: string }>(`/restrictions/roles/${roleId}`, {
+    return apiRequest<{ message: string }>(`/permissions/roles/${roleId}`, {
       method: "DELETE",
     });
   },

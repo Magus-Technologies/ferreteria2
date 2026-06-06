@@ -3,11 +3,15 @@ import { autorizacionesApi, autorizacionesKeys, type AutorizacionConfig } from '
 import { apiRequest } from '~/lib/api';
 import type { Accion } from '../_types';
 
+type TipoAutorizador = 'usuario' | 'cargo' | 'jerarquia';
+
 interface UseAuthConfigsReturn {
   authConfigs: AutorizacionConfig[];
   users: { id: string; name: string }[];
   isRequiereAuth: (modulo: string, accion: Accion) => boolean;
   getAutorizadorId: (modulo: string, accion: Accion) => string | null;
+  getTipoAutorizador: (modulo: string, accion: Accion) => TipoAutorizador;
+  getCargoAutorizador: (modulo: string, accion: Accion) => string | null;
 }
 
 export function useAuthConfigs(rolId: number | null): UseAuthConfigsReturn {
@@ -49,5 +53,20 @@ export function useAuthConfigs(rolId: number | null): UseAuthConfigsReturn {
     return getAuthConfig(modulo, accion)?.autorizador_id ?? null;
   };
 
-  return { authConfigs, users, isRequiereAuth, getAutorizadorId };
+  const getTipoAutorizador = (modulo: string, accion: Accion): TipoAutorizador => {
+    return (getAuthConfig(modulo, accion)?.tipo_autorizador as TipoAutorizador) ?? 'usuario';
+  };
+
+  const getCargoAutorizador = (modulo: string, accion: Accion): string | null => {
+    return getAuthConfig(modulo, accion)?.cargo_autorizador ?? null;
+  };
+
+  return {
+    authConfigs,
+    users,
+    isRequiereAuth,
+    getAutorizadorId,
+    getTipoAutorizador,
+    getCargoAutorizador,
+  };
 }

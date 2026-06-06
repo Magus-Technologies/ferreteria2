@@ -1,5 +1,6 @@
 import BottomNav from './_components/nav/bottom-nav'
 import TopNav from './_components/nav/top-nav'
+import AccesoGuard from '../_components/acceso-guard'
 
 export default function GestionContableYFinancieraLayout({
   children,
@@ -12,7 +13,7 @@ export default function GestionContableYFinancieraLayout({
       <div className='flex-1 flex items-center justify-center w-full
                       px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8
                       overflow-y-auto overflow-x-hidden'>
-        {children}
+        <AccesoGuard>{children}</AccesoGuard>
       </div>
       <BottomNav className='animate-fade-up animate-ease-in-out' />
     </>

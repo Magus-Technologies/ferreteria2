@@ -19,8 +19,8 @@ import LabelBase from "~/components/form/label-base";
 import InputBase from "~/app/_components/form/inputs/input-base";
 import SelectBase from "~/app/_components/form/selects/select-base";
 import SelectEstadoCivil from "~/app/_components/form/selects/select-estado-civil";
-import SelectRolSistema from "~/app/_components/form/selects/select-rol-sistema";
 import SelectCargo from "~/app/_components/form/selects/select-cargo";
+import SelectRolTabla from "~/app/_components/form/selects/select-rol-tabla";
 import DatePickerBase from "~/app/_components/form/fechas/date-picker-base";
 import { usuariosApi, CreateUsuarioRequest, Usuario } from "~/lib/api/usuarios";
 import SelectVehiculos from "~/app/_components/form/selects/select-vehiculos";
@@ -116,7 +116,7 @@ export default function ModalUsuarioForm({
         nacionalidad: usuarioEdit.nacionalidad || "PERUANA",
         fecha_nacimiento: usuarioEdit.fecha_nacimiento ? dayjs(usuarioEdit.fecha_nacimiento) : undefined,
         // Información de Contrato
-        rol_sistema: usuarioEdit.rol_sistema || undefined,
+        role_id: usuarioEdit.roles?.[0]?.id || undefined,
         cargo: usuarioEdit.cargo || undefined,
         fecha_inicio: usuarioEdit.fecha_inicio ? dayjs(usuarioEdit.fecha_inicio) : undefined,
         fecha_baja: usuarioEdit.fecha_baja ? dayjs(usuarioEdit.fecha_baja) : undefined,
@@ -597,11 +597,11 @@ export default function ModalUsuarioForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <LabelBase label="Rol del Sistema: *" orientation="column">
-                <SelectRolSistema
+                <SelectRolTabla
                   propsForm={{
-                    name: "rol_sistema",
+                    name: "role_id",
                     rules: [
-                      { required: true, message: "Selecciona el rol del sistema" },
+                      { required: true, message: "Selecciona el rol" },
                     ],
                   }}
                   placeholder="Seleccionar rol"

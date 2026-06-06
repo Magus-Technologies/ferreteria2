@@ -39,6 +39,10 @@ export interface LoginResponse {
     efectivo: number;
     empresa: Empresa | null;
     all_restrictions: string[];
+    /** componentIds de vistas que requieren autorización de acceso para el rol */
+    auth_required?: string[];
+    /** componentIds cuyo acceso ya fue otorgado al usuario */
+    auth_granted?: string[];
     rol_sistema: string | null;
     cargo: string | null;
     cargo_id?: number | null;

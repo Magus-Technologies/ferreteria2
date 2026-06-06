@@ -4,8 +4,9 @@ import { Button } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined, DownOutlined } from '@ant-design/icons';
 import { FaShieldAlt, FaUserShield } from 'react-icons/fa';
 import { Switch, Select } from 'antd';
-import { useMutation } from '@tanstack/react-query';
-import { autorizacionesApi } from '~/lib/api/autorizaciones';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { autorizacionesApi, autorizacionesKeys, type TipoAutorizador } from '~/lib/api/autorizaciones';
+import SelectCargo from '~/app/_components/form/selects/select-cargo';
 import { ACCIONES, ACCION_COLORS, ACCION_LABELS, ICON_MAP, PERMISSION_TO_AUTH_MODULO } from '../_constants';
 import { COMPONENT_MAP } from '../_constants/component-map';
 import type { NavItem, Accion } from '../_types';
@@ -19,6 +20,9 @@ interface ModuloCardProps {
   visible: boolean;
   isRequiereAuth: (modulo: string, accion: Accion) => boolean;
   getAutorizadorId: (modulo: string, accion: Accion) => string | null;
+  getTipoAutorizador: (modulo: string, accion: Accion) => TipoAutorizador;
+  getCargoAutorizador: (modulo: string, accion: Accion) => string | null;
+  rolId: number | null;
   users: { id: string; name: string }[];
   authConfigs: { modulo: string; accion: Accion; requiere_autorizacion: boolean }[];
 }
@@ -32,9 +36,13 @@ export default function ModuloCard({
   visible,
   isRequiereAuth,
   getAutorizadorId,
+  getTipoAutorizador,
+  getCargoAutorizador,
+  rolId,
   users,
   authConfigs,
 }: ModuloCardProps) {
+  const queryClient = useQueryClient();
   const icon = ICON_MAP[item.permission!] || '📌';
   const hasComponent = !!COMPONENT_MAP[item.permission!];
   const authModulo = PERMISSION_TO_AUTH_MODULO[item.permission!];
@@ -43,9 +51,18 @@ export default function ModuloCard({
     : 0;
 
   const saveAuthMutation = useMutation({
-    mutationFn: (data: { modulo: string; accion: Accion; requiere_autorizacion: boolean; autorizador_id?: string | null }) =>
-      autorizacionesApi.saveConfig(data as any),
-    onSuccess: () => {},
+    mutationFn: (data: {
+      modulo: string;
+      accion: Accion;
+      requiere_autorizacion: boolean;
+      tipo_autorizador?: TipoAutorizador;
+      autorizador_id?: string | null;
+      cargo_autorizador?: string | null;
+    }) => autorizacionesApi.saveConfig({ ...data, role_id: rolId! }),
+    onSuccess: () => {
+      // Refrescar la config para que los selectores reflejen lo guardado.
+      queryClient.invalidateQueries({ queryKey: autorizacionesKeys.configs(rolId ?? undefined) });
+    },
     onError: () => {},
   });
 
@@ -54,7 +71,21 @@ export default function ModuloCard({
       modulo,
       accion,
       requiere_autorizacion: checked,
+      tipo_autorizador: getTipoAutorizador(modulo, accion),
       autorizador_id: getAutorizadorId(modulo, accion),
+      cargo_autorizador: getCargoAutorizador(modulo, accion),
+    });
+  };
+
+  const handleTipoChange = (modulo: string, accion: Accion, tipo: TipoAutorizador) => {
+    saveAuthMutation.mutate({
+      modulo,
+      accion,
+      requiere_autorizacion: true,
+      tipo_autorizador: tipo,
+      // El backend ignora el dato que no corresponde al modo, pero lo limpiamos igual.
+      autorizador_id: tipo === 'usuario' ? getAutorizadorId(modulo, accion) : null,
+      cargo_autorizador: tipo === 'cargo' ? getCargoAutorizador(modulo, accion) : null,
     });
   };
 
@@ -63,7 +94,20 @@ export default function ModuloCard({
       modulo,
       accion,
       requiere_autorizacion: true,
+      tipo_autorizador: 'usuario',
       autorizador_id: autorizadorId,
+      cargo_autorizador: null,
+    });
+  };
+
+  const handleCargoChange = (modulo: string, accion: Accion, cargo: string | null) => {
+    saveAuthMutation.mutate({
+      modulo,
+      accion,
+      requiere_autorizacion: true,
+      tipo_autorizador: 'cargo',
+      autorizador_id: null,
+      cargo_autorizador: cargo,
     });
   };
 
@@ -125,9 +169,11 @@ export default function ModuloCard({
             {ACCIONES.map((accion) => {
               const activo = isRequiereAuth(authModulo, accion);
               const autorizadorId = getAutorizadorId(authModulo, accion);
+              const tipo = getTipoAutorizador(authModulo, accion);
+              const cargoAutorizador = getCargoAutorizador(authModulo, accion);
 
               return (
-                <div key={accion} className="flex items-center gap-2">
+                <div key={accion} className="flex items-center gap-2 flex-wrap">
                   <span className={`text-xs font-medium w-14 ${ACCION_COLORS[accion]}`}>
                     {ACCION_LABELS[accion]}
                   </span>
@@ -138,28 +184,61 @@ export default function ModuloCard({
                     loading={saveAuthMutation.isPending}
                   />
                   {activo && (
-                    <Select
-                      size="small"
-                      placeholder="Aprobador"
-                      allowClear
-                      className="flex-1 min-w-0"
-                      value={autorizadorId || undefined}
-                      onChange={(val) => handleAutorizadorChange(authModulo, accion, val || null)}
-                      options={users.map((u) => ({
-                        label: u.name?.split(' ')[0] || u.name,
-                        value: u.id,
-                      }))}
-                      popupMatchSelectWidth={200}
-                      optionRender={(option) => {
-                        const user = users.find((u) => u.id === option.value);
-                        return (
-                          <div className="flex items-center gap-2">
-                            <FaUserShield className="text-blue-500" size={12} />
-                            <span>{user?.name}</span>
-                          </div>
-                        );
-                      }}
-                    />
+                    <>
+                      <Select
+                        size="small"
+                        className="w-28"
+                        value={tipo}
+                        onChange={(val) => handleTipoChange(authModulo, accion, val as TipoAutorizador)}
+                        options={[
+                          { label: 'Jerarquía', value: 'jerarquia' },
+                          { label: 'Cargo', value: 'cargo' },
+                          { label: 'Usuario', value: 'usuario' },
+                        ]}
+                      />
+
+                      {tipo === 'jerarquia' && (
+                        <span className="text-[10px] text-gray-500 italic">
+                          Sube al cargo superior del organigrama
+                        </span>
+                      )}
+
+                      {tipo === 'cargo' && (
+                        <SelectCargo
+                          size="small"
+                          allowClear
+                          className="flex-1 min-w-0"
+                          placeholder="Cargo aprobador"
+                          value={cargoAutorizador || undefined}
+                          onChange={(val) => handleCargoChange(authModulo, accion, (val as string) || null)}
+                        />
+                      )}
+
+                      {tipo === 'usuario' && (
+                        <Select
+                          size="small"
+                          placeholder="Aprobador"
+                          allowClear
+                          className="flex-1 min-w-0"
+                          value={autorizadorId || undefined}
+                          onChange={(val) => handleAutorizadorChange(authModulo, accion, val || null)}
+                          options={users.map((u) => ({
+                            label: u.name?.split(' ')[0] || u.name,
+                            value: u.id,
+                          }))}
+                          popupMatchSelectWidth={200}
+                          optionRender={(option) => {
+                            const user = users.find((u) => u.id === option.value);
+                            return (
+                              <div className="flex items-center gap-2">
+                                <FaUserShield className="text-blue-500" size={12} />
+                                <span>{user?.name}</span>
+                              </div>
+                            );
+                          }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               );

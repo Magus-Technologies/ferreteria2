@@ -2,13 +2,15 @@
 
 import { Suspense, lazy, useState } from 'react'
 import { Spin, Tabs } from 'antd'
-import { FaUserPlus, FaUsers, FaTruck } from 'react-icons/fa'
+import { FaUserPlus, FaUsers, FaTruck, FaUserShield, FaSitemap } from 'react-icons/fa'
 import ContenedorGeneral from '~/app/_components/containers/contenedor-general'
 import TituloModulos from '~/app/_components/others/titulo-modulos'
 import ButtonBase from '~/components/buttons/button-base'
 import ModalUsuarioForm from './_components/modals/modal-usuario-form'
 import { Usuario } from '~/lib/api/usuarios'
 import TabVehiculos from '../registros/_components/tabs/tab-vehiculos'
+import TabRoles from './_components/tabs/tab-roles'
+import TabCargos from './_components/tabs/tab-cargos'
 
 // Lazy loading de componentes pesados
 const TableUsuarios = lazy(() => import('./_components/tables/table-usuarios'))
@@ -68,6 +70,16 @@ export default function UsuariosPage() {
                   </div>
                 </>
               ),
+            },
+            {
+              key: 'roles',
+              label: <span className='flex items-center gap-2'><FaUserShield /> Roles</span>,
+              children: <TabRoles />,
+            },
+            {
+              key: 'cargos',
+              label: <span className='flex items-center gap-2'><FaSitemap /> Cargos</span>,
+              children: <TabCargos />,
             },
             {
               key: 'vehiculos',

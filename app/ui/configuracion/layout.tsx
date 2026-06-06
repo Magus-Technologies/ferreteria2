@@ -1,5 +1,6 @@
 import TopNav from "./_components/nav/top-nav";
 import BottomNav from "./_components/nav/bottom-nav";
+import AccesoGuard from "../_components/acceso-guard";
 
 export default function ConfiguracionLayout({
   children,
@@ -13,7 +14,7 @@ export default function ConfiguracionLayout({
                 px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8
                 py-0 lg:py-0
                 overflow-y-auto overflow-x-hidden'>
-        {children}
+        <AccesoGuard>{children}</AccesoGuard>
       </div>
       <BottomNav className="animate-fade-up animate-ease-in-out" />
     </>

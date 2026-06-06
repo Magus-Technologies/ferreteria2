@@ -10,7 +10,7 @@ interface ModalAprobarProps {
   open: boolean
   onClose: () => void
   onAprobar: (data: {
-    tipo_aprobacion: 'temporal' | 'permanente'
+    tipo_aprobacion: 'temporal' | 'permanente' | 'una_vez'
     duracion_horas?: number
     comentario?: string
   }) => Promise<void>
@@ -37,7 +37,7 @@ export default function ModalAprobar({
   loading,
   solicitudDescripcion,
 }: ModalAprobarProps) {
-  const [tipo, setTipo] = useState<'temporal' | 'permanente'>('temporal')
+  const [tipo, setTipo] = useState<'temporal' | 'permanente' | 'una_vez'>('temporal')
   const [duracion, setDuracion] = useState<number>(24)
   const [comentario, setComentario] = useState('')
   const [modo, setModo] = useState<'aprobar' | 'rechazar' | null>(null)
@@ -120,6 +120,10 @@ export default function ModalAprobar({
                 <Radio value="permanente">
                   <span className="font-medium">Permanente</span>
                   <span className="text-xs text-gray-400 ml-2">— sin límite de tiempo</span>
+                </Radio>
+                <Radio value="una_vez">
+                  <span className="font-medium">Una sola vez</span>
+                  <span className="text-xs text-gray-400 ml-2">— se consume al usarla una vez</span>
                 </Radio>
               </Space>
             </Radio.Group>

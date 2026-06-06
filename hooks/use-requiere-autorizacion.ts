@@ -52,6 +52,9 @@ export function useRequiereAutorizacion({
         setRequiereAutorizacion(true)
         setTieneAutorizacion(true)
         await onPermitido()
+        // Si la autorización era de uso único, consumirla tras ejecutar la acción
+        // (no-op si era temporal/permanente).
+        autorizacionesApi.consumir({ modulo, accion }).catch(() => {})
         return
       }
 

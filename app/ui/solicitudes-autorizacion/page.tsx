@@ -213,7 +213,7 @@ export default function PageSolicitudesAutorizacion() {
   }
 
   const handleAprobar = async (data: {
-    tipo_aprobacion: 'temporal' | 'permanente'
+    tipo_aprobacion: 'temporal' | 'permanente' | 'una_vez'
     duracion_horas?: number
     comentario?: string
   }) => {
