@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal } from 'antd'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { MdPointOfSale } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import SelectProductos, { type RefSelectProductosProps } from '~/app/_components/form/selects/select-productos'
@@ -10,11 +10,24 @@ import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import CardAgregarProductoCotizacion from '../cards/card-agregar-producto-cotizacion'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
+import { cotizacionesApi } from '~/lib/api/cotizaciones'
 
 export default function HeaderCrearCotizacion() {
   const { can } = usePermissionHook()
 
   const selectProductosRef = useRef<RefSelectProductosProps>(null)
+
+  const [numeroCotizacion, setNumeroCotizacion] = useState<string>('')
+
+  useEffect(() => {
+    const cargarNumero = async () => {
+      const response = await cotizacionesApi.getSiguienteNumero()
+      if (response.data?.numero) {
+        setNumeroCotizacion(response.data.numero)
+      }
+    }
+    cargarNumero()
+  }, [])
 
   const [openModalAgregarProducto, _setOpenModalAgregarProducto] = useState(false)
 
@@ -39,7 +52,7 @@ export default function HeaderCrearCotizacion() {
 
   return (
     <TituloModulos
-      title='Crear Cotización'
+      title={numeroCotizacion ? `Crear Cotización — ${numeroCotizacion}` : 'Crear Cotización'}
       icon={<MdPointOfSale className='text-cyan-600' />}
       extra={
         <div className='pl-8 flex items-center gap-4'>
