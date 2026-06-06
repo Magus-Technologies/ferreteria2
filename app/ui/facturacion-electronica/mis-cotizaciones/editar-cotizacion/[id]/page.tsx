@@ -23,7 +23,7 @@ export default function EditarCotizacion() {
   return (
     <ContenedorGeneral className='h-full'>
       <Suspense fallback={<ComponentLoading />}>
-        <HeaderEditarCotizacion />
+        <HeaderEditarCotizacion cotizacionId={id} />
       </Suspense>
       <Suspense fallback={<ComponentLoading />}>
         <BodyEditarCotizacion cotizacionId={id} />

@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal } from 'antd'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { MdPointOfSale } from 'react-icons/md'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import SelectProductos, { type RefSelectProductosProps } from '~/app/_components/form/selects/select-productos'
@@ -10,11 +10,25 @@ import usePermissionHook from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import CardAgregarProductoCotizacion from '~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/_components/cards/card-agregar-producto-cotizacion'
 import { useStoreProductoSeleccionadoSearch } from '~/app/ui/gestion-comercial-e-inventario/mi-almacen/_store/store-producto-seleccionado-search'
+import { cotizacionesApi } from '~/lib/api/cotizaciones'
 
-export default function HeaderEditarCotizacion() {
+export default function HeaderEditarCotizacion({ cotizacionId }: { cotizacionId?: string }) {
   const { can } = usePermissionHook()
 
   const selectProductosRef = useRef<RefSelectProductosProps>(null)
+
+  const [numeroCotizacion, setNumeroCotizacion] = useState<string>('')
+
+  useEffect(() => {
+    if (!cotizacionId) return
+    const cargarNumero = async () => {
+      const response = await cotizacionesApi.getById(cotizacionId)
+      if (response.data?.data?.numero) {
+        setNumeroCotizacion(response.data.data.numero)
+      }
+    }
+    cargarNumero()
+  }, [cotizacionId])
 
   const [openModalAgregarProducto, _setOpenModalAgregarProducto] = useState(false)
 
@@ -39,7 +53,7 @@ export default function HeaderEditarCotizacion() {
 
   return (
     <TituloModulos
-      title='Editar Cotización'
+      title={numeroCotizacion ? `Editar Cotización — ${numeroCotizacion}` : 'Editar Cotización'}
       icon={<MdPointOfSale className='text-cyan-600' />}
       extra={
         <div className='pl-8 flex items-center gap-4'>

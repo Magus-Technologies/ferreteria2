@@ -292,7 +292,7 @@ export default function FormCrearCotizacion({
               propsForm={{
                 name: "direccion",
                 hasFeedback: false,
-                className: "!min-w-[300px] !w-[300px] !max-w-[300px]",
+                className: "!min-w-[500px] !w-[500px] !max-w-[500px]",
               }}
               placeholder="Dirección del cliente"
               prefix={<BsGeoAltFill className="text-cyan-600 mx-1" />}
