@@ -53,6 +53,12 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
   const direccionSeleccionada = Form.useWatch("direccion_seleccionada", form);
   const clienteNombre = Form.useWatch("cliente_nombre", form);
   const clienteId = Form.useWatch("cliente_id", form);
+  // Watch de descontar_stock: cuando es 'no', el cliente ya tiene la mercadería
+  // y el modal de entrega no debe pedirle "¿Quién entrega?".
+  const descontarStockWatch = Form.useWatch("descontar_stock", form) as
+    | "si"
+    | "no"
+    | undefined;
 
   // Obtener la dirección seleccionada del cliente — antes construía
   // dinámicamente `_cliente_direccion_${i}`. Ahora delega al helper
@@ -106,7 +112,10 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
       return;
     }
     form.setFieldValue("estado_de_venta", EstadoDeVenta.CREADO);
-    if (tipo_despacho === 'Omitir') {
+    // Si es despacho en tienda Y el cliente ya tiene la mercadería (descontar_stock=no),
+    // el backend ya decide todo (quien_entrega=vendedor, estado=en). No hay nada
+    // que configurar → submit directo sin abrir el modal.
+    if (tipo_despacho === 'Omitir' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
       form.submit();
     } else {
       setModalDetallesEntregaOpen(true);
@@ -508,6 +517,11 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         form={form}
         ventaId={ventaId}
         tipoDespacho={(!tipo_despacho || tipo_despacho === 'Omitir') ? 'EnTienda' : tipo_despacho}
+        // Si el usuario eligió `descontar_stock = 'no'`, el cliente YA TIENE la
+        // mercadería. El backend fuerza `quien_entrega = 'vendedor'` y
+        // `estado_entrega = 'en'`. Ocultamos el campo "¿Quién entrega?"
+        // porque sería ruido: el sistema ya decidió por el usuario.
+        ocultar={descontarStockWatch === 'no' ? ['quien-entrega'] : []}
         onConfirmar={() => {
           // El tipo de despacho ya está guardado en el formulario
           console.log("Entrega configurada");
@@ -540,8 +554,9 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         onSurchargeChange={setSurchargeTotal}
         onContinuar={() => {
           setModalOpen(false);
-          if (tipo_despacho === 'Omitir') {
-            // Omitir entrega: no necesita configurar despacho, enviar directo
+          // Misma lógica que handleCreditoClick: si EnTienda + descontar_stock=no,
+          // el backend ya decide todo, no abrir modal de entrega.
+          if (tipo_despacho === 'Omitir' || (tipo_despacho === 'EnTienda' && descontarStockWatch === 'no')) {
             form.submit();
           } else {
             setModalDetallesEntregaOpen(true);

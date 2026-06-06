@@ -78,7 +78,7 @@ export default function AccionConfigurarEntrega() {
             ? 'border-green-500 !text-green-700 hover:bg-green-50'
             : 'border-blue-500 !text-blue-700 hover:bg-blue-50'
         }`}
-        disabled={!venta || loadingHistorial}
+        disabled={!venta || loadingHistorial || venta.estado_de_venta === 'an'}
         onClick={() => setOpenResumen(true)}
       >
         {loadingHistorial ? (

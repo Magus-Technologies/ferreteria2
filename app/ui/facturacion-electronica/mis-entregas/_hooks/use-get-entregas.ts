@@ -8,7 +8,7 @@ import { entregasNuevasApi, type EntregaNueva } from '~/lib/api/entregas'
  * Map EntregaNueva (new entrega table) → shape compatible with TableMisEntregas
  * (which was designed for the old EntregaDB format).
  */
-function mapToEntregaDB(e: EntregaNueva): any {
+export function mapToEntregaDB(e: EntregaNueva): any {
   const venta = (e as any).venta ?? null
 
   return {

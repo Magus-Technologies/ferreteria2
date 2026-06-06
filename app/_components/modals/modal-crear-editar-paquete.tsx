@@ -126,6 +126,7 @@ export default function ModalCrearEditarPaquete({
                 classIconSearch="!mb-0"
                 withSearch
                 withTipoBusqueda
+                requireSearchToShow
                 showUltimasCompras={false}
                 selectionColor="#fb923c"
                 limpiarOnChange

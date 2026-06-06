@@ -58,6 +58,7 @@ export default function HeaderCrearCotizacion() {
             withTipoBusqueda
             showCardAgregarProductoCotizacion
             showUltimasCompras={false}
+            requireSearchToShow
             handleOnlyOneResult={(producto) => {
               setProductoSeleccionadoSearchStore(producto)
               if (producto) setOpenModalAgregarProducto(true)

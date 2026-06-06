@@ -3,6 +3,7 @@ import type { FormInstance } from 'antd'
 import dayjs from 'dayjs'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import { entregasNuevasApi } from '~/lib/api/entregas'
 import {
   entregaProductoApi,
   EstadoEntrega,
@@ -259,8 +260,8 @@ export function useConfirmarEntrega({
           // Necesitamos almacen_salida_id y user_id de la entrega origen.
           // Los pedimos al backend con un fetch corto (no agregamos al payload
           // del update porque este modo no los conoce de antemano).
-          const entregaResp = await entregaProductoApi.getById(mode.entregaId)
-          const entregaOrig: any = entregaResp.data?.data
+          const entregaResp = await entregasNuevasApi.obtener(Number(mode.entregaId))
+          const entregaOrig: any = (entregaResp.data as any)?.data ?? entregaResp.data
           const restoFecha = form.getFieldValue('_resto_fecha_programada')
           const restoDireccion = form.getFieldValue('_resto_direccion_entrega')
           const restoReferencia = form.getFieldValue('_resto_referencia_entrega')
@@ -278,7 +279,7 @@ export function useConfirmarEntrega({
             estado_entrega: EstadoEntrega.PENDIENTE,
             fecha_entrega: dayjs().format('YYYY-MM-DD'),
             almacen_salida_id: entregaOrig?.almacen_salida_id,
-            user_id: entregaOrig?.user_id,
+            user_id: entregaOrig?.user_creador_id ?? entregaOrig?.user_id,
             quien_entrega: QuienEntrega.CHOFER,
             tipo_pedido: tipoPedidoResto,
             productos_entregados: productosResto.map((p) => ({

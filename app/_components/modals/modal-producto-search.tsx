@@ -50,6 +50,11 @@ type ModalProductoSearchProps = {
   showStockMaxWarning?: boolean;
   showFiltrosAvanzados?: boolean;
   stockFilterMode?: 'default' | 'venta';
+  /**
+   * Si es true (ventas, cotizaciones, guías), el modal abre vacío y solo
+   * muestra productos cuando el usuario busca (mínimo 2 caracteres).
+   */
+  requireSearchToShow?: boolean;
 };
 
 export type CostoUnidadDerivadaSearch = {
@@ -83,6 +88,7 @@ export default function ModalProductoSearch({
   showStockMaxWarning = false,
   showFiltrosAvanzados = false,
   stockFilterMode = 'default',
+  requireSearchToShow = false,
 }: ModalProductoSearchProps) {
   const [text, setText] = useState(textDefault);
   useEffect(() => {
@@ -275,6 +281,7 @@ export default function ModalProductoSearch({
                 ignoreAlmacen={ignoreAlmacen}
                 overrideAlmacenId={almacenOrigenIdTransferencia ?? overrideAlmacenId}
                 showStockMaxWarning={showStockMaxWarning}
+                requireSearchToShow={requireSearchToShow}
               />
             </div>
             {showUltimasCompras && (

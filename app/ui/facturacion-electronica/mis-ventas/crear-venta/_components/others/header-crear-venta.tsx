@@ -312,6 +312,7 @@ export default function HeaderCrearVenta({
               showCardAgregarProductoVenta
               showUltimasCompras={false}
               stockFilterMode="venta"
+              requireSearchToShow
               handleOnlyOneResult={(producto) => {
                 setProductoSeleccionadoSearchStore(producto);
                 if (producto) setOpenModalAgregarProducto(true);

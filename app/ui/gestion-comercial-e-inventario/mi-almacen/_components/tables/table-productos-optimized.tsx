@@ -20,18 +20,18 @@ import { useStoreProductoSeleccionado } from "../../_store/store-producto-selecc
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { useStoreQuickFilter } from "../../_store/store-quick-filter";
 import { App } from "antd";
-import { useProductosInfiniteScroll } from "../../_hooks/useProductosInfiniteScroll";
+import { useProductosListadoCompleto } from "../../_hooks/useProductosListadoCompleto";
 import ActionButtonsWrapper from "../others/action-buttons-wrapper";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**
- * Tabla de productos OPTIMIZADA con Infinite Scroll
+ * Tabla de productos OPTIMIZADA para "Mi Almacén"
  *
  * Características:
- * - Carga inicial de 200 productos (rápido)
- * - Carga automática de más productos al hacer scroll
- * - Sin paginación visible (scroll infinito)
- * - Cache inteligente para filtros rápidos
+ * - Carga TODOS los productos de una vez (single request)
+ * - Filtros aplicados en memoria (client-side)
+ * - Cache del backend (10 min) + React Query (5 min)
+ * - Quick Filter local de AG Grid para búsquedas rápidas
  * - Loader visible durante carga
  */
 function TableProductosOptimized() {
@@ -49,21 +49,16 @@ function TableProductosOptimized() {
   const { can } = usePermissionHook();
   const columns = useColumnsProductos({ almacen_id });
 
-  // Hook optimizado con infinite scroll
-  // Solo se activa cuando hay filtros del store (después de que el formulario haga submit)
+  // Hook optimizado: carga TODOS los productos de una vez
   const {
     data: productos,
     loading,
-    loadingMore,
     isFetching,
-    total,
-    loaded,
-    hasMore,
-    fetchNextPage,
-  } = useProductosInfiniteScroll({
+    refetch,
+  } = useProductosListadoCompleto({
+    almacenId: filtros?.almacen_id ?? null,
     filtros: { ...(filtros || {}) },
     enabled: !!filtros?.almacen_id,
-    perPage: 1000,
   });
 
   // IMPORTANTE: getRowId permite que AG Grid identifique filas únicas
@@ -129,17 +124,8 @@ function TableProductosOptimized() {
     }
   }, [quickFilter, setProductoSeleccionado]);
 
-  // Cargar automáticamente todas las páginas en segundo plano
-  useEffect(() => {
-    if (!loading && hasMore && !loadingMore) {
-      // Esperar 500ms antes de cargar la siguiente página
-      const timer = setTimeout(() => {
-        fetchNextPage();
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [loading, hasMore, loadingMore, fetchNextPage]);
+  // Refetch cuando cambian filtros de almacén (se detecta por cambio de queryKey)
+  // El filtrado real ocurre en memoria, no se vuelve a pegar al backend.
 
   return (
     <div className="flex flex-col h-full">
@@ -156,7 +142,7 @@ function TableProductosOptimized() {
         title="Productos"
         schema={ProductoCreateInputSchema}
         headersRequired={["Ubicación en Almacén"]}
-        loading={loading || (isFetching && !loadingMore)}
+        loading={loading || isFetching}
         columnDefs={columns}
         rowData={productos}
         // CRÍTICO: getRowId permite que AG Grid mantenga el estado de filtros
@@ -282,7 +268,7 @@ function TableProductosOptimized() {
                     // de tocar selección o store, para no dejar a la UI sin producto
                     // (evita que tablas dependientes muestren "todos los productos" mientras recarga).
                     await queryClient.refetchQueries({
-                      queryKey: ["productos-infinite"],
+                      queryKey: ["productos-listado-completo"],
                     });
 
                     hasSelectedFirstProduct.current = false;

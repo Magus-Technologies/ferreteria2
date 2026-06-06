@@ -41,6 +41,7 @@ export default function TableProductoSearch({
   ignoreAlmacen = false,
   overrideAlmacenId,
   showStockMaxWarning = false,
+  requireSearchToShow = false,
 }: {
   value: string;
   onRowDoubleClicked?: ({
@@ -60,6 +61,12 @@ export default function TableProductoSearch({
   ignoreAlmacen?: boolean;
   overrideAlmacenId?: number;
   showStockMaxWarning?: boolean;
+  /**
+   * Si es true (ventas, cotizaciones, guías), la tabla NO muestra nada hasta
+   * que el usuario busque (mínimo 2 caracteres). En compras/orden de compra
+   * se deja en false para mostrar todo el catálogo desde el inicio.
+   */
+  requireSearchToShow?: boolean;
 }) {
   const almacen_id_store = useStoreAlmacen((store) => store.almacen_id);
   const almacen_id = overrideAlmacenId ?? almacen_id_store;
@@ -82,12 +89,14 @@ export default function TableProductoSearch({
   // lista; usamos el almacén actual del store o, en su defecto, el principal (1).
   const almacenIdListado = ignoreAlmacen ? (almacen_id ?? 1) : almacen_id;
 
+  // En vistas con requireSearchToShow (ventas, cotizaciones, guías) no cargamos
+  // el catálogo completo: solo se usa la búsqueda remota cuando el usuario tipea.
   const {
     data: productosCompletos = [],
     isLoading: loading,
     isFetching,
     refetch,
-  } = useProductosListadoCompleto(almacenIdListado);
+  } = useProductosListadoCompleto(almacenIdListado, !requireSearchToShow);
 
   const {
     data: productosBusquedaRemota = [],
@@ -155,6 +164,12 @@ export default function TableProductoSearch({
    * `quickFilterValue` (que es el filtro en vivo de AG Grid).
    */
   const productosFiltrados = useMemo(() => {
+    // Ventas / cotizaciones / guías: sin búsqueda activa NO se muestra nada.
+    // El usuario debe escribir al menos 2 caracteres para ver resultados.
+    if (requireSearchToShow && !isActiveSearch) {
+      return [] as Producto[];
+    }
+
     let productos = isActiveSearch ? productosBusquedaRemota : productosCompletos;
 
     // 1) Excluir productos ya agregados
@@ -232,6 +247,7 @@ export default function TableProductoSearch({
     categoriaId,
     value,
     tipoBusqueda,
+    requireSearchToShow,
   ]);
 
   function handleRefetch() {

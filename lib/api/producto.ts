@@ -146,6 +146,20 @@ export const productosApiV2 = {
   },
 
   /**
+   * Listado COMPLETO de TODOS los productos de un almacén para "Mi Almacén".
+   * Devuelve ambos estados, tiene_ingresos, img, ficha_tecnica,
+   * todos los productoEnAlmacenes (incluidos otros almacenes), ubicacion.
+   * Sin compras. Cache 10 min en el back.
+   *
+   * GET /api/productos/listado-completo?almacen_id={id}
+   */
+  async getListadoCompletoPorAlmacen(almacenId: number): Promise<ApiResponse<{ data: Producto[] }>> {
+    return apiRequest<{ data: Producto[] }>(
+      `/productos/listado-completo?almacen_id=${almacenId}`
+    );
+  },
+
+  /**
    * Obtener detalle de precios de un producto en un almacén específico
    * GET /api/productos/{id}/detalle-precios?almacen_id={id}
    */

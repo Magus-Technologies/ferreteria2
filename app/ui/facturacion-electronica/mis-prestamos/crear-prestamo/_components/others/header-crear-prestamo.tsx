@@ -28,6 +28,7 @@ export default function HeaderCrearPrestamo() {
             showButtonCreate={can(permissions.PRODUCTO_CREATE)}
             withSearch
             withTipoBusqueda
+            requireSearchToShow
             showCardAgregarProductoPrestamo
             showUltimasCompras={false}
             placeholder='Buscar productos para agregar al préstamo'

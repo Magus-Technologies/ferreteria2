@@ -85,6 +85,11 @@ interface SelectProductosProps extends Omit<SelectBaseProps, 'onChange'> {
   showStockMaxWarning?: boolean
   showFiltrosAvanzados?: boolean
   stockFilterMode?: 'default' | 'venta'
+  /**
+   * Si es true (ventas, cotizaciones, guías), el modal de búsqueda abre vacío
+   * y solo muestra productos cuando el usuario busca (mínimo 2 caracteres).
+   */
+  requireSearchToShow?: boolean
 }
 
 export interface RefSelectProductosProps {
@@ -123,6 +128,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
   showStockMaxWarning = false,
   showFiltrosAvanzados = false,
   stockFilterMode = 'default',
+  requireSearchToShow = false,
   ...props
 }, ref) {
   const selectProductoRef = useRef<RefSelectBaseProps>(null)
@@ -450,6 +456,7 @@ const SelectProductos = forwardRef<RefSelectProductosProps, SelectProductosProps
           showStockMaxWarning={showStockMaxWarning}
           showFiltrosAvanzados={showFiltrosAvanzados}
           stockFilterMode={stockFilterMode}
+          requireSearchToShow={requireSearchToShow}
           onAfterClose={() => {
             // Devolver focus al buscador después de cerrar el modal
             ;[0, 50, 150, 300, 500].forEach((delay) => {

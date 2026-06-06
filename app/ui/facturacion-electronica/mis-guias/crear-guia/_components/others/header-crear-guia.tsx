@@ -69,6 +69,7 @@ export default function HeaderCrearGuia({
             withTipoBusqueda
             showCardAgregarProductoGuia
             showUltimasCompras={false}
+            requireSearchToShow
             handleOnlyOneResult={(producto) => {
               setProductoSeleccionadoSearchStore(producto)
               if (producto) setOpenModalAgregarProducto(true)
