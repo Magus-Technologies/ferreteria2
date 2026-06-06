@@ -456,6 +456,9 @@ export interface Cargo {
   staff?: boolean;
   estado?: boolean;
   users_count?: number;
+  /** Rol del sistema relacionado (opcional). */
+  role_id?: number | null;
+  role?: { id: number; name: string; descripcion: string } | null;
 }
 
 export const cargosApi = {

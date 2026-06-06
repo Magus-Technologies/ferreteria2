@@ -19,6 +19,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FaPlus, FaEdit, FaTrash, FaSitemap } from 'react-icons/fa'
 import { cargosApi, type Cargo } from '~/lib/api/catalogos'
+import { permissionsApi } from '~/lib/api/permissions'
 
 const CARGOS_GESTION_KEY = ['cargos-gestion']
 
@@ -28,6 +29,7 @@ interface CargoFormValues {
   parent?: string | null
   staff?: boolean
   highlight?: boolean
+  role_id?: number | null
 }
 
 export default function TabCargos() {
@@ -41,6 +43,15 @@ export default function TabCargos() {
   const { data: cargos = [], isLoading } = useQuery({
     queryKey: CARGOS_GESTION_KEY,
     queryFn: () => cargosApi.listGestion(),
+  })
+
+  const { data: roles = [] } = useQuery({
+    queryKey: ['roles-gestion', 'select'],
+    queryFn: async () => {
+      const res = await permissionsApi.getRolesGestion()
+      return (res.data?.data ?? []).filter((r) => r.estado !== false)
+    },
+    staleTime: 5 * 60 * 1000,
   })
 
   const invalidar = () => {
@@ -57,6 +68,7 @@ export default function TabCargos() {
         parent: values.parent || null,
         staff: !!values.staff,
         highlight: !!values.highlight,
+        role_id: values.role_id ?? null,
       }
       if (editando) {
         return cargosApi.update(editando.codigo, payload)
@@ -115,6 +127,7 @@ export default function TabCargos() {
       parent: cargo.parent || undefined,
       staff: !!cargo.staff,
       highlight: !!cargo.highlight,
+      role_id: cargo.role_id ?? undefined,
     })
     setModalOpen(true)
   }
@@ -150,6 +163,12 @@ export default function TabCargos() {
       dataIndex: 'parent',
       key: 'parent',
       render: (p: string | null) => <span className="text-sm text-gray-600">{descripcionPorCodigo(p)}</span>,
+    },
+    {
+      title: 'Rol',
+      key: 'role',
+      render: (_: unknown, c: Cargo) =>
+        c.role ? <Tag color="purple">{c.role.descripcion}</Tag> : <span className="text-gray-300 text-xs">—</span>,
     },
     {
       title: 'Usuarios',
@@ -284,6 +303,19 @@ export default function TabCargos() {
               options={cargos
                 .filter((c) => c.codigo !== editando?.codigo)
                 .map((c) => ({ value: c.codigo, label: c.descripcion }))}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Rol relacionado (opcional)"
+            name="role_id"
+            extra="Relaciona este cargo con un rol del sistema (referencia)."
+          >
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Sin rol relacionado"
+              options={roles.map((r) => ({ value: r.id, label: r.descripcion || r.name }))}
             />
           </Form.Item>
           <Form.Item name="staff" valuePropName="checked">
