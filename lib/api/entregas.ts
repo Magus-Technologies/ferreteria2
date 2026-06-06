@@ -263,6 +263,17 @@ export interface FiltrosListarEntregas {
   search?: string
 }
 
+export interface FiltrosResumenVentas {
+  fecha_desde?: string
+  fecha_hasta?: string
+  search?: string
+  solo_con_pendientes?: boolean
+  solo_sin_entregas?: boolean
+  chofer_id?: string
+  per_page?: number
+  page?: number
+}
+
 export const entregasNuevasApi = {
   listar: (filtros: FiltrosListarEntregas = {}): Promise<ApiResponse<EntregaNueva[]>> => {
     const p = new URLSearchParams()

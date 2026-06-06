@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { cajaApi } from '~/lib/api/caja'
+import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { useRouter } from 'next/navigation'
 import ModalAperturarCaja from '~/app/ui/facturacion-electronica/_components/modals/modal-aperturar-caja'
@@ -18,15 +18,18 @@ export default function AperturaGuard() {
     const queryClient = useQueryClient()
     const successRef = useRef(false)
 
-    const { data: cajaActiva, isLoading } = useQuery({
+    const { data: cajaActiva, isSuccess } = useQuery({
         queryKey: [QueryKeys.CAJA_ACTIVA],
-        queryFn: async () => {
-            const response = await cajaApi.cajaActiva()
-            return response.data?.data || null
-        },
+        queryFn: () => fetchCajaActivaOrNull(),
+        staleTime: 30000,
+        gcTime: 60000,
+        retry: 1,
     })
 
-    const shouldOpen = !isLoading && !cajaActiva
+    // Abrir SOLO cuando la consulta tuvo éxito y confirmó que no hay caja (null).
+    // Si la consulta falla (error transitorio) `isSuccess` es false y conservamos
+    // el último valor bueno: el modal NO reaparece de forma espuria.
+    const shouldOpen = isSuccess && !cajaActiva
 
     const handleSetOpen = (val: boolean) => {
         if (!val && !successRef.current) {

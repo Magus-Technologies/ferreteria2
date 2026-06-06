@@ -17,7 +17,7 @@ import ModalSolicitarEfectivo from "../../gestion-cajas/_components/modal-solici
 import ModalTrasladoBoveda from "../../mis-aperturas-cierres/_components/modals/modal-traslado-boveda";
 import { QueryKeys } from "~/app/_lib/queryKeys";
 import { useRouter } from "next/navigation";
-import { cajaApi } from "~/lib/api/caja";
+import { fetchCajaActivaOrNull } from "~/lib/api/caja";
 
 // Mapa de iconos
 const iconMap: Record<string, any> = {
@@ -40,10 +40,10 @@ export default function TopNav({ className }: { className?: string }) {
   // Obtener caja activa
   const { data: cajaActiva } = useQuery({
     queryKey: [QueryKeys.CAJA_ACTIVA],
-    queryFn: async () => {
-      const response = await cajaApi.cajaActiva()
-      return response.data?.data || null
-    },
+    queryFn: () => fetchCajaActivaOrNull(),
+    staleTime: 30000,
+    gcTime: 60000,
+    retry: 1,
   })
 
   const moduleId = "facturacion-electronica";

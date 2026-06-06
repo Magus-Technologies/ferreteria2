@@ -16,7 +16,7 @@ import ModalSolicitarEfectivo from '~/app/ui/facturacion-electronica/gestion-caj
 import ModalTrasladoBoveda from '~/app/ui/facturacion-electronica/mis-aperturas-cierres/_components/modals/modal-traslado-boveda'
 import ModalAperturarCaja from '../../gestion-cajas/_components/modal-aperturar-caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { cajaApi } from '~/lib/api/caja'
+import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 
 
 export default function TopNav({ className }: { className?: string }) {
@@ -32,10 +32,10 @@ export default function TopNav({ className }: { className?: string }) {
   // Obtener caja activa (necesaria para Pedir Préstamo y Traslado a Bóveda)
   const { data: cajaActiva } = useQuery({
     queryKey: [QueryKeys.CAJA_ACTIVA],
-    queryFn: async () => {
-      const response = await cajaApi.cajaActiva()
-      return response.data?.data || null
-    },
+    queryFn: () => fetchCajaActivaOrNull(),
+    staleTime: 30000,
+    gcTime: 60000,
+    retry: 1,
   })
 
 const itemsVentas: MenuProps['items'] = [

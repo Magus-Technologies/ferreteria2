@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { cajaApi } from '~/lib/api/caja'
+import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import dayjs from 'dayjs'
 
@@ -11,12 +11,10 @@ export function useCheckAperturaDiaria() {
 
   const { data: cajaActiva, isLoading, refetch } = useQuery({
     queryKey: [QueryKeys.CAJA_ACTIVA],
-    queryFn: async () => {
-      const response = await cajaApi.cajaActiva()
-      return response.data?.data || null
-    },
+    queryFn: () => fetchCajaActivaOrNull(),
     staleTime: 30000,
     gcTime: 60000,
+    retry: 1,
   })
 
   const esAperturaDeHoy = useCallback(() => {

@@ -12,7 +12,7 @@ import TableWithTitle from '~/components/tables/table-with-title'
 import { AgGridReact } from 'ag-grid-react'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
-import { cajaApi } from '~/lib/api/caja'
+import { fetchCajaActivaOrNull } from '~/lib/api/caja'
 import { useColumnsHistorialTraslados } from '~/app/ui/facturacion-electronica/gestion-cajas/_components/columns-historial-traslados'
 
 interface ModalHistorialTrasladosBovedaProps {
@@ -39,10 +39,10 @@ export default function ModalHistorialTrasladosBoveda({
     // Obtener caja activa para sacar su ID
     const { data: cajaActiva } = useQuery({
         queryKey: [QueryKeys.CAJA_ACTIVA],
-        queryFn: async () => {
-            const response = await cajaApi.cajaActiva()
-            return response.data?.data || null
-        },
+        queryFn: () => fetchCajaActivaOrNull(),
+        staleTime: 30000,
+        gcTime: 60000,
+        retry: 1,
         enabled: open,
     })
 

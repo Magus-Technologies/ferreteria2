@@ -527,3 +527,32 @@ export const cajaApi = {
     return response.json()
   },
 }
+
+/**
+ * Consulta la caja activa del usuario y devuelve:
+ *   - el objeto de caja activa, si existe
+ *   - `null` SOLO cuando el backend confirma que no hay caja abierta (HTTP 404)
+ *
+ * Ante cualquier otro fallo (401 por token expirado, 500, error de red) LANZA
+ * un error. Esto es intencional: el backend colapsa todos los fallos en una
+ * respuesta sin `data`, y si tradujéramos eso a `null` React Query lo guardaría
+ * como dato válido y el modal de "Distribución de Efectivo a Vendedores"
+ * reaparecería en cada refetch transitorio aunque ya se haya distribuido.
+ * Al lanzar, React Query conserva el último valor bueno y no abre el modal.
+ */
+export async function fetchCajaActivaOrNull(userId?: string) {
+  const response = await cajaApi.cajaActiva(userId)
+
+  if (response.data) {
+    return response.data.data ?? null
+  }
+
+  // No hay `data` => hubo error. Distinguir "no hay caja" de fallos reales.
+  if (response.error?.status === 404) {
+    return null
+  }
+
+  throw new Error(
+    response.error?.message || 'No se pudo consultar la caja activa'
+  )
+}
