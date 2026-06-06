@@ -20,7 +20,7 @@ import { useStoreProductoSeleccionado } from "../../_store/store-producto-selecc
 import { useStoreFiltrosProductos } from "../../_store/store-filtros-productos";
 import { useStoreQuickFilter } from "../../_store/store-quick-filter";
 import { App } from "antd";
-import { useProductosListadoCompleto } from "../../_hooks/useProductosListadoCompleto";
+import { useProductosMiAlmacen } from "../../_hooks/useProductosMiAlmacen";
 import ActionButtonsWrapper from "../others/action-buttons-wrapper";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -54,8 +54,7 @@ function TableProductosOptimized() {
     data: productos,
     loading,
     isFetching,
-    refetch,
-  } = useProductosListadoCompleto({
+  } = useProductosMiAlmacen({
     almacenId: filtros?.almacen_id ?? null,
     filtros: { ...(filtros || {}) },
     enabled: !!filtros?.almacen_id,
