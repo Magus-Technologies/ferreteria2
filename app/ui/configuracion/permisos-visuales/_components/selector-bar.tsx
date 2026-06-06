@@ -36,7 +36,7 @@ export default function SelectorBar({
           options={
             Array.isArray(roles)
               ? roles.map((r) => ({
-                  label: r.descripcion,
+                  label: r.name,
                   value: r.id,
                 }))
               : []
