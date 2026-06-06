@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Button, Result, message } from 'antd'
-import { FaLock } from 'react-icons/fa'
+import { Button, Result, message, Space } from 'antd'
+import { FaLock, FaUserShield } from 'react-icons/fa'
 import { useAccesoVista } from '~/hooks/use-acceso-vista'
 import { useAuth } from '~/lib/auth-context'
 import { autorizacionesApi } from '~/lib/api/autorizaciones'
+import ModalSupervisorOverride from '~/app/_components/modals/modal-supervisor-override'
 
 /**
  * Bloquea las vistas de navegación marcadas como "Requiere autorización" para
@@ -21,6 +22,7 @@ export default function AccesoGuard({ children }: { children: React.ReactNode })
   const { refreshUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [solicitada, setSolicitada] = useState(false)
+  const [overrideOpen, setOverrideOpen] = useState(false)
   const consumidoRef = useRef(false)
 
   // Si la vista estaba concedida, intentar consumirla (solo afecta a las de
@@ -68,15 +70,34 @@ export default function AccesoGuard({ children }: { children: React.ReactNode })
             : 'No tienes acceso a esta vista. Solicita autorización a tu superior para continuar.'
         }
         extra={
-          solicitada ? (
-            <Button onClick={() => refreshUser()}>Ya me aprobaron, reintentar</Button>
-          ) : (
-            <Button type="primary" loading={loading} onClick={solicitar}>
-              Solicitar acceso
+          <Space direction="vertical" align="center" size="small">
+            {solicitada ? (
+              <Button onClick={() => refreshUser()}>Ya me aprobaron, reintentar</Button>
+            ) : (
+              <Button type="primary" loading={loading} onClick={solicitar}>
+                Solicitar acceso
+              </Button>
+            )}
+            <Button
+              type="link"
+              icon={<FaUserShield />}
+              onClick={() => setOverrideOpen(true)}
+            >
+              Autorizar con clave de supervisor
             </Button>
-          )
+          </Space>
         }
       />
+
+      {componentId && (
+        <ModalSupervisorOverride
+          open={overrideOpen}
+          setOpen={setOverrideOpen}
+          modulo={componentId}
+          accion="acceso"
+          onSuccess={() => refreshUser()}
+        />
+      )}
     </div>
   )
 }

@@ -133,6 +133,24 @@ export const autorizacionesApi = {
       data: data,
     }),
 
+  /** Supervisores válidos para autorizar en sitio esta acción (con clave). */
+  supervisoresOverride: (modulo: string, accion: AccionAutorizacion) =>
+    apiRequest<{ data: { id: string; name: string }[] }>('/autorizaciones/supervisores', {
+      method: 'GET',
+      params: { modulo, accion },
+    }),
+
+  /** Override en sitio: un supervisor autoriza con su clave (concede uso único). */
+  autorizarOverride: (data: {
+    modulo: string
+    accion: AccionAutorizacion
+    supervisor_id: string
+    supervisor_password: string
+  }) => apiRequest<{ data: AutorizacionOtorgada; message: string }>('/autorizaciones/override', {
+    method: 'POST',
+    data: data,
+  }),
+
   rechazar: (id: string, data?: { comentario?: string }) =>
     apiRequest<SolicitudAutorizacion>(`/autorizaciones/solicitudes/${id}/rechazar`, {
       method: 'POST',
