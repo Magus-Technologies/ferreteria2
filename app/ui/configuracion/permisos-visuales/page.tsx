@@ -17,7 +17,7 @@ import { ConfigModeProvider } from './_components/config-mode-context';
 import { FaUsers } from 'react-icons/fa';
 import { permissionsApi } from '~/lib/api/permissions';
 import { autorizacionesApi, autorizacionesKeys } from '~/lib/api/autorizaciones';
-import { MODULE_LABELS } from './_constants';
+import { MODULE_LABELS, PERMISSION_TO_AUTH_MODULO } from './_constants';
 import { COMPONENT_MAP } from './_constants/component-map';
 
 import SelectorBar from './_components/selector-bar';
@@ -53,7 +53,9 @@ export default function PermisosVisualesPage() {
     permission: string;
     component: React.LazyExoticComponent<any>;
   } | null>(null);
-  const [expandedPermission, setExpandedPermission] = useState<string | null>(null);
+  // Identificador ÚNICO por tarjeta (sección + índice). No usar item.permission:
+  // hay permisos duplicados en el nav, lo que hacía que se expandieran varias a la vez.
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [itemSeleccionado, setItemSeleccionado] = useState<{ label: string; permission: string } | null>(null);
   // Solo las vistas de navegación pueden requerir autorización de acceso.
@@ -120,7 +122,7 @@ export default function PermisosVisualesPage() {
       params.delete('rol');
     }
     router.replace(`?${params.toString()}`, { scroll: false });
-    setExpandedPermission(null);
+    setExpandedKey(null);
     if (vistaActiva) setVistaActiva(null);
   };
 
@@ -128,7 +130,7 @@ export default function PermisosVisualesPage() {
     const params = new URLSearchParams(searchParams.toString());
     params.set('area', value);
     router.replace(`?${params.toString()}`, { scroll: false });
-    setExpandedPermission(null);
+    setExpandedKey(null);
     if (vistaActiva) setVistaActiva(null);
   };
 
@@ -145,17 +147,32 @@ export default function PermisosVisualesPage() {
     return resultado;
   };
 
+  // Muestra una sola tarjeta por módulo de negocio (authModulo). Varias vistas
+  // del nav comparten authModulo (ej. "Mis Ventas" e "Historial de Ventas" → ventas),
+  // por lo que su switch de autorización es el mismo; mostrarlas todas se veía como
+  // "copia". Los items sin módulo de negocio se conservan (quitando duplicados exactos).
+  const dedupePorModulo = (items: NavItem[]): NavItem[] => {
+    const vistos = new Set<string>();
+    return items.filter((item) => {
+      const modulo = PERMISSION_TO_AUTH_MODULO[item.permission ?? ''];
+      const clave = modulo ?? `__nav__:${item.permission}`;
+      if (vistos.has(clave)) return false;
+      vistos.add(clave);
+      return true;
+    });
+  };
+
   const obtenerModulos = () => {
     if (area === 'facturacion-electronica') {
       return {
-        topNav: extraerItems(facturacionElectronicaNav.topNav.items),
-        bottomNav: extraerItems(facturacionElectronicaNav.bottomNav.items),
+        topNav: dedupePorModulo(extraerItems(facturacionElectronicaNav.topNav.items)),
+        bottomNav: dedupePorModulo(extraerItems(facturacionElectronicaNav.bottomNav.items)),
       };
     }
     if (area === 'gestion-comercial-e-inventario') {
       return {
-        topNav: extraerItems(gestionComercialNav.topNav.items),
-        bottomNav: extraerItems(gestionComercialNav.bottomNav.items),
+        topNav: dedupePorModulo(extraerItems(gestionComercialNav.topNav.items)),
+        bottomNav: dedupePorModulo(extraerItems(gestionComercialNav.bottomNav.items)),
       };
     }
     return { topNav: [], bottomNav: [] };
@@ -243,13 +260,15 @@ export default function PermisosVisualesPage() {
             <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
               <span className="text-blue-500">🔼</span> Barra Superior (Top Nav)
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-              {modulos.topNav.map((item, idx) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 items-start">
+              {modulos.topNav.map((item, idx) => {
+                const cardKey = `top-${idx}`;
+                return (
                 <ModuloCard
-                  key={idx}
+                  key={cardKey}
                   item={item}
-                  isExpanded={expandedPermission === item.permission}
-                  onToggleExpand={() => setExpandedPermission(expandedPermission === item.permission ? null : item.permission!)}
+                  isExpanded={expandedKey === cardKey}
+                  onToggleExpand={() => setExpandedKey(expandedKey === cardKey ? null : cardKey)}
                   onConfigurar={() => handleModuloClick(item.label || '', item.permission!, true)}
                   onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setEsNavSeleccionado(true); setModalVisible(true); }}
                   visible={estaVisible(item.permission!)}
@@ -261,7 +280,8 @@ export default function PermisosVisualesPage() {
                   users={users}
                   authConfigs={authConfigs as any}
                 />
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -271,13 +291,15 @@ export default function PermisosVisualesPage() {
             <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
               <span className="text-purple-500">🔽</span> Barra Inferior (Bottom Nav)
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-              {modulos.bottomNav.map((item, idx) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 items-start">
+              {modulos.bottomNav.map((item, idx) => {
+                const cardKey = `bottom-${idx}`;
+                return (
                 <ModuloCard
-                  key={idx}
+                  key={cardKey}
                   item={item}
-                  isExpanded={expandedPermission === item.permission}
-                  onToggleExpand={() => setExpandedPermission(expandedPermission === item.permission ? null : item.permission!)}
+                  isExpanded={expandedKey === cardKey}
+                  onToggleExpand={() => setExpandedKey(expandedKey === cardKey ? null : cardKey)}
                   onConfigurar={() => handleModuloClick(item.label || '', item.permission!, true)}
                   onVerToggle={() => { setItemSeleccionado({ label: item.label || '', permission: item.permission! }); setEsNavSeleccionado(true); setModalVisible(true); }}
                   visible={estaVisible(item.permission!)}
@@ -289,7 +311,8 @@ export default function PermisosVisualesPage() {
                   users={users}
                   authConfigs={authConfigs as any}
                 />
-              ))}
+                );
+              })}
             </div>
           </div>
 
