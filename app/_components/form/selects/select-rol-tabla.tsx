@@ -34,10 +34,8 @@ export default function SelectRolTabla({
     .filter(rol => rol.estado !== false)
     .map(rol => ({
       value: rol.id,
-      // Mostrar descripción + clave interna para que coincida con el tab de Roles
-      label: rol.descripcion && rol.descripcion !== rol.name
-        ? `${rol.descripcion} (${rol.name})`
-        : rol.name,
+      // Mostrar solo el nombre del rol de sistema
+      label: rol.name,
     }))
 
   return (
