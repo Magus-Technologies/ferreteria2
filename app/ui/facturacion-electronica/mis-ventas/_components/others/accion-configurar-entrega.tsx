@@ -20,7 +20,6 @@ export default function AccionConfigurarEntrega() {
     const covered: Record<string, number> = {}
     for (const entrega of historial) {
       if (entrega.estado_entrega_codigo === 'ca') continue
-      if (entrega.estado_entrega_codigo === 'pe') continue
       for (const d of entrega.detalles ?? []) {
         const id = String(d.unidad_derivada_venta_id)
         covered[id] = (covered[id] ?? 0) + (d.cantidad ?? 0)

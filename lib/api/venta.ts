@@ -446,6 +446,9 @@ export type VentaCompleta = {
   // Cantidad de ediciones registradas en `venta_historial` con accion='edicion'.
   // Calculado en backend con `withCount('historial as total_ediciones')`.
   total_ediciones?: number
+  // Si el stock fue descontado al crear la venta (descontar_stock='si').
+  // false cuando el cliente ya tenía la mercadería (descontar_stock='no').
+  stock_aplicado?: boolean
   cliente?: any
   recomendado_por?: any
   recomendadoPor?: any
