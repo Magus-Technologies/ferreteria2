@@ -296,7 +296,7 @@ export default function ModalVerEntregas({
     `${cliente?.nombres || ""} ${cliente?.apellidos || ""}`.trim() ||
     "SIN CLIENTE";
 
-  const items = (entregas || []).map((entrega: any, idx: number) => {
+  const items = (Array.isArray(entregas) ? entregas : []).map((entrega: any, idx: number) => {
     const estado = ESTADO_LABEL[entrega.estado_entrega] || {
       label: entrega.estado_entrega,
       color: "default",

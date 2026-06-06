@@ -27,7 +27,9 @@ export default function useGetEntregas({
   })
 
   return {
-    response: data,
+    // Garantizar siempre un array — el stale-cache puede tener el formato
+    // viejo ({ data: [...] }) cuando el realtime invalida la query.
+    response: Array.isArray(data) ? data : [],
     loading: isLoading,
   }
 }
