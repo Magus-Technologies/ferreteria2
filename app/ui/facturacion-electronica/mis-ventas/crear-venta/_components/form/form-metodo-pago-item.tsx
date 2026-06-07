@@ -1,8 +1,9 @@
 'use client'
 
 import { TipoMoneda } from '~/lib/api/venta'
-import { Tooltip, Input } from 'antd'
+import { Tooltip } from 'antd'
 import { MdDelete } from 'react-icons/md'
+import InputBase from '~/app/_components/form/inputs/input-base'
 import InputNumberBase from '~/app/_components/form/inputs/input-number-base'
 import SelectDespliegueDePago from '~/app/_components/form/selects/select-despliegue-de-pago'
 import { useState, useEffect } from 'react'
@@ -116,7 +117,8 @@ export default function FormMetodoPagoItem({
       {requiereNumeroOperacion && (
         <div className='flex items-center gap-2'>
           <div className='flex-1'>
-            <Input
+            <InputBase
+              uppercase={false}
               placeholder='Número de operación/voucher (requerido)'
               value={metodo.numero_operacion}
               onChange={(e) => onChange(index, 'numero_operacion', e.target.value)}

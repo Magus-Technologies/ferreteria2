@@ -3,7 +3,7 @@
 import { Form, InputNumber } from 'antd'
 import { FormItemProps, InputNumberProps } from 'antd/lib'
 import { focusNext } from '../../../_utils/autofocus'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 interface InputNumberBaseProps extends InputNumberProps {
   nextInEnter?: boolean
@@ -18,6 +18,8 @@ function Base({
   nextWithPrevent = true,
   controls = false,
   onKeyUp,
+  onFocus,
+  readOnly,
   className = '!w-full',
   autoComplete = 'off',
   variant = 'filled',
@@ -25,6 +27,12 @@ function Base({
   ref,
   ...props
 }: InputNumberBaseProps) {
+  // Anti-autofill de Chrome: arranca readOnly (Chrome no autocompleta campos
+  // readOnly) y se vuelve editable al enfocar. Solo si no se controla readOnly.
+  const autoBlock = readOnly === undefined
+  const [blocked, setBlocked] = useState(autoBlock)
+  const effectiveReadOnly = autoBlock ? blocked : readOnly
+
   return (
     <InputNumber
       ref={ref}
@@ -41,6 +49,11 @@ function Base({
         onKeyUp?.(e)
       }}
       {...props}
+      readOnly={effectiveReadOnly}
+      onFocus={e => {
+        if (autoBlock) setBlocked(false)
+        onFocus?.(e)
+      }}
     />
   )
 }

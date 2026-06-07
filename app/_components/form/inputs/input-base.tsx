@@ -3,7 +3,7 @@
 import { Form, Input } from 'antd'
 import { FormItemProps, InputProps } from 'antd/lib'
 import { focusNext } from '../../../_utils/autofocus'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 export interface InputBaseProps extends InputProps {
   uppercase?: boolean
@@ -19,14 +19,29 @@ function Base({
   nextWithPrevent = true,
   onInput,
   onKeyUp,
+  onFocus,
+  readOnly,
   autoComplete = 'off',
   variant = 'filled',
   ...props
 }: InputBaseProps) {
+  // Anti-autofill de Chrome: Chrome ignora autocomplete="off" para tarjetas/
+  // direcciones, pero NUNCA autocompleta un campo readOnly. Arrancamos readOnly
+  // y al enfocar lo volvemos editable (imperceptible para el usuario). Solo se
+  // aplica si el consumidor no controla readOnly explícitamente.
+  const autoBlock = readOnly === undefined
+  const [blocked, setBlocked] = useState(autoBlock)
+  const effectiveReadOnly = autoBlock ? blocked : readOnly
+
   return (
     <Input
       {...props}
       variant={variant}
+      readOnly={effectiveReadOnly}
+      onFocus={e => {
+        if (autoBlock) setBlocked(false)
+        onFocus?.(e)
+      }}
       onInput={e => {
         if (uppercase) {
           const el = e.currentTarget
