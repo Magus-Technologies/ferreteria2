@@ -333,7 +333,7 @@ export default function PermisosVisualesPage() {
         onMostrar={() => toggleMutation.mutate({ mostrar: true })}
         onOcultar={() => toggleMutation.mutate({ mostrar: false })}
         onCancel={() => { setModalVisible(false); setItemSeleccionado(null); }}
-        permitirAcceso={esNavSeleccionado}
+        permitirAcceso={true}
         requiereAcceso={!!accesoConfig?.requiere_autorizacion}
         tipoAutorizador={accesoConfig?.tipo_autorizador ?? 'jerarquia'}
         cargoAutorizador={accesoConfig?.cargo_autorizador ?? null}

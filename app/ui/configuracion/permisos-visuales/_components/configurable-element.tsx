@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react";
 import { useConfigMode } from "./config-mode-context";
 import { usePermission } from "~/hooks/use-permission";
+import ComponenteAccesoGuard from "~/app/ui/_components/componente-acceso-guard";
 
 interface ConfigurableElementProps {
   componentId: string; // ID del permiso/restricción (ej: "producto.create")
@@ -34,12 +35,17 @@ export default function ConfigurableElement({
 
   // Si NO está en modo configuración, verificar permisos normales
   if (!configMode?.enabled) {
-    // Si no tiene acceso, no renderizar nada
+    // Si está oculto (restricción/lista negra), no renderizar nada
     if (!hasAccess) {
       return null;
     }
-    // Si tiene acceso, renderizar normalmente
-    return <>{children}</>;
+    // Si tiene acceso: el guard decide si lo muestra normal o bloqueado por
+    // "Requiere autorización" (mismo flujo que las vistas de navegación).
+    return (
+      <ComponenteAccesoGuard componentId={componentId}>
+        {children}
+      </ComponenteAccesoGuard>
+    );
   }
 
   // Modo configuración activo
