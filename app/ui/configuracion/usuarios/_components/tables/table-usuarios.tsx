@@ -105,7 +105,10 @@ export default function TableUsuarios({ onUsuarioSelect }: TableUsuariosProps) {
         headerName: 'Rol Sistema',
         field: 'rol_sistema',
         width: 140,
-        valueGetter: (params) => params.data?.rol_sistema || '-',
+        // Mostrar el rol real (tabla role). El campo legacy rol_sistema queda null
+        // para roles personalizados, por eso priorizamos la relación roles[].
+        valueGetter: (params) =>
+          params.data?.roles?.[0]?.name || params.data?.rol_sistema || '-',
       },
       {
         headerName: 'Fecha Inicio',

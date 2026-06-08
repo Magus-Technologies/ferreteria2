@@ -88,6 +88,10 @@ export default function TableInfoUsuario({ usuario }: TableInfoUsuarioProps) {
         headerName: 'Rol Sistema',
         field: 'rol_sistema',
         width: 140,
+        // El rol real viene de la relación roles[]; rol_sistema (legacy) es null
+        // para roles personalizados.
+        valueGetter: (params: any) =>
+          params.data?.roles?.[0]?.name || params.data?.rol_sistema || '-',
       },
       {
         headerName: 'Cargo',
