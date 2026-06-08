@@ -5,6 +5,7 @@ import { authApi, getAuthToken, removeAuthToken, LoginResponse } from './api';
 import { useRouter } from 'next/navigation';
 import { clearLogoCache } from '~/hooks/use-empresa-publica';
 import { useStoreAuth } from '~/store/store-auth';
+import { subscribeModelChanged } from '~/lib/realtime-bus';
 
 export type User = LoginResponse['user'] | null;
 
@@ -117,6 +118,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCachedUser(null);
     }
   }, [setCachedUser]);
+
+  // Tiempo real: cuando aprueban una autorización de acceso para ESTE usuario,
+  // refrescar el user para que `auth_granted` se actualice y los candados
+  // (AccesoGuard / ComponenteAccesoGuard) desaparezcan solos, sin recargar.
+  useEffect(() => {
+    const userId = cachedUser?.id;
+    if (!userId) return;
+    return subscribeModelChanged((payload) => {
+      if (
+        payload.module === 'autorizaciones' &&
+        payload.action === 'aprobada' &&
+        payload.user_id === userId
+      ) {
+        refreshUser();
+      }
+    });
+  }, [cachedUser?.id, refreshUser]);
 
   // `loading=true` solo si todavía no hidratamos el cache.
   // Eso evita el flash de "splash" en cada navegación cliente.
