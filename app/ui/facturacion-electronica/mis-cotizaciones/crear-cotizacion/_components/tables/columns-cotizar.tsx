@@ -71,8 +71,10 @@ function calcularSubtotalForm({
 
 export function useColumnsCotizar({
   form,
+  remove,
 }: {
   form: FormInstance<FormCreateCotizacion>
+  remove: (index: number | number[]) => void
 }): ColDef[] {
   return [
     // {
@@ -474,13 +476,7 @@ export function useColumnsCotizar({
         return (
           <button
             type='button'
-            onClick={() => {
-              const productos = (form.getFieldValue('productos') || []) as FormCreateCotizacion['productos']
-              const newProductos = productos.filter(
-                (_, index: number) => index !== value
-              )
-              form.setFieldValue('productos', newProductos)
-            }}
+            onClick={() => remove(value)}
             className='text-red-600 hover:text-red-800 p-2'
           >
             <FaTrash />
