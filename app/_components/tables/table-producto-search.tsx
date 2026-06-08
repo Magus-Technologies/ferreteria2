@@ -340,6 +340,7 @@ export default function TableProductoSearch({
         setProductoSeleccionadoSearchStore(data as any);
         onRowDoubleClicked?.({ data: data as any });
       }}
+      getRowId={(params) => String(params.data.id)}
       rowData={productosFiltrados}
       selectionColor={colorSeleccion}
       isVisible={isVisible}

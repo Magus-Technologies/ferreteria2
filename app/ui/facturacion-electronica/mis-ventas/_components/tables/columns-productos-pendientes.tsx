@@ -10,8 +10,10 @@ export interface FilaProducto {
   pendiente: number; cantAProgramar: number
 }
 
-const CantCell = memo(function CantCell({ rowKey, init, max, onCommit }: {
-  rowKey: string; init: number; max: number; onCommit: (k: string, v: number) => void
+const CantCell = memo(function CantCell({ rowKey, init, max, onCommit, onChangeRef }: {
+  rowKey: string; init: number; max: number
+  onCommit: (k: string, v: number) => void
+  onChangeRef?: (k: string, v: number) => void
 }) {
   const [val, setVal] = useState<number | null>(init)
   useEffect(() => { setVal(init) }, [init])
@@ -20,21 +22,25 @@ const CantCell = memo(function CantCell({ rowKey, init, max, onCommit }: {
     return <div className="flex items-center h-full px-2"><span className="text-slate-300">—</span></div>
   }
 
-  const commit = () => onCommit(rowKey, Math.max(0, Math.min(Math.round(Number(val) || 0), max)))
+  const clamp = (v: number | null) => Math.max(0, Math.min(Math.round(Number(v) || 0), max))
+  const commit = () => onCommit(rowKey, clamp(val))
   return (
     <div className="flex items-center h-full">
       <InputNumber size="small" value={val} min={0} max={max} precision={0}
-        onChange={setVal} onBlur={commit} onPressEnter={commit} style={{ width: '100%' }} />
+        onChange={(v) => { setVal(v); onChangeRef?.(rowKey, clamp(v)) }}
+        onBlur={commit} onPressEnter={commit} style={{ width: '100%' }} />
     </div>
   )
 })
 
 export function useColsProductosPendientes({
   onCommit,
+  onChangeRef,
   includeAProgramar = true,
   aProgramarLabel = 'A programar',
 }: {
   onCommit: (key: string, value: number) => void
+  onChangeRef?: (key: string, value: number) => void
   includeAProgramar?: boolean
   aProgramarLabel?: string
 }): ColDef<FilaProducto>[] {
@@ -60,7 +66,7 @@ export function useColsProductosPendientes({
       colId: 'cant_programar', field: 'cantAProgramar', headerName: aProgramarLabel, width: 128,
       cellStyle: { backgroundColor: '#f0fdf4' },
       cellRenderer: ({ data: d }: { data: FilaProducto }) => (
-        <CantCell rowKey={d.key} init={d.cantAProgramar} max={d.pendiente} onCommit={onCommit} />
+        <CantCell rowKey={d.key} init={d.cantAProgramar} max={d.pendiente} onCommit={onCommit} onChangeRef={onChangeRef} />
       ),
     },
   ] : []

@@ -175,7 +175,7 @@ export default function TableCotizar({
         className='h-full'
         rowSelection={false}
         rowData={fields}
-        columnDefs={useColumnsCotizar({ form })}
+        columnDefs={useColumnsCotizar({ form, remove })}
         suppressCellFocus={true}
       />
     </>

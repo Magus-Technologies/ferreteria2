@@ -168,9 +168,16 @@ export default function FormCreateCliente({
                 } else if (rucData) {
                   form.setFieldValue("razon_social", rucData.razonSocial);
                   form.setFieldValue("telefono", rucData.telefonos[0]);
-                  // RUC trae solo dirección 1 — pasar via hook.
+                  // RUC trae dirección + departamento + provincia + distrito
+                  // (separados). Los concatenamos en un solo string para
+                  // que Dirección 1 muestre la dirección completa tipo
+                  // "CAL. MORELLI NRO 181 INT. P-2, LIMA, LIMA, SAN BORJA".
+                  const calle = rucData.direccion ?? ''
+                  const partes = [calle, rucData.departamento, rucData.provincia, rucData.distrito]
+                    .filter(p => p && p.trim() !== '')
+                  const direccionCompleta = partes.join(', ')
                   direccionesHook.actualizarDireccion(TipoDireccion.D1, {
-                    direccion: rucData.direccion ?? '',
+                    direccion: direccionCompleta,
                   });
                 }
               }}
