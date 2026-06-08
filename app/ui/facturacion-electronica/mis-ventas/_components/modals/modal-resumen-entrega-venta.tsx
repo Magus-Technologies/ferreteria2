@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Modal, Spin, App } from 'antd'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
@@ -44,8 +44,10 @@ function filasIguales(a: FilaProducto[], b: FilaProducto[]) {
       actual.unidad === siguiente.unidad &&
       actual.total === siguiente.total &&
       actual.entregado === siguiente.entregado &&
-      actual.pendiente === siguiente.pendiente &&
-      actual.cantAProgramar === siguiente.cantAProgramar
+      actual.pendiente === siguiente.pendiente
+      // cantAProgramar is intentionally excluded: it's user-editable state,
+      // not server data. Including it caused background refetches to overwrite
+      // the user's typed quantity with the server's pendiente value.
     )
   })
 }
@@ -59,6 +61,9 @@ export default function ModalResumenEntregaVenta({
   const [tipo,          setTipo]          = useState<TipoEntregaCodigo>('de')
   const [fecha,         setFecha]         = useState<Dayjs | null>(dayjs())
   const [filas,         setFilas]         = useState<FilaProducto[]>([])
+  // Ref síncrono para cantidades — evita stale closure cuando el usuario
+  // tipea y hace clic en "Programar" antes de que React re-renderice.
+  const cantidadesRef = useRef<Record<string, number>>({})
   const [quienEntrega,  setQuienEntrega]  = useState<'almacen' | 'vendedor'>('almacen')
 
   // Config de despacho a domicilio (dirección + GPS + fecha + chofer).
@@ -114,17 +119,40 @@ export default function ModalResumenEntregaVenta({
       })
     )
 
-    setFilas((prev) => filasIguales(prev, siguientesFilas) ? prev : siguientesFilas)
+    setFilas((prev) => {
+      if (filasIguales(prev, siguientesFilas)) return prev
+      // Server data changed (different pendiente/total/etc). Preserve the user's
+      // cantAProgramar where possible, but cap it to the new pendiente so we never
+      // try to deliver more than what's actually pending.
+      const merged = siguientesFilas.map(siguiente => {
+        const prevFila = prev.find(p => p.key === siguiente.key)
+        const cantAProgramar = prevFila
+          ? Math.min(prevFila.cantAProgramar, siguiente.pendiente)
+          : siguiente.pendiente
+        return { ...siguiente, cantAProgramar }
+      })
+      cantidadesRef.current = Object.fromEntries(merged.map(f => [f.key, f.cantAProgramar]))
+      return merged
+    })
   }, [vd, coveredMap])
 
   // Cuando se cambia a "En Tienda", poner toda la cantidad pendiente a programar
   useEffect(() => {
     if (tipo === 'rt') {
-      setFilas(prev => prev.map(f => ({ ...f, cantAProgramar: f.pendiente })))
+      setFilas(prev => {
+        const updated = prev.map(f => ({ ...f, cantAProgramar: f.pendiente }))
+        updated.forEach(f => { cantidadesRef.current[f.key] = f.cantAProgramar })
+        return updated
+      })
     }
   }, [tipo])
 
+  const onChangeRef = useCallback((key: string, value: number) => {
+    cantidadesRef.current[key] = value
+  }, [])
+
   const onCommit = useCallback((key: string, value: number) => {
+    cantidadesRef.current[key] = value
     setFilas(prev => prev.map(f => f.key === key ? { ...f, cantAProgramar: value } : f))
   }, [])
 
@@ -152,6 +180,7 @@ export default function ModalResumenEntregaVenta({
   // agenda para una fecha → "A programar".
   const colsProductos = useColsProductosPendientes({
     onCommit,
+    onChangeRef,
     includeAProgramar: hasPendiente,
     aProgramarLabel: tipo === 'rt' ? 'A entregar' : 'A programar',
   })
@@ -183,7 +212,10 @@ export default function ModalResumenEntregaVenta({
       latitud:           tipo === 'de' ? domicilioConfig?.latitud ?? null : null,
       longitud:          tipo === 'de' ? domicilioConfig?.longitud ?? null : null,
       observaciones:     tipo === 'de' ? domicilioConfig?.observaciones ?? null : null,
-      productos:         aProg.map(f => ({ unidad_derivada_venta_id: parseInt(f.udvId), cantidad: f.cantAProgramar })),
+      productos:         filas
+        .map(f => ({ ...f, cantAProgramar: cantidadesRef.current[f.key] ?? f.cantAProgramar }))
+        .filter(f => f.cantAProgramar > 0)
+        .map(f => ({ unidad_derivada_venta_id: parseInt(f.udvId), cantidad: f.cantAProgramar })),
       user_creador_id:   vd?.user?.id ?? vd?.user_id ?? '',
     }),
     onSuccess: () => {
