@@ -152,19 +152,17 @@ export default function ModalUsuarioForm({
     staleTime: 30 * 60 * 1000,
   });
 
-  // Autocompletado bidireccional cargo <-> rol del sistema. Solo se dispara con
-  // interacción del usuario: onValuesChange NO se dispara con setFieldsValue/setFieldValue,
-  // así que no pisa la edición al cargar ni genera bucles entre los dos campos.
+  // Autocompletado bidireccional cargo <-> rol. onValuesChange NO se dispara con
+  // setFieldsValue, así que no pisa la edición al cargar ni genera bucles entre campos.
   const handleValuesChange = (changed: Partial<UsuarioFormValues>) => {
-    // cargo -> rol: un cargo tiene un solo rol, autocompletado directo.
+    // cargo -> rol (1:1): el rol SIEMPRE refleja el cargo (lo pone, o lo limpia si
+    // el cargo no tiene rol vinculado, para no dejar uno viejo/ajeno).
     if ("cargo" in changed) {
       const cargo = cargos?.find((c) => c.codigo === changed.cargo);
-      if (cargo?.role_id) {
-        form.setFieldValue("role_id", cargo.role_id);
-      }
+      form.setFieldValue("role_id", cargo?.role_id ?? undefined);
     }
-    // rol -> cargo: un rol puede tener varios cargos; solo autocompleto si hay
-    // exactamente uno (si hay varios o ninguno, dejo el cargo como esté).
+    // rol -> cargo: un rol puede tener varios cargos. Solo autorrelleno si tiene
+    // EXACTAMENTE uno (sin ambigüedad); si tiene varios, lo deja para elegir a mano.
     if ("role_id" in changed) {
       const relacionados = cargos?.filter((c) => c.role_id === changed.role_id) ?? [];
       if (relacionados.length === 1) {

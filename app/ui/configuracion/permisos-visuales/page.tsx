@@ -22,7 +22,7 @@ import { COMPONENT_MAP } from './_constants/component-map';
 
 import SelectorBar from './_components/selector-bar';
 import ModuloCard from './_components/modulo-card';
-import DecisionModal from './_components/decision-modal';
+import DecisionModal, { type AceptarData } from './_components/decision-modal';
 
 import { useRoles } from './_hooks/use-roles';
 import { useAuthConfigs } from './_hooks/use-auth-configs';
@@ -72,45 +72,32 @@ export default function PermisosVisualesPage() {
     [authConfigs, itemSeleccionado]
   );
 
-  const toggleMutation = useMutation({
-    mutationFn: async ({ mostrar }: { mostrar: boolean }) => {
+  // Aplica el estado elegido en el modal: visibilidad (restricción) + autorización
+  // en una sola confirmación ("Aceptar").
+  const aceptarMutation = useMutation({
+    mutationFn: async ({ estado, tipo_autorizador, autorizador_id, cargo_autorizador }: AceptarData) => {
       if (!rolId || !itemSeleccionado) throw new Error('Datos incompletos');
-      return permissionsApi.toggleRestriction(rolId, itemSeleccionado.permission, mostrar);
-    },
-    onSuccess: (_, variables) => {
-      const mensaje = variables.mostrar
-        ? `${rolNombre} VERA "${itemSeleccionado?.label}"`
-        : `${rolNombre} NO VERA "${itemSeleccionado?.label}"`;
-      console.log(mensaje);
-      setModalVisible(false);
-      setItemSeleccionado(null);
-      queryClient.invalidateQueries({ queryKey: ['roles'] });
-    },
-    onError: (error: any) => {
-      console.error(error?.message || 'Error al guardar');
-    },
-  });
-
-  const saveAccesoMutation = useMutation({
-    mutationFn: async (data: {
-      requiere_autorizacion: boolean;
-      tipo_autorizador: 'usuario' | 'cargo' | 'jerarquia';
-      autorizador_id: string | null;
-      cargo_autorizador: string | null;
-    }) => {
-      if (!rolId || !itemSeleccionado) throw new Error('Datos incompletos');
-      return autorizacionesApi.saveConfig({
+      // Visibilidad: solo 'oculto' restringe; los demás lo dejan visible.
+      await permissionsApi.toggleRestriction(rolId, itemSeleccionado.permission, estado !== 'oculto');
+      // Autorización: solo el estado 'autorizacion' la requiere.
+      await autorizacionesApi.saveConfig({
         role_id: rolId,
         modulo: itemSeleccionado.permission,
         accion: 'acceso',
-        ...data,
+        requiere_autorizacion: estado === 'autorizacion',
+        tipo_autorizador,
+        autorizador_id,
+        cargo_autorizador,
       });
     },
     onSuccess: () => {
+      setModalVisible(false);
+      setItemSeleccionado(null);
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
       queryClient.invalidateQueries({ queryKey: autorizacionesKeys.configs(rolId ?? undefined) });
     },
     onError: (error: any) => {
-      console.error(error?.message || 'Error al guardar autorización');
+      console.error(error?.message || 'Error al guardar');
     },
   });
 
@@ -329,18 +316,16 @@ export default function PermisosVisualesPage() {
         visible={modalVisible}
         itemLabel={itemSeleccionado?.label || ''}
         rolNombre={rolNombre}
-        isLoading={toggleMutation.isPending}
-        onMostrar={() => toggleMutation.mutate({ mostrar: true })}
-        onOcultar={() => toggleMutation.mutate({ mostrar: false })}
-        onCancel={() => { setModalVisible(false); setItemSeleccionado(null); }}
-        permitirAcceso={true}
+        loading={aceptarMutation.isPending}
+        visibleActual={itemSeleccionado ? estaVisible(itemSeleccionado.permission) : true}
         requiereAcceso={!!accesoConfig?.requiere_autorizacion}
         tipoAutorizador={accesoConfig?.tipo_autorizador ?? 'jerarquia'}
         cargoAutorizador={accesoConfig?.cargo_autorizador ?? null}
         autorizadorId={accesoConfig?.autorizador_id ?? null}
         users={users}
-        savingAcceso={saveAccesoMutation.isPending}
-        onGuardarAcceso={(data) => saveAccesoMutation.mutate(data)}
+        permitirAcceso={true}
+        onAceptar={(data: AceptarData) => aceptarMutation.mutate(data)}
+        onCancel={() => { setModalVisible(false); setItemSeleccionado(null); }}
       />
     </ContenedorGeneral>
   );

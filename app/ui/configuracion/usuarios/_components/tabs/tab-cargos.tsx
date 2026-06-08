@@ -168,7 +168,7 @@ export default function TabCargos() {
       title: 'Rol',
       key: 'role',
       render: (_: unknown, c: Cargo) =>
-        c.role ? <Tag color="purple">{c.role.descripcion}</Tag> : <span className="text-gray-300 text-xs">—</span>,
+        c.role ? <Tag color="purple">{c.role.name}</Tag> : <span className="text-gray-300 text-xs">—</span>,
     },
     {
       title: 'Usuarios',
@@ -315,7 +315,7 @@ export default function TabCargos() {
               showSearch
               optionFilterProp="label"
               placeholder="Sin rol relacionado"
-              options={roles.map((r) => ({ value: r.id, label: r.descripcion || r.name }))}
+              options={roles.map((r) => ({ value: r.id, label: r.name }))}
             />
           </Form.Item>
           <Form.Item name="staff" valuePropName="checked">
