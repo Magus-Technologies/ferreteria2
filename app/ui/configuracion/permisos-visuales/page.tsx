@@ -14,7 +14,7 @@ import { usePermission } from '~/hooks/use-permission';
 import { permissions } from '~/lib/permissions';
 import NoAutorizado from '~/components/others/no-autorizado';
 import { ConfigModeProvider } from './_components/config-mode-context';
-import { FaUsers } from 'react-icons/fa';
+import { FaUsers, FaCheck, FaLock, FaTimes } from 'react-icons/fa';
 import { permissionsApi } from '~/lib/api/permissions';
 import { autorizacionesApi, autorizacionesKeys } from '~/lib/api/autorizaciones';
 import { MODULE_LABELS, PERMISSION_TO_AUTH_MODULO } from './_constants';
@@ -70,6 +70,18 @@ export default function PermisosVisualesPage() {
         (c) => c.modulo === itemSeleccionado?.permission && c.accion === 'acceso'
       ),
     [authConfigs, itemSeleccionado]
+  );
+
+  // componentIds que requieren autorización de acceso para el rol (marcados en naranja
+  // en el modo configuración).
+  const componentesConAutorizacion = useMemo(
+    () =>
+      new Set(
+        authConfigs
+          .filter((c) => c.accion === 'acceso' && c.requiere_autorizacion)
+          .map((c) => c.modulo)
+      ),
+    [authConfigs]
   );
 
   // Aplica el estado elegido en el modal: visibilidad (restricción) + autorización
@@ -233,7 +245,24 @@ export default function PermisosVisualesPage() {
             </div>
           </div>
 
-          <ConfigModeProvider enabled={true} onTogglePermiso={(id, label) => { setItemSeleccionado({ label, permission: id }); setEsNavSeleccionado(false); setModalVisible(true); }} permisosActivos={restriccionesActivas}>
+          {/* Leyenda de estados (siempre visible) */}
+          <div className="mb-3 flex items-center gap-4 flex-wrap text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            <span className="font-semibold text-gray-600">Leyenda:</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px]"><FaCheck /></span>
+              Visible
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-orange-500 flex items-center justify-center text-white text-[8px]"><FaLock /></span>
+              Requiere autorización
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-white text-[8px]"><FaTimes /></span>
+              Oculto
+            </span>
+          </div>
+
+          <ConfigModeProvider enabled={true} onTogglePermiso={(id, label) => { setItemSeleccionado({ label, permission: id }); setEsNavSeleccionado(false); setModalVisible(true); }} permisosActivos={restriccionesActivas} autorizacionesActivas={componentesConAutorizacion}>
             <div className="h-[calc(100vh-250px)] overflow-hidden">
               <Suspense fallback={<Spin size="large" tip="Cargando vista real..." />}>
                 <vistaActiva.component />

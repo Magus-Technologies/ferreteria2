@@ -40,6 +40,8 @@ export default function TipoAutorizacionFields({
         </label>
         <Radio.Group value={tipo} onChange={(e) => setTipo(e.target.value)} className="w-full">
           <Space direction="vertical" className="w-full">
+            {/* Por ahora solo se permite "Una sola vez". Temporal y Permanente
+                quedan comentados (no borrados) para reactivarlos más adelante.
             <Radio value="temporal">
               <span className="font-medium">Temporal</span>
               <span className="text-xs text-gray-400 ml-2">— por un tiempo limitado</span>
@@ -48,6 +50,7 @@ export default function TipoAutorizacionFields({
               <span className="font-medium">Permanente</span>
               <span className="text-xs text-gray-400 ml-2">— sin límite de tiempo</span>
             </Radio>
+            */}
             <Radio value="una_vez">
               <span className="font-medium">Una sola vez</span>
               <span className="text-xs text-gray-400 ml-2">— se consume al usarla una vez</span>

@@ -27,7 +27,8 @@ export default function ModalAprobar({
   loading,
   solicitudDescripcion,
 }: ModalAprobarProps) {
-  const [tipo, setTipo] = useState<'temporal' | 'permanente' | 'una_vez'>('temporal')
+  // Default 'una_vez': por ahora es la única opción visible (ver tipo-autorizacion-fields).
+  const [tipo, setTipo] = useState<'temporal' | 'permanente' | 'una_vez'>('una_vez')
   const [duracion, setDuracion] = useState<number>(24)
   const [comentario, setComentario] = useState('')
   const [modo, setModo] = useState<'aprobar' | 'rechazar' | null>(null)
@@ -47,7 +48,7 @@ export default function ModalAprobar({
   }
 
   const resetState = () => {
-    setTipo('temporal')
+    setTipo('una_vez')
     setDuracion(24)
     setComentario('')
     setModo(null)
