@@ -13,6 +13,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Spin, Result } from 'antd'
 import ButtonBase from '~/components/buttons/button-base'
+import dayjs from 'dayjs'
 
 export default function EditarVenta() {
   const canAccess = usePermission(permissions.VENTA_UPDATE)
@@ -115,9 +116,14 @@ export default function EditarVenta() {
     unidades_derivadas_names.includes(ud.name)
   )
 
+  // Si la venta está en espera, al recuperarla la fecha debe ser HOY
+  // (la venta se concreta en la fecha actual, no en la fecha del borrador).
+  const esEnEspera = (ventaData as any).estado_de_venta === 'ee'
+
   // Formatear la venta con las unidades derivadas normales
   const ventaFormated: VentaConUnidadDerivadaNormal = {
     ...ventaData,
+    fecha: esEnEspera ? dayjs().format('YYYY-MM-DD HH:mm:ss') : ventaData.fecha,
     productos_por_almacen: (ventaData.productos_por_almacen ?? []).map((ppa: any) => ({
       ...ppa,
       unidades_derivadas: (ppa.unidades_derivadas ?? []).map((ud: any) => ({

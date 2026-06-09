@@ -11,7 +11,7 @@ import { TipoPedido } from '~/lib/api/entrega-producto'
 import type { TipoDireccion } from '~/lib/api/cliente'
 import type { ClienteDireccionFormFields } from '~/lib/utils/cliente-direcciones-form'
 import { Form } from 'antd'
-import { Dayjs } from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import FormBase from '~/components/form/form-base'
@@ -217,6 +217,8 @@ export default function BodyVender({
   const productosFromCotizacion = cotizacion?.productosPorAlmacen ?? cotizacion?.productos_por_almacen;
   const ventaFromCotizacion = cotizacion ? {
     ...cotizacion,
+    // La fecha de la venta es HOY, no la fecha de la cotización.
+    fecha: dayjs().format('YYYY-MM-DD HH:mm:ss'),
     // La cotización guarda los días de crédito en `vigencia_dias`, pero el form de
     // venta (y useInitVenta) leen `numero_dias`. Traducir aquí para no perder los
     // días al cargar una cotización a crédito.
