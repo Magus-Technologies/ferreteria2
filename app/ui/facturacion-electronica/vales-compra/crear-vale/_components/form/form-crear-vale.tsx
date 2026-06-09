@@ -22,6 +22,7 @@ import {
 import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectCategorias from "~/app/_components/form/selects/select-categorias";
+import SelectMarcas from "~/app/_components/form/selects/select-marcas";
 import {
   MOMENTO_APLICACION_OPTIONS,
   TIPO_BENEFICIO_OPTIONS,
@@ -250,6 +251,7 @@ interface SeccionModalidadProps {
 }
 
 function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps) {
+  const categoriaIdsWatch = Form.useWatch("categoria_ids", form) as number[] | undefined;
   return (
     <div className="border-l-4 border-purple-500 pl-3">
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
@@ -274,9 +276,14 @@ function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps
           </Radio.Group>
         </Form.Item>
         {(modalidad === "POR_CATEGORIA" || modalidad === "MIXTO") && (
-          <Form.Item name="categoria_ids" label="Categorías Aplicables" rules={[{ required: true, message: "Seleccione al menos una categoría" }]} className="mt-3 !mb-0">
-            <SelectCategorias mode="multiple" placeholder="Seleccione las categorías..." showButtonCreate />
-          </Form.Item>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+            <Form.Item name="categoria_ids" label="Categorías Aplicables" rules={[{ required: true, message: "Seleccione al menos una categoría" }]} className="!mb-0">
+              <SelectCategorias mode="multiple" placeholder="Seleccione las categorías..." showButtonCreate />
+            </Form.Item>
+            <Form.Item name="marca_ids" label="Marcas (opcional)" tooltip="Limita la promoción a estas marcas dentro de la(s) categoría(s). Vacío = todas las marcas." className="!mb-0">
+              <SelectMarcas mode="multiple" placeholder="Todas las marcas..." categoriaIds={categoriaIdsWatch} />
+            </Form.Item>
+          </div>
         )}
         {(modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && (
           <Form.Item name="producto_ids" label="Productos Aplicables" rules={[{ required: true, message: "Seleccione al menos un producto" }]} className="mt-3 !mb-0">
@@ -299,6 +306,7 @@ interface SeccionBeneficioProps {
 function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPorUno }: SeccionBeneficioProps) {
   const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
   const descuentoAlcance = Form.useWatch("descuento_alcance", form) as string | undefined;
+  const descuentoCategoriaIdsWatch = Form.useWatch("descuento_categoria_ids", form) as number[] | undefined;
 
   const beneficiosPermitidos = beneficiosValidosParaMomento(momento);
 
@@ -440,14 +448,24 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
           )}
 
           {descuentoAlcance === "CATEGORIAS" && (
-            <Form.Item
-              name="descuento_categoria_ids"
-              label="Categorías a las que cae el descuento"
-              rules={[{ required: true, message: "Selecciona al menos una categoría" }]}
-              className="!mb-0"
-            >
-              <SelectCategorias mode="multiple" placeholder="Selecciona las categorías..." />
-            </Form.Item>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Form.Item
+                name="descuento_categoria_ids"
+                label="Categorías a las que cae el descuento"
+                rules={[{ required: true, message: "Selecciona al menos una categoría" }]}
+                className="!mb-0"
+              >
+                <SelectCategorias mode="multiple" placeholder="Selecciona las categorías..." />
+              </Form.Item>
+              <Form.Item
+                name="descuento_marca_ids"
+                label="Marcas (opcional)"
+                tooltip="Limita el descuento a estas marcas dentro de la(s) categoría(s). Vacío = todas las marcas."
+                className="!mb-0"
+              >
+                <SelectMarcas mode="multiple" placeholder="Todas las marcas..." categoriaIds={descuentoCategoriaIdsWatch} />
+              </Form.Item>
+            </div>
           )}
           </>
         )}

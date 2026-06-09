@@ -13,6 +13,8 @@ interface SelectMarcasProps extends SelectBaseProps {
   classNameIcon?: string
   sizeIcon?: number
   showButtonCreate?: boolean
+  // Si se pasa, el dropdown se acota a las marcas que tienen productos en estas categorías.
+  categoriaIds?: number[]
 }
 
 export default function SelectMarcas({
@@ -21,14 +23,19 @@ export default function SelectMarcas({
   classNameIcon = 'text-cyan-600 mx-1',
   sizeIcon = 18,
   showButtonCreate = false,
+  categoriaIds,
   ...props
 }: SelectMarcasProps) {
   const selectMarcasRef = useRef<RefSelectBaseProps>(null)
 
+  const categoriaIdsKey = (categoriaIds ?? []).slice().sort((a, b) => a - b)
+
   const { data } = useQuery({
-    queryKey: [QueryKeys.MARCAS],
+    queryKey: [QueryKeys.MARCAS, categoriaIdsKey],
     queryFn: async () => {
-      const response = await marcasApi.getAll()
+      const response = categoriaIdsKey.length > 0
+        ? await marcasApi.getByCategorias(categoriaIdsKey)
+        : await marcasApi.getAll()
       if (response.error) {
         throw new Error(response.error.message)
       }

@@ -82,6 +82,14 @@ export const marcasApi = {
     return apiRequest<Marca>(`/marcas/${id}`);
   },
 
+  // Marcas que tienen al menos un producto en las categorías dadas.
+  async getByCategorias(
+    categoriaIds: number[],
+  ): Promise<ApiResponse<CatalogResponse<Marca>>> {
+    const qs = categoriaIds.map((id) => `categoria_ids[]=${id}`).join("&");
+    return apiRequest<CatalogResponse<Marca>>(`/marcas?${qs}`);
+  },
+
   async create(data: {
     name: string;
     estado?: boolean;

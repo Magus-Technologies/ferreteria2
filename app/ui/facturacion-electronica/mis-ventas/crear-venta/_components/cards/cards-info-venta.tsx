@@ -220,9 +220,13 @@ export default function CardsInfoVenta({ form, ventaId, onMissingApertura, submi
         if (alcance !== 'VENTA') {
           const prodIds = (v.descuento_producto_ids ?? []).map(Number);
           const catIds = (v.descuento_categoria_ids ?? []).map(Number);
+          // Filtro opcional por marca dentro de la categoría (PASO 4). Vacío = todas.
+          const marcaIds = ((v as any).descuento_marca_ids ?? []).map(Number);
           const lineas = productosReales.filter((p) => {
             if (alcance === 'PRODUCTOS') return p?.producto_id != null && prodIds.includes(Number(p.producto_id));
-            return p?.categoria_id != null && catIds.includes(Number(p.categoria_id));
+            const okCategoria = p?.categoria_id != null && catIds.includes(Number(p.categoria_id));
+            const okMarca = marcaIds.length === 0 || ((p as any)?.marca_id != null && marcaIds.includes(Number((p as any).marca_id)));
+            return okCategoria && okMarca;
           });
           baseScope = lineas.reduce(
             (s, p) => s + Number(p?.precio_venta ?? 0) * Number(p?.cantidad ?? 0),

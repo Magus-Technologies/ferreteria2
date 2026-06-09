@@ -52,6 +52,8 @@ export default function BodyCrearVale() {
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,
         producto_ids: toArray(values.producto_ids),
         categoria_ids: toArray(values.categoria_ids),
+        // Filtro opcional por marca de la condición (PASO 3).
+        marca_ids: toArray(values.marca_ids),
         // Si el switch está OFF, nullear el valor para que el backend lo limpie.
         max_vales_por_venta: values.usa_limite_por_venta ? values.max_vales_por_venta : null,
         limite_usos_cliente: values.usa_limite_por_cliente ? values.limite_usos_cliente : null,
@@ -61,6 +63,7 @@ export default function BodyCrearVale() {
         descuento_alcance: values.tipo_beneficio === 'DESCUENTO' ? (values.descuento_alcance ?? 'VENTA') : null,
         descuento_producto_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'PRODUCTOS' ? toArray(values.descuento_producto_ids) : null,
         descuento_categoria_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_categoria_ids) : null,
+        descuento_marca_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_marca_ids) : null,
       }
 
       // Limpieza de campos según tipo de promoción
