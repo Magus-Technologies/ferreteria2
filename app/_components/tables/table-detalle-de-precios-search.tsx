@@ -48,8 +48,13 @@ export default function TableDetalleDePreciosSearch({
       producto: productoSeleccionado!,
       producto_almacen: {
         costo: producto_en_almacen.costo,
+        costo_con_flete: (producto_en_almacen as any).costo_con_flete,
         stock_fraccion: producto_en_almacen.stock_fraccion,
         ubicacion: producto_en_almacen.ubicacion,
+        costo_anterior: producto_en_almacen.costo_anterior,
+        stock_costo_anterior: producto_en_almacen.stock_costo_anterior,
+        costo_actual: producto_en_almacen.costo_actual,
+        stock_costo_actual: producto_en_almacen.stock_costo_actual,
       },
     })) ?? []
   }, [producto_en_almacen, productoSeleccionado])
