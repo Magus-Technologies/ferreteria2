@@ -97,7 +97,7 @@ export default function useInitVenta({
               cantidad: Number(ud.cantidad),
               unidad_derivada_id: ud.unidad_derivada_normal.id,
               recargo: Number(ud.recargo),
-              precio_venta: Number(ud.precio) + Number(ud.recargo),
+              precio_venta: Number(ud.precio),
               subtotal:
                 (Number(ud.precio) + Number(ud.recargo)) *
                 Number(ud.cantidad),
