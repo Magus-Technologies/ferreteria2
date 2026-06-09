@@ -5,6 +5,7 @@ import { Modal, Select, Input, App, Empty, Spin } from 'antd'
 import { FaUserShield } from 'react-icons/fa'
 import { useQuery } from '@tanstack/react-query'
 import { autorizacionesApi, type AccionAutorizacion } from '~/lib/api/autorizaciones'
+import TipoAutorizacionFields, { type TipoAprobacion } from '~/components/autorizaciones/tipo-autorizacion-fields'
 
 interface ModalSupervisorOverrideProps {
   open: boolean
@@ -30,6 +31,8 @@ export default function ModalSupervisorOverride({
   const { message } = App.useApp()
   const [supervisorId, setSupervisorId] = useState<string>()
   const [password, setPassword] = useState('')
+  const [tipo, setTipo] = useState<TipoAprobacion>('una_vez')
+  const [duracionHoras, setDuracionHoras] = useState<number>(24)
   const [loading, setLoading] = useState(false)
 
   const { data: supervisores = [], isLoading } = useQuery({
@@ -44,6 +47,8 @@ export default function ModalSupervisorOverride({
   const reset = () => {
     setSupervisorId(undefined)
     setPassword('')
+    setTipo('una_vez')
+    setDuracionHoras(24)
   }
 
   const handleConfirmar = async () => {
@@ -62,6 +67,8 @@ export default function ModalSupervisorOverride({
         accion,
         supervisor_id: supervisorId,
         supervisor_password: password,
+        tipo_aprobacion: tipo,
+        duracion_horas: tipo === 'temporal' ? duracionHoras : undefined,
       })
       if (res.data) {
         message.success('Autorización concedida')
@@ -104,7 +111,7 @@ export default function ModalSupervisorOverride({
       ) : (
         <div className="space-y-4 py-2">
           <p className="text-sm text-gray-500">
-            Un supervisor autorizado debe ingresar su clave para permitir esta acción una vez.
+            Un supervisor autorizado ingresa su clave y elige el tipo de autorización a conceder.
           </p>
           <div>
             <label className="text-xs font-semibold text-gray-600 block mb-1">Supervisor</label>
@@ -127,6 +134,13 @@ export default function ModalSupervisorOverride({
               onPressEnter={handleConfirmar}
             />
           </div>
+
+          <TipoAutorizacionFields
+            tipo={tipo}
+            setTipo={setTipo}
+            duracion={duracionHoras}
+            setDuracion={setDuracionHoras}
+          />
         </div>
       )}
     </Modal>

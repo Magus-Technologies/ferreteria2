@@ -140,12 +140,15 @@ export const autorizacionesApi = {
       params: { modulo, accion },
     }),
 
-  /** Override en sitio: un supervisor autoriza con su clave (concede uso único). */
+  /** Override en sitio: un supervisor autoriza con su clave. El supervisor elige
+   *  el tipo (una_vez por defecto, o temporal/permanente). */
   autorizarOverride: (data: {
     modulo: string
     accion: AccionAutorizacion
     supervisor_id: string
     supervisor_password: string
+    tipo_aprobacion?: 'temporal' | 'permanente' | 'una_vez'
+    duracion_horas?: number
   }) => apiRequest<{ data: AutorizacionOtorgada; message: string }>('/autorizaciones/override', {
     method: 'POST',
     data: data,

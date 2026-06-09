@@ -124,14 +124,14 @@ export default function ModalResumenEntregaVenta({
       // Server data changed (different pendiente/total/etc). Preserve the user's
       // cantAProgramar where possible, but cap it to the new pendiente so we never
       // try to deliver more than what's actually pending.
-      const merged = siguientesFilas.map(siguiente => {
+      const merged = siguientesFilas.map((siguiente: FilaProducto) => {
         const prevFila = prev.find(p => p.key === siguiente.key)
         const cantAProgramar = prevFila
           ? Math.min(prevFila.cantAProgramar, siguiente.pendiente)
           : siguiente.pendiente
         return { ...siguiente, cantAProgramar }
       })
-      cantidadesRef.current = Object.fromEntries(merged.map(f => [f.key, f.cantAProgramar]))
+      cantidadesRef.current = Object.fromEntries(merged.map((f: FilaProducto) => [f.key, f.cantAProgramar]))
       return merged
     })
   }, [vd, coveredMap])
