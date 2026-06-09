@@ -211,7 +211,7 @@ export default function CardAgregarProductoVenta({
       comision,
       tipo_precio,
       stock_fraccion: Number(producto_en_almacen?.stock_fraccion ?? 0),
-      costo: Number(producto_en_almacen?.costo ?? 0),
+      costo: Number((producto_en_almacen as any)?.costo_con_flete ?? producto_en_almacen?.costo ?? 0),
       unidades_derivadas_disponibles: unidades_derivadas,
       producto_en_almacenes: productoSeleccionadoSearchStore?.producto_en_almacenes,
       paquetes_count: paquetes.length,

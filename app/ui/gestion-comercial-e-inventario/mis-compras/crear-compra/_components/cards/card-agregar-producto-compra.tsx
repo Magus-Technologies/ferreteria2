@@ -239,7 +239,7 @@ export default function CardAgregarProductoCompra({
             S/.{' '}
             {(
               Number(unidad_derivada_seleccionada?.factor ?? 0) *
-              Number(producto_en_almacen?.costo ?? 0)
+              Number((producto_en_almacen as any)?.costo_con_flete ?? producto_en_almacen?.costo ?? 0)
             ).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 4,

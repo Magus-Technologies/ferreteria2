@@ -70,6 +70,7 @@ export default function TableDetalleDePrecios() {
           producto: productoSeleccionado,
           producto_almacen: {
             costo: producto_en_almacen?.costo,
+            costo_con_flete: (producto_en_almacen as any)?.costo_con_flete,
             stock_fraccion: producto_en_almacen?.stock_fraccion,
             ubicacion: producto_en_almacen?.ubicacion,
             costo_anterior: producto_en_almacen?.costo_anterior,
@@ -90,6 +91,7 @@ export default function TableDetalleDePrecios() {
                 producto: producto_seleccionado_aux,
                 producto_almacen: {
                   costo: producto_en_almacen_aux?.costo,
+                  costo_con_flete: (producto_en_almacen_aux as any)?.costo_con_flete,
                   stock_fraccion: producto_en_almacen_aux?.stock_fraccion,
                   ubicacion: producto_en_almacen_aux?.ubicacion,
                   costo_anterior: producto_en_almacen_aux?.costo_anterior,
@@ -268,7 +270,7 @@ export default function TableDetalleDePrecios() {
       optionsSelectColumns={[
         {
           label: 'Default',
-          columns: ['#', 'Formato', 'Factor', 'P. Compra', '% Venta', 'Precio Público', 'Ganancia', 'Precio Especial', 'Precio Mínimo', 'Precio Final'],
+          columns: ['#', 'Formato', 'Factor', 'P. Compra', 'Costo c/Flete', '% Venta', 'Precio Público', 'Ganancia', 'Precio Especial', 'Precio Mínimo', 'Precio Final'],
         },
         ...(can(permissions.PRODUCTO_IMPORT)
           ? [{

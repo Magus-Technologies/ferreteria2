@@ -19,6 +19,7 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   unidad_derivada: UnidadDerivada
   producto_almacen: {
     costo: Decimal
+    costo_con_flete?: Decimal | null
     stock_fraccion: Decimal
     ubicacion: Ubicacion
     costo_anterior?: Decimal | null
@@ -83,6 +84,21 @@ export function useColumnsDetalleDePrecios() {
       type: 'pen4',
     },
     {
+      colId: 'costo_con_flete',
+      headerName: 'Costo c/Flete',
+      field: 'producto_almacen.costo_con_flete',
+      minWidth: 110,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: ({ value, data }) => {
+        const base = Number(value ?? data?.producto_almacen?.costo)
+        const factor = Number(data!.factor)
+        if (isNaN(base) || isNaN(factor)) return '0.0000'
+        return `${(base * factor).toFixed(4)}`
+      },
+      width: 140,
+      type: 'pen4',
+    },
+    {
       colId: 'costo_anterior',
       headerName: 'Costo Anterior',
       field: 'producto_almacen.costo_anterior',
@@ -120,11 +136,12 @@ export function useColumnsDetalleDePrecios() {
       field: 'producto_almacen.costo_actual',
       minWidth: 160,
       cellRenderer: ({ data }: any) => {
-        const costoActual = data?.producto_almacen?.costo_actual
+        // El "Costo Actual" muestra el costo CON flete (costo real); cae al costo_actual crudo si no hay.
+        const costoActual = data?.producto_almacen?.costo_con_flete ?? data?.producto_almacen?.costo_actual
         const stockActual = data?.producto_almacen?.stock_costo_actual ?? 0
         const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
         const factor = Number(data?.factor ?? 1)
-        
+
         if (!costoActual) {
           return <span className='text-gray-400'>-</span>
         }
