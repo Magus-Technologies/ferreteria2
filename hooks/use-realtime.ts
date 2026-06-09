@@ -30,6 +30,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.PRODUCTOS_TABLE_SEARCH,
     'productos-search', // queryKey real del modal buscar producto
     'productos-infinite',
+    'productos-listado-completo',
     'vencimientos-proximos',
     // Una venta puede aplicar vales y descontar su stock → refrescar la lista de vales.
     'vales-compra',
@@ -52,6 +53,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.PRODUCTOS_TABLE_SEARCH,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
     'vencimientos-proximos',
   ],
   productos: [
@@ -63,6 +65,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.KARDEX_INVENTARIO,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
   ],
   cotizaciones: [QueryKeys.COTIZACIONES],
   // Vales de compra (promociones). 'vales-compra' = listas (valesCompraKeys.all),
@@ -94,6 +97,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.PRODUCTOS_TABLE_SEARCH,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
   ],
   'transferencias-stock': [
     QueryKeys.TRANSFERENCIAS_STOCK,
@@ -104,6 +108,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.PRODUCTOS_TABLE_SEARCH,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
   ],
   'recepciones-almacen': [
     QueryKeys.RECEPCIONES_ALMACEN,
@@ -114,6 +119,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.PRODUCTOS_TABLE_SEARCH,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
   ],
   // Las entregas modifican stock (cuando estado=ENTREGADO) → invalidar productos.
   // También cambian la cobertura/estado de la venta → invalidar VENTAS para que
@@ -131,6 +137,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.KARDEX_INVENTARIO,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
   ],
   prestamos: [
     QueryKeys.PRESTAMOS,
@@ -143,6 +150,7 @@ const MODULE_TO_QUERY_KEYS: Record<string, string[]> = {
     QueryKeys.KARDEX_INVENTARIO,
     'productos-search',
     'productos-infinite',
+    'productos-listado-completo',
     'vencimientos-proximos',
   ],
   cajas: [
