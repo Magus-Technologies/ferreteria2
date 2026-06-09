@@ -28,6 +28,10 @@ export default function ComponenteAccesoGuard({
   const [loading, setLoading] = useState(false)
   const [solicitada, setSolicitada] = useState(false)
   const [overrideOpen, setOverrideOpen] = useState(false)
+  // Recuerda que ya entró en esta visita: una autorización "una_vez" se consume al
+  // entrar, y un refreshUser posterior (p.ej. al autorizar otro componente vía
+  // websocket) no debe volver a bloquear lo que ya se desbloqueó en esta sesión.
+  const [accesoLocal, setAccesoLocal] = useState(false)
   const consumidoRef = useRef(false)
 
   const required = (user?.auth_required ?? []).includes(componentId)
@@ -35,15 +39,16 @@ export default function ComponenteAccesoGuard({
   const bloqueada = required && !granted
   const concedida = required && granted
 
-  // Si estaba concedida, intentar consumirla (solo afecta a las de uso único).
+  // Si estaba concedida, marcar acceso local y consumirla (solo afecta a las de uso único).
   useEffect(() => {
     if (concedida && !consumidoRef.current) {
       consumidoRef.current = true
+      setAccesoLocal(true)
       autorizacionesApi.consumir({ modulo: componentId, accion: 'acceso' }).catch(() => {})
     }
   }, [concedida, componentId])
 
-  if (!bloqueada) return <>{children}</>
+  if (!bloqueada || accesoLocal) return <>{children}</>
 
   const solicitar = async () => {
     setLoading(true)

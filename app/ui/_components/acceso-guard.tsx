@@ -23,19 +23,24 @@ export default function AccesoGuard({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(false)
   const [solicitada, setSolicitada] = useState(false)
   const [overrideOpen, setOverrideOpen] = useState(false)
+  // Recuerda que ya entró en esta visita: una autorización "una_vez" se consume al
+  // entrar; un refreshUser posterior (p.ej. al autorizar un componente interno vía
+  // websocket) NO debe volver a bloquear la vista que ya se desbloqueó esta sesión.
+  const [accesoLocal, setAccesoLocal] = useState(false)
   const consumidoRef = useRef(false)
 
-  // Si la vista estaba concedida, intentar consumirla (solo afecta a las de
-  // uso único). Así, si era "una sola vez", al refrescar la página vuelve el
-  // candado. Para permanente/temporal es no-op.
+  // Si la vista estaba concedida, marcar acceso local y consumirla (solo afecta a las
+  // de uso único). Así, si era "una sola vez", al refrescar/navegar vuelve el candado;
+  // pero dentro de la misma visita el acceso se mantiene.
   useEffect(() => {
     if (concedida && componentId && !consumidoRef.current) {
       consumidoRef.current = true
+      setAccesoLocal(true)
       autorizacionesApi.consumir({ modulo: componentId, accion: 'acceso' }).catch(() => {})
     }
   }, [concedida, componentId])
 
-  if (!bloqueada) return <>{children}</>
+  if (!bloqueada || accesoLocal) return <>{children}</>
 
   const solicitar = async () => {
     if (!componentId) return
