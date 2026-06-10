@@ -143,7 +143,10 @@ export default function MisEntregasPage() {
 
               <ButtonBase
                 className="w-full h-10 flex items-center justify-center gap-2 border-red-400 !text-red-600 font-semibold hover:bg-red-50"
-                disabled={sinEntrega || esFinal || yaAnulada}
+                // Anular es valido desde cualquier estado salvo 'ca' (ya anulada).
+                // El backend permite explicitamente 'en' -> 'ca' (anulacion
+                // post-entrega excepcional), igual que el dropdown de la tabla.
+                disabled={sinEntrega || yaAnulada}
                 onClick={() => setOpenAnular(true)}
               >
                 <FaBan size={16} />
