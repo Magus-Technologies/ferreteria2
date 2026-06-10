@@ -55,6 +55,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       descuento_alcance: vale.descuento_alcance || 'VENTA',
       descuento_producto_ids: vale.descuento_producto_ids || undefined,
       descuento_categoria_ids: vale.descuento_categoria_ids || undefined,
+      descuento_marca_ids: vale.descuento_marca_ids || undefined,
       producto_gratis_id: vale.producto_gratis_id || undefined,
       cantidad_producto_gratis: vale.cantidad_producto_gratis || 1,
       dos_por_uno_cantidad_compra: vale.dos_por_uno_cantidad_compra || undefined,
@@ -72,6 +73,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       aplica_precio_ultimo: Boolean(vale.aplica_precio_ultimo),
       producto_ids: vale.productos?.map((producto) => producto.id) || undefined,
       categoria_ids: vale.categorias?.map((categoria) => categoria.id) || undefined,
+      marca_ids: vale.marca_ids || undefined,
     }
   }
 
@@ -100,12 +102,14 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
         fecha_validez_vale: values.fecha_validez_vale ? dayjs(values.fecha_validez_vale).format('YYYY-MM-DD') : undefined,
         producto_ids: toArray(values.producto_ids),
         categoria_ids: toArray(values.categoria_ids),
+        marca_ids: toArray(values.marca_ids),
         max_vales_por_venta: values.usa_limite_por_venta ? values.max_vales_por_venta : null,
         limite_usos_cliente: values.usa_limite_por_cliente ? values.limite_usos_cliente : null,
         stock_disponible: values.usa_limite_stock ? values.stock_disponible : null,
         descuento_alcance: values.tipo_beneficio === 'DESCUENTO' ? (values.descuento_alcance ?? 'VENTA') : null,
         descuento_producto_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'PRODUCTOS' ? toArray(values.descuento_producto_ids) : null,
         descuento_categoria_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_categoria_ids) : null,
+        descuento_marca_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_marca_ids) : null,
       }
 
       const response = await updateValeCompra(vale.id, payload as any)

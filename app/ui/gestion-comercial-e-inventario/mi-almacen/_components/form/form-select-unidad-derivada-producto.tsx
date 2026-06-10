@@ -41,6 +41,15 @@ export default function FormSelectUnidadDerivadaProducto({
   )
   const unidades_derivadas = producto_en_almacen?.unidades_derivadas
 
+  // Costo según PEPS: si todavía queda stock del lote ANTERIOR, ese es el costo que
+  // sale primero (costo_anterior); cuando ya no queda, se usa el costo ACTUAL con
+  // flete prorrateado (costo_con_flete). Cae al costo promedio si no hay buckets.
+  const pa = producto_en_almacen as any
+  const costoPeps =
+    Number(pa?.stock_costo_anterior ?? 0) > 0
+      ? Number(pa?.costo_anterior ?? pa?.costo ?? 0)
+      : Number(pa?.costo_con_flete ?? pa?.costo_actual ?? pa?.costo ?? 0)
+
   const [factor, setFactor] = useState(0)
 
   useEffect(() => {
@@ -142,7 +151,7 @@ export default function FormSelectUnidadDerivadaProducto({
         <LabelBase label='Costo Actual:' orientation='column'>
           <div className='mb-9 font-bold text-nowrap text-xl'>
             S/.{' '}
-            {(Number(producto_en_almacen?.costo ?? 0) * factor).toLocaleString(
+            {(costoPeps * factor).toLocaleString(
               'en-US',
               {
                 maximumFractionDigits: 4,

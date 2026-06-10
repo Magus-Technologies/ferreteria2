@@ -59,6 +59,8 @@ export interface ValeCompra {
   descuento_alcance: DescuentoAlcance | null;
   descuento_producto_ids: number[] | null;
   descuento_categoria_ids: number[] | null;
+  descuento_marca_ids?: number[] | null;
+  marca_ids?: number[] | null;
   producto_gratis_id: number | null;
   cantidad_producto_gratis: number;
   dos_por_uno_cantidad_compra: number | null;
@@ -150,6 +152,7 @@ export interface CreateValeCompraRequest {
   descuento_alcance?: DescuentoAlcance | null;
   descuento_producto_ids?: number[] | null;
   descuento_categoria_ids?: number[] | null;
+  descuento_marca_ids?: number[] | null;
   producto_gratis_id?: number | null;
   cantidad_producto_gratis?: number;
   dos_por_uno_cantidad_compra?: number | null;
@@ -167,6 +170,7 @@ export interface CreateValeCompraRequest {
   aplica_precio_ultimo?: boolean;
   sorteo_incluye_producto?: boolean;
   categoria_ids?: number[];
+  marca_ids?: number[];
   producto_ids?: number[];
 }
 

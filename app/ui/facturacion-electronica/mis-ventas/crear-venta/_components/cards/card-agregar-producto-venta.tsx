@@ -204,6 +204,7 @@ export default function CardAgregarProductoVenta({
       producto_name: productoSeleccionadoSearchStore?.name,
       producto_codigo: productoSeleccionadoSearchStore?.cod_producto,
       marca_name: productoSeleccionadoSearchStore?.marca?.name,
+      marca_id: (productoSeleccionadoSearchStore as any)?.marca_id ?? (productoSeleccionadoSearchStore as any)?.marca?.id,
       categoria_id: (productoSeleccionadoSearchStore as any)?.categoria_id ?? (productoSeleccionadoSearchStore as any)?.categoria?.id,
       unidad_derivada_name: unidad_derivada?.unidad_derivada.name,
       unidad_derivada_factor: Number(unidad_derivada?.factor),
