@@ -182,9 +182,10 @@ export async function apiRequest<T = unknown>(
         };
       }
 
-      // Manejar error de autenticación
+      // 401: NO limpiamos el token aquí — auth-context se encarga centralizadamente.
+      // Limpiarlo en apiRequest causa cascadas donde un refetch fallido borra el token
+      // para TODOS los requests posteriores (Bearer null → 401 en cadena).
       if (response.status === 401) {
-        removeAuthToken();
         return {
           error: {
             message: data.message || "No autenticado",

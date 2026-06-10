@@ -105,6 +105,34 @@ export function useColsHistorialEntrega({ onRefetch, entregas }: { onRefetch?: (
       ),
     },
     {
+      colId: 'direccion', headerName: 'Dirección', width: 180,
+      cellRenderer: ({ data: d }: { data: EntregaNueva }) => {
+        if (!d.direccion_entrega && !d.latitud) return <div className="flex items-center h-full text-slate-300 text-xs">—</div>
+        const mapaUrl = d.latitud && d.longitud
+          ? `https://www.google.com/maps?q=${d.latitud},${d.longitud}`
+          : null
+        return (
+          <div className="flex flex-col justify-center h-full leading-tight gap-0.5">
+            <span className="text-[11px] text-slate-700 truncate" title={d.direccion_entrega ?? ''}>
+              📍 {d.direccion_entrega ?? 'Sin dirección'}
+            </span>
+            {d.referencia_entrega && (
+              <span className="text-[10px] text-slate-400 truncate" title={d.referencia_entrega}>
+                Ref: {d.referencia_entrega}
+              </span>
+            )}
+            {mapaUrl && (
+              <a href={mapaUrl} target="_blank" rel="noopener noreferrer"
+                className="text-[10px] text-blue-500 hover:text-blue-700"
+                onClick={(e) => e.stopPropagation()}>
+                Ver en mapa →
+              </a>
+            )}
+          </div>
+        )
+      },
+    },
+    {
       colId: 'acciones', headerName: 'Acciones', width: 90,
       pinned: 'right' as const, sortable: false, filter: false,
       cellRenderer: CellAccionesHistorial,

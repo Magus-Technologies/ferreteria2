@@ -224,6 +224,8 @@ export interface EntregaNueva {
   hora_fin: string | null
   direccion_entrega: string | null
   referencia_entrega: string | null
+  latitud: number | null
+  longitud: number | null
   observaciones: string | null
   motivo_anulacion: string | null
   detalles: EntregaDetalleProd[]

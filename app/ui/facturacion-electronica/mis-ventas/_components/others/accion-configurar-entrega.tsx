@@ -15,22 +15,52 @@ export default function AccionConfigurarEntrega() {
 
   const { entregas: historial, loading: loadingHistorial } = useEntregasDeVenta(venta?.id)
 
+  // Fallback: usar entregas embebidas de la venta cuando el query por-venta
+  // no devuelve datos (ej: token temporalmente null tras refetch).
+  const entregasEmbebidas = useMemo(() => {
+    if (historial.length > 0) return []
+    const embebidas = (venta as any)?.entregas
+      || (venta as any)?.entregas_productos
+      || (venta as any)?.entregasProductos
+      || []
+    // Normalizar: mapear {estado_entrega: {codigo}} y {estado_entrega: string} a codigo
+    return embebidas.map((e: any) => ({
+      ...e,
+      estado_entrega_codigo: e?.estado_entrega?.codigo ?? e?.estado_entrega,
+    }))
+  }, [venta, historial])
+
   const hasPendiente = useMemo(() => {
     if (!venta) return false
-    const covered: Record<string, number> = {}
-    for (const entrega of historial) {
-      if (entrega.estado_entrega_codigo === 'ca') continue
-      for (const d of entrega.detalles ?? []) {
-        const id = String(d.unidad_derivada_venta_id)
-        covered[id] = (covered[id] ?? 0) + (d.cantidad ?? 0)
+
+    // Si tenemos historial detallado (con detalles), usarlo
+    if (historial.length > 0) {
+      const covered: Record<string, number> = {}
+      for (const entrega of historial) {
+        if (entrega.estado_entrega_codigo === 'ca') continue
+        for (const d of entrega.detalles ?? []) {
+          const id = String(d.unidad_derivada_venta_id)
+          covered[id] = (covered[id] ?? 0) + (d.cantidad ?? 0)
+        }
       }
-    }
-    return (venta.productos_por_almacen ?? []).some((prod: any) =>
-      (prod.unidades_derivadas ?? []).some((udv: any) =>
-        Number(udv.cantidad ?? 0) - (covered[String(udv.id)] ?? 0) > 0
+      return (venta.productos_por_almacen ?? []).some((prod: any) =>
+        (prod.unidades_derivadas ?? []).some((udv: any) =>
+          Number(udv.cantidad ?? 0) - (covered[String(udv.id)] ?? 0) > 0
+        )
       )
-    )
-  }, [venta, historial])
+    }
+
+    // Fallback: si hay entregas embebidas con estado pendiente, asumir hay pendiente
+    if (entregasEmbebidas.length > 0) {
+      return entregasEmbebidas.some((e: any) =>
+        e.estado_entrega_codigo === 'pe' || e.estado_entrega_codigo === 'ec'
+      )
+    }
+
+    return false
+  }, [venta, historial, entregasEmbebidas])
+
+  const hayEntregas = historial.length > 0 || entregasEmbebidas.length > 0
 
   const [openResumen,      setOpenResumen]      = useState(false)
   const [openProgramar,    setOpenProgramar]    = useState(false)
@@ -73,7 +103,7 @@ export default function AccionConfigurarEntrega() {
     <>
       <ButtonBase
         className={`w-full min-h-10 flex items-center justify-center gap-2 font-semibold !text-sm text-center leading-tight !px-2 !py-1.5 ${
-          !hasPendiente && historial.length > 0
+          !hasPendiente && hayEntregas
             ? 'border-green-500 !text-green-700 hover:bg-green-50'
             : 'border-blue-500 !text-blue-700 hover:bg-blue-50'
         }`}
@@ -82,9 +112,9 @@ export default function AccionConfigurarEntrega() {
       >
         {loadingHistorial ? (
           <Spin size="small" />
-        ) : !hasPendiente && historial.length > 0 ? (
+        ) : !hasPendiente && hayEntregas ? (
           <><FaHistory size={13} /> Ver Historial</>
-        ) : hasPendiente && historial.length > 0 ? (
+        ) : hasPendiente && hayEntregas ? (
           <><FaPlus size={14} /> Configurar Entrega e Historial</>
         ) : (
           <><FaPlus size={14} /> Configurar Entrega</>
