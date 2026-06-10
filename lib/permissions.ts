@@ -30,6 +30,13 @@ export enum permissions {
   GESTION_COMERCIAL_E_INVENTARIO_CREAR_COMPRA_INDEX = "gestion-comercial-e-inventario.crear-compra.index",
   GESTION_COMERCIAL_E_INVENTARIO_CREAR_RECEPCION_INDEX = "gestion-comercial-e-inventario.crear-recepcion.index",
   GESTION_COMERCIAL_E_INVENTARIO_CONFIGURACION_INDEX = "gestion-comercial-e-inventario.configuracion.index",
+  GESTION_COMERCIAL_E_INVENTARIO_MIS_TRANSFERENCIAS_INDEX = "gestion-comercial-e-inventario.mis-transferencias.index",
+  GESTION_COMERCIAL_E_INVENTARIO_CUADRES_INDEX = "gestion-comercial-e-inventario.cuadres.index",
+  GESTION_COMERCIAL_E_INVENTARIO_MIS_ORDENES_DE_COMPRA_INDEX = "gestion-comercial-e-inventario.mis-ordenes-de-compra.index",
+  GESTION_COMERCIAL_E_INVENTARIO_CREAR_ORDEN_COMPRA_INDEX = "gestion-comercial-e-inventario.crear-orden-compra.index",
+  GESTION_COMERCIAL_E_INVENTARIO_MIS_ORDENES_DE_SERVICIO_INDEX = "gestion-comercial-e-inventario.mis-ordenes-de-servicio.index",
+  GESTION_COMERCIAL_E_INVENTARIO_SOLICITUD_ORDEN_COMPRA_INDEX = "gestion-comercial-e-inventario.solicitud-orden-compra.index",
+  GESTION_COMERCIAL_E_INVENTARIO_MIS_REQUERIMIENTOS_INTERNOS_INDEX = "gestion-comercial-e-inventario.mis-requerimientos-internos.index",
 
   // ============================================
   // SUBMÓDULOS - FACTURACIÓN ELECTRÓNICA
@@ -48,16 +55,24 @@ export enum permissions {
   FACTURACION_ELECTRONICA_CREAR_COTIZACION_INDEX = "facturacion-electronica.crear-cotizacion.index",
   FACTURACION_ELECTRONICA_CREAR_GUIA_INDEX = "facturacion-electronica.crear-guia.index",
   FACTURACION_ELECTRONICA_CREAR_PRESTAMO_INDEX = "facturacion-electronica.crear-prestamo.index",
+  FACTURACION_ELECTRONICA_CREAR_NOTA_CREDITO_INDEX = "facturacion-electronica.crear-nota-credito.index",
+  FACTURACION_ELECTRONICA_CREAR_NOTA_DEBITO_INDEX = "facturacion-electronica.crear-nota-debito.index",
   FACTURACION_ELECTRONICA_MI_ALMACEN_INDEX = "facturacion-electronica.mi-almacen.index",
 
   // ============================================
   // SUBMÓDULOS - GESTIÓN CONTABLE Y FINANCIERA
   // ============================================
   GESTION_CONTABLE_Y_FINANCIERA_DASHBOARD_INDEX = "gestion-contable-y-financiera.dashboard.index",
-  GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_COBRAR_INDEX = "gestion-contable-y-financiera.cuentas-por-cobrar.index",
-  GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_PAGAR_INDEX = "gestion-contable-y-financiera.cuentas-por-pagar.index",
-  GESTION_CONTABLE_Y_FINANCIERA_LIBRO_DIARIO_INDEX = "gestion-contable-y-financiera.libro-diario.index",
-  GESTION_CONTABLE_Y_FINANCIERA_BALANCE_GENERAL_INDEX = "gestion-contable-y-financiera.balance-general.index",
+  GESTION_CONTABLE_Y_FINANCIERA_MIS_INGRESOS_INDEX = "gestion-contable-y-financiera.mis-ingresos.index",
+  GESTION_CONTABLE_Y_FINANCIERA_MIS_GASTOS_INDEX = "gestion-contable-y-financiera.mis-gastos.index",
+  GESTION_CONTABLE_Y_FINANCIERA_MIS_GANANCIAS_INDEX = "gestion-contable-y-financiera.mis-ganancias.index",
+  GESTION_CONTABLE_Y_FINANCIERA_VENTAS_POR_COBRAR_INDEX = "gestion-contable-y-financiera.ventas-por-cobrar.index",
+  GESTION_CONTABLE_Y_FINANCIERA_COMPRAS_POR_PAGAR_INDEX = "gestion-contable-y-financiera.compras-por-pagar.index",
+  GESTION_CONTABLE_Y_FINANCIERA_COMISIONES_INDEX = "gestion-contable-y-financiera.comisiones.index",
+  GESTION_CONTABLE_Y_FINANCIERA_GESTION_CAJAS_INDEX = "gestion-contable-y-financiera.gestion-cajas.index",
+  GESTION_CONTABLE_Y_FINANCIERA_CIERRE_CAJA_INDEX = "gestion-contable-y-financiera.cierre-caja.index",
+  GESTION_CONTABLE_Y_FINANCIERA_METODOS_PAGO_INDEX = "gestion-contable-y-financiera.metodos-pago.index",
+  GESTION_CONTABLE_Y_FINANCIERA_KARDEX_FINANZAS_INDEX = "gestion-contable-y-financiera.kardex-finanzas.index",
 
   // ============================================
   // SUBMÓDULOS - REPORTES
@@ -68,6 +83,9 @@ export enum permissions {
   REPORTES_FINANCIEROS_INDEX = "reportes.financieros.index",
   REPORTES_CLIENTES_INDEX = "reportes.clientes.index",
   REPORTES_PROVEEDORES_INDEX = "reportes.proveedores.index",
+  REPORTES_CONTABLES_INDEX = "reportes.contables.index",
+  REPORTES_ENTREGAS_INDEX = "reportes.entregas.index",
+  REPORTES_GUIAS_INDEX = "reportes.guias.index",
 
   // ============================================
   // SUBMÓDULOS - CONFIGURACIÓN
@@ -80,6 +98,7 @@ export enum permissions {
   CONFIGURACION_CAJAS_INDEX = "configuracion.cajas.index",
   CONFIGURACION_SERIES_INDEX = "configuracion.series.index",
   CONFIGURACION_IMPRESION_INDEX = "configuracion.impresion.index",
+  CONFIGURACION_REGISTROS_INDEX = "configuracion.registros.index",
 
   // Gestion Comercial e Inventario - Mi Almacén
   PRODUCTO_BASE = "producto",
@@ -349,6 +368,20 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Página Crear Recepción",
   [permissions.GESTION_COMERCIAL_E_INVENTARIO_CONFIGURACION_INDEX]:
     "Ver Configuración Gestión Comercial e Inventario",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_TRANSFERENCIAS_INDEX]:
+    "Ver Página Mis Transferencias",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_CUADRES_INDEX]:
+    "Ver Página Cuadres",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_ORDENES_DE_COMPRA_INDEX]:
+    "Ver Página Mis Órdenes de Compra",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_CREAR_ORDEN_COMPRA_INDEX]:
+    "Ver Página Crear Orden de Compra",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_ORDENES_DE_SERVICIO_INDEX]:
+    "Ver Página Mis Órdenes de Servicio",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_SOLICITUD_ORDEN_COMPRA_INDEX]:
+    "Ver Página Solicitud de Orden de Compra",
+  [permissions.GESTION_COMERCIAL_E_INVENTARIO_MIS_REQUERIMIENTOS_INTERNOS_INDEX]:
+    "Ver Página Requerimientos Internos",
 
   // SUBMÓDULOS - FACTURACIÓN ELECTRÓNICA
   [permissions.FACTURACION_ELECTRONICA_DASHBOARD_INDEX]:
@@ -377,20 +410,36 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
     "Ver Página Crear Guía",
   [permissions.FACTURACION_ELECTRONICA_CREAR_PRESTAMO_INDEX]:
     "Ver Página Crear Préstamo",
+  [permissions.FACTURACION_ELECTRONICA_CREAR_NOTA_CREDITO_INDEX]:
+    "Ver Página Crear Nota de Crédito",
+  [permissions.FACTURACION_ELECTRONICA_CREAR_NOTA_DEBITO_INDEX]:
+    "Ver Página Crear Nota de Débito",
   [permissions.FACTURACION_ELECTRONICA_MI_ALMACEN_INDEX]:
     "Ver Kardex de Productos",
 
   // SUBMÓDULOS - GESTIÓN CONTABLE Y FINANCIERA
   [permissions.GESTION_CONTABLE_Y_FINANCIERA_DASHBOARD_INDEX]:
     "Ver Dashboard Gestión Contable y Financiera",
-  [permissions.GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_COBRAR_INDEX]:
-    "Ver Página Cuentas por Cobrar",
-  [permissions.GESTION_CONTABLE_Y_FINANCIERA_CUENTAS_POR_PAGAR_INDEX]:
-    "Ver Página Cuentas por Pagar",
-  [permissions.GESTION_CONTABLE_Y_FINANCIERA_LIBRO_DIARIO_INDEX]:
-    "Ver Página Libro Diario",
-  [permissions.GESTION_CONTABLE_Y_FINANCIERA_BALANCE_GENERAL_INDEX]:
-    "Ver Página Balance General",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_MIS_INGRESOS_INDEX]:
+    "Ver Página Mis Ingresos",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_MIS_GASTOS_INDEX]:
+    "Ver Página Mis Gastos",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_MIS_GANANCIAS_INDEX]:
+    "Ver Página Mis Ganancias",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_VENTAS_POR_COBRAR_INDEX]:
+    "Ver Página Ventas por Cobrar",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_COMPRAS_POR_PAGAR_INDEX]:
+    "Ver Página Compras por Pagar",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_COMISIONES_INDEX]:
+    "Ver Página Comisiones",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_GESTION_CAJAS_INDEX]:
+    "Ver Página Gestión de Cajas",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_CIERRE_CAJA_INDEX]:
+    "Ver Página Cierre de Caja",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_METODOS_PAGO_INDEX]:
+    "Ver Página Métodos de Pago",
+  [permissions.GESTION_CONTABLE_Y_FINANCIERA_KARDEX_FINANZAS_INDEX]:
+    "Ver Página Kardex de Finanzas",
 
   // SUBMÓDULOS - REPORTES
   [permissions.REPORTES_VENTAS_INDEX]: "Ver Reportes de Ventas",
@@ -399,6 +448,9 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.REPORTES_FINANCIEROS_INDEX]: "Ver Reportes Financieros",
   [permissions.REPORTES_CLIENTES_INDEX]: "Ver Reportes de Clientes",
   [permissions.REPORTES_PROVEEDORES_INDEX]: "Ver Reportes de Proveedores",
+  [permissions.REPORTES_CONTABLES_INDEX]: "Ver Reportes Contables",
+  [permissions.REPORTES_ENTREGAS_INDEX]: "Ver Reportes de Entregas",
+  [permissions.REPORTES_GUIAS_INDEX]: "Ver Reportes de Guías",
 
   // SUBMÓDULOS - CONFIGURACIÓN
   [permissions.CONFIGURACION_USUARIOS_INDEX]: "Ver Página Usuarios",
@@ -409,6 +461,7 @@ const permissionstoDescripcion: Record<PermisosValidos, string> = {
   [permissions.CONFIGURACION_CAJAS_INDEX]: "Ver Página Cajas",
   [permissions.CONFIGURACION_SERIES_INDEX]: "Ver Página Series",
   [permissions.CONFIGURACION_IMPRESION_INDEX]: "Ver Página Impresión",
+  [permissions.CONFIGURACION_REGISTROS_INDEX]: "Ver Página Registros",
 
   // PRODUCTOS
 

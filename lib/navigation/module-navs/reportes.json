@@ -58,7 +58,7 @@
         "label": "Contables",
         "icon": "FaFileInvoice",
         "route": "/ui/reportes/contables",
-        "permission": "reportes.financieros.index"
+        "permission": "reportes.contables.index"
       },
       {
         "id": "entregas",
@@ -66,7 +66,7 @@
         "label": "Entregas",
         "icon": "FaTruck",
         "route": "/ui/reportes/entregas",
-        "permission": "reportes.index"
+        "permission": "reportes.entregas.index"
       },
       {
         "id": "guias",
@@ -74,7 +74,7 @@
         "label": "Guías",
         "icon": "MdLocalShipping",
         "route": "/ui/reportes/guias",
-        "permission": "reportes.index"
+        "permission": "reportes.guias.index"
       }
     ]
   },
@@ -122,21 +122,21 @@
         "label": "Contables",
         "icon": "FaFileInvoice",
         "route": "/ui/reportes/contables",
-        "permission": "reportes.financieros.index"
+        "permission": "reportes.contables.index"
       },
       {
         "id": "entregas",
         "label": "Entregas",
         "icon": "FaTruck",
         "route": "/ui/reportes/entregas",
-        "permission": "reportes.index"
+        "permission": "reportes.entregas.index"
       },
       {
         "id": "guias",
         "label": "Guías",
         "icon": "MdLocalShipping",
         "route": "/ui/reportes/guias",
-        "permission": "reportes.index"
+        "permission": "reportes.guias.index"
       }
     ]
   }

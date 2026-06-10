@@ -17,7 +17,9 @@ export const ACCION_LABELS: Record<Accion, string> = {
 export const MODULE_LABELS: Record<string, string> = {
   'facturacion-electronica': '💰 Facturación Electrónica',
   'gestion-comercial-e-inventario': '📦 Gestión Comercial e Inventario',
-  'gestion-contable': '📊 Gestión Contable y Financiera',
+  'gestion-contable-y-financiera': '📊 Gestión Contable y Financiera',
+  'reportes': '📈 Reportes',
+  'configuracion': '⚙️ Configuración',
 };
 
 export const ICON_MAP: Record<string, string> = {
@@ -25,6 +27,8 @@ export const ICON_MAP: Record<string, string> = {
   'facturacion-electronica.crear-venta.index': '🏷️',
   'facturacion-electronica.crear-cotizacion.index': '📝',
   'facturacion-electronica.crear-prestamo.index': '🤝',
+  'facturacion-electronica.crear-nota-credito.index': '📑',
+  'facturacion-electronica.crear-nota-debito.index': '🧾',
   'facturacion-electronica.crear-guia.index': '📋',
   'facturacion-electronica.mis-ventas.index': '🛒',
   'facturacion-electronica.mis-entregas.index': '🚚',
@@ -76,5 +80,7 @@ export const PERMISSION_TO_AUTH_MODULO: Record<string, string> = {
 export const AREAS_DISPONIBLES = [
   { label: 'Facturación Electrónica', value: 'facturacion-electronica' },
   { label: 'Gestión Comercial e Inventario', value: 'gestion-comercial-e-inventario' },
-  { label: 'Gestión Contable y Financiera', value: 'gestion-contable', disabled: true },
+  { label: 'Gestión Contable y Financiera', value: 'gestion-contable-y-financiera' },
+  { label: 'Reportes', value: 'reportes' },
+  { label: 'Configuración', value: 'configuracion' },
 ];
