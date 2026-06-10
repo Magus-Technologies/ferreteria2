@@ -98,6 +98,8 @@ export default function useInitVenta({
               unidad_derivada_id: ud.unidad_derivada_normal.id,
               recargo: Number(ud.recargo),
               precio_venta: Number(ud.precio),
+              descuento_tipo: ud.descuento_tipo as any,
+              descuento: Number(ud.descuento ?? 0),
               subtotal:
                 (Number(ud.precio) + Number(ud.recargo)) *
                 Number(ud.cantidad),
