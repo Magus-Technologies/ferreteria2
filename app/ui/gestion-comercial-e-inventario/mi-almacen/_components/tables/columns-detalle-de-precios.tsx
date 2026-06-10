@@ -136,8 +136,8 @@ export function useColumnsDetalleDePrecios() {
       field: 'producto_almacen.costo_actual',
       minWidth: 160,
       cellRenderer: ({ data }: any) => {
-        // El "Costo Actual" muestra el costo CON flete (costo real); cae al costo_actual crudo si no hay.
-        const costoActual = data?.producto_almacen?.costo_con_flete ?? data?.producto_almacen?.costo_actual
+        // El bucket "actual" ya incluye el flete del lote (PEPS por costo real).
+        const costoActual = data?.producto_almacen?.costo_actual
         const stockActual = data?.producto_almacen?.stock_costo_actual ?? 0
         const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
         const factor = Number(data?.factor ?? 1)
