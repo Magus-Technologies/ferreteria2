@@ -34,6 +34,29 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
   }>
 }
 
+// Última compra RECIBIDA (estado_de_compra === 'pr') de la lista `compras` del producto.
+function getUltimaCompraRecibida(compras: any[] | undefined | null): any | null {
+  if (!compras?.length) return null
+  const recibidas = compras.filter((c) => c?.compra?.estado_de_compra === 'pr')
+  if (!recibidas.length) return null
+  return [...recibidas].sort(
+    (a, b) =>
+      new Date(b?.compra?.fecha ?? 0).getTime() - new Date(a?.compra?.fecha ?? 0).getTime(),
+  )[0]
+}
+
+// Flete prorrateado por unidad base de una compra: Σ flete / Σ (cantidad × factor).
+function fletePorUnidadBase(compra: any): number {
+  const uds = compra?.unidades_derivadas ?? []
+  let flete = 0
+  let base = 0
+  for (const u of uds) {
+    flete += Number(u?.flete ?? 0)
+    base += Number(u?.cantidad ?? 0) * Number(u?.factor ?? 0)
+  }
+  return base > 0 ? flete / base : 0
+}
+
 export function useColumnsDetalleDePrecios() {
   const columns: ColDef<DetalleDePreciosProps>[] = useMemo(() => [
     {
@@ -74,11 +97,14 @@ export function useColumnsDetalleDePrecios() {
       field: 'producto_almacen.costo',
       minWidth: 80,
       filter: 'agNumberColumnFilter',
-      valueFormatter: ({ value, data }) => {
-        const costo = Number(value)
+      // Jala SIEMPRE el costo crudo de la ÚLTIMA compra recibida (no el promedio del
+      // inventario). Cae al costo del almacén si no hay compras recibidas.
+      valueFormatter: ({ data }) => {
         const factor = Number(data!.factor)
-        if (isNaN(costo) || isNaN(factor)) return '0.0000'
-        return `${(costo * factor).toFixed(4)}`
+        const ult = getUltimaCompraRecibida((data as any)?.compras)
+        const base = ult ? Number(ult.costo) : Number(data?.producto_almacen?.costo)
+        if (isNaN(base) || isNaN(factor)) return '0.0000'
+        return `${(base * factor).toFixed(4)}`
       },
       width: 130,
       type: 'pen4',
@@ -89,9 +115,13 @@ export function useColumnsDetalleDePrecios() {
       field: 'producto_almacen.costo_con_flete',
       minWidth: 110,
       filter: 'agNumberColumnFilter',
-      valueFormatter: ({ value, data }) => {
-        const base = Number(value ?? data?.producto_almacen?.costo)
+      // Costo crudo + flete prorrateado de la ÚLTIMA compra recibida.
+      valueFormatter: ({ data }) => {
         const factor = Number(data!.factor)
+        const ult = getUltimaCompraRecibida((data as any)?.compras)
+        const base = ult
+          ? Number(ult.costo) + fletePorUnidadBase(ult)
+          : Number(data?.producto_almacen?.costo_con_flete ?? data?.producto_almacen?.costo)
         if (isNaN(base) || isNaN(factor)) return '0.0000'
         return `${(base * factor).toFixed(4)}`
       },

@@ -78,7 +78,11 @@ export default function TableDetalleDePrecios() {
             costo_actual: producto_en_almacen?.costo_actual,
             stock_costo_actual: producto_en_almacen?.stock_costo_actual,
           },
-          compras: producto_en_almacen?.compras,
+          // El producto del store (listado-completo) no trae `compras`; las tomamos
+          // del listado con compras (infinite scroll) para las columnas que las usan.
+          compras: (producto_en_almacen as any)?.compras
+            ?? productos_completos?.find((p: any) => p.id === productoSeleccionado?.id)
+                ?.producto_en_almacenes?.find((pa: any) => pa.almacen_id === almacen_id)?.compras,
           // Agregar ID único para forzar re-render cuando cambia el producto
           _producto_id: productoSeleccionado?.id,
         }))
