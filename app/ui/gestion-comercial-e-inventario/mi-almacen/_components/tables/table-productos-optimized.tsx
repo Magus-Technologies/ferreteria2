@@ -43,6 +43,9 @@ function TableProductosOptimized() {
   const setProductoSeleccionado = useStoreProductoSeleccionado(
     (store) => store.setProducto,
   );
+  const productoSeleccionado = useStoreProductoSeleccionado(
+    (store) => store.producto,
+  );
 
   const filtros = useStoreFiltrosProductos((state) => state.filtros);
   const quickFilter = useStoreQuickFilter((state) => state.quickFilter);
@@ -87,6 +90,19 @@ function TableProductosOptimized() {
       }, 100);
     }
   }, [productos, setProductoSeleccionado]);
+
+  // Re-sincronizar el producto SELECCIONADO cuando llegan datos frescos (refetch por
+  // websocket tras venta / ingreso / salida / recepción). Sin esto, las tablas
+  // dependientes (Detalle de Precios, Últimas compras) muestran la foto vieja del
+  // producto (stock/costo/buckets) hasta que el usuario lo re-selecciona.
+  useEffect(() => {
+    if (!productoSeleccionado?.id || !productos?.length) return;
+    const fresh = productos.find((p) => p.id === productoSeleccionado.id);
+    if (fresh && fresh !== productoSeleccionado) {
+      setProductoSeleccionado(fresh);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productos]);
 
   // Resetear cuando cambian los filtros
   useEffect(() => {
