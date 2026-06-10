@@ -56,7 +56,6 @@ function TableProductosOptimized() {
   const {
     data: productos,
     loading,
-    isFetching,
   } = useProductosMiAlmacen({
     almacenId: filtros?.almacen_id ?? null,
     filtros: { ...(filtros || {}) },
@@ -157,7 +156,10 @@ function TableProductosOptimized() {
         title="Productos"
         schema={ProductoCreateInputSchema}
         headersRequired={["Ubicación en Almacén"]}
-        loading={loading || isFetching}
+        // Solo spinner en la carga inicial. Los refetch en background (p.ej.
+        // invalidación tras una venta) actualizan las filas in-place vía
+        // getRowId sin bloquear la tabla con el overlay de loading.
+        loading={loading}
         columnDefs={columns}
         rowData={productos}
         // CRÍTICO: getRowId permite que AG Grid mantenga el estado de filtros
