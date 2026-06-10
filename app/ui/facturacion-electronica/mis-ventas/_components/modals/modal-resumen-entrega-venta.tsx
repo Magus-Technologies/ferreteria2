@@ -251,7 +251,13 @@ export default function ModalResumenEntregaVenta({
             <FaTruck className="text-blue-600" />
           </div>
           <div>
-            <div className="font-bold text-slate-800 leading-tight">Configurar Entrega</div>
+            <div className="font-bold text-slate-800 leading-tight">
+              {historial.length === 0
+                ? 'Configurar Entrega'
+                : hasPendiente
+                  ? 'Configurar Entrega e Historial'
+                  : 'Historial de Entregas'}
+            </div>
             {ventaNumero && <div className="text-xs text-slate-500">{ventaNumero}{clienteNombre ? ` — ${clienteNombre}` : ''}</div>}
           </div>
         </div>

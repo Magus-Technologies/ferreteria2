@@ -477,6 +477,11 @@ export default function useCreateVenta({
               ? 'Entrega programada exitosamente para el despachador'
               : 'Entrega programada exitosamente (sin despachador asignado)')
 
+            // Invalidar cache de entregas para que mis-ventas muestre el historial
+            queryClient.invalidateQueries({
+              queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaCreada.id],
+            })
+
             // 🔔 Enviar notificación push al despachador (solo si hay uno asignado)
             if (despachador_id) {
               try {
@@ -574,6 +579,11 @@ export default function useCreateVenta({
                     : 'Entrega parcial registrada exitosamente'
                 )
 
+                // Invalidar cache de entregas para que mis-ventas muestre el historial
+                queryClient.invalidateQueries({
+                  queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaCreada.id],
+                })
+
                 // ✅ CREAR SEGUNDA ENTREGA PROGRAMADA para el resto (si se configuró)
                 // Usa `entregar_programado` (editable por el usuario) en lugar de `total - entregar`.
                 // Lo que NO se programa queda en cantidad_pendiente para programarlo luego desde Mis Ventas.
@@ -633,6 +643,11 @@ export default function useCreateVenta({
                       })
                     } else {
                       message.success('Entrega del resto programada exitosamente')
+
+                      // Invalidar cache de entregas después de segunda entrega parcial
+                      queryClient.invalidateQueries({
+                        queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaCreada.id],
+                      })
 
                       // 🔔 Notificar al despachador del resto (solo si hay despachador interno)
                       if (parcial_resto_programado.despachador_id) {
@@ -716,6 +731,11 @@ export default function useCreateVenta({
             notification.warning({
               message: 'Venta creada pero entrega no pudo ser registrada',
               description: 'Puedes crearla manualmente desde "Mis Entregas".',
+            })
+          } else {
+            // Invalidar cache de entregas después de placeholder omitido
+            queryClient.invalidateQueries({
+              queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaCreada.id],
             })
           }
         } catch (error) {
