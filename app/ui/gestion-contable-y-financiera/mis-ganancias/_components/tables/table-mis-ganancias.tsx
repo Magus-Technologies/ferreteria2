@@ -132,6 +132,13 @@ export default function TableMisGanancias() {
       valueFormatter: (p) => p.value?.toFixed(2) || '0.00',
     },
     {
+      headerName: 'LOTE',
+      field: 'desglose_lote',
+      width: 75,
+      valueFormatter: (p) => p.value || '',
+      cellStyle: { color: '#7c3aed', fontWeight: 'bold', fontSize: '11px' } as CellStyle,
+    },
+    {
       headerName: 'P.COSTO',
       field: 'costo',
       width: 80,
