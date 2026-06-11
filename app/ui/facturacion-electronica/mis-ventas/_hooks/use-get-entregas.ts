@@ -18,17 +18,20 @@ export default function useGetEntregas({
 
   const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'por-venta', ventaId],
-    queryFn: async () => {
-      const response = await entregasNuevasApi.porVenta(String(ventaId))
-      const rows = (response.data as any)?.data ?? response.data ?? []
+    // IMPORTANTE: esta key se comparte con useEntregasDeVenta (modal Configurar
+    // Entrega) y use-init-guia. El cache SIEMPRE guarda el ApiResponse crudo;
+    // el mapeo a forma legacy se hace en `select` (solo vista de este hook).
+    // Antes el queryFn guardaba el array ya mapeado y el modal leía
+    // `res.data.data` sobre un array → historial vacío tras un refresh.
+    queryFn: () => entregasNuevasApi.porVenta(String(ventaId)),
+    enabled: !!ventaId,
+    select: (res) => {
+      const rows = (res.data as any)?.data ?? []
       return Array.isArray(rows) ? rows.map(mapToEntregaDB) : []
     },
-    enabled: !!ventaId,
   })
 
   return {
-    // Garantizar siempre un array — el stale-cache puede tener el formato
-    // viejo ({ data: [...] }) cuando el realtime invalida la query.
     response: Array.isArray(data) ? data : [],
     loading: isLoading,
   }

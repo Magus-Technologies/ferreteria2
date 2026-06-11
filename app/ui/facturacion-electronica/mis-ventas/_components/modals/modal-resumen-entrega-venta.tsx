@@ -77,6 +77,14 @@ export default function ModalResumenEntregaVenta({
     if (tipo !== 'de') setDomicilioConfig(null)
   }, [tipo])
 
+  // Resetear filas al cambiar de venta. Sin esto, el merge de cantidades
+  // reutiliza filas de la venta anterior (las keys por índice "0-0" colisionan
+  // entre ventas) y un cantAProgramar=0 viejo pisa el pendiente de la nueva.
+  useEffect(() => {
+    setFilas([])
+    cantidadesRef.current = {}
+  }, [ventaId])
+
   const { data: ventaResp, isLoading: isLoadingVenta } = useQuery({
     queryKey: [QueryKeys.VENTAS, 'resumen-entrega', ventaId],
     queryFn:  () => ventaApi.getById(ventaId!),
@@ -125,7 +133,9 @@ export default function ModalResumenEntregaVenta({
       // cantAProgramar where possible, but cap it to the new pendiente so we never
       // try to deliver more than what's actually pending.
       const merged = siguientesFilas.map((siguiente: FilaProducto) => {
-        const prevFila = prev.find(p => p.key === siguiente.key)
+        // Match por udvId (id real de la unidad derivada), no por key: las keys
+        // son índices ("0-0") y colisionan entre ventas distintas.
+        const prevFila = prev.find(p => p.udvId === siguiente.udvId)
         const cantAProgramar = prevFila
           ? Math.min(prevFila.cantAProgramar, siguiente.pendiente)
           : siguiente.pendiente
