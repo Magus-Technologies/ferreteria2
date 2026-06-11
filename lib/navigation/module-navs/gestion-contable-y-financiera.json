@@ -1,0 +1,157 @@
+{
+  "moduleId": "gestion-contable-y-financiera",
+  "topNav": {
+    "bgColor": "bg-rose-700",
+    "activeColor": "text-rose-700",
+    "items": [
+      {
+        "id": "dashboard",
+        "type": "button",
+        "label": "Dashboard",
+        "icon": "MdSpaceDashboard",
+        "route": "/ui/gestion-contable-y-financiera",
+        "permission": "gestion-contable-y-financiera.dashboard.index"
+      },
+      {
+        "id": "ventas-dropdown",
+        "type": "dropdown",
+        "label": "Ventas",
+        "icon": "FaCartShopping",
+        "permission": null,
+        "items": [
+          {
+            "key": "ingresos",
+            "label": "Ingresos",
+            "route": null,
+            "action": "openIngresoExtra",
+            "permission": null
+          },
+          {
+            "key": "gastos",
+            "label": "Gastos",
+            "route": null,
+            "action": "openGastoExtra",
+            "permission": null
+          }
+        ]
+      },
+      {
+        "id": "caja-dropdown",
+        "type": "dropdown",
+        "label": "Caja",
+        "icon": "FaCashRegister",
+        "permission": null,
+        "items": [
+          {
+            "key": "aperturar-caja",
+            "label": "Aperturar Caja",
+            "route": null,
+            "action": "openAperturarCaja",
+            "permission": null
+          },
+          {
+            "key": "cierre-caja",
+            "label": "Cierre de Caja",
+            "route": "/ui/gestion-contable-y-financiera/cierre-caja",
+            "permission": "gestion-contable-y-financiera.cierre-caja.index"
+          },
+          {
+            "key": "mover-dinero",
+            "label": "Mover Dinero entre Sub-Cajas",
+            "route": null,
+            "action": "openMoverDinero",
+            "permission": null
+          },
+          {
+            "key": "pedir-prestamo",
+            "label": "Pedir Préstamo",
+            "route": null,
+            "action": "openPedirPrestamo",
+            "permission": null
+          },
+          {
+            "key": "traslado-boveda",
+            "label": "Traslado a Bóveda",
+            "route": null,
+            "action": "openTrasladoBoveda",
+            "permission": null
+          },
+          {
+            "key": "gestion-cajas",
+            "label": "Gestión de Cajas",
+            "route": "/ui/gestion-contable-y-financiera/gestion-cajas",
+            "permission": "gestion-contable-y-financiera.gestion-cajas.index"
+          },
+          {
+            "key": "metodos-pago",
+            "label": "Métodos de Pago",
+            "route": "/ui/gestion-contable-y-financiera/metodos-pago",
+            "permission": "gestion-contable-y-financiera.metodos-pago.index"
+          }
+        ]
+      },
+      {
+        "id": "kardex",
+        "type": "button",
+        "label": "Kardex",
+        "icon": "FaClipboardList",
+        "route": "/ui/gestion-contable-y-financiera/kardex-finanzas",
+        "permission": "gestion-contable-y-financiera.kardex-finanzas.index"
+      }
+    ]
+  },
+  "bottomNav": {
+    "bgColor": "bg-rose-700",
+    "activeColor": "text-rose-700",
+    "items": [
+      {
+        "id": "mis-ingresos",
+        "type": "button",
+        "label": "Mis Ingresos",
+        "icon": "GiReceiveMoney",
+        "route": "/ui/gestion-contable-y-financiera/mis-ingresos",
+        "permission": "gestion-contable-y-financiera.mis-ingresos.index"
+      },
+      {
+        "id": "mis-gastos",
+        "type": "button",
+        "label": "Mis Gastos",
+        "icon": "GiPayMoney",
+        "route": "/ui/gestion-contable-y-financiera/mis-gastos",
+        "permission": "gestion-contable-y-financiera.mis-gastos.index"
+      },
+      {
+        "id": "mis-ganancias",
+        "type": "button",
+        "label": "Mis Ganancias",
+        "icon": "GiMoneyStack",
+        "route": "/ui/gestion-contable-y-financiera/mis-ganancias",
+        "permission": "gestion-contable-y-financiera.mis-ganancias.index"
+      },
+      {
+        "id": "compras-por-pagar",
+        "type": "button",
+        "label": "Compras por Pagar",
+        "icon": "FaFileInvoiceDollar",
+        "route": "/ui/gestion-contable-y-financiera/compras-por-pagar",
+        "permission": "gestion-contable-y-financiera.compras-por-pagar.index"
+      },
+      {
+        "id": "ventas-por-cobrar",
+        "type": "button",
+        "label": "Ventas por Cobrar",
+        "icon": "GiTakeMyMoney",
+        "route": "/ui/gestion-contable-y-financiera/ventas-por-cobrar",
+        "permission": "gestion-contable-y-financiera.ventas-por-cobrar.index"
+      },
+      {
+        "id": "comisiones",
+        "type": "button",
+        "label": "Comisiones",
+        "icon": "FaHandHoldingDollar",
+        "route": "/ui/gestion-contable-y-financiera/comisiones",
+        "permission": "gestion-contable-y-financiera.comisiones.index"
+      }
+    ]
+  }
+}

@@ -56,6 +56,9 @@ export default function TableDetalleDePreciosSearch({
         costo_actual: producto_en_almacen.costo_actual,
         stock_costo_actual: producto_en_almacen.stock_costo_actual,
       },
+      // Necesario para que "P. Compra" y "Costo c/Flete" muestren lo mismo que en
+      // Mi Almacén (última compra recibida), igual que el Detalle de Precios de allá.
+      compras: (producto_en_almacen as any).compras,
     })) ?? []
   }, [producto_en_almacen, productoSeleccionado])
 

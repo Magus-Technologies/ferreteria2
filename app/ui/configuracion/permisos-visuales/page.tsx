@@ -17,7 +17,7 @@ import { ConfigModeProvider } from './_components/config-mode-context';
 import { FaUsers, FaCheck, FaLock, FaTimes } from 'react-icons/fa';
 import { permissionsApi } from '~/lib/api/permissions';
 import { autorizacionesApi, autorizacionesKeys } from '~/lib/api/autorizaciones';
-import { MODULE_LABELS, PERMISSION_TO_AUTH_MODULO } from './_constants';
+import { MODULE_LABELS } from './_constants';
 import { COMPONENT_MAP } from './_constants/component-map';
 
 import SelectorBar from './_components/selector-bar';
@@ -29,6 +29,9 @@ import { useAuthConfigs } from './_hooks/use-auth-configs';
 
 import facturacionElectronicaNav from '~/lib/navigation/module-navs/facturacion-electronica.json';
 import gestionComercialNav from '~/lib/navigation/module-navs/gestion-comercial-e-inventario.json';
+import gestionContableNav from '~/lib/navigation/module-navs/gestion-contable-y-financiera.json';
+import reportesNav from '~/lib/navigation/module-navs/reportes.json';
+import configuracionNav from '~/lib/navigation/module-navs/configuracion.json';
 
 import type { NavItem } from './_types';
 
@@ -153,8 +156,10 @@ export default function PermisosVisualesPage() {
   const dedupePorModulo = (items: NavItem[]): NavItem[] => {
     const vistos = new Set<string>();
     return items.filter((item) => {
-      const modulo = PERMISSION_TO_AUTH_MODULO[item.permission ?? ''];
-      const clave = modulo ?? `__nav__:${item.permission}`;
+      // Cada item del nav se muestra como su propia tarjeta. Solo se descartan
+      // duplicados EXACTOS (misma ruta + permiso + label), no por módulo de
+      // autorización (eso ocultaba vistas distintas como "Movimientos de Caja").
+      const clave = `${item.permission ?? ''}|${item.route ?? ''}|${item.label ?? ''}`;
       if (vistos.has(clave)) return false;
       vistos.add(clave);
       return true;
@@ -172,6 +177,24 @@ export default function PermisosVisualesPage() {
       return {
         topNav: dedupePorModulo(extraerItems(gestionComercialNav.topNav.items)),
         bottomNav: dedupePorModulo(extraerItems(gestionComercialNav.bottomNav.items)),
+      };
+    }
+    if (area === 'gestion-contable-y-financiera') {
+      return {
+        topNav: dedupePorModulo(extraerItems(gestionContableNav.topNav.items)),
+        bottomNav: dedupePorModulo(extraerItems(gestionContableNav.bottomNav.items)),
+      };
+    }
+    if (area === 'reportes') {
+      return {
+        topNav: dedupePorModulo(extraerItems(reportesNav.topNav.items)),
+        bottomNav: dedupePorModulo(extraerItems(reportesNav.bottomNav.items)),
+      };
+    }
+    if (area === 'configuracion') {
+      return {
+        topNav: dedupePorModulo(extraerItems(configuracionNav.topNav.items)),
+        bottomNav: dedupePorModulo(extraerItems(configuracionNav.bottomNav.items)),
       };
     }
     return { topNav: [], bottomNav: [] };

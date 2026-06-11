@@ -47,13 +47,13 @@
             "key": "nota-credito",
             "label": "Crear Nota de Crédito",
             "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-credito",
-            "permission": null
+            "permission": "facturacion-electronica.crear-nota-credito.index"
           },
           {
             "key": "nota-debito",
             "label": "Crear Nota de Débito",
             "route": "/ui/facturacion-electronica/crear-notas-electronicas/nota-debito",
-            "permission": null
+            "permission": "facturacion-electronica.crear-nota-debito.index"
           }
         ]
       },

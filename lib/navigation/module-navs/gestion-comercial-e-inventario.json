@@ -52,7 +52,7 @@
             "key": "crear-orden-compra",
             "label": "Crear Orden de Compra",
             "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra/crear-orden-compra",
-            "permission": null
+            "permission": "gestion-comercial-e-inventario.crear-orden-compra.index"
           }
         ]
       },
@@ -84,8 +84,8 @@
         "type": "button",
         "label": "Requerimientos Internos",
         "icon": "FaClipboardList",
-        "route": null,
-        "permission": null
+        "route": "/ui/gestion-comercial-e-inventario/mis-requerimientos-internos",
+        "permission": "gestion-comercial-e-inventario.mis-requerimientos-internos.index"
       }
     ]
   },
@@ -105,14 +105,14 @@
         "label": "Mis Transferencias",
         "icon": "BiTransferAlt",
         "route": "/ui/gestion-comercial-e-inventario/mis-transferencias",
-        "permission": null
+        "permission": "gestion-comercial-e-inventario.mis-transferencias.index"
       },
       {
         "id": "cuadres",
         "label": "Cuadres",
         "icon": "FaCalculator",
         "route": "/ui/gestion-comercial-e-inventario/cuadres",
-        "permission": null
+        "permission": "gestion-comercial-e-inventario.cuadres.index"
       },
       {
         "id": "mis-compras",
@@ -126,7 +126,7 @@
         "label": "Mis Ordenes de Compra",
         "icon": "MdOutlinePendingActions",
         "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-compra",
-        "permission": null
+        "permission": "gestion-comercial-e-inventario.mis-ordenes-de-compra.index"
       },
       {
         "id": "mis-proveedores",
@@ -147,14 +147,14 @@
         "label": "Mis Órdenes de Servicio",
         "icon": "FaWrench",
         "route": "/ui/gestion-comercial-e-inventario/mis-ordenes-de-servicio",
-        "permission": null
+        "permission": "gestion-comercial-e-inventario.mis-ordenes-de-servicio.index"
       },
       {
         "id": "solicitud-orden-compra",
         "label": "Solicitud de Orden de Compra",
         "icon": "FaClipboardList",
         "route": "/ui/gestion-comercial-e-inventario/solicitud-orden-compra",
-        "permission": null
+        "permission": "gestion-comercial-e-inventario.solicitud-orden-compra.index"
       }
     ]
   }
