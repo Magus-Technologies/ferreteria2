@@ -392,14 +392,22 @@ export default function useCreateVenta({
         return
       }
 
-      // Si el usuario editó la dirección y hay un ID de dirección guardado, actualizar en el backend
+      // Si hay cliente y dirección seleccionada, actualizar esa dirección en el backend.
+      // Buscamos el ID dinámicamente para no depender de hidden fields con timing frágil.
       if (clienteIdFinal && direccion && direccion_seleccionada) {
-        const idField = LEGACY_CLIENTE_DIRECCION_ID_FIELDS[direccion_seleccionada as TipoDireccion]
-        const direccionId = (values as any)[idField] as number | null
-        if (direccionId) {
-          clienteApi.actualizarDireccion(direccionId, { direccion })
-            .catch(() => { /* no bloquear el flujo si falla */ })
-        }
+        const cid = clienteIdFinal
+        clienteApi.listarDirecciones(cid).then((resp) => {
+          const dirs = resp.data?.data ?? []
+          const found = dirs.find((d) => d.tipo === (direccion_seleccionada as TipoDireccion))
+          if (found) {
+            clienteApi.actualizarDireccion(found.id, { direccion }).catch(() => {})
+          } else {
+            clienteApi.crearDireccion(cid, {
+              direccion,
+              tipo: direccion_seleccionada as TipoDireccion,
+            } as any).catch(() => {})
+          }
+        }).catch(() => {})
       }
 
       // En modo edición, invalidar queries y seguir el flujo normal (mostrar PDF → limpiar)

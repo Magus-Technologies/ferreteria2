@@ -415,7 +415,7 @@ export default function FormCrearVenta({
               }}
               placeholder="Teléfono"
               className="w-full"
-              readOnly
+              readOnly={esFactura}
               uppercase={false}
             />
           </LabelBase>
@@ -439,7 +439,7 @@ export default function FormCrearVenta({
               }}
               placeholder="Email del cliente"
               className="w-full"
-              readOnly
+              readOnly={esFactura}
               uppercase={false}
             />
           </LabelBase>
