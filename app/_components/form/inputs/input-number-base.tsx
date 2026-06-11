@@ -21,7 +21,10 @@ function Base({
   onFocus,
   readOnly,
   className = '!w-full',
-  autoComplete = 'off',
+  // "one-time-code": Chrome ignora "off" para autofill de tarjetas (Google Pay)
+  // y los campos numericos (precio/cantidad/numero) son los mas propensos a
+  // clasificarse como cc-number. Un proposito explicito anula la heuristica.
+  autoComplete = 'one-time-code',
   variant = 'filled',
   type = 'number',
   ref,

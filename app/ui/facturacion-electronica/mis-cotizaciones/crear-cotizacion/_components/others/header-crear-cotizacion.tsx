@@ -52,7 +52,7 @@ export default function HeaderCrearCotizacion() {
 
   return (
     <TituloModulos
-      title={numeroCotizacion ? `Crear Cotización — ${numeroCotizacion}` : 'Crear Cotización'}
+      title={numeroCotizacion ? `Crear Cotización` : 'Crear Cotización'}
       icon={<MdPointOfSale className='text-cyan-600' />}
       extra={
         <div className='pl-8 flex items-center gap-4'>

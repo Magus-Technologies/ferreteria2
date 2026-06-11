@@ -21,10 +21,16 @@ function Base({
   onKeyUp,
   onFocus,
   readOnly,
-  autoComplete = 'off',
+  // "one-time-code" (campo OTP) en vez de "off": Chrome IGNORA "off" para su
+  // autofill de tarjetas/direcciones (popup de Google Pay), pero un proposito
+  // explicito no-pago anula esa heuristica. Los campos password conservan su
+  // comportamiento (el consumidor puede pasar autoComplete propio).
+  autoComplete,
   variant = 'filled',
   ...props
 }: InputBaseProps) {
+  const effectiveAutoComplete =
+    autoComplete ?? (props.type === 'password' ? 'off' : 'one-time-code')
   // Anti-autofill de Chrome: Chrome ignora autocomplete="off" para tarjetas/
   // direcciones, pero NUNCA autocompleta un campo readOnly. Arrancamos readOnly
   // y al enfocar lo volvemos editable (imperceptible para el usuario). Solo se
@@ -55,7 +61,7 @@ function Base({
         }
         onInput?.(e)
       }}
-      autoComplete={autoComplete}
+      autoComplete={effectiveAutoComplete}
       onKeyUp={e => {
         if (e.key === 'Enter' && nextInEnter) {
           if (nextWithPrevent) e.preventDefault()
@@ -73,7 +79,9 @@ export default function InputBase({
   nextWithPrevent = true,
   onInput,
   onKeyUp,
-  autoComplete = 'off',
+  // Sin default: si el consumidor no lo pasa, Base resuelve "one-time-code"
+  // (anti-autofill de tarjetas de Chrome) segun el tipo de input.
+  autoComplete,
   variant = 'filled',
   formWithMessage = true,
   propsForm,
