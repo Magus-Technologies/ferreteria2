@@ -5,7 +5,7 @@ import {
   TIPOS_DIRECCION_LIST,
   type TipoDireccion,
 } from '~/lib/api/cliente'
-import { LEGACY_CLIENTE_DIRECCION_FIELDS } from '~/lib/utils/cliente-direcciones-form'
+import { LEGACY_CLIENTE_DIRECCION_FIELDS, LEGACY_CLIENTE_DIRECCION_ID_FIELDS } from '~/lib/utils/cliente-direcciones-form'
 
 /**
  * Renderiza los `Form.Item` ocultos `_cliente_direccion_1..4` (o N) que
@@ -21,13 +21,12 @@ export default function HiddenDireccionesFormItems() {
   return (
     <>
       {TIPOS_DIRECCION_LIST.map((tipo: TipoDireccion) => (
-        <Form.Item
-          key={tipo}
-          name={LEGACY_CLIENTE_DIRECCION_FIELDS[tipo]}
-          hidden
-        >
-          {/* Ant Input (controlado) en vez de <input> nativo para evitar el
-              warning uncontrolled→controlled al precargar las direcciones. */}
+        <Form.Item key={tipo} name={LEGACY_CLIENTE_DIRECCION_FIELDS[tipo]} hidden>
+          <Input type="hidden" />
+        </Form.Item>
+      ))}
+      {TIPOS_DIRECCION_LIST.map((tipo: TipoDireccion) => (
+        <Form.Item key={`id-${tipo}`} name={LEGACY_CLIENTE_DIRECCION_ID_FIELDS[tipo]} hidden>
           <Input type="hidden" />
         </Form.Item>
       ))}

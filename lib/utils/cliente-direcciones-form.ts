@@ -31,6 +31,13 @@ export const LEGACY_CLIENTE_DIRECCION_FIELDS: Record<TipoDireccion, string> = {
   [TipoDireccion.D4]: '_cliente_direccion_4',
 }
 
+export const LEGACY_CLIENTE_DIRECCION_ID_FIELDS: Record<TipoDireccion, string> = {
+  [TipoDireccion.D1]: '_cliente_direccion_id_1',
+  [TipoDireccion.D2]: '_cliente_direccion_id_2',
+  [TipoDireccion.D3]: '_cliente_direccion_id_3',
+  [TipoDireccion.D4]: '_cliente_direccion_id_4',
+}
+
 /**
  * Setea en el form los campos `_cliente_direccion_*` con las direcciones
  * del cliente. Hace `find(d => d.tipo === ...)` por cada tipo para que el
@@ -44,9 +51,9 @@ export function setDireccionesClienteToForm(
 ): void {
   const direcciones = cliente?.direcciones ?? []
   TIPOS_DIRECCION_LIST.forEach((tipo) => {
-    const field = LEGACY_CLIENTE_DIRECCION_FIELDS[tipo]
-    const direccion = direcciones.find((d) => d.tipo === tipo)?.direccion ?? ''
-    form.setFieldValue(field, direccion)
+    const found = direcciones.find((d) => d.tipo === tipo)
+    form.setFieldValue(LEGACY_CLIENTE_DIRECCION_FIELDS[tipo], found?.direccion ?? '')
+    form.setFieldValue(LEGACY_CLIENTE_DIRECCION_ID_FIELDS[tipo], found?.id ?? null)
   })
 }
 
@@ -57,7 +64,12 @@ export function setDireccionesClienteToForm(
 export function clearDireccionesClienteFromForm(form: FormInstance): void {
   TIPOS_DIRECCION_LIST.forEach((tipo) => {
     form.setFieldValue(LEGACY_CLIENTE_DIRECCION_FIELDS[tipo], '')
+    form.setFieldValue(LEGACY_CLIENTE_DIRECCION_ID_FIELDS[tipo], null)
   })
+}
+
+export function getDireccionIdFromForm(form: FormInstance, tipo: TipoDireccion): number | null {
+  return form.getFieldValue(LEGACY_CLIENTE_DIRECCION_ID_FIELDS[tipo]) ?? null
 }
 
 /**
@@ -85,4 +97,6 @@ export function getDireccionFromForm(
  */
 export type ClienteDireccionFormFields = {
   [K in TipoDireccion as `_cliente_direccion_${K extends `D${infer N}` ? N : never}`]?: string
+} & {
+  [K in TipoDireccion as `_cliente_direccion_id_${K extends `D${infer N}` ? N : never}`]?: number | null
 }

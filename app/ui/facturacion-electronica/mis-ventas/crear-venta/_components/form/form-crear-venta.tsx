@@ -19,6 +19,7 @@ import { TipoDireccion } from "~/lib/api/cliente";
 import {
   setDireccionesClienteToForm,
   clearDireccionesClienteFromForm,
+  LEGACY_CLIENTE_DIRECCION_FIELDS,
 } from "~/lib/utils/cliente-direcciones-form";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
@@ -37,6 +38,9 @@ export default function FormCrearVenta({
 }) {
   const recomendadoPor = (venta as any)?.recomendado_por || venta?.recomendadoPor;
   const clienteId = Form.useWatch("cliente_id", form);
+  const tipoDocumento = Form.useWatch("tipo_documento", form);
+  const esFactura = tipoDocumento === "01";
+  const direccionSeleccionada = Form.useWatch("direccion_seleccionada", form) as TipoDireccion | undefined;
   const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
   const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
 
@@ -300,11 +304,12 @@ export default function FormCrearVenta({
                   // — antes hacía 4 `find(d.tipo === 'Dx')` hardcoded.
                   setDireccionesClienteToForm(form, cliente);
 
-                  // Actualizar direccion_entrega con la dirección principal
+                  // Actualizar direccion, direccion_entrega con la dirección activa (D1 por defecto)
                   const direcciones = cliente.direcciones || [];
-                  const direccionPrincipal = direcciones.find(d => d.es_principal);
-                  const d1 = direcciones.find(d => d.tipo === TipoDireccion.D1)?.direccion || '';
-                  form.setFieldValue("direccion_entrega", direccionPrincipal?.direccion || d1);
+                  const tipoActivo = (form.getFieldValue('direccion_seleccionada') as TipoDireccion) || TipoDireccion.D1;
+                  const direccionActiva = direcciones.find(d => d.tipo === tipoActivo)?.direccion || direcciones.find(d => d.tipo === TipoDireccion.D1)?.direccion || '';
+                  form.setFieldValue("direccion", direccionActiva);
+                  form.setFieldValue("direccion_entrega", direccionActiva);
                 } else {
                   form.setFieldValue("ruc_dni", "");
                   form.setFieldValue("cliente_nombre", "");
@@ -347,7 +352,7 @@ export default function FormCrearVenta({
               }}
               placeholder="Nombre del cliente"
               className={`w-full ${clienteTieneDeuda ? '!text-red-600' : ''}`}
-              readOnly
+              readOnly={esFactura}
               uppercase={false}
             />
           </LabelBase>
@@ -369,6 +374,10 @@ export default function FormCrearVenta({
               }}
               placeholder="Dirección del cliente"
               className="w-full"
+              onChange={(e) => {
+                const tipo = direccionSeleccionada || TipoDireccion.D1;
+                form.setFieldValue(LEGACY_CLIENTE_DIRECCION_FIELDS[tipo], e.target.value);
+              }}
             />
           </LabelBase>
         </ConfigurableElement>

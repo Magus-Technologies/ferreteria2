@@ -27,7 +27,8 @@ import {
   type CreateEntregaProductoRequest
 } from '~/lib/api/entrega-producto'
 import { fcmApi } from '~/lib/api/fcm'
-import type { TipoDireccion } from '~/lib/api/cliente'
+import { clienteApi, type TipoDireccion, TipoCliente } from '~/lib/api/cliente'
+import { LEGACY_CLIENTE_DIRECCION_ID_FIELDS } from '~/lib/utils/cliente-direcciones-form'
 import dayjs from 'dayjs'
  import { cajaApi } from '~/lib/api/caja'
 import { fechaSubmit } from '~/utils/fechas'
@@ -146,6 +147,11 @@ export default function useCreateVenta({
       _cliente_direccion_2: _d2Ignored,
       _cliente_direccion_3: _d3Ignored,
       _cliente_direccion_4: _d4Ignored,
+      _cliente_direccion_id_1: _cid1Ignored,
+      _cliente_direccion_id_2: _cid2Ignored,
+      _cliente_direccion_id_3: _cid3Ignored,
+      _cliente_direccion_id_4: _cid4Ignored,
+      cliente_nombre,
       productos,
       tipo_de_cambio,
       tipo_moneda,
@@ -227,8 +233,24 @@ export default function useCreateVenta({
       })
     }
 
-    // Para Boleta/NV: enviar cliente_id si existe, o undefined para que backend use "CLIENTE VARIOS"
-    const clienteIdFinal = cliente_id || undefined
+    // Para Boleta/NV: si el usuario escribió un nombre sin seleccionar cliente, auto-crear
+    let clienteIdFinal = cliente_id || undefined
+    if (!cliente_id && !esEnEspera && restValues.tipo_documento !== '01' && restValues.forma_de_pago !== FormaDePago.CREDITO) {
+      const nombreCompleto = (cliente_nombre as string | undefined)?.trim()
+      if (nombreCompleto) {
+        try {
+          const partes = nombreCompleto.split(' ')
+          const resp = await clienteApi.create({
+            tipo_cliente: TipoCliente.PERSONA,
+            numero_documento: '',
+            nombres: partes[0],
+            apellidos: partes.slice(1).join(' '),
+          })
+          const nuevoId = resp.data?.data?.id
+          if (nuevoId) clienteIdFinal = nuevoId
+        } catch (_) { /* sin documento — continúa con cliente genérico */ }
+      }
+    }
 
     // Si no hay estado_de_venta, usar 'cr' (Creado) por defecto
     const estadoVenta = estado_de_venta || EstadoDeVenta.CREADO
@@ -368,6 +390,16 @@ export default function useCreateVenta({
             : undefined
         })
         return
+      }
+
+      // Si el usuario editó la dirección y hay un ID de dirección guardado, actualizar en el backend
+      if (clienteIdFinal && direccion && direccion_seleccionada) {
+        const idField = LEGACY_CLIENTE_DIRECCION_ID_FIELDS[direccion_seleccionada as TipoDireccion]
+        const direccionId = (values as any)[idField] as number | null
+        if (direccionId) {
+          clienteApi.actualizarDireccion(direccionId, { direccion })
+            .catch(() => { /* no bloquear el flujo si falla */ })
+        }
       }
 
       // En modo edición, invalidar queries y seguir el flujo normal (mostrar PDF → limpiar)
