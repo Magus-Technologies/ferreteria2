@@ -10,7 +10,7 @@ import type {
 } from '~/types'
 import { ColDef } from 'ag-grid-community'
 import { useMemo } from 'react'
-import { Tooltip } from 'antd'
+import { Select, Tooltip } from 'antd'
 import { GetStock } from '~/app/_utils/get-stock'
 
 export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
@@ -26,6 +26,12 @@ export type DetalleDePreciosProps = ProductoAlmacenUnidadDerivada & {
     stock_costo_anterior?: Decimal
     costo_actual?: Decimal | null
     stock_costo_actual?: Decimal
+    lotes?: Array<{
+      id: number
+      costo: Decimal
+      cantidad_restante: Decimal
+      secuencia: number
+    }>
   }
   compras?: Array<{
     costo: Decimal
@@ -164,34 +170,63 @@ export function useColumnsDetalleDePrecios() {
       colId: 'costo_actual',
       headerName: 'Costo Actual',
       field: 'producto_almacen.costo_actual',
-      minWidth: 160,
+      minWidth: 200,
+      // Desplegable con TODOS los lotes PEPS (capas de costo) en orden FIFO:
+      // el primero (arriba) es el más viejo, que sale primero. Cada opción es
+      // `S/. costo (cantidad que queda)`. El costo de cada lote ya incluye su flete.
       cellRenderer: ({ data }: any) => {
-        // El bucket "actual" ya incluye el flete del lote (PEPS por costo real).
-        const costoActual = data?.producto_almacen?.costo_actual
-        const stockActual = data?.producto_almacen?.stock_costo_actual ?? 0
-        const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
+        const lotes = data?.producto_almacen?.lotes as
+          | Array<{ id: number; costo: any; cantidad_restante: any; secuencia: number }>
+          | undefined
         const factor = Number(data?.factor ?? 1)
+        const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
 
-        if (!costoActual) {
-          return <span className='text-gray-400'>-</span>
-        }
-
-        const costoTotal = Number(costoActual) * factor
-
-        return (
-          <div title={`Costo por unidad: S/. ${Number(costoActual).toFixed(4)} | Costo total: S/. ${costoTotal.toFixed(4)} | Stock: ${stockActual}`}>
+        // Fallback (sin lotes cargados): mostrar el costo_actual simple.
+        if (!lotes?.length) {
+          const costoActual = data?.producto_almacen?.costo_actual
+          if (!costoActual) return <span className='text-gray-400'>-</span>
+          const total = Number(costoActual) * factor
+          return (
             <span className='text-sm'>
-              S/. {costoTotal.toFixed(4)} (
+              S/. {total.toFixed(4)} (
               <GetStock
-                stock_fraccion={Number(stockActual)}
+                stock_fraccion={Number(data?.producto_almacen?.stock_costo_actual ?? 0)}
                 unidades_contenidas={unidadesContenidas}
               />
               )
             </span>
-          </div>
+          )
+        }
+
+        const options = lotes.map((l) => {
+          const total = Number(l.costo) * factor
+          return {
+            value: l.id,
+            label: (
+              <span className='text-sm'>
+                S/. {total.toFixed(4)} (
+                <GetStock
+                  stock_fraccion={Number(l.cantidad_restante)}
+                  unidades_contenidas={unidadesContenidas}
+                />
+                )
+              </span>
+            ),
+          }
+        })
+
+        return (
+          <Select
+            size='small'
+            variant='borderless'
+            popupMatchSelectWidth={false}
+            defaultValue={lotes[0].id}
+            options={options}
+            className='w-full'
+          />
         )
       },
-      width: 180,
+      width: 200,
     },
     {
       colId: 'costo_referencial',
