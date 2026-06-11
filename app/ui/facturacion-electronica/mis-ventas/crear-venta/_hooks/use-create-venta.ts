@@ -27,7 +27,7 @@ import {
   type CreateEntregaProductoRequest
 } from '~/lib/api/entrega-producto'
 import { fcmApi } from '~/lib/api/fcm'
-import { clienteApi, type TipoDireccion, TipoCliente } from '~/lib/api/cliente'
+import { clienteApi, TipoDireccion, TipoCliente } from '~/lib/api/cliente'
 import { LEGACY_CLIENTE_DIRECCION_ID_FIELDS } from '~/lib/utils/cliente-direcciones-form'
 import dayjs from 'dayjs'
  import { cajaApi } from '~/lib/api/caja'
@@ -392,19 +392,21 @@ export default function useCreateVenta({
         return
       }
 
-      // Si hay cliente y dirección seleccionada, actualizar esa dirección en el backend.
-      // Buscamos el ID dinámicamente para no depender de hidden fields con timing frágil.
-      if (clienteIdFinal && direccion && direccion_seleccionada) {
+      // Si hay cliente y dirección, actualizar esa dirección en el backend.
+      // `direccion_seleccionada` puede llegar undefined porque el input hidden nativo
+      // no se registra en el store de AntD; en ese caso defaulteamos a D1.
+      if (clienteIdFinal && direccion) {
+        const tipoDirActiva = (direccion_seleccionada as TipoDireccion) || TipoDireccion.D1
         const cid = clienteIdFinal
         clienteApi.listarDirecciones(cid).then((resp) => {
           const dirs = resp.data?.data ?? []
-          const found = dirs.find((d) => d.tipo === (direccion_seleccionada as TipoDireccion))
+          const found = dirs.find((d) => d.tipo === tipoDirActiva)
           if (found) {
             clienteApi.actualizarDireccion(found.id, { direccion }).catch(() => {})
           } else {
             clienteApi.crearDireccion(cid, {
               direccion,
-              tipo: direccion_seleccionada as TipoDireccion,
+              tipo: tipoDirActiva,
             } as any).catch(() => {})
           }
         }).catch(() => {})
