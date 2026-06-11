@@ -123,7 +123,7 @@ export default function FormCrearCotizacion({
               }}
               placeholder="COT-2025-001"
               prefix={<span className="text-rose-700 mx-1">#</span>}
-              disabled
+              // disabled
               readOnly
             />
           </ConfigurableElement>

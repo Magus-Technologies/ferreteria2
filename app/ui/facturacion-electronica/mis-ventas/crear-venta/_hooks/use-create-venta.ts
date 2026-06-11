@@ -163,6 +163,7 @@ export default function useCreateVenta({
       direccion_seleccionada,
       ruc_dni,
       telefono,
+      email,
       // Extraer campos de crédito
       numero_dias,
       fecha_vencimiento,
@@ -390,6 +391,15 @@ export default function useCreateVenta({
             : undefined
         })
         return
+      }
+
+      // Sincronizar teléfono/email editados con la ficha del cliente.
+      // El backend acepta update parcial — solo se envían los campos presentes.
+      if (clienteIdFinal && (telefono !== undefined || email !== undefined)) {
+        const datosContacto: { telefono?: string | null; email?: string | null } = {}
+        if (telefono !== undefined) datosContacto.telefono = telefono?.trim() || null
+        if (email !== undefined) datosContacto.email = email?.trim() || null
+        clienteApi.update(clienteIdFinal, datosContacto).catch(() => {})
       }
 
       // Si hay cliente y dirección, actualizar esa dirección en el backend.

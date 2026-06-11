@@ -24,6 +24,11 @@ import {
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import AlertDeudaCliente from "../others/alert-deuda-cliente";
 import InputCodigoVale from "../others/input-codigo-vale";
+import { serieDocumentoApi } from "~/lib/api/serie-documento";
+import { useStoreAlmacen } from "~/store/store-almacen";
+import { ventaEvents } from "../../_hooks/venta-events";
+import { subscribeModelChanged } from "~/lib/realtime-bus";
+import { IoReload } from "react-icons/io5";
 
 import { useUltimaCalificacionCliente } from "../../_hooks/use-ultima-calificacion-cliente";
 import FloatingCalificacionCliente from "../alerts/floating-calificacion-cliente";
@@ -36,13 +41,20 @@ export default function FormCrearVenta({
   form: FormInstance;
   venta?: VentaConUnidadDerivadaNormal;
 }) {
-  const recomendadoPor = (venta as any)?.recomendado_por || venta?.recomendadoPor;
+  const recomendadoPor =
+    (venta as any)?.recomendado_por || venta?.recomendadoPor;
   const clienteId = Form.useWatch("cliente_id", form);
   const tipoDocumento = Form.useWatch("tipo_documento", form);
   const esFactura = tipoDocumento === "01";
-  const direccionSeleccionada = Form.useWatch("direccion_seleccionada", form) as TipoDireccion | undefined;
+  const direccionSeleccionada = Form.useWatch(
+    "direccion_seleccionada",
+    form,
+  ) as TipoDireccion | undefined;
   const [clienteTieneDeuda, setClienteTieneDeuda] = useState(false);
-  const handleDeudaChange = useCallback((tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda), []);
+  const handleDeudaChange = useCallback(
+    (tieneDeuda: boolean) => setClienteTieneDeuda(tieneDeuda),
+    [],
+  );
 
   // SelectClientes limpia cliente_id automáticamente al modificar el texto
   // (líneas 84-109 y 286-295 de select-clientes.tsx), así que basta con observar cliente_id.
@@ -62,6 +74,48 @@ export default function FormCrearVenta({
       form.setFieldValue("direccion_seleccionada", "D1");
     }
   }, [form]);
+
+  // Mostrar el siguiente número de documento (preview, no consume correlativo).
+  // En edición se muestra la serie/número real de la venta. Se refresca al
+  // cambiar el tipo de documento, después de crear una venta local, y vía
+  // socket cuando otra sesión crea una venta o cambia la config de series.
+  const almacenId = useStoreAlmacen((s) => s.almacen_id);
+  const esEdicion = Boolean(venta?.serie && venta?.numero);
+
+  const cargarSiguienteNumero = useCallback(() => {
+    if (esEdicion || !tipoDocumento || !almacenId) return;
+    serieDocumentoApi
+      .siguienteNumero(tipoDocumento, almacenId)
+      .then((resp) => {
+        const data = resp.data?.data;
+        form.setFieldValue(
+          "numero",
+          data ? `${data.serie}-${String(data.numero).padStart(8, "0")}` : "",
+        );
+      })
+      .catch(() => form.setFieldValue("numero", ""));
+  }, [form, tipoDocumento, almacenId, esEdicion]);
+
+  useEffect(() => {
+    if (esEdicion) {
+      form.setFieldValue(
+        "numero",
+        `${venta!.serie}-${String(venta!.numero).padStart(8, "0")}`,
+      );
+      return;
+    }
+    cargarSiguienteNumero();
+    const offCreada = ventaEvents.on(() => cargarSiguienteNumero());
+    const offRealtime = subscribeModelChanged((event) => {
+      if (event.module === "ventas" || event.module === "series-documentos") {
+        cargarSiguienteNumero();
+      }
+    });
+    return () => {
+      offCreada();
+      offRealtime();
+    };
+  }, [cargarSiguienteNumero, esEdicion, form, venta]);
 
   // Guardar form en store para que el header pueda acceder
   const setValeForm = useStoreValeForm((s) => s.setForm);
@@ -207,7 +261,31 @@ export default function FormCrearVenta({
             />
           </LabelBase>
         </ConfigurableElement>
-
+        <ConfigurableElement
+          componentId="crear-venta.numero-documento"
+          label="Campo Número Documento"
+        >
+          <InputBase
+            propsForm={{
+              name: "numero",
+              hasFeedback: false,
+              className: "!min-w-[180px] !w-[180px] !max-w-[180px]",
+            }}
+            placeholder="B001-00000001"
+            prefix={<span className="text-rose-700 mx-1">#</span>}
+            suffix={
+              !esEdicion ? (
+                <IoReload
+                  size={14}
+                  title="Actualizar número"
+                  className="cursor-pointer text-gray-400 hover:text-rose-700 transition-colors"
+                  onClick={cargarSiguienteNumero}
+                />
+              ) : undefined
+            }
+            readOnly
+          />
+        </ConfigurableElement>
       </div>
 
       {/* 2da fila */}
@@ -264,16 +342,22 @@ export default function FormCrearVenta({
                 className:
                   "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
               }}
-              className={`w-full ${clienteTieneDeuda ? '[&_.ant-select-selection-item]:!text-red-600 [&_.ant-select-selection-search-input]:!text-red-600 [&_.ant-select-selection-placeholder]:!text-red-600' : ''}`}
+              className={`w-full ${clienteTieneDeuda ? "[&_.ant-select-selection-item]:!text-red-600 [&_.ant-select-selection-search-input]:!text-red-600 [&_.ant-select-selection-placeholder]:!text-red-600" : ""}`}
               classNameIcon="text-rose-700 mx-1"
               placeholder="DNI/RUC"
-              clienteOptionsDefault={venta?.cliente ? [{
-                id: venta.cliente.id,
-                numero_documento: venta.cliente.numero_documento || '',
-                razon_social: venta.cliente.razon_social || '',
-                nombres: venta.cliente.nombres || '',
-                apellidos: venta.cliente.apellidos || '',
-              }] : []}
+              clienteOptionsDefault={
+                venta?.cliente
+                  ? [
+                      {
+                        id: venta.cliente.id,
+                        numero_documento: venta.cliente.numero_documento || "",
+                        razon_social: venta.cliente.razon_social || "",
+                        nombres: venta.cliente.nombres || "",
+                        apellidos: venta.cliente.apellidos || "",
+                      },
+                    ]
+                  : []
+              }
               onChange={(_, cliente) => {
                 // Actualizar los campos relacionados
                 if (cliente) {
@@ -297,7 +381,10 @@ export default function FormCrearVenta({
                   form.setFieldValue("email", cliente.email || "");
 
                   // Actualizar fecha de nacimiento (campo oculto para edición)
-                  form.setFieldValue("fecha_nacimiento", cliente.fecha_nacimiento || null);
+                  form.setFieldValue(
+                    "fecha_nacimiento",
+                    cliente.fecha_nacimiento || null,
+                  );
 
                   // Distribuir las direcciones del cliente a los campos
                   // legacy (`_cliente_direccion_*`) iterando sobre el array
@@ -306,8 +393,15 @@ export default function FormCrearVenta({
 
                   // Actualizar direccion, direccion_entrega con la dirección activa (D1 por defecto)
                   const direcciones = cliente.direcciones || [];
-                  const tipoActivo = (form.getFieldValue('direccion_seleccionada') as TipoDireccion) || TipoDireccion.D1;
-                  const direccionActiva = direcciones.find(d => d.tipo === tipoActivo)?.direccion || direcciones.find(d => d.tipo === TipoDireccion.D1)?.direccion || '';
+                  const tipoActivo =
+                    (form.getFieldValue(
+                      "direccion_seleccionada",
+                    ) as TipoDireccion) || TipoDireccion.D1;
+                  const direccionActiva =
+                    direcciones.find((d) => d.tipo === tipoActivo)?.direccion ||
+                    direcciones.find((d) => d.tipo === TipoDireccion.D1)
+                      ?.direccion ||
+                    "";
                   form.setFieldValue("direccion", direccionActiva);
                   form.setFieldValue("direccion_entrega", direccionActiva);
                 } else {
@@ -351,7 +445,7 @@ export default function FormCrearVenta({
                 className: "w-full",
               }}
               placeholder="Nombre del cliente"
-              className={`w-full ${clienteTieneDeuda ? '!text-red-600' : ''}`}
+              className={`w-full ${clienteTieneDeuda ? "!text-red-600" : ""}`}
               readOnly={esFactura}
               uppercase={false}
             />
@@ -376,7 +470,10 @@ export default function FormCrearVenta({
               className="w-full"
               onChange={(e) => {
                 const tipo = direccionSeleccionada || TipoDireccion.D1;
-                form.setFieldValue(LEGACY_CLIENTE_DIRECCION_FIELDS[tipo], e.target.value);
+                form.setFieldValue(
+                  LEGACY_CLIENTE_DIRECCION_FIELDS[tipo],
+                  e.target.value,
+                );
               }}
             />
           </LabelBase>
@@ -393,7 +490,10 @@ export default function FormCrearVenta({
       </div>
 
       {/* Alerta de deudas del cliente */}
-      <AlertDeudaCliente clienteId={clienteId} onDeudaChange={handleDeudaChange} />
+      <AlertDeudaCliente
+        clienteId={clienteId}
+        onDeudaChange={handleDeudaChange}
+      />
 
       {/* ultima fila: Teléfono, Email, Recomendado por */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
@@ -464,13 +564,19 @@ export default function FormCrearVenta({
               }}
               className="w-full"
               classNameIcon="text-cyan-600 mx-1"
-              clienteOptionsDefault={recomendadoPor ? [{
-                id: recomendadoPor.id,
-                numero_documento: recomendadoPor.numero_documento || '',
-                razon_social: recomendadoPor.razon_social || '',
-                nombres: recomendadoPor.nombres || '',
-                apellidos: recomendadoPor.apellidos || '',
-              }] : []}
+              clienteOptionsDefault={
+                recomendadoPor
+                  ? [
+                      {
+                        id: recomendadoPor.id,
+                        numero_documento: recomendadoPor.numero_documento || "",
+                        razon_social: recomendadoPor.razon_social || "",
+                        nombres: recomendadoPor.nombres || "",
+                        apellidos: recomendadoPor.apellidos || "",
+                      },
+                    ]
+                  : []
+              }
             />
           </LabelBase>
         </ConfigurableElement>
