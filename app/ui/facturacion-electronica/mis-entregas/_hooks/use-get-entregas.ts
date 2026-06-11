@@ -27,7 +27,11 @@ export function mapToEntregaDB(e: EntregaNueva): any {
     fecha_programada: e.fecha_programada ?? undefined,
     hora_inicio:      e.hora_inicio ?? undefined,
     hora_fin:         e.hora_fin ?? undefined,
-    created_at:       e.fecha_creacion ?? '',
+    // La columna "Fecha Registro" lee `fecha_creacion` del row. Preferir el
+    // timestamp real (created_at) para mostrar hora y ordenar entregas del
+    // mismo dia; fallback al date-only para respuestas cacheadas viejas.
+    fecha_creacion:   (e as any).created_at ?? e.fecha_creacion ?? '',
+    created_at:       (e as any).created_at ?? e.fecha_creacion ?? '',
     updated_at:       '',
 
     // Location
