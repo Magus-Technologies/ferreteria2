@@ -77,6 +77,7 @@ export default function TableDetalleDePrecios() {
             stock_costo_anterior: producto_en_almacen?.stock_costo_anterior,
             costo_actual: producto_en_almacen?.costo_actual,
             stock_costo_actual: producto_en_almacen?.stock_costo_actual,
+            lotes: (producto_en_almacen as any)?.lotes,
           },
           // El producto del store (listado-completo) no trae `compras`; las tomamos
           // del listado con compras (infinite scroll) para las columnas que las usan.
@@ -102,6 +103,7 @@ export default function TableDetalleDePrecios() {
                   stock_costo_anterior: producto_en_almacen_aux?.stock_costo_anterior,
                   costo_actual: producto_en_almacen_aux?.costo_actual,
                   stock_costo_actual: producto_en_almacen_aux?.stock_costo_actual,
+                  lotes: (producto_en_almacen_aux as any)?.lotes,
                 },
                 compras: producto_en_almacen_aux?.compras,
                 // Agregar ID único para forzar re-render cuando cambia el producto
