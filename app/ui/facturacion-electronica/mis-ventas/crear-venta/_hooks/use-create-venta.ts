@@ -810,6 +810,6 @@ export default function useCreateVenta({
       setLoading(false)
     }
   }, [router, user_id, notification, message, almacen_id, queryClient, isEditing, ventaId, onMissingApertura])
-
+/////sadadadbajdb ahdbaj wd
   return { handleSubmit, loading }
 }
