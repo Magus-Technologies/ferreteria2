@@ -25,6 +25,8 @@ export interface GananciaDetalle {
   cc: string;
   created_at: string;
   updated_at: string;
+  // "Lote 1/2" cuando la venta se desglosa por costos PEPS distintos; null si no.
+  desglose_lote?: string | null;
 }
 
 export interface ResumenGanancias {
