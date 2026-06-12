@@ -46,12 +46,14 @@ export default function FormCrearVenta({
   const clienteId = Form.useWatch("cliente_id", form);
   const tipoDocumento = Form.useWatch("tipo_documento", form);
   const esFactura = tipoDocumento === "01";
-  // Con DNI/RUC ingresado el nombre viene del cliente registrado y no debe
-  // editarse a mano (en cualquier tipo de documento). Sin documento, la venta
-  // es casual y el nombre queda libre. En factura ademas se bloquea la
-  // direccion (dato fiscal del RUC).
-  const rucDni = Form.useWatch("ruc_dni", form);
-  const hayDocumento = !!(rucDni && String(rucDni).trim());
+  // Con cliente registrado seleccionado (cliente_id seteado por el select de
+  // DNI/RUC) el nombre viene del registro y no debe editarse a mano, en
+  // cualquier tipo de documento. Sin cliente, la venta es casual y el nombre
+  // queda libre. En factura ademas se bloquea la direccion (dato fiscal).
+  // OJO: no usar Form.useWatch("ruc_dni") — ese campo no tiene Form.Item
+  // registrado y antd no dispara el watch para setFieldValue sobre campos
+  // libres. cliente_id SI esta registrado (propsForm del SelectClientes).
+  const hayDocumento = !!clienteId;
   const direccionSeleccionada = Form.useWatch(
     "direccion_seleccionada",
     form,
