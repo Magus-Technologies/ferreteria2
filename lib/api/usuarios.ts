@@ -153,6 +153,8 @@ interface GetUsuariosParams {
   empresa_id?: number;
   estado?: boolean;
   rol_sistema?: 'ADMINISTRADOR' | 'VENDEDOR' | 'ALMACENERO' | 'CONTADOR' | 'DESPACHADOR' | 'CONDUCTOR';
+  /** Filtra usuarios que tienen acceso a un módulo específico (blacklist) */
+  modulo_acceso?: string;
 }
 
 // ============= RESPONSES =============

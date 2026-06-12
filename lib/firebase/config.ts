@@ -75,4 +75,42 @@ export function onForegroundMessage(callback: (payload: any) => void) {
   })
 }
 
+/**
+ * Verifica si el token FCM actual es el mismo que el último registrado.
+ * Si cambió, devuelve el nuevo token para que el caller lo re-registre.
+ * 
+ * Almacena el último token en sessionStorage para detección de cambios
+ * dentro de la misma sesión del navegador.
+ */
+export async function getCurrentFcmToken(): Promise<string | null> {
+  if (typeof window === 'undefined' || !messaging) return null
+
+  try {
+    const registration = await navigator.serviceWorker.ready
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    })
+    return token
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Compara el token actual con el último registrado.
+ * Si es diferente, devuelve el nuevo token para re-registrar.
+ */
+export function hasTokenChanged(newToken: string): boolean {
+  if (typeof window === 'undefined') return false
+  const lastToken = sessionStorage.getItem('fcm_last_token')
+  return lastToken !== newToken
+}
+
+export function storeLastToken(token: string): void {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('fcm_last_token', token)
+  }
+}
+
 export { app, messaging }

@@ -22,18 +22,24 @@ messaging.onBackgroundMessage((payload) => {
 
   const type = payload.data?.type || ''
   const isAutorizacion = type === 'autorizacion' || type === 'autorizacion_respuesta'
+  const isEntregaCompletada = type === 'entrega_completada'
 
   const notificationTitle = payload.notification?.title || 'Nueva Notificación'
   const notificationOptions = {
     body: payload.notification?.body || '',
     icon: '/icon-192x192.png',
     badge: '/icon-72x72.png',
-    tag: (isAutorizacion ? 'autorizacion-' : 'entrega-') + Date.now(),
+    tag: (isAutorizacion ? 'autorizacion-' : isEntregaCompletada ? 'calendario-' : 'entrega-') + Date.now(),
     data: payload.data,
     vibrate: [200, 100, 200],
     actions: isAutorizacion
       ? [
           { action: 'ver', title: 'Ver Solicitudes' },
+          { action: 'cerrar', title: 'Cerrar' }
+        ]
+      : isEntregaCompletada
+      ? [
+          { action: 'ver', title: 'Ver Calendario' },
           { action: 'cerrar', title: 'Cerrar' }
         ]
       : [
@@ -54,11 +60,16 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'ver' || !event.action) {
     const notifType = event.notification.data?.type || ''
     const isAutorizacion = notifType === 'autorizacion' || notifType === 'autorizacion_respuesta'
+    const isEntregaCompletada = notifType === 'entrega_completada'
     const urlToOpen = isAutorizacion
       ? '/ui/solicitudes-autorizacion'
+      : isEntregaCompletada
+      ? '/ui/facturacion-electronica/mis-ventas/calendario'
       : '/ui/facturacion-electronica/mis-entregas'
     const cacheMessage = isAutorizacion
       ? 'INVALIDATE_AUTORIZACIONES_CACHE'
+      : isEntregaCompletada
+      ? 'INVALIDATE_CALENDARIO_CACHE'
       : 'INVALIDATE_ENTREGAS_CACHE'
 
     event.waitUntil(

@@ -1,33 +1,37 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAuth } from '~/lib/auth-context'
 import { useNotifications } from '~/hooks/use-notifications'
+import { usePermission } from '~/hooks/use-permission'
+import { permissions } from '~/lib/permissions'
 
 /**
  * Componente que inicializa las notificaciones automáticamente
- * para usuarios con rol DESPACHADOR después del login
+ * para cualquier usuario con acceso al módulo de entregas,
+ * independientemente de su rol.
  */
 export default function NotificationInitializer() {
   const { user } = useAuth()
   const { enableNotifications, permissionStatus } = useNotifications()
+  const hasModuleAccess = usePermission(permissions.FACTURACION_ELECTRONICA_INDEX)
+  const registeredRef = useRef(false)
 
   useEffect(() => {
+    if (!user?.id || !hasModuleAccess) return
 
-
-    // Solo para usuarios DESPACHADOR
-    if (user?.rol_sistema === 'DESPACHADOR') {
-      if (permissionStatus === 'default') {
-        const timer = setTimeout(() => {
-          enableNotifications()
-        }, 3000)
-        return () => clearTimeout(timer)
-      } else if (permissionStatus === 'granted') {
+    if (permissionStatus === 'default') {
+      const timer = setTimeout(() => {
         enableNotifications()
-      }
+      }, 3000)
+      return () => clearTimeout(timer)
     }
-  }, [user?.rol_sistema, permissionStatus, enableNotifications])
 
-  // Este componente no renderiza nada
+    if (permissionStatus === 'granted' && !registeredRef.current) {
+      registeredRef.current = true
+      enableNotifications()
+    }
+  }, [user?.id, hasModuleAccess, permissionStatus, enableNotifications])
+
   return null
 }

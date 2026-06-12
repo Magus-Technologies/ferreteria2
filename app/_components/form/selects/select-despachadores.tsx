@@ -57,13 +57,14 @@ export default function SelectDespachadores({
   const [text, setText] = useState('')
   const [debouncedText] = useDebounce(text, 800)
 
-  // Buscar despachador por DNI exacto
+  const MODULO_ENTREGAS = 'facturacion-electronica.mis-entregas.index'
+
   const { data: despachadores = [] } = useQuery({
-    queryKey: [QueryKeys.USUARIOS, debouncedText, 'DESPACHADOR'],
+    queryKey: [QueryKeys.USUARIOS, debouncedText, MODULO_ENTREGAS],
     queryFn: async () => {
       const result = await usuariosApi.getAll({
         search: debouncedText,
-        rol_sistema: 'DESPACHADOR',
+        modulo_acceso: MODULO_ENTREGAS,
         estado: true,
       })
       return (result.data?.data || []) as Usuario[]
