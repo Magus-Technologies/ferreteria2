@@ -263,6 +263,18 @@ export interface GuiasRemisionListResponse {
 
 export const guiaRemisionApi = {
   /**
+   * Obtiene la serie y el siguiente número sin reservarlo
+   */
+  async siguienteNumero(
+    tipoGuia?: string
+  ): Promise<ApiResponse<{ data: { serie: string; numero: number } }>> {
+    const params = tipoGuia ? `?tipo_guia=${tipoGuia}` : '';
+    return apiRequest<{ data: { serie: string; numero: number } }>(
+      `/guias-remision/siguiente-numero/preview${params}`
+    );
+  },
+
+  /**
    * Listar guías de remisión con filtros
    */
   async list(filters?: GuiaRemisionFilters): Promise<ApiResponse<GuiasRemisionListResponse>> {

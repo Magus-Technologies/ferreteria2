@@ -31,7 +31,7 @@ import {
   getResumenProductosParcialAgrupado,
   isEntregaParcialAgrupada,
 } from '../../_lib/entregas-parciales'
-import TableBase from '~/components/tables/table-base'
+import TableWithTitle from '~/components/tables/table-with-title'
 import type { ColDef } from 'ag-grid-community'
 
 interface ModalDetallesEntregaCompletoProps {
@@ -377,20 +377,21 @@ export default function ModalDetallesEntregaCompleto({
         </div>
 
         {productosRowData.length > 0 && (
-          <div>
-            <div className="text-xs font-bold uppercase text-slate-500 tracking-wide mb-2">
-              Productos
-            </div>
-            <div className="h-[240px]">
-              <TableBase
-                rowData={productosRowData}
-                columnDefs={productosColDefs}
-                rowSelection={false}
-                persistColumnState={false}
-                withNumberColumn={false}
-                isVisible={open}
-              />
-            </div>
+          <div className="h-[280px]">
+            {/* TableWithTitle trae la barra estandar: selector de columnas +
+                export Excel/PDF (igual que las demas tablas del sistema). */}
+            <TableWithTitle
+              id="fe.mis-entregas.detalle-entrega.productos"
+              title="Productos"
+              rowData={productosRowData}
+              columnDefs={productosColDefs}
+              rowSelection={false}
+              persistColumnState={true}
+              withNumberColumn={false}
+              pagination={false}
+              domLayout="normal"
+              isVisible={open}
+            />
           </div>
         )}
       </div>

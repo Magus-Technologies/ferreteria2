@@ -111,6 +111,13 @@ export default function useInitVenta({
               producto_id: ppa.producto_almacen.producto_id,
               stock_fraccion: Number((ppa.producto_almacen as any).stock_fraccion ?? 0),
               img: ppa.producto_almacen.producto.img ?? null,
+              // marca/categoria: las usan los vales con alcance PRODUCTOS/CATEGORIAS
+              marca_id: (ppa.producto_almacen.producto as any).marca_id ?? null,
+              categoria_id: (ppa.producto_almacen.producto as any).categoria_id ?? null,
+              // costo y comision se persisten con `?? 0` en el backend al
+              // re-guardar — si no se cargan al editar, se PIERDEN.
+              costo: Number((ppa as any).costo ?? 0),
+              comision: Number((ud as any).comision ?? 0),
             }))
           ),
           // Servicios de la venta
@@ -234,6 +241,10 @@ export default function useInitVenta({
                 ...prod,
                 stock_fraccion: Number(productoEnAlmacen.stock_fraccion ?? 0),
                 tipo_precio,
+                // Todos los almacenes del producto — la columna Cantidad usa
+                // esto para el popover "Ver sucursales" (igual que al agregar
+                // un producto nuevo en crear-venta).
+                producto_en_almacenes: productoBackend.producto_en_almacenes,
               }
             })
 

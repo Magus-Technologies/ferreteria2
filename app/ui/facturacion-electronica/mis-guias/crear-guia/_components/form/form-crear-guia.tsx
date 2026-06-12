@@ -17,7 +17,10 @@ import {
   getDireccionFromForm,
 } from '~/lib/utils/cliente-direcciones-form'
 import { TipoDireccion } from '~/lib/api/cliente'
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { guiaRemisionApi } from '~/lib/api/guia-remision'
+import { subscribeModelChanged } from '~/lib/realtime-bus'
+import { IoReload } from 'react-icons/io5'
 import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 import SelectChoferes from '~/app/_components/form/selects/select-choferes'
 import SelectUsuariosDespachadores from '~/app/_components/form/selects/select-usuarios-despachadores'
@@ -129,6 +132,47 @@ export default function FormCrearGuia({
     }
   }, [form])
 
+  // Preview de serie/número (no reserva correlativo). Solo en creación: en
+  // edición la guía ya trae su serie/número. Se refresca al cambiar el tipo
+  // de guía (T001/V001/TF01) y vía socket cuando otra sesión crea una guía.
+  // Si el usuario escribió serie/número manualmente, el socket NO los pisa
+  // (solo el botón de refrescar fuerza la actualización).
+  const ultimoAutoNumero = useRef<{ serie?: string; numero?: number }>({})
+
+  const cargarSiguienteNumero = useCallback(
+    (forzar = false) => {
+      if (guia) return
+      guiaRemisionApi
+        .siguienteNumero(tipoGuia)
+        .then((resp) => {
+          const data = resp.data?.data
+          if (!data) return
+          const serieActual = form.getFieldValue('serie')
+          const numeroActual = form.getFieldValue('numero')
+          const esAutoOVacio =
+            (!serieActual && !numeroActual) ||
+            (serieActual === ultimoAutoNumero.current.serie &&
+              numeroActual === ultimoAutoNumero.current.numero)
+          if (forzar || esAutoOVacio) {
+            form.setFieldValue('serie', data.serie)
+            form.setFieldValue('numero', data.numero)
+            ultimoAutoNumero.current = { serie: data.serie, numero: data.numero }
+          }
+        })
+        .catch(() => {})
+    },
+    [form, guia, tipoGuia],
+  )
+
+  useEffect(() => {
+    if (guia) return
+    cargarSiguienteNumero()
+    const offRealtime = subscribeModelChanged((event) => {
+      if (event.module === 'guias-remision') cargarSiguienteNumero()
+    })
+    return offRealtime
+  }, [cargarSiguienteNumero, guia])
+
   // Limpiar comprador cuando el motivo cambia y ya no lo requiere
   useEffect(() => {
     if (!requiereComprador) {
@@ -232,6 +276,16 @@ export default function FormCrearGuia({
             }}
             placeholder='000012'
             className='w-full sm:!w-[120px] sm:!min-w-[120px] sm:!max-w-[120px]'
+            suffix={
+              !guia ? (
+                <IoReload
+                  size={14}
+                  title='Actualizar número'
+                  className='cursor-pointer text-gray-400 hover:text-cyan-700 transition-colors'
+                  onClick={() => cargarSiguienteNumero(true)}
+                />
+              ) : undefined
+            }
           />
         </LabelBase>
         <LabelBase label='Referencia (Comprobante):' classNames={{ labelParent: 'mb-2' }} className='w-full sm:w-auto'>

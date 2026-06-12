@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FaPlus, FaHistory } from 'react-icons/fa'
 import { Spin } from 'antd'
 import ButtonBase from '~/components/buttons/button-base'
@@ -8,6 +8,7 @@ import { useStoreVentaSeleccionada } from '../tables/table-mis-ventas'
 import ModalResumenEntregaVenta, { type TipoEntregaCodigo, type CantidadOverride } from '../modals/modal-resumen-entrega-venta'
 import ModalNuevaEntregaVenta from '~/app/ui/facturacion-electronica/mis-entregas/_components/modals/modal-nueva-entrega-venta'
 import useEntregasDeVenta from '~/app/ui/facturacion-electronica/mis-entregas/_hooks/use-entregas-de-venta'
+import { useStoreModalEntregaAbierto } from '../../store/store-modal-entrega-abierto'
 import type { ResumenVenta } from '~/lib/api/entregas'
 
 export default function AccionConfigurarEntrega() {
@@ -67,6 +68,15 @@ export default function AccionConfigurarEntrega() {
   const [tipoEntrega,      setTipoEntrega]      = useState<TipoEntregaCodigo>('de')
   const [cantidades,       setCantidades]       = useState<CantidadOverride[]>([])
   const [fechaProgramada,  setFechaProgramada]  = useState<string | null>(null)
+
+  // Congelar el refetch de la lista de ventas mientras cualquiera de los dos
+  // modales este abierto (ver store-modal-entrega-abierto). Cleanup al
+  // desmontar para no dejar la lista congelada.
+  const setModalEntregaAbierto = useStoreModalEntregaAbierto(s => s.setAbierto)
+  useEffect(() => {
+    setModalEntregaAbierto(openResumen || openProgramar)
+  }, [openResumen, openProgramar, setModalEntregaAbierto])
+  useEffect(() => () => setModalEntregaAbierto(false), [setModalEntregaAbierto])
 
   const ventaAdaptada: ResumenVenta | undefined = venta
     ? ({
