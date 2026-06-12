@@ -244,7 +244,15 @@ export default function CardAgregarProductoCompra({
             S/.{' '}
             {(
               Number(unidad_derivada_seleccionada?.factor ?? 0) *
-              Number((producto_en_almacen as any)?.costo_actual ?? producto_en_almacen?.costo ?? 0)
+              // Costo de referencia PEPS (misma lógica de la fila de costos):
+              // mientras el lote ANTERIOR tenga stock se muestra su costo (es el
+              // que sale primero); cuando se acaba, se muestra el ACTUAL.
+              Number(
+                Number((producto_en_almacen as any)?.stock_costo_anterior ?? 0) > 0 &&
+                  (producto_en_almacen as any)?.costo_anterior != null
+                  ? (producto_en_almacen as any)?.costo_anterior
+                  : ((producto_en_almacen as any)?.costo_actual ?? producto_en_almacen?.costo ?? 0),
+              )
             ).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 4,
