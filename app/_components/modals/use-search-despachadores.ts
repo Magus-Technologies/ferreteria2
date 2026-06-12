@@ -15,15 +15,17 @@ interface UseSearchDespachadoresProps {
   value: string
 }
 
+const MODULO_ENTREGAS = 'facturacion-electronica.mis-entregas.index'
+
 export default function useSearchDespachadores({
   value,
 }: UseSearchDespachadoresProps) {
   const { data: response, isLoading: loading } = useQuery({
-    queryKey: [QueryKeys.USUARIOS, value, 'DESPACHADOR'],
+    queryKey: [QueryKeys.USUARIOS, value, MODULO_ENTREGAS],
     queryFn: async () => {
       const result = await usuariosApi.getAll({
         search: value || '',
-        rol_sistema: 'DESPACHADOR',
+        modulo_acceso: MODULO_ENTREGAS,
         estado: true,
       })
       

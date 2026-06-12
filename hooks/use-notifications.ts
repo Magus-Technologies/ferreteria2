@@ -74,6 +74,12 @@ export function useNotifications() {
         queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
       }
 
+      // Entrega completada — refrescar calendario y listado
+      if (payload.data?.type === 'entrega_completada') {
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas'] })
+      }
+
       // Invalidar caché de autorizaciones (nueva solicitud para aprobador)
       if (payload.data?.type === 'autorizacion') {
         queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientes() })
@@ -96,6 +102,10 @@ export function useNotifications() {
           if (payload.data?.type === 'entrega' || payload.data?.type === 'pedido_entrega' || payload.data?.type === 'pedido_entrega_tomado') {
             window.location.href = '/ui/facturacion-electronica/mis-entregas'
           }
+          // Entrega completada — ir al calendario
+          if (payload.data?.type === 'entrega_completada') {
+            window.location.href = '/ui/facturacion-electronica/mis-ventas/calendario'
+          }
           // Navegar a solicitudes si es de autorización
           if (payload.data?.type === 'autorizacion' || payload.data?.type === 'autorizacion_respuesta') {
             window.location.href = '/ui/solicitudes-autorizacion'
@@ -116,6 +126,10 @@ export function useNotifications() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'INVALIDATE_ENTREGAS_CACHE') {
         queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+      }
+      if (event.data?.type === 'INVALIDATE_CALENDARIO_CACHE') {
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS] })
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.ENTREGAS_PRODUCTOS, 'programadas'] })
       }
       if (event.data?.type === 'INVALIDATE_AUTORIZACIONES_CACHE') {
         queryClient.invalidateQueries({ queryKey: autorizacionesKeys.pendientes() })
