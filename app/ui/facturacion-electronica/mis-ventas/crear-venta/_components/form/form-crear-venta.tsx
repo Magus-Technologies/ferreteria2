@@ -46,6 +46,12 @@ export default function FormCrearVenta({
   const clienteId = Form.useWatch("cliente_id", form);
   const tipoDocumento = Form.useWatch("tipo_documento", form);
   const esFactura = tipoDocumento === "01";
+  // Con DNI/RUC ingresado el nombre viene del cliente registrado y no debe
+  // editarse a mano (en cualquier tipo de documento). Sin documento, la venta
+  // es casual y el nombre queda libre. En factura ademas se bloquea la
+  // direccion (dato fiscal del RUC).
+  const rucDni = Form.useWatch("ruc_dni", form);
+  const hayDocumento = !!(rucDni && String(rucDni).trim());
   const direccionSeleccionada = Form.useWatch(
     "direccion_seleccionada",
     form,
@@ -446,7 +452,7 @@ export default function FormCrearVenta({
               }}
               placeholder="Nombre del cliente"
               className={`w-full ${clienteTieneDeuda ? "!text-red-600" : ""}`}
-              readOnly={esFactura}
+              readOnly={esFactura || hayDocumento}
               uppercase={false}
             />
           </LabelBase>
@@ -468,6 +474,10 @@ export default function FormCrearVenta({
               }}
               placeholder="Dirección del cliente"
               className="w-full"
+              // En factura la direccion es dato fiscal del RUC — viene de las
+              // direcciones registradas del cliente (radios D1..D4), no se
+              // tipea a mano. Los radios siguen funcionando (setean por form).
+              readOnly={esFactura}
               onChange={(e) => {
                 const tipo = direccionSeleccionada || TipoDireccion.D1;
                 form.setFieldValue(
@@ -556,6 +566,9 @@ export default function FormCrearVenta({
           >
             <SelectClientes
               form={form}
+              // Solo guarda el id del recomendado — sin pisar ruc_dni/telefono/
+              // direccion del cliente principal de la venta.
+              autocompleteFormFields={false}
               propsForm={{
                 name: "recomendado_por_id",
                 hasFeedback: false,

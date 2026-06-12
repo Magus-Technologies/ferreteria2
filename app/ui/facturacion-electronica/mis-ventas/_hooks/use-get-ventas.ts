@@ -1,12 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
 import { ventaApi, type VentaFilters } from '~/lib/api/venta'
+import { useStoreModalEntregaAbierto } from '../store/store-modal-entrega-abierto'
 
 export default function useGetVentas({
   where,
 }: {
   where?: VentaFilters
 }) {
+  const modalEntregaAbierto = useStoreModalEntregaAbierto(s => s.abierto)
+
   const { data, isFetching } = useQuery({
     queryKey: [QueryKeys.VENTAS, where],
     queryFn: async () => {
@@ -17,7 +20,12 @@ export default function useGetVentas({
       }
       return response.data
     },
-    // Siempre habilitado, si no hay filtros se cargan todas las ventas
+    // Congelar el refetch mientras el modal de Configurar Entrega esta
+    // abierto: con filtro "Entrega: PENDIENTE", confirmar una entrega
+    // sacaria la fila de la tabla y el modal saltaria a otra venta. La
+    // invalidacion marca la query stale; al cerrar el modal (enabled
+    // vuelve a true) refetchea sola y recien ahi se aplica el filtro.
+    enabled: !modalEntregaAbierto,
   })
 
   // "Todos" (sin estado) ahora muestra TODOS los estados, incluidos En Espera y

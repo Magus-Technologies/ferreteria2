@@ -11,9 +11,11 @@ import SelectTipoDocumento from "~/app/_components/form/selects/select-tipo-docu
 import LabelBase from "~/components/form/label-base";
 import { FaCalendar } from "react-icons/fa6";
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useAuth } from "~/lib/auth-context";
 import { cotizacionesApi } from "~/lib/api/cotizaciones";
+import { subscribeModelChanged } from "~/lib/realtime-bus";
+import { IoReload } from "react-icons/io5";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
 import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
 import { BsGeoAltFill } from "react-icons/bs";
@@ -40,17 +42,22 @@ export default function FormCrearCotizacion({
     }
   }, [user, form]);
 
-  // Cargar el siguiente número de cotización automáticamente
-  useEffect(() => {
-    const cargarSiguienteNumero = async () => {
-      const response = await cotizacionesApi.getSiguienteNumero();
-      if (response.data?.numero) {
-        form.setFieldValue("numero", response.data.numero);
-      }
-    };
-
-    cargarSiguienteNumero();
+  // Cargar el siguiente número de cotización automáticamente. Se refresca
+  // vía socket cuando otra sesión crea una cotización (el correlativo avanza).
+  const cargarSiguienteNumero = useCallback(async () => {
+    const response = await cotizacionesApi.getSiguienteNumero();
+    if (response.data?.numero) {
+      form.setFieldValue("numero", response.data.numero);
+    }
   }, [form]);
+
+  useEffect(() => {
+    cargarSiguienteNumero();
+    const offRealtime = subscribeModelChanged((event) => {
+      if (event.module === "cotizaciones") cargarSiguienteNumero();
+    });
+    return offRealtime;
+  }, [cargarSiguienteNumero]);
 
   // Inicializar D1 al montar el componente
   useEffect(() => {
@@ -123,7 +130,14 @@ export default function FormCrearCotizacion({
               }}
               placeholder="COT-2025-001"
               prefix={<span className="text-rose-700 mx-1">#</span>}
-              // disabled
+              suffix={
+                <IoReload
+                  size={14}
+                  title="Actualizar número"
+                  className="cursor-pointer text-gray-400 hover:text-rose-700 transition-colors"
+                  onClick={cargarSiguienteNumero}
+                />
+              }
               readOnly
             />
           </ConfigurableElement>
@@ -342,6 +356,9 @@ export default function FormCrearCotizacion({
           <ConfigurableElement componentId="field-recomendado-cotizacion" label="Campo Recomendado Por">
             <SelectClientes
               form={form}
+              // Solo guarda el id del recomendado — sin pisar ruc_dni/telefono/
+              // direccion del cliente principal de la cotizacion.
+              autocompleteFormFields={false}
               propsForm={{
                 name: "recomendado_por_id",
                 hasFeedback: false,

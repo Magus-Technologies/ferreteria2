@@ -34,6 +34,13 @@ interface SelectClientesProps extends Omit<SelectBaseProps, 'onChange'> {
   autoFocus?: boolean
   open?: boolean // Permitir controlar si se abre el dropdown
   initialCliente?: PartialCliente // Cliente pre-cargado (para pre-llenar sin búsqueda)
+  /**
+   * Autocompletar ruc_dni/telefono/direccion del form al seleccionar.
+   * Poner en `false` cuando el select NO es el cliente principal (ej.
+   * "Recomendado por"): el form se sigue usando para guardar el id del
+   * select, pero sin pisar los datos del cliente real de la venta.
+   */
+  autocompleteFormFields?: boolean
 }
 
 export default function SelectClientes({
@@ -52,6 +59,7 @@ export default function SelectClientes({
   autoFocus = false,
   open, // Nueva prop para controlar el dropdown
   initialCliente, // Cliente pre-cargado (para pre-llenar sin búsqueda)
+  autocompleteFormFields = true,
   ...props
 }: SelectClientesProps) {
   const selectClientesRef = useRef<RefSelectBaseProps>(null)
@@ -111,7 +119,7 @@ export default function SelectClientes({
       // Cargar direcciones del cliente para que los radios D1/D2 funcionen,
       // pero SIN sobreescribir el campo `direccion` (que ya viene del registro
       // padre — ej. la dirección guardada de la cotización al editar).
-      if (form && initialCliente.id !== undefined) {
+      if (form && initialCliente.id !== undefined && autocompleteFormFields) {
         cargarDireccionesCliente(initialCliente.id, { setDireccion: false })
       }
 
@@ -187,8 +195,11 @@ export default function SelectClientes({
         value: cliente.id,
       })
 
-      // Autocompletar campos del formulario si se proporciona form
-      if (form && cliente.id !== undefined) {
+      // Autocompletar campos del formulario si se proporciona form.
+      // Se omite cuando autocompleteFormFields=false (ej. "Recomendado por"):
+      // ahí el form solo sirve para guardar el id, no para pisar los datos
+      // del cliente principal.
+      if (form && cliente.id !== undefined && autocompleteFormFields) {
         if (cliente.numero_documento) {
           form.setFieldValue('ruc_dni', cliente.numero_documento)
         }
