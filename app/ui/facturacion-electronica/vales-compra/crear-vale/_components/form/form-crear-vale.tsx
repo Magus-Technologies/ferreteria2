@@ -244,13 +244,18 @@ function SeccionUmbral({ form, momento, tipoUmbral, setTipoUmbral, esDosPorUno }
   );
 }
 
+// Opción precargada {value,label} para que los SelectProductos (que solo cargan
+// opciones al buscar) muestren NOMBRES en vez de ids al editar un vale.
+type OpcionProducto = { value: number; label: string };
+
 interface SeccionModalidadProps {
   form: FormInstance<FormCreateVale>;
   modalidad: string;
   tipoUmbral: TipoUmbral | null;
+  productosDefault?: OpcionProducto[];
 }
 
-function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps) {
+function SeccionModalidad({ form, modalidad, tipoUmbral, productosDefault }: SeccionModalidadProps) {
   const categoriaIdsWatch = Form.useWatch("categoria_ids", form) as number[] | undefined;
   return (
     <div className="border-l-4 border-purple-500 pl-3">
@@ -287,7 +292,7 @@ function SeccionModalidad({ form, modalidad, tipoUmbral }: SeccionModalidadProps
         )}
         {(modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") && (
           <Form.Item name="producto_ids" label="Productos Aplicables" rules={[{ required: true, message: "Seleccione al menos un producto" }]} className="mt-3 !mb-0">
-            <SelectProductos mode="multiple" placeholder="Escriba y presione Enter o 🔍 para buscar productos..." className="w-full" withSearch styles={{ popup: { root: { display: "none" } } }} />
+            <SelectProductos mode="multiple" placeholder="Escriba y presione Enter o 🔍 para buscar productos..." className="w-full" withSearch optionsDefault={productosDefault} styles={{ popup: { root: { display: "none" } } }} />
           </Form.Item>
         )}
       </div>
@@ -301,9 +306,11 @@ interface SeccionBeneficioProps {
   descuentoTipo: string;
   momento: MomentoAplicacion;
   esDosPorUno?: boolean;
+  descuentoProductosDefault?: OpcionProducto[];
+  productoGratisDefault?: OpcionProducto[];
 }
 
-function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPorUno }: SeccionBeneficioProps) {
+function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPorUno, descuentoProductosDefault, productoGratisDefault }: SeccionBeneficioProps) {
   const beneficio = Form.useWatch("tipo_beneficio", form) as TipoBeneficio | undefined;
   const descuentoAlcance = Form.useWatch("descuento_alcance", form) as string | undefined;
   const descuentoCategoriaIdsWatch = Form.useWatch("descuento_categoria_ids", form) as number[] | undefined;
@@ -443,7 +450,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
               rules={[{ required: true, message: "Selecciona al menos un producto" }]}
               className="!mb-0"
             >
-              <SelectProductos mode="multiple" placeholder="Busca y selecciona productos..." className="w-full" withSearch />
+              <SelectProductos mode="multiple" placeholder="Busca y selecciona productos..." className="w-full" withSearch optionsDefault={descuentoProductosDefault} />
             </Form.Item>
           )}
 
@@ -478,7 +485,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
               label="Producto a Regalar"
               rules={[{ required: true, message: "Seleccione el producto" }]}
             >
-              <SelectProductos placeholder="Busque el producto a regalar..." className="w-full" withSearch searchOnEnterOnly />
+              <SelectProductos placeholder="Busque el producto a regalar..." className="w-full" withSearch searchOnEnterOnly optionsDefault={productoGratisDefault} />
             </Form.Item>
 
             <Form.Item
@@ -540,7 +547,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                 }
                 rules={[{ required: true, message: "Seleccione el producto al que aplicará el 2x1" }]}
               >
-                <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly />
+                <SelectProductos placeholder="Busque el producto para el 2x1..." className="w-full" withSearch searchOnEnterOnly optionsDefault={productoGratisDefault} />
               </Form.Item>
             </div>
             <p className="text-xs text-indigo-600 mt-2">
@@ -573,7 +580,7 @@ function SeccionBeneficio({ form, tipoPromocion, descuentoTipo, momento, esDosPo
                   label="Producto del Sorteo"
                   rules={[{ required: true, message: "Seleccione el producto" }]}
                 >
-                  <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch searchOnEnterOnly />
+                  <SelectProductos placeholder="Busque el producto del sorteo..." className="w-full" withSearch searchOnEnterOnly optionsDefault={productoGratisDefault} />
                 </Form.Item>
 
                 <Form.Item
@@ -822,7 +829,25 @@ function SeccionPrecios() {
 
 // ============= MAIN COMPONENT =============
 
-export default function FormCrearVale({ form }: { form: FormInstance<FormCreateVale> }) {
+interface FormCrearValeProps {
+  form: FormInstance<FormCreateVale>;
+  /**
+   * Vale en edición: sus productos (con nombre) precargan las opciones de los
+   * SelectProductos, que solo cargan opciones al buscar — sin esto, al editar
+   * se verían los IDs en vez de los nombres.
+   */
+  vale?: import("~/lib/api/vales-compra").ValeCompra;
+}
+
+const productoToOption = (p: { id: number; cod_producto?: string | null; name?: string | null }) => ({
+  value: p.id,
+  label: `${p.cod_producto ?? ""} : ${p.name ?? ""}`,
+});
+
+export default function FormCrearVale({ form, vale }: FormCrearValeProps) {
+  const productosDefault = vale?.productos?.map(productoToOption);
+  const descuentoProductosDefault = vale?.descuento_productos?.map(productoToOption);
+  const productoGratisDefault = vale?.producto_gratis ? [productoToOption(vale.producto_gratis)] : undefined;
   const momento = (Form.useWatch("momento_aplicacion", form) as MomentoAplicacion | undefined) ?? "MISMA_COMPRA";
   const tipoBeneficio = Form.useWatch("tipo_beneficio", form) as string | undefined;
   const tipoPromocion = Form.useWatch("tipo_promocion", form) || "DESCUENTO_MISMA_COMPRA";
@@ -879,8 +904,8 @@ export default function FormCrearVale({ form }: { form: FormInstance<FormCreateV
       </Form.Item>
       <SeccionBasica form={form} />
       <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno && !esFuturo} />
-      <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} />
-      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} />
+      <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} productosDefault={productosDefault} />
+      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} descuentoProductosDefault={descuentoProductosDefault} productoGratisDefault={productoGratisDefault} />
       <SeccionVigencia form={form} />
       <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} esDescuento={esDescuento} stockProductoGratis={stockProductoGratis ?? null} />
       <SeccionPrecios />

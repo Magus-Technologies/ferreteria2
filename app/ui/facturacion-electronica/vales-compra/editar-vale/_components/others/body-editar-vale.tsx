@@ -144,7 +144,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
     >
       <div className='flex-1 flex flex-col gap-4 min-w-0 min-h-0'>
         <div className='bg-white rounded-lg shadow-md p-4 flex-1'>
-          <FormCrearVale form={form} />
+          <FormCrearVale form={form} vale={vale} />
 
           <div className='flex justify-end gap-3 mt-4 pt-4 border-t'>
             <ButtonBase

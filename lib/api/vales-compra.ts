@@ -86,6 +86,9 @@ export interface ValeCompra {
   producto_gratis?: Producto | null;
   categorias?: Categoria[];
   productos?: Producto[];
+  // Productos del descuento (descuento_producto_ids) con nombre, solo en show():
+  // el form de edición los usa para mostrar nombres en vez de ids.
+  descuento_productos?: Producto[];
   creador?: User | null;
   editor?: User | null;
   aplicaciones?: ValeCompraAplicado[];
