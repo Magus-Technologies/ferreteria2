@@ -171,15 +171,31 @@ export function useColumnsDetalleDePrecios() {
       headerName: 'Costo Actual',
       field: 'producto_almacen.costo_actual',
       minWidth: 200,
-      // Desplegable con TODOS los lotes PEPS (capas de costo) en orden FIFO:
-      // el primero (arriba) es el más viejo, que sale primero. Cada opción es
-      // `S/. costo (cantidad que queda)`. El costo de cada lote ya incluye su flete.
+      // Desplegable con los lotes PEPS (capas de costo) en orden FIFO que componen
+      // el costo ACTUAL. El tramo más viejo (el "Costo Anterior", columna de al
+      // lado) se EXCLUYE para no duplicarlo: si hay un costo más nuevo distinto,
+      // los lotes iniciales con el costo del anterior no se listan aquí. Cada
+      // opción es `S/. costo (cantidad que queda)`; el costo ya incluye su flete.
       cellRenderer: ({ data }: any) => {
-        const lotes = data?.producto_almacen?.lotes as
+        const todosLotes = data?.producto_almacen?.lotes as
           | Array<{ id: number; costo: any; cantidad_restante: any; secuencia: number }>
           | undefined
         const factor = Number(data?.factor ?? 1)
         const unidadesContenidas = Number(data?.producto?.unidades_contenidas ?? 1)
+
+        // Excluir el grupo "anterior" (mismos criterios que el backend): tramo
+        // inicial de lotes con el mismo costo que el más viejo, solo si después
+        // hay un costo distinto. Si todos comparten costo, todo es "actual".
+        let lotes = todosLotes
+        if (todosLotes?.length) {
+          const costoRef = Number(todosLotes[0].costo)
+          const idxDistinto = todosLotes.findIndex(
+            (l) => Math.abs(Number(l.costo) - costoRef) > 0.0001,
+          )
+          if (idxDistinto > 0) {
+            lotes = todosLotes.slice(idxDistinto)
+          }
+        }
 
         // Fallback (sin lotes cargados): mostrar el costo_actual simple.
         if (!lotes?.length) {
