@@ -840,7 +840,9 @@ interface FormCrearValeProps {
 }
 
 const productoToOption = (p: { id: number; cod_producto?: string | null; name?: string | null }) => ({
-  value: p.id,
+  // Number(): el value de la opción debe matchear el value del form con ===;
+  // si el id llega como string el Select muestra el ID crudo en vez del nombre.
+  value: Number(p.id),
   label: `${p.cod_producto ?? ""} : ${p.name ?? ""}`,
 });
 

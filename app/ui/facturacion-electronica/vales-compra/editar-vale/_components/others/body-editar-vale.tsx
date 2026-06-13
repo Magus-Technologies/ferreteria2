@@ -32,6 +32,15 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
     return [val as number]
   }
 
+  // Laravel serializa los casts decimal como STRING ("10.00"); las reglas antd
+  // { type: 'number', min: 0 } fallan con string ("Debe ser mayor o igual a 0")
+  // y bloquean el guardado. Convertir a número al hidratar.
+  const toNumber = (val: unknown): number | undefined => {
+    if (val === null || val === undefined || val === '') return undefined
+    const n = Number(val)
+    return Number.isFinite(n) ? n : undefined
+  }
+
   const getInitialValues = () => {
     if (!vale) return {}
     // Para el beneficio derivamos del tipo_promocion del vale.
@@ -46,19 +55,21 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       momento_aplicacion: momento,
       tipo_beneficio: beneficio,
       modalidad: vale.modalidad,
-      cantidad_minima: vale.cantidad_minima,
+      cantidad_minima: toNumber(vale.cantidad_minima),
       tipo_umbral: vale.tipo_umbral || undefined,
       usa_limite_por_venta: !!vale.max_vales_por_venta,
       max_vales_por_venta: vale.max_vales_por_venta || undefined,
       descuento_tipo: vale.descuento_tipo || undefined,
-      descuento_valor: vale.descuento_valor || undefined,
+      descuento_valor: toNumber(vale.descuento_valor),
       descuento_alcance: vale.descuento_alcance || 'VENTA',
-      descuento_producto_ids: vale.descuento_producto_ids || undefined,
-      descuento_categoria_ids: vale.descuento_categoria_ids || undefined,
-      descuento_marca_ids: vale.descuento_marca_ids || undefined,
+      // Normalizar a número: si el JSON guardó ids como string, el Select no
+      // matchea las opciones precargadas y muestra el id en vez del nombre.
+      descuento_producto_ids: vale.descuento_producto_ids?.map(Number) || undefined,
+      descuento_categoria_ids: vale.descuento_categoria_ids?.map(Number) || undefined,
+      descuento_marca_ids: vale.descuento_marca_ids?.map(Number) || undefined,
       producto_gratis_id: vale.producto_gratis_id || undefined,
-      cantidad_producto_gratis: vale.cantidad_producto_gratis || 1,
-      dos_por_uno_cantidad_compra: vale.dos_por_uno_cantidad_compra || undefined,
+      cantidad_producto_gratis: toNumber(vale.cantidad_producto_gratis) ?? 1,
+      dos_por_uno_cantidad_compra: toNumber(vale.dos_por_uno_cantidad_compra),
       fecha_inicio: vale.fecha_inicio ? dayjs(vale.fecha_inicio) : dayjs(),
       fecha_fin: vale.fecha_fin ? dayjs(vale.fecha_fin) : undefined,
       fecha_validez_vale: vale.fecha_validez_vale ? dayjs(vale.fecha_validez_vale) : undefined,
@@ -95,7 +106,7 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
       // Solo descartamos `tipo_beneficio` (UI-only para derivar tipo_promocion).
       // `momento_aplicacion` se envía al backend para que actualice su columna.
       const { tipo_beneficio: _tb, usa_limite_por_venta: _ulv, ...rest } = values
-      const payload = {
+      let payload = {
         ...rest,
         fecha_inicio: values.fecha_inicio ? dayjs(values.fecha_inicio).format('YYYY-MM-DD') : undefined,
         fecha_fin: values.fecha_fin ? dayjs(values.fecha_fin).format('YYYY-MM-DD') : undefined,
@@ -110,6 +121,14 @@ export default function BodyEditarVale({ vale }: BodyEditarValeProps) {
         descuento_producto_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'PRODUCTOS' ? toArray(values.descuento_producto_ids) : null,
         descuento_categoria_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_categoria_ids) : null,
         descuento_marca_ids: values.tipo_beneficio === 'DESCUENTO' && values.descuento_alcance === 'CATEGORIAS' ? toArray(values.descuento_marca_ids) : null,
+      }
+
+      // "Ninguno" = sin umbral → cantidad_minima 0 (igual que en crear; sin esto el
+      // form mandaba el valor viejo preservado por antd y el vale nunca se activaba).
+      // Excepción: 2x1 de MISMA compra usa cantidad_minima para las unidades del 2x1.
+      const esDosPorUnoMisma = values.tipo_promocion === 'DOS_POR_UNO' && values.momento_aplicacion === 'MISMA_COMPRA'
+      if (values.tipo_umbral === 'NINGUNO' && !esDosPorUnoMisma) {
+        payload = { ...payload, cantidad_minima: 0 } as typeof payload
       }
 
       const response = await updateValeCompra(vale.id, payload as any)

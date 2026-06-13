@@ -182,10 +182,12 @@ export default function BodyCrearVale() {
         descuento_tipo: 'PORCENTAJE',
         descuento_alcance: 'VENTA',
         fecha_inicio: dayjs(),
+        // Por defecto solo el precio público participa; los demás se activan
+        // explícitamente si la promoción debe aplicar también a esos precios.
         aplica_precio_publico: true,
-        aplica_precio_especial: true,
-        aplica_precio_minimo: true,
-        aplica_precio_ultimo: true,
+        aplica_precio_especial: false,
+        aplica_precio_minimo: false,
+        aplica_precio_ultimo: false,
         usa_limite_por_cliente: false,
         usa_limite_stock: false,
         cantidad_producto_gratis: 1,
