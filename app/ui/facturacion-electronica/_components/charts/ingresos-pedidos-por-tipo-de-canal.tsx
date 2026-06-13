@@ -1,19 +1,44 @@
+'use client'
+
+import { useQuery } from '@tanstack/react-query'
 import ChartBar from '~/components/charts/chart-bar'
 import { orangeColors } from '~/lib/colors'
+import { dashboardFacturacionApi, dashboardFacturacionKeys } from '~/lib/api/dashboard-facturacion'
+import { useFiltrosDashboard } from '../../_store/store-dashboard-filtros'
 
 const colors = orangeColors
 
-const chartData = [
-  { xAxis: 'February', Mobile: 200 },
-  { xAxis: 'January', Mobile: 80 },
-]
-
 export default function IngresosPedidosPorTipoDeCanal() {
+  const filtros = useFiltrosDashboard()
+
+  const { data } = useQuery({
+    queryKey: dashboardFacturacionKeys.ingresosPorCanal(filtros),
+    queryFn: async () => {
+      const res = await dashboardFacturacionApi.ingresosPorCanal(filtros)
+      if (res.error) throw new Error(res.error.message)
+      return res.data?.data ?? []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const chartData = (data ?? []).map((item) => ({
+    xAxis: item.label,
+    Ingresos: item.value,
+  }))
+
+  if (chartData.length === 0) {
+    return (
+      <div className='flex items-center justify-center h-40 text-gray-400 text-sm'>
+        Sin ingresos en el periodo
+      </div>
+    )
+  }
+
   return (
     <ChartBar
       className='max-h-[24dvh]'
       data={chartData}
-      fills={{ Mobile: colors[3] }}
+      fills={{ Ingresos: colors[3] }}
     />
   )
 }

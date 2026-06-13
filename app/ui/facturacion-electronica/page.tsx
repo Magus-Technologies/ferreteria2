@@ -17,7 +17,11 @@ import RangePickerBase from "~/app/_components/form/fechas/range-picker-base";
 import { usePermission } from "~/hooks/use-permission";
 import { Spin } from "antd";
 import dynamic from "next/dynamic";
+import dayjs from "dayjs";
+import { useQuery } from "@tanstack/react-query";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
+import { dashboardFacturacionApi, dashboardFacturacionKeys } from "~/lib/api/dashboard-facturacion";
+import { useStoreDashboardFiltros, useFiltrosDashboard } from "./_store/store-dashboard-filtros";
 
 // Componente de loading optimizado
 const ChartLoading = () => (
@@ -55,6 +59,21 @@ const VentasPorMarca = dynamic(
 export default function FacturacionElectronica() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_DASHBOARD_INDEX);
 
+  const filtros = useFiltrosDashboard();
+  const desde = useStoreDashboardFiltros((s) => s.desde);
+  const hasta = useStoreDashboardFiltros((s) => s.hasta);
+  const setRango = useStoreDashboardFiltros((s) => s.setRango);
+
+  const { data: resumen } = useQuery({
+    queryKey: dashboardFacturacionKeys.resumen(filtros),
+    queryFn: async () => {
+      const res = await dashboardFacturacionApi.resumen(filtros);
+      if (res.error) throw new Error(res.error.message);
+      return res.data?.data ?? null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   if (!canAccess) return <NoAutorizado />;
 
   return (
@@ -72,6 +91,16 @@ export default function FacturacionElectronica() {
               variant="filled"
               size="large"
               className="w-full sm:w-auto"
+              allowClear={false}
+              value={[dayjs(desde), dayjs(hasta)]}
+              onChange={(rango) => {
+                if (rango && rango[0] && rango[1]) {
+                  setRango(
+                    rango[0].format("YYYY-MM-DD"),
+                    rango[1].format("YYYY-MM-DD"),
+                  );
+                }
+              }}
             />
           </ConfigurableElement>
           {/* SelectAlmacen ahora se configura desde el dropdown global de Sucursales */}
@@ -94,9 +123,9 @@ export default function FacturacionElectronica() {
           >
             <CardDashboard
               title="Total de Ventas / N° de Ventas"
-              value={250000}
+              value={resumen?.total_ventas ?? 0}
               prefix="S/. "
-              suffix=" / 1000"
+              suffix={` / ${resumen?.num_ventas ?? 0}`}
               icon={<FaMoneyBills size={20} />}
             />
           </ConfigurableElement>
@@ -106,7 +135,7 @@ export default function FacturacionElectronica() {
           >
             <CardDashboard
               title="Total de Ventas por Facturas"
-              value={50000}
+              value={resumen?.total_facturas ?? 0}
               prefix="S/. "
               icon={<MdFactCheck size={20} />}
             />
@@ -117,7 +146,7 @@ export default function FacturacionElectronica() {
           >
             <CardDashboard
               title="Total de Ventas por Boletas"
-              value={50000}
+              value={resumen?.total_boletas ?? 0}
               prefix="S/. "
               icon={<MdDocumentScanner size={20} />}
             />
@@ -128,7 +157,7 @@ export default function FacturacionElectronica() {
           >
             <CardDashboard
               title="Total de Ventas por Notas de Venta"
-              value={50000}
+              value={resumen?.total_notas ?? 0}
               prefix="S/. "
               icon={<IoDocumentText size={20} />}
             />
@@ -141,15 +170,15 @@ export default function FacturacionElectronica() {
           <div className="flex flex-col gap-3 sm:gap-4 md:gap-5">
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-xs sm:text-sm md:text-base text-slate-700">
-                Ventas por Categoría de Productos
+                Ventas por Marca
               </div>
-                <VentasPorCategoriaDeProductos />
+                <VentasPorMarca />
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
-                Ventas por Métodos de Pago
+                Ventas por Categoría de Productos
               </div>
-                <VentasPorMetodosDePago />
+                <VentasPorCategoriaDeProductos />
             </div>
           </div>
 
@@ -175,9 +204,9 @@ export default function FacturacionElectronica() {
             </div>
             <div>
               <div className="text-center font-semibold mt-2 mb-2 text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-700">
-                Ventas por Marca
+                Ventas por Métodos de Pago
               </div>
-                <VentasPorMarca />
+                <VentasPorMetodosDePago />
             </div>
           </div>
         </div>
