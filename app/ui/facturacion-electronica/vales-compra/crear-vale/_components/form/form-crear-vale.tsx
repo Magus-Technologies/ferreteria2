@@ -1,7 +1,7 @@
 "use client";
 
 import { FormInstance, Form, Input, InputNumber, Select, DatePicker, Switch, Radio } from "antd";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getStockProductos } from "~/lib/api/vales-compra";
 import { productosApiV2 } from "~/lib/api/producto";
@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectCategorias from "~/app/_components/form/selects/select-categorias";
 import SelectMarcas from "~/app/_components/form/selects/select-marcas";
+import ModalStockProductosVale from "../modals/modal-stock-productos-vale";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import {
   MOMENTO_APLICACION_OPTIONS,
@@ -697,9 +698,12 @@ interface SeccionRestriccionesProps {
   usaLimiteVenta: boolean;
   esDescuento: boolean;
   stockProductoGratis: { stock: number; unidades_contenidas: number } | null;
+  /** IDs de los productos involucrados (regalo / descuento / modalidad) para el modal de stock. */
+  productoIdsInvolucrados: number[];
 }
 
-function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta, esDescuento, stockProductoGratis }: SeccionRestriccionesProps) {
+function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta, esDescuento, stockProductoGratis, productoIdsInvolucrados }: SeccionRestriccionesProps) {
+  const [openStockModal, setOpenStockModal] = useState(false);
   return (
     <div className="border-l-4 border-orange-500 pl-3">
       <div className="flex items-center gap-2 mb-3">
@@ -785,6 +789,21 @@ function SeccionRestricciones({ usaLimiteCliente, usaLimiteStock, usaLimiteVenta
               <span className="text-gray-400">(solo informativo)</span>
             </p>
           )}
+          {productoIdsInvolucrados.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setOpenStockModal(true)}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 mb-2"
+            >
+              <FaBoxOpen className="text-blue-500" />
+              Ver stock de los productos de la promoción ({productoIdsInvolucrados.length})
+            </button>
+          )}
+          <ModalStockProductosVale
+            open={openStockModal}
+            setOpen={setOpenStockModal}
+            productoIds={productoIdsInvolucrados}
+          />
           {usaLimiteStock && (
             <Form.Item
               name="stock_disponible"
@@ -900,6 +919,22 @@ export default function FormCrearVale({ form, vale }: FormCrearValeProps) {
     enabled: !!productoGratisId,
   });
 
+  // Productos involucrados en la promoción, para el modal "Ver stock" del Paso 6:
+  // el que se regala/2x1/sorteo, los del descuento por productos y los de la
+  // modalidad por productos. Se deduplican.
+  const descuentoAlcance = Form.useWatch("descuento_alcance", form) as string | undefined;
+  const descuentoProductoIds = Form.useWatch("descuento_producto_ids", form) as number[] | undefined;
+  const productoIdsModalidad = Form.useWatch("producto_ids", form) as number[] | undefined;
+  const productoIdsInvolucrados = Array.from(
+    new Set(
+      [
+        productoGratisId,
+        ...(descuentoAlcance === "PRODUCTOS" ? descuentoProductoIds ?? [] : []),
+        ...((modalidad === "POR_PRODUCTOS" || modalidad === "MIXTO") ? productoIdsModalidad ?? [] : []),
+      ].filter((id): id is number => typeof id === "number"),
+    ),
+  );
+
   return (
     <div className="space-y-4">
       <Form.Item name="tipo_umbral" hidden>
@@ -921,7 +956,7 @@ export default function FormCrearVale({ form, vale }: FormCrearValeProps) {
         <SeccionVigencia form={form} />
       </ConfigurableElement>
       <ConfigurableElement componentId="crear-vale.seccion-restricciones" label="Paso 6 · Restricciones">
-        <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} esDescuento={esDescuento} stockProductoGratis={stockProductoGratis ?? null} />
+        <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} esDescuento={esDescuento} stockProductoGratis={stockProductoGratis ?? null} productoIdsInvolucrados={productoIdsInvolucrados} />
       </ConfigurableElement>
       <ConfigurableElement componentId="crear-vale.seccion-precios" label="Paso 7 · Aplicable a Precios">
         <SeccionPrecios />
