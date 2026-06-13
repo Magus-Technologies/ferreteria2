@@ -23,6 +23,7 @@ import { COMPONENT_MAP } from './_constants/component-map';
 import SelectorBar from './_components/selector-bar';
 import ModuloCard from './_components/modulo-card';
 import DecisionModal, { type AceptarData } from './_components/decision-modal';
+import ConfigPreviewViewport from './_components/config-preview-viewport';
 
 import { useRoles } from './_hooks/use-roles';
 import { useAuthConfigs } from './_hooks/use-auth-configs';
@@ -286,11 +287,11 @@ export default function PermisosVisualesPage() {
           </div>
 
           <ConfigModeProvider enabled={true} onTogglePermiso={(id, label) => { setItemSeleccionado({ label, permission: id }); setEsNavSeleccionado(false); setModalVisible(true); }} permisosActivos={restriccionesActivas} autorizacionesActivas={componentesConAutorizacion}>
-            <div className="h-[calc(100vh-250px)] overflow-hidden">
+            <ConfigPreviewViewport>
               <Suspense fallback={<Spin size="large" tip="Cargando vista real..." />}>
                 <vistaActiva.component />
               </Suspense>
-            </div>
+            </ConfigPreviewViewport>
           </ConfigModeProvider>
         </Card>
       ) : (
