@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import ChartBar from '~/components/charts/chart-bar'
 import { greenColors } from '~/lib/colors'
-import { prestamoApi } from '~/lib/api/prestamo'
+import { transferenciaStockApi } from '~/lib/api/transferencia-stock'
 import { useFiltrosDashboardGCI } from '../../_store/store-dashboard-filtros'
 
 const colors = greenColors
@@ -12,9 +12,9 @@ export default function PrestamosPrestes() {
   const filtros = useFiltrosDashboardGCI()
 
   const { data } = useQuery({
-    queryKey: ['prestamos-resumen-dashboard', filtros],
+    queryKey: ['transferencias-resumen-dashboard', filtros],
     queryFn: async () => {
-      const res = await prestamoApi.resumenDashboard(filtros)
+      const res = await transferenciaStockApi.resumenDashboard(filtros)
       if (res.error) throw new Error(res.error.message)
       return res.data?.data ?? []
     },
@@ -32,7 +32,7 @@ export default function PrestamosPrestes() {
   if (chartData.length === 0 || chartData.every((d) => d.Monto === 0)) {
     return (
       <div className='flex items-center justify-center h-full text-gray-400 text-sm'>
-        Sin préstamos en el periodo
+        Sin transferencias en el periodo
       </div>
     )
   }

@@ -120,4 +120,25 @@ export const transferenciaStockApi = {
       method: 'DELETE',
     })
   },
+
+  // Resumen para el dashboard: Préstamos (salidas/origen) vs Prestés (entradas/destino).
+  async resumenDashboard(
+    params?: { almacen_id?: number; desde?: string; hasta?: string },
+  ): Promise<ApiResponse<{ data: TransferenciaResumenDashboardItem[] }>> {
+    const qs = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) qs.append(k, String(v))
+      })
+    }
+    const s = qs.toString()
+    return apiRequest<{ data: TransferenciaResumenDashboardItem[] }>(
+      `/transferencias-stock-resumen-dashboard${s ? `?${s}` : ''}`,
+    )
+  },
+}
+
+export interface TransferenciaResumenDashboardItem {
+  label: string
+  value: number
 }
