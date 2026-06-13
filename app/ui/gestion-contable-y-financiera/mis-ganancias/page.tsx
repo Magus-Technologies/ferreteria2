@@ -7,6 +7,7 @@ import { permissions } from '~/lib/permissions'
 import FiltersMisGanancias from './_components/filters/filters-mis-ganancias'
 import TableMisGanancias from './_components/tables/table-mis-ganancias'
 import CardsInfoGanancias from './_components/cards/cards-info-ganancias'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function MisGananciasPage() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
@@ -16,7 +17,9 @@ export default function MisGananciasPage() {
   return (
     <ContenedorGeneral>
       <div className='flex flex-col gap-4 w-full'>
-        <FiltersMisGanancias />
+        <ConfigurableElement componentId='mis-ganancias.filtros' label='Filtros de Ganancias'>
+          <FiltersMisGanancias />
+        </ConfigurableElement>
 
         {/* Layout: Cards a la derecha, Tabla a la izquierda */}
         <div className='flex gap-4 w-full'>
@@ -26,9 +29,11 @@ export default function MisGananciasPage() {
           </div>
 
           {/* Cards - Columna vertical a la derecha */}
-          <div className='w-80 flex-shrink-0'>
-            <CardsInfoGanancias />
-          </div>
+          <ConfigurableElement componentId='mis-ganancias.cards-info' label='Tarjetas de Resumen de Ganancias' noFullWidth>
+            <div className='w-80 flex-shrink-0'>
+              <CardsInfoGanancias />
+            </div>
+          </ConfigurableElement>
         </div>
       </div>
     </ContenedorGeneral>

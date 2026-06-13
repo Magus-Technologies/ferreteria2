@@ -5,6 +5,7 @@ import NoAutorizado from "~/components/others/no-autorizado";
 import { permissions } from "~/lib/permissions";
 import { TipoDocumento } from "~/types";
 import { usePermission } from "~/hooks/use-permission";
+import { useRealtime } from "~/hooks/use-realtime";
 import { Suspense, lazy } from "react";
 import { Spin } from "antd";
 import ProgressiveLoader from "~/app/_components/others/progressive-loader";
@@ -52,6 +53,12 @@ export default function MiAlmacen() {
   const canCreateProducto = usePermission(permissions.PRODUCTO_CREATE);
   const canCreateIngreso = usePermission(permissions.PRODUCTO_INGRESO_CREATE);
   const canCreateSalida = usePermission(permissions.PRODUCTO_SALIDA_CREATE);
+
+  // Suscripción al canal websocket 'model-changes': al transferir/comprar/recepcionar
+  // stock hacia este almacén, el backend emite ModelChanged y aquí se invalidan las
+  // queries de productos (incluida 'productos-listado-completo') para refrescar el
+  // stock en tiempo real sin tener que recargar la página.
+  useRealtime();
 
   if (!canAccess) return <NoAutorizado />;
 

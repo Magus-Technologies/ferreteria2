@@ -21,6 +21,7 @@ import type { RecepcionAlmacenFilters } from '~/lib/api/recepcion-almacen'
 import SelectProveedores from '~/app/_components/form/selects/select-proveedores'
 import SelectTipoDocumento from '~/app/_components/form/selects/select-tipo-documento'
 import { useDebounce } from 'use-debounce'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 interface ValuesFiltersMisRecepciones {
   almacen_id: number
@@ -104,6 +105,7 @@ export default function FiltersMisRecepciones() {
           />
         </div>
       </TituloModulos>
+      <ConfigurableElement componentId='mis-recepciones.filtros' label='Filtros de Recepciones'>
       <div className='flex items-center gap-4 mt-4'>
         <LabelBase label='Desde:'>
           <DatePickerBase
@@ -199,6 +201,7 @@ export default function FiltersMisRecepciones() {
           Buscar
         </ButtonBase>
       </div>
+      </ConfigurableElement>
     </FormBase>
   )
 }

@@ -11,6 +11,7 @@ import SelectMotivoNota from "~/app/_components/form/selects/select-motivo-nota"
 import { FaCalendar, FaSearch } from "react-icons/fa";
 import useBuscarComprobanteInteligente from "../_hooks/use-buscar-comprobante-inteligente";
 import ModalBuscarComprobante from "./modal-buscar-comprobante";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 interface FormNotaCreditoProps {
   form: FormInstance;
@@ -170,6 +171,7 @@ export default function FormNotaCredito({ form }: FormNotaCreditoProps) {
       </div>
 
       {/* Tercera fila: Dirección, Teléfono, Email */}
+      <ConfigurableElement componentId="crear-nota-credito.datos-contacto" label="Datos de contacto del cliente">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Dirección:"
@@ -225,8 +227,10 @@ export default function FormNotaCredito({ form }: FormNotaCreditoProps) {
           />
         </LabelBase>
       </div>
+      </ConfigurableElement>
 
       {/* Cuarta fila: Motivo de Nota */}
+      <ConfigurableElement componentId="crear-nota-credito.motivo" label="Campo Motivo de Nota">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Motivo:"
@@ -247,6 +251,7 @@ export default function FormNotaCredito({ form }: FormNotaCreditoProps) {
           />
         </LabelBase>
       </div>
+      </ConfigurableElement>
 
       {/* Quinta fila: Sustento del Motivo (visible solo para código 10) */}
       <Form.Item noStyle shouldUpdate={(prev, curr) => prev.motivo_nota_id !== curr.motivo_nota_id}>
@@ -289,6 +294,7 @@ export default function FormNotaCredito({ form }: FormNotaCreditoProps) {
       </Form.Item>
 
       {/* Sexta fila: Moneda, Tipo de Cambio, Observaciones */}
+      <ConfigurableElement componentId="crear-nota-credito.moneda-observaciones" label="Moneda, Tipo de Cambio y Observaciones">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Moneda:"
@@ -342,6 +348,7 @@ export default function FormNotaCredito({ form }: FormNotaCreditoProps) {
           />
         </LabelBase>
       </div>
+      </ConfigurableElement>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import HistorialPrestamosVendedores from './_components/historial-prestamos-vendedores'
 import HistorialDepositosSeguridad from './_components/historial-depositos-seguridad'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function MovimientosCajaPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_INDEX)
@@ -24,7 +25,11 @@ export default function MovimientosCajaPage() {
           Préstamos entre Vendedores
         </span>
       ),
-      children: <HistorialPrestamosVendedores />,
+      children: (
+        <ConfigurableElement componentId="movimientos-caja.prestamos-vendedores" label="Tab Préstamos entre Vendedores">
+          <HistorialPrestamosVendedores />
+        </ConfigurableElement>
+      ),
     },
     {
       key: 'depositos-seguridad',
@@ -34,7 +39,11 @@ export default function MovimientosCajaPage() {
           Depósitos de Seguridad
         </span>
       ),
-      children: <HistorialDepositosSeguridad />,
+      children: (
+        <ConfigurableElement componentId="movimientos-caja.depositos-seguridad" label="Tab Depósitos de Seguridad">
+          <HistorialDepositosSeguridad />
+        </ConfigurableElement>
+      ),
     },
   ]
 

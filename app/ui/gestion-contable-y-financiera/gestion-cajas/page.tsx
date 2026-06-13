@@ -9,6 +9,7 @@ import { FaCashRegister } from 'react-icons/fa'
 import TableCajasPrincipales from './_components/table-cajas-principales'
 import { Suspense } from 'react'
 import { Spin } from 'antd'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
@@ -28,9 +29,11 @@ export default function GestionCajas() {
         icon={<FaCashRegister className='text-emerald-600' />}
       />
       <div className='w-full mt-2'>
-        <Suspense fallback={<ComponentLoading />}>
-          <TableCajasPrincipales />
-        </Suspense>
+        <ConfigurableElement componentId='gestion-cajas.tabla' label='Tabla de Cajas Principales'>
+          <Suspense fallback={<ComponentLoading />}>
+            <TableCajasPrincipales />
+          </Suspense>
+        </ConfigurableElement>
       </div>
     </ContenedorGeneral>
   )

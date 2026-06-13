@@ -5,6 +5,7 @@ const DashboardFE = lazy(() => import('~/app/ui/facturacion-electronica/page'));
 const MisVentas = lazy(() => import('~/app/ui/facturacion-electronica/mis-ventas/page'));
 const CrearVenta = lazy(() => import('~/app/ui/facturacion-electronica/mis-ventas/crear-venta/page'));
 const MisGuias = lazy(() => import('~/app/ui/facturacion-electronica/mis-guias/page'));
+const CrearGuia = lazy(() => import('~/app/ui/facturacion-electronica/mis-guias/crear-guia/page'));
 const MisCotizaciones = lazy(() => import('~/app/ui/facturacion-electronica/mis-cotizaciones/page'));
 const CrearCotizacion = lazy(() => import('~/app/ui/facturacion-electronica/mis-cotizaciones/crear-cotizacion/page'));
 const CrearPrestamo = lazy(() => import('~/app/ui/facturacion-electronica/mis-prestamos/crear-prestamo/page'));
@@ -18,6 +19,8 @@ const MisContactos = lazy(() => import('~/app/ui/facturacion-electronica/mis-con
 const MisAperturasCierres = lazy(() => import('~/app/ui/facturacion-electronica/mis-aperturas-cierres/page'));
 const MovimientosCaja = lazy(() => import('~/app/ui/facturacion-electronica/movimientos-caja/page'));
 const MisVales = lazy(() => import('~/app/ui/facturacion-electronica/vales-compra/page'));
+const CrearVale = lazy(() => import('~/app/ui/facturacion-electronica/vales-compra/crear-vale/page'));
+const KardexFacturacion = lazy(() => import('~/app/ui/facturacion-electronica/mi-almacen/page'));
 const DashboardGestionComercial = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/page'));
 const CrearCompraGestionComercial = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/mis-compras/crear-compra/page'));
 const MisComprasGestionComercial = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/mis-compras/page'));
@@ -31,10 +34,14 @@ const CrearOrdenCompra = lazy(() => import('~/app/ui/gestion-comercial-e-inventa
 const MisOrdenesDeServicio = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/mis-ordenes-de-servicio/page'));
 const SolicitudOrdenCompra = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/solicitud-orden-compra/page'));
 const MisRequerimientosInternos = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/mis-requerimientos-internos/page'));
+const MisProveedores = lazy(() => import('~/app/ui/gestion-comercial-e-inventario/mis-proveedores/page'));
 
-// Gestión Contable y Financiera (solo vistas client; cierre-caja y kardex-finanzas son
-// server components y no se pueden previsualizar aquí).
+// Gestión Contable y Financiera (solo vistas client; kardex-finanzas es server component
+// y no se puede previsualizar aquí). cierre-caja: la PÁGINA es server component, pero su
+// vista interna (CierreCajaView) sí es client, así que registramos la vista directamente.
 const DashboardFinanzas = lazy(() => import('~/app/ui/gestion-contable-y-financiera/page'));
+const CierreCajaView = lazy(() => import('~/app/ui/gestion-contable-y-financiera/cierre-caja/_components/cierre-caja-view'));
+const KardexFinanzasView = lazy(() => import('~/app/ui/gestion-contable-y-financiera/kardex-finanzas/_components/kardex-finanzas-view'));
 const MisIngresos = lazy(() => import('~/app/ui/gestion-contable-y-financiera/mis-ingresos/page'));
 const MisGastos = lazy(() => import('~/app/ui/gestion-contable-y-financiera/mis-gastos/page'));
 const MisGanancias = lazy(() => import('~/app/ui/gestion-contable-y-financiera/mis-ganancias/page'));
@@ -68,6 +75,7 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
   'facturacion-electronica.crear-venta.index': CrearVenta,
   'facturacion-electronica.mis-entregas.index': MisEntregas,
   'facturacion-electronica.mis-guias.index': MisGuias,
+  'facturacion-electronica.crear-guia.index': CrearGuia,
   'facturacion-electronica.mis-cotizaciones.index': MisCotizaciones,
   'facturacion-electronica.crear-cotizacion.index': CrearCotizacion,
   'facturacion-electronica.crear-prestamo.index': CrearPrestamo,
@@ -80,6 +88,8 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
   'facturacion-electronica.mis-aperturas-cierres.index': MisAperturasCierres,
   'facturacion-electronica.movimientos-caja.index': MovimientosCaja,
   'facturacion-electronica.mis-vales.index': MisVales,
+  'facturacion-electronica.crear-vale.index': CrearVale,
+  'facturacion-electronica.mi-almacen.index': KardexFacturacion,
   'gestion-comercial-e-inventario.dashboard.index': DashboardGestionComercial,
   'gestion-comercial-e-inventario.crear-compra.index': CrearCompraGestionComercial,
   'gestion-comercial-e-inventario.mis-compras.index': MisComprasGestionComercial,
@@ -93,6 +103,10 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
   'gestion-comercial-e-inventario.mis-ordenes-de-servicio.index': MisOrdenesDeServicio,
   'gestion-comercial-e-inventario.solicitud-orden-compra.index': SolicitudOrdenCompra,
   'gestion-comercial-e-inventario.mis-requerimientos-internos.index': MisRequerimientosInternos,
+  // "Mis Proveedores" y el atajo "Crear Proveedor" navegan a la misma página de proveedores.
+  // (producto.create se omite a propósito: abre un modal, no una página.)
+  'proveedor.listado': MisProveedores,
+  'proveedor.create': MisProveedores,
   // Gestión Contable y Financiera
   'gestion-contable-y-financiera.dashboard.index': DashboardFinanzas,
   'gestion-contable-y-financiera.mis-ingresos.index': MisIngresos,
@@ -103,6 +117,11 @@ export const COMPONENT_MAP: Partial<Record<string, React.LazyExoticComponent<any
   'gestion-contable-y-financiera.comisiones.index': Comisiones,
   'gestion-contable-y-financiera.gestion-cajas.index': GestionCajas,
   'gestion-contable-y-financiera.metodos-pago.index': MetodosPago,
+  'gestion-contable-y-financiera.cierre-caja.index': CierreCajaView,
+  'gestion-contable-y-financiera.kardex-finanzas.index': KardexFinanzasView,
+  // "Cerrar Caja" en el nav de Facturación usa el permiso caja.update y apunta a la
+  // misma vista de cierre de caja.
+  'caja.update': CierreCajaView,
   // Reportes
   'reportes.index': ReportesCategorias,
   'reportes.ventas.index': ReportesVentas,

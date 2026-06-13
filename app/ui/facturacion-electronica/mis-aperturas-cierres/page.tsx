@@ -10,6 +10,7 @@ import NoAutorizado from "~/components/others/no-autorizado";
 import { usePermission } from "~/hooks/use-permission";
 import { permissions } from "~/lib/permissions";
 import { useSearchParams } from "next/navigation";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 export default function MisAperturasCierresPage() {
   const canAccess = usePermission(permissions.FACTURACION_ELECTRONICA_INDEX);
@@ -27,7 +28,11 @@ export default function MisAperturasCierresPage() {
           Historial de Aperturas
         </span>
       ),
-      children: <HistorialAperturas />,
+      children: (
+        <ConfigurableElement componentId="mis-aperturas-cierres.aperturas" label="Tab Historial de Aperturas">
+          <HistorialAperturas />
+        </ConfigurableElement>
+      ),
     },
     {
       key: "cierres",
@@ -37,7 +42,11 @@ export default function MisAperturasCierresPage() {
           Historial de Cierres
         </span>
       ),
-      children: <HistorialCierres />,
+      children: (
+        <ConfigurableElement componentId="mis-aperturas-cierres.cierres" label="Tab Historial de Cierres">
+          <HistorialCierres />
+        </ConfigurableElement>
+      ),
     },
   ];
 

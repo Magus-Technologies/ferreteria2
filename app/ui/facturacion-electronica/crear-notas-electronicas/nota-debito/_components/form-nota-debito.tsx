@@ -11,6 +11,7 @@ import SelectMotivoNota from "~/app/_components/form/selects/select-motivo-nota"
 import { FaCalendar, FaSearch } from "react-icons/fa";
 import ModalBuscarComprobante from "./modal-buscar-comprobante";
 import useBuscarComprobanteInteligente from "../_hooks/use-buscar-comprobante-inteligente";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 interface FormNotaDebitoProps {
   form: FormInstance;
@@ -170,6 +171,7 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
       </div>
 
       {/* Tercera fila: Dirección, Teléfono, Email */}
+      <ConfigurableElement componentId="crear-nota-debito.datos-contacto" label="Datos de contacto del cliente">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Dirección:"
@@ -225,8 +227,10 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
           />
         </LabelBase>
       </div>
+      </ConfigurableElement>
 
       {/* Cuarta fila: Motivo de Nota */}
+      <ConfigurableElement componentId="crear-nota-debito.motivo" label="Campo Motivo de Nota">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Motivo:"
@@ -247,6 +251,7 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
           />
         </LabelBase>
       </div>
+      </ConfigurableElement>
 
       {/* Quinta fila: Sustento del Motivo (siempre visible cuando hay motivo seleccionado) */}
       <Form.Item noStyle shouldUpdate={(prev, curr) => prev.motivo_nota_id !== curr.motivo_nota_id}>
@@ -299,6 +304,7 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
       </Form.Item>
 
       {/* Sexta fila: Moneda, Tipo de Cambio, Observaciones */}
+      <ConfigurableElement componentId="crear-nota-debito.moneda-observaciones" label="Moneda, Tipo de Cambio y Observaciones">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 lg:gap-6">
         <LabelBase
           label="Moneda:"
@@ -352,6 +358,7 @@ export default function FormNotaDebito({ form }: FormNotaDebitoProps) {
           />
         </LabelBase>
       </div>
+      </ConfigurableElement>
     </div>
   );
 }

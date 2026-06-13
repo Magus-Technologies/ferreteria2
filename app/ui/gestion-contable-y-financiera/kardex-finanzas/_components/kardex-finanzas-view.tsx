@@ -14,6 +14,7 @@ import { kardexApi, type MovimientoKardex } from '~/lib/api/kardex'
 import ButtonBase from '~/components/buttons/button-base'
 import { subCajaApi } from '~/lib/api/sub-caja'
 import { usuariosApi } from '~/lib/api/usuarios'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 const { RangePicker } = DatePicker
 
@@ -215,6 +216,7 @@ export default function KardexFinanzasView() {
           <span className='text-xs text-gray-500'>Flujo de caja detallado</span>
         </div>
 
+        <ConfigurableElement componentId='kardex-finanzas.filtros' label='Filtros de Kardex Finanzas'>
         <div className='flex flex-wrap gap-3 items-end'>
           <div>
             <label className='text-xs font-semibold text-gray-600 mb-1 block'>Despliegue de Pago</label>
@@ -289,6 +291,7 @@ export default function KardexFinanzasView() {
             Buscar
           </ButtonBase>
         </div>
+        </ConfigurableElement>
       </div>
 
       {/* Resumen */}

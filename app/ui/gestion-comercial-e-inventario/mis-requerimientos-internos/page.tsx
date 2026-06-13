@@ -13,6 +13,7 @@ import { getAuthToken } from '~/lib/api'
 import ButtonBase from '~/components/buttons/button-base'
 import { classOkButtonModal } from '~/lib/clases'
 import dayjs from 'dayjs'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 const PRIORIDAD_COLORS: Record<string, string> = {
   BAJA: 'blue',
@@ -201,16 +202,19 @@ export default function MisRequerimientosInternos() {
           <h1 className="text-2xl font-bold text-slate-800">Mis Requerimientos Internos</h1>
           <p className="text-sm text-slate-500 mt-1">Gestiona tus solicitudes de compra y servicios</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          className="!bg-emerald-600 hover:!bg-emerald-700 !border-none !rounded-lg"
-        >
-          Nuevo Requerimiento
-        </Button>
+        <ConfigurableElement componentId="mis-requerimientos-internos.btn-nuevo" label="Botón Nuevo Requerimiento" noFullWidth>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            className="!bg-emerald-600 hover:!bg-emerald-700 !border-none !rounded-lg"
+          >
+            Nuevo Requerimiento
+          </Button>
+        </ConfigurableElement>
       </div>
 
       <Card className="!rounded-2xl !border-slate-100 shadow-sm">
+        <ConfigurableElement componentId="mis-requerimientos-internos.filtros" label="Filtros de Requerimientos">
         <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mb-6">
           <div className="flex items-center gap-1">
             <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Desde:</span>
@@ -288,6 +292,7 @@ export default function MisRequerimientosInternos() {
             Limpiar
           </Button>
         </div>
+        </ConfigurableElement>
 
         {loading ? (
           <div className="flex justify-center py-12">

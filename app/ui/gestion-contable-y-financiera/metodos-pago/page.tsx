@@ -10,6 +10,7 @@ import { usePermission } from '~/hooks/use-permission'
 import { permissions } from '~/lib/permissions'
 import TableMetodosPagoUnificado from './_components/table-metodos-pago-unificado'
 import type { MetodoDePago } from '~/lib/api/metodo-de-pago'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 const ComponentLoading = () => (
   <div className="flex items-center justify-center h-40">
@@ -36,9 +37,11 @@ export default function MetodosPagoPage() {
         icon={<FaCreditCard className='text-rose-600' />}
       />
       <div className='w-full mt-2'>
-        <Suspense fallback={<ComponentLoading />}>
-          <TableMetodosPagoUnificado onBancoDoubleClick={setSelectedBanco} />
-        </Suspense>
+        <ConfigurableElement componentId='metodos-pago.tabla' label='Tabla de Métodos de Pago'>
+          <Suspense fallback={<ComponentLoading />}>
+            <TableMetodosPagoUnificado onBancoDoubleClick={setSelectedBanco} />
+          </Suspense>
+        </ConfigurableElement>
       </div>
     </ContenedorGeneral>
   )

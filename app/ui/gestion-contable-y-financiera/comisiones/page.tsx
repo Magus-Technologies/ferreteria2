@@ -9,6 +9,7 @@ import FiltersComisiones from './_components/filters/filters-comisiones'
 import CardsResumenComisiones from './_components/cards/cards-resumen-comisiones'
 import TableComisionesPorVendedor from './_components/tables/table-comisiones-por-vendedor'
 import TableHistorialPagos from './_components/tables/table-historial-pagos'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 export default function ComisionesPage() {
   const canAccess = usePermission(permissions.GESTION_CONTABLE_Y_FINANCIERA_INDEX)
@@ -17,8 +18,12 @@ export default function ComisionesPage() {
   return (
     <ContenedorGeneral>
       <div className='flex flex-col gap-4 w-full'>
-        <FiltersComisiones />
-        <CardsResumenComisiones />
+        <ConfigurableElement componentId='comisiones.filtros' label='Filtros de Comisiones'>
+          <FiltersComisiones />
+        </ConfigurableElement>
+        <ConfigurableElement componentId='comisiones.cards-resumen' label='Tarjetas de Resumen de Comisiones'>
+          <CardsResumenComisiones />
+        </ConfigurableElement>
 
         <Tabs
           defaultActiveKey='por-vendedor'

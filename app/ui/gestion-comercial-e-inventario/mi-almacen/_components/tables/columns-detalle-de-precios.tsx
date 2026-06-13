@@ -214,6 +214,23 @@ export function useColumnsDetalleDePrecios() {
           )
         }
 
+        // Si solo queda un lote (un único costo), mostrarlo como texto plano: no
+        // tiene sentido un desplegable con una sola opción.
+        if (lotes.length === 1) {
+          const l = lotes[0]
+          const total = Number(l.costo) * factor
+          return (
+            <span className='text-sm'>
+              S/. {total.toFixed(4)} (
+              <GetStock
+                stock_fraccion={Number(l.cantidad_restante)}
+                unidades_contenidas={unidadesContenidas}
+              />
+              )
+            </span>
+          )
+        }
+
         const options = lotes.map((l) => {
           const total = Number(l.costo) * factor
           return {

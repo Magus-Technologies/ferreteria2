@@ -16,6 +16,7 @@ import { cierreCajaApi } from '../../../../../lib/api/cierre-caja'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEmpresaPublica } from '~/hooks/use-empresa-publica'
 import dayjs from 'dayjs'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 const { TextArea } = Input
 
@@ -350,6 +351,7 @@ export default function CierreCajaView() {
       </Card>
 
       {/* Campo de Supervisor - ARRIBA */}
+      <ConfigurableElement componentId='cierre-caja.supervisor' label='Sección de Supervisión'>
       <Card className='bg-amber-50 border border-amber-200 w-full' bodyStyle={{ padding: '16px' }}>
         <div className='text-sm font-semibold text-amber-800 mb-3'>Supervisión (Opcional)</div>
         <div className='grid grid-cols-1 gap-3'>
@@ -374,6 +376,7 @@ export default function CierreCajaView() {
           </div>
         </div>
       </Card>
+      </ConfigurableElement>
 
       {/* Modal de validación de supervisor */}
       <ModalValidarSupervisor

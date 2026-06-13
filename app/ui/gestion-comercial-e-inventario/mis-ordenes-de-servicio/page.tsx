@@ -17,6 +17,7 @@ import ModalDocOrdenServicio from './_components/modals/modal-doc-orden-servicio
 import TableWithTitle from '~/components/tables/table-with-title'
 import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '~/app/_lib/queryKeys'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 const FiltersMisOS = lazy(() => import('./_components/filters/filters-mis-os'))
 const TableMisOS = lazy(() => import('./_components/tables/table-mis-os'))
@@ -219,9 +220,11 @@ export default function MisOrdenesDeServicio() {
 
   return (
     <ContenedorGeneral className="h-full">
+      <ConfigurableElement componentId="mis-ordenes-de-servicio.filtros" label="Filtros y acciones de Órdenes de Servicio">
       <Suspense fallback={<div className="h-20" />}>
         <FiltersMisOS onNueva={() => setModalNuevoOpen(true)} />
       </Suspense>
+      </ConfigurableElement>
 
       <div className="w-full mt-4">
         <div className="h-[450px]">

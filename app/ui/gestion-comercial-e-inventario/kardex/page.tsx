@@ -9,6 +9,7 @@ import { usePermission } from '~/hooks/use-permission'
 import KardexInventarioView from './_components/kardex-inventario-view'
 import KardexView from '~/app/ui/facturacion-electronica/mi-almacen/_components/kardex-view'
 import KardexFinanzasView from '~/app/ui/gestion-contable-y-financiera/kardex-finanzas/_components/kardex-finanzas-view'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 type KardexTipo = 'inventario' | 'facturacion' | 'finanzas'
 
@@ -21,16 +22,18 @@ export default function KardexInventarioPage() {
   return (
     <ContenedorGeneral className='w-full !items-stretch !p-0'>
       <div className='flex justify-end p-4 border-b'>
-        <Select
-          value={tipo}
-          onChange={setTipo}
-          options={[
-            { value: 'inventario', label: 'Kardex Inventario' },
-            { value: 'facturacion', label: 'Kardex Facturación' },
-            { value: 'finanzas', label: 'Kardex Finanzas' },
-          ]}
-          className='w-56'
-        />
+        <ConfigurableElement componentId='kardex.selector-tipo' label='Selector de Tipo de Kardex' noFullWidth>
+          <Select
+            value={tipo}
+            onChange={setTipo}
+            options={[
+              { value: 'inventario', label: 'Kardex Inventario' },
+              { value: 'facturacion', label: 'Kardex Facturación' },
+              { value: 'finanzas', label: 'Kardex Finanzas' },
+            ]}
+            className='w-56'
+          />
+        </ConfigurableElement>
       </div>
       <div className='flex-1 overflow-auto'>
         {tipo === 'inventario' ? <KardexInventarioView /> : tipo === 'facturacion' ? <KardexView /> : <KardexFinanzasView />}

@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import SelectProductos from "~/app/_components/form/selects/select-productos";
 import SelectCategorias from "~/app/_components/form/selects/select-categorias";
 import SelectMarcas from "~/app/_components/form/selects/select-marcas";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 import {
   MOMENTO_APLICACION_OPTIONS,
   TIPO_BENEFICIO_OPTIONS,
@@ -904,13 +905,27 @@ export default function FormCrearVale({ form, vale }: FormCrearValeProps) {
       <Form.Item name="tipo_umbral" hidden>
         <input type="hidden" />
       </Form.Item>
-      <SeccionBasica form={form} />
-      <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno && !esFuturo} />
-      <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} productosDefault={productosDefault} />
-      <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} descuentoProductosDefault={descuentoProductosDefault} productoGratisDefault={productoGratisDefault} />
-      <SeccionVigencia form={form} />
-      <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} esDescuento={esDescuento} stockProductoGratis={stockProductoGratis ?? null} />
-      <SeccionPrecios />
+      <ConfigurableElement componentId="crear-vale.seccion-basica" label="Paso 1 · Información Básica">
+        <SeccionBasica form={form} />
+      </ConfigurableElement>
+      <ConfigurableElement componentId="crear-vale.seccion-umbral" label="Paso 2 · Umbral de Activación">
+        <SeccionUmbral form={form} momento={momento} tipoUmbral={tipoUmbral} setTipoUmbral={setTipoUmbral} esDosPorUno={esDosPorUno && !esFuturo} />
+      </ConfigurableElement>
+      <ConfigurableElement componentId="crear-vale.seccion-modalidad" label="Paso 3 · Productos / Modalidad">
+        <SeccionModalidad form={form} modalidad={modalidad} tipoUmbral={tipoUmbral} productosDefault={productosDefault} />
+      </ConfigurableElement>
+      <ConfigurableElement componentId="crear-vale.seccion-beneficio" label="Paso 4 · Beneficio">
+        <SeccionBeneficio form={form} tipoPromocion={tipoPromocion} descuentoTipo={descuentoTipo} momento={momento} esDosPorUno={esDosPorUno} descuentoProductosDefault={descuentoProductosDefault} productoGratisDefault={productoGratisDefault} />
+      </ConfigurableElement>
+      <ConfigurableElement componentId="crear-vale.seccion-vigencia" label="Paso 5 · Vigencia">
+        <SeccionVigencia form={form} />
+      </ConfigurableElement>
+      <ConfigurableElement componentId="crear-vale.seccion-restricciones" label="Paso 6 · Restricciones">
+        <SeccionRestricciones usaLimiteCliente={usaLimiteCliente} usaLimiteStock={usaLimiteStock} usaLimiteVenta={usaLimiteVenta} esDescuento={esDescuento} stockProductoGratis={stockProductoGratis ?? null} />
+      </ConfigurableElement>
+      <ConfigurableElement componentId="crear-vale.seccion-precios" label="Paso 7 · Aplicable a Precios">
+        <SeccionPrecios />
+      </ConfigurableElement>
     </div>
   );
 }

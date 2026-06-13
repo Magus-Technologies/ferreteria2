@@ -13,6 +13,7 @@ import ButtonBase from '~/components/buttons/button-base'
 import SelectAlmacen from '~/app/_components/form/selects/select-almacen'
 import DatePickerBase from '~/app/_components/form/fechas/date-picker-base'
 import { useStoreAlmacen } from '~/store/store-almacen'
+import ConfigurableElement from '~/app/ui/configuracion/permisos-visuales/_components/configurable-element'
 
 import ModalTransferirStock from '../_components/modals/modal-transferir-stock'
 
@@ -73,19 +74,22 @@ export default function MisTransferenciasPage() {
           title="Mis Transferencias"
           icon={<FaExchangeAlt className="text-emerald-600" />}
         >
-          <ButtonBase
-            color="success"
-            size="md"
-            type="button"
-            onClick={() => setOpenTransferir(true)}
-            className="flex items-center gap-2 whitespace-nowrap"
-          >
-            <FaPlusCircle />
-            Transferir Stock
-          </ButtonBase>
+          <ConfigurableElement componentId="mis-transferencias.btn-transferir" label="Botón Transferir Stock" noFullWidth>
+            <ButtonBase
+              color="success"
+              size="md"
+              type="button"
+              onClick={() => setOpenTransferir(true)}
+              className="flex items-center gap-2 whitespace-nowrap"
+            >
+              <FaPlusCircle />
+              Transferir Stock
+            </ButtonBase>
+          </ConfigurableElement>
         </TituloModulos>
 
         {/* Filtros */}
+        <ConfigurableElement componentId="mis-transferencias.filtros" label="Filtros de Transferencias">
         <div className="flex flex-wrap items-center gap-4 mt-4">
           <SelectAlmacen
             propsForm={{
@@ -134,6 +138,7 @@ export default function MisTransferenciasPage() {
             Buscar
           </ButtonBase>
         </div>
+        </ConfigurableElement>
       </FormBase>
 
       {/* Tablas */}

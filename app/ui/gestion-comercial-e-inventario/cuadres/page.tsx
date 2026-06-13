@@ -7,6 +7,7 @@ import { FaCalculator } from "react-icons/fa6";
 import TituloModulos from "~/app/_components/others/titulo-modulos";
 import { CuadresProvider, useCuadresContext } from "./_contexts/cuadres-context";
 import ModalDocIngresoSalida from "../mi-almacen/_components/modals/modal-doc-ingreso-salida";
+import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
 
 // Lazy loading de componentes
 const FiltersCuadres = lazy(() => import("./_components/filters/filters-cuadres"));
@@ -41,9 +42,11 @@ export default function CuadresPage() {
                         icon={<FaCalculator className="text-emerald-600" />}
                     />
 
+                    <ConfigurableElement componentId="cuadres.filtros" label="Filtros de Cuadres">
                     <Suspense fallback={<ComponentLoading />}>
                         <FiltersCuadres />
                     </Suspense>
+                    </ConfigurableElement>
 
                     <div className="w-full">
                         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-stretch transition-all duration-300">
@@ -64,6 +67,7 @@ export default function CuadresPage() {
                             </div>
 
                             {/* Columna Lateral: Sidebar con Cards distribuyendo el espacio */}
+                            <ConfigurableElement componentId="cuadres.cards-info" label="Tarjetas de Totales (Cuadres)" noFullWidth>
                             <div className="hidden lg:flex flex-col min-w-[200px] h-full">
                                 {/* Espaciador para alinear con el inicio de la primera tabla (debajo de sus botones) */}
                                 <div className="h-[42px] flex-shrink-0" />
@@ -74,6 +78,7 @@ export default function CuadresPage() {
                                     </Suspense>
                                 </div>
                             </div>
+                            </ConfigurableElement>
                         </div>
 
                         {/* Versión móvil de contadores */}
