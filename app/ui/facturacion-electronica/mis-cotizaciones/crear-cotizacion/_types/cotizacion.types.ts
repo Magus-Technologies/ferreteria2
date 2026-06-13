@@ -55,6 +55,10 @@ export interface FormCreateCotizacion extends ClienteDireccionFormFields {
   cliente_id?: number;
   cliente_nombre?: string;
   telefono?: string;
+  // Slots del selector Cel 1 / Cel 2 (ver cliente-telefonos-form)
+  telefono_seleccionado?: string;
+  _cliente_telefono_1?: string;
+  _cliente_telefono_2?: string;
   email?: string;
   direccion?: string;
   direccion_seleccionada?: TipoDireccion;

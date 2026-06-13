@@ -120,6 +120,10 @@ export default function BodyCotizar() {
           ruc_dni: cotizacion.ruc_dni || undefined,
           cliente_id: cotizacion.cliente_id || undefined,
           telefono: cotizacion.telefono || undefined,
+          // Slots del selector Cel 1 / Cel 2
+          telefono_seleccionado: 'C1',
+          _cliente_telefono_1: cotizacion.telefono || (cotizacion as any).cliente?.telefono || '',
+          _cliente_telefono_2: (cotizacion as any).cliente?.celular || '',
           direccion: cotizacion.direccion || undefined,
           tipo_documento: cotizacion.tipo_documento || undefined,
           observaciones: cotizacion.observaciones || undefined,

@@ -163,6 +163,12 @@ export default function useCreateVenta({
       direccion_seleccionada,
       ruc_dni,
       telefono,
+      // Slots de teléfono (Cel 1 / Cel 2) — registrados como campos ocultos.
+      // Se desestructuran para reconstruir ambos teléfonos y NO contaminar
+      // el payload de la venta (que no guarda teléfono).
+      telefono_seleccionado,
+      _cliente_telefono_1,
+      _cliente_telefono_2,
       email,
       // Extraer campos de crédito
       numero_dias,
@@ -393,12 +399,23 @@ export default function useCreateVenta({
         return
       }
 
-      // Sincronizar teléfono/email editados con la ficha del cliente.
-      // El backend acepta update parcial — solo se envían los campos presentes.
-      if (clienteIdFinal && (telefono !== undefined || email !== undefined)) {
-        const datosContacto: { telefono?: string | null; email?: string | null } = {}
-        if (telefono !== undefined) datosContacto.telefono = telefono?.trim() || null
-        if (email !== undefined) datosContacto.email = email?.trim() || null
+      // Sincronizar teléfonos/email editados con la ficha del cliente.
+      // Reconstruir Cel 1 (telefono) y Cel 2 (celular): el campo visible
+      // `telefono` tiene el valor del slot activo (con ediciones inline); el
+      // oculto tiene el slot inactivo. Mapeo: C1→telefono, C2→celular.
+      if (clienteIdFinal) {
+        const activo = (telefono_seleccionado as string) || 'C1'
+        const visible = (telefono as string | undefined)?.trim() || ''
+        const ocultoC1 = (_cliente_telefono_1 as string | undefined)?.trim() || ''
+        const ocultoC2 = (_cliente_telefono_2 as string | undefined)?.trim() || ''
+        const telC1 = activo === 'C1' ? visible : ocultoC1
+        const telC2 = activo === 'C2' ? visible : ocultoC2
+
+        const datosContacto: { telefono?: string | null; celular?: string | null; email?: string | null } = {
+          telefono: telC1 || null,
+          celular: telC2 || null,
+        }
+        if (email !== undefined) datosContacto.email = (email as string | undefined)?.trim() || null
         clienteApi.update(clienteIdFinal, datosContacto).catch(() => {})
       }
 

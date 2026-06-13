@@ -14,6 +14,7 @@ import InputBase from "~/app/_components/form/inputs/input-base";
 import { BsGeoAltFill } from "react-icons/bs";
 import { useEffect, useState, useCallback } from "react";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import RadioTelefonoCliente from "~/app/_components/form/radio-telefono-cliente";
 import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
 import { TipoDireccion } from "~/lib/api/cliente";
 import {
@@ -150,6 +151,16 @@ export default function FormCrearVenta({
       </Form.Item>
       <HiddenDireccionesFormItems />
       <Form.Item name="fecha_nacimiento" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      {/* Slots de teléfono (Cel 1 / Cel 2) — los maneja RadioTelefonoCliente */}
+      <Form.Item name="telefono_seleccionado" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_telefono_1" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_telefono_2" hidden>
         <input type="hidden" />
       </Form.Item>
 
@@ -518,18 +529,22 @@ export default function FormCrearVenta({
             classNames={{ labelParent: "mb-3 sm:mb-4 lg:mb-6" }}
             className="w-full sm:w-auto"
           >
-            <InputBase
-              propsForm={{
-                name: "telefono",
-                hasFeedback: false,
-                className:
-                  "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px]",
-              }}
-              placeholder="Teléfono"
-              className="w-full"
-              readOnly={esFactura}
-              uppercase={false}
-            />
+            <div className="flex flex-col gap-1">
+              <InputBase
+                propsForm={{
+                  name: "telefono",
+                  hasFeedback: false,
+                  className:
+                    "w-full sm:!min-w-[150px] sm:!w-[150px] sm:!max-w-[150px] !mb-0",
+                }}
+                placeholder="Teléfono"
+                className="w-full"
+                readOnly={esFactura}
+                uppercase={false}
+              />
+              {/* Selector Cel 1 / Cel 2 — análogo al D1-D4 de direcciones */}
+              <RadioTelefonoCliente form={form} />
+            </div>
           </LabelBase>
         </ConfigurableElement>
 
