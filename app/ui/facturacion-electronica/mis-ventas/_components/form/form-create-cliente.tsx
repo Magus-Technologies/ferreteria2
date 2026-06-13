@@ -228,6 +228,26 @@ export default function FormCreateCliente({
             />
           </LabelBase>
 
+          {/* Teléfono 2 — persiste en la columna `celular` (ya existía en la
+              tabla cliente, antes sin uso en la UI). Sin migración. */}
+          <LabelBase label="Telefono 2:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
+            <InputBase
+              prefix={<FaMobileButton className="text-cyan-600 mx-1" />}
+              propsForm={{
+                name: "celular",
+                hasFeedback: true,
+                rules: [
+                  {
+                    pattern: /^\d{9}$/,
+                    message: "El teléfono debe tener 9 dígitos",
+                  },
+                ],
+              }}
+              placeholder="Telefono 2 (opcional)"
+              maxLength={9}
+            />
+          </LabelBase>
+
           <LabelBase label="Profesion:" orientation="column" classNames={{ labelParent: "!mb-0" }}>
             <div className="flex items-center gap-2">
               <SelectProfesion

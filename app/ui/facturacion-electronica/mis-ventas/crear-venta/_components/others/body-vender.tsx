@@ -82,6 +82,10 @@ export type FormCreateVenta = ClienteDireccionFormFields & {
   ruc_dni?: string
   cliente_nombre?: string
   telefono?: string
+  // Slots del selector Cel 1 / Cel 2 (ver cliente-telefonos-form)
+  telefono_seleccionado?: string
+  _cliente_telefono_1?: string
+  _cliente_telefono_2?: string
   email?: string
   metodos_de_pago?: Array<{
     despliegue_de_pago_id: string

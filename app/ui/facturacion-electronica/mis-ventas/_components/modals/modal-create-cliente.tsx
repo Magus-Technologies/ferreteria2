@@ -36,6 +36,7 @@ export interface FormCreateClienteValues {
   // pero no necesitan estar en este interface (son detalles internos).
   direccion?: string | null;
   telefono?: string | null;
+  celular?: string | null;
   profesion_id?: number | null;
   email?: string | null;
   fecha_nacimiento?: string | null;

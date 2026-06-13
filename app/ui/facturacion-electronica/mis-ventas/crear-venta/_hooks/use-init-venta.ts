@@ -59,6 +59,10 @@ export default function useInitVenta({
             ? `${(venta as any).cliente.nombres} ${(venta as any).cliente.apellidos}`.trim()
             : undefined),
         telefono: (venta as any).telefono || (venta as any).cliente?.telefono || undefined,
+        // Slots del selector Cel 1 / Cel 2 — cargar ambos teléfonos del cliente.
+        telefono_seleccionado: 'C1',
+        _cliente_telefono_1: (venta as any).cliente?.telefono || '',
+        _cliente_telefono_2: (venta as any).cliente?.celular || '',
         direccion: (venta as any).direccion || (venta as any).cliente?.direccion || undefined,
         email: (venta as any).cliente?.email || undefined,
         direccion_seleccionada: (venta as any).direccion_seleccionada || TipoDireccion.D1,

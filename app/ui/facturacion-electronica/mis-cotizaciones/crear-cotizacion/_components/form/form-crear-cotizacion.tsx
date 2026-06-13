@@ -17,6 +17,7 @@ import { cotizacionesApi } from "~/lib/api/cotizaciones";
 import { subscribeModelChanged } from "~/lib/realtime-bus";
 import { IoReload } from "react-icons/io5";
 import RadioDireccionCliente from "~/app/_components/form/radio-direccion-cliente";
+import RadioTelefonoCliente from "~/app/_components/form/radio-telefono-cliente";
 import HiddenDireccionesFormItems from "~/app/_components/form/hidden-direcciones-form-items";
 import { BsGeoAltFill } from "react-icons/bs";
 import ConfigurableElement from "~/app/ui/configuracion/permisos-visuales/_components/configurable-element";
@@ -75,6 +76,16 @@ export default function FormCrearCotizacion({
         <input type="hidden" />
       </Form.Item>
       <HiddenDireccionesFormItems />
+      {/* Slots de teléfono (Cel 1 / Cel 2) — los maneja RadioTelefonoCliente */}
+      <Form.Item name="telefono_seleccionado" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_telefono_1" hidden>
+        <input type="hidden" />
+      </Form.Item>
+      <Form.Item name="_cliente_telefono_2" hidden>
+        <input type="hidden" />
+      </Form.Item>
 
       {/* Fila 1: Fecha Proforma, Vendedor, N° Cotización, Moneda */}
       <div className="flex gap-6">
@@ -324,16 +335,20 @@ export default function FormCrearCotizacion({
       <div className="flex gap-6">
         <LabelBase label="Tele/Cel:" classNames={{ labelParent: "mb-6" }}>
           <ConfigurableElement componentId="field-telefono-cotizacion" label="Campo Teléfono">
-            <InputBase
-              propsForm={{
-                name: "telefono",
-                hasFeedback: false,
-                className: "!min-w-[150px] !w-[150px] !max-w-[150px]",
-              }}
-              placeholder="Teléfono"
-              readOnly
-              uppercase={false}
-            />
+            <div className="flex flex-col gap-1">
+              <InputBase
+                propsForm={{
+                  name: "telefono",
+                  hasFeedback: false,
+                  className: "!min-w-[150px] !w-[150px] !max-w-[150px] !mb-0",
+                }}
+                placeholder="Teléfono"
+                readOnly
+                uppercase={false}
+              />
+              {/* Selector Cel 1 / Cel 2 — elige cuál teléfono va en la cotización */}
+              <RadioTelefonoCliente form={form} />
+            </div>
           </ConfigurableElement>
         </LabelBase>
 

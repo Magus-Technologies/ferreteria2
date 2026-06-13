@@ -10,6 +10,10 @@ import {
   clearDireccionesClienteFromForm,
   getDireccionFromForm,
 } from '~/lib/utils/cliente-direcciones-form'
+import {
+  setTelefonosClienteToForm,
+  clearTelefonosClienteFromForm,
+} from '~/lib/utils/cliente-telefonos-form'
 import useSearchClientes from '~/app/ui/facturacion-electronica/mis-ventas/_hooks/use-search-clientes'
 import { useDebounce } from 'use-debounce'
 import ButtonCreateCliente from '../buttons/button-create-cliente'
@@ -155,9 +159,9 @@ export default function SelectClientes({
     if (form) {
       form.setFieldValue('cliente_nombre', '')
       form.setFieldValue('direccion', '')
-      form.setFieldValue('telefono', '')
       form.setFieldValue('email', '')
       clearDireccionesClienteFromForm(form)
+      clearTelefonosClienteFromForm(form)
     }
     setClienteSeleccionado(undefined)
     iterarChangeValue({
@@ -203,9 +207,9 @@ export default function SelectClientes({
         if (cliente.numero_documento) {
           form.setFieldValue('ruc_dni', cliente.numero_documento)
         }
-        if (cliente.telefono) {
-          form.setFieldValue('telefono', cliente.telefono)
-        }
+        // Cargar AMBOS teléfonos (Cel 1=telefono, Cel 2=celular) en los slots
+        // del selector RadioTelefonoCliente, dejando Cel 1 activo y visible.
+        setTelefonosClienteToForm(form, cliente)
 
         // Cargar direcciones desde la tabla direcciones_cliente
         cargarDireccionesCliente(cliente.id)

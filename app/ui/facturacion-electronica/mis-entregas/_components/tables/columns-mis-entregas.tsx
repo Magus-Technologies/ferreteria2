@@ -43,20 +43,6 @@ export function useColumnsMisEntregas(onRefetch?: () => void) {
       cellRenderer: () => '',
     },
     {
-      headerName: 'Fecha Operativa',
-      colId: 'fecha_operativa',
-      width: 170,
-      valueGetter: (params) => params.data?.fecha_programada || params.data?.fecha_entrega,
-      tooltipValueGetter: (params) => {
-        const fechaOperativa = params.data?.fecha_programada || params.data?.fecha_entrega
-        return fechaOperativa
-          ? `La tabla se filtra por esta fecha: ${formatFechaPeru(fechaOperativa, 'DD/MM/YYYY hh:mm:ss A')}`
-          : 'Sin fecha operativa'
-      },
-      valueFormatter: (params) =>
-        params.value ? formatFechaPeru(params.value, 'DD/MM/YYYY hh:mm:ss A') : '-',
-    },
-    {
       headerName: 'Fecha Registro',
       colId: 'fecha_creacion',
       field: 'fecha_creacion',

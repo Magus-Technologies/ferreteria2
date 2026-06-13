@@ -49,6 +49,7 @@ export default function useCreateCliente({
         apellidos: values.apellidos || "",
         razon_social: values.razon_social || null,
         telefono: values.telefono || null,
+        celular: values.celular || null,
         profesion_id: values.profesion_id || null,
         email: values.email || null,
         fecha_nacimiento: values.fecha_nacimiento
