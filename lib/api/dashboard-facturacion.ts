@@ -57,6 +57,9 @@ export const dashboardFacturacionApi = {
 
   ingresosPorCanal: (params: DashboardFiltros): Promise<ApiResponse<{ data: CanalItem[] }>> =>
     get<CanalItem[]>('ingresos-por-canal', params),
+
+  ingresosPorDespacho: (params: DashboardFiltros): Promise<ApiResponse<{ data: CanalItem[] }>> =>
+    get<CanalItem[]>('ingresos-por-despacho', params),
 }
 
 // ============= QUERY KEYS =============
@@ -70,4 +73,5 @@ export const dashboardFacturacionKeys = {
   productosMasVendidos: (f: DashboardFiltros) => [...dashboardFacturacionKeys.all, 'productos-mas-vendidos', f] as const,
   ventasPorTipoDocumento: (f: DashboardFiltros) => [...dashboardFacturacionKeys.all, 'ventas-por-tipo-documento', f] as const,
   ingresosPorCanal: (f: DashboardFiltros) => [...dashboardFacturacionKeys.all, 'ingresos-por-canal', f] as const,
+  ingresosPorDespacho: (f: DashboardFiltros) => [...dashboardFacturacionKeys.all, 'ingresos-por-despacho', f] as const,
 }
