@@ -1,11 +1,14 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Form, Select } from 'antd'
 import type { SeccionOcultable } from '../types'
 
 interface SeccionEnTiendaProps {
   ocultar?: Set<SeccionOcultable>
 }
+
+const OPCIONES_VALIDAS = ['almacen', 'vendedor'] as const
 
 /**
  * Sección EnTienda — la más simple del modal.
@@ -17,6 +20,19 @@ interface SeccionEnTiendaProps {
  * la unión form ↔ display sea automática.
  */
 export function SeccionEnTienda({ ocultar }: SeccionEnTiendaProps) {
+  const form = Form.useFormInstance()
+  const quienEntrega = Form.useWatch('quien_entrega', form)
+
+  // Salvaguarda: En Tienda SOLO admite 'almacen'/'vendedor'. Si el form trae
+  // 'chofer' (heredado de una entrega a domicilio al editar la venta), el
+  // Select mostraría "CHOFER" crudo. Esta sección es la dueña de la
+  // restricción, así que normaliza el valor ella misma.
+  useEffect(() => {
+    if (quienEntrega && !OPCIONES_VALIDAS.includes(quienEntrega)) {
+      form.setFieldValue('quien_entrega', 'almacen')
+    }
+  }, [quienEntrega, form])
+
   if (ocultar?.has('quien-entrega')) return null
   return (
     <div>

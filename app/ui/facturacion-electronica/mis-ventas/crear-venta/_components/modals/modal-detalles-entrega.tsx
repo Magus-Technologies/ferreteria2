@@ -518,10 +518,16 @@ function ModalDetallesEntregaInner({
   }, [ventaResponse])
 
   // Inicializar cantidades de entrega cuando se abre el modal en modo Parcial
-  // Setear almacenero por defecto en EnTienda
+  // Sanitizar quien_entrega en EnTienda: solo admite 'almacen'/'vendedor'.
+  // Si viene 'chofer' (ej. venta editada que tenía entrega a domicilio) hay
+  // que resetearlo, porque el Select de EnTienda no tiene esa opción y AntD
+  // mostraría el valor crudo "CHOFER".
   useEffect(() => {
-    if (open && tipoDespacho === 'EnTienda' && !form.getFieldValue('quien_entrega')) {
-      form.setFieldValue('quien_entrega', 'almacen')
+    if (open && tipoDespacho === 'EnTienda') {
+      const actual = form.getFieldValue('quien_entrega')
+      if (actual !== 'almacen' && actual !== 'vendedor') {
+        form.setFieldValue('quien_entrega', 'almacen')
+      }
     }
   }, [open, tipoDespacho, form])
 
