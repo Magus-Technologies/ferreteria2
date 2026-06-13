@@ -32,9 +32,7 @@ export default function TableDetalleDeRecepcion() {
       id='g-c-e-i.mis-recepciones.detalle-de-recepcion'
       title='Detalle de Recepción'
       headersRequired={['Cod. Producto']}
-      columnDefs={useColumnsDetalleDeRecepcion({
-        estado: recepcionSeleccionada?.estado ?? false,
-      })}
+      columnDefs={useColumnsDetalleDeRecepcion()}
       optionsSelectColumns={[
         {
           label: 'Default',

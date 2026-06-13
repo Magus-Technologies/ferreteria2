@@ -12,35 +12,24 @@ export type TableDetalleDeRecepcionProps = Pick<
 
 function getHistorialFromResponse({
   historial,
-  estado,
 }: {
   historial: { stock_anterior: number; stock_nuevo: number }[] | undefined | null
-  estado: boolean
 }) {
   if (!historial || historial.length === 0) {
     return { stock_anterior: 0, stock_nuevo: 0 }
   }
 
-  const stock_anterior = Number(historial[0]?.stock_anterior ?? 0)
-  const stock_nuevo = Number(historial[0]?.stock_nuevo ?? 0)
-  let index = 0
-  if (
-    (estado && stock_anterior > stock_nuevo) ||
-    (!estado && stock_anterior < stock_nuevo)
-  )
-    index = 1
-
+  // El historial conserva siempre el movimiento ORIGINAL de la recepción
+  // (índice 0). Al deshacer ya NO se crea un movimiento de reversión, por lo
+  // que no se debe saltar al índice 1 cuando estado=false (antes lo hacía y
+  // dejaba en blanco las columnas Stock Anterior/Nuevo de las deshechas).
   return {
-    stock_anterior: Number(historial[index]?.stock_anterior ?? 0),
-    stock_nuevo: Number(historial[index]?.stock_nuevo ?? 0),
+    stock_anterior: Number(historial[0]?.stock_anterior ?? 0),
+    stock_nuevo: Number(historial[0]?.stock_nuevo ?? 0),
   }
 }
 
-export function useColumnsDetalleDeRecepcion({
-  estado,
-}: {
-  estado: boolean
-}) {
+export function useColumnsDetalleDeRecepcion() {
   const columns: ColDef<TableDetalleDeRecepcionProps>[] = [
     {
       colId: 'cod_producto',
@@ -175,7 +164,6 @@ export function useColumnsDetalleDeRecepcion({
       }) => {
         const historial = getHistorialFromResponse({
           historial: value,
-          estado,
         })
 
         const unidades_contenidas = Number(
@@ -203,7 +191,6 @@ export function useColumnsDetalleDeRecepcion({
       }) => {
         const historial = getHistorialFromResponse({
           historial: value,
-          estado,
         })
 
         const unidades_contenidas = Number(
