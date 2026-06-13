@@ -8,7 +8,15 @@ import { orangeColors } from '~/lib/colors'
 import { dashboardFacturacionApi, dashboardFacturacionKeys } from '~/lib/api/dashboard-facturacion'
 import { useFiltrosDashboard } from '../../_store/store-dashboard-filtros'
 
-const colors = orangeColors
+// Tonalidades de naranja distintas y visibles para colorear cada barra
+// (se omiten los tonos demasiado claros/oscuros del extremo de la paleta).
+const tonalidadesNaranja = [
+  orangeColors[1], // #fdba74
+  orangeColors[2], // #fb923c
+  orangeColors[3], // #f97316
+  orangeColors[4], // #ea580c
+  orangeColors[5], // #c2410c
+]
 
 type Vista = 'canal' | 'despacho'
 
@@ -32,9 +40,11 @@ export default function IngresosPedidosPorTipoDeCanal() {
     staleTime: 5 * 60 * 1000,
   })
 
-  const chartData = (data ?? []).map((item) => ({
+  const chartData = (data ?? []).map((item, i) => ({
     xAxis: item.label,
     Ingresos: item.value,
+    // Cada barra con su propia tonalidad de naranja.
+    fill: tonalidadesNaranja[i % tonalidadesNaranja.length],
   }))
 
   return (
@@ -45,7 +55,7 @@ export default function IngresosPedidosPorTipoDeCanal() {
           value={vista}
           onChange={setVista}
           options={[
-            { label: 'Canal', value: 'canal' },
+            { label: 'Web', value: 'canal' },
             { label: 'Despacho', value: 'despacho' },
           ]}
         />
@@ -59,7 +69,7 @@ export default function IngresosPedidosPorTipoDeCanal() {
         <ChartBar
           className="max-h-[24dvh]"
           data={chartData}
-          fills={{ Ingresos: colors[3] }}
+          fills={{ Ingresos: tonalidadesNaranja[2] }}
         />
       )}
     </div>

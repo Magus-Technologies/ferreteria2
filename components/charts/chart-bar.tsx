@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../ui/chart'
 
 interface ChartDataBar {
@@ -22,6 +22,11 @@ export default function ChartBar({ className, data, fills }: ChartBarProps) {
       !key.endsWith('Fill')
   )
 
+  // Soporte de color por-barra: si las filas traen un campo `fill`, cada barra
+  // usa su propio color (ej. tonalidades distintas). Si no, se usa el color de
+  // la serie (comportamiento original para el resto de gráficos).
+  const tieneFillPorBarra = data.some(d => typeof d.fill === 'string')
+
   return (
     <ChartContainer config={{}} className={`w-full ${className}`}>
       <BarChart accessibilityLayer data={data}>
@@ -39,7 +44,13 @@ export default function ChartBar({ className, data, fills }: ChartBarProps) {
           content={props => <ChartTooltipContent {...props} />}
         />
         {numericKeys.map(key => (
-          <Bar key={key} dataKey={key} radius={4} fill={fills?.[key]} />
+          <Bar key={key} dataKey={key} radius={4} fill={fills?.[key]}>
+            {tieneFillPorBarra
+              ? data.map((row, i) => (
+                  <Cell key={i} fill={(row.fill as string) ?? fills?.[key]} />
+                ))
+              : null}
+          </Bar>
         ))}
       </BarChart>
     </ChartContainer>
